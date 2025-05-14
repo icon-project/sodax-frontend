@@ -1,0 +1,40 @@
+{
+  "name": "node",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "evm": "pnpm run build && node dist/evm.js",
+    "cosmos": "pnpm run build && node dist/cosmos.js",
+    "sui": "pnpm run build && node dist/sui.js",
+    "moneyMarket": "pnpm run build && node dist/moneymarket.js",
+    "stellar": "pnpm run build && node dist/stellar.js",
+    "icon": "pnpm run build && node dist/icon.js",
+    "solana": "pnpm run build && node dist/solana.js",
+    "example": "pnpm run build && node dist/examples/cosmos/index.js",
+    "build": "tsc",
+    "checkTs": "tsc --noEmit",
+    "pretty": "biome format . --write",
+    "lint": "biome lint . --write",
+    "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo "
+  },
+  "main": "dist/main.js",
+  "dependencies": {
+    "@new-world/sdk": "workspace:*",
+    "@solana/web3.js": "1.95.4",
+    "@stellar/stellar-sdk": "12.3.0",
+    "bn": "^1.0.5",
+    "bn.js": "^5.2.1",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.5",
+    "viem": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.6",
+    "@types/node": "catalog:",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.4",
+    "typescript": "catalog:",
+    "vite": "^5.1.4"
+  },
+  "type": "module"
+}

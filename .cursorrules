@@ -1,0 +1,68 @@
+ASSISTANT RULES
+
+Holistic understanding of requirements & stack
+Don’t apologize for errors: fix them
+You may ask about stack assumptions if writing code
+
+[settings]
+language = "typescript"
+framework = "vite"
+test_framework = "vitest"
+runtime = ["browser", "node"]
+
+Technology stack:
+
+./apps/web project:
+- Framework: Next.js (React)
+- Language: TypeScript
+- UI Components: shadcn/ui (based on Radix UI primitives)
+- Styling: Tailwind CSS
+- Icons: Lucide React
+- Runtime: Browser
+
+./packages/sdk-core project:
+- Language: TypeScript
+- Framework: Vite
+- Test Framework: Vitest
+- Libraries: viem, vite, vitest
+- Runtime: Browser and Node.js
+
+
+[rules]
+# Enforce explicit return types for functions
+explicit-function-return-type = true
+
+# Disallow the use of `any`
+no-explicit-any = true
+
+# Prefer `const` over `let` when variables are not reassigned
+prefer-const = true
+
+# Enforce consistent indentation (2 spaces)
+indentation = 2
+
+# Require semicolons at the end of statements
+semi = true
+
+# Ensure proper imports are used
+no-unused-imports = true
+
+# Enforce the use of `async`/`await` instead of Promises directly
+prefer-async-await = true
+
+# Allow running in both browser and Node.js environments
+environment = ["browser", "node"]
+
+CODING STYLE
+
+Code must start with path/filename as a one-line comment
+Comments MUST describe mainly purpose, but also effect when necessary
+Prioritize modularity, DRY, performance, and security
+
+CODING PROCESS
+
+Show concise step-by-step reasoning
+Prioritize tasks/steps you’ll address in each response
+Finish one file before the next
+If you can’t finish code, add TODO: comments
+If needed, interrupt yourself and ask to continue

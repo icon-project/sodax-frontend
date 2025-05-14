@@ -1,0 +1,24 @@
+{
+  "name": "new-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.8.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "pretty": "turbo pretty",
+    "lint": "turbo lint",
+    "checkTs": "turbo checkTs",
+    "clean": "turbo clean && rm -rf node_modules dist .turbo && rm -rf apps/*/node_modules apps/*/dist apps/*/.turbo && rm -rf packages/*/node_modules packages/*/dist packages/*/.turbo",
+    "prepare": "cd .. && husky sdk-new/.husky"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "turbo": "^2.4.0"
+  },
+  "dependencies": {
+   
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "name": "@new-world/xwagmi",
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "XWagmi of BalancedNetwork",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.mjs",
+  "files": ["dist", "src"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/balancednetwork/balanced-network-interface"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "tsup --run",
+    "prepublishOnly": "tsup",
+    "clean": "rm -rf dist && rm -rf node_modules && rm -rf .turbo",
+    "pretty": "biome format . --write",
+    "checkTs": "tsc --noEmit",
+    "knip": "knip",
+    "lint": "biome lint . --write"
+  },
+  "dependencies": {
+    "@archwayhq/arch3.js": "0.7.0",
+    "@coral-xyz/anchor": "0.30.1",
+    "@cosmjs/cosmwasm-stargate": "0.32.2",
+    "@cosmjs/encoding": "0.32.3",
+    "@cosmjs/proto-signing": "0.32.3",
+    "@cosmjs/tendermint-rpc": "0.32.3",
+    "@creit.tech/stellar-wallets-kit": "1.2.1",
+    "@ethereumjs/rlp": "5.0.0",
+    "@injectivelabs/networks": "1.14.13",
+    "@injectivelabs/sdk-ts": "1.14.13",
+    "@injectivelabs/ts-types": "1.14.13",
+    "@injectivelabs/wallet-ts": "1.14.13",
+    "@keplr-wallet/types": "0.12.18",
+    "@mysten/dapp-kit": "0.14.18",
+    "@mysten/sui": "^1.21.2",
+    "@mysten/wallet-standard": "^0.13.26",
+    "@solana/spl-token": "0.4.9",
+    "@solana/wallet-adapter-base": "0.9.23",
+    "@solana/wallet-adapter-react": "0.15.35",
+    "@solana/wallet-adapter-wallets": "0.19.32",
+    "@solana/web3.js": "1.95.4",
+    "@stellar/stellar-sdk": "12.3.0",
+    "@tanstack/react-query": "catalog:",
+    "axios": "0.21.3",
+    "bech32": "2.0.0",
+    "bignumber.js": "9.1.2",
+    "cosmjs-types": "0.9.0",
+    "ethers": "5.6.1",
+    "icon-sdk-js": "1.5.3",
+    "immer": "10.1.1",
+    "react": "catalog:",
+    "react-device-detect": "2.2.3",
+    "react-dom": "catalog:",
+    "react-toastify": "7.0.3",
+    "rlp": "3.0.0",
+    "viem": "catalog:",
+    "wagmi": "catalog:",
+    "zustand": "4.5.2"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "knip": "5.30.5",
+    "tsup": "^8.4.0",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+catalog:
+  "@types/node": ^22.9.3
+  "@types/react": ^19.0.8
+  "@types/react-dom": ^19.0.3
+  "@tanstack/react-query": ^5.66.9
+  typescript: 5.5.4
+  viem: ^2.29.2
+  wagmi: ^2.14.12
+  react: ^19.0.0
+  react-dom: ^19.0.0

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "clean": {
+      "cache": false
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "cache": false
+    },
+    "checkTs": {
+      "dependsOn": ["^checkTs"]
+    },
+    "pretty": {
+      "dependsOn": ["^pretty"],
+      "cache": false
+    }
+  },
+  "remoteCache": {
+    "enabled": true
+  }
+}
