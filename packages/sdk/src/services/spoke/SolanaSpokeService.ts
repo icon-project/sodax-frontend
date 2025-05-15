@@ -1,4 +1,3 @@
-import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { ComputeBudgetProgram, PublicKey, SystemProgram, type TransactionInstruction } from '@solana/web3.js';
 import { BN } from 'bn.js';
@@ -212,7 +211,7 @@ export class SolanaSpokeService {
         //@ts-ignore
         dapp: null,
         config: ConnectionConfigPDA.config(connectionProgram.programId).pda,
-        systemProgram: SYSTEM_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
       })
       .instruction();
 
