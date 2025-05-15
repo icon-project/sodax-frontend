@@ -12,5 +12,4 @@ public/dist
 .history
 .idea
 **/build/**
-pnpm-lock.yaml
 
