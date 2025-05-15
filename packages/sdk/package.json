@@ -50,7 +50,6 @@
     "@suiet/wallet-kit": "^0.3.4",
     "bn.js": "^5.2.1",
     "ethers": "^6.13.5",
-    "thirdweb": "^5.88.4",
     "tiny-invariant": "1.3.3",
     "cosmjs-types": "^0.9.0"
   },
