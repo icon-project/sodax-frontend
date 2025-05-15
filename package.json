@@ -1,5 +1,5 @@
 {
-  "name": "new-sdk",
+  "name": "sodax-frontend",
   "version": "0.0.0",
   "private": true,
   "packageManager": "pnpm@9.8.0",
@@ -10,13 +10,20 @@
     "lint": "turbo lint",
     "checkTs": "turbo checkTs",
     "clean": "turbo clean && rm -rf node_modules dist .turbo && rm -rf apps/*/node_modules apps/*/dist apps/*/.turbo && rm -rf packages/*/node_modules packages/*/dist packages/*/.turbo",
-    "prepare": "cd .. && husky sdk-new/.husky"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@commitlint/cli": "^19.7.1",
+    "@commitlint/config-conventional": "^19.7.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
     "turbo": "^2.4.0"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
   },
   "dependencies": {
    
