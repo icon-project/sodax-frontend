@@ -2,7 +2,7 @@ import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { poolAbi } from '../../abis/pool.abi.js';
 import type { EvmHubProvider, EvmWalletProvider } from '../../entities/index.js';
 import { hubAssets, uiPoolDataAbi } from '../../index.js';
-import type { EvmContractCall, MoneyMarketConfig, SpokeChainId } from '../../types.js';
+import type { EvmContractCall, MoneyMarketConfig, SpokeChainId, PartnerFee } from '../../types.js';
 import { encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';
@@ -99,6 +99,7 @@ export type MoneyMarketRepayWithATokensParams = {
   interestRateMode: bigint; // The interest rate mode (2 for Variable).
 };
 
+
 export class MoneyMarketService {
   /**
    * Deposit tokens to the spoke chain and supply to the money market pool
@@ -148,6 +149,7 @@ export class MoneyMarketService {
    * @param spokeChainId The chain ID of the spoke chain
    * @param hubProvider The hub chain provider
    * @param moneyMarketConfig The money market configuration
+   * @param fee The fee for the transaction
    * @returns Transaction object
    */
   public static borrowData(
@@ -158,6 +160,7 @@ export class MoneyMarketService {
     spokeChainId: SpokeChainId,
     hubProvider: EvmHubProvider,
     moneyMarketConfig: MoneyMarketConfig,
+    fee?: PartnerFee,
   ): Hex {
     const calls: EvmContractCall[] = [];
     const assetConfig = hubAssets[spokeChainId][token];
@@ -169,6 +172,17 @@ export class MoneyMarketService {
       throw new Error('Address not found');
     }
 
+    let feeAmount:  bigint | undefined;
+    if (fee && fee.address) {
+      feeAmount = fee.amount;
+      if (fee.percentage !== undefined) {
+        // Ensure percentage is in basis points (e.g., 100 = 1%) and capped at 1%
+        const basisPoints = Math.min(fee.percentage, 100);
+        // Calculate fee as a percentage of the borrow amount
+        feeAmount = (amount * BigInt(basisPoints)) / 10000n;
+      }
+    }
+
     if (bnUSDVault && bnUSD && bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
       calls.push(
         MoneyMarketService.encodeBorrow(
@@ -178,6 +192,9 @@ export class MoneyMarketService {
       );
       calls.push(Erc20Service.encodeApprove(bnUSD, bnUSDVault, amount));
       calls.push(EvmVaultTokenService.encodeDeposit(bnUSDVault, bnUSD, amount));
+      if (fee && feeAmount) {
+        calls.push(Erc20Service.encodeTansfer(bnUSDVault, fee?.address, feeAmount))
+      }
     } else {
       calls.push(
         MoneyMarketService.encodeBorrow(
@@ -185,6 +202,9 @@ export class MoneyMarketService {
           moneyMarketConfig.lendingPool,
         ),
       );
+      if (fee && feeAmount) {
+        calls.push(Erc20Service.encodeTansfer(vaultAddress, fee?.address, feeAmount))
+      }
     }
 
     calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount));

@@ -31,6 +31,7 @@ import type {
   IntentRelayChainId,
   IntentStatusRequest,
   IntentStatusResponse,
+  PartnerFee,
   Result,
   SolverConfig,
   SpokeChainId,
@@ -74,6 +75,19 @@ export type Intent = {
   dstAddress: Hex; // Destination address in bytes (original address on spoke chain)
   solver: Address; // Optional specific solver address (address(0) = any solver)
   data: Hex; // Additional arbitrary data
+};
+
+// Data types for arbitrary data
+export const TYPE_FEE = 1;
+
+export type FeeData = {
+  fee: bigint;
+  receiver: Address;
+};
+
+export type IntentData = {
+  dataType: number;
+  data: Hex;
 };
 
 export type IntentState = {
@@ -214,9 +228,10 @@ export class SolverService {
     spokeProvider: T,
     hubProvider: HubProvider,
     timeout = 20000,
+    fee?: PartnerFee
   ): Promise<Result<[IntentExecutionResponse, Intent], IntentSubmitError<IntentSubmitErrorCode>>> {
     try {
-      const createIntentResult = await this.createIntent(payload, spokeProvider, hubProvider, false);
+      const createIntentResult = await this.createIntent(payload, spokeProvider, hubProvider, false, fee);
 
       if (!createIntentResult.ok) {
         return {
@@ -312,6 +327,7 @@ export class SolverService {
     spokeProvider: T,
     hubProvider: HubProvider,
     raw?: R,
+    fee?: PartnerFee
   ): Promise<Result<[TxReturnType<T, R>, Intent], IntentSubmitError<'CREATION_FAILED'>>> {
     invariant(
       isValidOriginalAssetAddress(intent.srcChain, intent.inputToken),

@@ -240,6 +240,19 @@ export type VaultReserves = {
   balances: readonly bigint[];
 };
 
+/**
+ * Fee type for transaction fees.
+ * @property address - The address to which the fee is sent.
+ * @property amount - Optional fixed fee amount in wei.
+ * @property percentage - Optional fee percentage in basis points (e.g., 100 = 1%). Maximum allowed is 100 (1%).
+ */
+export type PartnerFee = {
+  address: Address;
+  amount?: bigint;
+  percentage?: number;
+};
+
+
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
