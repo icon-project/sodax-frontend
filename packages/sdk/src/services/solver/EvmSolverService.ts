@@ -1,9 +1,10 @@
+import invariant from 'tiny-invariant';
 import {
   type Address,
   type GetLogsReturnType,
   encodeAbiParameters,
-  encodePacked,
   encodeFunctionData,
+  encodePacked,
   getAbiItem,
   isAddress,
   keccak256,
@@ -13,20 +14,31 @@ import {
   type EvmContractCall,
   type EvmHubProvider,
   type EvmSpokeProvider,
+  FEE_PERCENTAGE_SCALE,
   type Hash,
   type Hex,
   IntentsAbi,
   type PartnerFee,
   type SolverConfig,
   type TxReturnType,
+  calculatePercentageFeeAmount,
   encodeContractCalls,
   getHubAssetInfo,
   getIntentRelayChainId,
   isIntentRelayChainId,
+  isPartnerFeeAmount,
+  isPartnerFeePercentage,
   randomUint256,
 } from '../../index.js';
-import { type CreateIntentParams, Erc20Service, type Intent, SpokeService, type FeeData, type IntentData, TYPE_FEE } from '../index.js';
-import invariant from 'tiny-invariant';
+import {
+  type CreateIntentParams,
+  Erc20Service,
+  type FeeData,
+  type Intent,
+  type IntentData,
+  IntentDataType,
+  SpokeService,
+} from '../index.js';
 
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
 export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventAbi>[number];
@@ -34,13 +46,11 @@ export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventA
 export class EvmSolverService {
   private constructor() {}
 
-
-
   public static constructCreateIntentData(
     createIntentParams: CreateIntentParams,
     creatorHubWalletAddress: Address,
     intentConfig: SolverConfig,
-    fee?: PartnerFee
+    fee?: PartnerFee,
   ): [Hex, Intent] {
     const inputToken = getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset;
     const outputToken = getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset;
@@ -54,7 +64,7 @@ export class EvmSolverService {
       `hub asset not found for spoke chain token (intent.outputToken): ${createIntentParams.outputToken}`,
     );
 
-    const [feeData, feeAmount] = EvmSolverService.createFeeData(fee, createIntentParams.inputAmount);
+    const [feeData, feeAmount] = EvmSolverService.createIntentFeeData(fee, createIntentParams.inputAmount);
 
     const calls: EvmContractCall[] = [];
     const intentsContract = intentConfig.intentsContract;
@@ -69,64 +79,63 @@ export class EvmSolverService {
       data: feeData,
     } satisfies Intent;
 
-    calls.push(Erc20Service.encodeApprove(intent.inputToken, intentsContract, intent.inputAmount+feeAmount));
+    // user has to send input amount + fee amount to the intent contract
+    const totalInputAmount = intent.inputAmount + feeAmount;
+    calls.push(Erc20Service.encodeApprove(intent.inputToken, intentsContract, totalInputAmount));
     calls.push(EvmSolverService.encodeCreateIntent(intent, intentsContract));
     return [encodeContractCalls(calls), intent];
   }
 
-    /**
+  /**
    * Creates encoded fee data for an intent
    * @param fee The partner fee configuration
    * @param inputAmount The input amount to calculate percentage-based fee from
    * @returns A tuple containing [encoded fee data, fee amount]. Fee amount will be 0n if no fee.
    */
-    public static createFeeData(fee: PartnerFee | undefined, inputAmount: bigint): [Hex, bigint] {
-      if (!fee?.address) {
-        return ["0x", 0n];
-      }
-
-      let feeAmount: bigint;
-      if (fee.amount !== undefined) {
-        feeAmount = fee.amount;
-      } else if (fee.percentage !== undefined) {
-        // Ensure percentage is in basis points (e.g., 100 = 1%) and capped at 1%
-        const basisPoints = Math.min(fee.percentage, 100);
-        // Calculate fee as a percentage of the input amount
-        feeAmount = (inputAmount * BigInt(basisPoints)) / 10000n;
-      } else {
-        return ["0x", 0n];
-      }
-
-      // Create the fee data struct
-      const feeData: FeeData = {
-        fee: feeAmount,
-        receiver: fee.address,
-      };
-  
-      // Encode the fee data
-      const encodedFeeData = encodeAbiParameters(
-        [
-          { name: 'fee', type: 'uint256' },
-          { name: 'receiver', type: 'address' },
-        ],
-        [feeData.fee, feeData.receiver]
-      );
-  
-      // Create the intent data struct
-      const intentData: IntentData = {
-        dataType: TYPE_FEE,
-        data: encodedFeeData,
-      };
-  
-      // Encode the intent data
-      return [
-        encodePacked(
-          ["uint8", "bytes"],
-          [intentData.dataType, intentData.data]
-        ),
-        feeAmount
-      ];
+  public static createIntentFeeData(fee: PartnerFee | undefined, inputAmount: bigint): [Hex, bigint] {
+    invariant(inputAmount > 0n, 'Input amount must be greater than 0');
+    if (!fee) {
+      return ['0x', 0n];
     }
+
+    let feeAmount: bigint;
+    if (isPartnerFeeAmount(fee)) {
+      feeAmount = fee.amount;
+    } else if (isPartnerFeePercentage(fee)) {
+      invariant(
+        fee.percentage >= 0 && fee.percentage <= FEE_PERCENTAGE_SCALE,
+        `Fee percentage must be between 0 and ${FEE_PERCENTAGE_SCALE}}`,
+      );
+
+      feeAmount = calculatePercentageFeeAmount(inputAmount, fee.percentage);
+    } else {
+      return ['0x', 0n];
+    }
+
+    // Create the fee data struct
+    const feeData = {
+      fee: feeAmount,
+      receiver: fee.address,
+    } satisfies FeeData;
+
+    // Encode the fee data
+    const encodedFeeData = encodeAbiParameters(
+      [
+        { name: 'fee', type: 'uint256' },
+        { name: 'receiver', type: 'address' },
+      ],
+      [feeData.fee, feeData.receiver],
+    );
+
+    // Create the intent data struct
+    const intentData = {
+      type: IntentDataType.FEE,
+      data: encodedFeeData,
+    } satisfies IntentData;
+
+    // Encode the intent data
+    return [encodePacked(['uint8', 'bytes'], [intentData.type, intentData.data]), feeAmount];
+  }
 
   /**
    * Creates an intent by handling token approval and intent creation

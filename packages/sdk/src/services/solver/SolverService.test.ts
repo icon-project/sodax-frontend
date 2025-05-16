@@ -66,7 +66,24 @@ describe('SolverService', () => {
     intent_tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
   } satisfies IntentStatusRequest;
 
+  const feeAmount = 1000n;   // 1000 of input token
+  const feePercentage = 100; // 1% fee
+
   const solverService = new SolverService(mockSolverConfig);
+  const solverServiceWithPercentageFee = new SolverService({
+    ...mockSolverConfig,
+    fee: {
+      address: '0x0000000000000000000000000000000000000000',
+      percentage: feePercentage,
+    },
+  });
+  const solverServiceWithAmountFee = new SolverService({
+    ...mockSolverConfig,
+    fee: {
+      address: '0x0000000000000000000000000000000000000000',
+      amount: feeAmount,
+    },
+  });
 
   const mockEvmWalletProvider = new EvmWalletProvider({
     chain: BSC_MAINNET_CHAIN_ID,
@@ -145,6 +162,65 @@ describe('SolverService', () => {
         expect(result.error).toBeDefined();
         expect(result.error.detail.code).toBe(IntentErrorCode.UNKNOWN);
       }
+    });
+  });
+
+  describe('getFee', () => {
+    it('should calculate fee correctly for given input amount', async () => {
+      const inputAmount = 1000n;
+      const expectedFee = 10n; // Assuming 1% fee
+
+      const result = await solverServiceWithPercentageFee.getFee(inputAmount);
+
+      expect(result).toBe(expectedFee);
+    });
+
+    it('should handle zero input amount', async () => {
+      const inputAmount = 0n;
+
+      await expect(solverServiceWithPercentageFee.getFee(inputAmount)).rejects.toThrow();
+    });
+
+    it('should handle very large input amount', async () => {
+      const inputAmount = 2n ** 128n - 1n;
+      const result = await solverServiceWithPercentageFee.getFee(inputAmount);
+
+      expect(result).toBeDefined();
+      expect(typeof result).toBe('bigint');
+      expect(result).toBeGreaterThan(0n);
+    });
+
+    it('should handle negative input amount', async () => {
+      const inputAmount = -1000n;
+
+      await expect(solverServiceWithPercentageFee.getFee(inputAmount)).rejects.toThrow();
+    });
+
+    it('should handle undefined input amount', async () => {
+      // @ts-expect-error Testing invalid input
+      await expect(solverServiceWithPercentageFee.getFee(undefined)).rejects.toThrow();
+    });
+
+    it('should handle null input amount', async () => {
+      // @ts-expect-error Testing invalid input
+      await expect(solverServiceWithPercentageFee.getFee(null)).rejects.toThrow();
+    });
+
+    it('should handle fee amount', async () => {
+      const inputAmount = 1000n;
+      const result = await solverServiceWithAmountFee.getFee(inputAmount);
+
+      expect(result).toBe(feeAmount);
+    });
+
+    it('should handle undefined input amount', async () => {
+      // @ts-expect-error Testing invalid input
+      await expect(solverServiceWithAmountFee.getFee(undefined)).rejects.toThrow();
+    });
+
+    it('should handle null input amount', async () => {
+      // @ts-expect-error Testing invalid input
+      await expect(solverServiceWithAmountFee.getFee(null)).rejects.toThrow();
     });
   });
 

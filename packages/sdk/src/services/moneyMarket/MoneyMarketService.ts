@@ -1,11 +1,12 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { poolAbi } from '../../abis/pool.abi.js';
 import type { EvmHubProvider, EvmWalletProvider } from '../../entities/index.js';
-import { hubAssets, uiPoolDataAbi } from '../../index.js';
+import { FEE_PERCENTAGE_SCALE, hubAssets, isPartnerFeeAmount, isPartnerFeePercentage, uiPoolDataAbi } from '../../index.js';
 import type { EvmContractCall, MoneyMarketConfig, SpokeChainId, PartnerFee } from '../../types.js';
-import { encodeContractCalls } from '../../utils/index.js';
+import { calculatePercentageFeeAmount, encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';
+import invariant from 'tiny-invariant';
 
 export type AggregatedReserveData = {
   underlyingAsset: Address;
@@ -173,14 +174,15 @@ export class MoneyMarketService {
     }
 
     let feeAmount:  bigint | undefined;
-    if (fee && fee.address) {
+    if (isPartnerFeeAmount(fee)) {
       feeAmount = fee.amount;
-      if (fee.percentage !== undefined) {
-        // Ensure percentage is in basis points (e.g., 100 = 1%) and capped at 1%
-        const basisPoints = Math.min(fee.percentage, 100);
-        // Calculate fee as a percentage of the borrow amount
-        feeAmount = (amount * BigInt(basisPoints)) / 10000n;
-      }
+    } else if (isPartnerFeePercentage(fee)) {
+      invariant(
+        fee.percentage >= 0 && fee.percentage <= FEE_PERCENTAGE_SCALE,
+        `Fee percentage must be between 0 and ${FEE_PERCENTAGE_SCALE}}`,
+      );
+
+      feeAmount = calculatePercentageFeeAmount(amount, fee.percentage);
     }
 
     if (bnUSDVault && bnUSD && bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {

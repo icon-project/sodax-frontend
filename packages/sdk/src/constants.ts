@@ -26,6 +26,7 @@ export const DEFAULT_MAX_RETRY = 3;
 export const DEFAULT_RETRY_DELAY_MS = 2000;
 export const ICON_TX_RESULT_WAIT_MAX_RETRY = 10;
 export const MAX_UINT256 = (1n << 256n) - 1n;
+export const FEE_PERCENTAGE_SCALE = 10000n; // 100% = 10000
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
 export const INTENT_RELAY_CHAIN_IDS = {

@@ -16,6 +16,8 @@ import {
   type HubChainConfig,
   type IconAddress,
   type IntentRelayChainId,
+  type PartnerFeeAmount,
+  type PartnerFeePercentage,
   type SpokeChainConfig,
 } from './index.js';
 
@@ -90,4 +92,12 @@ export function isIntentRelayChainId(value: bigint): value is IntentRelayChainId
     value >= 0n &&
     Object.values(INTENT_RELAY_CHAIN_IDS).includes(value as IntentRelayChainId)
   );
+}
+
+export function isPartnerFeeAmount(value: unknown): value is PartnerFeeAmount {
+  return typeof value === 'object' && value !== null && 'address' in value && 'amount' in value;
+}
+
+export function isPartnerFeePercentage(value: unknown): value is PartnerFeePercentage {
+  return typeof value === 'object' && value !== null && 'address' in value && 'percentage' in value;
 }

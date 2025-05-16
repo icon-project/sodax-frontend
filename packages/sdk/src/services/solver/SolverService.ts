@@ -5,20 +5,20 @@ import {
   EvmHubProvider,
   EvmSpokeProvider,
   EvmWalletAbstraction,
-  getIntentRelayChainId,
   type HubProvider,
+  type ISpokeProvider,
   IconSpokeProvider,
   type IntentRelayRequest,
-  type ISpokeProvider,
+  SolanaSpokeProvider,
+  StellarSpokeProvider,
+  SuiSpokeProvider,
+  type WaitUntilIntentExecutedPayload,
+  getIntentRelayChainId,
   isValidOriginalAssetAddress,
   isValidSpokeChainId,
-  SolanaSpokeProvider,
   spokeChainConfig,
-  StellarSpokeProvider,
   submitTransaction,
-  SuiSpokeProvider,
   waitUntilIntentExecuted,
-  type WaitUntilIntentExecutedPayload,
 } from '../../index.js';
 import type {
   Hex,
@@ -37,12 +37,12 @@ import type {
   SpokeChainId,
   TxReturnType,
 } from '../../types.js';
-import { EvmSolverService } from './EvmSolverService.js';
-import { SolverApiService } from './SolverApiService.js';
-import { SolanaSolverService } from './SolanaSolverService.js';
-import { IconSolverService } from './IconSolverService.js';
-import { StellarSolverService } from './StellarSolverService.js';
 import { CWSolverService } from './CWSolverService.js';
+import { EvmSolverService } from './EvmSolverService.js';
+import { IconSolverService } from './IconSolverService.js';
+import { SolanaSolverService } from './SolanaSolverService.js';
+import { SolverApiService } from './SolverApiService.js';
+import { StellarSolverService } from './StellarSolverService.js';
 import { SuiSolverService } from './SuiSolverService.js';
 
 export type CreateIntentParams = {
@@ -78,7 +78,9 @@ export type Intent = {
 };
 
 // Data types for arbitrary data
-export const TYPE_FEE = 1;
+export enum IntentDataType {
+  FEE = 1,
+}
 
 export type FeeData = {
   fee: bigint;
@@ -86,7 +88,7 @@ export type FeeData = {
 };
 
 export type IntentData = {
-  dataType: number;
+  type: IntentDataType;
   data: Hex;
 };
 
@@ -165,6 +167,15 @@ export class SolverService {
   }
 
   /**
+   * Get the fee for a given input amount
+   * @param {bigint} inputAmount - The amount of input tokens
+   * @returns {Promise<bigint>} The fee amount (denominated in input tokens)
+   */
+  public async getFee(inputAmount: bigint): Promise<bigint> {
+    return EvmSolverService.createIntentFeeData(this.config.fee, inputAmount)[1];
+  }
+
+  /**
    * Get the status of an intent from Solver API
    * @param {IntentStatusRequest} intentStatusRequest - The intent status request
    * @returns {Promise<Result<IntentStatusResponse, IntentErrorResponse>>} The intent status response
@@ -228,7 +239,7 @@ export class SolverService {
     spokeProvider: T,
     hubProvider: HubProvider,
     timeout = 20000,
-    fee?: PartnerFee
+    fee?: PartnerFee,
   ): Promise<Result<[IntentExecutionResponse, Intent], IntentSubmitError<IntentSubmitErrorCode>>> {
     try {
       const createIntentResult = await this.createIntent(payload, spokeProvider, hubProvider, false, fee);
@@ -320,6 +331,7 @@ export class SolverService {
    * @param {ISpokeProvider} spokeProvider - The spoke provider
    * @param {HubProvider} hubProvider - The hub provider
    * @param {boolean} raw - Whether to return the raw transaction
+   * @param {PartnerFee} fee - The fee to apply to the intent
    * @returns {Promise<[TxReturnType<T, R>, Intent]>} The encoded contract call
    */
   public async createIntent<T extends ISpokeProvider, R extends boolean = false>(
@@ -327,7 +339,7 @@ export class SolverService {
     spokeProvider: T,
     hubProvider: HubProvider,
     raw?: R,
-    fee?: PartnerFee
+    fee?: PartnerFee,
   ): Promise<Result<[TxReturnType<T, R>, Intent], IntentSubmitError<'CREATION_FAILED'>>> {
     invariant(
       isValidOriginalAssetAddress(intent.srcChain, intent.inputToken),

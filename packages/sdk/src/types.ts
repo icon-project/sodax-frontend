@@ -244,14 +244,30 @@ export type VaultReserves = {
  * Fee type for transaction fees.
  * @property address - The address to which the fee is sent.
  * @property amount - Optional fixed fee amount in wei.
+ */
+export type PartnerFeeAmount = {
+  address: Address;
+  amount: bigint;
+}
+
+/**
+ * Fee type for transaction fees.
+ * @property address - The address to which the fee is sent.
  * @property percentage - Optional fee percentage in basis points (e.g., 100 = 1%). Maximum allowed is 100 (1%).
  */
-export type PartnerFee = {
+export type PartnerFeePercentage = {
   address: Address;
-  amount?: bigint;
-  percentage?: number;
-};
+  percentage: number;
+}
 
+
+/**
+ * Fee type for transaction fees.
+ * @property address - The address to which the fee is sent.
+ * @property percentage - Optional fee percentage in basis points (e.g., 100 = 1%). Maximum allowed is 100 (1%).
+ * @property amount - Optional fixed fee amount in wei. If both percentage and amount are provided, amount will be used.
+ */
+export type PartnerFee = PartnerFeeAmount | PartnerFeePercentage;
 
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
@@ -310,6 +326,7 @@ export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
   solverApiEndpoint: HttpUrl;
   relayerApiEndpoint: HttpUrl;
+  fee?: PartnerFee; // optional fee
 };
 
 export type QuoteType = 'exact_input' | 'exact_output';
