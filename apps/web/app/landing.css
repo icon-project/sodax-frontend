@@ -1,0 +1,245 @@
+/********* Font *********/
+
+@font-face {
+    font-family: 'Shrikhand';
+    src: url('/fonts/Shrikhand-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'InterBlack';
+    src: url('/fonts/Inter_18pt-Black.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'InterBold';
+    src: url('/fonts/Inter_18pt-Bold.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'InterMedium';
+    src: url('/fonts/Inter_18pt-Medium.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'InterRegular';
+    src: url('/fonts/Inter_18pt-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/********* Global Css *********/
+
+.custom-placeholder::placeholder {
+    color: white;
+}
+
+.dialog-content {
+    background-image: url('/circle.png');
+    background-size: auto;
+}
+
+.carousel-mask {
+    position: relative;
+}
+
+.carousel-mask::before,
+.carousel-mask::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 30px; /* Width of the gradient */
+    pointer-events: none; /* Ensure the gradient doesn't interfere with carousel interactions */
+    z-index: 1; /* Ensure the gradient is above the carousel */
+}
+
+.carousel-mask::before {
+    left: 0;
+    background: linear-gradient(to right, #A55C55, transparent);
+}
+
+.carousel-mask::after {
+    right: 0;
+    background: linear-gradient(to left, #A55C55, transparent);
+}
+
+.hero-section {
+    background-image: url('/circle1.png'), url('/girl.jpg');
+    background-repeat: no-repeat;
+    background-size: auto;
+}
+
+.radial-gradient-bg {
+    background: radial-gradient(circle at center, #5C3623, #1C1C24);
+}
+
+.section1 {
+    background-image: url('/sodax.jpg');
+    background-repeat: no-repeat;
+    background-position: 50% bottom;
+}
+
+.section2 {
+    background-image: url('/section2.jpg');
+    background-repeat: no-repeat;
+    background-position: 50% bottom;
+}
+
+.section-3-1 {
+    background-image: url('/section3-1.png'),radial-gradient(circle at center, #5C3623, #1C1C24);
+    background-repeat: no-repeat;
+    background-position: 50% bottom;
+}
+
+.section-3-2 {
+    background-image: url('/section3-2.png');
+    background-repeat: no-repeat;
+    background-position: 50% bottom;
+}
+
+.section4 {
+    background-image: url('/section4.jpg');
+    background-repeat: no-repeat;
+    background-position: 50% bottom;
+}
+
+.section-5-1 {
+    background-image: url('/section5-1.jpg');
+    background-repeat: no-repeat;
+    background-position: 50% bottom;
+}
+
+.section-5-2 {
+    background-image: url('/section5-2.jpg');
+    background-repeat: no-repeat;
+    background-position: 50% bottom;
+}
+
+.footer a {
+    font-family: 'InterMedium';
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.footer ul {
+    display: grid;
+}
+
+.footer .list {
+    margin-right: 40px;
+}
+
+.footer .menu-list {
+    margin-left: 50px;
+}
+
+.copy-right {
+    min-width: 200px;
+}
+
+/********* Responsive Css *********/
+@media (max-width: 500px) {
+    .logo-word {
+        display: none;
+    }
+
+    .hero-section {
+        height: 812px;
+        background-image: url('/circle3.png'), url('/girl2.jpg');
+        background-position: left 10%, right bottom;
+    }
+
+    .text-content {
+        width: 300px;
+        margin: 0 auto;
+        margin-top: 50px;
+    }
+
+    .serving {
+        width: 300px;
+        margin-top: 350px;
+        flex-wrap: wrap;
+    }
+
+    .serving button {
+        margin-left: 0px;
+        margin-top: 20px;
+    }
+
+    .section1 {
+        background-image: url('/sodax1.jpg');
+        background-size: contain;
+    }
+
+    
+    .section2 {
+        background-image: url('/section2-1.jpg');
+        background-size: contain;
+    }
+
+    .menu-list {
+        max-width: 320px;
+        flex-wrap: wrap;
+    }
+
+    .menu-list .list {
+        width: 160px;
+        margin-right: 0px;
+    }
+}
+
+@media (min-width: 501px) and (max-width: 1024px) {
+    .hero-section {
+        background-image: url('/circle2.png'), url('/girl1.jpg');
+        background-position: left top, right 50%;
+    }
+
+    .menu-list {
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .dialog-content {
+        max-width: 90%; /* sm:w-[90%] */
+    }
+
+    .join-button {
+        display: none;
+    }
+
+    .logo-desc {
+        display: none;
+    }
+
+    .footer {
+        flex-wrap: wrap-reverse;
+    }
+
+    .footer .copy-right {
+        margin-left: 34px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .dialog-content {
+        max-width: 952px; /* lg:w-[952px] */
+    }
+
+    .hero-section {
+        background-position: 15% top, 70% bottom;
+    }
+}
