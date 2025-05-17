@@ -6,6 +6,8 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:solver": "turbo dev --filter=react-solver-example",
     "pretty": "turbo pretty",
     "lint": "turbo lint",
     "checkTs": "turbo checkTs",
@@ -21,11 +23,7 @@
     "turbo": "^2.4.0"
   },
   "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
+    "extends": ["@commitlint/config-conventional"]
   },
-  "dependencies": {
-   
-  }
+  "dependencies": {}
 }
