@@ -1,391 +1,349 @@
 'use client';
+import {
+  AVALANCHE_FUJI_TESTNET_CHAIN_ID,
+  EvmAssetManagerService,
+  EvmHubProvider,
+  type EvmSpokeChainConfig,
+  EvmSpokeProvider,
+  EvmSpokeService,
+  EvmWalletAbstraction,
+  EvmWalletProvider,
+  type MoneyMarketConfig,
+  MoneyMarketService,
+  SONIC_TESTNET_CHAIN_ID,
+  SpokeService,
+  getHubChainConfig,
+  spokeChainConfig,
+  waitForTransactionReceipt,
+} from '@new-world/sdk';
+import { useMemo } from 'react';
+import type { Address, Hash, Hex, TransactionReceipt } from 'viem';
+import { formatUnits } from 'viem';
+import { useAccount, useBalance, usePublicClient, useWalletClient } from 'wagmi';
+import { avalancheFuji } from 'wagmi/chains';
 
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useEffect, useState } from 'react';
-import './landing.css';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu';
-import Image from 'next/image'; // Import the Image component
-import Link from 'next/link';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useQuery } from '@tanstack/react-query';
+import { sonicBlazeTestnet } from './config';
 
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import Autoplay from 'embla-carousel-autoplay';
+const moneyMarketConfig: MoneyMarketConfig = {
+  lendingPool: '0xA33E8f7177A070D0162Eea0765d051592D110cDE',
+  uiPoolDataProvider: '0x7997C9237D168986110A67C55106C410a2cF9d4f',
+  poolAddressesProvider: '0x04b3f588578BF89B1D2af7283762E3375f0340dA',
+};
+const sonicTestnetHubChainConfig = getHubChainConfig(SONIC_TESTNET_CHAIN_ID);
+const avalancheFujiSpokeChainConfig = spokeChainConfig[AVALANCHE_FUJI_TESTNET_CHAIN_ID] as EvmSpokeChainConfig;
 
-const carouselItems = [
-  { id: 1, src: '/coin/sui.png', alt: 'SUI' },
-  { id: 2, src: '/coin/btc.png', alt: 'BTC' },
-  { id: 3, src: '/coin/s.png', alt: 's' },
-  { id: 4, src: '/coin/inj.png', alt: 'INJ' },
-  { id: 5, src: '/coin/avax.png', alt: 'AVAX' },
-  { id: 6, src: '/coin/soda.png', alt: 'SODA' },
-  { id: 7, src: '/coin/arb.png', alt: 'ARB' },
-  { id: 8, src: '/coin/eth.png', alt: 'ETH' },
-  { id: 9, src: '/coin/msui.png', alt: 'MSUI' },
-  { id: 10, src: '/coin/pol.png', alt: 'POL' },
-  { id: 11, src: '/coin/usdc.png', alt: 'USDC' },
-  { id: 12, src: '/coin/usdt.png', alt: 'USDT' },
-  { id: 13, src: '/coin/wsteth.png', alt: 'wstETH' },
-  { id: 14, src: '/coin/xlm.png', alt: 'XLM' },
-  { id: 15, src: '/coin/stx.png', alt: 'STX' },
-  { id: 16, src: '/coin/base.png', alt: 'BASE' },
-];
+const moneyMarket = new MoneyMarketService();
 
-const LandingPage = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+export default function Page() {
+  // const { address } = useAccount();
+  // const { data: avaxBalance } = useBalance({
+  //   address,
+  //   chainId: avalancheFuji.id,
+  // });
 
-  useEffect(() => {
-    setIsDialogOpen(true);
-  }, []);
+  // const avalancheFujiPublicClient = usePublicClient({
+  //   chainId: avalancheFuji.id,
+  // });
+  // const { data: avalancheFujiWalletClient } = useWalletClient({
+  //   chainId: avalancheFuji.id,
+  // });
+  // const sonicTestnetPublicClient = usePublicClient({
+  //   chainId: sonicBlazeTestnet.id,
+  // });
+  // const { data: sonicTestnetWalletClient } = useWalletClient({
+  //   chainId: sonicBlazeTestnet.id,
+  // });
+
+  // const sonicTestnetEvmWallet = useMemo(() => {
+  //   if (!sonicTestnetPublicClient || !sonicTestnetWalletClient) {
+  //     return undefined;
+  //   }
+
+  //   return new EvmWalletProvider({
+  //     // @ts-ignore
+  //     publicClient: sonicTestnetPublicClient,
+  //     // @ts-ignore
+  //     walletClient: sonicTestnetWalletClient,
+  //   });
+  // }, [sonicTestnetPublicClient, sonicTestnetWalletClient]);
+
+  // const avalancheFujiEvmWallet = useMemo(() => {
+  //   if (!avalancheFujiPublicClient || !avalancheFujiWalletClient) {
+  //     return undefined;
+  //   }
+
+  //   return new EvmWalletProvider({
+  //     // @ts-ignore
+  //     publicClient: avalancheFujiPublicClient,
+  //     // @ts-ignore
+  //     walletClient: avalancheFujiWalletClient,
+  //   });
+  // }, [avalancheFujiPublicClient, avalancheFujiWalletClient]);
+
+  // const sonicTestnetEvmHubProvider = useMemo(
+  //   () => (sonicTestnetEvmWallet ? new EvmHubProvider(sonicTestnetEvmWallet, sonicTestnetHubChainConfig) : undefined),
+  //   [sonicTestnetEvmWallet],
+  // );
+
+  // const avalancheFujiEvmSpokeProvider = useMemo(
+  //   () =>
+  //     avalancheFujiEvmWallet ? new EvmSpokeProvider(avalancheFujiEvmWallet, avalancheFujiSpokeChainConfig) : undefined,
+  //   [avalancheFujiEvmWallet],
+  // );
+
+  // const handleSupplyAVAX = async () => {
+  //   console.log('Supplying AVAX');
+  //   console.log('avalancheFujiPublicClient', avalancheFujiPublicClient);
+  //   console.log('avalancheFujiWalletClient', avalancheFujiWalletClient);
+  //   console.log('sonicTestnetPublicClient', sonicTestnetPublicClient);
+  //   console.log('sonicTestnetWalletClient', sonicTestnetWalletClient);
+
+  //   if (!avalancheFujiEvmSpokeProvider) {
+  //     throw new Error('avalancheFujiEvmSpokeProvider is not defined');
+  //   }
+  //   if (!sonicTestnetEvmHubProvider) {
+  //     throw new Error('sonicTestnetEvmHubProvider is not defined');
+  //   }
+
+  //   const token = '0x0000000000000000000000000000000000000000';
+  //   const amount = 100000000000000000n;
+  //   const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  //     BigInt(avalancheFujiEvmSpokeProvider.chainConfig.chain.id),
+  //     avalancheFujiEvmSpokeProvider.walletProvider.walletClient.account.address,
+  //     sonicTestnetEvmHubProvider,
+  //   );
+
+  //   console.log('hubWallet', hubWallet);
+
+  //   const data = MoneyMarketService.supplyData(
+  //     token,
+  //     hubWallet,
+  //     amount,
+  //     6, //avalancheFujiEvmSpokeProvider.chainConfig.chain.id,
+  //     moneyMarketConfig,
+  //   );
+
+  //   console.log('spokeProvider instanceof EvmSpokeProvider', avalancheFujiEvmSpokeProvider instanceof EvmSpokeProvider);
+  //   const txHash = await EvmSpokeService.deposit(
+  //     {
+  //       from: avalancheFujiEvmSpokeProvider.walletProvider.walletClient.account.address,
+  //       token,
+  //       amount,
+  //       data,
+  //     },
+  //     avalancheFujiEvmSpokeProvider,
+  //     sonicTestnetEvmHubProvider,
+  //   );
+
+  //   // EvmSpokeService.deposit(params as EvmSpokeDepositParams, spokeProvider, hubProvider);
+
+  //   console.log('[supply] txHash', txHash);
+
+  //   const txReceipt: TransactionReceipt = await waitForTransactionReceipt(
+  //     txHash,
+  //     sonicTestnetEvmHubProvider.walletProvider,
+  //   );
+
+  //   console.log(txReceipt);
+  // };
+
+  // const handleWithdrawAVAX = () => {
+  //   console.log('Withdrawing AVAX');
+  // };
+
+  // const { data: userReserves } = useQuery({
+  //   queryKey: ['userReserves', address],
+  //   queryFn: () =>
+  //     moneyMarket.getUserReservesData(
+  //       // '0x64a4Cbe09adEB70111B387483d85023Af867609D' as Address,
+  //       address as Address,
+  //       moneyMarketConfig.uiPoolDataProvider as Address,
+  //       moneyMarketConfig.poolAddressesProvider as Address,
+  //       // @ts-ignore
+  //       sonicTestnetEvmWallet,
+  //     ),
+  //   enabled: !!address && !!sonicTestnetEvmWallet,
+  //   refetchInterval: 1000,
+  // });
+
+  // console.log('userReserves', userReserves);
 
   return (
-    <div>
-      {/* Hero Section */}
-      <div className="h-[860px] flex flex-col items-center bg-[#A55C55] hero-section">
-        {/* Menu Bar */}
-        <div className="w-full flex justify-between items-center p-6 max-w-[1200px]">
-          <div className="flex items-center">
-            <Image
-              src="/symbol.png" // Path to the image in the public directory
-              alt="SODAX Symbol"
-              width={32} // Set the width of the image
-              height={32} // Set the height of the image
-            />
-            <span className="ml-2 font-black text-2xl text-white logo-word">SODAX</span>
-            <span className="ml-4 font-[InterBlack] text-[#EADED4] text-[12px] logo-desc">
-              The Unified Liquidity Layer
-            </span>
-          </div>
-          <div className="flex items-center">
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <Link href="/docs" passHref>
-                    <NavigationMenuLink className="text-white font-[InterMedium] text-[14px]">About</NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link href="/docs" passHref>
-                    <NavigationMenuLink className="text-white font-[InterMedium] text-[14px]">
-                      Partners
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link href="/docs" passHref>
-                    <NavigationMenuLink className="text-white font-[InterMedium] text-[14px]">
-                      Community
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            <Button className="w-[183px] h-[40px] bg-[#ECC100] text-[#9C4846] font-[Shrikhand] rounded-full ml-3 text-[16px] join-button">
-              join waitlist
-            </Button>
-          </div>
-        </div>
-        {/* Center Content */}
-        <div className="w-full flex justify-center h-[700px]">
-          <div className="text-center">
-            <div className="text-content mt-[130px]">
-              <div className="flex items-center">
-                <Label className="text-[12px] sm:text-[14px] md:text-[14px] lg:text-[18px] text-white  mr-5 font-[InterBold]">
-                  DeFi for all chains - built on
-                </Label>
-                <Image
-                  src="/sonic.png" // Path to the image in the public directory
-                  alt="Sonic Symbol"
-                  width={76} // Set the width of the image
-                  height={24} // Set the height of the image
-                />
+    <main className="">
+      <div className="container mx-auto p-4 mt-10">
+        {/* Market Selector */}
+        {/* <div className="mb-8 flex justify-center">
+          <Select>
+            <SelectTrigger className="w-[200px]">
+              <div className="flex items-center gap-2">
+                <SelectValue placeholder="Select a market" />
               </div>
-              <Label className="text-[60px] sm:text-[138px] md:text-[138px] lg:text-[184px] leading-none text-[#FFD92F] font-[InterBlack]">
-                LIQUIDITY
-              </Label>
-              <Label className="text-[26px] sm:text-[64px] md:text-[64px] lg:text-[56px] text-white mt-2 font-[InterBlack]">
-                when you need it.
-              </Label>
-            </div>
-            <div className="flex items-center mt-6 serving">
-              <Label className="font-medium text-[18px] font-[Shrikhand] text-white mr-3">serving</Label>
-              <div className="carousel-mask">
-                <Carousel
-                  opts={{
-                    align: 'start',
-                    loop: true,
-                  }}
-                  plugins={[
-                    Autoplay({
-                      delay: 2000,
-                    }),
-                  ]}
-                >
-                  <CarouselContent className="-ml-1 max-w-[150px]">
-                    {carouselItems.map(item => (
-                      <CarouselItem key={item.id} className="basis-1/5 pl-1">
-                        <Image src={item.src} alt={item.alt} width={24} height={24} />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
-              </div>
-              <Button className="w-[183px] h-[40px] bg-[#ECC100] text-[#9C4846] font-[Shrikhand] rounded-full ml-3 text-[16px]">
-                join waitlist
-              </Button>
-            </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="eth">Ethereum</SelectItem>
+              <SelectItem value="btc">Bitcoin</SelectItem>
+              <SelectItem value="usdt">USDT</SelectItem>
+            </SelectContent>
+          </Select>
+        </div> */}
+
+        {/* Main Content Grid */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Your Supplies */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Your supplies</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Asset</TableHead>
+                      <TableHead>Balance</TableHead>
+                      <TableHead>APY</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>AVAX</TableCell>
+                      <TableCell>10</TableCell>
+                      <TableCell>2%</TableCell>
+                      <TableCell>
+                        <Button variant="secondary" size="sm">
+                          Withdraw
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Assets to Supply */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Assets to supply</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Asset</TableHead>
+                      <TableHead>Balance</TableHead>
+                      <TableHead>APY</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>AVAX</TableCell>
+                      <TableCell>0</TableCell>
+                      <TableCell>2%</TableCell>
+                      <TableCell>
+                        <Button variant="secondary" size="sm">
+                          Supply 0.1 AVAX
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6 opacity-30">
+            {/* Your Borrows */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Your borrows</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Asset</TableHead>
+                      <TableHead>Balance</TableHead>
+                      <TableHead>APY</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>bnUSD</TableCell>
+                      <TableCell>10000</TableCell>
+                      <TableCell>7%</TableCell>
+                      <TableCell>
+                        <Button variant="secondary" size="sm">
+                          Repay
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            {/* Assets to Borrow */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Assets to borrow</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Asset</TableHead>
+                      <TableHead>Balance</TableHead>
+                      <TableHead>APY</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>ETH</TableCell>
+                      <TableCell>100</TableCell>
+                      <TableCell>3.5%</TableCell>
+                      <TableCell>
+                        <Button variant="secondary" size="sm">
+                          Borrow
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>WBTC</TableCell>
+                      <TableCell>10</TableCell>
+                      <TableCell>4.2%</TableCell>
+                      <TableCell>
+                        <Button variant="secondary" size="sm">
+                          Borrow
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>USDC</TableCell>
+                      <TableCell>1000000</TableCell>
+                      <TableCell>5.8%</TableCell>
+                      <TableCell>
+                        <Button variant="secondary" size="sm">
+                          Borrow
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-
-      {/* Section1 */}
-      <div className="h-[440px] md:h-[560px] flex flex-col items-center bg-[#F8F3F3] mt-2 section pt-[40px] sm:pt-[60px] section1">
-        <div className="flex items-center">
-          <Image
-            src="/symbol.png" // Path to the image in the public directory
-            alt="SODAX Symbol"
-            width={32} // Set the width of the image
-            height={32} // Set the height of the image
-          />
-          <span className="text-[24px] md:text-[42px] font-[InterBlack] ml-5">Savings product filler</span>
-        </div>
-        <Label className="text-[18px] font-[InterRegular] text-[#483534]">Banner description</Label>
-        <div className="mt-4">
-          <Button className="mr-2 bg-[#CC9E9A] rounded-full w-[133px] h-[40px]">Main CTA</Button>
-          <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-[#483534]">
-            Secondary CTA
-          </Button>
-        </div>
-      </div>
-
-      {/* Section2 */}
-      <div className="h-[440px] md:h-[560px] flex flex-col items-center bg-[#F8F3F3] mt-2 pt-[40px] sm:pt-[60px] section2">
-        <div className="flex items-center">
-          <Image
-            src="/symbol.png" // Path to the image in the public directory
-            alt="SODAX Symbol"
-            width={32} // Set the width of the image
-            height={32} // Set the height of the image
-          />
-          <span className="text-[24px] md:text-[42px] font-[InterBlack] ml-5">Swaps product filler</span>
-        </div>
-        <Label className="text-[18px] font-[InterRegular] text-[#483534]">Banner description</Label>
-        <div className="mt-4">
-          <Button className="mr-2 bg-[#CC9E9A] rounded-full w-[133px] h-[40px]">Main CTA</Button>
-          <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-[#483534]">
-            Secondary CTA
-          </Button>
-        </div>
-      </div>
-
-      {/* Section3 */}
-      <div className="flex flex-col lg:flex-row">
-        <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] radial-gradient-bg section-3-1 h-[440px] sm:h-[480px] mt-2">
-          <div className="flex items-center">
-            <Image src="/symbol4.png" alt="SODAX Symbol" width={32} height={32} />
-            <span className="text-[24px] md:text-[32px] font-[InterBlack] ml-5 text-[#FF9048]">Sonic Summit</span>
-          </div>
-          <Label className="text-[14px] font-[InterRegular] text-white">
-            Update copy to reflect the event took place.
-          </Label>
-          <div className="mt-4">
-            <Button className="mr-2 bg-white rounded-full w-[133px] h-[40px] text-black">Main CTA</Button>
-            <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-white">
-              Secondary CTA
-            </Button>
-          </div>
-          <Label className="text-[17px] font-bold font-[InterRegular] text-[#CC9E9A] mt-16">6-8 Vienna</Label>
-          <Label className="text-[46px] font-bold font-[InterRegular] text-[#FF9048] leading-none">MAY</Label>
-        </div>
-        <div className="w-full lg:w-1/2 flex flex-col items-center section-3-2 pt-[40px] sm:pt-[60px] bg-[#ECC100]  h-[440px] sm:h-[480px] mt-2 lg:ml-2">
-          <div className="flex items-center">
-            <Image src="/symbol1.png" alt="SODAX Symbol" width={32} height={32} />
-            <span className="text-[24px] md:text-[32px] font-[InterBlack] ml-5 text-[#9C4846]">Level up!</span>
-          </div>
-          <Label className="text-[14px] font-[InterRegular] text-black">Points with every order.</Label>
-          <div className="mt-4">
-            <Button className="w-[183px] h-[40px] bg-white text-[#9C4846] font-[Shrikhand] rounded-full ml-3 text-[16px]">
-              join waitlist
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Section4 */}
-      <div className="h-[440px] md:h-[560px] flex flex-col items-center bg-[#A55C55] mt-2 section pt-[40px] sm:pt-[60px] section4">
-        <div className="flex items-center">
-          <Image
-            src="/symbol.png" // Path to the image in the public directory
-            alt="SODAX Symbol"
-            width={32} // Set the width of the image
-            height={32} // Set the height of the image
-          />
-          <span className="text-[24px] md:text-[42px] font-[InterBlack] ml-5 text-[#FFD92F]">Not gas, but fire</span>
-        </div>
-        <Label className="text-[12px] md:text-[18px] font-[InterRegular] text-white">
-          All platform and partner fees burn $SODA supply.
-        </Label>
-        <div className="mt-4">
-          <Button className="mr-2 bg-white rounded-full w-[133px] h-[40px] text-black">Main CTA</Button>
-          <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-white">
-            Secondary CTA
-          </Button>
-        </div>
-      </div>
-
-      {/* Section5 */}
-      <div className="flex flex-col lg:flex-row">
-        <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] bg-[#A55C55] section-5-1 h-[440px] sm:h-[480px] mt-2">
-          <div className="flex items-center">
-            <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
-            <span className="text-[24px] md:text-[32px] font-[InterBlack] ml-5 text-[#FFD92F]">Reliable liquidity</span>
-          </div>
-          <Label className="text-[14px] font-[InterRegular] text-white">Owned by us. There for you.</Label>
-          <div className="mt-4">
-            <Button className="mr-2 bg-white rounded-full w-[133px] h-[40px] text-black">Main CTA</Button>
-            <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-white">
-              Secondary CTA
-            </Button>
-          </div>
-        </div>
-        <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] bg-[#A55C55] section-5-2 h-[440px] sm:h-[480px] mt-2 lg:ml-2">
-          <div className="flex items-center">
-            <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
-            <span className="text-[24px] md:text-[32px] font-[InterBlack] ml-5 text-[#FFD92F]">
-              13 chains in seconds
-            </span>
-          </div>
-          <Label className="text-[14px] font-[InterRegular] text-white">The best value. Delivered with Intents.</Label>
-          <div className="mt-4">
-            <Button className="mr-2 bg-white rounded-full w-[133px] h-[40px] text-black">Main CTA</Button>
-            <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-white">
-              Secondary CTA
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="h-[560px] flex lg:justify-center mt-2 bg-[#F8F3F3] footer pt-[80px]">
-        <div className="p-4 copy-right">
-          <div className="flex items-center">
-            <Image
-              src="/symbol2.png" // Path to the image in the public directory
-              alt="SODAX Symbol"
-              width={32} // Set the width of the image
-              height={32} // Set the height of the image
-            />
-            <span className="ml-2 font-black text-2xl text-[#CC9E8A]">SODAX</span>
-          </div>
-          <div>
-            <Label className="text-[12px] font-[InterMedium] text-[#CC9E8A] mt-5">
-              © 2025 ICON Foundation. All rights reserved.
-            </Label>
-          </div>
-        </div>
-        <div className="flex justify-around mt-4 menu-list">
-          <div className="list">
-            <Label className="font-[Shrikhand] text-[16px] text-[#CC9E9A]">using soda</Label>
-            <ul className="">
-              <Link href="/dashboard">Flagship Platform (Soon)</Link>
-              <Link href="/dashboard">Hana Wallet</Link>
-              <Link href="/dashboard">Balanced DeFi</Link>
-            </ul>
-          </div>
-          <div className="list">
-            <Label className="font-[Shrikhand] text-[16px] text-[#CC9E9A]">socials</Label>
-            <ul className="">
-              <Link href="/dashboard">Blog</Link>
-              <Link href="/dashboard">Discord</Link>
-              <Link href="/dashboard">X (Twitter)</Link>
-              <Link href="/dashboard">Linktree</Link>
-            </ul>
-          </div>
-          <div className="list">
-            <Label className="font-[Shrikhand] text-[16px] text-[#CC9E9A]">resources</Label>
-            <ul className="">
-              <Link href="/dashboard">Business Development</Link>
-              <Link href="/dashboard">Contact Us</Link>
-              <Link href="/dashboard">Media Kit</Link>
-              <Link href="/dashboard">Disclaimer</Link>
-              <Link href="/dashboard">Terms & Conditions</Link>
-            </ul>
-          </div>
-          <div className="list">
-            <Label className="font-[Shrikhand] text-[16px] text-[#CC9E9A]">more</Label>
-            <ul className="">
-              <Link href="/dashboard">CMC</Link>
-              <Link href="/dashboard">Binance Square</Link>
-              <Link href="/dashboard">DefiLlama</Link>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="min-h-[480px] bg-[#CC9E9A] bg-no-repeat bg-contain bg-center bg-bottom py-[80px] dialog-content">
-          <DialogHeader>
-            <div className="flex justify-center">
-              <Image
-                src="/symbol.png" // Path to the image in the public directory
-                alt="SODAX Symbol"
-                width={64} // Set the width of the image
-                height={64} // Set the height of the image
-              />
-            </div>
-            <DialogTitle className="text-center text-white text-[42px] mt-4 font-[InterBlack]">
-              SHAKE IT UP!
-            </DialogTitle>
-            <DialogDescription className="text-center text-white text-base">
-              SODAX Rewards Coming Soon.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid">
-            <div className="flex justify-center">
-              <Input
-                placeholder="Add your X handle"
-                className="border border-white h-[36px] w-full max-w-[280px] rounded-full border-4 border-white text-center custom-placeholder"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <div className="flex justify-center items-center w-full">
-              <Button
-                type="button"
-                className="bg-[#FFD92F] w-[188px] h-[40px] text-[#A55C55] rounded-full font-[Shrikhand]"
-              >
-                Pre-register
-              </Button>
-            </div>
-          </DialogFooter>
-          <div className="flex items-center justify-center space-x-2">
-            <Checkbox id="terms" className="rounded-full bg-white" />
-            <Label htmlFor="terms" className="text-white">
-              Accept terms and conditions
-            </Label>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+    </main>
   );
-};
-
-export default LandingPage;
+}
