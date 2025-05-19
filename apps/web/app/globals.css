@@ -38,6 +38,15 @@
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.871 0.006 286.286);
+  --Cherry-dark: #9C4846;
+  --Cherry-soda: #A55C55;
+  --Cherry-bright: #CC9E9A;
+  --Yellow-soda: #FFD92F;
+  --Yellow-dark: #ECC100;
+  --Orange-sonic: #FF9048;
+  --Almost-white: #F8F3F3;
+  --Espresso: #483534;
+  --Cream: #EADED4;
 }
 
 .dark {
@@ -73,6 +82,15 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.274 0.006 286.033);
   --sidebar-ring: oklch(0.442 0.017 285.786);
+  --Cherry-dark: #9C4846;
+  --Cherry-soda: #A55C55;
+  --Cherry-bright: #CC9E9A;
+  --Yellow-soda: #FFD92F;
+  --Yellow-dark: #ECC100;
+  --Orange-sonic: #FF9048;
+  --Almost-white: #F8F3F3;
+  --Espresso: #483534;
+  --Cream: #EADED4;
 }
 
 @theme inline {
@@ -112,6 +130,15 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-Cherry-dark: var(--Cherry-dark);
+  --color-Cherry-soda: var(--Cherry-soda);
+  --color-Cherry-bright: var(--Cherry-bright);
+  --color-Yellow-soda: var(--Yellow-soda);
+  --color-Yellow-dark: var(--Yellow-dark);
+  --color-Orange-sonic: var(--Orange-sonic);
+  --color-Almost-white: var(--Almost-white);
+  --color-Espresso: var(--Espresso);
+  --color-Cream: var(--Cream);
 }
 
 @layer base {
@@ -121,4 +148,45 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+
+@font-face {
+  font-family: 'Shrikhand';
+  src: url('/fonts/Shrikhand-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'InterBlack';
+  src: url('/fonts/Inter_18pt-Black.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'InterBold';
+  src: url('/fonts/Inter_18pt-Bold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'InterMedium';
+  src: url('/fonts/Inter_18pt-Medium.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'InterRegular';
+  src: url('/fonts/Inter_18pt-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
