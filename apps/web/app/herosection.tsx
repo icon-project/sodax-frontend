@@ -59,7 +59,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
         </div>
         <div className="flex items-center">
           {/* Navigation Menu and Button */}
-          <Button className="w-[183px] h-[40px] bg-yellow-dark text-Cherry-dark font-[Shrikhand] rounded-full ml-3 text-[16px] join-button">
+          <Button className="w-[183px] h-[40px] bg-yellow-dark text-cherry-dark font-[Shrikhand] rounded-full ml-3 text-[16px] join-button">
             join waitlist
           </Button>
           <div
@@ -124,7 +124,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
               </Carousel>
               <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
             </div>
-            <Button className="w-[183px] h-[40px] bg-yellow-dark text-Cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+            <Button className="w-[183px] h-[40px] bg-yellow-dark text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
               join waitlist
             </Button>
           </div>

@@ -38,11 +38,11 @@ const Section4 = () => {
           height={185}
         />
         <div className="flex items-center">
-          <span className="text-[24px] md:text-[32px] font-[InterBlack] text-Cherry-dark">Level up!</span>
+          <span className="text-[24px] md:text-[32px] font-[InterBlack] text-cherry-dark">Level up!</span>
         </div>
         <Label className="text-xs font-[InterRegular] text-black">Points with every order.</Label>
         <div className="mt-4">
-          <Button className="w-[183px] h-[40px] bg-white text-Cherry-dark font-[Shrikhand] rounded-full ml-3 text-[16px]">
+          <Button className="w-[183px] h-[40px] bg-white text-cherry-dark font-[Shrikhand] rounded-full ml-3 text-[16px]">
             join waitlist
           </Button>
         </div>
