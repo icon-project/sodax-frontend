@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const Section3 = () => {
   return (
-    <div className="h-[440px] md:h-[560px] flex flex-col items-center bg-Almost-white mt-2 pt-[40px] sm:pt-[60px] relative overflow-hidden bg-[url('/section2-1.png')] bg-no-repeat bg-bottom section3">
+    <div className="h-[440px] md:h-[560px] flex flex-col items-center bg-almost-white mt-2 pt-[40px] sm:pt-[60px] relative overflow-hidden bg-[url('/section2-1.png')] bg-no-repeat bg-bottom section3">
       <Image
         className="mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[670px] md:w-[990px] max-w-[990px]"
         src="/section2.png"
@@ -24,10 +24,10 @@ const Section3 = () => {
           <span className="text-Black text-[24px] md:text-5xl font-black font-['InterBlack'] leading-10"> anywhere</span>
         </div>
       </div>
-      <Label className="text-xs sm:text-[18px] font-[InterRegular] text-Espresso mt-3">Assets for all tastes. Solved at leading rates.</Label>
+      <Label className="text-xs sm:text-[18px] font-[InterRegular] text-espresso mt-3">Assets for all tastes. Solved at leading rates.</Label>
       <div className="mt-4">
         <Button className="h-10 px-6 rounded-3xl outline outline-4 outline-solid outline-offset-[-4px] outline-red inline-flex justify-end items-center gap-1.5 bg-transparent">
-          <div className="justify-start text-Espresso text-sm font-medium font-['InterMedium'] leading-tight z-10">Follow X for launch</div>
+          <div className="justify-start text-espresso text-sm font-medium font-['InterMedium'] leading-tight z-10">Follow X for launch</div>
         </Button>
       </div>
     </div>

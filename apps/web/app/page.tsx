@@ -75,7 +75,7 @@ const LandingPage = () => {
             <div className="flex justify-center items-center w-full">
               <Button
                 type="button"
-                className="bg-Yellow-soda w-[188px] h-[40px] text-Cherry-soda rounded-full font-[Shrikhand]"
+                className="bg-yellow-soda w-[188px] h-[40px] text-cherry-soda rounded-full font-[Shrikhand]"
               >
                 Pre-register
               </Button>

@@ -27,7 +27,7 @@ const carouselItems = [
 
 const HeroSection = ({ toggle, isOpen }) => {
   return (
-    <div className="h-[812px] sm:h-[860px] flex flex-col items-center bg-Cherry-soda relative overflow-hidden">
+    <div className="h-[812px] sm:h-[860px] flex flex-col items-center bg-cherry-soda relative overflow-hidden">
       <Image
         className="absolute top-[20px] -left-[40%] sm:-left-[15%] sm:-top-[20px] lg:left-[10%] lg:-top-[50px] w-[357px] h-[357px] sm:w-[701px] sm:h-[701px]"
         src="/circle1.png"
@@ -52,13 +52,13 @@ const HeroSection = ({ toggle, isOpen }) => {
             height={32}
           />
           <span className="ml-2 font-black text-2xl text-white logo-word hidden sm:flex">SODAX</span>
-          <span className="ml-4 font-[InterBlack] text-Cream text-[12px] hidden lg:flex">
+          <span className="ml-4 font-[InterBlack] text-cream text-[12px] hidden lg:flex">
             The Unified Liquidity Layer
           </span>
         </div>
         <div className="flex items-center">
           {/* Navigation Menu and Button */}
-          <Button className="w-[183px] h-[40px] bg-Yellow-dark text-Cherry-dark font-[Shrikhand] rounded-full ml-3 text-[16px] join-button">
+          <Button className="w-[183px] h-[40px] bg-yellow-dark text-Cherry-dark font-[Shrikhand] rounded-full ml-3 text-[16px] join-button">
             join waitlist
           </Button>
           <div
@@ -89,7 +89,7 @@ const HeroSection = ({ toggle, isOpen }) => {
                 height={24}
               />
             </div>
-            <Label className="mix-blend-hard-light text-[60px] sm:text-[90px] md:text-[138px] lg:text-[184px] leading-none text-Yellow-soda font-[InterBlack]">
+            <Label className="mix-blend-hard-light text-[60px] sm:text-[90px] md:text-[138px] lg:text-[184px] leading-none text-yellow-soda font-[InterBlack]">
               LIQUIDITY
             </Label>
             <div className="flex">
@@ -101,7 +101,7 @@ const HeroSection = ({ toggle, isOpen }) => {
           <div className="flex items-center mt-[350px] sm:mt-6 w-[300px] sm:w-full flex-wrap">
             <Label className="font-medium text-[18px] font-[Shrikhand] text-white mr-3">serving</Label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-Cherry-soda to-transparent z-10"></div>
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-cherry-soda to-transparent z-10"></div>
               <Carousel
                 opts={{
                   align: 'start',
@@ -121,9 +121,9 @@ const HeroSection = ({ toggle, isOpen }) => {
                   ))}
                 </CarouselContent>
               </Carousel>
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-Cherry-soda to-transparent z-10"></div>
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
             </div>
-            <Button className="w-[183px] h-[40px] bg-Yellow-dark text-Cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+            <Button className="w-[183px] h-[40px] bg-yellow-dark text-Cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
               join waitlist
             </Button>
           </div>

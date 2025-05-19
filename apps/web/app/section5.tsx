@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const Section5 = () => {
   return (
-    <div className="h-[440px] md:h-[560px] flex flex-col items-center bg-Cherry-soda mt-2 pt-[40px] sm:pt-[60px] relative overflow-hidden section5">
+    <div className="h-[440px] md:h-[560px] flex flex-col items-center bg-cherry-soda mt-2 pt-[40px] sm:pt-[60px] relative overflow-hidden section5">
       <Image
         className="mix-blend-screen absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[626px] md:w-[797px] max-w-[990px]"
         src="/section4.png"
@@ -22,8 +22,8 @@ const Section5 = () => {
         />
         <div className="inline-flex justify-center items-center gap-4">
           <div className="text-center justify-center">
-            <span className="text-Yellow-soda text-[24px] sm:text-5xl font-['InterBlack'] leading-10">Not gas, but </span>
-            <span className="text-Yellow-soda text-[24px] sm:text-5xl font-normal font-['Shrikhand'] leading-10">fire</span>
+            <span className="text-yellow-soda text-[24px] sm:text-5xl font-['InterBlack'] leading-10">Not gas, but </span>
+            <span className="text-yellow-soda text-[24px] sm:text-5xl font-normal font-['Shrikhand'] leading-10">fire</span>
           </div>
         </div>
       </div>

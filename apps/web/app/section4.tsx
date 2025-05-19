@@ -15,7 +15,7 @@ const Section4 = () => {
         />
         <div className="flex items-center">
           <Image src="/symbol4.png" alt="SODAX Symbol" width={32} height={32} />
-          <span className="text-[24px] md:text-[32px] font-[InterBlack] ml-5 text-Orange-sonic">Sonic Summit</span>
+          <span className="text-[24px] md:text-[32px] font-[InterBlack] ml-5 text-orange-sonic">Sonic Summit</span>
         </div>
         <Label className="text-xs font-[InterRegular] text-white">
           Update copy to reflect the event took place.
@@ -27,9 +27,9 @@ const Section4 = () => {
           </Button>
         </div>
         <Label className="text-[17px] font-bold font-[InterRegular] text-Cherry-bright mt-16">6-8 Vienna</Label>
-        <Label className="text-[46px] font-bold font-[InterRegular] text-Orange-sonic leading-none">MAY</Label>
+        <Label className="text-[46px] font-bold font-[InterRegular] text-orange-sonic leading-none">MAY</Label>
       </div>
-      <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] bg-Yellow-dark h-[440px] sm:h-[480px] mt-2 lg:ml-2 relative z-1">
+      <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] bg-yellow-dark h-[440px] sm:h-[480px] mt-2 lg:ml-2 relative z-1">
         <Image
           className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[398px] z-2"
           src="/section3-2.png"
