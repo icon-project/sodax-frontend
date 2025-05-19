@@ -67,18 +67,23 @@ const LandingPage = () => {
             <div className="flex justify-center">
               <input
                 placeholder="Add your X handle"
-                className="border border-white h-[36px] w-full max-w-[280px] rounded-full border-4 border-white text-center placeholder-white"
+                className="border border-white h-[36px] w-full max-w-[280px] text-cream rounded-full border-4 border-white text-center placeholder-white"
               />
             </div>
           </div>
           <DialogFooter>
             <div className="flex justify-center items-center w-full">
-              <Button
-                type="button"
-                className="bg-yellow-soda w-[188px] h-[40px] text-cherry-soda rounded-full font-[Shrikhand]"
-              >
-                Pre-register
-              </Button>
+              <div className="inline-flex justify-center items-start">
+                <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+                  Pre-register
+                </Button>
+                <div className="w-4 h-6 relative">
+                  <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-dark rounded-full" />
+                  <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-dark rounded-full" />
+                  <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-dark rounded-full" />
+                  <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-dark rounded-full" />
+                </div>
+             </div>
             </div>
           </DialogFooter>
           <div className="flex items-center justify-center space-x-2">

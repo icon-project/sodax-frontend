@@ -59,9 +59,17 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
         </div>
         <div className="flex items-center">
           {/* Navigation Menu and Button */}
-          <Button className="w-[183px] h-[40px] bg-yellow-dark text-cherry-dark font-[Shrikhand] rounded-full ml-3 text-[16px] join-button">
-            join waitlist
-          </Button>
+          <div className="inline-flex justify-center items-start">
+            <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+              join waitlist
+            </Button>
+            <div className="w-4 h-6 relative">
+              <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-dark rounded-full" />
+              <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-dark rounded-full" />
+              <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-dark rounded-full" />
+              <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-dark rounded-full" />
+            </div>
+          </div>
           <div
             className="flex lg:hidden ml-3 text-white"
             onClick={toggle}
@@ -124,9 +132,17 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
               </Carousel>
               <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
             </div>
-            <Button className="w-[183px] h-[40px] bg-yellow-dark text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
-              join waitlist
-            </Button>
+            <div className="inline-flex justify-center items-start">
+              <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+                join waitlist
+              </Button>
+              <div className="w-4 h-6 relative">
+                <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-dark rounded-full" />
+                <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-dark rounded-full" />
+                <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-dark rounded-full" />
+                <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-dark rounded-full" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
