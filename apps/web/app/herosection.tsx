@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
@@ -25,7 +26,7 @@ const carouselItems = [
     { id: 16, src: '/coin/base.png', alt: 'BASE' },
 ];
 
-const HeroSection = ({ toggle, isOpen }) => {
+const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }): React.ReactElement => {
   return (
     <div className="h-[812px] sm:h-[860px] flex flex-col items-center bg-cherry-soda relative overflow-hidden">
       <Image

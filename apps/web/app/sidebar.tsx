@@ -1,3 +1,4 @@
+import React from 'react';
 import Link from "next/link";
 
 const Sidebar = ({
@@ -6,7 +7,7 @@ const Sidebar = ({
 }: {
   isOpen: boolean;
   toggle: () => void;
-}): JSX.Element => {
+}): React.ReactElement => {
   return (
     <>
       <div
