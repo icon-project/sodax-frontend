@@ -65,14 +65,14 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
     sonicEvmHubProvider,
   );
   console.log(suiSpokeProvider.getWalletAddress())
-  // const data = EvmAssetManagerService.depositToData(
-  //   {
-  //     token,
-  //     to: recipient,
-  //     amount,
-  //   },
-  //   suiSpokeProvider.chainConfig.chain.id,
-  // );
+  const data = EvmAssetManagerService.depositToData(
+    {
+      token,
+      to: recipient,
+      amount,
+    },
+    suiSpokeProvider.chainConfig.chain.id,
+  );
 
 
   const txHash: Hash = await SpokeService.deposit(
@@ -80,7 +80,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
       from: suiSpokeProvider.getWalletAddressBytes(),
       token,
       amount,
-      data:"0x",
+      data,
     },
     suiSpokeProvider,
     sonicEvmHubProvider,
