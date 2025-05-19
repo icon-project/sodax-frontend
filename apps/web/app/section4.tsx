@@ -21,7 +21,7 @@ const Section4 = () => {
           Update copy to reflect the event took place.
         </Label>
         <div className="mt-4">
-          <Button className="mr-2 rounded-full w-[133px] h-[40px]" variant="subtle">Main CTA11</Button>
+          <Button className="mr-2 rounded-full w-[133px]" variant="subtle" size="lg">Main CTA</Button>
           <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-white">
             Secondary CTA
           </Button>
