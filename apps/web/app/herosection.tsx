@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Sidebar from "./sidebar";
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
+import { NavigationMenu, NavigationMenuLink, NavigationMenuList, NavigationMenuItem } from '@/components/ui/navigation-menu';
 
 const carouselItems = [
     { id: 1, src: '/coin/sui.png', alt: 'SUI' },
@@ -59,6 +60,27 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
         </div>
         <div className="flex items-center">
           {/* Navigation Menu and Button */}
+            <ul className='hidden lg:flex gap-4'>
+                <li>
+                  <Link href="/docs" passHref>
+                    <span className="text-white font-[InterMedium] text-[14px]">About</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/docs" passHref>
+                    <span className="text-white font-[InterMedium] text-[14px]">
+                      Partners
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/docs" passHref>
+                    <span className="text-white font-[InterMedium] text-[14px]">
+                      Community
+                    </span>
+                  </Link>
+                </li>
+            </ul>
           <div className="inline-flex justify-center items-start">
             <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
               join waitlist
