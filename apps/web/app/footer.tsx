@@ -13,17 +13,17 @@ const Footer = () => {
             width={32}
             height={32}
           />
-          <span className="ml-2 font-black text-2xl text-Cherry-bright">SODAX</span>
+          <span className="ml-2 font-black text-2xl text-cherry-bright">SODAX</span>
         </div>
         <div>
-          <Label className="text-[12px] font-[InterMedium] text-Cherry-bright mt-5">
+          <Label className="text-[12px] font-[InterMedium] text-cherry-bright mt-5">
             © 2025 ICON Foundation. All rights reserved.
           </Label>
         </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 ml-[32px] font-['InterMedium']">
         <div className="list">
-          <Label className="font-[Shrikhand] text-[16px] text-Cherry-bright">using soda</Label>
+          <Label className="font-[Shrikhand] text-[16px] text-cherry-bright">using soda</Label>
           <ul className="text-xs grid gap-y-1.5">
             <Link href="/dashboard">Flagship Platform (Soon)</Link>
             <Link href="/dashboard">Hana Wallet</Link>
@@ -31,7 +31,7 @@ const Footer = () => {
           </ul>
         </div>
         <div className="list">
-          <Label className="font-[Shrikhand] text-[16px] text-Cherry-bright">socials</Label>
+          <Label className="font-[Shrikhand] text-[16px] text-cherry-bright">socials</Label>
           <ul className="text-xs grid gap-y-1.5">
             <Link href="/dashboard">Blog</Link>
             <Link href="/dashboard">Discord</Link>
@@ -40,7 +40,7 @@ const Footer = () => {
           </ul>
         </div>
         <div className="list">
-          <Label className="font-[Shrikhand] text-[16px] text-Cherry-bright">resources</Label>
+          <Label className="font-[Shrikhand] text-[16px] text-cherry-bright">resources</Label>
           <ul className="text-xs grid gap-y-1.5">
             <Link href="/dashboard" className="justify-start text-black text-xs">Business Development</Link>
             <Link href="/dashboard">Contact Us</Link>
@@ -50,7 +50,7 @@ const Footer = () => {
           </ul>
         </div>
         <div className="list">
-          <Label className="font-[Shrikhand] text-[16px] text-Cherry-bright">more</Label>
+          <Label className="font-[Shrikhand] text-[16px] text-cherry-bright">more</Label>
           <ul className="text-xs grid gap-y-1.5">
             <Link href="/dashboard">CMC</Link>
             <Link href="/dashboard">Binance Square</Link>

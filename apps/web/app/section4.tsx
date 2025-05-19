@@ -26,7 +26,7 @@ const Section4 = () => {
             Secondary CTA
           </Button>
         </div>
-        <Label className="text-[17px] font-bold font-[InterRegular] text-Cherry-bright mt-16">6-8 Vienna</Label>
+        <Label className="text-[17px] font-bold font-[InterRegular] text-cherry-bright mt-16">6-8 Vienna</Label>
         <Label className="text-[46px] font-bold font-[InterRegular] text-orange-sonic leading-none">MAY</Label>
       </div>
       <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] bg-yellow-dark h-[440px] sm:h-[480px] mt-2 lg:ml-2 relative z-1">

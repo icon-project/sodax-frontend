@@ -40,7 +40,7 @@
   --sidebar-ring: oklch(0.871 0.006 286.286);
   --Cherry-dark: #9C4846;
   --cherry-soda: #A55C55;
-  --Cherry-bright: #CC9E9A;
+  --cherry-bright: #CC9E9A;
   --yellow-soda: #FFD92F;
   --yellow-dark: #ECC100;
   --orange-sonic: #FF9048;
@@ -84,7 +84,7 @@
   --sidebar-ring: oklch(0.442 0.017 285.786);
   --Cherry-dark: #9C4846;
   --cherry-soda: #A55C55;
-  --Cherry-bright: #CC9E9A;
+  --cherry-bright: #CC9E9A;
   --yellow-soda: #FFD92F;
   --yellow-dark: #ECC100;
   --orange-sonic: #FF9048;
@@ -132,7 +132,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-Cherry-dark: var(--Cherry-dark);
   --color-cherry-soda: var(--cherry-soda);
-  --color-Cherry-bright: var(--Cherry-bright);
+  --color-cherry-bright: var(--cherry-bright);
   --color-yellow-soda: var(--yellow-soda);
   --color-yellow-dark: var(--yellow-dark);
   --color-orange-sonic: var(--orange-sonic);
