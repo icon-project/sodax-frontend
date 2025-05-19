@@ -19,9 +19,7 @@ const Section6 = () => {
         </div>
         <Label className="text-xs font-[InterRegular] text-white">Owned by us. There for you.</Label>
         <div className="mt-4 z-10">
-          <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-white z-10">
-            Learn more
-          </Button>
+          <Button variant="ghost" className="px-6 font-['InterMedium']" size="lg">Learn more</Button>
         </div>
       </div>
       <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] bg-cherry-soda h-[440px] sm:h-[480px] mt-2 lg:ml-2 relative overflow-hidden">
@@ -42,9 +40,7 @@ const Section6 = () => {
         </div>
         <Label className="text-xs font-[InterRegular] text-white">The best value. Delivered with Intents.</Label>
         <div className="mt-4">
-          <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-white">
-            Learn more
-          </Button>
+          <Button variant="ghost" className="px-6 font-['InterMedium']" size="lg">Learn more</Button>
         </div>
       </div>
     </div>

@@ -26,9 +26,7 @@ const Section1 = () => {
       </div>
       <Label className="text-xs sm:text-[18px] font-[InterRegular] text-espresso mt-3">Supply for a fully carbonated future.</Label>
       <div className="mt-4">
-        <Button className="h-10 px-6 rounded-3xl outline outline-4 outline-solid outline-offset-[-4px] outline-red inline-flex justify-end items-center gap-1.5 bg-transparent">
-          <div className="justify-start text-espresso text-sm font-medium font-['InterMedium'] leading-tight z-10">Follow X for launch</div>
-        </Button>
+        <Button variant="outline" className="px-6 font-['InterMedium']" size="lg">Follow X for launch</Button>
       </div>
     </div>
   );

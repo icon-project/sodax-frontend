@@ -22,10 +22,8 @@ const Section4 = () => {
         </Label>
         <div className="mt-4">
           <Button className="mr-2 rounded-full w-[133px]" variant="subtle" size="lg">Main CTA</Button>
-          <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-white">
-            Secondary CTA
-          </Button>
-        </div>
+          <Button variant="ghost" className="px-6 font-['InterMedium']" size="lg">Secondary CTA</Button>
+          </div>
         <Label className="text-[17px] font-bold font-[InterRegular] text-cherry-bright mt-16">6-8 Vienna</Label>
         <Label className="text-[46px] font-bold font-[InterRegular] text-orange-sonic leading-none">MAY</Label>
       </div>

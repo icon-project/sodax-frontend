@@ -31,11 +31,9 @@ const Section5 = () => {
         All platform and partner fees burn $SODA supply.
       </Label>
       <div className="mt-4 z-10">
-        <Button className="mr-2 bg-white rounded-full w-[133px] h-[40px] text-black">Learn more</Button>
-        <Button className="bg-[transparent] border-4 rounded-full w-[152px] h-[40px] text-white">
-          Secondary CTA
-        </Button>
-      </div>
+        <Button className="mr-2 rounded-full w-[133px]" variant="subtle" size="lg">Learn more</Button>
+        <Button variant="ghost" className="px-6 font-['InterMedium']" size="lg">Secondary CTA</Button>
+        </div>
     </div>
   );
 };
