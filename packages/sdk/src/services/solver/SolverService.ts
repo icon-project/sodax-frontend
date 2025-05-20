@@ -15,6 +15,8 @@ import {
   type WaitUntilIntentExecutedPayload,
   calculateFeeAmount,
   getIntentRelayChainId,
+  getSpokeChainIdFromIntentRelayChainId,
+  isValidIntentRelayChainId,
   isValidOriginalAssetAddress,
   isValidSpokeChainId,
   spokeChainConfig,
@@ -244,8 +246,8 @@ export class SolverService {
     payload: CreateIntentParams,
     spokeProvider: T,
     hubProvider: HubProvider,
-    timeout = 20000,
     fee?: PartnerFee,
+    timeout = 20000,
   ): Promise<Result<[IntentExecutionResponse, Intent], IntentSubmitError<IntentSubmitErrorCode>>> {
     try {
       const createIntentResult = await this.createIntent(payload, spokeProvider, hubProvider, fee, false);
@@ -333,7 +335,7 @@ export class SolverService {
   /**
    * Creates an intent by handling token approval and intent creation
    * NOTE: This method does not submit the intent to the Solver API
-   * @param {CreateIntentParams} createIntentParams - The intent to create
+   * @param {CreateIntentParams} params - The intent to create
    * @param {ISpokeProvider} spokeProvider - The spoke provider
    * @param {HubProvider} hubProvider - The hub provider
    * @param {boolean} raw - Whether to return the raw transaction
@@ -341,53 +343,53 @@ export class SolverService {
    * @returns {Promise<[TxReturnType<T, R>, Intent]>} The encoded contract call
    */
   public async createIntent<R extends boolean = false>(
-    createIntentParams: CreateIntentParams,
+    params: CreateIntentParams,
     spokeProvider: SpokeProvider,
     hubProvider: HubProvider,
     fee?: PartnerFee,
     raw?: R,
   ): Promise<Result<[TxReturnType<SpokeProvider, R>, Intent & FeeAmount], IntentSubmitError<'CREATION_FAILED'>>> {
     invariant(
-      isValidOriginalAssetAddress(createIntentParams.srcChain, createIntentParams.inputToken),
-      `Unsupported spoke chain token (intent.inputToken): ${createIntentParams.inputToken}`,
+      isValidOriginalAssetAddress(params.srcChain, params.inputToken),
+      `Unsupported spoke chain token (params.srcChain): ${params.srcChain}, params.inputToken): ${params.inputToken}`,
     );
     invariant(
-      isValidOriginalAssetAddress(createIntentParams.dstChain, createIntentParams.outputToken),
-      `Unsupported spoke chain token (intent.outputToken): ${createIntentParams.outputToken}`,
+      isValidOriginalAssetAddress(params.dstChain, params.outputToken),
+      `Unsupported spoke chain token (params.dstChain): ${params.dstChain}, params.outputToken): ${params.outputToken}`,
     );
     invariant(
-      isValidSpokeChainId(createIntentParams.srcChain),
-      `Invalid spoke chain (intent.srcChain): ${createIntentParams.srcChain}`,
+      isValidSpokeChainId(params.srcChain),
+      `Invalid spoke chain (params.srcChain): ${params.srcChain}`,
     );
     invariant(
-      isValidSpokeChainId(createIntentParams.dstChain),
-      `Invalid spoke chain (intent.dstChain): ${createIntentParams.dstChain}`,
+      isValidSpokeChainId(params.dstChain),
+      `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
     );
 
     try {
       // derive users hub wallet address
       const creatorHubWalletAddress = await EvmWalletAbstraction.getUserWallet(
-        createIntentParams.srcChain,
+        params.srcChain,
         spokeProvider.walletProvider.getWalletAddressBytes(),
         hubProvider,
       );
 
       // construct the intent data
       const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
-        createIntentParams,
+        params,
         creatorHubWalletAddress,
         this.config,
         fee,
       );
 
-      const srcSpokeChainConfig = spokeChainConfig[createIntentParams.srcChain];
+      const srcSpokeChainConfig = spokeChainConfig[params.srcChain];
       let response: TxReturnType<SpokeProvider, R>;
 
       switch (srcSpokeChainConfig.chain.type) {
         case 'evm':
           if (spokeProvider instanceof EvmSpokeProvider) {
             const txResult = await EvmSolverService.createIntentDeposit(
-              createIntentParams,
+              params,
               creatorHubWalletAddress,
               spokeProvider,
               hubProvider,
@@ -405,7 +407,7 @@ export class SolverService {
         case 'solana':
           if (spokeProvider instanceof SolanaSpokeProvider) {
             const txResult = await SolanaSolverService.createIntentDeposit(
-              createIntentParams,
+              params,
               creatorHubWalletAddress,
               spokeProvider,
               hubProvider,
@@ -423,7 +425,7 @@ export class SolverService {
         case 'stellar':
           if (spokeProvider instanceof StellarSpokeProvider) {
             const txResult = await StellarSolverService.createIntentDeposit(
-              createIntentParams,
+              params,
               creatorHubWalletAddress,
               spokeProvider,
               hubProvider,
@@ -441,7 +443,7 @@ export class SolverService {
         case 'cosmos':
           if (spokeProvider instanceof CWSpokeProvider) {
             const txResult = await CWSolverService.createIntentDeposit(
-              createIntentParams,
+              params,
               creatorHubWalletAddress,
               spokeProvider,
               hubProvider,
@@ -459,7 +461,7 @@ export class SolverService {
         case 'icon':
           if (spokeProvider instanceof IconSpokeProvider) {
             const txResult = await IconSolverService.createIntentDeposit(
-              createIntentParams,
+              params,
               creatorHubWalletAddress,
               spokeProvider,
               hubProvider,
@@ -477,7 +479,7 @@ export class SolverService {
         case 'sui':
           if (spokeProvider instanceof SuiSpokeProvider) {
             const txResult = await SuiSolverService.createIntentDeposit(
-              createIntentParams,
+              params,
               creatorHubWalletAddress,
               spokeProvider,
               hubProvider,
@@ -493,7 +495,7 @@ export class SolverService {
 
           break;
         default:
-          throw new Error(`Unsupported spoke chain type for srcChain: ${createIntentParams.srcChain}`);
+          throw new Error(`Unsupported spoke chain type for srcChain: ${params.srcChain}`);
       }
 
       return {
@@ -506,7 +508,7 @@ export class SolverService {
         error: {
           code: 'CREATION_FAILED',
           data: {
-            payload: createIntentParams,
+            payload: params,
             error: error,
           },
         },
@@ -529,15 +531,15 @@ export class SolverService {
     raw?: R,
   ): Promise<TxReturnType<T, R>> {
     invariant(
-      isValidSpokeChainId(Number(intent.srcChain)),
-      `Invalid spoke chain (intent.srcChain): ${intent.srcChain}`,
+      isValidIntentRelayChainId(intent.srcChain),
+      `Invalid intent.srcChain: ${intent.srcChain}`,
     );
     invariant(
-      isValidSpokeChainId(Number(intent.dstChain)),
-      `Invalid spoke chain (intent.dstChain): ${intent.dstChain}`,
+      isValidIntentRelayChainId(intent.dstChain),
+      `Invalid intent.dstChain: ${intent.dstChain}`,
     );
 
-    const srcSpokeChainConfig = spokeChainConfig[Number(intent.srcChain) as SpokeChainId];
+    const srcSpokeChainConfig = spokeChainConfig[getSpokeChainIdFromIntentRelayChainId(intent.srcChain)];
 
     switch (srcSpokeChainConfig.chain.type) {
       case 'evm':

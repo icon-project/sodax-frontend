@@ -2,14 +2,11 @@ import type { Address } from 'viem';
 import {
   type EvmContractCall,
   type EvmHubProvider,
-  type FeeAmount,
   type Hex,
   type IconAddress,
   type IconSpokeProvider,
-  type PartnerFee,
   type SolverConfig,
   type TxReturnType,
-  calculateFeeAmount,
   encodeContractCalls,
 } from '../../index.js';
 import { type CreateIntentParams, type Intent, SpokeService } from '../index.js';
