@@ -9,7 +9,6 @@ import {
   INJECTIVE_MAINNET_CHAIN_ID,
   INJECTIVE_TESTNET_CHAIN_ID,
   InjectiveWalletProvider,
-  type MoneyMarketConfig,
   MoneyMarketService,
   SONIC_MAINNET_CHAIN_ID,
   SONIC_TESTNET_CHAIN_ID,
@@ -78,7 +77,7 @@ const cosmosWalletProvider =
 
 const cwSpokeProvider = new CWSpokeProvider(cosmosConfig, cosmosWalletProvider);
 
-const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
+const moneyMarketService = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
 
 async function depositTo(token: string, amount: bigint, recipient: Address) {
   const data = EvmAssetManagerService.depositToData(
@@ -134,12 +133,11 @@ async function supply(token: string, amount: bigint) {
     sonicEvmHubProvider,
   );
 
-  const data = MoneyMarketService.supplyData(
+  const data = moneyMarketService.supplyData(
     token,
     hubWallet,
     amount,
     cwSpokeProvider.chainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash = await SpokeService.deposit(
@@ -163,14 +161,13 @@ async function borrow(token: string, amount: bigint) {
     sonicEvmHubProvider,
   );
   console.log(hubWallet);
-  const data: Hex = MoneyMarketService.borrowData(
+  const data: Hex = moneyMarketService.borrowData(
     hubWallet,
     cwSpokeProvider.walletProvider.getWalletAddressBytes(),
     token,
     amount,
     cwSpokeProvider.chainConfig.chain.id,
     sonicEvmHubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -190,14 +187,13 @@ async function withdraw(token: string, amount: bigint) {
     sonicEvmHubProvider,
   );
 
-  const data: Hex = MoneyMarketService.withdrawData(
+  const data: Hex = moneyMarketService.withdrawData(
     hubWallet,
     cwSpokeProvider.walletProvider.getWalletAddressBytes(),
     token,
     amount,
     cwSpokeProvider.chainConfig.chain.id,
     sonicEvmHubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -216,12 +212,11 @@ async function repay(token: string, amount: bigint) {
     cwSpokeProvider.walletProvider.getWalletAddressBytes(),
     sonicEvmHubProvider,
   );
-  const data: Hex = MoneyMarketService.repayData(
+  const data: Hex = moneyMarketService.repayData(
     token,
     hubWallet,
     amount,
     cwSpokeProvider.chainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.deposit(

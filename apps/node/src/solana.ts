@@ -9,7 +9,6 @@ import {
   EvmHubProvider,
   EvmWalletAbstraction,
   EvmWalletProvider,
-  type MoneyMarketConfig,
   MoneyMarketService,
   SONIC_TESTNET_CHAIN_ID,
   type SolanaChainConfig,
@@ -56,7 +55,7 @@ const solanaSpokeProvider = new SolanaSpokeProvider(solanaWallet, solanaSpokeCha
 const HubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const sonicEvmHubProvider = new EvmHubProvider(sonicTestnetEvmWallet, HubChainConfig);
 
-const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
+const moneyMarketService: MoneyMarketService = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
 
 const relayerBackendUrl = IS_TESTNET
   ? 'https://53naa6u2qd.execute-api.us-east-1.amazonaws.com/test'
@@ -182,12 +181,11 @@ async function withdrawAsset(token: PublicKey, amount: bigint, recipient: Addres
 async function supply(token: PublicKey, amount: bigint) {
   const hubWallet = await getUserWallet();
 
-  const data = MoneyMarketService.supplyData(
+  const data = moneyMarketService.supplyData(
     token.toString(),
     hubWallet,
     amount,
     solanaSpokeChainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash = await SpokeService.deposit(
@@ -210,14 +208,13 @@ async function supply(token: PublicKey, amount: bigint) {
 async function borrow(token: PublicKey, amount: bigint) {
   const hubWallet = await getUserWallet();
 
-  const data: Hex = MoneyMarketService.borrowData(
+  const data: Hex = moneyMarketService.borrowData(
     hubWallet,
     solanaSpokeProvider.walletProvider.getWalletAddressBytes(),
     token.toString(),
     amount,
     solanaSpokeChainConfig.chain.id,
     sonicEvmHubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -237,14 +234,13 @@ async function borrow(token: PublicKey, amount: bigint) {
 async function withdraw(token: PublicKey, amount: bigint) {
   const hubWallet = await getUserWallet();
 
-  const data: Hex = MoneyMarketService.withdrawData(
+  const data: Hex = moneyMarketService.withdrawData(
     hubWallet,
     solanaSpokeProvider.walletProvider.getWalletAddressBytes(),
     token.toString(),
     amount,
     solanaSpokeChainConfig.chain.id,
     sonicEvmHubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -264,12 +260,11 @@ async function withdraw(token: PublicKey, amount: bigint) {
 async function repay(token: PublicKey, amount: bigint) {
   const hubWallet = await getUserWallet();
 
-  const data: Hex = MoneyMarketService.repayData(
+  const data: Hex = moneyMarketService.repayData(
     token.toString(),
     hubWallet,
     amount,
     solanaSpokeChainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.deposit(

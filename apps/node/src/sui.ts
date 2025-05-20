@@ -2,7 +2,6 @@ import type { Address, Hash, Hex } from 'viem';
 import {
   EvmAssetManagerService,
   EvmHubProvider,
-  type MoneyMarketConfig,
   MoneyMarketService,
   EvmWalletAbstraction,
   EvmWalletProvider,
@@ -51,7 +50,7 @@ if (!suiWalletMnemonics) {
 const suiwalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
 const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiwalletProvider);
 
-const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
+const moneyMarketService: MoneyMarketService = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
 
 async function getBalance(token: string) {
   const balance = await suiSpokeProvider.getBalance(token);
@@ -118,12 +117,11 @@ async function supply(token: string, amount: bigint) {
     sonicEvmHubProvider,
   );
 
-  const data = MoneyMarketService.supplyData(
+  const data = moneyMarketService.supplyData(
     token,
     hubWallet,
     amount,
     suiSpokeProvider.chainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash = await SpokeService.deposit(
@@ -147,14 +145,13 @@ async function borrow(token: string, amount: bigint) {
     sonicEvmHubProvider,
   );
   console.log(hubWallet);
-  const data: Hex = MoneyMarketService.borrowData(
+  const data: Hex = moneyMarketService.borrowData(
     hubWallet,
     suiSpokeProvider.getWalletAddressBytes(),
     token,
     amount,
     suiSpokeProvider.chainConfig.chain.id,
     sonicEvmHubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -174,14 +171,13 @@ async function withdraw(token: string, amount: bigint) {
     sonicEvmHubProvider,
   );
 
-  const data: Hex = MoneyMarketService.withdrawData(
+  const data: Hex = moneyMarketService.withdrawData(
     hubWallet,
     suiSpokeProvider.getWalletAddressBytes(),
     token,
     amount,
     suiSpokeProvider.chainConfig.chain.id,
     sonicEvmHubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -200,12 +196,11 @@ async function repay(token: string, amount: bigint) {
     suiSpokeProvider.getWalletAddressBytes(),
     sonicEvmHubProvider,
   );
-  const data: Hex = MoneyMarketService.repayData(
+  const data: Hex = moneyMarketService.repayData(
     token,
     hubWallet,
     amount,
     suiSpokeProvider.chainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.deposit(
