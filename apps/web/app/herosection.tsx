@@ -103,7 +103,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
           <div className="flex items-center">
             <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
             <span className="ml-2 font-black text-2xl text-white logo-word hidden sm:flex">SODAX</span>
-            <span className="ml-8 mt-2 font-[InterBold] text-cream text-[12px] hidden lg:flex">
+            <span className="ml-8 mt-[2px] font-[InterBold] text-cream text-[12px] hidden lg:flex">
               The Unified Liquidity Layer
             </span>
           </div>
@@ -132,8 +132,8 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 </Link>
               </li>
             </ul>
-            <div className="inline-flex justify-center items-start relative mr-2 ml-3">
-              <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 sm:ml-3 sm:mt-[0px] text-[16px] z-10 pt-[11px]">
+            <div className="inline-flex justify-center items-start relative mr-2 ml-5">
+              <Button onClick={() => setIsDialogOpen(true)} className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 sm:ml-3 sm:mt-[0px] text-[16px] z-10 pt-[11px]">
                 join waitlist
               </Button>
               <div className="w-4 h-6 absolute -right-[15px] top-[0px]">
