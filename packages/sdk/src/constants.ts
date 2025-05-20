@@ -593,7 +593,7 @@ export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
       connection:
         '0xf3b1e696a66d02cb776dc15aae73c68bc8f03adcb6ba0ec7f6332d9d90a6a3d2::connectionv3::0x3ee76d13909ac58ae13baab4c9be5a5142818d9a387aed641825e5d4356969bf',
       assetManager:
-        '0xa17a409164d1676db71b411ab50813ba2c7dd547d2df538c699049566f1ff922::asset_manager::0xcb7346339340b7f8dea40fcafb70721dc2fcfa7e8626a89fd954d46c1f928b61',
+        '0x897f911a4b7691870a1a2513af7e85fdee8de275615c77068fd8b90b8e78c678::asset_manager::0xcb7346339340b7f8dea40fcafb70721dc2fcfa7e8626a89fd954d46c1f928b61',
       xTokenManager: '',
       rateLimit: '',
       testToken: '',
@@ -613,7 +613,7 @@ export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
       connection:
         '0xc0e61f9b2ba05922e1abe8656d6d5480b22eae084896bfbdf2ba54eb5eeb37e3::connectionv3::0xeb94ea14a2e1b012c9720cfb1b63f5d49c40aceb1b4eb0bc1006c93464162188',
       assetManager:
-        '0x62f46afdc46ca87549e6655565dffb2913d4d8e97ad953f959d49bbcd4787f4d::asset_manager::0x42bef60a77ecee7973b790ab9477bce62d834208cac19b5ed21849d54097b685',
+        '0x4205e34a4025ba6fc4c8d30e457768e6a153005c443af857d7e7bafdbb704345::asset_manager::0x42bef60a77ecee7973b790ab9477bce62d834208cac19b5ed21849d54097b685',
       xTokenManager: '',
       rateLimit: '',
       testToken:
