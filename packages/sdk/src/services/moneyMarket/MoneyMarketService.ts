@@ -1,12 +1,11 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { poolAbi } from '../../abis/pool.abi.js';
 import type { EvmHubProvider, EvmWalletProvider } from '../../entities/index.js';
-import { FEE_PERCENTAGE_SCALE, hubAssets, isPartnerFeeAmount, isPartnerFeePercentage, uiPoolDataAbi } from '../../index.js';
+import { hubAssets, uiPoolDataAbi } from '../../index.js';
 import type { EvmContractCall, MoneyMarketConfig, SpokeChainId, PartnerFee } from '../../types.js';
-import { calculatePercentageFeeAmount, encodeContractCalls } from '../../utils/index.js';
+import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';
-import invariant from 'tiny-invariant';
 
 export type AggregatedReserveData = {
   underlyingAsset: Address;
@@ -173,17 +172,7 @@ export class MoneyMarketService {
       throw new Error('Address not found');
     }
 
-    let feeAmount:  bigint | undefined;
-    if (isPartnerFeeAmount(fee)) {
-      feeAmount = fee.amount;
-    } else if (isPartnerFeePercentage(fee)) {
-      invariant(
-        fee.percentage >= 0 && fee.percentage <= FEE_PERCENTAGE_SCALE,
-        `Fee percentage must be between 0 and ${FEE_PERCENTAGE_SCALE}}`,
-      );
-
-      feeAmount = calculatePercentageFeeAmount(amount, fee.percentage);
-    }
+    const feeAmount = calculateFeeAmount(amount, fee);
 
     if (bnUSDVault && bnUSD && bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
       calls.push(
@@ -194,8 +183,9 @@ export class MoneyMarketService {
       );
       calls.push(Erc20Service.encodeApprove(bnUSD, bnUSDVault, amount));
       calls.push(EvmVaultTokenService.encodeDeposit(bnUSDVault, bnUSD, amount));
+
       if (fee && feeAmount) {
-        calls.push(Erc20Service.encodeTansfer(bnUSDVault, fee?.address, feeAmount))
+        calls.push(Erc20Service.encodeTansfer(bnUSDVault, fee.address, feeAmount))
       }
     } else {
       calls.push(
@@ -204,13 +194,14 @@ export class MoneyMarketService {
           moneyMarketConfig.lendingPool,
         ),
       );
+
       if (fee && feeAmount) {
-        calls.push(Erc20Service.encodeTansfer(vaultAddress, fee?.address, feeAmount))
+        calls.push(Erc20Service.encodeTansfer(vaultAddress, fee.address, feeAmount))
       }
     }
 
-    calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount));
-    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount);
+    calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount - feeAmount));
+    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount - feeAmount);
 
     calls.push(
       EvmAssetManagerService.encodeTransfer(

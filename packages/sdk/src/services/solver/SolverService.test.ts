@@ -10,6 +10,7 @@ import {
   EvmSpokeProvider,
   EvmWalletAbstraction,
   EvmWalletProvider,
+  type FeeAmount,
   type ISpokeProvider,
   type Intent,
   IntentErrorCode,
@@ -18,6 +19,8 @@ import {
   type IntentExecutionResponse,
   type IntentQuoteRequest,
   type IntentStatusRequest,
+  type IntentSubmitError,
+  type PartnerFee,
   type Result,
   SONIC_MAINNET_CHAIN_ID,
   type SolverConfig,
@@ -92,6 +95,11 @@ describe('SolverService', () => {
   });
 
   const mockHubProvider = new EvmHubProvider(mockEvmWalletProvider, getHubChainConfig(SONIC_MAINNET_CHAIN_ID));
+
+  const mockFee = {
+    address: '0x0000000000000000000000000000000000000000',
+    amount: feeAmount,
+  } satisfies PartnerFee;
 
   const mockBscSpokeProvider = new EvmSpokeProvider(
     mockEvmWalletProvider,
@@ -386,7 +394,10 @@ describe('SolverService', () => {
     } satisfies Intent;
 
     beforeEach(() => {
-      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce([mockTxHash, mockIntent]);
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash, mockIntent & { feeAmount: feeAmount }],
+      });
       vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
         ok: true,
         value: {
@@ -397,7 +408,7 @@ describe('SolverService', () => {
     });
 
     it('should successfully create and submit an intent', async () => {
-      vi.spyOn(EvmSolverService, 'createIntent').mockResolvedValueOnce([mockTxHash, mockIntent]);
+      vi.spyOn(EvmSolverService, 'createIntentDeposit').mockResolvedValueOnce(mockTxHash);
       vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
         ok: true,
         value: {
@@ -458,7 +469,7 @@ describe('SolverService', () => {
     });
 
     it('should handle submitTransaction error', async () => {
-      vi.spyOn(EvmSolverService, 'createIntent').mockResolvedValueOnce([mockTxHash, mockIntent]);
+      vi.spyOn(EvmSolverService, 'createIntentDeposit').mockResolvedValueOnce(mockTxHash);
       vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
         ok: true,
         value: {
@@ -534,15 +545,16 @@ describe('SolverService', () => {
     } satisfies Intent;
 
     it('should successfully create an intent for EVM chain', async () => {
-      vi.spyOn(EvmSolverService, 'createIntent').mockResolvedValueOnce([mockTxHash, mockIntent]);
+      vi.spyOn(EvmSolverService, 'createIntentDeposit').mockResolvedValueOnce(mockTxHash);
       vi.spyOn(EvmWalletAbstraction, 'getUserWallet').mockResolvedValueOnce(
         mockEvmWalletProvider.getWalletAddressBytes(),
       );
 
-      const result = await solverService.createIntent(
+      const result: Result<[Hex, Intent & FeeAmount], IntentSubmitError<'CREATION_FAILED'>> = await solverService.createIntent(
         mockCreateIntentParams,
         mockBscSpokeProvider,
         mockHubProvider,
+        mockFee,
         false,
       );
 

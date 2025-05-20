@@ -14,6 +14,7 @@ import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type SolanaSpokeDepositParams = {
   from: PublicKey;
+  to?: Hex; // The address of the user on the hub chain (wallet abstraction address)
   token: PublicKey;
   amount: bigint;
   data: Hex;
@@ -35,11 +36,11 @@ export class SolanaSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseSolanaTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserWallet(
+    const userWallet: Address = params.to ?? (await EvmWalletAbstraction.getUserWallet(
       spokeProvider.chainConfig.chain.id,
       toHex(params.from.toBytes()),
       hubProvider,
-    );
+    ));
 
     return SolanaSpokeService.transfer(
       {

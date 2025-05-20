@@ -7,20 +7,20 @@ import {
   EvmHubProvider,
   EvmWalletProvider,
   type Intent,
-  SUI_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
+  SUI_MAINNET_CHAIN_ID,
+  type SolverConfig,
   type SuiRawTransaction,
+  type SuiSpokeChainConfig,
   SuiSpokeProvider,
   SuiWalletProvider,
-  type SolverConfig,
   getHubChainConfig,
-  spokeChainConfig,
-  type SuiSpokeChainConfig,
   getIntentRelayChainId,
+  spokeChainConfig,
 } from '../../index.js';
-import { SuiSolverService } from './SuiSolverService.js';
 import { SuiSpokeService } from '../spoke/SuiSpokeService.js';
 import { EvmSolverService } from './EvmSolverService.js';
+import { SuiSolverService } from './SuiSolverService.js';
 
 describe('SuiSolverService', () => {
   const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890' satisfies Address;
@@ -89,7 +89,7 @@ describe('SuiSolverService', () => {
       // Mock the deposit function response
       vi.spyOn(SuiSpokeService, 'deposit').mockResolvedValueOnce('0xmockedtransactionhash' as Hex);
 
-      const [result, intent] = await SuiSolverService.createIntent(
+      const [result, intent] = await SuiSolverService.createIntentDeposit(
         mockCreateIntentParams,
         mockCreatorHubWalletAddress,
         mockIntentConfig,
@@ -110,7 +110,7 @@ describe('SuiSolverService', () => {
         data: '0x',
       } as SuiRawTransaction);
 
-      const [result] = await SuiSolverService.createIntent(
+      const [result] = await SuiSolverService.createIntentDeposit(
         mockCreateIntentParams,
         mockCreatorHubWalletAddress,
         mockIntentConfig,

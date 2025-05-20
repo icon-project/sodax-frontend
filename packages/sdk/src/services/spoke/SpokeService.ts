@@ -10,11 +10,11 @@ import {
   SuiSpokeProvider,
 } from '../../entities/index.js';
 import type { GetAddressType, GetSpokeDepositParamsType, IconAddress, PromiseTxReturnType } from '../../types.js';
-import { type CWSpokeDepositParams, CWSpokeService } from './CWSpokeService.js';
+import { CWSpokeService } from './CWSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
-import { type IconSpokeDepositParams, IconSpokeService } from './IconSpokeService.js';
+import { IconSpokeService } from './IconSpokeService.js';
 import { SolanaSpokeService } from './SolanaSpokeService.js';
-import { type StellarSpokeDepositParams, StellarSpokeService } from './StellarSpokeService.js';
+import {StellarSpokeService } from './StellarSpokeService.js';
 import { SuiSpokeService } from './SuiSpokeService.js';
 
 /**
@@ -26,9 +26,9 @@ import { SuiSpokeService } from './SuiSpokeService.js';
 export class SpokeService {
   /**
    * Deposit tokens to the spoke chain.
-   * @param {EvmSpokeDepositParams} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
-   * @param {EvmSpokeProvider} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @param {GetSpokeDepositParamsType<T extends SpokeProvider>} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
+   * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {HubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
   public static async deposit<T extends SpokeProvider = SpokeProvider, R extends boolean = false>(
@@ -47,7 +47,7 @@ export class SpokeService {
     }
     if (spokeProvider instanceof CWSpokeProvider) {
       return CWSpokeService.deposit(
-        params as CWSpokeDepositParams,
+        params as GetSpokeDepositParamsType<CWSpokeProvider>,
         spokeProvider,
         hubProvider,
         raw,
@@ -55,7 +55,7 @@ export class SpokeService {
     }
     if (spokeProvider instanceof IconSpokeProvider) {
       return IconSpokeService.deposit(
-        params as IconSpokeDepositParams,
+        params as GetSpokeDepositParamsType<IconSpokeProvider>,
         spokeProvider,
         hubProvider,
         raw,
@@ -81,7 +81,7 @@ export class SpokeService {
     }
     if (spokeProvider instanceof StellarSpokeProvider) {
       return StellarSpokeService.deposit(
-        params as StellarSpokeDepositParams,
+        params as GetSpokeDepositParamsType<StellarSpokeProvider>,
         spokeProvider,
         hubProvider,
         raw,

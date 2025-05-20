@@ -9,7 +9,6 @@ import type {
   EvmSpokeChainConfig,
   GetSpokeChainConfigType,
   HubAssetInfo,
-  HubChainConfig,
   HubChainId,
   IconSpokeChainConfig,
   IntentRelayChainId,
@@ -221,7 +220,7 @@ export function getEvmViemChain(id: EvmChainId): Chain {
   }
 }
 
-const hubChainConfig: Record<HubChainId, HubChainConfig> = {
+const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
   [SONIC_MAINNET_CHAIN_ID]: {
     chain: {
       name: 'Sonic',
@@ -267,7 +266,7 @@ const hubChainConfig: Record<HubChainId, HubChainConfig> = {
   } satisfies EvmHubChainConfig,
 } as const;
 
-export const getHubChainConfig = (chainId: HubChainId): HubChainConfig => hubChainConfig[chainId];
+export const getHubChainConfig = (chainId: HubChainId): EvmHubChainConfig => hubChainConfig[chainId];
 
 // TODO: make config hard typed on return (e.g. evm chain ids should return EvmSpokeChainConfig type)
 export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
@@ -1016,4 +1015,12 @@ export const supportedHubChains: HubChainId[] = Object.keys(hubChainConfig).map(
 export const supportedSpokeChains: SpokeChainId[] = Object.keys(spokeChainConfig).map(Number) as SpokeChainId[];
 export const getSpokeChainConfigsPerType = <T extends ChainType>(type: T): GetSpokeChainConfigType<T>[] => {
   return Object.values(spokeChainConfig).filter(config => config.chain.type === type) as GetSpokeChainConfigType<T>[];
+};
+export const getSpokeChainConfig = <T extends ChainType>(type: T, chainId: SpokeChainId): GetSpokeChainConfigType<T> => {
+  const config = spokeChainConfig[chainId];
+
+  if (config.chain.type !== type) {
+    throw new Error(`Invalid chain type: ${config.chain.type}, for given chainId: ${chainId}`);
+  }
+  return config as GetSpokeChainConfigType<T>;
 };

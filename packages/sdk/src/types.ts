@@ -269,6 +269,10 @@ export type PartnerFeePercentage = {
  */
 export type PartnerFee = PartnerFeeAmount | PartnerFeePercentage;
 
+export type FeeAmount = {
+  feeAmount: bigint;
+}
+
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
@@ -436,7 +440,7 @@ export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTran
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
 export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransaction : Hex;
 export type TxReturnType<
-  T extends ISpokeProvider,
+  T extends SpokeProvider,
   Raw extends boolean,
 > = T['chainConfig']['chain']['type'] extends 'evm'
   ? EvmReturnType<Raw>
@@ -482,3 +486,7 @@ export type PromiseTxReturnType<
           : T['chainConfig']['chain']['type'] extends 'cosmos'
             ? PromiseCWTxReturnType<Raw>
             : never;
+
+export type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};

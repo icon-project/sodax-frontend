@@ -70,7 +70,11 @@ export function calculatePercentageFeeAmount(
  * @param {PartnerFee} fee - The fee to calculate
  * @returns {bigint} The fee amount
  */
-export function calculateFeeAmount(inputAmount: bigint, fee: PartnerFee): bigint {
+export function calculateFeeAmount(inputAmount: bigint, fee: PartnerFee | undefined): bigint {
+  if (!fee) {
+    return 0n;
+  }
+
   invariant(inputAmount > 0n, 'Input amount must be greater than 0');
 
   let feeAmount = 0n;

@@ -18,8 +18,8 @@ import {
   getIntentRelayChainId,
   spokeChainConfig,
 } from '../../index.js';
-import { IconSolverService } from './IconSolverService.js';
 import { IconSpokeService } from '../spoke/IconSpokeService.js';
+import { IconSolverService } from './IconSolverService.js';
 
 describe('IConSolverService', () => {
   const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890' satisfies Address;
@@ -88,7 +88,7 @@ describe('IConSolverService', () => {
       // Mock the deposit function response
       vi.spyOn(IconSpokeService, 'deposit').mockResolvedValueOnce('0xmockedtransactionhash' as Hex);
 
-      const [result, intent] = await IconSolverService.createIntent(
+      const [result, intent] = await IconSolverService.createIntentDeposit(
         mockCreateIntentParams,
         mockCreatorHubWalletAddress,
         mockIntentConfig,
@@ -105,7 +105,7 @@ describe('IConSolverService', () => {
         value: '0x0',
       } as IconRawTransaction);
 
-      const [result] = await IconSolverService.createIntent(
+      const [result] = await IconSolverService.createIntentDeposit(
         mockCreateIntentParams,
         mockCreatorHubWalletAddress,
         mockIntentConfig,

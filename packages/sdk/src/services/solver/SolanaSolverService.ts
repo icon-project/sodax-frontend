@@ -1,8 +1,12 @@
 import type { Address } from 'viem';
 import {
+  calculateFeeAmount,
   encodeContractCalls,
   type EvmContractCall,
   type EvmHubProvider,
+  type FeeAmount,
+  type Hex,
+  type PartnerFee,
   type SolanaSpokeProvider,
   type SolverConfig,
   type TxReturnType,
@@ -16,42 +20,38 @@ export class SolanaSolverService {
 
   /**
    * Creates an intent by handling token approval and intent creation
-   * @param {Intent} intent - The intent to create
-   * @param {Address} creatorHubWalletAddress - The address of the intent creator on the hub chain
-   * @param {SolverConfig} intentConfig - The intent configuration
+   * @param {CreateIntentParams} createIntentParams - The intent to create
+   * @param {Address} creatorHubWalletAddress - The creator's hub wallet address
    * @param {SolanaSpokeProvider} spokeProvider - The spoke provider
    * @param {EvmHubProvider} hubProvider - The hub provider
+   * @param {bigint} feeAmount - The fee amount
+   * @param {Hex} data - The encoded fee data
    * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<[TxReturnType<SolanaSpokeProvider, R>, Intent]>} The transaction return type along with created intent
+   * @returns {Promise<TxReturnType<SolanaSpokeProvider, R>>} The transaction return type
    */
-  public static async createIntent<R extends boolean = false>(
+  public static async createIntentDeposit<R extends boolean = false>(
     createIntentParams: CreateIntentParams,
     creatorHubWalletAddress: Address,
-    intentConfig: SolverConfig,
     spokeProvider: SolanaSpokeProvider,
     hubProvider: EvmHubProvider,
+    feeAmount: bigint,
+    data: Hex,
     raw?: R,
-  ): Promise<[TxReturnType<SolanaSpokeProvider, R>, Intent]> {
-    const [data, intent] = EvmSolverService.constructCreateIntentData(
-      createIntentParams,
-      creatorHubWalletAddress,
-      intentConfig,
-    );
+  ): Promise<TxReturnType<SolanaSpokeProvider, R>> {
     const token = new PublicKey(createIntentParams.inputToken);
-    return [
-      await SpokeService.deposit(
-        {
-          from: spokeProvider.walletProvider.getAddress(),
-          token: token,
-          amount: createIntentParams.inputAmount,
-          data: data,
-        },
-        spokeProvider,
-        hubProvider,
-        raw,
-      ),
-      intent,
-    ];
+
+    return SpokeService.deposit(
+      {
+        from: spokeProvider.walletProvider.getAddress(),
+        to: creatorHubWalletAddress,
+        token: token,
+        amount: createIntentParams.inputAmount + feeAmount,
+        data: data,
+      },
+      spokeProvider,
+      hubProvider,
+      raw,
+    );
   }
 
   /**

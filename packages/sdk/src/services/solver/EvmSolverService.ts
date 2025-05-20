@@ -46,12 +46,20 @@ export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventA
 export class EvmSolverService {
   private constructor() {}
 
+  /**
+   * Constructs the create intent data for EVM Hub chain
+   * @param {CreateIntentParams} createIntentParams - The create intent parameters
+   * @param {Address} creatorHubWalletAddress - The creator hub wallet address
+   * @param {SolverConfig} solverConfig - The intent configuration
+   * @param {PartnerFee} fee - The partner fee configuration
+   * @returns {Promise<[Hex, Intent, bigint]>} The encoded contract call, intent and fee amount
+   */
   public static constructCreateIntentData(
     createIntentParams: CreateIntentParams,
     creatorHubWalletAddress: Address,
-    intentConfig: SolverConfig,
-    fee?: PartnerFee,
-  ): [Hex, Intent] {
+    solverConfig: SolverConfig,
+    fee: PartnerFee | undefined,
+  ): [Hex, Intent, bigint] {
     const inputToken = getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset;
     const outputToken = getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset;
 
@@ -67,7 +75,7 @@ export class EvmSolverService {
     const [feeData, feeAmount] = EvmSolverService.createIntentFeeData(fee, createIntentParams.inputAmount);
 
     const calls: EvmContractCall[] = [];
-    const intentsContract = intentConfig.intentsContract;
+    const intentsContract = solverConfig.intentsContract;
     const intent = {
       ...createIntentParams,
       inputToken,
@@ -79,11 +87,11 @@ export class EvmSolverService {
       data: feeData,
     } satisfies Intent;
 
-    // user has to send input amount + fee amount to the intent contract
+    // user has to send input amount + fee amount to the Hub intent contract
     const totalInputAmount = intent.inputAmount + feeAmount;
     calls.push(Erc20Service.encodeApprove(intent.inputToken, intentsContract, totalInputAmount));
     calls.push(EvmSolverService.encodeCreateIntent(intent, intentsContract));
-    return [encodeContractCalls(calls), intent];
+    return [encodeContractCalls(calls), intent, feeAmount];
   }
 
   /**
@@ -139,49 +147,43 @@ export class EvmSolverService {
 
   /**
    * Creates an intent by handling token approval and intent creation
-   * @param {Intent} intent - The intent to create
+   * @param {CreateIntentParams} createIntentParams - The intent to create
    * @param {Address} creatorHubWalletAddress - The address of the intent creator on the hub chain
-   * @param {SolverConfig} intentConfig - The intent configuration
    * @param {EvmSpokeProvider} spokeProvider - The spoke provider
    * @param {EvmHubProvider} hubProvider - The hub provider
+   * @param {bigint} feeAmount - The fee amount
+   * @param {Hex} data - The encoded fee data
    * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<[TxReturnType<EvmSpokeProvider, R>, Intent]} The transaction return type
+   * @returns {Promise<TxReturnType<EvmSpokeProvider, R>>} The transaction return type
    */
-  public static async createIntent<R extends boolean = false>(
+  public static async createIntentDeposit<R extends boolean = false>(
     createIntentParams: CreateIntentParams,
     creatorHubWalletAddress: Address,
-    intentConfig: SolverConfig,
     spokeProvider: EvmSpokeProvider,
     hubProvider: EvmHubProvider,
+    feeAmount: bigint,
+    data: Hex,
     raw?: R,
-  ): Promise<[TxReturnType<EvmSpokeProvider, R>, Intent]> {
+  ): Promise<TxReturnType<EvmSpokeProvider, R>> {
     invariant(
       isAddress(createIntentParams.inputToken),
       `Invalid spoke chain token (intent.inputToken): ${createIntentParams.inputToken}`,
     );
 
-    const [data, intent] = EvmSolverService.constructCreateIntentData(
-      createIntentParams,
-      creatorHubWalletAddress,
-      intentConfig,
-    );
-
-    return [
-      await SpokeService.deposit(
+    return SpokeService.deposit(
         {
           from: spokeProvider.getWalletAddress(),
           to: creatorHubWalletAddress,
           token: createIntentParams.inputToken,
-          amount: createIntentParams.inputAmount,
+          amount: createIntentParams.inputAmount + feeAmount,
           data: data,
         },
         spokeProvider,
         hubProvider,
         raw,
-      ),
-      intent,
-    ];
+      );
   }
+
   /**
    * Cancels an intent
    * @param {Intent} intent - The intent to cancel

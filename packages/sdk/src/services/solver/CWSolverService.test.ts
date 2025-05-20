@@ -2,26 +2,26 @@ import type { Address, Hex } from 'viem';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
+  ARCHWAY_TESTNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
+  CWSpokeProvider,
+  type CosmosSpokeChainConfig,
+  CosmosWalletProvider,
   type CreateIntentParams,
   EvmHubProvider,
+  EvmWalletAbstraction,
   EvmWalletProvider,
-  type Intent,
   INJECTIVE_MAINNET_CHAIN_ID,
-  CWSpokeProvider,
+  InjectiveWalletProvider,
+  type Intent,
+  SONIC_MAINNET_CHAIN_ID,
   type SolverConfig,
   getHubChainConfig,
-  spokeChainConfig,
-  SONIC_MAINNET_CHAIN_ID,
-  type CosmosSpokeChainConfig,
-  InjectiveWalletProvider,
-  EvmWalletAbstraction,
-  CosmosWalletProvider,
-  ARCHWAY_TESTNET_CHAIN_ID,
   getIntentRelayChainId,
+  spokeChainConfig,
 } from '../../index.js';
-import { CWSolverService } from './CWSolverService.js';
 import { CWSpokeService } from '../spoke/CWSpokeService.js';
+import { CWSolverService } from './CWSolverService.js';
 
 describe('CWSolverService', () => {
   const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890' satisfies Address;
@@ -123,7 +123,7 @@ describe('CWSolverService', () => {
       // Mock the deposit function response
       vi.spyOn(CWSpokeService, 'deposit').mockResolvedValueOnce('0xmockedtransactionhash' as Hex);
 
-      const [result, intent] = await CWSolverService.createIntent(
+      const [result, intent] = await CWSolverService.createIntentDeposit(
         mockCreateIntentParams,
         mockCreatorHubWalletAddress,
         mockIntentConfig,
@@ -140,7 +140,7 @@ describe('CWSolverService', () => {
         '0x3333333333333333333333333333333333333333' as Address,
       );
 
-      const [result] = await CWSolverService.createIntent(
+      const [result] = await CWSolverService.createIntentDeposit(
         mockCreateIntentParams,
         mockCreatorHubWalletAddress,
         mockIntentConfig,
@@ -163,7 +163,7 @@ describe('CWSolverService', () => {
       '0x3333333333333333333333333333333333333333' as Address,
     );
 
-    const [result] = await CWSolverService.createIntent(
+    const [result] = await CWSolverService.createIntentDeposit(
       mockCreateIntentArchParams,
       mockCreatorHubWalletAddress,
       mockIntentConfig,

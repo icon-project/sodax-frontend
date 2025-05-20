@@ -6,6 +6,7 @@ import { getIntentRelayChainId, type PromiseStellarTxReturnType } from '../../in
 
 export type StellarSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
+  to?: Hex; // The address of the user on the hub chain (wallet abstraction address)
   token: string; // The address of the token to deposit
   amount: bigint; // The amount of tokens to deposit
   data: Hex; // The data to send with the deposit
@@ -27,11 +28,11 @@ export class StellarSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserWallet(
+    const userWallet: Address = params.to ?? (await EvmWalletAbstraction.getUserWallet(
       spokeProvider.chainConfig.chain.id,
       params.from,
       hubProvider,
-    );
+    ));
 
     return StellarSpokeService.transfer(
       {

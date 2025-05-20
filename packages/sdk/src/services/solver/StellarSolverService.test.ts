@@ -1,26 +1,26 @@
 import type { Address, Hex } from 'viem';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import * as constants from '../../constants.js';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   AVALANCHE_FUJI_TESTNET_CHAIN_ID,
   type CreateIntentParams,
   EvmHubProvider,
   EvmWalletProvider,
-  getHubChainConfig,
-  getIntentRelayChainId,
   type Intent,
-  type SolverConfig,
   SONIC_TESTNET_CHAIN_ID,
-  spokeChainConfig,
   STELLAR_TESTNET_CHAIN_ID,
+  type SolverConfig,
   type StellarRawTransaction,
   type StellarSpokeChainConfig,
   StellarSpokeProvider,
   StellarWalletProvider,
+  getHubChainConfig,
+  getIntentRelayChainId,
+  spokeChainConfig,
 } from '../../index.js';
-import { StellarSolverService } from './StellarSolverService.js';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
-import * as constants from '../../constants.js';
+import { StellarSolverService } from './StellarSolverService.js';
 
 describe('StellarSolverService', () => {
   const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890' satisfies Address;
@@ -93,14 +93,14 @@ describe('StellarSolverService', () => {
       );
 
       // Mock the StellarSolverService.createIntent implementation
-      const originalCreateIntent = StellarSolverService.createIntent;
-      StellarSolverService.createIntent = vi.fn().mockResolvedValue(['0xmockedtransactionhash', mockIntent]);
+      const originalCreateIntent = StellarSolverService.createIntentDeposit;
+      StellarSolverService.createIntentDeposit = vi.fn().mockResolvedValue(['0xmockedtransactionhash', mockIntent]);
 
       // Mock the deposit function response
       vi.spyOn(StellarSpokeService, 'deposit').mockResolvedValueOnce('0xmockedtransactionhash' as Hex);
 
       try {
-        const [result, intent] = await StellarSolverService.createIntent(
+        const [result, intent] = await StellarSolverService.createIntentDeposit(
           mockCreateIntentParams,
           mockCreatorHubWalletAddress,
           mockIntentConfig,
@@ -112,7 +112,7 @@ describe('StellarSolverService', () => {
         expect(intent).toBeDefined();
       } finally {
         // Restore original implementation
-        StellarSolverService.createIntent = originalCreateIntent;
+        StellarSolverService.createIntentDeposit = originalCreateIntent;
       }
     });
 
@@ -134,7 +134,7 @@ describe('StellarSolverService', () => {
 
       const createIntentSpy = vi.spyOn(StellarSolverService, 'createIntent');
 
-      const [result] = await StellarSolverService.createIntent(
+      const [result] = await StellarSolverService.createIntentDeposit(
         mockCreateIntentParams,
         mockCreatorHubWalletAddress,
         mockIntentConfig,

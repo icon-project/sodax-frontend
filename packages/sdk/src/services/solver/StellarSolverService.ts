@@ -1,13 +1,14 @@
 import type { Address } from 'viem';
 import {
-  encodeContractCalls,
   type EvmContractCall,
   type EvmHubProvider,
-  type StellarSpokeProvider,
+  type Hex,
   type SolverConfig,
+  type StellarSpokeProvider,
   type TxReturnType,
+  encodeContractCalls,
 } from '../../index.js';
-import { SpokeService, type CreateIntentParams, type Intent } from '../index.js';
+import { type CreateIntentParams, type Intent, SpokeService } from '../index.js';
 import { EvmSolverService } from './EvmSolverService.js';
 
 export class StellarSolverService {
@@ -16,41 +17,36 @@ export class StellarSolverService {
   /**
    * Creates an intent by handling token approval and intent creation
    * @param {CreateIntentParams} createIntentParams - The intent to create
-   * @param {Address} creatorHubWalletAddress - The address of the intent creator on the hub chain
-   * @param {SolverConfig} intentConfig - The intent configuration
+   * @param {Address} creatorHubWalletAddress - The creator's hub wallet address
    * @param {StellarSpokeProvider} spokeProvider - The spoke provider
    * @param {EvmHubProvider} hubProvider - The hub provider
+   * @param {bigint} feeAmount - The fee amount
+   * @param {Hex} data - The data to be encoded
    * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<[TxReturnType<StellarSpokeProvider, R>, Intent]>} The transaction return type along with created intent
+   * @returns {Promise<TxReturnType<StellarSpokeProvider, R>>} The transaction return type
    */
-  public static async createIntent<R extends boolean = false>(
+  public static async createIntentDeposit<R extends boolean = false>(
     createIntentParams: CreateIntentParams,
     creatorHubWalletAddress: Address,
-    intentConfig: SolverConfig,
     spokeProvider: StellarSpokeProvider,
     hubProvider: EvmHubProvider,
+    feeAmount: bigint,
+    data: Hex,
     raw?: R,
-  ): Promise<[TxReturnType<StellarSpokeProvider, R>, Intent]> {
-    const [data, intent] = EvmSolverService.constructCreateIntentData(
-      createIntentParams,
-      creatorHubWalletAddress,
-      intentConfig,
-    );
+  ): Promise<TxReturnType<StellarSpokeProvider, R>> {
 
-    return [
-      await SpokeService.deposit(
-        {
-          from: spokeProvider.walletProvider.getWalletAddressBytes(),
-          token: createIntentParams.inputToken,
-          amount: createIntentParams.inputAmount,
-          data: data,
-        },
-        spokeProvider,
-        hubProvider,
-        raw,
-      ),
-      intent,
-    ];
+    return SpokeService.deposit(
+      {
+        from: spokeProvider.walletProvider.getWalletAddressBytes(),
+        to: creatorHubWalletAddress,
+        token: createIntentParams.inputToken,
+        amount: createIntentParams.inputAmount + feeAmount,
+        data: data,
+      },
+      spokeProvider,
+      hubProvider,
+      raw,
+    )
   }
 
   /**

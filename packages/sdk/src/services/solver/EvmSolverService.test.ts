@@ -81,7 +81,7 @@ describe('EvmSolverService', () => {
       // Mock the deposit function response
       vi.spyOn(EvmSpokeService, 'deposit').mockResolvedValueOnce('0xmockedtransactionhash' as Hex);
 
-      const [result, intent] = await EvmSolverService.createIntent(
+      const [result, intent] = await EvmSolverService.createIntentDeposit(
         mockCreateIntentParams,
         mockCreatorHubWalletAddress,
         mockIntentConfig,
@@ -94,7 +94,7 @@ describe('EvmSolverService', () => {
     });
 
     it('should create raw intent tx correctly', async () => {
-      const [result] = await EvmSolverService.createIntent(
+      const [result] = await EvmSolverService.createIntentDeposit(
         mockCreateIntentParams,
         mockCreatorHubWalletAddress,
         mockIntentConfig,
