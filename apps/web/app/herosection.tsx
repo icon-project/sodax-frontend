@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
@@ -6,7 +8,15 @@ import Link from 'next/link';
 import Sidebar from "./sidebar";
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
-import { NavigationMenu, NavigationMenuLink, NavigationMenuList, NavigationMenuItem } from '@/components/ui/navigation-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const carouselItems = [
     { id: 1, src: '/coin/sui.png', alt: 'SUI' },
@@ -28,7 +38,10 @@ const carouselItems = [
 ];
 
 const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }): React.ReactElement => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
+    <>
     <div className="h-[812px] sm:h-[860px] flex flex-col items-center bg-cherry-soda relative overflow-hidden">
       <Image
         className="absolute top-[20px] -left-[40%] sm:-left-[15%] sm:-top-[20px] lg:left-[10%] lg:-top-[50px] w-[357px] h-[357px] sm:w-[701px] sm:h-[701px]"
@@ -82,7 +95,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 </li>
             </ul>
           <div className="inline-flex justify-center items-start">
-            <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+            <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10" onClick={() => setIsDialogOpen(true)}>
               join waitlist
             </Button>
             <div className="w-4 h-6 relative">
@@ -155,7 +168,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
               <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
             </div>
             <div className="inline-flex justify-center items-start">
-              <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+              <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10" onClick={() => setIsDialogOpen(true)}>
                 join waitlist
               </Button>
               <div className="w-4 h-6 relative">
@@ -169,6 +182,57 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
         </div>
       </div>
     </div>
+    {/* Dialog */}
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="min-h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[80px] w-[90%] lg:max-w-[952px] dialog-content">
+          <DialogHeader>
+            <div className="flex justify-center">
+              <Image
+                src="/symbol.png"
+                alt="SODAX Symbol"
+                width={64}
+                height={64}
+              />
+            </div>
+            <DialogTitle className="text-center text-white text-[42px] mt-4 font-[InterBlack]">
+              SHAKE IT UP!
+            </DialogTitle>
+            <DialogDescription className="text-center text-white text-base">
+              SODAX Rewards Coming Soon.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid">
+            <div className="flex justify-center">
+              <input
+                placeholder="Add your X handle"
+                className="border border-white h-[36px] w-full max-w-[280px] text-cream rounded-full border-4 border-white text-center placeholder-white"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <div className="flex justify-center items-center w-full">
+              <div className="inline-flex justify-center items-start">
+                <Button className="w-[183px] h-[40px] bg-yellow-soda hover:bg-yellow-soda/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+                  pre-register
+                </Button>
+                <div className="w-4 h-6 relative">
+                  <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-soda rounded-full" />
+                  <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-soda rounded-full" />
+                  <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-soda rounded-full" />
+                  <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-soda rounded-full" />
+                </div>
+             </div>
+            </div>
+          </DialogFooter>
+          <div className="flex items-center justify-center space-x-2">
+            <Checkbox id="terms" className="rounded-full bg-white" />
+            <Label htmlFor="terms" className="text-white">
+              Accept terms and conditions
+            </Label>
+          </div>
+        </DialogContent>
+      </Dialog>
+      </>
   );
 };
 
