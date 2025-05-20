@@ -35,14 +35,13 @@
     "clsx": "^2.1.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.456.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-scripts": "5.0.1",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.5.4",
-    "viem": "2.x",
-    "wagmi": "^2.12.33",
+    "viem": "catalog:",
+    "wagmi": "catalog:",
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
