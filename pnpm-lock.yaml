@@ -329,6 +329,9 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.1.5(@types/react@19.1.4)
+      '@types/react-scroll':
+        specifier: ^1.8.10
+        version: 1.8.10
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -5648,6 +5651,9 @@ packages:
     resolution: {integrity: sha512-CMCjrWucUBZvohgZxkjd6S9h0nZxXjzus6yDfUb+xLxYM7VvjKNH1tQrE9GWLql1XoOP4/Ds3bwFqShHUYraGg==}
     peerDependencies:
       '@types/react': ^19.0.0
+
+  '@types/react-scroll@1.8.10':
+    resolution: {integrity: sha512-RD4Z7grbdNGOKwKnUBKar6zNxqaW3n8m9QSrfvljW+gmkj1GArb8AFBomVr6xMOgHPD3v1uV3BrIf01py57daQ==}
 
   '@types/react@18.3.21':
     resolution: {integrity: sha512-gXLBtmlcRJeT09/sI4PxVwyrku6SaNUj/6cMubjE6T6XdY1fDmBL7r0nX0jbSZPU/Xr0KuwLLZh6aOYY5d91Xw==}
@@ -23835,6 +23841,10 @@ snapshots:
     dependencies:
       '@types/react': 19.1.4
 
+  '@types/react-scroll@1.8.10':
+    dependencies:
+      '@types/react': 18.3.21
+
   '@types/react@18.3.21':
     dependencies:
       '@types/prop-types': 15.7.14
@@ -32524,6 +32534,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   metro-core@0.82.3:
     dependencies:
@@ -32635,6 +32646,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   metro@0.82.3(bufferutil@4.0.9)(utf-8-validate@5.0.10):
     dependencies:
@@ -32662,7 +32674,7 @@ snapshots:
       metro-babel-transformer: 0.82.3
       metro-cache: 0.82.3
       metro-cache-key: 0.82.3
-      metro-config: 0.82.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      metro-config: 0.82.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       metro-core: 0.82.3
       metro-file-map: 0.82.3
       metro-resolver: 0.82.3
@@ -32729,6 +32741,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   micro-ftch@0.3.1: {}
 

@@ -40,7 +40,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
 
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const constrain = 20;
-  const imgRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const carouselRef = useRef(null);
   const [api, setApi] = useState<CarouselApi>();
 
