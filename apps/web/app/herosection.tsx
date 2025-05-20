@@ -225,7 +225,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
             </div>
           </DialogFooter>
           <div className="flex items-center justify-center space-x-2">
-            <Checkbox id="terms" className="rounded-full bg-white" />
+            <Checkbox id="terms" className="bg-white" />
             <Label htmlFor="terms" className="text-white">
               Accept terms and conditions
             </Label>
