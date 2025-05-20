@@ -18,9 +18,13 @@ import {
 import { useEffect, useRef, useState } from 'react';
 
 import { Link as ScrollLink } from 'react-scroll';
-import Slider from 'react-slick';
 
 import Image from 'next/image';
+import Link from 'next/link';
+
+import { Label } from '@/components/ui/label';
+import Sidebar from './sidebar';
+import Autoplay from 'embla-carousel-autoplay';
 
 const carouselItems = [
   { id: 1, src: '/coin/sui.png', alt: 'SUI' },
