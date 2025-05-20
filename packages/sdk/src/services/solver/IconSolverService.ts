@@ -1,14 +1,15 @@
 import type { Address } from 'viem';
 import {
-  encodeContractCalls,
   type EvmContractCall,
   type EvmHubProvider,
+  type Hex,
   type IconAddress,
   type IconSpokeProvider,
   type SolverConfig,
   type TxReturnType,
+  encodeContractCalls,
 } from '../../index.js';
-import { SpokeService, type CreateIntentParams, type Intent } from '../index.js';
+import { type CreateIntentParams, type Intent, SpokeService } from '../index.js';
 import { EvmSolverService } from './EvmSolverService.js';
 
 export class IconSolverService {
@@ -16,42 +17,36 @@ export class IconSolverService {
 
   /**
    * Creates an intent by handling token approval and intent creation
-   * @param {Intent} intent - The intent to create
-   * @param {Address} creatorHubWalletAddress - The address of the intent creator on the hub chain
-   * @param {SolverConfig} intentConfig - The intent configuration
+   * @param {CreateIntentParams} createIntentParams - The intent to create
+   * @param {Address} creatorHubWalletAddress - The creator's hub wallet address
    * @param {IconSpokeProvider} spokeProvider - The spoke provider
    * @param {EvmHubProvider} hubProvider - The hub provider
+   * @param {bigint} feeAmount - The fee amount
+   * @param {Hex} data - The data to be encoded
    * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<[TxReturnType<IconSpokeProvider, R>, Intent]>} The transaction return type along with created intent
+   * @returns {Promise<TxReturnType<IconSpokeProvider, R>>} The transaction return type
    */
-  public static async createIntent<R extends boolean = false>(
+  public static async createIntentDeposit<R extends boolean = false>(
     createIntentParams: CreateIntentParams,
     creatorHubWalletAddress: Address,
-    intentConfig: SolverConfig,
     spokeProvider: IconSpokeProvider,
     hubProvider: EvmHubProvider,
+    feeAmount: bigint,
+    data: Hex,
     raw?: R,
-  ): Promise<[TxReturnType<IconSpokeProvider, R>, Intent]> {
-    const [data, intent] = EvmSolverService.constructCreateIntentData(
-      createIntentParams,
-      creatorHubWalletAddress,
-      intentConfig,
+  ): Promise<TxReturnType<IconSpokeProvider, R>> {
+    return SpokeService.deposit(
+      {
+        from: spokeProvider.walletProvider.getWalletAddress() as IconAddress,
+        to: creatorHubWalletAddress,
+        token: createIntentParams.inputToken,
+        amount: createIntentParams.inputAmount + feeAmount,
+        data: data,
+      },
+      spokeProvider,
+      hubProvider,
+      raw,
     );
-
-    return [
-      await SpokeService.deposit(
-        {
-          from: spokeProvider.walletProvider.getWalletAddress() as IconAddress,
-          token: createIntentParams.inputToken,
-          amount: createIntentParams.inputAmount,
-          data: data,
-        },
-        spokeProvider,
-        hubProvider,
-        raw,
-      ),
-      intent,
-    ];
   }
 
   /**

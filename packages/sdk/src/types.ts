@@ -240,6 +240,39 @@ export type VaultReserves = {
   balances: readonly bigint[];
 };
 
+/**
+ * Fee type for transaction fees.
+ * @property address - The address to which the fee is sent.
+ * @property amount - Optional fixed fee amount in wei.
+ */
+export type PartnerFeeAmount = {
+  address: Address;
+  amount: bigint;
+}
+
+/**
+ * Fee type for transaction fees.
+ * @property address - The address to which the fee is sent.
+ * @property percentage - Optional fee percentage in basis points (e.g., 100 = 1%). Maximum allowed is 100 (1%).
+ */
+export type PartnerFeePercentage = {
+  address: Address;
+  percentage: number;
+}
+
+
+/**
+ * Fee type for transaction fees.
+ * @property address - The address to which the fee is sent.
+ * @property percentage - Optional fee percentage in basis points (e.g., 100 = 1%). Maximum allowed is 100 (1%).
+ * @property amount - Optional fixed fee amount in wei. If both percentage and amount are provided, amount will be used.
+ */
+export type PartnerFee = PartnerFeeAmount | PartnerFeePercentage;
+
+export type FeeAmount = {
+  feeAmount: bigint;
+}
+
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
@@ -297,6 +330,7 @@ export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
   solverApiEndpoint: HttpUrl;
   relayerApiEndpoint: HttpUrl;
+  fee?: PartnerFee; // optional fee
 };
 
 export type QuoteType = 'exact_input' | 'exact_output';
@@ -406,7 +440,7 @@ export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTran
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
 export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransaction : Hex;
 export type TxReturnType<
-  T extends ISpokeProvider,
+  T extends SpokeProvider,
   Raw extends boolean,
 > = T['chainConfig']['chain']['type'] extends 'evm'
   ? EvmReturnType<Raw>
@@ -452,3 +486,7 @@ export type PromiseTxReturnType<
           : T['chainConfig']['chain']['type'] extends 'cosmos'
             ? PromiseCWTxReturnType<Raw>
             : never;
+
+export type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & {};

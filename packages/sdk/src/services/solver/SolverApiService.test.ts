@@ -40,9 +40,9 @@ describe('SolverApiService', () => {
 
   describe('getQuote', () => {
     const payload = {
-      token_src: bscEthHubTokenAsset.asset,
+      token_src: bscEthToken,
       token_src_blockchain_id: BSC_MAINNET_CHAIN_ID,
-      token_dst: arbWbtcHubTokenAsset.asset,
+      token_dst: arbWbtcToken,
       token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
       amount: 1000000000000000000n,
       quote_type: 'exact_input' as QuoteType,
@@ -50,7 +50,7 @@ describe('SolverApiService', () => {
 
     it('should return a successful quote response', async () => {
       const mockResponse = {
-        quoted_amount: '2000000000000000000',
+        quoted_amount: 2000000000000000000n,
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -73,8 +73,8 @@ describe('SolverApiService', () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            token_src: payload.token_src,
-            token_dst: payload.token_dst,
+            token_src: getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src)?.asset ?? '',
+            token_dst: getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst)?.asset ?? '',
             amount: payload.amount.toString(),
             quote_type: payload.quote_type,
           }),

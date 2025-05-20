@@ -6,6 +6,7 @@ import { getIntentRelayChainId, type PromiseSuiTxReturnType } from '../../index.
 
 export type SuiSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
+  to?: Hex; // The address of the user on the hub chain (wallet abstraction address)
   token: string; // The address of the token to deposit
   amount: bigint; // The amount of tokens to deposit
   data: Hex; // The data to send with the deposit
@@ -35,11 +36,11 @@ export class SuiSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseSuiTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserWallet(
+    const userWallet: Address = params.to ?? (await EvmWalletAbstraction.getUserWallet(
       spokeProvider.chainConfig.chain.id,
       params.from,
       hubProvider,
-    );
+    ));
 
     return SuiSpokeService.transfer(
       {

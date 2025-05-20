@@ -9,7 +9,6 @@ import type {
   EvmSpokeChainConfig,
   GetSpokeChainConfigType,
   HubAssetInfo,
-  HubChainConfig,
   HubChainId,
   IconSpokeChainConfig,
   IntentRelayChainId,
@@ -26,6 +25,7 @@ export const DEFAULT_MAX_RETRY = 3;
 export const DEFAULT_RETRY_DELAY_MS = 2000;
 export const ICON_TX_RESULT_WAIT_MAX_RETRY = 10;
 export const MAX_UINT256 = (1n << 256n) - 1n;
+export const FEE_PERCENTAGE_SCALE = 10000n; // 100% = 10000
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
 export const INTENT_RELAY_CHAIN_IDS = {
@@ -220,7 +220,7 @@ export function getEvmViemChain(id: EvmChainId): Chain {
   }
 }
 
-const hubChainConfig: Record<HubChainId, HubChainConfig> = {
+const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
   [SONIC_MAINNET_CHAIN_ID]: {
     chain: {
       name: 'Sonic',
@@ -266,7 +266,7 @@ const hubChainConfig: Record<HubChainId, HubChainConfig> = {
   } satisfies EvmHubChainConfig,
 } as const;
 
-export const getHubChainConfig = (chainId: HubChainId): HubChainConfig => hubChainConfig[chainId];
+export const getHubChainConfig = (chainId: HubChainId): EvmHubChainConfig => hubChainConfig[chainId];
 
 // TODO: make config hard typed on return (e.g. evm chain ids should return EvmSpokeChainConfig type)
 export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
@@ -1010,9 +1010,28 @@ export const isValidHubAsset = (hubAsset: Address): boolean =>
 export const isValidChainHubAsset = (chainId: SpokeChainId, hubAsset: Address): boolean =>
   chainIdToHubAssetsMap.get(chainId)?.has(hubAsset.toLowerCase() as Address) ?? false;
 export const isValidSpokeChainId = (chainId: number): boolean => spokeChainIdsSet.has(chainId as SpokeChainId);
-
+export const isValidIntentRelayChainId = (chainId: bigint): boolean =>
+  Object.values(INTENT_RELAY_CHAIN_IDS).some(id => id === chainId);
 export const supportedHubChains: HubChainId[] = Object.keys(hubChainConfig).map(Number) as HubChainId[];
 export const supportedSpokeChains: SpokeChainId[] = Object.keys(spokeChainConfig).map(Number) as SpokeChainId[];
 export const getSpokeChainConfigsPerType = <T extends ChainType>(type: T): GetSpokeChainConfigType<T>[] => {
   return Object.values(spokeChainConfig).filter(config => config.chain.type === type) as GetSpokeChainConfigType<T>[];
+};
+export const getSpokeChainConfig = <T extends ChainType>(type: T, chainId: SpokeChainId): GetSpokeChainConfigType<T> => {
+  const config = spokeChainConfig[chainId];
+
+  if (config.chain.type !== type) {
+    throw new Error(`Invalid chain type: ${config.chain.type}, for given chainId: ${chainId}`);
+  }
+  return config as GetSpokeChainConfigType<T>;
+};
+export const intentRelayChainIdToSpokeChainIdMap: Map<IntentRelayChainId, SpokeChainId> = new Map(
+  Object.entries(ChainIdToIntentRelayChainId).map(([chainId, intentRelayChainId]) => [intentRelayChainId, Number(chainId) as SpokeChainId]),
+);
+export const getSpokeChainIdFromIntentRelayChainId = (intentRelayChainId: IntentRelayChainId): SpokeChainId => {
+  const spokeChainId = intentRelayChainIdToSpokeChainIdMap.get(intentRelayChainId);
+  if (!spokeChainId) {
+    throw new Error(`Invalid intent relay chain id: ${intentRelayChainId}`);
+  }
+  return spokeChainId;
 };
