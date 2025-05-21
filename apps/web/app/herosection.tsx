@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { Label } from '@/components/ui/label';
 import Sidebar from './sidebar';
 import Autoplay from 'embla-carousel-autoplay';
+import { Input } from '@/components/ui/input';
 
 const carouselItems = [
   { id: 1, src: '/coin/sui.png', alt: 'SUI' },
@@ -170,7 +171,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none">
                   when{' '}
                 </Label>
-                <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-normal font-['Shrikhand'] leading-none ml-3 mt-[3px] sm:mt-[10px]">
+                <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-normal font-['Shrikhand'] leading-none ml-3 mt-[3px] sm:mt-[5px] md:mt-[10px]">
                   you
                 </Label>
                 <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none ml-3">
@@ -246,9 +247,9 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
           </DialogHeader>
           <div className="grid">
             <div className="flex justify-center">
-              <input
+              <Input
                 placeholder="Add your X handle"
-                className="border border-white h-[36px] w-full max-w-[280px] text-cream rounded-full border-4 border-white text-center placeholder-white"
+                className="border border-white h-[36px] w-full max-w-[280px] text-white rounded-full border-4 border-white text-center placeholder:text-cream"
               />
             </div>
           </div>
