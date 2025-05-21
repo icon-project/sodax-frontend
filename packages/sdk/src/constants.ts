@@ -613,7 +613,7 @@ export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
       connection:
         '0xc0e61f9b2ba05922e1abe8656d6d5480b22eae084896bfbdf2ba54eb5eeb37e3::connectionv3::0xeb94ea14a2e1b012c9720cfb1b63f5d49c40aceb1b4eb0bc1006c93464162188',
       assetManager:
-        '0x62f46afdc46ca87549e6655565dffb2913d4d8e97ad953f959d49bbcd4787f4d::asset_manager::0x42bef60a77ecee7973b790ab9477bce62d834208cac19b5ed21849d54097b685',
+        '0xac93feadb764f195edbf1dac99a4f1477b8f411ad37d95bea445fc143149200b::asset_manager::0x42bef60a77ecee7973b790ab9477bce62d834208cac19b5ed21849d54097b685',
       xTokenManager: '',
       rateLimit: '',
       testToken:
@@ -838,6 +838,11 @@ export const hubAssets: Record<
       decimal: 18,
       vault: '0x35CB50D8b896fCC1001dFc67C3772f2361E4d183',
     },
+    inj:{
+      asset:'0x306B4522f56fA66702e8c5d1A69157140424f820',
+      decimal:18,
+      vault:"0x",
+    }
   },
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     inj: {

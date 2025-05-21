@@ -91,6 +91,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
     },
     suiSpokeProvider.chainConfig.chain.id,
   );
+  
 
   const txHash: Hash = await SpokeService.deposit(
     {
@@ -331,7 +332,7 @@ async function fillIntent(
         },
         inputAmount,
         outputAmount,
-        0n,
+        6565n,
       ] as const,
       chainId: 57054,
     };
