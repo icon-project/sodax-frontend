@@ -13,7 +13,7 @@ import {
   custom,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { getEvmViemChain } from '../constants.js';
+import { getEvmViemChain, getHubChainConfig, SONIC_MAINNET_CHAIN_ID } from '../constants.js';
 import {
   isEvmInitializedConfig,
   isEvmUninitializedBrowserConfig,
@@ -121,13 +121,30 @@ export class EvmWalletProvider implements WalletAddressProvider {
   }
 }
 
+export type EvmHubProviderConfig = {
+  hubRpcUrl: string,
+  chainConfig: EvmHubChainConfig
+}
+
 export class EvmHubProvider {
-  public readonly walletProvider: EvmWalletProvider;
+  public readonly publicClient: PublicClient<HttpTransport>
   public readonly chainConfig: EvmHubChainConfig;
 
-  constructor(walletProvider: EvmWalletProvider, chainConfig: EvmHubChainConfig) {
-    this.walletProvider = walletProvider;
-    this.chainConfig = chainConfig;
+  constructor(config?: EvmHubProviderConfig) {
+    if (config) {
+      this.publicClient = createPublicClient({
+        transport: http(config.hubRpcUrl),
+        chain: getEvmViemChain(config.chainConfig.chain.id),
+      });
+      this.chainConfig = config.chainConfig;
+    } else {
+      // default to Sonic mainnet
+      this.publicClient = createPublicClient({
+        transport: http("https://rpc.soniclabs.com"),
+        chain: getEvmViemChain(SONIC_MAINNET_CHAIN_ID),
+      });
+      this.chainConfig = getHubChainConfig(SONIC_MAINNET_CHAIN_ID);
+    }
   }
 }
 
@@ -144,8 +161,6 @@ export class EvmSpokeProvider implements ISpokeProvider {
     return this.walletProvider.walletClient.account.address;
   }
 }
-
-export type HubProvider = EvmHubProvider;
 
 export { CWSpokeProvider } from './cosmos/CWSpokeProvider.js';
 export { InjectiveWalletProvider } from './cosmos/InjectiveWalletProvider.js';

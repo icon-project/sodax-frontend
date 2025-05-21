@@ -104,6 +104,7 @@ export type MoneyMarketConfig = {
   poolAddressesProvider: Address;
   bnUSD?: Address;
   bnUSDVault?: Address;
+  partnerFee?: PartnerFee;
 };
 
 export type EvmSpokeChainConfig = BaseSpokeChainConfig<'evm'> & {
@@ -330,7 +331,7 @@ export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
   solverApiEndpoint: HttpUrl;
   relayerApiEndpoint: HttpUrl;
-  fee?: PartnerFee; // optional fee
+  partnerFee?: PartnerFee; // optional fee
 };
 
 export type QuoteType = 'exact_input' | 'exact_output';

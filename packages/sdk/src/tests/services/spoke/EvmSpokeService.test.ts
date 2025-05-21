@@ -1,14 +1,13 @@
 import type { Address, Hash } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { connectionAbi } from '../../../abis/index.js';
-import { getHubChainConfig, spokeChainConfig } from '../../../constants.js';
-import type { EvmWalletProvider } from '../../../entities/index.js';
+import { getHubChainConfig, SONIC_MAINNET_CHAIN_ID, spokeChainConfig } from '../../../constants.js';
+import type { EvmHubProviderConfig, EvmWalletProvider } from '../../../entities/index.js';
 import {
-  type EvmHubProvider,
+  EvmHubProvider,
   type EvmSpokeDepositParams,
   type EvmSpokeProvider,
   EvmSpokeService,
-  SONIC_TESTNET_CHAIN_ID,
 } from '../../../index.js';
 
 // Hoisted mocks must be before any other code
@@ -18,7 +17,7 @@ vi.mock('../../../utils/evm-utils.js', () => ({
 
 vi.mock('../../../services/hub/EvmWalletAbstraction.js', () => ({
   EvmWalletAbstraction: {
-    getUserWallet: () => '0x4444444444444444444444444444444444444444',
+    getUserHubWalletAddress: () => '0x4444444444444444444444444444444444444444',
   },
 }));
 
@@ -103,18 +102,12 @@ describe('EvmSpokeService', () => {
     getWalletAddress: () => '0x9999999999999999999999999999999999999999' as Address,
   } satisfies EvmSpokeProvider;
 
-  const mockHubProvider = {
-    walletProvider: {
-      publicClient: {
-        readContract: vi.fn(),
-      },
-      walletClient: {
-        writeContract: vi.fn(),
-      },
-      getAddress: vi.fn().mockReturnValue('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
-    } as unknown as EvmWalletProvider,
-    chainConfig: getHubChainConfig(SONIC_TESTNET_CHAIN_ID),
-  } satisfies EvmHubProvider;
+  const mockHubConfig = {
+    hubRpcUrl: 'https://rpc.soniclabs.com',
+    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  } satisfies EvmHubProviderConfig;
+
+  const mockHubProvider = new EvmHubProvider(mockHubConfig);
 
   beforeEach(() => {
     vi.resetAllMocks();

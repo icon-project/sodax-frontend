@@ -1,10 +1,12 @@
 import { MoneyMarketService, SolverService } from "../services/index.js";
 import type { MoneyMarketConfig, SolverConfig } from "../types.js"
+import { EvmHubProvider, type EvmHubProviderConfig } from "./Providers.js";
 
 
 export type SodaxConfig = {
   solver?: SolverConfig
   moneyMarket?: MoneyMarketConfig
+  hubProviderConfig?: EvmHubProviderConfig // defaults to Sonic mainnet as a hub provider
 }
 
 /**
@@ -18,14 +20,17 @@ export class Sodax {
 
   private readonly solverService?: SolverService;
   private readonly moneyMarketService?: MoneyMarketService;
+  private readonly hubProvider: EvmHubProvider;
 
   constructor(config: SodaxConfig) {
     this.config = config;
+    this.hubProvider = new EvmHubProvider(config.hubProviderConfig);
+
     if (config.solver) {
-      this.solverService = new SolverService(config.solver);
+      this.solverService = new SolverService(config.solver, this.hubProvider);
     }
     if (config.moneyMarket) {
-      this.moneyMarketService = new MoneyMarketService(config.moneyMarket);
+      this.moneyMarketService = new MoneyMarketService(config.moneyMarket, this.hubProvider);
     }
   }
 

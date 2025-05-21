@@ -1,8 +1,8 @@
 import { type Address, type Hex, toHex } from 'viem';
 import { CWSpokeProvider } from '../../entities/cosmos/CWSpokeProvider.js';
 import type { EvmHubProvider } from '../../entities/index.js';
+import { type PromiseCWTxReturnType, getIntentRelayChainId } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
-import { getIntentRelayChainId, type PromiseCWTxReturnType } from '../../index.js';
 
 export type CWSpokeDepositParams = {
   from: string; // The address of the user on the spoke chain
@@ -36,11 +36,13 @@ export class CWSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseCWTxReturnType<R> {
-    const userWallet: Address = params.to ?? (await EvmWalletAbstraction.getUserWallet(
-      spokeProvider.chainConfig.chain.id,
-      toHex(Buffer.from(params.from, 'utf-8')),
-      hubProvider,
-    ));
+    const userWallet: Address =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        toHex(Buffer.from(params.from, 'utf-8')),
+        hubProvider,
+      ));
 
     return CWSpokeService.transfer(
       {
@@ -80,7 +82,7 @@ export class CWSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseCWTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserWallet(
+    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
       toHex(Buffer.from(from, 'utf-8')),
       hubProvider,

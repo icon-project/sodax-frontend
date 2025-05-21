@@ -2,10 +2,8 @@ import invariant from 'tiny-invariant';
 import type { Address, Hash } from 'viem';
 import {
   CWSpokeProvider,
-  EvmHubProvider,
+  type EvmHubProvider,
   EvmSpokeProvider,
-  EvmWalletAbstraction,
-  type HubProvider,
   IconSpokeProvider,
   type IntentRelayRequest,
   SolanaSpokeProvider,
@@ -41,6 +39,7 @@ import type {
   SpokeChainId,
   TxReturnType,
 } from '../../types.js';
+import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { CWSolverService } from './CWSolverService.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { IconSolverService } from './IconSolverService.js';
@@ -141,9 +140,11 @@ export type IntentSubmitError<T extends IntentSubmitErrorCode> = {
 
 export class SolverService {
   private readonly config: SolverConfig;
+  private readonly hubProvider: EvmHubProvider;
 
-  public constructor(config: SolverConfig) {
+  public constructor(config: SolverConfig, hubProvider: EvmHubProvider) {
     this.config = config;
+    this.hubProvider = hubProvider;
   }
 
   /**
@@ -176,11 +177,11 @@ export class SolverService {
    * @returns {Promise<bigint>} The fee amount (denominated in input tokens)
    */
   public async getFee(inputAmount: bigint): Promise<bigint> {
-    if (!this.config.fee) {
+    if (!this.config.partnerFee) {
       return 0n;
     }
 
-    return calculateFeeAmount(inputAmount, this.config.fee);
+    return calculateFeeAmount(inputAmount, this.config.partnerFee);
   }
 
   /**
@@ -238,19 +239,17 @@ export class SolverService {
    * Creates an intent and submits it to the Solver API and Relayer API
    * @param {CreateIntentParams} payload - The intent to create
    * @param {ISpokeProvider} spokeProvider - The spoke provider
-   * @param {HubProvider} hubProvider - The hub provider
    * @param {number} timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
    * @returns {Promise<Result<IntentExecutionResponse, IntentErrorResponse>>} The encoded contract call
    */
   public async createAndSubmitIntent<T extends SpokeProvider>(
     payload: CreateIntentParams,
     spokeProvider: T,
-    hubProvider: HubProvider,
     fee?: PartnerFee,
     timeout = 20000,
   ): Promise<Result<[IntentExecutionResponse, Intent], IntentSubmitError<IntentSubmitErrorCode>>> {
     try {
-      const createIntentResult = await this.createIntent(payload, spokeProvider, hubProvider, fee, false);
+      const createIntentResult = await this.createIntent(payload, spokeProvider, fee, false);
 
       if (!createIntentResult.ok) {
         return {
@@ -337,18 +336,16 @@ export class SolverService {
    * NOTE: This method does not submit the intent to the Solver API
    * @param {CreateIntentParams} params - The intent to create
    * @param {ISpokeProvider} spokeProvider - The spoke provider
-   * @param {HubProvider} hubProvider - The hub provider
    * @param {boolean} raw - Whether to return the raw transaction
    * @param {PartnerFee} fee - The fee to apply to the intent
    * @returns {Promise<[TxReturnType<T, R>, Intent]>} The encoded contract call
    */
-  public async createIntent<R extends boolean = false>(
+  public async createIntent<S extends SpokeProvider, R extends boolean = false>(
     params: CreateIntentParams,
-    spokeProvider: SpokeProvider,
-    hubProvider: HubProvider,
+    spokeProvider: S,
     fee?: PartnerFee,
     raw?: R,
-  ): Promise<Result<[TxReturnType<SpokeProvider, R>, Intent & FeeAmount], IntentSubmitError<'CREATION_FAILED'>>> {
+  ): Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount], IntentSubmitError<'CREATION_FAILED'>>> {
     invariant(
       isValidOriginalAssetAddress(params.srcChain, params.inputToken),
       `Unsupported spoke chain token (params.srcChain): ${params.srcChain}, params.inputToken): ${params.inputToken}`,
@@ -357,21 +354,15 @@ export class SolverService {
       isValidOriginalAssetAddress(params.dstChain, params.outputToken),
       `Unsupported spoke chain token (params.dstChain): ${params.dstChain}, params.outputToken): ${params.outputToken}`,
     );
-    invariant(
-      isValidSpokeChainId(params.srcChain),
-      `Invalid spoke chain (params.srcChain): ${params.srcChain}`,
-    );
-    invariant(
-      isValidSpokeChainId(params.dstChain),
-      `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
-    );
+    invariant(isValidSpokeChainId(params.srcChain), `Invalid spoke chain (params.srcChain): ${params.srcChain}`);
+    invariant(isValidSpokeChainId(params.dstChain), `Invalid spoke chain (params.dstChain): ${params.dstChain}`);
 
     try {
       // derive users hub wallet address
-      const creatorHubWalletAddress = await EvmWalletAbstraction.getUserWallet(
+      const creatorHubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
         params.srcChain,
         spokeProvider.walletProvider.getWalletAddressBytes(),
-        hubProvider,
+        this.hubProvider,
       );
 
       // construct the intent data
@@ -392,7 +383,7 @@ export class SolverService {
               params,
               creatorHubWalletAddress,
               spokeProvider,
-              hubProvider,
+              this.hubProvider,
               feeAmount,
               data,
               raw,
@@ -410,7 +401,7 @@ export class SolverService {
               params,
               creatorHubWalletAddress,
               spokeProvider,
-              hubProvider,
+              this.hubProvider,
               feeAmount,
               data,
               raw,
@@ -428,7 +419,7 @@ export class SolverService {
               params,
               creatorHubWalletAddress,
               spokeProvider,
-              hubProvider,
+              this.hubProvider,
               feeAmount,
               data,
               raw,
@@ -446,7 +437,7 @@ export class SolverService {
               params,
               creatorHubWalletAddress,
               spokeProvider,
-              hubProvider,
+              this.hubProvider,
               feeAmount,
               data,
               raw,
@@ -464,7 +455,7 @@ export class SolverService {
               params,
               creatorHubWalletAddress,
               spokeProvider,
-              hubProvider,
+              this.hubProvider,
               feeAmount,
               data,
               raw,
@@ -482,7 +473,7 @@ export class SolverService {
               params,
               creatorHubWalletAddress,
               spokeProvider,
-              hubProvider,
+              this.hubProvider,
               feeAmount,
               data,
               raw,
@@ -500,7 +491,7 @@ export class SolverService {
 
       return {
         ok: true,
-        value: [response, { ...intent, feeAmount }] satisfies [TxReturnType<SpokeProvider, R>, Intent & FeeAmount],
+        value: [response, { ...intent, feeAmount }] as [TxReturnType<S, R>, Intent & FeeAmount],
       };
     } catch (error) {
       return {
@@ -520,38 +511,30 @@ export class SolverService {
    * Cancels an intent
    * @param {Intent} intent - The intent to cancel
    * @param {ISpokeProvider} spokeProvider - The spoke provider
-   * @param {HubProvider} hubProvider - The hub provider
    * @param {boolean} raw - Whether to return the raw transaction
    * @returns {Promise<TxReturnType<T, R>>} The encoded contract call
    */
   public async cancelIntent<T extends SpokeProvider, R extends boolean = false>(
     intent: Intent,
     spokeProvider: T,
-    hubProvider: HubProvider,
     raw?: R,
   ): Promise<TxReturnType<T, R>> {
-    invariant(
-      isValidIntentRelayChainId(intent.srcChain),
-      `Invalid intent.srcChain: ${intent.srcChain}`,
-    );
-    invariant(
-      isValidIntentRelayChainId(intent.dstChain),
-      `Invalid intent.dstChain: ${intent.dstChain}`,
-    );
+    invariant(isValidIntentRelayChainId(intent.srcChain), `Invalid intent.srcChain: ${intent.srcChain}`);
+    invariant(isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
 
     const srcSpokeChainConfig = spokeChainConfig[getSpokeChainIdFromIntentRelayChainId(intent.srcChain)];
 
     switch (srcSpokeChainConfig.chain.type) {
       case 'evm':
         if (spokeProvider instanceof EvmSpokeProvider) {
-          return EvmSolverService.cancelIntent(intent, this.config, spokeProvider, hubProvider, raw) as Promise<
+          return EvmSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
             TxReturnType<T, R>
           >;
         }
         throw new Error('Invalid spoke provider (EvmSpokeProvider expected)');
       case 'solana':
         if (spokeProvider instanceof SolanaSpokeProvider) {
-          return SolanaSolverService.cancelIntent(intent, this.config, spokeProvider, hubProvider, raw) as Promise<
+          return SolanaSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
             TxReturnType<T, R>
           >;
         }
@@ -559,29 +542,33 @@ export class SolverService {
 
       case 'stellar':
         if (spokeProvider instanceof StellarSpokeProvider) {
-          return StellarSolverService.cancelIntent(intent, this.config, spokeProvider, hubProvider, raw) as Promise<
-            TxReturnType<T, R>
-          >;
+          return StellarSolverService.cancelIntent(
+            intent,
+            this.config,
+            spokeProvider,
+            this.hubProvider,
+            raw,
+          ) as Promise<TxReturnType<T, R>>;
         }
         throw new Error('Invalid spoke provider (StellarSpokeProvider expected)');
 
       case 'cosmos':
         if (spokeProvider instanceof CWSpokeProvider) {
-          return CWSolverService.cancelIntent(intent, this.config, spokeProvider, hubProvider, raw) as Promise<
+          return CWSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
             TxReturnType<T, R>
           >;
         }
         throw new Error('Invalid spoke provider (CWSpokeProvider expected)');
       case 'icon':
         if (spokeProvider instanceof IconSpokeProvider) {
-          return IconSolverService.cancelIntent(intent, this.config, spokeProvider, hubProvider, raw) as Promise<
+          return IconSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
             TxReturnType<T, R>
           >;
         }
         throw new Error('Invalid spoke provider (IconSpokeProvider expected)');
       case 'sui':
         if (spokeProvider instanceof SuiSpokeProvider) {
-          return SuiSolverService.cancelIntent(intent, this.config, spokeProvider, hubProvider, raw) as Promise<
+          return SuiSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
             TxReturnType<T, R>
           >;
         }
@@ -594,19 +581,10 @@ export class SolverService {
   /**
    * Gets an intent from a transaction hash (on Hub chain)
    * @param {Hash} txHash - The transaction hash on Hub chain
-   * @param {HubProvider} hubProvider - The hub provider
    * @returns {Promise<Intent>} The intent
    */
-  public getIntent<T extends HubProvider>(txHash: Hash, hubProvider: T): Promise<Intent> {
-    if (hubProvider.chainConfig.chain.type === 'evm') {
-      if (hubProvider instanceof EvmHubProvider) {
-        return EvmSolverService.getIntent(txHash, hubProvider, this.config);
-      }
-
-      throw new Error('Invalid hub provider (EvmHubProvider expected)');
-    }
-
-    throw new Error('Unsupported hub chain type');
+  public getIntent(txHash: Hash): Promise<Intent> {
+    return EvmSolverService.getIntent(txHash, this.hubProvider, this.config);
   }
 
   /**

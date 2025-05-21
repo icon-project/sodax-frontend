@@ -21,6 +21,9 @@ import type {
   SuiSpokeChainConfig,
 } from './index.js';
 
+// TODO CLEANUP TESTNET STUFF
+// TODO ADD DEFAULT CONTRACT ADDRESSES AND SO FORTH FROM WIKI
+
 export const DEFAULT_MAX_RETRY = 3;
 export const DEFAULT_RETRY_DELAY_MS = 2000;
 export const ICON_TX_RESULT_WAIT_MAX_RETRY = 10;
