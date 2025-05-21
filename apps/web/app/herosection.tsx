@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
 import Sidebar from './sidebar';
+import { DecoratedButton } from '@/components/landing/decorated-button';
 
 const carouselItems = [
   { id: 1, src: '/coin/sui.png', alt: 'SUI' },
@@ -145,18 +146,9 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
               </li> */}
             </ul>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-              <Button
-                onClick={() => setIsDialogOpen(true)}
-                className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 sm:ml-3 sm:mt-[0px] text-[16px] z-10 pt-[11px]"
-              >
+              <DecoratedButton onClick={() => setIsDialogOpen(true)}>
                 join waitlist
-              </Button>
-              <div className="w-4 h-6 absolute -right-[15px] top-[0px]">
-                <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-dark rounded-full" />
-                <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-dark rounded-full" />
-                <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-dark rounded-full" />
-                <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-dark rounded-full" />
-              </div>
+              </DecoratedButton>
             </div>
             <div className="flex lg:hidden ml-3 text-white" onClick={toggle}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -231,15 +223,9 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
               </div>
               <div className="inline-flex justify-center items-start relative">
-                <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10  pt-[11px]">
+                <DecoratedButton>
                   pre-register
-                </Button>
-                <div className="w-4 h-6 absolute -right-[15px] top-[0px]">
-                  <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-dark rounded-full" />
-                  <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-dark rounded-full" />
-                  <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-dark rounded-full" />
-                  <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-dark rounded-full" />
-                </div>
+                </DecoratedButton>
               </div>
             </div>
           </div>
@@ -270,15 +256,9 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
           <DialogFooter>
             <div className="flex justify-center items-center w-full">
               <div className="inline-flex justify-center items-start">
-                <Button className="w-[183px] h-[40px] bg-yellow-soda hover:bg-yellow-soda/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+                <DecoratedButton variant="yellow-soda">
                   pre-register
-                </Button>
-                <div className="w-4 h-6 relative">
-                  <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-soda rounded-full" />
-                  <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-soda rounded-full" />
-                  <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-soda rounded-full" />
-                  <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-soda rounded-full" />
-                </div>
+                </DecoratedButton>
               </div>
             </div>
           </DialogFooter>
