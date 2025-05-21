@@ -113,25 +113,25 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
             <ul className="hidden lg:flex gap-4 z-10">
               <li>
                 <ScrollLink to="section1" smooth={true} duration={500}>
-                  <span className="text-white font-[InterMedium] text-[14px] hover:font-bold cursor-pointer">
+                  <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                     About
                   </span>
                 </ScrollLink>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/docs" passHref>
-                  <span className="text-white font-[InterMedium] text-[14px] hover:font-bold cursor-pointer">
+                  <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                     Partners
                   </span>
                 </Link>
               </li>
               <li>
                 <Link href="/docs" passHref>
-                  <span className="text-white font-[InterMedium] text-[14px] hover:font-bold cursor-pointer">
+                  <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                     Community
                   </span>
                 </Link>
-              </li>
+              </li> */}
             </ul>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
               <Button onClick={() => setIsDialogOpen(true)} className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 sm:ml-3 sm:mt-[0px] text-[16px] z-10 pt-[11px]">
