@@ -43,7 +43,7 @@ const Section4 = () => {
         <Label className="text-sm font-[InterRegular] text-black">Points with every order.</Label>
         <div className="mt-6">
           <div className="inline-flex justify-center items-start relative">
-            <Button className="w-44 h-[40px] bg-white hover:bg-white/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 sm:ml-3 text-[16px] z-10  pt-[11px]">
+            <Button className="w-44 h-[40px] bg-white hover:bg-white/80 text-cherry-dark font-[Shrikhand] rounded-full text-[16px] z-10  pt-[11px]">
               join waitlist
             </Button>
             <div className="w-4 h-6  absolute -right-[15px] top-[0px]">
