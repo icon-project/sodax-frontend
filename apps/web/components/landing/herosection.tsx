@@ -96,14 +96,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
         className="h-[812px] sm:h-[860px] flex flex-col items-center bg-cherry-soda relative overflow-hidden"
         onMouseMove={handleMouseMove}
       >
-        <Image
-          className="mix-blend-color-dodge absolute top-[20px] -left-[40%] sm:-left-[15%] sm:-top-[20px] lg:left-[10%] lg:-top-[50px] w-[357px] h-[357px] sm:w-[701px] sm:h-[701px]"
-          src="/circle1.png"
-          alt="background"
-          width={701}
-          height={701}
-          ref={imgRef}
-        />
+        
         <Image
           className="mix-blend-screen absolute bottom-0 right-0 sm:-right-5 sm:bottom-30 lg:left-[50%] lg:bottom-0 w-[375px] h-[562px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
           src="/girl.png"
@@ -170,9 +163,20 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 </Label>
                 <Image src="/sonic.png" alt="Sonic Symbol" width={76} height={24} />
               </div>
-              <Label className="mix-blend-hard-light text-[60px] sm:text-[90px] md:text-[138px] lg:text-[184px] leading-none text-yellow-soda font-[InterBlack]">
-                LIQUIDITY
-              </Label>
+              <div className="relative">
+                <Label className="mix-blend-hard-light text-[60px] sm:text-[90px] md:text-[138px] lg:text-[184px] leading-none text-yellow-soda font-[InterBlack]">
+                  LIQUIDITY
+                </Label>
+                <Image
+                  className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[701px] top-[-100px] left-[-170px] sm:top-[-310px] sm:left-[-310px]"
+                  src="/circle1.png"
+                  alt="background"
+                  width={701}
+                  height={701}
+                  ref={imgRef}
+                />
+              </div>
+              
               <div className="flex">
                 <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none">
                   when{' '}
