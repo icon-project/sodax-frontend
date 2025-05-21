@@ -97,7 +97,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
         onMouseMove={handleMouseMove}
       >
         <Image
-          className="absolute top-[20px] -left-[40%] sm:-left-[15%] sm:-top-[20px] lg:left-[10%] lg:-top-[50px] w-[357px] h-[357px] sm:w-[701px] sm:h-[701px]"
+          className="mix-blend-color-dodge absolute top-[20px] -left-[40%] sm:-left-[15%] sm:-top-[20px] lg:left-[10%] lg:-top-[50px] w-[357px] h-[357px] sm:w-[701px] sm:h-[701px]"
           src="/circle1.png"
           alt="background"
           width={701}
@@ -205,7 +205,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                     ]}
                     setApi={setApi}
                   >
-                    <CarouselContent className="-ml-1 max-w-[150px]">
+                    <CarouselContent className="-ml-1 max-w-[150px] mix-blend-lighten">
                       {carouselItems.map(item => (
                         <CarouselItem key={item.id} className="basis-1/5 pl-1">
                           <Image
