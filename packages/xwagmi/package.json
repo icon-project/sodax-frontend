@@ -55,8 +55,6 @@
     "immer": "10.1.1",
     "react": "catalog:",
     "react-device-detect": "2.2.3",
-    "react-dom": "catalog:",
-    "react-toastify": "7.0.3",
     "rlp": "3.0.0",
     "viem": "catalog:",
     "wagmi": "catalog:",
@@ -64,10 +62,12 @@
   },
   "devDependencies": {
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
     "knip": "5.30.5",
     "tsup": "^8.4.0",
     "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "react": ">=19"
   },
   "engines": {
     "node": ">=18.0.0"

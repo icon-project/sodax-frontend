@@ -27,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useQuery } from '@tanstack/react-query';
 import { sonicBlazeTestnet } from '../config';
+import Header from '../header';
 
 const moneyMarketConfig: MoneyMarketConfig = {
   lendingPool: '0xA33E8f7177A070D0162Eea0765d051592D110cDE',
@@ -173,10 +174,12 @@ export default function Page() {
   // console.log('userReserves', userReserves);
 
   return (
-    <main className="">
-      <div className="container mx-auto p-4 mt-10">
-        {/* Market Selector */}
-        {/* <div className="mb-8 flex justify-center">
+    <>
+      <Header />
+      <main className="">
+        <div className="container mx-auto p-4 mt-10">
+          {/* Market Selector */}
+          {/* <div className="mb-8 flex justify-center">
           <Select>
             <SelectTrigger className="w-[200px]">
               <div className="flex items-center gap-2">
@@ -191,159 +194,160 @@ export default function Page() {
           </Select>
         </div> */}
 
-        {/* Main Content Grid */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* Your Supplies */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Your supplies</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Asset</TableHead>
-                      <TableHead>Balance</TableHead>
-                      <TableHead>APY</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>AVAX</TableCell>
-                      <TableCell>10</TableCell>
-                      <TableCell>2%</TableCell>
-                      <TableCell>
-                        <Button variant="secondary" size="sm">
-                          Withdraw
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+          {/* Main Content Grid */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Left Column */}
+            <div className="space-y-6">
+              {/* Your Supplies */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your supplies</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Asset</TableHead>
+                        <TableHead>Balance</TableHead>
+                        <TableHead>APY</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>AVAX</TableCell>
+                        <TableCell>10</TableCell>
+                        <TableCell>2%</TableCell>
+                        <TableCell>
+                          <Button variant="secondary" size="sm">
+                            Withdraw
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
 
-            {/* Assets to Supply */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Assets to supply</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Asset</TableHead>
-                      <TableHead>Balance</TableHead>
-                      <TableHead>APY</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>AVAX</TableCell>
-                      <TableCell>0</TableCell>
-                      <TableCell>2%</TableCell>
-                      <TableCell>
-                        <Button variant="secondary" size="sm">
-                          Supply 0.1 AVAX
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
+              {/* Assets to Supply */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Assets to supply</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Asset</TableHead>
+                        <TableHead>Balance</TableHead>
+                        <TableHead>APY</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>AVAX</TableCell>
+                        <TableCell>0</TableCell>
+                        <TableCell>2%</TableCell>
+                        <TableCell>
+                          <Button variant="secondary" size="sm">
+                            Supply 0.1 AVAX
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Right Column */}
-          <div className="space-y-6 opacity-30">
-            {/* Your Borrows */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Your borrows</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Asset</TableHead>
-                      <TableHead>Balance</TableHead>
-                      <TableHead>APY</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>bnUSD</TableCell>
-                      <TableCell>10000</TableCell>
-                      <TableCell>7%</TableCell>
-                      <TableCell>
-                        <Button variant="secondary" size="sm">
-                          Repay
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            {/* Right Column */}
+            <div className="space-y-6 opacity-30">
+              {/* Your Borrows */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your borrows</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Asset</TableHead>
+                        <TableHead>Balance</TableHead>
+                        <TableHead>APY</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>bnUSD</TableCell>
+                        <TableCell>10000</TableCell>
+                        <TableCell>7%</TableCell>
+                        <TableCell>
+                          <Button variant="secondary" size="sm">
+                            Repay
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
 
-            {/* Assets to Borrow */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Assets to borrow</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Asset</TableHead>
-                      <TableHead>Balance</TableHead>
-                      <TableHead>APY</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>ETH</TableCell>
-                      <TableCell>100</TableCell>
-                      <TableCell>3.5%</TableCell>
-                      <TableCell>
-                        <Button variant="secondary" size="sm">
-                          Borrow
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>WBTC</TableCell>
-                      <TableCell>10</TableCell>
-                      <TableCell>4.2%</TableCell>
-                      <TableCell>
-                        <Button variant="secondary" size="sm">
-                          Borrow
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>USDC</TableCell>
-                      <TableCell>1000000</TableCell>
-                      <TableCell>5.8%</TableCell>
-                      <TableCell>
-                        <Button variant="secondary" size="sm">
-                          Borrow
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+              {/* Assets to Borrow */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Assets to borrow</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Asset</TableHead>
+                        <TableHead>Balance</TableHead>
+                        <TableHead>APY</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>ETH</TableCell>
+                        <TableCell>100</TableCell>
+                        <TableCell>3.5%</TableCell>
+                        <TableCell>
+                          <Button variant="secondary" size="sm">
+                            Borrow
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>WBTC</TableCell>
+                        <TableCell>10</TableCell>
+                        <TableCell>4.2%</TableCell>
+                        <TableCell>
+                          <Button variant="secondary" size="sm">
+                            Borrow
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>USDC</TableCell>
+                        <TableCell>1000000</TableCell>
+                        <TableCell>5.8%</TableCell>
+                        <TableCell>
+                          <Button variant="secondary" size="sm">
+                            Borrow
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
