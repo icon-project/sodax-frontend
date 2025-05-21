@@ -1,7 +1,6 @@
 import { Label } from '@/components/ui/label';
-import { ArrowUpRight } from 'lucide-react';
+import { FooterLink } from '@/components/landing/footer-link';
 import Image from 'next/image';
-import Link from 'next/link';
 
 const Footer: React.FC = () => {
   return (
@@ -22,93 +21,66 @@ const Footer: React.FC = () => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             using soda
           </div>
-          <div className="group justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold cursor-pointer">
+          <FooterLink href="#">
             Flagship Platform (Soon)
-          </div>
-          <div className="group inline-flex justify-start items-start gap-3 cursor-pointer">
-            <div className="justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold">
-              Hana Wallet
-            </div>
-            <ArrowUpRight width={16} height={16} className="text-cherry-bright group-hover:stroke-[3.5]" />
-          </div>
-          <div className="group inline-flex justify-start items-start gap-3 cursor-pointer">
-            <div className="justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold">
-              Balanced DeFi
-            </div>
-            <ArrowUpRight width={16} height={16} className="text-cherry-bright group-hover:stroke-[3.5]" />
-          </div>
+          </FooterLink>
+          <FooterLink href="#" showArrow>
+            Hana Wallet
+          </FooterLink>
+          <FooterLink href="#" showArrow>
+            Balanced DeFi
+          </FooterLink>
         </div>
         <div className="inline-flex flex-col justify-start items-start gap-3">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             socials
           </div>
-          <div className="group justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold cursor-pointer">
+          <FooterLink href="#">
             Blog
-          </div>
-          <div className="group inline-flex justify-start items-start gap-3 cursor-pointer">
-            <div className="justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold">
-              Discord
-            </div>
-            <ArrowUpRight width={16} height={16} className="text-cherry-bright group-hover:stroke-[3.5]" />
-          </div>
-          <div className="group inline-flex justify-start items-start gap-3 cursor-pointer">
-            <div className="justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold">
-              X (Twitter)
-            </div>
-            <ArrowUpRight width={16} height={16} className="text-cherry-bright group-hover:stroke-[3.5]" />
-          </div>
-          <div className="group inline-flex justify-start items-start gap-3 cursor-pointer">
-            <div className="justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold">
-              Linktree
-            </div>
-            <ArrowUpRight width={16} height={16} className="text-cherry-bright group-hover:stroke-[3.5]" />
-          </div>
+          </FooterLink>
+          <FooterLink href="#" showArrow>
+            Discord
+          </FooterLink>
+          <FooterLink href="#" showArrow>
+            X (Twitter)
+          </FooterLink>
+          <FooterLink href="#" showArrow>
+            Linktree
+          </FooterLink>
         </div>
         <div className="inline-flex flex-col justify-start items-start gap-3">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             resources
           </div>
-          <div className="group inline-flex justify-start items-start gap-3 cursor-pointer">
-            <div className="justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold">
-              Partners
-            </div>
-            <ArrowUpRight width={16} height={16} className="text-cherry-bright group-hover:stroke-[3.5]" />
-          </div>
-          <div className="group justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold cursor-pointer">
+          <FooterLink href="#" showArrow>
+            Partners
+          </FooterLink>
+          <FooterLink href="#">
             Contact Us
-          </div>
-          <div className="group justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold cursor-pointer">
+          </FooterLink>
+          <FooterLink href="#">
             Media Kit
-          </div>
-          <div className="group justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold cursor-pointer">
+          </FooterLink>
+          <FooterLink href="#">
             Disclaimer
-          </div>
-          <div className="group justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold cursor-pointer">
+          </FooterLink>
+          <FooterLink href="#">
             Terms & Conditions
-          </div>
+          </FooterLink>
         </div>
         <div className="inline-flex flex-col justify-start items-start gap-3">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             more
           </div>
-          <div className="group inline-flex justify-start items-start gap-3 cursor-pointer">
-            <div className="justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold">
-              CMC
-            </div>
-            <ArrowUpRight width={16} height={16} className="text-cherry-bright group-hover:stroke-[3.5]" />
-          </div>
-          <div className="group inline-flex justify-start items-start gap-3 cursor-pointer">
-            <div className="justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold">
-              Binance Square
-            </div>
-            <ArrowUpRight width={16} height={16} className="text-cherry-bright group-hover:stroke-[3.5]" />
-          </div>
-          <div className="group inline-flex justify-start items-start gap-3 cursor-pointer">
-            <div className="justify-start text-black text-[13px] font-medium font-['InterMedium'] leading-[16px] group-hover:text-cherry-bright group-hover:font-bold">
-              DefiLlama
-            </div>
-            <ArrowUpRight width={16} height={16} className="text-cherry-bright group-hover:stroke-[3.5]" />
-          </div>
+          <FooterLink href="#" showArrow>
+            CMC
+          </FooterLink>
+          <FooterLink href="#" showArrow>
+            Binance Square
+          </FooterLink>
+          <FooterLink href="#" showArrow>
+            DefiLlama
+          </FooterLink>
         </div>
       </div>
     </div>
