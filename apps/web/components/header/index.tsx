@@ -10,7 +10,7 @@ export function NavigationMenuDemo() {
 
   return (
     <div className="flex items-center">
-      <ExampleLink href="/" name="Dashboard" isActive={pathname === '/'} />
+      <ExampleLink href="/money-markets" name="Dashboard" isActive={pathname === '/money-markets'} />
       <ExampleLink href="/markets" name="Markets" isActive={pathname === '/markets'} />
     </div>
   );

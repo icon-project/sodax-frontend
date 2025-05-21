@@ -1,12 +1,13 @@
 'use client';
+
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { getQueryClient } from '@/app/get-query-client';
 import { QueryClientProvider } from '@tanstack/react-query';
+import dynamic from 'next/dynamic';
 import type * as React from 'react';
-import { XWagmiProviders } from '@new-world/xwagmi';
-import { useEffect } from 'react';
-// import { ModalStoreProvider } from '@/providers/modal-store-provider.tsx';
 import { wagmiConfig } from './config';
+
+const XWagmiProviders = dynamic(() => import('@new-world/xwagmi').then(mod => mod.XWagmiProviders), { ssr: false });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
