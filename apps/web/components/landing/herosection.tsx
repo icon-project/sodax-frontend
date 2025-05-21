@@ -22,9 +22,11 @@ import { Link as ScrollLink } from 'react-scroll';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Sidebar from './sidebar';
 import Autoplay from 'embla-carousel-autoplay';
+import Sidebar from './sidebar';
+import { DecoratedButton } from '@/components/landing/decorated-button';
 
 const carouselItems = [
   { id: 1, src: '/coin/sui.png', alt: 'SUI' },
@@ -62,10 +64,21 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
 
   const transforms = (x: number, y: number, el: HTMLElement) => {
     const box = el.getBoundingClientRect();
-    const calcX = -(y - box.y - box.height / 2) / constrain;
-    const calcY = (x - box.x - box.width / 2) / constrain;
+    const centerX = box.x + box.width / 2;
+    const centerY = box.y + box.height / 2;
 
-    return `perspective(100px) rotateX(${calcX}deg) rotateY(${calcY}deg)`;
+    // Calculate the rotation values
+    let calcX = -(y - centerY) / constrain;
+    let calcY = (x - centerX) / constrain;
+
+    // Define the maximum allowed rotation angles
+    const maxRotationAngle = 20; // You can adjust this value as needed
+
+    // Constrain the rotation values
+    calcX = Math.max(-maxRotationAngle, Math.min(maxRotationAngle, calcX));
+    calcY = Math.max(-maxRotationAngle, Math.min(maxRotationAngle, calcY));
+
+    return `perspective(500px) rotateX(${calcX}deg) rotateY(${calcY}deg)`;
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -84,7 +97,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
         onMouseMove={handleMouseMove}
       >
         <Image
-          className="absolute top-[20px] -left-[40%] sm:-left-[15%] sm:-top-[20px] lg:left-[10%] lg:-top-[50px] w-[357px] h-[357px] sm:w-[701px] sm:h-[701px]"
+          className="mix-blend-color-dodge absolute top-[20px] -left-[40%] sm:-left-[15%] sm:-top-[20px] lg:left-[10%] lg:-top-[50px] w-[357px] h-[357px] sm:w-[701px] sm:h-[701px]"
           src="/circle1.png"
           alt="background"
           width={701}
@@ -112,36 +125,30 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
             <ul className="hidden lg:flex gap-4 z-10">
               <li>
                 <ScrollLink to="section1" smooth={true} duration={500}>
-                  <span className="text-white font-[InterMedium] text-[14px] hover:font-bold cursor-pointer">
+                  <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                     About
                   </span>
                 </ScrollLink>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/docs" passHref>
-                  <span className="text-white font-[InterMedium] text-[14px] hover:font-bold cursor-pointer">
+                  <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                     Partners
                   </span>
                 </Link>
               </li>
               <li>
                 <Link href="/docs" passHref>
-                  <span className="text-white font-[InterMedium] text-[14px] hover:font-bold cursor-pointer">
+                  <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                     Community
                   </span>
                 </Link>
-              </li>
+              </li> */}
             </ul>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-              <Button onClick={() => setIsDialogOpen(true)} className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 sm:ml-3 sm:mt-[0px] text-[16px] z-10 pt-[11px]">
+              <DecoratedButton onClick={() => setIsDialogOpen(true)}>
                 join waitlist
-              </Button>
-              <div className="w-4 h-6 absolute -right-[15px] top-[0px]">
-                <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-dark rounded-full" />
-                <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-dark rounded-full" />
-                <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-dark rounded-full" />
-                <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-dark rounded-full" />
-              </div>
+              </DecoratedButton>
             </div>
             <div className="flex lg:hidden ml-3 text-white" onClick={toggle}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -170,7 +177,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none">
                   when{' '}
                 </Label>
-                <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-normal font-['Shrikhand'] leading-none ml-3 mt-[3px] sm:mt-[10px]">
+                <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-normal font-['Shrikhand'] leading-none ml-3 mt-[3px] sm:mt-[5px] md:mt-[10px]">
                   you
                 </Label>
                 <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none ml-3">
@@ -198,7 +205,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                     ]}
                     setApi={setApi}
                   >
-                    <CarouselContent className="-ml-1 max-w-[150px]">
+                    <CarouselContent className="-ml-1 max-w-[150px] mix-blend-lighten">
                       {carouselItems.map(item => (
                         <CarouselItem key={item.id} className="basis-1/5 pl-1">
                           <Image
@@ -216,15 +223,9 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
               </div>
               <div className="inline-flex justify-center items-start relative">
-                <Button className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10  pt-[11px]">
+                <DecoratedButton>
                   pre-register
-                </Button>
-                <div className="w-4 h-6 absolute -right-[15px] top-[0px]">
-                  <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-dark rounded-full" />
-                  <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-dark rounded-full" />
-                  <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-dark rounded-full" />
-                  <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-dark rounded-full" />
-                </div>
+                </DecoratedButton>
               </div>
             </div>
           </div>
@@ -246,24 +247,18 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
           </DialogHeader>
           <div className="grid">
             <div className="flex justify-center">
-              <input
+              <Input
                 placeholder="Add your X handle"
-                className="border border-white h-[36px] w-full max-w-[280px] text-cream rounded-full border-4 border-white text-center placeholder-white"
+                className="border border-white h-[36px] w-full max-w-[280px] text-white rounded-full border-4 border-white text-center placeholder:text-cream"
               />
             </div>
           </div>
           <DialogFooter>
             <div className="flex justify-center items-center w-full">
               <div className="inline-flex justify-center items-start">
-                <Button className="w-[183px] h-[40px] bg-yellow-soda hover:bg-yellow-soda/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 mt-[20px] sm:ml-3 sm:mt-[0px] text-[16px] z-10">
+                <DecoratedButton variant="yellow-soda">
                   pre-register
-                </Button>
-                <div className="w-4 h-6 relative">
-                  <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-yellow-soda rounded-full" />
-                  <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-yellow-soda rounded-full" />
-                  <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-yellow-soda rounded-full" />
-                  <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-yellow-soda rounded-full" />
-                </div>
+                </DecoratedButton>
               </div>
             </div>
           </DialogFooter>

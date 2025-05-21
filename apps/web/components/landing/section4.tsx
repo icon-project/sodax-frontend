@@ -1,3 +1,4 @@
+import { DecoratedButton } from '@/components/landing/decorated-button';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
@@ -42,20 +43,9 @@ const Section4 = () => {
         </div>
         <Label className="text-sm font-[InterRegular] text-black">Points with every order.</Label>
         <div className="mt-6">
-          <div className="inline-flex justify-center items-start relative">
-            <Button className="w-44 h-[40px] bg-white hover:bg-white/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 sm:ml-3 text-[16px] z-10  pt-[11px]">
-              join waitlist
-            </Button>
-            <div className="w-4 h-6  absolute -right-[15px] top-[0px]">
-              <div className="w-2 h-2 left-[7px] top-[10px] absolute bg-white rounded-full" />
-              <div className="w-1 h-1 left-[9px] top-[-8px] absolute bg-white rounded-full" />
-              <div className="w-1.5 h-1.5 left-[0px] top-[-2px] absolute bg-white rounded-full" />
-              <div className="w-1 h-1 left-[12px] top-[1px] absolute bg-white rounded-full" />
-            </div>
-          </div>
-          {/* <Button className="w-[183px] h-[40px] bg-white text-cherry-dark font-[Shrikhand] rounded-full ml-3 text-[16px]">
+          <DecoratedButton variant="white">
             join waitlist
-          </Button> */}
+          </DecoratedButton>
         </div>
       </div>
     </div>

@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import HeroSection from './herosection';
-import Section1 from './section1';
-import Section2 from './section2';
-import Section3 from './section3';
-import Section4 from './section4';
-import Section5 from './section5';
-import Section6 from './section6';
-import Footer from './footer';
+import HeroSection from '../components/landing/herosection';
+import Section1 from '../components/landing/section1';
+import Section2 from '../components/landing/section2';
+import Section3 from '../components/landing/section3';
+import Section4 from '../components/landing/section4';
+import Section5 from '../components/landing/section5';
+import Section6 from '../components/landing/section6';
+import Footer from '../components/landing/footer';
 
 
 const LandingPage = () => {
