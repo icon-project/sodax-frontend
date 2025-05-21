@@ -22,10 +22,10 @@ import { Link as ScrollLink } from 'react-scroll';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { Label } from '@/components/ui/label';
-import Sidebar from './sidebar';
-import Autoplay from 'embla-carousel-autoplay';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Autoplay from 'embla-carousel-autoplay';
+import Sidebar from './sidebar';
 
 const carouselItems = [
   { id: 1, src: '/coin/sui.png', alt: 'SUI' },
@@ -63,10 +63,21 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
 
   const transforms = (x: number, y: number, el: HTMLElement) => {
     const box = el.getBoundingClientRect();
-    const calcX = -(y - box.y - box.height / 2) / constrain;
-    const calcY = (x - box.x - box.width / 2) / constrain;
+    const centerX = box.x + box.width / 2;
+    const centerY = box.y + box.height / 2;
 
-    return `perspective(100px) rotateX(${calcX}deg) rotateY(${calcY}deg)`;
+    // Calculate the rotation values
+    let calcX = -(y - centerY) / constrain;
+    let calcY = (x - centerX) / constrain;
+
+    // Define the maximum allowed rotation angles
+    const maxRotationAngle = 20; // You can adjust this value as needed
+
+    // Constrain the rotation values
+    calcX = Math.max(-maxRotationAngle, Math.min(maxRotationAngle, calcX));
+    calcY = Math.max(-maxRotationAngle, Math.min(maxRotationAngle, calcY));
+
+    return `perspective(500px) rotateX(${calcX}deg) rotateY(${calcY}deg)`;
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -134,7 +145,10 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
               </li> */}
             </ul>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-              <Button onClick={() => setIsDialogOpen(true)} className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 sm:ml-3 sm:mt-[0px] text-[16px] z-10 pt-[11px]">
+              <Button
+                onClick={() => setIsDialogOpen(true)}
+                className="w-[183px] h-[40px] bg-yellow-dark hover:bg-yellow-dark/80 text-cherry-dark font-[Shrikhand] rounded-full ml-0 sm:ml-3 sm:mt-[0px] text-[16px] z-10 pt-[11px]"
+              >
                 join waitlist
               </Button>
               <div className="w-4 h-6 absolute -right-[15px] top-[0px]">
