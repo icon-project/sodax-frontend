@@ -2,8 +2,8 @@ import type { Address, Hex } from 'viem';
 import { CWSpokeProvider } from '../../entities/cosmos/CWSpokeProvider.js';
 import { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import {
+  type EvmHubProvider,
   EvmSpokeProvider,
-  type HubProvider,
   SolanaSpokeProvider,
   type SpokeProvider,
   StellarSpokeProvider,
@@ -28,13 +28,13 @@ export class SpokeService {
    * Deposit tokens to the spoke chain.
    * @param {GetSpokeDepositParamsType<T extends SpokeProvider>} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
-   * @param {HubProvider} hubProvider - The provider for the hub chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
   public static async deposit<T extends SpokeProvider = SpokeProvider, R extends boolean = false>(
     params: GetSpokeDepositParamsType<T>,
     spokeProvider: T,
-    hubProvider: HubProvider,
+    hubProvider: EvmHubProvider,
     raw?: R,
   ): Promise<PromiseTxReturnType<T, R>> {
     if (spokeProvider instanceof EvmSpokeProvider) {
@@ -125,14 +125,14 @@ export class SpokeService {
    * @param {Address} from - The address of the user on the spoke chain.
    * @param {Hex} payload - The payload to send to the contract.
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
-   * @param {HubProvider} hubProvider - The provider for the hub chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
   public static async callWallet<T extends SpokeProvider = SpokeProvider, R extends boolean = false>(
     from: GetAddressType<T>,
     payload: Hex,
     spokeProvider: T,
-    hubProvider: HubProvider,
+    hubProvider: EvmHubProvider,
     raw?: R,
   ): Promise<PromiseTxReturnType<T, R>> {
     if (spokeProvider instanceof EvmSpokeProvider) {

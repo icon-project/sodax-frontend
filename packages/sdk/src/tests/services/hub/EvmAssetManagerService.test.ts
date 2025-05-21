@@ -3,7 +3,6 @@ import { decodeFunctionData, type Address, type PublicClient } from 'viem';
 import { assetManagerAbi } from '../../../abis/index.js';
 import {
   EvmAssetManagerService,
-  type EvmHubProvider,
   type EvmSpokeProvider,
   type EvmWalletProvider,
   spokeChainConfig,
@@ -11,6 +10,9 @@ import {
   type EvmWithdrawAssetDataParams,
   getHubChainConfig,
   AVALANCHE_FUJI_TESTNET_CHAIN_ID,
+  EvmHubProvider,
+  type EvmHubProviderConfig,
+  SONIC_MAINNET_CHAIN_ID,
 } from '../../../index.js';
 
 vi.mock('../../../utils/evm-utils.js', () => ({
@@ -19,7 +21,7 @@ vi.mock('../../../utils/evm-utils.js', () => ({
 
 vi.mock('../../../services/hub/EvmWalletAbstraction.js', () => ({
   EvmWalletAbstraction: {
-    getUserWallet: () => '0x4444444444444444444444444444444444444444',
+    getUserHubWalletAddress: () => '0x4444444444444444444444444444444444444444',
   },
 }));
 
@@ -82,17 +84,12 @@ describe('EvmAssetManagerService', () => {
     getWalletAddress: () => '0x3333333333333333333333333333333333333333' as Address,
   } satisfies EvmSpokeProvider;
 
-  const mockHubProvider = {
-    walletProvider: {
-      publicClient: {
-        readContract: vi.fn(),
-      },
-      walletClient: {
-        writeContract: vi.fn(),
-      },
-    } as unknown as EvmWalletProvider,
-    chainConfig: getHubChainConfig(57054),
-  } satisfies EvmHubProvider;
+  const mockHubConfig = {
+    hubRpcUrl: 'https://rpc.soniclabs.com',
+    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  } satisfies EvmHubProviderConfig;
+
+  const mockHubProvider = new EvmHubProvider(mockHubConfig);
 
   beforeEach(() => {
     vi.resetAllMocks();

@@ -36,11 +36,9 @@ export class SolanaSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseSolanaTxReturnType<R> {
-    const userWallet: Address = params.to ?? (await EvmWalletAbstraction.getUserWallet(
-      spokeProvider.chainConfig.chain.id,
-      toHex(params.from.toBytes()),
-      hubProvider,
-    ));
+    const userWallet: Address =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(spokeProvider.chainConfig.chain.id, toHex(params.from.toBytes()), hubProvider));
 
     return SolanaSpokeService.transfer(
       {
@@ -79,7 +77,7 @@ export class SolanaSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseSolanaTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserWallet(
+    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
       from,
       hubProvider,

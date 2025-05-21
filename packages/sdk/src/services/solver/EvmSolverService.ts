@@ -219,7 +219,7 @@ export class EvmSolverService {
     hubProvider: EvmHubProvider,
     solverConfig: SolverConfig,
   ): Promise<Intent> {
-    const receipt = await hubProvider.walletProvider.publicClient.waitForTransactionReceipt({ hash: txHash });
+    const receipt = await hubProvider.publicClient.waitForTransactionReceipt({ hash: txHash });
     const logs: IntentCreatedEventLog[] = parseEventLogs({
       abi: IntentsAbi,
       eventName: 'IntentCreated',

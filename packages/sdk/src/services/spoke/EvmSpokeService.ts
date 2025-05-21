@@ -1,5 +1,5 @@
 import { type Address, encodeFunctionData } from 'viem';
-import { spokeAssetManagerAbi, erc20Abi } from '../../abis/index.js';
+import { erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
 import type { EvmHubProvider, EvmSpokeProvider } from '../../entities/index.js';
 import { connectionAbi, getIntentRelayChainId } from '../../index.js';
 import type { EvmReturnType, EvmTransferToHubParams, Hex, PromiseEvmTxReturnType } from '../../types.js';
@@ -31,7 +31,11 @@ export class EvmSpokeService {
   ): PromiseEvmTxReturnType<R> {
     const to =
       params.to ??
-      (await EvmWalletAbstraction.getUserWallet(spokeProvider.chainConfig.chain.id, params.from, hubProvider));
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        params.from,
+        hubProvider,
+      ));
 
     return EvmSpokeService.transfer(
       {
@@ -76,7 +80,7 @@ export class EvmSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserWallet(
+    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
       from,
       hubProvider,

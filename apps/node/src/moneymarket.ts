@@ -99,7 +99,7 @@ function displayBaseCurrencyInfo(info: BaseCurrencyInfo) {
 // Main function to fetch and display pool data
 async function main() {
   try {
-    const moneyMarket = new MoneyMarketService();
+    const moneyMarket = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
 
     // Get list of reserves
     console.log('Fetching reserves list...');

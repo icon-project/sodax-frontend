@@ -1,8 +1,8 @@
-import { type Address, fromHex, type Hex } from 'viem';
-import { EvmWalletAbstraction } from '../hub/index.js';
+import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
-import { getIntentRelayChainId, type PromiseStellarTxReturnType } from '../../index.js';
+import { type PromiseStellarTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type StellarSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
@@ -28,11 +28,8 @@ export class StellarSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
-    const userWallet: Address = params.to ?? (await EvmWalletAbstraction.getUserWallet(
-      spokeProvider.chainConfig.chain.id,
-      params.from,
-      hubProvider,
-    ));
+    const userWallet: Address =
+      params.to ?? (await EvmWalletAbstraction.getUserHubWalletAddress(spokeProvider.chainConfig.chain.id, params.from, hubProvider));
 
     return StellarSpokeService.transfer(
       {
@@ -57,11 +54,7 @@ export class StellarSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserWallet(
-      spokeProvider.chainConfig.chain.id,
-      from,
-      hubProvider,
-    );
+    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(spokeProvider.chainConfig.chain.id, from, hubProvider);
 
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return StellarSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);

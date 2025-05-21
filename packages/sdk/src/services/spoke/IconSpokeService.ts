@@ -4,9 +4,9 @@ import type { Address, Hash, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
+import { getIntentRelayChainId } from '../../index.js';
 import type { IconAddress, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
-import { getIntentRelayChainId } from '../../index.js';
 
 export type IconSpokeDepositParams = {
   from: IconAddress; // The address of the user on the spoke chain
@@ -40,11 +40,13 @@ export class IconSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseIconTxReturnType<R> {
-    const userWallet: Address = params.to ?? (await EvmWalletAbstraction.getUserWallet(
-      spokeProvider.chainConfig.chain.id,
-      getIconAddressBytes(params.from),
-      hubProvider,
-    ));
+    const userWallet: Address =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        getIconAddressBytes(params.from),
+        hubProvider,
+      ));
 
     return IconSpokeService.transfer(
       {
@@ -90,7 +92,7 @@ export class IconSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): Promise<Hash> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserWallet(
+    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
       getIconAddressBytes(from),
       hubProvider,

@@ -62,7 +62,7 @@ const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
 const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
 // Configure based on testnet/mainnet
-const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
+const moneyMarketService = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
 
 const solverConfig: SolverConfig = IS_TESTNET
   ? {
@@ -131,12 +131,11 @@ async function supply(token: Address, amount: bigint) {
     hubProvider,
   );
 
-  const data = MoneyMarketService.supplyData(
+  const data = moneyMarketService.supplyData(
     token,
     hubWallet,
     amount,
     spokeProvider.chainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash = await SpokeService.deposit(
@@ -159,14 +158,13 @@ async function borrow(token: Address, amount: bigint) {
     spokeProvider.walletProvider.walletClient.account.address,
     hubProvider,
   );
-  const data: Hex = MoneyMarketService.borrowData(
+  const data: Hex = moneyMarketService.borrowData(
     hubWallet,
     spokeProvider.walletProvider.walletClient.account.address,
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
     hubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -186,14 +184,13 @@ async function withdraw(token: Address, amount: bigint) {
     hubProvider,
   );
 
-  const data: Hex = MoneyMarketService.withdrawData(
+  const data: Hex = moneyMarketService.withdrawData(
     hubWallet,
     spokeProvider.walletProvider.walletClient.account.address,
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
     hubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -212,12 +209,11 @@ async function repay(token: Address, amount: bigint) {
     spokeProvider.walletProvider.walletClient.account.address,
     hubProvider,
   );
-  const data: Hex = MoneyMarketService.repayData(
+  const data: Hex = moneyMarketService.repayData(
     token,
     hubWallet,
     amount,
     spokeProvider.chainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.deposit(

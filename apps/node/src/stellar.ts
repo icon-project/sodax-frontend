@@ -2,7 +2,6 @@ import type { Hash, Hex, Address } from 'viem';
 import {
   EvmAssetManagerService,
   EvmHubProvider,
-  type MoneyMarketConfig,
   MoneyMarketService,
   EvmWalletAbstraction,
   EvmWalletProvider,
@@ -51,7 +50,7 @@ const stellarSpokeProvider = new StellarSpokeProvider(
   STELLAR_RPC_URL,
 );
 
-const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
+const moneyMarketService: MoneyMarketService = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
 
 async function getBalance(token: string) {
   const balance = await stellarSpokeProvider.getBalance(token);
@@ -113,12 +112,11 @@ async function supply(token: string, amount: bigint) {
     sonicEvmHubProvider,
   );
 
-  const data = MoneyMarketService.supplyData(
+  const data = moneyMarketService.supplyData(
     token,
     hubWallet,
     amount,
     stellarSpokeProvider.chainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash = await SpokeService.deposit(
@@ -142,14 +140,13 @@ async function borrow(token: string, amount: bigint) {
     sonicEvmHubProvider,
   );
   console.log(hubWallet);
-  const data: Hex = MoneyMarketService.borrowData(
+  const data: Hex = moneyMarketService.borrowData(
     hubWallet,
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
     token,
     amount,
     stellarSpokeProvider.chainConfig.chain.id,
     sonicEvmHubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -171,14 +168,13 @@ async function withdraw(token: string, amount: bigint) {
 
   console.log('Hub wallet: ', hubWallet);
 
-  const data: Hex = MoneyMarketService.withdrawData(
+  const data: Hex = moneyMarketService.withdrawData(
     hubWallet,
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
     token,
     amount,
     stellarSpokeProvider.chainConfig.chain.id,
     sonicEvmHubProvider,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -197,12 +193,11 @@ async function repay(token: string, amount: bigint) {
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
     sonicEvmHubProvider,
   );
-  const data: Hex = MoneyMarketService.repayData(
+  const data: Hex = moneyMarketService.repayData(
     token,
     hubWallet,
     amount,
     stellarSpokeProvider.chainConfig.chain.id,
-    moneyMarketConfig,
   );
 
   const txHash: Hash = await SpokeService.deposit(

@@ -5,8 +5,8 @@ import {
   BSC_MAINNET_CHAIN_ID,
   type CreateIntentParams,
   EvmHubProvider,
+  type EvmHubProviderConfig,
   EvmSpokeProvider,
-  EvmWalletAbstraction,
   EvmWalletProvider,
   type FeeAmount,
   type Intent,
@@ -31,6 +31,7 @@ import {
   getSpokeChainConfig,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
+import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
 
 describe('SolverService', () => {
@@ -43,6 +44,13 @@ describe('SolverService', () => {
     solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
     relayerApiEndpoint: 'https://...',
   } satisfies SolverConfig;
+
+  const mockHubConfig = {
+    hubRpcUrl: 'https://rpc.soniclabs.com',
+    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  } satisfies EvmHubProviderConfig;
+
+  const mockHubProvider = new EvmHubProvider(mockHubConfig);
 
   const mockQuoteRequest = {
     token_src: bscEthToken,
@@ -64,29 +72,27 @@ describe('SolverService', () => {
   const feeAmount = 1000n; // 1000 of input token
   const feePercentage = 100; // 1% fee
 
-  const solverService = new SolverService(mockSolverConfig);
+  const solverService = new SolverService(mockSolverConfig, mockHubProvider);
   const solverServiceWithPercentageFee = new SolverService({
     ...mockSolverConfig,
-    fee: {
+    partnerFee: {
       address: '0x0000000000000000000000000000000000000000',
       percentage: feePercentage,
     },
-  });
+  }, mockHubProvider);
   const solverServiceWithAmountFee = new SolverService({
     ...mockSolverConfig,
-    fee: {
+    partnerFee: {
       address: '0x0000000000000000000000000000000000000000',
       amount: feeAmount,
     },
-  });
+  }, mockHubProvider);
 
   const mockEvmWalletProvider = new EvmWalletProvider({
     chain: BSC_MAINNET_CHAIN_ID,
     privateKey: '0xe0a01496281934154fe895c31b352f19fa9250fc0ffa28a597335d26aeb2bbf9' as Hex, // NOTE: random private key for unit testing only
     provider: 'https://bsc-mainnet.infura.io/v3/1234567890',
   });
-
-  const mockHubProvider = new EvmHubProvider(mockEvmWalletProvider, getHubChainConfig(SONIC_MAINNET_CHAIN_ID));
 
   const mockFee = {
     address: '0x0000000000000000000000000000000000000000',
@@ -233,7 +239,7 @@ describe('SolverService', () => {
   });
 
   describe('postExecution', () => {
-    it('should return a successful execution response', async () => {
+    it('should return a successful post execution response', async () => {
       // Mock fetch response
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
@@ -397,7 +403,7 @@ describe('SolverService', () => {
 
     it('should successfully create and submit an intent', async () => {
       vi.spyOn(EvmSolverService, 'createIntentDeposit').mockResolvedValueOnce(mockTxHash);
-      vi.spyOn(EvmWalletAbstraction, 'getUserWallet').mockResolvedValueOnce(
+      vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
         mockEvmWalletProvider.getWalletAddressBytes(),
       );
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
@@ -419,7 +425,6 @@ describe('SolverService', () => {
       const result = await solverService.createAndSubmitIntent(
         mockCreateIntentParams,
         mockBscSpokeProvider,
-        mockHubProvider,
         mockFee,
       );
 
@@ -432,7 +437,6 @@ describe('SolverService', () => {
       expect(solverService['createIntent']).toHaveBeenCalledWith(
         mockCreateIntentParams,
         mockBscSpokeProvider,
-        mockHubProvider,
         mockFee,
         false,
       );
@@ -456,7 +460,6 @@ describe('SolverService', () => {
       const result = await solverService.createAndSubmitIntent(
         mockCreateIntentParams,
         mockBscSpokeProvider,
-        mockHubProvider,
         mockFee,
       );
 
@@ -483,7 +486,6 @@ describe('SolverService', () => {
       const result = await solverService.createAndSubmitIntent(
         mockCreateIntentParams,
         mockBscSpokeProvider,
-        mockHubProvider,
         mockFee,
       );
 
@@ -533,7 +535,7 @@ describe('SolverService', () => {
 
     it('should successfully create an intent for EVM chain', async () => {
       vi.spyOn(EvmSolverService, 'createIntentDeposit').mockResolvedValueOnce(mockTxHash);
-      vi.spyOn(EvmWalletAbstraction, 'getUserWallet').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+      vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
 
       const result: Result<
         [Hex, Intent & FeeAmount],
@@ -541,7 +543,6 @@ describe('SolverService', () => {
       > = await solverService.createIntent(
         mockCreateIntentParams,
         mockBscSpokeProvider,
-        mockHubProvider,
         mockFee,
         false,
       );
@@ -586,7 +587,7 @@ describe('SolverService', () => {
 
     it('should successfully cancel an intent for EVM chain', async () => {
       vi.spyOn(EvmSolverService, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
-      const result = await solverService.cancelIntent(intent, mockBscSpokeProvider, mockHubProvider, false);
+      const result = await solverService.cancelIntent(intent, mockBscSpokeProvider, false);
 
       expect(result).toBe(mockTxHash);
     });
@@ -600,7 +601,7 @@ describe('SolverService', () => {
         },
       } as unknown as SpokeProvider;
 
-      await expect(solverService.cancelIntent(intent, nonEvmSpokeProvider, mockHubProvider, false)).rejects.toThrow(
+      await expect(solverService.cancelIntent(intent, nonEvmSpokeProvider, false)).rejects.toThrow(
         'Invalid spoke provider (EvmSpokeProvider expected',
       );
     });
@@ -614,7 +615,7 @@ describe('SolverService', () => {
         },
       } as unknown as SpokeProvider;
 
-      await expect(solverService.cancelIntent(intent, invalidSpokeProvider, mockHubProvider, false)).rejects.toThrow(
+      await expect(solverService.cancelIntent(intent, invalidSpokeProvider, false)).rejects.toThrow(
         'Invalid spoke provider (EvmSpokeProvider expected)',
       );
     });
@@ -656,7 +657,7 @@ describe('SolverService', () => {
 
     it('should successfully get an intent for EVM chain', async () => {
       vi.spyOn(EvmSolverService, 'getIntent').mockResolvedValueOnce(mockIntent);
-      const result = await solverService.getIntent(mockTxHash, mockHubProvider);
+      const result = await solverService.getIntent(mockTxHash);
 
       expect(result).toEqual(mockIntent);
     });

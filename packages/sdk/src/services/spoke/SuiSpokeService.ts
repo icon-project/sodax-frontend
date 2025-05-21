@@ -1,8 +1,8 @@
-import { fromHex, type Address, type Hex } from 'viem';
-import { EvmWalletAbstraction } from '../hub/index.js';
+import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { SuiSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
-import { getIntentRelayChainId, type PromiseSuiTxReturnType } from '../../index.js';
+import { type PromiseSuiTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type SuiSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
@@ -36,11 +36,8 @@ export class SuiSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseSuiTxReturnType<R> {
-    const userWallet: Address = params.to ?? (await EvmWalletAbstraction.getUserWallet(
-      spokeProvider.chainConfig.chain.id,
-      params.from,
-      hubProvider,
-    ));
+    const userWallet: Address =
+      params.to ?? (await EvmWalletAbstraction.getUserHubWalletAddress(spokeProvider.chainConfig.chain.id, params.from, hubProvider));
 
     return SuiSpokeService.transfer(
       {
@@ -80,11 +77,7 @@ export class SuiSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseSuiTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserWallet(
-      spokeProvider.chainConfig.chain.id,
-      from,
-      hubProvider,
-    );
+    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(spokeProvider.chainConfig.chain.id, from, hubProvider);
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return SuiSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);
   }
