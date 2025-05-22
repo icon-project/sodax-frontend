@@ -2,7 +2,6 @@ import type { Address, Hash, Hex } from 'viem';
 import {
   EvmAssetManagerService,
   EvmHubProvider,
-  MoneyMarketService,
   EvmWalletAbstraction,
   EvmWalletProvider,
   getHubChainConfig,
@@ -16,6 +15,10 @@ import {
   getMoneyMarketConfig,
   SUI_TESTNET_CHAIN_ID,
   SUI_MAINNET_CHAIN_ID,
+  EvmHubProviderConfig,
+  SolverConfig,
+  Sodax,
+  SodaxConfig,
 } from '@new-world/sdk';
 
 import dotenv from 'dotenv';
@@ -38,8 +41,31 @@ const hubEvmWallet = new EvmWalletProvider({
   provider: HUB_RPC_URL,
 });
 
-const sonicHubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
-const sonicEvmHubProvider = new EvmHubProvider(hubEvmWallet, sonicHubChainConfig);
+const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
+const hubProvider = new EvmHubProvider({
+  hubRpcUrl: HUB_RPC_URL,
+  chainConfig: hubChainConfig,
+});
+
+const hubConfig = {
+  hubRpcUrl: HUB_RPC_URL,
+  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+} satisfies EvmHubProviderConfig;
+
+const solverConfig = {
+  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
+  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
+  partnerFee: undefined,
+} satisfies SolverConfig;
+
+const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
+
+const sodax = new Sodax({
+  solver: solverConfig,
+  moneyMarket: moneyMarketConfig,
+  hubProviderConfig: hubConfig,
+} satisfies SodaxConfig);
 
 const suiConfig = spokeChainConfig[SUI_CHAIN_ID] as SuiSpokeChainConfig;
 const suiWalletMnemonics = process.env.MNEMONICS;
@@ -50,18 +76,16 @@ if (!suiWalletMnemonics) {
 const suiwalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
 const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiwalletProvider);
 
-const moneyMarketService: MoneyMarketService = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
-
 async function getBalance(token: string) {
   const balance = await suiSpokeProvider.getBalance(token);
   console.log('[Balance]:', balance);
 }
 
 async function depositTo(token: string, amount: bigint, recipient: Address) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     suiSpokeProvider.getWalletAddressBytes(),
-    sonicEvmHubProvider,
+    hubProvider,
   );
   const data = EvmAssetManagerService.depositToData(
     {
@@ -80,7 +104,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
       data,
     },
     suiSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[depositTo] txHash', txHash);
@@ -97,27 +121,27 @@ async function withdrawAsset(
       to: SuiSpokeProvider.getAddressBCSBytes(recipient),
       amount,
     },
-    sonicEvmHubProvider,
+    hubProvider,
     suiSpokeProvider.chainConfig.chain.id,
   );
   const txHash: Hash = await SpokeService.callWallet(
     suiSpokeProvider.getWalletAddressBytes(),
     data,
     suiSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[withdrawAsset] txHash', txHash);
 }
 
 async function supply(token: string, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     suiSpokeProvider.getWalletAddressBytes(),
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
-  const data = moneyMarketService.supplyData(
+  const data = sodax.moneyMarket.supplyData(
     token,
     hubWallet,
     amount,
@@ -132,71 +156,69 @@ async function supply(token: string, amount: bigint) {
       data,
     },
     suiSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[supply] txHash', txHash);
 }
 
 async function borrow(token: string, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     suiSpokeProvider.getWalletAddressBytes(),
-    sonicEvmHubProvider,
+    hubProvider,
   );
   console.log(hubWallet);
-  const data: Hex = moneyMarketService.borrowData(
+  const data: Hex = sodax.moneyMarket.borrowData(
     hubWallet,
     suiSpokeProvider.getWalletAddressBytes(),
     token,
     amount,
     suiSpokeProvider.chainConfig.chain.id,
-    sonicEvmHubProvider,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
     suiSpokeProvider.getWalletAddressBytes(),
     data,
     suiSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[borrow] txHash', txHash);
 }
 
 async function withdraw(token: string, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     suiSpokeProvider.getWalletAddressBytes(),
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
-  const data: Hex = moneyMarketService.withdrawData(
+  const data: Hex = sodax.moneyMarket.withdrawData(
     hubWallet,
     suiSpokeProvider.getWalletAddressBytes(),
     token,
     amount,
     suiSpokeProvider.chainConfig.chain.id,
-    sonicEvmHubProvider,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
     suiSpokeProvider.getWalletAddressBytes(),
     data,
     suiSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[withdraw] txHash', txHash);
 }
 
 async function repay(token: string, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     suiSpokeProvider.getWalletAddressBytes(),
-    sonicEvmHubProvider,
+    hubProvider,
   );
-  const data: Hex = moneyMarketService.repayData(
+  const data: Hex = sodax.moneyMarket.repayData(
     token,
     hubWallet,
     amount,
@@ -211,7 +233,7 @@ async function repay(token: string, amount: bigint) {
       data,
     },
     suiSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[repay] txHash', txHash);

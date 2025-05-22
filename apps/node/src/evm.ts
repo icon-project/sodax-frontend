@@ -2,18 +2,15 @@ import type { Address, Hash, Hex } from 'viem';
 import {
   EvmAssetManagerService,
   EvmHubProvider,
-  type MoneyMarketConfig,
   type EvmSpokeChainConfig,
   EvmSpokeProvider,
   EvmWalletAbstraction,
   EvmWalletProvider,
   getHubChainConfig,
-  MoneyMarketService,
   spokeChainConfig,
   SpokeService,
   waitForTransactionReceipt,
   type SolverConfig,
-  SolverService,
   IntentsAbi,
   SONIC_TESTNET_CHAIN_ID,
   AVALANCHE_FUJI_TESTNET_CHAIN_ID,
@@ -24,6 +21,9 @@ import {
   AVALANCHE_MAINNET_CHAIN_ID,
   type EvmChainId,
   getMoneyMarketConfig,
+  EvmHubProviderConfig,
+  SodaxConfig,
+  Sodax,
 } from '@new-world/sdk';
 
 // load PK from .env
@@ -55,14 +55,20 @@ const spokeEvmWallet = new EvmWalletProvider({
   provider: SPOKE_RPC_URL,
 });
 
-const hubChainCfg = getHubChainConfig(HUB_CHAIN_ID);
-const hubProvider = new EvmHubProvider(hubEvmWallet, hubChainCfg);
+const hubConfig = {
+  hubRpcUrl: HUB_RPC_URL,
+  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+} satisfies EvmHubProviderConfig;
+
+const hubProvider = new EvmHubProvider({
+  hubRpcUrl: HUB_RPC_URL,
+  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+});
 
 const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
 const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
-// Configure based on testnet/mainnet
-const moneyMarketService = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
+const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const solverConfig: SolverConfig = IS_TESTNET
   ? {
@@ -71,12 +77,16 @@ const solverConfig: SolverConfig = IS_TESTNET
       relayerApiEndpoint: 'https://TODO',
     }
   : {
-      intentsContract: '0x611d800F24b5844Ea874B330ef4Ad6f1d5812f29',
-      solverApiEndpoint: 'https://TODO',
-      relayerApiEndpoint: 'https://TODO',
+      intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
+      solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+      relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
     };
 
-const solverService = new SolverService(solverConfig);
+const sodax = new Sodax({
+  solver: solverConfig,
+  moneyMarket: moneyMarketConfig,
+  hubProviderConfig: hubConfig,
+} satisfies SodaxConfig);
 
 async function depositTo(token: Address, amount: bigint, recipient: Address) {
   console.log(recipient);
@@ -125,18 +135,13 @@ async function withdrawAsset(token: Address, amount: bigint, recipient: Address)
 }
 
 async function supply(token: Address, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
     spokeProvider.walletProvider.walletClient.account.address,
     hubProvider,
   );
 
-  const data = moneyMarketService.supplyData(
-    token,
-    hubWallet,
-    amount,
-    spokeProvider.chainConfig.chain.id,
-  );
+  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
@@ -153,18 +158,17 @@ async function supply(token: Address, amount: bigint) {
 }
 
 async function borrow(token: Address, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
     spokeProvider.walletProvider.walletClient.account.address,
     hubProvider,
   );
-  const data: Hex = moneyMarketService.borrowData(
+  const data: Hex = sodax.moneyMarket.borrowData(
     hubWallet,
     spokeProvider.walletProvider.walletClient.account.address,
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
-    hubProvider,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -178,19 +182,18 @@ async function borrow(token: Address, amount: bigint) {
 }
 
 async function withdraw(token: Address, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
     spokeProvider.walletProvider.walletClient.account.address,
     hubProvider,
   );
 
-  const data: Hex = moneyMarketService.withdrawData(
+  const data: Hex = sodax.moneyMarket.withdrawData(
     hubWallet,
     spokeProvider.walletProvider.walletClient.account.address,
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
-    hubProvider,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
@@ -204,17 +207,12 @@ async function withdraw(token: Address, amount: bigint) {
 }
 
 async function repay(token: Address, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
     spokeProvider.walletProvider.walletClient.account.address,
     hubProvider,
   );
-  const data: Hex = moneyMarketService.repayData(
-    token,
-    hubWallet,
-    amount,
-    spokeProvider.chainConfig.chain.id,
-  );
+  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {
@@ -247,7 +245,7 @@ async function createIntent(amount: bigint, nativeToken: Address, inputToken: Ad
     data: '0x',
   } satisfies CreateIntentParams;
 
-  const txHash = await solverService.createIntent(intent, spokeProvider, hubProvider);
+  const txHash = await sodax.solver.createIntent(intent, spokeProvider);
 
   console.log('[createIntent] txHash', txHash);
 }
@@ -261,13 +259,13 @@ async function fillIntent(
   outputAmount: bigint,
 ) {
   // Get the wallet client and account
-  const walletClient = hubProvider.walletProvider.walletClient;
+  const walletClient = spokeProvider.walletProvider.walletClient;
   const account = walletClient.account;
 
   console.log('Using account:', account.address);
 
   // Get the creator's wallet on the hub chain
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
     spokeProvider.walletProvider.walletClient.account.address,
     hubProvider,
@@ -326,10 +324,10 @@ async function fillIntent(
       chainId: 57054,
     };
 
-    console.log(hubProvider.walletProvider.walletClient.chain);
-    console.log(await hubProvider.walletProvider.walletClient.getChainId());
+    console.log(spokeProvider.walletProvider.walletClient.chain);
+    console.log(await spokeProvider.walletProvider.walletClient.getChainId());
     // Estimate gas with the same account that will send the transaction
-    const { request } = await hubProvider.walletProvider.publicClient.simulateContract(req);
+    const { request } = await spokeProvider.walletProvider.publicClient.simulateContract(req);
     console.log('[fillIntent] request', request);
 
     // Send the transaction using the same request object
@@ -337,7 +335,7 @@ async function fillIntent(
 
     console.log('[fillIntent] txHash', txHash);
 
-    const txReceipt = await waitForTransactionReceipt(txHash, hubProvider.walletProvider);
+    const txReceipt = await waitForTransactionReceipt(txHash, spokeProvider.walletProvider);
 
     console.log(txReceipt);
   } catch (error) {
@@ -348,15 +346,15 @@ async function fillIntent(
 
 // uses spoke assets to create intents
 async function cancelIntent(intentCreateTxHash: string) {
-  const intent = await solverService.getIntent(intentCreateTxHash as Hash, hubProvider);
+  const intent = await sodax.solver.getIntent(intentCreateTxHash as Hash);
 
-  const txHash: Hash = await solverService.cancelIntent(intent, spokeProvider, hubProvider);
+  const txHash: Hash = await sodax.solver.cancelIntent(intent, spokeProvider);
 
   console.log('[cancelIntent] txHash', txHash);
 }
 
 async function getIntent(txHash: string) {
-  const intent = await solverService.getIntent(txHash as Hash, hubProvider);
+  const intent = await sodax.solver.getIntent(txHash as Hash);
   console.log(intent);
 }
 

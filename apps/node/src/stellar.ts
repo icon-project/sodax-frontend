@@ -1,8 +1,6 @@
 import type { Hash, Hex, Address } from 'viem';
 import {
   EvmAssetManagerService,
-  EvmHubProvider,
-  MoneyMarketService,
   EvmWalletAbstraction,
   EvmWalletProvider,
   getHubChainConfig,
@@ -16,6 +14,11 @@ import {
   getMoneyMarketConfig,
   SONIC_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
+  SolverConfig,
+  EvmHubProviderConfig,
+  Sodax,
+  SodaxConfig,
+  EvmHubProvider,
 } from '@new-world/sdk';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
@@ -36,9 +39,6 @@ const hubWallet = new EvmWalletProvider({
   provider: HUB_RPC_URL,
 });
 
-const HubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
-const sonicEvmHubProvider = new EvmHubProvider(hubWallet, HubChainConfig);
-
 const stellarConfig = spokeChainConfig[STELLAR_CHAIN_ID] as StellarSpokeChainConfig;
 const STELLAR_SECRET_KEY = process.env.STELLAR_SECRET_KEY ?? "";
 const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL || stellarConfig.rpc_url;
@@ -50,7 +50,31 @@ const stellarSpokeProvider = new StellarSpokeProvider(
   STELLAR_RPC_URL,
 );
 
-const moneyMarketService: MoneyMarketService = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
+const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
+
+const solverConfig = {
+  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
+  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
+  partnerFee: undefined,
+} satisfies SolverConfig;
+
+const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
+const hubConfig = {
+  hubRpcUrl: HUB_RPC_URL,
+  chainConfig: hubChainConfig,
+} satisfies EvmHubProviderConfig;
+
+const sodax = new Sodax({
+  solver: solverConfig,
+  moneyMarket: moneyMarketConfig,
+  hubProviderConfig: hubConfig,
+} satisfies SodaxConfig);
+
+const hubProvider = new EvmHubProvider({
+  hubRpcUrl: HUB_RPC_URL,
+  chainConfig: hubChainConfig,
+});
 
 async function getBalance(token: string) {
   const balance = await stellarSpokeProvider.getBalance(token);
@@ -75,7 +99,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
       data,
     },
     stellarSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[depositTo] txHash', txHash);
@@ -92,27 +116,27 @@ async function withdrawAsset(
       to: `0x${stellarAddress.fromString(recipient).toScVal().toXDR('hex')}`,
       amount,
     },
-    sonicEvmHubProvider,
+    hubProvider,
     stellarSpokeProvider.chainConfig.chain.id,
   );
   const txHash: Hash = await SpokeService.callWallet(
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
     data,
     stellarSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[withdrawAsset] txHash', txHash);
 }
 
 async function supply(token: string, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
-  const data = moneyMarketService.supplyData(
+  const data = sodax.moneyMarket.supplyData(
     token,
     hubWallet,
     amount,
@@ -127,73 +151,71 @@ async function supply(token: string, amount: bigint) {
       data,
     },
     stellarSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[supply] txHash', txHash);
 }
 
 async function borrow(token: string, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
-    sonicEvmHubProvider,
+    hubProvider,
   );
   console.log(hubWallet);
-  const data: Hex = moneyMarketService.borrowData(
+  const data: Hex = sodax.moneyMarket.borrowData(
     hubWallet,
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
     token,
     amount,
     stellarSpokeProvider.chainConfig.chain.id,
-    sonicEvmHubProvider,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
     data,
     stellarSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[borrow] txHash', txHash);
 }
 
 async function withdraw(token: string, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('Hub wallet: ', hubWallet);
 
-  const data: Hex = moneyMarketService.withdrawData(
+  const data: Hex = sodax.moneyMarket.withdrawData(
     hubWallet,
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
     token,
     amount,
     stellarSpokeProvider.chainConfig.chain.id,
-    sonicEvmHubProvider,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
     data,
     stellarSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[withdraw] txHash', txHash);
 }
 
 async function repay(token: string, amount: bigint) {
-  const hubWallet = await EvmWalletAbstraction.getUserWallet(
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
-    sonicEvmHubProvider,
+    hubProvider,
   );
-  const data: Hex = moneyMarketService.repayData(
+  const data: Hex = sodax.moneyMarket.repayData(
     token,
     hubWallet,
     amount,
@@ -208,7 +230,7 @@ async function repay(token: string, amount: bigint) {
       data,
     },
     stellarSpokeProvider,
-    sonicEvmHubProvider,
+    hubProvider,
   );
 
   console.log('[repay] txHash', txHash);
