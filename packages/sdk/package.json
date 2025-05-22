@@ -16,7 +16,6 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:tmp": "vitest run ./src/services/solver/SolverService.test.ts",
     "dev": "tsc --watch",
     "ci": "pnpm run pretty && pnpm run build && pnpm run test",
     "checkTs": "tsc --noEmit",
