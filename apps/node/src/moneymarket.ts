@@ -2,11 +2,13 @@ import { argv } from 'node:process';
 import {
   type AggregatedReserveData,
   type BaseCurrencyInfo,
-  EvmWalletProvider,
+  EvmHubProviderConfig,
+  getHubChainConfig,
   getMoneyMarketConfig,
   type HubChainId,
   type MoneyMarketConfig,
-  MoneyMarketService,
+  Sodax,
+  SodaxConfig,
   SONIC_MAINNET_CHAIN_ID,
   SONIC_TESTNET_CHAIN_ID,
   type UserReserveData,
@@ -24,13 +26,17 @@ const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_CHAIN_ID: HubChainId = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 
-const hubEvmWallet = new EvmWalletProvider({
-  chain: HUB_CHAIN_ID,
-  privateKey: privateKey as Hex,
-  provider: HUB_RPC_URL,
-});
-
 const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
+
+const hubConfig = {
+  hubRpcUrl: HUB_RPC_URL,
+  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+} satisfies EvmHubProviderConfig;
+
+const sodax = new Sodax({
+  moneyMarket: moneyMarketConfig,
+  hubProviderConfig: hubConfig,
+} satisfies SodaxConfig);
 
 // Helper functions to format data
 function formatPercentage(value: bigint, decimals = 27): string {
@@ -99,23 +105,19 @@ function displayBaseCurrencyInfo(info: BaseCurrencyInfo) {
 // Main function to fetch and display pool data
 async function main() {
   try {
-    const moneyMarket = new MoneyMarketService(getMoneyMarketConfig(HUB_CHAIN_ID));
-
     // Get list of reserves
     console.log('Fetching reserves list...');
-    const reserves = await moneyMarket.getReservesList(
-      moneyMarketConfig.uiPoolDataProvider as Address,
-      moneyMarketConfig.poolAddressesProvider as Address,
-      hubEvmWallet,
+    const reserves = await sodax.moneyMarket.getReservesList(
+      moneyMarketConfig.uiPoolDataProvider,
+      moneyMarketConfig.poolAddressesProvider,
     );
     console.log('Available Reserves:', reserves);
 
     // Get detailed reserve data
     console.log('\nFetching detailed reserve data...');
-    const [reservesData, baseCurrencyInfo] = await moneyMarket.getReservesData(
-      moneyMarketConfig.uiPoolDataProvider as Address,
-      moneyMarketConfig.poolAddressesProvider as Address,
-      hubEvmWallet,
+    const [reservesData, baseCurrencyInfo] = await sodax.moneyMarket.getReservesData(
+      moneyMarketConfig.uiPoolDataProvider,
+      moneyMarketConfig.poolAddressesProvider,
     );
 
     // Display data for each reserve
@@ -127,11 +129,10 @@ async function main() {
     displayBaseCurrencyInfo(baseCurrencyInfo);
 
     const userAddress = argv[2] as Address;
-    const [userReserves, eModeCategory] = await moneyMarket.getUserReservesData(
+    const [userReserves, eModeCategory] = await sodax.moneyMarket.getUserReservesData(
       userAddress,
-      moneyMarketConfig.uiPoolDataProvider as Address,
-      moneyMarketConfig.poolAddressesProvider as Address,
-      hubEvmWallet,
+      moneyMarketConfig.uiPoolDataProvider,
+      moneyMarketConfig.poolAddressesProvider,
     );
 
     console.log('\nUser Position:');

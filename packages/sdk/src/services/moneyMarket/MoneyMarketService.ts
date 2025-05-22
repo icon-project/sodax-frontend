@@ -1,6 +1,6 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { poolAbi } from '../../abis/pool.abi.js';
-import type { EvmHubProvider, EvmWalletProvider } from '../../entities/index.js';
+import type { EvmHubProvider } from '../../entities/index.js';
 import { hubAssets, uiPoolDataAbi } from '../../index.js';
 import type { EvmContractCall, MoneyMarketConfig, SpokeChainId } from '../../types.js';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
@@ -309,15 +309,13 @@ export class MoneyMarketService {
    * Get the list of all reserves in the pool
    * @param uiPoolDataProvider - The address of the UI Pool Data Provider
    * @param poolAddressesProvider - The address of the Pool Addresses Provider
-   * @param {EvmWalletProvider} provider
    * @returns Array of reserve addresses
    */
   async getReservesList(
     uiPoolDataProvider: Address,
     poolAddressesProvider: Address,
-    provider: EvmWalletProvider,
   ): Promise<readonly Address[]> {
-    return provider.publicClient.readContract({
+    return this.hubProvider.publicClient.readContract({
       address: uiPoolDataProvider,
       abi: uiPoolDataAbi,
       functionName: 'getReservesList',
@@ -327,14 +325,15 @@ export class MoneyMarketService {
 
   /**
    * Get detailed data for all reserves in the pool
+   * @param uiPoolDataProvider - The address of the UI Pool Data Provider
+   * @param poolAddressesProvider - The address of the Pool Addresses Provider
    * @returns Tuple containing array of reserve data and base currency info
    */
   async getReservesData(
     uiPoolDataProvider: Address,
     poolAddressesProvider: Address,
-    provider: EvmWalletProvider,
   ): Promise<readonly [readonly AggregatedReserveData[], BaseCurrencyInfo]> {
-    return provider.publicClient.readContract({
+    return this.hubProvider.publicClient.readContract({
       address: uiPoolDataProvider,
       abi: uiPoolDataAbi,
       functionName: 'getReservesData',
@@ -345,15 +344,16 @@ export class MoneyMarketService {
   /**
    * Get user-specific reserve data
    * @param userAddress Address of the user
+   * @param uiPoolDataProvider - The address of the UI Pool Data Provider
+   * @param poolAddressesProvider - The address of the Pool Addresses Provider
    * @returns Tuple containing array of user reserve data and eMode category ID
    */
   async getUserReservesData(
     userAddress: Address,
     uiPoolDataProvider: Address,
     poolAddressesProvider: Address,
-    provider: EvmWalletProvider,
   ): Promise<readonly [readonly UserReserveData[], number]> {
-    return provider.publicClient.readContract({
+    return this.hubProvider.publicClient.readContract({
       address: uiPoolDataProvider,
       abi: uiPoolDataAbi,
       functionName: 'getUserReservesData',
