@@ -56,7 +56,7 @@ export class EvmSpokeService {
    * @returns {Promise<bigint>} The balance of the token.
    */
   public static async getDeposit(token: Address, spokeProvider: EvmSpokeProvider): Promise<bigint> {
-    return spokeProvider.walletProvider.publicClient.readContract({
+    return spokeProvider.publicClient.readContract({
       address: token,
       abi: erc20Abi,
       functionName: 'balanceOf',
@@ -114,20 +114,24 @@ export class EvmSpokeService {
       value: token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ? amount : undefined,
     } as const;
 
+    const rawTx = {
+      from: spokeProvider.walletProvider.getWalletAddress(),
+      to: txPayload.address,
+      value: txPayload.value ?? 0n,
+      data: encodeFunctionData({
+        abi: spokeAssetManagerAbi,
+        functionName: 'transfer',
+        args: [token, recipient, amount, data],
+      }),
+    };
+
     if (raw) {
-      return {
-        from: spokeProvider.getWalletAddress(),
-        to: txPayload.address,
-        value: txPayload.value ?? 0n,
-        data: encodeFunctionData({
-          abi: spokeAssetManagerAbi,
-          functionName: 'transfer',
-          args: [token, recipient, amount, data],
-        }),
-      } as EvmReturnType<R>;
+      return rawTx satisfies EvmReturnType<true> as EvmReturnType<R>;
     }
 
-    return spokeProvider.walletProvider.walletClient.writeContract(txPayload) as PromiseEvmTxReturnType<R>;
+    return spokeProvider.walletProvider.sendTransaction(
+      rawTx,
+    ) satisfies PromiseEvmTxReturnType<false> as PromiseEvmTxReturnType<R>;
   }
 
   /**
@@ -153,18 +157,23 @@ export class EvmSpokeService {
       args: [dstChainId, dstAddress, payload],
     } as const;
 
+    const rawTx = {
+      from: spokeProvider.walletProvider.getWalletAddress(),
+      to: txPayload.address,
+      value: 0n,
+      data: encodeFunctionData({
+        abi: connectionAbi,
+        functionName: 'sendMessage',
+        args: [dstChainId, dstAddress, payload],
+      }),
+    };
+
     if (raw) {
-      return {
-        from: spokeProvider.getWalletAddress(),
-        to: txPayload.address,
-        data: encodeFunctionData({
-          abi: connectionAbi,
-          functionName: 'sendMessage',
-          args: [dstChainId, dstAddress, payload],
-        }),
-      } as EvmReturnType<R>;
+      return rawTx as EvmReturnType<R>;
     }
 
-    return spokeProvider.walletProvider.walletClient.writeContract(txPayload) as PromiseEvmTxReturnType<R>;
+    return spokeProvider.walletProvider.sendTransaction(
+      rawTx,
+    ) satisfies PromiseEvmTxReturnType<false> as PromiseEvmTxReturnType<R>;
   }
 }

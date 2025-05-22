@@ -1,13 +1,15 @@
-import type { Address, Hash } from 'viem';
+import { getIntentRelayChainId } from '../../../index.js'
+import { encodeFunctionData, type Address, type Hash, type HttpTransport, type PublicClient } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { connectionAbi } from '../../../abis/index.js';
 import { getHubChainConfig, SONIC_MAINNET_CHAIN_ID, spokeChainConfig } from '../../../constants.js';
-import type { EvmHubProviderConfig, EvmWalletProvider } from '../../../entities/index.js';
+import type { EvmHubProviderConfig } from '../../../entities/index.js';
 import {
   EvmHubProvider,
   type EvmSpokeDepositParams,
   type EvmSpokeProvider,
   EvmSpokeService,
+  type IEvmWalletProvider,
 } from '../../../index.js';
 
 // Hoisted mocks must be before any other code
@@ -71,18 +73,20 @@ describe('EvmSpokeService', () => {
   const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
   const mockChainId = 43113; // Avalanche Fuji testnet
   const mockTxHash = '0x123...' as Hash;
-  const mockPayload = '0xabcd' as const;
+  const mockPayload = '0xabcd';
 
   // Mock providers setup
   const mockSpokeWalletProvider = {
     publicClient: {
       readContract: vi.fn(),
     },
-    walletClient: {
+    getWalletAddressBytes: {
       writeContract: vi.fn(),
     },
-    getAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
-  } as unknown as EvmWalletProvider;
+    getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+    sendTransaction: vi.fn(),
+    waitForTransactionReceipt: vi.fn(),
+  } as unknown as IEvmWalletProvider;
 
   const mockSpokeProvider = {
     walletProvider: mockSpokeWalletProvider,
@@ -99,7 +103,9 @@ describe('EvmSpokeService', () => {
       },
       nativeToken: '0x0000000000000000000000000000000000000000' as Address,
     },
-    getWalletAddress: () => '0x9999999999999999999999999999999999999999' as Address,
+    publicClient: {
+      readContract: vi.fn(),
+    } as unknown as PublicClient<HttpTransport>,
   } satisfies EvmSpokeProvider;
 
   const mockHubConfig = {
@@ -122,7 +128,7 @@ describe('EvmSpokeService', () => {
     } satisfies EvmSpokeDepositParams;
 
     it('should correctly initiate deposit', async () => {
-      vi.mocked(mockSpokeWalletProvider.walletClient.writeContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockSpokeWalletProvider.sendTransaction).mockResolvedValueOnce(mockTxHash);
 
       const result = await EvmSpokeService.deposit(depositParams, mockSpokeProvider, mockHubProvider);
 
@@ -135,11 +141,11 @@ describe('EvmSpokeService', () => {
         token: mockSpokeProvider.chainConfig.nativeToken,
       };
 
-      vi.mocked(mockSpokeWalletProvider.walletClient.writeContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockSpokeWalletProvider.sendTransaction).mockResolvedValueOnce(mockTxHash);
 
       await EvmSpokeService.deposit(nativeTokenParams, mockSpokeProvider, mockHubProvider);
 
-      expect(mockSpokeWalletProvider.walletClient.writeContract).toHaveBeenCalledWith(
+      expect(mockSpokeWalletProvider.sendTransaction).toHaveBeenCalledWith(
         expect.objectContaining({
           value: mockAmount,
         }),
@@ -150,7 +156,7 @@ describe('EvmSpokeService', () => {
   describe('getDeposit', () => {
     it('should correctly fetch token balance', async () => {
       const expectedBalance = 1000000n;
-      vi.mocked(mockSpokeWalletProvider.publicClient.readContract).mockResolvedValueOnce(expectedBalance);
+      vi.mocked(mockSpokeProvider.publicClient.readContract).mockResolvedValueOnce(expectedBalance);
 
       const result = await EvmSpokeService.getDeposit(mockToken, mockSpokeProvider);
 
@@ -158,7 +164,7 @@ describe('EvmSpokeService', () => {
     });
 
     it('should handle zero balance', async () => {
-      vi.mocked(mockSpokeWalletProvider.publicClient.readContract).mockResolvedValueOnce(0n);
+      vi.mocked(mockSpokeProvider.publicClient.readContract).mockResolvedValueOnce(0n);
 
       const result = await EvmSpokeService.getDeposit(mockToken, mockSpokeProvider);
 
@@ -168,7 +174,7 @@ describe('EvmSpokeService', () => {
 
   describe('callWallet', () => {
     it('should correctly call wallet with payload', async () => {
-      vi.mocked(mockSpokeWalletProvider.walletClient.writeContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockSpokeWalletProvider.sendTransaction).mockResolvedValueOnce(mockTxHash);
 
       const result = await EvmSpokeService.callWallet(mockUser, mockPayload, mockSpokeProvider, mockHubProvider);
 
@@ -176,15 +182,19 @@ describe('EvmSpokeService', () => {
     });
 
     it('should use correct connection contract address', async () => {
-      vi.mocked(mockSpokeWalletProvider.walletClient.writeContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockSpokeWalletProvider.sendTransaction).mockResolvedValueOnce(mockTxHash);
 
       await EvmSpokeService.callWallet(mockUser, mockPayload, mockSpokeProvider, mockHubProvider);
 
-      expect(mockSpokeWalletProvider.walletClient.writeContract).toHaveBeenCalledWith(
+      expect(mockSpokeWalletProvider.sendTransaction).toHaveBeenCalledWith(
         expect.objectContaining({
-          address: mockSpokeProvider.chainConfig.addresses.connection,
-          abi: connectionAbi,
-          functionName: 'sendMessage',
+          from: mockSpokeProvider.walletProvider.getWalletAddress(),
+          to: mockSpokeProvider.chainConfig.addresses.connection,
+          data: encodeFunctionData({
+            abi: connectionAbi,
+            functionName: 'sendMessage',
+            args: [getIntentRelayChainId(mockHubProvider.chainConfig.chain.id), mockUser, mockPayload],
+          }),
         }),
       );
     });
@@ -200,7 +210,7 @@ describe('EvmSpokeService', () => {
         data: '0x',
       } satisfies EvmSpokeDepositParams;
 
-      vi.mocked(mockSpokeWalletProvider.walletClient.writeContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockSpokeWalletProvider.sendTransaction).mockResolvedValueOnce(mockTxHash);
 
       const result = await EvmSpokeService.deposit(largeAmountParams, mockSpokeProvider, mockHubProvider);
 
@@ -215,7 +225,7 @@ describe('EvmSpokeService', () => {
         data: '0x',
       } satisfies EvmSpokeDepositParams;
 
-      vi.mocked(mockSpokeWalletProvider.walletClient.writeContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockSpokeWalletProvider.sendTransaction).mockResolvedValueOnce(mockTxHash);
 
       const result = await EvmSpokeService.deposit(emptyDataParams, mockSpokeProvider, mockHubProvider);
 
@@ -230,7 +240,7 @@ describe('EvmSpokeService', () => {
         data: '0x1234',
       } satisfies EvmSpokeDepositParams;
 
-      vi.mocked(mockSpokeWalletProvider.walletClient.writeContract).mockResolvedValueOnce(mockTxHash);
+      vi.mocked(mockSpokeWalletProvider.sendTransaction).mockResolvedValueOnce(mockTxHash);
 
       const result = await EvmSpokeService.deposit(customDataParams, mockSpokeProvider, mockHubProvider);
 

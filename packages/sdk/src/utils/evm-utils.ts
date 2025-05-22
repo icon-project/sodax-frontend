@@ -1,6 +1,7 @@
-import { encodeAbiParameters, parseAbiParameters, type Hex, type TransactionReceipt } from 'viem';
-import type { EvmContractCall } from '../types.js';
-import type { EvmWalletProvider } from '../entities/index.js';
+import { encodeAbiParameters, parseAbiParameters } from 'viem';
+import type { EvmContractCall, EvmRawTransactionReceipt, Hex } from '../types.js';
+import type { IEvmWalletProvider } from '../interfaces.js';
+
 /**
  * ABI-encode an array of ContractCall objects.
  * @param calls An array of ContractCall objects.
@@ -12,6 +13,6 @@ export function encodeContractCalls(calls: EvmContractCall[]): Hex {
   ]);
 }
 
-export async function waitForTransactionReceipt(hash: Hex, provider: EvmWalletProvider): Promise<TransactionReceipt> {
-  return provider.publicClient.waitForTransactionReceipt({ hash });
+export async function waitForTransactionReceipt(hash: Hex, provider: IEvmWalletProvider): Promise<EvmRawTransactionReceipt> {
+  return provider.waitForTransactionReceipt(hash);
 }

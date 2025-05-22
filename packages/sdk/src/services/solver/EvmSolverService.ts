@@ -171,17 +171,17 @@ export class EvmSolverService {
     );
 
     return SpokeService.deposit(
-        {
-          from: spokeProvider.getWalletAddress(),
-          to: creatorHubWalletAddress,
-          token: createIntentParams.inputToken,
-          amount: createIntentParams.inputAmount + feeAmount,
-          data: data,
-        },
-        spokeProvider,
-        hubProvider,
-        raw,
-      );
+      {
+        from: spokeProvider.walletProvider.getWalletAddress(),
+        to: creatorHubWalletAddress,
+        token: createIntentParams.inputToken,
+        amount: createIntentParams.inputAmount + feeAmount,
+        data: data,
+      },
+      spokeProvider,
+      hubProvider,
+      raw,
+    );
   }
 
   /**
@@ -204,20 +204,26 @@ export class EvmSolverService {
     const intentsContract = intentConfig.intentsContract;
     calls.push(EvmSolverService.encodeCancelIntent(intent, intentsContract));
     const data = encodeContractCalls(calls);
-    return SpokeService.callWallet(spokeProvider.getWalletAddress(), data, spokeProvider, hubProvider, raw);
+    return SpokeService.callWallet(
+      spokeProvider.walletProvider.getWalletAddress(),
+      data,
+      spokeProvider,
+      hubProvider,
+      raw,
+    );
   }
 
   /**
    * Gets an intent from a transaction hash
    * @param {Hash} txHash - The transaction hash
-   * @param {EvmHubProvider} hubProvider - The EVM hub provider
    * @param {SolverConfig} solverConfig - The solver configuration
+   * @param {EvmHubProvider} hubProvider - The EVM hub provider
    * @returns {Promise<Intent>} The intent
    */
   public static async getIntent(
     txHash: Hash,
-    hubProvider: EvmHubProvider,
     solverConfig: SolverConfig,
+    hubProvider: EvmHubProvider,
   ): Promise<Intent> {
     const receipt = await hubProvider.publicClient.waitForTransactionReceipt({ hash: txHash });
     const logs: IntentCreatedEventLog[] = parseEventLogs({
