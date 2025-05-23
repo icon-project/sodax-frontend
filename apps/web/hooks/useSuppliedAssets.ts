@@ -1,8 +1,8 @@
-import { allXTokens, moneyMarket, moneyMarketConfig, sonicBlazeTestnet } from '@/app/config';
+import { allXTokens, moneyMarket, moneyMarketConfig } from '@/app/config';
 import type { EvmHubProvider } from '@new-world/sdk';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useQuery } from '@tanstack/react-query';
-import type { Address, HttpTransport, PublicClient } from 'viem';
+import type { Address } from 'viem';
 import { useHubProvider } from './useHubProvider';
 import { useHubWallet } from './useHubWallet';
 import { useWalletProvider } from './useWalletProvider';
