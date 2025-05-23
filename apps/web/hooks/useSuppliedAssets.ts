@@ -3,23 +3,19 @@ import type { EvmHubProvider } from '@new-world/sdk';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { Address, HttpTransport, PublicClient } from 'viem';
-import { usePublicClient } from 'wagmi';
 import { useHubProvider } from './useHubProvider';
 import { useHubWallet } from './useHubWallet';
-
+import { useWalletProvider } from './useWalletProvider';
 export default function useSuppliedAssets() {
   const { address } = useXAccount(getXChainType('0xa869.fuji'));
+  const hubWalletProvider = useWalletProvider('0xa869.fuji');
   const hubProvider = useHubProvider('sonic-blaze');
   const { data: hubWallet } = useHubWallet('0xa869.fuji', address, hubProvider as EvmHubProvider);
-
-  const sonicTestnetPublicClient = usePublicClient({
-    chainId: sonicBlazeTestnet.id,
-  }) as PublicClient<HttpTransport> | undefined;
 
   const { data: userReserves } = useQuery({
     queryKey: ['userReserves', hubWallet],
     queryFn: async () => {
-      if (!sonicTestnetPublicClient) {
+      if (!hubWalletProvider) {
         return;
       }
 
@@ -27,7 +23,7 @@ export default function useSuppliedAssets() {
         hubWallet as Address,
         moneyMarketConfig.uiPoolDataProvider as Address,
         moneyMarketConfig.poolAddressesProvider as Address,
-        sonicTestnetPublicClient,
+        hubWalletProvider,
       );
 
       return res?.map(r => {
@@ -37,7 +33,7 @@ export default function useSuppliedAssets() {
         };
       });
     },
-    enabled: !!address && !!sonicTestnetPublicClient,
+    enabled: !!address && !!hubWalletProvider,
     refetchInterval: 5000,
   });
 
