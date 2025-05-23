@@ -82,6 +82,7 @@ const initXServices = (config: XConfig) => {
         if (config[xChainType]) {
           xServices[xChainType] = EvmXService.getInstance();
           xServices[xChainType].setXConnectors([]);
+          xServices[xChainType].setConfig(config[xChainType]);
         }
         break;
       case 'ARCHWAY':

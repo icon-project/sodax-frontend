@@ -1,5 +1,4 @@
 import type { XAccount } from '@/types';
-import { isBrowser } from 'react-device-detect';
 import { ICONexRequestEventType, ICONexResponseEventType, request } from './iconex';
 
 import { XConnector } from '@/core/XConnector';
@@ -11,7 +10,7 @@ export class IconHanaXConnector extends XConnector {
 
   async connect(): Promise<XAccount | undefined> {
     const { hanaWallet } = window as any;
-    if (isBrowser && !hanaWallet && !hanaWallet?.isAvailable) {
+    if (window && !hanaWallet && !hanaWallet?.isAvailable) {
       window.open('https://chromewebstore.google.com/detail/hana-wallet/jfdlamikmbghhapbgfoogdffldioobgl', '_blank');
       return;
     }

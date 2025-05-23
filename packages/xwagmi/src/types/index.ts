@@ -1,5 +1,5 @@
 import type { Config } from 'wagmi';
-import { XChainId, type XChainType } from './xChain';
+import type { XChainId, XChainType } from './xChain';
 
 export type XAccount = {
   address: string | undefined;
@@ -44,4 +44,12 @@ export type XConfig = {
       : key extends 'SOLANA'
         ? SolanaConfig
         : any;
+};
+
+export type XToken = {
+  xChainId: XChainId;
+  address: string;
+  symbol: string;
+  name: string;
+  decimals: number;
 };

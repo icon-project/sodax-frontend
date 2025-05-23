@@ -8,3 +8,6 @@ export { useXConnectors } from './useXConnectors';
 export { useXDisconnect } from './useXDisconnect';
 export { useXDisconnectAll } from './useXDisconnectAll';
 export { useXService } from './useXService';
+export { useXBalances } from './useXBalances';
+export { useWalletProviderOptions } from './useWalletProviderOptions';
+export { useEvmSwitchChain } from './useEvmSwitchChain';

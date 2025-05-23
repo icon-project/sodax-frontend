@@ -2,7 +2,7 @@ export * from './actions';
 export * from './constants';
 export * from './core';
 
-// export * from './utils';
+export * from './utils';
 
 export * from './xchains/archway';
 export * from './xchains/evm';
