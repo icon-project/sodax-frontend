@@ -8,7 +8,7 @@ import { useHubWallet } from './useHubWallet';
 import { useWalletProvider } from './useWalletProvider';
 export default function useSuppliedAssets() {
   const { address } = useXAccount(getXChainType('0xa869.fuji'));
-  const hubWalletProvider = useWalletProvider('0xa869.fuji');
+  const hubWalletProvider = useWalletProvider('sonic-blaze');
   const hubProvider = useHubProvider('sonic-blaze');
   const { data: hubWallet } = useHubWallet('0xa869.fuji', address, hubProvider as EvmHubProvider);
 
@@ -19,19 +19,23 @@ export default function useSuppliedAssets() {
         return;
       }
 
-      const [res] = await moneyMarket.getUserReservesData(
-        hubWallet as Address,
-        moneyMarketConfig.uiPoolDataProvider as Address,
-        moneyMarketConfig.poolAddressesProvider as Address,
-        hubWalletProvider,
-      );
+      try {
+        const [res] = await moneyMarket.getUserReservesData(
+          hubWallet as Address,
+          moneyMarketConfig.uiPoolDataProvider as Address,
+          moneyMarketConfig.poolAddressesProvider as Address,
+          hubWalletProvider,
+        );
 
-      return res?.map(r => {
-        return {
-          ...r,
-          token: allXTokens.find(t => t.address === r.underlyingAsset),
-        };
-      });
+        return res?.map(r => {
+          return {
+            ...r,
+            token: allXTokens.find(t => t.address === r.underlyingAsset),
+          };
+        });
+      } catch (error) {
+        console.log('error', error);
+      }
     },
     enabled: !!address && !!hubWalletProvider,
     refetchInterval: 5000,
