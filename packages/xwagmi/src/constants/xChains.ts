@@ -30,7 +30,7 @@ export const archway: XChain = {
 export const archwayTestnet: XChain = {
   id: 'archway',
   name: 'archway testnet',
-  xChainId: 'archway-1',
+  xChainId: 'archway',
   xChainType: 'ARCHWAY',
   nativeCurrency: {
     decimals: 18,
@@ -387,6 +387,31 @@ export const optimism: XChain = {
   useXCallScanner: false,
 };
 
+export const sonicBlaze: XChain = {
+  id: 57_054,
+  name: 'Sonic Blaze',
+  xChainId: 'sonic-blaze',
+  xChainType: 'EVM',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'ETH',
+    symbol: 'ETH',
+  },
+  rpc: {
+    http: 'https://rpc.sonic.blaze.xyz',
+  },
+  contracts: {
+    xCall: '0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b',
+    assetManager: '0xdf851B4f0D9b2323e03B3980b1C4Cf56273c0bd9',
+    bnUSD: '0xdBDd50997361522495EcFE57EBb6850dA0E4C699',
+  },
+  autoExecution: true,
+  gasThreshold: 0.0001,
+  testnet: false,
+  useXCallScanner: false,
+  tracker: { tx: 'https://sonic.blaze.xyz/tx' },
+};
+
 // the order is important, using manual order to display in the UI
 export const xChainMap: { [key in XChainId]: XChain } = {
   '0x1.icon': icon,
@@ -404,9 +429,10 @@ export const xChainMap: { [key in XChainId]: XChain } = {
   stellar: stellar,
   sui: sui,
   solana: solana,
+  'sonic-blaze': sonicBlaze,
 };
 
-export const xChains = Object.values(xChainMap).filter(xChain => !xChain.testnet);
+export const xChains = Object.values(xChainMap);
 export const SUPPORTED_XCALL_CHAINS = xChains.map(({ xChainId }) => xChainId);
 
 // you can the following values by calling getProtocols function of the XCallManager contract on ICON

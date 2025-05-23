@@ -1,13 +1,12 @@
 import { XService } from '@/core/XService';
 import { FREIGHTER_ID, StellarWalletsKit, WalletNetwork, allowAllModules } from '@creit.tech/stellar-wallets-kit';
 import * as StellarSdk from '@stellar/stellar-sdk';
-import type { Server } from '@stellar/stellar-sdk/lib/horizon';
 
 export class StellarXService extends XService {
   private static instance: StellarXService;
 
   public walletsKit: StellarWalletsKit;
-  public server: Server;
+  public server: StellarSdk.Horizon.Server;
 
   private constructor() {
     super('STELLAR');
