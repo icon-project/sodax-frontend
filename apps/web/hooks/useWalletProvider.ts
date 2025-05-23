@@ -25,23 +25,6 @@ export class EvmWalletProvider implements IEvmWalletProvider {
     return this._walletClient.sendTransaction(evmRawTx);
   }
 
-  // export type EvmRawTransactionReceipt = {
-  //   transactionHash: string; // 32-byte hash
-  //   transactionIndex: string; // hex string, e.g., '0x1'
-  //   blockHash: string; // 32-byte hash
-  //   blockNumber: string; // hex string, e.g., '0x5BAD55'
-  //   from: string; // 20-byte address
-  //   to: string | null; // null if contract creation
-  //   cumulativeGasUsed: string; // hex string
-  //   gasUsed: string; // hex string
-  //   contractAddress: string | null; // non-null only if contract creation
-  //   logs: EvmRawLog[];
-  //   logsBloom: string; // 256-byte bloom filter hex string
-  //   status?: string; // '0x1' = success, '0x0' = failure (optional pre-Byzantium)
-  //   type?: string; // '0x0', '0x1', or '0x2' for tx type
-  //   effectiveGasPrice?: string; // hex string, only on EIP-1559 txs
-  // };
-
   async waitForTransactionReceipt(txHash: Hash): Promise<EvmRawTransactionReceipt> {
     const receipt = await this.publicClient.waitForTransactionReceipt({ hash: txHash });
     return {

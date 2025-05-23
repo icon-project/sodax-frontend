@@ -106,18 +106,6 @@ const HUB_CHAIN_ID: HubChainId = SONIC_TESTNET_CHAIN_ID;
 
 export const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
-const solverConfig: SolverConfig = IS_TESTNET
-  ? {
-      intentsContract: '0x611d800F24b5844Ea874B330ef4Ad6f1d5812f29',
-      solverApiEndpoint: 'https://TODO',
-      relayerApiEndpoint: 'https://TODO',
-    }
-  : {
-      intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-      solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-      relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
-    };
-
 export const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 
 const hubConfig = {
@@ -126,7 +114,6 @@ const hubConfig = {
 } satisfies EvmHubProviderConfig;
 
 export const sodax = new Sodax({
-  solver: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);

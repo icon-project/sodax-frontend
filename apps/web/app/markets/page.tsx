@@ -21,12 +21,6 @@ const MONEY_MARKET_CONFIG = {
 // This would typically come from environment variables
 const privateKey = '0xd17e858c2aca0f31be86c01039dc070123e52df4d418535a9b3c92130d271120';
 
-// const sonicTestnetEvmWallet = new EvmWalletProvider({
-//   chain: SONIC_TESTNET_CHAIN_ID,
-//   privateKey: privateKey as `0x${string}`,
-//   provider: 'https://rpc.blaze.soniclabs.com',
-// });
-
 export default function MoneyMarketPage() {
   const [reserves, setReserves] = useState<AggregatedReserveData[]>([]);
   const [baseCurrencyInfo, setBaseCurrencyInfo] = useState<BaseCurrencyInfo | null>(null);
