@@ -7,10 +7,17 @@ import { useHubWallet } from '@/hooks/useHubWallet';
 import { useMoneyMarketConfig } from '@/hooks/useMoneyMarketConfig';
 import { useSpokeProvider } from '@/hooks/useSpokeProvider';
 import type { EvmHubProvider, IntentRelayRequest, SubmitTxResponse } from '@new-world/sdk';
-import { EvmAssetManagerService, EvmSpokeService, submitTransaction, waitForTransactionReceipt } from '@new-world/sdk';
+import {
+  EvmAssetManagerService,
+  EvmSpokeService,
+  MoneyMarketService,
+  SpokeService,
+  submitTransaction,
+  waitForTransactionReceipt,
+} from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
-import type { TransactionReceipt } from 'viem';
+import type { Hash, Hex, TransactionReceipt } from 'viem';
 
 export function WithdrawButton({ token }: { token: XToken }) {
   const { address } = useXAccount(getXChainType('0xa869.fuji'));
@@ -34,40 +41,51 @@ export function WithdrawButton({ token }: { token: XToken }) {
       return;
     }
 
-    const amount = 20000000000000000n;
+    const amount = 10000000000000000n;
 
-    const data = EvmAssetManagerService.withdrawAssetData(
-      {
-        token: token.address as `0x${string}`,
-        to: address as `0x${string}`,
-        amount,
-      },
-      hubProvider,
+    const data: Hex = MoneyMarketService.withdrawData(
+      hubWallet,
+      spokeProvider.walletProvider.walletClient.account.address,
+      '0x0000000000000000000000000000000000000000',
+      amount,
       spokeProvider.chainConfig.chain.id,
+      hubProvider,
+      moneyMarketConfig,
     );
 
-    // TODO: use SpokeService.deposit instead of EvmSpokeService.deposit
-    const txHash = await EvmSpokeService.callWallet(address as `0x${string}`, data, spokeProvider, hubProvider);
-
-    console.log('[withdrawAsset] txHash', txHash);
-
-    const txReceipt: TransactionReceipt = await waitForTransactionReceipt(txHash, hubProvider.walletProvider);
-
-    console.log(txReceipt);
-
-    const request = {
-      action: 'submit',
-      params: {
-        chain_id: '6',
-        tx_hash: txHash,
-      },
-    } satisfies IntentRelayRequest<'submit'>;
-
-    // TODO: use the correct endpoint
-    const response: SubmitTxResponse = await submitTransaction(
-      request,
-      'https://53naa6u2qd.execute-api.us-east-1.amazonaws.com/prod',
+    const txHash: Hash = await SpokeService.callWallet(
+      spokeProvider.walletProvider.walletClient.account.address,
+      data,
+      spokeProvider,
+      hubProvider,
     );
+
+    console.log('[withdraw] txHash', txHash);
+
+    try {
+      // const txReceipt: TransactionReceipt = await waitForTransactionReceipt(txHash, hubProvider.walletProvider);
+
+      // console.log(txReceipt);
+
+      const txHash = '0xc948aa61bd32b580390ebfd6a9a9fe7d87fe3e6e862e866e916eca2d2ba647d2';
+      const request = {
+        action: 'submit',
+        params: {
+          chain_id: '6',
+          tx_hash: txHash,
+        },
+      } satisfies IntentRelayRequest<'submit'>;
+
+      // TODO: use the correct endpoint
+      const response: SubmitTxResponse = await submitTransaction(
+        request,
+        'https://53naa6u2qd.execute-api.us-east-1.amazonaws.com/prod',
+      );
+
+      console.log('response', response);
+    } catch (error) {
+      console.log('error', error);
+    }
   };
 
   return (
