@@ -1,3 +1,4 @@
+import { sodax } from '@/app/config';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { useHubWallet } from '@/hooks/useHubWallet';
 import { useMoneyMarketConfig } from '@/hooks/useMoneyMarketConfig';
 import { useSpokeProvider } from '@/hooks/useSpokeProvider';
 import type { EvmHubProvider, IntentRelayRequest, SubmitTxResponse } from '@new-world/sdk';
-import { MoneyMarketService, SpokeService, submitTransaction } from '@new-world/sdk';
+import { SpokeService, submitTransaction } from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useState } from 'react';
@@ -42,18 +43,16 @@ export function WithdrawButton({ token }: { token: XToken }) {
 
     setIsLoading(true);
 
-    const data: Hex = MoneyMarketService.withdrawData(
+    const data: Hex = sodax.moneyMarket.withdrawData(
       hubWallet,
-      spokeProvider.walletProvider.walletClient.account.address,
+      spokeProvider.walletProvider.getWalletAddress(),
       '0x0000000000000000000000000000000000000000',
       parseUnits(amount, token.decimals),
       spokeProvider.chainConfig.chain.id,
-      hubProvider,
-      moneyMarketConfig,
     );
 
     const txHash: Hash = await SpokeService.callWallet(
-      spokeProvider.walletProvider.walletClient.account.address,
+      spokeProvider.walletProvider.getWalletAddress(),
       data,
       spokeProvider,
       hubProvider,

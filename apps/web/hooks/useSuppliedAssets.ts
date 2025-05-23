@@ -1,4 +1,4 @@
-import { allXTokens, moneyMarket, moneyMarketConfig } from '@/app/config';
+import { allXTokens, moneyMarketConfig, sodax } from '@/app/config';
 import type { EvmHubProvider } from '@new-world/sdk';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useQuery } from '@tanstack/react-query';
@@ -20,11 +20,10 @@ export default function useSuppliedAssets() {
       }
 
       try {
-        const [res] = await moneyMarket.getUserReservesData(
+        const [res] = await sodax.moneyMarket.getUserReservesData(
           hubWallet as Address,
           moneyMarketConfig.uiPoolDataProvider as Address,
           moneyMarketConfig.poolAddressesProvider as Address,
-          hubWalletProvider,
         );
 
         return res?.map(r => {

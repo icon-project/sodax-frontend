@@ -1,3 +1,4 @@
+import { sodax } from '@/app/config';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -48,13 +49,12 @@ export function SupplyButton({ token }: { token: XToken }) {
     setIsLoading(true);
 
     try {
-      const data = MoneyMarketService.supplyData(
+      const data = sodax.moneyMarket.supplyData(
         token.address,
         hubWallet,
         parseUnits(amount, token.decimals),
         // @ts-ignore
         sdkChainIdMap[token.xChainId],
-        moneyMarketConfig,
       );
 
       // TODO: use SpokeService.deposit instead of EvmSpokeService.deposit
