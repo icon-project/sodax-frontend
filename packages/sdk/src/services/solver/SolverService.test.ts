@@ -28,8 +28,8 @@ import {
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
-  getSpokeChainConfig,
   type TxReturnType,
+  spokeChainConfig,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
@@ -103,7 +103,7 @@ describe('SolverService', () => {
 
   const mockBscSpokeProvider = new EvmSpokeProvider(
     mockEvmWalletProvider,
-    getSpokeChainConfig('evm', BSC_MAINNET_CHAIN_ID),
+    spokeChainConfig[BSC_MAINNET_CHAIN_ID],
   );
 
   const mockIntentConfig: SolverConfig = {

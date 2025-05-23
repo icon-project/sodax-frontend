@@ -36,9 +36,9 @@ export class SolverApiService {
     config: SolverConfig,
   ): Promise<Result<IntentQuoteResponse, IntentErrorResponse>> {
     invariant(payload.token_src.length > 0, 'Empty token_src');
-    invariant(payload.token_src_blockchain_id > 0, 'Empty token_src_blockchain_id');
+    invariant(payload.token_src_blockchain_id.length > 0, 'Empty token_src_blockchain_id');
     invariant(payload.token_dst.length > 0, 'Empty token_dst');
-    invariant(payload.token_dst_blockchain_id > 0, 'Empty token_dst_blockchain_id');
+    invariant(payload.token_dst_blockchain_id.length > 0, 'Empty token_dst_blockchain_id');
     invariant(payload.amount > 0n, 'amount must be greater than 0');
     invariant(
       isValidOriginalAssetAddress(payload.token_src_blockchain_id, payload.token_src),

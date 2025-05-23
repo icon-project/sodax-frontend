@@ -22,13 +22,13 @@ import {
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
-  getSpokeChainConfig,
   Sodax,
   EvmSolverService,
   getMoneyMarketConfig,
   type SpokeProvider,
   type IEvmWalletProvider,
-  type TxReturnType
+  type TxReturnType,
+  spokeChainConfig,
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
@@ -121,7 +121,7 @@ describe('Sodax', () => {
 
     const mockBscSpokeProvider = new EvmSpokeProvider(
       mockEvmWalletProvider,
-      getSpokeChainConfig('evm', BSC_MAINNET_CHAIN_ID),
+      spokeChainConfig[BSC_MAINNET_CHAIN_ID],
     );
 
     describe('getQuote', () => {

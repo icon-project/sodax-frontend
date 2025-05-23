@@ -28,7 +28,6 @@ import type { StellarSpokeDepositParams } from './services/spoke/StellarSpokeSer
 import type { SuiSpokeDepositParams } from './services/spoke/SuiSpokeService.js';
 
 export type HubChainId = (typeof HUB_CHAIN_IDS)[number];
-
 export type SpokeChainId = (typeof SPOKE_CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];

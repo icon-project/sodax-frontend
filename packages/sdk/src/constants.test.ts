@@ -1,3 +1,5 @@
+import type { Address } from 'viem';
+import { avalanche, avalancheFuji, sonic } from 'viem/chains';
 // packages/sdk/src/constants.test.ts
 import { describe, expect, it } from 'vitest';
 import {
@@ -20,17 +22,15 @@ import {
   hubAssetToOriginalAssetMap,
   originalAssetTohubAssetMap,
 } from './index.js';
-import { avalanche, avalancheFuji, sonic } from 'viem/chains';
 import type { EvmChainId, HubChainId } from './index.js';
-import type { Address } from 'viem';
 
 describe('Constants', () => {
   describe('Chain IDs', () => {
     it('should export valid chain ID constants', () => {
-      expect(AVALANCHE_FUJI_TESTNET_CHAIN_ID).toBe(43113);
-      expect(AVALANCHE_MAINNET_CHAIN_ID).toBe(43114);
-      expect(SONIC_MAINNET_CHAIN_ID).toBe(146);
-      expect(SONIC_TESTNET_CHAIN_ID).toBe(57054);
+      expect(AVALANCHE_FUJI_TESTNET_CHAIN_ID).toBe('0xa869.fuji');
+      expect(AVALANCHE_MAINNET_CHAIN_ID).toBe('0xa86a.avax');
+      expect(SONIC_MAINNET_CHAIN_ID).toBe('sonic');
+      expect(SONIC_TESTNET_CHAIN_ID).toBe('sonic-blaze');
     });
 
     it('should have valid chain ID arrays', () => {
@@ -70,7 +70,7 @@ describe('Constants', () => {
     });
 
     it('should throw an error for unsupported chain ID', () => {
-      expect(() => getEvmViemChain(999999 as EvmChainId)).toThrow('Unsupported EVM chain ID: 999999');
+      expect(() => getEvmViemChain("999999" as EvmChainId)).toThrow('Unsupported EVM chain ID: 999999');
     });
   });
 
