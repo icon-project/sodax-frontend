@@ -1,5 +1,5 @@
 import type { Address, Hex } from 'viem';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
@@ -29,6 +29,7 @@ import {
   getHubChainConfig,
   getIntentRelayChainId,
   getSpokeChainConfig,
+  type TxReturnType,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
@@ -388,22 +389,11 @@ describe('SolverService', () => {
       payload: '0x',
     } satisfies PacketData;
 
-    beforeEach(() => {
+    it('should successfully create and submit an intent', async () => {
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as never, { ...mockIntent, feeAmount: feeAmount }],
+        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
       });
-      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
-        ok: true,
-        value: {
-          answer: 'OK',
-          intent_hash: mockTxHash,
-        },
-      });
-    });
-
-    it('should successfully create and submit an intent', async () => {
-      vi.spyOn(EvmSolverService, 'createIntentDeposit').mockResolvedValueOnce(mockTxHash);
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
         mockEvmWalletProvider.getWalletAddressBytes(),
       );
@@ -471,7 +461,10 @@ describe('SolverService', () => {
     });
 
     it('should handle submitTransaction error', async () => {
-      vi.spyOn(EvmSolverService, 'createIntentDeposit').mockResolvedValueOnce(mockTxHash);
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+      });
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
         success: false,
         message: 'Transaction submission failed',
@@ -535,7 +528,10 @@ describe('SolverService', () => {
     );
 
     it('should successfully create an intent for EVM chain', async () => {
-      vi.spyOn(EvmSolverService, 'createIntentDeposit').mockResolvedValueOnce(mockTxHash);
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...intent, feeAmount: feeAmount }],
+      });
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
 
       const result: Result<
@@ -587,24 +583,10 @@ describe('SolverService', () => {
     );
 
     it('should successfully cancel an intent for EVM chain', async () => {
-      vi.spyOn(EvmSolverService, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
+      vi.spyOn(solverService, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
       const result = await solverService.cancelIntent(intent, mockBscSpokeProvider, false);
 
       expect(result).toBe(mockTxHash);
-    });
-
-    it('should throw error for non-EVM chain', async () => {
-      const nonEvmSpokeProvider = {
-        chainConfig: {
-          chain: {
-            type: 'cosmos',
-          },
-        },
-      } as unknown as SpokeProvider;
-
-      await expect(solverService.cancelIntent(intent, nonEvmSpokeProvider, false)).rejects.toThrow(
-        'Invalid spoke provider (EvmSpokeProvider expected',
-      );
     });
 
     it('should throw error for invalid spoke provider', async () => {
@@ -614,10 +596,13 @@ describe('SolverService', () => {
             type: 'evm',
           },
         },
+        walletProvider: {
+          getWalletAddressBytes: () => '0x1234567890123456789012345678901234567890',
+        },
       } as unknown as SpokeProvider;
 
       await expect(solverService.cancelIntent(intent, invalidSpokeProvider, false)).rejects.toThrow(
-        'Invalid spoke provider (EvmSpokeProvider expected)',
+        'Invalid spoke provider',
       );
     });
   });

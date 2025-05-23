@@ -2,7 +2,7 @@ import { type Address, encodeFunctionData } from 'viem';
 import { erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
 import type { EvmHubProvider, EvmSpokeProvider } from '../../entities/index.js';
 import { connectionAbi, getIntentRelayChainId } from '../../index.js';
-import type { EvmReturnType, EvmTransferToHubParams, Hex, PromiseEvmTxReturnType } from '../../types.js';
+import type { EvmReturnType, EvmTransferToHubParams, Hex, PromiseEvmTxReturnType, TxReturnType } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type EvmSpokeDepositParams = {
@@ -79,7 +79,7 @@ export class EvmSpokeService {
     spokeProvider: EvmSpokeProvider,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
+  ): Promise<TxReturnType<EvmSpokeProvider, R>> {
     const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
       from,
@@ -87,7 +87,9 @@ export class EvmSpokeService {
     );
 
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return EvmSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);
+    const result = await EvmSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);
+
+    return result satisfies TxReturnType<EvmSpokeProvider, R>;
   }
 
   /**
@@ -123,7 +125,7 @@ export class EvmSpokeService {
         functionName: 'transfer',
         args: [token, recipient, amount, data],
       }),
-    };
+    } satisfies TxReturnType<EvmSpokeProvider, true>;
 
     if (raw) {
       return rawTx satisfies EvmReturnType<true> as EvmReturnType<R>;
@@ -166,10 +168,10 @@ export class EvmSpokeService {
         functionName: 'sendMessage',
         args: [dstChainId, dstAddress, payload],
       }),
-    };
+    } satisfies TxReturnType<EvmSpokeProvider, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return rawTx as TxReturnType<EvmSpokeProvider, R>;
     }
 
     return spokeProvider.walletProvider.sendTransaction(

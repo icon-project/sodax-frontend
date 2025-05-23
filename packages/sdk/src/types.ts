@@ -484,12 +484,12 @@ export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chai
           : T['chainConfig']['chain']['type'] extends 'cosmos'
             ? CWReturnType<Raw>
             : never; // TODO extend for each chain implementation
-export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<EvmReturnType<Raw>>;
-export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<SolanaReturnType<Raw>>;
-export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<StellarReturnType<Raw>>;
-export type PromiseIconTxReturnType<Raw extends boolean> = Promise<IconReturnType<Raw>>;
-export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<SuiReturnType<Raw>>;
-export type PromiseCWTxReturnType<Raw extends boolean> = Promise<CWReturnType<Raw>>;
+export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
+export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<TxReturnType<SolanaSpokeProvider, Raw>>;
+export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnType<StellarSpokeProvider, Raw>>;
+export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
+export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
+export type PromiseCWTxReturnType<Raw extends boolean> = Promise<TxReturnType<CWSpokeProvider, Raw>>;
 
 export type RawTxReturnType =
   | EvmRawTransaction
