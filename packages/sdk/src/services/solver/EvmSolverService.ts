@@ -6,21 +6,18 @@ import {
   encodeFunctionData,
   encodePacked,
   getAbiItem,
-  isAddress,
   keccak256,
   parseEventLogs,
 } from 'viem';
 import {
   type EvmContractCall,
   type EvmHubProvider,
-  type EvmSpokeProvider,
   FEE_PERCENTAGE_SCALE,
   type Hash,
   type Hex,
   IntentsAbi,
   type PartnerFee,
   type SolverConfig,
-  type TxReturnType,
   calculatePercentageFeeAmount,
   encodeContractCalls,
   getHubAssetInfo,
@@ -37,7 +34,6 @@ import {
   type Intent,
   type IntentData,
   IntentDataType,
-  SpokeService,
 } from '../index.js';
 
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
@@ -143,74 +139,6 @@ export class EvmSolverService {
 
     // Encode the intent data
     return [encodePacked(['uint8', 'bytes'], [intentData.type, intentData.data]), feeAmount];
-  }
-
-  /**
-   * Creates an intent by handling token approval and intent creation
-   * @param {CreateIntentParams} createIntentParams - The intent to create
-   * @param {Address} creatorHubWalletAddress - The address of the intent creator on the hub chain
-   * @param {EvmSpokeProvider} spokeProvider - The spoke provider
-   * @param {EvmHubProvider} hubProvider - The hub provider
-   * @param {bigint} feeAmount - The fee amount
-   * @param {Hex} data - The encoded fee data
-   * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<TxReturnType<EvmSpokeProvider, R>>} The transaction return type
-   */
-  public static async createIntentDeposit<R extends boolean = false>(
-    createIntentParams: CreateIntentParams,
-    creatorHubWalletAddress: Address,
-    spokeProvider: EvmSpokeProvider,
-    hubProvider: EvmHubProvider,
-    feeAmount: bigint,
-    data: Hex,
-    raw?: R,
-  ): Promise<TxReturnType<EvmSpokeProvider, R>> {
-    invariant(
-      isAddress(createIntentParams.inputToken),
-      `Invalid spoke chain token (intent.inputToken): ${createIntentParams.inputToken}`,
-    );
-
-    return SpokeService.deposit(
-      {
-        from: spokeProvider.walletProvider.getWalletAddress(),
-        to: creatorHubWalletAddress,
-        token: createIntentParams.inputToken,
-        amount: createIntentParams.inputAmount + feeAmount,
-        data: data,
-      },
-      spokeProvider,
-      hubProvider,
-      raw,
-    );
-  }
-
-  /**
-   * Cancels an intent
-   * @param {Intent} intent - The intent to cancel
-   * @param {SolverConfig} intentConfig - The intent configuration
-   * @param {EvmSpokeProvider} spokeProvider - The spoke provider
-   * @param {EvmHubProvider} hubProvider - The hub provider
-   * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<[TxReturnType<EvmSpokeProvider, R>, Intent]} The transaction return type
-   */
-  public static async cancelIntent<R extends boolean = false>(
-    intent: Intent,
-    intentConfig: SolverConfig,
-    spokeProvider: EvmSpokeProvider,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<EvmSpokeProvider, R>> {
-    const calls: EvmContractCall[] = [];
-    const intentsContract = intentConfig.intentsContract;
-    calls.push(EvmSolverService.encodeCancelIntent(intent, intentsContract));
-    const data = encodeContractCalls(calls);
-    return SpokeService.callWallet(
-      spokeProvider.walletProvider.getWalletAddress(),
-      data,
-      spokeProvider,
-      hubProvider,
-      raw,
-    );
   }
 
   /**

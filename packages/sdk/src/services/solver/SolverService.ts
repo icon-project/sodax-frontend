@@ -1,28 +1,26 @@
 import invariant from 'tiny-invariant';
-import type { Address, Hash } from 'viem';
 import {
-  CWSpokeProvider,
   type EvmHubProvider,
-  EvmSpokeProvider,
-  IconSpokeProvider,
   type IntentRelayRequest,
-  SolanaSpokeProvider,
   type SpokeProvider,
-  StellarSpokeProvider,
-  SuiSpokeProvider,
+  SpokeService,
   type WaitUntilIntentExecutedPayload,
   calculateFeeAmount,
+  encodeContractCalls,
   getIntentRelayChainId,
-  getSpokeChainIdFromIntentRelayChainId,
   isValidIntentRelayChainId,
   isValidOriginalAssetAddress,
   isValidSpokeChainId,
-  spokeChainConfig,
   submitTransaction,
   waitUntilIntentExecuted,
 } from '../../index.js';
 import type {
+  Address,
+  EvmContractCall,
   FeeAmount,
+  GetAddressType,
+  GetSpokeDepositParamsType,
+  Hash,
   Hex,
   HttpUrl,
   IntentErrorResponse,
@@ -40,13 +38,8 @@ import type {
   TxReturnType,
 } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
-import { CWSolverService } from './CWSolverService.js';
 import { EvmSolverService } from './EvmSolverService.js';
-import { IconSolverService } from './IconSolverService.js';
-import { SolanaSolverService } from './SolanaSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
-import { StellarSolverService } from './StellarSolverService.js';
-import { SuiSolverService } from './SuiSolverService.js';
 
 export type CreateIntentParams = {
   inputToken: string; // The address of the input token on spoke chain
@@ -373,125 +366,22 @@ export class SolverService {
         fee,
       );
 
-      const srcSpokeChainConfig = spokeChainConfig[params.srcChain];
-      let response: TxReturnType<SpokeProvider, R>;
-
-      switch (srcSpokeChainConfig.chain.type) {
-        case 'evm':
-          if (spokeProvider instanceof EvmSpokeProvider) {
-            const txResult = await EvmSolverService.createIntentDeposit(
-              params,
-              creatorHubWalletAddress,
-              spokeProvider,
-              this.hubProvider,
-              feeAmount,
-              data,
-              raw,
-            );
-
-            response = txResult as TxReturnType<SpokeProvider, R>;
-          } else {
-            throw new Error('Invalid spoke provider (EvmSpokeProvider expected)');
-          }
-
-          break;
-        case 'solana':
-          if (spokeProvider instanceof SolanaSpokeProvider) {
-            const txResult = await SolanaSolverService.createIntentDeposit(
-              params,
-              creatorHubWalletAddress,
-              spokeProvider,
-              this.hubProvider,
-              feeAmount,
-              data,
-              raw,
-            );
-
-            response = txResult as TxReturnType<SpokeProvider, R>;
-          } else {
-            throw new Error('Invalid spoke provider (SolanaSpokeProvider expected)');
-          }
-
-          break;
-        case 'stellar':
-          if (spokeProvider instanceof StellarSpokeProvider) {
-            const txResult = await StellarSolverService.createIntentDeposit(
-              params,
-              creatorHubWalletAddress,
-              spokeProvider,
-              this.hubProvider,
-              feeAmount,
-              data,
-              raw,
-            );
-
-            response = txResult as TxReturnType<SpokeProvider, R>;
-          } else {
-            throw new Error('Invalid spoke provider (StellarSpokeProvider expected)');
-          }
-
-          break;
-        case 'cosmos':
-          if (spokeProvider instanceof CWSpokeProvider) {
-            const txResult = await CWSolverService.createIntentDeposit(
-              params,
-              creatorHubWalletAddress,
-              spokeProvider,
-              this.hubProvider,
-              feeAmount,
-              data,
-              raw,
-            );
-
-            response = txResult as TxReturnType<SpokeProvider, R>;
-          } else {
-            throw new Error('Invalid spoke provider (CosmosSpokeProvider expected)');
-          }
-
-          break;
-        case 'icon':
-          if (spokeProvider instanceof IconSpokeProvider) {
-            const txResult = await IconSolverService.createIntentDeposit(
-              params,
-              creatorHubWalletAddress,
-              spokeProvider,
-              this.hubProvider,
-              feeAmount,
-              data,
-              raw,
-            );
-
-            response = txResult as TxReturnType<SpokeProvider, R>;
-          } else {
-            throw new Error('Invalid spoke provider (IconSpokeProvider expected)');
-          }
-
-          break;
-        case 'sui':
-          if (spokeProvider instanceof SuiSpokeProvider) {
-            const txResult = await SuiSolverService.createIntentDeposit(
-              params,
-              creatorHubWalletAddress,
-              spokeProvider,
-              this.hubProvider,
-              feeAmount,
-              data,
-              raw,
-            );
-
-            response = txResult as TxReturnType<SpokeProvider, R>;
-          } else {
-            throw new Error('Invalid spoke provider (SuiSpokeProvider expected)');
-          }
-
-          break;
-        default:
-          throw new Error(`Unsupported spoke chain type for srcChain: ${params.srcChain}`);
-      }
+      const txResult = await SpokeService.deposit(
+        {
+          from: spokeProvider.walletProvider.getWalletAddress(),
+          to: creatorHubWalletAddress,
+          token: params.inputToken,
+          amount: params.inputAmount + feeAmount,
+          data: data,
+        } as GetSpokeDepositParamsType<S>,
+        spokeProvider satisfies S,
+        this.hubProvider,
+        raw,
+      );
 
       return {
         ok: true,
-        value: [response, { ...intent, feeAmount }] as [TxReturnType<S, R>, Intent & FeeAmount],
+        value: [txResult as TxReturnType<S, R>, { ...intent, feeAmount }] as [TxReturnType<S, R>, Intent & FeeAmount],
       };
     } catch (error) {
       return {
@@ -522,60 +412,17 @@ export class SolverService {
     invariant(isValidIntentRelayChainId(intent.srcChain), `Invalid intent.srcChain: ${intent.srcChain}`);
     invariant(isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
 
-    const srcSpokeChainConfig = spokeChainConfig[getSpokeChainIdFromIntentRelayChainId(intent.srcChain)];
-
-    switch (srcSpokeChainConfig.chain.type) {
-      case 'evm':
-        if (spokeProvider instanceof EvmSpokeProvider) {
-          return EvmSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
-            TxReturnType<T, R>
-          >;
-        }
-        throw new Error('Invalid spoke provider (EvmSpokeProvider expected)');
-      case 'solana':
-        if (spokeProvider instanceof SolanaSpokeProvider) {
-          return SolanaSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
-            TxReturnType<T, R>
-          >;
-        }
-        throw new Error('Invalid spoke provider (SolanaSpokeProvider expected)');
-
-      case 'stellar':
-        if (spokeProvider instanceof StellarSpokeProvider) {
-          return StellarSolverService.cancelIntent(
-            intent,
-            this.config,
-            spokeProvider,
-            this.hubProvider,
-            raw,
-          ) as Promise<TxReturnType<T, R>>;
-        }
-        throw new Error('Invalid spoke provider (StellarSpokeProvider expected)');
-
-      case 'cosmos':
-        if (spokeProvider instanceof CWSpokeProvider) {
-          return CWSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
-            TxReturnType<T, R>
-          >;
-        }
-        throw new Error('Invalid spoke provider (CWSpokeProvider expected)');
-      case 'icon':
-        if (spokeProvider instanceof IconSpokeProvider) {
-          return IconSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
-            TxReturnType<T, R>
-          >;
-        }
-        throw new Error('Invalid spoke provider (IconSpokeProvider expected)');
-      case 'sui':
-        if (spokeProvider instanceof SuiSpokeProvider) {
-          return SuiSolverService.cancelIntent(intent, this.config, spokeProvider, this.hubProvider, raw) as Promise<
-            TxReturnType<T, R>
-          >;
-        }
-        throw new Error('Invalid spoke provider (SuiSpokeProvider expected)');
-      default:
-        throw new Error(`Unsupported spoke chain type for srcChain: ${intent.srcChain}`);
-    }
+    const calls: EvmContractCall[] = [];
+    const intentsContract = this.config.intentsContract;
+    calls.push(EvmSolverService.encodeCancelIntent(intent, intentsContract));
+    const data = encodeContractCalls(calls);
+    return SpokeService.callWallet(
+      spokeProvider.walletProvider.getWalletAddressBytes() as GetAddressType<T>,
+      data,
+      spokeProvider,
+      this.hubProvider,
+      raw,
+    );
   }
 
   /**
@@ -584,7 +431,7 @@ export class SolverService {
    * @returns {Promise<Intent>} The intent
    */
   public getIntent(txHash: Hash): Promise<Intent> {
-    return EvmSolverService.getIntent(txHash, this.config, this.hubProvider,);
+    return EvmSolverService.getIntent(txHash, this.config, this.hubProvider);
   }
 
   /**

@@ -2,12 +2,10 @@ import { type Address, type Chain, defineChain } from 'viem';
 import { arbitrum, avalanche, avalancheFuji, base, bsc, nibiru, optimism, polygon, sonic } from 'viem/chains';
 import type {
   ChainId,
-  ChainType,
   CosmosSpokeChainConfig,
   EvmChainId,
   EvmHubChainConfig,
   EvmSpokeChainConfig,
-  GetSpokeChainConfigType,
   HubAssetInfo,
   HubChainId,
   IconSpokeChainConfig,
@@ -15,13 +13,11 @@ import type {
   MoneyMarketConfig,
   OriginalAssetAddress,
   SolanaChainConfig,
-  SpokeChainConfig,
   SpokeChainId,
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
 } from './index.js';
 
-// TODO CLEANUP TESTNET STUFF
 // TODO ADD DEFAULT CONTRACT ADDRESSES AND SO FORTH FROM WIKI
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -49,27 +45,27 @@ export const INTENT_RELAY_CHAIN_IDS = {
 } as const;
 
 // chain ids (actual for evm chains), custom for other chains not having native ids
-export const AVALANCHE_FUJI_TESTNET_CHAIN_ID = 43113;
-export const AVALANCHE_MAINNET_CHAIN_ID = 43114;
-export const ARBITRUM_MAINNET_CHAIN_ID = 42161;
-export const BASE_MAINNET_CHAIN_ID = 8453;
-export const BSC_MAINNET_CHAIN_ID = 56;
-export const INJECTIVE_TESTNET_CHAIN_ID = 19;
-export const INJECTIVE_MAINNET_CHAIN_ID = 18;
-export const SONIC_TESTNET_CHAIN_ID = 57054;
-export const SONIC_MAINNET_CHAIN_ID = 146;
-export const ICON_TESTNET_CHAIN_ID = 1768124271;
-export const ICON_MAINNET_CHAIN_ID = 1768124270;
-export const SUI_TESTNET_CHAIN_ID = 21;
-export const SUI_MAINNET_CHAIN_ID = 20;
-export const ARCHWAY_TESTNET_CHAIN_ID = 1634886504;
-export const OPTIMISM_MAINNET_CHAIN_ID = 10;
-export const POLYGON_MAINNET_CHAIN_ID = 137;
-export const SOLANA_MAINNET_CHAIN_ID = 1;
-export const SOLANA_TESTNET_CHAIN_ID = 101;
-export const STELLAR_TESTNET_CHAIN_ID = 2727;
-export const STELLAR_MAINNET_CHAIN_ID = 27;
-export const NIBIRU_MAINNET_CHAIN_ID = 7235938;
+export const AVALANCHE_FUJI_TESTNET_CHAIN_ID = '0xa869.fuji';
+export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
+export const ARBITRUM_MAINNET_CHAIN_ID = '0xa4b1.arbitrum';
+export const BASE_MAINNET_CHAIN_ID = '0x2105.base';
+export const BSC_MAINNET_CHAIN_ID = '0x38.bsc';
+export const INJECTIVE_MAINNET_CHAIN_ID = 'injective-1';
+export const INJECTIVE_TESTNET_CHAIN_ID = 'injective-2';
+export const SONIC_TESTNET_CHAIN_ID = 'sonic-blaze';
+export const SONIC_MAINNET_CHAIN_ID = 'sonic';
+export const ICON_TESTNET_CHAIN_ID = '0x2.icon';
+export const ICON_MAINNET_CHAIN_ID = '0x1.icon';
+export const SUI_TESTNET_CHAIN_ID = 'sui-testnet';
+export const SUI_MAINNET_CHAIN_ID = 'sui';
+export const ARCHWAY_TESTNET_CHAIN_ID = 'archway-testnet';
+export const OPTIMISM_MAINNET_CHAIN_ID = '0xa.optimism';
+export const POLYGON_MAINNET_CHAIN_ID = '0x89.polygon';
+export const SOLANA_MAINNET_CHAIN_ID = 'solana';
+export const SOLANA_TESTNET_CHAIN_ID = 'solana-testnet';
+export const STELLAR_TESTNET_CHAIN_ID = 'stellar-testnet';
+export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
+export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
 
 // hub chain ids (sonic mainnet and testnet)
 export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID, SONIC_TESTNET_CHAIN_ID] as const;
@@ -85,16 +81,16 @@ export const SPOKE_CHAIN_IDS = [
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   SOLANA_MAINNET_CHAIN_ID,
+  ICON_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
+  NIBIRU_MAINNET_CHAIN_ID,
   AVALANCHE_FUJI_TESTNET_CHAIN_ID,
   INJECTIVE_TESTNET_CHAIN_ID,
   ICON_TESTNET_CHAIN_ID,
-  ICON_MAINNET_CHAIN_ID,
   SUI_TESTNET_CHAIN_ID,
   ARCHWAY_TESTNET_CHAIN_ID,
   STELLAR_TESTNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
   SOLANA_TESTNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
 ] as const;
 
 export const MAINNET_CHAIN_IDS = [
@@ -271,8 +267,7 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
 
 export const getHubChainConfig = (chainId: HubChainId): EvmHubChainConfig => hubChainConfig[chainId];
 
-// TODO: make config hard typed on return (e.g. evm chain ids should return EvmSpokeChainConfig type)
-export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
+export const spokeChainConfig = {
   [SOLANA_MAINNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'AnCCJjheynmGqPp6Vgat9DTirGKD4CtQzP8cwTYV8qKH',
@@ -439,33 +434,6 @@ export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
       },
     ],
   } satisfies EvmSpokeChainConfig,
-  [AVALANCHE_FUJI_TESTNET_CHAIN_ID]: {
-    chain: {
-      name: 'Avalanche Fuji Testnet',
-      id: AVALANCHE_FUJI_TESTNET_CHAIN_ID,
-      type: 'evm',
-    },
-    addresses: {
-      assetManager: '0x92971C06586576a14C0Deb583C8299B0B037bdC3',
-      connection: '0x4031D470e73b5E72A0879Fc77aBf2F64049CF6BD',
-    },
-    nativeToken: '0x0000000000000000000000000000000000000000',
-    bnUSD: '',
-    supportedTokens: [
-      {
-        symbol: 'S',
-        name: 'Sonic',
-        decimals: 18,
-        address: '0x0000000000000000000000000000000000000000',
-      },
-      {
-        symbol: 'WETH',
-        name: 'Wrapped Ether',
-        decimals: 18,
-        address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
-      },
-    ],
-  } satisfies EvmSpokeChainConfig,
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'inj1dg6tm62uup53wn2kn97caeqfwt0sukx3qjk8rw',
@@ -508,6 +476,76 @@ export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
       type: 'stellar',
     },
   } satisfies StellarSpokeChainConfig,
+  [SUI_MAINNET_CHAIN_ID]: {
+    addresses: {
+      connection:
+        '0xf3b1e696a66d02cb776dc15aae73c68bc8f03adcb6ba0ec7f6332d9d90a6a3d2::connectionv3::0x3ee76d13909ac58ae13baab4c9be5a5142818d9a387aed641825e5d4356969bf',
+      assetManager:
+        '0x897f911a4b7691870a1a2513af7e85fdee8de275615c77068fd8b90b8e78c678::asset_manager::0xcb7346339340b7f8dea40fcafb70721dc2fcfa7e8626a89fd954d46c1f928b61',
+      xTokenManager: '',
+      rateLimit: '',
+      testToken: '',
+    },
+    supportedTokens: [],
+    nativeToken: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
+    bnUSD: '0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD',
+    rpc_url: 'https://fullnode.mainnet.sui.io:443',
+    chain: {
+      name: 'sui',
+      id: SUI_MAINNET_CHAIN_ID,
+      type: 'sui',
+    },
+  } satisfies SuiSpokeChainConfig,
+  [ICON_MAINNET_CHAIN_ID]: {
+    addresses: {
+      assetManager: 'cx1be33c283c7dc7617181d1b21a6a2309e71b1ee7',
+      connection: 'cxe5cdf3b0f26967b0efc72d470d57bbf534268f94',
+      rateLimit: 'cxbbdcea9e6757023a046067ba8daa3c4c50304358',
+    },
+    chain: {
+      id: ICON_MAINNET_CHAIN_ID,
+      name: 'ICON Mainnet',
+      type: 'icon',
+    },
+    supportedTokens: [
+      {
+        symbol: 'wICX',
+        name: 'Wrapped ICX',
+        decimals: 18,
+        address: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d',
+      },
+    ],
+    nativeToken: 'cx0000000000000000000000000000000000000000',
+    bnUSD: '',
+    nid: '0x1',
+  } satisfies IconSpokeChainConfig,
+  [AVALANCHE_FUJI_TESTNET_CHAIN_ID]: {
+    chain: {
+      name: 'Avalanche Fuji Testnet',
+      id: AVALANCHE_FUJI_TESTNET_CHAIN_ID,
+      type: 'evm',
+    },
+    addresses: {
+      assetManager: '0x92971C06586576a14C0Deb583C8299B0B037bdC3',
+      connection: '0x4031D470e73b5E72A0879Fc77aBf2F64049CF6BD',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000',
+    bnUSD: '',
+    supportedTokens: [
+      {
+        symbol: 'S',
+        name: 'Sonic',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+      },
+      {
+        symbol: 'WETH',
+        name: 'Wrapped Ether',
+        decimals: 18,
+        address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+      },
+    ],
+  } satisfies EvmSpokeChainConfig,
   [INJECTIVE_TESTNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'inj1gru3eu7rmrsynu8ksfgd6tm05dy0ttuwej2nh2',
@@ -591,26 +629,6 @@ export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
       type: 'stellar',
     },
   } satisfies StellarSpokeChainConfig,
-  [SUI_MAINNET_CHAIN_ID]: {
-    addresses: {
-      connection:
-        '0xf3b1e696a66d02cb776dc15aae73c68bc8f03adcb6ba0ec7f6332d9d90a6a3d2::connectionv3::0x3ee76d13909ac58ae13baab4c9be5a5142818d9a387aed641825e5d4356969bf',
-      assetManager:
-        '0x897f911a4b7691870a1a2513af7e85fdee8de275615c77068fd8b90b8e78c678::asset_manager::0xcb7346339340b7f8dea40fcafb70721dc2fcfa7e8626a89fd954d46c1f928b61',
-      xTokenManager: '',
-      rateLimit: '',
-      testToken: '',
-    },
-    supportedTokens: [],
-    nativeToken: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
-    bnUSD: '0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD',
-    rpc_url: 'https://fullnode.mainnet.sui.io:443',
-    chain: {
-      name: 'sui',
-      id: SUI_MAINNET_CHAIN_ID,
-      type: 'sui',
-    },
-  } satisfies SuiSpokeChainConfig,
   [SUI_TESTNET_CHAIN_ID]: {
     addresses: {
       connection:
@@ -648,47 +666,12 @@ export const spokeChainConfig: Record<SpokeChainId, SpokeChainConfig> = {
     bnUSD: '',
     nid: '0x2',
   } satisfies IconSpokeChainConfig,
-  [ICON_MAINNET_CHAIN_ID]: {
-    addresses: {
-      assetManager: 'cx1be33c283c7dc7617181d1b21a6a2309e71b1ee7',
-      connection: 'cxe5cdf3b0f26967b0efc72d470d57bbf534268f94',
-      rateLimit: 'cxbbdcea9e6757023a046067ba8daa3c4c50304358',
-    },
-    chain: {
-      id: ICON_MAINNET_CHAIN_ID,
-      name: 'ICON Mainnet',
-      type: 'icon',
-    },
-    supportedTokens: [
-      {
-        symbol: 'wICX',
-        name: 'Wrapped ICX',
-        decimals: 18,
-        address: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d',
-      },
-    ],
-    nativeToken: 'cx0000000000000000000000000000000000000000',
-    bnUSD: '',
-    nid: '0x1',
-  } satisfies IconSpokeChainConfig,
 } as const;
 
 export const hubAssets: Record<
   SpokeChainId,
   Record<Address | string, { asset: Address; decimal: number; vault: Address }>
 > = {
-  [AVALANCHE_FUJI_TESTNET_CHAIN_ID]: {
-    [spokeChainConfig[AVALANCHE_FUJI_TESTNET_CHAIN_ID].nativeToken]: {
-      asset: '0x18afE238E6366Bc3834844cC257acF1cfE52D8c5',
-      decimal: 18,
-      vault: '0xd40AbC1b98746E902Ab4194F1b6e09E8139Ba67c',
-    },
-    '0x162608464d2c70301d5ce214E57A70B08aAB4cf8': {
-      asset: '0x4d28211e808fb07092519436cdfb8ea73085f131',
-      decimal: 18,
-      vault: '0x35CB50D8b896fCC1001dFc67C3772f2361E4d183',
-    },
-  },
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0xc9e4f0B6195F389D9d2b639f2878B7674eB9D8cD',
@@ -829,19 +812,6 @@ export const hubAssets: Record<
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
   },
-
-  [INJECTIVE_TESTNET_CHAIN_ID]: {
-    inj172gzzhqxm60yvshmk3un0qcx2j97ezsdzy26ss: {
-      asset: '0xBC4BFEcd8067F1c7fbbF17fEcbFCbA56615C3b55',
-      decimal: 12,
-      vault: '0x0d6eF3889eb9F12423dDB209EC704aBdf614EDcA',
-    },
-    inj1fyt67lnhpkwyjekcs3awfdxv90kwmun73n9x7h: {
-      asset: '0x3cBe8540208998De060E97B1AdE9fB0A31464c70',
-      decimal: 18,
-      vault: '0x35CB50D8b896fCC1001dFc67C3772f2361E4d183',
-    },
-  },
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     inj: {
       asset: '0xd375590b4955f6ea5623f799153f9b787a3bd319',
@@ -852,20 +822,6 @@ export const hubAssets: Record<
       asset: '0x69425FFb14704124A58d6F69d510f74A59D9a5bC',
       decimal: 18,
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
-    },
-  },
-  [ARCHWAY_TESTNET_CHAIN_ID]: {
-    aconst: {
-      asset: '0xa4e0cbdf9a605ec54fc1d3e3089107fd55c3f064',
-      decimal: 18,
-      vault: '0xB0189e752973FEaae68BbcEcbdD4514c392D7ca3',
-    },
-  },
-  [STELLAR_TESTNET_CHAIN_ID]: {
-    [spokeChainConfig[STELLAR_TESTNET_CHAIN_ID].nativeToken]: {
-      asset: '0xBc6C4b894D7942cC940C1C23CaA9F9F335aC2fcf',
-      decimal: 7,
-      vault: '0x1293c7efd9D48234E4Edd84C3dfcdfAF216B305b',
     },
   },
   [STELLAR_MAINNET_CHAIN_ID]: {
@@ -890,6 +846,74 @@ export const hubAssets: Record<
       asset: '0xDf23097B9AEb917Bf8fb70e99b6c528fffA35364',
       decimal: 9,
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
+    },
+  },
+  [SOLANA_MAINNET_CHAIN_ID]: {
+    //bnusd
+    [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0x14C65b1CDc0B821569081b1F77342dA0D0CbF439',
+      decimal: 9,
+      vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
+    },
+    '11111111111111111111111111111111': {
+      asset: '0x0c09e69a4528945de6d16c7e469dea6996fdf636',
+      decimal: 9,
+      vault: '0xdEa692287E2cE8Cb08FA52917Be0F16b1DACDC87',
+    },
+  },
+  [ICON_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
+      decimal: 18,
+      vault: '0x0000000000000000000000000000000000000000',
+    },
+    ['cx88fd7df7ddff82f7cc735c871dc519838cb235bb']: {
+      asset: '0x654dddf32a9a2ac53f5fb54bf1e93f66791f8047',
+      decimal: 18,
+      vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
+    },
+    ['cx3975b43d260fb8ec802cef6e60c2f4d07486f11d']: {
+      asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
+      decimal: 18,
+      vault: '0x70CB7B199700Ae2B1FAb3d4e6FecDa156FBf8182',
+    },
+  },
+  [AVALANCHE_FUJI_TESTNET_CHAIN_ID]: {
+    [spokeChainConfig[AVALANCHE_FUJI_TESTNET_CHAIN_ID].nativeToken]: {
+      asset: '0x18afE238E6366Bc3834844cC257acF1cfE52D8c5',
+      decimal: 18,
+      vault: '0xd40AbC1b98746E902Ab4194F1b6e09E8139Ba67c',
+    },
+    '0x162608464d2c70301d5ce214E57A70B08aAB4cf8': {
+      asset: '0x4d28211e808fb07092519436cdfb8ea73085f131',
+      decimal: 18,
+      vault: '0x35CB50D8b896fCC1001dFc67C3772f2361E4d183',
+    },
+  },
+  [INJECTIVE_TESTNET_CHAIN_ID]: {
+    inj172gzzhqxm60yvshmk3un0qcx2j97ezsdzy26ss: {
+      asset: '0xBC4BFEcd8067F1c7fbbF17fEcbFCbA56615C3b55',
+      decimal: 12,
+      vault: '0x0d6eF3889eb9F12423dDB209EC704aBdf614EDcA',
+    },
+    inj1fyt67lnhpkwyjekcs3awfdxv90kwmun73n9x7h: {
+      asset: '0x3cBe8540208998De060E97B1AdE9fB0A31464c70',
+      decimal: 18,
+      vault: '0x35CB50D8b896fCC1001dFc67C3772f2361E4d183',
+    },
+  },
+  [ARCHWAY_TESTNET_CHAIN_ID]: {
+    aconst: {
+      asset: '0xa4e0cbdf9a605ec54fc1d3e3089107fd55c3f064',
+      decimal: 18,
+      vault: '0xB0189e752973FEaae68BbcEcbdD4514c392D7ca3',
+    },
+  },
+  [STELLAR_TESTNET_CHAIN_ID]: {
+    [spokeChainConfig[STELLAR_TESTNET_CHAIN_ID].nativeToken]: {
+      asset: '0xBc6C4b894D7942cC940C1C23CaA9F9F335aC2fcf',
+      decimal: 7,
+      vault: '0x1293c7efd9D48234E4Edd84C3dfcdfAF216B305b',
     },
   },
   [SUI_TESTNET_CHAIN_ID]: {
@@ -928,36 +952,6 @@ export const hubAssets: Record<
       vault: '0x8Ba33C0255c338A6295D282d5D97068E88b0df16',
     },
   },
-  [SOLANA_MAINNET_CHAIN_ID]: {
-    //bnusd
-    [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].bnUSD]: {
-      asset: '0x14C65b1CDc0B821569081b1F77342dA0D0CbF439',
-      decimal: 9,
-      vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
-    },
-    '11111111111111111111111111111111': {
-      asset: '0x0c09e69a4528945de6d16c7e469dea6996fdf636',
-      decimal: 9,
-      vault: '0xdEa692287E2cE8Cb08FA52917Be0F16b1DACDC87',
-    },
-  },
-  [ICON_MAINNET_CHAIN_ID]: {
-    [spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
-      decimal: 18,
-      vault: '0x0000000000000000000000000000000000000000',
-    },
-    ['cx88fd7df7ddff82f7cc735c871dc519838cb235bb']: {
-      asset: '0x654dddf32a9a2ac53f5fb54bf1e93f66791f8047',
-      decimal: 18,
-      vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
-    },
-    ['cx3975b43d260fb8ec802cef6e60c2f4d07486f11d']: {
-      asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
-      decimal: 18,
-      vault: '0x70CB7B199700Ae2B1FAb3d4e6FecDa156FBf8182',
-    },
-  },
 } as const;
 
 const moneyMarketConfig: Record<HubChainId, MoneyMarketConfig> = {
@@ -981,19 +975,19 @@ export const getMoneyMarketConfig = (chainId: HubChainId): MoneyMarketConfig => 
 
 export const originalAssetTohubAssetMap: Map<SpokeChainId, Map<OriginalAssetAddress, HubAssetInfo>> = new Map(
   Object.entries(hubAssets).map(([chainId, assets]) => [
-    Number(chainId) as SpokeChainId,
+    chainId as SpokeChainId,
     new Map(Object.entries(assets).map(([asset, info]) => [asset.toLowerCase(), info])),
   ]),
 );
 export const hubAssetToOriginalAssetMap: Map<SpokeChainId, Map<Address, OriginalAssetAddress>> = new Map(
   Object.entries(hubAssets).map(([chainId, assets]) => [
-    Number(chainId) as SpokeChainId,
+    chainId as SpokeChainId,
     new Map(Object.entries(assets).map(([asset, info]) => [info.asset.toLowerCase() as Address, asset])),
   ]),
 );
 export const chainIdToHubAssetsMap: Map<SpokeChainId, Map<Address, HubAssetInfo>> = new Map(
   Object.entries(hubAssets).map(([chainId, assets]) => [
-    Number(chainId) as SpokeChainId,
+    chainId as SpokeChainId,
     new Map(Object.entries(assets).map(([, info]) => [info.asset.toLowerCase() as Address, info])),
   ]),
 );
@@ -1012,24 +1006,16 @@ export const isValidHubAsset = (hubAsset: Address): boolean =>
   supportedHubAssets.has(hubAsset.toLowerCase() as Address);
 export const isValidChainHubAsset = (chainId: SpokeChainId, hubAsset: Address): boolean =>
   chainIdToHubAssetsMap.get(chainId)?.has(hubAsset.toLowerCase() as Address) ?? false;
-export const isValidSpokeChainId = (chainId: number): boolean => spokeChainIdsSet.has(chainId as SpokeChainId);
+export const isValidSpokeChainId = (chainId: SpokeChainId): boolean => spokeChainIdsSet.has(chainId);
 export const isValidIntentRelayChainId = (chainId: bigint): boolean =>
   Object.values(INTENT_RELAY_CHAIN_IDS).some(id => id === chainId);
-export const supportedHubChains: HubChainId[] = Object.keys(hubChainConfig).map(Number) as HubChainId[];
-export const supportedSpokeChains: SpokeChainId[] = Object.keys(spokeChainConfig).map(Number) as SpokeChainId[];
-export const getSpokeChainConfigsPerType = <T extends ChainType>(type: T): GetSpokeChainConfigType<T>[] => {
-  return Object.values(spokeChainConfig).filter(config => config.chain.type === type) as GetSpokeChainConfigType<T>[];
-};
-export const getSpokeChainConfig = <T extends ChainType>(type: T, chainId: SpokeChainId): GetSpokeChainConfigType<T> => {
-  const config = spokeChainConfig[chainId];
-
-  if (config.chain.type !== type) {
-    throw new Error(`Invalid chain type: ${config.chain.type}, for given chainId: ${chainId}`);
-  }
-  return config as GetSpokeChainConfigType<T>;
-};
+export const supportedHubChains: HubChainId[] = Object.keys(hubChainConfig) as HubChainId[];
+export const supportedSpokeChains: SpokeChainId[] = Object.keys(spokeChainConfig) as SpokeChainId[];
 export const intentRelayChainIdToSpokeChainIdMap: Map<IntentRelayChainId, SpokeChainId> = new Map(
-  Object.entries(ChainIdToIntentRelayChainId).map(([chainId, intentRelayChainId]) => [intentRelayChainId, Number(chainId) as SpokeChainId]),
+  Object.entries(ChainIdToIntentRelayChainId).map(([chainId, intentRelayChainId]) => [
+    intentRelayChainId,
+    chainId as SpokeChainId,
+  ]),
 );
 export const getSpokeChainIdFromIntentRelayChainId = (intentRelayChainId: IntentRelayChainId): SpokeChainId => {
   const spokeChainId = intentRelayChainIdToSpokeChainIdMap.get(intentRelayChainId);
