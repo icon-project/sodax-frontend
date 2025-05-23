@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHubProvider } from '@/hooks/useHubProvider';
 import { sdkChainIdMap, useHubWallet } from '@/hooks/useHubWallet';
-import { useMoneyMarketConfig } from '@/hooks/useMoneyMarketConfig';
 import { useSpokeProvider } from '@/hooks/useSpokeProvider';
 import {
   type EvmHubProvider,
@@ -23,7 +22,6 @@ import { parseUnits } from 'viem';
 export function SupplyButton({ token }: { token: XToken }) {
   const { address } = useXAccount(getXChainType(token.xChainId));
 
-  const moneyMarketConfig = useMoneyMarketConfig();
   const hubProvider = useHubProvider('sonic-blaze');
   const spokeProvider = useSpokeProvider(token.xChainId);
   const { data: hubWallet } = useHubWallet(token.xChainId, address, hubProvider as EvmHubProvider);

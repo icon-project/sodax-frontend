@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHubProvider } from '@/hooks/useHubProvider';
 import { useHubWallet } from '@/hooks/useHubWallet';
-import { useMoneyMarketConfig } from '@/hooks/useMoneyMarketConfig';
 import { useSpokeProvider } from '@/hooks/useSpokeProvider';
 import type { EvmHubProvider, IntentRelayRequest, SubmitTxResponse } from '@new-world/sdk';
 import { SpokeService, submitTransaction } from '@new-world/sdk';
@@ -18,7 +17,6 @@ import { parseUnits } from 'viem';
 export function WithdrawButton({ token }: { token: XToken }) {
   const { address } = useXAccount(getXChainType('0xa869.fuji'));
 
-  const moneyMarketConfig = useMoneyMarketConfig();
   const hubProvider = useHubProvider('sonic-blaze');
   const spokeProvider = useSpokeProvider('0xa869.fuji');
   const { data: hubWallet } = useHubWallet('0xa869.fuji', address, hubProvider as EvmHubProvider);
