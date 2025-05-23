@@ -19,7 +19,7 @@ export function useHubWallet(xChainId: XChainId, address: string | undefined, hu
     queryFn: async () => {
       if (!address) return null;
 
-      const hubWallet = await EvmWalletAbstraction.getUserWallet(
+      const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
         // @ts-ignore
         BigInt(sdkChainIdMap[xChainId]),
         address as `0x${string}`,

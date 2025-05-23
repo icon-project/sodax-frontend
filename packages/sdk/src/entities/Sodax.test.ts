@@ -5,7 +5,6 @@ import {
   type CreateIntentParams,
   type EvmHubProviderConfig,
   EvmSpokeProvider,
-  EvmWalletProvider,
   type FeeAmount,
   type Intent,
   IntentErrorCode,
@@ -27,7 +26,8 @@ import {
   Sodax,
   EvmSolverService,
   getMoneyMarketConfig,
-  type SpokeProvider
+  type SpokeProvider,
+  type IEvmWalletProvider
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
@@ -111,11 +111,12 @@ describe('Sodax', () => {
     const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
     const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
 
-    const mockEvmWalletProvider = new EvmWalletProvider({
-      chain: BSC_MAINNET_CHAIN_ID,
-      privateKey: '0xe0a01496281934154fe895c31b352f19fa9250fc0ffa28a597335d26aeb2bbf9', // NOTE: random private key for unit testing only
-      provider: 'https://bsc-mainnet.infura.io/v3/1234567890',
-    });
+    const mockEvmWalletProvider = {
+      sendTransaction: vi.fn(),
+      getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+      getWalletAddressBytes: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+      waitForTransactionReceipt: vi.fn(),
+    } as unknown as IEvmWalletProvider;
 
     const mockBscSpokeProvider = new EvmSpokeProvider(
       mockEvmWalletProvider,

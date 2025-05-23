@@ -7,7 +7,7 @@ import {
   EvmHubProvider,
   type EvmHubProviderConfig,
   EvmSpokeProvider,
-  EvmWalletProvider,
+  type IEvmWalletProvider,
   type FeeAmount,
   type Intent,
   IntentErrorCode,
@@ -88,11 +88,12 @@ describe('SolverService', () => {
     },
   }, mockHubProvider);
 
-  const mockEvmWalletProvider = new EvmWalletProvider({
-    chain: BSC_MAINNET_CHAIN_ID,
-    privateKey: '0xe0a01496281934154fe895c31b352f19fa9250fc0ffa28a597335d26aeb2bbf9' as Hex, // NOTE: random private key for unit testing only
-    provider: 'https://bsc-mainnet.infura.io/v3/1234567890',
-  });
+  const mockEvmWalletProvider = {
+    sendTransaction: vi.fn(),
+    getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+    getWalletAddressBytes: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+    waitForTransactionReceipt: vi.fn(),
+  } as unknown as IEvmWalletProvider;
 
   const mockFee = {
     address: '0x0000000000000000000000000000000000000000',

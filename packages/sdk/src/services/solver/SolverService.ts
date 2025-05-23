@@ -584,7 +584,7 @@ export class SolverService {
    * @returns {Promise<Intent>} The intent
    */
   public getIntent(txHash: Hash): Promise<Intent> {
-    return EvmSolverService.getIntent(txHash, this.hubProvider, this.config);
+    return EvmSolverService.getIntent(txHash, this.config, this.hubProvider,);
   }
 
   /**

@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { decodeFunctionData, type Address, type PublicClient } from 'viem';
+import { decodeFunctionData, type Address, type HttpTransport, type PublicClient } from 'viem';
 import { assetManagerAbi } from '../../../abis/index.js';
 import {
   EvmAssetManagerService,
   type EvmSpokeProvider,
-  type EvmWalletProvider,
   spokeChainConfig,
   type EvmDepositToDataParams,
   type EvmWithdrawAssetDataParams,
@@ -13,6 +12,7 @@ import {
   EvmHubProvider,
   type EvmHubProviderConfig,
   SONIC_MAINNET_CHAIN_ID,
+  type IEvmWalletProvider,
 } from '../../../index.js';
 
 vi.mock('../../../utils/evm-utils.js', () => ({
@@ -61,10 +61,13 @@ describe('EvmAssetManagerService', () => {
     publicClient: {
       readContract: vi.fn(),
     },
-    walletClient: {
+    getWalletAddressBytes: {
       writeContract: vi.fn(),
     },
-  } as unknown as EvmWalletProvider;
+    getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+    sendTransaction: vi.fn(),
+    waitForTransactionReceipt: vi.fn(),
+  } as unknown as IEvmWalletProvider;
 
   const mockSpokeProvider = {
     walletProvider: mockSpokeWalletProvider,
@@ -81,7 +84,9 @@ describe('EvmAssetManagerService', () => {
       },
       nativeToken: '0x0000000000000000000000000000000000000000' as Address,
     },
-    getWalletAddress: () => '0x3333333333333333333333333333333333333333' as Address,
+    publicClient: {
+      readContract: vi.fn(),
+    } as unknown as PublicClient<HttpTransport>,
   } satisfies EvmSpokeProvider;
 
   const mockHubConfig = {

@@ -8,8 +8,6 @@ import { UserReservesCard } from '@/components/markets/user-reserves-card';
 import {
   type AggregatedReserveData,
   type BaseCurrencyInfo,
-  EvmWalletProvider,
-  MoneyMarketService,
   SONIC_TESTNET_CHAIN_ID,
   type UserReserveData,
 } from '@new-world/sdk';
@@ -23,12 +21,6 @@ const MONEY_MARKET_CONFIG = {
 // This would typically come from environment variables
 const privateKey = '0xd17e858c2aca0f31be86c01039dc070123e52df4d418535a9b3c92130d271120';
 
-const sonicTestnetEvmWallet = new EvmWalletProvider({
-  chain: SONIC_TESTNET_CHAIN_ID,
-  privateKey: privateKey as `0x${string}`,
-  provider: 'https://rpc.blaze.soniclabs.com',
-});
-
 export default function MoneyMarketPage() {
   const [reserves, setReserves] = useState<AggregatedReserveData[]>([]);
   const [baseCurrencyInfo, setBaseCurrencyInfo] = useState<BaseCurrencyInfo | null>(null);
@@ -37,46 +29,46 @@ export default function MoneyMarketPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const moneyMarket = new MoneyMarketService();
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const moneyMarket = new MoneyMarketService();
 
-        // Get list of reserves
-        const reservesList = await moneyMarket.getReservesList(
-          MONEY_MARKET_CONFIG.uiPoolDataProvider as `0x${string}`,
-          MONEY_MARKET_CONFIG.poolAddressesProvider as `0x${string}`,
-          sonicTestnetEvmWallet,
-        );
+  //       // Get list of reserves
+  //       const reservesList = await moneyMarket.getReservesList(
+  //         MONEY_MARKET_CONFIG.uiPoolDataProvider as `0x${string}`,
+  //         MONEY_MARKET_CONFIG.poolAddressesProvider as `0x${string}`,
+  //         sonicTestnetEvmWallet,
+  //       );
 
-        // Get detailed reserve data
-        const [reservesData, baseCurrencyData] = await moneyMarket.getReservesData(
-          MONEY_MARKET_CONFIG.uiPoolDataProvider as `0x${string}`,
-          MONEY_MARKET_CONFIG.poolAddressesProvider as `0x${string}`,
-          sonicTestnetEvmWallet,
-        );
+  //       // Get detailed reserve data
+  //       const [reservesData, baseCurrencyData] = await moneyMarket.getReservesData(
+  //         MONEY_MARKET_CONFIG.uiPoolDataProvider as `0x${string}`,
+  //         MONEY_MARKET_CONFIG.poolAddressesProvider as `0x${string}`,
+  //         sonicTestnetEvmWallet,
+  //       );
 
-        // Get user data - using the wallet address as the user address
-        // const [userReservesData, eModeCategoryData] = await moneyMarket.getUserReservesData(
-        //   await sonicTestnetEvmWallet.getAddress(),
-        //   MONEY_MARKET_CONFIG.uiPoolDataProvider as `0x${string}`,
-        //   MONEY_MARKET_CONFIG.poolAddressesProvider as `0x${string}`,
-        //   sonicTestnetEvmWallet,
-        // );
+  //       // Get user data - using the wallet address as the user address
+  //       // const [userReservesData, eModeCategoryData] = await moneyMarket.getUserReservesData(
+  //       //   await sonicTestnetEvmWallet.getAddress(),
+  //       //   MONEY_MARKET_CONFIG.uiPoolDataProvider as `0x${string}`,
+  //       //   MONEY_MARKET_CONFIG.poolAddressesProvider as `0x${string}`,
+  //       //   sonicTestnetEvmWallet,
+  //       // );
 
-        setReserves([...reservesData]);
-        setBaseCurrencyInfo(baseCurrencyData);
-        // setUserReserves([...userReservesData]);
-        // setEModeCategory(eModeCategoryData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred while fetching data');
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       setReserves([...reservesData]);
+  //       setBaseCurrencyInfo(baseCurrencyData);
+  //       // setUserReserves([...userReservesData]);
+  //       // setEModeCategory(eModeCategoryData);
+  //     } catch (err) {
+  //       setError(err instanceof Error ? err.message : 'An error occurred while fetching data');
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
 
   if (loading) {
     return <div className="p-8">Loading...</div>;

@@ -39,15 +39,4 @@ export type Chain = {
 export type XChain = Chain & {
   xChainId: XChainId;
   xChainType: XChainType;
-  contracts: {
-    xCall: string;
-    assetManager: string;
-    bnUSD?: string;
-    liquidSwap?: string;
-    xCallManager?: string;
-    bnUSDToken?: string;
-  };
-  autoExecution: boolean;
-  gasThreshold: number;
-  useXCallScanner: boolean;
 };

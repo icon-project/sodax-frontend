@@ -1,4 +1,7 @@
-import type { Address, TransactionReceipt } from 'viem';
+import type { PublicKey } from '@solana/web3.js';
+import type { SignDoc } from 'cosmjs-types/cosmos/tx/v1beta1/tx.js';
+import type { Converter } from 'icon-sdk-js';
+import type { TransactionReceipt } from 'viem';
 import type { CWSpokeProvider } from './entities/cosmos/CWSpokeProvider.js';
 import type {
   EvmSpokeProvider,
@@ -23,9 +26,6 @@ import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.j
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
 import type { StellarSpokeDepositParams } from './services/spoke/StellarSpokeService.js';
 import type { SuiSpokeDepositParams } from './services/spoke/SuiSpokeService.js';
-import type { PublicKey } from '@solana/web3.js';
-import type { Converter } from 'icon-sdk-js';
-import type { SignDoc } from 'cosmjs-types/cosmos/tx/v1beta1/tx.js';
 
 export type HubChainId = (typeof HUB_CHAIN_IDS)[number];
 
@@ -57,6 +57,7 @@ export type GetSpokeChainIdType<T extends ChainType> = T extends 'evm' ? EvmSpok
 export type ByteArray = Uint8Array;
 export type Hex = `0x${string}`;
 export type Hash = `0x${string}`;
+export type Address = `0x${string}`;
 export type OriginalAssetAddress = string;
 
 export type Token = {
@@ -249,7 +250,7 @@ export type VaultReserves = {
 export type PartnerFeeAmount = {
   address: Address;
   amount: bigint;
-}
+};
 
 /**
  * Fee type for transaction fees.
@@ -259,8 +260,7 @@ export type PartnerFeeAmount = {
 export type PartnerFeePercentage = {
   address: Address;
   percentage: number;
-}
-
+};
 
 /**
  * Fee type for transaction fees.
@@ -272,7 +272,7 @@ export type PartnerFee = PartnerFeeAmount | PartnerFeePercentage;
 
 export type FeeAmount = {
   feeAmount: bigint;
-}
+};
 
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
@@ -403,6 +403,37 @@ export type EvmRawTransaction = {
   data: Hex;
 };
 
+// Ethereum JSON-RPC Spec based logs
+export type EvmRawLog = {
+  address: Address;
+  topics: [Hex, ...Hex[]] | [];
+  data: Hex;
+  blockHash: Hash | null;
+  blockNumber: Address | null;
+  logIndex: Hex | null;
+  transactionHash: Hash | null;
+  transactionIndex: Hex | null;
+  removed: boolean;
+};
+
+// Ethereum JSON-RPC Spec based transaction receipt
+export type EvmRawTransactionReceipt = {
+  transactionHash: string; // 32-byte hash
+  transactionIndex: string; // hex string, e.g., '0x1'
+  blockHash: string; // 32-byte hash
+  blockNumber: string; // hex string, e.g., '0x5BAD55'
+  from: string; // 20-byte address
+  to: string | null; // null if contract creation
+  cumulativeGasUsed: string; // hex string
+  gasUsed: string; // hex string
+  contractAddress: string | null; // non-null only if contract creation
+  logs: EvmRawLog[];
+  logsBloom: string; // 256-byte bloom filter hex string
+  status?: string; // '0x1' = success, '0x0' = failure (optional pre-Byzantium)
+  type?: string; // '0x0', '0x1', or '0x2' for tx type
+  effectiveGasPrice?: string; // hex string, only on EIP-1559 txs
+};
+
 type Base64String = string;
 
 export type SolanaRawTransaction = {
@@ -440,10 +471,7 @@ export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarR
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
 export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransaction : Hex;
-export type TxReturnType<
-  T extends SpokeProvider,
-  Raw extends boolean,
-> = T['chainConfig']['chain']['type'] extends 'evm'
+export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chainConfig']['chain']['type'] extends 'evm'
   ? EvmReturnType<Raw>
   : T['chainConfig']['chain']['type'] extends 'solana'
     ? SolanaReturnType<Raw>

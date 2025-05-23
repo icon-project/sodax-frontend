@@ -9,17 +9,8 @@ import {
   type PublicClient,
   type WalletClient,
   createPublicClient,
-  createWalletClient,
-  custom,
 } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
 import { getEvmViemChain, getHubChainConfig, SONIC_MAINNET_CHAIN_ID } from '../constants.js';
-import {
-  isEvmInitializedConfig,
-  isEvmUninitializedBrowserConfig,
-  isEvmUninitializedConfig,
-  isEvmUninitializedPrivateKeyConfig,
-} from '../guards.js';
 import type { EvmChainId, EvmHubChainConfig, EvmSpokeChainConfig, SpokeChainConfig } from '../types.js';
 import type { CWSpokeProvider, ICWWalletProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
@@ -29,6 +20,7 @@ import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider, StellarWalletProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
 import type { SuiWalletProvider } from './sui/SuiWalletProvider.js';
+import type { IEvmWalletProvider } from '../index.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -61,66 +53,6 @@ export type EvmInitializedConfig = {
   publicClient: PublicClient<CustomTransport | HttpTransport>;
 };
 
-/**
- * EvmWalletProvider is a class that provides functionalities for dealing with wallet signing and sending transactions
- * in an EVM (Ethereum Virtual Machine) compatible environment. It supports both uninitialized and initialized configurations.
- */
-export class EvmWalletProvider implements WalletAddressProvider {
-  private readonly _walletClient?: WalletClient<CustomTransport | HttpTransport, Chain, Account>;
-  public readonly publicClient: PublicClient<CustomTransport | HttpTransport>;
-
-  constructor(payload: EvmUninitializedConfig | EvmInitializedConfig) {
-    if (isEvmUninitializedConfig(payload)) {
-      if (isEvmUninitializedBrowserConfig(payload)) {
-        this._walletClient = createWalletClient({
-          account: payload.userAddress,
-          transport: custom(payload.provider),
-          chain: getEvmViemChain(payload.chain),
-        });
-        this.publicClient = createPublicClient({
-          transport: custom(payload.provider),
-          chain: getEvmViemChain(payload.chain),
-        });
-      } else if (isEvmUninitializedPrivateKeyConfig(payload)) {
-        if (payload.privateKey) {
-          this._walletClient = createWalletClient({
-            account: privateKeyToAccount(payload.privateKey),
-            transport: http(payload.provider),
-            chain: getEvmViemChain(payload.chain),
-          });
-        }
-        this.publicClient = createPublicClient({
-          transport: http(payload.provider),
-          chain: getEvmViemChain(payload.chain),
-        });
-      } else {
-        throw new Error('Invalid configuration parameters');
-      }
-    } else if (isEvmInitializedConfig(payload)) {
-      this._walletClient = payload.walletClient;
-      this.publicClient = payload.publicClient;
-    } else {
-      throw new Error('Invalid configuration parameters');
-    }
-  }
-
-  get walletClient(): WalletClient<CustomTransport | HttpTransport, Chain, Account> {
-    if (!this._walletClient) {
-      throw new Error('[EvmWalletProvider] Undefined walletClient');
-    }
-
-    return this._walletClient;
-  }
-
-  getWalletAddress(): Address {
-    return this.walletClient.account.address;
-  }
-
-  getWalletAddressBytes(): Hex {
-    return this.walletClient.account.address;
-  }
-}
-
 export type EvmHubProviderConfig = {
   hubRpcUrl: string,
   chainConfig: EvmHubChainConfig
@@ -149,16 +81,24 @@ export class EvmHubProvider {
 }
 
 export class EvmSpokeProvider implements ISpokeProvider {
-  public readonly walletProvider: EvmWalletProvider;
+  public readonly walletProvider: IEvmWalletProvider;
   public readonly chainConfig: EvmSpokeChainConfig;
+  public readonly publicClient: PublicClient<HttpTransport>;
 
-  constructor(walletProvider: EvmWalletProvider, chainConfig: EvmSpokeChainConfig) {
+  constructor(walletProvider: IEvmWalletProvider, chainConfig: EvmSpokeChainConfig, rpcUrl?: string) {
     this.walletProvider = walletProvider;
     this.chainConfig = chainConfig;
-  }
-
-  getWalletAddress(): Address {
-    return this.walletProvider.walletClient.account.address;
+    if (rpcUrl) {
+      this.publicClient = createPublicClient({
+        transport: http(rpcUrl),
+        chain: getEvmViemChain(chainConfig.chain.id),
+      });
+    } else {
+      this.publicClient = createPublicClient({
+        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
+        chain: getEvmViemChain(chainConfig.chain.id),
+      });
+    }
   }
 }
 
@@ -170,7 +110,7 @@ export { IconWalletProvider } from './icon/IconWalletProvider.js';
 export { getIconAddressBytes } from './icon/utils.js';
 
 export type WalletProvider = (
-  | EvmWalletProvider
+  | IEvmWalletProvider
   | ICWWalletProvider
   | SuiWalletProvider
   | IconWalletProvider

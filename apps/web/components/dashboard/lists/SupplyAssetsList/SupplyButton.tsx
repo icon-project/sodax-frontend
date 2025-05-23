@@ -1,10 +1,10 @@
+import { sodax } from '@/app/config';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useHubProvider } from '@/hooks/useHubProvider';
 import { sdkChainIdMap, useHubWallet } from '@/hooks/useHubWallet';
-import { useMoneyMarketConfig } from '@/hooks/useMoneyMarketConfig';
 import { useSpokeProvider } from '@/hooks/useSpokeProvider';
 import {
   type EvmHubProvider,
@@ -22,7 +22,6 @@ import { parseUnits } from 'viem';
 export function SupplyButton({ token }: { token: XToken }) {
   const { address } = useXAccount(getXChainType(token.xChainId));
 
-  const moneyMarketConfig = useMoneyMarketConfig();
   const hubProvider = useHubProvider('sonic-blaze');
   const spokeProvider = useSpokeProvider(token.xChainId);
   const { data: hubWallet } = useHubWallet(token.xChainId, address, hubProvider as EvmHubProvider);
@@ -48,13 +47,12 @@ export function SupplyButton({ token }: { token: XToken }) {
     setIsLoading(true);
 
     try {
-      const data = MoneyMarketService.supplyData(
+      const data = sodax.moneyMarket.supplyData(
         token.address,
         hubWallet,
         parseUnits(amount, token.decimals),
         // @ts-ignore
         sdkChainIdMap[token.xChainId],
-        moneyMarketConfig,
       );
 
       // TODO: use SpokeService.deposit instead of EvmSpokeService.deposit
