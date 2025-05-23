@@ -15,16 +15,7 @@ export const archway: XChain = {
     http: 'https://rpc.mainnet.archway.io',
     ws: 'wss://rpc.mainnet.archway.io:443/websocket',
   },
-  contracts: {
-    xCall: 'archway19hzhgd90etqc3z2qswumq80ag2d8het38r0al0r4ulrly72t20psdrpna6',
-    assetManager: 'archway1sg2kgqjhj7vyu0x9tflx4ju9vjn2x6c7g39vx3tv9ethfg9d9zns6ajpja',
-    bnUSD: 'archway1l3m84nf7xagkdrcced2y0g367xphnea5uqc3mww3f83eh6h38nqqxnsxz7',
-    liquidSwap: 'archway1ywv0gxrw3kv25kn9f05dtqf6577fer5pc2vewvgcagpm5p8l4kuqc4qfp6',
-  },
-  autoExecution: true,
-  gasThreshold: 2,
   testnet: false,
-  useXCallScanner: false,
 };
 
 export const archwayTestnet: XChain = {
@@ -42,16 +33,7 @@ export const archwayTestnet: XChain = {
     http: 'https://rpc.mainnet.archway.io',
     ws: 'wss://rpc.mainnet.archway.io:443/websocket',
   },
-  contracts: {
-    xCall: 'archway1h04c8eqr99dnsw6wqx80juj2vtuxth70eh65cf6pnj4zan6ms4jqshc5wk',
-    assetManager: 'archway1sg2kgqjhj7vyu0x9tflx4ju9vjn2x6c7g39vx3tv9ethfg9d9zns6ajpja',
-    bnUSD: 'archway1l3m84nf7xagkdrcced2y0g367xphnea5uqc3mww3f83eh6h38nqqxnsxz7',
-    liquidSwap: 'archway1ywv0gxrw3kv25kn9f05dtqf6577fer5pc2vewvgcagpm5p8l4kuqc4qfp6',
-  },
-  autoExecution: true,
-  gasThreshold: 10,
   testnet: true,
-  useXCallScanner: false,
 };
 
 export const icon: XChain = {
@@ -69,16 +51,7 @@ export const icon: XChain = {
     http: '',
     ws: 'wss://ctz.solidwallet.io/api/v3/icon_dex/block',
   },
-  contracts: {
-    xCall: 'cxa07f426062a1384bdd762afa6a87d123fbc81c75',
-    assetManager: 'cxabea09a8c5f3efa54d0a0370b14715e6f2270591',
-    bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
-    liquidSwap: '',
-  },
-  autoExecution: true,
-  gasThreshold: 2.5,
   testnet: false,
-  useXCallScanner: false,
 };
 
 export const lisbon: XChain = {
@@ -96,16 +69,7 @@ export const lisbon: XChain = {
     http: '',
     ws: 'wss://ctz.solidwallet.io/api/v3/icon_dex/block',
   },
-  contracts: {
-    xCall: 'cx15a339fa60bd86225050b22ea8cd4a9d7cd8bb83',
-    assetManager: 'cxabea09a8c5f3efa54d0a0370b14715e6f2270591',
-    bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
-    liquidSwap: '',
-  },
-  autoExecution: true,
-  gasThreshold: 4,
   testnet: true,
-  useXCallScanner: false,
 };
 
 export const avalanche: XChain = {
@@ -122,15 +86,7 @@ export const avalanche: XChain = {
   rpc: {
     http: 'https://api.avax.network/ext/bc/C/rpc',
   },
-  contracts: {
-    xCall: '0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b',
-    assetManager: '0xdf851B4f0D9b2323e03B3980b1C4Cf56273c0bd9',
-    bnUSD: '0xdBDd50997361522495EcFE57EBb6850dA0E4C699',
-  },
-  autoExecution: true,
-  gasThreshold: 0.05,
   testnet: false,
-  useXCallScanner: false,
 };
 
 export const fuji: XChain = {
@@ -147,15 +103,7 @@ export const fuji: XChain = {
   rpc: {
     http: 'https://api.avax.network/ext/bc/C/rpc',
   },
-  contracts: {
-    xCall: '0x28ecb198e86a7FcA1cf51032635967fc26cDDAaD',
-    assetManager: '0xdf851B4f0D9b2323e03B3980b1C4Cf56273c0bd9',
-    bnUSD: '0xdBDd50997361522495EcFE57EBb6850dA0E4C699',
-  },
-  autoExecution: true,
-  gasThreshold: 0,
   testnet: true,
-  useXCallScanner: false,
 };
 
 export const havah: XChain = {
@@ -172,16 +120,7 @@ export const havah: XChain = {
   rpc: {
     http: 'https://ctz.havah.io/api/v3',
   },
-  contracts: {
-    // TODO: are contracts correct?
-    xCall: '0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b',
-    assetManager: '0xdf851B4f0D9b2323e03B3980b1C4Cf56273c0bd9',
-    bnUSD: '0xdBDd50997361522495EcFE57EBb6850dA0E4C699',
-  },
-  autoExecution: true,
-  gasThreshold: 0.2,
   testnet: false,
-  useXCallScanner: false,
 };
 
 export const bsc: XChain = {
@@ -198,15 +137,7 @@ export const bsc: XChain = {
   rpc: {
     http: 'https://bsc-dataseed.bnbchain.org',
   },
-  contracts: {
-    xCall: '0xfc83a3f252090b26f92f91dfb9dc3eb710adaf1b',
-    assetManager: '0x69e81Cea7889608A63947814893ad1B86DcC03Aa',
-    bnUSD: '0xc65132325bD4FcF2Ec5F3a9375487163B6999206',
-  },
-  autoExecution: true,
-  gasThreshold: 0.005,
   testnet: false,
-  useXCallScanner: false,
 };
 
 export const arbitrum: XChain = {
@@ -223,15 +154,7 @@ export const arbitrum: XChain = {
   rpc: {
     http: 'https://arb1.arbitrum.io/rpc',
   },
-  contracts: {
-    xCall: '0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b',
-    assetManager: '0x78b7CD9308287DEb724527d8703c889e2d6C3708',
-    bnUSD: '0xA67f4b09Eed22f8201Ee0637CbE9d654E63F946e',
-  },
-  autoExecution: true,
-  gasThreshold: 0.0001,
   testnet: false,
-  useXCallScanner: false,
 };
 
 export const base: XChain = {
@@ -248,15 +171,7 @@ export const base: XChain = {
   rpc: {
     http: 'https://mainnet.base.org',
   },
-  contracts: {
-    xCall: '0x7fdde482956770D148E055f9d2893f84a1B6B00B',
-    assetManager: '0xDccd213951D8214fBACa720728474E2cEf9d247B',
-    bnUSD: '0x78b7CD9308287DEb724527d8703c889e2d6C3708',
-  },
-  autoExecution: true,
-  gasThreshold: 0.0001,
   testnet: false,
-  useXCallScanner: false,
 };
 
 export const injective: XChain = {
@@ -273,15 +188,7 @@ export const injective: XChain = {
   rpc: {
     http: 'https://sentry.tm.injective.network',
   },
-  contracts: {
-    xCall: 'inj177fx40l0g3jqmtmmuyl2zhrjvhr3knvthlr0ul',
-    assetManager: 'inj1hayj9xnlh44sn29sgggn3jwl3ktl6djwcven25',
-    bnUSD: 'inj1qspaxnztkkzahvp6scq6xfpgafejmj2td83r9j',
-  },
-  autoExecution: true,
-  gasThreshold: 0.01,
   testnet: false,
-  useXCallScanner: false,
 };
 
 export const stellar: XChain = {
@@ -298,15 +205,7 @@ export const stellar: XChain = {
   rpc: {
     http: 'https://horizon.stellar.org',
   },
-  contracts: {
-    xCall: 'CB6IJRLOWGQXUDSYGFOAAZYVOESQ6TVSTU3242I7PG3LH7F43PPX2HE6',
-    assetManager: 'CAGP34E2VHGO7Y3NEJHCMVFMTTTIYCGBWUH7FTCMHMVYAMQBIILX5GXH',
-    bnUSD: 'CCT4ZYIYZ3TUO2AWQFEOFGBZ6HQP3GW5TA37CK7CRZVFRDXYTHTYX7KP',
-  },
-  autoExecution: true,
-  gasThreshold: 1, // xCall fee: 0.1 XLM
   testnet: false,
-  useXCallScanner: true,
 };
 
 // TODO: complete SUI chain
@@ -324,15 +223,7 @@ export const sui: XChain = {
   rpc: {
     http: 'https://sentry.tm.sui.network',
   },
-  contracts: {
-    xCall: '0x3638b141b349173a97261bbfa33ccd45334d41a80584db6f30429e18736206fe', // TODO: not being used, just empty string
-    assetManager: '0x1c1795e30fbc0b9c18543527940446e7601f5a3ca4db9830da4f3c68557e1fb3', // TODO: not being used, just empty string
-    bnUSD: '0x03917a812fe4a6d6bc779c5ab53f8a80ba741f8af04121193fc44e0f662e2ceb::balanced_dollar::BALANCED_DOLLAR',
-  },
-  autoExecution: true,
-  gasThreshold: 0.15, // xCall fee: 0.05 SUI
   testnet: false,
-  useXCallScanner: true,
 };
 
 // TODO: complete solana chain
@@ -350,16 +241,7 @@ export const solana: XChain = {
   rpc: {
     http: 'https://sentry.tm.solana.network',
   },
-  contracts: {
-    xCall: '3LWnGCRFuS4TJ5WeDKeWdoSRptB2tzeEFhSBFFu4ogMo',
-    assetManager: '4u979CPSHUeJQbCYUAvoki4CQHDiG1257vt2DaJULPV9',
-    bnUSD: '3JfaNQh3zRyBQ3spQJJWKmgRcXuQrcNrpLH5pDvaX2gG',
-    xCallManager: 'Ganbqm2tJ8SuaN6kSRWsJhXGb7aLCvHLuCySxCfkXPVL',
-  },
-  autoExecution: true,
-  gasThreshold: 0.01, // xCall fee: 0.0006 SOL
   testnet: false,
-  useXCallScanner: true,
 };
 
 export const optimism: XChain = {
@@ -376,15 +258,7 @@ export const optimism: XChain = {
   rpc: {
     http: 'https://mainnet.optimism.io',
   },
-  contracts: {
-    xCall: '0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b',
-    assetManager: '0xbcbd42Ab3c9d219b9c992Cc984DD2a77AfD95EF3',
-    bnUSD: '0xdccd213951d8214fbaca720728474e2cef9d247b',
-  },
-  autoExecution: true,
-  gasThreshold: 0.0001,
   testnet: false,
-  useXCallScanner: false,
 };
 
 export const sonicBlaze: XChain = {
@@ -400,15 +274,7 @@ export const sonicBlaze: XChain = {
   rpc: {
     http: 'https://rpc.sonic.blaze.xyz',
   },
-  contracts: {
-    xCall: '0xfC83a3F252090B26f92F91DFB9dC3Eb710AdAf1b',
-    assetManager: '0xdf851B4f0D9b2323e03B3980b1C4Cf56273c0bd9',
-    bnUSD: '0xdBDd50997361522495EcFE57EBb6850dA0E4C699',
-  },
-  autoExecution: true,
-  gasThreshold: 0.0001,
   testnet: false,
-  useXCallScanner: false,
   tracker: { tx: 'https://sonic.blaze.xyz/tx' },
 };
 
