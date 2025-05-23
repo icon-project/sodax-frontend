@@ -1,4 +1,10 @@
-import { type MoneyMarketConfig, MoneyMarketService } from '@new-world/sdk';
+import {
+  type HubChainId,
+  type MoneyMarketConfig,
+  MoneyMarketService,
+  SONIC_TESTNET_CHAIN_ID,
+  getMoneyMarketConfig,
+} from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { defineChain } from 'viem';
 import { http, createConfig } from 'wagmi';
@@ -90,8 +96,6 @@ export const allXTokens: XToken[] = [
 
 export const moneyMarket = new MoneyMarketService();
 
-export const moneyMarketConfig: MoneyMarketConfig = {
-  lendingPool: '0xA33E8f7177A070D0162Eea0765d051592D110cDE',
-  uiPoolDataProvider: '0x7997C9237D168986110A67C55106C410a2cF9d4f',
-  poolAddressesProvider: '0x04b3f588578BF89B1D2af7283762E3375f0340dA',
-};
+const HUB_CHAIN_ID: HubChainId = SONIC_TESTNET_CHAIN_ID;
+
+export const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);

@@ -22,8 +22,6 @@ export function SuppliedAssetsList() {
 
   const userReserves = useSuppliedAssets();
 
-  console.log('userReserves', userReserves);
-
   return (
     <Card>
       <CardHeader>
