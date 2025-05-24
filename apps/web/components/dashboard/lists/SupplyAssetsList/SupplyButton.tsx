@@ -16,6 +16,7 @@ import type { XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useState } from 'react';
 import { parseUnits } from 'viem';
+import type { Address } from 'viem';
 
 export function SupplyButton({ token }: { token: XToken }) {
   const { address } = useXAccount(getXChainType(token.xChainId));
@@ -47,7 +48,7 @@ export function SupplyButton({ token }: { token: XToken }) {
     try {
       const data = sodax.moneyMarket.supplyData(
         token.address,
-        hubWallet,
+        hubWallet as Address,
         parseUnits(amount, token.decimals),
         // @ts-ignore
         sdkChainIdMap[token.xChainId],
