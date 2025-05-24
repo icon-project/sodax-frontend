@@ -70,7 +70,7 @@ describe('Constants', () => {
     });
 
     it('should throw an error for unsupported chain ID', () => {
-      expect(() => getEvmViemChain("999999" as EvmChainId)).toThrow('Unsupported EVM chain ID: 999999');
+      expect(() => getEvmViemChain('999999' as EvmChainId)).toThrow('Unsupported EVM chain ID: 999999');
     });
   });
 

@@ -110,25 +110,55 @@ export function isPartnerFeePercentage(value: unknown): value is PartnerFeePerce
 }
 
 export function isEvmSpokeProvider(value: SpokeProvider): value is EvmSpokeProvider {
-  return typeof value === 'object' && value !== null && value instanceof EvmSpokeProvider && value.chainConfig.chain.type === 'evm';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof EvmSpokeProvider &&
+    value.chainConfig.chain.type === 'evm'
+  );
 }
 
 export function isSolanaSpokeProvider(value: SpokeProvider): value is SolanaSpokeProvider {
-  return typeof value === 'object' && value !== null && value instanceof SolanaSpokeProvider && value.chainConfig.chain.type === 'solana';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof SolanaSpokeProvider &&
+    value.chainConfig.chain.type === 'solana'
+  );
 }
 
 export function isStellarSpokeProvider(value: SpokeProvider): value is StellarSpokeProvider {
-  return typeof value === 'object' && value !== null && value instanceof StellarSpokeProvider && value.chainConfig.chain.type === 'stellar';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof StellarSpokeProvider &&
+    value.chainConfig.chain.type === 'stellar'
+  );
 }
 
 export function isCWSpokeProvider(value: SpokeProvider): value is CWSpokeProvider {
-  return typeof value === 'object' && value !== null && value instanceof CWSpokeProvider && value.chainConfig.chain.type === 'cosmos';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof CWSpokeProvider &&
+    value.chainConfig.chain.type === 'cosmos'
+  );
 }
 
 export function isIconSpokeProvider(value: SpokeProvider): value is IconSpokeProvider {
-  return typeof value === 'object' && value !== null && value instanceof IconSpokeProvider && value.chainConfig.chain.type === 'icon';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof IconSpokeProvider &&
+    value.chainConfig.chain.type === 'icon'
+  );
 }
 
 export function isSuiSpokeProvider(value: SpokeProvider): value is SuiSpokeProvider {
-  return typeof value === 'object' && value !== null && value instanceof SuiSpokeProvider && value.chainConfig.chain.type === 'sui';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof SuiSpokeProvider &&
+    value.chainConfig.chain.type === 'sui'
+  );
 }

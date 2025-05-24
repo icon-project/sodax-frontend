@@ -3,15 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useHubProvider } from '@/hooks/useHubProvider';
-import { useHubWallet } from '@/hooks/useHubWallet';
-import { useSpokeProvider } from '@/hooks/useSpokeProvider';
+import { useHubProvider, useHubWallet, useSpokeProvider } from '@new-world/dapp-kit';
 import type { EvmHubProvider, IntentRelayRequest, SubmitTxResponse } from '@new-world/sdk';
 import { SpokeService, submitTransaction } from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useState } from 'react';
-import type { Hash, Hex } from 'viem';
+import type { Address, Hash, Hex } from 'viem';
 import { parseUnits } from 'viem';
 
 export function WithdrawButton({ token }: { token: XToken }) {
@@ -42,7 +40,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
     setIsLoading(true);
 
     const data: Hex = sodax.moneyMarket.withdrawData(
-      hubWallet,
+      hubWallet as Address,
       spokeProvider.walletProvider.getWalletAddress(),
       '0x0000000000000000000000000000000000000000',
       parseUnits(amount, token.decimals),

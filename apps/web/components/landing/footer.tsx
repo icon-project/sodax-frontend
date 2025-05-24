@@ -21,9 +21,7 @@ const Footer: React.FC = () => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             using soda
           </div>
-          <FooterLink href="#">
-            Flagship Platform (Soon)
-          </FooterLink>
+          <FooterLink href="#">Flagship Platform (Soon)</FooterLink>
           <FooterLink href="#" showArrow>
             Hana Wallet
           </FooterLink>
@@ -35,9 +33,7 @@ const Footer: React.FC = () => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             socials
           </div>
-          <FooterLink href="#">
-            Blog
-          </FooterLink>
+          <FooterLink href="#">Blog</FooterLink>
           <FooterLink href="#" showArrow>
             Discord
           </FooterLink>
@@ -55,18 +51,10 @@ const Footer: React.FC = () => {
           <FooterLink href="#" showArrow>
             Partners
           </FooterLink>
-          <FooterLink href="#">
-            Contact Us
-          </FooterLink>
-          <FooterLink href="#">
-            Media Kit
-          </FooterLink>
-          <FooterLink href="#">
-            Disclaimer
-          </FooterLink>
-          <FooterLink href="#">
-            Terms & Conditions
-          </FooterLink>
+          <FooterLink href="#">Contact Us</FooterLink>
+          <FooterLink href="#">Media Kit</FooterLink>
+          <FooterLink href="#">Disclaimer</FooterLink>
+          <FooterLink href="#">Terms & Conditions</FooterLink>
         </div>
         <div className="inline-flex flex-col justify-start items-start gap-3">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">

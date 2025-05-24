@@ -43,9 +43,7 @@ const Section4 = () => {
         </div>
         <Label className="text-sm font-[InterRegular] text-black">Points with every order.</Label>
         <div className="mt-6">
-          <DecoratedButton variant="white">
-            join waitlist
-          </DecoratedButton>
+          <DecoratedButton variant="white">join waitlist</DecoratedButton>
         </div>
       </div>
     </div>

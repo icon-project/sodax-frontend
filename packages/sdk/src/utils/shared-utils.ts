@@ -56,10 +56,7 @@ export function randomUint256(): bigint {
  * @param {number} percentage - The percentage of the fee in basis points (e.g. 100 = 1%, 10000 = 100%)
  * @returns {bigint} The fee amount
  */
-export function calculatePercentageFeeAmount(
-  amount: bigint,
-  percentage: number,
-) {
+export function calculatePercentageFeeAmount(amount: bigint, percentage: number) {
   // Calculate fee as a percentage of the input amount
   return (amount * BigInt(percentage)) / FEE_PERCENTAGE_SCALE;
 }

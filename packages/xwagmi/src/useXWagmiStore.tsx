@@ -13,7 +13,6 @@ import type { XConnection } from './types';
 import { ArchwayXConnector, ArchwayXService } from './xchains/archway';
 import { EvmXService } from './xchains/evm';
 import { HavahHanaXConnector, HavahXConnector, HavahXService } from './xchains/havah';
-import { IconHanaXConnector, IconXService } from './xchains/icon';
 import { InjectiveKelprXConnector, InjectiveMetamaskXConnector, InjectiveXService } from './xchains/injective';
 import { SolanaXService } from './xchains/solana/SolanaXService';
 import { useAnchorProvider } from './xchains/solana/hooks/useAnchorProvider';

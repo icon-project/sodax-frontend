@@ -122,12 +122,7 @@ async function supply(token: IconAddress, amount: bigint) {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.supplyData(
-    token,
-    hubWallet,
-    amount,
-    iconSpokeChainConfig.chain.id,
-  );
+  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, iconSpokeChainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
@@ -198,12 +193,7 @@ async function repay(token: IconAddress, amount: bigint) {
     iconSpokeProvider.walletProvider.getWalletAddressBytes(),
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.repayData(
-    token,
-    hubWallet,
-    amount,
-    iconSpokeChainConfig.chain.id,
-  );
+  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, iconSpokeChainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {

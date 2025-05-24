@@ -3,9 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useHubProvider } from '@/hooks/useHubProvider';
-import { sdkChainIdMap, useHubWallet } from '@/hooks/useHubWallet';
-import { useSpokeProvider } from '@/hooks/useSpokeProvider';
+import { useHubProvider, useHubWallet, useSpokeProvider } from '@new-world/dapp-kit';
 import {
   type EvmHubProvider,
   EvmSpokeService,
@@ -18,6 +16,7 @@ import type { XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useState } from 'react';
 import { parseUnits } from 'viem';
+import type { Address } from 'viem';
 
 export function SupplyButton({ token }: { token: XToken }) {
   const { address } = useXAccount(getXChainType(token.xChainId));
@@ -49,7 +48,7 @@ export function SupplyButton({ token }: { token: XToken }) {
     try {
       const data = sodax.moneyMarket.supplyData(
         token.address,
-        hubWallet,
+        hubWallet as Address,
         parseUnits(amount, token.decimals),
         // @ts-ignore
         sdkChainIdMap[token.xChainId],

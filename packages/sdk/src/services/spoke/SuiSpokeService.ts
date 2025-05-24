@@ -37,7 +37,12 @@ export class SuiSpokeService {
     raw?: R,
   ): PromiseSuiTxReturnType<R> {
     const userWallet: Address =
-      params.to ?? (await EvmWalletAbstraction.getUserHubWalletAddress(spokeProvider.chainConfig.chain.id, params.from, hubProvider));
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        params.from,
+        hubProvider,
+      ));
 
     return SuiSpokeService.transfer(
       {
@@ -77,7 +82,11 @@ export class SuiSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseSuiTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(spokeProvider.chainConfig.chain.id, from, hubProvider);
+    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
+      spokeProvider.chainConfig.chain.id,
+      from,
+      hubProvider,
+    );
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return SuiSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);
   }

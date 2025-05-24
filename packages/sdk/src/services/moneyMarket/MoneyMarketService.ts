@@ -99,7 +99,6 @@ export type MoneyMarketRepayWithATokensParams = {
   interestRateMode: bigint; // The interest rate mode (2 for Variable).
 };
 
-
 export class MoneyMarketService {
   private readonly config: MoneyMarketConfig;
   private readonly hubProvider: EvmHubProvider;
@@ -117,12 +116,7 @@ export class MoneyMarketService {
    * @param spokeChainId The chain ID of the spoke chain
    * @returns Transaction object
    */
-  public supplyData(
-    token: Address | string,
-    to: Address,
-    amount: bigint,
-    spokeChainId: SpokeChainId,
-  ): Hex {
+  public supplyData(token: Address | string, to: Address, amount: bigint, spokeChainId: SpokeChainId): Hex {
     const calls: EvmContractCall[] = [];
     const assetConfig = hubAssets[spokeChainId][token];
     const assetAddress = assetConfig?.asset;
@@ -185,7 +179,7 @@ export class MoneyMarketService {
       calls.push(EvmVaultTokenService.encodeDeposit(bnUSDVault, bnUSD, amount));
 
       if (this.config.partnerFee && feeAmount) {
-        calls.push(Erc20Service.encodeTansfer(bnUSDVault, this.config.partnerFee.address, feeAmount))
+        calls.push(Erc20Service.encodeTansfer(bnUSDVault, this.config.partnerFee.address, feeAmount));
       }
     } else {
       calls.push(
@@ -196,7 +190,7 @@ export class MoneyMarketService {
       );
 
       if (this.config.partnerFee && feeAmount) {
-        calls.push(Erc20Service.encodeTansfer(vaultAddress, this.config.partnerFee.address, feeAmount))
+        calls.push(Erc20Service.encodeTansfer(vaultAddress, this.config.partnerFee.address, feeAmount));
       }
     }
 
@@ -240,10 +234,7 @@ export class MoneyMarketService {
       throw new Error('Address not found');
     }
     calls.push(
-      MoneyMarketService.encodeWithdraw(
-        { asset: vaultAddress, amount: amount, to: from },
-        this.config.lendingPool,
-      ),
+      MoneyMarketService.encodeWithdraw({ asset: vaultAddress, amount: amount, to: from }, this.config.lendingPool),
     );
 
     calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount));
@@ -268,12 +259,7 @@ export class MoneyMarketService {
    * @param moneyMarketConfig The money market config
    * @returns Transaction object
    */
-  public repayData(
-    token: Address | string,
-    to: Address,
-    amount: bigint,
-    spokeChainId: SpokeChainId,
-  ): Hex {
+  public repayData(token: Address | string, to: Address, amount: bigint, spokeChainId: SpokeChainId): Hex {
     const calls: EvmContractCall[] = [];
     const assetConfig = hubAssets[spokeChainId][token];
     const assetAddress = assetConfig?.asset;
@@ -311,10 +297,7 @@ export class MoneyMarketService {
    * @param poolAddressesProvider - The address of the Pool Addresses Provider
    * @returns Array of reserve addresses
    */
-  async getReservesList(
-    uiPoolDataProvider: Address,
-    poolAddressesProvider: Address,
-  ): Promise<readonly Address[]> {
+  async getReservesList(uiPoolDataProvider: Address, poolAddressesProvider: Address): Promise<readonly Address[]> {
     return this.hubProvider.publicClient.readContract({
       address: uiPoolDataProvider,
       abi: uiPoolDataAbi,

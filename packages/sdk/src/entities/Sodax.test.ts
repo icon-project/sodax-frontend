@@ -119,10 +119,7 @@ describe('Sodax', () => {
       waitForTransactionReceipt: vi.fn(),
     } as unknown as IEvmWalletProvider;
 
-    const mockBscSpokeProvider = new EvmSpokeProvider(
-      mockEvmWalletProvider,
-      spokeChainConfig[BSC_MAINNET_CHAIN_ID],
-    );
+    const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
 
     describe('getQuote', () => {
       const quoteRequest = {
@@ -221,10 +218,10 @@ describe('Sodax', () => {
               intent_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
             }) satisfies IntentExecutionResponse,
         });
-  
+
         const result: Result<IntentExecutionResponse, IntentErrorResponse> =
           await sodax.solver.postExecution(executionRequest);
-  
+
         expect(result.ok).toBe(true);
         if (result.ok) {
           expect(result.value).toBeDefined();
@@ -276,9 +273,9 @@ describe('Sodax', () => {
             intent_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
           }),
         });
-  
+
         const result = await sodax.solver.getStatus(statusRequest);
-  
+
         expect(result.ok).toBe(true);
         if (result.ok) {
           expect(result.value).toBeDefined();
@@ -305,15 +302,15 @@ describe('Sodax', () => {
             },
           }),
         });
-  
+
         const result = await sodax.solver.getStatus(statusRequest);
-  
+
         expect(result.ok).toBe(false);
         if (!result.ok) {
           expect(result.error).toBeDefined();
         }
       });
-    })
+    });
 
     describe('createAndSubmitIntent', () => {
       const mockCreateIntentParams = {
@@ -337,7 +334,8 @@ describe('Sodax', () => {
         intentId: BigInt(1),
         creator: mockBscSpokeProvider.walletProvider.getWalletAddress(),
         inputToken: getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
-        outputToken: getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
+        outputToken:
+          getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
         inputAmount: mockCreateIntentParams.inputAmount,
         minOutputAmount: mockCreateIntentParams.minOutputAmount,
         deadline: mockCreateIntentParams.deadline,
@@ -350,7 +348,7 @@ describe('Sodax', () => {
         data: mockCreateIntentParams.data,
         feeAmount: partnerFeeAmount.amount,
       } satisfies Intent & FeeAmount;
-  
+
       const mockPacketData = {
         src_chain_id: Number(getIntentRelayChainId(BSC_MAINNET_CHAIN_ID)), // BSC chain ID
         src_tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
@@ -367,7 +365,10 @@ describe('Sodax', () => {
       it('should successfully create and submit an intent', async () => {
         vi.spyOn(sodax.solver, 'createIntent').mockResolvedValueOnce({
           ok: true,
-          value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: partnerFeeAmount.amount }],
+          value: [
+            mockTxHash as TxReturnType<EvmSpokeProvider, false>,
+            { ...mockIntent, feeAmount: partnerFeeAmount.amount },
+          ],
         });
         vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
           mockEvmWalletProvider.getWalletAddressBytes(),
@@ -418,7 +419,7 @@ describe('Sodax', () => {
         });
         expect(IntentRelayApiService.submitTransaction).toHaveBeenCalled();
       });
-    })
+    });
 
     describe('cancelIntent', () => {
       const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890';
@@ -437,7 +438,7 @@ describe('Sodax', () => {
         solver: '0x0000000000000000000000000000000000000000',
         data: '0x',
       } satisfies CreateIntentParams;
-  
+
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const [, intent] = EvmSolverService.constructCreateIntentData(
         mockCreateIntentParams,
@@ -445,14 +446,14 @@ describe('Sodax', () => {
         solverConfig,
         partnerFeeAmount,
       );
-  
+
       it('should successfully cancel an intent for EVM chain', async () => {
         vi.spyOn(sodax.solver, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
         const result = await sodax.solver.cancelIntent(intent, mockBscSpokeProvider, false);
-  
+
         expect(result).toBe(mockTxHash);
       });
-  
+
       it('should throw error for invalid spoke provider', async () => {
         const invalidSpokeProvider = {
           chainConfig: {
@@ -464,7 +465,7 @@ describe('Sodax', () => {
             getWalletAddressBytes: () => '0x1234567890123456789012345678901234567890',
           },
         } as unknown as SpokeProvider;
-  
+
         await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).rejects.toThrow(
           'Invalid spoke provider',
         );
@@ -486,13 +487,14 @@ describe('Sodax', () => {
         solver: '0x0000000000000000000000000000000000000000',
         data: '0x',
       } satisfies CreateIntentParams;
-  
+
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = {
         intentId: BigInt(1),
         creator: mockBscSpokeProvider.walletProvider.getWalletAddress(),
         inputToken: getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
-        outputToken: getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
+        outputToken:
+          getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
         inputAmount: mockCreateIntentParams.inputAmount,
         minOutputAmount: mockCreateIntentParams.minOutputAmount,
         deadline: mockCreateIntentParams.deadline,
@@ -504,11 +506,11 @@ describe('Sodax', () => {
         solver: mockCreateIntentParams.solver,
         data: mockCreateIntentParams.data,
       } satisfies Intent;
-  
+
       it('should successfully get an intent for EVM chain', async () => {
         vi.spyOn(EvmSolverService, 'getIntent').mockResolvedValueOnce(mockIntent);
         const result = await sodax.solver.getIntent(mockTxHash);
-  
+
         expect(result).toEqual(mockIntent);
       });
     });

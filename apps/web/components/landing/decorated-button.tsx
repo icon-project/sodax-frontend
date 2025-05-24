@@ -39,7 +39,7 @@ export const DecoratedButton = ({
           getBgColor(),
           getTextColor(),
           'transition-all hover:scale-[102%]',
-          className
+          className,
         )}
         {...props}
       >
@@ -53,4 +53,4 @@ export const DecoratedButton = ({
       </div>
     </div>
   );
-}; 
+};
