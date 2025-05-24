@@ -3,9 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useHubProvider } from '@/hooks/useHubProvider';
-import { sdkChainIdMap, useHubWallet } from '@/hooks/useHubWallet';
-import { useSpokeProvider } from '@/hooks/useSpokeProvider';
+import { useHubProvider, useHubWallet, useSpokeProvider } from '@new-world/dapp-kit';
 import {
   type EvmHubProvider,
   EvmSpokeService,

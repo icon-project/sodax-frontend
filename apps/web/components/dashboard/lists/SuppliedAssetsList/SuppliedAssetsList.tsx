@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import useSuppliedAssets from '@/hooks/useSuppliedAssets';
+import { useSuppliedAssets } from '@new-world/dapp-kit';
 import type { UserReserveData } from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { SuppliedAssetsListItem } from './SuppliedAssetsListItem';

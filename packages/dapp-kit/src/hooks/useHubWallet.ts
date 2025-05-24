@@ -5,7 +5,7 @@ import {
   SONIC_TESTNET_CHAIN_ID,
 } from '@new-world/sdk';
 import type { XChainId } from '@new-world/xwagmi';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
 // TODO: complete this map
 export const sdkChainIdMap = {
@@ -13,7 +13,11 @@ export const sdkChainIdMap = {
   'sonic-blaze': SONIC_TESTNET_CHAIN_ID,
 };
 
-export function useHubWallet(xChainId: XChainId, address: string | undefined, hubProvider: EvmHubProvider) {
+export function useHubWallet(
+  xChainId: XChainId,
+  address: string | undefined,
+  hubProvider: EvmHubProvider,
+): UseQueryResult<string | null> {
   return useQuery({
     queryKey: ['hubWallet', xChainId, address],
     queryFn: async () => {

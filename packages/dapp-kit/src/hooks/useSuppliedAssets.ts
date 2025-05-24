@@ -1,4 +1,4 @@
-import { allXTokens, moneyMarketConfig, sodax } from '@/app/config';
+import { allXTokens, moneyMarketConfig, sodax } from '@/core';
 import type { EvmHubProvider } from '@new-world/sdk';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useQuery } from '@tanstack/react-query';
@@ -6,7 +6,8 @@ import type { Address } from 'viem';
 import { useHubProvider } from './useHubProvider';
 import { useHubWallet } from './useHubWallet';
 import { useWalletProvider } from './useWalletProvider';
-export default function useSuppliedAssets() {
+
+export function useSuppliedAssets() {
   const { address } = useXAccount(getXChainType('0xa869.fuji'));
   const hubWalletProvider = useWalletProvider('sonic-blaze');
   const hubProvider = useHubProvider('sonic-blaze');
@@ -34,6 +35,7 @@ export default function useSuppliedAssets() {
         });
       } catch (error) {
         console.log('error', error);
+        return;
       }
     },
     enabled: !!address && !!hubWalletProvider,
