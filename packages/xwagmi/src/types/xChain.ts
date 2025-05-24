@@ -21,18 +21,6 @@ export type XChainType = 'ICON' | 'EVM' | 'ARCHWAY' | 'HAVAH' | 'INJECTIVE' | 'S
 export type Chain = {
   id: string | number;
   name: string;
-  nativeCurrency: {
-    decimals: number;
-    name: string;
-    symbol: string;
-  };
-  rpc: {
-    http: string;
-    ws?: string;
-  };
-  tracker: {
-    tx: string;
-  };
   testnet: boolean;
 };
 
