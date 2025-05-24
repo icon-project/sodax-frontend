@@ -532,15 +532,6 @@ importers:
       '@mysten/sui':
         specifier: ^1.21.2
         version: 1.29.1(typescript@5.5.4)
-      '@mysten/wallet-standard':
-        specifier: ^0.13.26
-        version: 0.13.29(typescript@5.5.4)
-      '@solana/spl-token':
-        specifier: 0.4.9
-        version: 0.4.9(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)(utf-8-validate@5.0.10)
-      '@solana/wallet-adapter-base':
-        specifier: 0.9.23
-        version: 0.9.23(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       '@solana/wallet-adapter-react':
         specifier: 0.15.35
         version: 0.15.35(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(bs58@5.0.0)(react-native@0.79.2(@babel/core@7.27.1)(@types/react@19.1.4)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
@@ -556,12 +547,6 @@ importers:
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.76.1(react@19.1.0)
-      bech32:
-        specifier: 2.0.0
-        version: 2.0.0
-      bignumber.js:
-        specifier: 9.1.2
-        version: 9.1.2
       cosmjs-types:
         specifier: 0.9.0
         version: 0.9.0
@@ -17045,17 +17030,6 @@ snapshots:
       '@solana/errors': 2.1.1(typescript@5.5.4)
       typescript: 5.5.4
 
-  '@solana/buffer-layout-utils@0.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@solana/buffer-layout': 4.0.1
-      '@solana/web3.js': 1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      bigint-buffer: 1.1.5
-      bignumber.js: 9.1.2
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
-
   '@solana/buffer-layout-utils@0.2.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
       '@solana/buffer-layout': 4.0.1
@@ -17436,26 +17410,10 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@solana/spl-token-group@0.0.7(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)':
-    dependencies:
-      '@solana/codecs': 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)
-      '@solana/web3.js': 1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - fastestsmallesttextencoderdecoder
-      - typescript
-
   '@solana/spl-token-group@0.0.7(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@6.0.5))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)':
     dependencies:
       '@solana/codecs': 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)
       '@solana/web3.js': 1.95.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-    transitivePeerDependencies:
-      - fastestsmallesttextencoderdecoder
-      - typescript
-
-  '@solana/spl-token-metadata@0.1.6(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)':
-    dependencies:
-      '@solana/codecs': 2.0.0-rc.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)
-      '@solana/web3.js': 1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
       - typescript
@@ -17467,21 +17425,6 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
       - typescript
-
-  '@solana/spl-token@0.4.9(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@solana/buffer-layout': 4.0.1
-      '@solana/buffer-layout-utils': 0.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      '@solana/spl-token-group': 0.0.7(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)
-      '@solana/spl-token-metadata': 0.1.6(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)
-      '@solana/web3.js': 1.95.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      buffer: 6.0.3
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - fastestsmallesttextencoderdecoder
-      - typescript
-      - utf-8-validate
 
   '@solana/spl-token@0.4.9(@solana/web3.js@1.95.4(bufferutil@4.0.9)(utf-8-validate@6.0.5))(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)(utf-8-validate@6.0.5)':
     dependencies:
@@ -25821,19 +25764,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  metro-config@0.82.3:
-    dependencies:
-      connect: 3.7.0
-      cosmiconfig: 5.2.1
-      flow-enums-runtime: 0.0.6
-      jest-validate: 29.7.0
-      metro: 0.82.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      metro-cache: 0.82.3
-      metro-core: 0.82.3
-      metro-runtime: 0.82.3
-    transitivePeerDependencies:
-      - supports-color
-
   metro-config@0.82.3(bufferutil@4.0.9)(utf-8-validate@5.0.10):
     dependencies:
       connect: 3.7.0
@@ -26001,7 +25931,7 @@ snapshots:
       metro-babel-transformer: 0.82.3
       metro-cache: 0.82.3
       metro-cache-key: 0.82.3
-      metro-config: 0.82.3
+      metro-config: 0.82.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       metro-core: 0.82.3
       metro-file-map: 0.82.3
       metro-resolver: 0.82.3
@@ -26048,7 +25978,7 @@ snapshots:
       metro-babel-transformer: 0.82.3
       metro-cache: 0.82.3
       metro-cache-key: 0.82.3
-      metro-config: 0.82.3
+      metro-config: 0.82.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       metro-core: 0.82.3
       metro-file-map: 0.82.3
       metro-resolver: 0.82.3
