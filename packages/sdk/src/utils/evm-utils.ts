@@ -13,6 +13,9 @@ export function encodeContractCalls(calls: EvmContractCall[]): Hex {
   ]);
 }
 
-export async function waitForTransactionReceipt(hash: Hex, provider: IEvmWalletProvider): Promise<EvmRawTransactionReceipt> {
+export async function waitForTransactionReceipt(
+  hash: Hex,
+  provider: IEvmWalletProvider,
+): Promise<EvmRawTransactionReceipt> {
   return provider.waitForTransactionReceipt(hash);
 }

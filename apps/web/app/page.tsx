@@ -10,7 +10,6 @@ import Section5 from '../components/landing/section5';
 import Section6 from '../components/landing/section6';
 import Footer from '../components/landing/footer';
 
-
 const LandingPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const toggle = () => {
@@ -27,8 +26,6 @@ const LandingPage = () => {
       <Section5 />
       <Section6 />
       <Footer />
-
-      
     </div>
   );
 };

@@ -80,7 +80,6 @@ const sodax = new Sodax({
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
-
 const relayerBackendUrl = IS_TESTNET
   ? 'https://53naa6u2qd.execute-api.us-east-1.amazonaws.com/test'
   : 'https://n7gem91bcb.execute-api.us-east-1.amazonaws.com/prod';
@@ -205,12 +204,7 @@ async function withdrawAsset(token: PublicKey, amount: bigint, recipient: Addres
 async function supply(token: PublicKey, amount: bigint) {
   const hubWallet = await getUserWallet();
 
-  const data = sodax.moneyMarket.supplyData(
-    token.toString(),
-    hubWallet,
-    amount,
-    solanaSpokeChainConfig.chain.id,
-  );
+  const data = sodax.moneyMarket.supplyData(token.toString(), hubWallet, amount, solanaSpokeChainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
@@ -282,12 +276,7 @@ async function withdraw(token: PublicKey, amount: bigint) {
 async function repay(token: PublicKey, amount: bigint) {
   const hubWallet = await getUserWallet();
 
-  const data: Hex = sodax.moneyMarket.repayData(
-    token.toString(),
-    hubWallet,
-    amount,
-    solanaSpokeChainConfig.chain.id,
-  );
+  const data: Hex = sodax.moneyMarket.repayData(token.toString(), hubWallet, amount, solanaSpokeChainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {

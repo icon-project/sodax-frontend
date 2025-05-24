@@ -1,13 +1,12 @@
-import { MoneyMarketService, SolverService } from "../services/index.js";
-import type { MoneyMarketConfig, SolverConfig } from "../types.js"
-import { EvmHubProvider, type EvmHubProviderConfig } from "./Providers.js";
-
+import { MoneyMarketService, SolverService } from '../services/index.js';
+import type { MoneyMarketConfig, SolverConfig } from '../types.js';
+import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 
 export type SodaxConfig = {
-  solver?: SolverConfig
-  moneyMarket?: MoneyMarketConfig
-  hubProviderConfig?: EvmHubProviderConfig // defaults to Sonic mainnet as a hub provider
-}
+  solver?: SolverConfig;
+  moneyMarket?: MoneyMarketConfig;
+  hubProviderConfig?: EvmHubProviderConfig; // defaults to Sonic mainnet as a hub provider
+};
 
 /**
  * Sodax class is used to interact with the Sodax API.
@@ -15,7 +14,6 @@ export type SodaxConfig = {
  * @see https://docs.sodax.com
  */
 export class Sodax {
-
   public readonly config: SodaxConfig;
 
   private readonly solverService?: SolverService;
@@ -36,14 +34,14 @@ export class Sodax {
 
   get solver(): SolverService {
     if (!this.solverService) {
-      throw new Error("Solver service not initialized");
+      throw new Error('Solver service not initialized');
     }
     return this.solverService;
   }
 
   get moneyMarket(): MoneyMarketService {
     if (!this.moneyMarketService) {
-      throw new Error("Money market service not initialized");
+      throw new Error('Money market service not initialized');
     }
     return this.moneyMarketService;
   }

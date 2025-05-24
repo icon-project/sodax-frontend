@@ -9,12 +9,7 @@ import {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
-import type {
-  GetAddressType,
-  GetSpokeDepositParamsType,
-  PromiseTxReturnType,
-  TxReturnType,
-} from '../../types.js';
+import type { GetAddressType, GetSpokeDepositParamsType, PromiseTxReturnType, TxReturnType } from '../../types.js';
 import { CWSpokeService } from './CWSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';

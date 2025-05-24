@@ -112,7 +112,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
       data,
     },
     cwSpokeProvider,
-    evmHubProvider
+    evmHubProvider,
   );
 
   console.log('[depositTo] txHash', txHash);
@@ -149,12 +149,7 @@ async function supply(token: string, amount: bigint) {
     evmHubProvider,
   );
 
-  const data = sodax.moneyMarket.supplyData(
-    token,
-    hubWallet,
-    amount,
-    cwSpokeProvider.chainConfig.chain.id,
-  );
+  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, cwSpokeProvider.chainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
@@ -214,7 +209,7 @@ async function withdraw(token: string, amount: bigint) {
     cwSpokeProvider.walletProvider.getWalletAddress(),
     data,
     cwSpokeProvider,
-    evmHubProvider
+    evmHubProvider,
   );
 
   console.log('[withdraw] txHash', txHash);
@@ -226,12 +221,7 @@ async function repay(token: string, amount: bigint) {
     cwSpokeProvider.walletProvider.getWalletAddressBytes(),
     evmHubProvider,
   );
-  const data: Hex = sodax.moneyMarket.repayData(
-    token,
-    hubWallet,
-    amount,
-    cwSpokeProvider.chainConfig.chain.id,
-  );
+  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, cwSpokeProvider.chainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {

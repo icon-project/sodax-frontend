@@ -20,7 +20,7 @@ const FooterLink: React.FC<FooterLinkProps> = ({
     <Link
       className={cn(
         'group inline-flex items-center gap-2 text-black text-[13px] font-medium font-["InterMedium"] leading-[16px] hover:text-cherry-bright hover:font-bold transition-colors',
-        className
+        className,
       )}
       {...props}
     >
@@ -36,4 +36,4 @@ const FooterLink: React.FC<FooterLinkProps> = ({
   );
 };
 
-export { FooterLink }; 
+export { FooterLink };

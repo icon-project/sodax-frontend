@@ -54,12 +54,12 @@ export type EvmInitializedConfig = {
 };
 
 export type EvmHubProviderConfig = {
-  hubRpcUrl: string,
-  chainConfig: EvmHubChainConfig
-}
+  hubRpcUrl: string;
+  chainConfig: EvmHubChainConfig;
+};
 
 export class EvmHubProvider {
-  public readonly publicClient: PublicClient<HttpTransport>
+  public readonly publicClient: PublicClient<HttpTransport>;
   public readonly chainConfig: EvmHubChainConfig;
 
   constructor(config?: EvmHubProviderConfig) {
@@ -72,7 +72,7 @@ export class EvmHubProvider {
     } else {
       // default to Sonic mainnet
       this.publicClient = createPublicClient({
-        transport: http("https://rpc.soniclabs.com"),
+        transport: http('https://rpc.soniclabs.com'),
         chain: getEvmViemChain(SONIC_MAINNET_CHAIN_ID),
       });
       this.chainConfig = getHubChainConfig(SONIC_MAINNET_CHAIN_ID);

@@ -40,7 +40,7 @@ const hubWallet = new EvmWalletProvider({
 });
 
 const stellarConfig = spokeChainConfig[STELLAR_CHAIN_ID] as StellarSpokeChainConfig;
-const STELLAR_SECRET_KEY = process.env.STELLAR_SECRET_KEY ?? "";
+const STELLAR_SECRET_KEY = process.env.STELLAR_SECRET_KEY ?? '';
 const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL || stellarConfig.rpc_url;
 const stellarWalletProvider = new StellarWalletProvider(STELLAR_SECRET_KEY);
 const stellarSpokeProvider = new StellarSpokeProvider(
@@ -136,12 +136,7 @@ async function supply(token: string, amount: bigint) {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.supplyData(
-    token,
-    hubWallet,
-    amount,
-    stellarSpokeProvider.chainConfig.chain.id,
-  );
+  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
@@ -215,12 +210,7 @@ async function repay(token: string, amount: bigint) {
     stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.repayData(
-    token,
-    hubWallet,
-    amount,
-    stellarSpokeProvider.chainConfig.chain.id,
-  );
+  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {

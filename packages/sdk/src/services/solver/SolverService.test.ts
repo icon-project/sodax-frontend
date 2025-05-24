@@ -74,20 +74,26 @@ describe('SolverService', () => {
   const feePercentage = 100; // 1% fee
 
   const solverService = new SolverService(mockSolverConfig, mockHubProvider);
-  const solverServiceWithPercentageFee = new SolverService({
-    ...mockSolverConfig,
-    partnerFee: {
-      address: '0x0000000000000000000000000000000000000000',
-      percentage: feePercentage,
+  const solverServiceWithPercentageFee = new SolverService(
+    {
+      ...mockSolverConfig,
+      partnerFee: {
+        address: '0x0000000000000000000000000000000000000000',
+        percentage: feePercentage,
+      },
     },
-  }, mockHubProvider);
-  const solverServiceWithAmountFee = new SolverService({
-    ...mockSolverConfig,
-    partnerFee: {
-      address: '0x0000000000000000000000000000000000000000',
-      amount: feeAmount,
+    mockHubProvider,
+  );
+  const solverServiceWithAmountFee = new SolverService(
+    {
+      ...mockSolverConfig,
+      partnerFee: {
+        address: '0x0000000000000000000000000000000000000000',
+        amount: feeAmount,
+      },
     },
-  }, mockHubProvider);
+    mockHubProvider,
+  );
 
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
@@ -101,10 +107,7 @@ describe('SolverService', () => {
     amount: feeAmount,
   } satisfies PartnerFee;
 
-  const mockBscSpokeProvider = new EvmSpokeProvider(
-    mockEvmWalletProvider,
-    spokeChainConfig[BSC_MAINNET_CHAIN_ID],
-  );
+  const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
 
   const mockIntentConfig: SolverConfig = {
     intentsContract: mockIntentsContract,
@@ -413,11 +416,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.createAndSubmitIntent(
-        mockCreateIntentParams,
-        mockBscSpokeProvider,
-        mockFee,
-      );
+      const result = await solverService.createAndSubmitIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -448,11 +447,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.createAndSubmitIntent(
-        mockCreateIntentParams,
-        mockBscSpokeProvider,
-        mockFee,
-      );
+      const result = await solverService.createAndSubmitIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -477,11 +472,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.createAndSubmitIntent(
-        mockCreateIntentParams,
-        mockBscSpokeProvider,
-        mockFee,
-      );
+      const result = await solverService.createAndSubmitIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -537,12 +528,7 @@ describe('SolverService', () => {
       const result: Result<
         [Hex, Intent & FeeAmount],
         IntentSubmitError<'CREATION_FAILED'>
-      > = await solverService.createIntent(
-        mockCreateIntentParams,
-        mockBscSpokeProvider,
-        mockFee,
-        false,
-      );
+      > = await solverService.createIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee, false);
 
       if (!result.ok) {
         throw new Error('Failed to create intent');

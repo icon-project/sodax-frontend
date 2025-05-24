@@ -96,7 +96,6 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
         className="h-[812px] sm:h-[860px] flex flex-col items-center bg-cherry-soda relative overflow-hidden"
         onMouseMove={handleMouseMove}
       >
-        
         <Image
           className="mix-blend-screen absolute bottom-0 right-0 sm:-right-5 sm:bottom-30 lg:left-[50%] lg:bottom-0 w-[375px] h-[562px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
           src="/girl.png"
@@ -139,9 +138,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
               </li> */}
             </ul>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-              <DecoratedButton onClick={() => setIsDialogOpen(true)}>
-                join waitlist
-              </DecoratedButton>
+              <DecoratedButton onClick={() => setIsDialogOpen(true)}>join waitlist</DecoratedButton>
             </div>
             <div className="flex lg:hidden ml-3 text-white" onClick={toggle}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -176,7 +173,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                   ref={imgRef}
                 />
               </div>
-              
+
               <div className="flex">
                 <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none">
                   when{' '}
@@ -227,9 +224,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
               </div>
               <div className="inline-flex justify-center items-start relative">
-                <DecoratedButton>
-                  pre-register
-                </DecoratedButton>
+                <DecoratedButton>pre-register</DecoratedButton>
               </div>
             </div>
           </div>
@@ -260,9 +255,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
           <DialogFooter>
             <div className="flex justify-center items-center w-full">
               <div className="inline-flex justify-center items-start">
-                <DecoratedButton variant="yellow-soda">
-                  pre-register
-                </DecoratedButton>
+                <DecoratedButton variant="yellow-soda">pre-register</DecoratedButton>
               </div>
             </div>
           </DialogFooter>

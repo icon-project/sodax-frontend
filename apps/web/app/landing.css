@@ -1,27 +1,27 @@
 .hero-section {
-    background-image: url('/circle1.png');
-    background-repeat: no-repeat;
-    background-size: auto;
+  background-image: url("/circle1.png");
+  background-repeat: no-repeat;
+  background-size: auto;
 }
 
 /********* Responsive Css *********/
 @media (max-width: 500px) {
-    .hero-section {
-        height: 812px;
-        background-image: url('/circle3.png');
-        background-position: left 10%, right bottom;
-    }
+  .hero-section {
+    height: 812px;
+    background-image: url("/circle3.png");
+    background-position: left 10%, right bottom;
+  }
 }
 
 @media (min-width: 501px) and (max-width: 1024px) {
-    .hero-section {
-        background-image: url('/circle2.png');
-        background-position: left top, right 50%;
-    }
+  .hero-section {
+    background-image: url("/circle2.png");
+    background-position: left top, right 50%;
+  }
 }
 
 @media (min-width: 1024px) {
-    .hero-section {
-        background-position: 15% top, 70% bottom;
-    }
+  .hero-section {
+    background-position: 15% top, 70% bottom;
+  }
 }
