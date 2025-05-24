@@ -9,7 +9,7 @@ import { SpokeService, submitTransaction } from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useState } from 'react';
-import type { Hash, Hex } from 'viem';
+import type { Address, Hash, Hex } from 'viem';
 import { parseUnits } from 'viem';
 
 export function WithdrawButton({ token }: { token: XToken }) {
@@ -40,7 +40,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
     setIsLoading(true);
 
     const data: Hex = sodax.moneyMarket.withdrawData(
-      hubWallet,
+      hubWallet as Address,
       spokeProvider.walletProvider.getWalletAddress(),
       '0x0000000000000000000000000000000000000000',
       parseUnits(amount, token.decimals),
