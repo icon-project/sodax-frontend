@@ -1,10 +1,12 @@
-import { getIntentRelayChainId } from '../../../index.js'
+import { getIntentRelayChainId } from '../../../index.js';
 import { encodeFunctionData, type Address, type Hash, type HttpTransport, type PublicClient } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { connectionAbi } from '../../../abis/index.js';
-import { getHubChainConfig, SONIC_MAINNET_CHAIN_ID, spokeChainConfig } from '../../../constants.js';
 import type { EvmHubProviderConfig } from '../../../entities/index.js';
 import {
+  getHubChainConfig,
+  SONIC_MAINNET_CHAIN_ID,
+  spokeChainConfig,
   EvmHubProvider,
   type EvmSpokeDepositParams,
   type EvmSpokeProvider,
@@ -29,7 +31,7 @@ vi.mock('../../../constants.js', async importOriginal => {
   return {
     ...actual,
     hubAssets: {
-      43113: {
+      '0xa869.fuji': {
         // Mock token configuration for Avalanche Fuji testnet
         '0x1234567890123456789012345678901234567890': {
           asset: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
@@ -38,9 +40,9 @@ vi.mock('../../../constants.js', async importOriginal => {
       },
     },
     spokeChainConfig: {
-      [43113]: {
+      ['0xa869.fuji']: {
         chain: {
-          id: 43113,
+          id: '0xa869.fuji',
           name: 'Avalanche Fuji',
           type: 'evm',
         },
@@ -71,7 +73,7 @@ describe('EvmSpokeService', () => {
   const mockToken = '0x1234567890123456789012345678901234567890' as Address;
   const mockUser = '0x4444444444444444444444444444444444444444' as Address;
   const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
-  const mockChainId = 43113; // Avalanche Fuji testnet
+  const mockChainId = '0xa869.fuji'; // Avalanche Fuji testnet
   const mockTxHash = '0x123...' as Hash;
   const mockPayload = '0xabcd';
 

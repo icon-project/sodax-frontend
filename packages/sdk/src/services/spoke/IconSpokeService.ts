@@ -1,6 +1,6 @@
 import IconService from 'icon-sdk-js';
 import * as rlp from 'rlp';
-import type { Address, Hash, Hex } from 'viem';
+import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
@@ -91,7 +91,7 @@ export class IconSpokeService {
     spokeProvider: IconSpokeProvider,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): Promise<Hash> {
+  ): PromiseIconTxReturnType<R> {
     const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
       getIconAddressBytes(from),

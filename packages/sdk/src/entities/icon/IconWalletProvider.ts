@@ -28,10 +28,10 @@ export class IconWalletProvider implements WalletAddressProvider {
     return result as Hash;
   }
 
-  getWalletAddress(): string {
-    if (!this.wallet.startsWith('0x')) return this.wallet;
+  getWalletAddress(): IconEoaAddress {
+    if (!this.wallet.startsWith('0x')) return this.wallet as IconEoaAddress;
 
-    return IconService.Wallet.loadPrivateKey(this.wallet.slice(2)).getAddress();
+    return IconService.Wallet.loadPrivateKey(this.wallet.slice(2)).getAddress() as IconEoaAddress;
   }
 
   getWalletAddressBytes(): Hex {

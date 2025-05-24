@@ -9,13 +9,26 @@ import {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
-import type { GetAddressType, GetSpokeDepositParamsType, IconAddress, PromiseTxReturnType } from '../../types.js';
+import type {
+  GetAddressType,
+  GetSpokeDepositParamsType,
+  PromiseTxReturnType,
+  TxReturnType,
+} from '../../types.js';
 import { CWSpokeService } from './CWSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';
 import { SolanaSpokeService } from './SolanaSpokeService.js';
-import {StellarSpokeService } from './StellarSpokeService.js';
+import { StellarSpokeService } from './StellarSpokeService.js';
 import { SuiSpokeService } from './SuiSpokeService.js';
+import {
+  isCWSpokeProvider,
+  isEvmSpokeProvider,
+  isIconSpokeProvider,
+  isSolanaSpokeProvider,
+  isStellarSpokeProvider,
+  isSuiSpokeProvider,
+} from '../../guards.js';
 
 /**
  * SpokeService is a main class that provides functionalities for dealing with spoke chains.
@@ -134,59 +147,58 @@ export class SpokeService {
     spokeProvider: T,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): Promise<PromiseTxReturnType<T, R>> {
-    if (spokeProvider instanceof EvmSpokeProvider) {
-      return EvmSpokeService.callWallet(
+  ): Promise<TxReturnType<T, R>> {
+    if (isEvmSpokeProvider(spokeProvider)) {
+      return (await EvmSpokeService.callWallet(
         from as GetAddressType<EvmSpokeProvider>,
         payload,
         spokeProvider,
         hubProvider,
-      ) as PromiseTxReturnType<T, R>;
+      )) satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<T, R>;
     }
-    if (spokeProvider instanceof CWSpokeProvider) {
-      return CWSpokeService.callWallet(
+    if (isCWSpokeProvider(spokeProvider)) {
+      return (await CWSpokeService.callWallet(
         from as GetAddressType<CWSpokeProvider>,
         payload,
         spokeProvider,
         hubProvider,
         raw,
-      ) as PromiseTxReturnType<T, R>;
+      )) satisfies TxReturnType<CWSpokeProvider, R> as TxReturnType<T, R>;
     }
-    if (spokeProvider instanceof IconSpokeProvider) {
-      return IconSpokeService.callWallet(
-        from as IconAddress,
+    if (isIconSpokeProvider(spokeProvider)) {
+      return (await IconSpokeService.callWallet(
+        from as GetAddressType<IconSpokeProvider>,
         payload,
         spokeProvider,
         hubProvider,
         raw,
-      ) as PromiseTxReturnType<T, R>;
+      )) satisfies TxReturnType<IconSpokeProvider, R> as TxReturnType<T, R>;
     }
-
-    if (spokeProvider instanceof SuiSpokeProvider) {
-      return SuiSpokeService.callWallet(
+    if (isSuiSpokeProvider(spokeProvider)) {
+      return (await SuiSpokeService.callWallet(
         from as GetAddressType<SuiSpokeProvider>,
         payload,
         spokeProvider,
         hubProvider,
         raw,
-      ) as PromiseTxReturnType<T, R>;
+      )) satisfies TxReturnType<SuiSpokeProvider, R> as TxReturnType<T, R>;
     }
-
-    if (spokeProvider instanceof SolanaSpokeProvider) {
-      return SolanaSpokeService.callWallet(
+    if (isSolanaSpokeProvider(spokeProvider)) {
+      return (await SolanaSpokeService.callWallet(
         from as GetAddressType<SolanaSpokeProvider>,
         payload,
         spokeProvider,
         hubProvider,
         raw,
-      ) as PromiseTxReturnType<T, R>;
+      )) satisfies TxReturnType<SolanaSpokeProvider, R> as TxReturnType<T, R>;
     }
-
-    if (spokeProvider instanceof StellarSpokeProvider) {
-      return StellarSpokeService.callWallet(from as Hex, payload, spokeProvider, hubProvider) as PromiseTxReturnType<
-        T,
-        R
-      >;
+    if (isStellarSpokeProvider(spokeProvider)) {
+      return (await StellarSpokeService.callWallet(
+        from as Hex,
+        payload,
+        spokeProvider,
+        hubProvider,
+      )) satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<T, R>;
     }
 
     throw new Error('Invalid spoke provider');

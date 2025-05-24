@@ -30,7 +30,7 @@ vi.mock('../../../constants.js', async importOriginal => {
   return {
     ...actual,
     hubAssets: {
-      43113: {
+      '0xa869.fuji': {
         // Mock token configuration for Avalanche Fuji testnet
         '0x1234567890123456789012345678901234567890': {
           asset: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
@@ -48,7 +48,7 @@ describe('EvmAssetManagerService', () => {
   const mockTo = '0x5555555555555555555555555555555555555555' as Address;
   const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
   const mockChainId = 1n;
-  const mockSpokeChainId = 43113;
+  const mockSpokeChainId = '0xa869.fuji';
   const mockSpokeAddress = '0x3333333333333333333333333333333333333333' as Address;
 
   // Mock PublicClient

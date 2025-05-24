@@ -13,7 +13,7 @@ import {
 
 describe('MoneyMarketService', () => {
   const mockToken = '0x0000000000000000000000000000000000000000' as Address;
-  const mockVault = hubAssets[43113][mockToken]?.vault ?? ('0x0000000000000000000000000000000000000001' as Address);
+  const mockVault = hubAssets['0xa869.fuji'][mockToken]?.vault ?? ('0x0000000000000000000000000000000000000001' as Address);
   const mockLendingPool = '0x3333333333333333333333333333333333333333' as Address;
   const mockUser = '0x4444444444444444444444444444444444444444' as Address;
   const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
