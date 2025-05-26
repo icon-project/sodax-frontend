@@ -1,9 +1,10 @@
 import { createContext } from 'react';
-import type { Sodax } from '@new-world/sdk';
+import type { Sodax, SONIC_MAINNET_CHAIN_ID, SONIC_TESTNET_CHAIN_ID } from '@new-world/sdk';
 
 export interface SodaxContextType {
   sodax: Sodax;
   testnet: boolean;
+  hubChainId: typeof SONIC_TESTNET_CHAIN_ID | typeof SONIC_MAINNET_CHAIN_ID;
 }
 
 export const SodaxContext = createContext<SodaxContextType | null>(null);

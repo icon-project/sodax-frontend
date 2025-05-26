@@ -6,11 +6,13 @@ import type { Address } from 'viem';
 import { useHubProvider } from './useHubProvider';
 import { useHubWallet } from './useHubWallet';
 import { useWalletProvider } from './useWalletProvider';
+import { useSodaxContext } from './useSodaxContext';
 
 export function useSuppliedAssets() {
+  const { hubChainId } = useSodaxContext();
+  const hubWalletProvider = useWalletProvider(hubChainId);
+  const hubProvider = useHubProvider();
   const { address } = useXAccount(getXChainType('0xa869.fuji'));
-  const hubWalletProvider = useWalletProvider('sonic-blaze');
-  const hubProvider = useHubProvider('sonic-blaze');
   const { data: hubWallet } = useHubWallet('0xa869.fuji', address, hubProvider as EvmHubProvider);
 
   const { data: userReserves } = useQuery({

@@ -19,7 +19,7 @@ interface UseWithdrawReturn {
 export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
 
-  const hubProvider = useHubProvider('sonic-blaze');
+  const hubProvider = useHubProvider();
   const spokeProvider = useSpokeProvider(spokeChainId);
   const { data: hubWallet } = useHubWallet(spokeChainId, address, hubProvider as EvmHubProvider);
 

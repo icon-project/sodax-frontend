@@ -15,20 +15,20 @@ interface SodaxProviderProps {
 }
 
 export const SodaxProvider = ({ children, testnet = false }: SodaxProviderProps): ReactElement => {
-  const HUB_CHAIN_ID = testnet ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
-  const HUB_RPC_URL = testnet ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
+  const hubChainId = testnet ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
+  const hubRpcUrl = testnet ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 
   const hubConfig = {
-    hubRpcUrl: HUB_RPC_URL,
-    chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+    hubRpcUrl,
+    chainConfig: getHubChainConfig(hubChainId),
   } satisfies SodaxConfig['hubProviderConfig'];
 
-  const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
+  const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
 
   const sodax = new Sodax({
     moneyMarket: moneyMarketConfig,
     hubProviderConfig: hubConfig,
   } satisfies SodaxConfig);
 
-  return <SodaxContext.Provider value={{ sodax, testnet }}>{children}</SodaxContext.Provider>;
+  return <SodaxContext.Provider value={{ sodax, testnet, hubChainId }}>{children}</SodaxContext.Provider>;
 };

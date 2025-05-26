@@ -1,16 +1,3 @@
-import {
-  type EvmHubProviderConfig,
-  type HubChainId,
-  type MoneyMarketConfig,
-  MoneyMarketService,
-  SONIC_MAINNET_CHAIN_ID,
-  SONIC_TESTNET_CHAIN_ID,
-  Sodax,
-  type SodaxConfig,
-  type SolverConfig,
-  getHubChainConfig,
-  getMoneyMarketConfig,
-} from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { defineChain } from 'viem';
 import { http, createConfig } from 'wagmi';
@@ -99,21 +86,3 @@ export const allXTokens: XToken[] = [
     address: '0x742BD79c9997A51F1c4F38F1F33C7841B0F34a7a',
   },
 ];
-
-const IS_TESTNET = true;
-
-const HUB_CHAIN_ID: HubChainId = SONIC_TESTNET_CHAIN_ID;
-
-export const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
-
-export const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
-
-const hubConfig = {
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
-} satisfies EvmHubProviderConfig;
-
-export const sodax = new Sodax({
-  moneyMarket: moneyMarketConfig,
-  hubProviderConfig: hubConfig,
-} satisfies SodaxConfig);

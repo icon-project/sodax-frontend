@@ -1,17 +1,18 @@
 import { EvmHubProvider, getHubChainConfig } from '@new-world/sdk';
-import { type XChainId, getXChainType } from '@new-world/xwagmi';
+import { getXChainType } from '@new-world/xwagmi';
 import { useMemo } from 'react';
-import { sdkChainIdMap } from './useHubWallet';
+import { useSodaxContext } from '../hooks/useSodaxContext';
 
 const IS_TESTNET = true;
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 
-export function useHubProvider(xChainId: XChainId): EvmHubProvider | undefined {
-  const xChainType = getXChainType(xChainId);
+export function useHubProvider(): EvmHubProvider | undefined {
+  const { hubChainId } = useSodaxContext();
+  const xChainType = getXChainType(hubChainId);
   const hubProvider = useMemo(() => {
     if (xChainType === 'EVM') {
       // @ts-ignore
-      const hubChainCfg = getHubChainConfig(sdkChainIdMap[xChainId]);
+      const hubChainCfg = getHubChainConfig(hubChainId);
 
       if (!hubChainCfg) return undefined;
 
@@ -21,7 +22,7 @@ export function useHubProvider(xChainId: XChainId): EvmHubProvider | undefined {
       });
     }
     return undefined;
-  }, [xChainType, xChainId]);
+  }, [xChainType, hubChainId]);
 
   return hubProvider;
 }

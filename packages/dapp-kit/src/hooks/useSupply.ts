@@ -19,7 +19,7 @@ interface UseSupplyReturn {
 export function useSupply(token: XToken): UseSupplyReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
 
-  const hubProvider = useHubProvider('sonic-blaze');
+  const hubProvider = useHubProvider();
 
   const spokeProvider = useSpokeProvider(token.xChainId);
 
