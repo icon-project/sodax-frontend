@@ -14,18 +14,17 @@ export const sdkChainIdMap = {
 };
 
 export function useHubWallet(
-  xChainId: XChainId,
+  spokeChainId: XChainId,
   address: string | undefined,
   hubProvider: EvmHubProvider,
 ): UseQueryResult<string | null> {
   return useQuery({
-    queryKey: ['hubWallet', xChainId, address],
+    queryKey: ['hubWallet', spokeChainId, address],
     queryFn: async () => {
       if (!address) return null;
 
       const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
-        // @ts-ignore
-        BigInt(sdkChainIdMap[xChainId]),
+        sdkChainIdMap[spokeChainId],
         address as `0x${string}`,
         hubProvider,
       );
