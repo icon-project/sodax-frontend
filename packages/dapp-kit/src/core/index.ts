@@ -1,32 +1,8 @@
-import {
-  SONIC_MAINNET_CHAIN_ID,
-  SONIC_TESTNET_CHAIN_ID,
-  Sodax,
-  getHubChainConfig,
-  getMoneyMarketConfig,
-} from '@new-world/sdk';
-import type { EvmHubProviderConfig, HubChainId, MoneyMarketConfig, SodaxConfig } from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 
-const IS_TESTNET = true;
-
-export const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
-
-const HUB_CHAIN_ID: HubChainId = SONIC_TESTNET_CHAIN_ID;
-
-export const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
-
-const hubConfig = {
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
-} satisfies EvmHubProviderConfig;
-
-export const sodax = new Sodax({
-  moneyMarket: moneyMarketConfig,
-  hubProviderConfig: hubConfig,
-} satisfies SodaxConfig);
-
 export const allXTokens: XToken[] = [
+  // testnet
+
   {
     xChainId: '0xa869.fuji',
     symbol: 'AVAX',
@@ -34,6 +10,7 @@ export const allXTokens: XToken[] = [
     decimals: 18,
     address: '0x0000000000000000000000000000000000000000',
   },
+
   {
     xChainId: 'sonic-blaze',
     symbol: 'nwt',
@@ -75,5 +52,23 @@ export const allXTokens: XToken[] = [
     name: 'SUI Vault token',
     decimals: 18,
     address: '0x742BD79c9997A51F1c4F38F1F33C7841B0F34a7a',
+  },
+
+  // mainnet - avalanche
+  {
+    xChainId: '0xa86a.avax',
+    symbol: 'AVAX',
+    name: 'AVAX',
+    decimals: 18,
+    address: '0x0000000000000000000000000000000000000000',
+  },
+
+  // mainnet - avalanche vault on sonic
+  {
+    xChainId: 'sonic',
+    symbol: 'AVAX',
+    name: 'AVAX',
+    decimals: 18,
+    address: '0x14238D267557E9d799016ad635B53CD15935d290',
   },
 ];

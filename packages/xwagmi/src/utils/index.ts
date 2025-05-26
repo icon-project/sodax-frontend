@@ -56,10 +56,13 @@ export const isNativeToken = (xToken: XToken) => {
   return nativeAddresses.includes(xToken.address);
 };
 
+// TODO: remove this? move to dapp-kit?
 export const getWagmiChainId = (xChainId: XChainId): number => {
   const xChainMap = {
     '0xa869.fuji': 43113,
     'sonic-blaze': 57054,
+    sonic: 146,
+    '0xa86a.avax': 43114,
   };
   return xChainMap[xChainId] ?? 0;
 };
