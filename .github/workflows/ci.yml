@@ -45,7 +45,7 @@ jobs:
         run: pnpm build:packages
 
       - name: Install packages
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --force
       - name: Build Check
         run: pnpm checkTs
 
