@@ -43,6 +43,8 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
     setIsLoading(true);
     setError(null);
 
+    console.log('spokeProvider.chainConfig.chain.id', spokeChainId, spokeProvider.chainConfig.chain.id);
+
     try {
       const data: Hex = sodax.moneyMarket.withdrawData(
         hubWalletAddress as Address,
@@ -68,10 +70,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
       } satisfies IntentRelayRequest<'submit'>;
 
       // TODO: use the correct endpoint
-      const response: SubmitTxResponse = await submitTransaction(
-        request,
-        'https://53naa6u2qd.execute-api.us-east-1.amazonaws.com/prod',
-      );
+      const response: SubmitTxResponse = await submitTransaction(request, 'https://xcall-relay.nw.iconblockchain.xyz');
 
       console.log('Withdraw transaction submitted:', response);
     } catch (err) {
