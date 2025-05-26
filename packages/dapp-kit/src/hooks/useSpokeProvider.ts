@@ -1,7 +1,7 @@
 import { EvmSpokeProvider, spokeChainConfig } from '@new-world/sdk';
 import { type XChainId, getXChainType } from '@new-world/xwagmi';
 import { useMemo } from 'react';
-import { sdkChainIdMap } from './useHubWallet';
+import { sdkChainIdMap } from './useHubWalletAddress';
 import { useWalletProvider } from './useWalletProvider';
 
 export function useSpokeProvider(spokeChainId: XChainId) {

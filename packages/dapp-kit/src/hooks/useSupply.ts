@@ -6,7 +6,7 @@ import { useState } from 'react';
 import type { Address } from 'viem';
 import { parseUnits } from 'viem';
 import { useHubProvider } from './useHubProvider';
-import { useHubWallet } from './useHubWallet';
+import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
 import { useSodaxContext } from './useSodaxContext';
 
@@ -23,14 +23,14 @@ export function useSupply(token: XToken): UseSupplyReturn {
 
   const spokeProvider = useSpokeProvider(token.xChainId);
 
-  const { data: hubWallet } = useHubWallet(token.xChainId, address, hubProvider as EvmHubProvider);
+  const { data: hubWalletAddress } = useHubWalletAddress(token.xChainId, address, hubProvider as EvmHubProvider);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
   const supply = async (amount: string): Promise<void> => {
-    if (!hubWallet) {
-      setError(new Error('hubWallet is not found'));
+    if (!hubWalletAddress) {
+      setError(new Error('hubWalletAddress is not found'));
       return;
     }
     if (!spokeProvider) {
@@ -48,7 +48,7 @@ export function useSupply(token: XToken): UseSupplyReturn {
     try {
       const data = sodax.moneyMarket.supplyData(
         token.address,
-        hubWallet as Address,
+        hubWalletAddress as Address,
         parseUnits(amount, token.decimals),
         token.xChainId as SpokeChainId,
       );

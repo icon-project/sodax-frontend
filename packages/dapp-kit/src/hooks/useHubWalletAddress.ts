@@ -13,7 +13,7 @@ export const sdkChainIdMap = {
   'sonic-blaze': SONIC_TESTNET_CHAIN_ID,
 };
 
-export function useHubWallet(
+export function useHubWalletAddress(
   spokeChainId: XChainId,
   address: string | undefined,
   hubProvider: EvmHubProvider,
@@ -23,12 +23,12 @@ export function useHubWallet(
     queryFn: async () => {
       if (!address) return null;
 
-      const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+      const hubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
         sdkChainIdMap[spokeChainId],
         address as `0x${string}`,
         hubProvider,
       );
-      return hubWallet;
+      return hubWalletAddress;
     },
     enabled: !!address && !!hubProvider,
   });
