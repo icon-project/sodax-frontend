@@ -125,6 +125,14 @@ export const sonicBlaze: XChain = {
   name: 'Sonic Blaze',
   xChainId: 'sonic-blaze',
   xChainType: 'EVM',
+  testnet: true,
+};
+
+export const sonic: XChain = {
+  id: 57_054,
+  name: 'Sonic',
+  xChainId: 'sonic',
+  xChainType: 'EVM',
   testnet: false,
 };
 
@@ -146,6 +154,7 @@ export const xChainMap: { [key in XChainId]: XChain } = {
   sui: sui,
   solana: solana,
   'sonic-blaze': sonicBlaze,
+  sonic: sonic,
 };
 
 export const xChains = Object.values(xChainMap);

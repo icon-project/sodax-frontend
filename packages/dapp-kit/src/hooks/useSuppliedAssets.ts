@@ -1,28 +1,31 @@
-import { allXTokens, moneyMarketConfig, sodax } from '@/core';
-import type { EvmHubProvider } from '@new-world/sdk';
-import { getXChainType, useXAccount } from '@new-world/xwagmi';
+import { allXTokens } from '@/core';
+import { getMoneyMarketConfig, type EvmHubProvider } from '@new-world/sdk';
+import { getXChainType, useXAccount, type XChainId } from '@new-world/xwagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
 import { useHubProvider } from './useHubProvider';
-import { useHubWallet } from './useHubWallet';
+import { useHubWalletAddress } from './useHubWalletAddress';
 import { useWalletProvider } from './useWalletProvider';
+import { useSodaxContext } from './useSodaxContext';
 
-export function useSuppliedAssets() {
-  const { address } = useXAccount(getXChainType('0xa869.fuji'));
-  const hubWalletProvider = useWalletProvider('sonic-blaze');
-  const hubProvider = useHubProvider('sonic-blaze');
-  const { data: hubWallet } = useHubWallet('0xa869.fuji', address, hubProvider as EvmHubProvider);
+export function useSuppliedAssets(spokeChainId: XChainId) {
+  const { hubChainId, sodax } = useSodaxContext();
+  const hubWalletProvider = useWalletProvider(hubChainId);
+  const hubProvider = useHubProvider();
+  const { address } = useXAccount(getXChainType(spokeChainId));
+  const { data: hubWalletAddress } = useHubWalletAddress(spokeChainId, address, hubProvider as EvmHubProvider);
 
   const { data: userReserves } = useQuery({
-    queryKey: ['userReserves', hubWallet],
+    queryKey: ['userReserves', hubWalletAddress],
     queryFn: async () => {
       if (!hubWalletProvider) {
         return;
       }
 
+      const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
       try {
         const [res] = await sodax.moneyMarket.getUserReservesData(
-          hubWallet as Address,
+          hubWalletAddress as Address,
           moneyMarketConfig.uiPoolDataProvider as Address,
           moneyMarketConfig.poolAddressesProvider as Address,
         );

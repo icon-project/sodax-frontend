@@ -1,82 +1,20 @@
-import { sodax } from '@/app/config';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useHubProvider, useHubWallet, useSpokeProvider } from '@new-world/dapp-kit';
-import type { EvmHubProvider, IntentRelayRequest, SubmitTxResponse } from '@new-world/sdk';
-import { SpokeService, submitTransaction } from '@new-world/sdk';
+import { useWithdraw } from '@new-world/dapp-kit';
 import type { XToken } from '@new-world/xwagmi';
-import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useState } from 'react';
-import type { Address, Hash, Hex } from 'viem';
-import { parseUnits } from 'viem';
 
 export function WithdrawButton({ token }: { token: XToken }) {
-  const { address } = useXAccount(getXChainType('0xa869.fuji'));
-
-  const hubProvider = useHubProvider('sonic-blaze');
-  const spokeProvider = useSpokeProvider('0xa869.fuji');
-  const { data: hubWallet } = useHubWallet('0xa869.fuji', address, hubProvider as EvmHubProvider);
-
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { withdraw, isLoading, error } = useWithdraw(token, '0xa869.fuji');
 
   const handleWithdraw = async () => {
-    if (!hubWallet) {
-      console.log('hubWallet is not found');
-      return;
-    }
-    if (!spokeProvider) {
-      console.log('spokeProvider is not found');
-      return;
-    }
-    if (!hubProvider) {
-      console.log('hubProvider is not found');
-      return;
-    }
-
-    setIsLoading(true);
-
-    const data: Hex = sodax.moneyMarket.withdrawData(
-      hubWallet as Address,
-      spokeProvider.walletProvider.getWalletAddress(),
-      '0x0000000000000000000000000000000000000000',
-      parseUnits(amount, token.decimals),
-      spokeProvider.chainConfig.chain.id,
-    );
-
-    const txHash: Hash = await SpokeService.callWallet(
-      spokeProvider.walletProvider.getWalletAddress(),
-      data,
-      spokeProvider,
-      hubProvider,
-    );
-
-    console.log('[withdraw] txHash', txHash);
-
-    try {
-      const request = {
-        action: 'submit',
-        params: {
-          chain_id: '6',
-          tx_hash: txHash,
-        },
-      } satisfies IntentRelayRequest<'submit'>;
-
-      // TODO: use the correct endpoint
-      const response: SubmitTxResponse = await submitTransaction(
-        request,
-        'https://53naa6u2qd.execute-api.us-east-1.amazonaws.com/prod',
-      );
-
-      console.log('response', response);
-    } catch (error) {
-      console.log('error', error);
-    } finally {
+    await withdraw(amount);
+    if (!error) {
       setOpen(false);
-      setIsLoading(false);
     }
   };
 

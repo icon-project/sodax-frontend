@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
+    "dev": "tsup --watch ./src",
     "test": "tsc --noEmit",
     "prepublishOnly": "tsup",
     "clean": "rm -rf dist && rm -rf node_modules && rm -rf .turbo",

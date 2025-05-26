@@ -2,14 +2,13 @@ import { exec } from 'child_process';
 import { defineConfig } from 'tsup';
 
 export default defineConfig(options => ({
-  entry: {
-    index: './src/index.ts',
-  },
+  entry: ['./src/index.ts'],
   format: ['esm', 'cjs'],
   dts: false,
   clean: !options.watch,
   treeshake: true,
   splitting: true,
+  sourcemap: true,
   onSuccess: async () => {
     exec('tsc --emitDeclarationOnly --declaration', (err, stdout) => {
       if (err) {
