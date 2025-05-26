@@ -283,8 +283,6 @@ export class SolverService {
         apiUrl: this.config.relayerApiEndpoint,
       });
 
-      console.log('packet', packet);
-
       if (!packet.ok) {
         return {
           ok: false,

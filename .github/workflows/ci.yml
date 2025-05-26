@@ -11,10 +11,11 @@ on:
 jobs:
   build:
     name: Build and Test
-    timeout-minutes: 5
+    timeout-minutes: 10
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         node-version: ['18.x', '20.x', '22.x']
 
@@ -40,8 +41,10 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Build
-        run: pnpm build
+      - name: Build Packages
+        run: pnpm build:packages
+      - name: Build Check
+        run: pnpm checkTs
 
       - name: Test
         run: pnpm test

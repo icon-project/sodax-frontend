@@ -39,11 +39,13 @@ export type EvmSpokeChainId = (typeof EVM_SPOKE_CHAIN_IDS)[number];
 
 export type ChainType = 'evm' | 'cosmos' | 'stellar' | 'icon' | 'sui' | 'solana';
 
-export type SpokeChainInfo<T extends ChainType> = {
+export type BaseSpokeChainInfo<T extends ChainType> = {
   name: string;
   id: GetSpokeChainIdType<T>;
   type: T;
-};
+}
+
+export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
 
 export type HubChainInfo<T extends ChainType> = {
   name: string;
@@ -391,9 +393,23 @@ export enum IntentErrorCode {
   NOT_ENOUGH_PRIVATE_LIQUIDITY = -8, // Path found, but not enough private liquidity on the dst chain
   NO_EXECUTION_MODULE_FOUND = -7, // Path found, private liquidity, but execution modules unavailable
   QUOTE_NOT_FOUND = -8, // When executing, given quote_uuid does not exist
+  QUOTE_NOT_MATCH = -9, // When executing, given quote_uuid does not match the quote
+  INTENT_DATA_NOT_MATCH_QUOTE = -10,
+  NO_GAS_HANDLER_FOR_BLOCKCHAIN = -11,
+  INTENT_NOT_FOUND = -12,
+  QUOTE_EXPIRED = -13,
+  MAX_INPUT_AMOUNT = -14,
+  MAX_DIFF_OUTPUT = -15,
+  STOPPED = -16,
+  NO_ORACLE_MODULE_FOUND = -17,
+  NEGATIVE_INPUT_AMOUNT = -18,
+  INTENT_ALREADY_IN_ORDERBOOK = -19,
   CREATE_INTENT_ORDER_FAILED = -998,
   UNKNOWN = -999,
 }
+
+
+
 
 export type EvmRawTransaction = {
   from: Address;

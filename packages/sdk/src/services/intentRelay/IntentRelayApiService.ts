@@ -59,10 +59,15 @@ export type GetTransactionPacketsResponse = {
   data: PacketData[];
 };
 
-export type GetPacketResponse = {
-  success: boolean;
-  data: PacketData;
-};
+export type GetPacketResponse =
+  | {
+      success: true;
+      data: PacketData;
+    }
+  | {
+      success: false;
+      message: string;
+    };
 
 export type GetRelayRequestParamType<T extends RelayAction> = T extends 'submit'
   ? SubmitTxParams
@@ -183,23 +188,23 @@ export async function waitUntilIntentExecuted(
           payload.apiUrl,
         );
 
-        console.log('txPackets', txPackets);
-        const packet = txPackets.data.find(
-          packet => packet.src_tx_hash.toLowerCase() === payload.spokeTxHash.toLowerCase(),
-        );
+        if (txPackets.success && txPackets.data.length > 0) {
+          const packet = txPackets.data.find(
+            packet => packet.src_tx_hash.toLowerCase() === payload.spokeTxHash.toLowerCase(),
+          );
 
-        if (txPackets.success && txPackets.data.length > 0 && packet && packet.status === 'executed') {
-          return {
-            ok: true,
-            value: packet,
-          };
+          if (txPackets.success && txPackets.data.length > 0 && packet && packet.status === 'executed') {
+            return {
+              ok: true,
+              value: packet,
+            };
+          }
         }
-
-        // wait one second before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000));
       } catch (e) {
         console.error('Error getting transaction packets', e);
       }
+      // wait one second before retrying
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     return {

@@ -5,6 +5,18 @@
     "ignore": ["**/.next", "./components/ui"]
   },
   "linter": {
+    "rules": {
+      "style": {
+        "noUselessElse": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noFallthroughSwitchClause": "error"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "off"
+      }
+    },
     "ignore": []
   }
 }

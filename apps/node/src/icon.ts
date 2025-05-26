@@ -3,7 +3,6 @@ import {
   EvmAssetManagerService,
   EvmHubProvider,
   EvmWalletAbstraction,
-  EvmWalletProvider,
   getHubChainConfig,
   spokeChainConfig,
   SpokeService,
@@ -18,10 +17,10 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   ICON_TESTNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
-  EvmHubProviderConfig,
+  type EvmHubProviderConfig,
   Sodax,
-  SodaxConfig,
-  SolverConfig,
+  type SodaxConfig,
+  type SolverConfig,
 } from '@new-world/sdk';
 
 // load PK from .env
@@ -34,12 +33,6 @@ if (!privateKey) {
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_CHAIN_ID: HubChainId = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
-
-const sonicEvmWallet = new EvmWalletProvider({
-  chain: HUB_CHAIN_ID,
-  privateKey: privateKey as Hex,
-  provider: HUB_RPC_URL,
-});
 
 const DEFAULT_SPOKE_RPC_URL = IS_TESTNET
   ? 'https://lisbon.net.solidwallet.io/api/v3'

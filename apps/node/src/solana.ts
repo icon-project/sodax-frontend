@@ -1,18 +1,17 @@
 import {
-  EvmHubProviderConfig,
+  type EvmHubProviderConfig,
   getMoneyMarketConfig,
   Sodax,
-  SodaxConfig,
+  type SodaxConfig,
   SOLANA_MAINNET_CHAIN_ID,
   SOLANA_TESTNET_CHAIN_ID,
-  SolverConfig,
+  type SolverConfig,
   SONIC_MAINNET_CHAIN_ID,
 } from '@new-world/sdk';
 import {
   EvmAssetManagerService,
   EvmHubProvider,
   EvmWalletAbstraction,
-  EvmWalletProvider,
   SONIC_TESTNET_CHAIN_ID,
   type SolanaChainConfig,
   SolanaSpokeProvider,
@@ -25,6 +24,7 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import * as dotenv from 'dotenv';
 import { keccak256 } from 'ethers';
 import type { Address, Hash, Hex } from 'viem';
+import { EvmWalletProvider } from './wallet-providers';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -47,11 +47,7 @@ const solPrivateKeyUint8 = new Uint8Array(Buffer.from(solanaPrivateKey, 'hex'));
 const keypair = Keypair.fromSecretKey(solPrivateKeyUint8);
 const solanaWallet = new SolanaWalletProvider({ privateKey: keypair.secretKey }, solanaSpokeChainConfig.rpcUrl);
 
-const sonicTestnetEvmWallet = new EvmWalletProvider({
-  chain: HUB_CHAIN_ID,
-  privateKey: privateKey as Hex,
-  provider: HUB_RPC_URL,
-});
+const sonicTestnetEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',

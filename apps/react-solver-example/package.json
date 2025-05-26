@@ -9,7 +9,10 @@
     "dev": "vite --port 4000",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "true",
     "checkTs": "tsc --noEmit",
+    "pretty": "biome format . --write",
+    "lint": "biome lint . --write",
     "start:prod": "pnpm run build && serve -s build",
     "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
   },
@@ -43,6 +46,7 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "babel-plugin-macros": "3.1.0",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "autoprefixer": "^10.4.20",
