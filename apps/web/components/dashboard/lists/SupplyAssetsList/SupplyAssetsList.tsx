@@ -1,4 +1,4 @@
-import { allXTokens } from '@/app/config';
+import { allXTokens } from '@new-world/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useChainSelector } from '@/contexts/ChainSelectorContext';
