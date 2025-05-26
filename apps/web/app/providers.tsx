@@ -9,33 +9,36 @@ import { wagmiConfig } from './config';
 import { ChainSelectorProvider } from '@/contexts/ChainSelectorContext';
 
 const XWagmiProviders = dynamic(() => import('@new-world/xwagmi').then(mod => mod.XWagmiProviders), { ssr: false });
+const SodaxProvider = dynamic(() => import('@new-world/dapp-kit').then(mod => mod.SodaxProvider), { ssr: false });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <XWagmiProviders
-        config={{
-          EVM: {
-            wagmiConfig: wagmiConfig,
-          },
-          SUI: {
-            isMainnet: true,
-          },
-          SOLANA: {
-            endpoint: 'https://solana-mainnet.g.alchemy.com/v2/nCndZC8P7BdiVKkczCErdwpIgaBQpPFM',
-          },
-          ICON: {},
-          ARCHWAY: {},
-          STELLAR: {},
-          HAVAH: {},
-          INJECTIVE: {},
-        }}
-      >
-        <ChainSelectorProvider defaultChain="0xa869.fuji">{children}</ChainSelectorProvider>
-      </XWagmiProviders>
-      {/* <ReactQueryDevtools /> */}
-    </QueryClientProvider>
+    <SodaxProvider testnet={true}>
+      <QueryClientProvider client={queryClient}>
+        <XWagmiProviders
+          config={{
+            EVM: {
+              wagmiConfig: wagmiConfig,
+            },
+            SUI: {
+              isMainnet: true,
+            },
+            SOLANA: {
+              endpoint: 'https://solana-mainnet.g.alchemy.com/v2/nCndZC8P7BdiVKkczCErdwpIgaBQpPFM',
+            },
+            ICON: {},
+            ARCHWAY: {},
+            STELLAR: {},
+            HAVAH: {},
+            INJECTIVE: {},
+          }}
+        >
+          <ChainSelectorProvider defaultChain="0xa869.fuji">{children}</ChainSelectorProvider>
+        </XWagmiProviders>
+        {/* <ReactQueryDevtools /> */}
+      </QueryClientProvider>
+    </SodaxProvider>
   );
 }
