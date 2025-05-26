@@ -41,6 +41,8 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Build Packages
+        run: pnpm build:packages
       - name: Build Check
         run: pnpm checkTs
 
