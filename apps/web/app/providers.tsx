@@ -15,7 +15,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
   return (
-    <SodaxProvider testnet={true}>
+    <SodaxProvider testnet={false}>
       <QueryClientProvider client={queryClient}>
         <XWagmiProviders
           config={{

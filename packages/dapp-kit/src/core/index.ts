@@ -1,6 +1,8 @@
 import type { XToken } from '@new-world/xwagmi';
 
 export const allXTokens: XToken[] = [
+  // testnet
+
   {
     xChainId: '0xa869.fuji',
     symbol: 'AVAX',
@@ -8,6 +10,7 @@ export const allXTokens: XToken[] = [
     decimals: 18,
     address: '0x0000000000000000000000000000000000000000',
   },
+
   {
     xChainId: 'sonic-blaze',
     symbol: 'nwt',
@@ -49,5 +52,23 @@ export const allXTokens: XToken[] = [
     name: 'SUI Vault token',
     decimals: 18,
     address: '0x742BD79c9997A51F1c4F38F1F33C7841B0F34a7a',
+  },
+
+  // mainnet - avalanche
+  {
+    xChainId: '0xa86a.avax',
+    symbol: 'AVAX',
+    name: 'AVAX',
+    decimals: 18,
+    address: '0x0000000000000000000000000000000000000000',
+  },
+
+  // mainnet - avalanche vault on sonic
+  {
+    xChainId: 'sonic',
+    symbol: 'AVAX',
+    name: 'AVAX',
+    decimals: 18,
+    address: '0x14238D267557E9d799016ad635B53CD15935d290',
   },
 ];

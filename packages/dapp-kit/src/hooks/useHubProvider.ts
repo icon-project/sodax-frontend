@@ -3,11 +3,8 @@ import { getXChainType } from '@new-world/xwagmi';
 import { useMemo } from 'react';
 import { useSodaxContext } from '../hooks/useSodaxContext';
 
-const IS_TESTNET = true;
-const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
-
 export function useHubProvider(): EvmHubProvider | undefined {
-  const { hubChainId } = useSodaxContext();
+  const { hubChainId, hubRpcUrl } = useSodaxContext();
   const xChainType = getXChainType(hubChainId);
   const hubProvider = useMemo(() => {
     if (xChainType === 'EVM') {
@@ -17,12 +14,12 @@ export function useHubProvider(): EvmHubProvider | undefined {
       if (!hubChainCfg) return undefined;
 
       return new EvmHubProvider({
-        hubRpcUrl: HUB_RPC_URL,
+        hubRpcUrl: hubRpcUrl,
         chainConfig: hubChainCfg,
       });
     }
     return undefined;
-  }, [xChainType, hubChainId]);
+  }, [xChainType, hubChainId, hubRpcUrl]);
 
   return hubProvider;
 }

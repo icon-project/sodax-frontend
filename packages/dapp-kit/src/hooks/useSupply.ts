@@ -72,11 +72,8 @@ export function useSupply(token: XToken): UseSupplyReturn {
         },
       } satisfies IntentRelayRequest<'submit'>;
 
-      // TODO: use the correct endpoint
-      const response: SubmitTxResponse = await submitTransaction(
-        request,
-        'https://53naa6u2qd.execute-api.us-east-1.amazonaws.com/prod',
-      );
+      // TODO: use the correct endpoint according to testnet or mainnet
+      const response: SubmitTxResponse = await submitTransaction(request, 'https://xcall-relay.nw.iconblockchain.xyz');
 
       console.log('Supply transaction submitted:', response);
     } catch (err) {

@@ -30,5 +30,5 @@ export const SodaxProvider = ({ children, testnet = false }: SodaxProviderProps)
     hubProviderConfig: hubConfig,
   } satisfies SodaxConfig);
 
-  return <SodaxContext.Provider value={{ sodax, testnet, hubChainId }}>{children}</SodaxContext.Provider>;
+  return <SodaxContext.Provider value={{ sodax, testnet, hubChainId, hubRpcUrl }}>{children}</SodaxContext.Provider>;
 };
