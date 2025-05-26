@@ -1,5 +1,4 @@
-// @ts-ignore
-import path from 'path';
+import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import type { ConfigEnv } from 'vite';
 import { defineConfig, loadEnv } from 'vite';

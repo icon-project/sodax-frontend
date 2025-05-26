@@ -2,7 +2,7 @@
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "extends": ["../../biome.json"],
   "files": {
-    "ignore": ["**/.next", "./components/ui"]
+    "ignore": ["**/.next", "./components"]
   },
   "linter": {
     "ignore": []

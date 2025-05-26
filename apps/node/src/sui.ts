@@ -14,10 +14,10 @@ import {
   getMoneyMarketConfig,
   SUI_TESTNET_CHAIN_ID,
   SUI_MAINNET_CHAIN_ID,
-  EvmHubProviderConfig,
-  SolverConfig,
+  type EvmHubProviderConfig,
+  type SolverConfig,
   Sodax,
-  SodaxConfig,
+  type SodaxConfig,
 } from '@new-world/sdk';
 
 import dotenv from 'dotenv';

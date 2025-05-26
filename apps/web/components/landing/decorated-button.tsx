@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
 
 interface DecoratedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'yellow-dark' | 'yellow-soda' | 'white';

@@ -21,10 +21,10 @@ import {
   AVALANCHE_MAINNET_CHAIN_ID,
   type EvmChainId,
   getMoneyMarketConfig,
-  EvmHubProviderConfig,
-  SodaxConfig,
+  type EvmHubProviderConfig,
+  type SodaxConfig,
   Sodax,
-  EvmRawTransaction,
+  type EvmRawTransaction,
 } from '@new-world/sdk';
 import { EvmWalletProvider } from './wallet-providers';
 

@@ -1,6 +1,6 @@
 import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
-import { type ComponentProps } from 'react';
+import type { ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
 

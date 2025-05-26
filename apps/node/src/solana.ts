@@ -1,11 +1,11 @@
 import {
-  EvmHubProviderConfig,
+  type EvmHubProviderConfig,
   getMoneyMarketConfig,
   Sodax,
-  SodaxConfig,
+  type SodaxConfig,
   SOLANA_MAINNET_CHAIN_ID,
   SOLANA_TESTNET_CHAIN_ID,
-  SolverConfig,
+  type SolverConfig,
   SONIC_MAINNET_CHAIN_ID,
 } from '@new-world/sdk';
 import {

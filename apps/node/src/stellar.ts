@@ -13,10 +13,10 @@ import {
   getMoneyMarketConfig,
   SONIC_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
-  SolverConfig,
-  EvmHubProviderConfig,
+  type SolverConfig,
+  type EvmHubProviderConfig,
   Sodax,
-  SodaxConfig,
+  type SodaxConfig,
   EvmHubProvider,
 } from '@new-world/sdk';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';

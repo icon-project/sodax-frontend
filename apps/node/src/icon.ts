@@ -17,10 +17,10 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   ICON_TESTNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
-  EvmHubProviderConfig,
+  type EvmHubProviderConfig,
   Sodax,
-  SodaxConfig,
-  SolverConfig,
+  type SodaxConfig,
+  type SolverConfig,
 } from '@new-world/sdk';
 
 // load PK from .env
