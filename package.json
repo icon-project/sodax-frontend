@@ -5,7 +5,7 @@
   "packageManager": "pnpm@9.8.0",
   "scripts": {
     "build": "turbo run build",
-    "build:packages": "turbo run build --filter=packages/*",
+    "build:packages": "turbo run build:packages",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=web",
     "dev:solver": "turbo run dev --filter=react-solver-example",
