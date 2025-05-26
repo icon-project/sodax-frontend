@@ -10,7 +10,6 @@ export function useSpokeProvider(spokeChainId: XChainId) {
   const spokeProvider = useMemo(() => {
     if (!walletProvider) return undefined;
     if (xChainType === 'EVM') {
-      console.log('sdkChainIdMap[xChainId]', sdkChainIdMap[spokeChainId]);
       // @ts-ignore
       return new EvmSpokeProvider(walletProvider, spokeChainConfig[sdkChainIdMap[spokeChainId]]);
     }
