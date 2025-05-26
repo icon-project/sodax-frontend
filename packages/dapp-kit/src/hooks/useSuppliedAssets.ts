@@ -1,5 +1,5 @@
-import { allXTokens, moneyMarketConfig, sodax } from '@/core';
-import type { EvmHubProvider } from '@new-world/sdk';
+import { allXTokens } from '@/core';
+import { getMoneyMarketConfig, type EvmHubProvider } from '@new-world/sdk';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
@@ -9,7 +9,7 @@ import { useWalletProvider } from './useWalletProvider';
 import { useSodaxContext } from './useSodaxContext';
 
 export function useSuppliedAssets() {
-  const { hubChainId } = useSodaxContext();
+  const { hubChainId, sodax } = useSodaxContext();
   const hubWalletProvider = useWalletProvider(hubChainId);
   const hubProvider = useHubProvider();
   const { address } = useXAccount(getXChainType('0xa869.fuji'));
@@ -22,6 +22,7 @@ export function useSuppliedAssets() {
         return;
       }
 
+      const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
       try {
         const [res] = await sodax.moneyMarket.getUserReservesData(
           hubWallet as Address,

@@ -1,14 +1,14 @@
-import { sodax } from '@/core';
 import type { EvmHubProvider, SpokeChainId } from '@new-world/sdk';
 import { SpokeService, type IntentRelayRequest, type SubmitTxResponse, submitTransaction } from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
 import { useState } from 'react';
-import type { Address, Hash, Hex } from 'viem';
+import type { Address } from 'viem';
 import { parseUnits } from 'viem';
 import { useHubProvider } from './useHubProvider';
 import { useHubWallet } from './useHubWallet';
 import { useSpokeProvider } from './useSpokeProvider';
+import { useSodaxContext } from './useSodaxContext';
 
 interface UseSupplyReturn {
   supply: (amount: string) => Promise<void>;
@@ -18,7 +18,7 @@ interface UseSupplyReturn {
 
 export function useSupply(token: XToken): UseSupplyReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
-
+  const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
 
   const spokeProvider = useSpokeProvider(token.xChainId);

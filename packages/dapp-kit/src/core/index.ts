@@ -1,30 +1,4 @@
-import {
-  SONIC_MAINNET_CHAIN_ID,
-  SONIC_TESTNET_CHAIN_ID,
-  Sodax,
-  getHubChainConfig,
-  getMoneyMarketConfig,
-} from '@new-world/sdk';
-import type { EvmHubProviderConfig, HubChainId, MoneyMarketConfig, SodaxConfig } from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
-
-const IS_TESTNET = true;
-
-export const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
-
-const HUB_CHAIN_ID: HubChainId = SONIC_TESTNET_CHAIN_ID;
-
-export const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
-
-const hubConfig = {
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
-} satisfies EvmHubProviderConfig;
-
-export const sodax = new Sodax({
-  moneyMarket: moneyMarketConfig,
-  hubProviderConfig: hubConfig,
-} satisfies SodaxConfig);
 
 export const allXTokens: XToken[] = [
   {
