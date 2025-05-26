@@ -23,8 +23,8 @@
     },
     "sourceMap": true,
     "incremental": true,
-    "composite": true,
+    "composite": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": [],
+  "exclude": []
 }

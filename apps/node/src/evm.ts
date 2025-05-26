@@ -1,11 +1,11 @@
-import type { Address, Hash, Hex } from 'viem';
+import { encodeFunctionData, type Address, type Hash, type Hex } from 'viem';
 import {
   EvmAssetManagerService,
   EvmHubProvider,
   type EvmSpokeChainConfig,
   EvmSpokeProvider,
   EvmWalletAbstraction,
-  EvmWalletProvider,
+  IEvmWalletProvider,
   getHubChainConfig,
   spokeChainConfig,
   SpokeService,
@@ -24,36 +24,32 @@ import {
   EvmHubProviderConfig,
   SodaxConfig,
   Sodax,
+  EvmRawTransaction,
 } from '@new-world/sdk';
+import { EvmWalletProvider } from './wallet-providers';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const DEFAULT_SPOKE_RPC_URL = IS_TESTNET ? 'https://avalanche-fuji.drpc.org' : 'https://api.avax.network/ext/bc/C/rpc';
 const DEFAULT_SPOKE_CHAIN_ID = IS_TESTNET
-  ? AVALANCHE_FUJI_TESTNET_CHAIN_ID.toString()
-  : AVALANCHE_MAINNET_CHAIN_ID.toString();
+  ? AVALANCHE_FUJI_TESTNET_CHAIN_ID
+  : AVALANCHE_MAINNET_CHAIN_ID;
 const HUB_CHAIN_ID: HubChainId = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 
-const EVM_SPOKE_CHAIN_ID = Number.parseInt(process.env.SPOKE_CHAIN_ID || DEFAULT_SPOKE_CHAIN_ID) as SpokeChainId; // Default to Avalanche
+const EVM_SPOKE_CHAIN_ID = (process.env.SPOKE_CHAIN_ID || DEFAULT_SPOKE_CHAIN_ID) as EvmChainId & SpokeChainId; // Default to Avalanche
 const SPOKE_RPC_URL = process.env.SPOKE_RPC_URL || DEFAULT_SPOKE_RPC_URL;
 
 if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const hubEvmWallet = new EvmWalletProvider({
-  chain: HUB_CHAIN_ID,
-  privateKey: privateKey as Hex,
-  provider: HUB_RPC_URL,
-});
 
-const spokeEvmWallet = new EvmWalletProvider({
-  chain: EVM_SPOKE_CHAIN_ID as EvmChainId,
-  privateKey: privateKey as Hex,
-  provider: SPOKE_RPC_URL,
-});
+
+const hubEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
+
+const spokeEvmWallet = new EvmWalletProvider(privateKey as Hex, EVM_SPOKE_CHAIN_ID, SPOKE_RPC_URL);
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
@@ -102,7 +98,7 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
 
   const txHash: Hash = await SpokeService.deposit(
     {
-      from: spokeProvider.walletProvider.walletClient.account.address,
+      from: spokeProvider.walletProvider.getWalletAddress(),
       token,
       amount,
       data,
@@ -125,7 +121,7 @@ async function withdrawAsset(token: Address, amount: bigint, recipient: Address)
     spokeProvider.chainConfig.chain.id,
   );
   const txHash: Hash = await SpokeService.callWallet(
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     data,
     spokeProvider,
     hubProvider,
@@ -137,7 +133,7 @@ async function withdrawAsset(token: Address, amount: bigint, recipient: Address)
 async function supply(token: Address, amount: bigint) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     hubProvider,
   );
 
@@ -145,7 +141,7 @@ async function supply(token: Address, amount: bigint) {
 
   const txHash = await SpokeService.deposit(
     {
-      from: spokeProvider.walletProvider.walletClient.account.address,
+      from: spokeProvider.walletProvider.getWalletAddress(),
       token,
       amount,
       data,
@@ -160,19 +156,19 @@ async function supply(token: Address, amount: bigint) {
 async function borrow(token: Address, amount: bigint) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     hubProvider,
   );
   const data: Hex = sodax.moneyMarket.borrowData(
     hubWallet,
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     data,
     spokeProvider,
     hubProvider,
@@ -184,20 +180,20 @@ async function borrow(token: Address, amount: bigint) {
 async function withdraw(token: Address, amount: bigint) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     hubProvider,
   );
 
   const data: Hex = sodax.moneyMarket.withdrawData(
     hubWallet,
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
   );
 
   const txHash: Hash = await SpokeService.callWallet(
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     data,
     spokeProvider,
     hubProvider,
@@ -209,14 +205,14 @@ async function withdraw(token: Address, amount: bigint) {
 async function repay(token: Address, amount: bigint) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     hubProvider,
   );
   const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {
-      from: spokeProvider.walletProvider.walletClient.account.address,
+      from: spokeProvider.walletProvider.getWalletAddress(),
       token,
       amount,
       data,
@@ -239,8 +235,8 @@ async function createIntent(amount: bigint, nativeToken: Address, inputToken: Ad
     allowPartialFill: false,
     srcChain: spokeProvider.chainConfig.chain.id,
     dstChain: spokeProvider.chainConfig.chain.id,
-    srcAddress: spokeProvider.walletProvider.walletClient.account.address,
-    dstAddress: spokeProvider.walletProvider.walletClient.account.address,
+    srcAddress: spokeProvider.walletProvider.getWalletAddress(),
+    dstAddress: spokeProvider.walletProvider.getWalletAddress(),
     solver: '0x0000000000000000000000000000000000000000',
     data: '0x',
   } satisfies CreateIntentParams;
@@ -259,15 +255,15 @@ async function fillIntent(
   outputAmount: bigint,
 ) {
   // Get the wallet client and account
-  const walletClient = spokeProvider.walletProvider.walletClient;
-  const account = walletClient.account;
+  const walletClient = spokeProvider.walletProvider;
+  const account = walletClient.getWalletAddress();
 
-  console.log('Using account:', account.address);
+  console.log('Using account:', account);
 
   // Get the creator's wallet on the hub chain
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.walletClient.account.address,
+    spokeProvider.walletProvider.getWalletAddress(),
     hubProvider,
   );
 
@@ -283,8 +279,8 @@ async function fillIntent(
     allowPartialFill: false,
     srcChain: BigInt(spokeProvider.chainConfig.chain.id),
     dstChain: BigInt(spokeProvider.chainConfig.chain.id),
-    srcAddress: spokeProvider.walletProvider.walletClient.account.address as Address,
-    dstAddress: spokeProvider.walletProvider.walletClient.account.address as Address,
+    srcAddress: spokeProvider.walletProvider.getWalletAddress() as Address,
+    dstAddress: spokeProvider.walletProvider.getWalletAddress() as Address,
     solver: '0x0000000000000000000000000000000000000000' as Address,
     data: '0x' as Hex,
   };
@@ -323,15 +319,41 @@ async function fillIntent(
       ] as const,
       chainId: 57054,
     };
+    const rawTx = {
+      from: account,
+      to: solverConfig.intentsContract as `0x${string}`,
+      data: encodeFunctionData({
+        abi: IntentsAbi,
+        functionName: 'fillIntent',
+        args: [{
+          intentId: intent.intentId,
+          creator: intent.creator,
+          inputToken: intent.inputToken,
+          outputToken: intent.outputToken,
+          inputAmount: intent.inputAmount,
+          minOutputAmount: intent.minOutputAmount,
+          deadline: intent.deadline,
+          allowPartialFill: intent.allowPartialFill,
+          srcChain: intent.srcChain,
+          dstChain: intent.dstChain,
+          srcAddress: intent.srcAddress,
+          dstAddress: intent.dstAddress,
+          solver: intent.solver,
+          data: intent.data,
+        },
+        inputAmount,
+        outputAmount,
+        0n,],
+      }),
+      value: 0n,
+    } satisfies EvmRawTransaction;
 
-    console.log(spokeProvider.walletProvider.walletClient.chain);
-    console.log(await spokeProvider.walletProvider.walletClient.getChainId());
     // Estimate gas with the same account that will send the transaction
-    const { request } = await spokeProvider.walletProvider.publicClient.simulateContract(req);
+    const { request } = await spokeProvider.publicClient.simulateContract(req);
     console.log('[fillIntent] request', request);
 
     // Send the transaction using the same request object
-    const txHash = await walletClient.writeContract(request);
+    const txHash = await walletClient.sendTransaction(rawTx);
 
     console.log('[fillIntent] txHash', txHash);
 

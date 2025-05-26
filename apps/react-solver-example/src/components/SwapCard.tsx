@@ -13,18 +13,22 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supportedTokensPerChain } from '@/constants';
-import { useSolver } from '@/contexts/SolverContextProvider';
+import { sodax, supportedTokensPerChain } from '@/constants';
+import { useSpokeProvider } from '@/hooks/useSpokeProvider';
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
+  type Address,
   type CreateIntentParams,
+  type EvmChainId,
   type Hex,
   type IntentQuoteRequest,
   type IntentQuoteResponse,
   POLYGON_MAINNET_CHAIN_ID,
   type SpokeChainId,
+  type SpokeProvider,
   type Token,
+  getEvmViemChain,
   spokeChainConfig,
   supportedSpokeChains,
 } from '@new-world/sdk';
@@ -33,17 +37,20 @@ import { debounce } from 'lodash';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useState } from 'react';
 import { useSwitchChain } from 'wagmi';
+import { switchChain } from 'wagmi/actions';
 
 export default function SwapCard({
   setIntentTxHash,
+  address,
 }: {
   setIntentTxHash: (value: SetStateAction<Hex | undefined>) => void;
+  address: Address;
 }) {
-  const { getConnectedWalletAddressBytes, getProvider, solverService, hubProvider } = useSolver();
-  const { chains, switchChain } = useSwitchChain();
-
+  const { switchChain } = useSwitchChain();
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ARBITRUM_MAINNET_CHAIN_ID);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
+  const sourceChainSpokeProvider = useSpokeProvider(sourceChain, address);
+  console.log('sourceChainSpokeProvider:', sourceChainSpokeProvider);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens[0],
   );
@@ -65,10 +72,7 @@ export default function SwapCard({
 
   const onSrcChainChange = (chainId: SpokeChainId) => {
     console.log('onSrcChainChange chainId:', chainId);
-    if (spokeChainConfig[chainId].chain.type === 'evm') {
-      switchChain({ chainId: chainId });
-    }
-
+    switchChain({ chainId: getEvmViemChain(chainId as EvmChainId).id });
     setSourceChain(chainId);
     setSourceToken(spokeChainConfig[chainId].supportedTokens[0]);
   };
@@ -101,7 +105,7 @@ export default function SwapCard({
 
     console.log('payload:', payload);
 
-    const quoteResult = await solverService.getQuote(payload);
+    const quoteResult = await sodax.solver.getQuote(payload);
 
     if (quoteResult.ok) {
       setExchangeRate(
@@ -121,6 +125,14 @@ export default function SwapCard({
     setSourceAmount(value);
     debounce(() => getQuote(value), 2000)();
   };
+
+  function getSourceChainSpokeProvider(): SpokeProvider {
+    if (sourceChainSpokeProvider) {
+      return sourceChainSpokeProvider;
+    }
+
+    throw new Error('Source chain spoke provider not found');
+  }
 
   const createIntentOrderPayload = () => {
     if (!quote) {
@@ -142,8 +154,8 @@ export default function SwapCard({
       allowPartialFill: false, // Whether the intent can be partially filled
       srcChain: sourceChain, // Chain ID where input tokens originate
       dstChain: destChain, // Chain ID where output tokens should be delivered
-      srcAddress: getConnectedWalletAddressBytes(sourceChain), // Source address in bytes (original address on spoke chain)
-      dstAddress: getConnectedWalletAddressBytes(destChain), // Destination address in bytes (original address on spoke chain)
+      srcAddress: getSourceChainSpokeProvider().walletProvider.getWalletAddressBytes(), // Source address in bytes (original address on spoke chain)
+      dstAddress: getSourceChainSpokeProvider().walletProvider.getWalletAddressBytes(), // Destination address in bytes (original address on spoke chain)
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
       data: '0x', // Additional arbitrary data
     } satisfies CreateIntentParams;
@@ -157,26 +169,10 @@ export default function SwapCard({
       return;
     }
 
-    const sourceChainProvider = getProvider(spokeChainConfig[sourceChain].chain.type, sourceChain);
-
-    if (!sourceChainProvider) {
-      console.error('No provider set');
-      return;
-    }
-
-    console.log('sourceChainProvider:', sourceChainProvider);
-
     if (!sourceToken || !destToken) {
       console.error('Source token or destination token undefined');
       return;
     }
-
-    if (!hubProvider) {
-      console.error('Hub provider undefined');
-      return;
-    }
-
-    console.log('hubProvider:', hubProvider);
 
     // create on-chain intent, post to Solver API and Submit to Relay API
     // NOTE: you should primarily use this one to create intent
@@ -184,7 +180,7 @@ export default function SwapCard({
 
     // console.log("rawResult", rawResult)
 
-    const result = await solverService.createAndSubmitIntent(createIntentParams, sourceChainProvider, hubProvider);
+    const result = await sodax.solver.createAndSubmitIntent(createIntentParams, getSourceChainSpokeProvider());
 
     console.log('result:', result);
 
@@ -254,7 +250,7 @@ export default function SwapCard({
             id="fromAddress"
             type="text"
             placeholder="0.0"
-            value={getConnectedWalletAddressBytes(sourceChain)}
+            value={getSourceChainSpokeProvider().walletProvider.getWalletAddress()}
             disabled={true}
           />
         </div>
@@ -300,7 +296,12 @@ export default function SwapCard({
         </div>
         <div className="flex-grow">
           <Label htmlFor="toAddress">Destination address</Label>
-          <Input id="toAddress" type="text" value={getConnectedWalletAddressBytes(destChain)} disabled={true} />
+          <Input
+            id="toAddress"
+            type="text"
+            value={getSourceChainSpokeProvider().walletProvider.getWalletAddress()}
+            disabled={true}
+          />
         </div>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">

@@ -9,7 +9,10 @@
     "dev": "vite --port 4000",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "true",
     "checkTs": "tsc --noEmit",
+    "pretty": "biome format . --write",
+    "lint": "biome lint . --write",
     "start:prod": "pnpm run build && serve -s build",
     "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
   },

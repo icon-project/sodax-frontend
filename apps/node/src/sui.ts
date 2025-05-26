@@ -3,7 +3,6 @@ import {
   EvmAssetManagerService,
   EvmHubProvider,
   EvmWalletAbstraction,
-  EvmWalletProvider,
   getHubChainConfig,
   spokeChainConfig,
   SpokeService,
@@ -22,6 +21,7 @@ import {
 } from '@new-world/sdk';
 
 import dotenv from 'dotenv';
+import { EvmWalletProvider } from './wallet-providers';
 dotenv.config();
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -35,11 +35,7 @@ if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const hubEvmWallet = new EvmWalletProvider({
-  chain: HUB_CHAIN_ID,
-  privateKey: privateKey as Hex,
-  provider: HUB_RPC_URL,
-});
+const hubEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
 
 const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const hubProvider = new EvmHubProvider({

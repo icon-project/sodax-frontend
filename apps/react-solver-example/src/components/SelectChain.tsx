@@ -1,37 +1,35 @@
-"use client"
+'use client';
 
-import React from "react";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
-import {SpokeChainId} from "@new-world/sdk";
-import {Label} from "@/components/ui/label";
-import { chainIdToChainName } from "@/constants";
+import React from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { SpokeChainId } from '@new-world/sdk';
+import { Label } from '@/components/ui/label';
+import { chainIdToChainName } from '@/constants';
 
-export function SelectChain(
-  {
-    chainList,
-    value,
-    setChain,
-    placeholder,
-    id,
-    label
-  }: {
-    chainList: SpokeChainId[],
-    value: SpokeChainId,
-    setChain: (value: SpokeChainId) => void,
-    placeholder: string,
-    id: string,
-    label: string
-  }) {
-
+export function SelectChain({
+  chainList,
+  value,
+  setChain,
+  placeholder,
+  id,
+  label,
+}: {
+  chainList: SpokeChainId[];
+  value: SpokeChainId;
+  setChain: (value: SpokeChainId) => void;
+  placeholder: string;
+  id: string;
+  label: string;
+}) {
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
-      <Select value={value.toString()} onValueChange={(v) => setChain(Number(v) as SpokeChainId)}>
+      <Select value={value.toString()} onValueChange={v => setChain(v as SpokeChainId)}>
         <SelectTrigger id={id}>
-          <SelectValue placeholder={placeholder}/>
+          <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          {chainList.map((chain) => (
+          {chainList.map(chain => (
             <SelectItem key={chain} value={chain.toString()}>
               {chainIdToChainName(chain)}
             </SelectItem>
@@ -39,5 +37,5 @@ export function SelectChain(
         </SelectContent>
       </Select>
     </div>
-    )
-  }
+  );
+}

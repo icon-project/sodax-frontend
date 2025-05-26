@@ -11,6 +11,7 @@
     "pretty": "turbo pretty",
     "lint": "turbo lint",
     "checkTs": "turbo checkTs",
+    "test": "turbo test",
     "clean": "turbo clean && rm -rf node_modules dist .turbo && rm -rf apps/*/node_modules apps/*/dist apps/*/.turbo && rm -rf packages/*/node_modules packages/*/dist packages/*/.turbo",
     "prepare": "husky"
   },

@@ -2,7 +2,6 @@ import type { Hash, Hex, Address } from 'viem';
 import {
   EvmAssetManagerService,
   EvmWalletAbstraction,
-  EvmWalletProvider,
   getHubChainConfig,
   spokeChainConfig,
   SpokeService,
@@ -22,6 +21,7 @@ import {
 } from '@new-world/sdk';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
+import { EvmWalletProvider } from './wallet-providers';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -33,11 +33,7 @@ if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const hubWallet = new EvmWalletProvider({
-  chain: SONIC_TESTNET_CHAIN_ID,
-  privateKey: privateKey as Hex,
-  provider: HUB_RPC_URL,
-});
+const hubWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
 
 const stellarConfig = spokeChainConfig[STELLAR_CHAIN_ID] as StellarSpokeChainConfig;
 const STELLAR_SECRET_KEY = process.env.STELLAR_SECRET_KEY ?? '';
