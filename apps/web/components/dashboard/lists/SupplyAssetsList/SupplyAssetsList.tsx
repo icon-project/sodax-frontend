@@ -29,7 +29,7 @@ export function SupplyAssetsList() {
             <TableRow>
               <TableHead>Asset</TableHead>
               <TableHead>Balance</TableHead>
-              <TableHead>APY</TableHead>
+              {/* <TableHead>APY</TableHead> */}
               <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
