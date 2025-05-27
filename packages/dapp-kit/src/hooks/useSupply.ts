@@ -1,5 +1,11 @@
 import type { EvmHubProvider, SpokeChainId } from '@new-world/sdk';
-import { SpokeService, type IntentRelayRequest, type SubmitTxResponse, submitTransaction } from '@new-world/sdk';
+import {
+  SpokeService,
+  type IntentRelayRequest,
+  type SubmitTxResponse,
+  submitTransaction,
+  getIntentRelayChainId,
+} from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
 import { useState } from 'react';
@@ -72,7 +78,7 @@ export function useSupply(token: XToken): UseSupplyReturn {
       const request = {
         action: 'submit',
         params: {
-          chain_id: '6',
+          chain_id: getIntentRelayChainId(token.xChainId as SpokeChainId).toString(),
           tx_hash: txHash,
         },
       } satisfies IntentRelayRequest<'submit'>;

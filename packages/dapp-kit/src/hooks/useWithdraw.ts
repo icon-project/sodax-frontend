@@ -1,5 +1,11 @@
 import type { EvmHubProvider, SpokeChainId } from '@new-world/sdk';
-import { SpokeService, type IntentRelayRequest, type SubmitTxResponse, submitTransaction } from '@new-world/sdk';
+import {
+  SpokeService,
+  type IntentRelayRequest,
+  type SubmitTxResponse,
+  submitTransaction,
+  getIntentRelayChainId,
+} from '@new-world/sdk';
 import type { XChainId, XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
 import { useState } from 'react';
@@ -49,8 +55,6 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
     setIsLoading(true);
     setError(null);
 
-    console.log('spokeProvider.chainConfig.chain.id', spokeChainId, spokeProvider.chainConfig.chain.id);
-
     try {
       const data: Hex = sodax.moneyMarket.withdrawData(
         hubWalletAddress as Address,
@@ -70,7 +74,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
       const request = {
         action: 'submit',
         params: {
-          chain_id: '6',
+          chain_id: getIntentRelayChainId(spokeChainId as SpokeChainId).toString(),
           tx_hash: txHash,
         },
       } satisfies IntentRelayRequest<'submit'>;
