@@ -1,4 +1,4 @@
-import type { EvmHubProvider } from '@new-world/sdk';
+import type { EvmHubProvider, SpokeChainId } from '@new-world/sdk';
 import { SpokeService, type IntentRelayRequest, type SubmitTxResponse, submitTransaction } from '@new-world/sdk';
 import type { XChainId, XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount } from '@new-world/xwagmi';
@@ -21,7 +21,11 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
   const spokeProvider = useSpokeProvider(spokeChainId);
-  const { data: hubWalletAddress } = useHubWalletAddress(spokeChainId, address, hubProvider as EvmHubProvider);
+  const { data: hubWalletAddress } = useHubWalletAddress(
+    spokeChainId as SpokeChainId,
+    address,
+    hubProvider as EvmHubProvider,
+  );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);

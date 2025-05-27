@@ -136,6 +136,14 @@ export const sonic: XChain = {
   testnet: false,
 };
 
+export const polygon: XChain = {
+  id: 137,
+  name: 'Polygon',
+  xChainId: '0x89.polygon',
+  xChainType: 'EVM',
+  testnet: false,
+};
+
 // the order is important, using manual order to display in the UI
 export const xChainMap: { [key in XChainId]: XChain } = {
   '0x1.icon': icon,
@@ -155,6 +163,7 @@ export const xChainMap: { [key in XChainId]: XChain } = {
   solana: solana,
   'sonic-blaze': sonicBlaze,
   sonic: sonic,
+  '0x89.polygon': polygon,
 };
 
 export const xChains = Object.values(xChainMap);

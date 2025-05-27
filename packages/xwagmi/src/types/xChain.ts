@@ -15,7 +15,8 @@ export type XChainId =
   | 'stellar'
   | 'solana'
   | 'sonic-blaze'
-  | 'sonic';
+  | 'sonic'
+  | '0x89.polygon';
 
 export type XChainType = 'ICON' | 'EVM' | 'ARCHWAY' | 'HAVAH' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA';
 

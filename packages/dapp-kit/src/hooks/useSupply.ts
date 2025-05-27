@@ -23,7 +23,11 @@ export function useSupply(token: XToken): UseSupplyReturn {
 
   const spokeProvider = useSpokeProvider(token.xChainId);
 
-  const { data: hubWalletAddress } = useHubWalletAddress(token.xChainId, address, hubProvider as EvmHubProvider);
+  const { data: hubWalletAddress } = useHubWalletAddress(
+    token.xChainId as SpokeChainId,
+    address,
+    hubProvider as EvmHubProvider,
+  );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
