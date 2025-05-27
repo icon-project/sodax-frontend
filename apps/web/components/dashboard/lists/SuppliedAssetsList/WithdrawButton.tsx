@@ -15,7 +15,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
 
   const { withdraw, isLoading, error, resetError } = useWithdraw(token, selectedChain);
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChain);
 
   const handleWithdraw = async () => {
     await withdraw(amount);

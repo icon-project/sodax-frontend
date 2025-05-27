@@ -16,6 +16,7 @@ import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
 import { useSodaxContext } from './useSodaxContext';
 import { XCALL_RELAY_URL } from '@/constants';
+import { getSpokeTokenAddressByVault } from '@/core';
 
 interface UseWithdrawReturn {
   withdraw: (amount: string) => Promise<void>;
@@ -24,6 +25,7 @@ interface UseWithdrawReturn {
   resetError: () => void;
 }
 
+// token: this is hub token
 export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
@@ -60,7 +62,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
       const data: Hex = sodax.moneyMarket.withdrawData(
         hubWalletAddress as Address,
         spokeProvider.walletProvider.getWalletAddress(),
-        '0x0000000000000000000000000000000000000000',
+        getSpokeTokenAddressByVault(spokeChainId, token.address),
         parseUnits(amount, token.decimals),
         spokeProvider.chainConfig.chain.id,
       );
