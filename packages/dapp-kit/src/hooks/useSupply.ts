@@ -10,7 +10,7 @@ import type { XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
 import { useState } from 'react';
 import type { Address } from 'viem';
-import { parseUnits } from 'viem';
+import { parseUnits, TransactionExecutionError } from 'viem';
 import { useHubProvider } from './useHubProvider';
 import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
@@ -21,6 +21,7 @@ interface UseSupplyReturn {
   supply: (amount: string) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
+  resetError: () => void;
 }
 
 export function useSupply(token: XToken): UseSupplyReturn {
@@ -90,16 +91,26 @@ export function useSupply(token: XToken): UseSupplyReturn {
 
       console.log('Supply transaction submitted:', response);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to supply tokens'));
-      console.error('Error supplying tokens:', err);
+      // setError(err instanceof Error ? err : new Error('Failed to supply tokens'));
+      if (err instanceof TransactionExecutionError) {
+        setError(new Error(err.message));
+      } else {
+        setError(new Error('Failed to supply tokens'));
+      }
+      console.log(err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const resetError = () => {
+    setError(null);
   };
 
   return {
     supply,
     isLoading,
     error,
+    resetError,
   };
 }

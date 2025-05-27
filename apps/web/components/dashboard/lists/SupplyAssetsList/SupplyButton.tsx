@@ -5,11 +5,14 @@ import { Label } from '@/components/ui/label';
 import { useSupply } from '@new-world/dapp-kit';
 import type { XToken } from '@new-world/xwagmi';
 import { useState } from 'react';
+import { useEvmSwitchChain } from '@new-world/xwagmi';
 
 export function SupplyButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const { supply, isLoading, error } = useSupply(token);
+  const { supply, isLoading, error, resetError } = useSupply(token);
+
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleSupply = async () => {
     try {
@@ -20,10 +23,26 @@ export function SupplyButton({ token }: { token: XToken }) {
     }
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setAmount('');
+      resetError?.();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline">Supply</Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            resetError?.();
+            setOpen(true);
+          }}
+        >
+          Supply
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -40,9 +59,16 @@ export function SupplyButton({ token }: { token: XToken }) {
         </div>
         {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
         <DialogFooter className="sm:justify-start">
-          <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={isLoading}>
-            {isLoading ? 'Supplying...' : 'Supply'}
-          </Button>
+          {isWrongChain && (
+            <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
+              Switch Chain
+            </Button>
+          )}
+          {!isWrongChain && (
+            <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={isLoading}>
+              {isLoading ? 'Supplying...' : 'Supply'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

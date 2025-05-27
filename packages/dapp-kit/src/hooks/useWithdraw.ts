@@ -21,6 +21,7 @@ interface UseWithdrawReturn {
   withdraw: (amount: string) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
+  resetError: () => void;
 }
 
 export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawReturn {
@@ -93,9 +94,14 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
     }
   };
 
+  const resetError = () => {
+    setError(null);
+  };
+
   return {
     withdraw,
     isLoading,
     error,
+    resetError,
   };
 }
