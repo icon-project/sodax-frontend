@@ -35,7 +35,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             INJECTIVE: {},
           }}
         >
-          <ChainSelectorProvider defaultChain="0xa869.fuji">{children}</ChainSelectorProvider>
+          <ChainSelectorProvider defaultChain="0xa86a.avax">{children}</ChainSelectorProvider>
         </XWagmiProviders>
         {/* <ReactQueryDevtools /> */}
       </QueryClientProvider>
