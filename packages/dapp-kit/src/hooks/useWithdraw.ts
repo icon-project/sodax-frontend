@@ -1,7 +1,7 @@
 import type { EvmHubProvider, SpokeChainId } from '@new-world/sdk';
 import { SpokeService, type IntentRelayRequest, type SubmitTxResponse, submitTransaction } from '@new-world/sdk';
 import type { XChainId, XToken } from '@new-world/xwagmi';
-import { getXChainType, useXAccount } from '@new-world/xwagmi';
+import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
 import { useState } from 'react';
 import type { Address, Hash, Hex } from 'viem';
 import { parseUnits } from 'viem';
@@ -9,6 +9,7 @@ import { useHubProvider } from './useHubProvider';
 import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
 import { useSodaxContext } from './useSodaxContext';
+import { XCALL_RELAY_URL } from '@/constants';
 
 interface UseWithdrawReturn {
   withdraw: (amount: string) => Promise<void>;
@@ -21,6 +22,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
   const spokeProvider = useSpokeProvider(spokeChainId);
+  const chain = xChainMap[token.xChainId];
   const { data: hubWalletAddress } = useHubWalletAddress(
     spokeChainId as SpokeChainId,
     address,
@@ -73,8 +75,10 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
         },
       } satisfies IntentRelayRequest<'submit'>;
 
-      // TODO: use the correct endpoint
-      const response: SubmitTxResponse = await submitTransaction(request, 'https://xcall-relay.nw.iconblockchain.xyz');
+      const response: SubmitTxResponse = await submitTransaction(
+        request,
+        chain.testnet ? XCALL_RELAY_URL.testnet : XCALL_RELAY_URL.mainnet,
+      );
 
       console.log('Withdraw transaction submitted:', response);
     } catch (err) {
