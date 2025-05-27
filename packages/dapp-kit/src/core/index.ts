@@ -23,7 +23,7 @@ Object.keys(hubAssets).forEach(xChainId => {
       symbol: token.symbol,
       name: token.name,
       decimals: token.decimal,
-      address: token.address,
+      address: token.vault,
     });
   });
 });
