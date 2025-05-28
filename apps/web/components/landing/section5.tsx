@@ -29,10 +29,7 @@ const Section5 = () => {
       </Label>
       <div className="mt-4 z-10">
         <Button className="mr-2 rounded-full w-[133px]" variant="subtle" size="lg">
-          Learn more
-        </Button>
-        <Button variant="ghost" className="px-6 font-['InterMedium']" size="lg">
-          Secondary CTA
+          Join Discord
         </Button>
       </div>
     </div>
