@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const Section5 = () => {
   return (
-    <div className="h-[440px] sm:h-[480px] flex flex-col items-center bg-cherry-soda pt-[40px] sm:pt-[60px] relative overflow-hidden section5">
+    <div className="big-banner h-[440px] sm:h-[480px] md:h-[560px] flex flex-col gap-2 items-center bg-cherry-soda pt-[40px] sm:pt-[60px] relative overflow-hidden section5">
       <Image
         className="mix-blend-screen absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[626px] md:w-[797px] max-w-[990px]"
         src="/section4.png"
@@ -15,16 +15,16 @@ const Section5 = () => {
       <div className="flex items-center">
         <div className="inline-flex justify-center items-center gap-4 ml-5">
           <div className="text-center justify-center">
-            <span className="text-yellow-soda text-[24px] sm:text-5xl font-['InterBlack'] leading-10">
+            <span className="text-yellow-soda text-[24px] sm:text-[42px] font-['InterBold'] leading-[110%]">
               Not gas, but{' '}
             </span>
-            <span className="text-yellow-soda text-[24px] sm:text-5xl font-normal font-['Shrikhand'] leading-10">
+            <span className="text-yellow-soda text-[24px] sm:text-[42px] font-normal font-['Shrikhand'] leading-[110%]">
               fire
             </span>
           </div>
         </div>
       </div>
-      <Label className="text-[12px] md:text-[18px] font-[InterRegular] text-white mt-5">
+      <Label className="text-[12px] md:text-[18px] font-[InterRegular] text-white leading-[110%]">
         All platform and partner fees burn $SODA supply.
       </Label>
       <div className="mt-4 z-10">
