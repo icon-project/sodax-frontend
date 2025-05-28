@@ -99,7 +99,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
       >
         <Image
           className="mix-blend-screen absolute bottom-0 right-0 sm:-right-5 sm:bottom-30 lg:left-[50%] lg:bottom-0 w-[375px] h-[562px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
-          src="/girl.png"
+          src="/vending_machine_and_sodie.png"
           alt="background"
           width={541}
           height={811}
@@ -256,7 +256,9 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
           <DialogFooter>
             <div className="flex justify-center items-center w-full">
               <div className="inline-flex justify-center items-start">
-                <DecoratedButton variant="yellow-soda">pre-register</DecoratedButton>
+                <DecoratedButton variant="yellow-soda" disabled>
+                  pre-register
+                </DecoratedButton>
               </div>
             </div>
           </DialogFooter>

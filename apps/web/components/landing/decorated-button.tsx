@@ -12,6 +12,7 @@ export const DecoratedButton = ({
   variant = 'yellow-dark',
   className,
   children,
+  disabled,
   ...props
 }: DecoratedButtonProps): React.ReactElement => {
   const getBgColor = () => {
@@ -41,6 +42,7 @@ export const DecoratedButton = ({
           'transition-all hover:scale-[102%]',
           className,
         )}
+        disabled={disabled}
         {...props}
       >
         {children}
