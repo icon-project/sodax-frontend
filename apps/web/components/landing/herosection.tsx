@@ -156,17 +156,17 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
           <div className="text-center">
             <div className="text-content w-[300px] sm:w-[400px] md:w-full mt-[30px] sm:mt-[170px] lg:mt-[140px]">
               <div className="flex items-center">
-                <Label className="text-[12px] sm:text-[14px] md:text-[14px] lg:text-[18px] text-white  mr-5 font-[InterRegular]">
+                <span className="text-[14px] lg:text-[24px] text-white mr-5 font-[InterRegular]">
                   No banks, no borders, just freedom.
-                </Label>
+                </span>
                 {/* <Image src="/sonic.png" alt="Sonic Symbol" width={76} height={24} /> */}
               </div>
               <div className="relative">
-                <Label className="mix-blend-hard-light text-[60px] sm:text-[90px] md:text-[138px] lg:text-[184px] leading-none text-yellow-soda font-[InterBlack]">
+                <span className="mix-blend-hard-light text-[80px] sm:text-[90px] md:text-[164px] lg:text-[212px] leading-[110%] text-yellow-soda font-[InterBlack]">
                   MONEY
-                </Label>
+                </span>
                 <Image
-                  className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[701px] top-[-100px] left-[-170px] sm:top-[-310px] sm:left-[-310px]"
+                  className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[701px] top-[-100px] left-[-170px] sm:top-[-320px] sm:left-[-310px]"
                   src="/circle1.png"
                   alt="background"
                   width={701}
