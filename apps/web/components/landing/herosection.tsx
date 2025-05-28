@@ -44,6 +44,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
   const constrain = 20;
   const imgRef = useRef<HTMLImageElement>(null);
   const carouselRef = useRef(null);
+
   const [api, setApi] = useState<CarouselApi>();
 
   useEffect(() => {
@@ -62,39 +63,39 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
     api?.plugins().autoplay.play();
   };
 
-  const transforms = (x: number, y: number, el: HTMLElement) => {
-    const box = el.getBoundingClientRect();
-    const centerX = box.x + box.width / 2;
-    const centerY = box.y + box.height / 2;
+  // const transforms = (x: number, y: number, el: HTMLElement) => {
+  //   const box = el.getBoundingClientRect();
+  //   const centerX = box.x + box.width / 2;
+  //   const centerY = box.y + box.height / 2;
 
-    // Calculate the rotation values
-    let calcX = -(y - centerY) / constrain;
-    let calcY = (x - centerX) / constrain;
+  //   // Calculate the rotation values
+  //   let calcX = -(y - centerY) / constrain;
+  //   let calcY = (x - centerX) / constrain;
 
-    // Define the maximum allowed rotation angles
-    const maxRotationAngle = 20; // You can adjust this value as needed
+  //   // Define the maximum allowed rotation angles
+  //   const maxRotationAngle = 20; // You can adjust this value as needed
 
-    // Constrain the rotation values
-    calcX = Math.max(-maxRotationAngle, Math.min(maxRotationAngle, calcX));
-    calcY = Math.max(-maxRotationAngle, Math.min(maxRotationAngle, calcY));
+  //   // Constrain the rotation values
+  //   calcX = Math.max(-maxRotationAngle, Math.min(maxRotationAngle, calcX));
+  //   calcY = Math.max(-maxRotationAngle, Math.min(maxRotationAngle, calcY));
 
-    return `perspective(500px) rotateX(${calcX}deg) rotateY(${calcY}deg)`;
-  };
+  //   return `perspective(500px) rotateX(${calcX}deg) rotateY(${calcY}deg)`;
+  // };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (imgRef.current) {
-      const position = [e.clientX, e.clientY, imgRef.current];
-      const transformValue = transforms(...(position as [number, number, HTMLElement]));
-      imgRef.current.style.transform = transformValue;
-    }
-    setMousePosition({ x: e.clientX, y: e.clientY });
-  };
+  // const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  //   if (imgRef.current) {
+  //     const position = [e.clientX, e.clientY, imgRef.current];
+  //     const transformValue = transforms(...(position as [number, number, HTMLElement]));
+  //     imgRef.current.style.transform = transformValue;
+  //   }
+  //   setMousePosition({ x: e.clientX, y: e.clientY });
+  // };
 
   return (
     <div>
       <div
         className="h-[812px] sm:h-[860px] flex flex-col items-center bg-cherry-soda relative overflow-hidden"
-        onMouseMove={handleMouseMove}
+        // onMouseMove={handleMouseMove}
       >
         <Image
           className="mix-blend-screen absolute bottom-0 right-0 sm:-right-5 sm:bottom-30 lg:left-[50%] lg:bottom-0 w-[375px] h-[562px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
@@ -170,7 +171,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                   alt="background"
                   width={701}
                   height={701}
-                  ref={imgRef}
+                  // ref={imgRef}
                 />
               </div>
 
