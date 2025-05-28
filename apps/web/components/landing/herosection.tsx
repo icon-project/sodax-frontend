@@ -157,13 +157,13 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
             <div className="text-content w-[300px] sm:w-[400px] md:w-full mt-[30px] sm:mt-[170px] lg:mt-[140px]">
               <div className="flex items-center">
                 <Label className="text-[12px] sm:text-[14px] md:text-[14px] lg:text-[18px] text-white  mr-5 font-[InterRegular]">
-                  DeFi for all chains - built on
+                  No banks, no borders, just freedom.
                 </Label>
-                <Image src="/sonic.png" alt="Sonic Symbol" width={76} height={24} />
+                {/* <Image src="/sonic.png" alt="Sonic Symbol" width={76} height={24} /> */}
               </div>
               <div className="relative">
                 <Label className="mix-blend-hard-light text-[60px] sm:text-[90px] md:text-[138px] lg:text-[184px] leading-none text-yellow-soda font-[InterBlack]">
-                  LIQUIDITY
+                  MONEY
                 </Label>
                 <Image
                   className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[701px] top-[-100px] left-[-170px] sm:top-[-310px] sm:left-[-310px]"
@@ -177,14 +177,14 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
 
               <div className="flex">
                 <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none">
-                  when{' '}
+                  as it{' '}
                 </Label>
                 <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-normal font-['Shrikhand'] leading-none ml-3 mt-[3px] sm:mt-[5px] md:mt-[10px]">
-                  you
+                  should
                 </Label>
                 <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none ml-3">
                   {' '}
-                  need it.
+                  be.
                 </Label>
               </div>
             </div>
