@@ -5,7 +5,7 @@ import Image from 'next/image';
 const Section6 = () => {
   return (
     <div className="flex flex-col lg:flex-row section6 gap-4">
-      <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] bg-cherry-soda  h-[440px] sm:h-[480px] relative overflow-hidden">
+      <div className="w-full lg:w-1/2 flex flex-col gap-2 items-center pt-[40px] sm:pt-[60px] bg-cherry-soda  h-[440px] sm:h-[480px] relative overflow-hidden">
         <Image
           className="mix-blend-screen absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[514px] sm:w-[561px] max-w-[990px]"
           src="/section5-1.png"
@@ -19,16 +19,16 @@ const Section6 = () => {
             Reliable liquidity
           </span>
         </div>
-        <Label className="mt-2 text-[14px] font-[500] font-[InterRegular] text-white leading-[140%]">
+        <Label className="text-[14px] font-[500] font-[InterRegular] text-white leading-[140%]">
           Owned by us. There for you.
         </Label>
-        <div className="mt-6 z-10">
-          <Button variant="ghost" className="px-6 font-['InterMedium']" size="lg">
-            Learn more
+        <div className="mt-4 z-10">
+          <Button className="mr-2 rounded-full w-[133px]" variant="subtle" size="lg">
+            Join Discord
           </Button>
         </div>
       </div>
-      <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] bg-cherry-soda  h-[440px] sm:h-[480px] relative overflow-hidden">
+      <div className="w-full lg:w-1/2 flex flex-col gap-2 items-center pt-[40px] sm:pt-[60px] bg-cherry-soda  h-[440px] sm:h-[480px] relative overflow-hidden">
         <Image
           className="mix-blend-screen absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[577px] sm:w-[629px] max-w-[990px]"
           src="/section5-2.png"
@@ -44,12 +44,12 @@ const Section6 = () => {
             </span>
           </div>
         </div>
-        <Label className="mt-2 text-[14px] font-[500] font-[InterRegular] text-white leading-[140%]">
+        <Label className="text-[14px] font-[500] font-[InterRegular] text-white leading-[140%]">
           The best value. Delivered with Intents.
         </Label>
-        <div className="mt-6">
-          <Button variant="ghost" className="px-6 font-['InterMedium']" size="lg">
-            Learn more
+        <div className="mt-4">
+          <Button className="mr-2 rounded-full w-[133px]" variant="subtle" size="lg">
+            Join Discord
           </Button>
         </div>
       </div>
