@@ -6,7 +6,7 @@ import Image from 'next/image';
 const Section4 = () => {
   return (
     <div className="flex flex-col lg:flex-row section4 gap-4">
-      <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] h-[440px] sm:h-[480px] bg-[radial-gradient(circle_at_center,_#5C3623,_#1C1C24)] relative z-1">
+      <div className="w-full lg:w-1/2 flex flex-col gap-2 items-center pt-[40px] sm:pt-[60px] h-[440px] sm:h-[480px] bg-[radial-gradient(circle_at_center,_#5C3623,_#1C1C24)] relative z-1">
         <Image
           className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[398px] z-2"
           src="/section3-1.png"
@@ -16,9 +16,13 @@ const Section4 = () => {
         />
         <div className="flex items-center">
           <Image src="/symbol_dark.png" alt="SODAX Symbol" width={32} height={32} />
-          <span className="text-[24px] md:text-[32px] font-[InterBold] ml-5 text-orange-sonic">Sonic Summit</span>
+          <span className="text-[24px] md:text-[32px] font-[InterRegular] font-[600] leading-[110%] ml-5 text-orange-sonic">
+            Sonic Summit
+          </span>
         </div>
-        <Label className="text-sm font-[InterRegular] text-white">Update copy to reflect the event took place.</Label>
+        <Label className="text-[14px] font-[500] font-[InterRegular] text-white">
+          Update copy to reflect the event took place.
+        </Label>
         <div className="mt-4">
           <Button className="mr-2 rounded-full w-[133px]" variant="subtle" size="lg">
             Main CTA
@@ -30,7 +34,7 @@ const Section4 = () => {
         <Label className="text-[17px] font-bold font-[InterRegular] text-cherry-bright mt-16">6-8 Vienna</Label>
         <Label className="text-[46px] font-bold font-[InterRegular] text-orange-sonic leading-none">MAY</Label>
       </div>
-      <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] bg-yellow-dark  h-[440px] sm:h-[480px] relative z-1">
+      <div className="w-full lg:w-1/2 flex flex-col gap-2 items-center pt-[40px] sm:pt-[60px] bg-yellow-dark  h-[440px] sm:h-[480px] relative z-1">
         <Image
           className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[398px] z-2"
           src="/section3-2.png"
@@ -39,10 +43,12 @@ const Section4 = () => {
           height={185}
         />
         <div className="flex items-center">
-          <span className="text-[24px] md:text-[32px] font-[InterBold] text-cherry-dark">Level up!</span>
+          <span className="text-[24px] md:text-[32px] font-[InterRegular] font-[600] leading-[110%] text-cherry-dark">
+            Level up!
+          </span>
         </div>
-        <Label className="text-sm font-[InterRegular] text-black">Points with every order.</Label>
-        <div className="mt-6">
+        <Label className="text-[14px] font-[500] font-[InterRegular] text-black">Points with every order.</Label>
+        <div className="mt-4">
           <DecoratedButton variant="white">join waitlist</DecoratedButton>
         </div>
       </div>
