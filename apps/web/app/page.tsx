@@ -17,7 +17,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div>
+    <div className="flex flex-col gap-4">
       <HeroSection toggle={toggle} isOpen={isOpen} />
       <Section1 />
       <Section2 />

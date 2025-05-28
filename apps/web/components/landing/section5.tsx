@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const Section5 = () => {
   return (
-    <div className="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-cherry-soda mt-2 pt-[40px] sm:pt-[60px] relative overflow-hidden section5">
+    <div className="h-[440px] sm:h-[480px] flex flex-col items-center bg-cherry-soda pt-[40px] sm:pt-[60px] relative overflow-hidden section5">
       <Image
         className="mix-blend-screen absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[626px] md:w-[797px] max-w-[990px]"
         src="/section4.png"

@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const Footer: React.FC = () => {
   return (
-    <div className="h-[560px] flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center mt-2 bg-almost-white footer pt-[80px]">
+    <div className="h-[560px] flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center bg-almost-white footer pt-[80px]">
       <div className="p-4 pl-0 min-w-[200px] ml-[32px]">
         <div className="flex items-center">
           <Image src="/symbol2.png" alt="SODAX Symbol" width={32} height={32} />

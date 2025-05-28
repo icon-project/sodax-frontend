@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const Section2 = () => {
   return (
-    <div className="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white mt-2 pt-[40px] sm:pt-[60px] relative overflow-hidden section2">
+    <div className="h-[440px] sm:h-[480px] flex flex-col items-center bg-almost-white pt-[40px] sm:pt-[60px] relative overflow-hidden section2">
       <Image
         className="mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[777px] md:w-[990px] max-w-[990px]"
         src="/sodax.png"
