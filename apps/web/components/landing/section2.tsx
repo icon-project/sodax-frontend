@@ -6,11 +6,18 @@ const Section2 = () => {
   return (
     <div className="big-banner h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white pt-[40px] sm:pt-[60px] relative overflow-hidden section2">
       <Image
-        className="mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[777px] md:w-[990px] max-w-[990px]"
-        src="/sodax.png"
+        className="mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 md:w-[502px] max-w-[502px]"
+        src="/borrow_on_tap.png"
         alt="background"
-        width={990}
-        height={660}
+        width={502}
+        height={478}
+      />
+      <Image
+        className="mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 md:w-[860px] max-w-[860px]"
+        src="/vintage_citrus.png"
+        alt="background"
+        width={860}
+        height={532}
       />
       <div className="flex items-center">
         <Image src="/symbol_dark.png" alt="SODAX Symbol" width={32} height={32} />
