@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
         </div>
       </div>
       <div className="sm:inline-flex sm:justify-end sm:items-start gap-10 p-4 ml-[32px] pl-0 flex flex-wrap lg:ml-[111px]">
-        <div className="inline-flex flex-col justify-start items-start gap-3">
+        <div className="inline-flex flex-col justify-start items-start gap-3 w-[152px]">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             using soda
           </div>
@@ -44,7 +44,7 @@ const Footer: React.FC = () => {
             Linktree
           </FooterLink>
         </div>
-        <div className="inline-flex flex-col justify-start items-start gap-3">
+        <div className="inline-flex flex-col justify-start items-start gap-3 w-[152px]">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             resources
           </div>
