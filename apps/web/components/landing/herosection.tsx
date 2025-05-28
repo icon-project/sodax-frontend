@@ -188,8 +188,8 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 </Label>
               </div>
             </div>
-            <div className="flex items-center mt-[350px] sm:mt-6 w-[300px] sm:w-full flex-wrap">
-              <Label className="font-medium text-[18px] font-[Shrikhand] text-white mr-3">serving</Label>
+            <div className="flex items-center mt-[350px] sm:mt-6 w-[300px] sm:w-full flex-wrap gap-4">
+              <Label className="font-medium text-[18px] font-[Shrikhand] text-white">serving</Label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-cherry-soda to-transparent z-10"></div>
                 <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
@@ -225,7 +225,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
               </div>
               <div className="inline-flex justify-center items-start relative">
-                <DecoratedButton>pre-register</DecoratedButton>
+                <DecoratedButton onClick={() => setIsDialogOpen(true)}>join waitlist</DecoratedButton>
               </div>
             </div>
           </div>
