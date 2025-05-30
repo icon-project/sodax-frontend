@@ -2,10 +2,22 @@ import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import type { ConfigEnv } from 'vite';
 import { defineConfig, loadEnv } from 'vite';
-import nodePolyfills from 'vite-plugin-node-stdlib-browser';
+import { nodePolyfills, type PolyfillOptions } from 'vite-plugin-node-polyfills';
 
 import svgr from 'vite-plugin-svgr';
 import viteTsconfigPaths from 'vite-tsconfig-paths';
+
+const nodePolyfillsFix = (options?: PolyfillOptions | undefined): Plugin => {
+  return {
+    ...nodePolyfills(options),
+    resolveId(source: string) {
+      const m = /^vite-plugin-node-polyfills\/shims\/(buffer|global|process)$/.exec(source);
+      if (m) {
+        return `node_modules/vite-plugin-node-polyfills/shims/${m[1]}/dist/index.cjs`;
+      }
+    },
+  };
+};
 
 export default defineConfig(({ command, mode }: ConfigEnv) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -26,12 +38,10 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
           plugins: ['macros'],
         },
       }),
-      nodePolyfills(),
+      nodePolyfillsFix(),
     ],
     resolve: {
       alias: {
-        // Polyfill for Node.js core modules
-        stream: 'stream-browserify',
         '@': path.resolve(__dirname, './src'),
       },
     },
