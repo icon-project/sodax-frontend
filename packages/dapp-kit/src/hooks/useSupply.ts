@@ -1,19 +1,27 @@
 import type { EvmHubProvider, SpokeChainId } from '@new-world/sdk';
-import { SpokeService, type IntentRelayRequest, type SubmitTxResponse, submitTransaction } from '@new-world/sdk';
+import {
+  SpokeService,
+  type IntentRelayRequest,
+  type SubmitTxResponse,
+  submitTransaction,
+  getIntentRelayChainId,
+} from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
-import { getXChainType, useXAccount } from '@new-world/xwagmi';
+import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
 import { useState } from 'react';
 import type { Address } from 'viem';
-import { parseUnits } from 'viem';
+import { parseUnits, TransactionExecutionError } from 'viem';
 import { useHubProvider } from './useHubProvider';
 import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
 import { useSodaxContext } from './useSodaxContext';
+import { XCALL_RELAY_URL } from '@/constants';
 
 interface UseSupplyReturn {
   supply: (amount: string) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
+  resetError: () => void;
 }
 
 export function useSupply(token: XToken): UseSupplyReturn {
@@ -21,9 +29,13 @@ export function useSupply(token: XToken): UseSupplyReturn {
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
 
-  const spokeProvider = useSpokeProvider(token.xChainId);
-
-  const { data: hubWalletAddress } = useHubWalletAddress(token.xChainId, address, hubProvider as EvmHubProvider);
+  const spokeProvider = useSpokeProvider(token.xChainId as SpokeChainId);
+  const chain = xChainMap[token.xChainId];
+  const { data: hubWalletAddress } = useHubWalletAddress(
+    token.xChainId as SpokeChainId,
+    address,
+    hubProvider as EvmHubProvider,
+  );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
@@ -67,26 +79,38 @@ export function useSupply(token: XToken): UseSupplyReturn {
       const request = {
         action: 'submit',
         params: {
-          chain_id: '6',
+          chain_id: getIntentRelayChainId(token.xChainId as SpokeChainId).toString(),
           tx_hash: txHash,
         },
       } satisfies IntentRelayRequest<'submit'>;
 
-      // TODO: use the correct endpoint according to testnet or mainnet
-      const response: SubmitTxResponse = await submitTransaction(request, 'https://xcall-relay.nw.iconblockchain.xyz');
+      const response: SubmitTxResponse = await submitTransaction(
+        request,
+        chain.testnet ? XCALL_RELAY_URL.testnet : XCALL_RELAY_URL.mainnet,
+      );
 
       console.log('Supply transaction submitted:', response);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to supply tokens'));
-      console.error('Error supplying tokens:', err);
+      // setError(err instanceof Error ? err : new Error('Failed to supply tokens'));
+      if (err instanceof TransactionExecutionError) {
+        setError(new Error(err.message));
+      } else {
+        setError(new Error('Failed to supply tokens'));
+      }
+      console.log(err);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const resetError = () => {
+    setError(null);
   };
 
   return {
     supply,
     isLoading,
     error,
+    resetError,
   };
 }

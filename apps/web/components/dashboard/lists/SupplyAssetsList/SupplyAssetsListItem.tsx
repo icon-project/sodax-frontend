@@ -13,7 +13,7 @@ export function SupplyAssetsListItem({ token, balance, apy }: SupplyAssetsListIt
     <TableRow>
       <TableCell>{token.symbol}</TableCell>
       <TableCell>{balance}</TableCell>
-      <TableCell>hello%</TableCell>
+      {/* <TableCell>hello%</TableCell> */}
       <TableCell>
         <SupplyButton token={token} />
       </TableCell>

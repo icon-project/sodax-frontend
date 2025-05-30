@@ -1,5 +1,5 @@
 import { allXTokens } from '@/core';
-import { getMoneyMarketConfig, type EvmHubProvider } from '@new-world/sdk';
+import { getMoneyMarketConfig, type SpokeChainId, type EvmHubProvider } from '@new-world/sdk';
 import { getXChainType, useXAccount, type XChainId } from '@new-world/xwagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
@@ -13,12 +13,20 @@ export function useSuppliedAssets(spokeChainId: XChainId) {
   const hubWalletProvider = useWalletProvider(hubChainId);
   const hubProvider = useHubProvider();
   const { address } = useXAccount(getXChainType(spokeChainId));
-  const { data: hubWalletAddress } = useHubWalletAddress(spokeChainId, address, hubProvider as EvmHubProvider);
+  const { data: hubWalletAddress } = useHubWalletAddress(
+    spokeChainId as SpokeChainId,
+    address,
+    hubProvider as EvmHubProvider,
+  );
 
   const { data: userReserves } = useQuery({
     queryKey: ['userReserves', hubWalletAddress],
     queryFn: async () => {
       if (!hubWalletProvider) {
+        return;
+      }
+
+      if (!hubWalletAddress) {
         return;
       }
 
@@ -41,7 +49,7 @@ export function useSuppliedAssets(spokeChainId: XChainId) {
         return;
       }
     },
-    enabled: !!address && !!hubWalletProvider,
+    enabled: !!address && !!hubWalletProvider && !!hubWalletAddress,
     refetchInterval: 5000,
   });
 

@@ -1,13 +1,5 @@
 import type { XChain, XChainId } from '@/types';
 
-export const archway: XChain = {
-  id: 'archway-1',
-  name: 'Archway',
-  xChainId: 'archway-1',
-  xChainType: 'ARCHWAY',
-  testnet: false,
-};
-
 export const archwayTestnet: XChain = {
   id: 'archway',
   name: 'archway testnet',
@@ -46,14 +38,6 @@ export const fuji: XChain = {
   xChainId: '0xa869.fuji',
   xChainType: 'EVM',
   testnet: true,
-};
-
-export const havah: XChain = {
-  id: 'havah',
-  name: 'Havah',
-  xChainId: '0x100.icon',
-  xChainType: 'HAVAH',
-  testnet: false,
 };
 
 export const bsc: XChain = {
@@ -136,15 +120,21 @@ export const sonic: XChain = {
   testnet: false,
 };
 
+export const polygon: XChain = {
+  id: 137,
+  name: 'Polygon',
+  xChainId: '0x89.polygon',
+  xChainType: 'EVM',
+  testnet: false,
+};
+
 // the order is important, using manual order to display in the UI
 export const xChainMap: { [key in XChainId]: XChain } = {
   '0x1.icon': icon,
   '0x2.icon': lisbon,
   archway: archwayTestnet,
-  'archway-1': archway,
   '0xa4b1.arbitrum': arbitrum,
   '0xa86a.avax': avalanche,
-  '0x100.icon': havah,
   '0xa869.fuji': fuji,
   '0x38.bsc': bsc,
   '0x2105.base': base,
@@ -155,6 +145,7 @@ export const xChainMap: { [key in XChainId]: XChain } = {
   solana: solana,
   'sonic-blaze': sonicBlaze,
   sonic: sonic,
+  '0x89.polygon': polygon,
 };
 
 export const xChains = Object.values(xChainMap);

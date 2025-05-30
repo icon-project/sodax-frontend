@@ -6,13 +6,16 @@ import { useChainSelector } from '@/contexts/ChainSelectorContext';
 import { useWithdraw } from '@new-world/dapp-kit';
 import type { XToken } from '@new-world/xwagmi';
 import { useState } from 'react';
+import { useEvmSwitchChain } from '@new-world/xwagmi';
 
 export function WithdrawButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const { selectedChain } = useChainSelector();
 
-  const { withdraw, isLoading, error } = useWithdraw(token, selectedChain);
+  const { withdraw, isLoading, error, resetError } = useWithdraw(token, selectedChain);
+
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChain);
 
   const handleWithdraw = async () => {
     await withdraw(amount);
@@ -21,10 +24,26 @@ export function WithdrawButton({ token }: { token: XToken }) {
     }
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setAmount('');
+      resetError?.();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline">Withdraw</Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            resetError?.();
+            setOpen(true);
+          }}
+        >
+          Withdraw
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -40,9 +59,16 @@ export function WithdrawButton({ token }: { token: XToken }) {
           </div>
         </div>
         <DialogFooter className="sm:justify-start">
-          <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={isLoading}>
-            {isLoading ? 'Withdrawing...' : 'Withdraw'}
-          </Button>
+          {isWrongChain && (
+            <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
+              Switch Chain
+            </Button>
+          )}
+          {!isWrongChain && (
+            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={isLoading}>
+              {isLoading ? 'Withdrawing...' : 'Withdraw'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

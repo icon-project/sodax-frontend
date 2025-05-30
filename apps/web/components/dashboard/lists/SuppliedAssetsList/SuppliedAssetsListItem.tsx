@@ -13,7 +13,7 @@ export function SuppliedAssetsListItem({ reserve }: SuppliedAssetsListItemProps)
     <TableRow>
       <TableCell>{reserve?.token?.symbol}</TableCell>
       <TableCell>{formatUnits(reserve.scaledATokenBalance, reserve?.token?.decimals || 18)}</TableCell>
-      <TableCell>hello%</TableCell>
+      {/* <TableCell>hello%</TableCell> */}
       <TableCell>{reserve?.token && <WithdrawButton token={reserve?.token} />}</TableCell>
     </TableRow>
   );

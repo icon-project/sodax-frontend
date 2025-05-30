@@ -9,24 +9,23 @@ import {
 import type { XChainId, XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
 import { useState } from 'react';
-import type { Address, Hash, Hex } from 'viem';
+import type { Address, Hex } from 'viem';
 import { parseUnits } from 'viem';
 import { useHubProvider } from './useHubProvider';
 import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
 import { useSodaxContext } from './useSodaxContext';
 import { XCALL_RELAY_URL } from '@/constants';
-import { getSpokeTokenAddressByVault } from '@/core';
 
-interface UseWithdrawReturn {
-  withdraw: (amount: string) => Promise<void>;
+interface UseRepayReturn {
+  repay: (amount: string) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
 }
 
 // token: this is hub token
-export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawReturn {
+export function useRepay(token: XToken, spokeChainId: XChainId): UseRepayReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
@@ -41,7 +40,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const withdraw = async (amount: string): Promise<void> => {
+  const repay = async (amount: string): Promise<void> => {
     if (!hubWalletAddress) {
       setError(new Error('hubWalletAddress is not found'));
       return;
@@ -59,17 +58,20 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
     setError(null);
 
     try {
-      const data: Hex = sodax.moneyMarket.withdrawData(
+      const data: Hex = sodax.moneyMarket.repayData(
+        token.address,
         hubWalletAddress as Address,
-        spokeProvider.walletProvider.getWalletAddress(),
-        getSpokeTokenAddressByVault(spokeChainId, token.address),
         parseUnits(amount, token.decimals),
         spokeProvider.chainConfig.chain.id,
       );
 
-      const txHash: Hash = await SpokeService.callWallet(
-        spokeProvider.walletProvider.getWalletAddress(),
-        data,
+      const txHash = await SpokeService.deposit(
+        {
+          from: address as `0x${string}`,
+          token: token.address as `0x${string}`,
+          amount: parseUnits(amount, token.decimals),
+          data,
+        },
         spokeProvider,
         hubProvider,
       );
@@ -101,7 +103,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
   };
 
   return {
-    withdraw,
+    repay,
     isLoading,
     error,
     resetError,

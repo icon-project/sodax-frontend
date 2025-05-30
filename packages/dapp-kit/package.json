@@ -2,7 +2,7 @@
   "name": "@new-world/dapp-kit",
   "license": "MIT",
   "version": "1.0.0",
-  "description": "DappKit of New World",
+  "description": "dapp-kit of New World",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",

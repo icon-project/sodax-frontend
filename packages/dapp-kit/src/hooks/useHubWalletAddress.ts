@@ -1,24 +1,8 @@
-import {
-  AVALANCHE_FUJI_TESTNET_CHAIN_ID,
-  AVALANCHE_MAINNET_CHAIN_ID,
-  type EvmHubProvider,
-  EvmWalletAbstraction,
-  SONIC_TESTNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-} from '@new-world/sdk';
-import type { XChainId } from '@new-world/xwagmi';
+import { type EvmHubProvider, EvmWalletAbstraction, type SpokeChainId } from '@new-world/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
-// TODO: remove later
-export const sdkChainIdMap = {
-  '0xa869.fuji': AVALANCHE_FUJI_TESTNET_CHAIN_ID,
-  '0xa86a.avax': AVALANCHE_MAINNET_CHAIN_ID,
-  'sonic-blaze': SONIC_TESTNET_CHAIN_ID,
-  sonic: SONIC_MAINNET_CHAIN_ID,
-};
-
 export function useHubWalletAddress(
-  spokeChainId: XChainId,
+  spokeChainId: SpokeChainId,
   address: string | undefined,
   hubProvider: EvmHubProvider,
 ): UseQueryResult<string | null> {
@@ -29,7 +13,7 @@ export function useHubWalletAddress(
 
       try {
         const hubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
-          sdkChainIdMap[spokeChainId],
+          spokeChainId,
           address as `0x${string}`,
           hubProvider,
         );

@@ -1,17 +1,11 @@
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useChainSelector } from '@/contexts/ChainSelectorContext';
 import { xChains } from '@new-world/xwagmi';
+import { useSodaxContext } from '@new-world/dapp-kit';
 
 export function ChainSelector() {
   const { selectedChain, changeChain } = useChainSelector();
+  const { testnet } = useSodaxContext();
 
   return (
     <Select value={selectedChain} onValueChange={changeChain}>
@@ -21,11 +15,13 @@ export function ChainSelector() {
         </div>
       </SelectTrigger>
       <SelectContent>
-        {xChains.map(xChain => (
-          <SelectItem key={xChain.xChainId} value={xChain.xChainId}>
-            {xChain.name}
-          </SelectItem>
-        ))}
+        {xChains
+          .filter(x => testnet === x.testnet)
+          .map(xChain => (
+            <SelectItem key={xChain.xChainId} value={xChain.xChainId}>
+              {xChain.name}
+            </SelectItem>
+          ))}
       </SelectContent>
     </Select>
   );

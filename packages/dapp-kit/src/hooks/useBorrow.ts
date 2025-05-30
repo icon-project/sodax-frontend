@@ -18,15 +18,15 @@ import { useSodaxContext } from './useSodaxContext';
 import { XCALL_RELAY_URL } from '@/constants';
 import { getSpokeTokenAddressByVault } from '@/core';
 
-interface UseWithdrawReturn {
-  withdraw: (amount: string) => Promise<void>;
+interface UseBorrowReturn {
+  borrow: (amount: string) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
 }
 
 // token: this is hub token
-export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawReturn {
+export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
@@ -41,7 +41,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const withdraw = async (amount: string): Promise<void> => {
+  const borrow = async (amount: string): Promise<void> => {
     if (!hubWalletAddress) {
       setError(new Error('hubWalletAddress is not found'));
       return;
@@ -59,7 +59,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
     setError(null);
 
     try {
-      const data: Hex = sodax.moneyMarket.withdrawData(
+      const data: Hex = sodax.moneyMarket.borrowData(
         hubWalletAddress as Address,
         spokeProvider.walletProvider.getWalletAddress(),
         getSpokeTokenAddressByVault(spokeChainId, token.address),
@@ -87,10 +87,10 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
         chain.testnet ? XCALL_RELAY_URL.testnet : XCALL_RELAY_URL.mainnet,
       );
 
-      console.log('Withdraw transaction submitted:', response);
+      console.log('Borrow transaction submitted:', response);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to withdraw tokens'));
-      console.error('Error withdrawing tokens:', err);
+      setError(err instanceof Error ? err : new Error('Failed to borrow tokens'));
+      console.error('Error borrowing tokens:', err);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +101,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
   };
 
   return {
-    withdraw,
+    borrow,
     isLoading,
     error,
     resetError,
