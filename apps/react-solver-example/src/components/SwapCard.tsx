@@ -13,8 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { sodax, supportedTokensPerChain } from '@/constants';
-import { useSpokeProvider } from '@/hooks/useSpokeProvider';
+import { supportedTokensPerChain } from '@/constants';
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -33,11 +32,10 @@ import {
   supportedSpokeChains,
 } from '@new-world/sdk';
 import BigNumber from 'bignumber.js';
-import { debounce } from 'lodash';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
-import React, { type SetStateAction, useState } from 'react';
+import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useSwitchChain } from 'wagmi';
-import { switchChain } from 'wagmi/actions';
+import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@new-world/dapp-kit';
 
 export default function SwapCard({
   setIntentTxHash,
@@ -49,8 +47,8 @@ export default function SwapCard({
   const { switchChain } = useSwitchChain();
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ARBITRUM_MAINNET_CHAIN_ID);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
-  const sourceChainSpokeProvider = useSpokeProvider(sourceChain, address);
-  console.log('sourceChainSpokeProvider:', sourceChainSpokeProvider);
+  const sourceChainSpokeProvider = useSpokeProvider(sourceChain);
+  const { createIntentOrder } = useCreateIntentOrder(sourceChain);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens[0],
   );
@@ -58,8 +56,6 @@ export default function SwapCard({
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens[0],
   );
   const [sourceAmount, setSourceAmount] = useState<string>('');
-  const [quote, setQuote] = useState<IntentQuoteResponse | undefined>(undefined);
-  const [exchangeRate, setExchangeRate] = useState<BigNumber | string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const [open, setOpen] = useState(false);
 
@@ -71,68 +67,50 @@ export default function SwapCard({
   };
 
   const onSrcChainChange = (chainId: SpokeChainId) => {
-    console.log('onSrcChainChange chainId:', chainId);
     switchChain({ chainId: getEvmViemChain(chainId as EvmChainId).id });
     setSourceChain(chainId);
     setSourceToken(spokeChainConfig[chainId].supportedTokens[0]);
   };
 
-  const getQuote = async (value: string) => {
-    if (Number(value) <= 0) {
-      return;
-    }
-
-    console.log('getQuote:', value);
-
+  const payload = useMemo(() => {
     if (!sourceToken || !destToken) {
-      console.error('sourceToken or destToken undefined');
-      return;
+      return undefined;
     }
 
-    console.log('sourceChain:', sourceChain);
-    console.log('destChain:', destChain);
-    console.log('sourceToken:', sourceToken);
-    console.log('destToken:', destToken);
+    if (Number(sourceAmount) <= 0) {
+      return undefined;
+    }
 
-    const payload = {
+    return {
       token_src: sourceToken.address,
       token_src_blockchain_id: sourceChain,
       token_dst: destToken.address,
       token_dst_blockchain_id: destChain,
-      amount: scaleTokenAmount(value, sourceToken.decimals),
+      amount: scaleTokenAmount(sourceAmount, sourceToken.decimals),
       quote_type: 'exact_input',
     } satisfies IntentQuoteRequest;
+  }, [sourceToken, destToken, sourceChain, destChain, sourceAmount]);
 
-    console.log('payload:', payload);
+  const quoteQuery = useQuote(payload);
 
-    const quoteResult = await sodax.solver.getQuote(payload);
-
-    if (quoteResult.ok) {
-      setExchangeRate(
-        calculateExchangeRate(
-          new BigNumber(value),
-          new BigNumber(normaliseTokenAmount(quoteResult.value.quoted_amount, destToken.decimals)),
-        ),
-      );
-      setQuote(quoteResult.value);
-    } else {
-      console.error(quoteResult.error.detail.message);
+  const quote = useMemo(() => {
+    if (quoteQuery.data?.ok) {
+      return quoteQuery.data.value;
     }
-  };
+
+    return undefined;
+  }, [quoteQuery]);
+
+  const exchangeRate = useMemo(() => {
+    return calculateExchangeRate(
+      new BigNumber(sourceAmount),
+      new BigNumber(normaliseTokenAmount(quote?.quoted_amount ?? 0n, destToken?.decimals ?? 0)),
+    );
+  }, [quote, sourceAmount, destToken]);
 
   const onSourceAmountChange = (value: string) => {
-    console.log('onSourceAmountChange:', value);
     setSourceAmount(value);
-    debounce(() => getQuote(value), 2000)();
   };
-
-  function getSourceChainSpokeProvider(): SpokeProvider {
-    if (sourceChainSpokeProvider) {
-      return sourceChainSpokeProvider;
-    }
-
-    throw new Error('Source chain spoke provider not found');
-  }
 
   const createIntentOrderPayload = () => {
     if (!quote) {
@@ -145,6 +123,11 @@ export default function SwapCard({
       return;
     }
 
+    if (!sourceChainSpokeProvider) {
+      console.error('sourceChainSpokeProvider undefined');
+      return;
+    }
+
     const createIntentParams = {
       inputToken: sourceToken.address, // The address of the input token on hub chain
       outputToken: destToken.address, // The address of the output token on hub chain
@@ -154,8 +137,8 @@ export default function SwapCard({
       allowPartialFill: false, // Whether the intent can be partially filled
       srcChain: sourceChain, // Chain ID where input tokens originate
       dstChain: destChain, // Chain ID where output tokens should be delivered
-      srcAddress: getSourceChainSpokeProvider().walletProvider.getWalletAddressBytes(), // Source address in bytes (original address on spoke chain)
-      dstAddress: getSourceChainSpokeProvider().walletProvider.getWalletAddressBytes(), // Destination address in bytes (original address on spoke chain)
+      srcAddress: address, // Source address in bytes (original address on spoke chain)
+      dstAddress: address, // Destination address in bytes (original address on spoke chain)
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
       data: '0x', // Additional arbitrary data
     } satisfies CreateIntentParams;
@@ -163,42 +146,17 @@ export default function SwapCard({
     setIntentOrderPayload(createIntentParams);
   };
 
-  const createIntentOrder = async (createIntentParams: CreateIntentParams) => {
-    if (!quote) {
-      console.error('Quote undefined');
-      return;
-    }
-
-    if (!sourceToken || !destToken) {
-      console.error('Source token or destination token undefined');
-      return;
-    }
-
-    // create on-chain intent, post to Solver API and Submit to Relay API
-    // NOTE: you should primarily use this one to create intent
-    // const rawResult = await solverService.createIntent(createIntentParams, sourceChainProvider, hubProvider, true);
-
-    // console.log("rawResult", rawResult)
-
-    const result = await sodax.solver.createAndSubmitIntent(createIntentParams, getSourceChainSpokeProvider());
-
-    console.log('result:', result);
+  const handleSwap = async (intentOrderPayload: CreateIntentParams) => {
+    setOpen(false);
+    const result = await createIntentOrder(intentOrderPayload);
 
     if (result.ok) {
       const [response, intent] = result.value;
-      console.log('response:', response);
-      console.log('intent:', intent);
 
       setIntentTxHash(response.intent_hash);
     } else {
       console.error('Error creating and submitting intent:', result.error);
     }
-  };
-
-  const handleSwap = async (intentOrderPayload: CreateIntentParams) => {
-    setOpen(false);
-    // Implement swap logic here
-    await createIntentOrder(intentOrderPayload);
   };
 
   return (
@@ -246,13 +204,7 @@ export default function SwapCard({
         </div>
         <div className="flex-grow">
           <Label htmlFor="fromAddress">Source address</Label>
-          <Input
-            id="fromAddress"
-            type="text"
-            placeholder="0.0"
-            value={getSourceChainSpokeProvider().walletProvider.getWalletAddress()}
-            disabled={true}
-          />
+          <Input id="fromAddress" type="text" placeholder="0.0" value={address} disabled={true} />
         </div>
         <div className="flex justify-center">
           <Button variant="outline" size="icon" onClick={() => onChangeDirection()}>
@@ -296,12 +248,7 @@ export default function SwapCard({
         </div>
         <div className="flex-grow">
           <Label htmlFor="toAddress">Destination address</Label>
-          <Input
-            id="toAddress"
-            type="text"
-            value={getSourceChainSpokeProvider().walletProvider.getWalletAddress()}
-            disabled={true}
-          />
+          <Input id="toAddress" type="text" value={address} disabled={true} />
         </div>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">

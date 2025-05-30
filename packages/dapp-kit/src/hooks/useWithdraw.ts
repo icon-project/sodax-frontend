@@ -30,7 +30,7 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
-  const spokeProvider = useSpokeProvider(spokeChainId);
+  const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
   const chain = xChainMap[token.xChainId];
   const { data: hubWalletAddress } = useHubWalletAddress(
     spokeChainId as SpokeChainId,

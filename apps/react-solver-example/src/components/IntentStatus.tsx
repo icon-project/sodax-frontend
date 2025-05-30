@@ -1,26 +1,14 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import type { Hex, IntentErrorResponse, IntentStatusResponse, Result } from '@new-world/sdk';
+import React from 'react';
+import type { Hex } from '@new-world/sdk';
 import { statusCodeToMessage } from '@/lib/utils';
-import { sodax } from '@/constants';
+import { useStatus } from '@new-world/dapp-kit';
 
 export default function IntentStatus({
   intent_tx_hash,
 }: {
   intent_tx_hash: Hex;
 }) {
-  const [status, setStatus] = useState<Result<IntentStatusResponse, IntentErrorResponse> | undefined>(undefined);
-
-  useQuery({
-    queryKey: [intent_tx_hash],
-    queryFn: async () => {
-      const intentResult = await sodax.solver.getStatus({ intent_tx_hash });
-      setStatus(intentResult);
-
-      return intentResult;
-    },
-    refetchInterval: 3000, // 3s
-  });
+  const { data: status, } = useStatus(intent_tx_hash);
 
   if (status) {
     if (status.ok) {

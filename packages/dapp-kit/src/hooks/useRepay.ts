@@ -9,14 +9,13 @@ import {
 import type { XChainId, XToken } from '@new-world/xwagmi';
 import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
 import { useState } from 'react';
-import type { Address, Hash, Hex } from 'viem';
+import type { Address, Hex } from 'viem';
 import { parseUnits } from 'viem';
 import { useHubProvider } from './useHubProvider';
 import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
 import { useSodaxContext } from './useSodaxContext';
 import { XCALL_RELAY_URL } from '@/constants';
-import { getSpokeTokenAddressByVault } from '@/core';
 
 interface UseRepayReturn {
   repay: (amount: string) => Promise<void>;
@@ -30,7 +29,7 @@ export function useRepay(token: XToken, spokeChainId: XChainId): UseRepayReturn 
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
-  const spokeProvider = useSpokeProvider(spokeChainId);
+  const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
   const chain = xChainMap[token.xChainId];
   const { data: hubWalletAddress } = useHubWalletAddress(
     spokeChainId as SpokeChainId,

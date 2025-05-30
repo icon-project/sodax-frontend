@@ -20,6 +20,7 @@
     "@mysten/dapp-kit": "^0.14.40",
     "@mysten/sui": "^1.16.0",
     "@new-world/sdk": "workspace:*",
+    "@new-world/dapp-kit": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-select": "^2.1.2",

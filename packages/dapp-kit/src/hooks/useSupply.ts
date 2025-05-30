@@ -29,7 +29,7 @@ export function useSupply(token: XToken): UseSupplyReturn {
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
 
-  const spokeProvider = useSpokeProvider(token.xChainId);
+  const spokeProvider = useSpokeProvider(token.xChainId as SpokeChainId);
   const chain = xChainMap[token.xChainId];
   const { data: hubWalletAddress } = useHubWalletAddress(
     token.xChainId as SpokeChainId,
