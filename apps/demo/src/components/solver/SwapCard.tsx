@@ -1,4 +1,4 @@
-import { SelectChain } from '@/components/SelectChain';
+import { SelectChain } from '@/components/solver/SelectChain';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
