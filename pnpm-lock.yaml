@@ -165,6 +165,9 @@ importers:
       web-vitals:
         specifier: ^2.1.4
         version: 2.1.4
+      zustand:
+        specifier: 4.5.2
+        version: 4.5.2(@types/react@19.1.5)(immer@10.1.1)(react@19.1.0)
     devDependencies:
       '@types/react':
         specifier: 'catalog:'
@@ -25634,7 +25637,6 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-    optional: true
 
   metro-core@0.82.4:
     dependencies:
@@ -25746,7 +25748,6 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-    optional: true
 
   metro@0.82.4(bufferutil@4.0.9)(utf-8-validate@5.0.10):
     dependencies:
@@ -25774,7 +25775,7 @@ snapshots:
       metro-babel-transformer: 0.82.4
       metro-cache: 0.82.4
       metro-cache-key: 0.82.4
-      metro-config: 0.82.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      metro-config: 0.82.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       metro-core: 0.82.4
       metro-file-map: 0.82.4
       metro-resolver: 0.82.4
@@ -25841,7 +25842,6 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-    optional: true
 
   micro-ftch@0.3.1: {}
 
