@@ -636,7 +636,7 @@ export const spokeChainConfig = {
       assetManager:
         '0x4205e34a4025ba6fc4c8d30e457768e6a153005c443af857d7e7bafdbb704345::asset_manager::0x42bef60a77ecee7973b790ab9477bce62d834208cac19b5ed21849d54097b685',
       xTokenManager: '',
-      rateLimit: '',
+      rateLimit: '0xfdcb9076ec6480e2998c342220e789f95c48fb2805d3deb28985e9afe7208943::rate_limits::0xf2164d1a32670624c6d3d57aa06d957e0f7340a982624af6a337715f7869e6c4',
       testToken:
         '0xc0ec9fc7688a435c385a2fd2f1cd6148f3218f70787fd84818ebdc48b045a9f2::nwt::0x3694296da388c970b54d4a50d1e03782bd6b4dc9ac002a73ce8b6a54cd0e684a',
     },
