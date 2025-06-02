@@ -7,6 +7,7 @@ import { createBrowserRouter, Outlet, RouterProvider, Navigate } from 'react-rou
 import HomePage from './pages/page';
 import MoneyMarketPage from './pages/money-market/page';
 import Header from './components/layout/header';
+import SolverPage from './pages/solver/page';
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
       {
         path: '/money-market',
         element: <MoneyMarketPage />,
+      },
+      {
+        path: '/solver',
+        element: <SolverPage />,
       },
     ],
   },

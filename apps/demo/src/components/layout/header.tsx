@@ -8,9 +8,9 @@ import { useState } from 'react';
 export function NavigationMenu() {
   return (
     <nav className="flex items-center gap-4">
-      <NavLink 
+      <NavLink
         to="/money-market"
-        className={({ isActive }) => 
+        className={({ isActive }) =>
           `text-sm font-medium transition-colors hover:text-primary ${
             isActive ? 'text-primary' : 'text-muted-foreground'
           }`
@@ -26,8 +26,18 @@ export function NavigationMenu() {
           }`
         }
       >
-        Markets
+          Markets
       </NavLink> */}
+      <NavLink
+        to="/solver"
+        className={({ isActive }) =>
+          `text-sm font-medium transition-colors hover:text-primary ${
+            isActive ? 'text-primary' : 'text-muted-foreground'
+          }`
+        }
+      >
+        Solver
+      </NavLink>
     </nav>
   );
 }
