@@ -20,6 +20,7 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "noUnusedParameters": false // TODO turn on and fix all the issues
   }
 }

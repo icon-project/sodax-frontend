@@ -23,8 +23,15 @@ import {
   type HubChainConfig,
   type IconAddress,
   type IntentRelayChainId,
+  type MoneyMarketConfig,
+  type MoneyMarketConfigParams,
+  type Optional,
   type PartnerFeeAmount,
+  type PartnerFeeConfig,
   type PartnerFeePercentage,
+  type Prettify,
+  type SolverConfig,
+  type SolverConfigParams,
   type SpokeChainConfig,
 } from './index.js';
 
@@ -160,5 +167,31 @@ export function isSuiSpokeProvider(value: SpokeProvider): value is SuiSpokeProvi
     value !== null &&
     value instanceof SuiSpokeProvider &&
     value.chainConfig.chain.type === 'sui'
+  );
+}
+
+export function isConfiguredSolverConfig(
+  value: SolverConfigParams,
+): value is Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'intentsContract' in value &&
+    'solverApiEndpoint' in value &&
+    'relayerApiEndpoint' in value
+  );
+}
+
+export function isConfiguredMoneyMarketConfig(
+  value: MoneyMarketConfigParams,
+): value is Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'lendingPool' in value &&
+    'uiPoolDataProvider' in value &&
+    'poolAddressesProvider' in value &&
+    'bnUSD' in value &&
+    'bnUSDVault' in value
   );
 }

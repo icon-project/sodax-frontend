@@ -20,7 +20,6 @@ describe('SolverApiService', () => {
   const mockConfig: SolverConfig = {
     solverApiEndpoint: 'https://api.example.com',
     intentsContract: '0x1234567890123456789012345678901234567890',
-    relayerApiEndpoint: 'https://relayer.example.com',
   };
 
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';

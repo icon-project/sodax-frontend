@@ -1,11 +1,35 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { poolAbi } from '../../abis/pool.abi.js';
-import type { EvmHubProvider } from '../../entities/index.js';
-import { hubAssets, uiPoolDataAbi } from '../../index.js';
-import type { EvmContractCall, MoneyMarketConfig, SpokeChainId } from '../../types.js';
+import type { EvmHubProvider, SpokeProvider } from '../../entities/index.js';
+import {
+  DEFAULT_RELAYER_API_ENDPOINT,
+  getHubAssetInfo,
+  getMoneyMarketConfig,
+  getSupportedMoneyMarketTokens,
+  isConfiguredMoneyMarketConfig,
+  isValidOriginalAssetAddress,
+  isValidSpokeChainId,
+  moneyMarketReserveAssets,
+  SpokeService,
+  relayTxAndWaitPacket,
+  uiPoolDataAbi,
+  type RelayErrorCode,
+} from '../../index.js';
+import type {
+  EvmContractCall,
+  GetSpokeDepositParamsType,
+  HttpUrl,
+  MoneyMarketConfigParams,
+  MoneyMarketServiceConfig,
+  OriginalAssetAddress,
+  Result,
+  SpokeChainId,
+  TxReturnType,
+} from '../../types.js';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
-import { EvmAssetManagerService, EvmVaultTokenService } from '../hub/index.js';
+import { EvmAssetManagerService, EvmVaultTokenService, EvmWalletAbstraction } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';
+import invariant from 'tiny-invariant';
 
 export type AggregatedReserveData = {
   underlyingAsset: Address;
@@ -65,20 +89,20 @@ export type UserReserveData = {
   scaledVariableDebt: bigint;
 };
 
-export type MoneyMarketSupplyParams = {
+export type MoneyMarketEncodeSupplyParams = {
   asset: Address; // The address of the asset to supply.
   amount: bigint; // The amount of the asset to supply.
   onBehalfOf: Address; // The address on whose behalf the asset is supplied.
   referralCode: number; // The referral code for the transaction.
 };
 
-export type MoneyMarketWithdrawParams = {
+export type MoneyMarketEncodeWithdrawParams = {
   asset: Address; // The address of the asset to withdraw.
   amount: bigint; // The amount of the asset to withdraw.
   to: Address; // The address that will receive the withdrawn assets.
 };
 
-export type MoneyMarketBorrowParams = {
+export type MoneyMarketEncodeBorrowParams = {
   asset: Address; // The address of the asset to borrow.
   amount: bigint; // The amount of the asset to borrow.
   interestRateMode: bigint; // The interest rate mode (2 for Variable).
@@ -86,45 +110,442 @@ export type MoneyMarketBorrowParams = {
   onBehalfOf: Address; // The address that will receive the borrowed assets.
 };
 
-export type MoneyMarketRepayParams = {
+export type MoneyMarketEncodeRepayParams = {
   asset: Address; // The address of the asset to repay.
   amount: bigint; // The amount of the asset to repay.
   interestRateMode: bigint; // The interest rate mode (2 for Variable).
   onBehalfOf: Address; // The address that will get their debt reduced/removed.
 };
 
-export type MoneyMarketRepayWithATokensParams = {
+export type MoneyMarketEncodeRepayWithATokensParams = {
   asset: Address; // The address of the asset to repay.
   amount: bigint; // The amount of the asset to repay.
   interestRateMode: bigint; // The interest rate mode (2 for Variable).
 };
 
+export type MoneyMarketSupplyParams = {
+  token: string;
+  amount: bigint;
+};
+
+export type MoneyMarketBorrowParams = {
+  token: string;
+  amount: bigint;
+};
+
+export type MoneyMarketWithdrawParams = {
+  token: string;
+  amount: bigint;
+};
+
+export type MoneyMarketRepayParams = {
+  token: string;
+  amount: bigint;
+};
+
+export type MoneyMarketErrorCode =
+  | RelayErrorCode
+  | 'UNKNOWN'
+  | 'SUPPLY_FAILED'
+  | 'BORROW_FAILED'
+  | 'WITHDRAW_FAILED'
+  | 'REPAY_FAILED';
+
+export type MoneyMarketError = {
+  code: MoneyMarketErrorCode;
+  error: unknown;
+};
+
 export class MoneyMarketService {
-  private readonly config: MoneyMarketConfig;
+  private readonly config: MoneyMarketServiceConfig;
   private readonly hubProvider: EvmHubProvider;
 
-  constructor(config: MoneyMarketConfig, hubProvider: EvmHubProvider) {
-    this.config = config;
+  constructor(config: MoneyMarketConfigParams, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
+    if (isConfiguredMoneyMarketConfig(config)) {
+      this.config = {
+        ...config,
+        partnerFee: config.partnerFee,
+        relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
+      };
+    } else {
+      this.config = {
+        ...getMoneyMarketConfig(hubProvider.chainConfig.chain.id), // default to mainnet config
+        partnerFee: config.partnerFee,
+        relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
+      };
+    }
     this.hubProvider = hubProvider;
   }
 
   /**
+   * Supply tokens to the money market pool and submit the intent to the Solver API
+   * @param params - The parameters for the supply transaction.
+   * @param spokeProvider - The spoke provider.
+   * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
+   * @returns [spokeTxHash, hubTxHash]
+   */
+  public async supplyAndSubmit<S extends SpokeProvider>(
+    params: MoneyMarketSupplyParams,
+    spokeProvider: S,
+    timeout = 20000,
+  ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
+    try {
+      const txResult = await this.supply(params, spokeProvider);
+
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'SUPPLY_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        spokeProvider,
+        this.config.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return packetResult;
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'UNKNOWN',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Supply tokens to the money market pool
+   * NOTE: This method does not submit the intent to the Solver API
+   * @param params - The parameters for the supply transaction.
+   * @param spokeProvider - The spoke provider.
+   * @param raw - Whether to return the raw transaction data.
+   * @returns The transaction result.
+   */
+  async supply<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+    params: MoneyMarketSupplyParams,
+    spokeProvider: S,
+    raw?: R,
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketError>> {
+    try {
+      invariant(
+        isValidOriginalAssetAddress(spokeProvider.chainConfig.chain.id, params.token),
+        `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
+      );
+
+      const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        spokeProvider.walletProvider.getWalletAddressBytes(),
+        this.hubProvider,
+      );
+
+      const data: Hex = this.supplyData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
+
+      const txResult = await SpokeService.deposit(
+        {
+          from: spokeProvider.walletProvider.getWalletAddress(),
+          to: hubWallet,
+          token: params.token,
+          amount: params.amount,
+          data,
+        } as GetSpokeDepositParamsType<S>,
+        spokeProvider,
+        this.hubProvider,
+        raw,
+      );
+
+      return {
+        ok: true,
+        value: txResult as TxReturnType<S, R>,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'UNKNOWN',
+          error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Borrow tokens from the money market pool and submit the intent to the Solver API
+   * @param params - The parameters for the borrow transaction.
+   * @param spokeProvider - The spoke provider.
+   * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
+   * @returns [spokeTxHash, hubTxHash]
+   */
+  public async borrowAndSubmit<S extends SpokeProvider>(
+    params: MoneyMarketSupplyParams,
+    spokeProvider: S,
+    timeout = 20000,
+  ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
+    try {
+      const txResult = await this.borrow(params, spokeProvider);
+
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'BORROW_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        spokeProvider,
+        this.config.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return packetResult;
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'UNKNOWN',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Borrow tokens from the money market pool
+   * NOTE: This method does not submit the intent to the Solver API
+   * @param params - The parameters for the borrow transaction.
+   * @param spokeProvider - The spoke provider.
+   * @param raw - Whether to return the raw transaction data.
+   * @returns The transaction result (raw transaction data or transaction hash).
+   */
+  async borrow<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+    params: MoneyMarketBorrowParams,
+    spokeProvider: S,
+    raw?: R,
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>> {
+    invariant(
+      isValidOriginalAssetAddress(spokeProvider.chainConfig.chain.id, params.token),
+      `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
+    );
+
+    const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+      spokeProvider.chainConfig.chain.id,
+      spokeProvider.walletProvider.getWalletAddressBytes(),
+      this.hubProvider,
+    );
+
+    const data: Hex = this.borrowData(
+      hubWallet,
+      spokeProvider.walletProvider.getWalletAddressBytes(),
+      params.token,
+      params.amount,
+      spokeProvider.chainConfig.chain.id,
+    );
+
+    const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
+
+    return { ok: true, value: txResult as TxReturnType<S, R> };
+  }
+
+  /**
+   * Withdraw tokens from the money market pool and submit the intent to the Solver API
+   * @param params - The parameters for the withdraw transaction.
+   * @param spokeProvider - The spoke provider.
+   * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
+   * @returns [spokeTxHash, hubTxHash]
+   */
+  public async withdrawAndSubmit<S extends SpokeProvider>(
+    params: MoneyMarketWithdrawParams,
+    spokeProvider: S,
+    timeout = 20000,
+  ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
+    try {
+      const txResult = await this.withdraw(params, spokeProvider);
+
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'WITHDRAW_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        spokeProvider,
+        this.config.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return packetResult;
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'UNKNOWN',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Withdraw tokens from the money market pool
+   * NOTE: This method does not submit the intent to the Solver API
+   * @param params - The parameters for the withdraw transaction.
+   * @param spokeProvider - The spoke provider.
+   * @param raw - Whether to return the raw transaction data.
+   * @returns The transaction result (raw transaction data or transaction hash).
+   */
+  async withdraw<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+    params: MoneyMarketWithdrawParams,
+    spokeProvider: S,
+    raw?: R,
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>> {
+    const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+      spokeProvider.chainConfig.chain.id,
+      spokeProvider.walletProvider.getWalletAddressBytes(),
+      this.hubProvider,
+    );
+
+    const data: Hex = this.withdrawData(
+      hubWallet,
+      spokeProvider.walletProvider.getWalletAddressBytes(),
+      params.token,
+      params.amount,
+      spokeProvider.chainConfig.chain.id,
+    );
+
+    const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
+
+    return { ok: true, value: txResult };
+  }
+
+  /**
+   * Repay tokens to the money market pool and submit the intent to the Solver API
+   * @param params - The parameters for the repay transaction.
+   * @param spokeProvider - The spoke provider.
+   * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
+   * @returns [spokeTxHash, hubTxHash]
+   */
+  public async repayAndSubmit<S extends SpokeProvider>(
+    params: MoneyMarketRepayParams,
+    spokeProvider: S,
+    timeout = 20000,
+  ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
+    try {
+      const txResult = await this.repay(params, spokeProvider);
+
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'REPAY_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        spokeProvider,
+        this.config.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return packetResult;
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'UNKNOWN',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Repay tokens to the money market pool
+   * NOTE: This method does not submit the intent to the Solver API
+   * @param params - The parameters for the repay transaction.
+   * @param spokeProvider - The spoke provider.
+   * @param raw - Whether to return the raw transaction data.
+   * @returns The transaction result (raw transaction data or transaction hash).
+   */
+  async repay<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+    params: MoneyMarketRepayParams,
+    spokeProvider: S,
+    raw?: R,
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>> {
+    const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+      spokeProvider.chainConfig.chain.id,
+      spokeProvider.walletProvider.getWalletAddressBytes(),
+      this.hubProvider,
+    );
+    const data: Hex = this.repayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
+
+    const txResult = await SpokeService.deposit(
+      {
+        from: spokeProvider.walletProvider.getWalletAddress(),
+        to: hubWallet,
+        token: params.token,
+        amount: params.amount,
+        data,
+      } as GetSpokeDepositParamsType<S>,
+      spokeProvider,
+      this.hubProvider,
+      raw,
+    );
+
+    return { ok: true, value: txResult as TxReturnType<S, R> };
+  }
+
+  /**
    * Deposit tokens to the spoke chain and supply to the money market pool
-   * @param token The address of the token to deposit
+   * @param token - The address of the token on spoke chain
    * @param to The user wallet address on the hub chain
    * @param amount The amount to deposit
    * @param spokeChainId The chain ID of the spoke chain
-   * @returns Transaction object
+   * @returns The transaction result (raw transaction data or transaction hash).
    */
-  public supplyData(token: Address | string, to: Address, amount: bigint, spokeChainId: SpokeChainId): Hex {
+  public supplyData(token: string, to: Address, amount: bigint, spokeChainId: SpokeChainId): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = hubAssets[spokeChainId][token];
-    const assetAddress = assetConfig?.asset;
-    const vaultAddress = assetConfig?.vault;
+    const assetConfig = getHubAssetInfo(spokeChainId, token);
+
+    invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
+
+    const assetAddress = assetConfig.asset;
+    const vaultAddress = assetConfig.vault;
     const lendingPool = this.config.lendingPool;
-    if (!assetAddress || !vaultAddress || !lendingPool) {
-      throw new Error('Address not found');
-    }
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
@@ -149,24 +570,24 @@ export class MoneyMarketService {
    * @param spokeChainId The chain ID of the spoke chain
    * @returns Transaction object
    */
-  public borrowData(
-    from: Address,
-    to: Address | Hex,
-    token: Address | string,
-    amount: bigint,
-    spokeChainId: SpokeChainId,
-  ): Hex {
-    const calls: EvmContractCall[] = [];
-    const assetConfig = hubAssets[spokeChainId][token];
-    const assetAddress = assetConfig?.asset;
-    const vaultAddress = assetConfig?.vault;
+  public borrowData(from: Address, to: Address | Hex, token: string, amount: bigint, spokeChainId: SpokeChainId): Hex {
+    invariant(isValidSpokeChainId(spokeChainId), `Invalid spokeChainId: ${spokeChainId}`);
+    invariant(
+      isValidOriginalAssetAddress(spokeChainId, token),
+      `Unsupported spoke chain (${spokeChainId}) token: ${token}`,
+    );
+
+    const assetConfig = getHubAssetInfo(spokeChainId, token);
+
+    invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
+
+    const assetAddress = assetConfig.asset;
+    const vaultAddress = assetConfig.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
-    if (!assetAddress || !vaultAddress) {
-      throw new Error('Address not found');
-    }
 
     const feeAmount = calculateFeeAmount(amount, this.config.partnerFee);
+    const calls: EvmContractCall[] = [];
 
     if (bnUSDVault && bnUSD && bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
       calls.push(
@@ -218,17 +639,16 @@ export class MoneyMarketService {
    * @param spokeChainId The chain ID of the spoke chain
    * @returns Transaction object
    */
-  public withdrawData(
-    from: Address,
-    to: Address,
-    token: Address | string,
-    amount: bigint,
-    spokeChainId: SpokeChainId,
-  ): Hex {
+  public withdrawData(from: Address, to: Address, token: string, amount: bigint, spokeChainId: SpokeChainId): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = hubAssets[spokeChainId][token];
-    const assetAddress = assetConfig?.asset;
-    const vaultAddress = assetConfig?.vault;
+    const assetConfig = getHubAssetInfo(spokeChainId, token);
+
+    if (!assetConfig) {
+      throw new Error('[withdrawData] Hub asset not found');
+    }
+
+    const assetAddress = assetConfig.asset;
+    const vaultAddress = assetConfig.vault;
 
     if (!assetAddress || !vaultAddress) {
       throw new Error('Address not found');
@@ -259,17 +679,18 @@ export class MoneyMarketService {
    * @param moneyMarketConfig The money market config
    * @returns Transaction object
    */
-  public repayData(token: Address | string, to: Address, amount: bigint, spokeChainId: SpokeChainId): Hex {
+  public repayData(token: string, to: Address, amount: bigint, spokeChainId: SpokeChainId): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = hubAssets[spokeChainId][token];
-    const assetAddress = assetConfig?.asset;
-    const vaultAddress = assetConfig?.vault;
+    const assetConfig = getHubAssetInfo(spokeChainId, token);
+
+    if (!assetConfig) {
+      throw new Error('[repayData] Hub asset not found');
+    }
+
+    const assetAddress = assetConfig.asset;
+    const vaultAddress = assetConfig.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
-
-    if (!assetAddress || !vaultAddress) {
-      throw new Error('Asset or vault address not found');
-    }
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
@@ -346,11 +767,11 @@ export class MoneyMarketService {
 
   /**
    * Encodes a supply transaction for a money market pool.
-   * @param {MoneyMarketWithdrawParams} params - The parameters for the supply transaction.
+   * @param {MoneyMarketEncodeWithdrawParams} params - The parameters for the supply transaction.
    * @param {Address} lendingPool - The address of the lending pool contract.
    * @returns {EvmContractCall} The encoded contract call.
    */
-  public static encodeSupply(params: MoneyMarketSupplyParams, lendingPool: Address): EvmContractCall {
+  public static encodeSupply(params: MoneyMarketEncodeSupplyParams, lendingPool: Address): EvmContractCall {
     return {
       address: lendingPool,
       value: 0n,
@@ -364,14 +785,14 @@ export class MoneyMarketService {
 
   /**
    * Encodes a withdraw transaction from a pool.
-   * @param {MoneyMarketWithdrawParams} params - The parameters for the withdraw transaction.
+   * @param {MoneyMarketEncodeWithdrawParams} params - The parameters for the withdraw transaction.
    * @param {Address} params.asset - The address of the asset to withdraw.
    * @param {bigint} params.amount - The amount of the asset to withdraw.
    * @param {Address} params.to - The address that will receive the withdrawn assets.
    * @param {Address} lendingPool - The address of the lending pool contract.
    * @returns {EvmContractCall} The encoded contract call.
    */
-  public static encodeWithdraw(params: MoneyMarketWithdrawParams, lendingPool: Address): EvmContractCall {
+  public static encodeWithdraw(params: MoneyMarketEncodeWithdrawParams, lendingPool: Address): EvmContractCall {
     return {
       address: lendingPool,
       value: 0n,
@@ -385,11 +806,11 @@ export class MoneyMarketService {
 
   /**
    * Encodes a borrow transaction from a pool.
-   * @param {MoneyMarketBorrowParams} params - The parameters for the borrow transaction.
+   * @param {MoneyMarketEncodeBorrowParams} params - The parameters for the borrow transaction.
    * @param {Address} lendingPool - The address of the lending pool contract.
    * @returns {EvmContractCall} The encoded contract call.
    */
-  public static encodeBorrow(params: MoneyMarketBorrowParams, lendingPool: Address): EvmContractCall {
+  public static encodeBorrow(params: MoneyMarketEncodeBorrowParams, lendingPool: Address): EvmContractCall {
     return {
       address: lendingPool,
       value: 0n,
@@ -403,7 +824,7 @@ export class MoneyMarketService {
 
   /**
    * Encodes a repay transaction for a pool.
-   * @param {MoneyMarketRepayParams} params - The parameters for the repay transaction.
+   * @param {MoneyMarketEncodeRepayParams} params - The parameters for the repay transaction.
    * @param {Address} params.asset - The address of the borrowed asset to repay.
    * @param {bigint} params.amount - The amount to repay. Use type(uint256).max to repay the entire debt.
    * @param {number} params.interestRateMode - The interest rate mode (2 for Variable).
@@ -411,7 +832,7 @@ export class MoneyMarketService {
    * @param {Address} lendingPool - The address of the lending pool contract.
    * @returns {EvmContractCall} The encoded contract call.
    */
-  public static encodeRepay(params: MoneyMarketRepayParams, lendingPool: Address): EvmContractCall {
+  public static encodeRepay(params: MoneyMarketEncodeRepayParams, lendingPool: Address): EvmContractCall {
     return {
       address: lendingPool,
       value: 0n,
@@ -425,12 +846,12 @@ export class MoneyMarketService {
 
   /**
    * Encodes a repayWithATokens transaction for a pool.
-   * @param {MoneyMarketRepayWithATokensParams} params - The parameters for the repayWithATokens transaction.
+   * @param {MoneyMarketEncodeRepayWithATokensParams} params - The parameters for the repayWithATokens transaction.
    * @param {Address} lendingPool - The address of the lending pool contract.
    * @returns {EvmContractCall} The encoded contract call.
    */
   public static encodeRepayWithATokens(
-    params: MoneyMarketRepayWithATokensParams,
+    params: MoneyMarketEncodeRepayWithATokensParams,
     lendingPool: Address,
   ): EvmContractCall {
     return {
@@ -465,5 +886,23 @@ export class MoneyMarketService {
         args: [asset, useAsCollateral],
       }),
     };
+  }
+
+  /**
+   * Get the list of all supported money market tokens (supply / borrow tokens) for a given spoke chain ID
+   * @param chainId The chain ID
+   * @returns Array of supported tokens
+   */
+  public getSupportedTokens(chainId: SpokeChainId): OriginalAssetAddress[] {
+    return getSupportedMoneyMarketTokens(chainId);
+  }
+
+  /**
+   * Get the list of all supported money market reserves (supply / borrow reserves)
+   * NOTE: reserve addresses are on the hub chain and can be of type vault, erc20, etc.
+   * @returns Array of supported reserves
+   */
+  public getSupportedReserves(): readonly Address[] {
+    return [...moneyMarketReserveAssets];
   }
 }

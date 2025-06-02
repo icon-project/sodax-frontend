@@ -9,7 +9,7 @@ import { getAssetManagerProgram, getConnectionProgram } from '../../entities/sol
 import type { SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvider.js';
 import { AssetManagerPDA, ConnectionConfigPDA } from '../../entities/solana/pda/pda.js';
 import { isNative } from '../../entities/solana/utils/utils.js';
-import type { PromiseSolanaTxReturnType, SolanaReturnType } from '../../types.js';
+import type { HubAddress, PromiseSolanaTxReturnType, SolanaReturnType } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type SolanaSpokeDepositParams = {
@@ -74,8 +74,17 @@ export class SolanaSpokeService {
     return BigInt(tokenAccount.value.amount);
   }
 
+  /**
+   * Calls a contract on the spoke chain using the user's wallet.
+   * @param from - The address of the user on the hub chain.
+   * @param payload - The payload to send to the contract.
+   * @param spokeProvider - The spoke provider.
+   * @param hubProvider - The hub provider.
+   * @param raw - Whether to return the raw transaction data.
+   * @returns The transaction result.
+   */
   public static async callWallet<R extends boolean = false>(
-    from: Hex,
+    from: HubAddress,
     payload: Hex,
     spokeProvider: SolanaSpokeProvider,
     hubProvider: EvmHubProvider,
@@ -188,9 +197,18 @@ export class SolanaSpokeService {
     return tx as PromiseSolanaTxReturnType<R>;
   }
 
+  /**
+   * Sends a message to the hub chain.
+   * @param dstChainId - The chain ID of the hub chain.
+   * @param dstAddress - The address on the hub chain.
+   * @param payload - The payload to send.
+   * @param spokeProvider - The spoke provider.
+   * @param raw - Whether to return the raw transaction data.
+   * @returns The transaction result.
+   */
   private static async call<R extends boolean = false>(
     dstChainId: bigint,
-    dstAddress: Hex,
+    dstAddress: HubAddress,
     payload: Hex,
     spokeProvider: SolanaSpokeProvider,
     raw?: R,

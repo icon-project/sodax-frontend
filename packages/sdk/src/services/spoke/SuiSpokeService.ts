@@ -1,7 +1,7 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { SuiSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
-import { type PromiseSuiTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { type HubAddress, type PromiseSuiTxReturnType, getIntentRelayChainId } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type SuiSpokeDepositParams = {
@@ -68,7 +68,7 @@ export class SuiSpokeService {
 
   /**
    * Calls a contract on the spoke chain using the user's wallet.
-   * @param {string} from - The address of the user on the spoke chain.
+   * @param {HubAddress} from - The address of the user on the spoke chain.
    * @param {Hex} payload - The payload to send to the contract.
    * @param {SuiSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
@@ -76,7 +76,7 @@ export class SuiSpokeService {
    * @returns {PromiseSuiTxReturnType<R>} A promise that resolves to the transaction hash or raw transaction base64 string.
    */
   public static async callWallet<R extends boolean = false>(
-    from: Hex,
+    from: HubAddress,
     payload: Hex,
     spokeProvider: SuiSpokeProvider,
     hubProvider: EvmHubProvider,
@@ -113,7 +113,7 @@ export class SuiSpokeService {
   /**
    * Sends a message to the hub chain.
    * @param {bigint} dstChainId - The chain ID of the hub chain.
-   * @param {Address} dstAddress - The address on the hub chain.
+   * @param {HubAddress} dstAddress - The address on the hub chain.
    * @param {Hex} payload - The payload to send.
    * @param {SuiSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {boolean} raw - The return type raw or just transaction hash
@@ -121,7 +121,7 @@ export class SuiSpokeService {
    */
   private static async call<R extends boolean = false>(
     dstChainId: bigint,
-    dstAddress: Hex,
+    dstAddress: HubAddress,
     payload: Hex,
     spokeProvider: SuiSpokeProvider,
     raw?: R,

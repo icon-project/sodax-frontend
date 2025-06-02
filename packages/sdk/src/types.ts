@@ -43,7 +43,7 @@ export type BaseSpokeChainInfo<T extends ChainType> = {
   name: string;
   id: GetSpokeChainIdType<T>;
   type: T;
-}
+};
 
 export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
 
@@ -59,6 +59,7 @@ export type ByteArray = Uint8Array;
 export type Hex = `0x${string}`;
 export type Hash = `0x${string}`;
 export type Address = `0x${string}`;
+export type HubAddress = Address;
 export type OriginalAssetAddress = string;
 
 export type Token = {
@@ -100,13 +101,27 @@ export type EvmHubChainConfig = BaseHubChainConfig<'evm'> & {
   nativeToken: Address;
 };
 
+export type RelayerApiConfig = {
+  relayerApiEndpoint: HttpUrl;
+};
+
 export type MoneyMarketConfig = {
   uiPoolDataProvider: Address;
   lendingPool: Address;
   poolAddressesProvider: Address;
-  bnUSD?: Address;
-  bnUSDVault?: Address;
-  partnerFee?: PartnerFee;
+  bnUSD: Address;
+  bnUSDVault: Address;
+};
+
+export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
+export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
+
+export type MoneyMarketConfigParams =
+  | Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
+  | Optional<PartnerFeeConfig, 'partnerFee'>;
+
+export type Default = {
+  default: boolean;
 };
 
 export type EvmSpokeChainConfig = BaseSpokeChainConfig<'evm'> & {
@@ -271,6 +286,10 @@ export type PartnerFeePercentage = {
  */
 export type PartnerFee = PartnerFeeAmount | PartnerFeePercentage;
 
+export type PartnerFeeConfig = {
+  partnerFee: PartnerFee | undefined;
+};
+
 export type FeeAmount = {
   feeAmount: bigint;
 };
@@ -331,9 +350,11 @@ export type HttpUrl = `http://${string}` | `https://${string}`;
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
   solverApiEndpoint: HttpUrl;
-  relayerApiEndpoint: HttpUrl;
-  partnerFee?: PartnerFee; // optional fee
 };
+
+export type SolverConfigParams =
+  | Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
+  | Optional<PartnerFeeConfig, 'partnerFee'>;
 
 export type QuoteType = 'exact_input' | 'exact_output';
 
@@ -407,9 +428,6 @@ export enum IntentErrorCode {
   CREATE_INTENT_ORDER_FAILED = -998,
   UNKNOWN = -999,
 }
-
-
-
 
 export type EvmRawTransaction = {
   from: Address;
@@ -531,6 +549,13 @@ export type PromiseTxReturnType<
             ? PromiseCWTxReturnType<Raw>
             : never;
 
+export type VaultType = {
+  address: Address; // vault address
+  reserves: Address[]; // hub asset addresses contained in the vault
+};
+
 export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
+
+export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;

@@ -3,18 +3,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { poolAbi } from '../../../abis/pool.abi.js';
 import { hubAssets } from '../../../constants.js';
 import {
-  type MoneyMarketBorrowParams,
-  type MoneyMarketRepayParams,
-  type MoneyMarketRepayWithATokensParams,
+  type MoneyMarketEncodeBorrowParams,
+  type MoneyMarketEncodeRepayParams,
+  type MoneyMarketEncodeRepayWithATokensParams,
   MoneyMarketService,
-  type MoneyMarketSupplyParams,
-  type MoneyMarketWithdrawParams,
+  type MoneyMarketEncodeSupplyParams,
+  type MoneyMarketEncodeWithdrawParams,
 } from '../../../index.js';
 
 describe('MoneyMarketService', () => {
   const mockToken = '0x0000000000000000000000000000000000000000' as Address;
   const mockVault =
-    hubAssets['0xa869.fuji'][mockToken]?.vault ?? ('0x0000000000000000000000000000000000000001' as Address);
+    hubAssets['0xa86a.avax'][mockToken]?.vault ?? ('0x0000000000000000000000000000000000000001' as Address);
   const mockLendingPool = '0x3333333333333333333333333333333333333333' as Address;
   const mockUser = '0x4444444444444444444444444444444444444444' as Address;
   const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
@@ -34,7 +34,7 @@ describe('MoneyMarketService', () => {
           amount: mockAmount,
           onBehalfOf: mockUser,
           referralCode: 0,
-        } satisfies MoneyMarketSupplyParams;
+        } satisfies MoneyMarketEncodeSupplyParams;
 
         const encodedCall = MoneyMarketService.encodeSupply(supplyParams, mockLendingPool);
 
@@ -60,7 +60,7 @@ describe('MoneyMarketService', () => {
           asset: mockVault,
           amount: mockAmount,
           to: mockUser,
-        } satisfies MoneyMarketWithdrawParams;
+        } satisfies MoneyMarketEncodeWithdrawParams;
 
         const encodedCall = MoneyMarketService.encodeWithdraw(withdrawParams, mockLendingPool);
 
@@ -82,7 +82,7 @@ describe('MoneyMarketService', () => {
           interestRateMode: 2n,
           referralCode: 0,
           onBehalfOf: mockUser,
-        } satisfies MoneyMarketBorrowParams;
+        } satisfies MoneyMarketEncodeBorrowParams;
 
         const encodedCall = MoneyMarketService.encodeBorrow(borrowParams, mockLendingPool);
 
@@ -103,7 +103,7 @@ describe('MoneyMarketService', () => {
           amount: mockAmount,
           interestRateMode: 2n,
           onBehalfOf: mockUser,
-        } satisfies MoneyMarketRepayParams;
+        } satisfies MoneyMarketEncodeRepayParams;
 
         const encodedCall = MoneyMarketService.encodeRepay(repayParams, mockLendingPool);
 
@@ -123,7 +123,7 @@ describe('MoneyMarketService', () => {
           asset: mockVault,
           amount: mockAmount,
           interestRateMode: 2n,
-        } satisfies MoneyMarketRepayWithATokensParams;
+        } satisfies MoneyMarketEncodeRepayWithATokensParams;
 
         const encodedCall = MoneyMarketService.encodeRepayWithATokens(repayParams, mockLendingPool);
 

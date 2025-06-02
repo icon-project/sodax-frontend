@@ -43,7 +43,6 @@ describe('SolverService', () => {
   const mockSolverConfig = {
     intentsContract: mockIntentsContract,
     solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-    relayerApiEndpoint: 'https://...',
   } satisfies SolverConfig;
 
   const mockHubConfig = {
@@ -112,7 +111,6 @@ describe('SolverService', () => {
   const mockIntentConfig: SolverConfig = {
     intentsContract: mockIntentsContract,
     solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-    relayerApiEndpoint: 'https://...',
   };
 
   const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890';
@@ -479,7 +477,7 @@ describe('SolverService', () => {
         expect(result.error).toEqual({
           code: 'SUBMIT_TX_FAILED',
           data: {
-            apiUrl: 'https://...',
+            apiUrl: 'https://xcall-relay.nw.iconblockchain.xyz',
             payload: {
               action: 'submit',
               params: {
@@ -573,23 +571,6 @@ describe('SolverService', () => {
       const result = await solverService.cancelIntent(intent, mockBscSpokeProvider, false);
 
       expect(result).toBe(mockTxHash);
-    });
-
-    it('should throw error for invalid spoke provider', async () => {
-      const invalidSpokeProvider = {
-        chainConfig: {
-          chain: {
-            type: 'evm',
-          },
-        },
-        walletProvider: {
-          getWalletAddressBytes: () => '0x1234567890123456789012345678901234567890',
-        },
-      } as unknown as SpokeProvider;
-
-      await expect(solverService.cancelIntent(intent, invalidSpokeProvider, false)).rejects.toThrow(
-        'Invalid spoke provider',
-      );
     });
   });
 

@@ -1,13 +1,17 @@
 import invariant from 'tiny-invariant';
 import {
+  DEFAULT_RELAYER_API_ENDPOINT,
   type EvmHubProvider,
   type IntentRelayRequest,
+  type RelayErrorCode,
   type SpokeProvider,
   SpokeService,
   type WaitUntilIntentExecutedPayload,
   calculateFeeAmount,
   encodeContractCalls,
   getIntentRelayChainId,
+  getSolverConfig,
+  isConfiguredSolverConfig,
   isValidIntentRelayChainId,
   isValidOriginalAssetAddress,
   isValidSpokeChainId,
@@ -18,7 +22,6 @@ import type {
   Address,
   EvmContractCall,
   FeeAmount,
-  GetAddressType,
   GetSpokeDepositParamsType,
   Hash,
   Hex,
@@ -33,7 +36,8 @@ import type {
   IntentStatusResponse,
   PartnerFee,
   Result,
-  SolverConfig,
+  SolverConfigParams,
+  SolverServiceConfig,
   SpokeChainId,
   TxReturnType,
 } from '../../types.js';
@@ -110,12 +114,7 @@ export type IntentWaitUntilIntentExecutedFailedErrorData = {
   error: unknown;
 };
 
-export type IntentSubmitErrorCode =
-  | 'TIMEOUT'
-  | 'CREATION_FAILED'
-  | 'SUBMIT_TX_FAILED'
-  | 'POST_EXECUTION_FAILED'
-  | 'UNKNOWN';
+export type IntentSubmitErrorCode = RelayErrorCode | 'UNKNOWN' | 'CREATION_FAILED';
 export type IntentSubmitErrorData<T extends IntentSubmitErrorCode> = T extends 'TIMEOUT'
   ? IntentWaitUntilIntentExecutedFailedErrorData
   : T extends 'CREATION_FAILED'
@@ -132,11 +131,23 @@ export type IntentSubmitError<T extends IntentSubmitErrorCode> = {
 };
 
 export class SolverService {
-  private readonly config: SolverConfig;
+  private readonly config: SolverServiceConfig;
   private readonly hubProvider: EvmHubProvider;
 
-  public constructor(config: SolverConfig, hubProvider: EvmHubProvider) {
-    this.config = config;
+  public constructor(config: SolverConfigParams, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
+    if (isConfiguredSolverConfig(config)) {
+      this.config = {
+        ...config,
+        partnerFee: config.partnerFee,
+        relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
+      };
+    } else {
+      this.config = {
+        ...getSolverConfig(hubProvider.chainConfig.chain.id), // default to mainnet config
+        partnerFee: config.partnerFee,
+        relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
+      };
+    }
     this.hubProvider = hubProvider;
   }
 
@@ -235,9 +246,9 @@ export class SolverService {
    * @param {number} timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
    * @returns {Promise<Result<IntentExecutionResponse, IntentErrorResponse>>} The encoded contract call
    */
-  public async createAndSubmitIntent<T extends SpokeProvider>(
+  public async createAndSubmitIntent<S extends SpokeProvider>(
     payload: CreateIntentParams,
-    spokeProvider: T,
+    spokeProvider: S,
     fee?: PartnerFee,
     timeout = 20000,
   ): Promise<Result<[IntentExecutionResponse, Intent], IntentSubmitError<IntentSubmitErrorCode>>> {
@@ -410,17 +421,18 @@ export class SolverService {
     invariant(isValidIntentRelayChainId(intent.srcChain), `Invalid intent.srcChain: ${intent.srcChain}`);
     invariant(isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
 
+    // derive users hub wallet address
+    const creatorHubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
+      spokeProvider.chainConfig.chain.id,
+      spokeProvider.walletProvider.getWalletAddressBytes(),
+      this.hubProvider,
+    );
+
     const calls: EvmContractCall[] = [];
     const intentsContract = this.config.intentsContract;
     calls.push(EvmSolverService.encodeCancelIntent(intent, intentsContract));
     const data = encodeContractCalls(calls);
-    return SpokeService.callWallet(
-      spokeProvider.walletProvider.getWalletAddressBytes() as GetAddressType<T>,
-      data,
-      spokeProvider,
-      this.hubProvider,
-      raw,
-    );
+    return SpokeService.callWallet(creatorHubWalletAddress, data, spokeProvider, this.hubProvider, raw);
   }
 
   /**

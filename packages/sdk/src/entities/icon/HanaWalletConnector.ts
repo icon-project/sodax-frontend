@@ -122,7 +122,7 @@ export function requestSigning(from: IconAddress, hash: string): Promise<Result<
   });
 }
 
-export function requestJsonRpc<T = unknown>(
+export function requestJsonRpc(
   rawTransaction: unknown,
   id = 99999,
 ): Promise<Result<JsonRpcPayloadResponse>> {

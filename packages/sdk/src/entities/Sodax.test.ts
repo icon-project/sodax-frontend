@@ -18,7 +18,6 @@ import {
   type RelayTxStatus,
   type Result,
   SONIC_MAINNET_CHAIN_ID,
-  type SolverConfig,
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
@@ -29,6 +28,7 @@ import {
   type IEvmWalletProvider,
   type TxReturnType,
   spokeChainConfig,
+  type SolverConfigParams,
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
@@ -47,9 +47,8 @@ describe('Sodax', () => {
   const solverConfig = {
     intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
     solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-    relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
     partnerFee: partnerFeePercentage,
-  } satisfies SolverConfig;
+  } satisfies SolverConfigParams;
 
   const moneyMarketConfig = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID);
 

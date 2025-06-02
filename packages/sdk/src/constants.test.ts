@@ -1,18 +1,12 @@
 import type { Address } from 'viem';
-import { avalanche, avalancheFuji, sonic } from 'viem/chains';
+import { avalanche, sonic } from 'viem/chains';
 // packages/sdk/src/constants.test.ts
 import { describe, expect, it } from 'vitest';
 import {
-  AVALANCHE_FUJI_TESTNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
-  CHAIN_IDS,
-  EVM_CHAIN_IDS,
   HUB_CHAIN_IDS,
-  MAINNET_CHAIN_IDS,
   SONIC_MAINNET_CHAIN_ID,
-  SONIC_TESTNET_CHAIN_ID,
   SPOKE_CHAIN_IDS,
-  TESTNET_CHAIN_IDS,
   getEvmViemChain,
   getHubAssetInfo,
   getHubChainConfig,
@@ -27,29 +21,14 @@ import type { EvmChainId, HubChainId } from './index.js';
 describe('Constants', () => {
   describe('Chain IDs', () => {
     it('should export valid chain ID constants', () => {
-      expect(AVALANCHE_FUJI_TESTNET_CHAIN_ID).toBe('0xa869.fuji');
       expect(AVALANCHE_MAINNET_CHAIN_ID).toBe('0xa86a.avax');
       expect(SONIC_MAINNET_CHAIN_ID).toBe('sonic');
-      expect(SONIC_TESTNET_CHAIN_ID).toBe('sonic-blaze');
     });
 
     it('should have valid chain ID arrays', () => {
       expect(HUB_CHAIN_IDS).toContain(SONIC_MAINNET_CHAIN_ID);
-      expect(HUB_CHAIN_IDS).toContain(SONIC_TESTNET_CHAIN_ID);
 
       expect(SPOKE_CHAIN_IDS).toContain(AVALANCHE_MAINNET_CHAIN_ID);
-      expect(SPOKE_CHAIN_IDS).toContain(AVALANCHE_FUJI_TESTNET_CHAIN_ID);
-
-      expect(MAINNET_CHAIN_IDS).toContain(AVALANCHE_MAINNET_CHAIN_ID);
-      expect(MAINNET_CHAIN_IDS).toContain(SONIC_MAINNET_CHAIN_ID);
-
-      expect(TESTNET_CHAIN_IDS).toContain(AVALANCHE_FUJI_TESTNET_CHAIN_ID);
-      expect(TESTNET_CHAIN_IDS).toContain(SONIC_TESTNET_CHAIN_ID);
-
-      expect(CHAIN_IDS).toEqual([...MAINNET_CHAIN_IDS, ...TESTNET_CHAIN_IDS]);
-
-      expect(EVM_CHAIN_IDS).toContain(AVALANCHE_FUJI_TESTNET_CHAIN_ID);
-      expect(EVM_CHAIN_IDS).toContain(SONIC_TESTNET_CHAIN_ID);
     });
   });
 
@@ -62,11 +41,6 @@ describe('Constants', () => {
     it('should return the correct viem chain for Avalanche Mainnet', () => {
       const chain = getEvmViemChain(AVALANCHE_MAINNET_CHAIN_ID as EvmChainId);
       expect(chain).toBe(avalanche);
-    });
-
-    it('should return the correct viem chain for Avalanche Fuji Testnet', () => {
-      const chain = getEvmViemChain(AVALANCHE_FUJI_TESTNET_CHAIN_ID as EvmChainId);
-      expect(chain).toBe(avalancheFuji);
     });
 
     it('should throw an error for unsupported chain ID', () => {
@@ -82,15 +56,6 @@ describe('Constants', () => {
       expect(config.chain.type).toBe('evm');
       expect(config.addresses.assetManager).toBeDefined();
     });
-
-    it('should return the correct hub chain config for Sonic Testnet', () => {
-      const config = getHubChainConfig(SONIC_TESTNET_CHAIN_ID as HubChainId);
-      expect(config.chain.name).toBe('Sonic Blaze Testnet');
-      expect(config.chain.id).toBe(SONIC_TESTNET_CHAIN_ID);
-      expect(config.chain.type).toBe('evm');
-      expect(config.addresses.assetManager).toBeDefined();
-      expect(config.supportedTokens.length).toBeGreaterThan(0);
-    });
   });
 
   describe('getMoneyMarketConfig', () => {
@@ -99,14 +64,6 @@ describe('Constants', () => {
       expect(config.lendingPool).toBeDefined();
       expect(config.uiPoolDataProvider).toBeDefined();
       expect(config.poolAddressesProvider).toBeDefined();
-    });
-
-    it('should return the correct money market config for Sonic Testnet', () => {
-      const config = getMoneyMarketConfig(SONIC_TESTNET_CHAIN_ID as HubChainId);
-      expect(config.lendingPool).toBeDefined();
-      expect(config.uiPoolDataProvider).toBeDefined();
-      expect(config.poolAddressesProvider).toBeDefined();
-      expect(config.bnUSD).toBeDefined();
     });
   });
 

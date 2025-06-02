@@ -2,7 +2,7 @@ import { type Address, encodeFunctionData } from 'viem';
 import { erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
 import type { EvmHubProvider, EvmSpokeProvider } from '../../entities/index.js';
 import { connectionAbi, getIntentRelayChainId } from '../../index.js';
-import type { EvmReturnType, EvmTransferToHubParams, Hex, PromiseEvmTxReturnType, TxReturnType } from '../../types.js';
+import type { EvmReturnType, EvmTransferToHubParams, Hex, HubAddress, PromiseEvmTxReturnType, TxReturnType } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type EvmSpokeDepositParams = {
@@ -66,7 +66,7 @@ export class EvmSpokeService {
 
   /**
    * Calls a contract on the spoke chain using the user's wallet.
-   * @param {Address} from - The address of the user on the spoke chain.
+   * @param {HubAddress} from - The address of the user on the hub chain.
    * @param {Hex} payload - The payload to send to the contract.
    * @param {EvmSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
@@ -74,20 +74,14 @@ export class EvmSpokeService {
    * @returns {PromiseEvmTxReturnType<R>} A promise that resolves to the transaction hash.
    */
   public static async callWallet<R extends boolean = false>(
-    from: Address,
+    from: HubAddress,
     payload: Hex,
     spokeProvider: EvmSpokeProvider,
     hubProvider: EvmHubProvider,
     raw?: R,
   ): Promise<TxReturnType<EvmSpokeProvider, R>> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      from,
-      hubProvider,
-    );
-
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    const result = await EvmSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);
+    const result = await EvmSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
 
     return result satisfies TxReturnType<EvmSpokeProvider, R>;
   }
