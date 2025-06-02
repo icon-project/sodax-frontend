@@ -92,7 +92,7 @@ export function useWalletProvider(xChainId: SpokeChainId, address: Address): Evm
         return new EvmWalletProvider({
           walletClient: createWalletClient({
             chain: getEvmViemChain(xChainId as EvmChainId),
-            transport: custom(window.ethereum),
+            transport: custom((window as unknown as { ethereum: any }).ethereum),
             account: address,
           }),
           publicClient: createPublicClient({
