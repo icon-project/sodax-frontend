@@ -1,4 +1,4 @@
-import { SelectChain } from '@/components/SelectChain';
+import { SelectChain } from '@/components/solver/SelectChain';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -22,10 +22,8 @@ import {
   type EvmChainId,
   type Hex,
   type IntentQuoteRequest,
-  type IntentQuoteResponse,
   POLYGON_MAINNET_CHAIN_ID,
   type SpokeChainId,
-  type SpokeProvider,
   type Token,
   getEvmViemChain,
   spokeChainConfig,

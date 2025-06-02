@@ -1,3 +1,4 @@
+import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { UserReserveData } from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';

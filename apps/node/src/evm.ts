@@ -32,9 +32,7 @@ import { EvmWalletProvider } from './wallet-providers';
 const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const DEFAULT_SPOKE_RPC_URL = IS_TESTNET ? 'https://avalanche-fuji.drpc.org' : 'https://api.avax.network/ext/bc/C/rpc';
-const DEFAULT_SPOKE_CHAIN_ID = IS_TESTNET
-  ? AVALANCHE_FUJI_TESTNET_CHAIN_ID
-  : AVALANCHE_MAINNET_CHAIN_ID;
+const DEFAULT_SPOKE_CHAIN_ID = IS_TESTNET ? AVALANCHE_FUJI_TESTNET_CHAIN_ID : AVALANCHE_MAINNET_CHAIN_ID;
 const HUB_CHAIN_ID: HubChainId = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 
@@ -44,8 +42,6 @@ const SPOKE_RPC_URL = process.env.SPOKE_RPC_URL || DEFAULT_SPOKE_RPC_URL;
 if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
-
-
 
 const hubEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
 
@@ -325,25 +321,27 @@ async function fillIntent(
       data: encodeFunctionData({
         abi: IntentsAbi,
         functionName: 'fillIntent',
-        args: [{
-          intentId: intent.intentId,
-          creator: intent.creator,
-          inputToken: intent.inputToken,
-          outputToken: intent.outputToken,
-          inputAmount: intent.inputAmount,
-          minOutputAmount: intent.minOutputAmount,
-          deadline: intent.deadline,
-          allowPartialFill: intent.allowPartialFill,
-          srcChain: intent.srcChain,
-          dstChain: intent.dstChain,
-          srcAddress: intent.srcAddress,
-          dstAddress: intent.dstAddress,
-          solver: intent.solver,
-          data: intent.data,
-        },
-        inputAmount,
-        outputAmount,
-        0n,],
+        args: [
+          {
+            intentId: intent.intentId,
+            creator: intent.creator,
+            inputToken: intent.inputToken,
+            outputToken: intent.outputToken,
+            inputAmount: intent.inputAmount,
+            minOutputAmount: intent.minOutputAmount,
+            deadline: intent.deadline,
+            allowPartialFill: intent.allowPartialFill,
+            srcChain: intent.srcChain,
+            dstChain: intent.dstChain,
+            srcAddress: intent.srcAddress,
+            dstAddress: intent.dstAddress,
+            solver: intent.solver,
+            data: intent.data,
+          },
+          inputAmount,
+          outputAmount,
+          0n,
+        ],
       }),
       value: 0n,
     } satisfies EvmRawTransaction;

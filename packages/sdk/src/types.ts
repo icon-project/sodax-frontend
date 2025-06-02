@@ -43,7 +43,7 @@ export type BaseSpokeChainInfo<T extends ChainType> = {
   name: string;
   id: GetSpokeChainIdType<T>;
   type: T;
-}
+};
 
 export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
 
@@ -407,9 +407,6 @@ export enum IntentErrorCode {
   CREATE_INTENT_ORDER_FAILED = -998,
   UNKNOWN = -999,
 }
-
-
-
 
 export type EvmRawTransaction = {
   from: Address;

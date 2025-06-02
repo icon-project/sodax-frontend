@@ -1,4 +1,4 @@
-'use client';
+import React from 'react';
 
 import { ChainSelector } from '@/components/dashboard/ChainSelector';
 import { SuppliedAssetsList } from '@/components/dashboard/lists/SuppliedAssetsList/SuppliedAssetsList';
@@ -10,7 +10,7 @@ import { WalletModal } from '@/components/wallet-modal';
 import { useXAccount } from '@new-world/xwagmi';
 import { useState } from 'react';
 
-export default function Page() {
+export default function MoneyMarketPage() {
   const xAccount = useXAccount('EVM');
   const [isOpen, setIsOpen] = useState(false);
 

@@ -1,14 +1,15 @@
+import React from 'react';
 import { allXTokens } from '@new-world/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useChainSelector } from '@/contexts/ChainSelectorContext';
 import { getXChainType, useXAccount, useXBalances } from '@new-world/xwagmi';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useMemo } from 'react';
+import { useAppStore } from '@/zustand/useAppStore';
 
 export function SupplyAssetsList() {
-  const { selectedChain } = useChainSelector();
+  const { selectedChain } = useAppStore();
   const tokens = useMemo(() => allXTokens.filter(token => token.xChainId === selectedChain), [selectedChain]);
 
   const { address } = useXAccount(getXChainType(selectedChain));

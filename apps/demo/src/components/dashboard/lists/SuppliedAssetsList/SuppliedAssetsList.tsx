@@ -1,13 +1,14 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useSuppliedAssets } from '@new-world/dapp-kit';
 import type { UserReserveData } from '@new-world/sdk';
 import type { XToken } from '@new-world/xwagmi';
 import { SuppliedAssetsListItem } from './SuppliedAssetsListItem';
-import { useChainSelector } from '@/contexts/ChainSelectorContext';
+import { useAppStore } from '@/zustand/useAppStore';
 
 export function SuppliedAssetsList() {
-  const { selectedChain } = useChainSelector();
+  const { selectedChain } = useAppStore();
 
   const userReserves = useSuppliedAssets(selectedChain);
 

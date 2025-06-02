@@ -1,3 +1,4 @@
+import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken } from '@new-world/xwagmi';
 import { SupplyButton } from './SupplyButton';

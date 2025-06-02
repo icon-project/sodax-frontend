@@ -1,10 +1,11 @@
+import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useChainSelector } from '@/contexts/ChainSelectorContext';
 import { xChains } from '@new-world/xwagmi';
 import { useSodaxContext } from '@new-world/dapp-kit';
+import { useAppStore } from '@/zustand/useAppStore';
 
 export function ChainSelector() {
-  const { selectedChain, changeChain } = useChainSelector();
+  const { selectedChain, changeChain } = useAppStore();
   const { testnet } = useSodaxContext();
 
   return (

@@ -1,25 +1,27 @@
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useSupply } from '@new-world/dapp-kit';
+import { useWithdraw } from '@new-world/dapp-kit';
 import type { XToken } from '@new-world/xwagmi';
 import { useState } from 'react';
 import { useEvmSwitchChain } from '@new-world/xwagmi';
+import { useAppStore } from '@/zustand/useAppStore';
 
-export function SupplyButton({ token }: { token: XToken }) {
+export function WithdrawButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const { supply, isLoading, error, resetError } = useSupply(token);
+  const { selectedChain } = useAppStore();
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
+  const { withdraw, isLoading, error, resetError } = useWithdraw(token, selectedChain);
 
-  const handleSupply = async () => {
-    try {
-      await supply(amount);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChain);
+
+  const handleWithdraw = async () => {
+    await withdraw(amount);
+    if (!error) {
       setOpen(false);
-    } catch (err) {
-      console.error('Error in handleSupply:', err);
     }
   };
 
@@ -41,12 +43,12 @@ export function SupplyButton({ token }: { token: XToken }) {
             setOpen(true);
           }}
         >
-          Supply
+          Withdraw
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Supply {token.symbol}</DialogTitle>
+          <DialogTitle>Withdraw {token.symbol}</DialogTitle>
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -57,7 +59,6 @@ export function SupplyButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
         <DialogFooter className="sm:justify-start">
           {isWrongChain && (
             <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
@@ -65,8 +66,8 @@ export function SupplyButton({ token }: { token: XToken }) {
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={isLoading}>
-              {isLoading ? 'Supplying...' : 'Supply'}
+            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={isLoading}>
+              {isLoading ? 'Withdrawing...' : 'Withdraw'}
             </Button>
           )}
         </DialogFooter>

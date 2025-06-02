@@ -21,7 +21,7 @@
   "main": "dist/main.js",
   "dependencies": {
     "@new-world/sdk": "workspace:*",
-    "@solana/web3.js": "1.95.4",
+    "@solana/web3.js": "1.98.0",
     "@stellar/stellar-sdk": "12.3.0",
     "bn": "^1.0.5",
     "bn.js": "^5.2.1",

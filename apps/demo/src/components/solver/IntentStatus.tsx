@@ -8,7 +8,7 @@ export default function IntentStatus({
 }: {
   intent_tx_hash: Hex;
 }) {
-  const { data: status, } = useStatus(intent_tx_hash);
+  const { data: status } = useStatus(intent_tx_hash);
 
   if (status) {
     if (status.ok) {
