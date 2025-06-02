@@ -77,6 +77,18 @@ async function getBalance(token: string) {
   console.log('[Balance]:', balance);
 }
 
+
+async function getAvailable(token: string) {
+  const balance = await suiSpokeProvider.getAvailable(token);
+  console.log('[Available]:', balance);
+}
+
+
+async function getLimit(token: string) {
+  const balance = await suiSpokeProvider.getLimit(token);
+  console.log('[Limit]:', balance);
+}
+
 async function depositTo(token: string, amount: bigint, recipient: Address) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
@@ -259,7 +271,13 @@ async function main() {
   } else if (functionName === 'balance') {
     const token = process.argv[3] as string;
     await getBalance(token);
-  } else {
+  }  else if (functionName === 'get_limit') {
+    const token = process.argv[3] as string;
+    await getLimit(token);
+  }  else if (functionName === 'get_available') {
+    const token = process.argv[3] as string;
+    await getAvailable(token);
+  }else {
     console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
   }
 }
