@@ -12,5 +12,5 @@ export const useAppStore = create<AppStore>()(
   immer((set, get) => ({
     selectedChain: '0xa86a.avax',
     changeChain: (chain: XChainId) => set({ selectedChain: chain }),
-  })) as StateCreator<AppStore, [], []>
-);  
+  })) as StateCreator<AppStore, [], []>,
+);

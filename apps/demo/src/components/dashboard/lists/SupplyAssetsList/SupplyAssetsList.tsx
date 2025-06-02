@@ -8,7 +8,6 @@ import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useMemo } from 'react';
 import { useAppStore } from '@/zustand/useAppStore';
 
-
 export function SupplyAssetsList() {
   const { selectedChain } = useAppStore();
   const tokens = useMemo(() => allXTokens.filter(token => token.xChainId === selectedChain), [selectedChain]);
