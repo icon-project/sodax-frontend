@@ -38,7 +38,7 @@ export class SuiSpokeProvider implements ISpokeProvider {
     return BigInt(str_u64);
   }
 
-   async getLimit(token: string): Promise<bigint> {
+  async getLimit(token: string): Promise<bigint> {
     const rateLimit = this.splitAddress(this.chainConfig.addresses.rateLimit);
     const tx = new Transaction();
     const result = await this.walletProvider.viewContract(
@@ -61,7 +61,7 @@ export class SuiSpokeProvider implements ISpokeProvider {
     return BigInt(str_u64);
   }
 
-   async getAvailable(token: string): Promise<bigint> {
+  async getAvailable(token: string): Promise<bigint> {
     const rateLimit = this.splitAddress(this.chainConfig.addresses.rateLimit);
     const tx = new Transaction();
     const result = await this.walletProvider.viewContract(
@@ -83,7 +83,6 @@ export class SuiSpokeProvider implements ISpokeProvider {
     const str_u64 = bcs.U64.parse(Uint8Array.from(val));
     return BigInt(str_u64);
   }
-
 
   async transfer<R extends boolean = false>(
     token: string,

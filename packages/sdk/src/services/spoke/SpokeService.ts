@@ -205,12 +205,10 @@ export class SpokeService {
    * @param {SpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The max limit allowed for token.
    */
-  public static getLimit(token: string|Address, spokeProvider: SpokeProvider): Promise<bigint> {
-   
+  public static getLimit(token: string | Address, spokeProvider: SpokeProvider): Promise<bigint> {
     if (spokeProvider instanceof SuiSpokeProvider) {
       return SuiSpokeService.getLimit(token as string, spokeProvider);
     }
-   
 
     throw new Error('Invalid spoke provider');
   }
@@ -221,12 +219,10 @@ export class SpokeService {
    * @param {SpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The available withdrawable amount for token.
    */
-  public static getAvailable(token: string|Address, spokeProvider: SpokeProvider): Promise<bigint> {
-   
+  public static getAvailable(token: string | Address, spokeProvider: SpokeProvider): Promise<bigint> {
     if (spokeProvider instanceof SuiSpokeProvider) {
       return SuiSpokeService.getAvailable(token as string, spokeProvider);
     }
-   
 
     throw new Error('Invalid spoke provider');
   }

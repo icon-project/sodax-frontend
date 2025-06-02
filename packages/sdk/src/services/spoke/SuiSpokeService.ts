@@ -66,22 +66,21 @@ export class SuiSpokeService {
     return spokeProvider.getBalance(token);
   }
 
-   /**
+  /**
    * Get Max Withdrawable Balance for the token.
    * @param {Address} token - The address of the token to get the balance of.
    * @param {SuiSpokeProvider} spokeProvider - The spoke provider.
-   * @returns {Promise<bigint>} The balance of the token.
+   * @returns {Promise<bigint>} The max limit of the token.
    */
   public static async getLimit(token: string, spokeProvider: SuiSpokeProvider): Promise<bigint> {
     return spokeProvider.getLimit(token);
   }
 
-
-   /**
+  /**
    * Get available withdrawable amount for the token.
    * @param {Address} token - The address of the token to get the balance of.
    * @param {SuiSpokeProvider} spokeProvider - The spoke provider.
-   * @returns {Promise<bigint>} The balance of the token.
+   * @returns {Promise<bigint>} The available withdrawable amount of the token.
    */
   public static async getAvailable(token: string, spokeProvider: SuiSpokeProvider): Promise<bigint> {
     return spokeProvider.getAvailable(token);
