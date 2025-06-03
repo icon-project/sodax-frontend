@@ -511,11 +511,15 @@ export const hubAssets: Record<
     '0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe': { // wetETH
       asset: '0x08D5cf039De35627fD5C0f48B8AF4a1647a462E8',
       decimal: 18,
+      symbol: 'wETH',
+      name: 'Wrapped Ethereum',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     '0x5979D7b546E38E414F7E9822514be443A4800529': { // wstETH
       asset: '0x2D5A7837D68b0c2CC4b14C2af2a1F0Ef420DDDc5',
       decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     '0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40': { // tBTC
@@ -579,17 +583,16 @@ export const hubAssets: Record<
     '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a': { // weETH
       asset: '0x55e0ad45eb97493b3045eee417fb6726cb85dfd4',
       decimal: 18,
+      symbol: 'wETH',
+      name: 'Wrapped Ethereum',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     '0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452': { // wstETH
       asset: '0x494aaeaefdf5964d4ed400174e8c5b98c00957aa',
       decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
-    },
-    '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf': { // cbBTC
-      asset: '0x2803a23a3BA6b09e57D1c71deC0D9eFdBB00A27F',
-      decimal: 18,
-      vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
     },
   },
   [OPTIMISM_MAINNET_CHAIN_ID]: {
@@ -610,21 +613,29 @@ export const hubAssets: Record<
     '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85': { // USDC
       asset: '0xb7C213CbD24967dE9838fa014668FDDB338f724B',
       decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
       vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
     '0x1F32b1c2345538c0c6f582fCB022739c4A194Ebb': { // wstETH
       asset: '0x61e26f611090CdC6bc79A7Bf156b0fD10f1fC212',
       decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     '0x5A7fACB970D094B6C7FF1df0eA68D99E6e73CBFF': { // weETH
       asset: '0xE121c0Dc2B33c00ff31ee3D902D248cc3f19Ea50',
       decimal: 18,
+      symbol: 'wETH',
+      name: 'Wrapped Ethereum',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58': { // USDT
       asset: '0xc168067d95109003805aC865ae556e8476DC69bc',
       decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
       vault: '0xbDf1F453FCB61424011BBDDCB96cFDB30f3Fe876',
     },
   },
@@ -681,11 +692,6 @@ export const hubAssets: Record<
       symbol: 'MATIC',
       name: 'Polygon',
       vault: '0x0000000000000000000000000000000000000000',
-    },
-    '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359': {
-      asset: '0xa36893ba308b332FDEbfa95916D1dF3a2e3CF8B3',
-      decimal: 6,
-      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x18f85f9E80ff9496EeBD5979a051AF16Ce751567',
