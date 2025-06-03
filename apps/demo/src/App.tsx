@@ -3,7 +3,7 @@ import './App.css';
 
 import { createBrowserRouter, Outlet, RouterProvider, Navigate } from 'react-router';
 import MoneyMarketPage from './pages/money-market/page';
-import Header from './components/layout/header';
+import Header from './components/shared/header';
 import SolverPage from './pages/solver/page';
 
 const router = createBrowserRouter([

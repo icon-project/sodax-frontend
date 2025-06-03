@@ -4,7 +4,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import type { XChainType, XConnector } from '@new-world/xwagmi';
 import { useXAccount, useXConnect, useXConnection, useXConnectors, useXDisconnect } from '@new-world/xwagmi';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 export type WalletItemProps = {
   name: string;
