@@ -16,7 +16,7 @@ export function NavigationMenu() {
           }`
         }
       >
-        Dashboard
+        Money Market
       </NavLink>
       {/* <NavLink 
         to="/markets"

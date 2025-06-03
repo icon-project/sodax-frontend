@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { ChainSelector } from '@/components/dashboard/ChainSelector';
-import { SuppliedAssetsList } from '@/components/dashboard/lists/SuppliedAssetsList/SuppliedAssetsList';
-import { SupplyAssetsList } from '@/components/dashboard/lists/SupplyAssetsList/SupplyAssetsList';
+import { ChainSelector } from '@/components/mm/ChainSelector';
+import { SuppliedAssetsList } from '@/components/mm/lists/SuppliedAssetsList/SuppliedAssetsList';
+import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList/SupplyAssetsList';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';

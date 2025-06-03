@@ -34,6 +34,7 @@ import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useSwitchChain } from 'wagmi';
 import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@new-world/dapp-kit';
+import { useEvmSwitchChain, type XChainId } from '@new-world/xwagmi';
 
 export default function SwapCard({
   setIntentTxHash,
@@ -143,6 +144,8 @@ export default function SwapCard({
 
     setIntentOrderPayload(createIntentParams);
   };
+
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as XChainId);
 
   const handleSwap = async (intentOrderPayload: CreateIntentParams) => {
     setOpen(false);
@@ -296,13 +299,19 @@ export default function SwapCard({
               </div>
             </div>
             <DialogFooter>
-              {intentOrderPayload ? (
-                <Button className="w-full" onClick={() => handleSwap(intentOrderPayload)}>
-                  <ArrowLeftRight className="mr-2 h-4 w-4" /> Swap
+              {isWrongChain && (
+                <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
+                  Switch Chain
                 </Button>
-              ) : (
-                <span>Intent Order undefined</span>
               )}
+              {!isWrongChain &&
+                (intentOrderPayload ? (
+                  <Button className="w-full" onClick={() => handleSwap(intentOrderPayload)}>
+                    <ArrowLeftRight className="mr-2 h-4 w-4" /> Swap
+                  </Button>
+                ) : (
+                  <span>Intent Order undefined</span>
+                ))}
             </DialogFooter>
           </DialogContent>
         </Dialog>
