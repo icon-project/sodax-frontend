@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { StateCreator } from 'zustand';
-import { XChainId } from '@new-world/xwagmi';
+import type { StateCreator } from 'zustand';
+import type { XChainId } from '@new-world/xwagmi';
 
 type AppStore = {
   selectedChain: XChainId;
