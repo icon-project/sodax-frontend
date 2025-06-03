@@ -3,7 +3,7 @@ import { NavLink } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { WalletModal } from '@/components/shared/wallet-modal';
 import { useXAccounts } from '@new-world/xwagmi';
-import { useState } from 'react';
+import { useAppStore } from '@/zustand/useAppStore';
 
 export function NavigationMenu() {
   return (
@@ -43,7 +43,7 @@ export function NavigationMenu() {
 }
 
 export default function Header() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isWalletModalOpen, openWalletModal, closeWalletModal } = useAppStore();
   const xAccounts = useXAccounts();
 
   const connectedXAccounts = Object.values(xAccounts).filter(xAccount => xAccount?.address);
@@ -54,13 +54,13 @@ export default function Header() {
       {connectedXAccounts.length > 0 ? (
         <div className="flex items-center gap-2">
           <span>{connectedXAccounts.map(xAccount => xAccount?.xChainType).join(',')}</span>
-          <Button onClick={() => setIsOpen(true)}>Wallet View</Button>
+          <Button onClick={openWalletModal}>Wallet View</Button>
         </div>
       ) : (
-        <Button onClick={() => setIsOpen(true)}>Connect</Button>
+        <Button onClick={openWalletModal}>Connect</Button>
       )}
 
-      <WalletModal isOpen={isOpen} onDismiss={() => setIsOpen(false)} />
+      <WalletModal isOpen={isWalletModalOpen} onDismiss={closeWalletModal} />
     </div>
   );
 }

@@ -6,13 +6,12 @@ import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList/SupplyA
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { WalletModal } from '@/components/shared/wallet-modal';
 import { useXAccount } from '@new-world/xwagmi';
-import { useState } from 'react';
+import { useAppStore } from '@/zustand/useAppStore';
 
 export default function MoneyMarketPage() {
   const xAccount = useXAccount('EVM');
-  const [isOpen, setIsOpen] = useState(false);
+  const { openWalletModal } = useAppStore();
 
   return (
     <main className="">
@@ -121,11 +120,10 @@ export default function MoneyMarketPage() {
           </div>
         ) : (
           <div className="flex justify-center items-center h-[600px] border-2">
-            <Button onClick={() => setIsOpen(true)}>Connect</Button>
+            <Button onClick={openWalletModal}>Connect</Button>
           </div>
         )}
       </div>
-      <WalletModal isOpen={isOpen} onDismiss={() => setIsOpen(false)} />
     </main>
   );
 }
