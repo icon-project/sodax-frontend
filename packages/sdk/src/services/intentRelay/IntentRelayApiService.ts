@@ -2,7 +2,7 @@ import type { Hex, HttpUrl, Result } from '../../types.js';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentSubmitError } from '../solver/SolverService.js';
-import { getIntentRelayChainId } from '../../constants.js';
+import { DEFAULT_RELAY_TX_TIMEOUT, getIntentRelayChainId } from '../../constants.js';
 import type { SpokeProvider } from '../../entities/Providers.js';
 
 /**
@@ -254,7 +254,7 @@ export async function relayTxAndWaitPacket<S extends SpokeProvider>(
   spokeTxHash: Hex,
   spokeProvider: S,
   relayerApiEndpoint: HttpUrl,
-  timeout = 20000,
+  timeout = DEFAULT_RELAY_TX_TIMEOUT,
 ): Promise<Result<PacketData, RelayError>> {
   try {
     const intentRelayChainId = getIntentRelayChainId(spokeProvider.chainConfig.chain.id).toString();

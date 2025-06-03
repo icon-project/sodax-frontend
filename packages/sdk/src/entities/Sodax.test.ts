@@ -65,18 +65,6 @@ describe('Sodax', () => {
   });
 
   describe('constructor', () => {
-    it('should initialize with solver config', () => {
-      const sodax = new Sodax({ solver: solverConfig });
-      expect(sodax.solver).toBeDefined();
-      expect(() => sodax.moneyMarket).toThrow('Money market service not initialized');
-    });
-
-    it('should initialize with money market config', () => {
-      const sodax = new Sodax({ moneyMarket: moneyMarketConfig });
-      expect(sodax.moneyMarket).toBeDefined();
-      expect(() => sodax.solver).toThrow('Solver service not initialized');
-    });
-
     it('should initialize with both services', () => {
       const sodax = new Sodax({
         solver: solverConfig,
@@ -92,18 +80,6 @@ describe('Sodax', () => {
         hubProviderConfig: hubConfig,
       });
       expect(sodax.solver).toBeDefined();
-    });
-  });
-
-  describe('getters', () => {
-    it('should throw error when accessing uninitialized solver service', () => {
-      const sodax = new Sodax({});
-      expect(() => sodax.solver).toThrow('Solver service not initialized');
-    });
-
-    it('should throw error when accessing uninitialized money market service', () => {
-      const sodax = new Sodax({});
-      expect(() => sodax.moneyMarket).toThrow('Money market service not initialized');
     });
   });
 

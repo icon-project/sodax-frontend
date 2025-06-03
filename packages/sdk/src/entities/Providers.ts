@@ -30,7 +30,7 @@ export interface WalletAddressProvider {
 }
 
 export interface ISpokeProvider {
-  readonly walletProvider: WalletProvider;
+  readonly walletProvider: IWalletProvider;
   readonly chainConfig: SpokeChainConfig;
 }
 
@@ -109,7 +109,7 @@ export { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 export { IconWalletProvider } from './icon/IconWalletProvider.js';
 export { getIconAddressBytes } from './icon/utils.js';
 
-export type WalletProvider = (
+export type IWalletProvider = (
   | IEvmWalletProvider
   | ICWWalletProvider
   | SuiWalletProvider

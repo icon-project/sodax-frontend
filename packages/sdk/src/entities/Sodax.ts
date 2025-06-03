@@ -1,52 +1,41 @@
 import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
 import { MoneyMarketService, SolverService } from '../services/index.js';
-import type { HttpUrl, MoneyMarketConfig, SolverConfig } from '../types.js';
+import type { HttpUrl, SolverConfigParams, MoneyMarketConfigParams } from '../types.js';
 import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 
 export type SodaxConfig = {
-  solver?: SolverConfig;
-  moneyMarket?: MoneyMarketConfig;
-  hubProviderConfig?: EvmHubProviderConfig; // defaults to Sonic mainnet as a hub provider
-  relayerApiEndpoint?: HttpUrl;
+  solver?: SolverConfigParams; // optional Solver service enabling intent based swaps
+  moneyMarket?: MoneyMarketConfigParams; // optional Money Market service enabling cross-chain lending and borrowing
+  hubProviderConfig?: EvmHubProviderConfig; // hub provider for the hub chain (e.g. Sonic mainnet)
+  relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
 };
 
 /**
- * Sodax class is used to interact with the Sodax API.
+ * Sodax class is used to interact with the Sodax.
  *
  * @see https://docs.sodax.com
  */
 export class Sodax {
-  public readonly config: SodaxConfig;
+  public readonly config?: SodaxConfig;
 
-  private readonly solverService?: SolverService;
-  private readonly moneyMarketService?: MoneyMarketService;
-  private readonly hubProvider: EvmHubProvider;
-  private readonly relayerApiEndpoint: HttpUrl;
+  public readonly solver: SolverService; // Solver service enabling intent based swaps
+  public readonly moneyMarket: MoneyMarketService; // Money Market service enabling cross-chain lending and borrowing
+  private readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
+  private readonly relayerApiEndpoint: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
 
-  constructor(config: SodaxConfig) {
+  constructor(config?: SodaxConfig) {
     this.config = config;
-    this.relayerApiEndpoint = config.relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT;
-    this.hubProvider = new EvmHubProvider(config.hubProviderConfig);
+    this.relayerApiEndpoint = config?.relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT;
+    this.hubProvider = new EvmHubProvider(config?.hubProviderConfig); // default to Sonic mainnet
 
-    if (config.solver) {
-      this.solverService = new SolverService(config.solver, this.hubProvider, this.relayerApiEndpoint);
-    }
-    if (config.moneyMarket) {
-      this.moneyMarketService = new MoneyMarketService(config.moneyMarket, this.hubProvider, this.relayerApiEndpoint);
-    }
-  }
+    this.solver =
+      config && config.solver
+        ? new SolverService(config.solver, this.hubProvider, this.relayerApiEndpoint)
+        : new SolverService(undefined, this.hubProvider, this.relayerApiEndpoint); // default to mainnet config
 
-  get solver(): SolverService {
-    if (!this.solverService) {
-      throw new Error('Solver service not initialized');
-    }
-    return this.solverService;
-  }
-
-  get moneyMarket(): MoneyMarketService {
-    if (!this.moneyMarketService) {
-      throw new Error('Money market service not initialized');
-    }
-    return this.moneyMarketService;
+    this.moneyMarket =
+      config && config.moneyMarket
+        ? new MoneyMarketService(config.moneyMarket, this.hubProvider, this.relayerApiEndpoint)
+        : new MoneyMarketService(undefined, this.hubProvider, this.relayerApiEndpoint); // default to mainnet config
   }
 }

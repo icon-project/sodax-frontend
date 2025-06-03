@@ -17,7 +17,6 @@ import {
 
 describe('EvmAssetManagerService', () => {
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
-  const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
 
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),

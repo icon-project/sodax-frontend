@@ -1,9 +1,11 @@
 import invariant from 'tiny-invariant';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
+  DEFAULT_RELAY_TX_TIMEOUT,
   type EvmHubProvider,
   type IntentRelayRequest,
   type RelayErrorCode,
+  SONIC_MAINNET_CHAIN_ID,
   type SpokeProvider,
   SpokeService,
   type WaitUntilIntentExecutedPayload,
@@ -134,8 +136,16 @@ export class SolverService {
   private readonly config: SolverServiceConfig;
   private readonly hubProvider: EvmHubProvider;
 
-  public constructor(config: SolverConfigParams, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
-    if (isConfiguredSolverConfig(config)) {
+  public constructor(config: SolverConfigParams | undefined, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
+    if (!config) {
+      // default to mainnet config
+      this.config = {
+        ...getSolverConfig(SONIC_MAINNET_CHAIN_ID), // default to mainnet config
+        partnerFee: undefined,
+        relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
+      };
+    }
+    else if (isConfiguredSolverConfig(config)) {
       this.config = {
         ...config,
         partnerFee: config.partnerFee,
@@ -250,7 +260,7 @@ export class SolverService {
     payload: CreateIntentParams,
     spokeProvider: S,
     fee?: PartnerFee,
-    timeout = 20000,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[IntentExecutionResponse, Intent], IntentSubmitError<IntentSubmitErrorCode>>> {
     try {
       const createIntentResult = await this.createIntent(payload, spokeProvider, fee, false);

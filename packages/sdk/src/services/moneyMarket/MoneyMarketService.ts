@@ -14,6 +14,8 @@ import {
   relayTxAndWaitPacket,
   uiPoolDataAbi,
   type RelayErrorCode,
+  SONIC_MAINNET_CHAIN_ID,
+  DEFAULT_RELAY_TX_TIMEOUT,
 } from '../../index.js';
 import type {
   EvmContractCall,
@@ -160,8 +162,14 @@ export class MoneyMarketService {
   private readonly config: MoneyMarketServiceConfig;
   private readonly hubProvider: EvmHubProvider;
 
-  constructor(config: MoneyMarketConfigParams, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
-    if (isConfiguredMoneyMarketConfig(config)) {
+  constructor(config: MoneyMarketConfigParams | undefined, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
+    if (!config) {
+      this.config = {
+        ...getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID), // default to mainnet config
+        partnerFee: undefined,
+        relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
+      };
+    } else if (isConfiguredMoneyMarketConfig(config)) {
       this.config = {
         ...config,
         partnerFee: config.partnerFee,
@@ -187,7 +195,7 @@ export class MoneyMarketService {
   public async supplyAndSubmit<S extends SpokeProvider>(
     params: MoneyMarketSupplyParams,
     spokeProvider: S,
-    timeout = 20000,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
     try {
       const txResult = await this.supply(params, spokeProvider);
@@ -290,7 +298,7 @@ export class MoneyMarketService {
   public async borrowAndSubmit<S extends SpokeProvider>(
     params: MoneyMarketSupplyParams,
     spokeProvider: S,
-    timeout = 20000,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
     try {
       const txResult = await this.borrow(params, spokeProvider);
@@ -375,7 +383,7 @@ export class MoneyMarketService {
   public async withdrawAndSubmit<S extends SpokeProvider>(
     params: MoneyMarketWithdrawParams,
     spokeProvider: S,
-    timeout = 20000,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
     try {
       const txResult = await this.withdraw(params, spokeProvider);
@@ -455,7 +463,7 @@ export class MoneyMarketService {
   public async repayAndSubmit<S extends SpokeProvider>(
     params: MoneyMarketRepayParams,
     spokeProvider: S,
-    timeout = 20000,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
     try {
       const txResult = await this.repay(params, spokeProvider);

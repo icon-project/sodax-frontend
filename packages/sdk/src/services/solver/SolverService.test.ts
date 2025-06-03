@@ -24,7 +24,6 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   type SolverConfig,
   SolverService,
-  type SpokeProvider,
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
