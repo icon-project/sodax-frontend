@@ -14,9 +14,6 @@
     "clean": "rm -rf .next && rm -rf node_modules && rm -rf dist && rm -rf .turbo"
   },
   "dependencies": {
-    "@new-world/sdk": "workspace:*",
-    "@new-world/xwagmi": "workspace:*",
-    "@new-world/dapp-kit": "workspace:*",
     "@radix-ui/react-checkbox": "^1.3.1",
     "@radix-ui/react-dialog": "^1.1.13",
     "@radix-ui/react-label": "^2.1.0",
@@ -43,9 +40,7 @@
     "slick-carousel": "^1.8.1",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.8",
-    "tailwindcss-animate": "^1.0.7",
-    "viem": "catalog:",
-    "wagmi": "catalog:"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

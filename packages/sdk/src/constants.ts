@@ -458,27 +458,38 @@ export const spokeChainConfig = {
   } satisfies IconSpokeChainConfig,
 } as const;
 
-export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; decimal: number; vault: Address }>> = {
+export const hubAssets: Record<
+  SpokeChainId,
+  Record<Address | string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>
+> = {
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].nativeToken]: { // AVAX
       asset: '0xc9e4f0B6195F389D9d2b639f2878B7674eB9D8cD',
       decimal: 18,
-      vault: '0x14238D267557E9d799016ad635B53CD15935d290', // sodaAVAX
+      symbol: 'AVAX',
+      name: 'AVAX',
+      vault: '0x14238D267557E9d799016ad635B53CD15935d290',
     },
     '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7': { // USDT
       asset: '0x41Fd5c169e014e2A657B9de3553f7a7b735Fe47A',
       decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
       vault: '0xbDf1F453FCB61424011BBDDCB96cFDB30f3Fe876',
     },
 
     '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E': { // USDC
       asset: '0x41abF4B1559FF709Ef8150079BcB26DB1Fffd117',
       decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
       vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x289cDa1043b4Ce26BDCa3c12E534f56b24308A5B',
       decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
   },
@@ -486,11 +497,15 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0xdcd9578b51ef55239b6e68629d822a8d97c95b86',
       decimal: 18,
+      symbol: 'ETH',
+      name: 'Ethereum',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f': { // WBTC
       asset: '0xfB0ACB1b2720B620935F50a6dd3F7FEA52b2FCBe',
       decimal: 8,
+      symbol: 'WBTC',
+      name: 'Wrapped Bitcoin',
       vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
     },
     '0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe': { // wetETH
@@ -506,21 +521,29 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     '0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40': { // tBTC
       asset: '0x96Fc8540736f1598b7E235e6dE8814062b3b5d3B',
       decimal: 18,
+      symbol: 'tBTC',
+      name: 'Arbitrum tBTC',
       vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
     },
     '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9': { // USDT
       asset: '0x3C0a80C6a1110fC80309382b3989eC626c135eE9',
       decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
       vault: '0xbDf1F453FCB61424011BBDDCB96cFDB30f3Fe876',
     },
     '0xaf88d065e77c8cC2239327C5EDb3A432268e5831': { // USDC
       asset: '0xdB7BdA65c3a1C51D64dC4444e418684677334109',
       decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
       vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x419cA9054E44E94ceAb52846eCdC3997439BBcA6',
       decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
   },
@@ -528,16 +551,29 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0x70178089842be7f8e4726b33f0d1569db8021faa',
       decimal: 18,
+      symbol: 'ETH',
+      name: 'Ethereum',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
-    '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913': { // USDC
+    '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf': {
+      asset: '0x2803a23a3BA6b09e57D1c71deC0D9eFdBB00A27F',
+      decimal: 8,
+      symbol: 'WBTC',
+      name: 'Wrapped Bitcoin',
+      vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
+    },
+    '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913': {
       asset: '0x72E852545B024ddCbc5b70C1bCBDAA025164259C',
       decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
       vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0xDF5639D91359866f266b56D60d98edE9fEEDd100',
       decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
     '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a': { // weETH
@@ -560,11 +596,15 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0xad332860dd3b6f0e63f4f66e9457900917ac78cd',
       decimal: 18,
+      symbol: 'ETH',
+      name: 'Ethereum',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x238384AE2b4F0EC189ecB5031859bA306B2679c5',
       decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
     '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85': { // USDC
@@ -592,11 +632,15 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0xe0064414c2c1a636a9424C7a17D86fbF7FD3f190',
       decimal: 18,
+      symbol: 'NIBI',
+      name: 'Nibiru',
       vault: '0xc6c85287a8b173A509C2F198bB719A8a5a2d0C68',
     },
     [spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x11b93C162aABFfD026539bb3B9F9eC22c8b7ef8a',
       decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
   },
@@ -604,21 +648,29 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[BSC_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0x13b70564b1ec12876B20FAb5D1Bb630311312f4f',
       decimal: 18,
+      symbol: 'BNB',
+      name: 'BNB',
       vault: '0x40Cd41b35DB9e5109ae7E54b44De8625dB320E6b',
     },
     '0x2170Ed0880ac9A755fd29B2688956BD959F933F8': { // ETH
       asset: '0x57fC2aC5701e463ae261AdBd6C99FBeB48Ce5293',
       decimal: 18,
+      symbol: 'USDT',
+      name: 'Tether USD',
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c': { // BTCB
       asset: '0xD8A24c71FEa5bB81c66C01e532dE7d9B11e13905',
       decimal: 18,
+      symbol: 'USDC',
+      name: 'USD Coin',
       vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
     },
     [spokeChainConfig[BSC_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x5Ce6C1c51ff762cF3acD21396257046f694168b6',
       decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
   },
@@ -626,16 +678,27 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0x9ee17486571917837210824b0d4cadfe3b324d12',
       decimal: 18,
+      symbol: 'MATIC',
+      name: 'Polygon',
       vault: '0x0000000000000000000000000000000000000000',
+    },
+    '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359': {
+      asset: '0xa36893ba308b332FDEbfa95916D1dF3a2e3CF8B3',
+      decimal: 6,
+      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x18f85f9E80ff9496EeBD5979a051AF16Ce751567',
       decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
     '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359': { // USDC
       asset: '0xa36893ba308b332FDEbfa95916D1dF3a2e3CF8B3',
       decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
       vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
   },
@@ -643,11 +706,15 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     inj: {
       asset: '0xd375590b4955f6ea5623f799153f9b787a3bd319',
       decimal: 18,
+      symbol: 'INJ',
+      name: 'Injective',
       vault: '0x1f22279C89B213944b7Ea41daCB0a868DdCDFd13',
     },
     [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x69425FFb14704124A58d6F69d510f74A59D9a5bC',
       decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
   },
@@ -655,11 +722,15 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0x8ac68af223907fb1b893086601a3d99e00f2fa9d',
       decimal: 7,
+      symbol: 'XLM',
+      name: 'Stellar Lumens',
       vault: '0x6BC8C37cba91F76E68C9e6d689A9C21E4d32079B',
     },
     [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x23225Ab8E63FCa4070296678cb46566d57E1BBe3',
       decimal: 7,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
   },
@@ -667,11 +738,15 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[SUI_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0x4676b2a551b25c04e235553c1c81019337384673',
       decimal: 9,
+      symbol: 'SUI',
+      name: 'Sui',
       vault: '0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3',
     },
     [spokeChainConfig[SUI_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0xDf23097B9AEb917Bf8fb70e99b6c528fffA35364',
       decimal: 9,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
   },
@@ -680,11 +755,15 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x14C65b1CDc0B821569081b1F77342dA0D0CbF439',
       decimal: 9,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
     '11111111111111111111111111111111': {
       asset: '0x0c09e69a4528945de6d16c7e469dea6996fdf636',
       decimal: 9,
+      symbol: 'USDC',
+      name: 'USD Coin',
       vault: '0xdEa692287E2cE8Cb08FA52917Be0F16b1DACDC87',
     },
   },
@@ -692,16 +771,22 @@ export const hubAssets: Record<SpokeChainId, Record<string, { asset: Address; de
     [spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
       decimal: 18,
+      symbol: 'ICX',
+      name: 'ICON',
       vault: '0x0000000000000000000000000000000000000000',
     },
     ['cx88fd7df7ddff82f7cc735c871dc519838cb235bb']: {
       asset: '0x654dddf32a9a2ac53f5fb54bf1e93f66791f8047',
       decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
       vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
     },
     ['cx3975b43d260fb8ec802cef6e60c2f4d07486f11d']: {
       asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
       decimal: 18,
+      symbol: 'ICX',
+      name: 'ICON',
       vault: '0x70CB7B199700Ae2B1FAb3d4e6FecDa156FBf8182',
     },
   },

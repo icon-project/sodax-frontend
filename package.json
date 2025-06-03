@@ -8,7 +8,7 @@
     "build:packages": "turbo run build:packages",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=web",
-    "dev:solver": "turbo run dev --filter=react-solver-example",
+    "dev:demo": "turbo run dev --filter=demo",
     "pretty": "turbo run pretty",
     "lint": "turbo run lint",
     "checkTs": "turbo run checkTs",

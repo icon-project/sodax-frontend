@@ -1,7 +1,13 @@
-import type { EvmHubProvider } from '@new-world/sdk';
-import { SpokeService, type IntentRelayRequest, type SubmitTxResponse, submitTransaction } from '@new-world/sdk';
+import type { EvmHubProvider, SpokeChainId } from '@new-world/sdk';
+import {
+  SpokeService,
+  type IntentRelayRequest,
+  type SubmitTxResponse,
+  submitTransaction,
+  getIntentRelayChainId,
+} from '@new-world/sdk';
 import type { XChainId, XToken } from '@new-world/xwagmi';
-import { getXChainType, useXAccount } from '@new-world/xwagmi';
+import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
 import { useState } from 'react';
 import type { Address, Hash, Hex } from 'viem';
 import { parseUnits } from 'viem';
@@ -9,19 +15,28 @@ import { useHubProvider } from './useHubProvider';
 import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
 import { useSodaxContext } from './useSodaxContext';
+import { XCALL_RELAY_URL } from '@/constants';
+import { getSpokeTokenAddressByVault } from '@/core';
 
 interface UseWithdrawReturn {
   withdraw: (amount: string) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
+  resetError: () => void;
 }
 
+// token: this is hub token
 export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
-  const spokeProvider = useSpokeProvider(spokeChainId);
-  const { data: hubWalletAddress } = useHubWalletAddress(spokeChainId, address, hubProvider as EvmHubProvider);
+  const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
+  const chain = xChainMap[token.xChainId];
+  const { data: hubWalletAddress } = useHubWalletAddress(
+    spokeChainId as SpokeChainId,
+    address,
+    hubProvider as EvmHubProvider,
+  );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
@@ -43,13 +58,11 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
     setIsLoading(true);
     setError(null);
 
-    console.log('spokeProvider.chainConfig.chain.id', spokeChainId, spokeProvider.chainConfig.chain.id);
-
     try {
       const data: Hex = sodax.moneyMarket.withdrawData(
         hubWalletAddress as Address,
         spokeProvider.walletProvider.getWalletAddress(),
-        '0x0000000000000000000000000000000000000000',
+        getSpokeTokenAddressByVault(spokeChainId, token.address),
         parseUnits(amount, token.decimals),
         spokeProvider.chainConfig.chain.id,
       );
@@ -64,13 +77,15 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
       const request = {
         action: 'submit',
         params: {
-          chain_id: '6',
+          chain_id: getIntentRelayChainId(spokeChainId as SpokeChainId).toString(),
           tx_hash: txHash,
         },
       } satisfies IntentRelayRequest<'submit'>;
 
-      // TODO: use the correct endpoint
-      const response: SubmitTxResponse = await submitTransaction(request, 'https://xcall-relay.nw.iconblockchain.xyz');
+      const response: SubmitTxResponse = await submitTransaction(
+        request,
+        chain.testnet ? XCALL_RELAY_URL.testnet : XCALL_RELAY_URL.mainnet,
+      );
 
       console.log('Withdraw transaction submitted:', response);
     } catch (err) {
@@ -81,9 +96,14 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
     }
   };
 
+  const resetError = () => {
+    setError(null);
+  };
+
   return {
     withdraw,
     isLoading,
     error,
+    resetError,
   };
 }
