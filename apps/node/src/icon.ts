@@ -11,16 +11,14 @@ import {
   IconWalletProvider,
   type IconAddress,
   getIconAddressBytes,
-  SONIC_TESTNET_CHAIN_ID,
   getMoneyMarketConfig,
   type HubChainId,
   SONIC_MAINNET_CHAIN_ID,
-  ICON_TESTNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
-  type SolverConfig,
+  SolverConfigParams,
 } from '@new-world/sdk';
 
 // load PK from .env
@@ -31,13 +29,13 @@ if (!privateKey) {
 }
 
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
-const HUB_CHAIN_ID: HubChainId = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
-const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
+const HUB_CHAIN_ID: HubChainId = SONIC_MAINNET_CHAIN_ID;
+const HUB_RPC_URL = 'https://rpc.soniclabs.com';
 
 const DEFAULT_SPOKE_RPC_URL = IS_TESTNET
   ? 'https://lisbon.net.solidwallet.io/api/v3'
   : 'https://ctz.solidwallet.io/api/v3';
-const DEFAULT_SPOKE_CHAIN_ID = IS_TESTNET ? ICON_TESTNET_CHAIN_ID : ICON_MAINNET_CHAIN_ID;
+const DEFAULT_SPOKE_CHAIN_ID = ICON_MAINNET_CHAIN_ID;
 
 const iconSpokeWallet = new IconWalletProvider(privateKey as Hex, DEFAULT_SPOKE_RPC_URL);
 const iconSpokeChainConfig = spokeChainConfig[DEFAULT_SPOKE_CHAIN_ID];
@@ -54,9 +52,8 @@ const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef', // mainnet
   solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-  relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
   partnerFee: undefined,
-} satisfies SolverConfig;
+} satisfies SolverConfigParams;
 
 const sodax = new Sodax({
   solver: solverConfig,
@@ -89,6 +86,12 @@ async function depositTo(token: IconAddress, amount: bigint, recipient: Address)
 }
 
 async function withdrawAsset(token: IconAddress, amount: bigint, recipient: IconAddress) {
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+    iconSpokeProvider.chainConfig.chain.id,
+    iconSpokeProvider.walletProvider.getWalletAddressBytes(),
+    hubProvider,
+  );
+
   const data = EvmAssetManagerService.withdrawAssetData(
     {
       token,
@@ -98,12 +101,7 @@ async function withdrawAsset(token: IconAddress, amount: bigint, recipient: Icon
     hubProvider,
     iconSpokeChainConfig.chain.id,
   );
-  const txHash: Hash = await SpokeService.callWallet(
-    iconSpokeProvider.walletProvider.getWalletAddress() as IconAddress,
-    data,
-    iconSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, iconSpokeProvider, hubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -145,12 +143,7 @@ async function borrow(token: IconAddress, amount: bigint) {
     iconSpokeChainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    iconSpokeProvider.walletProvider.getWalletAddress() as IconAddress,
-    data,
-    iconSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, iconSpokeProvider, hubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
@@ -170,12 +163,7 @@ async function withdraw(token: IconAddress, amount: bigint) {
     iconSpokeChainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    iconSpokeProvider.walletProvider.getWalletAddress() as IconAddress,
-    data,
-    iconSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, iconSpokeProvider, hubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }

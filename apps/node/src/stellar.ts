@@ -8,8 +8,6 @@ import {
   StellarSpokeProvider,
   type StellarSpokeChainConfig,
   StellarWalletProvider,
-  SONIC_TESTNET_CHAIN_ID,
-  STELLAR_TESTNET_CHAIN_ID,
   getMoneyMarketConfig,
   SONIC_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
@@ -18,6 +16,7 @@ import {
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
+  SolverConfigParams,
 } from '@new-world/sdk';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
@@ -26,9 +25,9 @@ dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
-const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
-const HUB_CHAIN_ID = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
-const STELLAR_CHAIN_ID = IS_TESTNET ? STELLAR_TESTNET_CHAIN_ID : STELLAR_MAINNET_CHAIN_ID;
+const HUB_RPC_URL = 'https://rpc.soniclabs.com';
+const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
+const STELLAR_CHAIN_ID = STELLAR_MAINNET_CHAIN_ID;
 if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
@@ -51,9 +50,8 @@ const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-  relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
   partnerFee: undefined,
-} satisfies SolverConfig;
+} satisfies SolverConfigParams;
 
 const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const hubConfig = {
@@ -106,6 +104,12 @@ async function withdrawAsset(
   amount: bigint,
   recipient: string, // stellar address
 ) {
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+    stellarSpokeProvider.chainConfig.chain.id,
+    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    hubProvider,
+  );
+
   const data = EvmAssetManagerService.withdrawAssetData(
     {
       token,
@@ -116,7 +120,7 @@ async function withdrawAsset(
     stellarSpokeProvider.chainConfig.chain.id,
   );
   const txHash: Hash = await SpokeService.callWallet(
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    hubWallet,
     data,
     stellarSpokeProvider,
     hubProvider,
@@ -164,7 +168,7 @@ async function borrow(token: string, amount: bigint) {
   );
 
   const txHash: Hash = await SpokeService.callWallet(
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    hubWallet,
     data,
     stellarSpokeProvider,
     hubProvider,
@@ -191,7 +195,7 @@ async function withdraw(token: string, amount: bigint) {
   );
 
   const txHash: Hash = await SpokeService.callWallet(
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    hubWallet,
     data,
     stellarSpokeProvider,
     hubProvider,

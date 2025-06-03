@@ -7,7 +7,6 @@ import {
   type Hash,
   type Hex,
   type IEvmWalletProvider,
-  SpokeChainId,
 } from '@new-world/sdk';
 import {
   type WalletClient,
