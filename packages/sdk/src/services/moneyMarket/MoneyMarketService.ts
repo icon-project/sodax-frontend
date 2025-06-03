@@ -1,7 +1,7 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { poolAbi } from '../../abis/pool.abi.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { hubAssets, uiPoolDataAbi } from '../../index.js';
+import { hubAssets, SONIC_TESTNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, uiPoolDataAbi } from '../../index.js';
 import type { EvmContractCall, MoneyMarketConfig, SpokeChainId } from '../../types.js';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService } from '../hub/index.js';
@@ -65,6 +65,39 @@ export type UserReserveData = {
   scaledVariableDebt: bigint;
 };
 
+export type ReserveDataLegacy = {
+  //stores the reserve configuration
+  configuration: bigint;
+  //the liquidity index. Expressed in ray
+  liquidityIndex: bigint;
+  //the current supply rate. Expressed in ray
+  currentLiquidityRate: bigint;
+  //variable borrow index. Expressed in ray
+  variableBorrowIndex: bigint;
+  //the current variable borrow rate. Expressed in ray
+  currentVariableBorrowRate: bigint;
+  // DEPRECATED on v3.2.0
+  currentStableBorrowRate: bigint;
+  //timestamp of last update
+  lastUpdateTimestamp: number;
+  //the id of the reserve. Represents the position in the list of the active reserves
+  id: number;
+  //aToken address
+  aTokenAddress: Address;
+  // DEPRECATED on v3.2.0
+  stableDebtTokenAddress: Address;
+  //variableDebtToken address
+  variableDebtTokenAddress: Address;
+  //address of the interest rate strategy
+  interestRateStrategyAddress: Address;
+  //the current treasury balance, scaled
+  accruedToTreasury: bigint;
+  //the outstanding unbacked aTokens minted through the bridging feature
+  unbacked: bigint;
+  //the outstanding debt borrowed against this asset in isolation mode
+  isolationModeTotalDebt: bigint;
+};
+
 export type MoneyMarketSupplyParams = {
   asset: Address; // The address of the asset to supply.
   amount: bigint; // The amount of the asset to supply.
@@ -100,7 +133,7 @@ export type MoneyMarketRepayWithATokensParams = {
 };
 
 export class MoneyMarketService {
-  private readonly config: MoneyMarketConfig;
+  public readonly config: MoneyMarketConfig;
   private readonly hubProvider: EvmHubProvider;
 
   constructor(config: MoneyMarketConfig, hubProvider: EvmHubProvider) {
@@ -179,7 +212,7 @@ export class MoneyMarketService {
       calls.push(EvmVaultTokenService.encodeDeposit(bnUSDVault, bnUSD, amount));
 
       if (this.config.partnerFee && feeAmount) {
-        calls.push(Erc20Service.encodeTansfer(bnUSDVault, this.config.partnerFee.address, feeAmount));
+        calls.push(Erc20Service.encodeTransfer(bnUSDVault, this.config.partnerFee.address, feeAmount));
       }
     } else {
       calls.push(
@@ -190,21 +223,24 @@ export class MoneyMarketService {
       );
 
       if (this.config.partnerFee && feeAmount) {
-        calls.push(Erc20Service.encodeTansfer(vaultAddress, this.config.partnerFee.address, feeAmount));
+        calls.push(Erc20Service.encodeTransfer(vaultAddress, this.config.partnerFee.address, feeAmount));
       }
     }
 
     calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount - feeAmount));
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount - feeAmount);
-
-    calls.push(
-      EvmAssetManagerService.encodeTransfer(
-        assetAddress,
-        to,
-        translatedAmountOut,
-        this.hubProvider.chainConfig.addresses.assetManager,
-      ),
-    );
+    if (spokeChainId === SONIC_MAINNET_CHAIN_ID || spokeChainId === SONIC_TESTNET_CHAIN_ID) {
+      calls.push(Erc20Service.encodeTransfer(assetAddress, to, translatedAmountOut));
+    } else {
+      calls.push(
+        EvmAssetManagerService.encodeTransfer(
+          assetAddress,
+          to,
+          translatedAmountOut,
+          this.hubProvider.chainConfig.addresses.assetManager,
+        ),
+      );
+    }
 
     return encodeContractCalls(calls);
   }
@@ -239,14 +275,19 @@ export class MoneyMarketService {
 
     calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount));
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount);
-    calls.push(
-      EvmAssetManagerService.encodeTransfer(
-        assetAddress,
-        to,
-        translatedAmountOut,
-        this.hubProvider.chainConfig.addresses.assetManager,
-      ),
-    );
+    if (spokeChainId === SONIC_MAINNET_CHAIN_ID || spokeChainId === SONIC_TESTNET_CHAIN_ID) {
+      calls.push(Erc20Service.encodeTransfer(assetAddress, to, translatedAmountOut));
+    } else {
+      calls.push(
+        EvmAssetManagerService.encodeTransfer(
+          assetAddress,
+          to,
+          translatedAmountOut,
+          this.hubProvider.chainConfig.addresses.assetManager,
+        ),
+      );
+    }
+
     return encodeContractCalls(calls);
   }
 
@@ -322,6 +363,38 @@ export class MoneyMarketService {
       functionName: 'getReservesData',
       args: [poolAddressesProvider],
     });
+  }
+
+  /**
+   * Get detailed data for a reserve in the pool
+   * @param poolAddress - The address of the pool
+   * @param assetAddress - The address of the asset
+   * @returns Tuple containing array of reserve data and base currency info
+   */
+  async getReserveData(poolAddress: Address, assetAddress: Address): Promise<ReserveDataLegacy> {
+    return this.hubProvider.publicClient.readContract({
+      address: poolAddress,
+      abi: poolAbi,
+      functionName: 'getReserveData',
+      args: [assetAddress],
+    });
+  }
+
+  /**
+   * Calculate aToken amount from actual amount using liquidityIndex
+   * @param amount The actual amount
+   * @param liquidityIndex The current liquidity index from reserve data
+   * @returns The equivalent aToken amount
+   */
+  async calculateATokenAmount(poolAddress: Address, amount: bigint, asset: Address): Promise<bigint> {
+    const normalizedIncome = await this.hubProvider.publicClient.readContract({
+      address: poolAddress,
+      abi: poolAbi,
+      functionName: 'getReserveNormalizedIncome',
+      args: [asset],
+    });
+
+    return (amount * 10n ** 18n) / normalizedIncome;
   }
 
   /**

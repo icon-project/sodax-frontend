@@ -13,6 +13,7 @@ import type {
   MoneyMarketConfig,
   OriginalAssetAddress,
   SolanaChainConfig,
+  SonicSpokeChainConfig,
   SpokeChainId,
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
@@ -73,6 +74,8 @@ export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID, SONIC_TESTNET_CHAIN_ID] as
 // currently supported spoke chains
 export const SPOKE_CHAIN_IDS = [
   AVALANCHE_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  SONIC_TESTNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
@@ -268,6 +271,35 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
 export const getHubChainConfig = (chainId: HubChainId): EvmHubChainConfig => hubChainConfig[chainId];
 
 export const spokeChainConfig = {
+  [SONIC_MAINNET_CHAIN_ID]: {
+    chain: {
+      name: 'Sonic',
+      id: SONIC_MAINNET_CHAIN_ID,
+      type: 'sonic',
+    },
+    addresses: {
+      walletRouter: '0x5bDD1E1C5173F4c912cC919742FB94A55ECfaf86',
+      wrappedSonic: '0x0000000000000000000000000000000000000000',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000',
+    bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
+    supportedTokens: [],
+  } satisfies SonicSpokeChainConfig,
+
+  [SONIC_TESTNET_CHAIN_ID]: {
+    chain: {
+      name: 'Sonic Blaze Testnet',
+      id: SONIC_TESTNET_CHAIN_ID,
+      type: 'sonic',
+    },
+    addresses: {
+      walletRouter: '0x5bDD1E1C5173F4c912cC919742FB94A55ECfaf86',
+      wrappedSonic: '0x0000000000000000000000000000000000000000',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000',
+    bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
+    supportedTokens: [],
+  } satisfies SonicSpokeChainConfig,
   [SOLANA_MAINNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'AnCCJjheynmGqPp6Vgat9DTirGKD4CtQzP8cwTYV8qKH',
@@ -672,6 +704,24 @@ export const hubAssets: Record<
   SpokeChainId,
   Record<Address | string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>
 > = {
+  [SONIC_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0x0000000000000000000000000000000000000000',
+      decimal: 18,
+      symbol: 'S',
+      name: 'Sonic',
+      vault: '0x0000000000000000000000000000000000000000',
+    },
+  },
+  [SONIC_TESTNET_CHAIN_ID]: {
+    [spokeChainConfig[SONIC_TESTNET_CHAIN_ID].nativeToken]: {
+      asset: '0x0000000000000000000000000000000000000000',
+      decimal: 18,
+      symbol: 'S',
+      name: 'Sonic',
+      vault: '0x0000000000000000000000000000000000000000',
+    },
+  },
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0xc9e4f0B6195F389D9d2b639f2878B7674eB9D8cD',

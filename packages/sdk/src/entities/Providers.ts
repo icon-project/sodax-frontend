@@ -11,7 +11,13 @@ import {
   createPublicClient,
 } from 'viem';
 import { getEvmViemChain, getHubChainConfig, SONIC_MAINNET_CHAIN_ID } from '../constants.js';
-import type { EvmChainId, EvmHubChainConfig, EvmSpokeChainConfig, SpokeChainConfig } from '../types.js';
+import type {
+  EvmChainId,
+  EvmHubChainConfig,
+  EvmSpokeChainConfig,
+  SonicSpokeChainConfig,
+  SpokeChainConfig,
+} from '../types.js';
 import type { CWSpokeProvider, ICWWalletProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { IconWalletProvider } from './icon/IconWalletProvider.js';
@@ -83,6 +89,28 @@ export class EvmHubProvider {
 export class EvmSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: IEvmWalletProvider;
   public readonly chainConfig: EvmSpokeChainConfig;
+  public readonly publicClient: PublicClient<HttpTransport>;
+
+  constructor(walletProvider: IEvmWalletProvider, chainConfig: EvmSpokeChainConfig, rpcUrl?: string) {
+    this.walletProvider = walletProvider;
+    this.chainConfig = chainConfig;
+    if (rpcUrl) {
+      this.publicClient = createPublicClient({
+        transport: http(rpcUrl),
+        chain: getEvmViemChain(chainConfig.chain.id),
+      });
+    } else {
+      this.publicClient = createPublicClient({
+        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
+        chain: getEvmViemChain(chainConfig.chain.id),
+      });
+    }
+  }
+}
+
+export class SonicSpokeProvider implements ISpokeProvider {
+  public readonly walletProvider: IEvmWalletProvider;
+  public readonly chainConfig: SonicSpokeChainConfig;
   public readonly publicClient: PublicClient<HttpTransport>;
 
   constructor(walletProvider: IEvmWalletProvider, chainConfig: EvmSpokeChainConfig, rpcUrl?: string) {
