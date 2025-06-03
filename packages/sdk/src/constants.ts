@@ -297,7 +297,26 @@ export const spokeChainConfig = {
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
-    supportedTokens: [],
+    supportedTokens: [
+      {
+        symbol: 'AVAX',
+        name: 'Avalanche',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+      },
+      {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7',
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
+      },
+    ],
   } satisfies EvmSpokeChainConfig,
   [NIBIRU_MAINNET_CHAIN_ID]: {
     chain: {
@@ -313,7 +332,6 @@ export const spokeChainConfig = {
     bnUSD: '0x043fb7e23350Dd5b77dE5E228B528763DEcb9131',
     supportedTokens: [],
   } satisfies EvmSpokeChainConfig,
-
   [ARBITRUM_MAINNET_CHAIN_ID]: {
     chain: {
       name: 'Arbitrum',
@@ -361,7 +379,7 @@ export const spokeChainConfig = {
         symbol: 'USDC',
         name: 'USD Coin (USDC)',
         decimals: 6,
-        address: '0xaf88d065e77c8cc2239327c5edb3a432268e5831',
+        address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
       },
     ],
   } satisfies EvmSpokeChainConfig,
@@ -377,7 +395,38 @@ export const spokeChainConfig = {
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     bnUSD: '0xAcfab3F31C0a18559D78556BBf297EC29c6cf8aa',
-    supportedTokens: [],
+    supportedTokens: [
+      {
+        symbol: 'ETH',
+        name: 'Ethereum',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+      },
+      {
+        symbol: 'weETH',
+        name: 'Wrapped eETH',
+        decimals: 18,
+        address: '0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452',
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      },
+      {
+        symbol: 'wstETH',
+        name: 'Wrapped stETH',
+        decimals: 18,
+        address: '0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452',
+      },
+      {
+        symbol: 'cbBTC',
+        name: 'Coinbase Wrapped BTC',
+        decimals: 8,
+        address: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf',
+      },
+    ],
   } satisfies EvmSpokeChainConfig,
   [OPTIMISM_MAINNET_CHAIN_ID]: {
     chain: {
@@ -391,7 +440,38 @@ export const spokeChainConfig = {
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     bnUSD: '0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8',
-    supportedTokens: [],
+    supportedTokens: [
+      {
+        symbol: 'ETH',
+        name: 'Ethereum',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+      },
+      {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85',
+      },
+      {
+        symbol: 'wstETH',
+        name: 'Wrapped stETH',
+        decimals: 18,
+        address: '0x1F32b1c2345538c0c6f582fCB022739c4A194Ebb',
+      },
+      {
+        symbol: 'weETH',
+        name: 'Wrapped eETH',
+        decimals: 18,
+        address: '0x5A7fACB970D094B6C7FF1df0eA68D99E6e73CBFF',
+      },
+      {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58',
+      },
+    ],
   } satisfies EvmSpokeChainConfig,
   [BSC_MAINNET_CHAIN_ID]: {
     chain: {
@@ -405,7 +485,26 @@ export const spokeChainConfig = {
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     bnUSD: '0x8428FedC020737a5A2291F46cB1B80613eD71638',
-    supportedTokens: [],
+    supportedTokens: [
+      {
+        symbol: 'BNB',
+        name: 'BNB',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+      },
+      {
+        symbol: 'ETHB',
+        name: 'Ethereum BSC',
+        decimals: 18,
+        address: '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
+      },
+      {
+        symbol: 'BTCB',
+        name: 'Bitcoin BSC',
+        decimals: 18,
+        address: '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c',
+      },
+    ],
   } satisfies EvmSpokeChainConfig,
   [POLYGON_MAINNET_CHAIN_ID]: {
     chain: {
@@ -811,7 +910,7 @@ export const hubAssets: Record<
   },
   [BSC_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[BSC_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: '0x13b70564b1ec12876B20FAb5D1Bb630311312f4f',
+      asset: '0x13b70564b1ec12876b20fab5d1bb630311312f4f',
       decimal: 18,
       symbol: 'BNB',
       name: 'BNB',

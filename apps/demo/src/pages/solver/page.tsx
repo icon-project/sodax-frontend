@@ -10,7 +10,7 @@ export default function SolverPage() {
   const [intentTxHash, setIntentTxHash] = useState<Hex | undefined>(undefined);
 
   return (
-    <div className="flex items-center content-center justify-center h-screen">
+    <div className="flex flex-col items-center content-center justify-center h-screen">
       {intentTxHash && <IntentStatus intent_tx_hash={intentTxHash} />}
       <SwapCard setIntentTxHash={setIntentTxHash} address={evmAccount.address as Address} />
     </div>
