@@ -1,7 +1,9 @@
-import type { HttpUrl, Result } from '../../types.js';
+import type { Hex, HttpUrl, Result } from '../../types.js';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentSubmitError } from '../solver/SolverService.js';
+import { DEFAULT_RELAY_TX_TIMEOUT, getIntentRelayChainId } from '../../constants.js';
+import type { SpokeProvider } from '../../entities/Providers.js';
 
 /**
  * The action type for the intent relay service.
@@ -19,6 +21,13 @@ export type RelayAction = 'submit' | 'get_transaction_packets' | 'get_packet';
  * executed - has confirmed transaction-hash
  */
 export type RelayTxStatus = 'pending' | 'validating' | 'executing' | 'executed';
+
+export type RelayErrorCode = 'UNKNOWN' | 'SUBMIT_TX_FAILED' | 'POST_EXECUTION_FAILED' | 'TIMEOUT';
+
+export type RelayError = {
+  code: RelayErrorCode;
+  error: unknown;
+};
 
 export type SubmitTxParams = {
   chain_id: string; // The ID of the chain where the transaction was submitted
@@ -229,6 +238,74 @@ export async function waitUntilIntentExecuted(
           payload: payload,
           error: e,
         },
+      },
+    };
+  }
+}
+
+/**
+ * Submit the transaction to the Solver API and wait for it to be executed
+ * @param spokeTxHash - The transaction hash to submit.
+ * @param spokeProvider - The spoke provider.
+ * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
+ * @returns The transaction hash.
+ */
+export async function relayTxAndWaitPacket<S extends SpokeProvider>(
+  spokeTxHash: Hex,
+  spokeProvider: S,
+  relayerApiEndpoint: HttpUrl,
+  timeout = DEFAULT_RELAY_TX_TIMEOUT,
+): Promise<Result<PacketData, RelayError>> {
+  try {
+    const intentRelayChainId = getIntentRelayChainId(spokeProvider.chainConfig.chain.id).toString();
+
+    const submitPayload: IntentRelayRequest<'submit'> = {
+      action: 'submit',
+      params: {
+        chain_id: intentRelayChainId,
+        tx_hash: spokeTxHash,
+      },
+    };
+
+    const submitResult = await submitTransaction(submitPayload, relayerApiEndpoint);
+
+    if (!submitResult.success) {
+      return {
+        ok: false,
+        error: {
+          code: 'SUBMIT_TX_FAILED',
+          error: submitResult.message,
+        },
+      };
+    }
+
+    const packet = await waitUntilIntentExecuted({
+      intentRelayChainId,
+      spokeTxHash,
+      timeout,
+      apiUrl: relayerApiEndpoint,
+    });
+
+    if (!packet.ok) {
+      return {
+        ok: false,
+        error: {
+          code: 'TIMEOUT',
+          error: packet.error,
+        },
+      };
+    }
+
+    return {
+      ok: true,
+      value: packet.value,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: {
+        code: 'UNKNOWN',
+        error: error,
       },
     };
   }

@@ -13,6 +13,9 @@
       },
       "complexity": {
         "noStaticOnlyClass": "off"
+      },
+      "correctness": {
+        "noUnusedFunctionParameters": "off"
       }
     },
     "ignore": []

@@ -1,24 +1,21 @@
-import {
-  type EvmHubProviderConfig,
-  getMoneyMarketConfig,
-  Sodax,
-  type SodaxConfig,
-  SOLANA_MAINNET_CHAIN_ID,
-  SOLANA_TESTNET_CHAIN_ID,
-  type SolverConfig,
-  SONIC_MAINNET_CHAIN_ID,
-} from '@new-world/sdk';
+
 import {
   EvmAssetManagerService,
   EvmHubProvider,
   EvmWalletAbstraction,
-  SONIC_TESTNET_CHAIN_ID,
   type SolanaChainConfig,
   SolanaSpokeProvider,
   SolanaWalletProvider,
   SpokeService,
   getHubChainConfig,
   spokeChainConfig,
+  type EvmHubProviderConfig,
+  getMoneyMarketConfig,
+  Sodax,
+  type SodaxConfig,
+  SOLANA_MAINNET_CHAIN_ID,
+  SolverConfigParams,
+  SONIC_MAINNET_CHAIN_ID,
 } from '@new-world/sdk';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import * as dotenv from 'dotenv';
@@ -30,8 +27,8 @@ dotenv.config();
 const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
-const HUB_CHAIN_ID = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
-const SOLANA_CHAIN_ID = IS_TESTNET ? SOLANA_TESTNET_CHAIN_ID : SOLANA_MAINNET_CHAIN_ID;
+const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
+const SOLANA_CHAIN_ID = SOLANA_MAINNET_CHAIN_ID;
 
 const solanaSpokeChainConfig: SolanaChainConfig = spokeChainConfig[SOLANA_CHAIN_ID] as SolanaChainConfig;
 
@@ -52,9 +49,8 @@ const sonicTestnetEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-  relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
   partnerFee: undefined,
-} satisfies SolverConfig;
+} satisfies SolverConfigParams;
 
 const solanaSpokeProvider = new SolanaSpokeProvider(solanaWallet, solanaSpokeChainConfig);
 

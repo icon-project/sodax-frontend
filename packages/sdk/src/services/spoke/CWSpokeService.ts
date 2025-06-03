@@ -1,7 +1,7 @@
 import { type Address, type Hex, toHex } from 'viem';
 import { CWSpokeProvider } from '../../entities/cosmos/CWSpokeProvider.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { type PromiseCWTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { type HubAddress, type PromiseCWTxReturnType, getIntentRelayChainId } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type CWSpokeDepositParams = {
@@ -69,26 +69,21 @@ export class CWSpokeService {
 
   /**
    * Calls a contract on the spoke chain using the user's wallet.
-   * @param {string} from - The address of the user on the spoke chain.
+   * @param {HubAddress} from - The address of the user on the hub chain.
    * @param {Hex} payload - The payload to send to the contract.
    * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {PromiseCWTxReturnType<R>} A promise that resolves to the transaction hash.
    */
   public static async callWallet<R extends boolean = false>(
-    from: string,
+    from: HubAddress,
     payload: Hex,
     spokeProvider: CWSpokeProvider,
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseCWTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      toHex(Buffer.from(from, 'utf-8')),
-      hubProvider,
-    );
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return CWSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);
+    return CWSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
 
   /**
@@ -108,7 +103,7 @@ export class CWSpokeService {
     raw?: R,
   ): PromiseCWTxReturnType<R> {
     const sender = spokeProvider.walletProvider.getWalletAddress();
-    return CWSpokeProvider.deposit(sender, token, recipient, amount, data, spokeProvider);
+    return CWSpokeProvider.deposit(sender, token, recipient, amount, data, spokeProvider, raw);
   }
 
   /**
@@ -127,6 +122,6 @@ export class CWSpokeService {
     raw?: R,
   ): PromiseCWTxReturnType<R> {
     const sender = spokeProvider.walletProvider.getWalletAddress();
-    return spokeProvider.send_message(sender, dstChainId.toString(), dstAddress, payload);
+    return spokeProvider.send_message(sender, dstChainId.toString(), dstAddress, payload, raw);
   }
 }

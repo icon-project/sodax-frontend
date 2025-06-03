@@ -7,13 +7,11 @@ import {
   type EvmHubProviderConfig,
   EvmWalletAbstraction,
   INJECTIVE_MAINNET_CHAIN_ID,
-  INJECTIVE_TESTNET_CHAIN_ID,
   InjectiveWalletProvider,
   SONIC_MAINNET_CHAIN_ID,
-  SONIC_TESTNET_CHAIN_ID,
   Sodax,
   type SodaxConfig,
-  type SolverConfig,
+  SolverConfigParams,
   type SpokeChainId,
   SpokeService,
   getHubChainConfig,
@@ -28,14 +26,14 @@ dotenv.config();
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY as Hex;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
-const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
-const HUB_CHAIN_ID = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
+const HUB_RPC_URL = 'https://rpc.soniclabs.com'
+const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 
 const DEFAULT_SPOKE_RPC_URL = IS_TESTNET
   ? 'https://injective-testnet-rpc.publicnode.com:443'
   : 'https://injective-rpc.publicnode.com:443';
 
-const DEFAULT_SPOKE_CHAIN_ID = IS_TESTNET ? INJECTIVE_TESTNET_CHAIN_ID : INJECTIVE_MAINNET_CHAIN_ID;
+const DEFAULT_SPOKE_CHAIN_ID = INJECTIVE_MAINNET_CHAIN_ID;
 
 const SPOKE_CHAIN_ID = (process.env.SPOKE_CHAIN_ID || DEFAULT_SPOKE_CHAIN_ID) as SpokeChainId; // Default to Injective
 const SPOKE_RPC_URL = process.env.SPOKE_RPC_URL || DEFAULT_SPOKE_RPC_URL;
@@ -54,7 +52,7 @@ if (!cosmosWalletMnemonics) {
 }
 
 const cosmosWalletProvider =
-  cosmosConfig.chain.id === INJECTIVE_MAINNET_CHAIN_ID || cosmosConfig.chain.id === INJECTIVE_TESTNET_CHAIN_ID
+  cosmosConfig.chain.id === INJECTIVE_MAINNET_CHAIN_ID
     ? new InjectiveWalletProvider({
         mnemonics: cosmosWalletMnemonics,
         network: cosmosNetwork,
@@ -78,9 +76,8 @@ const hubConfig = {
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-  relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
   partnerFee: undefined,
-} satisfies SolverConfig;
+} satisfies SolverConfigParams;
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
@@ -132,8 +129,14 @@ async function withdrawAsset(
     evmHubProvider,
     cwSpokeProvider.chainConfig.chain.id,
   );
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+    cwSpokeProvider.chainConfig.chain.id,
+    cwSpokeProvider.walletProvider.getWalletAddressBytes(),
+    evmHubProvider,
+  );
+
   const txHash: Hash = await SpokeService.callWallet(
-    cwSpokeProvider.walletProvider.getWalletAddress(),
+    hubWallet,
     data,
     cwSpokeProvider,
     evmHubProvider,
@@ -179,9 +182,10 @@ async function borrow(token: string, amount: bigint) {
     amount,
     cwSpokeProvider.chainConfig.chain.id,
   );
+  
 
   const txHash: Hash = await SpokeService.callWallet(
-    cwSpokeProvider.walletProvider.getWalletAddress(),
+    hubWallet,
     data,
     cwSpokeProvider,
     evmHubProvider,
@@ -206,7 +210,7 @@ async function withdraw(token: string, amount: bigint) {
   );
 
   const txHash: Hash = await SpokeService.callWallet(
-    cwSpokeProvider.walletProvider.getWalletAddress(),
+    hubWallet,
     data,
     cwSpokeProvider,
     evmHubProvider,

@@ -10,10 +10,9 @@ import {
   Sodax,
   type SodaxConfig,
   SONIC_MAINNET_CHAIN_ID,
-  SONIC_TESTNET_CHAIN_ID,
   type UserReserveData,
 } from '@new-world/sdk';
-import type { Address, Hex } from 'viem';
+import type { Address } from 'viem';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -23,8 +22,8 @@ if (!privateKey) {
 }
 
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
-const HUB_CHAIN_ID: HubChainId = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
-const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
+const HUB_CHAIN_ID: HubChainId = SONIC_MAINNET_CHAIN_ID;
+const HUB_RPC_URL = 'https://rpc.soniclabs.com';
 
 const moneyMarketConfig: MoneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 

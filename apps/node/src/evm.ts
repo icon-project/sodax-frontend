@@ -12,8 +12,6 @@ import {
   waitForTransactionReceipt,
   type SolverConfig,
   IntentsAbi,
-  SONIC_TESTNET_CHAIN_ID,
-  AVALANCHE_FUJI_TESTNET_CHAIN_ID,
   type CreateIntentParams,
   type SpokeChainId,
   type HubChainId,
@@ -25,6 +23,7 @@ import {
   type SodaxConfig,
   Sodax,
   type EvmRawTransaction,
+  SolverConfigParams,
 } from '@new-world/sdk';
 import { EvmWalletProvider } from './wallet-providers';
 
@@ -32,9 +31,9 @@ import { EvmWalletProvider } from './wallet-providers';
 const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const DEFAULT_SPOKE_RPC_URL = IS_TESTNET ? 'https://avalanche-fuji.drpc.org' : 'https://api.avax.network/ext/bc/C/rpc';
-const DEFAULT_SPOKE_CHAIN_ID = IS_TESTNET ? AVALANCHE_FUJI_TESTNET_CHAIN_ID : AVALANCHE_MAINNET_CHAIN_ID;
-const HUB_CHAIN_ID: HubChainId = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
-const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
+const DEFAULT_SPOKE_CHAIN_ID = AVALANCHE_MAINNET_CHAIN_ID;
+const HUB_CHAIN_ID: HubChainId = SONIC_MAINNET_CHAIN_ID;
+const HUB_RPC_URL = 'https://rpc.soniclabs.com';
 
 const EVM_SPOKE_CHAIN_ID = (process.env.SPOKE_CHAIN_ID || DEFAULT_SPOKE_CHAIN_ID) as EvmChainId & SpokeChainId; // Default to Avalanche
 const SPOKE_RPC_URL = process.env.SPOKE_RPC_URL || DEFAULT_SPOKE_RPC_URL;
@@ -62,17 +61,11 @@ const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
-const solverConfig: SolverConfig = IS_TESTNET
-  ? {
-      intentsContract: '0x611d800F24b5844Ea874B330ef4Ad6f1d5812f29',
-      solverApiEndpoint: 'https://TODO',
-      relayerApiEndpoint: 'https://TODO',
-    }
-  : {
-      intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-      solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-      relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
-    };
+const solverConfig = {
+  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
+  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  partnerFee: undefined,
+} satisfies SolverConfigParams;
 
 const sodax = new Sodax({
   solver: solverConfig,
@@ -107,6 +100,12 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
 }
 
 async function withdrawAsset(token: Address, amount: bigint, recipient: Address) {
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+    spokeProvider.chainConfig.chain.id,
+    spokeProvider.walletProvider.getWalletAddress(),
+    hubProvider,
+  );
+
   const data = EvmAssetManagerService.withdrawAssetData(
     {
       token,
@@ -117,7 +116,7 @@ async function withdrawAsset(token: Address, amount: bigint, recipient: Address)
     spokeProvider.chainConfig.chain.id,
   );
   const txHash: Hash = await SpokeService.callWallet(
-    spokeProvider.walletProvider.getWalletAddress(),
+    hubWallet,
     data,
     spokeProvider,
     hubProvider,
@@ -164,7 +163,7 @@ async function borrow(token: Address, amount: bigint) {
   );
 
   const txHash: Hash = await SpokeService.callWallet(
-    spokeProvider.walletProvider.getWalletAddress(),
+    hubWallet,
     data,
     spokeProvider,
     hubProvider,
@@ -189,7 +188,7 @@ async function withdraw(token: Address, amount: bigint) {
   );
 
   const txHash: Hash = await SpokeService.callWallet(
-    spokeProvider.walletProvider.getWalletAddress(),
+    hubWallet,
     data,
     spokeProvider,
     hubProvider,

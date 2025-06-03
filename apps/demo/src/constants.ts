@@ -5,9 +5,8 @@ import {
   getMoneyMarketConfig,
   type PartnerFee,
   type SodaxConfig,
-  type SolverConfig,
+  SolverConfigParams,
   SONIC_MAINNET_CHAIN_ID,
-  SONIC_TESTNET_CHAIN_ID,
   spokeChainConfig,
   type SpokeChainId,
   supportedSpokeChains,
@@ -33,8 +32,8 @@ export const supportedTokensPerChain: Map<SpokeChainId, Token[]> = new Map(
 );
 
 const testnet = import.meta.env.VITE_TESTNET === 'YES';
-const hubChainId = testnet ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
-const hubRpcUrl = testnet ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
+const hubChainId = SONIC_MAINNET_CHAIN_ID;
+const hubRpcUrl = 'https://rpc.soniclabs.com';
 
 const hubConfig = {
   hubRpcUrl,
@@ -51,20 +50,19 @@ export const partnerFeePercentage = {
 export const mainnetSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-  relayerApiEndpoint: 'https://xcall-relay.nw.iconblockchain.xyz',
   partnerFee: partnerFeePercentage, // fee to be paid to the partner address
-} satisfies SolverConfig;
+} satisfies SolverConfigParams;
 
 // TODO: replace with actual testnet data
 export const testnetSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-  relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
   partnerFee: partnerFeePercentage, // fee to be paid to the partner address
-} satisfies SolverConfig;
+} satisfies SolverConfigParams;
 
 export const sodaxConfig = {
   hubProviderConfig: hubConfig,
   moneyMarket: moneyMarketConfig,
   solver: testnet ? testnetSolverConfig : mainnetSolverConfig,
+  relayerApiEndpoint: testnet ? 'https://testnet-xcall-relay.nw.iconblockchain.xyz' : 'https://xcall-relay.nw.iconblockchain.xyz',
 } satisfies SodaxConfig;
