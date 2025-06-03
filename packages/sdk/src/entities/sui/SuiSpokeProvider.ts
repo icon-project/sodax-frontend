@@ -38,6 +38,52 @@ export class SuiSpokeProvider implements ISpokeProvider {
     return BigInt(str_u64);
   }
 
+  async getLimit(token: string): Promise<bigint> {
+    const rateLimit = this.splitAddress(this.chainConfig.addresses.rateLimit);
+    const tx = new Transaction();
+    const result = await this.walletProvider.viewContract(
+      tx,
+      rateLimit.packageId,
+      rateLimit.moduleId,
+      'get_max_available',
+      [tx.object(rateLimit.stateId)],
+      [token],
+    );
+    if (
+      !Array.isArray(result?.returnValues) ||
+      !Array.isArray(result.returnValues[0]) ||
+      result.returnValues[0][0] === undefined
+    ) {
+      throw new Error('Failed to get Balance');
+    }
+    const val: number[] = result.returnValues[0][0];
+    const str_u64 = bcs.U64.parse(Uint8Array.from(val));
+    return BigInt(str_u64);
+  }
+
+  async getAvailable(token: string): Promise<bigint> {
+    const rateLimit = this.splitAddress(this.chainConfig.addresses.rateLimit);
+    const tx = new Transaction();
+    const result = await this.walletProvider.viewContract(
+      tx,
+      rateLimit.packageId,
+      rateLimit.moduleId,
+      'get_available',
+      [tx.object(rateLimit.stateId)],
+      [token],
+    );
+    if (
+      !Array.isArray(result?.returnValues) ||
+      !Array.isArray(result.returnValues[0]) ||
+      result.returnValues[0][0] === undefined
+    ) {
+      throw new Error('Failed to get Balance');
+    }
+    const val: number[] = result.returnValues[0][0];
+    const str_u64 = bcs.U64.parse(Uint8Array.from(val));
+    return BigInt(str_u64);
+  }
+
   async transfer<R extends boolean = false>(
     token: string,
     amount: bigint,
