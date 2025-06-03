@@ -2,6 +2,19 @@
 
 Money Market part of SDK provides abstractions to assist you with interacting with the cross-chain Money Market Smart Contracts.
 
+## Using SDK Config and Constants
+
+SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
+
+```typescript
+import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token } from "sodax/sdk"
+
+// all supported spoke chains
+export const spokeChains: SpokeChainId[] = supportedSpokeChains;
+
+// using spoke chain id to retrieve supported tokens address (on spoke chain = original address) for money market
+const supportedMoneyMarketTokens: OriginalAssetAddress[] = getSupportedMoneyMarketTokens(spokeChainId)
+```
 
 ## Supply Tokens
 
