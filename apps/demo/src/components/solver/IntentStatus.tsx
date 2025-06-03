@@ -13,9 +13,9 @@ export default function IntentStatus({
   if (status) {
     if (status.ok) {
       return (
-        <div className="flex flexitems-center content-center justify-center text-center pb-4">
-          <span>Intent tx hash: {intent_tx_hash}</span>
-          <span>Status: {statusCodeToMessage(status.value.status)}</span>
+        <div className="flex flex-col text-center pb-4">
+          <div>Intent tx hash: {intent_tx_hash}</div>
+          <div>Status: {statusCodeToMessage(status.value.status)}</div>
         </div>
       );
     }
