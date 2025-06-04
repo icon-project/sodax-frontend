@@ -35,6 +35,7 @@ import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useSwitchChain } from 'wagmi';
 import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@new-world/dapp-kit';
 import { useEvmSwitchChain, type XChainId } from '@new-world/xwagmi';
+import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
   setIntentTxHash,
@@ -46,6 +47,7 @@ export default function SwapCard({
   const { switchChain } = useSwitchChain();
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ARBITRUM_MAINNET_CHAIN_ID);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
+  const { openWalletModal } = useAppStore();
   const sourceChainSpokeProvider = useSpokeProvider(sourceChain);
   const { createIntentOrder } = useCreateIntentOrder(sourceChain);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
@@ -161,7 +163,7 @@ export default function SwapCard({
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center">Cross-Chain Swap</CardTitle>
       </CardHeader>
@@ -205,7 +207,16 @@ export default function SwapCard({
         </div>
         <div className="flex-grow">
           <Label htmlFor="fromAddress">Source address</Label>
-          <Input id="fromAddress" type="text" placeholder="0.0" value={address} disabled={true} />
+          <div className="flex items-center gap-2">
+            <Input
+              id="fromAddress"
+              type="text"
+              placeholder="0x0000000000000000000000000000000000000000"
+              value={address}
+              disabled={true}
+            />
+            <Button onClick={openWalletModal}>Connect</Button>
+          </div>
         </div>
         <div className="flex justify-center">
           <Button variant="outline" size="icon" onClick={() => onChangeDirection()}>
