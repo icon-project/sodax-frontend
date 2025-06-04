@@ -1,4 +1,3 @@
-import type { Address, Hex } from 'viem';
 import { CWSpokeProvider } from '../../entities/cosmos/CWSpokeProvider.js';
 import { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import {
@@ -9,7 +8,14 @@ import {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
-import type { GetAddressType, GetSpokeDepositParamsType, PromiseTxReturnType, TxReturnType } from '../../types.js';
+import type {
+  Address,
+  Hex,
+  GetSpokeDepositParamsType,
+  PromiseTxReturnType,
+  TxReturnType,
+  HubAddress,
+} from '../../types.js';
 import { CWSpokeService } from './CWSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';
@@ -130,14 +136,14 @@ export class SpokeService {
 
   /**
    * Calls a contract on the spoke chain using the user's wallet.
-   * @param {Address} from - The address of the user on the spoke chain.
+   * @param {HubAddress} from - The address of the user on the hub chain.
    * @param {Hex} payload - The payload to send to the contract.
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
   public static async callWallet<T extends SpokeProvider = SpokeProvider, R extends boolean = false>(
-    from: GetAddressType<T>,
+    from: HubAddress,
     payload: Hex,
     spokeProvider: T,
     hubProvider: EvmHubProvider,
@@ -145,7 +151,7 @@ export class SpokeService {
   ): Promise<TxReturnType<T, R>> {
     if (isEvmSpokeProvider(spokeProvider)) {
       return (await EvmSpokeService.callWallet(
-        from as GetAddressType<EvmSpokeProvider>,
+        from,
         payload,
         spokeProvider,
         hubProvider,
@@ -153,7 +159,7 @@ export class SpokeService {
     }
     if (isCWSpokeProvider(spokeProvider)) {
       return (await CWSpokeService.callWallet(
-        from as GetAddressType<CWSpokeProvider>,
+        from,
         payload,
         spokeProvider,
         hubProvider,
@@ -162,7 +168,7 @@ export class SpokeService {
     }
     if (isIconSpokeProvider(spokeProvider)) {
       return (await IconSpokeService.callWallet(
-        from as GetAddressType<IconSpokeProvider>,
+        from,
         payload,
         spokeProvider,
         hubProvider,
@@ -171,7 +177,7 @@ export class SpokeService {
     }
     if (isSuiSpokeProvider(spokeProvider)) {
       return (await SuiSpokeService.callWallet(
-        from as GetAddressType<SuiSpokeProvider>,
+        from,
         payload,
         spokeProvider,
         hubProvider,
@@ -180,7 +186,7 @@ export class SpokeService {
     }
     if (isSolanaSpokeProvider(spokeProvider)) {
       return (await SolanaSpokeService.callWallet(
-        from as GetAddressType<SolanaSpokeProvider>,
+        from,
         payload,
         spokeProvider,
         hubProvider,
@@ -189,7 +195,7 @@ export class SpokeService {
     }
     if (isStellarSpokeProvider(spokeProvider)) {
       return (await StellarSpokeService.callWallet(
-        from as Hex,
+        from,
         payload,
         spokeProvider,
         hubProvider,

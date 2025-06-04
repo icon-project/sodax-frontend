@@ -5,7 +5,7 @@ import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { getIntentRelayChainId } from '../../index.js';
-import type { IconAddress, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
+import type { HubAddress, IconAddress, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type IconSpokeDepositParams = {
@@ -78,7 +78,7 @@ export class IconSpokeService {
 
   /**
    * Calls a contract on the spoke chain using the user's wallet.
-   * @param {string} from - The address of the user on the spoke chain
+   * @param {HubAddress} from - The address of the user on the hub chain
    * @param {Hex} payload - The payload to send to the contract
    * @param {IconWalletProvider} spokeProvider - The provider for the spoke chain
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain
@@ -86,20 +86,14 @@ export class IconSpokeService {
    * @returns {Promise<Result<string>>} A promise that resolves to the transaction hash
    */
   public static async callWallet<R extends boolean = false>(
-    from: IconAddress,
+    from: HubAddress,
     payload: Hex,
     spokeProvider: IconSpokeProvider,
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseIconTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      getIconAddressBytes(from),
-      hubProvider,
-    );
-
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return IconSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider);
+    return IconSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
 
   /**
@@ -147,7 +141,7 @@ export class IconSpokeService {
    */
   private static async call<R extends boolean = false>(
     dstChainId: bigint,
-    dstAddress: Hex,
+    dstAddress: HubAddress,
     payload: Hex,
     spokeProvider: IconSpokeProvider,
     raw?: R,

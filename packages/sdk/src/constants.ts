@@ -1,5 +1,5 @@
-import { type Address, type Chain, defineChain } from 'viem';
-import { arbitrum, avalanche, avalancheFuji, base, bsc, nibiru, optimism, polygon, sonic } from 'viem/chains';
+import type { Address, Chain } from 'viem';
+import { arbitrum, avalanche, base, bsc, nibiru, optimism, polygon, sonic } from 'viem/chains';
 import type {
   ChainId,
   CosmosSpokeChainConfig,
@@ -13,14 +13,18 @@ import type {
   MoneyMarketConfig,
   OriginalAssetAddress,
   SolanaChainConfig,
+  SolverConfig,
   SpokeChainId,
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
+  Token,
+  VaultType,
 } from './index.js';
 
 // TODO ADD DEFAULT CONTRACT ADDRESSES AND SO FORTH FROM WIKI
 
 export const DEFAULT_MAX_RETRY = 3;
+export const DEFAULT_RELAY_TX_TIMEOUT = 60000; // 60 seconds
 export const DEFAULT_RETRY_DELAY_MS = 2000;
 export const ICON_TX_RESULT_WAIT_MAX_RETRY = 10;
 export const MAX_UINT256 = (1n << 256n) - 1n;
@@ -45,30 +49,21 @@ export const INTENT_RELAY_CHAIN_IDS = {
 } as const;
 
 // chain ids (actual for evm chains), custom for other chains not having native ids
-export const AVALANCHE_FUJI_TESTNET_CHAIN_ID = '0xa869.fuji';
 export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
 export const ARBITRUM_MAINNET_CHAIN_ID = '0xa4b1.arbitrum';
 export const BASE_MAINNET_CHAIN_ID = '0x2105.base';
 export const BSC_MAINNET_CHAIN_ID = '0x38.bsc';
 export const INJECTIVE_MAINNET_CHAIN_ID = 'injective-1';
-export const INJECTIVE_TESTNET_CHAIN_ID = 'injective-2';
-export const SONIC_TESTNET_CHAIN_ID = 'sonic-blaze';
 export const SONIC_MAINNET_CHAIN_ID = 'sonic';
-export const ICON_TESTNET_CHAIN_ID = '0x2.icon';
 export const ICON_MAINNET_CHAIN_ID = '0x1.icon';
-export const SUI_TESTNET_CHAIN_ID = 'sui-testnet';
 export const SUI_MAINNET_CHAIN_ID = 'sui';
-export const ARCHWAY_TESTNET_CHAIN_ID = 'archway-testnet';
 export const OPTIMISM_MAINNET_CHAIN_ID = '0xa.optimism';
 export const POLYGON_MAINNET_CHAIN_ID = '0x89.polygon';
 export const SOLANA_MAINNET_CHAIN_ID = 'solana';
-export const SOLANA_TESTNET_CHAIN_ID = 'solana-testnet';
-export const STELLAR_TESTNET_CHAIN_ID = 'stellar-testnet';
 export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
 export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
 
-// hub chain ids (sonic mainnet and testnet)
-export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID, SONIC_TESTNET_CHAIN_ID] as const;
+export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
 
 // currently supported spoke chains
 export const SPOKE_CHAIN_IDS = [
@@ -84,16 +79,9 @@ export const SPOKE_CHAIN_IDS = [
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
-  AVALANCHE_FUJI_TESTNET_CHAIN_ID,
-  INJECTIVE_TESTNET_CHAIN_ID,
-  ICON_TESTNET_CHAIN_ID,
-  SUI_TESTNET_CHAIN_ID,
-  ARCHWAY_TESTNET_CHAIN_ID,
-  STELLAR_TESTNET_CHAIN_ID,
-  SOLANA_TESTNET_CHAIN_ID,
 ] as const;
 
-export const MAINNET_CHAIN_IDS = [
+export const CHAIN_IDS = [
   AVALANCHE_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
@@ -109,26 +97,11 @@ export const MAINNET_CHAIN_IDS = [
   NIBIRU_MAINNET_CHAIN_ID,
 ] as const;
 
-export const TESTNET_CHAIN_IDS = [
-  AVALANCHE_FUJI_TESTNET_CHAIN_ID,
-  INJECTIVE_TESTNET_CHAIN_ID,
-  SONIC_TESTNET_CHAIN_ID,
-  ICON_TESTNET_CHAIN_ID,
-  SUI_TESTNET_CHAIN_ID,
-  ARCHWAY_TESTNET_CHAIN_ID,
-  STELLAR_TESTNET_CHAIN_ID,
-  SOLANA_TESTNET_CHAIN_ID,
-] as const;
-
-export const CHAIN_IDS = [...MAINNET_CHAIN_IDS, ...TESTNET_CHAIN_IDS] as const;
-
 export const EVM_CHAIN_IDS = [
-  AVALANCHE_FUJI_TESTNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
-  SONIC_TESTNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
@@ -136,7 +109,6 @@ export const EVM_CHAIN_IDS = [
 ] as const;
 
 export const EVM_SPOKE_CHAIN_IDS = [
-  AVALANCHE_FUJI_TESTNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
@@ -147,61 +119,29 @@ export const EVM_SPOKE_CHAIN_IDS = [
 ] as const;
 
 const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
-  [AVALANCHE_FUJI_TESTNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.AVAX,
   [AVALANCHE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.AVAX,
   [ARBITRUM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ARBITRUM,
   [BASE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.BASE,
   [BSC_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.BINANCE,
   [INJECTIVE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.INJ,
-  [INJECTIVE_TESTNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.INJ,
-  [SONIC_TESTNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SONIC,
   [SONIC_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SONIC,
   [OPTIMISM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.OPTIMISM,
   [POLYGON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.POLYGON,
   [SOLANA_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SOL,
-  [SOLANA_TESTNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SOL,
   [SUI_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SUI,
-  [SUI_TESTNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SUI,
-  [ARCHWAY_TESTNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ARCHWAY,
-  [STELLAR_TESTNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
   [STELLAR_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
-  [ICON_TESTNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
   [ICON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
   [NIBIRU_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.NIBIRU,
 };
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
 
-const sonicTestnet = /*#__PURE__*/ defineChain({
-  id: 57054,
-  name: 'Sonic Testnet',
-  nativeCurrency: {
-    decimals: 18,
-    name: 'Sonic',
-    symbol: 'S',
-  },
-  rpcUrls: {
-    default: { http: ['https://rpc.blaze.soniclabs.com'] },
-  },
-  blockExplorers: {
-    default: {
-      name: 'Sonic Testnet Explorer',
-      url: 'https://testnet.soniclabs.com/',
-    },
-  },
-  testnet: true,
-});
-
 export function getEvmViemChain(id: EvmChainId): Chain {
   switch (id) {
     case SONIC_MAINNET_CHAIN_ID:
       return sonic;
-    case SONIC_TESTNET_CHAIN_ID:
-      return sonicTestnet;
     case AVALANCHE_MAINNET_CHAIN_ID:
       return avalanche;
-    case AVALANCHE_FUJI_TESTNET_CHAIN_ID:
-      return avalancheFuji;
     case ARBITRUM_MAINNET_CHAIN_ID:
       return arbitrum;
     case BASE_MAINNET_CHAIN_ID:
@@ -230,38 +170,9 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
       hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
-      bnUSDVault: '0x0000000000000000000000000000000000000000',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     supportedTokens: [],
-  } satisfies EvmHubChainConfig,
-  [SONIC_TESTNET_CHAIN_ID]: {
-    chain: {
-      name: 'Sonic Blaze Testnet',
-      id: SONIC_TESTNET_CHAIN_ID,
-      type: 'evm',
-    },
-    addresses: {
-      assetManager: '0x594b477dd2195CCB5Ff43EafC9b8a8de0F4B4fA3',
-      hubWallet: '0xd5CECE180a52e0353654B3337c985E8d5E056344',
-      xTokenManager: '0x5b1Bd6d5C811FFA7688cf418FEF29877a3c0dBBa',
-      bnUSDVault: '0x35cb50d8b896fcc1001dfc67c3772f2361e4d183',
-    },
-    nativeToken: '0x0000000000000000000000000000000000000000',
-    supportedTokens: [
-      {
-        symbol: 'S',
-        name: 'Sonic',
-        decimals: 18,
-        address: '0x0000000000000000000000000000000000000000',
-      },
-      {
-        symbol: 'WETH',
-        name: 'Wrapped Ether',
-        decimals: 18,
-        address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
-      },
-    ],
   } satisfies EvmHubChainConfig,
 } as const;
 
@@ -277,9 +188,9 @@ export const spokeChainConfig = {
       xTokenManager: '',
     },
     chain: { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', type: 'solana' },
-    nativeToken: '11111111111111111111111111111111',
+    nativeToken: '11111111111111111111111111111111' as const,
     bnUSD: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
-    supportedTokens: [],
+    supportedTokens: [] as const,
     gasPrice: '500000',
     rpcUrl: 'https://api.mainnet-beta.solana.com',
     wsUrl: 'https://api.mainnet-beta.solana.com',
@@ -295,7 +206,7 @@ export const spokeChainConfig = {
       assetManager: '0x5bDD1E1C5173F4c912cC919742FB94A55ECfaf86',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
     },
-    nativeToken: '0x0000000000000000000000000000000000000000',
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
     supportedTokens: [
       {
@@ -328,9 +239,9 @@ export const spokeChainConfig = {
       assetManager: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
       connection: '0x772FFE538E45b2cDdFB5823041EC26C44815B9AB',
     },
-    nativeToken: '0x0000000000000000000000000000000000000000',
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x043fb7e23350Dd5b77dE5E228B528763DEcb9131',
-    supportedTokens: [],
+    supportedTokens: [] as const,
   } satisfies EvmSpokeChainConfig,
   [ARBITRUM_MAINNET_CHAIN_ID]: {
     chain: {
@@ -342,7 +253,7 @@ export const spokeChainConfig = {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
     },
-    nativeToken: '0x0000000000000000000000000000000000000000',
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0xA256dd181C3f6E5eC68C6869f5D50a712d47212e',
     supportedTokens: [
       {
@@ -376,12 +287,18 @@ export const spokeChainConfig = {
         address: '0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40',
       },
       {
+        symbol: 'WBTC',
+        name: 'Wrapped BTC',
+        decimals: 8,
+        address: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
+      },
+      {
         symbol: 'USDC',
         name: 'USD Coin (USDC)',
         decimals: 6,
         address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
       },
-    ],
+    ] as const,
   } satisfies EvmSpokeChainConfig,
   [BASE_MAINNET_CHAIN_ID]: {
     chain: {
@@ -393,7 +310,7 @@ export const spokeChainConfig = {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
     },
-    nativeToken: '0x0000000000000000000000000000000000000000',
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0xAcfab3F31C0a18559D78556BBf297EC29c6cf8aa',
     supportedTokens: [
       {
@@ -438,7 +355,7 @@ export const spokeChainConfig = {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
     },
-    nativeToken: '0x0000000000000000000000000000000000000000',
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8',
     supportedTokens: [
       {
@@ -483,7 +400,7 @@ export const spokeChainConfig = {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
     },
-    nativeToken: '0x0000000000000000000000000000000000000000',
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x8428FedC020737a5A2291F46cB1B80613eD71638',
     supportedTokens: [
       {
@@ -516,7 +433,7 @@ export const spokeChainConfig = {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
     },
-    nativeToken: '0x0000000000000000000000000000000000000000',
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x39E77f86C1B1f3fbAb362A82b49D2E86C09659B4',
     supportedTokens: [
       {
@@ -531,7 +448,7 @@ export const spokeChainConfig = {
         decimals: 6,
         address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
       },
-    ],
+    ] as const,
   } satisfies EvmSpokeChainConfig,
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -546,10 +463,10 @@ export const spokeChainConfig = {
       name: 'Injective',
       type: 'cosmos',
     },
-    nativeToken: 'inj',
+    nativeToken: 'inj' as const,
     bnUSD: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
     networkId: 'injective-1',
-    supportedTokens: [],
+    supportedTokens: [] as const,
     gasPrice: '500000000inj',
     network: 'TestNet',
     prefix: 'inj',
@@ -565,8 +482,8 @@ export const spokeChainConfig = {
       rateLimit: 'CB6G3ULISTTBPXUN3BI6ADHQGWJEN7BPQINHL45TCB6TDFM5QWU24HAY',
       testToken: '',
     },
-    supportedTokens: [],
-    nativeToken: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
+    supportedTokens: [] as const,
+    nativeToken: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA' as const,
     bnUSD: 'CD6YBFFWMU2UJHX2NGRJ7RN76IJVTCC7MRA46DUBXNB7E6W7H7JRJ2CX',
     rpc_url: 'https://rpc.ankr.com/stellar_soroban',
     chain: {
@@ -585,8 +502,8 @@ export const spokeChainConfig = {
       rateLimit: '',
       testToken: '',
     },
-    supportedTokens: [],
-    nativeToken: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
+    supportedTokens: [] as const,
+    nativeToken: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI' as const,
     bnUSD: '0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD',
     rpc_url: 'https://fullnode.mainnet.sui.io:443',
     chain: {
@@ -613,157 +530,10 @@ export const spokeChainConfig = {
         decimals: 18,
         address: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d',
       },
-    ],
-    nativeToken: 'cx0000000000000000000000000000000000000000',
+    ] as const,
+    nativeToken: 'cx0000000000000000000000000000000000000000' as const,
     bnUSD: '',
     nid: '0x1',
-  } satisfies IconSpokeChainConfig,
-  [AVALANCHE_FUJI_TESTNET_CHAIN_ID]: {
-    chain: {
-      name: 'Avalanche Fuji Testnet',
-      id: AVALANCHE_FUJI_TESTNET_CHAIN_ID,
-      type: 'evm',
-    },
-    addresses: {
-      assetManager: '0x92971C06586576a14C0Deb583C8299B0B037bdC3',
-      connection: '0x4031D470e73b5E72A0879Fc77aBf2F64049CF6BD',
-    },
-    nativeToken: '0x0000000000000000000000000000000000000000',
-    bnUSD: '',
-    supportedTokens: [
-      {
-        symbol: 'S',
-        name: 'Sonic',
-        decimals: 18,
-        address: '0x0000000000000000000000000000000000000000',
-      },
-      {
-        symbol: 'WETH',
-        name: 'Wrapped Ether',
-        decimals: 18,
-        address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
-      },
-    ],
-  } satisfies EvmSpokeChainConfig,
-  [INJECTIVE_TESTNET_CHAIN_ID]: {
-    addresses: {
-      assetManager: 'inj1gru3eu7rmrsynu8ksfgd6tm05dy0ttuwej2nh2',
-      connection: 'inj10cnfez7heja2s8kjjcm00quj0rkadknxm03hfa',
-      rateLimit: 'inj1rhe9xj9mhwuxkxwqr3x6luq59s79egkjl3xjpp',
-      testToken: 'inj172gzzhqxm60yvshmk3un0qcx2j97ezsdzy26ss',
-      xTokenManager: '',
-    },
-    chain: {
-      id: INJECTIVE_TESTNET_CHAIN_ID,
-      name: 'Injective',
-      type: 'cosmos',
-    },
-    nativeToken: 'inj',
-    bnUSD: '',
-    networkId: 'injective-888',
-    supportedTokens: [],
-    gasPrice: '0.025inj',
-    network: 'TestNet',
-    prefix: 'inj',
-    isBrowser: false,
-    rpcUrl: 'https://injective-testnet-rpc.publicnode.com:443',
-    walletAddress: 'inj15slcxnxxtw6jn4chulgw78tdcd8ppgnm2un4ts',
-  } satisfies CosmosSpokeChainConfig,
-  [ARCHWAY_TESTNET_CHAIN_ID]: {
-    addresses: {
-      assetManager: 'archway1ddsmzctpdszkyuq84cltmh30k86e6y26csray5nwl9l5ydsuad9se3hwhw',
-      connection: 'archway1gfsfp5qrrreftfxl32rlyc2gdrm5je62h4kx83tjrxfd5vs63pkqprtclx',
-      rateLimit: 'archway1ed6xrxx9g648g4gg4f2f6hf4n2ep4e82qf7gs9lguz2s70jeq3uq0g73h8',
-      testToken: '',
-      xTokenManager: '',
-    },
-    chain: {
-      id: ARCHWAY_TESTNET_CHAIN_ID,
-      name: 'Archway',
-      type: 'cosmos',
-    },
-    nativeToken: 'aconst',
-    bnUSD: '',
-    supportedTokens: [],
-    gasPrice: '500000000000aconst',
-    network: 'TestNet',
-    networkId: 'constantine-3',
-    prefix: 'archway',
-    rpcUrl: 'https://rpc.constantine.archway.io:443',
-    isBrowser: false,
-    walletAddress: 'archway1ywtvgurt69ujpd2cpx76ufd9c98rjm8jm6f9mw',
-  } satisfies CosmosSpokeChainConfig,
-  [SOLANA_TESTNET_CHAIN_ID]: {
-    addresses: {
-      assetManager: 'AnCCJjheynmGqPp6Vgat9DTirGKD4CtQzP8cwTYV8qKH',
-      connection: 'GxS8i6D9qQjbSeniD487CnomUxU2pXt6V8P96T6MkUXB',
-      rateLimit: '2Vyy3A3Teju2EMCkdnappEeWqBXyAaF5V2WsrU4hDtsk',
-      testToken: '3Q2HS3png7fLaYerqCun3zw8rnBZo2Ksvdg6RHTyM4Ns',
-      xTokenManager: '',
-    },
-    chain: { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', type: 'solana' },
-    nativeToken: '11111111111111111111111111111111',
-    bnUSD: '',
-    supportedTokens: [],
-    gasPrice: '500000',
-    rpcUrl: 'https://api.devnet.solana.com',
-    wsUrl: 'https://api.devnet.solana.com',
-    walletAddress: '14YCFqCF9rQ1BEmPegwZKjKwsGoP5d1AZmJmUXZTTEA5',
-  } satisfies SolanaChainConfig,
-  [STELLAR_TESTNET_CHAIN_ID]: {
-    addresses: {
-      connection: 'CB2QGJB675SQ43RBKZZCZQ44B33Y247NAIBYMO7U3WFFB2LHHX23E6ZK',
-      assetManager: 'CBE2JXDRGUFEGEXU6KGP6Q5FJIROYG5ZXCJQCTH6Y3FWQIQ2TNIZVN5D',
-      xTokenManager: '',
-      rateLimit: 'CCFDSBX24HF77OCFVBKP36CO56PLEVAN225EMRZJGIDQNZAOVV4KIRWK',
-      testToken: '',
-    },
-    supportedTokens: [],
-    nativeToken: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
-    bnUSD: '',
-    rpc_url: 'https://soroban-testnet.stellar.org',
-    chain: {
-      name: 'soroban-testnet',
-      id: STELLAR_TESTNET_CHAIN_ID,
-      type: 'stellar',
-    },
-  } satisfies StellarSpokeChainConfig,
-  [SUI_TESTNET_CHAIN_ID]: {
-    addresses: {
-      connection:
-        '0xc0e61f9b2ba05922e1abe8656d6d5480b22eae084896bfbdf2ba54eb5eeb37e3::connectionv3::0xeb94ea14a2e1b012c9720cfb1b63f5d49c40aceb1b4eb0bc1006c93464162188',
-      assetManager:
-        '0x4205e34a4025ba6fc4c8d30e457768e6a153005c443af857d7e7bafdbb704345::asset_manager::0x42bef60a77ecee7973b790ab9477bce62d834208cac19b5ed21849d54097b685',
-      xTokenManager: '',
-      rateLimit: '',
-      testToken:
-        '0xc0ec9fc7688a435c385a2fd2f1cd6148f3218f70787fd84818ebdc48b045a9f2::nwt::0x3694296da388c970b54d4a50d1e03782bd6b4dc9ac002a73ce8b6a54cd0e684a',
-    },
-    supportedTokens: [],
-    nativeToken: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI',
-    bnUSD: '',
-    rpc_url: 'https://fullnode.testnet.sui.io:443',
-    chain: {
-      name: 'sui testnet',
-      id: SUI_TESTNET_CHAIN_ID,
-      type: 'sui',
-    },
-  } satisfies SuiSpokeChainConfig,
-  [ICON_TESTNET_CHAIN_ID]: {
-    addresses: {
-      assetManager: 'cx0aa4073cf4be3ee46b2b9d4e0bf374b17c2012a3',
-      connection: 'cx4e2d496e97a82fd0e41a22d8d8e06bcabb99e346',
-      rateLimit: 'cx628f2f825c07cce689cb6495ba8282a161dc1757',
-    },
-    chain: {
-      id: ICON_TESTNET_CHAIN_ID,
-      name: 'ICON Lisbon',
-      type: 'icon',
-    },
-    supportedTokens: [],
-    nativeToken: 'cxb93097e655a37ef5561eb05061edd406651cedb6',
-    bnUSD: '',
-    nid: '0x2',
   } satisfies IconSpokeChainConfig,
 } as const;
 
@@ -773,6 +543,7 @@ export const hubAssets: Record<
 > = {
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].nativeToken]: {
+      // AVAX
       asset: '0xc9e4f0B6195F389D9d2b639f2878B7674eB9D8cD',
       decimal: 18,
       symbol: 'AVAX',
@@ -780,6 +551,7 @@ export const hubAssets: Record<
       vault: '0x14238D267557E9d799016ad635B53CD15935d290',
     },
     '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7': {
+      // USDT
       asset: '0x41Fd5c169e014e2A657B9de3553f7a7b735Fe47A',
       decimal: 6,
       symbol: 'USDT',
@@ -788,6 +560,7 @@ export const hubAssets: Record<
     },
 
     '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E': {
+      // USDC
       asset: '0x41abF4B1559FF709Ef8150079BcB26DB1Fffd117',
       decimal: 6,
       symbol: 'USDC',
@@ -811,13 +584,31 @@ export const hubAssets: Record<
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f': {
+      // WBTC
       asset: '0xfB0ACB1b2720B620935F50a6dd3F7FEA52b2FCBe',
       decimal: 8,
       symbol: 'WBTC',
       name: 'Wrapped Bitcoin',
       vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
     },
+    '0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe': {
+      // wetETH
+      asset: '0x08D5cf039De35627fD5C0f48B8AF4a1647a462E8',
+      decimal: 18,
+      symbol: 'wETH',
+      name: 'Wrapped Ethereum',
+      vault: '0x4effB5813271699683C25c734F4daBc45B363709',
+    },
+    '0x5979D7b546E38E414F7E9822514be443A4800529': {
+      // wstETH
+      asset: '0x2D5A7837D68b0c2CC4b14C2af2a1F0Ef420DDDc5',
+      decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
+      vault: '0x4effB5813271699683C25c734F4daBc45B363709',
+    },
     '0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40': {
+      // tBTC
       asset: '0x96Fc8540736f1598b7E235e6dE8814062b3b5d3B',
       decimal: 18,
       symbol: 'tBTC',
@@ -825,6 +616,7 @@ export const hubAssets: Record<
       vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
     },
     '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9': {
+      // USDT
       asset: '0x3C0a80C6a1110fC80309382b3989eC626c135eE9',
       decimal: 6,
       symbol: 'USDT',
@@ -832,6 +624,7 @@ export const hubAssets: Record<
       vault: '0xbDf1F453FCB61424011BBDDCB96cFDB30f3Fe876',
     },
     '0xaf88d065e77c8cC2239327C5EDb3A432268e5831': {
+      // USDC
       asset: '0xdB7BdA65c3a1C51D64dC4444e418684677334109',
       decimal: 6,
       symbol: 'USDC',
@@ -875,6 +668,22 @@ export const hubAssets: Record<
       name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
+    '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a': {
+      // weETH
+      asset: '0x55e0ad45eb97493b3045eee417fb6726cb85dfd4',
+      decimal: 18,
+      symbol: 'wETH',
+      name: 'Wrapped Ethereum',
+      vault: '0x4effB5813271699683C25c734F4daBc45B363709',
+    },
+    '0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452': {
+      // wstETH
+      asset: '0x494aaeaefdf5964d4ed400174e8c5b98c00957aa',
+      decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
+      vault: '0x4effB5813271699683C25c734F4daBc45B363709',
+    },
   },
   [OPTIMISM_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].nativeToken]: {
@@ -890,6 +699,38 @@ export const hubAssets: Record<
       symbol: 'bnUSD',
       name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
+    },
+    '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85': {
+      // USDC
+      asset: '0xb7C213CbD24967dE9838fa014668FDDB338f724B',
+      decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
+    },
+    '0x1F32b1c2345538c0c6f582fCB022739c4A194Ebb': {
+      // wstETH
+      asset: '0x61e26f611090CdC6bc79A7Bf156b0fD10f1fC212',
+      decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
+      vault: '0x4effB5813271699683C25c734F4daBc45B363709',
+    },
+    '0x5A7fACB970D094B6C7FF1df0eA68D99E6e73CBFF': {
+      // weETH
+      asset: '0xE121c0Dc2B33c00ff31ee3D902D248cc3f19Ea50',
+      decimal: 18,
+      symbol: 'wETH',
+      name: 'Wrapped Ethereum',
+      vault: '0x4effB5813271699683C25c734F4daBc45B363709',
+    },
+    '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58': {
+      // USDT
+      asset: '0xc168067d95109003805aC865ae556e8476DC69bc',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: '0xbDf1F453FCB61424011BBDDCB96cFDB30f3Fe876',
     },
   },
   [NIBIRU_MAINNET_CHAIN_ID]: {
@@ -917,6 +758,7 @@ export const hubAssets: Record<
       vault: '0x40Cd41b35DB9e5109ae7E54b44De8625dB320E6b',
     },
     '0x2170Ed0880ac9A755fd29B2688956BD959F933F8': {
+      // ETH
       asset: '0x57fC2aC5701e463ae261AdBd6C99FBeB48Ce5293',
       decimal: 18,
       symbol: 'USDT',
@@ -924,6 +766,7 @@ export const hubAssets: Record<
       vault: '0x4effB5813271699683C25c734F4daBc45B363709',
     },
     '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c': {
+      // BTCB
       asset: '0xD8A24c71FEa5bB81c66C01e532dE7d9B11e13905',
       decimal: 18,
       symbol: 'USDC',
@@ -946,19 +789,20 @@ export const hubAssets: Record<
       name: 'Polygon',
       vault: '0x0000000000000000000000000000000000000000',
     },
-    '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359': {
-      asset: '0xa36893ba308b332FDEbfa95916D1dF3a2e3CF8B3',
-      decimal: 6,
-      symbol: 'USDC',
-      name: 'USD Coin',
-      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
-    },
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x18f85f9E80ff9496EeBD5979a051AF16Ce751567',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
+    },
+    '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359': {
+      // USDC
+      asset: '0xa36893ba308b332FDEbfa95916D1dF3a2e3CF8B3',
+      decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
   },
   [INJECTIVE_MAINNET_CHAIN_ID]: {
@@ -1049,107 +893,230 @@ export const hubAssets: Record<
       vault: '0x70CB7B199700Ae2B1FAb3d4e6FecDa156FBf8182',
     },
   },
-  [AVALANCHE_FUJI_TESTNET_CHAIN_ID]: {
-    [spokeChainConfig[AVALANCHE_FUJI_TESTNET_CHAIN_ID].nativeToken]: {
-      asset: '0x18afE238E6366Bc3834844cC257acF1cfE52D8c5',
-      decimal: 18,
-      symbol: 'AVAX',
-      name: 'Avalanche',
-      vault: '0xd40AbC1b98746E902Ab4194F1b6e09E8139Ba67c',
-    },
-    '0x162608464d2c70301d5ce214E57A70B08aAB4cf8': {
-      asset: '0x4d28211e808fb07092519436cdfb8ea73085f131',
-      decimal: 18,
-      symbol: 'USDC',
-      name: 'USD Coin',
-      vault: '0x35CB50D8b896fCC1001dFc67C3772f2361E4d183',
-    },
-  },
-  [INJECTIVE_TESTNET_CHAIN_ID]: {
-    inj172gzzhqxm60yvshmk3un0qcx2j97ezsdzy26ss: {
-      asset: '0xBC4BFEcd8067F1c7fbbF17fEcbFCbA56615C3b55',
-      decimal: 12,
-      symbol: 'USDC',
-      name: 'USD Coin',
-      vault: '0x0d6eF3889eb9F12423dDB209EC704aBdf614EDcA',
-    },
-    inj1fyt67lnhpkwyjekcs3awfdxv90kwmun73n9x7h: {
-      asset: '0x3cBe8540208998De060E97B1AdE9fB0A31464c70',
-      decimal: 18,
-      symbol: 'bnUSD',
-      name: 'bnUSD',
-      vault: '0x35CB50D8b896fCC1001dFc67C3772f2361E4d183',
-    },
-  },
-  [ARCHWAY_TESTNET_CHAIN_ID]: {
-    aconst: {
-      asset: '0xa4e0cbdf9a605ec54fc1d3e3089107fd55c3f064',
-      decimal: 18,
-      symbol: '---',
-      name: '---',
-      vault: '0xB0189e752973FEaae68BbcEcbdD4514c392D7ca3',
-    },
-  },
-  [STELLAR_TESTNET_CHAIN_ID]: {
-    [spokeChainConfig[STELLAR_TESTNET_CHAIN_ID].nativeToken]: {
-      asset: '0xBc6C4b894D7942cC940C1C23CaA9F9F335aC2fcf',
-      decimal: 7,
-      symbol: 'XLM',
-      name: 'Stellar Lumens',
-      vault: '0x1293c7efd9D48234E4Edd84C3dfcdfAF216B305b',
-    },
-  },
-  [SUI_TESTNET_CHAIN_ID]: {
-    [spokeChainConfig[SUI_TESTNET_CHAIN_ID].nativeToken]: {
-      asset: '0x088cfbf363465c5ee9282d004d98fac62f69329d',
-      decimal: 9,
-      symbol: 'SUI',
-      name: 'Sui',
-      vault: '0x742BD79c9997A51F1c4F38F1F33C7841B0F34a7a',
-    },
-    ['0xc0ec9fc7688a435c385a2fd2f1cd6148f3218f70787fd84818ebdc48b045a9f2::nwt::NWT']: {
-      asset: '0xf9719328f664903d489336d41656caf777f3ec33',
-      decimal: 9,
-      symbol: 'bnUSD',
-      name: 'bnUSD',
-      vault: '0x0d6eF3889eb9F12423dDB209EC704aBdf614EDcA',
-    },
-    ['0x67bab56cff10de8854de706d7e71941221e687a04abb119a1f777d088ad98bf9::bnusd::BNUSD']: {
-      asset: '0xb3183418c2c35c856cbfd1628218b0c74ef8cd47',
-      decimal: 9,
-      symbol: 'bnUSD',
-      name: 'bnUSD',
-      vault: '0x35CB50D8b896fCC1001dFc67C3772f2361E4d183',
-    },
-  },
-  [ICON_TESTNET_CHAIN_ID]: {
-    ['cxb93097e655a37ef5561eb05061edd406651cedb6']: {
-      asset: '0x6acfc83bf253e8cfde6876cf1388a33dcf82b830',
-      decimal: 18,
-      symbol: 'bnUSD',
-      name: 'bnUSD',
-      vault: '0x70CB7B199700Ae2B1FAb3d4e6FecDa156FBf8182',
-    },
-  },
-  [SOLANA_TESTNET_CHAIN_ID]: {
-    '3Q2HS3png7fLaYerqCun3zw8rnBZo2Ksvdg6RHTyM4Ns': {
-      asset: '0xa08416f478fbb342bb86b8b2f4433548f79b0e30',
-      decimal: 9,
-      symbol: 'USDC',
-      name: 'USD Coin',
-      vault: '0x0d6eF3889eb9F12423dDB209EC704aBdf614EDcA',
-    },
-    '11111111111111111111111111111111': {
-      asset: '0x25903e762879dfabd30a70c32d3111b51dfefe49',
-      decimal: 9,
-      symbol: 'USDC',
-      name: 'USD Coin',
-      vault: '0x8Ba33C0255c338A6295D282d5D97068E88b0df16',
-    },
-  },
 } as const;
 
-const moneyMarketConfig: Record<HubChainId, MoneyMarketConfig> = {
+export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';
+
+const solverConfig = {
+  [SONIC_MAINNET_CHAIN_ID]: {
+    intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
+    solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz', // TODO replace with mainnet
+  } satisfies SolverConfig,
+};
+
+export const getSolverConfig = (chainId: HubChainId): SolverConfig => solverConfig[chainId];
+
+const solverSupportedTokens: Record<SpokeChainId, Token[]> = {
+  [AVALANCHE_MAINNET_CHAIN_ID]: [
+    {
+      symbol: 'AVAX',
+      name: 'Avalanche',
+      decimals: 18,
+      address: spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].nativeToken,
+    },
+    {
+      symbol: 'USDt',
+      name: 'TetherToken',
+      decimals: 6,
+      address: '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7',
+    },
+    {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      address: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
+    },
+    {
+      symbol: 'bnUSD',
+      name: 'Balanced Dollar',
+      decimals: 18,
+      address: spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].bnUSD,
+    },
+  ] as const,
+  [ARBITRUM_MAINNET_CHAIN_ID]: [
+    {
+      symbol: 'ETH',
+      name: 'Ethereum',
+      decimals: 18,
+      address: spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].nativeToken,
+    },
+    {
+      symbol: 'bnUSD',
+      name: 'Balanced Dollar',
+      decimals: 18,
+      address: spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].bnUSD,
+    },
+    {
+      symbol: 'WBTC',
+      name: 'Wrapped BTC',
+      decimals: 8,
+      address: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
+    },
+    {
+      symbol: 'weETH',
+      name: 'Wrapped eETH',
+      decimals: 18,
+      address: '0x35751007a407ca6FEFfE80b3cB397736D2cf4dbe',
+    },
+    {
+      symbol: 'wstETH',
+      name: 'Wrapped stETH',
+      decimals: 18,
+      address: '0x5979D7b546E38E414F7E9822514be443A4800529',
+    },
+    {
+      symbol: 'tBTC',
+      name: 'Arbitrum tBTC v2',
+      decimals: 18,
+      address: '0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40',
+    },
+
+    {
+      symbol: 'USDC',
+      name: 'USD Coin (USDC)',
+      decimals: 6,
+      address: '0xaf88d065e77c8cc2239327c5edb3a432268e5831',
+    },
+    {
+      symbol: 'USDT',
+      name: 'TetherToken',
+      decimals: 6,
+      address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+    },
+  ] as const,
+  [BASE_MAINNET_CHAIN_ID]: [
+    {
+      symbol: 'ETH',
+      name: 'Ethereum',
+      decimals: 18,
+      address: spokeChainConfig[BASE_MAINNET_CHAIN_ID].nativeToken,
+    },
+    {
+      symbol: 'bnUSD',
+      name: 'Balanced Dollar',
+      decimals: 18,
+      address: spokeChainConfig[BASE_MAINNET_CHAIN_ID].bnUSD,
+    },
+    {
+      symbol: 'weETH',
+      name: 'Wrapped eETH',
+      decimals: 18,
+      address: '0x04c0599ae5a44757c0af6f9ec3b93da8976c150a',
+    },
+    {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    },
+    {
+      symbol: 'wstETH',
+      name: 'Wrapped stETH',
+      decimals: 18,
+      address: '0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452',
+    },
+    {
+      symbol: 'cbBTC',
+      name: 'Coinbase Wrapped BTC ',
+      decimals: 18,
+      address: '0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40',
+    },
+  ] as const,
+  [OPTIMISM_MAINNET_CHAIN_ID]: [
+    {
+      symbol: 'ETH',
+      name: 'Ethereum',
+      decimals: 18,
+      address: spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].nativeToken,
+    },
+    {
+      symbol: 'bnUSD',
+      name: 'Balanced Dollar',
+      decimals: 18,
+      address: spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].bnUSD,
+    },
+    {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85',
+    },
+    {
+      symbol: 'wstETH',
+      name: 'Wrapped stETH',
+      decimals: 18,
+      address: '0x1F32b1c2345538c0c6f582fCB022739c4A194Ebb',
+    },
+    {
+      symbol: 'weETH',
+      name: 'Wrapped eETH',
+      decimals: 18,
+      address: '0x5A7fACB970D094B6C7FF1df0eA68D99E6e73CBFF',
+    },
+    {
+      symbol: 'USDT',
+      name: 'TetherToken',
+      decimals: 6,
+      address: '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58',
+    },
+  ] as const,
+  [POLYGON_MAINNET_CHAIN_ID]: [
+    {
+      symbol: 'ETH',
+      name: 'Ethereum',
+      decimals: 18,
+      address: spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].nativeToken,
+    },
+    {
+      symbol: 'bnUSD',
+      name: 'Balanced Dollar',
+      decimals: 18,
+      address: spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].bnUSD,
+    },
+    {
+      symbol: 'USDC',
+      name: 'USD Coin',
+      decimals: 6,
+      address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+    },
+  ] as const,
+  [BSC_MAINNET_CHAIN_ID]: [
+    {
+      symbol: 'BNB',
+      name: 'BNB',
+      decimals: 18,
+      address: spokeChainConfig[BSC_MAINNET_CHAIN_ID].nativeToken,
+    },
+    {
+      symbol: 'bnUSD',
+      name: 'Balanced Dollar',
+      decimals: 18,
+      address: spokeChainConfig[BSC_MAINNET_CHAIN_ID].bnUSD,
+    },
+    {
+      symbol: 'ETH',
+      name: 'Ethereum Token',
+      decimals: 18,
+      address: '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
+    },
+    {
+      symbol: 'BTCB',
+      name: 'BTCB',
+      decimals: 18,
+      address: '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c',
+    },
+  ] as const,
+  [SOLANA_MAINNET_CHAIN_ID]: [],
+  [ICON_MAINNET_CHAIN_ID]: [],
+  [STELLAR_MAINNET_CHAIN_ID]: [],
+  [SUI_MAINNET_CHAIN_ID]: [],
+  [INJECTIVE_MAINNET_CHAIN_ID]: [],
+  [NIBIRU_MAINNET_CHAIN_ID]: [],
+} as const;
+
+export const getSupportedSolverTokens = (chainId: SpokeChainId): Token[] => solverSupportedTokens[chainId];
+
+const moneyMarketConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
     lendingPool: '0x553434896D39F867761859D0FE7189d2Af70514E',
     uiPoolDataProvider: '0xC04d746C38f1E51C8b3A3E2730250bbAC2F271bf',
@@ -1157,16 +1124,129 @@ const moneyMarketConfig: Record<HubChainId, MoneyMarketConfig> = {
     bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38',
     bnUSDVault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
   } satisfies MoneyMarketConfig,
-  [SONIC_TESTNET_CHAIN_ID]: {
-    lendingPool: '0xA33E8f7177A070D0162Eea0765d051592D110cDE',
-    uiPoolDataProvider: '0x7997C9237D168986110A67C55106C410a2cF9d4f',
-    poolAddressesProvider: '0x04b3f588578BF89B1D2af7283762E3375f0340dA',
-    bnUSD: '0x79C7C0f4B1e606da53dEb9871a7a97f31928C858',
-    bnUSDVault: '0x35cb50d8b896fcc1001dfc67c3772f2361e4d183',
-  } satisfies MoneyMarketConfig,
 } as const;
 
 export const getMoneyMarketConfig = (chainId: HubChainId): MoneyMarketConfig => moneyMarketConfig[chainId];
+
+export const HubVaultSymbols = [
+  'sodaAVAX',
+  'sodaBNB',
+  'sodaETH',
+  'sodaBTC',
+  'sodaSUI',
+  'sodaINJ',
+  'sodaXLM',
+  'sodaSOL',
+] as const;
+
+export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
+
+export const hubVaults: Record<HubVaultSymbol, VaultType> = {
+  sodaAVAX: {
+    // SODA AVAX vault
+    address: '0x14238d267557e9d799016ad635b53cd15935d290',
+    reserves: [
+      // hub asset addresses contained in the vault
+      '0xc9e4f0b6195f389d9d2b639f2878b7674eb9d8cd', // AvalancheAVAX hub asset
+    ],
+  },
+  sodaBNB: {
+    // SODA BNB vault
+    address: '0x40cd41b35db9e5109ae7e54b44de8625db320e6b',
+    reserves: [
+      // hub asset addresses contained in the vault
+      '0x13b70564b1ec12876b20fab5d1bb630311312f4f', // BSC BNB hub asset
+    ],
+  },
+  sodaETH: {
+    // SODA ETH vault
+    address: '0x4effb5813271699683c25c734f4dabc45b363709',
+    reserves: [
+      // hub asset addresses contained in the vault
+      '0x70178089842be7f8e4726b33f0d1569db8021faa', // BASE ETH hub asset
+      '0xad332860dd3b6f0e63f4f66e9457900917ac78cd', // Optimism ETH hub asset
+      '0xdcd9578b51ef55239b6e68629d822a8d97c95b86', // Arbitrum ETH hub asset
+      '0x57fc2ac5701e463ae261adbd6c99fbeb48ce5293', // BSC ETH hub asset
+    ],
+  },
+  sodaBTC: {
+    // SODA BTC vault
+    address: '0x7a1a5555842ad2d0ed274d09b5c4406a95799d5d',
+    reserves: [
+      // hub asset addresses contained in the vault
+      '0x2803a23a3ba6b09e57d1c71dec0d9efdbb00a27f', // BASE cbBTC hub asset,
+      '0xfb0acb1b2720b620935f50a6dd3f7fea52b2fcbe', // Arbitrum wBTC hub asset
+      '0x96fc8540736f1598b7e235e6de8814062b3b5d3b', // Arbitrum tBTC hub asset,
+      '0xd8a24c71fea5bb81c66c01e532de7d9b11e13905', // BSC BTCB hub asset
+    ],
+  },
+  sodaSUI: {
+    // SODA SUI vault
+    address: '0xdc5b4b00f98347e95b9f94911213dab4c687e1e3',
+    reserves: [
+      // hub asset addresses contained in the vault
+      '0x4676b2a551b25c04e235553c1c81019337384673', // SUI SUI hub asset
+    ],
+  },
+  sodaINJ: {
+    // SODA INJ vault
+    address: '0x1f22279c89b213944b7ea41dacb0a868ddcdfd13',
+    reserves: [
+      // hub asset addresses contained in the vault
+      '0xd375590b4955f6ea5623f799153f9b787a3bd319', // Injective INJ hub asset
+    ],
+  },
+  sodaXLM: {
+    // SODA XLM vault
+    address: '0x6bc8c37cba91f76e68c9e6d689a9c21e4d32079b',
+    reserves: [
+      // hub asset addresses contained in the vault
+      '0x8ac68af223907fb1b893086601a3d99e00f2fa9d', // Stellar XLM hub asset
+    ],
+  },
+  sodaSOL: {
+    // SODA SOL vault
+    address: '0xdea692287e2ce8cb08fa52917be0f16b1dacdc87',
+    reserves: [
+      // hub asset addresses contained in the vault
+      '0x0c09e69a4528945de6d16c7e469dea6996fdf636', // Solana SOL hub asset
+    ],
+  },
+} as const;
+
+export const hubVaultsAddressSet = new Set<Address>(
+  Object.values(hubVaults).map(vault => vault.address.toLowerCase() as Address),
+);
+
+// all hub assets contained in the money market reserves (supply / borrow assets)
+export const moneyMarketReserveHubAssetsSet = new Set<Address>(
+  Object.values(hubVaults).flatMap(vault => vault.reserves.map(reserve => reserve.toLowerCase() as Address)),
+);
+
+export const isMoneyMarketReserveHubAsset = (hubAsset: Address): boolean =>
+  moneyMarketReserveHubAssetsSet.has(hubAsset.toLowerCase() as Address);
+
+export const getSupportedMoneyMarketTokens = (chainId: SpokeChainId): OriginalAssetAddress[] => {
+  return Array.from(moneyMarketReserveHubAssetsSet)
+    .map(asset => getOriginalAssetAddress(chainId, asset))
+    .filter(asset => asset !== undefined);
+};
+
+// TODO put those in money market sodax instance as well
+export const moneyMarketReserveAssets = [
+  hubVaults['sodaAVAX'].address,
+  hubVaults['sodaBNB'].address,
+  hubVaults['sodaETH'].address,
+  hubVaults['sodaBTC'].address,
+  hubVaults['sodaSUI'].address,
+  hubVaults['sodaINJ'].address,
+  hubVaults['sodaXLM'].address,
+  hubVaults['sodaSOL'].address,
+  getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault,
+] as const;
+
+export const isMoneyMarketReserveAsset = (asset: Address): boolean =>
+  moneyMarketReserveAssets.map(a => a.toLowerCase()).includes(asset.toLowerCase());
 
 export const originalAssetTohubAssetMap: Map<SpokeChainId, Map<OriginalAssetAddress, HubAssetInfo>> = new Map(
   Object.entries(hubAssets).map(([chainId, assets]) => [

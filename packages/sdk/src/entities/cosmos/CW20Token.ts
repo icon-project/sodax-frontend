@@ -53,7 +53,6 @@ export class CW20Token {
     senderAddress: string,
     recipientAddress: string,
     amount: string,
-    fee = 200000,
   ): Promise<ExecuteResponse> {
     const msg = {
       transfer: {
@@ -70,7 +69,6 @@ export class CW20Token {
     spenderAddress: string,
     amount: string,
     expires?: { at_height?: number; at_time?: string; never?: {} },
-    fee = 200000,
   ): Promise<ExecuteResponse> {
     const msg = {
       increase_allowance: {
@@ -88,7 +86,6 @@ export class CW20Token {
     spenderAddress: string,
     amount: string,
     expires?: { at_height?: number; at_time?: string; never?: {} },
-    fee = 200000,
   ): Promise<ExecuteResponse> {
     const msg = {
       decrease_allowance: {
@@ -106,7 +103,6 @@ export class CW20Token {
     ownerAddress: string,
     recipientAddress: string,
     amount: string,
-    fee = 200000,
   ): Promise<ExecuteResponse> {
     const msg = {
       transfer_from: {

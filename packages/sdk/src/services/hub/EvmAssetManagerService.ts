@@ -1,6 +1,6 @@
 import { type Address, type Hex, type PublicClient, encodeFunctionData } from 'viem';
 import { assetManagerAbi } from '../../abis/index.js';
-import { hubAssets } from '../../constants.js';
+import { getHubAssetInfo } from '../../constants.js';
 import type { EvmHubProvider } from '../../entities/Providers.js';
 import type { AssetInfo, EvmContractCall, SpokeChainId } from '../../types.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
@@ -72,13 +72,14 @@ export class EvmAssetManagerService {
    */
   public static depositToData(params: EvmDepositToDataParams, spokeChainId: SpokeChainId): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = hubAssets[spokeChainId][params.token];
-    const assetAddress = assetConfig?.asset;
-    const vaultAddress = assetConfig?.vault;
+    const assetConfig = getHubAssetInfo(spokeChainId, params.token);
 
-    if (!assetAddress || !vaultAddress) {
-      throw new Error('Asset or vault address not found');
+    if (!assetConfig) {
+      throw new Error('[depositToData] Hub asset not found');
     }
+
+    const assetAddress = assetConfig.asset;
+    const vaultAddress = assetConfig.vault;
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, params.amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, params.amount));
@@ -102,12 +103,13 @@ export class EvmAssetManagerService {
     spokeChainId: SpokeChainId,
   ): Hex {
     const calls: EvmContractCall[] = [];
-    console.log('withdrawparams', params);
-    const assetConfig = hubAssets[spokeChainId][params.token];
-    const assetAddress = assetConfig?.asset;
-    if (!assetAddress) {
-      throw new Error('Asset or vault address not found');
+    const assetConfig = getHubAssetInfo(spokeChainId, params.token);
+
+    if (!assetConfig) {
+      throw new Error('[withdrawAssetData] Hub asset not found');
     }
+
+    const assetAddress = assetConfig.asset;
 
     calls.push(
       EvmAssetManagerService.encodeTransfer(

@@ -9,15 +9,14 @@ import {
   type SuiSpokeChainConfig,
   SuiSpokeProvider,
   SuiWalletProvider,
-  SONIC_TESTNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   getMoneyMarketConfig,
-  SUI_TESTNET_CHAIN_ID,
   SUI_MAINNET_CHAIN_ID,
   type EvmHubProviderConfig,
   type SolverConfig,
   Sodax,
   type SodaxConfig,
+  SolverConfigParams,
 } from '@new-world/sdk';
 
 import dotenv from 'dotenv';
@@ -27,8 +26,8 @@ dotenv.config();
 const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
-const HUB_CHAIN_ID = IS_TESTNET ? SONIC_TESTNET_CHAIN_ID : SONIC_MAINNET_CHAIN_ID;
-const SUI_CHAIN_ID = IS_TESTNET ? SUI_TESTNET_CHAIN_ID : SUI_MAINNET_CHAIN_ID;
+const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
+const SUI_CHAIN_ID = SUI_MAINNET_CHAIN_ID;
 const SUI_RPC_URL = IS_TESTNET ? 'https://fullnode.testnet.sui.io' : 'https://fullnode.mainnet.sui.io';
 
 if (!privateKey) {
@@ -51,9 +50,8 @@ const hubConfig = {
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-  relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
   partnerFee: undefined,
-} satisfies SolverConfig;
+} satisfies SolverConfigParams;
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
@@ -95,6 +93,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
   const txHash: Hash = await SpokeService.deposit(
     {
       from: suiSpokeProvider.getWalletAddressBytes(),
+      to: hubWallet,
       token,
       amount,
       data,
@@ -111,6 +110,11 @@ async function withdrawAsset(
   amount: bigint,
   recipient: string, // sui address
 ) {
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+    suiSpokeProvider.chainConfig.chain.id,
+    suiSpokeProvider.getWalletAddressBytes(),
+    hubProvider,
+  );
   const data = EvmAssetManagerService.withdrawAssetData(
     {
       token,
@@ -121,7 +125,7 @@ async function withdrawAsset(
     suiSpokeProvider.chainConfig.chain.id,
   );
   const txHash: Hash = await SpokeService.callWallet(
-    suiSpokeProvider.getWalletAddressBytes(),
+    hubWallet,
     data,
     suiSpokeProvider,
     hubProvider,
@@ -169,7 +173,7 @@ async function borrow(token: string, amount: bigint) {
   );
 
   const txHash: Hash = await SpokeService.callWallet(
-    suiSpokeProvider.getWalletAddressBytes(),
+    hubWallet,
     data,
     suiSpokeProvider,
     hubProvider,
@@ -194,7 +198,7 @@ async function withdraw(token: string, amount: bigint) {
   );
 
   const txHash: Hash = await SpokeService.callWallet(
-    suiSpokeProvider.getWalletAddressBytes(),
+    hubWallet,
     data,
     suiSpokeProvider,
     hubProvider,

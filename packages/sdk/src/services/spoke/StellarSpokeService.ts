@@ -1,7 +1,7 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
-import { type PromiseStellarTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { type HubAddress, type PromiseStellarTxReturnType, getIntentRelayChainId } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type StellarSpokeDepositParams = {
@@ -52,21 +52,24 @@ export class StellarSpokeService {
     return BigInt(await spokeProvider.getBalance(token));
   }
 
+  /**
+   * Calls a contract on the spoke chain using the user's wallet.
+   * @param from - The address of the user on the hub chain.
+   * @param payload - The payload to send to the contract.
+   * @param spokeProvider - The spoke provider.
+   * @param hubProvider - The hub provider.
+   * @param raw - Whether to return the raw transaction data.
+   * @returns The transaction result.
+   */
   public static async callWallet<R extends boolean = false>(
-    from: Hex,
+    from: HubAddress,
     payload: Hex,
     spokeProvider: StellarSpokeProvider,
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      from,
-      hubProvider,
-    );
-
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return StellarSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);
+    return StellarSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
 
   private static async transfer<R extends boolean = false>(
@@ -85,7 +88,7 @@ export class StellarSpokeService {
 
   private static async call<R extends boolean = false>(
     dstChainId: bigint,
-    dstAddress: Hex,
+    dstAddress: HubAddress,
     payload: Hex,
     spokeProvider: StellarSpokeProvider,
     raw?: R,

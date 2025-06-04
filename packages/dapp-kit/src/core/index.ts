@@ -1,6 +1,6 @@
 import type { XToken, XChainId } from '@new-world/xwagmi';
 
-import { MAINNET_CHAIN_IDS, hubAssets } from '@new-world/sdk';
+import { CHAIN_IDS, hubAssets } from '@new-world/sdk';
 
 export const allXTokens: XToken[] = [];
 
@@ -19,7 +19,7 @@ Object.keys(hubAssets).forEach(xChainId => {
 
     allXTokens.push({
       // @ts-ignore
-      xChainId: MAINNET_CHAIN_IDS.includes(xChainId as XChainId) ? 'sonic' : 'sonic-blaze',
+      xChainId: CHAIN_IDS.includes(xChainId as XChainId) ? 'sonic' : 'sonic-blaze',
       symbol: token.symbol,
       name: token.name,
       decimals: token.decimal,

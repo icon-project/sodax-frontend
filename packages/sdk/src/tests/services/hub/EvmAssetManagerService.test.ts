@@ -1,93 +1,31 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { decodeFunctionData, type Address, type HttpTransport, type PublicClient } from 'viem';
+import { describe, it, expect, vi } from 'vitest';
+import { decodeFunctionData, type Address } from 'viem';
 import { assetManagerAbi } from '../../../abis/index.js';
 import {
   EvmAssetManagerService,
-  type EvmSpokeProvider,
+  EvmSpokeProvider,
   spokeChainConfig,
   type EvmDepositToDataParams,
   type EvmWithdrawAssetDataParams,
   getHubChainConfig,
-  AVALANCHE_FUJI_TESTNET_CHAIN_ID,
   EvmHubProvider,
   type EvmHubProviderConfig,
   SONIC_MAINNET_CHAIN_ID,
   type IEvmWalletProvider,
+  BSC_MAINNET_CHAIN_ID,
 } from '../../../index.js';
 
-vi.mock('../../../utils/evm-utils.js', () => ({
-  encodeContractCalls: () => '0xencoded',
-}));
-
-vi.mock('../../../services/hub/EvmWalletAbstraction.js', () => ({
-  EvmWalletAbstraction: {
-    getUserHubWalletAddress: () => '0x4444444444444444444444444444444444444444',
-  },
-}));
-
-vi.mock('../../../constants.js', async importOriginal => {
-  const actual = (await importOriginal()) as object;
-  return {
-    ...actual,
-    hubAssets: {
-      '0xa869.fuji': {
-        // Mock token configuration for Avalanche Fuji testnet
-        '0x1234567890123456789012345678901234567890': {
-          asset: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-          decimal: 18,
-          vault: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
-        },
-      },
-    },
-  };
-});
-
 describe('EvmAssetManagerService', () => {
-  const mockAsset = '0x1234567890123456789012345678901234567890' as Address;
-  const mockAssetManager = '0x0987654321098765432109876543210987654321' as Address;
-  const mockTo = '0x5555555555555555555555555555555555555555' as Address;
-  const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
-  const mockChainId = 1n;
-  const mockSpokeChainId = '0xa869.fuji';
-  const mockSpokeAddress = '0x3333333333333333333333333333333333333333' as Address;
+  const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
 
-  // Mock PublicClient
-  const mockPublicClient = {
-    readContract: vi.fn(),
-  } as unknown as PublicClient;
-
-  // Mock providers setup
-  const mockSpokeWalletProvider = {
-    publicClient: {
-      readContract: vi.fn(),
-    },
-    getWalletAddressBytes: {
-      writeContract: vi.fn(),
-    },
-    getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+  const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
+    getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+    getWalletAddressBytes: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
     waitForTransactionReceipt: vi.fn(),
   } as unknown as IEvmWalletProvider;
 
-  const mockSpokeProvider = {
-    walletProvider: mockSpokeWalletProvider,
-    chainConfig: {
-      ...spokeChainConfig[mockSpokeChainId],
-      chain: {
-        id: AVALANCHE_FUJI_TESTNET_CHAIN_ID,
-        name: 'Avalanche Fuji',
-        type: 'evm',
-      },
-      addresses: {
-        assetManager: '0x5555555555555555555555555555555555555555' as Address,
-        connection: '0x6666666666666666666666666666666666666666' as Address,
-      },
-      nativeToken: '0x0000000000000000000000000000000000000000' as Address,
-    },
-    publicClient: {
-      readContract: vi.fn(),
-    } as unknown as PublicClient<HttpTransport>,
-  } satisfies EvmSpokeProvider;
+  const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
@@ -96,35 +34,42 @@ describe('EvmAssetManagerService', () => {
 
   const mockHubProvider = new EvmHubProvider(mockHubConfig);
 
-  beforeEach(() => {
-    vi.resetAllMocks();
-  });
-
   describe('getAssetInfo', () => {
     it('should correctly fetch asset information', async () => {
-      const mockResponse = [mockChainId, mockSpokeAddress] as const;
-      vi.mocked(mockPublicClient.readContract).mockResolvedValueOnce(mockResponse);
+      const mockResponse = [
+        mockBscSpokeProvider.chainConfig.chain.id,
+        mockBscSpokeProvider.chainConfig.addresses.spokeAddress,
+      ] as const;
+      vi.spyOn(mockBscSpokeProvider.publicClient, 'readContract').mockResolvedValueOnce(mockResponse);
 
-      const result = await EvmAssetManagerService.getAssetInfo(mockAsset, mockAssetManager, mockPublicClient);
+      const result = await EvmAssetManagerService.getAssetInfo(
+        bscEthToken,
+        mockBscSpokeProvider.chainConfig.addresses.assetManager,
+        mockBscSpokeProvider.publicClient,
+      );
 
-      expect(mockPublicClient.readContract).toHaveBeenCalledWith({
-        address: mockAssetManager,
+      expect(mockBscSpokeProvider.publicClient.readContract).toHaveBeenCalledWith({
+        address: mockBscSpokeProvider.chainConfig.addresses.assetManager,
         abi: assetManagerAbi,
         functionName: 'assetInfo',
-        args: [mockAsset],
+        args: [bscEthToken],
       });
 
       expect(result).toEqual({
-        chainId: mockChainId,
-        spokeAddress: mockSpokeAddress,
+        chainId: mockBscSpokeProvider.chainConfig.chain.id,
+        spokeAddress: mockBscSpokeProvider.chainConfig.addresses.spokeAddress,
       });
     });
 
     it('should handle zero values', async () => {
       const mockResponse = [0n, '0x0000000000000000000000000000000000000000' as Address] as const;
-      vi.mocked(mockPublicClient.readContract).mockResolvedValueOnce(mockResponse);
+      vi.spyOn(mockBscSpokeProvider.publicClient, 'readContract').mockResolvedValueOnce(mockResponse);
 
-      const result = await EvmAssetManagerService.getAssetInfo(mockAsset, mockAssetManager, mockPublicClient);
+      const result = await EvmAssetManagerService.getAssetInfo(
+        bscEthToken,
+        mockBscSpokeProvider.chainConfig.addresses.assetManager,
+        mockBscSpokeProvider.publicClient,
+      );
 
       expect(result).toEqual({
         chainId: 0n,
@@ -135,10 +80,15 @@ describe('EvmAssetManagerService', () => {
 
   describe('encodeTransfer', () => {
     it('should correctly encode transfer transaction data', () => {
-      const encodedCall = EvmAssetManagerService.encodeTransfer(mockAsset, mockTo, mockAmount, mockAssetManager);
+      const encodedCall = EvmAssetManagerService.encodeTransfer(
+        bscEthToken,
+        mockEvmWalletProvider.getWalletAddress(),
+        1000000000000000000n,
+        mockBscSpokeProvider.chainConfig.addresses.assetManager,
+      );
 
       expect(encodedCall).toEqual({
-        address: mockAssetManager,
+        address: mockBscSpokeProvider.chainConfig.addresses.assetManager,
         value: 0n,
         data: expect.any(String),
       });
@@ -149,23 +99,28 @@ describe('EvmAssetManagerService', () => {
       });
 
       expect(decoded.functionName).toBe('transfer');
-      expect(decoded.args).toEqual([mockAsset, mockTo, mockAmount, '0x']);
+      expect(decoded.args).toEqual([
+        bscEthToken,
+        mockEvmWalletProvider.getWalletAddress(),
+        1000000000000000000n,
+        '0x',
+      ]);
     });
 
     it('should handle zero amount transfers', () => {
-      const encodedCall = EvmAssetManagerService.encodeTransfer(mockAsset, mockTo, 0n, mockAssetManager);
+      const encodedCall = EvmAssetManagerService.encodeTransfer(bscEthToken, mockEvmWalletProvider.getWalletAddress(), 0n, mockBscSpokeProvider.chainConfig.addresses.assetManager);
 
       const decoded = decodeFunctionData({
         abi: assetManagerAbi,
         data: encodedCall.data,
       });
 
-      expect(decoded.args).toEqual([mockAsset, mockTo, 0n, '0x']);
+      expect(decoded.args).toEqual([bscEthToken, mockEvmWalletProvider.getWalletAddress(), 0n, '0x']);
     });
 
     it('should handle maximum uint256 amount', () => {
       const maxUint256 = 2n ** 256n - 1n;
-      const encodedCall = EvmAssetManagerService.encodeTransfer(mockAsset, mockTo, maxUint256, mockAssetManager);
+      const encodedCall = EvmAssetManagerService.encodeTransfer(bscEthToken, mockEvmWalletProvider.getWalletAddress(), maxUint256, mockBscSpokeProvider.chainConfig.addresses.assetManager);
 
       const decoded = decodeFunctionData({
         abi: assetManagerAbi,
@@ -177,7 +132,7 @@ describe('EvmAssetManagerService', () => {
 
     it('should maintain data precision for large numbers', () => {
       const largeAmount = 2n ** 128n;
-      const encodedCall = EvmAssetManagerService.encodeTransfer(mockAsset, mockTo, largeAmount, mockAssetManager);
+      const encodedCall = EvmAssetManagerService.encodeTransfer(bscEthToken, mockEvmWalletProvider.getWalletAddress(), largeAmount, mockBscSpokeProvider.chainConfig.addresses.assetManager);
 
       const decoded = decodeFunctionData({
         abi: assetManagerAbi,
@@ -190,40 +145,40 @@ describe('EvmAssetManagerService', () => {
 
   describe('depositToData', () => {
     const depositParams = {
-      token: mockAsset,
-      to: mockTo,
-      amount: mockAmount,
+      token: bscEthToken,
+      to: mockEvmWalletProvider.getWalletAddress(),
+      amount: 1000000000000000000n,
     } satisfies EvmDepositToDataParams;
 
     it('should correctly encode deposit transaction data', () => {
-      const result = EvmAssetManagerService.depositToData(depositParams, mockSpokeProvider.chainConfig.chain.id);
-      expect(result).toBe('0xencoded');
+      const result = EvmAssetManagerService.depositToData(depositParams, mockBscSpokeProvider.chainConfig.chain.id);
+      expect(result).toBe('0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000022000000000000000000000000057fc2ac5701e463ae261adbd6c99fbeb48ce5293000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044095ea7b30000000000000000000000004effb5813271699683c25c734f4dabc45b3637090000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000000000000000000004effb5813271699683c25c734f4dabc45b36370900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000004447e7ef2400000000000000000000000057fc2ac5701e463ae261adbd6c99fbeb48ce52930000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000000000000000000004effb5813271699683c25c734f4dabc45b363709000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044a9059cbb00000000000000000000000099999999999999999999999999999999999999990000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000');
     });
 
     it('should throw error if asset config not found', () => {
       const invalidToken = '0x9999999999999999999999999999999999999999' as Address;
       const invalidParams = { ...depositParams, token: invalidToken };
 
-      expect(() => EvmAssetManagerService.depositToData(invalidParams, mockSpokeProvider.chainConfig.chain.id)).toThrow(
-        'Asset or vault address not found',
+      expect(() => EvmAssetManagerService.depositToData(invalidParams, mockBscSpokeProvider.chainConfig.chain.id)).toThrow(
+        '[depositToData] Hub asset not found',
       );
     });
   });
 
   describe('withdrawAssetData', () => {
     const withdrawParams = {
-      token: mockAsset,
-      to: mockTo,
-      amount: mockAmount,
+      token: bscEthToken,
+      to: mockEvmWalletProvider.getWalletAddress(),
+      amount: 1000000000000000000n,
     } satisfies EvmWithdrawAssetDataParams;
 
     it('should correctly encode withdraw transaction data', () => {
       const result = EvmAssetManagerService.withdrawAssetData(
         withdrawParams,
         mockHubProvider,
-        mockSpokeProvider.chainConfig.chain.id,
+        mockBscSpokeProvider.chainConfig.chain.id,
       );
-      expect(result).toBe('0xencoded');
+      expect(result).toBe('0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000060c5681bd1db4e50735c4ca3386005a4ba4937c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000e4c6b4180b00000000000000000000000057fc2ac5701e463ae261adbd6c99fbeb48ce529300000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000149999999999999999999999999999999999999999000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000');
     });
 
     it('should throw error if asset config not found', () => {
@@ -234,69 +189,9 @@ describe('EvmAssetManagerService', () => {
         EvmAssetManagerService.withdrawAssetData(
           invalidParams,
           mockHubProvider,
-          mockSpokeProvider.chainConfig.chain.id,
+          mockBscSpokeProvider.chainConfig.chain.id,
         ),
-      ).toThrow('Asset or vault address not found');
-    });
-  });
-
-  describe('getAssetAddress', () => {
-    it('should correctly fetch asset address', async () => {
-      const expectedAddress = '0x4444444444444444444444444444444444444444' as Address;
-      vi.mocked(mockPublicClient.readContract).mockResolvedValueOnce(expectedAddress);
-
-      const result = await EvmAssetManagerService.prototype.getAssetAddress.call(
-        { constructor: EvmAssetManagerService },
-        mockChainId,
-        mockSpokeAddress,
-        mockAssetManager,
-        mockPublicClient,
-      );
-
-      expect(mockPublicClient.readContract).toHaveBeenCalledWith({
-        address: mockAssetManager,
-        abi: assetManagerAbi,
-        functionName: 'assets',
-        args: [mockChainId, mockSpokeAddress],
-      });
-
-      expect(result).toBe(expectedAddress);
-    });
-
-    it('should handle zero address response', async () => {
-      const zeroAddress = '0x0000000000000000000000000000000000000000' as Address;
-      vi.mocked(mockPublicClient.readContract).mockResolvedValueOnce(zeroAddress);
-
-      const result = await EvmAssetManagerService.prototype.getAssetAddress.call(
-        { constructor: EvmAssetManagerService },
-        mockChainId,
-        mockSpokeAddress,
-        mockAssetManager,
-        mockPublicClient,
-      );
-
-      expect(result).toBe(zeroAddress);
-    });
-
-    it('should handle different chain IDs', async () => {
-      const expectedAddress = '0x4444444444444444444444444444444444444444' as Address;
-      vi.mocked(mockPublicClient.readContract).mockResolvedValueOnce(expectedAddress);
-
-      const differentChainId = 42n;
-      await EvmAssetManagerService.prototype.getAssetAddress.call(
-        { constructor: EvmAssetManagerService },
-        differentChainId,
-        mockSpokeAddress,
-        mockAssetManager,
-        mockPublicClient,
-      );
-
-      expect(mockPublicClient.readContract).toHaveBeenCalledWith({
-        address: mockAssetManager,
-        abi: assetManagerAbi,
-        functionName: 'assets',
-        args: [differentChainId, mockSpokeAddress],
-      });
+      ).toThrow('[withdrawAssetData] Hub asset not found');
     });
   });
 });

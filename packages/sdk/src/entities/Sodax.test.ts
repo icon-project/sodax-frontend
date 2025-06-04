@@ -18,7 +18,6 @@ import {
   type RelayTxStatus,
   type Result,
   SONIC_MAINNET_CHAIN_ID,
-  type SolverConfig,
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
@@ -29,6 +28,7 @@ import {
   type IEvmWalletProvider,
   type TxReturnType,
   spokeChainConfig,
+  type SolverConfigParams,
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
@@ -47,9 +47,8 @@ describe('Sodax', () => {
   const solverConfig = {
     intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
     solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-    relayerApiEndpoint: 'https://testnet-xcall-relay.nw.iconblockchain.xyz',
     partnerFee: partnerFeePercentage,
-  } satisfies SolverConfig;
+  } satisfies SolverConfigParams;
 
   const moneyMarketConfig = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID);
 
@@ -66,18 +65,6 @@ describe('Sodax', () => {
   });
 
   describe('constructor', () => {
-    it('should initialize with solver config', () => {
-      const sodax = new Sodax({ solver: solverConfig });
-      expect(sodax.solver).toBeDefined();
-      expect(() => sodax.moneyMarket).toThrow('Money market service not initialized');
-    });
-
-    it('should initialize with money market config', () => {
-      const sodax = new Sodax({ moneyMarket: moneyMarketConfig });
-      expect(sodax.moneyMarket).toBeDefined();
-      expect(() => sodax.solver).toThrow('Solver service not initialized');
-    });
-
     it('should initialize with both services', () => {
       const sodax = new Sodax({
         solver: solverConfig,
@@ -93,18 +80,6 @@ describe('Sodax', () => {
         hubProviderConfig: hubConfig,
       });
       expect(sodax.solver).toBeDefined();
-    });
-  });
-
-  describe('getters', () => {
-    it('should throw error when accessing uninitialized solver service', () => {
-      const sodax = new Sodax({});
-      expect(() => sodax.solver).toThrow('Solver service not initialized');
-    });
-
-    it('should throw error when accessing uninitialized money market service', () => {
-      const sodax = new Sodax({});
-      expect(() => sodax.moneyMarket).toThrow('Money market service not initialized');
     });
   });
 
