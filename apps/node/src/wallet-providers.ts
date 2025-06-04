@@ -18,6 +18,7 @@ import {
   type PublicClient,
   createPublicClient,
 } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 
 export class EvmWalletProvider implements IEvmWalletProvider {
   private readonly walletClient: WalletClient<HttpTransport, Chain, Account>;
@@ -28,7 +29,7 @@ export class EvmWalletProvider implements IEvmWalletProvider {
     this.walletClient = createWalletClient({
       chain,
       transport: http(rpcUrl ?? chain.rpcUrls.default.http[0]),
-      account: privateKey,
+      account: privateKeyToAccount(privateKey),
     });
     this.publicClient = createPublicClient({
       chain,
