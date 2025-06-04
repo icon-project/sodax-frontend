@@ -14,5 +14,6 @@ export const useQuote = (payload: IntentQuoteRequest | undefined) => {
       return quoteResult;
     },
     enabled: !!payload,
+    refetchInterval: 3000,
   });
 };
