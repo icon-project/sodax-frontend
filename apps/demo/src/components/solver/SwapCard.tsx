@@ -59,7 +59,7 @@ export default function SwapCard({
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const [open, setOpen] = useState(false);
-
+  const [slippage, setSlippage] = useState<string>('0.5');
   const onChangeDirection = () => {
     setSourceChain(destChain);
     setDestChain(sourceChain);
@@ -109,6 +109,12 @@ export default function SwapCard({
     );
   }, [quote, sourceAmount, destToken]);
 
+  const minOutputAmount = useMemo(() => {
+    return quote?.quoted_amount
+      ? new BigNumber(quote?.quoted_amount).multipliedBy(new BigNumber(100).minus(new BigNumber(slippage))).div(100)
+      : undefined;
+  }, [quote, slippage]);
+
   const onSourceAmountChange = (value: string) => {
     setSourceAmount(value);
   };
@@ -129,11 +135,16 @@ export default function SwapCard({
       return;
     }
 
+    if (!minOutputAmount) {
+      console.error('minOutputAmount undefined');
+      return;
+    }
+
     const createIntentParams = {
       inputToken: sourceToken.address, // The address of the input token on hub chain
       outputToken: destToken.address, // The address of the output token on hub chain
       inputAmount: scaleTokenAmount(sourceAmount, sourceToken.decimals), // The amount of input tokens
-      minOutputAmount: quote.quoted_amount, // The minimum amount of output tokens to accept
+      minOutputAmount: BigInt(minOutputAmount.toFixed(0)), // The minimum amount of output tokens to accept
       deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
       allowPartialFill: false, // Whether the intent can be partially filled
       srcChain: sourceChain, // Chain ID where input tokens originate
@@ -265,10 +276,25 @@ export default function SwapCard({
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
         <div className="w-full text-sm text-muted-foreground">
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span>Exchange Rate</span>
             <span>
               1 {sourceToken?.symbol} ≈ {exchangeRate.toString()} {destToken?.symbol}
+            </span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span>Slippage:</span>
+            <div className="flex items-center gap-2">
+              <Input type="number" value={slippage} onChange={e => setSlippage(e.target.value)} />
+              <span>%</span>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span>Minimum Output Amount</span>
+            <span>
+              {minOutputAmount ? normaliseTokenAmount(minOutputAmount.toString(), destToken?.decimals ?? 0) : '0'}{' '}
+              {destToken?.symbol}
             </span>
           </div>
         </div>
@@ -285,27 +311,27 @@ export default function SwapCard({
             </DialogHeader>
             <div className="">
               <div className="flex flex-col">
-                <div>inputToken: {intentOrderPayload?.inputToken}</div>
-                <div>outputToken: {intentOrderPayload?.outputToken}</div>
-                <div>inputAmount: {intentOrderPayload?.inputAmount.toString()}</div>
-                <div>minOutputAmount: {intentOrderPayload?.minOutputAmount.toString()}</div>
+                <div>
+                  inputToken: {intentOrderPayload?.inputToken} on {intentOrderPayload?.srcChain}
+                </div>
+                <div>
+                  outputToken: {intentOrderPayload?.outputToken} on {intentOrderPayload?.dstChain}
+                </div>
+                <div>
+                  inputAmount: {normaliseTokenAmount(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}
+                </div>
                 <div>deadline: {intentOrderPayload?.deadline.toString()}</div>
                 <div>allowPartialFill: {intentOrderPayload?.allowPartialFill.toString()}</div>
-                <div>srcChain: {intentOrderPayload?.srcChain.toString()}</div>
-                <div>dstChain: {intentOrderPayload?.dstChain.toString()}</div>
                 <div>srcAddress: {intentOrderPayload?.srcAddress}</div>
                 <div>dstAddress: {intentOrderPayload?.dstAddress}</div>
                 <div>solver: {intentOrderPayload?.solver}</div>
                 <div>data: {intentOrderPayload?.data}</div>
                 <div>
-                  amount: {intentOrderPayload?.inputAmount.toString()}
-                  (normalised:{normaliseTokenAmount(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)})
+                  amount: {normaliseTokenAmount(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}
                 </div>
-                <div>toToken: {intentOrderPayload?.outputToken}</div>
                 <div>
-                  toAmount: {intentOrderPayload?.minOutputAmount.toString()}
-                  (normalised:
-                  {normaliseTokenAmount(intentOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)})
+                  outputAmount:{' '}
+                  {normaliseTokenAmount(intentOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)}
                 </div>
               </div>
             </div>
