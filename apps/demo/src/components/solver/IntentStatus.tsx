@@ -1,6 +1,5 @@
 import React from 'react';
 import type { Hex } from '@new-world/sdk';
-import { statusCodeToMessage } from '@/lib/utils';
 import { useStatus } from '@new-world/dapp-kit';
 
 export default function IntentStatus({
@@ -14,8 +13,8 @@ export default function IntentStatus({
     if (status.ok) {
       return (
         <div className="flex flex-col text-center pb-4">
-          <div>Intent tx hash: {intent_tx_hash}</div>
-          <div>Status: {statusCodeToMessage(status.value.status)}</div>
+          <div>Intent hash: {intent_tx_hash}</div>
+          {/* <div>Status: {statusCodeToMessage(status.value.status)}</div> */}
         </div>
       );
     }
