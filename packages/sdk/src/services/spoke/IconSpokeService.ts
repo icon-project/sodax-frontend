@@ -1,4 +1,4 @@
-import IconService from 'icon-sdk-js';
+import * as IconService from 'icon-sdk-js';
 import * as rlp from 'rlp';
 import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';

@@ -14,6 +14,7 @@ import type {
   OriginalAssetAddress,
   SolanaChainConfig,
   SolverConfig,
+  SonicSpokeChainConfig,
   SpokeChainId,
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
@@ -68,6 +69,7 @@ export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
 // currently supported spoke chains
 export const SPOKE_CHAIN_IDS = [
   AVALANCHE_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
@@ -136,7 +138,7 @@ const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
 
-export function getEvmViemChain(id: EvmChainId): Chain {
+export function getEvmViemChain(id: EvmChainId | 'sonic'): Chain {
   switch (id) {
     case SONIC_MAINNET_CHAIN_ID:
       return sonic;
@@ -179,6 +181,20 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
 export const getHubChainConfig = (chainId: HubChainId): EvmHubChainConfig => hubChainConfig[chainId];
 
 export const spokeChainConfig = {
+  [SONIC_MAINNET_CHAIN_ID]: {
+    chain: {
+      name: 'Sonic',
+      id: SONIC_MAINNET_CHAIN_ID,
+      type: 'sonic',
+    },
+    addresses: {
+      walletRouter: '0xC67C3e55c665E78b25dc9829B3Aa5af47d914733',
+      wrappedSonic: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000',
+    bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
+    supportedTokens: [],
+  } satisfies SonicSpokeChainConfig,
   [SOLANA_MAINNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'AnCCJjheynmGqPp6Vgat9DTirGKD4CtQzP8cwTYV8qKH',
@@ -541,6 +557,36 @@ export const hubAssets: Record<
   SpokeChainId,
   Record<Address | string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>
 > = {
+  [SONIC_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+      decimal: 18,
+      symbol: 'S',
+      name: 'Sonic',
+      vault: '0x62ecc3Eeb80a162c57624B3fF80313FE69f5203e',
+    },
+    '0x50c42dEAcD8Fc9773493ED674b675bE577f2634b': {
+      asset: '0x50c42dEAcD8Fc9773493ED674b675bE577f2634b',
+      decimal: 18,
+      symbol: 'WETH',
+      name: 'Wrapped Ethereum',
+      vault: '0x4effB5813271699683C25c734F4daBc45B363709',
+    },
+    '0x29219dd400f2Bf60E5a23d13Be72B486D4038894': {
+      asset: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
+      decimal: 6,
+      symbol: 'USDC ',
+      name: 'USD Coin',
+      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
+    },
+    '0x6047828dc181963ba44974801ff68e538da5eaf9': {
+      asset: '0x6047828dc181963ba44974801ff68e538da5eaf9',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: '0xbDf1F453FCB61424011BBDDCB96cFDB30f3Fe876',
+    },
+  },
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].nativeToken]: {
       // AVAX
@@ -907,6 +953,7 @@ const solverConfig = {
 export const getSolverConfig = (chainId: HubChainId): SolverConfig => solverConfig[chainId];
 
 const solverSupportedTokens: Record<SpokeChainId, Token[]> = {
+  [SONIC_MAINNET_CHAIN_ID]: [],
   [AVALANCHE_MAINNET_CHAIN_ID]: [
     {
       symbol: 'AVAX',

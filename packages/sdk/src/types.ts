@@ -37,7 +37,7 @@ export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof IN
 export type EvmChainId = (typeof EVM_CHAIN_IDS)[number];
 export type EvmSpokeChainId = (typeof EVM_SPOKE_CHAIN_IDS)[number];
 
-export type ChainType = 'evm' | 'cosmos' | 'stellar' | 'icon' | 'sui' | 'solana';
+export type ChainType = 'evm' | 'cosmos' | 'stellar' | 'icon' | 'sui' | 'solana' | 'sonic';
 
 export type BaseSpokeChainInfo<T extends ChainType> = {
   name: string;
@@ -132,6 +132,14 @@ export type EvmSpokeChainConfig = BaseSpokeChainConfig<'evm'> & {
   nativeToken: Address | string;
 };
 
+export type SonicSpokeChainConfig = BaseSpokeChainConfig<'sonic'> & {
+  addresses: {
+    walletRouter: Address;
+    wrappedSonic: Address;
+  };
+  nativeToken: Address;
+};
+
 export type SuiSpokeChainConfig = BaseSpokeChainConfig<'sui'> & {
   addresses: {
     assetManager: string;
@@ -203,6 +211,7 @@ export type HubChainConfig = EvmHubChainConfig;
 
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
+  | SonicSpokeChainConfig
   | CosmosSpokeChainConfig
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
@@ -211,17 +220,19 @@ export type SpokeChainConfig =
 
 export type GetSpokeChainConfigType<T extends ChainType> = T extends 'evm'
   ? EvmSpokeChainConfig
-  : T extends 'cosmos'
-    ? CosmosSpokeChainConfig
-    : T extends 'icon'
-      ? IconSpokeChainConfig
-      : T extends 'sui'
-        ? SuiSpokeChainConfig
-        : T extends 'stellar'
-          ? StellarSpokeChainConfig
-          : T extends 'solana'
-            ? SolanaChainConfig
-            : never;
+  : T extends 'sonic'
+    ? SonicSpokeChainConfig
+    : T extends 'sonic'
+      ? CosmosSpokeChainConfig
+      : T extends 'icon'
+        ? IconSpokeChainConfig
+        : T extends 'sui'
+          ? SuiSpokeChainConfig
+          : T extends 'stellar'
+            ? StellarSpokeChainConfig
+            : T extends 'solana'
+              ? SolanaChainConfig
+              : never;
 
 export type EvmContractCall = {
   address: Address; // Target address of the call

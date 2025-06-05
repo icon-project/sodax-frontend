@@ -12,7 +12,6 @@ import {
 import type { PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
 import { toHex, type Hex } from 'viem';
 import type { ISpokeProvider, WalletAddressProvider } from '../Providers.js';
-import type { Server } from '@stellar/stellar-sdk/rpc';
 
 export class StellarWalletProvider implements WalletAddressProvider {
   private readonly _keypair: Keypair;
@@ -36,7 +35,7 @@ export class StellarWalletProvider implements WalletAddressProvider {
 }
 
 export class StellarSpokeProvider implements ISpokeProvider {
-  private readonly server: Server;
+  private readonly server: StellarRpc.Server;
   private readonly contract: Contract;
   public readonly chainConfig: StellarSpokeChainConfig;
   public readonly walletProvider: StellarWalletProvider;

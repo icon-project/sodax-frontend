@@ -84,7 +84,7 @@ export class EvmAssetManagerService {
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, params.amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, params.amount));
     const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, params.amount);
-    calls.push(Erc20Service.encodeTansfer(vaultAddress, params.to, translatedAmount));
+    calls.push(Erc20Service.encodeTransfer(vaultAddress, params.to, translatedAmount));
 
     return encodeContractCalls(calls);
   }

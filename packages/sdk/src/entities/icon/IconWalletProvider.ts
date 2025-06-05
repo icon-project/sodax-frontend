@@ -1,4 +1,4 @@
-import IconService from 'icon-sdk-js';
+import * as IconService from 'icon-sdk-js';
 import type { Hash, Hex } from 'viem';
 import type { HttpPrefixedUrl, IconEoaAddress, WalletAddressProvider } from '../../index.js';
 import { requestJsonRpc } from './HanaWalletConnector.js';
