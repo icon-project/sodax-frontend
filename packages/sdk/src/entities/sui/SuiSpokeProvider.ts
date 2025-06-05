@@ -2,15 +2,16 @@ import { bcs } from '@mysten/sui/bcs';
 import { Transaction, type TransactionResult } from '@mysten/sui/transactions';
 import { type Hex, toHex } from 'viem';
 import type { PromiseSuiTxReturnType, SuiReturnType, SuiSpokeChainConfig } from '../../types.js';
-import type { ISpokeProvider, SuiWalletProvider } from '../index.js';
+import type { ISpokeProvider } from '../index.js';
+import type { ISuiWalletProvider } from '../../interfaces.js';
 
 type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
 type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | undefined };
 export class SuiSpokeProvider implements ISpokeProvider {
-  public readonly walletProvider: SuiWalletProvider;
+  public readonly walletProvider: ISuiWalletProvider;
   public chainConfig: SuiSpokeChainConfig;
 
-  constructor(config: SuiSpokeChainConfig, wallet_provider: SuiWalletProvider) {
+  constructor(config: SuiSpokeChainConfig, wallet_provider: ISuiWalletProvider) {
     this.chainConfig = config;
     this.walletProvider = wallet_provider;
   }

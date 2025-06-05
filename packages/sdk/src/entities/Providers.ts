@@ -19,8 +19,7 @@ import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
 import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider, StellarWalletProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
-import type { SuiWalletProvider } from './sui/SuiWalletProvider.js';
-import type { IEvmWalletProvider } from '../index.js';
+import type { IEvmWalletProvider, ISuiWalletProvider } from '../index.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -112,7 +111,7 @@ export { getIconAddressBytes } from './icon/utils.js';
 export type IWalletProvider = (
   | IEvmWalletProvider
   | ICWWalletProvider
-  | SuiWalletProvider
+  | ISuiWalletProvider
   | IconWalletProvider
   | SolanaWalletProvider
   | StellarWalletProvider
