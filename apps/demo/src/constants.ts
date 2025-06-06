@@ -9,7 +9,7 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   spokeChainConfig,
   type SpokeChainId,
-} from '@new-world/sdk';
+} from '@sodax/sdk';
 
 declare global {
   interface Window {

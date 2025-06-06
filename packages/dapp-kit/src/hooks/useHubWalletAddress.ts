@@ -1,4 +1,4 @@
-import { type EvmHubProvider, EvmWalletAbstraction, type SpokeChainId } from '@new-world/sdk';
+import { type EvmHubProvider, EvmWalletAbstraction, type SpokeChainId } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
 export function useHubWalletAddress(

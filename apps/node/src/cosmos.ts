@@ -17,7 +17,7 @@ import {
   getHubChainConfig,
   getMoneyMarketConfig,
   spokeChainConfig,
-} from '@new-world/sdk';
+} from '@sodax/sdk';
 import { type Address, type Hash, type Hex, toHex } from 'viem';
 
 import dotenv from 'dotenv';
@@ -75,7 +75,7 @@ const hubConfig = {
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 

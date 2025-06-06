@@ -1,6 +1,6 @@
-import type { XToken, XChainId } from '@new-world/xwagmi';
+import type { XToken, XChainId } from '@sodax/xwagmi';
 
-import { CHAIN_IDS, hubAssets } from '@new-world/sdk';
+import { CHAIN_IDS, hubAssets } from '@sodax/sdk';
 
 export const allXTokens: XToken[] = [];
 

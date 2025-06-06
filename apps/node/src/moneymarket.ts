@@ -11,7 +11,7 @@ import {
   type SodaxConfig,
   SONIC_MAINNET_CHAIN_ID,
   type UserReserveData,
-} from '@new-world/sdk';
+} from '@sodax/sdk';
 import type { Address } from 'viem';
 
 // load PK from .env

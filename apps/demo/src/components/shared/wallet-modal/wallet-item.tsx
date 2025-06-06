@@ -1,9 +1,8 @@
-import { XIcon } from 'lucide-react';
-import { Loader2 } from 'lucide-react';
+import { XIcon, Loader2 } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import type { XChainType, XConnector } from '@new-world/xwagmi';
-import { useXAccount, useXConnect, useXConnection, useXConnectors, useXDisconnect } from '@new-world/xwagmi';
+import type { XChainType, XConnector } from '@sodax/xwagmi';
+import { useXAccount, useXConnect, useXConnection, useXConnectors, useXDisconnect } from '@sodax/xwagmi';
 import { Button } from '@/components/ui/button';
 
 export type WalletItemProps = {

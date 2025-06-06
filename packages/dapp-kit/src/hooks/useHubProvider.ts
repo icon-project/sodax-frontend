@@ -1,5 +1,5 @@
-import { EvmHubProvider, getHubChainConfig } from '@new-world/sdk';
-import { getXChainType } from '@new-world/xwagmi';
+import { EvmHubProvider, getHubChainConfig } from '@sodax/sdk';
+import { getXChainType } from '@sodax/xwagmi';
 import { useMemo } from 'react';
 import { useSodaxContext } from '../hooks/useSodaxContext';
 

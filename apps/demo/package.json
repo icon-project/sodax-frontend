@@ -17,9 +17,9 @@
     "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
   },
   "dependencies": {
-    "@new-world/dapp-kit": "workspace:*",
-    "@new-world/sdk": "workspace:*",
-    "@new-world/xwagmi": "workspace:*",
+    "@sodax/dapp-kit": "workspace:*",
+    "@sodax/sdk": "workspace:*",
+    "@sodax/xwagmi": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-scroll-area": "^1.2.3",

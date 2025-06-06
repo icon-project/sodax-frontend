@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import SwapCard from '@/components/solver/SwapCard';
-import type { Address, Hex, Intent, PacketData } from '@new-world/sdk';
+import type { Address, Hex, Intent, PacketData } from '@sodax/sdk';
 import OrderStatus from '@/components/solver/OrderStatus';
-import { useXAccount } from '@new-world/xwagmi';
+import { useXAccount } from '@sodax/xwagmi';
 
 export default function SolverPage() {
   const evmAccount = useXAccount('EVM');

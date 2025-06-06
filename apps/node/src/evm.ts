@@ -24,7 +24,7 @@ import {
   Sodax,
   type EvmRawTransaction,
   SolverConfigParams,
-} from '@new-world/sdk';
+} from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers';
 
 // load PK from .env
@@ -63,7 +63,7 @@ const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 

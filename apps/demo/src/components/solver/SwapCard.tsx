@@ -30,13 +30,13 @@ import {
   spokeChainConfig,
   supportedSpokeChains,
   supportedTokensPerChain,
-} from '@new-world/sdk';
+} from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useSwitchChain } from 'wagmi';
-import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@new-world/dapp-kit';
-import { useEvmSwitchChain, type XChainId } from '@new-world/xwagmi';
+import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@sodax/dapp-kit';
+import { useEvmSwitchChain, type XChainId } from '@sodax/xwagmi';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
