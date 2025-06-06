@@ -4,6 +4,7 @@ import {
   DEFAULT_RELAY_TX_TIMEOUT,
   type EvmHubProvider,
   type IntentRelayRequest,
+  type PacketData,
   type RelayErrorCode,
   SONIC_MAINNET_CHAIN_ID,
   type SpokeProvider,
@@ -136,7 +137,11 @@ export class SolverService {
   private readonly config: SolverServiceConfig;
   private readonly hubProvider: EvmHubProvider;
 
-  public constructor(config: SolverConfigParams | undefined, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
+  public constructor(
+    config: SolverConfigParams | undefined,
+    hubProvider: EvmHubProvider,
+    relayerApiEndpoint?: HttpUrl,
+  ) {
     if (!config) {
       // default to mainnet config
       this.config = {
@@ -144,8 +149,7 @@ export class SolverService {
         partnerFee: undefined,
         relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
       };
-    }
-    else if (isConfiguredSolverConfig(config)) {
+    } else if (isConfiguredSolverConfig(config)) {
       this.config = {
         ...config,
         partnerFee: config.partnerFee,
@@ -261,7 +265,7 @@ export class SolverService {
     spokeProvider: S,
     fee?: PartnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[IntentExecutionResponse, Intent], IntentSubmitError<IntentSubmitErrorCode>>> {
+  ): Promise<Result<[IntentExecutionResponse, Intent, PacketData], IntentSubmitError<IntentSubmitErrorCode>>> {
     try {
       const createIntentResult = await this.createIntent(payload, spokeProvider, fee, false);
 
@@ -327,7 +331,7 @@ export class SolverService {
 
       return {
         ok: true,
-        value: [result.value, intent],
+        value: [result.value, intent, packet.value],
       };
     } catch (error) {
       return {

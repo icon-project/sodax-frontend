@@ -21,8 +21,10 @@ import {
   type CreateIntentParams,
   type EvmChainId,
   type Hex,
+  type Intent,
   type IntentQuoteRequest,
   POLYGON_MAINNET_CHAIN_ID,
+  type PacketData,
   type SpokeChainId,
   type Token,
   getEvmViemChain,
@@ -38,10 +40,10 @@ import { useEvmSwitchChain, type XChainId } from '@new-world/xwagmi';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
-  setIntentTxHash,
+  setOrders,
   address,
 }: {
-  setIntentTxHash: (value: SetStateAction<Hex | undefined>) => void;
+  setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; packet: PacketData }[]>) => void;
   address: Address;
 }) {
   const { switchChain } = useSwitchChain();
@@ -165,9 +167,9 @@ export default function SwapCard({
     const result = await createIntentOrder(intentOrderPayload);
 
     if (result.ok) {
-      const [response, intent] = result.value;
+      const [response, intent, packet] = result.value;
 
-      setIntentTxHash(response.intent_hash);
+      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, packet }]);
     } else {
       console.error('Error creating and submitting intent:', result.error);
     }
