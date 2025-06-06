@@ -7,7 +7,7 @@ import {
   type Hash,
   type Hex,
   type IEvmWalletProvider,
-} from '@new-world/sdk';
+} from '@sodax/sdk';
 import {
   type WalletClient,
   type HttpTransport,

@@ -1,13 +1,13 @@
-import type { EvmHubProvider, SpokeChainId } from '@new-world/sdk';
+import type { EvmHubProvider, SpokeChainId } from '@sodax/sdk';
 import {
   SpokeService,
   type IntentRelayRequest,
   type SubmitTxResponse,
   submitTransaction,
   getIntentRelayChainId,
-} from '@new-world/sdk';
-import type { XChainId, XToken } from '@new-world/xwagmi';
-import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
+} from '@sodax/sdk';
+import type { XChainId, XToken } from '@sodax/xwagmi';
+import { getXChainType, useXAccount, xChainMap } from '@sodax/xwagmi';
 import { useState } from 'react';
 import type { Address, Hash, Hex } from 'viem';
 import { parseUnits } from 'viem';

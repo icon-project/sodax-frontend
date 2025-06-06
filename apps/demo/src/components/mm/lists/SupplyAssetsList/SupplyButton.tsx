@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useSupply } from '@new-world/dapp-kit';
-import type { XToken } from '@new-world/xwagmi';
-import { useState } from 'react';
-import { useEvmSwitchChain } from '@new-world/xwagmi';
+import { useSupply } from '@sodax/dapp-kit';
+import type { XToken } from '@sodax/xwagmi';
+import { useEvmSwitchChain } from '@sodax/xwagmi';
 
 export function SupplyButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');

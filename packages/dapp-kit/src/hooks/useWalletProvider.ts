@@ -1,6 +1,6 @@
-import type { EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@new-world/sdk';
-import { isEvmInitializedConfig } from '@new-world/sdk';
-import { type XChainId, getXChainType, useWalletProviderOptions } from '@new-world/xwagmi';
+import type { EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@sodax/sdk';
+import { isEvmInitializedConfig } from '@sodax/sdk';
+import { type XChainId, getXChainType, useWalletProviderOptions } from '@sodax/xwagmi';
 import { useMemo } from 'react';
 import type { Account, Address, Chain, CustomTransport, Hash, HttpTransport, PublicClient, WalletClient } from 'viem';
 
