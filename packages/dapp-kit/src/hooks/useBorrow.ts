@@ -62,7 +62,8 @@ export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowRetur
       const data: Hex = sodax.moneyMarket.borrowData(
         hubWalletAddress as Address,
         spokeProvider.walletProvider.getWalletAddress(),
-        getSpokeTokenAddressByVault(spokeChainId, token.address),
+        token.address,
+        // getSpokeTokenAddressByVault(spokeChainId, token.address),
         parseUnits(amount, token.decimals),
         spokeProvider.chainConfig.chain.id,
       );

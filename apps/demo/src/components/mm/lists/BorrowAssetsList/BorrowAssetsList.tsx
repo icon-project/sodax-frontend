@@ -11,15 +11,23 @@ export function BorrowAssetsList() {
   const { selectedChain } = useAppStore();
   const tokens = useMemo(() => allXTokens.filter(token => token.xChainId === selectedChain), [selectedChain]);
 
-  const { data: reservesData } = useReservesData();
+  // const { data: reservesData } = useReservesData();
 
-  // reservesData to an array of XTokens
-  const assets = reservesData?.map(item => ({
-    ...item,
-    available: formatUnits(item.availableLiquidity, Number(item.decimals)),
-    apy: 0,
-    token: allXTokens.find(t => t.address === item.underlyingAsset),
-  }));
+  // // reservesData to an array of XTokens
+  // const assets = reservesData?.map(item => ({
+  //   ...item,
+  //   available: formatUnits(item.availableLiquidity, Number(item.decimals)),
+  //   apy: 0,
+  //   token: allXTokens.find(t => t.address === item.underlyingAsset),
+  // }));
+
+  const assets = useMemo(() => [
+    {
+      token: allXTokens.find(t => t.address === '0x0000000000000000000000000000000000000000' && t.xChainId === selectedChain),
+      available: '100',
+      apy: 0,
+    },
+  ], [selectedChain]);
 
   return (
     <Card>
@@ -40,7 +48,7 @@ export function BorrowAssetsList() {
             {assets &&
               assets.map(asset => (
                 <BorrowAssetsListItem
-                  key={asset.aTokenAddress}
+                  key={asset.token?.address}
                   token={asset.token}
                   available={asset.available}
                   apy={asset.apy}
