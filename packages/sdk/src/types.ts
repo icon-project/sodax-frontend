@@ -19,6 +19,7 @@ import type {
   HUB_CHAIN_IDS,
   INTENT_RELAY_CHAIN_IDS,
   SPOKE_CHAIN_IDS,
+  spokeChainConfig,
 } from './index.js';
 import type { EvmSpokeDepositParams } from './services/index.js';
 import type { CWSpokeDepositParams } from './services/spoke/CWSpokeService.js';
@@ -79,7 +80,7 @@ export type HubAssetInfo = { asset: Address; decimal: number; vault: Address };
 export type BaseSpokeChainConfig<T extends ChainType> = {
   chain: SpokeChainInfo<T>;
   addresses: { [key: string]: Address | string | Uint8Array };
-  supportedTokens: Token[];
+  supportedTokens: Record<string, Token>;
   nativeToken: Address | string;
   bnUSD: Address | string;
 };
@@ -194,7 +195,6 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'solana'> & {
   rpcUrl: string;
   wsUrl: string;
   walletAddress: string;
-  supportedTokens: Array<string>;
   nativeToken: string;
   gasPrice: string;
 };
@@ -559,3 +559,6 @@ export type Prettify<T> = {
 } & {};
 
 export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+type ExtractKeys<T> = T extends unknown ? keyof T : never;
+
+export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChainId]['supportedTokens']>;
