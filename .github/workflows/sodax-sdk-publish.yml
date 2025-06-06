@@ -1,0 +1,34 @@
+name: Publish Package to npmjs
+
+on:
+  push:
+    tags:
+      - '@sodax/sdk@*.*.*'
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build packages
+        run: pnpm build
+      - name: Publish package
+        run: |
+          cd packages/sdk
+          pnpm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.SODAX_FRONTEND_NPM_TOKEN}}
