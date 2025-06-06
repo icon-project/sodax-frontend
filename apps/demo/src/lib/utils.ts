@@ -33,6 +33,8 @@ export function statusCodeToMessage(status: IntentStatusCode): string {
       return 'SOLVED';
     case IntentStatusCode.STARTED_NOT_FINISHED:
       return 'STARTED_NOT_FINISHED';
+    case IntentStatusCode.FAILED:
+      return 'FAILED';
     default:
       return 'UNKNOWN';
   }
