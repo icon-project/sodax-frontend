@@ -1,4 +1,4 @@
-import { getMoneyMarketConfig } from '@new-world/sdk';
+import { getMoneyMarketConfig } from '@sodax/sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useSodaxContext } from './useSodaxContext';
 

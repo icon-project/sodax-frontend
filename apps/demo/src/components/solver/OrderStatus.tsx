@@ -1,6 +1,6 @@
 import React from 'react';
-import type { Hex, Intent, PacketData } from '@new-world/sdk';
-import { useStatus } from '@new-world/dapp-kit';
+import type { Hex, Intent, PacketData } from '@sodax/sdk';
+import { useStatus } from '@sodax/dapp-kit';
 import { statusCodeToMessage } from '@/lib/utils';
 
 export default function OrderStatus({

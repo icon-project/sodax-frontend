@@ -15,7 +15,7 @@ import {
   SOLANA_MAINNET_CHAIN_ID,
   type SolverConfigParams,
   SONIC_MAINNET_CHAIN_ID,
-} from '@new-world/sdk';
+} from '@sodax/sdk';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import * as dotenv from 'dotenv';
 import { keccak256 } from 'ethers';
@@ -47,7 +47,7 @@ const sonicTestnetEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 

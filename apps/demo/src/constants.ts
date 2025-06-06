@@ -9,9 +9,7 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   spokeChainConfig,
   type SpokeChainId,
-  supportedSpokeChains,
-  type Token,
-} from '@new-world/sdk';
+} from '@sodax/sdk';
 
 declare global {
   interface Window {
@@ -24,12 +22,6 @@ export const defaultSourceChainId = ARBITRUM_MAINNET_CHAIN_ID;
 export function chainIdToChainName(chainId: SpokeChainId): string {
   return spokeChainConfig[chainId].chain.name;
 }
-
-export const supportedTokensPerChain: Map<SpokeChainId, Token[]> = new Map(
-  supportedSpokeChains.map(chainId => {
-    return [chainId, spokeChainConfig[chainId].supportedTokens];
-  }),
-);
 
 const testnet = import.meta.env.VITE_TESTNET === 'YES';
 const hubChainId = SONIC_MAINNET_CHAIN_ID;

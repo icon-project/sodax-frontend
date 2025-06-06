@@ -1,6 +1,6 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import type { XToken } from '@new-world/xwagmi';
+import type { XToken } from '@sodax/xwagmi';
 import { BorrowButton } from './BorrowButton';
 
 interface BorrowAssetsListItemProps {

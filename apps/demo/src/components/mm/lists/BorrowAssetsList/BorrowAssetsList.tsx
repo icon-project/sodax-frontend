@@ -1,5 +1,5 @@
 import React from 'react';
-import { allXTokens, useReservesData } from '@new-world/dapp-kit';
+import { allXTokens, useReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useMemo } from 'react';

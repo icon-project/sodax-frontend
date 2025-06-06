@@ -13,11 +13,10 @@ import {
   getMoneyMarketConfig,
   SUI_MAINNET_CHAIN_ID,
   type EvmHubProviderConfig,
-  type SolverConfig,
   Sodax,
   type SodaxConfig,
-  type SolverConfigParams,
-} from '@new-world/sdk';
+  SolverConfigParams,
+} from '@sodax/sdk';
 
 import dotenv from 'dotenv';
 import { EvmWalletProvider } from './wallet-providers';
@@ -49,7 +48,7 @@ const hubConfig = {
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 

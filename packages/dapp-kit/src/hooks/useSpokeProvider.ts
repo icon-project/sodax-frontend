@@ -1,5 +1,5 @@
-import { EvmSpokeProvider, spokeChainConfig, type SpokeChainId } from '@new-world/sdk';
-import { type XChainId, getXChainType } from '@new-world/xwagmi';
+import { EvmSpokeProvider, spokeChainConfig, type SpokeChainId } from '@sodax/sdk';
+import { type XChainId, getXChainType } from '@sodax/xwagmi';
 import { useMemo } from 'react';
 import { useWalletProvider } from './useWalletProvider';
 

@@ -14,9 +14,9 @@ import {
   getSupportedMoneyMarketTokens,
   EvmWalletAbstraction,
   SpokeService,
-  type OriginalAssetAddress,
   type EvmRawTransaction,
   type PacketData,
+  type Address,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 
@@ -60,7 +60,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.supply(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -88,7 +88,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.supply(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: rawEvmTx.value,
       },
       mockBscSpokeProvider,
@@ -118,7 +118,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.supplyAndSubmit(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -140,7 +140,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.borrow(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -169,7 +169,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.borrow(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: rawEvmTx.value,
       },
       mockBscSpokeProvider,
@@ -199,7 +199,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.borrowAndSubmit(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -221,7 +221,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.withdraw(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -250,7 +250,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.withdraw(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: rawEvmTx.value,
       },
       mockBscSpokeProvider,
@@ -280,7 +280,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.withdrawAndSubmit(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -302,7 +302,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.repay(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -331,7 +331,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.repay(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: rawEvmTx.value,
       },
       mockBscSpokeProvider,
@@ -361,7 +361,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.repayAndSubmit(
       {
-        token: supportedTokens[0] as OriginalAssetAddress,
+        token: supportedTokens[0]?.address as Address,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,

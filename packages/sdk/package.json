@@ -1,16 +1,20 @@
 {
-  "name": "@new-world/sdk",
-  "version": "0.0.1",
+  "name": "@sodax/sdk",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "0.0.1-rc.2",
   "license": "MIT",
-  "description": "New World SDK",
-  "keywords": ["new-world-sdk"],
-  "homepage": "https://github.com/icon-project/operation-liquidity-layer",
+  "description": "Sodax SDK",
+  "keywords": ["sodax", "sdk", "frontend", "interface"],
+  "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/sdk",
   "bugs": {
-    "url": "https://github.com/icon-project/operation-liquidity-layer/issues"
+    "url": "https://github.com/icon-project/sodax-frontend/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/icon-project/operation-liquidity-layer"
+    "url": "https://github.com/icon-project/sodax-frontend"
   },
   "main": "dist/index.js",
   "scripts": {

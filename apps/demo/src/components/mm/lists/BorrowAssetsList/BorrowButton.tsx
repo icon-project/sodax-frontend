@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useBorrow } from '@new-world/dapp-kit';
-import type { XToken } from '@new-world/xwagmi';
+import { useBorrow } from '@sodax/dapp-kit';
+import type { XToken } from '@sodax/xwagmi';
 import { useState } from 'react';
-import { useEvmSwitchChain } from '@new-world/xwagmi';
+import { useEvmSwitchChain } from '@sodax/xwagmi';
 
 export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');

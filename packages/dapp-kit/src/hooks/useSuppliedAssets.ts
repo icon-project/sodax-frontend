@@ -1,6 +1,6 @@
 import { allXTokens } from '@/core';
-import { getMoneyMarketConfig, type SpokeChainId, type EvmHubProvider } from '@new-world/sdk';
-import { getXChainType, useXAccount, type XChainId } from '@new-world/xwagmi';
+import { getMoneyMarketConfig, type SpokeChainId, type EvmHubProvider } from '@sodax/sdk';
+import { getXChainType, useXAccount, type XChainId } from '@sodax/xwagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
 import { useHubProvider } from './useHubProvider';

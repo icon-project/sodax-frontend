@@ -13,7 +13,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supportedTokensPerChain } from '@/constants';
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -30,13 +29,14 @@ import {
   getEvmViemChain,
   spokeChainConfig,
   supportedSpokeChains,
-} from '@new-world/sdk';
+  supportedTokensPerChain,
+} from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useSwitchChain } from 'wagmi';
-import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@new-world/dapp-kit';
-import { useEvmSwitchChain, type XChainId } from '@new-world/xwagmi';
+import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@sodax/dapp-kit';
+import { useEvmSwitchChain, type XChainId } from '@sodax/xwagmi';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({

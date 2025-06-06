@@ -1,4 +1,4 @@
-import type { Hex } from '@new-world/sdk';
+import type { Hex } from '@sodax/sdk';
 import { useQuery } from '@tanstack/react-query';
 import { useSodaxContext } from './useSodaxContext';
 

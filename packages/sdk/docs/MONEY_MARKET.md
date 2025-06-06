@@ -7,13 +7,53 @@ Money Market part of SDK provides abstractions to assist you with interacting wi
 SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
 
 ```typescript
-import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token } from "sodax/sdk"
+import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token } from "@sodax/sdk"
 
 // all supported spoke chains
 export const spokeChains: SpokeChainId[] = supportedSpokeChains;
 
 // using spoke chain id to retrieve supported tokens address (on spoke chain = original address) for money market
-const supportedMoneyMarketTokens: OriginalAssetAddress[] = getSupportedMoneyMarketTokens(spokeChainId)
+const supportedMoneyMarketTokens: readonly Token[] = getSupportedMoneyMarketTokens(spokeChainId)
+
+// check if token address for given spoke chain id is supported
+const isMoneyMarketSupportedToken: boolean = isMoneyMarketSupportedToken(spokeChainId, token)
+```
+
+### Initialising Spoke Provider
+
+Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider) section to see how BSC spoke provider used as `bscSpokeProvider` can be created.
+
+## Allowance and Approval
+
+Before supplying or repaying tokens, you need to ensure the money market contract has sufficient allowance to spend your tokens. The SDK provides methods to check and set allowances:
+
+```typescript
+import { MoneyMarketSupplyParams, MoneyMarketRepayParams } from "@sodax/sdk";
+
+// Check if allowance is sufficient for supply
+const supplyParams: MoneyMarketSupplyParams = {
+  token: '0x...', // Address of the token to supply
+  amount: 1000n, // Amount to supply (in token decimals)
+};
+
+const isAllowanceValid = await sodax.moneyMarket.isAllowanceValid(supplyParams, spokeProvider);
+
+if (!isAllowanceValid.ok || !isAllowanceValid.value) {
+  // Approve the money market contract to spend tokens
+  const approveResult = await sodax.moneyMarket.approve(
+    supplyParams.token as Address,
+    supplyParams.amount,
+    spokeProvider.chainConfig.addresses.assetManager,
+    spokeProvider
+  );
+
+  if (!approveResult.ok) {
+    // Handle approval error
+    return;
+  }
+}
+
+// Now you can proceed with supply
 ```
 
 ## Supply Tokens
@@ -24,13 +64,30 @@ Supply tokens to the money market pool. There are two methods available:
 2. `supply`: Supplies tokens without submitting to the Solver API
 
 ```typescript
-import { MoneyMarketSupplyParams, DEFAULT_RELAY_TX_TIMEOUT } from "sodax/sdk";
+import { MoneyMarketSupplyParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for supply operation
 const supplyParams: MoneyMarketSupplyParams = {
   token: '0x...', // Address of the token to supply
   amount: 1000n, // Amount to supply (in token decimals)
 };
+
+// First check and set allowance if needed
+const isAllowanceValid = await sodax.moneyMarket.isAllowanceValid(supplyParams, spokeProvider);
+
+if (!isAllowanceValid.ok || !isAllowanceValid.value) {
+  const approveResult = await sodax.moneyMarket.approve(
+    supplyParams.token as Address,
+    supplyParams.amount,
+    spokeProvider.chainConfig.addresses.assetManager,
+    spokeProvider
+  );
+
+  if (!approveResult.ok) {
+    // Handle approval error
+    return;
+  }
+}
 
 // Supply and submit to Solver API
 const supplyAndSubmitResult = await sodax.moneyMarket.supplyAndSubmit(
@@ -69,7 +126,7 @@ Borrow tokens from the money market pool. There are two methods available:
 2. `borrow`: Borrows tokens without submitting to the Solver API
 
 ```typescript
-import { MoneyMarketBorrowParams, DEFAULT_RELAY_TX_TIMEOUT } from "sodax/sdk";
+import { MoneyMarketBorrowParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for borrow operation
 const borrowParams: MoneyMarketBorrowParams = {
@@ -114,7 +171,7 @@ Withdraw tokens from the money market pool. There are two methods available:
 2. `withdraw`: Withdraws tokens without submitting to the Solver API
 
 ```typescript
-import { MoneyMarketWithdrawParams, DEFAULT_RELAY_TX_TIMEOUT } from "sodax/sdk";
+import { MoneyMarketWithdrawParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for withdraw operation
 const withdrawParams: MoneyMarketWithdrawParams = {
@@ -159,13 +216,30 @@ Repay tokens to the money market pool. There are two methods available:
 2. `repay`: Repays tokens without submitting to the Solver API
 
 ```typescript
-import { MoneyMarketRepayParams, DEFAULT_RELAY_TX_TIMEOUT } from "sodax/sdk";
+import { MoneyMarketRepayParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for repay operation
 const repayParams: MoneyMarketRepayParams = {
   token: '0x...', // Address of the token to repay
   amount: 1000n, // Amount to repay (in token decimals)
 };
+
+// First check and set allowance if needed
+const isAllowanceValid = await sodax.moneyMarket.isAllowanceValid(repayParams, spokeProvider);
+
+if (!isAllowanceValid.ok || !isAllowanceValid.value) {
+  const approveResult = await sodax.moneyMarket.approve(
+    repayParams.token as Address,
+    repayParams.amount,
+    spokeProvider.chainConfig.addresses.assetManager,
+    spokeProvider
+  );
+
+  if (!approveResult.ok) {
+    // Handle approval error
+    return;
+  }
+}
 
 // Repay and submit to Solver API
 const repayAndSubmitResult = await sodax.moneyMarket.repayAndSubmit(

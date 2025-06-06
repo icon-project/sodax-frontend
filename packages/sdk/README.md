@@ -8,9 +8,7 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
 
 Installing through npm:
 
-`npm i --save sodax/sdk`
-
-**NOTE** Package is not yet published to the npm registry!!!
+`npm i --save @sodax/sdk`
 
 ### Local Installation
 
@@ -20,9 +18,9 @@ Package can be locally installed by following this steps:
 2. `cd` into repository folder location.
 3. Execute `pnpm install` command in your CLI to install dependencies.
 4. Execute `pnpm run build` to build the packages.
-5. In your app repository `package.json` file, define dependency named `"sodax/sdk"` under `"dependencies"`.
+5. In your app repository `package.json` file, define dependency named `"@sodax/sdk"` under `"dependencies"`.
    Instead of version define absolute path to your SDK repository `"file:<sdk-repository-path>"` (e.g. `"file:/Users/dev/.../operation-liquidity-layer/packages/sdk"`).
-   Full example: `"sodax/sdk": "file:/Users/dev/operation-liquidity-layer/sdk-new/packages/sdk"`.
+   Full example: `"@sodax/sdk": "file:/Users/dev/operation-liquidity-layer/sdk-new/packages/sdk"`.
 
 ## Local Development
 
@@ -91,7 +89,7 @@ import {
   SolverConfigParams,
   getSolverConfig,
   getMoneyMarketConfig,
-} from 'sodax/sdk';
+} from '@sodax/sdk';
 
 // Partner fee can be defined as a percentage or a definite token amount.
 // Fee is optional, you can leave it empty/undefined.
@@ -149,7 +147,7 @@ const sodax = new Sodax({
 
 SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
 
-**NOTE** you should generally only use `spokeChains` configuration to retrieve all supported chains and then invoke per chain based configurations.
+**NOTE** you should generally only use `spokeChains` configuration to retrieve all supported chains and then invoke per spoke chain based configurations. If you are using hub configurations you should know what you are doing.
 
 ```typescript
 import {
@@ -160,7 +158,7 @@ import {
   spokeChainConfig,
   getSupportedSolverTokens,
   moneyMarketReserveAssets,
-} from "sodax/sdk";
+} from "@sodax/sdk";
 
 const hubChainConfig = getHubChainConfig(SONIC_MAINNET_CHAIN_ID);
 
@@ -180,34 +178,35 @@ export const moneyMarketReserves = moneyMarketReserveAssets;
 export spokeChainConfigRecord : Record<SpokeChainId, SpokeChainConfig> = spokeChainConfig;
 
 // using spoke chain id to retrieve supported tokens for solver (intent swaps)
-const supportedSolverTokens: Token[] = getSupportedSolverTokens(spokeChainId);
+const supportedSolverTokens: readonly Token[] = getSupportedSolverTokens(spokeChainId);
 
 // using spoke chain id to retrieve supported tokens address (on spoke chain = original address) for money market
-const supportedMoneyMarketTokens: OriginalAssetAddress[] = getSupportedMoneyMarketTokens(spokeChainId)
+const supportedMoneyMarketTokens: readonly Token[] = getSupportedMoneyMarketTokens(spokeChainId)
+
+// checkout constants.ts for all configs available
 ```
 
 ### Wallet Providers
+
 Sodax SDK does not force the usage of a specific wallet or library, but requires client to provide implementation of `IWalletProvider` interfaces (e.g. for EVM chains `IEvmWalletProvider` has to be implemented).
 
 As part of Sodax suite, xWagmi SDK is also going to be provided as one example wallet provider implementation. You are free to choose between using our xWagmi SDK or implementing your own wallet connectivity for each chain.
 
 ### Initialising Spoke Provider
 
-Spoke provider is a main instance used to interact with Sodax features because it contains all the relevant information we need to successfully execute features.
+Spoke provider is a main instance used to interact with Sodax features because it contains all the relevant information we need to successfully execute features. You should generally establish SpokeProvider instances for each chain user connects wallet to.
 
 EVM Provider example:
 
 ```typescript
-import { EvmProvider, EvmHubProvider, EvmSpokeProvider, AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from "sodax/sdk"
+import { EvmProvider, EvmHubProvider, EvmSpokeProvider, AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from "@sodax/sdk"
 
-// wallet provider represents users connected wallet, should be instantiated when user connects wallet
-// NOTE: you can construct instance from EvmUninitializedConfig or EvmInitializedConfig
 const evmWalletProvider: IEvmWalletProvider = // injected by xWagmi SDK or your own implementation
 
-// spoke provider represents connection to a specific chain, should be instantiated for each supported chain
+// spoke provider represents connection to a specific chain, should be instantiated for each supported chain when user connects wallet
 const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
-  evmWalletProvider,
-  spokeChainConfig[BSC_MAINNET_CHAIN_ID] as EvmSpokeChainConfig,
+  evmWalletProvider, // user connected wallet
+  spokeChainConfig[BSC_MAINNET_CHAIN_ID] as EvmSpokeChainConfig, // connected chain config
 );
 ```
 
