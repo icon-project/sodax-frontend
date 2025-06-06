@@ -10,8 +10,6 @@ Installing through npm:
 
 `npm i --save @sodax/sdk`
 
-**NOTE** Package is not yet published to the npm registry!!!
-
 ### Local Installation
 
 Package can be locally installed by following this steps:
