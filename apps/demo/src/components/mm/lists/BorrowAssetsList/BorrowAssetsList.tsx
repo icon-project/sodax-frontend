@@ -21,13 +21,18 @@ export function BorrowAssetsList() {
   //   token: allXTokens.find(t => t.address === item.underlyingAsset),
   // }));
 
-  const assets = useMemo(() => [
-    {
-      token: allXTokens.find(t => t.address === '0x0000000000000000000000000000000000000000' && t.xChainId === selectedChain),
-      available: '100',
-      apy: 0,
-    },
-  ], [selectedChain]);
+  const assets = useMemo(
+    () => [
+      {
+        token: allXTokens.find(
+          t => t.address === '0x0000000000000000000000000000000000000000' && t.xChainId === selectedChain,
+        ),
+        available: '100',
+        apy: 0,
+      },
+    ],
+    [selectedChain],
+  );
 
   return (
     <Card>

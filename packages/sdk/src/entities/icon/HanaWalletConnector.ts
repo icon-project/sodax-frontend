@@ -122,10 +122,7 @@ export function requestSigning(from: IconAddress, hash: string): Promise<Result<
   });
 }
 
-export function requestJsonRpc(
-  rawTransaction: unknown,
-  id = 99999,
-): Promise<Result<JsonRpcPayloadResponse>> {
+export function requestJsonRpc(rawTransaction: unknown, id = 99999): Promise<Result<JsonRpcPayloadResponse>> {
   return new Promise((resolve, reject) => {
     const eventHandler = (event: Event) => {
       const customEvent = event as CustomEvent<RelayResponseEventDetail>;

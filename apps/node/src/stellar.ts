@@ -16,7 +16,7 @@ import {
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
-  SolverConfigParams,
+  type SolverConfigParams,
 } from '@new-world/sdk';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
@@ -119,12 +119,7 @@ async function withdrawAsset(
     hubProvider,
     stellarSpokeProvider.chainConfig.chain.id,
   );
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    stellarSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -167,12 +162,7 @@ async function borrow(token: string, amount: bigint) {
     stellarSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    stellarSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
@@ -194,12 +184,7 @@ async function withdraw(token: string, amount: bigint) {
     stellarSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    stellarSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }
