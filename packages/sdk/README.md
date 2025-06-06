@@ -196,21 +196,19 @@ As part of Sodax suite, xWagmi SDK is also going to be provided as one example w
 
 ### Initialising Spoke Provider
 
-Spoke provider is a main instance used to interact with Sodax features because it contains all the relevant information we need to successfully execute features.
+Spoke provider is a main instance used to interact with Sodax features because it contains all the relevant information we need to successfully execute features. You should generally establish SpokeProvider instances for each chain user connects wallet to.
 
 EVM Provider example:
 
 ```typescript
 import { EvmProvider, EvmHubProvider, EvmSpokeProvider, AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from "sodax/sdk"
 
-// wallet provider represents users connected wallet, should be instantiated when user connects wallet
-// NOTE: you can construct instance from EvmUninitializedConfig or EvmInitializedConfig
 const evmWalletProvider: IEvmWalletProvider = // injected by xWagmi SDK or your own implementation
 
-// spoke provider represents connection to a specific chain, should be instantiated for each supported chain
+// spoke provider represents connection to a specific chain, should be instantiated for each supported chain when user connects wallet
 const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
-  evmWalletProvider,
-  spokeChainConfig[BSC_MAINNET_CHAIN_ID] as EvmSpokeChainConfig,
+  evmWalletProvider, // user connected wallet
+  spokeChainConfig[BSC_MAINNET_CHAIN_ID] as EvmSpokeChainConfig, // connected chain config
 );
 ```
 
