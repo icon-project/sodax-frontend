@@ -13,7 +13,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supportedTokensPerChain } from '@/constants';
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -30,6 +29,7 @@ import {
   getEvmViemChain,
   spokeChainConfig,
   supportedSpokeChains,
+  supportedTokensPerChain,
 } from '@new-world/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';

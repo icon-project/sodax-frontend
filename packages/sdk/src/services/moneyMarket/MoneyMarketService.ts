@@ -23,9 +23,9 @@ import type {
   HttpUrl,
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,
-  OriginalAssetAddress,
   Result,
   SpokeChainId,
+  Token,
   TxReturnType,
 } from '../../types.js';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
@@ -901,7 +901,7 @@ export class MoneyMarketService {
    * @param chainId The chain ID
    * @returns Array of supported tokens
    */
-  public getSupportedTokens(chainId: SpokeChainId): OriginalAssetAddress[] {
+  public getSupportedTokens(chainId: SpokeChainId): readonly Token[] {
     return getSupportedMoneyMarketTokens(chainId);
   }
 
