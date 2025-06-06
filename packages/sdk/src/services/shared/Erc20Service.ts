@@ -1,8 +1,89 @@
 import { encodeFunctionData, erc20Abi, type Address } from 'viem';
-import type { EvmContractCall } from '../../types.js';
+import type { EvmContractCall, EvmRawTransactionReceipt, Result } from '../../types.js';
+import type { EvmSpokeProvider } from '../../entities/Providers.js';
 
 export class Erc20Service {
   private constructor() {}
+
+  /**
+   * Check if spender has enough ERC20 allowance for given amount
+   * @param token - ERC20 token address
+   * @param amount - Amount to check allowance for
+   * @param from - User wallet address
+   * @param to - Address to check allowance for
+   * @param spokeProvider - EVM Spoke provider
+   * @return - True if spender is allowed to spend amount on behalf of owner
+   */
+  static async isAllowanceValid(
+    token: Address,
+    amount: bigint,
+    owner: Address,
+    spender: Address,
+    spokeProvider: EvmSpokeProvider,
+  ): Promise<Result<boolean>> {
+    try {
+      if (token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
+        return {
+          ok: true,
+          value: true,
+        };
+      }
+
+      const allowedAmount = await spokeProvider.publicClient.readContract({
+        address: token,
+        abi: erc20Abi,
+        functionName: 'allowance',
+        args: [owner, spender],
+      });
+
+      return {
+        ok: true,
+        value: allowedAmount >= amount,
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  /**
+   * Approve ERC20 amount spending
+   * @param token - ERC20 token address
+   * @param amount - Amount to approve
+   * @param address - Address to approve spending for
+   * @param provider - EVM Provider
+   */
+  static async approve(
+    token: Address,
+    amount: bigint,
+    address: Address,
+    spokeProvider: EvmSpokeProvider,
+  ): Promise<Result<EvmRawTransactionReceipt>> {
+    try {
+      const hash = await spokeProvider.walletProvider.sendTransaction({
+        from: spokeProvider.walletProvider.getWalletAddress(),
+        to: token,
+        value: 0n,
+        data: encodeFunctionData({
+          abi: erc20Abi,
+          functionName: 'approve',
+          args: [address, amount],
+        }),
+      });
+
+      return {
+        ok: true,
+        value: await spokeProvider.walletProvider.waitForTransactionReceipt(hash),
+      };
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
 
   /**
    * Encodes a transfer transaction for a token.

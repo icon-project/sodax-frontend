@@ -2,7 +2,9 @@ import invariant from 'tiny-invariant';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
   DEFAULT_RELAY_TX_TIMEOUT,
+  Erc20Service,
   type EvmHubProvider,
+  EvmSpokeProvider,
   type IntentRelayRequest,
   type PacketData,
   type RelayErrorCode,
@@ -24,6 +26,7 @@ import {
 import type {
   Address,
   EvmContractCall,
+  EvmRawTransactionReceipt,
   FeeAmount,
   GetSpokeDepositParamsType,
   Hash,
@@ -348,10 +351,73 @@ export class SolverService {
   }
 
   /**
+   * Check whether assetManager contract is allowed to move the given payload amount
+   * @param {CreateIntentParams} params - The intent to create
+   * @param {SpokeProvider} spokeProvider - The spoke provider
+   * @return {Promise<Result<boolean>>} - valid = true, invalid = false
+   */
+  public async isAllowanceValid<S extends SpokeProvider>(
+    params: CreateIntentParams,
+    spokeProvider: S,
+  ): Promise<Result<boolean>> {
+    try {
+      if (spokeProvider instanceof EvmSpokeProvider) {
+        return Erc20Service.isAllowanceValid(
+          params.inputToken as Address,
+          params.inputAmount,
+          spokeProvider.walletProvider.getWalletAddress(),
+          spokeProvider.chainConfig.addresses.assetManager,
+          spokeProvider,
+        );
+      }
+
+      return {
+        ok: true,
+        value: true,
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        error: error,
+      };
+    }
+  }
+
+    /**
+   * Approve ERC20 amount spending
+   * @param token - ERC20 token address
+   * @param amount - Amount to approve
+   * @param address - Address to approve spending for
+   * @param spokeProvider - Spoke provider
+   */
+    public async approve<S extends SpokeProvider>(
+      token: Address,
+      amount: bigint,
+      address: Address,
+      spokeProvider: S,
+    ): Promise<Result<EvmRawTransactionReceipt>> {
+      try {
+        if (spokeProvider instanceof EvmSpokeProvider) {
+          return Erc20Service.approve(token, amount, address, spokeProvider);
+        }
+
+        return {
+          ok: false,
+          error: new Error('Approve only supported for EVM spoke chains'),
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          error: error,
+        };
+      }
+    }
+
+  /**
    * Creates an intent by handling token approval and intent creation
    * NOTE: This method does not submit the intent to the Solver API
    * @param {CreateIntentParams} params - The intent to create
-   * @param {ISpokeProvider} spokeProvider - The spoke provider
+   * @param {SpokeProvider} spokeProvider - The spoke provider
    * @param {boolean} raw - Whether to return the raw transaction
    * @param {PartnerFee} fee - The fee to apply to the intent
    * @returns {Promise<[TxReturnType<T, R>, Intent]>} The encoded contract call

@@ -1061,6 +1061,10 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
 // get supported spoke chain tokens for solver
 export const getSupportedSolverTokens = (chainId: SpokeChainId): readonly Token[] => solverSupportedTokens[chainId];
 
+// check if token address for given spoke chain id is supported
+export const isSolverSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
+  solverSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
+
 const moneyMarketConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
     lendingPool: '0x553434896D39F867761859D0FE7189d2Af70514E',
@@ -1111,6 +1115,9 @@ const moneyMarketSupportedTokens = {
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
+
+export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
+  moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
 
 // get supported spoke chain tokens for money market
 export const getSupportedMoneyMarketTokens = (chainId: SpokeChainId): readonly Token[] => moneyMarketSupportedTokens[chainId];
@@ -1213,7 +1220,7 @@ export const moneyMarketReserveHubAssetsSet = new Set<Address>(
 export const isMoneyMarketReserveHubAsset = (hubAsset: Address): boolean =>
   moneyMarketReserveHubAssetsSet.has(hubAsset.toLowerCase() as Address);
 
-// TODO put those in money market sodax instance as well
+
 export const moneyMarketReserveAssets = [
   hubVaults['sodaAVAX'].address,
   hubVaults['sodaBNB'].address,

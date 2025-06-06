@@ -149,7 +149,7 @@ const sodax = new Sodax({
 
 SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
 
-**NOTE** you should generally only use `spokeChains` configuration to retrieve all supported chains and then invoke per chain based configurations.
+**NOTE** you should generally only use `spokeChains` configuration to retrieve all supported chains and then invoke per spoke chain based configurations. If you are using hub configurations you should know what you are doing.
 
 ```typescript
 import {
@@ -180,13 +180,16 @@ export const moneyMarketReserves = moneyMarketReserveAssets;
 export spokeChainConfigRecord : Record<SpokeChainId, SpokeChainConfig> = spokeChainConfig;
 
 // using spoke chain id to retrieve supported tokens for solver (intent swaps)
-const supportedSolverTokens: Token[] = getSupportedSolverTokens(spokeChainId);
+const supportedSolverTokens: readonly Token[] = getSupportedSolverTokens(spokeChainId);
 
 // using spoke chain id to retrieve supported tokens address (on spoke chain = original address) for money market
-const supportedMoneyMarketTokens: OriginalAssetAddress[] = getSupportedMoneyMarketTokens(spokeChainId)
+const supportedMoneyMarketTokens: readonly Token[] = getSupportedMoneyMarketTokens(spokeChainId)
+
+// checkout constants.ts for all configs available
 ```
 
 ### Wallet Providers
+
 Sodax SDK does not force the usage of a specific wallet or library, but requires client to provide implementation of `IWalletProvider` interfaces (e.g. for EVM chains `IEvmWalletProvider` has to be implemented).
 
 As part of Sodax suite, xWagmi SDK is also going to be provided as one example wallet provider implementation. You are free to choose between using our xWagmi SDK or implementing your own wallet connectivity for each chain.
