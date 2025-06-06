@@ -7,7 +7,7 @@ Solver part of the SDK provides abstractions to assist you with interacting with
 SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
 
 ```typescript
-import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token } from "sodax/sdk"
+import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token } from "@sodax/sdk"
 
 // all supported spoke chains
 export const spokeChains: SpokeChainId[] = supportedSpokeChains;
@@ -42,7 +42,7 @@ import {
   Result,
   IntentQuoteResponse,
   IntentErrorResponse
-} from "sodax/sdk";
+} from "@sodax/sdk";
 
 const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
 const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
@@ -74,7 +74,7 @@ import {
   SolverService,
   BSC_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID
-} from "sodax/sdk"
+} from "@sodax/sdk"
 
 const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
 const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
@@ -138,7 +138,7 @@ Example for BSC -> ARB Intent Order:
     SolverConfig,
     BSC_MAINNET_CHAIN_ID,
     ARBITRUM_MAINNET_CHAIN_ID
-  } from "sodax/sdk"
+  } from "@sodax/sdk"
 
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
   const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';

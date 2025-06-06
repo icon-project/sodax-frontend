@@ -7,7 +7,7 @@ Money Market part of SDK provides abstractions to assist you with interacting wi
 SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
 
 ```typescript
-import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token } from "sodax/sdk"
+import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token } from "@sodax/sdk"
 
 // all supported spoke chains
 export const spokeChains: SpokeChainId[] = supportedSpokeChains;
@@ -28,7 +28,7 @@ Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider)
 Before supplying or repaying tokens, you need to ensure the money market contract has sufficient allowance to spend your tokens. The SDK provides methods to check and set allowances:
 
 ```typescript
-import { MoneyMarketSupplyParams, MoneyMarketRepayParams } from "sodax/sdk";
+import { MoneyMarketSupplyParams, MoneyMarketRepayParams } from "@sodax/sdk";
 
 // Check if allowance is sufficient for supply
 const supplyParams: MoneyMarketSupplyParams = {
@@ -64,7 +64,7 @@ Supply tokens to the money market pool. There are two methods available:
 2. `supply`: Supplies tokens without submitting to the Solver API
 
 ```typescript
-import { MoneyMarketSupplyParams, DEFAULT_RELAY_TX_TIMEOUT } from "sodax/sdk";
+import { MoneyMarketSupplyParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for supply operation
 const supplyParams: MoneyMarketSupplyParams = {
@@ -126,7 +126,7 @@ Borrow tokens from the money market pool. There are two methods available:
 2. `borrow`: Borrows tokens without submitting to the Solver API
 
 ```typescript
-import { MoneyMarketBorrowParams, DEFAULT_RELAY_TX_TIMEOUT } from "sodax/sdk";
+import { MoneyMarketBorrowParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for borrow operation
 const borrowParams: MoneyMarketBorrowParams = {
@@ -171,7 +171,7 @@ Withdraw tokens from the money market pool. There are two methods available:
 2. `withdraw`: Withdraws tokens without submitting to the Solver API
 
 ```typescript
-import { MoneyMarketWithdrawParams, DEFAULT_RELAY_TX_TIMEOUT } from "sodax/sdk";
+import { MoneyMarketWithdrawParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for withdraw operation
 const withdrawParams: MoneyMarketWithdrawParams = {
@@ -216,7 +216,7 @@ Repay tokens to the money market pool. There are two methods available:
 2. `repay`: Repays tokens without submitting to the Solver API
 
 ```typescript
-import { MoneyMarketRepayParams, DEFAULT_RELAY_TX_TIMEOUT } from "sodax/sdk";
+import { MoneyMarketRepayParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for repay operation
 const repayParams: MoneyMarketRepayParams = {

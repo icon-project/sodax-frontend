@@ -8,7 +8,7 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
 
 Installing through npm:
 
-`npm i --save sodax/sdk`
+`npm i --save @sodax/sdk`
 
 **NOTE** Package is not yet published to the npm registry!!!
 
@@ -20,9 +20,9 @@ Package can be locally installed by following this steps:
 2. `cd` into repository folder location.
 3. Execute `pnpm install` command in your CLI to install dependencies.
 4. Execute `pnpm run build` to build the packages.
-5. In your app repository `package.json` file, define dependency named `"sodax/sdk"` under `"dependencies"`.
+5. In your app repository `package.json` file, define dependency named `"@sodax/sdk"` under `"dependencies"`.
    Instead of version define absolute path to your SDK repository `"file:<sdk-repository-path>"` (e.g. `"file:/Users/dev/.../operation-liquidity-layer/packages/sdk"`).
-   Full example: `"sodax/sdk": "file:/Users/dev/operation-liquidity-layer/sdk-new/packages/sdk"`.
+   Full example: `"@sodax/sdk": "file:/Users/dev/operation-liquidity-layer/sdk-new/packages/sdk"`.
 
 ## Local Development
 
@@ -91,7 +91,7 @@ import {
   SolverConfigParams,
   getSolverConfig,
   getMoneyMarketConfig,
-} from 'sodax/sdk';
+} from '@sodax/sdk';
 
 // Partner fee can be defined as a percentage or a definite token amount.
 // Fee is optional, you can leave it empty/undefined.
@@ -160,7 +160,7 @@ import {
   spokeChainConfig,
   getSupportedSolverTokens,
   moneyMarketReserveAssets,
-} from "sodax/sdk";
+} from "@sodax/sdk";
 
 const hubChainConfig = getHubChainConfig(SONIC_MAINNET_CHAIN_ID);
 
@@ -201,7 +201,7 @@ Spoke provider is a main instance used to interact with Sodax features because i
 EVM Provider example:
 
 ```typescript
-import { EvmProvider, EvmHubProvider, EvmSpokeProvider, AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from "sodax/sdk"
+import { EvmProvider, EvmHubProvider, EvmSpokeProvider, AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from "@sodax/sdk"
 
 const evmWalletProvider: IEvmWalletProvider = // injected by xWagmi SDK or your own implementation
 
