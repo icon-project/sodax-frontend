@@ -36,6 +36,6 @@ jobs:
       - name: Publish package
         run: |
           cd packages/sdk
-          pnpm publish --provenance --access public
+          pnpm publish --no-git-checks --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.SODAX_FRONTEND_NPM_TOKEN}}
