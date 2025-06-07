@@ -18,7 +18,7 @@ import {
 } from '@solana/wallet-adapter-react';
 import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
 import type { XConfig } from './types';
-import { initXWagmiStore } from './useXWagmiStore';
+import { initXWagmiStore, InitXWagmiStore } from './useXWagmiStore';
 
 export const XWagmiProviders = ({ children, config }: { children: React.ReactNode; config: XConfig }) => {
   useEffect(() => {
@@ -38,6 +38,7 @@ export const XWagmiProviders = ({ children, config }: { children: React.ReactNod
         <SuiWalletProvider autoConnect={true}>
           <SolanaConnectionProvider endpoint={endpoint}>
             <SolanaWalletProvider wallets={wallets} autoConnect>
+              <InitXWagmiStore />
               {children}
             </SolanaWalletProvider>
           </SolanaConnectionProvider>
