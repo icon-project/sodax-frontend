@@ -12,3 +12,5 @@ export * from './useStatus';
 export * from './useBorrow';
 export * from './useRepay';
 export * from './useReservesData';
+export * from './useAllowance';
+export * from './useApprove';

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useSupply } from '@sodax/dapp-kit';
+import { useAllowance, useSupply, useApprove } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/xwagmi';
 import { useEvmSwitchChain } from '@sodax/xwagmi';
 
@@ -12,6 +12,8 @@ export function SupplyButton({ token }: { token: XToken }) {
   const [open, setOpen] = useState(false);
   const { supply, isLoading, error, resetError } = useSupply(token);
 
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount);
+  const { approve, isLoading: isApproving } = useApprove(token);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleSupply = async () => {
@@ -29,6 +31,10 @@ export function SupplyButton({ token }: { token: XToken }) {
       setAmount('');
       resetError?.();
     }
+  };
+
+  const handleApprove = async () => {
+    await approve(amount);
   };
 
   return (
@@ -59,6 +65,15 @@ export function SupplyButton({ token }: { token: XToken }) {
         </div>
         {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
         <DialogFooter className="sm:justify-start">
+          <Button
+            className="w-full"
+            type="button"
+            variant="default"
+            onClick={handleApprove}
+            disabled={isAllowanceLoading || hasAllowed || isApproving}
+          >
+            {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+          </Button>
           {isWrongChain && (
             <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
               Switch Chain
