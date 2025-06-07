@@ -6,7 +6,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/icon-project/sodax-frontend"
@@ -23,6 +26,8 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
+    "@mysten/sui": "^1.21.2",
+    "@mysten/wallet-standard": "^0.15.6",
     "@new-world/sdk": "workspace:*",
     "@new-world/xwagmi": "workspace:*",
     "viem": "catalog:"

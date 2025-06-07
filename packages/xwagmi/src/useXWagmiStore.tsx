@@ -133,26 +133,6 @@ export const InitXWagmiStore = () => {
       SuiXService.getInstance().suiClient = suiClient;
     }
   }, [suiClient]);
-
-  const { connection: solanaConnection } = useConnection();
-  const solanaWallet = useWallet();
-  const solanaProvider = useAnchorProvider();
-  useEffect(() => {
-    if (solanaConnection) {
-      SolanaXService.getInstance().connection = solanaConnection;
-    }
-  }, [solanaConnection]);
-  useEffect(() => {
-    if (solanaWallet) {
-      SolanaXService.getInstance().wallet = solanaWallet;
-    }
-  }, [solanaWallet]);
-  useEffect(() => {
-    if (solanaProvider) {
-      SolanaXService.getInstance().provider = solanaProvider;
-    }
-  }, [solanaProvider]);
-
   const { currentWallet: suiWallet } = useCurrentWallet();
   useEffect(() => {
     if (suiWallet) {
@@ -165,6 +145,25 @@ export const InitXWagmiStore = () => {
       SuiXService.getInstance().suiAccount = suiAccount;
     }
   }, [suiAccount]);
+
+  // const { connection: solanaConnection } = useConnection();
+  // const solanaWallet = useWallet();
+  // const solanaProvider = useAnchorProvider();
+  // useEffect(() => {
+  //   if (solanaConnection) {
+  //     SolanaXService.getInstance().connection = solanaConnection;
+  //   }
+  // }, [solanaConnection]);
+  // useEffect(() => {
+  //   if (solanaWallet) {
+  //     SolanaXService.getInstance().wallet = solanaWallet;
+  //   }
+  // }, [solanaWallet]);
+  // useEffect(() => {
+  //   if (solanaProvider) {
+  //     SolanaXService.getInstance().provider = solanaProvider;
+  //   }
+  // }, [solanaProvider]);
 
   // const havahXConnection = useXConnection('HAVAH');
   // useEffect(() => {

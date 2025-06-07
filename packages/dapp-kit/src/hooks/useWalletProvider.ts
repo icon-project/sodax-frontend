@@ -1,6 +1,6 @@
 import { type XChainId, getXChainType, useWalletProviderOptions } from '@new-world/xwagmi';
 import { useMemo } from 'react';
-import { EvmWalletProvider } from '../wallet-providers';
+import { EvmWalletProvider, SuiWalletProvider } from '../wallet-providers';
 
 export function useWalletProvider(xChainId: XChainId) {
   const xChainType = getXChainType(xChainId);
@@ -18,6 +18,14 @@ export function useWalletProvider(xChainId: XChainId) {
         // @ts-ignore
         return new EvmWalletProvider({ walletClient, publicClient });
       }
+
+      case 'SUI': {
+        const { client, wallet, account } = walletProviderOptions;
+
+        // @ts-ignore
+        return new SuiWalletProvider({ client, wallet, account });
+      }
+
       default:
         return undefined;
     }
