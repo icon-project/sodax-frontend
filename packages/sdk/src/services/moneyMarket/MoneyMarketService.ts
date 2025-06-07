@@ -225,18 +225,18 @@ export class MoneyMarketService {
    * Approve ERC20 amount spending
    * @param token - ERC20 token address
    * @param amount - Amount to approve
-   * @param address - Address to approve spending for
+   * @param spender - Spender address
    * @param spokeProvider - Spoke provider
    */
   public async approve<S extends SpokeProvider>(
     token: Address,
     amount: bigint,
-    address: Address,
+    spender: Address,
     spokeProvider: S,
   ): Promise<Result<EvmRawTransactionReceipt>> {
     try {
       if (spokeProvider instanceof EvmSpokeProvider) {
-        return Erc20Service.approve(token, amount, address, spokeProvider);
+        return Erc20Service.approve(token, amount, spender, spokeProvider);
       }
 
       return {

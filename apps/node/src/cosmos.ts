@@ -11,7 +11,7 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   Sodax,
   type SodaxConfig,
-  SolverConfigParams,
+  type SolverConfigParams,
   type SpokeChainId,
   SpokeService,
   getHubChainConfig,
@@ -26,7 +26,7 @@ dotenv.config();
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY as Hex;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
-const HUB_RPC_URL = 'https://rpc.soniclabs.com'
+const HUB_RPC_URL = 'https://rpc.soniclabs.com';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 
 const DEFAULT_SPOKE_RPC_URL = IS_TESTNET
@@ -135,12 +135,7 @@ async function withdrawAsset(
     evmHubProvider,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    cwSpokeProvider,
-    evmHubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, cwSpokeProvider, evmHubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -182,14 +177,8 @@ async function borrow(token: string, amount: bigint) {
     amount,
     cwSpokeProvider.chainConfig.chain.id,
   );
-  
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    cwSpokeProvider,
-    evmHubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, cwSpokeProvider, evmHubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
@@ -209,12 +198,7 @@ async function withdraw(token: string, amount: bigint) {
     cwSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    cwSpokeProvider,
-    evmHubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, cwSpokeProvider, evmHubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }

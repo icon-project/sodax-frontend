@@ -1,4 +1,3 @@
-
 import {
   EvmAssetManagerService,
   EvmHubProvider,
@@ -14,7 +13,7 @@ import {
   Sodax,
   type SodaxConfig,
   SOLANA_MAINNET_CHAIN_ID,
-  SolverConfigParams,
+  type SolverConfigParams,
   SONIC_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
 import { Keypair, PublicKey } from '@solana/web3.js';

@@ -115,12 +115,7 @@ async function withdrawAsset(token: Address, amount: bigint, recipient: Address)
     hubProvider,
     spokeProvider.chainConfig.chain.id,
   );
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    spokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -162,12 +157,7 @@ async function borrow(token: Address, amount: bigint) {
     spokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    spokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
@@ -187,12 +177,7 @@ async function withdraw(token: Address, amount: bigint) {
     spokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    spokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }

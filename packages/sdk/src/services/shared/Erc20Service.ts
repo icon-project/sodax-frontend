@@ -9,8 +9,8 @@ export class Erc20Service {
    * Check if spender has enough ERC20 allowance for given amount
    * @param token - ERC20 token address
    * @param amount - Amount to check allowance for
-   * @param from - User wallet address
-   * @param to - Address to check allowance for
+   * @param owner - User wallet address
+   * @param spender - Spender address
    * @param spokeProvider - EVM Spoke provider
    * @return - True if spender is allowed to spend amount on behalf of owner
    */
@@ -52,13 +52,13 @@ export class Erc20Service {
    * Approve ERC20 amount spending
    * @param token - ERC20 token address
    * @param amount - Amount to approve
-   * @param address - Address to approve spending for
+   * @param spender - Spender address
    * @param provider - EVM Provider
    */
   static async approve(
     token: Address,
     amount: bigint,
-    address: Address,
+    spender: Address,
     spokeProvider: EvmSpokeProvider,
   ): Promise<Result<EvmRawTransactionReceipt>> {
     try {
@@ -69,7 +69,7 @@ export class Erc20Service {
         data: encodeFunctionData({
           abi: erc20Abi,
           functionName: 'approve',
-          args: [address, amount],
+          args: [spender, amount],
         }),
       });
 
