@@ -2,8 +2,9 @@ import { type Address, encodeFunctionData } from 'viem';
 import { erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
 import type { EvmHubProvider, EvmSpokeProvider } from '../../entities/index.js';
 import { connectionAbi, getIntentRelayChainId } from '../../index.js';
-import type { EvmReturnType, EvmTransferToHubParams, Hex, PromiseEvmTxReturnType, TxReturnType } from '../../types.js';
+import type { EvmReturnType, EvmTransferToHubParams, Hex, PromiseEvmTxReturnType, RateLimitConfig, TxReturnType } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import { rateLimitAbi } from '../../abis/rate-limit.abi.js';
 
 export type EvmSpokeDepositParams = {
   from: Address; // The address of the user on the spoke chain
@@ -62,6 +63,44 @@ export class EvmSpokeService {
       functionName: 'balanceOf',
       args: [token],
     });
+  }
+
+  /**
+   * Get available withdrawable amount for the token.
+   * @param {Address} token - The address of the token to get the balance of.
+   * @param {EvmSpokeProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The available withdrawable amount for token.
+   */
+  public static async getAvailable(token: Address, spokeProvider: EvmSpokeProvider): Promise<bigint> {
+    let result = spokeProvider.publicClient.readContract({
+      address: spokeProvider.chainConfig.addresses.rateLimit as Address,
+      abi: rateLimitAbi,
+      functionName: 'getAvailable',
+      args: [token],
+    });
+    console.log(result);
+    return BigInt(0);
+  }
+
+/**
+ * Get the maximum withdrawable balance for a token on the spoke chain.
+ * @param {Address} token - The address of the token to get the balance of.
+ * @param {EvmSpokeProvider} spokeProvider - The provider for the spoke chain.
+ * @returns {Promise<bigint>} The maximum limit of the token balance.
+ */
+
+  public static async getLimit(token: Address, spokeProvider: EvmSpokeProvider): Promise<RateLimitConfig> {
+    let result = spokeProvider.publicClient.readContract({
+      address: spokeProvider.chainConfig.addresses.rateLimit as Address,
+      abi: rateLimitAbi,
+      functionName: 'tokenConfigs',
+      args: [token],
+    });
+    console.log(result);
+    return {
+      ratePerSecond: BigInt(0),
+      maxAvailableWithdraw: BigInt(0),
+    }
   }
 
   /**

@@ -528,6 +528,7 @@ export const spokeChainConfig = {
     addresses: {
       assetManager: '0x92971C06586576a14C0Deb583C8299B0B037bdC3',
       connection: '0x4031D470e73b5E72A0879Fc77aBf2F64049CF6BD',
+      rateLimit: '0xeCaD07b8a7dD8DefaA915A64E9Bb6c838869a685',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     bnUSD: '',
@@ -616,7 +617,7 @@ export const spokeChainConfig = {
       connection: 'CB2QGJB675SQ43RBKZZCZQ44B33Y247NAIBYMO7U3WFFB2LHHX23E6ZK',
       assetManager: 'CBE2JXDRGUFEGEXU6KGP6Q5FJIROYG5ZXCJQCTH6Y3FWQIQ2TNIZVN5D',
       xTokenManager: '',
-      rateLimit: 'CCFDSBX24HF77OCFVBKP36CO56PLEVAN225EMRZJGIDQNZAOVV4KIRWK',
+      rateLimit: 'CCLKE2ON2OSU2N6OI5QRZW7T4PYRJ7CCH7GPADMNNQZT3524QEFSECQD',
       testToken: '',
     },
     supportedTokens: [],
@@ -654,7 +655,7 @@ export const spokeChainConfig = {
     addresses: {
       assetManager: 'cx0aa4073cf4be3ee46b2b9d4e0bf374b17c2012a3',
       connection: 'cx4e2d496e97a82fd0e41a22d8d8e06bcabb99e346',
-      rateLimit: 'cx628f2f825c07cce689cb6495ba8282a161dc1757',
+      rateLimit: 'cx8ffb42809997f8371b431617b70de243623408fb',
     },
     chain: {
       id: ICON_TESTNET_CHAIN_ID,

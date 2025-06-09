@@ -531,6 +531,11 @@ export type PromiseTxReturnType<
             ? PromiseCWTxReturnType<Raw>
             : never;
 
+export type RateLimitConfig = {
+  ratePerSecond: bigint;
+  maxAvailableWithdraw: bigint;
+}
+
 export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};

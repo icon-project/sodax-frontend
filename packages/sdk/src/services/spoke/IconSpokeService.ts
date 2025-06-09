@@ -5,7 +5,7 @@ import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { getIntentRelayChainId } from '../../index.js';
-import type { IconAddress, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
+import type { IconAddress, IconReturnType, PromiseIconTxReturnType, RateLimitConfig } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type IconSpokeDepositParams = {
@@ -76,6 +76,41 @@ export class IconSpokeService {
     return BigInt(result.value);
   }
 
+  /**
+   * Get available withdrawable amount for the token.
+   * @param {string} token - The address of the token to get the balance of.
+   * @param {IconWalletProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The available withdrawable amount for token.
+   */
+  public static async getAvailable(token: string, spokeProvider: IconSpokeProvider): Promise<bigint> {
+    const transaction = new IconService.CallBuilder()
+      .to(spokeProvider.chainConfig.addresses.rateLimit)
+      .method('getAvailable')
+      .params({ token: token })
+      .build();
+    const result = await spokeProvider.walletProvider.iconService.call(transaction).execute();
+    return BigInt(result);
+  }
+  
+  /**
+   * Get the maximum withdrawable balance for the token.
+   * @param {string} token - The address of the token to get the limit of.
+   * @param {IconSpokeProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The max limit allowed for the token.
+   */
+
+  public static async getLimit(token: string, spokeProvider: IconSpokeProvider): Promise<RateLimitConfig> {
+    const transaction = new IconService.CallBuilder()
+      .to(spokeProvider.chainConfig.addresses.rateLimit)
+      .method('getRateLimit')
+      .params({ token: token })
+      .build();
+    const result = await spokeProvider.walletProvider.iconService.call(transaction).execute();
+    return {
+      ratePerSecond: BigInt(result.ratePerSecond),
+      maxAvailableWithdraw: BigInt(result.maxAvailableWithdraw),
+    }
+  }
   /**
    * Calls a contract on the spoke chain using the user's wallet.
    * @param {string} from - The address of the user on the spoke chain

@@ -9,7 +9,7 @@ import {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
-import type { GetAddressType, GetSpokeDepositParamsType, PromiseTxReturnType, TxReturnType } from '../../types.js';
+import type { GetAddressType, GetSpokeDepositParamsType, PromiseTxReturnType, RateLimitConfig, TxReturnType } from '../../types.js';
 import { CWSpokeService } from './CWSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';
@@ -128,6 +128,7 @@ export class SpokeService {
     throw new Error('Invalid spoke provider');
   }
 
+
   /**
    * Calls a contract on the spoke chain using the user's wallet.
    * @param {Address} from - The address of the user on the spoke chain.
@@ -205,11 +206,21 @@ export class SpokeService {
    * @param {SpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The max limit allowed for token.
    */
-  public static getLimit(token: string | Address, spokeProvider: SpokeProvider): Promise<bigint> {
+  public static getLimit(token: string | Address, spokeProvider: SpokeProvider): Promise<RateLimitConfig> {
     if (spokeProvider instanceof SuiSpokeProvider) {
       return SuiSpokeService.getLimit(token as string, spokeProvider);
     }
+    if (spokeProvider instanceof IconSpokeProvider) {
+      return IconSpokeService.getLimit(token as string, spokeProvider);
+    }
 
+    if (spokeProvider instanceof EvmSpokeProvider) {
+      return EvmSpokeService.getLimit(token as Address, spokeProvider);
+    }
+
+    if (spokeProvider instanceof StellarSpokeProvider) {
+      return StellarSpokeService.getLimit(token as string, spokeProvider);
+    }
     throw new Error('Invalid spoke provider');
   }
 
@@ -223,6 +234,26 @@ export class SpokeService {
     if (spokeProvider instanceof SuiSpokeProvider) {
       return SuiSpokeService.getAvailable(token as string, spokeProvider);
     }
+
+    if (spokeProvider instanceof IconSpokeProvider) {
+      return IconSpokeService.getAvailable(token as string, spokeProvider);
+    }
+
+    if (spokeProvider instanceof EvmSpokeProvider) {
+      return EvmSpokeService.getAvailable(token as Address, spokeProvider);
+    }
+
+    if (spokeProvider instanceof StellarSpokeProvider) {
+      return StellarSpokeService.getAvailable(token as string, spokeProvider);
+    }
+    
+    // if (spokeProvider instanceof SolanaSpokeProvider) {
+    //   return SolanaSpokeService.getAvailable(token as string, spokeProvider);
+    // }
+
+    // if (spokeProvider instanceof CWSpokeProvider) {
+    //   return CWSpokeService.getAvailable(token as string, spokeProvider);
+    // }
 
     throw new Error('Invalid spoke provider');
   }

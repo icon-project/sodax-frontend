@@ -84,6 +84,17 @@ const sodax = new Sodax({
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
+async function getAvailable(token: string) {
+  const balance = await SpokeService.getAvailable(token, spokeProvider);
+  console.log('[Available]:', balance);
+}
+
+
+async function getLimit(token: string) {
+  const balance = await SpokeService.getLimit(token, spokeProvider);
+  console.log('[Limit]:', balance);
+}
+
 async function depositTo(token: Address, amount: bigint, recipient: Address) {
   console.log(recipient);
 
@@ -429,6 +440,12 @@ async function main() {
   } else if (functionName === 'getIntent') {
     const txHash = process.argv[3]; // Get txHash from command line argument
     await getIntent(txHash);
+  }  else if (functionName === 'get_limit') {
+    const token = process.argv[3] as string;
+    await getLimit(token);
+  }  else if (functionName === 'get_available') {
+    const token = process.argv[3] as string;
+    await getAvailable(token);
   } else {
     console.log(
       'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "createIntent", "fillIntent", or "cancelIntent".',

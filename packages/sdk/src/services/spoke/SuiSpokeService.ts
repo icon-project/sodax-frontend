@@ -1,7 +1,7 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { SuiSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
-import { type PromiseSuiTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { type PromiseSuiTxReturnType, type RateLimitConfig, getIntentRelayChainId } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type SuiSpokeDepositParams = {
@@ -72,7 +72,7 @@ export class SuiSpokeService {
    * @param {SuiSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The max limit of the token.
    */
-  public static async getLimit(token: string, spokeProvider: SuiSpokeProvider): Promise<bigint> {
+  public static async getLimit(token: string, spokeProvider: SuiSpokeProvider): Promise<RateLimitConfig> {
     return spokeProvider.getLimit(token);
   }
 

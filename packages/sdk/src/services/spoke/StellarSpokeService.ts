@@ -1,7 +1,7 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
-import { type PromiseStellarTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { type PromiseStellarTxReturnType, type RateLimitConfig, getIntentRelayChainId } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type StellarSpokeDepositParams = {
@@ -46,6 +46,14 @@ export class StellarSpokeService {
       spokeProvider,
       raw,
     );
+  }
+
+  public static async getAvailable(token: string, spokeProvider: StellarSpokeProvider): Promise<bigint> {
+    return BigInt(await spokeProvider.getAvailable(token));
+  }
+
+  public static async getLimit(token: string, spokeProvider: StellarSpokeProvider): Promise<RateLimitConfig> {
+    return await spokeProvider.getLimit(token)
   }
 
   public static async getDeposit(token: string, spokeProvider: StellarSpokeProvider): Promise<bigint> {

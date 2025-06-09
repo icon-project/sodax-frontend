@@ -1,7 +1,7 @@
 import { bcs } from '@mysten/sui/bcs';
 import { Transaction, type TransactionResult } from '@mysten/sui/transactions';
 import { type Hex, toHex } from 'viem';
-import type { PromiseSuiTxReturnType, SuiReturnType, SuiSpokeChainConfig } from '../../types.js';
+import type { PromiseSuiTxReturnType, RateLimitConfig, SuiReturnType, SuiSpokeChainConfig } from '../../types.js';
 import type { ISpokeProvider, SuiWalletProvider } from '../index.js';
 
 type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
@@ -38,7 +38,7 @@ export class SuiSpokeProvider implements ISpokeProvider {
     return BigInt(str_u64);
   }
 
-  async getLimit(token: string): Promise<bigint> {
+  async getLimit(token: string): Promise<RateLimitConfig> {
     const rateLimit = this.splitAddress(this.chainConfig.addresses.rateLimit);
     const tx = new Transaction();
     const result = await this.walletProvider.viewContract(
@@ -58,7 +58,10 @@ export class SuiSpokeProvider implements ISpokeProvider {
     }
     const val: number[] = result.returnValues[0][0];
     const str_u64 = bcs.U64.parse(Uint8Array.from(val));
-    return BigInt(str_u64);
+    return {
+      ratePerSecond: BigInt(str_u64),
+      maxAvailableWithdraw: BigInt(str_u64),
+    }
   }
 
   async getAvailable(token: string): Promise<bigint> {
