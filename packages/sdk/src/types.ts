@@ -528,26 +528,6 @@ export type StellarRawTransaction = {
   data: string;
 };
 
-export type StellarSimulationResult = {
-  id?: string; // Optional transaction ID (not always present in simulation)
-  transactionData: XDR; // Base64-encoded XDR of the Soroban transaction data (or empty for classic transactions)
-  events: XDR[]; // Array of Base64-encoded XDR diagnostic events
-  minResourceFee: string; // Minimum resource fee (in stroops) required for the transaction
-  results: Array<{
-    auth: XDR[]; // Array of Base64-encoded XDR authorizations (if applicable)
-    xdr: XDR; // Base64-encoded XDR of the operation result
-    returnValue?: unknown; // Optional parsed return value (decoded from xdr, if SDK parses it)
-  }>; // Results for each operation in the transaction
-  cost: {
-    cpuInstructions: string; // CPU instructions used (as a string representing a number)
-    memoryBytes: string; // Memory bytes used (as a string representing a number)
-  };
-  latestLedger: number; // Latest ledger number at the time of simulation
-  error?: string; // Error message if the simulation failed
-  stateChanges?: XDR[]; // Optional: Base64-encoded XDR of ledger state changes caused by the simulation
-  restoredData?: XDR; // Optional: Base64-encoded XDR of restored ledger entries (for time-bound contract data)
-};
-
 export type IconRawTransaction = Converter.RawTransaction;
 
 export type SuiRawTransaction = {
