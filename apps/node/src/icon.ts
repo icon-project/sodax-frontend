@@ -64,6 +64,17 @@ const sodax = new Sodax({
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
+async function getAvailable(token: string) {
+  const balance = await SpokeService.getAvailable(token, iconSpokeProvider);
+  console.log('[Available]:', balance);
+}
+
+
+async function getLimit(token: string) {
+  const balance = await SpokeService.getLimit(token, iconSpokeProvider);
+  console.log('[Limit]:', balance);
+}
+
 async function depositTo(token: IconAddress, amount: bigint, recipient: Address) {
   const data = EvmAssetManagerService.depositToData(
     {
@@ -232,7 +243,13 @@ async function main() {
     const token = process.argv[3] as IconAddress; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
-  } else {
+  }  else if (functionName === 'get_limit') {
+    const token = process.argv[3] as string;
+    await getLimit(token);
+  }  else if (functionName === 'get_available') {
+    const token = process.argv[3] as string;
+    await getAvailable(token);
+  }else {
     console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
   }
 }

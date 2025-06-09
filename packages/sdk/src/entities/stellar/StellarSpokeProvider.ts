@@ -8,8 +8,9 @@ import {
   nativeToScVal,
   TimeoutInfinite,
   scValToBigInt,
+  scValToNative,
 } from '@stellar/stellar-sdk';
-import type { PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
+import type { PromiseStellarTxReturnType, RateLimitConfig, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
 import { toHex, type Hex } from 'viem';
 import type { ISpokeProvider, WalletAddressProvider } from '../Providers.js';
 import type { Server } from '@stellar/stellar-sdk/rpc';
@@ -38,6 +39,7 @@ export class StellarWalletProvider implements WalletAddressProvider {
 export class StellarSpokeProvider implements ISpokeProvider {
   private readonly server: Server;
   private readonly contract: Contract;
+  private readonly rateLimit: Contract;
   public readonly chainConfig: StellarSpokeChainConfig;
   public readonly walletProvider: StellarWalletProvider;
 
@@ -50,6 +52,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
     this.server = new StellarRpc.Server(rpc);
     this.walletProvider = walletProvider;
     this.contract = new Contract(contractAddress);
+    this.rateLimit = new Contract(config.addresses.rateLimit);
     this.chainConfig = config;
   }
 
@@ -74,6 +77,64 @@ export class StellarSpokeProvider implements ISpokeProvider {
 
     if (resultValue) {
       return Number(scValToBigInt(resultValue.retval));
+    }
+
+    throw new Error('result undefined');
+  }
+
+  async getAvailable(tokenAddress: string): Promise<number> {
+    const sourceAccount = await this.server.getAccount(this.walletProvider.keypair.publicKey());
+
+    const tx = new TransactionBuilder(sourceAccount, {
+      fee: BASE_FEE,
+      networkPassphrase: (await this.server.getNetwork()).passphrase,
+    })
+      .addOperation(this.rateLimit.call('get_available', nativeToScVal(tokenAddress, { type: 'address' })))
+      .setTimeout(TimeoutInfinite)
+      .build();
+
+    const result = await this.server.simulateTransaction(tx);
+
+    if (StellarRpc.Api.isSimulationError(result)) {
+      throw new Error('Failed to simulate transaction');
+    }
+
+    const resultValue = result.result;
+
+    if (resultValue) {
+      return Number(scValToBigInt(resultValue.retval));
+    }
+
+    throw new Error('result undefined');
+  }
+
+    async getLimit(tokenAddress: string): Promise<RateLimitConfig> {
+    const sourceAccount = await this.server.getAccount(this.walletProvider.keypair.publicKey());
+
+    const tx = new TransactionBuilder(sourceAccount, {
+      fee: BASE_FEE,
+      networkPassphrase: (await this.server.getNetwork()).passphrase,
+    })
+      .addOperation(this.rateLimit.call('get_rate_limit_configs', nativeToScVal(tokenAddress, { type: 'address' })))
+      .setTimeout(TimeoutInfinite)
+      .build();
+
+    const result = await this.server.simulateTransaction(tx);
+
+    
+    if (StellarRpc.Api.isSimulationError(result)) {
+      throw new Error('Failed to simulate transaction');
+    }
+
+    const resultValue = result.result;
+    console.log(resultValue);
+    if (resultValue) {
+       let result = scValToNative(resultValue.retval)
+
+      return {
+        ratePerSecond: result.rate_per_second,
+        maxAvailableWithdraw: result.max_available,
+      }
     }
 
     throw new Error('result undefined');
