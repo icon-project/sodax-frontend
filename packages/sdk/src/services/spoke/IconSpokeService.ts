@@ -4,7 +4,7 @@ import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { getIntentRelayChainId } from '../../index.js';
+import { BigIntToHex, getIntentRelayChainId, isNativeToken } from '../../index.js';
 import type { HubAddress, IconAddress, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
@@ -19,7 +19,7 @@ export type IconSpokeDepositParams = {
 export type TransferToHubParams = {
   token: string;
   recipient: Address;
-  amount: string;
+  amount: bigint;
   data: Hex;
 };
 
@@ -52,7 +52,7 @@ export class IconSpokeService {
       {
         token: params.token,
         recipient: userWallet,
-        amount: params.amount.toString(),
+        amount: params.amount,
         data: params.data,
       },
       spokeProvider,
@@ -72,7 +72,7 @@ export class IconSpokeService {
       .method('balanceOf')
       .params({ _owner: spokeProvider.chainConfig.addresses.assetManager })
       .build();
-    const result = await spokeProvider.walletProvider.iconService.call(transaction).execute();
+    const result = await spokeProvider.iconService.call(transaction).execute();
     return BigInt(result.value);
   }
 
@@ -109,31 +109,38 @@ export class IconSpokeService {
     const hexData = `0x${Buffer.from(rlpEncodedData).toString('hex')}`;
     const params = {
       _to: spokeProvider.chainConfig.addresses.assetManager,
-      _value: amount,
+      _value: BigIntToHex(amount),
       _data: hexData,
     };
 
-    let value = '0x0';
-    if (token === spokeProvider.chainConfig.nativeToken) {
-      value = amount;
-    }
+    const value: Hex = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? BigIntToHex(amount) : '0x0';
 
-    const transaction = new IconService.CallTransactionBuilder()
-      .from(spokeProvider.walletProvider.getWalletAddress())
-      .to(token)
-      .stepLimit(IconService.Converter.toBigNumber('2000000'))
-      .nid(spokeProvider.chainConfig.nid)
-      .version('0x3')
-      .timestamp(new Date().getTime() * 1000)
-      .value(value)
-      .method('transfer')
-      .params(params)
-      .build();
+    const rawTransaction = IconService.Converter.toRawTransaction(
+      new IconService.CallTransactionBuilder()
+        .from(spokeProvider.walletProvider.getWalletAddress())
+        .to(token)
+        .stepLimit(IconService.Converter.toBigNumber('2000000'))
+        .nid(spokeProvider.chainConfig.nid)
+        .version('0x3')
+        .timestamp(new Date().getTime() * 1000)
+        .value(value)
+        .method('transfer')
+        .params(params)
+        .build(),
+    );
 
     if (raw) {
-      return IconService.Converter.toRawTransaction(transaction) as IconReturnType<R>;
+      return rawTransaction satisfies IconReturnType<true> as IconReturnType<R>;
     }
-    return spokeProvider.walletProvider.sendTransaction(transaction) as PromiseIconTxReturnType<R>;
+
+    return spokeProvider.walletProvider.sendTransaction({
+      from: spokeProvider.walletProvider.getWalletAddress(),
+      to: token,
+      value: value,
+      nid: spokeProvider.chainConfig.nid,
+      method: 'transfer',
+      params: params,
+    }) satisfies PromiseIconTxReturnType<false> as PromiseIconTxReturnType<R>;
   }
 
   /**
@@ -165,6 +172,13 @@ export class IconSpokeService {
     if (raw) {
       return IconService.Converter.toRawTransaction(transaction) as IconReturnType<R>;
     }
-    return spokeProvider.walletProvider.sendTransaction(transaction) as PromiseIconTxReturnType<R>;
+    return spokeProvider.walletProvider.sendTransaction({
+      from: spokeProvider.walletProvider.getWalletAddressBytes(),
+      to: spokeProvider.chainConfig.addresses.connection,
+      nid: spokeProvider.chainConfig.nid,
+      value: '0x0',
+      method: 'sendMessage',
+      params: params,
+    }) satisfies PromiseIconTxReturnType<false> as PromiseIconTxReturnType<R>;
   }
 }

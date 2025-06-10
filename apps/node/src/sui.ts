@@ -19,7 +19,7 @@ import {
 } from '@sodax/sdk';
 
 import dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
 dotenv.config();
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;

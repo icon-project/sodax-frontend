@@ -25,7 +25,7 @@ import {
   type EvmRawTransaction,
   type SolverConfigParams,
 } from '@sodax/sdk';
-import { EvmWalletProvider } from './wallet-providers';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;

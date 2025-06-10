@@ -1282,6 +1282,10 @@ export const getSpokeChainIdFromIntentRelayChainId = (intentRelayChainId: Intent
   }
   return spokeChainId;
 };
-export const isNativeToken = (chainId: SpokeChainId, token: Token) => {
+export const isNativeToken = (chainId: SpokeChainId, token: Token | string): boolean => {
+  if (typeof token === 'string') {
+    return token.toLowerCase() === spokeChainConfig[chainId].nativeToken.toLowerCase();
+  }
+
   return token.address.toLowerCase() === spokeChainConfig[chainId].nativeToken.toLowerCase();
 };
