@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAllowance, useSupply, useApprove } from '@sodax/dapp-kit';
+import { useBorrow } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/wallet-sdk';
+import { useState } from 'react';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 
-export function SupplyButton({ token }: { token: XToken }) {
+export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const { supply, isLoading, error, resetError } = useSupply(token);
+  console.log('token', token, token.xChainId);
+  const { borrow, isLoading, error, resetError } = useBorrow(token, token.xChainId);
 
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount);
-  const { approve, isLoading: isApproving } = useApprove(token);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
-  const handleSupply = async () => {
+  const handleBorrow = async () => {
     try {
-      await supply(amount);
+      await borrow(amount);
       setOpen(false);
     } catch (err) {
-      console.error('Error in handleSupply:', err);
+      console.error('Error in handleBorrow:', err);
     }
   };
 
@@ -31,10 +31,6 @@ export function SupplyButton({ token }: { token: XToken }) {
       setAmount('');
       resetError?.();
     }
-  };
-
-  const handleApprove = async () => {
-    await approve(amount);
   };
 
   return (
@@ -47,12 +43,12 @@ export function SupplyButton({ token }: { token: XToken }) {
             setOpen(true);
           }}
         >
-          Supply
+          Borrow
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Supply {token.symbol}</DialogTitle>
+          <DialogTitle>Borrow {token.symbol}</DialogTitle>
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -65,23 +61,14 @@ export function SupplyButton({ token }: { token: XToken }) {
         </div>
         {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
         <DialogFooter className="sm:justify-start">
-          <Button
-            className="w-full"
-            type="button"
-            variant="default"
-            onClick={handleApprove}
-            disabled={isAllowanceLoading || hasAllowed || isApproving}
-          >
-            {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
-          </Button>
           {isWrongChain && (
             <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
               Switch Chain
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={isLoading}>
-              {isLoading ? 'Supplying...' : 'Supply'}
+            <Button className="w-full" type="button" variant="default" onClick={handleBorrow} disabled={isLoading}>
+              {isLoading ? 'Borrowing...' : 'Borrow'}
             </Button>
           )}
         </DialogFooter>

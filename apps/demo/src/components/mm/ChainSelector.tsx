@@ -1,7 +1,7 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { xChains } from '@new-world/xwagmi';
-import { useSodaxContext } from '@new-world/dapp-kit';
+import { xChains } from '@sodax/wallet-sdk';
+import { useSodaxContext } from '@sodax/dapp-kit';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export function ChainSelector() {

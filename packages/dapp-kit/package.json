@@ -1,15 +1,12 @@
 {
-  "name": "@new-world/dapp-kit",
+  "name": "@sodax/dapp-kit",
   "license": "MIT",
   "version": "1.0.0",
   "description": "dapp-kit of New World",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "repository": {
     "type": "git",
     "url": "https://github.com/icon-project/sodax-frontend"
@@ -28,8 +25,8 @@
   "dependencies": {
     "@mysten/sui": "^1.21.2",
     "@mysten/wallet-standard": "^0.15.6",
-    "@new-world/sdk": "workspace:*",
-    "@new-world/xwagmi": "workspace:*",
+    "@sodax/sdk": "workspace:*",
+    "@sodax/wallet-sdk": "workspace:*",
     "viem": "catalog:"
   },
   "devDependencies": {

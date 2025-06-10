@@ -1,5 +1,5 @@
 import { useSodaxContext } from './useSodaxContext';
-import type { CreateIntentParams, SpokeChainId } from '@new-world/sdk';
+import type { CreateIntentParams, SpokeChainId } from '@sodax/sdk';
 import { useSpokeProvider } from './useSpokeProvider';
 
 export function useCreateIntentOrder(chainId: SpokeChainId) {

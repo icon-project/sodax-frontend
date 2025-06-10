@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { Sodax, SONIC_MAINNET_CHAIN_ID } from '@new-world/sdk';
+import type { Sodax, SONIC_MAINNET_CHAIN_ID } from '@sodax/sdk';
 
 export interface SodaxContextType {
   sodax: Sodax;

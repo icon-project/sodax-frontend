@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { SpokeChainId } from '@new-world/sdk';
+import type { SpokeChainId } from '@sodax/sdk';
 import { Label } from '@/components/ui/label';
 import { chainIdToChainName } from '@/constants';
 

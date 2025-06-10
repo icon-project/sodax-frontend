@@ -1,4 +1,4 @@
-import { type XChainId, getXChainType, useWalletProviderOptions } from '@new-world/xwagmi';
+import { type XChainId, getXChainType, useWalletProviderOptions } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
 import { EvmWalletProvider, SuiWalletProvider } from '../wallet-providers';
 

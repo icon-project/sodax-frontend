@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import SwapCard from '@/components/solver/SwapCard';
-import type { Address, Hex } from '@new-world/sdk';
-import IntentStatus from '@/components/solver/IntentStatus';
-import { useXAccount } from '@new-world/xwagmi';
+import type { Address, Hex, Intent, PacketData } from '@sodax/sdk';
+import OrderStatus from '@/components/solver/OrderStatus';
+import { useXAccount } from '@sodax/wallet-sdk';
 
 export default function SolverPage() {
   const evmAccount = useXAccount('EVM');
 
-  const [intentTxHash, setIntentTxHash] = useState<Hex | undefined>(undefined);
+  const [orders, setOrders] = useState<{ intentHash: Hex; intent: Intent; packet: PacketData }[]>([]);
 
   return (
     <div className="flex flex-col items-center content-center justify-center h-screen">
-      {intentTxHash && <IntentStatus intent_tx_hash={intentTxHash} />}
-      <SwapCard setIntentTxHash={setIntentTxHash} address={evmAccount.address as Address} />
+      {orders.map((order, index) => (
+        <OrderStatus key={index} order={order} />
+      ))}
+      <SwapCard setOrders={setOrders} address={evmAccount.address as Address} />
     </div>
   );
 }

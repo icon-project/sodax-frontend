@@ -1,11 +1,10 @@
-import React from 'react';
-import { allXTokens } from '@new-world/dapp-kit';
+import React, { useMemo } from 'react';
+import { allXTokens } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getXChainType, useXAccount, useXBalances } from '@new-world/xwagmi';
+import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
-import { useMemo } from 'react';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export function SupplyAssetsList() {

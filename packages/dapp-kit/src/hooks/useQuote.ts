@@ -1,4 +1,4 @@
-import type { IntentQuoteRequest } from '@new-world/sdk';
+import type { IntentQuoteRequest } from '@sodax/sdk';
 import { useSodaxContext } from './useSodaxContext';
 import { useQuery } from '@tanstack/react-query';
 

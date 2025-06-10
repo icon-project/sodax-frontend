@@ -11,16 +11,15 @@ import {
   getMoneyMarketConfig,
   SONIC_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
-  type SolverConfig,
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
-  SolverConfigParams,
-} from '@new-world/sdk';
+  type SolverConfigParams,
+} from '@sodax/sdk';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -49,7 +48,7 @@ const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 
@@ -119,12 +118,7 @@ async function withdrawAsset(
     hubProvider,
     stellarSpokeProvider.chainConfig.chain.id,
   );
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    stellarSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -167,12 +161,7 @@ async function borrow(token: string, amount: bigint) {
     stellarSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    stellarSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
@@ -194,12 +183,7 @@ async function withdraw(token: string, amount: bigint) {
     stellarSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    stellarSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }

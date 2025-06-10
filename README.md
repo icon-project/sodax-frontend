@@ -1,35 +1,26 @@
 [![CI](https://github.com/icon-project/sodax-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/icon-project/sodax-frontend/actions/workflows/ci.yml)
 
-# `Turborepo` Vite starter
+# Sodax Frontend
 
-This is a community-maintained example. If you experience a problem, please submit a pull request with a fix. GitHub Issues will be closed.
+This repository contains the frontend and libraries implementation for the Sodax project, built with a modern tech stack and monorepo architecture.
 
-## Using this example
+If you want to contribute, please refer to the [contributing guidelines](./CONTRIBUTING.md) of this project.
 
-Run the following command:
+## Repository Structure
 
-```sh
-npx create-turbo@latest -e with-vite
-```
+### Apps (`/apps`)
 
-## What's inside?
+The `apps` directory contains various frontend applications:
 
-This Turborepo includes the following packages and apps:
+- **web** (`/apps/web`): Main Next.js web application
+- **demo** (`/apps/demo`): Demo application showcasing features
+- **node** (`/apps/node`): Node.js specific implementation
+- **react-solver-example** (`/apps/react-solver-example`): Example implementation of the solver
 
-### Apps and Packages
+### SDK's (`/packages`)
 
-- `docs`: a vanilla [vite](https://vitejs.dev) ts app
-- `web`: another vanilla [vite](https://vitejs.dev) ts app
-- `@repo/ui`: a stub component & utility library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: shared `eslint` configurations
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+The `packages` directory contains a sdk's and libraries:
 
-Each package and app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+- **sdk** (`/packages/sdk`): The core SDK that exposes the full suite of Sodax features through a streamlined set of interfaces and functions. For wallet integration, developers can either implement the provided wallet provider interfaces or utilize the optional xwagmi SDK for a more comprehensive solution. [Sodax SDK Documentation](./packages/sdk/README.md).
+- **xwagmi** (`/packages/xwagmi`): A dedicated Wallet Connectivity SDK that supports multi-chain wallet operations, including transaction signing, broadcasting, and retrieval. It is fully compliant with the Sodax SDK wallet provider interface specifications, ensuring seamless integration. [xWagmi Documentation](./packages/xwagmi/README.md).
+- **dapp-kit** (`/packages/dapp-kit`): A utility kit optimized for React and Next.js applications, leveraging both the xWagmi and Sodax SDKs. It offers a collection of hooks, components, and utilities designed to accelerate frontend dApp development with modular, production-ready building blocks. [Dapp Kit Documentation](./packages/dapp-kit/README.md).

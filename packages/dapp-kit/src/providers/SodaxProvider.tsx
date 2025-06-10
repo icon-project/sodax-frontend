@@ -1,6 +1,6 @@
 import type { ReactNode, ReactElement } from 'react';
-import { Sodax, type SodaxConfig } from '@new-world/sdk';
-import { SONIC_MAINNET_CHAIN_ID } from '@new-world/sdk';
+import { Sodax, type SodaxConfig } from '@sodax/sdk';
+import { SONIC_MAINNET_CHAIN_ID } from '@sodax/sdk';
 import { SodaxContext } from '@/contexts';
 import React from 'react';
 

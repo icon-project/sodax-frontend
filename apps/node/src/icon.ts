@@ -8,7 +8,6 @@ import {
   SpokeService,
   type IconSpokeChainConfig,
   IconSpokeProvider,
-  IconWalletProvider,
   type IconAddress,
   getIconAddressBytes,
   getMoneyMarketConfig,
@@ -19,7 +18,8 @@ import {
   Sodax,
   type SodaxConfig,
   SolverConfigParams,
-} from '@new-world/sdk';
+} from '@sodax/sdk';
+import { IconWalletProvider } from './wallet-providers/IconWalletProvider';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -37,7 +37,10 @@ const DEFAULT_SPOKE_RPC_URL = IS_TESTNET
   : 'https://ctz.solidwallet.io/api/v3';
 const DEFAULT_SPOKE_CHAIN_ID = ICON_MAINNET_CHAIN_ID;
 
-const iconSpokeWallet = new IconWalletProvider(privateKey as Hex, DEFAULT_SPOKE_RPC_URL);
+const iconSpokeWallet = new IconWalletProvider({
+  privateKey: privateKey as Hex,
+  rpcUrl: DEFAULT_SPOKE_RPC_URL,
+});
 const iconSpokeChainConfig = spokeChainConfig[DEFAULT_SPOKE_CHAIN_ID];
 const iconSpokeProvider = new IconSpokeProvider(iconSpokeWallet, iconSpokeChainConfig as IconSpokeChainConfig);
 
@@ -51,7 +54,7 @@ const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef', // mainnet
-  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 

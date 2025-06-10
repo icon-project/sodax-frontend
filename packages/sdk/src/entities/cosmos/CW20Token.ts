@@ -49,11 +49,7 @@ export class CW20Token {
   }
 
   // Execute Methods (requires SigningCosmWasmClient)
-  async transfer(
-    senderAddress: string,
-    recipientAddress: string,
-    amount: string,
-  ): Promise<ExecuteResponse> {
+  async transfer(senderAddress: string, recipientAddress: string, amount: string): Promise<ExecuteResponse> {
     const msg = {
       transfer: {
         recipient: recipientAddress,

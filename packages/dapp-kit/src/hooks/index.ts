@@ -9,3 +9,8 @@ export * from './useSodaxContext';
 export * from './useQuote';
 export * from './useCreateIntentOrder';
 export * from './useStatus';
+export * from './useBorrow';
+export * from './useRepay';
+export * from './useReservesData';
+export * from './useAllowance';
+export * from './useApprove';

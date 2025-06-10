@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { IntentStatusCode } from '@new-world/sdk';
+import { IntentStatusCode } from '@sodax/sdk';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -33,6 +33,8 @@ export function statusCodeToMessage(status: IntentStatusCode): string {
       return 'SOLVED';
     case IntentStatusCode.STARTED_NOT_FINISHED:
       return 'STARTED_NOT_FINISHED';
+    case IntentStatusCode.FAILED:
+      return 'FAILED';
     default:
       return 'UNKNOWN';
   }

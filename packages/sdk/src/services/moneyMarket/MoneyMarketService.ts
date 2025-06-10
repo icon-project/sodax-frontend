@@ -16,16 +16,19 @@ import {
   type RelayErrorCode,
   SONIC_MAINNET_CHAIN_ID,
   DEFAULT_RELAY_TX_TIMEOUT,
+  EvmSpokeProvider,
+  isMoneyMarketSupportedToken,
 } from '../../index.js';
 import type {
   EvmContractCall,
+  EvmRawTransactionReceipt,
   GetSpokeDepositParamsType,
   HttpUrl,
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,
-  OriginalAssetAddress,
   Result,
   SpokeChainId,
+  Token,
   TxReturnType,
 } from '../../types.js';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
@@ -186,6 +189,69 @@ export class MoneyMarketService {
   }
 
   /**
+   * Check whether assetManager contract is allowed to move the given payload amount
+   * @param {MoneyMarketRepayParams | MoneyMarketSupplyParams} params - Money market params
+   * @param {SpokeProvider} spokeProvider - The spoke provider
+   * @return {Promise<Result<boolean>>} - valid = true, invalid = false
+   */
+  public async isAllowanceValid<S extends SpokeProvider>(
+    params: MoneyMarketRepayParams | MoneyMarketSupplyParams,
+    spokeProvider: S,
+  ): Promise<Result<boolean>> {
+    try {
+      if (spokeProvider instanceof EvmSpokeProvider) {
+        return Erc20Service.isAllowanceValid(
+          params.token as Address,
+          params.amount,
+          spokeProvider.walletProvider.getWalletAddress(),
+          spokeProvider.chainConfig.addresses.assetManager,
+          spokeProvider,
+        );
+      }
+
+      return {
+        ok: true,
+        value: true,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error,
+      };
+    }
+  }
+
+  /**
+   * Approve ERC20 amount spending
+   * @param token - ERC20 token address
+   * @param amount - Amount to approve
+   * @param spender - Spender address
+   * @param spokeProvider - Spoke provider
+   */
+  public async approve<S extends SpokeProvider>(
+    token: Address,
+    amount: bigint,
+    spender: Address,
+    spokeProvider: S,
+  ): Promise<Result<EvmRawTransactionReceipt>> {
+    try {
+      if (spokeProvider instanceof EvmSpokeProvider) {
+        return Erc20Service.approve(token, amount, spender, spokeProvider);
+      }
+
+      return {
+        ok: false,
+        error: new Error('Approve only supported for EVM spoke chains'),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error,
+      };
+    }
+  }
+
+  /**
    * Supply tokens to the money market pool and submit the intent to the Solver API
    * @param params - The parameters for the supply transaction.
    * @param spokeProvider - The spoke provider.
@@ -247,8 +313,10 @@ export class MoneyMarketService {
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>, MoneyMarketError>> {
     try {
+      invariant(params.token.length > 0, 'Token is required');
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(
-        isValidOriginalAssetAddress(spokeProvider.chainConfig.chain.id, params.token),
+        isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
         `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
       );
 
@@ -349,8 +417,10 @@ export class MoneyMarketService {
     spokeProvider: S,
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>> {
+    invariant(params.token.length > 0, 'Token is required');
+    invariant(params.amount > 0n, 'Amount must be greater than 0');
     invariant(
-      isValidOriginalAssetAddress(spokeProvider.chainConfig.chain.id, params.token),
+      isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
       `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
@@ -434,6 +504,13 @@ export class MoneyMarketService {
     spokeProvider: S,
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>> {
+    invariant(params.token.length > 0, 'Token is required');
+    invariant(params.amount > 0n, 'Amount must be greater than 0');
+    invariant(
+      isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
+      `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
+    );
+
     const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
       spokeProvider.walletProvider.getWalletAddressBytes(),
@@ -514,6 +591,13 @@ export class MoneyMarketService {
     spokeProvider: S,
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>> {
+    invariant(params.token.length > 0, 'Token is required');
+    invariant(params.amount > 0n, 'Amount must be greater than 0');
+    invariant(
+      isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
+      `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
+    );
+
     const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
       spokeProvider.walletProvider.getWalletAddressBytes(),
@@ -901,7 +985,7 @@ export class MoneyMarketService {
    * @param chainId The chain ID
    * @returns Array of supported tokens
    */
-  public getSupportedTokens(chainId: SpokeChainId): OriginalAssetAddress[] {
+  public getSupportedTokens(chainId: SpokeChainId): readonly Token[] {
     return getSupportedMoneyMarketTokens(chainId);
   }
 

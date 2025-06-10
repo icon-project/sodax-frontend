@@ -1,13 +1,13 @@
-import type { EvmHubProvider, SpokeChainId } from '@new-world/sdk';
+import type { EvmHubProvider, SpokeChainId } from '@sodax/sdk';
 import {
   SpokeService,
   type IntentRelayRequest,
   type SubmitTxResponse,
   submitTransaction,
   getIntentRelayChainId,
-} from '@new-world/sdk';
-import type { XChainId, XToken } from '@new-world/xwagmi';
-import { getXChainType, useXAccount, xChainMap } from '@new-world/xwagmi';
+} from '@sodax/sdk';
+import type { XChainId, XToken } from '@sodax/wallet-sdk';
+import { getXChainType, useXAccount, xChainMap } from '@sodax/wallet-sdk';
 import { useState } from 'react';
 import type { Address, Hash, Hex } from 'viem';
 import { parseUnits } from 'viem';
@@ -62,7 +62,8 @@ export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowRetur
       const data: Hex = sodax.moneyMarket.borrowData(
         hubWalletAddress as Address,
         spokeProvider.walletProvider.getWalletAddress(),
-        getSpokeTokenAddressByVault(spokeChainId, token.address),
+        token.address,
+        // getSpokeTokenAddressByVault(spokeChainId, token.address),
         parseUnits(amount, token.decimals),
         spokeProvider.chainConfig.chain.id,
       );

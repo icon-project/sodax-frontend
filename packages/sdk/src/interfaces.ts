@@ -7,6 +7,9 @@ import type {
   SuiTransaction,
   SuiPaginatedCoins,
   SuiExecutionResult,
+  IconEoaAddress,
+  IconTransactionResult,
+  IcxCallTransaction,
 } from './index.js';
 
 export interface IEvmWalletProvider {
@@ -29,4 +32,11 @@ export interface ISuiWalletProvider {
     typeArgs: string[],
   ): Promise<SuiExecutionResult>;
   getCoins: (address: string, token: string) => Promise<SuiPaginatedCoins>;
+}
+
+export interface IIconWalletProvider {
+  getWalletAddress: () => IconEoaAddress;
+  getWalletAddressBytes: () => Hex;
+  sendTransaction: (iconRawTx: IcxCallTransaction) => Promise<Hash>;
+  waitForTransactionReceipt: (txHash: Hash) => Promise<IconTransactionResult>;
 }

@@ -1,12 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useWithdraw } from '@new-world/dapp-kit';
-import type { XToken } from '@new-world/xwagmi';
-import { useState } from 'react';
-import { useEvmSwitchChain } from '@new-world/xwagmi';
+import { useWithdraw } from '@sodax/dapp-kit';
+import type { XToken } from '@sodax/wallet-sdk';
+import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export function WithdrawButton({ token }: { token: XToken }) {

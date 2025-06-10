@@ -1,7 +1,7 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import type { UserReserveData } from '@new-world/sdk';
-import type { XToken } from '@new-world/xwagmi';
+import type { UserReserveData } from '@sodax/sdk';
+import type { XToken } from '@sodax/wallet-sdk';
 import { formatUnits } from 'viem';
 import { WithdrawButton } from './WithdrawButton';
 
@@ -13,7 +13,7 @@ export function SuppliedAssetsListItem({ reserve }: SuppliedAssetsListItemProps)
   return (
     <TableRow>
       <TableCell>{reserve?.token?.symbol}</TableCell>
-      <TableCell>{formatUnits(reserve.scaledATokenBalance, reserve?.token?.decimals || 18)}</TableCell>
+      <TableCell>{formatUnits(reserve.scaledATokenBalance, 18)}</TableCell>
       {/* <TableCell>hello%</TableCell> */}
       <TableCell>{reserve?.token && <WithdrawButton token={reserve?.token} />}</TableCell>
     </TableRow>

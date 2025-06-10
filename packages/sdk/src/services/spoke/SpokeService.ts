@@ -150,39 +150,28 @@ export class SpokeService {
     raw?: R,
   ): Promise<TxReturnType<T, R>> {
     if (isEvmSpokeProvider(spokeProvider)) {
-      return (await EvmSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-      )) satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<T, R>;
+      return (await EvmSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
+        EvmSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
     }
     if (isCWSpokeProvider(spokeProvider)) {
-      return (await CWSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-        raw,
-      )) satisfies TxReturnType<CWSpokeProvider, R> as TxReturnType<T, R>;
+      return (await CWSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
+        CWSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
     }
     if (isIconSpokeProvider(spokeProvider)) {
-      return (await IconSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-        raw,
-      )) satisfies TxReturnType<IconSpokeProvider, R> as TxReturnType<T, R>;
+      return (await IconSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
+        IconSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
     }
     if (isSuiSpokeProvider(spokeProvider)) {
-      return (await SuiSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-        raw,
-      )) satisfies TxReturnType<SuiSpokeProvider, R> as TxReturnType<T, R>;
+      return (await SuiSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
+        SuiSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
     }
     if (isSolanaSpokeProvider(spokeProvider)) {
       return (await SolanaSpokeService.callWallet(
@@ -194,12 +183,10 @@ export class SpokeService {
       )) satisfies TxReturnType<SolanaSpokeProvider, R> as TxReturnType<T, R>;
     }
     if (isStellarSpokeProvider(spokeProvider)) {
-      return (await StellarSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-      )) satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<T, R>;
+      return (await StellarSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
+        StellarSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
     }
 
     throw new Error('Invalid spoke provider');

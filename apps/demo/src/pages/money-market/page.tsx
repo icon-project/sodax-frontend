@@ -6,8 +6,9 @@ import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList/SupplyA
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getXChainType, useXAccount } from '@new-world/xwagmi';
+import { useXAccount, getXChainType } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
+import { BorrowAssetsList } from '@/components/mm/lists/BorrowAssetsList/BorrowAssetsList';
 
 export default function MoneyMarketPage() {
   const { selectedChain } = useAppStore();
@@ -35,7 +36,7 @@ export default function MoneyMarketPage() {
             </div>
 
             {/* Right Column */}
-            <div className="space-y-6 opacity-30">
+            <div className="space-y-6 ">
               {/* Your Borrows */}
               <Card>
                 <CardHeader>
@@ -68,7 +69,8 @@ export default function MoneyMarketPage() {
               </Card>
 
               {/* Assets to Borrow */}
-              <Card>
+              <BorrowAssetsList />
+              {/* <Card>
                 <CardHeader>
                   <CardTitle>Assets to borrow</CardTitle>
                 </CardHeader>
@@ -116,7 +118,7 @@ export default function MoneyMarketPage() {
                     </TableBody>
                   </Table>
                 </CardContent>
-              </Card>
+              </Card> */}
             </div>
           </div>
         ) : (

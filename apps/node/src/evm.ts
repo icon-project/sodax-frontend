@@ -23,9 +23,9 @@ import {
   type SodaxConfig,
   Sodax,
   type EvmRawTransaction,
-  SolverConfigParams,
-} from '@new-world/sdk';
-import { EvmWalletProvider } from './wallet-providers';
+  type SolverConfigParams,
+} from '@sodax/sdk';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -63,7 +63,7 @@ const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 
@@ -115,12 +115,7 @@ async function withdrawAsset(token: Address, amount: bigint, recipient: Address)
     hubProvider,
     spokeProvider.chainConfig.chain.id,
   );
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    spokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -162,12 +157,7 @@ async function borrow(token: Address, amount: bigint) {
     spokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    spokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
@@ -187,12 +177,7 @@ async function withdraw(token: Address, amount: bigint) {
     spokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    spokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }
