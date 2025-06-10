@@ -1,7 +1,13 @@
-import type { PaginatedCoins, SuiExecutionResult } from '@mysten/sui/client';
-import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
-
-import type { Address, EvmRawTransaction, EvmRawTransactionReceipt, Hash, Hex } from './index.js';
+import type {
+  Address,
+  EvmRawTransaction,
+  EvmRawTransactionReceipt,
+  Hash,
+  Hex,
+  SuiTransaction,
+  SuiPaginatedCoins,
+  SuiExecutionResult,
+} from './index.js';
 
 export interface IEvmWalletProvider {
   getWalletAddress: () => Address;
@@ -13,14 +19,14 @@ export interface IEvmWalletProvider {
 export interface ISuiWalletProvider {
   getWalletAddress: () => Address;
   getWalletAddressBytes: () => Hex;
-  signAndExecuteTxn: (txn: Transaction) => Promise<Hex>;
+  signAndExecuteTxn: (txn: SuiTransaction) => Promise<Hex>;
   viewContract(
-    tx: Transaction,
+    tx: SuiTransaction,
     packageId: string,
     module: string,
     functionName: string,
-    args: TransactionArgument[],
+    args: unknown[],
     typeArgs: string[],
   ): Promise<SuiExecutionResult>;
-  getCoins: (address: string, token: string) => Promise<PaginatedCoins>;
+  getCoins: (address: string, token: string) => Promise<SuiPaginatedCoins>;
 }
