@@ -31,7 +31,7 @@ interface UseSupplyReturn {
  * handling the entire supply process including transaction creation, submission,
  * and cross-chain communication.
  *
- * @param token - The token to supply. Must be an XToken with valid address and chain information.
+ * @param {XToken} spokeToken - The token to supply on the spoke chain. Must be an XToken with valid address and chain information.
  *
  * @returns {UseSupplyReturn} An object containing:
  *   - supply: Function to execute the supply transaction
@@ -41,7 +41,7 @@ interface UseSupplyReturn {
  *
  * @example
  * ```typescript
- * const { supply, isLoading, error } = useSupply(token);
+ * const { supply, isLoading, error } = useSupply(spokeToken);
  *
  * // Supply 100 tokens
  * await supply('100');
@@ -53,15 +53,15 @@ interface UseSupplyReturn {
  *   - hubProvider is not available
  *   - Transaction execution fails
  */
-export function useSupply(token: XToken): UseSupplyReturn {
-  const { address } = useXAccount(getXChainType(token.xChainId));
+export function useSupply(spokeToken: XToken): UseSupplyReturn {
+  const { address } = useXAccount(getXChainType(spokeToken.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
 
-  const spokeProvider = useSpokeProvider(token.xChainId as SpokeChainId);
-  const chain = xChainMap[token.xChainId];
+  const spokeProvider = useSpokeProvider(spokeToken.xChainId as SpokeChainId);
+  const chain = xChainMap[spokeToken.xChainId];
   const { data: hubWalletAddress } = useHubWalletAddress(
-    token.xChainId as SpokeChainId,
+    spokeToken.xChainId as SpokeChainId,
     address,
     hubProvider as EvmHubProvider,
   );
@@ -88,17 +88,17 @@ export function useSupply(token: XToken): UseSupplyReturn {
 
     try {
       const data = sodax.moneyMarket.supplyData(
-        token.address,
+        spokeToken.address,
         hubWalletAddress as Address,
-        parseUnits(amount, token.decimals),
-        token.xChainId as SpokeChainId,
+        parseUnits(amount, spokeToken.decimals),
+        spokeToken.xChainId as SpokeChainId,
       );
 
       const txHash = await SpokeService.deposit(
         {
           from: address as `0x${string}`,
-          token: token.address as `0x${string}`,
-          amount: parseUnits(amount, token.decimals),
+          token: spokeToken.address as `0x${string}`,
+          amount: parseUnits(amount, spokeToken.decimals),
           data,
         },
         spokeProvider,
@@ -108,7 +108,7 @@ export function useSupply(token: XToken): UseSupplyReturn {
       const request = {
         action: 'submit',
         params: {
-          chain_id: getIntentRelayChainId(token.xChainId as SpokeChainId).toString(),
+          chain_id: getIntentRelayChainId(spokeToken.xChainId as SpokeChainId).toString(),
           tx_hash: txHash,
         },
       } satisfies IntentRelayRequest<'submit'>;
