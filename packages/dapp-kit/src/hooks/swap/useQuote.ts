@@ -1,5 +1,5 @@
 import type { IntentQuoteRequest } from '@sodax/sdk';
-import { useSodaxContext } from './useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext';
 import { useQuery } from '@tanstack/react-query';
 
 export const useQuote = (payload: IntentQuoteRequest | undefined) => {

@@ -1,6 +1,6 @@
 import type { Hex } from '@sodax/sdk';
 import { useQuery } from '@tanstack/react-query';
-import { useSodaxContext } from './useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 export const useStatus = (intent_tx_hash: Hex) => {
   const { sodax } = useSodaxContext();

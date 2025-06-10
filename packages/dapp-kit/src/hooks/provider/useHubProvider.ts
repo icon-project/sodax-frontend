@@ -1,7 +1,7 @@
 import { EvmHubProvider, getHubChainConfig } from '@sodax/sdk';
 import { getXChainType } from '@sodax/xwagmi';
 import { useMemo } from 'react';
-import { useSodaxContext } from '../hooks/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 export function useHubProvider(): EvmHubProvider | undefined {
   const { hubChainId, hubRpcUrl } = useSodaxContext();

@@ -11,10 +11,10 @@ import { getXChainType, useXAccount, xChainMap } from '@sodax/xwagmi';
 import { useState } from 'react';
 import type { Address } from 'viem';
 import { parseUnits, TransactionExecutionError } from 'viem';
-import { useHubProvider } from './useHubProvider';
-import { useHubWalletAddress } from './useHubWalletAddress';
-import { useSpokeProvider } from './useSpokeProvider';
-import { useSodaxContext } from './useSodaxContext';
+import { useHubProvider } from '../provider/useHubProvider';
+import { useHubWalletAddress } from '../mm/useHubWalletAddress';
+import { useSpokeProvider } from '../provider/useSpokeProvider';
+import { useSodaxContext } from '../shared/useSodaxContext';
 import { XCALL_RELAY_URL } from '@/constants';
 
 interface UseSupplyReturn {
@@ -24,6 +24,35 @@ interface UseSupplyReturn {
   resetError: () => void;
 }
 
+/**
+ * Hook for supplying tokens to the Sodax money market.
+ *
+ * This hook provides functionality to supply tokens to the money market protocol,
+ * handling the entire supply process including transaction creation, submission,
+ * and cross-chain communication.
+ *
+ * @param token - The token to supply. Must be an XToken with valid address and chain information.
+ *
+ * @returns {UseSupplyReturn} An object containing:
+ *   - supply: Function to execute the supply transaction
+ *   - isLoading: Boolean indicating if a transaction is in progress
+ *   - error: Error object if the last transaction failed, null otherwise
+ *   - resetError: Function to clear any existing error
+ *
+ * @example
+ * ```typescript
+ * const { supply, isLoading, error } = useSupply(token);
+ *
+ * // Supply 100 tokens
+ * await supply('100');
+ * ```
+ *
+ * @throws {Error} When:
+ *   - hubWalletAddress is not found
+ *   - spokeProvider is not available
+ *   - hubProvider is not available
+ *   - Transaction execution fails
+ */
 export function useSupply(token: XToken): UseSupplyReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();

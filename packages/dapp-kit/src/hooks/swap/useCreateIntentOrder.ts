@@ -1,6 +1,6 @@
-import { useSodaxContext } from './useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext';
 import type { CreateIntentParams, SpokeChainId } from '@sodax/sdk';
-import { useSpokeProvider } from './useSpokeProvider';
+import { useSpokeProvider } from '../provider/useSpokeProvider';
 
 export function useCreateIntentOrder(chainId: SpokeChainId) {
   const { sodax } = useSodaxContext();

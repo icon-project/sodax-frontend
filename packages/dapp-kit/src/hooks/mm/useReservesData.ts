@@ -1,6 +1,6 @@
 import { getMoneyMarketConfig } from '@sodax/sdk';
 import { useQuery } from '@tanstack/react-query';
-import { useSodaxContext } from './useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 export function useReservesData() {
   const { hubChainId, sodax } = useSodaxContext();

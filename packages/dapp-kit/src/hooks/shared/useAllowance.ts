@@ -1,5 +1,5 @@
-import { useSodaxContext } from '@/hooks/useSodaxContext';
-import { useSpokeProvider } from './useSpokeProvider';
+import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSpokeProvider } from '../provider/useSpokeProvider';
 import type { XToken } from '@sodax/xwagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { SpokeChainId } from '@sodax/sdk';

@@ -9,24 +9,23 @@ import {
 import type { XChainId, XToken } from '@sodax/xwagmi';
 import { getXChainType, useXAccount, xChainMap } from '@sodax/xwagmi';
 import { useState } from 'react';
-import type { Address, Hash, Hex } from 'viem';
+import type { Address, Hex } from 'viem';
 import { parseUnits } from 'viem';
-import { useHubProvider } from './useHubProvider';
-import { useHubWalletAddress } from './useHubWalletAddress';
-import { useSpokeProvider } from './useSpokeProvider';
-import { useSodaxContext } from './useSodaxContext';
+import { useHubProvider } from '../provider/useHubProvider';
+import { useHubWalletAddress } from '../mm/useHubWalletAddress';
+import { useSpokeProvider } from '../provider/useSpokeProvider';
+import { useSodaxContext } from '../shared/useSodaxContext';
 import { XCALL_RELAY_URL } from '@/constants';
-import { getSpokeTokenAddressByVault } from '@/core';
 
-interface UseBorrowReturn {
-  borrow: (amount: string) => Promise<void>;
+interface UseRepayReturn {
+  repay: (amount: string) => Promise<void>;
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
 }
 
 // token: this is hub token
-export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowReturn {
+export function useRepay(token: XToken, spokeChainId: XChainId): UseRepayReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
@@ -41,7 +40,7 @@ export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowRetur
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const borrow = async (amount: string): Promise<void> => {
+  const repay = async (amount: string): Promise<void> => {
     if (!hubWalletAddress) {
       setError(new Error('hubWalletAddress is not found'));
       return;
@@ -59,16 +58,23 @@ export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowRetur
     setError(null);
 
     try {
-      const data: Hex = sodax.moneyMarket.borrowData(
-        hubWalletAddress as Address,
-        spokeProvider.walletProvider.getWalletAddress(),
+      const data: Hex = sodax.moneyMarket.repayData(
         token.address,
-        // getSpokeTokenAddressByVault(spokeChainId, token.address),
+        hubWalletAddress as Address,
         parseUnits(amount, token.decimals),
         spokeProvider.chainConfig.chain.id,
       );
 
-      const txHash: Hash = await SpokeService.callWallet(hubWalletAddress as Address, data, spokeProvider, hubProvider);
+      const txHash = await SpokeService.deposit(
+        {
+          from: address as `0x${string}`,
+          token: token.address as `0x${string}`,
+          amount: parseUnits(amount, token.decimals),
+          data,
+        },
+        spokeProvider,
+        hubProvider,
+      );
 
       const request = {
         action: 'submit',
@@ -83,10 +89,10 @@ export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowRetur
         chain.testnet ? XCALL_RELAY_URL.testnet : XCALL_RELAY_URL.mainnet,
       );
 
-      console.log('Borrow transaction submitted:', response);
+      console.log('Withdraw transaction submitted:', response);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to borrow tokens'));
-      console.error('Error borrowing tokens:', err);
+      setError(err instanceof Error ? err : new Error('Failed to withdraw tokens'));
+      console.error('Error withdrawing tokens:', err);
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +103,7 @@ export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowRetur
   };
 
   return {
-    borrow,
+    repay,
     isLoading,
     error,
     resetError,

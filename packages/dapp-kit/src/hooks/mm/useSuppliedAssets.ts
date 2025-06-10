@@ -3,10 +3,10 @@ import { getMoneyMarketConfig, type SpokeChainId, type EvmHubProvider } from '@s
 import { getXChainType, useXAccount, type XChainId } from '@sodax/xwagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
-import { useHubProvider } from './useHubProvider';
-import { useHubWalletAddress } from './useHubWalletAddress';
-import { useWalletProvider } from './useWalletProvider';
-import { useSodaxContext } from './useSodaxContext';
+import { useHubProvider } from '../provider/useHubProvider';
+import { useHubWalletAddress } from '../mm/useHubWalletAddress';
+import { useWalletProvider } from '../provider/useWalletProvider';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 export function useSuppliedAssets(spokeChainId: XChainId) {
   const { hubChainId, sodax } = useSodaxContext();
