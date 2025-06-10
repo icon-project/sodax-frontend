@@ -166,17 +166,5 @@ export const InitXWagmiStore = () => {
     }
   }, [suiAccount]);
 
-  // const havahXConnection = useXConnection('HAVAH');
-  // useEffect(() => {
-  //   if (havahXConnection) {
-  //     if (havahXConnection.xConnectorId === 'hana') {
-  //       // @ts-ignore
-  //       havahXService.walletClient = new BalancedJs({ networkId: 0x100, walletProvider: window.hanaWallet.havah });
-  //     } else if (havahXConnection.xConnectorId === 'havah') {
-  //       // @ts-ignore
-  //       havahXService.walletClient = new BalancedJs({ networkId: 0x100, walletProvider: window.havah });
-  //     }
-  //   }
-  // }, [havahXConnection]);
   return <></>;
 };

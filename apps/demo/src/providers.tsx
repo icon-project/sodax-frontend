@@ -22,11 +22,6 @@ export default function Providers({ children }: { children: ReactNode }) {
             SOLANA: {
               endpoint: 'https://solana-mainnet.g.alchemy.com/v2/nCndZC8P7BdiVKkczCErdwpIgaBQpPFM',
             },
-            ICON: {},
-            ARCHWAY: {},
-            STELLAR: {},
-            HAVAH: {},
-            INJECTIVE: {},
           }}
         >
           {children}
