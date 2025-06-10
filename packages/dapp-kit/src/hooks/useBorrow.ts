@@ -67,12 +67,7 @@ export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowRetur
         spokeProvider.chainConfig.chain.id,
       );
 
-      const txHash: Hash = await SpokeService.callWallet(
-        spokeProvider.walletProvider.getWalletAddress(),
-        data,
-        spokeProvider,
-        hubProvider,
-      );
+      const txHash: Hash = await SpokeService.callWallet(hubWalletAddress as Address, data, spokeProvider, hubProvider);
 
       const request = {
         action: 'submit',

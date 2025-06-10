@@ -8,7 +8,6 @@ import {
   SpokeService,
   type SuiSpokeChainConfig,
   SuiSpokeProvider,
-  SuiWalletProvider,
   SONIC_MAINNET_CHAIN_ID,
   getMoneyMarketConfig,
   SUI_MAINNET_CHAIN_ID,
@@ -16,8 +15,9 @@ import {
   type SolverConfig,
   Sodax,
   type SodaxConfig,
-  SolverConfigParams,
+  type SolverConfigParams,
 } from '@new-world/sdk';
+import { SuiWalletProvider } from './sui-wallet-provider';
 
 import dotenv from 'dotenv';
 import { EvmWalletProvider } from './wallet-providers';
@@ -67,8 +67,8 @@ const suiWalletMnemonics = process.env.MNEMONICS;
 if (!suiWalletMnemonics) {
   throw new Error('SUI_MNEMONICS environment variable is required');
 }
-const suiwalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
-const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiwalletProvider);
+const suiWalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
+const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
 
 async function getBalance(token: string) {
   const balance = await suiSpokeProvider.getBalance(token);
@@ -124,12 +124,7 @@ async function withdrawAsset(
     hubProvider,
     suiSpokeProvider.chainConfig.chain.id,
   );
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    suiSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, suiSpokeProvider, hubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -172,12 +167,7 @@ async function borrow(token: string, amount: bigint) {
     suiSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    suiSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, suiSpokeProvider, hubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
@@ -197,12 +187,7 @@ async function withdraw(token: string, amount: bigint) {
     suiSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    suiSpokeProvider,
-    hubProvider,
-  );
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, suiSpokeProvider, hubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }

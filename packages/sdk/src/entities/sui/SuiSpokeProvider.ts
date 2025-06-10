@@ -51,7 +51,6 @@ export class SuiSpokeProvider implements ISpokeProvider {
     const coin: TransactionResult | SuiNativeCoinResult | SuiTxObject = isNative
       ? await this.getNativeCoin(tx, amount)
       : await this.getCoin(tx, token, amount, this.walletProvider.getWalletAddressBytes());
-    console.log(coin);
     const connection = this.splitAddress(this.chainConfig.addresses.connection);
     const assetManager = this.splitAddress(this.chainConfig.addresses.assetManager);
 

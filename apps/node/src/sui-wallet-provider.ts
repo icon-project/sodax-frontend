@@ -1,35 +1,26 @@
 import { bcs } from '@mysten/sui/bcs';
-import type { PaginatedCoins, SuiClient, SuiExecutionResult } from '@mysten/sui/client';
+import { SuiClient } from '@mysten/sui/client';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
-import { type Address, toHex } from 'viem';
+import { toHex } from 'viem';
 import type { Hex } from '@new-world/sdk';
-import type { WalletAddressProvider } from '@new-world/sdk';
-import { signTransaction } from '@mysten/wallet-standard';
+import type { WalletAddressProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@new-world/sdk';
 
 export class SuiWalletProvider implements WalletAddressProvider {
+  private keyPair: Ed25519Keypair;
   private client: SuiClient;
-  private wallet: any;
-  private account: any;
-  constructor({ client, wallet, account }) {
-    this.client = client;
-    this.wallet = wallet;
-    this.account = account;
+  constructor(rpcUrl: string, mnemonics: string) {
+    this.client = new SuiClient({
+      url: rpcUrl,
+    });
+
+    this.keyPair = Ed25519Keypair.deriveKeypair(mnemonics);
   }
-  async signAndExecuteTxn(txn: Transaction): Promise<Hex> {
-    const { bytes, signature } = await signTransaction(this.wallet, {
-      transaction: txn,
-      account: this.account,
-      chain: this.account.chains[0],
+  async signAndExecuteTxn(txn: SuiTransaction): Promise<Hex> {
+    const res = await this.client.signAndExecuteTransaction({
+      transaction: txn as unknown as Transaction,
+      signer: this.keyPair,
     });
-
-    const res = await this.client.executeTransactionBlock({
-      transactionBlock: bytes,
-      signature,
-      options: {
-        showRawEffects: true,
-      },
-    });
-
     return `0x${res.digest}`;
   }
 
@@ -38,32 +29,32 @@ export class SuiWalletProvider implements WalletAddressProvider {
     packageId: string,
     module: string,
     functionName: string,
-    args: TransactionArgument[],
+    args: unknown[],
     typeArgs: string[] = [],
   ): Promise<SuiExecutionResult> {
     tx.moveCall({
       target: `${packageId}::${module}::${functionName}`,
-      arguments: args,
+      arguments: args as TransactionArgument[],
       typeArguments: typeArgs,
     });
 
     const txResults = await this.client.devInspectTransactionBlock({
       transactionBlock: tx,
-      sender: this.account.getPublicKey().toSuiAddress(),
+      sender: this.keyPair.getPublicKey().toSuiAddress(),
     });
 
     if (txResults.results && txResults.results[0] !== undefined) {
-      return txResults.results[0];
+      return txResults.results[0] as SuiExecutionResult;
     }
     throw Error(`transaction didn't return any values: ${JSON.stringify(txResults, null, 2)}`);
   }
 
-  async getCoins(address: string, token: string): Promise<PaginatedCoins> {
+  async getCoins(address: string, token: string): Promise<SuiPaginatedCoins> {
     return this.client.getCoins({ owner: address, coinType: token, limit: 10 });
   }
 
   getWalletAddress() {
-    return this.account.getPublicKey().toSuiAddress() as `0x${string}`;
+    return this.keyPair.toSuiAddress() as `0x${string}`;
   }
 
   getWalletAddressBytes(): Hex {
