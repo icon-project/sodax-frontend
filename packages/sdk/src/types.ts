@@ -505,6 +505,8 @@ export type IcxCallTransaction = {
   value: Hex;
   method: string;
   params: object;
+  version?: Hex;
+  timestamp?: number;
 };
 
 export type IconTransactionResult = {

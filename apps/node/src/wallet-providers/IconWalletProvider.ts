@@ -1,47 +1,5 @@
+import type { IconTransactionResult, IcxCallTransaction } from '@sodax/sdk';
 import IconService, { Wallet, Converter, CallTransactionBuilder } from 'icon-sdk-js';
-
-export type IcxRawTransaction = {
-  to: string;
-  from: string;
-  value: Hex;
-  stepLimit: Hex;
-  nid: Hex;
-  nonce: Hex;
-  version: Hex;
-  timestamp: Hex;
-  data: Hex;
-  dataType: "message" | "call" | "deploy" | "deposit";
-}
-
-export type IcxCallTransaction = {
-  to: string;
-  from: string;
-  nid: Hex;
-  value: Hex;
-  method: string;
-  params: object;
-  version?: Hex;
-  timestamp?: number;
-};
-
-export type IconTransactionResult = {
-  status: number;
-  to: string;
-  txHash: string;
-  txIndex: number;
-  blockHeight: number;
-  blockHash: string;
-  cumulativeStepUsed: bigint;
-  stepUsed: bigint;
-  stepPrice: bigint;
-  scoreAddress?: string;
-  eventLogs?: unknown;
-  logsBloom?: unknown;
-  failure?: {
-    code: string;
-    message: string;
-  };
-}
 
 export interface IIconWalletProvider {
   getWalletAddress: () => IconEoaAddress;
