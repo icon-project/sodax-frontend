@@ -24,13 +24,43 @@ interface UseBorrowReturn {
   resetError: () => void;
 }
 
-// token: this is hub token
-export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowReturn {
-  const { address } = useXAccount(getXChainType(token.xChainId));
+/**
+ * Hook for borrowing tokens from the Sodax money market.
+ *
+ * This hook provides functionality to borrow tokens from the money market protocol,
+ * handling the entire borrow process including transaction creation, submission,
+ * and cross-chain communication.
+ *
+ * @param hubToken - The hub token to borrow. Must be an XToken with valid address and chain information.
+ * @param spokeChainId - The chain ID where the borrowed tokens will be received.
+ *
+ * @returns {UseBorrowReturn} An object containing:
+ *   - borrow: Function to execute the borrow transaction
+ *   - isLoading: Boolean indicating if a transaction is in progress
+ *   - error: Error object if the last transaction failed, null otherwise
+ *   - resetError: Function to clear any existing error
+ *
+ * @example
+ * ```typescript
+ * const { borrow, isLoading, error } = useBorrow(hubToken, spokeChainId);
+ *
+ * // Borrow 100 tokens
+ * await borrow('100');
+ * ```
+ *
+ * @throws {Error} When:
+ *   - hubWalletAddress is not found
+ *   - spokeProvider is not available
+ *   - hubProvider is not available
+ *   - Transaction execution fails
+ */
+
+export function useBorrow(hubToken: XToken, spokeChainId: XChainId): UseBorrowReturn {
+  const { address } = useXAccount(getXChainType(spokeChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
   const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
-  const chain = xChainMap[token.xChainId];
+  const chain = xChainMap[spokeChainId];
   const { data: hubWalletAddress } = useHubWalletAddress(
     spokeChainId as SpokeChainId,
     address,
@@ -61,9 +91,8 @@ export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowRetur
       const data: Hex = sodax.moneyMarket.borrowData(
         hubWalletAddress as Address,
         spokeProvider.walletProvider.getWalletAddress(),
-        token.address,
-        // getSpokeTokenAddressByVault(spokeChainId, token.address),
-        parseUnits(amount, token.decimals),
+        hubToken.address,
+        parseUnits(amount, hubToken.decimals),
         spokeProvider.chainConfig.chain.id,
       );
 

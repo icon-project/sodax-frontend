@@ -77,7 +77,7 @@ function WalletConnect() {
 - `useRepay()` - Repay borrowed tokens
 - `useSupply()` - Supply tokens to the money market
 - `useWithdraw()` - Withdraw supplied tokens
-- `useSuppliedAssets()` - Get list of supplied assets
+- `useUserReservesData()` - Get list of supplied assets
 - `useHubWalletAddress()` - Get hub wallet address for a spoke chain
 
 #### Swap Hooks

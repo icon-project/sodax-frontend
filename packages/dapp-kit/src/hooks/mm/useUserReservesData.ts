@@ -4,11 +4,11 @@ import { getXChainType, useXAccount, type XChainId } from '@sodax/xwagmi';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
 import { useHubProvider } from '../provider/useHubProvider';
-import { useHubWalletAddress } from '../mm/useHubWalletAddress';
+import { useHubWalletAddress } from './useHubWalletAddress';
 import { useWalletProvider } from '../provider/useWalletProvider';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-export function useSuppliedAssets(spokeChainId: XChainId) {
+export function useUserReservesData(spokeChainId: XChainId) {
   const { hubChainId, sodax } = useSodaxContext();
   const hubWalletProvider = useWalletProvider(hubChainId);
   const hubProvider = useHubProvider();
