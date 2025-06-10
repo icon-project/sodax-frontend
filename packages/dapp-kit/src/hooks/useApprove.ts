@@ -30,7 +30,7 @@ export function useApprove(token: XToken): UseApproveReturn {
       const allowance = await sodax.moneyMarket.approve(
         token.address as Address,
         parseUnits(amount, token.decimals),
-        spokeProvider.chainConfig.addresses.assetManager,
+        spokeProvider.chainConfig.addresses.assetManager as Address,
         spokeProvider,
       );
       if (!allowance.ok) {
