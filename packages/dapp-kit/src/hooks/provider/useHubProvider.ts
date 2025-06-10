@@ -1,5 +1,5 @@
 import { EvmHubProvider, getHubChainConfig } from '@sodax/sdk';
-import { getXChainType } from '@sodax/xwagmi';
+import { getXChainType } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
 import { useSodaxContext } from '../shared/useSodaxContext';
 

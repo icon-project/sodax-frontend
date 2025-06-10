@@ -6,8 +6,8 @@ import {
   submitTransaction,
   getIntentRelayChainId,
 } from '@sodax/sdk';
-import type { XChainId, XToken } from '@sodax/xwagmi';
-import { useXAccount, xChainMap } from '@sodax/xwagmi';
+import type { XChainId, XToken } from '@sodax/wallet-sdk';
+import { useXAccount, xChainMap } from '@sodax/wallet-sdk';
 import { useState } from 'react';
 import type { Address, Hash, Hex } from 'viem';
 import { parseUnits } from 'viem';

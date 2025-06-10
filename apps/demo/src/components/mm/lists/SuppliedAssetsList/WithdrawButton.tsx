@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWithdraw } from '@sodax/dapp-kit';
-import type { XToken } from '@sodax/xwagmi';
-import { useEvmSwitchChain } from '@sodax/xwagmi';
+import type { XToken } from '@sodax/wallet-sdk';
+import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export function WithdrawButton({ token }: { token: XToken }) {

@@ -23,7 +23,7 @@ import {
   type SodaxConfig,
   Sodax,
   type EvmRawTransaction,
-  SolverConfigParams,
+  type SolverConfigParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers';
 

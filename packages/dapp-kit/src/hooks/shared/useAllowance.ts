@@ -1,6 +1,6 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
-import type { XToken } from '@sodax/xwagmi';
+import type { XToken } from '@sodax/wallet-sdk';
 import { useQuery } from '@tanstack/react-query';
 import type { SpokeChainId } from '@sodax/sdk';
 import { parseUnits } from 'viem';

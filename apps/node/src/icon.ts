@@ -18,7 +18,7 @@ import {
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
-  SolverConfigParams,
+  type SolverConfigParams,
 } from '@sodax/sdk';
 
 // load PK from .env

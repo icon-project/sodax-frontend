@@ -1,8 +1,8 @@
 {
-  "name": "@sodax/xwagmi",
+  "name": "@sodax/wallet-sdk",
   "license": "MIT",
   "version": "1.0.0",
-  "description": "XWagmi of New World",
+  "description": "Wallet SDK of Sodax",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",

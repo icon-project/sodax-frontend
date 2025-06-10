@@ -16,7 +16,7 @@ import {
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
-  SolverConfigParams,
+  type SolverConfigParams,
 } from '@sodax/sdk';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';

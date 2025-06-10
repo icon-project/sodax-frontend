@@ -15,7 +15,7 @@ import {
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
-  SolverConfigParams,
+  type SolverConfigParams,
 } from '@sodax/sdk';
 
 import dotenv from 'dotenv';
