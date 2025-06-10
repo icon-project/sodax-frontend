@@ -6,6 +6,9 @@ import type {
   Hex,
   StellarRawTransactionReceipt,
   XDR,
+  IconEoaAddress,
+  IconTransactionResult,
+  IcxCallTransaction,
 } from './index.js';
 
 export interface IEvmWalletProvider {
@@ -39,4 +42,11 @@ export interface IStellarWalletProvider {
    * @returns Promise resolving to transaction receipt with status and metadata
    */
   waitForTransactionReceipt: (txHash: string) => Promise<StellarRawTransactionReceipt>;
+}
+
+export interface IIconWalletProvider {
+  getWalletAddress: () => IconEoaAddress;
+  getWalletAddressBytes: () => Hex;
+  sendTransaction: (iconRawTx: IcxCallTransaction) => Promise<Hash>;
+  waitForTransactionReceipt: (txHash: Hash) => Promise<IconTransactionResult>;
 }

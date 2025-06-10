@@ -26,7 +26,6 @@ import {
   type PacketData,
   type SpokeChainId,
   type Token,
-  getEvmViemChain,
   spokeChainConfig,
   supportedSpokeChains,
   supportedTokensPerChain,
@@ -34,9 +33,8 @@ import {
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
-import { useSwitchChain } from 'wagmi';
 import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@sodax/dapp-kit';
-import { useEvmSwitchChain, type XChainId } from '@sodax/xwagmi';
+import { useEvmSwitchChain, type XChainId } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
@@ -46,7 +44,6 @@ export default function SwapCard({
   setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; packet: PacketData }[]>) => void;
   address: Address;
 }) {
-  const { switchChain } = useSwitchChain();
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ARBITRUM_MAINNET_CHAIN_ID);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const { openWalletModal } = useAppStore();
@@ -70,7 +67,6 @@ export default function SwapCard({
   };
 
   const onSrcChainChange = (chainId: SpokeChainId) => {
-    switchChain({ chainId: getEvmViemChain(chainId as EvmChainId).id });
     setSourceChain(chainId);
     setSourceToken(spokeChainConfig[chainId].supportedTokens[0]);
   };

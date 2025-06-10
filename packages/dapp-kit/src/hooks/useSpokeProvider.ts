@@ -1,5 +1,5 @@
 import { EvmSpokeProvider, spokeChainConfig, type SpokeChainId } from '@sodax/sdk';
-import { type XChainId, getXChainType } from '@sodax/xwagmi';
+import { type XChainId, getXChainType } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
 import { useWalletProvider } from './useWalletProvider';
 

@@ -374,7 +374,7 @@ export class SolverService {
       return {
         ok: true,
         value: true,
-      }
+      };
     } catch (error) {
       return {
         ok: false,
@@ -383,35 +383,35 @@ export class SolverService {
     }
   }
 
-    /**
+  /**
    * Approve ERC20 amount spending
    * @param token - ERC20 token address
    * @param amount - Amount to approve
    * @param address - Address to approve spending for
    * @param spokeProvider - Spoke provider
    */
-    public async approve<S extends SpokeProvider>(
-      token: Address,
-      amount: bigint,
-      address: Address,
-      spokeProvider: S,
-    ): Promise<Result<EvmRawTransactionReceipt>> {
-      try {
-        if (spokeProvider instanceof EvmSpokeProvider) {
-          return Erc20Service.approve(token, amount, address, spokeProvider);
-        }
-
-        return {
-          ok: false,
-          error: new Error('Approve only supported for EVM spoke chains'),
-        };
-      } catch (error) {
-        return {
-          ok: false,
-          error: error,
-        };
+  public async approve<S extends SpokeProvider>(
+    token: Address,
+    amount: bigint,
+    address: Address,
+    spokeProvider: S,
+  ): Promise<Result<EvmRawTransactionReceipt>> {
+    try {
+      if (spokeProvider instanceof EvmSpokeProvider) {
+        return Erc20Service.approve(token, amount, address, spokeProvider);
       }
+
+      return {
+        ok: false,
+        error: new Error('Approve only supported for EVM spoke chains'),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error,
+      };
     }
+  }
 
   /**
    * Creates an intent by handling token approval and intent creation

@@ -11,16 +11,15 @@ import {
   getMoneyMarketConfig,
   SONIC_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
-  type SolverConfig,
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
-  SolverConfigParams,
+  type SolverConfigParams,
 } from '@sodax/sdk';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;

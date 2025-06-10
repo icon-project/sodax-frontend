@@ -1,6 +1,6 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import type { XToken } from '@sodax/xwagmi';
+import type { XToken } from '@sodax/wallet-sdk';
 import { SupplyButton } from './SupplyButton';
 
 interface SupplyAssetsListItemProps {
