@@ -1,6 +1,5 @@
 import type { PublicKey } from '@solana/web3.js';
 import type { SignDoc } from 'cosmjs-types/cosmos/tx/v1beta1/tx.js';
-import type { Converter } from 'icon-sdk-js';
 import type { TransactionReceipt } from 'viem';
 import type { CWSpokeProvider } from './entities/cosmos/CWSpokeProvider.js';
 import type {
@@ -483,7 +482,51 @@ export type StellarRawTransaction = {
   data: string;
 };
 
-export type IconRawTransaction = Converter.RawTransaction;
+export type IconRawTransaction = {
+  [key: string]: string | object;
+};
+
+export type IcxRawTransaction = {
+  to: string;
+  from: string;
+  value: Hex;
+  stepLimit: Hex;
+  nid: Hex;
+  nonce: Hex;
+  version: Hex;
+  timestamp: Hex;
+  data: Hex;
+}
+
+export type IcxCallTransaction = {
+  to: string;
+  from: string;
+  nid: Hex;
+  value: Hex;
+  method: string;
+  params: object;
+  version?: Hex;
+  timestamp?: number;
+};
+
+export type IconTransactionResult = {
+  status: number;
+  to: string;
+  txHash: string;
+  txIndex: number;
+  blockHeight: number;
+  blockHash: string;
+  cumulativeStepUsed: bigint;
+  stepUsed: bigint;
+  stepPrice: bigint;
+  scoreAddress?: string;
+  eventLogs?: unknown;
+  logsBloom?: unknown;
+  failure?: {
+    code: string;
+    message: string;
+  };
+}
 
 export type SuiRawTransaction = {
   from: Hex;

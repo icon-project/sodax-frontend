@@ -5,6 +5,7 @@ import {
   FEE_PERCENTAGE_SCALE,
   isPartnerFeeAmount,
   isPartnerFeePercentage,
+  type Hex,
   type PartnerFee,
 } from '../index.js';
 
@@ -92,4 +93,8 @@ export function calculateFeeAmount(inputAmount: bigint, fee: PartnerFee | undefi
   }
 
   return feeAmount;
+}
+
+export function BigIntToHex(value: bigint): Hex {
+  return `0x${value.toString(16)}`;
 }
