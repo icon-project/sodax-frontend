@@ -2,7 +2,7 @@ import React, { type ReactNode } from 'react';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { wagmiConfig } from './config';
-import { XWagmiProviders } from '@sodax/xwagmi';
+import { XWagmiProviders } from '@sodax/wallet-sdk';
 import { SodaxProvider } from '@sodax/dapp-kit';
 import { sodaxConfig } from './constants';
 const queryClient = new QueryClient();

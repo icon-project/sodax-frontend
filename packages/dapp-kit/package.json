@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@sodax/sdk": "workspace:*",
-    "@sodax/xwagmi": "workspace:*",
+    "@sodax/wallet-sdk": "workspace:*",
     "viem": "catalog:"
   },
   "devDependencies": {

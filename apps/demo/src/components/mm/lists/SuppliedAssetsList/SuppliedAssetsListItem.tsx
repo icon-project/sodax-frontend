@@ -1,7 +1,7 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { UserReserveData } from '@sodax/sdk';
-import type { XToken } from '@sodax/xwagmi';
+import type { XToken } from '@sodax/wallet-sdk';
 import { formatUnits } from 'viem';
 import { WithdrawButton } from './WithdrawButton';
 

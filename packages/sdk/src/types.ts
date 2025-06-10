@@ -496,7 +496,7 @@ export type IcxRawTransaction = {
   version: Hex;
   timestamp: Hex;
   data: Hex;
-}
+};
 
 export type IcxCallTransaction = {
   to: string;
@@ -526,7 +526,7 @@ export type IconTransactionResult = {
     code: string;
     message: string;
   };
-}
+};
 
 export type SuiRawTransaction = {
   from: Hex;

@@ -15,15 +15,15 @@ export class IconWalletProvider implements IIconWalletProvider {
   constructor(wallet: IconWalletConfig) {
     if (isPrivateKeyIconWalletConfig(wallet)) {
       this.wallet = {
-        type: "PRIVATE_KEY",
-        wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2))
-      }
+        type: 'PRIVATE_KEY',
+        wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
+      };
       this.iconService = new IconService(new IconService.HttpProvider(wallet.rpcUrl));
     } else if (isBrowserExtensionIconWalletConfig(wallet)) {
       this.wallet = {
-        type: "BROWSER_EXTENSION",
-        wallet: wallet.walletAddress
-      }
+        type: 'BROWSER_EXTENSION',
+        wallet: wallet.walletAddress,
+      };
       this.iconService = new IconService(new IconService.HttpProvider(wallet.rpcUrl));
     } else {
       throw new Error('Invalid Icon wallet config');
@@ -68,7 +68,7 @@ export class IconWalletProvider implements IIconWalletProvider {
   }
 
   getWalletAddress(): IconEoaAddress {
-    return isIconPkWallet(this.wallet) ? this.wallet.wallet.getAddress() as IconEoaAddress : this.wallet.wallet;
+    return isIconPkWallet(this.wallet) ? (this.wallet.wallet.getAddress() as IconEoaAddress) : this.wallet.wallet;
   }
 
   getWalletAddressBytes(): Hex {
@@ -82,32 +82,32 @@ export class IconWalletProvider implements IIconWalletProvider {
 
 export type IconJsonRpcVersion = '2.0';
 
-export type Hex = `0x${string}`
-export type Hash = `0x${string}`
+export type Hex = `0x${string}`;
+export type Hash = `0x${string}`;
 export type IconAddress = `hx${string}` | `cx${string}`;
 export type IconEoaAddress = `hx${string}`;
 
 export type PrivateKeyIconWalletConfig = {
-  privateKey: `0x${string}`,
-  rpcUrl: `http${string}`
-}
+  privateKey: `0x${string}`;
+  rpcUrl: `http${string}`;
+};
 
 export type BrowserExtensionIconWalletConfig = {
-  walletAddress: IconEoaAddress,
-  rpcUrl: `http${string}`
-}
+  walletAddress: IconEoaAddress;
+  rpcUrl: `http${string}`;
+};
 
-export type IconWalletConfig = PrivateKeyIconWalletConfig | BrowserExtensionIconWalletConfig
+export type IconWalletConfig = PrivateKeyIconWalletConfig | BrowserExtensionIconWalletConfig;
 
 export type IconPkWallet = {
-  type: "PRIVATE_KEY",
-  wallet: Wallet,
-}
+  type: 'PRIVATE_KEY';
+  wallet: Wallet;
+};
 
 export type IconBrowserExtensionWallet = {
-  type: "BROWSER_EXTENSION",
-  wallet: IconEoaAddress,
-}
+  type: 'BROWSER_EXTENSION';
+  wallet: IconEoaAddress;
+};
 
 export type IconWallet = IconPkWallet | IconBrowserExtensionWallet;
 
@@ -170,19 +170,21 @@ interface RelayResponseEventDetail {
  */
 
 export function isIconPkWallet(wallet: IconWallet): wallet is IconPkWallet {
-  return wallet.type === "PRIVATE_KEY"
+  return wallet.type === 'PRIVATE_KEY';
 }
 
 export function isIconBrowserExtensionWallet(wallet: IconWallet): wallet is IconBrowserExtensionWallet {
-  return wallet.type === "BROWSER_EXTENSION"
+  return wallet.type === 'BROWSER_EXTENSION';
 }
 
 export function isPrivateKeyIconWalletConfig(config: IconWalletConfig): config is PrivateKeyIconWalletConfig {
-  return "privateKey" in config && config.privateKey.startsWith("0x")
+  return 'privateKey' in config && config.privateKey.startsWith('0x');
 }
 
-export function isBrowserExtensionIconWalletConfig(config: IconWalletConfig): config is BrowserExtensionIconWalletConfig {
-  return "walletAddress" in config && isIconEoaAddress(config.walletAddress)
+export function isBrowserExtensionIconWalletConfig(
+  config: IconWalletConfig,
+): config is BrowserExtensionIconWalletConfig {
+  return 'walletAddress' in config && isIconEoaAddress(config.walletAddress);
 }
 
 export function isIconAddress(value: unknown): value is IconAddress {

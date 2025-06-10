@@ -34,7 +34,7 @@ import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@sodax/dapp-kit';
-import { useEvmSwitchChain, type XChainId } from '@sodax/xwagmi';
+import { useEvmSwitchChain, type XChainId } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
