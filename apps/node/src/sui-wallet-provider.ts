@@ -3,9 +3,9 @@ import { SuiClient } from '@mysten/sui/client';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
 import { toHex } from 'viem';
-import type { Hex } from '@new-world/sdk';
-import type { ISuiWalletProvider } from '@new-world/sdk';
-import type { SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@new-world/sdk';
+import type { Hex } from '@sodax/sdk';
+import type { ISuiWalletProvider } from '@sodax/sdk';
+import type { SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@sodax/sdk';
 
 export class SuiWalletProvider implements ISuiWalletProvider {
   private keyPair: Ed25519Keypair;

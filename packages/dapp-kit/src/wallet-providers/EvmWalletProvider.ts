@@ -1,5 +1,5 @@
-import type { EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@new-world/sdk';
-import { isEvmInitializedConfig } from '@new-world/sdk';
+import type { EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@sodax/sdk';
+import { isEvmInitializedConfig } from '@sodax/sdk';
 import type { Account, Address, Chain, CustomTransport, Hash, HttpTransport, PublicClient, WalletClient } from 'viem';
 
 export class EvmWalletProvider implements IEvmWalletProvider {

@@ -2,8 +2,8 @@ import { bcs } from '@mysten/sui/bcs';
 import type { SuiClient } from '@mysten/sui/client';
 import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
 import { type Address, toHex } from 'viem';
-import type { Hex } from '@new-world/sdk';
-import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@new-world/sdk';
+import type { Hex } from '@sodax/sdk';
+import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@sodax/sdk';
 import { signTransaction } from '@mysten/wallet-standard';
 
 export class SuiWalletProvider implements ISuiWalletProvider {
