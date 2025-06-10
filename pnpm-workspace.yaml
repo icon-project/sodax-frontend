@@ -12,3 +12,4 @@ catalog:
   wagmi: ^2.14.12
   react: ^19.0.0
   react-dom: ^19.0.0
+  "icon-sdk-js": "1.5.3"

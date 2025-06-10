@@ -8,7 +8,6 @@ import {
   SpokeService,
   type IconSpokeChainConfig,
   IconSpokeProvider,
-  IconWalletProvider,
   type IconAddress,
   getIconAddressBytes,
   getMoneyMarketConfig,
@@ -20,6 +19,7 @@ import {
   type SodaxConfig,
   SolverConfigParams,
 } from '@sodax/sdk';
+import { IconWalletProvider } from './wallet-providers/IconWalletProvider';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -37,7 +37,10 @@ const DEFAULT_SPOKE_RPC_URL = IS_TESTNET
   : 'https://ctz.solidwallet.io/api/v3';
 const DEFAULT_SPOKE_CHAIN_ID = ICON_MAINNET_CHAIN_ID;
 
-const iconSpokeWallet = new IconWalletProvider(privateKey as Hex, DEFAULT_SPOKE_RPC_URL);
+const iconSpokeWallet = new IconWalletProvider({
+  privateKey: privateKey as Hex,
+  rpcUrl: DEFAULT_SPOKE_RPC_URL,
+});
 const iconSpokeChainConfig = spokeChainConfig[DEFAULT_SPOKE_CHAIN_ID];
 const iconSpokeProvider = new IconSpokeProvider(iconSpokeWallet, iconSpokeChainConfig as IconSpokeChainConfig);
 

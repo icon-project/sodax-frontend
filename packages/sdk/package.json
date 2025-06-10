@@ -70,7 +70,7 @@
     "@mysten/sui": "^1.14.1",
     "@mysten/wallet-standard": "^0.13.16",
     "bignumber.js": "9.1.2",
-    "icon-sdk-js": "1.5.3",
+    "icon-sdk-js": "catalog:",
     "rlp": "3.0.0",
     "viem": "catalog:"
   }

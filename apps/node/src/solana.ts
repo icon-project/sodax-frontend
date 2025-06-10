@@ -20,7 +20,7 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import * as dotenv from 'dotenv';
 import { keccak256 } from 'ethers';
 import type { Address, Hash, Hex } from 'viem';
-import { EvmWalletProvider } from './wallet-providers';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
