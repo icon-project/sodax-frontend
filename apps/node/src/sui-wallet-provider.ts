@@ -4,9 +4,10 @@ import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
 import { toHex } from 'viem';
 import type { Hex } from '@new-world/sdk';
-import type { WalletAddressProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@new-world/sdk';
+import type { ISuiWalletProvider } from '@new-world/sdk';
+import type { SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@new-world/sdk';
 
-export class SuiWalletProvider implements WalletAddressProvider {
+export class SuiWalletProvider implements ISuiWalletProvider {
   private keyPair: Ed25519Keypair;
   private client: SuiClient;
   constructor(rpcUrl: string, mnemonics: string) {

@@ -1,12 +1,12 @@
 import { bcs } from '@mysten/sui/bcs';
-import type { PaginatedCoins, SuiClient, SuiExecutionResult } from '@mysten/sui/client';
+import type { SuiClient } from '@mysten/sui/client';
 import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
 import { type Address, toHex } from 'viem';
 import type { Hex } from '@new-world/sdk';
-import type { WalletAddressProvider } from '@new-world/sdk';
+import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@new-world/sdk';
 import { signTransaction } from '@mysten/wallet-standard';
 
-export class SuiWalletProvider implements WalletAddressProvider {
+export class SuiWalletProvider implements ISuiWalletProvider {
   private client: SuiClient;
   private wallet: any;
   private account: any;
@@ -15,7 +15,7 @@ export class SuiWalletProvider implements WalletAddressProvider {
     this.wallet = wallet;
     this.account = account;
   }
-  async signAndExecuteTxn(txn: Transaction): Promise<Hex> {
+  async signAndExecuteTxn(txn: SuiTransaction): Promise<Hex> {
     const { bytes, signature } = await signTransaction(this.wallet, {
       transaction: txn,
       account: this.account,
@@ -38,12 +38,12 @@ export class SuiWalletProvider implements WalletAddressProvider {
     packageId: string,
     module: string,
     functionName: string,
-    args: TransactionArgument[],
+    args: unknown[],
     typeArgs: string[] = [],
   ): Promise<SuiExecutionResult> {
     tx.moveCall({
       target: `${packageId}::${module}::${functionName}`,
-      arguments: args,
+      arguments: args as TransactionArgument[],
       typeArguments: typeArgs,
     });
 
@@ -53,12 +53,12 @@ export class SuiWalletProvider implements WalletAddressProvider {
     });
 
     if (txResults.results && txResults.results[0] !== undefined) {
-      return txResults.results[0];
+      return txResults.results[0] as SuiExecutionResult;
     }
     throw Error(`transaction didn't return any values: ${JSON.stringify(txResults, null, 2)}`);
   }
 
-  async getCoins(address: string, token: string): Promise<PaginatedCoins> {
+  async getCoins(address: string, token: string): Promise<SuiPaginatedCoins> {
     return this.client.getCoins({ owner: address, coinType: token, limit: 10 });
   }
 
