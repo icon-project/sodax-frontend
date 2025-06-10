@@ -4,9 +4,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useBorrow } from '@sodax/dapp-kit';
-import type { XToken } from '@sodax/xwagmi';
+import type { XToken } from '@sodax/wallet-sdk';
 import { useState } from 'react';
-import { useEvmSwitchChain } from '@sodax/xwagmi';
+import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 
 export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');

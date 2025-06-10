@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { WalletModal } from '@/components/shared/wallet-modal';
-import { useXAccounts } from '@sodax/xwagmi';
+import { useXAccounts } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export function NavigationMenu() {

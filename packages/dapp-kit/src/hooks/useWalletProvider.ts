@@ -1,6 +1,6 @@
 import type { EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@sodax/sdk';
 import { isEvmInitializedConfig } from '@sodax/sdk';
-import { type XChainId, getXChainType, useWalletProviderOptions } from '@sodax/xwagmi';
+import { type XChainId, getXChainType, useWalletProviderOptions } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
 import type { Account, Address, Chain, CustomTransport, Hash, HttpTransport, PublicClient, WalletClient } from 'viem';
 
