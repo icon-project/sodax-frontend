@@ -250,6 +250,33 @@ Note: Make sure to wrap `XWagmiProviders` inside a `QueryClientProvider` from `@
     </div>
   ));
 
+- `useEvmSwitchChain()`: Switch between EVM chains
+  ```typescript
+  // Example usage in a component
+  function SupplyButton({ token }: { token: XToken }) {
+    const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
+    const { mutateAsync: supply, isPending } = useSupply(token);
+
+    return (
+      <div>
+        {isWrongChain ? (
+          <Button onClick={handleSwitchChain}>
+            Switch Chain
+          </Button>
+        ) : (
+          <Button onClick={() => supply('100')} disabled={isPending}>
+            {isPending ? 'Supplying...' : 'Supply'}
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  // The hook provides:
+  // - isWrongChain: boolean indicating if the current chain is different from the required chain
+  // - handleSwitchChain: function to switch to the required chain
+  ```
+
 - `useXAccount(xChainType: XChainType)`: Get account information for a specific chain
   ```typescript
   const account = useXAccount('EVM');
