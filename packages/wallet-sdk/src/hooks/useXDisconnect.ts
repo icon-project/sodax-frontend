@@ -1,4 +1,4 @@
-import type { XChainType } from '@/types';
+import type { XChainType } from '@sodax/types';
 import { useDisconnectWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useCallback } from 'react';

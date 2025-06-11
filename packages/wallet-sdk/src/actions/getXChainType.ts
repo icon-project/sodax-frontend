@@ -1,4 +1,4 @@
-import type { XChainId, XChainType } from '@/types';
+import type { XChainId, XChainType } from '@sodax/types';
 
 import { xChainMap } from '@/constants/xChains';
 

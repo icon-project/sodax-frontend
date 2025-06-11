@@ -1,4 +1,4 @@
-import type { XToken, XChainId } from '@sodax/wallet-sdk';
+import type { XToken, XChainId } from '@sodax/types';
 
 import { CHAIN_IDS, hubAssets } from '@sodax/sdk';
 

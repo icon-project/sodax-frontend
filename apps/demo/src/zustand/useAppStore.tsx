@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import type { StateCreator } from 'zustand';
-import type { XChainId } from '@sodax/wallet-sdk';
+import type { XChainId } from '@sodax/types';
 
 type AppStore = {
   selectedChain: XChainId;

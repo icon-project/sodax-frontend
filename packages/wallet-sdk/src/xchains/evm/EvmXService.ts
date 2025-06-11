@@ -1,5 +1,6 @@
 import { XService } from '@/core/XService';
-import type { EVMConfig, XChainId, XToken } from '@/types';
+import type { XChainId, XToken } from '@sodax/types';
+import type { EVMConfig } from '@/types';
 import { getWagmiChainId, isNativeToken } from '@/utils';
 
 // biome-ignore lint/style/useImportType: <explanation>

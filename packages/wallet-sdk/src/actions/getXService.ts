@@ -1,4 +1,4 @@
-import type { XChainType } from '@/types';
+import type { XChainType } from '@sodax/types';
 
 import { ArchwayXService, HavahXService, IconXService, InjectiveXService, SolanaXService, StellarXService } from '..';
 import { SuiXService } from '..';

@@ -1,4 +1,4 @@
-import { XChainType } from '@/types';
+import { XChainType } from '@sodax/types';
 import { useCallback } from 'react';
 import { useXDisconnect } from './useXDisconnect';
 

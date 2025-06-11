@@ -1,4 +1,4 @@
-import type { XChain, XChainId } from '@/types';
+import type { XChain, XChainId } from '@sodax/types';
 
 export const archwayTestnet: XChain = {
   id: 'archway',

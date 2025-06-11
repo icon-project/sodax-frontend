@@ -6,7 +6,7 @@ import {
   submitTransaction,
   getIntentRelayChainId,
 } from '@sodax/sdk';
-import type { XToken } from '@sodax/wallet-sdk';
+import type { XToken } from '@sodax/types';
 import { getXChainType, useXAccount, xChainMap } from '@sodax/wallet-sdk';
 import { useState } from 'react';
 import type { Address } from 'viem';

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import type { XChainType } from '@/types';
+import type { XChainType } from '@sodax/types';
 
 import type { XAccount } from '../types';
 import { useXConnection } from './useXConnection';

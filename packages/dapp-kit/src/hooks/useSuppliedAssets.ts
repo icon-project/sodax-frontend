@@ -1,6 +1,7 @@
 import { allXTokens } from '@/core';
 import { getMoneyMarketConfig, type SpokeChainId, type EvmHubProvider } from '@sodax/sdk';
-import { getXChainType, useXAccount, type XChainId } from '@sodax/wallet-sdk';
+import { getXChainType, useXAccount } from '@sodax/wallet-sdk';
+import type { XChainId } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
 import { useHubProvider } from './useHubProvider';

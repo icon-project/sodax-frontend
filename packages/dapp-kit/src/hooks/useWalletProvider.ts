@@ -1,4 +1,5 @@
-import { type XChainId, getXChainType, useWalletProviderOptions } from '@sodax/wallet-sdk';
+import { getXChainType, useWalletProviderOptions } from '@sodax/wallet-sdk';
+import type { XChainId } from '@sodax/types';
 import { useMemo } from 'react';
 import { EvmWalletProvider, SuiWalletProvider } from '../wallet-providers';
 

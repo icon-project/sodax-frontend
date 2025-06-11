@@ -1,6 +1,6 @@
 // import { xChainMap } from '@/constants/xChains';
 
-import type { XChainId, XToken } from '@/types';
+import type { XChainId, XToken } from '@sodax/types';
 
 // export const getNetworkDisplayName = (chain: XChainId) => {
 //   return xChainMap[chain].name;

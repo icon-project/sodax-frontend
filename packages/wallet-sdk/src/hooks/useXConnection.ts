@@ -1,4 +1,4 @@
-import type { XChainType } from '@/types';
+import type { XChainType } from '@sodax/types';
 import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useMemo } from 'react';

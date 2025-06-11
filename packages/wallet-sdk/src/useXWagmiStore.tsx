@@ -1,6 +1,7 @@
 'use client';
 
-import type { XChainType, XConfig } from '@/types';
+import type { XChainType } from '@sodax/types';
+import type { XConfig } from './types';
 import { useCurrentAccount, useCurrentWallet, useSuiClient } from '@mysten/dapp-kit';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import React, { useEffect } from 'react';

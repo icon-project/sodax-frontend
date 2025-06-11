@@ -1,6 +1,6 @@
 import { getXChainType } from '@/actions';
 import { type UseQueryResult, keepPreviousData, useQuery } from '@tanstack/react-query';
-import type { XChainId, XToken } from '../types';
+import type { XChainId, XToken } from '@sodax/types';
 import { useXService } from './useXService';
 
 export function useXBalances({

@@ -1,4 +1,4 @@
-import type { XToken } from '@sodax/wallet-sdk';
+import type { XToken } from '@sodax/types';
 import { useSodaxContext } from './useSodaxContext';
 import { useSpokeProvider } from './useSpokeProvider';
 import type { Address, SpokeChainId } from '@sodax/sdk';

@@ -1,7 +1,7 @@
 import { getXChainType } from '@/actions';
 import { useMemo } from 'react';
 import { usePublicClient, useWalletClient } from 'wagmi';
-import type { XChainId } from '../types';
+import type { XChainId } from '@sodax/types';
 import { getWagmiChainId } from '../utils';
 import { useXService } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';

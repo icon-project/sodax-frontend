@@ -1,4 +1,4 @@
-import type { XChainId, XChainType, XToken } from '@/types';
+import type { XChainId, XChainType, XToken } from '@sodax/types';
 import type { XConnector } from './XConnector';
 export abstract class XService {
   xChainType: XChainType;

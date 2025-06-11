@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import type { XChainType } from '@/types';
+import type { XChainType } from '@sodax/types';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useAccount } from 'wagmi';
