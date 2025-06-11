@@ -187,6 +187,9 @@ importers:
       '@creit.tech/stellar-wallets-kit':
         specifier: 1.7.5
         version: 1.7.5(jerwqavw4mdb7fehfxmysfzb2u)
+      '@mysten/sui':
+        specifier: ^1.21.2
+        version: 1.30.5(typescript@5.5.4)
       '@sodax/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
