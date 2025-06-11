@@ -1,9 +1,9 @@
 import type { Config } from 'wagmi';
-import type { XChainType } from '@sodax/types';
+import type { ChainType } from '@sodax/types';
 
 export type XAccount = {
   address: string | undefined;
-  xChainType: XChainType | undefined;
+  xChainType: ChainType | undefined;
 };
 
 export type XConnection = {
@@ -35,7 +35,7 @@ export type SolanaConfig = {
 };
 
 export type XConfig = {
-  [key in XChainType]: key extends 'EVM'
+  [key in ChainType]: key extends 'EVM'
     ? EVMConfig
     : key extends 'SUI'
       ? SuiConfig

@@ -1,12 +1,12 @@
 import { getXChainType } from '@/actions';
 import { useMemo } from 'react';
 import { usePublicClient, useWalletClient } from 'wagmi';
-import type { XChainId } from '@sodax/types';
+import type { ChainId } from '@sodax/types';
 import { getWagmiChainId } from '../utils';
 import { useXService } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';
 
-export function useWalletProviderOptions(xChainId: XChainId) {
+export function useWalletProviderOptions(xChainId: ChainId) {
   const xChainType = getXChainType(xChainId);
 
   const evmPublicClient = usePublicClient({

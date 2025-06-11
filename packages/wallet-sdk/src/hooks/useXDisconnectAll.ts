@@ -1,4 +1,4 @@
-import { XChainType } from '@sodax/types';
+import { ChainType } from '@sodax/types';
 import { useCallback } from 'react';
 import { useXDisconnect } from './useXDisconnect';
 
@@ -7,7 +7,7 @@ export function useXDisconnectAll() {
 
   const disconnectAll = useCallback(async () => {
     // TODO: better handling for getting all xChainTypes
-    // const promises = Object.keys(xServices).map((xChainType) => xDisconnect(xChainType as XChainType));
+    // const promises = Object.keys(xServices).map((xChainType) => xDisconnect(xChainType as ChainType));
     // await Promise.all(promises);
   }, []);
   return disconnectAll;

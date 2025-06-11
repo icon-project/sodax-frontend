@@ -1,13 +1,13 @@
-import type { XChainType } from '@sodax/types';
+import type { ChainType } from '@sodax/types';
 import type { XAccount } from '../types';
 
 export abstract class XConnector {
-  xChainType: XChainType;
+  xChainType: ChainType;
   name: string;
   _id: string;
   _icon: string | undefined;
 
-  constructor(xChainType: XChainType, name: string, id: string) {
+  constructor(xChainType: ChainType, name: string, id: string) {
     this.xChainType = xChainType;
     this.name = name;
     this._id = id;

@@ -6,7 +6,7 @@ import {
   submitTransaction,
   getIntentRelayChainId,
 } from '@sodax/sdk';
-import type { XChainId, XToken } from '@sodax/types';
+import type { ChainId, XToken } from '@sodax/types';
 import { getXChainType, useXAccount, xChainMap } from '@sodax/wallet-sdk';
 import { useState } from 'react';
 import type { Address, Hash, Hex } from 'viem';
@@ -26,7 +26,7 @@ interface UseWithdrawReturn {
 }
 
 // token: this is hub token
-export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawReturn {
+export function useWithdraw(token: XToken, spokeChainId: ChainId): UseWithdrawReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();

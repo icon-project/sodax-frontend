@@ -1,11 +1,11 @@
-import type { XChainType } from '@sodax/types';
+import type { ChainType } from '@sodax/types';
 
 import { ArchwayXService, HavahXService, IconXService, InjectiveXService, SolanaXService, StellarXService } from '..';
 import { SuiXService } from '..';
 import { EvmXService } from '..';
 import type { XService } from '../core';
 
-export function getXService(xChainType: XChainType): XService {
+export function getXService(xChainType: ChainType): XService {
   switch (xChainType) {
     case 'EVM':
       return EvmXService.getInstance();

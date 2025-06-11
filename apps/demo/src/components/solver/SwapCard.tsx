@@ -35,7 +35,7 @@ import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
-import type { XChainId } from '@sodax/types';
+import type { ChainId } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
@@ -157,7 +157,7 @@ export default function SwapCard({
     setIntentOrderPayload(createIntentParams);
   };
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as XChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as ChainId);
 
   const handleSwap = async (intentOrderPayload: CreateIntentParams) => {
     setOpen(false);

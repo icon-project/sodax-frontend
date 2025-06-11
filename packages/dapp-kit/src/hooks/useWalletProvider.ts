@@ -1,9 +1,9 @@
 import { getXChainType, useWalletProviderOptions } from '@sodax/wallet-sdk';
-import type { XChainId } from '@sodax/types';
+import type { ChainId } from '@sodax/types';
 import { useMemo } from 'react';
 import { EvmWalletProvider, SuiWalletProvider } from '../wallet-providers';
 
-export function useWalletProvider(xChainId: XChainId) {
+export function useWalletProvider(xChainId: ChainId) {
   const xChainType = getXChainType(xChainId);
   const walletProviderOptions = useWalletProviderOptions(xChainId);
 

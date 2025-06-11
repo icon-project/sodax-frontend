@@ -1,13 +1,13 @@
 import { getXChainType } from '@/actions';
 import { type UseQueryResult, keepPreviousData, useQuery } from '@tanstack/react-query';
-import type { XChainId, XToken } from '@sodax/types';
+import type { ChainId, XToken } from '@sodax/types';
 import { useXService } from './useXService';
 
 export function useXBalances({
   xChainId,
   xTokens,
   address,
-}: { xChainId: XChainId; xTokens: XToken[]; address: string | undefined }): UseQueryResult<{
+}: { xChainId: ChainId; xTokens: XToken[]; address: string | undefined }): UseQueryResult<{
   [key: string]: bigint;
 }> {
   const xService = useXService(getXChainType(xChainId));
