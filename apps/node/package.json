@@ -20,6 +20,7 @@
   },
   "main": "dist/main.js",
   "dependencies": {
+    "@creit.tech/stellar-wallets-kit": "^1.7.5",
     "@sodax/sdk": "workspace:*",
     "@solana/web3.js": "1.98.0",
     "@stellar/stellar-sdk": "12.3.0",
@@ -27,8 +28,8 @@
     "bn.js": "^5.2.1",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.5",
-    "viem": "catalog:",
-    "icon-sdk-js": "catalog:"
+    "icon-sdk-js": "catalog:",
+    "viem": "catalog:"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.6",
