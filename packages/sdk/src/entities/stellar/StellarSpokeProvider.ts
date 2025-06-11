@@ -33,7 +33,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
   }
 
   async getBalance(tokenAddress: string): Promise<number> {
-    const sourceAccount = await this.server.getAccount(this.walletProvider.getWalletAddress());
+    const sourceAccount = await this.server.getAccount(await this.walletProvider.getWalletAddress());
 
     const tx = new TransactionBuilder(sourceAccount, {
       fee: BASE_FEE,
@@ -66,7 +66,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
     try {
-      const sourceAccount = await this.server.getAccount(this.walletProvider.getWalletAddress());
+      const sourceAccount = await this.server.getAccount(await this.walletProvider.getWalletAddress());
       const simulateTx = new TransactionBuilder(sourceAccount, {
         fee: BASE_FEE,
         networkPassphrase: (await this.server.getNetwork()).passphrase,
@@ -74,7 +74,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
         .addOperation(
           this.contract.call(
             'transfer',
-            nativeToScVal(Address.fromString(this.walletProvider.getWalletAddress()), { type: 'address' }),
+            nativeToScVal(Address.fromString(await this.walletProvider.getWalletAddress()), { type: 'address' }),
             nativeToScVal(Address.fromString(token), {
               type: 'address',
             }),
@@ -93,7 +93,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
         const transactionXdr = tx.toXDR();
 
         return {
-          from: this.walletProvider.getWalletAddress(),
+          from: await this.walletProvider.getWalletAddress(),
           to: this.chainConfig.addresses.assetManager,
           value: BigInt(amount),
           data: transactionXdr,
@@ -123,7 +123,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
     try {
-      const sourceAccount = await this.server.getAccount(this.walletProvider.getWalletAddress());
+      const sourceAccount = await this.server.getAccount(await this.walletProvider.getWalletAddress());
       const connection = new Contract(this.chainConfig.addresses.connection);
 
       const simulateTx = new TransactionBuilder(sourceAccount, {
@@ -133,7 +133,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
         .addOperation(
           connection.call(
             'send_message',
-            nativeToScVal(Address.fromString(this.walletProvider.getWalletAddress()), { type: 'address' }),
+            nativeToScVal(Address.fromString(await this.walletProvider.getWalletAddress()), { type: 'address' }),
             nativeToScVal(dst_chain_id, { type: 'u128' }),
             nativeToScVal(Buffer.from(dst_address), { type: 'bytes' }),
             nativeToScVal(Buffer.from(payload), { type: 'bytes' }),
@@ -148,7 +148,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
       if (raw) {
         const transactionXdr = tx.toXDR();
         return {
-          from: this.walletProvider.getWalletAddress(),
+          from: await this.walletProvider.getWalletAddress(),
           to: this.chainConfig.addresses.assetManager,
           value: 0n,
           data: transactionXdr,

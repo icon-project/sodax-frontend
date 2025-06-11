@@ -114,6 +114,7 @@ export type IWalletProvider =
   | SuiWalletProvider
   | IIconWalletProvider
   | SolanaWalletProvider;
+
 export type SpokeProvider = (
   | EvmSpokeProvider
   | CWSpokeProvider
