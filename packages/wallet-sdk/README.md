@@ -223,7 +223,6 @@ Note: Make sure to wrap `XWagmiProviders` inside a `QueryClientProvider` from `@
 
 #### Core Wallet Hooks
 
-
 - `useXConnectors(xChainType: XChainType)`: Get available wallet connectors for a specific blockchain
   ```typescript
   // Get EVM wallet connectors (MetaMask, WalletConnect, etc.)
@@ -275,6 +274,43 @@ Note: Make sure to wrap `XWagmiProviders` inside a `QueryClientProvider` from `@
   // The hook provides:
   // - isWrongChain: boolean indicating if the current chain is different from the required chain
   // - handleSwitchChain: function to switch to the required chain
+  ```
+
+- `useXBalances(params: { xChainId: XChainId; xTokens: XToken[]; address: string | undefined })`: Fetch token balances for multiple tokens on a specific chain
+  ```typescript
+  // Example usage in a component
+  function TokenBalances({ tokens }: { tokens: XToken[] }) {
+    const { address } = useXAccount('EVM');
+    const { data: balances } = useXBalances({
+      xChainId: '0xa86a.avax',
+      xTokens: tokens,
+      address,
+    });
+
+    return (
+      <div>
+        {tokens.map(token => (
+          <div key={token.address}>
+            {token.symbol}: {formatUnits(balances?.[token.address] || 0n, token.decimals)}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Parameters:
+  // - xChainId: Chain identifier (e.g. '0xa86a.avax', '0x1.base', '0x2.bsc', '0x89.polygon', '0x1.optimism')
+  // - xTokens: Array of token objects to fetch balances for
+  // - address: Wallet address to fetch balances for. If undefined, returns empty object
+  //
+  // Returns: UseQueryResult containing an object mapping token addresses to their balances as bigints.
+  // The balances are denominated in the token's smallest unit (e.g. wei for ETH).
+  // Returns empty object if wallet is not connected or service is unavailable.
+  //
+  // Features:
+  // - Auto-refreshes every 5 seconds
+  // - Keeps previous data while loading
+  // - Enabled only when service is available
   ```
 
 - `useXAccount(xChainType: XChainType)`: Get account information for a specific chain
