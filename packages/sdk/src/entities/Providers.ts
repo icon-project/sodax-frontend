@@ -18,8 +18,7 @@ import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
 import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
-import type { SuiWalletProvider } from './sui/SuiWalletProvider.js';
-import type { IEvmWalletProvider, IStellarWalletProvider, IIconWalletProvider } from '../index.js';
+import type { IEvmWalletProvider, IStellarWalletProvider, ISuiWalletProvider, IIconWalletProvider } from '../index.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -111,7 +110,7 @@ export type IWalletProvider =
   | IEvmWalletProvider
   | ICWWalletProvider
   | IStellarWalletProvider
-  | SuiWalletProvider
+  | ISuiWalletProvider
   | IIconWalletProvider
   | SolanaWalletProvider;
 

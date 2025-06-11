@@ -580,6 +580,38 @@ export type SuiRawTransaction = {
   data: Base64String;
 };
 
+export type SuiTransaction = {
+  toJSON: () => Promise<string>;
+};
+
+export type SuiArgument =
+  | 'GasCoin'
+  | {
+      Input: number;
+    }
+  | {
+      Result: number;
+    };
+
+export interface SuiExecutionResult {
+  mutableReferenceOutputs?: [SuiArgument, number[], string][];
+  returnValues?: [number[], string][];
+}
+
+export interface SuiCoinStruct {
+  balance: string;
+  coinObjectId: string;
+  coinType: string;
+  digest: string;
+  previousTransaction: string;
+  version: string;
+}
+export interface SuiPaginatedCoins {
+  data: SuiCoinStruct[];
+  hasNextPage: boolean;
+  nextCursor?: string | null;
+}
+
 export type CWRawTransaction = {
   from: Hex;
   to: Hex;

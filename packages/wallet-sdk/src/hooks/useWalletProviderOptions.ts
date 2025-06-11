@@ -3,6 +3,8 @@ import { useMemo } from 'react';
 import { usePublicClient, useWalletClient } from 'wagmi';
 import type { XChainId } from '../types';
 import { getWagmiChainId } from '../utils';
+import { useXService } from '..';
+import type { SuiXService } from '../xchains/sui/SuiXService';
 
 export function useWalletProviderOptions(xChainId: XChainId) {
   const xChainType = getXChainType(xChainId);
@@ -14,13 +16,19 @@ export function useWalletProviderOptions(xChainId: XChainId) {
     chainId: getWagmiChainId(xChainId),
   });
 
+  const xService = useXService(getXChainType(xChainId));
+
   return useMemo(() => {
     switch (xChainType) {
       case 'EVM': {
         return { walletClient: evmWalletClient, publicClient: evmPublicClient };
       }
+      case 'SUI': {
+        const suiXService = xService as SuiXService;
+        return { client: suiXService.suiClient, wallet: suiXService.suiWallet, account: suiXService.suiAccount };
+      }
       default:
         return undefined;
     }
-  }, [xChainType, evmPublicClient, evmWalletClient]);
+  }, [xChainType, evmPublicClient, evmWalletClient, xService]);
 }
