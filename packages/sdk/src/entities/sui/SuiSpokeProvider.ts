@@ -70,9 +70,8 @@ export class SuiSpokeProvider implements ISpokeProvider {
     if (raw) {
       const transactionRaw = await tx.build();
       const transactionRawBase64String = Buffer.from(transactionRaw).toString('base64');
-      const fromAddress = await this.walletProvider.getWalletAddressBytes();
       return {
-        from: fromAddress,
+        from: walletAddress,
         to: `${assetManager.packageId}::${assetManager.moduleId}::transfer`,
         value: amount,
         data: transactionRawBase64String,
@@ -161,9 +160,9 @@ export class SuiSpokeProvider implements ISpokeProvider {
     if (raw) {
       const transactionRaw = await txb.build();
       const transactionRawBase64String = Buffer.from(transactionRaw).toString('base64');
-      const fromAddress = await this.walletProvider.getWalletAddressBytes();
+      const walletAddress = await this.walletProvider.getWalletAddressBytes();
       return {
-        from: fromAddress,
+        from: walletAddress,
         to: `${connection.packageId}::${connection.moduleId}::send_message_ua`,
         value: 0n,
         data: transactionRawBase64String,
