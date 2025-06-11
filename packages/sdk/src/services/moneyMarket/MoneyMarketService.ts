@@ -129,17 +129,17 @@ export type MoneyMarketEncodeRepayWithATokensParams = {
 };
 
 export type MoneyMarketSupplyParams = {
-  token: string;
+  token: string; // spoke chain token address
   amount: bigint;
 };
 
 export type MoneyMarketBorrowParams = {
-  token: string;
+  token: string; // spoke chain token address
   amount: bigint;
 };
 
 export type MoneyMarketWithdrawParams = {
-  token: string;
+  token: string; // spoke chain token address
   amount: bigint;
 };
 
