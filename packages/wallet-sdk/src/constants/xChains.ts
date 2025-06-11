@@ -148,4 +148,28 @@ export const xChainMap: { [key in XChainId]: XChain } = {
   '0x89.polygon': polygon,
 };
 
+/**
+ * List of all supported chains in Sodax ecosystem
+ *
+ * Currently supported chains:
+ * - EVM chains:
+ *   - Arbitrum (0xa4b1.arbitrum)
+ *   - Avalanche (0xa86a.avax)
+ *   - Base (0x2105.base)
+ *   - BSC (0x38.bsc)
+ *   - Optimism (0xa.optimism)
+ *   - Polygon (0x89.polygon)
+ *   - Sonic (sonic)
+ *   - Sonic Blaze (sonic-blaze)
+ * - ICON chains:
+ *   - ICON (0x1.icon)
+ *   - Lisbon (0x2.icon)
+ * - Other chains:
+ *   - Archway (archway)
+ *   - Injective (injective-1)
+ *   - Solana (solana)
+ *   - Stellar (stellar)
+ *   - Sui (sui)
+ */
+
 export const xChains = Object.values(xChainMap);

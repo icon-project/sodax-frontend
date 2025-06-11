@@ -339,6 +339,61 @@ Note: Make sure to wrap `XWagmiProviders` inside a `QueryClientProvider` from `@
   // Returns: { walletClient, publicClient } | undefined
   ```
 
+### Constants
+
+- `xChains`: Array of all supported chains in the Sodax ecosystem
+  ```typescript
+  const xChains = [
+    {
+      id: '0x1.icon',
+      name: 'ICON',
+      xChainId: '0x1.icon',
+      xChainType: 'ICON',
+      testnet: false
+    },
+    {
+      id: 43114,
+      name: 'Avalanche',
+      xChainId: '0xa86a.avax',
+      xChainType: 'EVM',
+      testnet: false
+    },
+    // ... other chain configurations
+  ];
+  ```
+
+  Currently supported chains:
+  - EVM chains:
+    - Arbitrum (0xa4b1.arbitrum)
+    - Avalanche (0xa86a.avax)
+    - Base (0x2105.base)
+    - BSC (0x38.bsc)
+    - Optimism (0xa.optimism)
+    - Polygon (0x89.polygon)
+    - Sonic (sonic)
+    - Sonic Blaze (sonic-blaze)
+  - ICON chains:
+    - ICON (0x1.icon)
+    - Lisbon (0x2.icon)
+  - Other chains:
+    - Archway (archway)
+    - Injective (injective-1)
+    - Solana (solana)
+    - Stellar (stellar)
+    - Sui (sui)
+
+- `xChainMap`: Map of chain IDs to their configurations
+  ```typescript
+  const xChainMap: { [key in XChainId]: XChain } = {
+    '0x1.icon': icon,
+    '0x2.icon': lisbon,
+    'archway': archwayTestnet,
+    '0xa4b1.arbitrum': arbitrum,
+    '0xa86a.avax': avalanche,
+    // ... other chain configurations
+  };
+  ```
+
 ### Types
 
 - `XAccount`: Represents a wallet account
@@ -357,6 +412,18 @@ Note: Make sure to wrap `XWagmiProviders` inside a `QueryClientProvider` from `@
   };
   ```
 
+- `XConnector`: Represents a blockchain wallet connector
+  ```typescript
+  type XConnector = {
+    id: string;
+    name: string;
+    icon: string;
+    xChainType: XChainType;
+    connect: () => Promise<XAccount>;
+    disconnect: () => Promise<void>;
+  };
+  ```
+
 - `XToken`: Represents a token across chains
   ```typescript
   type XToken = {
@@ -368,9 +435,39 @@ Note: Make sure to wrap `XWagmiProviders` inside a `QueryClientProvider` from `@
   };
   ```
 
-- `useXConnect()`: Hook for connecting to different wallet types
-  ```typescript
-  const { mutateAsync: connect } = useXConnect();
-  // Usage: await connect(xConnector);
-  ```
+### Classes
 
+#### XConnector
+
+Base class for blockchain wallet connectors that provides a unified interface for wallet connections.
+
+```typescript
+abstract class XConnector {
+  abstract readonly id: string;
+  abstract readonly name: string;
+  abstract readonly icon: string;
+  abstract readonly xChainType: XChainType;
+
+  /**
+   * Connect to the wallet
+   * @returns {Promise<XAccount>} Connected account information
+   */
+  abstract connect(): Promise<XAccount>;
+
+  /**
+   * Disconnect from the wallet
+   * @returns {Promise<void>}
+   */
+  abstract disconnect(): Promise<void>;
+}
+```
+
+Each blockchain implementation extends this base class to provide chain-specific wallet connection functionality:
+
+- `EvmXConnector`: For EVM-compatible chains (MetaMask, WalletConnect, etc.)
+- `SolanaXConnector`: For Solana wallets (Phantom, etc.)
+- `SuiXConnector`: For Sui wallets
+- `StellarXConnector`: For Stellar wallets
+- `InjectiveXConnector`: For Injective wallets
+- `HavahXConnector`: For Havah wallets
+- `IconXConnector`: For ICON wallets
