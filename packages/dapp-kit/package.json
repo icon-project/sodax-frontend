@@ -6,7 +6,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/icon-project/sodax-frontend"
@@ -27,6 +30,7 @@
     "@mysten/wallet-standard": "^0.15.6",
     "@sodax/sdk": "workspace:*",
     "@sodax/wallet-sdk": "workspace:*",
+    "icon-sdk-js": "^1.5.3",
     "viem": "catalog:"
   },
   "devDependencies": {
