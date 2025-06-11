@@ -18,6 +18,7 @@ import { SolanaXService } from './xchains/solana/SolanaXService';
 import { useAnchorProvider } from './xchains/solana/hooks/useAnchorProvider';
 import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
+import { IconHanaXConnector, IconXService } from './xchains/icon';
 
 type XWagmiStore = {
   xServices: Partial<Record<XChainType, XService>>;
@@ -108,10 +109,10 @@ const initXServices = (config: XConfig) => {
         xServices[xChainType] = SolanaXService.getInstance();
         xServices[xChainType].setXConnectors([]);
         break;
-      // case 'ICON':
-      //   xServices[xChainType] = IconXService.getInstance();
-      //   xServices[xChainType].setXConnectors([new IconHanaXConnector()]);
-      //   break;
+      case 'ICON':
+        xServices[xChainType] = IconXService.getInstance();
+        xServices[xChainType].setXConnectors([new IconHanaXConnector()]);
+        break;
       default:
         break;
     }
