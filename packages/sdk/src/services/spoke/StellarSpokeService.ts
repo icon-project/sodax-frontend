@@ -1,8 +1,9 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
-import { type HubAddress, type PromiseStellarTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { getIntentRelayChainId, type PromiseStellarTxReturnType } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import type { HubAddress } from '@sodax/types';
 
 export type StellarSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain

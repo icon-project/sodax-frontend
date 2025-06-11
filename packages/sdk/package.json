@@ -33,6 +33,7 @@
   "files": ["dist"],
   "type": "module",
   "dependencies": {
+    "@sodax/types": "workspace:*",
     "@coral-xyz/anchor": "0.30.1",
     "@cosmjs/cosmwasm-stargate": "0.32.2",
     "@cosmjs/encoding": "0.32.3",

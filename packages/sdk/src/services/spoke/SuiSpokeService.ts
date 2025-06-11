@@ -1,7 +1,8 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { SuiSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
-import { type HubAddress, type PromiseSuiTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { getIntentRelayChainId, type PromiseSuiTxReturnType } from '../../index.js';
+import type { HubAddress } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type SuiSpokeDepositParams = {

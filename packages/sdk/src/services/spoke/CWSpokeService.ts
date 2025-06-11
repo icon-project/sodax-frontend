@@ -1,8 +1,9 @@
 import { type Address, type Hex, toHex } from 'viem';
 import { CWSpokeProvider } from '../../entities/cosmos/CWSpokeProvider.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { type HubAddress, type PromiseCWTxReturnType, getIntentRelayChainId } from '../../index.js';
+import { getIntentRelayChainId, type PromiseCWTxReturnType } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import type { HubAddress } from '@sodax/types';
 
 export type CWSpokeDepositParams = {
   from: string; // The address of the user on the spoke chain

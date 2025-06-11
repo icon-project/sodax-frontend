@@ -6,19 +6,21 @@ import {
   EvmHubProvider,
   type EvmHubProviderConfig,
   getHubChainConfig,
-  SONIC_MAINNET_CHAIN_ID,
-  type IEvmWalletProvider,
-  BSC_MAINNET_CHAIN_ID,
   EvmSpokeProvider,
   spokeChainConfig,
   getSupportedMoneyMarketTokens,
   EvmWalletAbstraction,
   SpokeService,
-  type EvmRawTransaction,
-  type PacketData,
-  type Address,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
+import {
+  type IEvmWalletProvider,
+  BSC_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  type EvmRawTransaction,
+  type PacketData,
+  type EvmAddress,
+} from '@sodax/types';
 
 describe('MoneyMarketService', () => {
   const mockEvmWalletProvider = {
@@ -60,7 +62,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.supply(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -88,7 +90,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.supply(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: rawEvmTx.value,
       },
       mockBscSpokeProvider,
@@ -105,7 +107,7 @@ describe('MoneyMarketService', () => {
     vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
       mockEvmWalletProvider.getWalletAddressBytes(),
     );
-    vi.spyOn(moneyMarket, 'supply').mockReturnValueOnce({
+    vi.spyOn(moneyMarket, 'supply').mockResolvedValueOnce({
       ok: true,
       value: '0x',
     });
@@ -118,7 +120,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.supplyAndSubmit(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -140,7 +142,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.borrow(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -169,7 +171,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.borrow(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: rawEvmTx.value,
       },
       mockBscSpokeProvider,
@@ -186,7 +188,7 @@ describe('MoneyMarketService', () => {
     vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
       mockEvmWalletProvider.getWalletAddressBytes(),
     );
-    vi.spyOn(moneyMarket, 'borrow').mockReturnValueOnce({
+    vi.spyOn(moneyMarket, 'borrow').mockResolvedValueOnce({
       ok: true,
       value: '0x',
     });
@@ -199,7 +201,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.borrowAndSubmit(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -221,7 +223,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.withdraw(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -250,7 +252,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.withdraw(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: rawEvmTx.value,
       },
       mockBscSpokeProvider,
@@ -267,7 +269,7 @@ describe('MoneyMarketService', () => {
     vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
       mockEvmWalletProvider.getWalletAddressBytes(),
     );
-    vi.spyOn(moneyMarket, 'withdraw').mockReturnValueOnce({
+    vi.spyOn(moneyMarket, 'withdraw').mockResolvedValueOnce({
       ok: true,
       value: '0x',
     });
@@ -280,7 +282,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.withdrawAndSubmit(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -302,7 +304,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.repay(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,
@@ -331,7 +333,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.repay(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: rawEvmTx.value,
       },
       mockBscSpokeProvider,
@@ -348,7 +350,7 @@ describe('MoneyMarketService', () => {
     vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
       mockEvmWalletProvider.getWalletAddressBytes(),
     );
-    vi.spyOn(moneyMarket, 'repay').mockReturnValueOnce({
+    vi.spyOn(moneyMarket, 'repay').mockResolvedValueOnce({
       ok: true,
       value: '0x',
     });
@@ -361,7 +363,7 @@ describe('MoneyMarketService', () => {
 
     const result = await moneyMarket.repayAndSubmit(
       {
-        token: supportedTokens[0]?.address as Address,
+        token: supportedTokens[0]?.address as EvmAddress,
         amount: 1000000000000000000n,
       },
       mockBscSpokeProvider,

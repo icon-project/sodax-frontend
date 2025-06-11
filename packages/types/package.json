@@ -1,19 +1,30 @@
 {
   "name": "@sodax/types",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "1.0.0",
-  "description": "",
+  "description": "Sodax Types",
   "main": "dist/index.js",
+  "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/types",
+  "bugs": {
+    "url": "https://github.com/icon-project/sodax-frontend/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/icon-project/sodax-frontend"
   },
-  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts"
-    }
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
-  "files": ["dist"],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",

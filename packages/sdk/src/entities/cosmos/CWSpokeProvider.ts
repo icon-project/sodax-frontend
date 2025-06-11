@@ -3,9 +3,10 @@ import type { ExecuteResult, JsonObject } from '@cosmjs/cosmwasm-stargate';
 import { type Coin, type StdFee, coins } from '@cosmjs/stargate';
 import type { TxResponse } from '@injectivelabs/sdk-ts';
 import { type Address, type Hex, fromHex } from 'viem';
-import type { CosmosSpokeChainConfig, CWRawTransaction, CWReturnType, PromiseCWTxReturnType } from '../../types.js';
+import type { CWRawTransaction, CWReturnType, PromiseCWTxReturnType } from '../../types.js';
 import type { ISpokeProvider, WalletAddressProvider } from '../Providers.js';
 import { CW20Token } from './CW20Token.js';
+import type { CosmosSpokeChainConfig } from '@sodax/types';
 
 export type CWSpokeDepositParams = {
   from: string; // The address of the user on the spoke chain

@@ -1,3 +1,21 @@
+import {
+  type HubChainConfig,
+  type EvmHubChainConfig,
+  type SpokeChainConfig,
+  type EvmSpokeChainConfig,
+  type IconAddress,
+  type IntentRelayChainId,
+  INTENT_RELAY_CHAIN_IDS,
+  type PartnerFeeAmount,
+  type PartnerFeePercentage,
+  type SolverConfigParams,
+  type SolverConfig,
+  type Optional,
+  type PartnerFeeConfig,
+  type MoneyMarketConfigParams,
+  type MoneyMarketConfig,
+} from '@sodax/types';
+import type { Prettify } from 'viem';
 import type {
   JsonRpcPayloadResponse,
   ResponseAddressType,
@@ -16,31 +34,13 @@ import {
   type SpokeProvider,
   EvmSpokeProvider,
 } from './entities/index.js';
-import {
-  INTENT_RELAY_CHAIN_IDS,
-  type EvmHubChainConfig,
-  type EvmSpokeChainConfig,
-  type HubChainConfig,
-  type IconAddress,
-  type IntentRelayChainId,
-  type MoneyMarketConfig,
-  type MoneyMarketConfigParams,
-  type Optional,
-  type PartnerFeeAmount,
-  type PartnerFeeConfig,
-  type PartnerFeePercentage,
-  type Prettify,
-  type SolverConfig,
-  type SolverConfigParams,
-  type SpokeChainConfig,
-} from './index.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
-  return typeof value === 'object' && value.chain.type === 'evm';
+  return typeof value === 'object' && value.chain.type === 'EVM';
 }
 
 export function isEvmSpokeChainConfig(value: SpokeChainConfig): value is EvmSpokeChainConfig {
-  return typeof value === 'object' && value.chain.type === 'evm';
+  return typeof value === 'object' && value.chain.type === 'EVM';
 }
 
 export function isEvmUninitializedConfig(
@@ -121,7 +121,7 @@ export function isEvmSpokeProvider(value: SpokeProvider): value is EvmSpokeProvi
     typeof value === 'object' &&
     value !== null &&
     value instanceof EvmSpokeProvider &&
-    value.chainConfig.chain.type === 'evm'
+    value.chainConfig.chain.type === 'EVM'
   );
 }
 
@@ -130,7 +130,7 @@ export function isSolanaSpokeProvider(value: SpokeProvider): value is SolanaSpok
     typeof value === 'object' &&
     value !== null &&
     value instanceof SolanaSpokeProvider &&
-    value.chainConfig.chain.type === 'solana'
+    value.chainConfig.chain.type === 'SOLANA'
   );
 }
 
@@ -139,7 +139,7 @@ export function isStellarSpokeProvider(value: SpokeProvider): value is StellarSp
     typeof value === 'object' &&
     value !== null &&
     value instanceof StellarSpokeProvider &&
-    value.chainConfig.chain.type === 'stellar'
+    value.chainConfig.chain.type === 'STELLAR'
   );
 }
 
@@ -148,7 +148,7 @@ export function isCWSpokeProvider(value: SpokeProvider): value is CWSpokeProvide
     typeof value === 'object' &&
     value !== null &&
     value instanceof CWSpokeProvider &&
-    value.chainConfig.chain.type === 'cosmos'
+    value.chainConfig.chain.type === 'INJECTIVE'
   );
 }
 
@@ -157,7 +157,7 @@ export function isIconSpokeProvider(value: SpokeProvider): value is IconSpokePro
     typeof value === 'object' &&
     value !== null &&
     value instanceof IconSpokeProvider &&
-    value.chainConfig.chain.type === 'icon'
+    value.chainConfig.chain.type === 'ICON'
   );
 }
 
@@ -166,7 +166,7 @@ export function isSuiSpokeProvider(value: SpokeProvider): value is SuiSpokeProvi
     typeof value === 'object' &&
     value !== null &&
     value instanceof SuiSpokeProvider &&
-    value.chainConfig.chain.type === 'sui'
+    value.chainConfig.chain.type === 'SUI'
   );
 }
 

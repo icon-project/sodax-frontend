@@ -1,18 +1,17 @@
-import { AVALANCHE_MAINNET_CHAIN_ID, getIntentRelayChainId } from '../../../index.js';
+import { getIntentRelayChainId } from '../../../index.js';
 import { encodeFunctionData, type Address, type Hash, type HttpTransport, type PublicClient } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { connectionAbi } from '../../../abis/index.js';
 import type { EvmHubProviderConfig } from '../../../entities/index.js';
 import {
   getHubChainConfig,
-  SONIC_MAINNET_CHAIN_ID,
   spokeChainConfig,
   EvmHubProvider,
   type EvmSpokeDepositParams,
   type EvmSpokeProvider,
   EvmSpokeService,
-  type IEvmWalletProvider,
 } from '../../../index.js';
+import { AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type IEvmWalletProvider } from '@sodax/types';
 
 // Hoisted mocks must be before any other code
 vi.mock('../../../utils/evm-utils.js', () => ({
@@ -43,7 +42,7 @@ vi.mock('../../../constants.js', async importOriginal => {
         chain: {
           id: '0xa86a.avax',
           name: 'Avalanche',
-          type: 'evm',
+          type: 'EVM',
         },
         addresses: {
           assetManager: '0x5555555555555555555555555555555555555555',
@@ -96,7 +95,7 @@ describe('EvmSpokeService', () => {
       chain: {
         id: mockChainId,
         name: 'Avalanche',
-        type: 'evm',
+        type: 'EVM',
       },
       addresses: {
         assetManager: '0x5555555555555555555555555555555555555555' as Address,

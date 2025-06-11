@@ -3,10 +3,11 @@ import type { Coin } from '@cosmjs/proto-signing';
 import type { StdFee } from '@cosmjs/stargate';
 import { Network } from '@injectivelabs/networks';
 import { MsgBroadcasterWithPk, PrivateKey, MsgExecuteContract, createTransaction } from '@injectivelabs/sdk-ts';
-import type { CosmosNetworkEnv, CWRawTransaction, Hex } from '../../index.js';
+import type { CWRawTransaction } from '../../index.js';
 import { ExecuteResponse, type ICWWalletProvider } from './CWSpokeProvider.js';
 import { DEFAULT_GAS_LIMIT } from '@injectivelabs/utils';
 import { toHex } from 'viem';
+import type { CosmosNetworkEnv, Hex } from '@sodax/types';
 
 // TODO implement browser extension based login
 export interface InjectiveWalletConfig {

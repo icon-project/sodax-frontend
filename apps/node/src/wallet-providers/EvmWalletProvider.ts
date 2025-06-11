@@ -1,5 +1,5 @@
 import {
-  type Address,
+  type EvmAddress,
   type EvmChainId,
   type EvmRawTransaction,
   type EvmRawTransactionReceipt,
@@ -37,7 +37,7 @@ export class EvmWalletProvider implements IEvmWalletProvider {
     });
   }
 
-  getWalletAddress(): Address {
+  getWalletAddress(): EvmAddress {
     return this.walletClient.account.address;
   }
   getWalletAddressBytes(): Hex {

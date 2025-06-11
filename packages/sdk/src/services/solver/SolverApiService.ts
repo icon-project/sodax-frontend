@@ -1,20 +1,18 @@
 import invariant from 'tiny-invariant';
+import { getHubAssetInfo, isValidOriginalAssetAddress, retry } from '../../index.js';
 import {
-  getHubAssetInfo,
-  IntentErrorCode,
-  isValidOriginalAssetAddress,
-  retry,
+  type IntentQuoteRequest,
+  type SolverConfig,
+  type Result,
+  type IntentQuoteResponse,
   type IntentErrorResponse,
+  type IntentQuoteResponseRaw,
+  IntentErrorCode,
   type IntentExecutionRequest,
   type IntentExecutionResponse,
-  type IntentQuoteRequest,
-  type IntentQuoteResponse,
-  type IntentQuoteResponseRaw,
   type IntentStatusRequest,
   type IntentStatusResponse,
-  type Result,
-  type SolverConfig,
-} from '../../index.js';
+} from '@sodax/types';
 
 export class SolverApiService {
   private constructor() {}

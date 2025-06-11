@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 import type { Hex } from 'viem';
-import { SOLANA_MAINNET_CHAIN_ID, spokeChainConfig } from '../../../constants.js';
-import type { SolanaChainConfig } from '../../../types.js';
+import { spokeChainConfig } from '../../../constants.js';
+import { type SolanaChainConfig, SOLANA_MAINNET_CHAIN_ID } from '@sodax/types';
 
 const solanaSpokeChainConfig = spokeChainConfig[SOLANA_MAINNET_CHAIN_ID] as SolanaChainConfig;
 

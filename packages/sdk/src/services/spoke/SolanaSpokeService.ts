@@ -9,8 +9,9 @@ import { getAssetManagerProgram, getConnectionProgram } from '../../entities/sol
 import type { SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvider.js';
 import { AssetManagerPDA, ConnectionConfigPDA } from '../../entities/solana/pda/pda.js';
 import { isNative } from '../../entities/solana/utils/utils.js';
-import type { HubAddress, PromiseSolanaTxReturnType, SolanaReturnType } from '../../types.js';
+import type { PromiseSolanaTxReturnType, SolanaReturnType } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import type { HubAddress } from '@sodax/types';
 
 export type SolanaSpokeDepositParams = {
   from: PublicKey;

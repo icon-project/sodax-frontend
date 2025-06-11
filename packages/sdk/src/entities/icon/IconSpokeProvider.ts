@@ -1,6 +1,5 @@
-import type { IconSpokeChainConfig } from '../../types.js';
-import type { IIconWalletProvider } from '../../interfaces.js';
 import IconService from 'icon-sdk-js';
+import type { IconSpokeChainConfig, IIconWalletProvider } from '@sodax/types';
 
 export class IconSpokeProvider {
   public readonly walletProvider: IIconWalletProvider;

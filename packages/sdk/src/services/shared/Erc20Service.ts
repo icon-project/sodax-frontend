@@ -1,5 +1,5 @@
 import { encodeFunctionData, erc20Abi, type Address } from 'viem';
-import type { EvmContractCall, EvmRawTransactionReceipt, Result } from '../../types.js';
+import type { EvmContractCall, EvmRawTransactionReceipt, Result } from '@sodax/types';
 import type { EvmSpokeProvider } from '../../entities/Providers.js';
 
 export class Erc20Service {

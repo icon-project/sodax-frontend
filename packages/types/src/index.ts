@@ -1,78 +1,12 @@
-// chain ids (actual for evm chains), custom for other chains not having native ids
-export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
-export const ARBITRUM_MAINNET_CHAIN_ID = '0xa4b1.arbitrum';
-export const BASE_MAINNET_CHAIN_ID = '0x2105.base';
-export const BSC_MAINNET_CHAIN_ID = '0x38.bsc';
-export const INJECTIVE_MAINNET_CHAIN_ID = 'injective-1';
-export const SONIC_MAINNET_CHAIN_ID = 'sonic';
-export const ICON_MAINNET_CHAIN_ID = '0x1.icon';
-export const SUI_MAINNET_CHAIN_ID = 'sui';
-export const OPTIMISM_MAINNET_CHAIN_ID = '0xa.optimism';
-export const POLYGON_MAINNET_CHAIN_ID = '0x89.polygon';
-export const SOLANA_MAINNET_CHAIN_ID = 'solana';
-export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
-export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
-
-// currently supported spoke chains
-export const SPOKE_CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  INJECTIVE_MAINNET_CHAIN_ID,
-  SUI_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  SOLANA_MAINNET_CHAIN_ID,
-  ICON_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-] as const;
-
-export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
-
-export const CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  INJECTIVE_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  SUI_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  SOLANA_MAINNET_CHAIN_ID,
-  ICON_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-] as const;
-
-export type HubChainId = (typeof HUB_CHAIN_IDS)[number];
-
-export type SpokeChainId = (typeof SPOKE_CHAIN_IDS)[number];
-
-export type ChainId = (typeof CHAIN_IDS)[number];
-
-export type ChainType = 'ICON' | 'EVM' | 'ARCHWAY' | 'HAVAH' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA';
-
-export type Chain = {
-  id: string | number;
-  name: string;
-  testnet: boolean;
-};
-
-export type XChain = Chain & {
-  xChainId: ChainId;
-  xChainType: ChainType;
-};
-
-export type Token = {
-  symbol: string;
-  name: string;
-  decimals: number;
-  address: string;
-};
-
-export type XToken = Token & {
-  xChainId: ChainId;
-};
+export * from './chain/index.js';
+export * from './constants/index.js';
+export * from './evm/index.js';
+export * from './icon/index.js';
+export * from './money-market/index.js';
+export * from './shared/index.js';
+export * from './solver/index.js';
+export * from './tokens/index.js';
+export * from './util/index.js';
+export * from './wallet/index.js';
+export * from './relay/index.js';
+export * from './sui/index.js';

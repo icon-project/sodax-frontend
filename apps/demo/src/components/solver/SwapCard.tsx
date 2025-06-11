@@ -16,9 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
-  type Address,
   type CreateIntentParams,
-  type EvmChainId,
   type Hex,
   type Intent,
   type IntentQuoteRequest,
@@ -35,7 +33,7 @@ import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
-import type { ChainId } from '@sodax/types';
+import type { ChainId, EvmAddress } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
@@ -43,7 +41,7 @@ export default function SwapCard({
   address,
 }: {
   setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; packet: PacketData }[]>) => void;
-  address: Address;
+  address: EvmAddress;
 }) {
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ARBITRUM_MAINNET_CHAIN_ID);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);

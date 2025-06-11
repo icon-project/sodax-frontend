@@ -2,6 +2,8 @@ import invariant from 'tiny-invariant';
 import {
   type Address,
   type GetLogsReturnType,
+  type Hash,
+  type Hex,
   encodeAbiParameters,
   encodeFunctionData,
   encodePacked,
@@ -10,14 +12,9 @@ import {
   parseEventLogs,
 } from 'viem';
 import {
-  type EvmContractCall,
   type EvmHubProvider,
   FEE_PERCENTAGE_SCALE,
-  type Hash,
-  type Hex,
   IntentsAbi,
-  type PartnerFee,
-  type SolverConfig,
   calculatePercentageFeeAmount,
   encodeContractCalls,
   getHubAssetInfo,
@@ -27,14 +24,17 @@ import {
   isPartnerFeePercentage,
   randomUint256,
 } from '../../index.js';
+import { Erc20Service } from '../index.js';
 import {
   type CreateIntentParams,
-  Erc20Service,
-  type FeeData,
+  type SolverConfig,
+  type PartnerFee,
   type Intent,
-  type IntentData,
+  type EvmContractCall,
+  type FeeData,
   IntentDataType,
-} from '../index.js';
+  type IntentData,
+} from '@sodax/types';
 
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
 export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventAbi>[number];

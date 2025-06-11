@@ -1,25 +1,40 @@
+import {
+  AVALANCHE_MAINNET_CHAIN_ID,
+  ARBITRUM_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  INJECTIVE_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  OPTIMISM_MAINNET_CHAIN_ID,
+  POLYGON_MAINNET_CHAIN_ID,
+  SOLANA_MAINNET_CHAIN_ID,
+  SUI_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
+  ICON_MAINNET_CHAIN_ID,
+  NIBIRU_MAINNET_CHAIN_ID,
+  INTENT_RELAY_CHAIN_IDS,
+  SPOKE_CHAIN_IDS,
+  type ChainId,
+  type CosmosSpokeChainConfig,
+  type EvmChainId,
+  type EvmHubChainConfig,
+  type EvmSpokeChainConfig,
+  type HubAssetInfo,
+  type HubChainId,
+  type IconSpokeChainConfig,
+  type IntentRelayChainId,
+  type MoneyMarketConfig,
+  type SolanaChainConfig,
+  type SolverConfig,
+  type SpokeChainId,
+  type StellarSpokeChainConfig,
+  type SuiSpokeChainConfig,
+  type Token,
+  type VaultType,
+  ChainIdToIntentRelayChainId,
+} from '@sodax/types';
 import type { Address, Chain } from 'viem';
 import { arbitrum, avalanche, base, bsc, nibiru, optimism, polygon, sonic } from 'viem/chains';
-import type {
-  ChainId,
-  CosmosSpokeChainConfig,
-  EvmChainId,
-  EvmHubChainConfig,
-  EvmSpokeChainConfig,
-  HubAssetInfo,
-  HubChainId,
-  IconSpokeChainConfig,
-  IntentRelayChainId,
-  MoneyMarketConfig,
-  OriginalAssetAddress,
-  SolanaChainConfig,
-  SolverConfig,
-  SpokeChainId,
-  StellarSpokeChainConfig,
-  SuiSpokeChainConfig,
-  Token,
-  VaultType,
-} from './index.js';
 
 // TODO ADD DEFAULT CONTRACT ADDRESSES AND SO FORTH FROM WIKI
 
@@ -29,110 +44,6 @@ export const DEFAULT_RETRY_DELAY_MS = 2000;
 export const ICON_TX_RESULT_WAIT_MAX_RETRY = 10;
 export const MAX_UINT256 = (1n << 256n) - 1n;
 export const FEE_PERCENTAGE_SCALE = 10000n; // 100% = 10000
-
-// NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
-export const INTENT_RELAY_CHAIN_IDS = {
-  AVAX: 6n,
-  SUI: 21n,
-  SONIC: 146n,
-  STELLAR: 27n,
-  INJ: 19n,
-  SOL: 1n,
-  ICON: 1768124270n,
-  ARCHWAY: 1634886504n,
-  BASE: 30n,
-  BINANCE: 4n,
-  OPTIMISM: 24n,
-  POLYGON: 5n,
-  ARBITRUM: 23n,
-  NIBIRU: 7235938n,
-} as const;
-
-// chain ids (actual for evm chains), custom for other chains not having native ids
-export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
-export const ARBITRUM_MAINNET_CHAIN_ID = '0xa4b1.arbitrum';
-export const BASE_MAINNET_CHAIN_ID = '0x2105.base';
-export const BSC_MAINNET_CHAIN_ID = '0x38.bsc';
-export const INJECTIVE_MAINNET_CHAIN_ID = 'injective-1';
-export const SONIC_MAINNET_CHAIN_ID = 'sonic';
-export const ICON_MAINNET_CHAIN_ID = '0x1.icon';
-export const SUI_MAINNET_CHAIN_ID = 'sui';
-export const OPTIMISM_MAINNET_CHAIN_ID = '0xa.optimism';
-export const POLYGON_MAINNET_CHAIN_ID = '0x89.polygon';
-export const SOLANA_MAINNET_CHAIN_ID = 'solana';
-export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
-export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
-
-export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
-
-// currently supported spoke chains
-export const SPOKE_CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  INJECTIVE_MAINNET_CHAIN_ID,
-  SUI_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  SOLANA_MAINNET_CHAIN_ID,
-  ICON_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-] as const;
-
-export const CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  INJECTIVE_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  SUI_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  SOLANA_MAINNET_CHAIN_ID,
-  ICON_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-] as const;
-
-export const EVM_CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-] as const;
-
-export const EVM_SPOKE_CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-] as const;
-
-const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
-  [AVALANCHE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.AVAX,
-  [ARBITRUM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ARBITRUM,
-  [BASE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.BASE,
-  [BSC_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.BINANCE,
-  [INJECTIVE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.INJ,
-  [SONIC_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SONIC,
-  [OPTIMISM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.OPTIMISM,
-  [POLYGON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.POLYGON,
-  [SOLANA_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SOL,
-  [SUI_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SUI,
-  [STELLAR_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
-  [ICON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
-  [NIBIRU_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.NIBIRU,
-};
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
 
@@ -164,7 +75,7 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
     chain: {
       name: 'Sonic',
       id: SONIC_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
@@ -187,7 +98,7 @@ export const spokeChainConfig = {
       testToken: '3Q2HS3png7fLaYerqCun3zw8rnBZo2Ksvdg6RHTyM4Ns',
       xTokenManager: '',
     },
-    chain: { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', type: 'solana' },
+    chain: { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', type: 'SOLANA' },
     nativeToken: '11111111111111111111111111111111' as const,
     bnUSD: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
     supportedTokens: {
@@ -213,7 +124,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Avalanche',
       id: AVALANCHE_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x5bDD1E1C5173F4c912cC919742FB94A55ECfaf86',
@@ -252,7 +163,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Nibiru',
       id: NIBIRU_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
@@ -279,7 +190,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Arbitrum',
       id: ARBITRUM_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -348,7 +259,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'BASE',
       id: BASE_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -399,7 +310,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Optimism',
       id: OPTIMISM_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -450,7 +361,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'BSC',
       id: BSC_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -489,7 +400,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Polygon',
       id: POLYGON_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -529,7 +440,7 @@ export const spokeChainConfig = {
     chain: {
       id: INJECTIVE_MAINNET_CHAIN_ID,
       name: 'Injective',
-      type: 'cosmos',
+      type: 'INJECTIVE',
     },
     nativeToken: 'inj' as const,
     bnUSD: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
@@ -583,7 +494,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'soroban-mainnet',
       id: STELLAR_MAINNET_CHAIN_ID,
-      type: 'stellar',
+      type: 'STELLAR',
     },
   } as const satisfies StellarSpokeChainConfig,
   [SUI_MAINNET_CHAIN_ID]: {
@@ -616,7 +527,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'sui',
       id: SUI_MAINNET_CHAIN_ID,
-      type: 'sui',
+      type: 'SUI',
     },
   } as const satisfies SuiSpokeChainConfig,
   [ICON_MAINNET_CHAIN_ID]: {
@@ -628,7 +539,7 @@ export const spokeChainConfig = {
     chain: {
       id: ICON_MAINNET_CHAIN_ID,
       name: 'ICON Mainnet',
-      type: 'icon',
+      type: 'ICON',
     },
     supportedTokens: {
       ICX: {
@@ -658,7 +569,7 @@ export const spokeChainConfig = {
 
 export const hubAssets: Record<
   SpokeChainId,
-  Record<Address | string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>
+  Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>
 > = {
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].nativeToken]: {
@@ -1224,13 +1135,13 @@ export const moneyMarketReserveAssets = [
 export const isMoneyMarketReserveAsset = (asset: Address): boolean =>
   moneyMarketReserveAssets.map(a => a.toLowerCase()).includes(asset.toLowerCase());
 
-export const originalAssetTohubAssetMap: Map<SpokeChainId, Map<OriginalAssetAddress, HubAssetInfo>> = new Map(
+export const originalAssetTohubAssetMap: Map<SpokeChainId, Map<string, HubAssetInfo>> = new Map(
   Object.entries(hubAssets).map(([chainId, assets]) => [
     chainId as SpokeChainId,
     new Map(Object.entries(assets).map(([asset, info]) => [asset.toLowerCase(), info])),
   ]),
 );
-export const hubAssetToOriginalAssetMap: Map<SpokeChainId, Map<Address, OriginalAssetAddress>> = new Map(
+export const hubAssetToOriginalAssetMap: Map<SpokeChainId, Map<Address, string>> = new Map(
   Object.entries(hubAssets).map(([chainId, assets]) => [
     chainId as SpokeChainId,
     new Map(Object.entries(assets).map(([asset, info]) => [info.asset.toLowerCase() as Address, asset])),
@@ -1247,11 +1158,11 @@ export const supportedHubAssets: Set<Address> = new Set(
 );
 export const spokeChainIdsSet = new Set(SPOKE_CHAIN_IDS);
 
-export const getHubAssetInfo = (chainId: SpokeChainId, asset: OriginalAssetAddress): HubAssetInfo | undefined =>
+export const getHubAssetInfo = (chainId: SpokeChainId, asset: string): HubAssetInfo | undefined =>
   originalAssetTohubAssetMap.get(chainId)?.get(asset.toLowerCase());
-export const isValidOriginalAssetAddress = (chainId: SpokeChainId, asset: OriginalAssetAddress): boolean =>
+export const isValidOriginalAssetAddress = (chainId: SpokeChainId, asset: string): boolean =>
   originalAssetTohubAssetMap.get(chainId)?.has(asset.toLowerCase()) ?? false;
-export const getOriginalAssetAddress = (chainId: SpokeChainId, hubAsset: Address): OriginalAssetAddress | undefined =>
+export const getOriginalAssetAddress = (chainId: SpokeChainId, hubAsset: Address): string | undefined =>
   hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
 export const isValidHubAsset = (hubAsset: Address): boolean =>
   supportedHubAssets.has(hubAsset.toLowerCase() as Address);

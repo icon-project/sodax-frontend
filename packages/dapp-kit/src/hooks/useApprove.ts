@@ -1,7 +1,7 @@
 import type { XToken } from '@sodax/types';
 import { useSodaxContext } from './useSodaxContext';
 import { useSpokeProvider } from './useSpokeProvider';
-import type { Address, SpokeChainId } from '@sodax/sdk';
+import type { EvmAddress, SpokeChainId } from '@sodax/sdk';
 import { parseUnits } from 'viem';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -28,9 +28,9 @@ export function useApprove(token: XToken): UseApproveReturn {
         throw new Error('Spoke provider not found');
       }
       const allowance = await sodax.moneyMarket.approve(
-        token.address as Address,
+        token.address as EvmAddress,
         parseUnits(amount, token.decimals),
-        spokeProvider.chainConfig.addresses.assetManager as Address,
+        spokeProvider.chainConfig.addresses.assetManager as EvmAddress,
         spokeProvider,
       );
       if (!allowance.ok) {

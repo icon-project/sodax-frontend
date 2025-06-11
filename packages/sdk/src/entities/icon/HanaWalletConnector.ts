@@ -1,10 +1,5 @@
-import {
-  isJsonRpcPayloadResponse,
-  isResponseAddressType,
-  isResponseSigningType,
-  type IconAddress,
-  type Result,
-} from '../../index.js';
+import type { IconAddress, Result } from '@sodax/types';
+import { isJsonRpcPayloadResponse, isResponseAddressType, isResponseSigningType } from '../../index.js';
 
 export type IconJsonRpcVersion = '2.0';
 
