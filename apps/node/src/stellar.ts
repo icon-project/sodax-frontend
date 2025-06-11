@@ -7,7 +7,6 @@ import {
   SpokeService,
   StellarSpokeProvider,
   type StellarSpokeChainConfig,
-  StellarWalletProvider,
   getMoneyMarketConfig,
   SONIC_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
@@ -17,6 +16,8 @@ import {
   EvmHubProvider,
   type SolverConfigParams,
 } from '@sodax/sdk';
+
+import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
@@ -36,7 +37,16 @@ const hubWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC
 const stellarConfig = spokeChainConfig[STELLAR_CHAIN_ID] as StellarSpokeChainConfig;
 const STELLAR_SECRET_KEY = process.env.STELLAR_SECRET_KEY ?? '';
 const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL || stellarConfig.rpc_url;
-const stellarWalletProvider = new StellarWalletProvider(STELLAR_SECRET_KEY);
+
+// Create Stellar wallet config
+const stellarWalletConfig: StellarWalletConfig = {
+  type: 'PRIVATE_KEY',
+  privateKey: STELLAR_SECRET_KEY as Hex,
+  network: IS_TESTNET ? 'TESTNET' : 'PUBLIC',
+  rpcUrl: STELLAR_RPC_URL,
+};
+
+const stellarWalletProvider = new StellarWalletProvider(stellarWalletConfig);
 const stellarSpokeProvider = new StellarSpokeProvider(
   stellarWalletProvider,
   stellarConfig.addresses.assetManager,
@@ -75,6 +85,7 @@ async function getBalance(token: string) {
 }
 
 async function depositTo(token: string, amount: bigint, recipient: Address) {
+  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
   const data = EvmAssetManagerService.depositToData(
     {
       token,
@@ -86,7 +97,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
 
   const txHash: Hash = await SpokeService.deposit(
     {
-      from: stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+      from: walletAddressBytes,
       token,
       amount,
       data,
@@ -103,9 +114,10 @@ async function withdrawAsset(
   amount: bigint,
   recipient: string, // stellar address
 ) {
+  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    walletAddressBytes,
     hubProvider,
   );
 
@@ -124,9 +136,10 @@ async function withdrawAsset(
 }
 
 async function supply(token: string, amount: bigint) {
+  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    walletAddressBytes,
     hubProvider,
   );
 
@@ -134,7 +147,7 @@ async function supply(token: string, amount: bigint) {
 
   const txHash = await SpokeService.deposit(
     {
-      from: stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+      from: walletAddressBytes,
       token,
       amount,
       data,
@@ -147,15 +160,16 @@ async function supply(token: string, amount: bigint) {
 }
 
 async function borrow(token: string, amount: bigint) {
+  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    walletAddressBytes,
     hubProvider,
   );
   console.log(hubWallet);
   const data: Hex = sodax.moneyMarket.borrowData(
     hubWallet,
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    walletAddressBytes,
     token,
     amount,
     stellarSpokeProvider.chainConfig.chain.id,
@@ -167,9 +181,10 @@ async function borrow(token: string, amount: bigint) {
 }
 
 async function withdraw(token: string, amount: bigint) {
+  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    walletAddressBytes,
     hubProvider,
   );
 
@@ -177,7 +192,7 @@ async function withdraw(token: string, amount: bigint) {
 
   const data: Hex = sodax.moneyMarket.withdrawData(
     hubWallet,
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    walletAddressBytes,
     token,
     amount,
     stellarSpokeProvider.chainConfig.chain.id,
@@ -189,16 +204,17 @@ async function withdraw(token: string, amount: bigint) {
 }
 
 async function repay(token: string, amount: bigint) {
+  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
-    stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+    walletAddressBytes,
     hubProvider,
   );
   const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {
-      from: stellarSpokeProvider.walletProvider.getWalletAddressBytes(),
+      from: walletAddressBytes,
       token,
       amount,
       data,
