@@ -17,7 +17,7 @@ import {
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
-  SolverConfigParams,
+  type SolverConfigParams,
 } from '@sodax/sdk';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider';
 
@@ -76,7 +76,7 @@ async function depositTo(token: IconAddress, amount: bigint, recipient: Address)
 
   const txHash: Hash = await SpokeService.deposit(
     {
-      from: iconSpokeProvider.walletProvider.getWalletAddress() as IconAddress,
+      from: (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress,
       token,
       amount,
       data: data,
@@ -91,7 +91,7 @@ async function depositTo(token: IconAddress, amount: bigint, recipient: Address)
 async function withdrawAsset(token: IconAddress, amount: bigint, recipient: IconAddress) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
-    iconSpokeProvider.walletProvider.getWalletAddressBytes(),
+    (await iconSpokeProvider.walletProvider.getWalletAddressBytes()) as Hex,
     hubProvider,
   );
 
@@ -112,7 +112,7 @@ async function withdrawAsset(token: IconAddress, amount: bigint, recipient: Icon
 async function supply(token: IconAddress, amount: bigint) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
-    iconSpokeProvider.walletProvider.getWalletAddressBytes(),
+    (await iconSpokeProvider.walletProvider.getWalletAddressBytes()) as Hex,
     hubProvider,
   );
 
@@ -120,7 +120,7 @@ async function supply(token: IconAddress, amount: bigint) {
 
   const txHash = await SpokeService.deposit(
     {
-      from: iconSpokeProvider.walletProvider.getWalletAddress() as IconAddress,
+      from: (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress,
       token,
       amount,
       data,
@@ -135,12 +135,12 @@ async function supply(token: IconAddress, amount: bigint) {
 async function borrow(token: IconAddress, amount: bigint) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
-    iconSpokeProvider.walletProvider.getWalletAddressBytes(),
+    (await iconSpokeProvider.walletProvider.getWalletAddressBytes()) as Hex,
     hubProvider,
   );
   const data: Hex = sodax.moneyMarket.borrowData(
     hubWallet,
-    iconSpokeProvider.walletProvider.getWalletAddressBytes(),
+    (await iconSpokeProvider.walletProvider.getWalletAddressBytes()) as Hex,
     token,
     amount,
     iconSpokeChainConfig.chain.id,
@@ -154,13 +154,13 @@ async function borrow(token: IconAddress, amount: bigint) {
 async function withdraw(token: IconAddress, amount: bigint) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
-    iconSpokeProvider.walletProvider.getWalletAddressBytes(),
+    (await iconSpokeProvider.walletProvider.getWalletAddressBytes()) as Hex,
     hubProvider,
   );
 
   const data: Hex = sodax.moneyMarket.withdrawData(
     hubWallet,
-    iconSpokeProvider.walletProvider.getWalletAddressBytes(),
+    (await iconSpokeProvider.walletProvider.getWalletAddressBytes()) as Hex,
     token,
     amount,
     iconSpokeChainConfig.chain.id,
@@ -174,14 +174,14 @@ async function withdraw(token: IconAddress, amount: bigint) {
 async function repay(token: IconAddress, amount: bigint) {
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
-    iconSpokeProvider.walletProvider.getWalletAddressBytes(),
+    (await iconSpokeProvider.walletProvider.getWalletAddressBytes()) as Hex,
     hubProvider,
   );
   const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, iconSpokeChainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {
-      from: iconSpokeProvider.walletProvider.getWalletAddress() as IconAddress,
+      from: (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress,
       token,
       amount,
       data,

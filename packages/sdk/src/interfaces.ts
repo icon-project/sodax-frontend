@@ -1,19 +1,15 @@
 import type {
-  Address,
   EvmRawTransaction,
   EvmRawTransactionReceipt,
   Hash,
-  Hex,
   StellarRawTransactionReceipt,
   XDR,
-  IconEoaAddress,
   IconTransactionResult,
   IcxCallTransaction,
+  WalletAddressProvider,
 } from './index.js';
 
-export interface IEvmWalletProvider {
-  getWalletAddress: () => Address;
-  getWalletAddressBytes: () => Hex;
+export interface IEvmWalletProvider extends WalletAddressProvider {
   sendTransaction: (evmRawTx: EvmRawTransaction) => Promise<Hash>;
   waitForTransactionReceipt: (txHash: Hash) => Promise<EvmRawTransactionReceipt>;
 }
@@ -22,13 +18,7 @@ export interface IEvmWalletProvider {
  * Interface for Stellar blockchain wallet operations
  * Provides methods for address management, signing and receipt retrieval
  */
-export interface IStellarWalletProvider {
-  /** Returns the wallet's public key as a string */
-  getWalletAddress: () => string;
-
-  /** Returns the wallet's public key as a hex string */
-  getWalletAddressBytes: () => Hex;
-
+export interface IStellarWalletProvider extends WalletAddressProvider {
   /**
    * Signs a transaction with the wallet's private key
    * @param tx - Base64-encoded XDR transaction envelope
@@ -44,9 +34,7 @@ export interface IStellarWalletProvider {
   waitForTransactionReceipt: (txHash: string) => Promise<StellarRawTransactionReceipt>;
 }
 
-export interface IIconWalletProvider {
-  getWalletAddress: () => IconEoaAddress;
-  getWalletAddressBytes: () => Hex;
+export interface IIconWalletProvider extends WalletAddressProvider {
   sendTransaction: (iconRawTx: IcxCallTransaction) => Promise<Hash>;
   waitForTransactionReceipt: (txHash: Hash) => Promise<IconTransactionResult>;
 }

@@ -50,11 +50,11 @@ export class SuiWalletProvider implements WalletAddressProvider {
     return this.client.getCoins({ owner: address, coinType: token, limit: 10 });
   }
 
-  getWalletAddress(): string {
-    return this.keyPair.toSuiAddress();
+  async getWalletAddress(): Promise<string> {
+    return Promise.resolve(this.keyPair.toSuiAddress());
   }
 
-  getWalletAddressBytes(): Hex {
-    return toHex(bcs.Address.serialize(this.getWalletAddress()).toBytes());
+  async getWalletAddressBytes(): Promise<Hex> {
+    return toHex(bcs.Address.serialize(await this.getWalletAddress()).toBytes());
   }
 }

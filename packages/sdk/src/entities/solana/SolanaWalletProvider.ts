@@ -64,12 +64,12 @@ export class SolanaWalletProvider implements WalletAddressProvider {
     return this.wallet;
   }
 
-  public getWalletAddress(): string {
+  public async getWalletAddress(): Promise<string> {
     return this.getAddress().toBase58();
   }
 
-  public getWalletAddressBytes(): Hex {
-    return `0x${Buffer.from(this.getAddress().toBytes()).toString('hex')}` as Hex;
+  public async getWalletAddressBytes(): Promise<Hex> {
+    return `0x${Buffer.from(await this.getWalletAddress()).toString('hex')}` as Hex;
   }
 
   public async getAssociatedTokenAddress(mint: PublicKey): Promise<PublicKey> {

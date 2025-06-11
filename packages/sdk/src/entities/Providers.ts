@@ -24,8 +24,8 @@ import type { IEvmWalletProvider, IStellarWalletProvider, IIconWalletProvider } 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
 export interface WalletAddressProvider {
-  getWalletAddress(): string; // The wallet address as a string
-  getWalletAddressBytes(): Hex; // The wallet address as a hex string
+  getWalletAddress(): Promise<string>; // The wallet address as a string
+  getWalletAddressBytes(): Promise<Hex>; // The wallet address as a hex string
 }
 
 export interface ISpokeProvider {
@@ -107,15 +107,13 @@ export { CosmosWalletProvider } from './cosmos/CosmosWalletProvider.js';
 export { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 export { getIconAddressBytes } from './icon/utils.js';
 
-export type IWalletProvider = (
+export type IWalletProvider =
   | IEvmWalletProvider
   | ICWWalletProvider
   | IStellarWalletProvider
   | SuiWalletProvider
   | IIconWalletProvider
-  | SolanaWalletProvider
-) &
-  WalletAddressProvider;
+  | SolanaWalletProvider;
 export type SpokeProvider = (
   | EvmSpokeProvider
   | CWSpokeProvider
