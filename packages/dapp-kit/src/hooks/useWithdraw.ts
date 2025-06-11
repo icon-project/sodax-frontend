@@ -59,20 +59,17 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
     setError(null);
 
     try {
+      const spokeWalletAddress: Address = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
+
       const data: Hex = sodax.moneyMarket.withdrawData(
         hubWalletAddress as Address,
-        spokeProvider.walletProvider.getWalletAddress(),
+        spokeWalletAddress,
         getSpokeTokenAddressByVault(spokeChainId, token.address),
         parseUnits(amount, token.decimals),
         spokeProvider.chainConfig.chain.id,
       );
 
-      const txHash: Hash = await SpokeService.callWallet(
-        spokeProvider.walletProvider.getWalletAddress(),
-        data,
-        spokeProvider,
-        hubProvider,
-      );
+      const txHash: Hash = await SpokeService.callWallet(spokeWalletAddress, data, spokeProvider, hubProvider);
 
       const request = {
         action: 'submit',

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { decodeFunctionData, type Address } from 'viem';
 import { assetManagerAbi } from '../../../abis/index.js';
 import {
@@ -20,8 +20,8 @@ describe('EvmAssetManagerService', () => {
 
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
-    getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
-    getWalletAddressBytes: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+    getWalletAddress: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999' as `0x${string}`),
+    getWalletAddressBytes: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999' as `0x${string}`),
     waitForTransactionReceipt: vi.fn(),
   } as unknown as IEvmWalletProvider;
 
@@ -79,10 +79,11 @@ describe('EvmAssetManagerService', () => {
   });
 
   describe('encodeTransfer', () => {
-    it('should correctly encode transfer transaction data', () => {
+    it('should correctly encode transfer transaction data', async () => {
+      const walletAddress = (await mockEvmWalletProvider.getWalletAddress()) as `0x${string}`;
       const encodedCall = EvmAssetManagerService.encodeTransfer(
         bscEthToken,
-        mockEvmWalletProvider.getWalletAddress(),
+        walletAddress,
         1000000000000000000n,
         mockBscSpokeProvider.chainConfig.addresses.assetManager,
       );
@@ -99,13 +100,14 @@ describe('EvmAssetManagerService', () => {
       });
 
       expect(decoded.functionName).toBe('transfer');
-      expect(decoded.args).toEqual([bscEthToken, mockEvmWalletProvider.getWalletAddress(), 1000000000000000000n, '0x']);
+      expect(decoded.args).toEqual([bscEthToken, walletAddress, 1000000000000000000n, '0x']);
     });
 
-    it('should handle zero amount transfers', () => {
+    it('should handle zero amount transfers', async () => {
+      const walletAddress = (await mockEvmWalletProvider.getWalletAddress()) as `0x${string}`;
       const encodedCall = EvmAssetManagerService.encodeTransfer(
         bscEthToken,
-        mockEvmWalletProvider.getWalletAddress(),
+        walletAddress,
         0n,
         mockBscSpokeProvider.chainConfig.addresses.assetManager,
       );
@@ -115,14 +117,15 @@ describe('EvmAssetManagerService', () => {
         data: encodedCall.data,
       });
 
-      expect(decoded.args).toEqual([bscEthToken, mockEvmWalletProvider.getWalletAddress(), 0n, '0x']);
+      expect(decoded.args).toEqual([bscEthToken, walletAddress, 0n, '0x']);
     });
 
-    it('should handle maximum uint256 amount', () => {
+    it('should handle maximum uint256 amount', async () => {
+      const walletAddress = (await mockEvmWalletProvider.getWalletAddress()) as `0x${string}`;
       const maxUint256 = 2n ** 256n - 1n;
       const encodedCall = EvmAssetManagerService.encodeTransfer(
         bscEthToken,
-        mockEvmWalletProvider.getWalletAddress(),
+        walletAddress,
         maxUint256,
         mockBscSpokeProvider.chainConfig.addresses.assetManager,
       );
@@ -135,11 +138,12 @@ describe('EvmAssetManagerService', () => {
       expect(decoded.args?.[2]).toBe(maxUint256);
     });
 
-    it('should maintain data precision for large numbers', () => {
+    it('should maintain data precision for large numbers', async () => {
+      const walletAddress = (await mockEvmWalletProvider.getWalletAddress()) as `0x${string}`;
       const largeAmount = 2n ** 128n;
       const encodedCall = EvmAssetManagerService.encodeTransfer(
         bscEthToken,
-        mockEvmWalletProvider.getWalletAddress(),
+        walletAddress,
         largeAmount,
         mockBscSpokeProvider.chainConfig.addresses.assetManager,
       );
@@ -154,22 +158,28 @@ describe('EvmAssetManagerService', () => {
   });
 
   describe('depositToData', () => {
-    const depositParams = {
-      token: bscEthToken,
-      to: mockEvmWalletProvider.getWalletAddress(),
-      amount: 1000000000000000000n,
-    } satisfies EvmDepositToDataParams;
+    let depositParams: EvmDepositToDataParams;
 
-    it('should correctly encode deposit transaction data', () => {
+    beforeEach(async () => {
+      const walletAddress = (await mockEvmWalletProvider.getWalletAddress()) as `0x${string}`;
+      depositParams = {
+        token: bscEthToken,
+        to: walletAddress,
+        amount: 1000000000000000000n,
+      };
+    });
+
+    it('should correctly encode deposit transaction data', async () => {
       const result = EvmAssetManagerService.depositToData(depositParams, mockBscSpokeProvider.chainConfig.chain.id);
       expect(result).toBe(
         '0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000022000000000000000000000000057fc2ac5701e463ae261adbd6c99fbeb48ce5293000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044095ea7b30000000000000000000000004effb5813271699683c25c734f4dabc45b3637090000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000000000000000000004effb5813271699683c25c734f4dabc45b36370900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000004447e7ef2400000000000000000000000057fc2ac5701e463ae261adbd6c99fbeb48ce52930000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000000000000000000004effb5813271699683c25c734f4dabc45b363709000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044a9059cbb00000000000000000000000099999999999999999999999999999999999999990000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000',
       );
     });
 
-    it('should throw error if asset config not found', () => {
+    it('should throw error if asset config not found', async () => {
+      const walletAddress = (await mockEvmWalletProvider.getWalletAddress()) as `0x${string}`;
       const invalidToken = '0x9999999999999999999999999999999999999999' as Address;
-      const invalidParams = { ...depositParams, token: invalidToken };
+      const invalidParams = { ...depositParams, token: invalidToken, to: walletAddress };
 
       expect(() =>
         EvmAssetManagerService.depositToData(invalidParams, mockBscSpokeProvider.chainConfig.chain.id),
@@ -178,13 +188,18 @@ describe('EvmAssetManagerService', () => {
   });
 
   describe('withdrawAssetData', () => {
-    const withdrawParams = {
-      token: bscEthToken,
-      to: mockEvmWalletProvider.getWalletAddress(),
-      amount: 1000000000000000000n,
-    } satisfies EvmWithdrawAssetDataParams;
+    let withdrawParams: EvmWithdrawAssetDataParams;
 
-    it('should correctly encode withdraw transaction data', () => {
+    beforeEach(async () => {
+      const walletAddress = (await mockEvmWalletProvider.getWalletAddress()) as `0x${string}`;
+      withdrawParams = {
+        token: bscEthToken,
+        to: walletAddress,
+        amount: 1000000000000000000n,
+      };
+    });
+
+    it('should correctly encode withdraw transaction data', async () => {
       const result = EvmAssetManagerService.withdrawAssetData(
         withdrawParams,
         mockHubProvider,
@@ -195,9 +210,10 @@ describe('EvmAssetManagerService', () => {
       );
     });
 
-    it('should throw error if asset config not found', () => {
+    it('should throw error if asset config not found', async () => {
+      const walletAddress = (await mockEvmWalletProvider.getWalletAddress()) as `0x${string}`;
       const invalidToken = '0x9999999999999999999999999999999999999999' as Address;
-      const invalidParams = { ...withdrawParams, token: invalidToken };
+      const invalidParams = { ...withdrawParams, token: invalidToken, to: walletAddress };
 
       expect(() =>
         EvmAssetManagerService.withdrawAssetData(

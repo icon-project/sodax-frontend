@@ -114,10 +114,11 @@ export class IconSpokeService {
     };
 
     const value: Hex = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? BigIntToHex(amount) : '0x0';
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
     const rawTransaction = IconService.Converter.toRawTransaction(
       new IconService.CallTransactionBuilder()
-        .from(spokeProvider.walletProvider.getWalletAddress())
+        .from(walletAddress)
         .to(token)
         .stepLimit(IconService.Converter.toBigNumber('2000000'))
         .nid(spokeProvider.chainConfig.nid)
@@ -134,7 +135,7 @@ export class IconSpokeService {
     }
 
     return spokeProvider.walletProvider.sendTransaction({
-      from: spokeProvider.walletProvider.getWalletAddress(),
+      from: walletAddress,
       to: token,
       value: value,
       nid: spokeProvider.chainConfig.nid,
@@ -159,8 +160,10 @@ export class IconSpokeService {
       payload: payload,
     };
 
+    const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+
     const transaction = new IconService.CallTransactionBuilder()
-      .from(spokeProvider.walletProvider.getWalletAddressBytes())
+      .from(walletAddressBytes)
       .to(spokeProvider.chainConfig.addresses.connection)
       .stepLimit(IconService.Converter.toBigNumber('2000000'))
       .nid(spokeProvider.chainConfig.nid)
@@ -169,11 +172,13 @@ export class IconSpokeService {
       .method('sendMessage')
       .params(params)
       .build();
+
     if (raw) {
       return IconService.Converter.toRawTransaction(transaction) as IconReturnType<R>;
     }
+
     return spokeProvider.walletProvider.sendTransaction({
-      from: spokeProvider.walletProvider.getWalletAddressBytes(),
+      from: walletAddressBytes,
       to: spokeProvider.chainConfig.addresses.connection,
       nid: spokeProvider.chainConfig.nid,
       value: '0x0',

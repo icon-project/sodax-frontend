@@ -62,8 +62,9 @@ export class Erc20Service {
     spokeProvider: EvmSpokeProvider,
   ): Promise<Result<EvmRawTransactionReceipt>> {
     try {
+      const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
       const hash = await spokeProvider.walletProvider.sendTransaction({
-        from: spokeProvider.walletProvider.getWalletAddress(),
+        from: walletAddress,
         to: token,
         value: 0n,
         data: encodeFunctionData({

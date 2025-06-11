@@ -117,8 +117,9 @@ export class EvmSpokeService {
       value: token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ? amount : undefined,
     } as const;
 
+    const from = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
     const rawTx = {
-      from: spokeProvider.walletProvider.getWalletAddress(),
+      from,
       to: txPayload.address,
       value: txPayload.value ?? 0n,
       data: encodeFunctionData({
@@ -126,15 +127,13 @@ export class EvmSpokeService {
         functionName: 'transfer',
         args: [token, recipient, amount, data],
       }),
-    } satisfies TxReturnType<EvmSpokeProvider, true>;
+    } satisfies EvmReturnType<true>;
 
     if (raw) {
-      return rawTx satisfies EvmReturnType<true> as EvmReturnType<R>;
+      return rawTx as EvmReturnType<R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(
-      rawTx,
-    ) satisfies PromiseEvmTxReturnType<false> as PromiseEvmTxReturnType<R>;
+    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
   }
 
   /**
@@ -160,8 +159,9 @@ export class EvmSpokeService {
       args: [dstChainId, dstAddress, payload],
     } as const;
 
+    const from = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
     const rawTx = {
-      from: spokeProvider.walletProvider.getWalletAddress(),
+      from,
       to: txPayload.address,
       value: 0n,
       data: encodeFunctionData({
@@ -169,14 +169,12 @@ export class EvmSpokeService {
         functionName: 'sendMessage',
         args: [dstChainId, dstAddress, payload],
       }),
-    } satisfies TxReturnType<EvmSpokeProvider, true>;
+    } satisfies EvmReturnType<true>;
 
     if (raw) {
-      return rawTx as TxReturnType<EvmSpokeProvider, R>;
+      return rawTx as EvmReturnType<R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(
-      rawTx,
-    ) satisfies PromiseEvmTxReturnType<false> as PromiseEvmTxReturnType<R>;
+    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
   }
 }

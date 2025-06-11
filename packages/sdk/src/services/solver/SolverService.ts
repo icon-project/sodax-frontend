@@ -362,10 +362,11 @@ export class SolverService {
   ): Promise<Result<boolean>> {
     try {
       if (spokeProvider instanceof EvmSpokeProvider) {
+        const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
         return Erc20Service.isAllowanceValid(
           params.inputToken as Address,
           params.inputAmount,
-          spokeProvider.walletProvider.getWalletAddress(),
+          walletAddress,
           spokeProvider.chainConfig.addresses.assetManager,
           spokeProvider,
         );
@@ -440,10 +441,11 @@ export class SolverService {
     invariant(isValidSpokeChainId(params.dstChain), `Invalid spoke chain (params.dstChain): ${params.dstChain}`);
 
     try {
+      const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
       // derive users hub wallet address
       const creatorHubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
         params.srcChain,
-        spokeProvider.walletProvider.getWalletAddressBytes(),
+        walletAddressBytes,
         this.hubProvider,
       );
 
@@ -455,9 +457,10 @@ export class SolverService {
         fee,
       );
 
+      const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
       const txResult = await SpokeService.deposit(
         {
-          from: spokeProvider.walletProvider.getWalletAddress(),
+          from: walletAddress,
           to: creatorHubWalletAddress,
           token: params.inputToken,
           amount: params.inputAmount + feeAmount,
@@ -501,10 +504,11 @@ export class SolverService {
     invariant(isValidIntentRelayChainId(intent.srcChain), `Invalid intent.srcChain: ${intent.srcChain}`);
     invariant(isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
 
+    const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
     // derive users hub wallet address
     const creatorHubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
-      spokeProvider.walletProvider.getWalletAddressBytes(),
+      walletAddressBytes,
       this.hubProvider,
     );
 

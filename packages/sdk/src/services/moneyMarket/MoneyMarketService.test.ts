@@ -23,8 +23,8 @@ import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js'
 describe('MoneyMarketService', () => {
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
-    getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
-    getWalletAddressBytes: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+    getWalletAddress: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999'),
+    getWalletAddressBytes: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999'),
     waitForTransactionReceipt: vi.fn(),
   } as unknown as IEvmWalletProvider;
 
@@ -47,14 +47,18 @@ describe('MoneyMarketService', () => {
     new EvmHubProvider(hubConfig),
   );
 
+  // Helper function to get mock address
+  const getMockAddress = async (): Promise<`0x${string}`> => {
+    return '0x9999999999999999999999999999999999999999' as `0x${string}`;
+  };
+
   it('should have supported tokens', () => {
     expect(supportedTokens.length).toBeGreaterThan(0);
   });
 
   it('should supply a token', async () => {
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    const mockAddress = await getMockAddress();
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'supplyData').mockReturnValueOnce('0x');
     vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce('0x');
 
@@ -74,16 +78,15 @@ describe('MoneyMarketService', () => {
   });
 
   it('should supply a token raw', async () => {
+    const mockAddress = await getMockAddress();
     const rawEvmTx = {
-      from: mockEvmWalletProvider.getWalletAddressBytes(),
+      from: mockAddress,
       to: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       value: 1000000000000000000n,
       data: '0xc6b4180b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001499999999999999999999999999999999999999990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
     } satisfies EvmRawTransaction;
 
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'supplyData').mockReturnValueOnce('0x');
 
     const result = await moneyMarket.supply(
@@ -102,9 +105,8 @@ describe('MoneyMarketService', () => {
   });
 
   it('should supply a token and submit', async () => {
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    const mockAddress = await getMockAddress();
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'supply').mockReturnValueOnce({
       ok: true,
       value: '0x',
@@ -132,9 +134,8 @@ describe('MoneyMarketService', () => {
   });
 
   it('should borrow a token', async () => {
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    const mockAddress = await getMockAddress();
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'borrowData').mockReturnValueOnce('0x');
     vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce('0x');
 
@@ -154,16 +155,15 @@ describe('MoneyMarketService', () => {
   });
 
   it('should borrow a token raw', async () => {
+    const mockAddress = await getMockAddress();
     const rawEvmTx = {
-      from: mockEvmWalletProvider.getWalletAddressBytes(),
+      from: mockAddress,
       to: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       value: 1000000000000000000n,
       data: '0xc6b4180b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001499999999999999999999999999999999999999990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
     } satisfies EvmRawTransaction;
 
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'borrowData').mockReturnValueOnce('0x');
     vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce(rawEvmTx);
 
@@ -183,9 +183,8 @@ describe('MoneyMarketService', () => {
   });
 
   it('should borrow a token and submit', async () => {
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    const mockAddress = await getMockAddress();
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'borrow').mockReturnValueOnce({
       ok: true,
       value: '0x',
@@ -213,9 +212,8 @@ describe('MoneyMarketService', () => {
   });
 
   it('should withdraw a token', async () => {
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    const mockAddress = await getMockAddress();
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'withdrawData').mockReturnValueOnce('0x');
     vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce('0x');
 
@@ -235,16 +233,15 @@ describe('MoneyMarketService', () => {
   });
 
   it('should withdraw a token raw', async () => {
+    const mockAddress = await getMockAddress();
     const rawEvmTx = {
-      from: mockEvmWalletProvider.getWalletAddressBytes(),
+      from: mockAddress,
       to: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       value: 1000000000000000000n,
       data: '0xc6b4180b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001499999999999999999999999999999999999999990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
     } satisfies EvmRawTransaction;
 
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'withdrawData').mockReturnValueOnce('0x');
     vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce(rawEvmTx);
 
@@ -264,9 +261,8 @@ describe('MoneyMarketService', () => {
   });
 
   it('should withdraw a token and submit', async () => {
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    const mockAddress = await getMockAddress();
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'withdraw').mockReturnValueOnce({
       ok: true,
       value: '0x',
@@ -294,9 +290,8 @@ describe('MoneyMarketService', () => {
   });
 
   it('should repay a token', async () => {
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    const mockAddress = await getMockAddress();
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'repayData').mockReturnValueOnce('0x');
     vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce('0x');
 
@@ -316,16 +311,15 @@ describe('MoneyMarketService', () => {
   });
 
   it('should repay a token raw', async () => {
+    const mockAddress = await getMockAddress();
     const rawEvmTx = {
-      from: mockEvmWalletProvider.getWalletAddressBytes(),
+      from: mockAddress,
       to: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       value: 1000000000000000000n,
       data: '0xc6b4180b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001499999999999999999999999999999999999999990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
     } satisfies EvmRawTransaction;
 
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'repayData').mockReturnValueOnce('0x');
     vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(rawEvmTx);
 
@@ -345,9 +339,8 @@ describe('MoneyMarketService', () => {
   });
 
   it('should repay a token and submit', async () => {
-    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-      mockEvmWalletProvider.getWalletAddressBytes(),
-    );
+    const mockAddress = await getMockAddress();
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockAddress);
     vi.spyOn(moneyMarket, 'repay').mockReturnValueOnce({
       ok: true,
       value: '0x',

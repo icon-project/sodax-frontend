@@ -14,23 +14,8 @@ export interface IEvmWalletProvider extends WalletAddressProvider {
   waitForTransactionReceipt: (txHash: Hash) => Promise<EvmRawTransactionReceipt>;
 }
 
-/**
- * Interface for Stellar blockchain wallet operations
- * Provides methods for address management, signing and receipt retrieval
- */
 export interface IStellarWalletProvider extends WalletAddressProvider {
-  /**
-   * Signs a transaction with the wallet's private key
-   * @param tx - Base64-encoded XDR transaction envelope
-   * @returns Promise resolving to signed transaction as XDR
-   */
   signTransaction: (tx: XDR) => Promise<XDR>;
-
-  /**
-   * Waits for a transaction to be confirmed and returns its receipt
-   * @param txHash - Transaction hash to look up
-   * @returns Promise resolving to transaction receipt with status and metadata
-   */
   waitForTransactionReceipt: (txHash: string) => Promise<StellarRawTransactionReceipt>;
 }
 

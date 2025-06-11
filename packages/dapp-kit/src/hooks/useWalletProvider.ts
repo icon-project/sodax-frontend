@@ -44,14 +44,14 @@ export class EvmWalletProvider implements IEvmWalletProvider {
     };
   }
 
-  getWalletAddress(): Address {
+  async getWalletAddress(): Promise<string> {
     if (!this._walletClient) {
       throw new Error('Wallet client not initialized');
     }
     return this._walletClient.account.address;
   }
 
-  getWalletAddressBytes(): Hex {
+  async getWalletAddressBytes(): Promise<Hex> {
     if (!this._walletClient) {
       throw new Error('Wallet client not initialized');
     }
