@@ -8,7 +8,6 @@ import {
   SpokeService,
   type SuiSpokeChainConfig,
   SuiSpokeProvider,
-  SuiWalletProvider,
   SONIC_MAINNET_CHAIN_ID,
   getMoneyMarketConfig,
   SUI_MAINNET_CHAIN_ID,
@@ -17,6 +16,7 @@ import {
   type SodaxConfig,
   type SolverConfigParams,
 } from '@sodax/sdk';
+import { SuiWalletProvider } from './sui-wallet-provider';
 
 import dotenv from 'dotenv';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
@@ -66,8 +66,8 @@ const suiWalletMnemonics = process.env.MNEMONICS;
 if (!suiWalletMnemonics) {
   throw new Error('SUI_MNEMONICS environment variable is required');
 }
-const suiwalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
-const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiwalletProvider);
+const suiWalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
+const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
 
 async function getBalance(token: string) {
   const balance = await suiSpokeProvider.getBalance(token);
