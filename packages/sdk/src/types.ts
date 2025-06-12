@@ -26,7 +26,7 @@ import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.j
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
 import type { StellarSpokeDepositParams } from './services/spoke/StellarSpokeService.js';
 import type { SuiSpokeDepositParams } from './services/spoke/SuiSpokeService.js';
-import type { ChainType } from '@sodax/types';
+import type { ChainType, Token } from '@sodax/types';
 
 export type HubChainId = (typeof HUB_CHAIN_IDS)[number];
 export type SpokeChainId = (typeof SPOKE_CHAIN_IDS)[number];
@@ -61,12 +61,6 @@ export type Address = `0x${string}`;
 export type HubAddress = Address;
 export type OriginalAssetAddress = string;
 
-export type Token = {
-  symbol: string;
-  name: string;
-  decimals: number;
-  address: string;
-};
 
 export type AssetInfo = {
   chainId: bigint;

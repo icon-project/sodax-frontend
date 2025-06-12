@@ -17,9 +17,9 @@ import type {
   SpokeChainId,
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
-  Token,
   VaultType,
 } from './index.js';
+import type { Token } from '@sodax/types';
 
 // TODO ADD DEFAULT CONTRACT ADDRESSES AND SO FORTH FROM WIKI
 

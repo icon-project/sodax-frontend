@@ -28,13 +28,13 @@ import type {
   MoneyMarketServiceConfig,
   Result,
   SpokeChainId,
-  Token,
   TxReturnType,
 } from '../../types.js';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService, EvmWalletAbstraction } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';
 import invariant from 'tiny-invariant';
+import type { Token } from '@sodax/types';
 
 export type AggregatedReserveData = {
   underlyingAsset: Address;

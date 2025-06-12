@@ -25,7 +25,6 @@ import {
   POLYGON_MAINNET_CHAIN_ID,
   type PacketData,
   type SpokeChainId,
-  type Token,
   spokeChainConfig,
   supportedSpokeChains,
   supportedTokensPerChain,
@@ -35,7 +34,7 @@ import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
-import type { ChainId } from '@sodax/types';
+import type { ChainId, Token } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
