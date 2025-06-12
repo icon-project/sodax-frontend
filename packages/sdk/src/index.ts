@@ -4,5 +4,6 @@ export * from './services/index.js';
 export * from './utils/index.js';
 export * from './constants.js';
 export * from './guards.js';
+export * from './errors.js';
 export * from './types.js';
-export * from '@sodax/types';
+export * from './interfaces.js';

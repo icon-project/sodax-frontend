@@ -9,11 +9,10 @@ import {
   TimeoutInfinite,
   scValToBigInt,
 } from '@stellar/stellar-sdk';
-import type { PromiseStellarTxReturnType, StellarReturnType } from '../../types.js';
+import type { PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
 import { toHex, type Hex } from 'viem';
 import type { ISpokeProvider, WalletAddressProvider } from '../Providers.js';
 import type { Server } from '@stellar/stellar-sdk/rpc';
-import type { StellarSpokeChainConfig } from '@sodax/types';
 
 export class StellarWalletProvider implements WalletAddressProvider {
   private readonly _keypair: Keypair;

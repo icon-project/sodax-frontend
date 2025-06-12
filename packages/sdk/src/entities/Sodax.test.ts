@@ -1,7 +1,23 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  type CreateIntentParams,
   type EvmHubProviderConfig,
   EvmSpokeProvider,
+  type FeeAmount,
+  type Intent,
+  IntentErrorCode,
+  type IntentErrorResponse,
+  type IntentExecutionRequest,
+  type IntentExecutionResponse,
+  type IntentQuoteRequest,
+  type IntentStatusRequest,
+  type PacketData,
+  type PartnerFee,
+  type RelayTxStatus,
+  type Result,
+  SONIC_MAINNET_CHAIN_ID,
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
@@ -9,28 +25,13 @@ import {
   EvmSolverService,
   getMoneyMarketConfig,
   type SpokeProvider,
+  type IEvmWalletProvider,
   type TxReturnType,
   spokeChainConfig,
+  type SolverConfigParams,
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
-import type {
-  PartnerFee,
-  SolverConfigParams,
-  IEvmWalletProvider,
-  IntentQuoteRequest,
-  IntentExecutionRequest,
-  IntentExecutionResponse,
-  Result,
-  IntentErrorResponse,
-  IntentStatusRequest,
-  CreateIntentParams,
-  Intent,
-  FeeAmount,
-  RelayTxStatus,
-  PacketData,
-} from '@sodax/types';
-import { SONIC_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, ARBITRUM_MAINNET_CHAIN_ID, IntentErrorCode } from '@sodax/types';
 
 describe('Sodax', () => {
   const partnerFeePercentage = {

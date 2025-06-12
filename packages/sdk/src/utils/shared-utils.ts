@@ -5,8 +5,9 @@ import {
   FEE_PERCENTAGE_SCALE,
   isPartnerFeeAmount,
   isPartnerFeePercentage,
+  type Hex,
+  type PartnerFee,
 } from '../index.js';
-import type { Hex, PartnerFee } from '@sodax/types';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,

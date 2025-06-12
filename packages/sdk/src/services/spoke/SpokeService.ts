@@ -8,7 +8,14 @@ import {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
-import type { GetSpokeDepositParamsType, PromiseTxReturnType, TxReturnType } from '../../types.js';
+import type {
+  Address,
+  Hex,
+  GetSpokeDepositParamsType,
+  PromiseTxReturnType,
+  TxReturnType,
+  HubAddress,
+} from '../../types.js';
 import { CWSpokeService } from './CWSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';
@@ -23,7 +30,6 @@ import {
   isStellarSpokeProvider,
   isSuiSpokeProvider,
 } from '../../guards.js';
-import type { EvmAddress, Hex, HubAddress } from '@sodax/types';
 
 /**
  * SpokeService is a main class that provides functionalities for dealing with spoke chains.
@@ -105,7 +111,7 @@ export class SpokeService {
    * @param {SpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static getDeposit(token: EvmAddress, spokeProvider: SpokeProvider): Promise<bigint> {
+  public static getDeposit(token: Address, spokeProvider: SpokeProvider): Promise<bigint> {
     if (spokeProvider instanceof EvmSpokeProvider) {
       return EvmSpokeService.getDeposit(token, spokeProvider);
     }

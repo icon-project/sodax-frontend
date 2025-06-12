@@ -6,9 +6,8 @@ import { AuthInfo, SignerInfo, TxBody } from 'cosmjs-types/cosmos/tx/v1beta1/tx.
 import { MsgExecuteContract } from 'cosmjs-types/cosmwasm/wasm/v1/tx.js';
 import type { Any } from 'cosmjs-types/google/protobuf/any.js';
 import { toHex } from 'viem';
-import type { CWRawTransaction } from '../../index.js';
+import type { CWRawTransaction, CosmosNetworkEnv, Hex } from '../../index.js';
 import { ExecuteResponse, type ICWWalletProvider } from './CWSpokeProvider.js';
-import type { CosmosNetworkEnv, Hex } from '@sodax/types';
 
 // TODO implement browser extension based login
 export interface CosmosWalletConfig {

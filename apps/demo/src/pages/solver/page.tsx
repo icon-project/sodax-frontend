@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import SwapCard from '@/components/solver/SwapCard';
-import type { EvmAddress, Hex, Intent, PacketData } from '@sodax/sdk';
+import type { Address, Hex, Intent, PacketData } from '@sodax/sdk';
 import OrderStatus from '@/components/solver/OrderStatus';
 import { useXAccount } from '@sodax/wallet-sdk';
 
@@ -14,7 +14,7 @@ export default function SolverPage() {
       {orders.map((order, index) => (
         <OrderStatus key={index} order={order} />
       ))}
-      <SwapCard setOrders={setOrders} address={evmAccount.address as EvmAddress} />
+      <SwapCard setOrders={setOrders} address={evmAccount.address as Address} />
     </div>
   );
 }

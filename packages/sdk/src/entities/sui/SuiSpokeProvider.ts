@@ -1,9 +1,9 @@
 import { bcs } from '@mysten/sui/bcs';
 import { Transaction, type TransactionResult } from '@mysten/sui/transactions';
 import { type Hex, toHex } from 'viem';
-import type { PromiseSuiTxReturnType, SuiReturnType } from '../../types.js';
+import type { PromiseSuiTxReturnType, SuiReturnType, SuiSpokeChainConfig } from '../../types.js';
 import type { ISpokeProvider } from '../index.js';
-import type { SuiSpokeChainConfig, ISuiWalletProvider } from '@sodax/types';
+import type { ISuiWalletProvider } from '../../interfaces.js';
 
 type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
 type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | undefined };

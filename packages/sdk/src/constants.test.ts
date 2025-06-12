@@ -3,6 +3,10 @@ import { avalanche, sonic } from 'viem/chains';
 // packages/sdk/src/constants.test.ts
 import { describe, expect, it } from 'vitest';
 import {
+  AVALANCHE_MAINNET_CHAIN_ID,
+  HUB_CHAIN_IDS,
+  SONIC_MAINNET_CHAIN_ID,
+  SPOKE_CHAIN_IDS,
   getEvmViemChain,
   getHubAssetInfo,
   getHubChainConfig,
@@ -12,14 +16,7 @@ import {
   hubAssetToOriginalAssetMap,
   originalAssetTohubAssetMap,
 } from './index.js';
-import {
-  type EvmChainId,
-  type HubChainId,
-  AVALANCHE_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  HUB_CHAIN_IDS,
-  SPOKE_CHAIN_IDS,
-} from '@sodax/types';
+import type { EvmChainId, HubChainId } from './index.js';
 
 describe('Constants', () => {
   describe('Chain IDs', () => {
@@ -56,7 +53,7 @@ describe('Constants', () => {
       const config = getHubChainConfig(SONIC_MAINNET_CHAIN_ID);
       expect(config.chain.name).toBe('Sonic');
       expect(config.chain.id).toBe(SONIC_MAINNET_CHAIN_ID);
-      expect(config.chain.type).toBe('EVM');
+      expect(config.chain.type).toBe('evm');
       expect(config.addresses.assetManager).toBeDefined();
     });
   });

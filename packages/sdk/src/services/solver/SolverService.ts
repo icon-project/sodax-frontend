@@ -5,8 +5,13 @@ import {
   Erc20Service,
   type EvmHubProvider,
   EvmSpokeProvider,
+  type IntentRelayRequest,
+  type PacketData,
+  type RelayErrorCode,
+  SONIC_MAINNET_CHAIN_ID,
   type SpokeProvider,
   SpokeService,
+  type WaitUntilIntentExecutedPayload,
   calculateFeeAmount,
   encodeContractCalls,
   getIntentRelayChainId,
@@ -18,37 +23,118 @@ import {
   submitTransaction,
   waitUntilIntentExecuted,
 } from '../../index.js';
-import type { GetSpokeDepositParamsType, TxReturnType } from '../../types.js';
+import type {
+  Address,
+  EvmContractCall,
+  EvmRawTransactionReceipt,
+  FeeAmount,
+  GetSpokeDepositParamsType,
+  Hash,
+  Hex,
+  HttpUrl,
+  IntentErrorResponse,
+  IntentExecutionRequest,
+  IntentExecutionResponse,
+  IntentQuoteRequest,
+  IntentQuoteResponse,
+  IntentRelayChainId,
+  IntentStatusRequest,
+  IntentStatusResponse,
+  PartnerFee,
+  Result,
+  SolverConfigParams,
+  SolverServiceConfig,
+  SpokeChainId,
+  TxReturnType,
+} from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
-import {
-  SONIC_MAINNET_CHAIN_ID,
-  type CreateIntentParams,
-  type EvmAddress,
-  type EvmContractCall,
-  type EvmRawTransactionReceipt,
-  type FeeAmount,
-  type Hash,
-  type Hex,
-  type HttpUrl,
-  type Intent,
-  type IntentErrorResponse,
-  type IntentExecutionRequest,
-  type IntentExecutionResponse,
-  type IntentQuoteRequest,
-  type IntentQuoteResponse,
-  type IntentRelayRequest,
-  type IntentStatusRequest,
-  type IntentStatusResponse,
-  type IntentSubmitError,
-  type IntentSubmitErrorCode,
-  type PacketData,
-  type PartnerFee,
-  type Result,
-  type SolverConfigParams,
-  type SolverServiceConfig,
-} from '@sodax/types';
+
+export type CreateIntentParams = {
+  inputToken: string; // The address of the input token on spoke chain
+  outputToken: string; // The address of the output token on spoke chain
+  inputAmount: bigint; // The amount of input tokens
+  minOutputAmount: bigint; // The minimum amount of output tokens to accept
+  deadline: bigint; // Optional timestamp after which intent expires (0 = no deadline)
+  allowPartialFill: boolean; // Whether the intent can be partially filled
+  srcChain: SpokeChainId; // Chain ID where input tokens originate
+  dstChain: SpokeChainId; // Chain ID where output tokens should be delivered
+  srcAddress: Hex; // Source address in bytes (original address on spoke chain)
+  dstAddress: Hex; // Destination address in bytes (original address on spoke chain)
+  solver: Address; // Optional specific solver address (address(0) = any solver)
+  data: Hex; // Additional arbitrary data
+};
+
+export type Intent = {
+  intentId: bigint; // Unique identifier for the intent
+  creator: Address; // Address that created the intent (Wallet abstraction address on hub chain)
+  inputToken: Address; // Token the user is providing (hub asset address on hub chain)
+  outputToken: Address; // Token the user wants to receive (hub asset address on hub chain)
+  inputAmount: bigint; // Amount of input tokens
+  minOutputAmount: bigint; // Minimum amount of output tokens to accept
+  deadline: bigint; // Optional timestamp after which intent expires (0 = no deadline)
+  allowPartialFill: boolean; // Whether the intent can be partially filled
+  srcChain: IntentRelayChainId; // Chain ID where input tokens originate
+  dstChain: IntentRelayChainId; // Chain ID where output tokens should be delivered
+  srcAddress: Hex; // Source address in bytes (original address on spoke chain)
+  dstAddress: Hex; // Destination address in bytes (original address on spoke chain)
+  solver: Address; // Optional specific solver address (address(0) = any solver)
+  data: Hex; // Additional arbitrary data
+};
+
+// Data types for arbitrary data
+export enum IntentDataType {
+  FEE = 1,
+}
+
+export type FeeData = {
+  fee: bigint;
+  receiver: Address;
+};
+
+export type IntentData = {
+  type: IntentDataType;
+  data: Hex;
+};
+
+export type IntentState = {
+  exists: boolean;
+  remainingInput: bigint;
+  receivedOutput: bigint;
+  pendingPayment: boolean;
+};
+
+export type IntentCreationFailedErrorData = {
+  payload: CreateIntentParams;
+  error: unknown;
+};
+
+export type IntentSubmitTxFailedErrorData = {
+  payload: IntentRelayRequest<'submit'>;
+  apiUrl: HttpUrl;
+};
+
+export type IntentWaitUntilIntentExecutedFailedErrorData = {
+  payload: WaitUntilIntentExecutedPayload;
+  error: unknown;
+};
+
+export type IntentSubmitErrorCode = RelayErrorCode | 'UNKNOWN' | 'CREATION_FAILED';
+export type IntentSubmitErrorData<T extends IntentSubmitErrorCode> = T extends 'TIMEOUT'
+  ? IntentWaitUntilIntentExecutedFailedErrorData
+  : T extends 'CREATION_FAILED'
+    ? IntentCreationFailedErrorData
+    : T extends 'SUBMIT_TX_FAILED'
+      ? IntentSubmitTxFailedErrorData
+      : T extends 'POST_EXECUTION_FAILED'
+        ? IntentErrorResponse
+        : never;
+
+export type IntentSubmitError<T extends IntentSubmitErrorCode> = {
+  code: T;
+  data: IntentSubmitErrorData<T>;
+};
 
 export class SolverService {
   private readonly config: SolverServiceConfig;
@@ -277,7 +363,7 @@ export class SolverService {
     try {
       if (spokeProvider instanceof EvmSpokeProvider) {
         return Erc20Service.isAllowanceValid(
-          params.inputToken as EvmAddress,
+          params.inputToken as Address,
           params.inputAmount,
           spokeProvider.walletProvider.getWalletAddress(),
           spokeProvider.chainConfig.addresses.assetManager,
@@ -305,9 +391,9 @@ export class SolverService {
    * @param spokeProvider - Spoke provider
    */
   public async approve<S extends SpokeProvider>(
-    token: EvmAddress,
+    token: Address,
     amount: bigint,
-    address: EvmAddress,
+    address: Address,
     spokeProvider: S,
   ): Promise<Result<EvmRawTransactionReceipt>> {
     try {

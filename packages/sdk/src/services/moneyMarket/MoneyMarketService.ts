@@ -13,40 +13,153 @@ import {
   SpokeService,
   relayTxAndWaitPacket,
   uiPoolDataAbi,
+  type RelayErrorCode,
+  SONIC_MAINNET_CHAIN_ID,
   DEFAULT_RELAY_TX_TIMEOUT,
   EvmSpokeProvider,
   isMoneyMarketSupportedToken,
 } from '../../index.js';
-import type { GetSpokeDepositParamsType, TxReturnType } from '../../types.js';
+import type {
+  EvmContractCall,
+  EvmRawTransactionReceipt,
+  GetSpokeDepositParamsType,
+  HttpUrl,
+  MoneyMarketConfigParams,
+  MoneyMarketServiceConfig,
+  Result,
+  SpokeChainId,
+  Token,
+  TxReturnType,
+} from '../../types.js';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService, EvmWalletAbstraction } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';
 import invariant from 'tiny-invariant';
-import {
-  SONIC_MAINNET_CHAIN_ID,
-  type AggregatedReserveData,
-  type BaseCurrencyInfo,
-  type EvmContractCall,
-  type EvmRawTransactionReceipt,
-  type HttpUrl,
-  type MoneyMarketBorrowParams,
-  type MoneyMarketConfigParams,
-  type MoneyMarketEncodeBorrowParams,
-  type MoneyMarketEncodeRepayParams,
-  type MoneyMarketEncodeRepayWithATokensParams,
-  type MoneyMarketEncodeSupplyParams,
-  type MoneyMarketEncodeWithdrawParams,
-  type MoneyMarketError,
-  type MoneyMarketErrorCode,
-  type MoneyMarketRepayParams,
-  type MoneyMarketServiceConfig,
-  type MoneyMarketSupplyParams,
-  type MoneyMarketWithdrawParams,
-  type Result,
-  type SpokeChainId,
-  type Token,
-  type UserReserveData,
-} from '@sodax/types';
+
+export type AggregatedReserveData = {
+  underlyingAsset: Address;
+  name: string;
+  symbol: string;
+  decimals: bigint;
+  baseLTVasCollateral: bigint;
+  reserveLiquidationThreshold: bigint;
+  reserveLiquidationBonus: bigint;
+  reserveFactor: bigint;
+  usageAsCollateralEnabled: boolean;
+  borrowingEnabled: boolean;
+  isActive: boolean;
+  isFrozen: boolean;
+  liquidityIndex: bigint;
+  variableBorrowIndex: bigint;
+  liquidityRate: bigint;
+  variableBorrowRate: bigint;
+  lastUpdateTimestamp: number;
+  aTokenAddress: Address;
+  variableDebtTokenAddress: Address;
+  interestRateStrategyAddress: Address;
+  availableLiquidity: bigint;
+  totalScaledVariableDebt: bigint;
+  priceInMarketReferenceCurrency: bigint;
+  priceOracle: Address;
+  variableRateSlope1: bigint;
+  variableRateSlope2: bigint;
+  baseVariableBorrowRate: bigint;
+  optimalUsageRatio: bigint;
+  isPaused: boolean;
+  isSiloedBorrowing: boolean;
+  accruedToTreasury: bigint;
+  unbacked: bigint;
+  isolationModeTotalDebt: bigint;
+  flashLoanEnabled: boolean;
+  debtCeiling: bigint;
+  debtCeilingDecimals: bigint;
+  borrowCap: bigint;
+  supplyCap: bigint;
+  borrowableInIsolation: boolean;
+  virtualAccActive: boolean;
+  virtualUnderlyingBalance: bigint;
+};
+
+export type BaseCurrencyInfo = {
+  marketReferenceCurrencyUnit: bigint;
+  marketReferenceCurrencyPriceInUsd: bigint;
+  networkBaseTokenPriceInUsd: bigint;
+  networkBaseTokenPriceDecimals: number;
+};
+
+export type UserReserveData = {
+  underlyingAsset: string;
+  scaledATokenBalance: bigint;
+  usageAsCollateralEnabledOnUser: boolean;
+  scaledVariableDebt: bigint;
+};
+
+export type MoneyMarketEncodeSupplyParams = {
+  asset: Address; // The address of the asset to supply.
+  amount: bigint; // The amount of the asset to supply.
+  onBehalfOf: Address; // The address on whose behalf the asset is supplied.
+  referralCode: number; // The referral code for the transaction.
+};
+
+export type MoneyMarketEncodeWithdrawParams = {
+  asset: Address; // The address of the asset to withdraw.
+  amount: bigint; // The amount of the asset to withdraw.
+  to: Address; // The address that will receive the withdrawn assets.
+};
+
+export type MoneyMarketEncodeBorrowParams = {
+  asset: Address; // The address of the asset to borrow.
+  amount: bigint; // The amount of the asset to borrow.
+  interestRateMode: bigint; // The interest rate mode (2 for Variable).
+  referralCode: number; // The referral code for the borrow transaction.
+  onBehalfOf: Address; // The address that will receive the borrowed assets.
+};
+
+export type MoneyMarketEncodeRepayParams = {
+  asset: Address; // The address of the asset to repay.
+  amount: bigint; // The amount of the asset to repay.
+  interestRateMode: bigint; // The interest rate mode (2 for Variable).
+  onBehalfOf: Address; // The address that will get their debt reduced/removed.
+};
+
+export type MoneyMarketEncodeRepayWithATokensParams = {
+  asset: Address; // The address of the asset to repay.
+  amount: bigint; // The amount of the asset to repay.
+  interestRateMode: bigint; // The interest rate mode (2 for Variable).
+};
+
+export type MoneyMarketSupplyParams = {
+  token: string;
+  amount: bigint;
+};
+
+export type MoneyMarketBorrowParams = {
+  token: string;
+  amount: bigint;
+};
+
+export type MoneyMarketWithdrawParams = {
+  token: string;
+  amount: bigint;
+};
+
+export type MoneyMarketRepayParams = {
+  token: string;
+  amount: bigint;
+};
+
+export type MoneyMarketErrorCode =
+  | RelayErrorCode
+  | 'UNKNOWN'
+  | 'SUPPLY_FAILED'
+  | 'BORROW_FAILED'
+  | 'WITHDRAW_FAILED'
+  | 'REPAY_FAILED';
+
+export type MoneyMarketError = {
+  code: MoneyMarketErrorCode;
+  error: unknown;
+};
 
 export class MoneyMarketService {
   private readonly config: MoneyMarketServiceConfig;

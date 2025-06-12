@@ -10,23 +10,15 @@ import {
   type WalletClient,
   createPublicClient,
 } from 'viem';
-import { getEvmViemChain, getHubChainConfig } from '../constants.js';
-import {
-  type EvmChainId,
-  type EvmHubChainConfig,
-  type EvmSpokeChainConfig,
-  type SpokeChainConfig,
-  SONIC_MAINNET_CHAIN_ID,
-  type IEvmWalletProvider,
-  type IIconWalletProvider,
-  type ISuiWalletProvider,
-} from '@sodax/types';
+import { getEvmViemChain, getHubChainConfig, SONIC_MAINNET_CHAIN_ID } from '../constants.js';
+import type { EvmChainId, EvmHubChainConfig, EvmSpokeChainConfig, SpokeChainConfig } from '../types.js';
 import type { CWSpokeProvider, ICWWalletProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
 import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider, StellarWalletProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
+import type { IEvmWalletProvider, ISuiWalletProvider, IIconWalletProvider } from '../index.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 

@@ -1,16 +1,16 @@
+import type { Address } from 'viem';
 import { walletFactoryAbi } from '../../abis/index.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { getIntentRelayChainId } from '../../index.js';
-import type { EvmAddress, SpokeChainId } from '@sodax/types';
+import { type Hex, type SpokeChainId, getIntentRelayChainId } from '../../index.js';
 
 export class EvmWalletAbstraction {
   private constructor() {}
 
   public static async getUserHubWalletAddress(
     chainId: SpokeChainId,
-    address: EvmAddress,
+    address: Hex,
     hubProvider: EvmHubProvider,
-  ): Promise<EvmAddress> {
+  ): Promise<Address> {
     return hubProvider.publicClient.readContract({
       address: hubProvider.chainConfig.addresses.hubWallet,
       abi: walletFactoryAbi,

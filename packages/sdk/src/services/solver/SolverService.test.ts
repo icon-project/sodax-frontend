@@ -1,9 +1,28 @@
 import type { Address, Hex } from 'viem';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  type CreateIntentParams,
   EvmHubProvider,
   type EvmHubProviderConfig,
   EvmSpokeProvider,
+  type IEvmWalletProvider,
+  type FeeAmount,
+  type Intent,
+  IntentErrorCode,
+  type IntentErrorResponse,
+  type IntentExecutionRequest,
+  type IntentExecutionResponse,
+  type IntentQuoteRequest,
+  type IntentStatusRequest,
+  type IntentSubmitError,
+  type PacketData,
+  type PartnerFee,
+  type RelayTxStatus,
+  type Result,
+  SONIC_MAINNET_CHAIN_ID,
+  type SolverConfig,
   SolverService,
   getHubAssetInfo,
   getHubChainConfig,
@@ -14,27 +33,6 @@ import {
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
-import {
-  type SolverConfig,
-  SONIC_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  type IntentQuoteRequest,
-  type IntentExecutionRequest,
-  type IntentStatusRequest,
-  type IEvmWalletProvider,
-  type PartnerFee,
-  IntentErrorCode,
-  type IntentExecutionResponse,
-  type Result,
-  type IntentErrorResponse,
-  type CreateIntentParams,
-  type Intent,
-  type FeeAmount,
-  type RelayTxStatus,
-  type PacketData,
-  type IntentSubmitError,
-} from '@sodax/types';
 
 describe('SolverService', () => {
   const mockIntentsContract = '0x0987654321098765432109876543210987654321' satisfies Address;

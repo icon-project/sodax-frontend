@@ -1,6 +1,7 @@
 import { type Address, type Hash, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { vaultTokenAbi } from '../../abis/index.js';
-import type { EvmContractCall, IEvmWalletProvider, VaultReserves, VaultTokenInfo } from '@sodax/types';
+import type { EvmContractCall, TokenInfo, VaultReserves } from '../../types.js';
+import type { IEvmWalletProvider } from '../../index.js';
 
 export class EvmVaultTokenService {
   private constructor() {}
@@ -16,7 +17,7 @@ export class EvmVaultTokenService {
     vault: Address,
     token: Address,
     publicClient: PublicClient<HttpTransport>,
-  ): Promise<VaultTokenInfo> {
+  ): Promise<TokenInfo> {
     const [decimals, depositFee, withdrawalFee, maxDeposit, isSupported] = await publicClient.readContract({
       address: vault,
       abi: vaultTokenAbi,
@@ -61,7 +62,7 @@ export class EvmVaultTokenService {
     publicClient: PublicClient<HttpTransport>,
   ): Promise<{
     tokens: readonly Address[];
-    infos: readonly VaultTokenInfo[];
+    infos: readonly TokenInfo[];
     reserves: readonly bigint[];
   }> {
     const [tokens, infos, reserves] = await publicClient.readContract({

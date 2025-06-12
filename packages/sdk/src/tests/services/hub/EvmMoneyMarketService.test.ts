@@ -2,14 +2,14 @@ import { type Address, decodeFunctionData } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { poolAbi } from '../../../abis/pool.abi.js';
 import { hubAssets } from '../../../constants.js';
-import { MoneyMarketService } from '../../../index.js';
-import type {
-  MoneyMarketEncodeSupplyParams,
-  MoneyMarketEncodeWithdrawParams,
-  MoneyMarketEncodeBorrowParams,
-  MoneyMarketEncodeRepayParams,
-  MoneyMarketEncodeRepayWithATokensParams,
-} from '@sodax/types';
+import {
+  type MoneyMarketEncodeBorrowParams,
+  type MoneyMarketEncodeRepayParams,
+  type MoneyMarketEncodeRepayWithATokensParams,
+  MoneyMarketService,
+  type MoneyMarketEncodeSupplyParams,
+  type MoneyMarketEncodeWithdrawParams,
+} from '../../../index.js';
 
 describe('MoneyMarketService', () => {
   const mockToken = '0x0000000000000000000000000000000000000000' as Address;

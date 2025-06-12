@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { submitTransaction, getTransactionPackets, getPacket } from './IntentRelayApiService.js';
-import type {
-  IntentRelayRequest,
-  SubmitTxResponse,
-  GetTransactionPacketsResponse,
-  GetPacketResponse,
-} from '@sodax/types';
+import {
+  submitTransaction,
+  getTransactionPackets,
+  getPacket,
+  type IntentRelayRequest,
+  type SubmitTxResponse,
+  type GetTransactionPacketsResponse,
+  type GetPacketResponse,
+} from './IntentRelayApiService.js';
 
 // Mock global fetch
 const mockFetch = vi.fn();

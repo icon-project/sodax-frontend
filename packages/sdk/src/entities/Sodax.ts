@@ -1,6 +1,6 @@
 import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
 import { MoneyMarketService, SolverService } from '../services/index.js';
-import type { HttpUrl, SolverConfigParams, MoneyMarketConfigParams } from '@sodax/types';
+import type { HttpUrl, SolverConfigParams, MoneyMarketConfigParams } from '../types.js';
 import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 
 export type SodaxConfig = {
