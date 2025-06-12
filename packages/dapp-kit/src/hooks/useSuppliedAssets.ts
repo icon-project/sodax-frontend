@@ -1,12 +1,11 @@
 import { allXTokens } from '@/core';
 import { getMoneyMarketConfig, type SpokeChainId, type EvmHubProvider } from '@sodax/sdk';
-import { getXChainType, useXAccount } from '@sodax/wallet-sdk';
+import { getXChainType, useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
 import type { ChainId } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
 import { useHubProvider } from './useHubProvider';
 import { useHubWalletAddress } from './useHubWalletAddress';
-import { useWalletProvider } from './useWalletProvider';
 import { useSodaxContext } from './useSodaxContext';
 
 export function useSuppliedAssets(spokeChainId: ChainId) {
