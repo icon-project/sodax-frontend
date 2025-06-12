@@ -89,12 +89,12 @@ export class EvmSpokeProvider implements ISpokeProvider {
     if (rpcUrl) {
       this.publicClient = createPublicClient({
         transport: http(rpcUrl),
-        chain: getEvmViemChain(chainConfig.chain.id),
+        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
       });
     } else {
       this.publicClient = createPublicClient({
-        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
-        chain: getEvmViemChain(chainConfig.chain.id),
+        transport: http(getEvmViemChain(chainConfig.chain.id as EvmChainId).rpcUrls.default.http[0]),
+        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId ),
       });
     }
   }

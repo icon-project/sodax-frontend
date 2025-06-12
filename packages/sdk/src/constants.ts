@@ -164,7 +164,7 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
     chain: {
       name: 'Sonic',
       id: SONIC_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
@@ -187,7 +187,7 @@ export const spokeChainConfig = {
       testToken: '3Q2HS3png7fLaYerqCun3zw8rnBZo2Ksvdg6RHTyM4Ns',
       xTokenManager: '',
     },
-    chain: { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', type: 'solana' },
+    chain: { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', type: 'SOLANA' },
     nativeToken: '11111111111111111111111111111111' as const,
     bnUSD: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
     supportedTokens: {
@@ -213,7 +213,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Avalanche',
       id: AVALANCHE_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x5bDD1E1C5173F4c912cC919742FB94A55ECfaf86',
@@ -252,7 +252,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Nibiru',
       id: NIBIRU_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
@@ -279,7 +279,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Arbitrum',
       id: ARBITRUM_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -348,7 +348,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'BASE',
       id: BASE_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -399,7 +399,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Optimism',
       id: OPTIMISM_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -450,7 +450,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'BSC',
       id: BSC_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -489,7 +489,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Polygon',
       id: POLYGON_MAINNET_CHAIN_ID,
-      type: 'evm',
+      type: 'EVM',
     },
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
@@ -529,7 +529,7 @@ export const spokeChainConfig = {
     chain: {
       id: INJECTIVE_MAINNET_CHAIN_ID,
       name: 'Injective',
-      type: 'cosmos',
+      type: 'INJECTIVE',
     },
     nativeToken: 'inj' as const,
     bnUSD: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
@@ -583,7 +583,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'soroban-mainnet',
       id: STELLAR_MAINNET_CHAIN_ID,
-      type: 'stellar',
+      type: 'STELLAR',
     },
   } as const satisfies StellarSpokeChainConfig,
   [SUI_MAINNET_CHAIN_ID]: {
@@ -616,7 +616,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'sui',
       id: SUI_MAINNET_CHAIN_ID,
-      type: 'sui',
+      type: 'SUI',
     },
   } as const satisfies SuiSpokeChainConfig,
   [ICON_MAINNET_CHAIN_ID]: {
@@ -628,7 +628,7 @@ export const spokeChainConfig = {
     chain: {
       id: ICON_MAINNET_CHAIN_ID,
       name: 'ICON Mainnet',
-      type: 'icon',
+      type: 'ICON',
     },
     supportedTokens: {
       ICX: {

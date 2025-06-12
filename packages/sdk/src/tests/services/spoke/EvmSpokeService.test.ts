@@ -43,7 +43,7 @@ vi.mock('../../../constants.js', async importOriginal => {
         chain: {
           id: '0xa86a.avax',
           name: 'Avalanche',
-          type: 'evm',
+          type: 'EVM',
         },
         addresses: {
           assetManager: '0x5555555555555555555555555555555555555555',
@@ -57,7 +57,7 @@ vi.mock('../../../constants.js', async importOriginal => {
         chain: {
           id: 57054,
           name: 'Mock Hub Chain',
-          type: 'evm',
+          type: 'EVM',
         },
         addresses: {
           assetManager: '0x7777777777777777777777777777777777777777',
@@ -96,7 +96,7 @@ describe('EvmSpokeService', () => {
       chain: {
         id: mockChainId,
         name: 'Avalanche',
-        type: 'evm',
+        type: 'EVM',
       },
       addresses: {
         assetManager: '0x5555555555555555555555555555555555555555' as Address,
