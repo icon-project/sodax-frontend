@@ -56,7 +56,7 @@ describe('Constants', () => {
       const config = getHubChainConfig(SONIC_MAINNET_CHAIN_ID);
       expect(config.chain.name).toBe('Sonic');
       expect(config.chain.id).toBe(SONIC_MAINNET_CHAIN_ID);
-      expect(config.chain.type).toBe('evm');
+      expect(config.chain.type).toBe('EVM');
       expect(config.addresses.assetManager).toBeDefined();
     });
   });
