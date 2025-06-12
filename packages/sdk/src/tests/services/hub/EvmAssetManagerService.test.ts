@@ -10,10 +10,9 @@ import {
   getHubChainConfig,
   EvmHubProvider,
   type EvmHubProviderConfig,
-  SONIC_MAINNET_CHAIN_ID,
   type IEvmWalletProvider,
-  BSC_MAINNET_CHAIN_ID,
 } from '../../../index.js';
+import { BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 describe('EvmAssetManagerService', () => {
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';

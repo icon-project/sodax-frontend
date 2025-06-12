@@ -1,0 +1,45 @@
+{
+  "name": "@sodax/types",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
+  "description": "Sodax Types",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/types",
+  "bugs": {
+    "url": "https://github.com/icon-project/sodax-frontend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icon-project/sodax-frontend"
+  },
+  "files": ["dist"],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "ci": "pnpm run pretty && pnpm run build && pnpm run test",
+    "checkTs": "tsc",
+    "pretty": "biome format . --write",
+    "lint": "biome lint . --write",
+    "check-exports": "attw $(pnpm pack) --ignore-rules=cjs-resolves-to-esm",
+    "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "catalog:"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

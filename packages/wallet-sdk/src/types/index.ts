@@ -1,9 +1,9 @@
 import type { Config } from 'wagmi';
-import type { XChainId, XChainType } from './xChain';
+import type { ChainType } from '@sodax/types';
 
 export type XAccount = {
   address: string | undefined;
-  xChainType: XChainType | undefined;
+  xChainType: ChainType | undefined;
 };
 
 export type XConnection = {
@@ -22,8 +22,6 @@ export enum WalletId {
   HAVAH = 'havah',
 }
 
-export * from './xChain';
-
 export type EVMConfig = {
   wagmiConfig: Config;
 };
@@ -37,19 +35,11 @@ export type SolanaConfig = {
 };
 
 export type XConfig = {
-  [key in XChainType]: key extends 'EVM'
+  [key in ChainType]: key extends 'EVM'
     ? EVMConfig
     : key extends 'SUI'
       ? SuiConfig
       : key extends 'SOLANA'
         ? SolanaConfig
         : any;
-};
-
-export type XToken = {
-  xChainId: XChainId;
-  address: string;
-  symbol: string;
-  name: string;
-  decimals: number;
 };

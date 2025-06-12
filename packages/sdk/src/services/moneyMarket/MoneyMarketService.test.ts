@@ -6,9 +6,7 @@ import {
   EvmHubProvider,
   type EvmHubProviderConfig,
   getHubChainConfig,
-  SONIC_MAINNET_CHAIN_ID,
   type IEvmWalletProvider,
-  BSC_MAINNET_CHAIN_ID,
   EvmSpokeProvider,
   spokeChainConfig,
   getSupportedMoneyMarketTokens,
@@ -19,6 +17,7 @@ import {
   type Address,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
+import { BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 describe('MoneyMarketService', () => {
   const mockEvmWalletProvider = {

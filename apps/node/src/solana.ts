@@ -12,10 +12,9 @@ import {
   getMoneyMarketConfig,
   Sodax,
   type SodaxConfig,
-  SOLANA_MAINNET_CHAIN_ID,
   type SolverConfigParams,
-  SONIC_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
+import { SOLANA_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { Keypair, PublicKey } from '@solana/web3.js';
 import * as dotenv from 'dotenv';
 import { keccak256 } from 'ethers';

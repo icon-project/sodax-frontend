@@ -9,14 +9,13 @@ import {
   type StellarSpokeChainConfig,
   StellarWalletProvider,
   getMoneyMarketConfig,
-  SONIC_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
   type SolverConfigParams,
 } from '@sodax/sdk';
+import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';

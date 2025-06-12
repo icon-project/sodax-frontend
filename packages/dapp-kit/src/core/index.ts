@@ -1,6 +1,7 @@
-import type { XToken, XChainId } from '@sodax/wallet-sdk';
+import type { XToken, ChainId } from '@sodax/types';
 
-import { CHAIN_IDS, hubAssets } from '@sodax/sdk';
+import { hubAssets } from '@sodax/sdk';
+import { CHAIN_IDS } from '@sodax/types';
 
 export const allXTokens: XToken[] = [];
 
@@ -10,7 +11,7 @@ Object.keys(hubAssets).forEach(xChainId => {
   Object.keys(tokens).forEach(tokenAddress => {
     const token = tokens[tokenAddress];
     allXTokens.push({
-      xChainId: xChainId as XChainId,
+      xChainId: xChainId as ChainId,
       symbol: token.symbol,
       name: token.name,
       decimals: token.decimal,
@@ -19,7 +20,7 @@ Object.keys(hubAssets).forEach(xChainId => {
 
     allXTokens.push({
       // @ts-ignore
-      xChainId: CHAIN_IDS.includes(xChainId as XChainId) ? 'sonic' : 'sonic-blaze',
+      xChainId: CHAIN_IDS.includes(xChainId as ChainId) ? 'sonic' : 'sonic-blaze',
       symbol: token.symbol,
       name: token.name,
       decimals: token.decimal,
@@ -28,7 +29,7 @@ Object.keys(hubAssets).forEach(xChainId => {
   });
 });
 
-export const getSpokeTokenAddressByVault = (spokeChainId: XChainId, vault: string) => {
+export const getSpokeTokenAddressByVault = (spokeChainId: ChainId, vault: string) => {
   const tokens = hubAssets[spokeChainId];
 
   const token = Object.keys(tokens).find(tokenAddress => tokens[tokenAddress].vault === vault);
