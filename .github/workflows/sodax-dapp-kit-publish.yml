@@ -1,9 +1,9 @@
-name: Publish @sodax/sdk Package to npmjs
+name: Publish @sodax/dapp-kit Package to npmjs
 
 on:
   push:
     tags:
-      - '@sodax/sdk@*.*.*'
+      - '@sodax/dapp-kit@*.*.*'
 
 jobs:
   publish-npm:
@@ -35,7 +35,7 @@ jobs:
         run: pnpm build:packages
       - name: Publish package
         run: |
-          cd packages/sdk
+          cd packages/dapp-kit
           pnpm publish --no-git-checks --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.SODAX_FRONTEND_NPM_TOKEN}}
