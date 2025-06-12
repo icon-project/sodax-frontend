@@ -23,9 +23,12 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
+    "@mysten/sui": "^1.21.2",
+    "@mysten/wallet-standard": "^0.15.6",
     "@sodax/sdk": "workspace:*",
     "@sodax/wallet-sdk": "workspace:*",
-    "viem": "catalog:"
+    "viem": "catalog:",
+    "@sodax/types": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "catalog:",

@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
   getHubAssetInfo,
   type Hex,
   IntentErrorCode,
@@ -11,6 +9,7 @@ import {
   type SolverConfig,
 } from '../../index.js';
 import { SolverApiService } from './SolverApiService.js';
+import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 // Mock fetch
 const mockFetch = vi.fn();

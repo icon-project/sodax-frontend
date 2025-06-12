@@ -1,8 +1,8 @@
 'use client';
 
-import type { XChainType, XConfig } from '@/types';
+import type { ChainType } from '@sodax/types';
+import type { XConfig } from './types';
 import { useCurrentAccount, useCurrentWallet, useSuiClient } from '@mysten/dapp-kit';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import React, { useEffect } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -15,16 +15,15 @@ import { EvmXService } from './xchains/evm';
 import { HavahHanaXConnector, HavahXConnector, HavahXService } from './xchains/havah';
 import { InjectiveKelprXConnector, InjectiveMetamaskXConnector, InjectiveXService } from './xchains/injective';
 import { SolanaXService } from './xchains/solana/SolanaXService';
-import { useAnchorProvider } from './xchains/solana/hooks/useAnchorProvider';
 import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
 
 type XWagmiStore = {
-  xServices: Partial<Record<XChainType, XService>>;
-  xConnections: Partial<Record<XChainType, XConnection>>;
+  xServices: Partial<Record<ChainType, XService>>;
+  xConnections: Partial<Record<ChainType, XConnection>>;
 
-  setXConnection: (xChainType: XChainType, xConnection: XConnection) => void;
-  unsetXConnection: (xChainType: XChainType) => void;
+  setXConnection: (xChainType: ChainType, xConnection: XConnection) => void;
+  unsetXConnection: (xChainType: ChainType) => void;
 };
 
 export const useXWagmiStore = create<XWagmiStore>()(
@@ -32,12 +31,12 @@ export const useXWagmiStore = create<XWagmiStore>()(
     immer((set, get) => ({
       xServices: {},
       xConnections: {},
-      setXConnection: (xChainType: XChainType, xConnection: XConnection) => {
+      setXConnection: (xChainType: ChainType, xConnection: XConnection) => {
         set(state => {
           state.xConnections[xChainType] = xConnection;
         });
       },
-      unsetXConnection: (xChainType: XChainType) => {
+      unsetXConnection: (xChainType: ChainType) => {
         set(state => {
           delete state.xConnections[xChainType];
         });
@@ -56,7 +55,7 @@ export const useXWagmiStore = create<XWagmiStore>()(
           if (state?.xConnections) {
             console.log('rehydrating xConnections', state.xConnections);
             Object.entries(state.xConnections).forEach(([xChainType, xConnection]) => {
-              const xConnector = getXService(xChainType as XChainType).getXConnectorById(xConnection.xConnectorId);
+              const xConnector = getXService(xChainType as ChainType).getXConnectorById(xConnection.xConnectorId);
               xConnector?.connect();
             });
           }
@@ -74,7 +73,7 @@ export const useXWagmiStore = create<XWagmiStore>()(
 const initXServices = (config: XConfig) => {
   const xServices = {};
   Object.keys(config).forEach(key => {
-    const xChainType = key as XChainType;
+    const xChainType = key as ChainType;
 
     switch (xChainType) {
       case 'EVM':
@@ -133,26 +132,6 @@ export const InitXWagmiStore = () => {
       SuiXService.getInstance().suiClient = suiClient;
     }
   }, [suiClient]);
-
-  const { connection: solanaConnection } = useConnection();
-  const solanaWallet = useWallet();
-  const solanaProvider = useAnchorProvider();
-  useEffect(() => {
-    if (solanaConnection) {
-      SolanaXService.getInstance().connection = solanaConnection;
-    }
-  }, [solanaConnection]);
-  useEffect(() => {
-    if (solanaWallet) {
-      SolanaXService.getInstance().wallet = solanaWallet;
-    }
-  }, [solanaWallet]);
-  useEffect(() => {
-    if (solanaProvider) {
-      SolanaXService.getInstance().provider = solanaProvider;
-    }
-  }, [solanaProvider]);
-
   const { currentWallet: suiWallet } = useCurrentWallet();
   useEffect(() => {
     if (suiWallet) {

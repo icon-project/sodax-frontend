@@ -1,4 +1,4 @@
-import type { XChainType } from '@/types';
+import type { ChainType } from '@sodax/types';
 import { useDisconnectWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useCallback } from 'react';
@@ -13,18 +13,18 @@ import { useXWagmiStore } from '../useXWagmiStore';
  * Clears connection state from XWagmiStore.
  *
  * @param {void} - No parameters required
- * @returns {(xChainType: XChainType) => Promise<void>} Async function that disconnects from the specified chain
+ * @returns {(xChainType: ChainType) => Promise<void>} Async function that disconnects from the specified chain
  *
  * @example
  * ```ts
  * const disconnect = useXDisconnect();
  *
- * const handleDisconnect = async (xChainType: XChainType) => {
+ * const handleDisconnect = async (xChainType: ChainType) => {
  *   await disconnect(xChainType);
  * };
  * ```
  */
-export function useXDisconnect(): (xChainType: XChainType) => Promise<void> {
+export function useXDisconnect(): (xChainType: ChainType) => Promise<void> {
   // Get connection state and disconnect handler from store
   const xConnections = useXWagmiStore(state => state.xConnections);
   const unsetXConnection = useXWagmiStore(state => state.unsetXConnection);
@@ -35,7 +35,7 @@ export function useXDisconnect(): (xChainType: XChainType) => Promise<void> {
   const solanaWallet = useWallet();
 
   return useCallback(
-    async (xChainType: XChainType) => {
+    async (xChainType: ChainType) => {
       // Handle disconnection based on chain type
       switch (xChainType) {
         case 'EVM':

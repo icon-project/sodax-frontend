@@ -1,13 +1,14 @@
 import { XIcon, Loader2 } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import type { XChainType, XConnector } from '@sodax/wallet-sdk';
+import type { ChainType } from '@sodax/types';
+import type { XConnector } from '@sodax/wallet-sdk';
 import { useXAccount, useXConnect, useXConnection, useXConnectors, useXDisconnect } from '@sodax/wallet-sdk';
 import { Button } from '@/components/ui/button';
 
 export type WalletItemProps = {
   name: string;
-  xChainType: XChainType;
+  xChainType: ChainType;
 };
 
 export function shortenAddress(address: string, chars = 7): string {

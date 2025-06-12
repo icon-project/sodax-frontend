@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import type { XChainType } from '@/types';
+import type { ChainType } from '@sodax/types';
 
 import type { XAccount } from '../types';
 import { useXConnection } from './useXConnection';
@@ -17,7 +17,7 @@ import { useXConnection } from './useXConnection';
  * // Returns: { address: string | undefined, xChainType: XChainType | undefined }
  * ```
  */
-export function useXAccount(xChainType: XChainType | undefined): XAccount {
+export function useXAccount(xChainType: ChainType | undefined): XAccount {
   const xConnection = useXConnection(xChainType);
 
   const xAccount = useMemo((): XAccount => {

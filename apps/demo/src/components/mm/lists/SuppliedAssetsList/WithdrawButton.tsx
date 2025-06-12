@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWithdraw } from '@sodax/dapp-kit';
-import type { XToken } from '@sodax/wallet-sdk';
+import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 

@@ -1,4 +1,4 @@
-import type { XChainId, XToken } from '@/types';
+import type { ChainId, XToken } from '@sodax/types';
 
 export const isNativeToken = (xToken: XToken) => {
   const nativeAddresses = [
@@ -15,7 +15,7 @@ export const isNativeToken = (xToken: XToken) => {
 };
 
 // TODO: remove this? move to dapp-kit?
-export const getWagmiChainId = (xChainId: XChainId): number => {
+export const getWagmiChainId = (xChainId: ChainId): number => {
   const xChainMap = {
     '0xa869.fuji': 43113,
     'sonic-blaze': 57054,

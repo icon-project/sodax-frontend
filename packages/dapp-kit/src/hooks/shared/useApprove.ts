@@ -1,9 +1,9 @@
-import type { XToken } from '@sodax/wallet-sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
-import type { Address, SpokeChainId } from '@sodax/sdk';
+import type { SpokeChainId, XToken } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Address } from '@sodax/sdk';
 
 interface UseApproveReturn {
   approve: (amount: string) => Promise<boolean>;
@@ -30,7 +30,7 @@ export function useApprove(token: XToken): UseApproveReturn {
       const allowance = await sodax.moneyMarket.approve(
         token.address as Address,
         parseUnits(amount, token.decimals),
-        spokeProvider.chainConfig.addresses.assetManager,
+        spokeProvider.chainConfig.addresses.assetManager as Address,
         spokeProvider,
       );
       if (!allowance.ok) {

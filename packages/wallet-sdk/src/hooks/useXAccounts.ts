@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import type { XChainType } from '@/types';
+import type { ChainType } from '@sodax/types';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useAccount } from 'wagmi';
@@ -16,7 +16,7 @@ export function useXAccounts() {
   const solanaWallet = useWallet();
 
   const xAccounts = useMemo(() => {
-    const result: Partial<Record<XChainType, XAccount>> = {};
+    const result: Partial<Record<ChainType, XAccount>> = {};
     for (const xChainType of xChainTypes) {
       const xConnection = xConnections[xChainType];
 

@@ -1,5 +1,5 @@
 import type { SpokeChainId } from '@sodax/sdk';
-import type { XChainId, XToken } from '@sodax/wallet-sdk';
+import type { ChainId, XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
@@ -29,7 +29,7 @@ interface WithdrawResponse {
  */
 export function useWithdraw(
   hubToken: XToken,
-  spokeChainId: XChainId,
+  spokeChainId: ChainId,
 ): UseMutationResult<WithdrawResponse, Error, string> {
   const { sodax } = useSodaxContext();
   const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);

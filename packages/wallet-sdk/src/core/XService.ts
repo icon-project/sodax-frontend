@@ -1,4 +1,4 @@
-import type { XChainId, XChainType, XToken } from '@/types';
+import type { ChainId, ChainType, XToken } from '@sodax/types';
 import type { XConnector } from './XConnector';
 
 /**
@@ -14,18 +14,18 @@ import type { XConnector } from './XConnector';
  *
  * @abstract
  * @class XService
- * @property {XChainType} xChainType - The blockchain type this service handles (e.g., 'SOLANA', 'HAVAH', 'EVM')
+ * @property {ChainType} xChainType - The blockchain type this service handles (e.g., 'SOLANA', 'HAVAH', 'EVM')
  * @property {XConnector[]} xConnectors - Available wallet connectors for this chain
  *
  */
 export abstract class XService {
   /** The blockchain type this service handles */
-  public readonly xChainType: XChainType;
+  public readonly xChainType: ChainType;
 
   /** Available wallet connectors for this chain */
   private xConnectors: XConnector[] = [];
 
-  constructor(xChainType: XChainType) {
+  constructor(xChainType: ChainType) {
     this.xChainType = xChainType;
   }
 
@@ -36,7 +36,7 @@ export abstract class XService {
    * @param xChainId The chain ID to query
    * @returns Promise resolving to the token balance as a bigint
    */
-  public async getBalance(address: string | undefined, xToken: XToken, xChainId: XChainId): Promise<bigint> {
+  public async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
     return 0n;
   }
 
@@ -50,7 +50,7 @@ export abstract class XService {
   public async getBalances(
     address: string | undefined,
     xTokens: XToken[],
-    xChainId: XChainId,
+    xChainId: ChainId,
   ): Promise<Record<string, bigint>> {
     if (!address) return {};
 

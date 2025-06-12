@@ -1,4 +1,4 @@
-import type { XChainType } from '@/types';
+import type { ChainType } from '@sodax/types';
 import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useMemo } from 'react';
@@ -12,7 +12,7 @@ import { useXWagmiStore } from '../useXWagmiStore';
  * Retrieves the current connection state for the specified chain type,
  * including the connected account and connector ID.
  *
- * @param {XChainType} xChainType - The type of blockchain to get connection details for
+ * @param {ChainType} xChainType - The type of blockchain to get connection details for
  * @returns {XConnection | undefined} Connection details including account and connector ID, or undefined if not connected
  *
  * @example
@@ -25,7 +25,7 @@ import { useXWagmiStore } from '../useXWagmiStore';
  * }
  * ```
  */
-export function useXConnection(xChainType: XChainType | undefined): XConnection | undefined {
+export function useXConnection(xChainType: ChainType | undefined): XConnection | undefined {
   const xConnection = useXWagmiStore(state => (xChainType ? state.xConnections?.[xChainType] : undefined));
 
   const evmConnections = useConnections();

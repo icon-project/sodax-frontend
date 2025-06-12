@@ -1,4 +1,4 @@
-import type { XChainType } from '@/types';
+import type { ChainType } from '@sodax/types';
 import { useWallets } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useMemo } from 'react';
@@ -23,7 +23,7 @@ import { useXService } from './useXService';
  * @returns An array of XConnector instances compatible with the specified chain type
  */
 
-export function useXConnectors(xChainType: XChainType | undefined): XConnector[] {
+export function useXConnectors(xChainType: ChainType | undefined): XConnector[] {
   const xService = useXService(xChainType);
   const evmConnectors = useConnectors();
   const suiWallets = useWallets();

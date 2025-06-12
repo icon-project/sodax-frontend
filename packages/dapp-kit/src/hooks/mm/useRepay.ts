@@ -1,5 +1,5 @@
 import type { SpokeChainId } from '@sodax/sdk';
-import type { XChainId, XToken } from '@sodax/wallet-sdk';
+import type { ChainId, XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
@@ -27,7 +27,7 @@ interface RepayResponse {
  *   - spokeProvider is not available
  *   - Transaction execution fails
  */
-export function useRepay(hubToken: XToken, spokeChainId: XChainId): UseMutationResult<RepayResponse, Error, string> {
+export function useRepay(hubToken: XToken, spokeChainId: ChainId): UseMutationResult<RepayResponse, Error, string> {
   const { sodax } = useSodaxContext();
   const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
 

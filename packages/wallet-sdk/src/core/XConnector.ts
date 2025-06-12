@@ -1,12 +1,12 @@
-import type { XChainType } from '@/types';
+import type { ChainType } from '@sodax/types';
 import type { XAccount } from '../types';
 
 /**
  * Base class for wallet provider connectors that handles connection management and wallet interactions
- * 
+ *
  * @abstract
  * @class XConnector
- * @property {XChainType} xChainType - The blockchain type this connector supports
+ * @property {ChainType} xChainType - The blockchain type this connector supports
  * @property {string} name - Display name of the wallet provider
  * @property {string} _id - Unique identifier for the connector
  * @property {string | undefined} _icon - Optional icon URL for the wallet provider
@@ -14,7 +14,7 @@ import type { XAccount } from '../types';
 
 export abstract class XConnector {
   /** The blockchain type this connector supports */
-  public readonly xChainType: XChainType;
+  public readonly xChainType: ChainType;
 
   /** Display name of the wallet provider */
   public readonly name: string;
@@ -25,7 +25,7 @@ export abstract class XConnector {
   /** Optional icon URL for the wallet provider */
   private readonly _icon?: string;
 
-  constructor(xChainType: XChainType, name: string, id: string) {
+  constructor(xChainType: ChainType, name: string, id: string) {
     this.xChainType = xChainType;
     this.name = name;
     this._id = id;

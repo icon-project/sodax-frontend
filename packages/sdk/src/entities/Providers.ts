@@ -10,7 +10,7 @@ import {
   type WalletClient,
   createPublicClient,
 } from 'viem';
-import { getEvmViemChain, getHubChainConfig, SONIC_MAINNET_CHAIN_ID } from '../constants.js';
+import { getEvmViemChain, getHubChainConfig } from '../constants.js';
 import type { EvmChainId, EvmHubChainConfig, EvmSpokeChainConfig, SpokeChainConfig } from '../types.js';
 import type { CWSpokeProvider, ICWWalletProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
@@ -18,8 +18,8 @@ import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
 import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider, StellarWalletProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
-import type { SuiWalletProvider } from './sui/SuiWalletProvider.js';
-import type { IEvmWalletProvider, IIconWalletProvider } from '../index.js';
+import type { IEvmWalletProvider, ISuiWalletProvider, IIconWalletProvider } from '../index.js';
+import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -90,12 +90,12 @@ export class EvmSpokeProvider implements ISpokeProvider {
     if (rpcUrl) {
       this.publicClient = createPublicClient({
         transport: http(rpcUrl),
-        chain: getEvmViemChain(chainConfig.chain.id),
+        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
       });
     } else {
       this.publicClient = createPublicClient({
-        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
-        chain: getEvmViemChain(chainConfig.chain.id),
+        transport: http(getEvmViemChain(chainConfig.chain.id as EvmChainId).rpcUrls.default.http[0]),
+        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
       });
     }
   }
@@ -110,7 +110,7 @@ export { getIconAddressBytes } from './icon/utils.js';
 export type IWalletProvider = (
   | IEvmWalletProvider
   | ICWWalletProvider
-  | SuiWalletProvider
+  | ISuiWalletProvider
   | IIconWalletProvider
   | SolanaWalletProvider
   | StellarWalletProvider

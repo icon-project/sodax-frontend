@@ -1,5 +1,6 @@
 import { XService } from '@/core/XService';
-import type { EVMConfig, XChainId, XToken } from '@/types';
+import type { ChainId, XToken } from '@sodax/types';
+import type { EVMConfig } from '@/types';
 import { getWagmiChainId, isNativeToken } from '@/utils';
 
 import { type Address, type PublicClient, type WalletClient, erc20Abi } from 'viem';
@@ -48,7 +49,7 @@ export class EvmXService extends XService {
     return await getWalletClient(this.config.wagmiConfig, { chainId });
   }
 
-  async getBalance(address: string | undefined, xToken: XToken, xChainId: XChainId): Promise<bigint> {
+  async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
     if (!address) return 0n;
 
     const chainId = getWagmiChainId(xChainId);
@@ -61,7 +62,7 @@ export class EvmXService extends XService {
     throw new Error(`Unsupported token: ${xToken.symbol}`);
   }
 
-  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: XChainId) {
+  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: ChainId) {
     if (!address) return {};
 
     const balancePromises = xTokens

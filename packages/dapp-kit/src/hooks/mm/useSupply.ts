@@ -1,5 +1,5 @@
 import type { SpokeChainId } from '@sodax/sdk';
-import type { XToken } from '@sodax/wallet-sdk';
+import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSpokeProvider } from '../provider/useSpokeProvider';

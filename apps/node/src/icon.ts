@@ -11,15 +11,13 @@ import {
   type IconAddress,
   getIconAddressBytes,
   getMoneyMarketConfig,
-  type HubChainId,
-  SONIC_MAINNET_CHAIN_ID,
-  ICON_MAINNET_CHAIN_ID,
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
 } from '@sodax/sdk';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider';
+import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;

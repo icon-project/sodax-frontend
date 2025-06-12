@@ -1,4 +1,4 @@
-import type { XChainId, XToken } from '@sodax/wallet-sdk';
+import type { ChainId, XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
@@ -26,7 +26,7 @@ interface BorrowResponse {
  *   - spokeProvider is not available
  *   - Transaction execution fails
  */
-export function useBorrow(hubToken: XToken, spokeChainId: XChainId): UseMutationResult<BorrowResponse, Error, string> {
+export function useBorrow(hubToken: XToken, spokeChainId: ChainId): UseMutationResult<BorrowResponse, Error, string> {
   const { sodax } = useSodaxContext();
   const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
 

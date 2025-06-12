@@ -6,12 +6,13 @@ import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList/SupplyA
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useXAccount } from '@sodax/wallet-sdk';
+import { useXAccount, getXChainType } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 import { BorrowAssetsList } from '@/components/mm/lists/BorrowAssetsList/BorrowAssetsList';
 
 export default function MoneyMarketPage() {
-  const xAccount = useXAccount('EVM');
+  const { selectedChain } = useAppStore();
+  const xAccount = useXAccount(getXChainType(selectedChain));
   const { openWalletModal } = useAppStore();
 
   return (

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useUserReservesData } from '@sodax/dapp-kit';
 import type { UserReserveData } from '@sodax/sdk';
-import type { XToken } from '@sodax/wallet-sdk';
+import type { XToken } from '@sodax/types';
 import { SuppliedAssetsListItem } from './SuppliedAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
 

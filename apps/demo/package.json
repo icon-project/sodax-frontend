@@ -20,6 +20,7 @@
     "@sodax/dapp-kit": "workspace:*",
     "@sodax/sdk": "workspace:*",
     "@sodax/wallet-sdk": "workspace:*",
+    "@sodax/types": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-scroll-area": "^1.2.3",

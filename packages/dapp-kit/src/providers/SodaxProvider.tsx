@@ -1,6 +1,6 @@
 import type { ReactNode, ReactElement } from 'react';
 import { Sodax, type SodaxConfig } from '@sodax/sdk';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { SodaxContext } from '@/contexts';
 import React from 'react';
 
