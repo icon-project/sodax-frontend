@@ -10,7 +10,7 @@ import {
   type WalletClient,
   createPublicClient,
 } from 'viem';
-import { getEvmViemChain, getHubChainConfig, SONIC_MAINNET_CHAIN_ID } from '../constants.js';
+import { getEvmViemChain, getHubChainConfig } from '../constants.js';
 import type { EvmChainId, EvmHubChainConfig, EvmSpokeChainConfig, SpokeChainConfig } from '../types.js';
 import type { CWSpokeProvider, ICWWalletProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
@@ -19,6 +19,7 @@ import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider, StellarWalletProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
 import type { IEvmWalletProvider, ISuiWalletProvider, IIconWalletProvider } from '../index.js';
+import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -94,7 +95,7 @@ export class EvmSpokeProvider implements ISpokeProvider {
     } else {
       this.publicClient = createPublicClient({
         transport: http(getEvmViemChain(chainConfig.chain.id as EvmChainId).rpcUrls.default.http[0]),
-        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId ),
+        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
       });
     }
   }

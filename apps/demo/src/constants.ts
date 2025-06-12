@@ -1,15 +1,13 @@
 import {
-  ARBITRUM_MAINNET_CHAIN_ID,
   type CustomProvider,
   getHubChainConfig,
   getMoneyMarketConfig,
   type PartnerFee,
   type SodaxConfig,
   type SolverConfigParams,
-  SONIC_MAINNET_CHAIN_ID,
   spokeChainConfig,
-  type SpokeChainId,
 } from '@sodax/sdk';
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, ARBITRUM_MAINNET_CHAIN_ID } from '@sodax/types';
 
 declare global {
   interface Window {

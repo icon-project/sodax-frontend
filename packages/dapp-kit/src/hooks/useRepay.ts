@@ -1,4 +1,5 @@
-import type { EvmHubProvider, SpokeChainId } from '@sodax/sdk';
+import type { EvmHubProvider } from '@sodax/sdk';
+import type { SpokeChainId } from '@sodax/types';
 import {
   SpokeService,
   type IntentRelayRequest,

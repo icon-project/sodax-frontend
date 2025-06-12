@@ -15,16 +15,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
-  ARBITRUM_MAINNET_CHAIN_ID,
   type Address,
   type CreateIntentParams,
-  type EvmChainId,
   type Hex,
   type Intent,
   type IntentQuoteRequest,
-  POLYGON_MAINNET_CHAIN_ID,
   type PacketData,
-  type SpokeChainId,
   spokeChainConfig,
   supportedSpokeChains,
   supportedTokensPerChain,
@@ -34,7 +30,14 @@ import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
-import type { ChainId, Token } from '@sodax/types';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  type ChainId,
+  POLYGON_MAINNET_CHAIN_ID,
+  type Token,
+  type SpokeChainId,
+} from '@sodax/types';
+
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({

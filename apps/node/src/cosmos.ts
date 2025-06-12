@@ -6,20 +6,17 @@ import {
   EvmHubProvider,
   type EvmHubProviderConfig,
   EvmWalletAbstraction,
-  INJECTIVE_MAINNET_CHAIN_ID,
   InjectiveWalletProvider,
-  SONIC_MAINNET_CHAIN_ID,
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
-  type SpokeChainId,
   SpokeService,
   getHubChainConfig,
   getMoneyMarketConfig,
   spokeChainConfig,
 } from '@sodax/sdk';
 import { type Address, type Hash, type Hex, toHex } from 'viem';
-
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, INJECTIVE_MAINNET_CHAIN_ID } from '@sodax/types';
 import dotenv from 'dotenv';
 dotenv.config();
 

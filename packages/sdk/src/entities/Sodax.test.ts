@@ -1,7 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
   type CreateIntentParams,
   type EvmHubProviderConfig,
   EvmSpokeProvider,
@@ -17,7 +15,6 @@ import {
   type PartnerFee,
   type RelayTxStatus,
   type Result,
-  SONIC_MAINNET_CHAIN_ID,
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
@@ -32,6 +29,7 @@ import {
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
+import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 describe('Sodax', () => {
   const partnerFeePercentage = {

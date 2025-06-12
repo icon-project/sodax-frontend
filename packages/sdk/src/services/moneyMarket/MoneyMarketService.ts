@@ -14,7 +14,6 @@ import {
   relayTxAndWaitPacket,
   uiPoolDataAbi,
   type RelayErrorCode,
-  SONIC_MAINNET_CHAIN_ID,
   DEFAULT_RELAY_TX_TIMEOUT,
   EvmSpokeProvider,
   isMoneyMarketSupportedToken,
@@ -27,14 +26,13 @@ import type {
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,
   Result,
-  SpokeChainId,
   TxReturnType,
 } from '../../types.js';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService, EvmWalletAbstraction } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';
 import invariant from 'tiny-invariant';
-import type { Token } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Token } from '@sodax/types';
 
 export type AggregatedReserveData = {
   underlyingAsset: Address;

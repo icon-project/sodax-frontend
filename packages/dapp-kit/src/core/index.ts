@@ -1,6 +1,7 @@
 import type { XToken, ChainId } from '@sodax/types';
 
-import { CHAIN_IDS, hubAssets } from '@sodax/sdk';
+import { hubAssets } from '@sodax/sdk';
+import { CHAIN_IDS } from '@sodax/types';
 
 export const allXTokens: XToken[] = [];
 

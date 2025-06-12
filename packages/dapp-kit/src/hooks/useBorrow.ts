@@ -1,4 +1,5 @@
-import type { EvmHubProvider, SpokeChainId } from '@sodax/sdk';
+import type { EvmHubProvider } from '@sodax/sdk';
+import type { SpokeChainId } from '@sodax/types';
 import {
   SpokeService,
   type IntentRelayRequest,
@@ -16,7 +17,6 @@ import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
 import { useSodaxContext } from './useSodaxContext';
 import { XCALL_RELAY_URL } from '@/constants';
-import { getSpokeTokenAddressByVault } from '@/core';
 
 interface UseBorrowReturn {
   borrow: (amount: string) => Promise<void>;

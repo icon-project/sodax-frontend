@@ -11,27 +11,14 @@ import type {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from './entities/index.js';
-import type {
-  CHAIN_IDS,
-  EVM_CHAIN_IDS,
-  EVM_SPOKE_CHAIN_IDS,
-  HUB_CHAIN_IDS,
-  INTENT_RELAY_CHAIN_IDS,
-  SPOKE_CHAIN_IDS,
-  spokeChainConfig,
-} from './index.js';
+import type { EVM_CHAIN_IDS, EVM_SPOKE_CHAIN_IDS, INTENT_RELAY_CHAIN_IDS, spokeChainConfig } from './index.js';
 import type { EvmSpokeDepositParams } from './services/index.js';
 import type { CWSpokeDepositParams } from './services/spoke/CWSpokeService.js';
 import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.js';
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
 import type { StellarSpokeDepositParams } from './services/spoke/StellarSpokeService.js';
 import type { SuiSpokeDepositParams } from './services/spoke/SuiSpokeService.js';
-import type { ChainType, Token } from '@sodax/types';
-
-export type HubChainId = (typeof HUB_CHAIN_IDS)[number];
-export type SpokeChainId = (typeof SPOKE_CHAIN_IDS)[number];
-
-export type ChainId = (typeof CHAIN_IDS)[number];
+import type { ChainType, Token, HubChainId, SpokeChainId } from '@sodax/types';
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 
@@ -60,7 +47,6 @@ export type Hash = `0x${string}`;
 export type Address = `0x${string}`;
 export type HubAddress = Address;
 export type OriginalAssetAddress = string;
-
 
 export type AssetInfo = {
   chainId: bigint;

@@ -2,7 +2,7 @@ import { useSodaxContext } from '@/hooks/useSodaxContext';
 import { useSpokeProvider } from './useSpokeProvider';
 import type { XToken } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
-import type { SpokeChainId } from '@sodax/sdk';
+import type { SpokeChainId } from '@sodax/types';
 import { parseUnits } from 'viem';
 
 export function useAllowance(token: XToken, amount: string) {
