@@ -1,12 +1,12 @@
 import { EvmSpokeProvider, spokeChainConfig, SuiSpokeProvider } from '@sodax/sdk';
-import type { ChainId, SpokeChainId } from '@sodax/types';
+import type { SpokeChainId } from '@sodax/types';
 import { getXChainType } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
 import { useWalletProvider } from './useWalletProvider';
 
 export function useSpokeProvider(spokeChainId: SpokeChainId) {
-  const xChainType = getXChainType(spokeChainId as ChainId);
-  const walletProvider = useWalletProvider(spokeChainId as ChainId);
+  const xChainType = getXChainType(spokeChainId);
+  const walletProvider = useWalletProvider(spokeChainId);
   const spokeProvider = useMemo(() => {
     if (!walletProvider) return undefined;
     if (xChainType === 'EVM') {
