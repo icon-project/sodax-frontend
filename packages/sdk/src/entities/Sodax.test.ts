@@ -431,7 +431,7 @@ describe('Sodax', () => {
         const invalidSpokeProvider = {
           chainConfig: {
             chain: {
-              type: 'evm',
+              type: 'EVM',
             },
           },
           walletProvider: {

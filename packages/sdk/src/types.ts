@@ -39,7 +39,7 @@ export type HubChainInfo<T extends ChainType> = {
   type: T;
 };
 
-export type GetSpokeChainIdType<T extends ChainType> = T extends 'evm' ? EvmSpokeChainId : SpokeChainId;
+export type GetSpokeChainIdType<T extends ChainType> = T extends 'EVM' ? EvmSpokeChainId : SpokeChainId;
 
 export type ByteArray = Uint8Array;
 export type Hex = `0x${string}`;
@@ -279,17 +279,17 @@ export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: fals
 export type HttpPrefixedUrl = `http${string}`;
 export type IconEoaAddress = `hx${string}`;
 
-export type GetSpokeProviderType<T extends ChainType> = T extends 'evm'
+export type GetSpokeProviderType<T extends ChainType> = T extends 'EVM'
   ? EvmSpokeProvider
-  : T extends 'cosmos'
+  : T extends 'INJECTIVE'
     ? CWSpokeProvider
-    : T extends 'icon'
+    : T extends 'ICON'
       ? IconSpokeProvider
-      : T extends 'sui'
+      : T extends 'SUI'
         ? SuiSpokeProvider
-        : T extends 'stellar'
+        : T extends 'STELLAR'
           ? StellarSpokeProvider
-          : T extends 'solana'
+          : T extends 'SOLANA'
             ? SolanaSpokeProvider
             : never;
 
@@ -584,22 +584,22 @@ export type RawTxReturnType =
   | CWRawTransaction
   | IconRawTransaction
   | SuiRawTransaction; // TODO extend for other chains (Icon, Cosmos, Sui)
-export type GetRawTxReturnType<T extends ChainType> = T extends 'evm' ? PromiseEvmTxReturnType<boolean> : never;
+export type GetRawTxReturnType<T extends ChainType> = T extends 'EVM' ? PromiseEvmTxReturnType<boolean> : never;
 
 export type PromiseTxReturnType<
   T extends ISpokeProvider,
   Raw extends boolean,
-> = T['chainConfig']['chain']['type'] extends 'evm'
+> = T['chainConfig']['chain']['type'] extends 'EVM'
   ? PromiseEvmTxReturnType<Raw>
-  : T['chainConfig']['chain']['type'] extends 'solana'
+  : T['chainConfig']['chain']['type'] extends 'SOLANA'
     ? PromiseSolanaTxReturnType<Raw>
-    : T['chainConfig']['chain']['type'] extends 'stellar'
+    : T['chainConfig']['chain']['type'] extends 'STELLAR'
       ? PromiseStellarTxReturnType<Raw>
-      : T['chainConfig']['chain']['type'] extends 'icon'
+      : T['chainConfig']['chain']['type'] extends 'ICON'
         ? PromiseIconTxReturnType<Raw>
-        : T['chainConfig']['chain']['type'] extends 'sui'
+        : T['chainConfig']['chain']['type'] extends 'SUI'
           ? PromiseSuiTxReturnType<Raw>
-          : T['chainConfig']['chain']['type'] extends 'cosmos'
+          : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
             ? PromiseCWTxReturnType<Raw>
             : never;
 
