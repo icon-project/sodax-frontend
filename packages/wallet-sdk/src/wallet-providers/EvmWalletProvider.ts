@@ -5,10 +5,13 @@ export class EvmWalletProvider implements IEvmWalletProvider {
   private readonly _walletClient?: WalletClient<CustomTransport | HttpTransport, Chain, Account>;
   public readonly publicClient: PublicClient<CustomTransport | HttpTransport>;
 
-  constructor(
-    publicClient: PublicClient<CustomTransport | HttpTransport>,
-    walletClient: WalletClient<CustomTransport | HttpTransport, Chain, Account> | undefined,
-  ) {
+  constructor({
+    publicClient,
+    walletClient,
+  }: {
+    publicClient: PublicClient<CustomTransport | HttpTransport>;
+    walletClient: WalletClient<CustomTransport | HttpTransport, Chain, Account> | undefined;
+  }) {
     this._walletClient = walletClient;
     this.publicClient = publicClient;
   }
