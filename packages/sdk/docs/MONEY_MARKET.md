@@ -17,6 +17,9 @@ const supportedMoneyMarketTokens: readonly Token[] = getSupportedMoneyMarketToke
 
 // check if token address for given spoke chain id is supported
 const isMoneyMarketSupportedToken: boolean = isMoneyMarketSupportedToken(spokeChainId, token)
+
+// Get all supported reserves (hub chain token addresses, i.e. money market on Sonic chain)
+const supportedReserves = sodax.moneyMarket.getSupportedReserves();
 ```
 
 ### Initialising Spoke Provider
@@ -32,7 +35,7 @@ import { MoneyMarketSupplyParams, MoneyMarketRepayParams } from "@sodax/sdk";
 
 // Check if allowance is sufficient for supply
 const supplyParams: MoneyMarketSupplyParams = {
-  token: '0x...', // Address of the token to supply
+  token: '0x...', // Address of the token (spoke chain) to supply
   amount: 1000n, // Amount to supply (in token decimals)
 };
 
@@ -68,7 +71,7 @@ import { MoneyMarketSupplyParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for supply operation
 const supplyParams: MoneyMarketSupplyParams = {
-  token: '0x...', // Address of the token to supply
+  token: '0x...', // Address of the token (spoke chain) to supply
   amount: 1000n, // Amount to supply (in token decimals)
 };
 
@@ -130,7 +133,7 @@ import { MoneyMarketBorrowParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for borrow operation
 const borrowParams: MoneyMarketBorrowParams = {
-  token: '0x...', // Address of the token to borrow
+  token: '0x...', // Address of the token (spoke chain) to supply
   amount: 1000n, // Amount to borrow (in token decimals)
 };
 
@@ -175,7 +178,7 @@ import { MoneyMarketWithdrawParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk"
 
 // Parameters for withdraw operation
 const withdrawParams: MoneyMarketWithdrawParams = {
-  token: '0x...', // Address of the token to withdraw
+  token: '0x...', // Address of the token (spoke chain) to supply
   amount: 1000n, // Amount to withdraw (in token decimals)
 };
 
@@ -220,7 +223,7 @@ import { MoneyMarketRepayParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for repay operation
 const repayParams: MoneyMarketRepayParams = {
-  token: '0x...', // Address of the token to repay
+  token: '0x...', // Address of the token (spoke chain) to supply
   amount: 1000n, // Amount to repay (in token decimals)
 };
 
@@ -268,18 +271,6 @@ if (repayResult.ok) {
 } else {
   // Handle error
 }
-```
-
-## Get Supported Tokens and Reserves
-
-You can get information about supported tokens and reserves:
-
-```typescript
-// Get supported tokens for a specific chain (token addresses are native to the chain id)
-const supportedTokens = sodax.moneyMarket.getSupportedTokens(chainId);
-
-// Get all supported reserves (hub chain token addresses, e.g. Sonic chain)
-const supportedReserves = sodax.moneyMarket.getSupportedReserves();
 ```
 
 ## Error Handling

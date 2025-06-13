@@ -196,6 +196,8 @@ As part of Sodax suite, xWagmi SDK is also going to be provided as one example w
 
 Spoke provider is a main instance used to interact with Sodax features because it contains all the relevant information we need to successfully execute features. You should generally establish SpokeProvider instances for each chain user connects wallet to.
 
+Spoke is simply a chain you are connecting to and SpokeProvider is a container of relevant wallet provider and chain configuration.
+
 EVM Provider example:
 
 ```typescript

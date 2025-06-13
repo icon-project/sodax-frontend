@@ -6,7 +6,7 @@ import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type CWSpokeDepositParams = {
   from: string; // The address of the user on the spoke chain
-  to?: Hex; // The address of the user on the hub chain (wallet abstraction address)
+  to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: string; // The address of the token to deposit
   amount: bigint; // The amount of tokens to deposit
   data: Hex; // The data to send with the deposit

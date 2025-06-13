@@ -15,7 +15,7 @@ import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type SolanaSpokeDepositParams = {
   from: PublicKey;
-  to?: Hex; // The address of the user on the hub chain (wallet abstraction address)
+  to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: PublicKey;
   amount: bigint;
   data: Hex;
