@@ -23,13 +23,9 @@ import {
   waitUntilIntentExecuted,
 } from '../../index.js';
 import type {
-  Address,
   EvmContractCall,
-  EvmRawTransactionReceipt,
   FeeAmount,
   GetSpokeDepositParamsType,
-  Hash,
-  Hex,
   HttpUrl,
   IntentErrorResponse,
   IntentExecutionRequest,
@@ -45,6 +41,7 @@ import type {
   SolverServiceConfig,
   TxReturnType,
 } from '../../types.js';
+import type { Address, Hex, EvmRawTransactionReceipt, Hash } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
@@ -123,12 +120,12 @@ export type IntentSubmitErrorCode = RelayErrorCode | 'UNKNOWN' | 'CREATION_FAILE
 export type IntentSubmitErrorData<T extends IntentSubmitErrorCode> = T extends 'TIMEOUT'
   ? IntentWaitUntilIntentExecutedFailedErrorData
   : T extends 'CREATION_FAILED'
-    ? IntentCreationFailedErrorData
-    : T extends 'SUBMIT_TX_FAILED'
-      ? IntentSubmitTxFailedErrorData
-      : T extends 'POST_EXECUTION_FAILED'
-        ? IntentErrorResponse
-        : never;
+  ? IntentCreationFailedErrorData
+  : T extends 'SUBMIT_TX_FAILED'
+  ? IntentSubmitTxFailedErrorData
+  : T extends 'POST_EXECUTION_FAILED'
+  ? IntentErrorResponse
+  : never;
 
 export type IntentSubmitError<T extends IntentSubmitErrorCode> = {
   code: T;

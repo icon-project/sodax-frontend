@@ -2,14 +2,8 @@ import { type Address, encodeFunctionData } from 'viem';
 import { erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
 import type { EvmHubProvider, EvmSpokeProvider } from '../../entities/index.js';
 import { connectionAbi, getIntentRelayChainId } from '../../index.js';
-import type {
-  EvmReturnType,
-  EvmTransferToHubParams,
-  Hex,
-  HubAddress,
-  PromiseEvmTxReturnType,
-  TxReturnType,
-} from '../../types.js';
+import type { EvmReturnType, EvmTransferToHubParams, PromiseEvmTxReturnType, TxReturnType } from '../../types.js';
+import type { Hex, HubAddress } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type EvmSpokeDepositParams = {
@@ -21,7 +15,7 @@ export type EvmSpokeDepositParams = {
 };
 
 export class EvmSpokeService {
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Deposit tokens to the spoke chain.
