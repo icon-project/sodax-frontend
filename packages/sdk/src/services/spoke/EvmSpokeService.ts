@@ -15,7 +15,7 @@ export type EvmSpokeDepositParams = {
 };
 
 export class EvmSpokeService {
-  private constructor() { }
+  private constructor() {}
 
   /**
    * Deposit tokens to the spoke chain.

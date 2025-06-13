@@ -120,12 +120,12 @@ export type IntentSubmitErrorCode = RelayErrorCode | 'UNKNOWN' | 'CREATION_FAILE
 export type IntentSubmitErrorData<T extends IntentSubmitErrorCode> = T extends 'TIMEOUT'
   ? IntentWaitUntilIntentExecutedFailedErrorData
   : T extends 'CREATION_FAILED'
-  ? IntentCreationFailedErrorData
-  : T extends 'SUBMIT_TX_FAILED'
-  ? IntentSubmitTxFailedErrorData
-  : T extends 'POST_EXECUTION_FAILED'
-  ? IntentErrorResponse
-  : never;
+    ? IntentCreationFailedErrorData
+    : T extends 'SUBMIT_TX_FAILED'
+      ? IntentSubmitTxFailedErrorData
+      : T extends 'POST_EXECUTION_FAILED'
+        ? IntentErrorResponse
+        : never;
 
 export type IntentSubmitError<T extends IntentSubmitErrorCode> = {
   code: T;

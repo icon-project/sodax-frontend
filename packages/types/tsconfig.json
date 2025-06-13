@@ -20,6 +20,6 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": true
   }
 }

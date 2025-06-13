@@ -1,5 +1,4 @@
-import type { WalletAddressProvider } from "../common/index.js";
-
+import type { WalletAddressProvider } from '../common/index.js';
 
 export type XDR = string;
 

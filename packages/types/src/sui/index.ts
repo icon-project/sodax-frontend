@@ -1,4 +1,4 @@
-import type { WalletAddressProvider, Address, Hex } from "../common/index.js";
+import type { WalletAddressProvider, Address, Hex } from '../common/index.js';
 
 export type SuiTransaction = {
   toJSON: () => Promise<string>;
@@ -7,11 +7,11 @@ export type SuiTransaction = {
 export type SuiArgument =
   | 'GasCoin'
   | {
-    Input: number;
-  }
+      Input: number;
+    }
   | {
-    Result: number;
-  };
+      Result: number;
+    };
 
 export interface SuiExecutionResult {
   mutableReferenceOutputs?: [SuiArgument, number[], string][];
@@ -31,8 +31,6 @@ export interface SuiPaginatedCoins {
   hasNextPage: boolean;
   nextCursor?: string | null;
 }
-
-
 
 export interface ISuiWalletProvider extends WalletAddressProvider {
   getWalletAddress: () => Promise<Address>;

@@ -25,7 +25,7 @@ export type TransferToHubParams = {
 };
 
 export class IconSpokeService {
-  private constructor() { }
+  private constructor() {}
 
   /**
    * Deposit tokens to the spoke chain.

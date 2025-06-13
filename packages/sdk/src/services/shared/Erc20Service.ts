@@ -4,7 +4,7 @@ import type { EvmSpokeProvider } from '../../entities/Providers.js';
 import type { EvmRawTransactionReceipt } from '@sodax/types';
 
 export class Erc20Service {
-  private constructor() { }
+  private constructor() {}
 
   /**
    * Check if spender has enough ERC20 allowance for given amount

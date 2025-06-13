@@ -1,4 +1,4 @@
-import type { Hex, WalletAddressProvider, Hash } from "../common/index.js";
+import type { Hex, WalletAddressProvider, Hash } from '../common/index.js';
 
 export type IconEoaAddress = `hx${string}`;
 export type IcxCallTransaction = {
@@ -37,4 +37,3 @@ export interface IIconWalletProvider extends WalletAddressProvider {
   sendTransaction: (iconRawTx: IcxCallTransaction) => Promise<Hash>;
   waitForTransactionReceipt: (txHash: Hash) => Promise<IconTransactionResult>;
 }
-
