@@ -1,4 +1,5 @@
-import type { Hex, HttpUrl, Result } from '../../types.js';
+import type { HttpUrl, Result } from '../../types.js';
+import type { Hex } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentSubmitError } from '../solver/SolverService.js';
@@ -70,29 +71,29 @@ export type GetTransactionPacketsResponse = {
 
 export type GetPacketResponse =
   | {
-      success: true;
-      data: PacketData;
-    }
+    success: true;
+    data: PacketData;
+  }
   | {
-      success: false;
-      message: string;
-    };
+    success: false;
+    message: string;
+  };
 
 export type GetRelayRequestParamType<T extends RelayAction> = T extends 'submit'
   ? SubmitTxParams
   : T extends 'get_transaction_packets'
-    ? GetTransactionPacketsParams
-    : T extends 'get_packet'
-      ? GetPacketParams
-      : never;
+  ? GetTransactionPacketsParams
+  : T extends 'get_packet'
+  ? GetPacketParams
+  : never;
 
 export type GetRelayResponse<T extends RelayAction> = T extends 'submit'
   ? SubmitTxResponse
   : T extends 'get_transaction_packets'
-    ? GetTransactionPacketsResponse
-    : T extends 'get_packet'
-      ? GetPacketResponse
-      : never;
+  ? GetTransactionPacketsResponse
+  : T extends 'get_packet'
+  ? GetPacketResponse
+  : never;
 
 export type IntentRelayRequestParams = SubmitTxParams | GetTransactionPacketsParams | GetPacketParams;
 

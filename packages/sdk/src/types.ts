@@ -18,7 +18,7 @@ import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.j
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
 import type { StellarSpokeDepositParams } from './services/spoke/StellarSpokeService.js';
 import type { SuiSpokeDepositParams } from './services/spoke/SuiSpokeService.js';
-import type { ChainType, Token, HubChainId, SpokeChainId } from '@sodax/types';
+import type { ChainType, Token, HubChainId, SpokeChainId, Hex, Address, EvmRawTransaction } from '@sodax/types';
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 
@@ -40,13 +40,6 @@ export type HubChainInfo<T extends ChainType> = {
 };
 
 export type GetSpokeChainIdType<T extends ChainType> = T extends 'EVM' ? EvmSpokeChainId : SpokeChainId;
-
-export type ByteArray = Uint8Array;
-export type Hex = `0x${string}`;
-export type Hash = `0x${string}`;
-export type Address = `0x${string}`;
-export type HubAddress = Address;
-export type OriginalAssetAddress = string;
 
 export type AssetInfo = {
   chainId: bigint;
@@ -190,16 +183,16 @@ export type SpokeChainConfig =
 export type GetSpokeChainConfigType<T extends ChainType> = T extends 'EVM'
   ? EvmSpokeChainConfig
   : T extends 'INJECTIVE'
-    ? CosmosSpokeChainConfig
-    : T extends 'icon'
-      ? IconSpokeChainConfig
-      : T extends 'SUI'
-        ? SuiSpokeChainConfig
-        : T extends 'STELLAR'
-          ? StellarSpokeChainConfig
-          : T extends 'SOLANA'
-            ? SolanaChainConfig
-            : never;
+  ? CosmosSpokeChainConfig
+  : T extends 'icon'
+  ? IconSpokeChainConfig
+  : T extends 'SUI'
+  ? SuiSpokeChainConfig
+  : T extends 'STELLAR'
+  ? StellarSpokeChainConfig
+  : T extends 'SOLANA'
+  ? SolanaChainConfig
+  : never;
 
 export type EvmContractCall = {
   address: Address; // Target address of the call
@@ -277,51 +270,50 @@ export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionRec
 export type IconAddress = `hx${string}` | `cx${string}`;
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 export type HttpPrefixedUrl = `http${string}`;
-export type IconEoaAddress = `hx${string}`;
 
 export type GetSpokeProviderType<T extends ChainType> = T extends 'EVM'
   ? EvmSpokeProvider
   : T extends 'INJECTIVE'
-    ? CWSpokeProvider
-    : T extends 'ICON'
-      ? IconSpokeProvider
-      : T extends 'SUI'
-        ? SuiSpokeProvider
-        : T extends 'STELLAR'
-          ? StellarSpokeProvider
-          : T extends 'SOLANA'
-            ? SolanaSpokeProvider
-            : never;
+  ? CWSpokeProvider
+  : T extends 'ICON'
+  ? IconSpokeProvider
+  : T extends 'SUI'
+  ? SuiSpokeProvider
+  : T extends 'STELLAR'
+  ? StellarSpokeProvider
+  : T extends 'SOLANA'
+  ? SolanaSpokeProvider
+  : never;
 
 export type SpokeDepositParams = EvmSpokeDepositParams | CWSpokeDepositParams | IconSpokeDepositParams;
 
 export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? EvmSpokeDepositParams
   : T extends CWSpokeProvider
-    ? CWSpokeDepositParams
-    : T extends SuiSpokeProvider
-      ? SuiSpokeDepositParams
-      : T extends IconSpokeProvider
-        ? IconSpokeDepositParams
-        : T extends StellarSpokeProvider
-          ? StellarSpokeDepositParams
-          : T extends SolanaSpokeProvider
-            ? SolanaSpokeDepositParams
-            : never;
+  ? CWSpokeDepositParams
+  : T extends SuiSpokeProvider
+  ? SuiSpokeDepositParams
+  : T extends IconSpokeProvider
+  ? IconSpokeDepositParams
+  : T extends StellarSpokeProvider
+  ? StellarSpokeDepositParams
+  : T extends SolanaSpokeProvider
+  ? SolanaSpokeDepositParams
+  : never;
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? Address
   : T extends CWSpokeProvider
-    ? string
-    : T extends StellarSpokeProvider
-      ? Hex
-      : T extends IconSpokeProvider
-        ? IconAddress
-        : T extends SuiSpokeProvider
-          ? Hex
-          : T extends SolanaSpokeProvider
-            ? Hex
-            : never;
+  ? string
+  : T extends StellarSpokeProvider
+  ? Hex
+  : T extends IconSpokeProvider
+  ? IconAddress
+  : T extends SuiSpokeProvider
+  ? Hex
+  : T extends SolanaSpokeProvider
+  ? Hex
+  : never;
 
 export type HttpUrl = `http://${string}` | `https://${string}`;
 
@@ -407,43 +399,9 @@ export enum IntentErrorCode {
   UNKNOWN = -999,
 }
 
-export type EvmRawTransaction = {
-  from: Address;
-  to: Address;
-  value: bigint;
-  data: Hex;
-};
 
-// Ethereum JSON-RPC Spec based logs
-export type EvmRawLog = {
-  address: Address;
-  topics: [Hex, ...Hex[]] | [];
-  data: Hex;
-  blockHash: Hash | null;
-  blockNumber: Address | null;
-  logIndex: Hex | null;
-  transactionHash: Hash | null;
-  transactionIndex: Hex | null;
-  removed: boolean;
-};
 
-// Ethereum JSON-RPC Spec based transaction receipt
-export type EvmRawTransactionReceipt = {
-  transactionHash: string; // 32-byte hash
-  transactionIndex: string; // hex string, e.g., '0x1'
-  blockHash: string; // 32-byte hash
-  blockNumber: string; // hex string, e.g., '0x5BAD55'
-  from: string; // 20-byte address
-  to: string | null; // null if contract creation
-  cumulativeGasUsed: string; // hex string
-  gasUsed: string; // hex string
-  contractAddress: string | null; // non-null only if contract creation
-  logs: EvmRawLog[];
-  logsBloom: string; // 256-byte bloom filter hex string
-  status?: string; // '0x1' = success, '0x0' = failure (optional pre-Byzantium)
-  type?: string; // '0x0', '0x1', or '0x2' for tx type
-  effectiveGasPrice?: string; // hex string, only on EIP-1559 txs
-};
+
 
 type Base64String = string;
 
@@ -477,36 +435,6 @@ export type IcxRawTransaction = {
   data: Hex;
 };
 
-export type IcxCallTransaction = {
-  to: string;
-  from: string;
-  nid: Hex;
-  value: Hex;
-  method: string;
-  params: object;
-  version?: Hex;
-  timestamp?: number;
-};
-
-export type IconTransactionResult = {
-  status: number;
-  to: string;
-  txHash: string;
-  txIndex: number;
-  blockHeight: number;
-  blockHash: string;
-  cumulativeStepUsed: bigint;
-  stepUsed: bigint;
-  stepPrice: bigint;
-  scoreAddress?: string;
-  eventLogs?: unknown;
-  logsBloom?: unknown;
-  failure?: {
-    code: string;
-    message: string;
-  };
-};
-
 export type SuiRawTransaction = {
   from: Hex;
   to: string;
@@ -514,37 +442,6 @@ export type SuiRawTransaction = {
   data: Base64String;
 };
 
-export type SuiTransaction = {
-  toJSON: () => Promise<string>;
-};
-
-export type SuiArgument =
-  | 'GasCoin'
-  | {
-      Input: number;
-    }
-  | {
-      Result: number;
-    };
-
-export interface SuiExecutionResult {
-  mutableReferenceOutputs?: [SuiArgument, number[], string][];
-  returnValues?: [number[], string][];
-}
-
-export interface SuiCoinStruct {
-  balance: string;
-  coinObjectId: string;
-  coinType: string;
-  digest: string;
-  previousTransaction: string;
-  version: string;
-}
-export interface SuiPaginatedCoins {
-  data: SuiCoinStruct[];
-  hasNextPage: boolean;
-  nextCursor?: string | null;
-}
 
 export type CWRawTransaction = {
   from: Hex;
@@ -561,16 +458,16 @@ export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransact
 export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chainConfig']['chain']['type'] extends 'EVM'
   ? EvmReturnType<Raw>
   : T['chainConfig']['chain']['type'] extends 'SOLANA'
-    ? SolanaReturnType<Raw>
-    : T['chainConfig']['chain']['type'] extends 'STELLAR'
-      ? StellarReturnType<Raw>
-      : T['chainConfig']['chain']['type'] extends 'ICON'
-        ? IconReturnType<Raw>
-        : T['chainConfig']['chain']['type'] extends 'SUI'
-          ? SuiReturnType<Raw>
-          : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-            ? CWReturnType<Raw>
-            : never; // TODO extend for each chain implementation
+  ? SolanaReturnType<Raw>
+  : T['chainConfig']['chain']['type'] extends 'STELLAR'
+  ? StellarReturnType<Raw>
+  : T['chainConfig']['chain']['type'] extends 'ICON'
+  ? IconReturnType<Raw>
+  : T['chainConfig']['chain']['type'] extends 'SUI'
+  ? SuiReturnType<Raw>
+  : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+  ? CWReturnType<Raw>
+  : never; // TODO extend for each chain implementation
 export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
 export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<TxReturnType<SolanaSpokeProvider, Raw>>;
 export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnType<StellarSpokeProvider, Raw>>;
@@ -592,16 +489,16 @@ export type PromiseTxReturnType<
 > = T['chainConfig']['chain']['type'] extends 'EVM'
   ? PromiseEvmTxReturnType<Raw>
   : T['chainConfig']['chain']['type'] extends 'SOLANA'
-    ? PromiseSolanaTxReturnType<Raw>
-    : T['chainConfig']['chain']['type'] extends 'STELLAR'
-      ? PromiseStellarTxReturnType<Raw>
-      : T['chainConfig']['chain']['type'] extends 'ICON'
-        ? PromiseIconTxReturnType<Raw>
-        : T['chainConfig']['chain']['type'] extends 'SUI'
-          ? PromiseSuiTxReturnType<Raw>
-          : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-            ? PromiseCWTxReturnType<Raw>
-            : never;
+  ? PromiseSolanaTxReturnType<Raw>
+  : T['chainConfig']['chain']['type'] extends 'STELLAR'
+  ? PromiseStellarTxReturnType<Raw>
+  : T['chainConfig']['chain']['type'] extends 'ICON'
+  ? PromiseIconTxReturnType<Raw>
+  : T['chainConfig']['chain']['type'] extends 'SUI'
+  ? PromiseSuiTxReturnType<Raw>
+  : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+  ? PromiseCWTxReturnType<Raw>
+  : never;
 
 export type VaultType = {
   address: Address; // vault address

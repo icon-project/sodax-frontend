@@ -3,7 +3,7 @@ import { Transaction, type TransactionResult } from '@mysten/sui/transactions';
 import { type Hex, toHex } from 'viem';
 import type { PromiseSuiTxReturnType, SuiReturnType, SuiSpokeChainConfig } from '../../types.js';
 import type { ISpokeProvider } from '../index.js';
-import type { ISuiWalletProvider } from '../../interfaces.js';
+import type { ISuiWalletProvider } from '@sodax/types';
 
 type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
 type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | undefined };
