@@ -1,7 +1,8 @@
-import type { XToken } from '@sodax/wallet-sdk';
+import type { XToken } from '@sodax/types';
 import { useSodaxContext } from './useSodaxContext';
 import { useSpokeProvider } from './useSpokeProvider';
-import type { Address, SpokeChainId } from '@sodax/sdk';
+import type { Address } from '@sodax/sdk';
+import type { SpokeChainId } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

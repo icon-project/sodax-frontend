@@ -1,4 +1,5 @@
-import type { EvmHubProvider, SpokeChainId } from '@sodax/sdk';
+import type { EvmHubProvider } from '@sodax/sdk';
+import type { SpokeChainId } from '@sodax/types';
 import {
   SpokeService,
   type IntentRelayRequest,
@@ -6,7 +7,7 @@ import {
   submitTransaction,
   getIntentRelayChainId,
 } from '@sodax/sdk';
-import type { XChainId, XToken } from '@sodax/wallet-sdk';
+import type { ChainId, XToken } from '@sodax/types';
 import { getXChainType, useXAccount, xChainMap } from '@sodax/wallet-sdk';
 import { useState } from 'react';
 import type { Address, Hash, Hex } from 'viem';
@@ -26,7 +27,7 @@ interface UseWithdrawReturn {
 }
 
 // token: this is hub token
-export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawReturn {
+export function useWithdraw(token: XToken, spokeChainId: ChainId): UseWithdrawReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();
@@ -59,9 +60,11 @@ export function useWithdraw(token: XToken, spokeChainId: XChainId): UseWithdrawR
     setError(null);
 
     try {
+      const spokeWalletAddress: Address = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
+
       const data: Hex = sodax.moneyMarket.withdrawData(
         hubWalletAddress as Address,
-        spokeProvider.walletProvider.getWalletAddress(),
+        spokeWalletAddress,
         getSpokeTokenAddressByVault(spokeChainId, token.address),
         parseUnits(amount, token.decimals),
         spokeProvider.chainConfig.chain.id,

@@ -23,9 +23,8 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
-    "@mysten/sui": "^1.21.2",
-    "@mysten/wallet-standard": "^0.15.6",
     "@sodax/sdk": "workspace:*",
+    "@sodax/types": "workspace:*",
     "@sodax/wallet-sdk": "workspace:*",
     "viem": "catalog:"
   },
@@ -41,12 +40,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "prettier": {
-    "printWidth": 120,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "all"
   },
   "exports": {
     "./package.json": "./package.json",

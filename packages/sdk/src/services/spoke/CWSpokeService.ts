@@ -102,7 +102,7 @@ export class CWSpokeService {
     spokeProvider: CWSpokeProvider,
     raw?: R,
   ): PromiseCWTxReturnType<R> {
-    const sender = spokeProvider.walletProvider.getWalletAddress();
+    const sender = await spokeProvider.walletProvider.getWalletAddress();
     return CWSpokeProvider.deposit(sender, token, recipient, amount, data, spokeProvider, raw);
   }
 
@@ -121,7 +121,7 @@ export class CWSpokeService {
     spokeProvider: CWSpokeProvider,
     raw?: R,
   ): PromiseCWTxReturnType<R> {
-    const sender = spokeProvider.walletProvider.getWalletAddress();
+    const sender = await spokeProvider.walletProvider.getWalletAddress();
     return spokeProvider.send_message(sender, dstChainId.toString(), dstAddress, payload, raw);
   }
 }

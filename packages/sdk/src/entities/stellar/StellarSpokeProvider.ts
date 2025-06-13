@@ -1,5 +1,4 @@
 import {
-  Keypair,
   Contract,
   TransactionBuilder,
   BASE_FEE,
@@ -11,38 +10,18 @@ import {
 } from '@stellar/stellar-sdk';
 import type { PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
 import { toHex, type Hex } from 'viem';
-import type { ISpokeProvider, WalletAddressProvider } from '../Providers.js';
+import type { ISpokeProvider } from '../Providers.js';
 import type { Server } from '@stellar/stellar-sdk/rpc';
-
-export class StellarWalletProvider implements WalletAddressProvider {
-  private readonly _keypair: Keypair;
-
-  constructor(secretKey: string) {
-    this._keypair = Keypair.fromSecret(secretKey);
-  }
-
-  getWalletAddress(): string {
-    console.log('Public key is:', this._keypair.publicKey());
-    return this._keypair.publicKey();
-  }
-
-  getWalletAddressBytes(): Hex {
-    return StellarSpokeProvider.getAddressBCSBytes(this.getWalletAddress());
-  }
-
-  get keypair(): Keypair {
-    return this._keypair;
-  }
-}
+import type { IStellarWalletProvider } from '@sodax/types';
 
 export class StellarSpokeProvider implements ISpokeProvider {
   private readonly server: Server;
   private readonly contract: Contract;
   public readonly chainConfig: StellarSpokeChainConfig;
-  public readonly walletProvider: StellarWalletProvider;
+  public readonly walletProvider: IStellarWalletProvider;
 
   constructor(
-    walletProvider: StellarWalletProvider,
+    walletProvider: IStellarWalletProvider,
     contractAddress: string,
     config: StellarSpokeChainConfig,
     rpc: string,
@@ -54,11 +33,15 @@ export class StellarSpokeProvider implements ISpokeProvider {
   }
 
   async getBalance(tokenAddress: string): Promise<number> {
-    const sourceAccount = await this.server.getAccount(this.walletProvider.keypair.publicKey());
+    const [network, walletAddress] = await Promise.all([
+      this.server.getNetwork(),
+      this.walletProvider.getWalletAddress(),
+    ]);
+    const sourceAccount = await this.server.getAccount(walletAddress);
 
     const tx = new TransactionBuilder(sourceAccount, {
       fee: BASE_FEE,
-      networkPassphrase: (await this.server.getNetwork()).passphrase,
+      networkPassphrase: network.passphrase,
     })
       .addOperation(this.contract.call('get_token_balance', nativeToScVal(tokenAddress, { type: 'address' })))
       .setTimeout(TimeoutInfinite)
@@ -87,15 +70,19 @@ export class StellarSpokeProvider implements ISpokeProvider {
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
     try {
-      const sourceAccount = await this.server.getAccount(this.walletProvider.keypair.publicKey());
+      const [network, walletAddress] = await Promise.all([
+        this.server.getNetwork(),
+        this.walletProvider.getWalletAddress(),
+      ]);
+      const sourceAccount = await this.server.getAccount(walletAddress);
       const simulateTx = new TransactionBuilder(sourceAccount, {
         fee: BASE_FEE,
-        networkPassphrase: (await this.server.getNetwork()).passphrase,
+        networkPassphrase: network.passphrase,
       })
         .addOperation(
           this.contract.call(
             'transfer',
-            nativeToScVal(Address.fromString(this.walletProvider.keypair.publicKey()), { type: 'address' }),
+            nativeToScVal(Address.fromString(walletAddress), { type: 'address' }),
             nativeToScVal(Address.fromString(token), {
               type: 'address',
             }),
@@ -114,7 +101,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
         const transactionXdr = tx.toXDR();
 
         return {
-          from: this.walletProvider.getWalletAddress(),
+          from: walletAddress,
           to: this.chainConfig.addresses.assetManager,
           value: BigInt(amount),
           data: transactionXdr,
@@ -122,8 +109,10 @@ export class StellarSpokeProvider implements ISpokeProvider {
       }
 
       if (tx) {
-        tx.sign(this.walletProvider.keypair);
-        const sendResponse = await this.server.sendTransaction(tx);
+        const signedTx = await this.walletProvider.signTransaction(tx.toXDR());
+        const sendResponse = await this.server.sendTransaction(
+          TransactionBuilder.fromXDR(signedTx, tx.networkPassphrase),
+        );
         if (sendResponse.hash) {
           return `0x${sendResponse.hash}` as StellarReturnType<R>;
         }
@@ -142,17 +131,21 @@ export class StellarSpokeProvider implements ISpokeProvider {
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
     try {
-      const sourceAccount = await this.server.getAccount(this.walletProvider.keypair.publicKey());
+      const [network, walletAddress] = await Promise.all([
+        this.server.getNetwork(),
+        this.walletProvider.getWalletAddress(),
+      ]);
+      const sourceAccount = await this.server.getAccount(walletAddress);
       const connection = new Contract(this.chainConfig.addresses.connection);
 
       const simulateTx = new TransactionBuilder(sourceAccount, {
         fee: BASE_FEE,
-        networkPassphrase: (await this.server.getNetwork()).passphrase,
+        networkPassphrase: network.passphrase,
       })
         .addOperation(
           connection.call(
             'send_message',
-            nativeToScVal(Address.fromString(this.walletProvider.keypair.publicKey()), { type: 'address' }),
+            nativeToScVal(Address.fromString(walletAddress), { type: 'address' }),
             nativeToScVal(dst_chain_id, { type: 'u128' }),
             nativeToScVal(Buffer.from(dst_address), { type: 'bytes' }),
             nativeToScVal(Buffer.from(payload), { type: 'bytes' }),
@@ -167,15 +160,18 @@ export class StellarSpokeProvider implements ISpokeProvider {
       if (raw) {
         const transactionXdr = tx.toXDR();
         return {
-          from: this.walletProvider.getWalletAddress(),
+          from: walletAddress,
           to: this.chainConfig.addresses.assetManager,
           value: 0n,
           data: transactionXdr,
         } as StellarReturnType<R>;
       }
+
       if (tx) {
-        tx.sign(this.walletProvider.keypair);
-        const sendResponse = await this.server.sendTransaction(tx);
+        const signedTx = await this.walletProvider.signTransaction(tx.toXDR());
+        const sendResponse = await this.server.sendTransaction(
+          TransactionBuilder.fromXDR(signedTx, tx.networkPassphrase),
+        );
         if (sendResponse.hash) {
           return `0x${sendResponse.hash}` as StellarReturnType<R>;
         }

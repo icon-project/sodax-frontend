@@ -37,11 +37,11 @@ export class EvmWalletProvider implements IEvmWalletProvider {
     });
   }
 
-  getWalletAddress(): Address {
-    return this.walletClient.account.address;
+  async getWalletAddress(): Promise<Address> {
+    return Promise.resolve(this.walletClient.account.address as Address);
   }
-  getWalletAddressBytes(): Hex {
-    return this.walletClient.account.address;
+  async getWalletAddressBytes(): Promise<Hex> {
+    return Promise.resolve(this.walletClient.account.address as Hex);
   }
 
   async sendTransaction(evmRawTx: EvmRawTransaction): Promise<Hash> {

@@ -2,9 +2,10 @@ import { xChainMap } from '@/constants/xChains';
 import { useCallback, useMemo } from 'react';
 import { useAccount } from 'wagmi';
 import { useSwitchChain } from 'wagmi';
-import { type XChainId, getXChainType } from '..';
+import type { ChainId } from '@sodax/types';
+import { getXChainType } from '@/actions';
 
-export const useEvmSwitchChain = (expectedXChainId: XChainId) => {
+export const useEvmSwitchChain = (expectedXChainId: ChainId) => {
   const xChainType = getXChainType(expectedXChainId);
   const expectedChainId = xChainMap[expectedXChainId].id as number;
 

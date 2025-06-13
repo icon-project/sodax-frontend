@@ -1,6 +1,6 @@
 import { encodeAbiParameters, parseAbiParameters } from 'viem';
-import type { EvmContractCall, EvmRawTransactionReceipt, Hex } from '../types.js';
-import type { IEvmWalletProvider } from '../interfaces.js';
+import type { EvmContractCall } from '../types.js';
+import type { IEvmWalletProvider, EvmRawTransactionReceipt, Hex } from '@sodax/types';
 
 /**
  * ABI-encode an array of ContractCall objects.

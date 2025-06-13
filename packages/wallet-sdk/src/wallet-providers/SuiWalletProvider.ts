@@ -2,8 +2,8 @@ import { bcs } from '@mysten/sui/bcs';
 import type { SuiClient } from '@mysten/sui/client';
 import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
 import { type Address, toHex } from 'viem';
-import type { Hex } from '@sodax/sdk';
-import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@sodax/sdk';
+import type { Hex } from '@sodax/types';
+import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@sodax/types';
 import { signTransaction } from '@mysten/wallet-standard';
 
 export class SuiWalletProvider implements ISuiWalletProvider {
@@ -62,11 +62,12 @@ export class SuiWalletProvider implements ISuiWalletProvider {
     return this.client.getCoins({ owner: address, coinType: token, limit: 10 });
   }
 
-  getWalletAddress() {
-    return this.account.getPublicKey().toSuiAddress() as `0x${string}`;
+  async getWalletAddress(): Promise<Address> {
+    return this.account.getPublicKey().toSuiAddress() as Address;
   }
 
-  getWalletAddressBytes(): Hex {
-    return toHex(bcs.Address.serialize(this.getWalletAddress()).toBytes());
+  async getWalletAddressBytes(): Promise<Hex> {
+    const walletAddress = await this.getWalletAddress();
+    return toHex(bcs.Address.serialize(walletAddress).toBytes());
   }
 }

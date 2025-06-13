@@ -1,4 +1,4 @@
-import type { XChainType } from '@/types';
+import type { ChainType } from '@sodax/types';
 import { useDisconnectWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useCallback } from 'react';
@@ -15,7 +15,7 @@ export function useXDisconnect() {
   const solanaWallet = useWallet();
 
   const disconnect = useCallback(
-    async (xChainType: XChainType) => {
+    async (xChainType: ChainType) => {
       switch (xChainType) {
         case 'EVM':
           await disconnectAsync();

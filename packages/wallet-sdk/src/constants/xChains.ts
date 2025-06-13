@@ -1,12 +1,4 @@
-import type { XChain, XChainId } from '@/types';
-
-export const archwayTestnet: XChain = {
-  id: 'archway',
-  name: 'archway testnet',
-  xChainId: 'archway',
-  xChainType: 'ARCHWAY',
-  testnet: true,
-};
+import type { XChain, ChainId } from '@sodax/types';
 
 export const icon: XChain = {
   id: 1,
@@ -16,28 +8,12 @@ export const icon: XChain = {
   testnet: false,
 };
 
-export const lisbon: XChain = {
-  id: 2,
-  name: 'Lisbon Testnet',
-  xChainId: '0x2.icon',
-  xChainType: 'ICON',
-  testnet: true,
-};
-
 export const avalanche: XChain = {
   id: 43_114,
   name: 'Avalanche',
   xChainId: '0xa86a.avax',
   xChainType: 'EVM',
   testnet: false,
-};
-
-export const fuji: XChain = {
-  id: 43_113,
-  name: 'Fuji Testnet',
-  xChainId: '0xa869.fuji',
-  xChainType: 'EVM',
-  testnet: true,
 };
 
 export const bsc: XChain = {
@@ -104,14 +80,6 @@ export const optimism: XChain = {
   testnet: false,
 };
 
-export const sonicBlaze: XChain = {
-  id: 57_054,
-  name: 'Sonic Blaze',
-  xChainId: 'sonic-blaze',
-  xChainType: 'EVM',
-  testnet: true,
-};
-
 export const sonic: XChain = {
   id: 57_054,
   name: 'Sonic',
@@ -128,14 +96,20 @@ export const polygon: XChain = {
   testnet: false,
 };
 
+// TODO: update information
+export const nibiru: XChain = {
+  id: 2894,
+  name: 'Nibiru',
+  xChainId: 'nibiru',
+  xChainType: 'EVM',
+  testnet: false,
+};
+
 // the order is important, using manual order to display in the UI
-export const xChainMap: { [key in XChainId]: XChain } = {
+export const xChainMap: { [key in ChainId]: XChain } = {
   '0x1.icon': icon,
-  '0x2.icon': lisbon,
-  archway: archwayTestnet,
   '0xa4b1.arbitrum': arbitrum,
   '0xa86a.avax': avalanche,
-  '0xa869.fuji': fuji,
   '0x38.bsc': bsc,
   '0x2105.base': base,
   '0xa.optimism': optimism,
@@ -143,9 +117,9 @@ export const xChainMap: { [key in XChainId]: XChain } = {
   stellar: stellar,
   sui: sui,
   solana: solana,
-  'sonic-blaze': sonicBlaze,
   sonic: sonic,
   '0x89.polygon': polygon,
+  nibiru: nibiru,
 };
 
 export const xChains = Object.values(xChainMap);

@@ -1,7 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
   type CreateIntentParams,
   type EvmHubProviderConfig,
   EvmSpokeProvider,
@@ -17,7 +15,6 @@ import {
   type PartnerFee,
   type RelayTxStatus,
   type Result,
-  SONIC_MAINNET_CHAIN_ID,
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
@@ -32,6 +29,7 @@ import {
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
+import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 describe('Sodax', () => {
   const partnerFeePercentage = {
@@ -89,8 +87,8 @@ describe('Sodax', () => {
 
     const mockEvmWalletProvider = {
       sendTransaction: vi.fn(),
-      getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
-      getWalletAddressBytes: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
+      getWalletAddress: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999'),
+      getWalletAddressBytes: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999'),
       waitForTransactionReceipt: vi.fn(),
     } as unknown as IEvmWalletProvider;
 
@@ -288,56 +286,66 @@ describe('Sodax', () => {
     });
 
     describe('createAndSubmitIntent', () => {
-      const mockCreateIntentParams = {
-        inputToken: bscEthToken,
-        outputToken: arbWbtcToken,
-        inputAmount: BigInt(1000000),
-        minOutputAmount: BigInt(900000),
-        deadline: BigInt(0),
-        allowPartialFill: false,
-        srcChain: BSC_MAINNET_CHAIN_ID,
-        dstChain: ARBITRUM_MAINNET_CHAIN_ID,
-        srcAddress: mockEvmWalletProvider.getWalletAddressBytes(),
-        dstAddress: mockEvmWalletProvider.getWalletAddressBytes(),
-        solver: '0x0000000000000000000000000000000000000000',
-        data: '0x',
-      } satisfies CreateIntentParams;
+      let mockCreateIntentParams: CreateIntentParams;
+      let mockIntent: Intent & FeeAmount;
+      let mockPacketData: PacketData;
 
-      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      beforeEach(async () => {
+        const walletAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+        mockCreateIntentParams = {
+          inputToken: bscEthToken,
+          outputToken: arbWbtcToken,
+          inputAmount: BigInt(1000000),
+          minOutputAmount: BigInt(900000),
+          deadline: BigInt(0),
+          allowPartialFill: false,
+          srcChain: BSC_MAINNET_CHAIN_ID,
+          dstChain: ARBITRUM_MAINNET_CHAIN_ID,
+          srcAddress: walletAddress,
+          dstAddress: walletAddress,
+          solver: '0x0000000000000000000000000000000000000000',
+          data: '0x',
+        } satisfies CreateIntentParams;
 
-      const mockIntent = {
-        intentId: BigInt(1),
-        creator: mockBscSpokeProvider.walletProvider.getWalletAddress(),
-        inputToken: getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
-        outputToken:
-          getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
-        inputAmount: mockCreateIntentParams.inputAmount,
-        minOutputAmount: mockCreateIntentParams.minOutputAmount,
-        deadline: mockCreateIntentParams.deadline,
-        allowPartialFill: mockCreateIntentParams.allowPartialFill,
-        srcChain: getIntentRelayChainId(mockCreateIntentParams.srcChain),
-        dstChain: getIntentRelayChainId(mockCreateIntentParams.dstChain),
-        srcAddress: mockCreateIntentParams.srcAddress,
-        dstAddress: mockCreateIntentParams.dstAddress,
-        solver: mockCreateIntentParams.solver,
-        data: mockCreateIntentParams.data,
-        feeAmount: partnerFeeAmount.amount,
-      } satisfies Intent & FeeAmount;
+        const creatorAddress = await mockBscSpokeProvider.walletProvider.getWalletAddress();
+        mockIntent = {
+          intentId: BigInt(1),
+          creator: creatorAddress as `0x${string}`,
+          inputToken:
+            getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
+          outputToken:
+            getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
+          inputAmount: mockCreateIntentParams.inputAmount,
+          minOutputAmount: mockCreateIntentParams.minOutputAmount,
+          deadline: mockCreateIntentParams.deadline,
+          allowPartialFill: mockCreateIntentParams.allowPartialFill,
+          srcChain: getIntentRelayChainId(mockCreateIntentParams.srcChain),
+          dstChain: getIntentRelayChainId(mockCreateIntentParams.dstChain),
+          srcAddress: walletAddress,
+          dstAddress: walletAddress,
+          solver: mockCreateIntentParams.solver,
+          data: mockCreateIntentParams.data,
+          feeAmount: partnerFeeAmount.amount,
+        } satisfies Intent & FeeAmount;
 
-      const mockPacketData = {
-        src_chain_id: Number(getIntentRelayChainId(BSC_MAINNET_CHAIN_ID)), // BSC chain ID
-        src_tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-        src_address: '0x1234567890123456789012345678901234567890',
-        status: 'executed' satisfies RelayTxStatus,
-        dst_chain_id: Number(getIntentRelayChainId(ARBITRUM_MAINNET_CHAIN_ID)), // Arbitrum chain ID
-        conn_sn: 1,
-        dst_address: '0x1234567890123456789012345678901234567890',
-        dst_tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-        signatures: ['0x1234567890123456789012345678901234567890'],
-        payload: '0x',
-      } satisfies PacketData;
+        mockPacketData = {
+          src_chain_id: Number(getIntentRelayChainId(BSC_MAINNET_CHAIN_ID)), // BSC chain ID
+          src_tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+          src_address: '0x1234567890123456789012345678901234567890',
+          status: 'executed' satisfies RelayTxStatus,
+          dst_chain_id: Number(getIntentRelayChainId(ARBITRUM_MAINNET_CHAIN_ID)), // Arbitrum chain ID
+          conn_sn: 1,
+          dst_address: '0x1234567890123456789012345678901234567890',
+          dst_tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+          signatures: ['0x1234567890123456789012345678901234567890'],
+          payload: '0x',
+        } satisfies PacketData;
+      });
 
       it('should successfully create and submit an intent', async () => {
+        const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+        const walletAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+
         vi.spyOn(sodax.solver, 'createIntent').mockResolvedValueOnce({
           ok: true,
           value: [
@@ -345,9 +353,7 @@ describe('Sodax', () => {
             { ...mockIntent, feeAmount: partnerFeeAmount.amount },
           ],
         });
-        vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
-          mockEvmWalletProvider.getWalletAddressBytes(),
-        );
+        vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(walletAddress);
         vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
           success: true,
           message: 'Transaction submitted successfully',
@@ -363,13 +369,6 @@ describe('Sodax', () => {
             intent_hash: mockTxHash,
           },
         });
-
-        // const createIntentResult = await sodax.solver.createIntent(
-        //   mockCreateIntentParams,
-        //   mockBscSpokeProvider,
-        //   partnerFeeAmount,
-        //   true,
-        // );
 
         const result = await sodax.solver.createAndSubmitIntent(
           mockCreateIntentParams,
@@ -397,32 +396,38 @@ describe('Sodax', () => {
     });
 
     describe('cancelIntent', () => {
-      const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890';
+      let mockCreateIntentParams: CreateIntentParams;
+      let intent: Intent & FeeAmount;
 
-      const mockCreateIntentParams = {
-        inputToken: bscEthToken,
-        outputToken: arbWbtcToken,
-        inputAmount: BigInt(1000000),
-        minOutputAmount: BigInt(900000),
-        deadline: BigInt(0),
-        allowPartialFill: false,
-        srcChain: BSC_MAINNET_CHAIN_ID,
-        dstChain: ARBITRUM_MAINNET_CHAIN_ID,
-        srcAddress: mockEvmWalletProvider.getWalletAddressBytes(),
-        dstAddress: mockEvmWalletProvider.getWalletAddressBytes(),
-        solver: '0x0000000000000000000000000000000000000000',
-        data: '0x',
-      } satisfies CreateIntentParams;
+      beforeEach(async () => {
+        const walletAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+        mockCreateIntentParams = {
+          inputToken: bscEthToken,
+          outputToken: arbWbtcToken,
+          inputAmount: BigInt(1000000),
+          minOutputAmount: BigInt(900000),
+          deadline: BigInt(0),
+          allowPartialFill: false,
+          srcChain: BSC_MAINNET_CHAIN_ID,
+          dstChain: ARBITRUM_MAINNET_CHAIN_ID,
+          srcAddress: walletAddress,
+          dstAddress: walletAddress,
+          solver: '0x0000000000000000000000000000000000000000',
+          data: '0x',
+        } satisfies CreateIntentParams;
 
-      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
-      const [, intent] = EvmSolverService.constructCreateIntentData(
-        mockCreateIntentParams,
-        mockCreatorHubWalletAddress,
-        solverConfig,
-        partnerFeeAmount,
-      );
+        const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890';
+        const [, constructedIntent] = EvmSolverService.constructCreateIntentData(
+          mockCreateIntentParams,
+          mockCreatorHubWalletAddress,
+          solverConfig,
+          partnerFeeAmount,
+        );
+        intent = { ...constructedIntent, feeAmount: partnerFeeAmount.amount } satisfies Intent & FeeAmount;
+      });
 
       it('should successfully cancel an intent for EVM chain', async () => {
+        const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
         vi.spyOn(sodax.solver, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
         const result = await sodax.solver.cancelIntent(intent, mockBscSpokeProvider, false);
 
@@ -433,7 +438,7 @@ describe('Sodax', () => {
         const invalidSpokeProvider = {
           chainConfig: {
             chain: {
-              type: 'evm',
+              type: 'EVM',
             },
           },
           walletProvider: {
@@ -448,41 +453,50 @@ describe('Sodax', () => {
     });
 
     describe('getIntent', () => {
-      const mockCreateIntentParams = {
-        inputToken: bscEthToken,
-        outputToken: arbWbtcToken,
-        inputAmount: BigInt(1000000),
-        minOutputAmount: BigInt(900000),
-        deadline: BigInt(0),
-        allowPartialFill: false,
-        srcChain: BSC_MAINNET_CHAIN_ID,
-        dstChain: ARBITRUM_MAINNET_CHAIN_ID,
-        srcAddress: mockEvmWalletProvider.getWalletAddressBytes(),
-        dstAddress: mockEvmWalletProvider.getWalletAddressBytes(),
-        solver: '0x0000000000000000000000000000000000000000',
-        data: '0x',
-      } satisfies CreateIntentParams;
+      let mockCreateIntentParams: CreateIntentParams;
+      let mockIntent: Intent & FeeAmount;
 
-      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
-      const mockIntent = {
-        intentId: BigInt(1),
-        creator: mockBscSpokeProvider.walletProvider.getWalletAddress(),
-        inputToken: getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
-        outputToken:
-          getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
-        inputAmount: mockCreateIntentParams.inputAmount,
-        minOutputAmount: mockCreateIntentParams.minOutputAmount,
-        deadline: mockCreateIntentParams.deadline,
-        allowPartialFill: mockCreateIntentParams.allowPartialFill,
-        srcChain: getIntentRelayChainId(mockCreateIntentParams.srcChain),
-        dstChain: getIntentRelayChainId(mockCreateIntentParams.dstChain),
-        srcAddress: mockCreateIntentParams.srcAddress,
-        dstAddress: mockCreateIntentParams.dstAddress,
-        solver: mockCreateIntentParams.solver,
-        data: mockCreateIntentParams.data,
-      } satisfies Intent;
+      beforeEach(async () => {
+        const walletAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+        mockCreateIntentParams = {
+          inputToken: bscEthToken,
+          outputToken: arbWbtcToken,
+          inputAmount: BigInt(1000000),
+          minOutputAmount: BigInt(900000),
+          deadline: BigInt(0),
+          allowPartialFill: false,
+          srcChain: BSC_MAINNET_CHAIN_ID,
+          dstChain: ARBITRUM_MAINNET_CHAIN_ID,
+          srcAddress: walletAddress,
+          dstAddress: walletAddress,
+          solver: '0x0000000000000000000000000000000000000000',
+          data: '0x',
+        } satisfies CreateIntentParams;
+
+        const creatorAddress = await mockBscSpokeProvider.walletProvider.getWalletAddress();
+        mockIntent = {
+          intentId: BigInt(1),
+          creator: creatorAddress as `0x${string}`,
+          inputToken:
+            getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
+          outputToken:
+            getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
+          inputAmount: mockCreateIntentParams.inputAmount,
+          minOutputAmount: mockCreateIntentParams.minOutputAmount,
+          deadline: mockCreateIntentParams.deadline,
+          allowPartialFill: mockCreateIntentParams.allowPartialFill,
+          srcChain: getIntentRelayChainId(mockCreateIntentParams.srcChain),
+          dstChain: getIntentRelayChainId(mockCreateIntentParams.dstChain),
+          srcAddress: walletAddress,
+          dstAddress: walletAddress,
+          solver: mockCreateIntentParams.solver,
+          data: mockCreateIntentParams.data,
+          feeAmount: partnerFeeAmount.amount,
+        } satisfies Intent & FeeAmount;
+      });
 
       it('should successfully get an intent for EVM chain', async () => {
+        const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
         vi.spyOn(EvmSolverService, 'getIntent').mockResolvedValueOnce(mockIntent);
         const result = await sodax.solver.getIntent(mockTxHash);
 

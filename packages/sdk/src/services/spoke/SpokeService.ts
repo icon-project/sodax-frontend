@@ -8,14 +8,8 @@ import {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
-import type {
-  Address,
-  Hex,
-  GetSpokeDepositParamsType,
-  PromiseTxReturnType,
-  TxReturnType,
-  HubAddress,
-} from '../../types.js';
+import type { GetSpokeDepositParamsType, PromiseTxReturnType, TxReturnType } from '../../types.js';
+import type { Address, Hex, HubAddress } from '@sodax/types';
 import { CWSpokeService } from './CWSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';

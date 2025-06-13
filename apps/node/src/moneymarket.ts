@@ -5,13 +5,12 @@ import {
   type EvmHubProviderConfig,
   getHubChainConfig,
   getMoneyMarketConfig,
-  type HubChainId,
   type MoneyMarketConfig,
   Sodax,
   type SodaxConfig,
-  SONIC_MAINNET_CHAIN_ID,
   type UserReserveData,
 } from '@sodax/sdk';
+import { SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
 import type { Address } from 'viem';
 
 // load PK from .env

@@ -1,4 +1,5 @@
-import type { Hex, HttpUrl, Result } from '../../types.js';
+import type { HttpUrl, Result } from '../../types.js';
+import type { Hex } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentSubmitError } from '../solver/SolverService.js';

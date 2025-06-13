@@ -6,4 +6,4 @@ export * from './constants.js';
 export * from './guards.js';
 export * from './errors.js';
 export * from './types.js';
-export * from './interfaces.js';
+export * from '@sodax/types';

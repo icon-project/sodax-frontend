@@ -1,4 +1,4 @@
-name: Publish Package to npmjs
+name: Publish @sodax/sdk Package to npmjs
 
 on:
   push:
