@@ -20,7 +20,6 @@ import {
 } from '../../index.js';
 import type {
   EvmContractCall,
-  EvmRawTransactionReceipt,
   GetSpokeDepositParamsType,
   HttpUrl,
   MoneyMarketConfigParams,
@@ -28,6 +27,7 @@ import type {
   Result,
   TxReturnType,
 } from '../../types.js';
+import type { EvmRawTransactionReceipt } from '@sodax/types';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService, EvmWalletAbstraction } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';
@@ -127,17 +127,17 @@ export type MoneyMarketEncodeRepayWithATokensParams = {
 };
 
 export type MoneyMarketSupplyParams = {
-  token: string;
+  token: string; // spoke chain token address
   amount: bigint;
 };
 
 export type MoneyMarketBorrowParams = {
-  token: string;
+  token: string; // spoke chain token address
   amount: bigint;
 };
 
 export type MoneyMarketWithdrawParams = {
-  token: string;
+  token: string; // spoke chain token address
   amount: bigint;
 };
 
@@ -198,10 +198,11 @@ export class MoneyMarketService {
   ): Promise<Result<boolean>> {
     try {
       if (spokeProvider instanceof EvmSpokeProvider) {
+        const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
         return Erc20Service.isAllowanceValid(
           params.token as Address,
           params.amount,
-          spokeProvider.walletProvider.getWalletAddress(),
+          walletAddress,
           spokeProvider.chainConfig.addresses.assetManager,
           spokeProvider,
         );
@@ -318,22 +319,24 @@ export class MoneyMarketService {
         `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
       );
 
+      const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
       const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
         spokeProvider.chainConfig.chain.id,
-        spokeProvider.walletProvider.getWalletAddressBytes(),
+        walletAddressBytes,
         this.hubProvider,
       );
 
       const data: Hex = this.supplyData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
 
+      const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
       const txResult = await SpokeService.deposit(
         {
-          from: spokeProvider.walletProvider.getWalletAddress(),
+          from: walletAddress,
           to: hubWallet,
           token: params.token,
           amount: params.amount,
           data,
-        } as GetSpokeDepositParamsType<S>,
+        } as unknown as GetSpokeDepositParamsType<S>,
         spokeProvider,
         this.hubProvider,
         raw,
@@ -422,15 +425,16 @@ export class MoneyMarketService {
       `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
+    const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
     const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
-      spokeProvider.walletProvider.getWalletAddressBytes(),
+      walletAddressBytes,
       this.hubProvider,
     );
 
     const data: Hex = this.borrowData(
       hubWallet,
-      spokeProvider.walletProvider.getWalletAddressBytes(),
+      walletAddressBytes,
       params.token,
       params.amount,
       spokeProvider.chainConfig.chain.id,
@@ -509,15 +513,16 @@ export class MoneyMarketService {
       `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
+    const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
     const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
-      spokeProvider.walletProvider.getWalletAddressBytes(),
+      walletAddressBytes,
       this.hubProvider,
     );
 
     const data: Hex = this.withdrawData(
       hubWallet,
-      spokeProvider.walletProvider.getWalletAddressBytes(),
+      walletAddressBytes,
       params.token,
       params.amount,
       spokeProvider.chainConfig.chain.id,
@@ -596,21 +601,23 @@ export class MoneyMarketService {
       `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
+    const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
     const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
-      spokeProvider.walletProvider.getWalletAddressBytes(),
+      walletAddressBytes,
       this.hubProvider,
     );
     const data: Hex = this.repayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
 
+    const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
     const txResult = await SpokeService.deposit(
       {
-        from: spokeProvider.walletProvider.getWalletAddress(),
+        from: walletAddress,
         to: hubWallet,
         token: params.token,
         amount: params.amount,
         data,
-      } as GetSpokeDepositParamsType<S>,
+      } as unknown as GetSpokeDepositParamsType<S>,
       spokeProvider,
       this.hubProvider,
       raw,

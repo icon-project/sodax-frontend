@@ -69,6 +69,7 @@ const sodax = new Sodax({
 } satisfies SodaxConfig);
 
 async function depositTo(token: Address, amount: bigint, recipient: Address) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   console.log(recipient);
 
   const data = EvmAssetManagerService.depositToData(
@@ -82,7 +83,7 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
 
   const txHash: Hash = await SpokeService.deposit(
     {
-      from: spokeProvider.walletProvider.getWalletAddress(),
+      from: walletAddress,
       token,
       amount,
       data,
@@ -95,9 +96,10 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
 }
 
 async function withdrawAsset(token: Address, amount: bigint, recipient: Address) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.getWalletAddress(),
+    walletAddress,
     hubProvider,
   );
 
@@ -116,9 +118,10 @@ async function withdrawAsset(token: Address, amount: bigint, recipient: Address)
 }
 
 async function supply(token: Address, amount: bigint) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.getWalletAddress(),
+    walletAddress,
     hubProvider,
   );
 
@@ -126,7 +129,7 @@ async function supply(token: Address, amount: bigint) {
 
   const txHash = await SpokeService.deposit(
     {
-      from: spokeProvider.walletProvider.getWalletAddress(),
+      from: walletAddress,
       token,
       amount,
       data,
@@ -139,14 +142,15 @@ async function supply(token: Address, amount: bigint) {
 }
 
 async function borrow(token: Address, amount: bigint) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.getWalletAddress(),
+    walletAddress,
     hubProvider,
   );
   const data: Hex = sodax.moneyMarket.borrowData(
     hubWallet,
-    spokeProvider.walletProvider.getWalletAddress(),
+    walletAddress,
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
@@ -158,15 +162,16 @@ async function borrow(token: Address, amount: bigint) {
 }
 
 async function withdraw(token: Address, amount: bigint) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.getWalletAddress(),
+    walletAddress,
     hubProvider,
   );
 
   const data: Hex = sodax.moneyMarket.withdrawData(
     hubWallet,
-    spokeProvider.walletProvider.getWalletAddress(),
+    walletAddress,
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
@@ -178,16 +183,17 @@ async function withdraw(token: Address, amount: bigint) {
 }
 
 async function repay(token: Address, amount: bigint) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.getWalletAddress(),
+    walletAddress,
     hubProvider,
   );
   const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {
-      from: spokeProvider.walletProvider.getWalletAddress(),
+      from: walletAddress,
       token,
       amount,
       data,
@@ -201,6 +207,7 @@ async function repay(token: Address, amount: bigint) {
 
 // uses spoke assets to create intents
 async function createIntent(amount: bigint, nativeToken: Address, inputToken: Address, outputToken: Address) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const intent = {
     inputToken: inputToken,
     outputToken: outputToken,
@@ -210,8 +217,8 @@ async function createIntent(amount: bigint, nativeToken: Address, inputToken: Ad
     allowPartialFill: false,
     srcChain: spokeProvider.chainConfig.chain.id,
     dstChain: spokeProvider.chainConfig.chain.id,
-    srcAddress: spokeProvider.walletProvider.getWalletAddress(),
-    dstAddress: spokeProvider.walletProvider.getWalletAddress(),
+    srcAddress: walletAddress,
+    dstAddress: walletAddress,
     solver: '0x0000000000000000000000000000000000000000',
     data: '0x',
   } satisfies CreateIntentParams;
@@ -231,14 +238,14 @@ async function fillIntent(
 ) {
   // Get the wallet client and account
   const walletClient = spokeProvider.walletProvider;
-  const account = walletClient.getWalletAddress();
+  const walletAddress = (await walletClient.getWalletAddress()) as Address;
 
-  console.log('Using account:', account);
+  console.log('Using account:', walletAddress);
 
   // Get the creator's wallet on the hub chain
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
-    spokeProvider.walletProvider.getWalletAddress(),
+    walletAddress,
     hubProvider,
   );
 
@@ -254,8 +261,8 @@ async function fillIntent(
     allowPartialFill: false,
     srcChain: BigInt(spokeProvider.chainConfig.chain.id),
     dstChain: BigInt(spokeProvider.chainConfig.chain.id),
-    srcAddress: spokeProvider.walletProvider.getWalletAddress() as Address,
-    dstAddress: spokeProvider.walletProvider.getWalletAddress() as Address,
+    srcAddress: walletAddress,
+    dstAddress: walletAddress,
     solver: '0x0000000000000000000000000000000000000000' as Address,
     data: '0x' as Hex,
   };
@@ -267,7 +274,7 @@ async function fillIntent(
   try {
     // Prepare the transaction request
     const req = {
-      account,
+      account: walletAddress,
       address: solverConfig.intentsContract as `0x${string}`,
       abi: IntentsAbi,
       functionName: 'fillIntent' as const,
@@ -295,7 +302,7 @@ async function fillIntent(
       chainId: 57054,
     };
     const rawTx = {
-      from: account,
+      from: walletAddress,
       to: solverConfig.intentsContract as `0x${string}`,
       data: encodeFunctionData({
         abi: IntentsAbi,

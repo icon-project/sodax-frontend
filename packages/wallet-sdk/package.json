@@ -23,7 +23,6 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
-    "@sodax/types": "workspace:*",
     "@archwayhq/arch3.js": "0.7.0",
     "@coral-xyz/anchor": "0.30.1",
     "@cosmjs/cosmwasm-stargate": "0.32.2",
@@ -38,6 +37,8 @@
     "@keplr-wallet/types": "0.12.18",
     "@mysten/dapp-kit": "0.14.18",
     "@mysten/sui": "^1.21.2",
+    "@mysten/wallet-standard": "^0.15.6",
+    "@sodax/types": "workspace:*",
     "@solana/wallet-adapter-react": "0.15.35",
     "@solana/wallet-adapter-wallets": "0.19.32",
     "@solana/web3.js": "1.98.0",
@@ -61,12 +62,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "prettier": {
-    "printWidth": 120,
-    "semi": true,
-    "singleQuote": true,
-    "trailingComma": "all"
   },
   "exports": {
     "./package.json": "./package.json",

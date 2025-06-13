@@ -1,12 +1,5 @@
-import type { IconTransactionResult, IcxCallTransaction } from '@sodax/sdk';
+import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/sdk';
 import IconService, { Wallet, Converter, CallTransactionBuilder } from 'icon-sdk-js';
-
-export interface IIconWalletProvider {
-  getWalletAddress: () => IconEoaAddress;
-  getWalletAddressBytes: () => Hex;
-  sendTransaction: (iconRawTx: IcxCallTransaction) => Promise<Hash>;
-  // waitForTransactionReceipt: (txHash: Hash) => Promise<IconRawTransactionReceipt>;
-}
 
 export class IconWalletProvider implements IIconWalletProvider {
   private readonly wallet: IconWallet;
@@ -67,12 +60,13 @@ export class IconWalletProvider implements IIconWalletProvider {
     } satisfies IconTransactionResult;
   }
 
-  getWalletAddress(): IconEoaAddress {
+  async getWalletAddress(): Promise<IconEoaAddress> {
     return isIconPkWallet(this.wallet) ? (this.wallet.wallet.getAddress() as IconEoaAddress) : this.wallet.wallet;
   }
 
-  getWalletAddressBytes(): Hex {
-    return `0x${Buffer.from(this.getWalletAddress().replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex').toString('hex')}`;
+  async getWalletAddressBytes(): Promise<Hex> {
+    const address = await this.getWalletAddress();
+    return `0x${Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex').toString('hex')}`;
   }
 }
 

@@ -44,8 +44,8 @@ import {
   IntentErrorResponse
 } from "@sodax/sdk";
 
-const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
-const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
+const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';  // Address of the ETH token on BSC (spoke chain)
+const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of the wBTC token on ARB (spoke chain)
 
   const quoteRequest = {
     token_src: bscEthToken,
@@ -76,24 +76,25 @@ import {
   ARBITRUM_MAINNET_CHAIN_ID
 } from "@sodax/sdk"
 
-const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
-const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
+const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';  // Address of the ETH token on BSC (spoke chain)
+const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of the wBTC token on ARB (spoke chain)
+const evmWalletAddressBytes = evmWalletProvider.getWalletAddressBytes();
 
 // First check if approval is needed
 const isApproved = await sodax.solver.isAllowanceValid(
   {
-    inputToken: bscEthToken,
-    outputToken: arbWbtcToken,
-    inputAmount: BigInt(1000000),
-    minOutputAmount: BigInt(900000),
-    deadline: BigInt(0),
-    allowPartialFill: false,
-    srcChain: BSC_MAINNET_CHAIN_ID,
-    dstChain: ARBITRUM_MAINNET_CHAIN_ID,
-    srcAddress: evmWalletProvider.getWalletAddressBytes(),
-    dstAddress: evmWalletProvider.getWalletAddressBytes(),
-    solver: '0x0000000000000000000000000000000000000000',
-    data: '0x',
+    inputToken: bscEthToken,  // The address of the input token on spoke chain
+    outputToken: arbWbtcToken,  // The address of the output token on spoke chain
+    inputAmount: BigInt(1000000), // The amount of input tokens
+    minOutputAmount: BigInt(900000), // min amount you are expecting to receive
+    deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
+    allowPartialFill: false, // Whether the intent can be partially filled
+    srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
+    dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+    srcAddress: evmWalletAddressBytes, // Source address in bytes (original address on spoke chain)
+    dstAddress: evmWalletAddressBytes, // Destination address in bytes (original address on spoke chain)
+    solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
+    data: '0x', // Additional arbitrary data
   },
   bscSpokeProvider
 );
@@ -140,22 +141,23 @@ Example for BSC -> ARB Intent Order:
     ARBITRUM_MAINNET_CHAIN_ID
   } from "@sodax/sdk"
 
-  const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
-  const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
+  const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';  // Address of the ETH token on BSC (spoke chain)
+  const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of the wBTC token on ARB (spoke chain)
+  const evmWalletAddressBytes = evmWalletProvider.getWalletAddressBytes();
 
   const createIntentParams = {
-    inputToken: bscEthToken,
-    outputToken: arbWbtcToken,
-    inputAmount: BigInt(1000000), // amount you are paying
+    inputToken: bscEthToken,  // The address of the input token on spoke chain
+    outputToken: arbWbtcToken,  // The address of the output token on spoke chain
+    inputAmount: BigInt(1000000), // The amount of input tokens
     minOutputAmount: BigInt(900000), // min amount you are expecting to receive
-    deadline: BigInt(0),
-    allowPartialFill: false,
-    srcChain: BSC_MAINNET_CHAIN_ID,
-    dstChain: ARBITRUM_MAINNET_CHAIN_ID,
-    srcAddress: evmWalletProvider.getWalletAddressBytes(),
-    dstAddress: evmWalletProvider.getWalletAddressBytes(),
-    solver: '0x0000000000000000000000000000000000000000',
-    data: '0x',
+    deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
+    allowPartialFill: false, // Whether the intent can be partially filled
+    srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
+    dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+    srcAddress: evmWalletAddressBytes, // Source address in bytes (original address on spoke chain)
+    dstAddress: evmWalletAddressBytes, // Destination address in bytes (original address on spoke chain)
+    solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
+    data: '0x', // Additional arbitrary data
   } satisfies CreateIntentParams;
 
   // creates and submits on-chain transaction or returns raw transaction

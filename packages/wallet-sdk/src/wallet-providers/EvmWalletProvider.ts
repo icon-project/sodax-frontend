@@ -1,19 +1,19 @@
-import type { EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@sodax/sdk';
-import { isEvmInitializedConfig } from '@sodax/sdk';
+import type { EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@sodax/types';
 import type { Account, Address, Chain, CustomTransport, Hash, HttpTransport, PublicClient, WalletClient } from 'viem';
 
 export class EvmWalletProvider implements IEvmWalletProvider {
   private readonly _walletClient?: WalletClient<CustomTransport | HttpTransport, Chain, Account>;
   public readonly publicClient: PublicClient<CustomTransport | HttpTransport>;
 
-  // @ts-ignore
-  constructor(payload) {
-    if (isEvmInitializedConfig(payload)) {
-      this._walletClient = payload.walletClient;
-      this.publicClient = payload.publicClient;
-    } else {
-      throw new Error('Invalid configuration parameters');
-    }
+  constructor({
+    publicClient,
+    walletClient,
+  }: {
+    publicClient: PublicClient<CustomTransport | HttpTransport>;
+    walletClient: WalletClient<CustomTransport | HttpTransport, Chain, Account> | undefined;
+  }) {
+    this._walletClient = walletClient;
+    this.publicClient = publicClient;
   }
 
   sendTransaction(evmRawTx: EvmRawTransaction) {
@@ -42,14 +42,14 @@ export class EvmWalletProvider implements IEvmWalletProvider {
     };
   }
 
-  getWalletAddress(): Address {
+  async getWalletAddress(): Promise<Address> {
     if (!this._walletClient) {
       throw new Error('Wallet client not initialized');
     }
     return this._walletClient.account.address;
   }
 
-  getWalletAddressBytes(): Hex {
+  async getWalletAddressBytes(): Promise<Hex> {
     if (!this._walletClient) {
       throw new Error('Wallet client not initialized');
     }

@@ -73,12 +73,12 @@ export class InjectiveWalletProvider implements ICWWalletProvider {
     return this.cosmosClient;
   }
 
-  getWalletAddress(): string {
-    return this.address;
+  async getWalletAddress(): Promise<string> {
+    return Promise.resolve(this.address);
   }
 
-  getWalletAddressBytes(): Hex {
-    return toHex(Buffer.from(this.address, 'utf-8'));
+  async getWalletAddressBytes(): Promise<Hex> {
+    return toHex(Buffer.from(await this.getWalletAddress(), 'utf-8'));
   }
 
   async execute(

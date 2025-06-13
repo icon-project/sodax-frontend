@@ -6,7 +6,7 @@ import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type CWSpokeDepositParams = {
   from: string; // The address of the user on the spoke chain
-  to?: Hex; // The address of the user on the hub chain (wallet abstraction address)
+  to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: string; // The address of the token to deposit
   amount: bigint; // The amount of tokens to deposit
   data: Hex; // The data to send with the deposit
@@ -102,7 +102,7 @@ export class CWSpokeService {
     spokeProvider: CWSpokeProvider,
     raw?: R,
   ): PromiseCWTxReturnType<R> {
-    const sender = spokeProvider.walletProvider.getWalletAddress();
+    const sender = await spokeProvider.walletProvider.getWalletAddress();
     return CWSpokeProvider.deposit(sender, token, recipient, amount, data, spokeProvider, raw);
   }
 
@@ -121,7 +121,7 @@ export class CWSpokeService {
     spokeProvider: CWSpokeProvider,
     raw?: R,
   ): PromiseCWTxReturnType<R> {
-    const sender = spokeProvider.walletProvider.getWalletAddress();
+    const sender = await spokeProvider.walletProvider.getWalletAddress();
     return spokeProvider.send_message(sender, dstChainId.toString(), dstAddress, payload, raw);
   }
 }

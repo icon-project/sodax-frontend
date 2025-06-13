@@ -9,12 +9,13 @@ import { getAssetManagerProgram, getConnectionProgram } from '../../entities/sol
 import type { SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvider.js';
 import { AssetManagerPDA, ConnectionConfigPDA } from '../../entities/solana/pda/pda.js';
 import { isNative } from '../../entities/solana/utils/utils.js';
-import type { HubAddress, PromiseSolanaTxReturnType, SolanaReturnType } from '../../types.js';
+import type { PromiseSolanaTxReturnType, SolanaReturnType } from '../../types.js';
+import type { HubAddress } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type SolanaSpokeDepositParams = {
   from: PublicKey;
-  to?: Hex; // The address of the user on the hub chain (wallet abstraction address)
+  to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: PublicKey;
   amount: bigint;
   data: Hex;
