@@ -5,27 +5,22 @@ import {
   type EvmSpokeChainConfig,
   EvmSpokeProvider,
   EvmWalletAbstraction,
-  IEvmWalletProvider,
   getHubChainConfig,
   spokeChainConfig,
   SpokeService,
   waitForTransactionReceipt,
-  type SolverConfig,
   IntentsAbi,
   type CreateIntentParams,
-  type SpokeChainId,
-  type HubChainId,
-  SONIC_MAINNET_CHAIN_ID,
-  AVALANCHE_MAINNET_CHAIN_ID,
-  type EvmChainId,
   getMoneyMarketConfig,
   type EvmHubProviderConfig,
   type SodaxConfig,
   Sodax,
   type EvmRawTransaction,
   type SolverConfigParams,
+  type EvmChainId,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
+import { SONIC_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;

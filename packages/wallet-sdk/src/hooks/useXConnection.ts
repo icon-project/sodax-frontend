@@ -1,4 +1,4 @@
-import type { XChainType } from '@/types';
+import type { ChainType } from '@sodax/types';
 import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useMemo } from 'react';
@@ -6,7 +6,7 @@ import { useAccount, useConnections } from 'wagmi';
 import type { XConnection } from '../types';
 import { useXWagmiStore } from '../useXWagmiStore';
 
-export function useXConnection(xChainType: XChainType | undefined): XConnection | undefined {
+export function useXConnection(xChainType: ChainType | undefined): XConnection | undefined {
   const xConnection = useXWagmiStore(state => (xChainType ? state.xConnections?.[xChainType] : undefined));
 
   const evmConnections = useConnections();

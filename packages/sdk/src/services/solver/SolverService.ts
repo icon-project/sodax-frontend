@@ -8,7 +8,6 @@ import {
   type IntentRelayRequest,
   type PacketData,
   type RelayErrorCode,
-  SONIC_MAINNET_CHAIN_ID,
   type SpokeProvider,
   SpokeService,
   type WaitUntilIntentExecutedPayload,
@@ -44,12 +43,12 @@ import type {
   Result,
   SolverConfigParams,
   SolverServiceConfig,
-  SpokeChainId,
   TxReturnType,
 } from '../../types.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 
 export type CreateIntentParams = {
   inputToken: string; // The address of the input token on spoke chain

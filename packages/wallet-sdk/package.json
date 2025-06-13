@@ -23,6 +23,7 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
+    "@sodax/types": "workspace:*",
     "@archwayhq/arch3.js": "0.7.0",
     "@coral-xyz/anchor": "0.30.1",
     "@cosmjs/cosmwasm-stargate": "0.32.2",

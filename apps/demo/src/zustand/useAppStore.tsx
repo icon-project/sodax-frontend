@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import type { StateCreator } from 'zustand';
-import type { XChainId } from '@sodax/wallet-sdk';
+import type { ChainId } from '@sodax/types';
 
 type AppStore = {
-  selectedChain: XChainId;
-  changeChain: (chain: XChainId) => void;
+  selectedChain: ChainId;
+  changeChain: (chain: ChainId) => void;
   isWalletModalOpen: boolean;
   openWalletModal: () => void;
   closeWalletModal: () => void;
@@ -14,7 +14,7 @@ type AppStore = {
 export const useAppStore = create<AppStore>()(
   immer((set, get) => ({
     selectedChain: '0xa86a.avax',
-    changeChain: (chain: XChainId) => set({ selectedChain: chain }),
+    changeChain: (chain: ChainId) => set({ selectedChain: chain }),
     isWalletModalOpen: false,
     openWalletModal: () => set({ isWalletModalOpen: true }),
     closeWalletModal: () => set({ isWalletModalOpen: false }),

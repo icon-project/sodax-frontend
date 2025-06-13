@@ -1,4 +1,5 @@
-import type { EvmHubProvider, SpokeChainId } from '@sodax/sdk';
+import type { EvmHubProvider } from '@sodax/sdk';
+import type { SpokeChainId } from '@sodax/types';
 import {
   SpokeService,
   type IntentRelayRequest,
@@ -6,7 +7,7 @@ import {
   submitTransaction,
   getIntentRelayChainId,
 } from '@sodax/sdk';
-import type { XChainId, XToken } from '@sodax/wallet-sdk';
+import type { ChainId, XToken } from '@sodax/types';
 import { getXChainType, useXAccount, xChainMap } from '@sodax/wallet-sdk';
 import { useState } from 'react';
 import type { Address, Hash, Hex } from 'viem';
@@ -16,7 +17,6 @@ import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSpokeProvider } from './useSpokeProvider';
 import { useSodaxContext } from './useSodaxContext';
 import { XCALL_RELAY_URL } from '@/constants';
-import { getSpokeTokenAddressByVault } from '@/core';
 
 interface UseBorrowReturn {
   borrow: (amount: string) => Promise<void>;
@@ -26,7 +26,7 @@ interface UseBorrowReturn {
 }
 
 // token: this is hub token
-export function useBorrow(token: XToken, spokeChainId: XChainId): UseBorrowReturn {
+export function useBorrow(token: XToken, spokeChainId: ChainId): UseBorrowReturn {
   const { address } = useXAccount(getXChainType(token.xChainId));
   const { sodax } = useSodaxContext();
   const hubProvider = useHubProvider();

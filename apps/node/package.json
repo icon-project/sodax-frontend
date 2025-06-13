@@ -29,8 +29,9 @@
     "bn.js": "^5.2.1",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.5",
+    "viem": "catalog:",
     "icon-sdk-js": "catalog:",
-    "viem": "catalog:"
+    "@sodax/types": "workspace:*"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.6",

@@ -8,14 +8,13 @@ import {
   SpokeService,
   type SuiSpokeChainConfig,
   SuiSpokeProvider,
-  SONIC_MAINNET_CHAIN_ID,
   getMoneyMarketConfig,
-  SUI_MAINNET_CHAIN_ID,
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
 } from '@sodax/sdk';
+import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID } from '@sodax/types';
 import { SuiWalletProvider } from './sui-wallet-provider';
 
 import dotenv from 'dotenv';

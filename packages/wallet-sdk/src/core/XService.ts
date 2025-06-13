@@ -1,18 +1,18 @@
-import type { XChainId, XChainType, XToken } from '@/types';
+import type { ChainId, ChainType, XToken } from '@sodax/types';
 import type { XConnector } from './XConnector';
 export abstract class XService {
-  xChainType: XChainType;
+  xChainType: ChainType;
   xConnectors: XConnector[] = [];
 
-  constructor(xChainType: XChainType) {
+  constructor(xChainType: ChainType) {
     this.xChainType = xChainType;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken, xChainId: XChainId): Promise<bigint> {
+  async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
     return 0n;
   }
 
-  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: XChainId) {
+  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: ChainId) {
     if (!address) return {};
 
     return xTokens.reduce((acc, xToken) => {

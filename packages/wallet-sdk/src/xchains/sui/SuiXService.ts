@@ -1,5 +1,5 @@
 import { XService } from '@/core/XService';
-import type { XToken } from '@/types';
+import type { XToken } from '@sodax/types';
 import { isNativeToken } from '@/utils';
 
 export class SuiXService extends XService {

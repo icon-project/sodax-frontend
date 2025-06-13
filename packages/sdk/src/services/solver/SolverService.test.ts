@@ -1,8 +1,6 @@
 import type { Address, Hex } from 'viem';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
   type CreateIntentParams,
   EvmHubProvider,
   type EvmHubProviderConfig,
@@ -21,7 +19,6 @@ import {
   type PartnerFee,
   type RelayTxStatus,
   type Result,
-  SONIC_MAINNET_CHAIN_ID,
   type SolverConfig,
   SolverService,
   getHubAssetInfo,
@@ -33,6 +30,7 @@ import {
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
+import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 describe('SolverService', () => {
   const mockIntentsContract = '0x0987654321098765432109876543210987654321' satisfies Address;

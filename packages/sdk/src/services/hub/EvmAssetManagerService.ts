@@ -2,10 +2,11 @@ import { type Address, type Hex, type PublicClient, encodeFunctionData } from 'v
 import { assetManagerAbi } from '../../abis/index.js';
 import { getHubAssetInfo } from '../../constants.js';
 import type { EvmHubProvider } from '../../entities/Providers.js';
-import type { AssetInfo, EvmContractCall, SpokeChainId } from '../../types.js';
+import type { AssetInfo, EvmContractCall } from '../../types.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import { Erc20Service } from '../shared/Erc20Service.js';
 import { EvmVaultTokenService } from './EvmVaultTokenService.js';
+import type { SpokeChainId } from '@sodax/types';
 
 export type EvmDepositToDataParams = {
   token: Hex | string;
