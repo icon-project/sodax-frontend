@@ -189,7 +189,7 @@ describe('EvmSpokeService', () => {
 
       expect(mockSpokeWalletProvider.sendTransaction).toHaveBeenCalledWith(
         expect.objectContaining({
-          from: mockSpokeProvider.walletProvider.getWalletAddress(),
+          from: await mockSpokeProvider.walletProvider.getWalletAddress(),
           to: mockSpokeProvider.chainConfig.addresses.connection,
           data: encodeFunctionData({
             abi: connectionAbi,

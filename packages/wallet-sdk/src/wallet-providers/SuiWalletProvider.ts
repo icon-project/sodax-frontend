@@ -62,8 +62,8 @@ export class SuiWalletProvider implements ISuiWalletProvider {
     return this.client.getCoins({ owner: address, coinType: token, limit: 10 });
   }
 
-  async getWalletAddress(): Promise<string> {
-    return this.account.getPublicKey().toSuiAddress() as `0x${string}`;
+  async getWalletAddress(): Promise<Address> {
+    return this.account.getPublicKey().toSuiAddress() as Address;
   }
 
   async getWalletAddressBytes(): Promise<Hex> {

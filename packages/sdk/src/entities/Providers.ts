@@ -18,15 +18,15 @@ import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
 import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
-import type { IEvmWalletProvider, IStellarWalletProvider, ISuiWalletProvider, IIconWalletProvider } from '../index.js';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  type IEvmWalletProvider,
+  type IStellarWalletProvider,
+  type ISuiWalletProvider,
+  type IIconWalletProvider,
+} from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
-
-export interface WalletAddressProvider {
-  getWalletAddress(): Promise<string>; // The wallet address as a string
-  getWalletAddressBytes(): Promise<Hex>; // The wallet address as a hex string
-}
 
 export interface ISpokeProvider {
   readonly walletProvider: IWalletProvider;

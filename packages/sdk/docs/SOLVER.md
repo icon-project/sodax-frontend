@@ -78,6 +78,7 @@ import {
 
 const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
 const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
+const evmWalletAddressBytes = evmWalletProvider.getWalletAddressBytes();
 
 // First check if approval is needed
 const isApproved = await sodax.solver.isAllowanceValid(
@@ -90,8 +91,8 @@ const isApproved = await sodax.solver.isAllowanceValid(
     allowPartialFill: false,
     srcChain: BSC_MAINNET_CHAIN_ID,
     dstChain: ARBITRUM_MAINNET_CHAIN_ID,
-    srcAddress: evmWalletProvider.getWalletAddressBytes(),
-    dstAddress: evmWalletProvider.getWalletAddressBytes(),
+    srcAddress: evmWalletAddressBytes,
+    dstAddress: evmWalletAddressBytes
     solver: '0x0000000000000000000000000000000000000000',
     data: '0x',
   },
@@ -142,6 +143,7 @@ Example for BSC -> ARB Intent Order:
 
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
   const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
+  const evmWalletAddressBytes = evmWalletProvider.getWalletAddressBytes();
 
   const createIntentParams = {
     inputToken: bscEthToken,
@@ -152,8 +154,8 @@ Example for BSC -> ARB Intent Order:
     allowPartialFill: false,
     srcChain: BSC_MAINNET_CHAIN_ID,
     dstChain: ARBITRUM_MAINNET_CHAIN_ID,
-    srcAddress: evmWalletProvider.getWalletAddressBytes(),
-    dstAddress: evmWalletProvider.getWalletAddressBytes(),
+    srcAddress: evmWalletAddressBytes,
+    dstAddress: evmWalletAddressBytes,
     solver: '0x0000000000000000000000000000000000000000',
     data: '0x',
   } satisfies CreateIntentParams;

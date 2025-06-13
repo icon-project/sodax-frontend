@@ -12,7 +12,7 @@ import type { PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainCo
 import { toHex, type Hex } from 'viem';
 import type { ISpokeProvider } from '../Providers.js';
 import type { Server } from '@stellar/stellar-sdk/rpc';
-import type { IStellarWalletProvider } from '../../interfaces.js';
+import type { IStellarWalletProvider } from '@sodax/types';
 
 export class StellarSpokeProvider implements ISpokeProvider {
   private readonly server: Server;
