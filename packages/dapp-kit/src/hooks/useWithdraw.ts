@@ -60,9 +60,11 @@ export function useWithdraw(token: XToken, spokeChainId: ChainId): UseWithdrawRe
     setError(null);
 
     try {
+      const spokeWalletAddress: Address = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
+
       const data: Hex = sodax.moneyMarket.withdrawData(
         hubWalletAddress as Address,
-        spokeProvider.walletProvider.getWalletAddress(),
+        spokeWalletAddress,
         getSpokeTokenAddressByVault(spokeChainId, token.address),
         parseUnits(amount, token.decimals),
         spokeProvider.chainConfig.chain.id,

@@ -29,7 +29,7 @@ export type TransferToHubParams = {
 };
 
 export class SolanaSpokeService {
-  private constructor() { }
+  private constructor() {}
 
   public static async deposit<R extends boolean = false>(
     params: SolanaSpokeDepositParams,

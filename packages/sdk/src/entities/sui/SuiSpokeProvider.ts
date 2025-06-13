@@ -48,9 +48,10 @@ export class SuiSpokeProvider implements ISpokeProvider {
   ): PromiseSuiTxReturnType<R> {
     const isNative = token.toLowerCase() === this.chainConfig.nativeToken.toLowerCase();
     const tx = new Transaction();
+    const walletAddress = await this.walletProvider.getWalletAddressBytes();
     const coin: TransactionResult | SuiNativeCoinResult | SuiTxObject = isNative
       ? await this.getNativeCoin(tx, amount)
-      : await this.getCoin(tx, token, amount, this.walletProvider.getWalletAddressBytes());
+      : await this.getCoin(tx, token, amount, walletAddress);
     const connection = this.splitAddress(this.chainConfig.addresses.connection);
     const assetManager = this.splitAddress(this.chainConfig.addresses.assetManager);
 
@@ -70,7 +71,7 @@ export class SuiSpokeProvider implements ISpokeProvider {
       const transactionRaw = await tx.build();
       const transactionRawBase64String = Buffer.from(transactionRaw).toString('base64');
       return {
-        from: this.walletProvider.getWalletAddressBytes(),
+        from: walletAddress,
         to: `${assetManager.packageId}::${assetManager.moduleId}::transfer`,
         value: amount,
         data: transactionRawBase64String,
@@ -159,8 +160,9 @@ export class SuiSpokeProvider implements ISpokeProvider {
     if (raw) {
       const transactionRaw = await txb.build();
       const transactionRawBase64String = Buffer.from(transactionRaw).toString('base64');
+      const walletAddress = await this.walletProvider.getWalletAddressBytes();
       return {
-        from: this.walletProvider.getWalletAddressBytes(),
+        from: walletAddress,
         to: `${connection.packageId}::${connection.moduleId}::send_message_ua`,
         value: 0n,
         data: transactionRawBase64String,
@@ -182,12 +184,14 @@ export class SuiSpokeProvider implements ISpokeProvider {
     const result = await this.walletProvider.signAndExecuteTxn(tx);
     return result;
   }
-  getWalletAddress(): string {
+
+  async getWalletAddress(): Promise<string> {
     return this.walletProvider.getWalletAddress();
   }
 
-  getWalletAddressBytes(): Hex {
-    return SuiSpokeProvider.getAddressBCSBytes(this.getWalletAddress());
+  async getWalletAddressBytes(): Promise<Hex> {
+    const address = await this.getWalletAddress();
+    return SuiSpokeProvider.getAddressBCSBytes(address);
   }
 
   static getAddressBCSBytes(suiaddress: string): Hex {

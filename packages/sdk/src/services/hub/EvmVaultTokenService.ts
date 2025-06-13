@@ -93,8 +93,9 @@ export class EvmVaultTokenService {
     amount: bigint,
     walletProvider: IEvmWalletProvider,
   ): Promise<Hash> {
+    const from = (await walletProvider.getWalletAddress()) as `0x${string}`;
     return walletProvider.sendTransaction({
-      from: walletProvider.getWalletAddress(),
+      from,
       to: vault,
       value: 0n,
       data: encodeFunctionData({
@@ -119,8 +120,9 @@ export class EvmVaultTokenService {
     amount: bigint,
     provider: IEvmWalletProvider,
   ): Promise<Hash> {
+    const from = (await provider.getWalletAddress()) as `0x${string}`;
     return provider.sendTransaction({
-      from: provider.getWalletAddress(),
+      from,
       to: vault,
       value: 0n,
       data: encodeFunctionData({

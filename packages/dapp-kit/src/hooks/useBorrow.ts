@@ -59,9 +59,11 @@ export function useBorrow(token: XToken, spokeChainId: ChainId): UseBorrowReturn
     setError(null);
 
     try {
+      const spokeWalletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
       const data: Hex = sodax.moneyMarket.borrowData(
         hubWalletAddress as Address,
-        spokeProvider.walletProvider.getWalletAddress(),
+        spokeWalletAddress as Address,
         token.address,
         // getSpokeTokenAddressByVault(spokeChainId, token.address),
         parseUnits(amount, token.decimals),

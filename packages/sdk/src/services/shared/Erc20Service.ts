@@ -4,7 +4,7 @@ import type { EvmSpokeProvider } from '../../entities/Providers.js';
 import type { EvmRawTransactionReceipt } from '@sodax/types';
 
 export class Erc20Service {
-  private constructor() { }
+  private constructor() {}
 
   /**
    * Check if spender has enough ERC20 allowance for given amount
@@ -63,8 +63,9 @@ export class Erc20Service {
     spokeProvider: EvmSpokeProvider,
   ): Promise<Result<EvmRawTransactionReceipt>> {
     try {
+      const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
       const hash = await spokeProvider.walletProvider.sendTransaction({
-        from: spokeProvider.walletProvider.getWalletAddress(),
+        from: walletAddress,
         to: token,
         value: 0n,
         data: encodeFunctionData({

@@ -104,15 +104,15 @@ export class CosmosWalletProvider implements ICWWalletProvider {
     return this.wallet;
   }
 
-  getWalletAddress(): string {
+  async getWalletAddress(): Promise<string> {
     if (this.address) {
-      return this.address;
+      return Promise.resolve(this.address);
     }
     throw Error('Address Not Set');
   }
 
-  getWalletAddressBytes(): Hex {
-    return toHex(Buffer.from(this.getWalletAddress(), 'utf-8'));
+  async getWalletAddressBytes(): Promise<Hex> {
+    return toHex(Buffer.from(await this.getWalletAddress(), 'utf-8'));
   }
 
   async execute(

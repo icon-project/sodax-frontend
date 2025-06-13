@@ -4,7 +4,8 @@ import { type Coin, type StdFee, coins } from '@cosmjs/stargate';
 import type { TxResponse } from '@injectivelabs/sdk-ts';
 import { type Address, type Hex, fromHex } from 'viem';
 import type { CosmosSpokeChainConfig, CWRawTransaction, CWReturnType, PromiseCWTxReturnType } from '../../types.js';
-import type { ISpokeProvider, WalletAddressProvider } from '../Providers.js';
+import type { ISpokeProvider } from '../Providers.js';
+import type { WalletAddressProvider } from '@sodax/types';
 import { CW20Token } from './CW20Token.js';
 
 export type CWSpokeDepositParams = {
