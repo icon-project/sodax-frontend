@@ -1,4 +1,4 @@
-import type { Address, Hex } from 'viem';
+import type { Address } from 'viem';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   type CreateIntentParams,
@@ -31,6 +31,9 @@ import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js'
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+
+// Define a type for Intent with fee amount
+type IntentWithFee = Intent & FeeAmount;
 
 describe('SolverService', () => {
   const mockIntentsContract = '0x0987654321098765432109876543210987654321' satisfies Address;
@@ -105,11 +108,6 @@ describe('SolverService', () => {
 
   const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
 
-  const mockIntentConfig: SolverConfig = {
-    intentsContract: mockIntentsContract,
-    solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
-  };
-
   const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`;
 
   const mockPacketData = {
@@ -148,6 +146,9 @@ describe('SolverService', () => {
   // Helper function to create mock intent with resolved addresses
   const createMockIntent = async (params: CreateIntentParams): Promise<Intent> => {
     const creator = await mockBscSpokeProvider.walletProvider.getWalletAddress();
+    const srcAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+    const dstAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+
     return {
       intentId: BigInt(1),
       creator: creator as `0x${string}`,
@@ -159,8 +160,8 @@ describe('SolverService', () => {
       allowPartialFill: params.allowPartialFill,
       srcChain: getIntentRelayChainId(params.srcChain),
       dstChain: getIntentRelayChainId(params.dstChain),
-      srcAddress: params.srcAddress,
-      dstAddress: params.dstAddress,
+      srcAddress,
+      dstAddress,
       solver: params.solver,
       data: params.data,
     } satisfies Intent;
@@ -398,10 +399,11 @@ describe('SolverService', () => {
       const mockCreateIntentParams = await createMockIntentParams();
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = await createMockIntent(mockCreateIntentParams);
+      const mockIntentWithFee: IntentWithFee = { ...mockIntent, feeAmount };
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, mockIntentWithFee],
       });
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
@@ -426,7 +428,7 @@ describe('SolverService', () => {
       if (result.ok) {
         expect(result.value).toBeDefined();
         expect(result.value[0]).toBeDefined();
-        expect(result.value[1]).toEqual(mockIntent);
+        expect(result.value[1]).toEqual(mockIntentWithFee);
       }
       expect(solverService['createIntent']).toHaveBeenCalledWith(
         mockCreateIntentParams,
@@ -507,36 +509,23 @@ describe('SolverService', () => {
     it('should successfully create an intent for EVM chain', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
-
-      const [, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
-        mockCreateIntentParams,
-        mockCreatorHubWalletAddress,
-        mockIntentConfig,
-        mockFee,
-      );
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
+      const mockIntentWithFee: IntentWithFee = { ...mockIntent, feeAmount };
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...intent, feeAmount: feeAmount }],
+        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, mockIntentWithFee],
       });
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
 
-      const result: Result<
-        [Hex, Intent & FeeAmount],
-        IntentSubmitError<'CREATION_FAILED'>
-      > = await solverService.createIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee, false);
+      const result = await solverService.createIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee, false);
 
-      if (!result.ok) {
-        throw new Error('Failed to create intent');
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        const [txHash, resultingIntent] = result.value;
+        expect(txHash).toBe(mockTxHash);
+        expect(resultingIntent).toEqual(mockIntentWithFee);
       }
-
-      const [txHash, resultingIntent] = result.value;
-
-      expect(txHash).toBeDefined();
-      expect(txHash).toBe(mockTxHash);
-
-      resultingIntent.intentId = intent.intentId;
-      expect(resultingIntent).toEqual({ ...intent, feeAmount });
     });
   });
 
@@ -544,16 +533,10 @@ describe('SolverService', () => {
     it('should successfully cancel an intent for EVM chain', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
-
-      const [, intent] = EvmSolverService.constructCreateIntentData(
-        mockCreateIntentParams,
-        mockCreatorHubWalletAddress,
-        mockIntentConfig,
-        mockFee,
-      );
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
 
       vi.spyOn(solverService, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
-      const result = await solverService.cancelIntent(intent, mockBscSpokeProvider, false);
+      const result = await solverService.cancelIntent(mockIntent, mockBscSpokeProvider, false);
 
       expect(result).toBe(mockTxHash);
     });
@@ -575,18 +558,12 @@ describe('SolverService', () => {
   describe('getIntentHash', () => {
     it('should successfully get an intent hash', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
-
-      const [, intent] = EvmSolverService.constructCreateIntentData(
-        mockCreateIntentParams,
-        mockCreatorHubWalletAddress,
-        mockIntentConfig,
-        mockFee,
-      );
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
 
       vi.spyOn(solverService, 'getIntentHash').mockReturnValueOnce(
         '0x8196c6646c0d811b2ff19ffdf61533ad2d73d724fcd69c77ec243a908364a35e',
       );
-      const result = solverService.getIntentHash(intent);
+      const result = solverService.getIntentHash(mockIntent);
 
       expect(result).toBe('0x8196c6646c0d811b2ff19ffdf61533ad2d73d724fcd69c77ec243a908364a35e');
     });
