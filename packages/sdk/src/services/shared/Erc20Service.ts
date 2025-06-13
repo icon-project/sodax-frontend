@@ -1,9 +1,10 @@
 import { encodeFunctionData, erc20Abi, type Address } from 'viem';
-import type { EvmContractCall, EvmRawTransactionReceipt, Result } from '../../types.js';
+import type { EvmContractCall, Result } from '../../types.js';
 import type { EvmSpokeProvider } from '../../entities/Providers.js';
+import type { EvmRawTransactionReceipt } from '@sodax/types';
 
 export class Erc20Service {
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Check if spender has enough ERC20 allowance for given amount

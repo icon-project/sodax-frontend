@@ -76,3 +76,140 @@ export type Token = {
 export type XToken = Token & {
   xChainId: ChainId;
 };
+
+export type ByteArray = Uint8Array;
+export type Hex = `0x${string}`;
+export type Hash = `0x${string}`;
+export type Address = `0x${string}`;
+export type HubAddress = Address;
+export type OriginalAssetAddress = string;
+
+export type EvmRawTransaction = {
+  from: Address;
+  to: Address;
+  value: bigint;
+  data: Hex;
+};
+
+// Ethereum JSON-RPC Spec based logs
+export type EvmRawLog = {
+  address: Address;
+  topics: [Hex, ...Hex[]] | [];
+  data: Hex;
+  blockHash: Hash | null;
+  blockNumber: Address | null;
+  logIndex: Hex | null;
+  transactionHash: Hash | null;
+  transactionIndex: Hex | null;
+  removed: boolean;
+};
+
+// Ethereum JSON-RPC Spec based transaction receipt
+export type EvmRawTransactionReceipt = {
+  transactionHash: string; // 32-byte hash
+  transactionIndex: string; // hex string, e.g., '0x1'
+  blockHash: string; // 32-byte hash
+  blockNumber: string; // hex string, e.g., '0x5BAD55'
+  from: string; // 20-byte address
+  to: string | null; // null if contract creation
+  cumulativeGasUsed: string; // hex string
+  gasUsed: string; // hex string
+  contractAddress: string | null; // non-null only if contract creation
+  logs: EvmRawLog[];
+  logsBloom: string; // 256-byte bloom filter hex string
+  status?: string; // '0x1' = success, '0x0' = failure (optional pre-Byzantium)
+  type?: string; // '0x0', '0x1', or '0x2' for tx type
+  effectiveGasPrice?: string; // hex string, only on EIP-1559 txs
+};
+
+export type SuiTransaction = {
+  toJSON: () => Promise<string>;
+};
+
+export type SuiArgument =
+  | 'GasCoin'
+  | {
+    Input: number;
+  }
+  | {
+    Result: number;
+  };
+
+export interface SuiExecutionResult {
+  mutableReferenceOutputs?: [SuiArgument, number[], string][];
+  returnValues?: [number[], string][];
+}
+
+export interface SuiCoinStruct {
+  balance: string;
+  coinObjectId: string;
+  coinType: string;
+  digest: string;
+  previousTransaction: string;
+  version: string;
+}
+export interface SuiPaginatedCoins {
+  data: SuiCoinStruct[];
+  hasNextPage: boolean;
+  nextCursor?: string | null;
+}
+
+export interface IEvmWalletProvider {
+  getWalletAddress: () => Address;
+  getWalletAddressBytes: () => Hex;
+  sendTransaction: (evmRawTx: EvmRawTransaction) => Promise<Hash>;
+  waitForTransactionReceipt: (txHash: Hash) => Promise<EvmRawTransactionReceipt>;
+}
+
+export interface ISuiWalletProvider {
+  getWalletAddress: () => Address;
+  getWalletAddressBytes: () => Hex;
+  signAndExecuteTxn: (txn: SuiTransaction) => Promise<Hex>;
+  viewContract(
+    tx: SuiTransaction,
+    packageId: string,
+    module: string,
+    functionName: string,
+    args: unknown[],
+    typeArgs: string[],
+  ): Promise<SuiExecutionResult>;
+  getCoins: (address: string, token: string) => Promise<SuiPaginatedCoins>;
+}
+
+export type IconEoaAddress = `hx${string}`;
+export type IcxCallTransaction = {
+  to: string;
+  from: string;
+  nid: Hex;
+  value: Hex;
+  method: string;
+  params: object;
+  version?: Hex;
+  timestamp?: number;
+};
+
+export type IconTransactionResult = {
+  status: number;
+  to: string;
+  txHash: string;
+  txIndex: number;
+  blockHeight: number;
+  blockHash: string;
+  cumulativeStepUsed: bigint;
+  stepUsed: bigint;
+  stepPrice: bigint;
+  scoreAddress?: string;
+  eventLogs?: unknown;
+  logsBloom?: unknown;
+  failure?: {
+    code: string;
+    message: string;
+  };
+};
+
+export interface IIconWalletProvider {
+  getWalletAddress: () => IconEoaAddress;
+  getWalletAddressBytes: () => Hex;
+  sendTransaction: (iconRawTx: IcxCallTransaction) => Promise<Hash>;
+  waitForTransactionReceipt: (txHash: Hash) => Promise<IconTransactionResult>;
+}

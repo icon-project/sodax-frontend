@@ -20,7 +20,6 @@ import {
 } from '../../index.js';
 import type {
   EvmContractCall,
-  EvmRawTransactionReceipt,
   GetSpokeDepositParamsType,
   HttpUrl,
   MoneyMarketConfigParams,
@@ -28,6 +27,7 @@ import type {
   Result,
   TxReturnType,
 } from '../../types.js';
+import type { EvmRawTransactionReceipt } from '@sodax/types';
 import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService, EvmWalletAbstraction } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';

@@ -5,7 +5,8 @@ import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { BigIntToHex, getIntentRelayChainId, isNativeToken } from '../../index.js';
-import type { HubAddress, IconAddress, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
+import type { IconAddress, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
+import type { HubAddress } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 
 export type IconSpokeDepositParams = {
@@ -24,7 +25,7 @@ export type TransferToHubParams = {
 };
 
 export class IconSpokeService {
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Deposit tokens to the spoke chain.
