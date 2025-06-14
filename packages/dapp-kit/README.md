@@ -5,11 +5,6 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
 
 ## Features
 
-- Wallet Integration
-  - Seamless wallet connectivity for all supported wallets in the Sodax network
-  - Built-in wallet management
-  - Address and connection state management
-
 - Money Market
   - Supply tokens to the money market (`useSupply`)
   - Withdraw tokens from the money market (`useWithdraw`)

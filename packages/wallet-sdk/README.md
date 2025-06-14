@@ -3,17 +3,7 @@
 A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet connectivity across multiple blockchain networks.
 
 ## Features
-
-- 🔗 Multi-chain Support
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
-  - Sui ❌ Coming soon
-  - Solana ❌ Coming soon
-  - Stellar ❌ Coming soon
-  - Injective ❌ Coming soon
-  - Havah ❌ Coming soon
-  - ICON ❌ Coming soon
-
-- 🔒 Wallet Integration
+- Seamless wallet connectivity for all supported wallets in the Sodax network
   - EVM Wallets: All browser extensions that support [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963) (Hana Wallet, MetaMask, Phantom, etc.) ✅
   - Sui Wallets: ❌ Coming soon
   - Solana Wallets: ❌ Coming soon
@@ -22,10 +12,15 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
   - Havah Wallets: ❌ Coming soon
   - ICON Wallets: ❌ Coming soon
 
-- 🛠️ Core Features
-  - Unified wallet connection interface
-  - Type-safe development with TypeScript
-  - React hooks for easy integration
+- Address and connection state management
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
+  - Sui ❌ Coming soon
+  - Solana ❌ Coming soon
+  - Stellar ❌ Coming soon
+  - Injective ❌ Coming soon
+  - Havah ❌ Coming soon
+  - ICON ❌ Coming soon
+
 
 ## Installation
 
