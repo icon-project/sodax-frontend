@@ -24,7 +24,6 @@
   },
   "dependencies": {
     "@archwayhq/arch3.js": "0.7.0",
-    "@coral-xyz/anchor": "0.30.1",
     "@cosmjs/cosmwasm-stargate": "0.32.2",
     "@cosmjs/encoding": "0.32.3",
     "@cosmjs/proto-signing": "0.32.3",
