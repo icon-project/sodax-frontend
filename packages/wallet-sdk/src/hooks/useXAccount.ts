@@ -16,10 +16,10 @@ import { getXChainType } from '../actions';
  * ```ts
  * // Using ChainType (preferred)
  * const { address } = useXAccount('EVM');
- * 
+ *
  * // Using ChainId
  * const { address } = useXAccount('0xa86a.avax');
- * 
+ *
  * // Returns: { address: string | undefined, xChainType: ChainType | undefined }
  * ```
  */

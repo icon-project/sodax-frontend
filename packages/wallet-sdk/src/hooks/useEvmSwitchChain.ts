@@ -11,17 +11,17 @@ interface UseEvmSwitchChainReturn {
 
 /**
  * Hook to handle EVM chain switching functionality
- * 
+ *
  * @param expectedXChainId - The target chain ID to switch to (e.g. '0xa.optimism', '0x89.polygon')
  * @returns {Object} Object containing:
  *   - isWrongChain: boolean indicating if current chain differs from expected chain
  *   - handleSwitchChain: function to trigger chain switch to expected chain
- * 
+ *
  * @example
  * ```tsx
  * function ChainSwitchButton({ targetChain }: { targetChain: ChainId }) {
  *   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(targetChain);
- *   
+ *
  *   return (
  *     <Button onClick={handleSwitchChain} disabled={!isWrongChain}>
  *       Switch Network
