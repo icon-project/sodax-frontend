@@ -96,9 +96,8 @@ export const polygon: XChain = {
   testnet: false,
 };
 
-// TODO: update information
 export const nibiru: XChain = {
-  id: 2894,
+  id: 6900,
   name: 'Nibiru',
   xChainId: 'nibiru',
   xChainType: 'EVM',
@@ -134,16 +133,13 @@ export const xChainMap: { [key in ChainId]: XChain } = {
  *   - Optimism (0xa.optimism)
  *   - Polygon (0x89.polygon)
  *   - Sonic (sonic)
- *   - Sonic Blaze (sonic-blaze)
- * - ICON chains:
- *   - ICON (0x1.icon)
- *   - Lisbon (0x2.icon)
- * - Other chains:
- *   - Archway (archway)
- *   - Injective (injective-1)
- *   - Solana (solana)
- *   - Stellar (stellar)
- *   - Sui (sui)
+ *   - Nibiru (nibiru)
+ * - ICON chain: 0x1.icon
+ * - Sui chain: sui
+ * - Solana chain: solana
+ * - Stellar chain: stellar
+ * - Injective chain: injective-1
+ * - Nibiru chain: nibiru
  */
 
 export const xChains = Object.values(xChainMap);

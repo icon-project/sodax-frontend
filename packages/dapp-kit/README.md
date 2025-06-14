@@ -1,4 +1,4 @@
-# dApp Kit
+# @sodax/dapp-kit
 
 dApp Kit is a collection of React components, hooks, and utilities designed to streamline dApp development within the Sodax ecosystem. It provides seamless integration with Sodax smart contracts, enabling easy data querying and transaction execution. Additionally, it offers built-in wallet connectivity for all supported wallets in the Sodax network, simplifying the user onboarding experience. Under the hood, dApp Kit leverages @sodax/wallet-kit and @sodax/sdk for seamless functionality.
 
@@ -196,6 +196,12 @@ function SwapComponent() {
 }
 ```
 
+## Requirements
+
+- Node.js >= 18.0.0
+- React >= 19
+- TypeScript
+
 ## API Reference
 
 ### Components
@@ -227,22 +233,33 @@ function SwapComponent() {
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
+## Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build the package
+pnpm build      
+
+# Run in development mode
+pnpm dev
+
+# Run type checking
+pnpm checkTs
+
+# Format code
+pnpm pretty
+
+# Lint code
+pnpm lint
+```
+
 ## License
 
 [MIT](LICENSE)
 
 ## Support
 
-- [Documentation](https://docs.sodax.com/dapp-kit)
-- [GitHub Issues](https://github.com/sodax/dapp-kit/issues)
-- [Discord Community](https://discord.gg/sodax)
-
-## Roadmap
-
-- [ ] Multi-chain support
-- [ ] Additional wallet integrations
-- [ ] Enhanced transaction management
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
+- [GitHub Issues](https://github.com/icon-project/sodax-frontend/issues)
+- [Discord Community](https://discord.gg/sodax-formerly-icon-880651922682560582)

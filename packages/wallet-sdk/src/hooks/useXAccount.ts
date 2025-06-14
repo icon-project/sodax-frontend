@@ -1,35 +1,51 @@
 import { useMemo } from 'react';
 
-import type { ChainType } from '@sodax/types';
+import type { ChainId, ChainType } from '@sodax/types';
 
 import type { XAccount } from '../types';
 import { useXConnection } from './useXConnection';
+import { getXChainType } from '../actions';
 
 /**
- * Hook to get the current connected account for a specific blockchain type
+ * Hook to get the current connected account for a specific blockchain
  *
- * @param xChainType - The blockchain type to get the account for (e.g. 'EVM', 'SUI', 'SOLANA')
+ * @param chainIdentifier - The blockchain identifier (either chain type like 'EVM' or chain ID like '0xa86a.avax')
  * @returns {XAccount} The current connected account, or undefined if no account is connected
  *
  * @example
  * ```ts
+ * // Using ChainType (preferred)
  * const { address } = useXAccount('EVM');
- * // Returns: { address: string | undefined, xChainType: XChainType | undefined }
+ * 
+ * // Using ChainId
+ * const { address } = useXAccount('0xa86a.avax');
+ * 
+ * // Returns: { address: string | undefined, xChainType: ChainType | undefined }
  * ```
  */
-export function useXAccount(xChainType: ChainType | undefined): XAccount {
-  const xConnection = useXConnection(xChainType);
+function isChainType(chainIdentifier: ChainType | ChainId): chainIdentifier is ChainType {
+  return ['ICON', 'EVM', 'ARCHWAY', 'HAVAH', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA'].includes(chainIdentifier);
+}
+
+export function useXAccount(chainIdentifier?: ChainType | ChainId): XAccount {
+  const resolvedChainType: ChainType | undefined = chainIdentifier
+    ? isChainType(chainIdentifier)
+      ? chainIdentifier
+      : getXChainType(chainIdentifier as ChainId)
+    : undefined;
+
+  const xConnection = useXConnection(resolvedChainType);
 
   const xAccount = useMemo((): XAccount => {
-    if (!xChainType) {
+    if (!resolvedChainType) {
       return {
         address: undefined,
         xChainType: undefined,
       };
     }
 
-    return xConnection?.xAccount || { address: undefined, xChainType };
-  }, [xChainType, xConnection]);
+    return xConnection?.xAccount || { address: undefined, xChainType: resolvedChainType };
+  }, [resolvedChainType, xConnection]);
 
   return xAccount;
 }

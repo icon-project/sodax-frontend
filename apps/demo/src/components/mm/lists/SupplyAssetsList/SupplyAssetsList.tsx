@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { allXTokens } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
@@ -11,7 +11,7 @@ export function SupplyAssetsList() {
   const { selectedChain } = useAppStore();
   const tokens = useMemo(() => allXTokens.filter(token => token.xChainId === selectedChain), [selectedChain]);
 
-  const { address } = useXAccount(getXChainType(selectedChain));
+  const { address } = useXAccount(selectedChain);
   const { data: balances } = useXBalances({
     xChainId: selectedChain,
     xTokens: tokens,

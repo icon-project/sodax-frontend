@@ -1,7 +1,7 @@
 import { allXTokens } from '@/core';
 import { getMoneyMarketConfig, type EvmHubProvider } from '@sodax/sdk';
 import type { SpokeChainId } from '@sodax/types';
-import { getXChainType, useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
+import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
 import type { ChainId } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
 import type { Address } from 'viem';
@@ -13,7 +13,7 @@ export function useUserReservesData(spokeChainId: ChainId) {
   const { hubChainId, sodax } = useSodaxContext();
   const hubWalletProvider = useWalletProvider(hubChainId);
   const hubProvider = useHubProvider();
-  const { address } = useXAccount(getXChainType(spokeChainId));
+  const { address } = useXAccount(spokeChainId);
   const { data: hubWalletAddress } = useHubWalletAddress(
     spokeChainId as SpokeChainId,
     address,
