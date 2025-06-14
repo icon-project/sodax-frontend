@@ -4,7 +4,6 @@ import type { HubChainId, SpokeChainId } from '@sodax/types';
 import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
 import type { ChainId } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
-import type { Address } from 'viem';
 import { useHubProvider } from '../provider/useHubProvider';
 import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSodaxContext } from '../shared/useSodaxContext';
@@ -35,9 +34,9 @@ export function useUserReservesData(spokeChainId: ChainId) {
       const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
       try {
         const [res] = await sodax.moneyMarket.getUserReservesData(
-          hubWalletAddress as Address,
-          moneyMarketConfig.uiPoolDataProvider as Address,
-          moneyMarketConfig.poolAddressesProvider as Address,
+          hubWalletAddress as `0x${string}`,
+          moneyMarketConfig.uiPoolDataProvider,
+          moneyMarketConfig.poolAddressesProvider,
         );
 
         return res?.map(r => {
