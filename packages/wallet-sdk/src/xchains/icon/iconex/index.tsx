@@ -1,5 +1,5 @@
-export const ICONEX_RELAY_RESPONSE = 'ICONEX_RELAY_RESPONSE';
-export const ICONEX_RELAY_REQUEST = 'ICONEX_RELAY_REQUEST';
+const ICONEX_RELAY_RESPONSE = 'ICONEX_RELAY_RESPONSE';
+const ICONEX_RELAY_REQUEST = 'ICONEX_RELAY_REQUEST';
 
 export enum ICONexRequestEventType {
   REQUEST_HAS_ACCOUNT = 'REQUEST_HAS_ACCOUNT',
@@ -16,8 +16,6 @@ export enum ICONexResponseEventType {
   RESPONSE_JSON = 'RESPONSE_JSON',
   RESPONSE_SIGNING = 'RESPONSE_SIGNING',
 }
-
-export type ICONexEventType = ICONexRequestEventType | ICONexResponseEventType;
 
 export interface ICONexRequestEvent {
   type: ICONexRequestEventType;
