@@ -28,7 +28,7 @@ import {
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
-import { useQuote, useSpokeProvider, useCreateIntentOrder } from '@sodax/dapp-kit';
+import { useQuote, useCreateIntentOrder } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -50,8 +50,7 @@ export default function SwapCard({
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ARBITRUM_MAINNET_CHAIN_ID);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const { openWalletModal } = useAppStore();
-  const sourceChainSpokeProvider = useSpokeProvider(sourceChain);
-  const { createIntentOrder } = useCreateIntentOrder(sourceChain);
+  const { mutateAsync: createIntentOrder } = useCreateIntentOrder(sourceChain);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens[0],
   );
@@ -128,11 +127,6 @@ export default function SwapCard({
 
     if (!sourceToken || !destToken) {
       console.error('sourceToken or destToken undefined');
-      return;
-    }
-
-    if (!sourceChainSpokeProvider) {
-      console.error('sourceChainSpokeProvider undefined');
       return;
     }
 

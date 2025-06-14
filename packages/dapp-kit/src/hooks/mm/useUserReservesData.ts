@@ -1,19 +1,19 @@
 import { allXTokens } from '@/core';
 import { getMoneyMarketConfig, type EvmHubProvider } from '@sodax/sdk';
-import type { SpokeChainId } from '@sodax/types';
-import { getXChainType, useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
+import type { HubChainId, SpokeChainId } from '@sodax/types';
+import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
 import type { ChainId } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
-import type { Address } from 'viem';
-import { useHubProvider } from './useHubProvider';
+import { useHubProvider } from '../provider/useHubProvider';
 import { useHubWalletAddress } from './useHubWalletAddress';
-import { useSodaxContext } from './useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
-export function useSuppliedAssets(spokeChainId: ChainId) {
-  const { hubChainId, sodax } = useSodaxContext();
+export function useUserReservesData(spokeChainId: ChainId) {
+  const { sodax } = useSodaxContext();
+  const hubChainId = (sodax.config?.hubProviderConfig?.chainConfig.chain.id ?? 'sonic') as HubChainId;
   const hubWalletProvider = useWalletProvider(hubChainId);
   const hubProvider = useHubProvider();
-  const { address } = useXAccount(getXChainType(spokeChainId));
+  const { address } = useXAccount(spokeChainId);
   const { data: hubWalletAddress } = useHubWalletAddress(
     spokeChainId as SpokeChainId,
     address,
@@ -34,9 +34,9 @@ export function useSuppliedAssets(spokeChainId: ChainId) {
       const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
       try {
         const [res] = await sodax.moneyMarket.getUserReservesData(
-          hubWalletAddress as Address,
-          moneyMarketConfig.uiPoolDataProvider as Address,
-          moneyMarketConfig.poolAddressesProvider as Address,
+          hubWalletAddress as `0x${string}`,
+          moneyMarketConfig.uiPoolDataProvider,
+          moneyMarketConfig.poolAddressesProvider,
         );
 
         return res?.map(r => {

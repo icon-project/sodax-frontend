@@ -1,10 +1,9 @@
-import type { XToken } from '@sodax/types';
-import { useSodaxContext } from './useSodaxContext';
-import { useSpokeProvider } from './useSpokeProvider';
-import type { Address } from '@sodax/sdk';
-import type { SpokeChainId } from '@sodax/types';
+import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSpokeProvider } from '../provider/useSpokeProvider';
+import type { SpokeChainId, XToken } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Address } from '@sodax/sdk';
 
 interface UseApproveReturn {
   approve: (amount: string) => Promise<boolean>;

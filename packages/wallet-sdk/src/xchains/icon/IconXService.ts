@@ -1,7 +1,7 @@
 import { XService } from '@/core/XService';
 import IconService from 'icon-sdk-js';
 
-export enum SupportedChainId {
+enum SupportedChainId {
   MAINNET = 1,
   YEOUIDO = 3,
   SEJONG = 83,
@@ -19,7 +19,7 @@ interface ChainInfo {
   readonly tracker: string;
 }
 
-export const CHAIN_INFO: { readonly [chainId: number]: ChainInfo } = {
+const CHAIN_INFO: { readonly [chainId: number]: ChainInfo } = {
   [SupportedChainId.MAINNET]: {
     name: 'ICON Mainnet',
     node: 'https://ctz.solidwallet.io',

@@ -1,35 +1,91 @@
 import type { ChainId, ChainType, XToken } from '@sodax/types';
 import type { XConnector } from './XConnector';
+
+/**
+ * Abstract base class for blockchain service implementations.
+ *
+ * The XService class serves as a foundation for implementing blockchain-specific services
+ * in a multi-chain environment. It provides a standardized interface for:
+ * 1. Managing wallet connectors for different blockchain types
+ * 2. Querying token balances across different chains
+ *
+ * Each blockchain implementation (e.g., Solana, Havah, EVM chains) extends this class
+ * to provide chain-specific functionality while maintaining a consistent interface.
+ *
+ * @abstract
+ * @class XService
+ * @property {ChainType} xChainType - The blockchain type this service handles (e.g., 'SOLANA', 'HAVAH', 'EVM')
+ * @property {XConnector[]} xConnectors - Available wallet connectors for this chain
+ *
+ */
 export abstract class XService {
-  xChainType: ChainType;
-  xConnectors: XConnector[] = [];
+  /** The blockchain type this service handles */
+  public readonly xChainType: ChainType;
+
+  /** Available wallet connectors for this chain */
+  private xConnectors: XConnector[] = [];
 
   constructor(xChainType: ChainType) {
     this.xChainType = xChainType;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
+  /**
+   * Gets the balance of a specific token for an address
+   * @param address The wallet address to check
+   * @param xToken The token to get the balance for
+   * @param xChainId The chain ID to query
+   * @returns Promise resolving to the token balance as a bigint
+   */
+  public async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
     return 0n;
   }
 
-  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: ChainId) {
+  /**
+   * Gets balances for multiple tokens for an address
+   * @param address The wallet address to check
+   * @param xTokens Array of tokens to get balances for
+   * @param xChainId The chain ID to query
+   * @returns Promise resolving to object mapping token addresses to balances
+   */
+  public async getBalances(
+    address: string | undefined,
+    xTokens: XToken[],
+    xChainId: ChainId,
+  ): Promise<Record<string, bigint>> {
     if (!address) return {};
 
-    return xTokens.reduce((acc, xToken) => {
-      acc[xToken.address] = this.getBalance(address, xToken, xChainId);
+    const balancePromises = xTokens.map(async xToken => {
+      const balance = await this.getBalance(address, xToken, xChainId);
+      return { address: xToken.address, balance };
+    });
+
+    const balances = await Promise.all(balancePromises);
+    return balances.reduce<Record<string, bigint>>((acc, { address, balance }) => {
+      acc[address] = balance;
       return acc;
     }, {});
   }
 
-  getXConnectors(): XConnector[] {
+  /**
+   * Gets all available connectors for this chain
+   */
+  public getXConnectors(): XConnector[] {
     return this.xConnectors;
   }
 
-  setXConnectors(xConnectors: XConnector[]): void {
+  /**
+   * Sets the available connectors for this chain
+   */
+  public setXConnectors(xConnectors: XConnector[]): void {
     this.xConnectors = xConnectors;
   }
 
-  getXConnectorById(xConnectorId: string): XConnector | undefined {
+  /**
+   * Gets a specific connector by its ID
+   * @param xConnectorId The connector ID to look up
+   * @returns The matching connector or undefined if not found
+   */
+  public getXConnectorById(xConnectorId: string): XConnector | undefined {
     return this.getXConnectors().find(xConnector => xConnector.id === xConnectorId);
   }
 }

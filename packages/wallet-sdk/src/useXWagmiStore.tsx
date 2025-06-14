@@ -145,36 +145,5 @@ export const InitXWagmiStore = () => {
     }
   }, [suiAccount]);
 
-  // const { connection: solanaConnection } = useConnection();
-  // const solanaWallet = useWallet();
-  // const solanaProvider = useAnchorProvider();
-  // useEffect(() => {
-  //   if (solanaConnection) {
-  //     SolanaXService.getInstance().connection = solanaConnection;
-  //   }
-  // }, [solanaConnection]);
-  // useEffect(() => {
-  //   if (solanaWallet) {
-  //     SolanaXService.getInstance().wallet = solanaWallet;
-  //   }
-  // }, [solanaWallet]);
-  // useEffect(() => {
-  //   if (solanaProvider) {
-  //     SolanaXService.getInstance().provider = solanaProvider;
-  //   }
-  // }, [solanaProvider]);
-
-  // const havahXConnection = useXConnection('HAVAH');
-  // useEffect(() => {
-  //   if (havahXConnection) {
-  //     if (havahXConnection.xConnectorId === 'hana') {
-  //       // @ts-ignore
-  //       havahXService.walletClient = new BalancedJs({ networkId: 0x100, walletProvider: window.hanaWallet.havah });
-  //     } else if (havahXConnection.xConnectorId === 'havah') {
-  //       // @ts-ignore
-  //       havahXService.walletClient = new BalancedJs({ networkId: 0x100, walletProvider: window.havah });
-  //     }
-  //   }
-  // }, [havahXConnection]);
   return <></>;
 };

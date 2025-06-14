@@ -10,7 +10,7 @@ import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 export function SupplyButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const { supply, isLoading, error, resetError } = useSupply(token);
+  const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply(token);
 
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount);
   const { approve, isLoading: isApproving } = useApprove(token);
@@ -80,8 +80,8 @@ export function SupplyButton({ token }: { token: XToken }) {
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={isLoading}>
-              {isLoading ? 'Supplying...' : 'Supply'}
+            <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={isPending}>
+              {isPending ? 'Supplying...' : 'Supply'}
             </Button>
           )}
         </DialogFooter>

@@ -13,7 +13,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
   const [open, setOpen] = useState(false);
   const { selectedChain } = useAppStore();
 
-  const { withdraw, isLoading, error, resetError } = useWithdraw(token, selectedChain);
+  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, selectedChain);
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChain);
 
@@ -65,8 +65,8 @@ export function WithdrawButton({ token }: { token: XToken }) {
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={isLoading}>
-              {isLoading ? 'Withdrawing...' : 'Withdraw'}
+            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={isPending}>
+              {isPending ? 'Withdrawing...' : 'Withdraw'}
             </Button>
           )}
         </DialogFooter>

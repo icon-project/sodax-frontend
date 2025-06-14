@@ -3,9 +3,13 @@ import type { ChainId, XToken } from '@sodax/types';
 import type { EVMConfig } from '@/types';
 import { getWagmiChainId, isNativeToken } from '@/utils';
 
-// biome-ignore lint/style/useImportType: <explanation>
-import { Address, PublicClient, WalletClient, erc20Abi } from 'viem';
+import { type Address, type PublicClient, type WalletClient, erc20Abi } from 'viem';
 import { getPublicClient, getWalletClient } from 'wagmi/actions';
+
+/**
+ * Service class for handling EVM chain interactions.
+ * Implements singleton pattern and provides methods for wallet/chain operations.
+ */
 
 export class EvmXService extends XService {
   private static instance: EvmXService;
@@ -29,12 +33,11 @@ export class EvmXService extends XService {
     this.config = config;
   }
 
-  getPublicClient(chainId: number): PublicClient {
+  getPublicClient(chainId: number): PublicClient | undefined {
     if (!this.config) {
       throw new Error('EvmXService: config is not initialized yet');
     }
 
-    // @ts-ignore
     return getPublicClient(this.config.wagmiConfig, { chainId });
   }
 
@@ -52,8 +55,8 @@ export class EvmXService extends XService {
     const chainId = getWagmiChainId(xChainId);
 
     if (isNativeToken(xToken)) {
-      const balance = await this.getPublicClient(chainId).getBalance({ address: address as Address });
-      return balance;
+      const balance = await this.getPublicClient(chainId)?.getBalance({ address: address as Address });
+      return balance || 0n;
     }
 
     throw new Error(`Unsupported token: ${xToken.symbol}`);
@@ -76,7 +79,7 @@ export class EvmXService extends XService {
     }, {});
 
     const nonNativeXTokens = xTokens.filter(xToken => !isNativeToken(xToken));
-    const result = await this.getPublicClient(getWagmiChainId(xChainId)).multicall({
+    const result = await this.getPublicClient(getWagmiChainId(xChainId))?.multicall({
       contracts: nonNativeXTokens.map(token => ({
         abi: erc20Abi,
         address: token.address as `0x${string}`,
@@ -90,7 +93,7 @@ export class EvmXService extends XService {
       .map((token, index) => ({
         symbol: token.symbol,
         address: token.address,
-        balance: result[index].result?.toString() || '0',
+        balance: result?.[index]?.result?.toString() || '0',
       }))
       .reduce((acc, balance) => {
         acc[balance.address] = balance.balance;

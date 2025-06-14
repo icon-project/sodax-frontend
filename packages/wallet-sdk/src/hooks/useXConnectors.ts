@@ -10,6 +10,19 @@ import { useStellarXConnectors } from '../xchains/stellar/useStellarXConnectors'
 import { SuiXConnector } from '../xchains/sui';
 import { useXService } from './useXService';
 
+/**
+ * Hook to retrieve available wallet connectors for a specific blockchain type.
+ *
+ * This hook aggregates wallet connectors from different blockchain ecosystems:
+ * - EVM: Uses wagmi connectors
+ * - Sui: Uses Sui wallet adapters
+ * - Stellar: Uses custom Stellar connectors
+ * - Solana: Uses Solana wallet adapters (filtered to installed wallets only)
+ *
+ * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA')
+ * @returns An array of XConnector instances compatible with the specified chain type
+ */
+
 export function useXConnectors(xChainType: ChainType | undefined): XConnector[] {
   const xService = useXService(xChainType);
   const evmConnectors = useConnectors();

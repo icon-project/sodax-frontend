@@ -1,7 +1,7 @@
 import type { XAccount } from '@/types';
 import { useConnectWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { useConnect } from 'wagmi';
 import type { XConnector } from '../core/XConnector';
 import { useXWagmiStore } from '../useXWagmiStore';
@@ -9,7 +9,33 @@ import type { EvmXConnector } from '../xchains/evm';
 import type { SolanaXConnector } from '../xchains/solana';
 import type { SuiXConnector } from '../xchains/sui';
 
-export function useXConnect() {
+/**
+ * Hook for connecting to various blockchain wallets across different chains
+ *
+ * Handles connection logic for EVM, SUI, Solana and other supported chains.
+ * Sets up wallet connections and stores connection state in XWagmiStore.
+ *
+ * @param {void} - No parameters required
+ * @returns {UseMutationResult<XAccount | undefined, Error, XConnector>} Mutation result containing:
+ * - mutateAsync: Function to connect a wallet
+ * - isPending: Boolean indicating if connection is in progress
+ * - error: Any error that occurred
+ * - data: Connected account data if successful
+ *
+ * @example
+ * ```ts
+ * const { mutateAsync: connect, isPending } = useXConnect();
+ *
+ * const handleConnect = async (connector: XConnector) => {
+ *   try {
+ *     await connect(connector);
+ *   } catch (err) {
+ *     console.error(err);
+ *   }
+ * };
+ * ```
+ */
+export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XConnector> {
   const setXConnection = useXWagmiStore(state => state.setXConnection);
 
   const { connectAsync: evmConnectAsync } = useConnect();
@@ -31,7 +57,7 @@ export function useXConnect() {
         case 'SOLANA':
           {
             const walletName = (xConnector as SolanaXConnector).wallet.adapter.name;
-            await solanaWallet.select(walletName);
+            solanaWallet.select(walletName);
             await solanaWallet.connect();
           }
           break;

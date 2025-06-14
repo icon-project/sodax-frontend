@@ -11,8 +11,8 @@ import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  console.log('token', token, token.xChainId);
-  const { borrow, isLoading, error, resetError } = useBorrow(token, token.xChainId);
+
+  const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token, token.xChainId);
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
@@ -67,8 +67,8 @@ export function BorrowButton({ token }: { token: XToken }) {
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleBorrow} disabled={isLoading}>
-              {isLoading ? 'Borrowing...' : 'Borrow'}
+            <Button className="w-full" type="button" variant="default" onClick={handleBorrow} disabled={isPending}>
+              {isPending ? 'Borrowing...' : 'Borrow'}
             </Button>
           )}
         </DialogFooter>
