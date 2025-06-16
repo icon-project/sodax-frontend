@@ -34,10 +34,6 @@ export const xChainTypes: WalletItemProps[] = [
     xChainType: 'STELLAR',
   },
   {
-    name: 'Archway',
-    xChainType: 'ARCHWAY',
-  },
-  {
     name: 'ICON',
     xChainType: 'ICON',
   },

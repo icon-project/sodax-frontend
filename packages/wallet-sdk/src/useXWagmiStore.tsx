@@ -10,7 +10,6 @@ import { immer } from 'zustand/middleware/immer';
 import { getXService } from '.';
 import type { XService } from './core';
 import type { XConnection } from './types';
-import { ArchwayXConnector, ArchwayXService } from './xchains/archway';
 import { EvmXService } from './xchains/evm';
 import { HavahHanaXConnector, HavahXConnector, HavahXService } from './xchains/havah';
 import { InjectiveKelprXConnector, InjectiveMetamaskXConnector, InjectiveXService } from './xchains/injective';
@@ -85,10 +84,6 @@ const initXServices = (config: XConfig) => {
           xServices[xChainType].setXConnectors([]);
           xServices[xChainType].setConfig(config[xChainType]);
         }
-        break;
-      case 'ARCHWAY':
-        xServices[xChainType] = ArchwayXService.getInstance();
-        xServices[xChainType].setXConnectors([new ArchwayXConnector()]);
         break;
       case 'HAVAH':
         xServices[xChainType] = HavahXService.getInstance();

@@ -4,7 +4,6 @@ export * from './core';
 
 export * from './utils';
 
-export * from './xchains/archway';
 export * from './xchains/evm';
 export * from './xchains/havah';
 export * from './xchains/icon';

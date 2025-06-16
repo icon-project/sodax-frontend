@@ -1,7 +1,6 @@
 import type { XToken, ChainId } from '@sodax/types';
 
 import { hubAssets } from '@sodax/sdk';
-import { CHAIN_IDS } from '@sodax/types';
 
 export const allXTokens: XToken[] = [];
 
@@ -19,8 +18,7 @@ Object.keys(hubAssets).forEach(xChainId => {
     });
 
     allXTokens.push({
-      // @ts-ignore
-      xChainId: CHAIN_IDS.includes(xChainId as ChainId) ? 'sonic' : 'sonic-blaze',
+      xChainId: 'sonic',
       symbol: token.symbol,
       name: token.name,
       decimals: token.decimal,
