@@ -17,6 +17,8 @@ import { InjectiveKelprXConnector, InjectiveMetamaskXConnector, InjectiveXServic
 import { SolanaXService } from './xchains/solana/SolanaXService';
 import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
+import { IconXService } from './xchains/icon';
+import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
 
 type XWagmiStore = {
   xServices: Partial<Record<ChainType, XService>>;
@@ -73,6 +75,7 @@ export const useXWagmiStore = create<XWagmiStore>()(
 const initXServices = (config: XConfig) => {
   const xServices = {};
   Object.keys(config).forEach(key => {
+    console.log('key', key);
     const xChainType = key as ChainType;
 
     switch (xChainType) {
@@ -107,10 +110,10 @@ const initXServices = (config: XConfig) => {
         xServices[xChainType] = SolanaXService.getInstance();
         xServices[xChainType].setXConnectors([]);
         break;
-      // case 'ICON':
-      //   xServices[xChainType] = IconXService.getInstance();
-      //   xServices[xChainType].setXConnectors([new IconHanaXConnector()]);
-      //   break;
+      case 'ICON':
+        xServices[xChainType] = IconXService.getInstance();
+        xServices[xChainType].setXConnectors([new IconHanaXConnector()]);
+        break;
       default:
         break;
     }
