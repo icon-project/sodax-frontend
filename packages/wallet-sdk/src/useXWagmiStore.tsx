@@ -74,7 +74,6 @@ export const useXWagmiStore = create<XWagmiStore>()(
 const initXServices = (config: XConfig) => {
   const xServices = {};
   Object.keys(config).forEach(key => {
-    console.log('key', key);
     const xChainType = key as ChainType;
 
     switch (xChainType) {
