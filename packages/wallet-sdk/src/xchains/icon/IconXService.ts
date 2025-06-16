@@ -86,7 +86,6 @@ export class IconXService extends XService {
 
     if (nativeXToken) {
       const balance = await this.iconService.getBalance(address).execute();
-      console.log('native', balance);
       balances[nativeXToken.address] = BigInt(balance.toFixed());
     }
 
@@ -105,7 +104,6 @@ export class IconXService extends XService {
 
     return nonNativeXTokens.reduce((agg, token, idx) => {
       const balance = data[idx];
-      console.log('non-native', balance);
       balances[token.address] = BigInt(balance);
 
       return agg;
