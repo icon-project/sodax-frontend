@@ -53,7 +53,6 @@ export const INTENT_RELAY_CHAIN_IDS = {
   INJ: 19n,
   SOL: 1n,
   ICON: 1768124270n,
-  ARCHWAY: 1634886504n,
   BASE: 30n,
   BINANCE: 4n,
   OPTIMISM: 24n,

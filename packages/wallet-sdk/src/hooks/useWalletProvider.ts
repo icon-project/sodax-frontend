@@ -22,10 +22,8 @@ export function useWalletProvider(xChainId: ChainId) {
       }
 
       case 'SUI': {
-        // @ts-ignore
         const { client, wallet, account } = walletProviderOptions;
 
-        // @ts-ignore
         return new SuiWalletProvider({ client, wallet, account });
       }
 

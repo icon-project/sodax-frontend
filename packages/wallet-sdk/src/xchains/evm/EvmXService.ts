@@ -45,7 +45,6 @@ export class EvmXService extends XService {
     if (!this.config) {
       throw new Error('EvmXService: config is not initialized yet');
     }
-    //@ts-ignore
     return await getWalletClient(this.config.wagmiConfig, { chainId });
   }
 

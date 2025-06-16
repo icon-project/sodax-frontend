@@ -10,7 +10,6 @@ export function useHubProvider(): EvmHubProvider | undefined {
   const xChainType = getXChainType(hubChainId);
   const hubProvider = useMemo(() => {
     if (xChainType === 'EVM' && hubChainId && hubRpcUrl) {
-      // @ts-ignore
       const hubChainCfg = getHubChainConfig(hubChainId);
 
       if (!hubChainCfg) return undefined;
