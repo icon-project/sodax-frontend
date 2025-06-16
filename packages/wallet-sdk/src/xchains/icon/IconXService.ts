@@ -2,8 +2,12 @@ import { XService } from '@/core/XService';
 import IconService from 'icon-sdk-js';
 import type { ChainId, XToken } from '@sodax/types';
 import { isNativeToken } from '@/utils';
-  // import type { CallData } from '@balancednetwork/balanced-js';
-  // import { BalancedJs } from '@balancednetwork/balanced-js';
+import { Builder as IconBuilder, Converter as IconConverter } from 'icon-sdk-js';
+export interface CallData {
+  target: string;
+  method: string;
+  params: string[];
+}
 
 enum SupportedChainId {
   MAINNET = 1,
@@ -37,7 +41,6 @@ export class IconXService extends XService {
   private constructor() {
     super('ICON');
     this.iconService = new IconService(new IconService.HttpProvider(CHAIN_INFO[SupportedChainId.MAINNET].APIEndpoint));
-    // this.bnJs = new BalancedJs({ networkId: 1 });
   }
 
   public static getInstance(): IconXService {
@@ -47,39 +50,65 @@ export class IconXService extends XService {
     return IconXService.instance;
   }
 
-  // async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
-  //   // not used
-  //   return Promise.resolve(undefined);
-  // }
+  private async getAggregateData(requireSuccess: boolean, calls: CallData[]) {
+    const rawTx = new IconBuilder.CallBuilder()
+      // muticall address on mainnet
+      .to('cxa4aa9185e23558cff990f494c1fd2845f6cbf741')
+      .method('tryAggregate')
+      .params({ requireSuccess: IconConverter.toHex(requireSuccess ? 1 : 0), calls })
+      .build();
 
-  // async getBalances(address: string | undefined, xTokens: XToken[], xChainId: ChainId) {
-  //   if (!address) return {};
+    try {
+      const result = await this.iconService.call(rawTx).execute();
+      const aggs = result['returnData'];
 
-  //   const balances = {};
+      const data = aggs.map(agg => {
+        if (agg['success'] === '0x0') {
+          return null;
+        }
+        return agg['returnData'];
+      });
 
-  //   const nativeXToken = xTokens.find(xToken => isNativeToken(xToken));
-  //   const nonNativeXTokens = xTokens.filter(xToken => !isNativeToken(xToken));
+      return data;
+    } catch (err) {
+      console.error(err);
+      return Array(calls.length).fill(null);
+    }
+  }
 
-  //   if (nativeXToken) {
-  //     const balance = await bnJs.ICX.balanceOf(address).then(res => res.toFixed());
-  //     balances[nativeXToken.address] = BigInt(balance);
-  //   }
+  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: ChainId) {
+    if (!address) return {};
 
-  //   const cds: CallData[] = nonNativeXTokens.map(token => {
-  //     return {
-  //       target: token.address,
-  //       method: 'balanceOf',
-  //       params: [address],
-  //     };
-  //   });
+    const balances = {};
 
-  //   const data: string[] = await bnJs.Multicall.getAggregateData(cds.filter(cd => cd.target.startsWith('cx')));
+    const nativeXToken = xTokens.find(xToken => isNativeToken(xToken));
+    const nonNativeXTokens = xTokens.filter(xToken => !isNativeToken(xToken));
 
-  //   return nonNativeXTokens.reduce((agg, token, idx) => {
-  //     const balance = data[idx];
-  //     balances[token.address] = BigInt(balance);
+    if (nativeXToken) {
+      const balance = await this.iconService.getBalance(address).execute();
+      console.log('native', balance);
+      balances[nativeXToken.address] = BigInt(balance.toFixed());
+    }
 
-  //     return agg;
-  //   }, balances);
-  // }
+    const cds: CallData[] = nonNativeXTokens.map(token => {
+      return {
+        target: token.address,
+        method: 'balanceOf',
+        params: [address],
+      };
+    });
+
+    const data: string[] = await this.getAggregateData(
+      false,
+      cds.filter(cd => cd.target.startsWith('cx')),
+    );
+
+    return nonNativeXTokens.reduce((agg, token, idx) => {
+      const balance = data[idx];
+      console.log('non-native', balance);
+      balances[token.address] = BigInt(balance);
+
+      return agg;
+    }, balances);
+  }
 }
