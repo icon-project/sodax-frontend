@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { EvmWalletProvider, SuiWalletProvider } from '../wallet-providers';
 import { getXChainType } from '../actions';
 import { useWalletProviderOptions } from './useWalletProviderOptions';
+import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
 
 export function useWalletProvider(xChainId: ChainId) {
   const xChainType = getXChainType(xChainId);
@@ -15,9 +16,11 @@ export function useWalletProvider(xChainId: ChainId) {
 
     switch (xChainType) {
       case 'EVM': {
-        const { walletClient, publicClient } = walletProviderOptions;
+        const { walletClient, publicClient } = walletProviderOptions as {
+          walletClient: WalletClient<CustomTransport | HttpTransport, Chain, Account> | undefined;
+          publicClient: PublicClient<CustomTransport | HttpTransport>;
+        };
 
-        // @ts-ignore
         return new EvmWalletProvider({ walletClient, publicClient });
       }
 
