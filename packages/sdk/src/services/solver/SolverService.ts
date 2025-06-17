@@ -41,11 +41,17 @@ import type {
   SolverServiceConfig,
   TxReturnType,
 } from '../../types.js';
-import type { Address, Hex, EvmRawTransactionReceipt, Hash } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
-import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  type SpokeChainId,
+  type Address,
+  type Hex,
+  type EvmRawTransactionReceipt,
+  type Hash,
+} from '@sodax/types';
 
 export type CreateIntentParams = {
   inputToken: string; // The address of the input token on spoke chain
@@ -170,19 +176,23 @@ export class SolverService {
    * @returns {Promise<Result<IntentQuoteResponse, IntentErrorResponse>>} The intent quote response
    *
    * @example
-   * // payload
-   * {
-   *     "token_src":"0x13b70564b1ec12876b20fab5d1bb630311312f4f", // Asset BSC
-   *     "token_dst":"0xdcd9578b51ef55239b6e68629d822a8d97c95b86", // Asset ETH Arbitrum
-   *     "token_src_blockchain_id":"56",
-   *     "token_dst_blockchain_id":"42161",
+   * const payload = {
+   *     "token_src":"0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
+   *     "token_dst":"0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
+   *     "token_src_blockchain_id":"0x38.bsc",
+   *     "token_dst_blockchain_id":"0xa4b1.arbitrum",
    *     "amount":1000000000000000n,
    *     "quote_type": "exact_input"
    * } satisfies IntentQuoteRequest
-   * // response
-   * {
-   *     "quoted_amount": "1000000000000000"
-   * } satisfies IntentQuoteResponse
+   *
+   * const response = await solverService.getQuote(payload);
+   *
+   * if (response.ok) {
+   *   const quotedAmount = response.value.quoted_amount;
+   *   console.log('Quoted amount:', quotedAmount);
+   * } else {
+   *   console.error('Quote failed:', response.error);
+   * }
    */
   public async getQuote(payload: IntentQuoteRequest): Promise<Result<IntentQuoteResponse, IntentErrorResponse>> {
     return SolverApiService.getQuote(payload, this.config);
@@ -192,6 +202,10 @@ export class SolverService {
    * Get the fee for a given input amount
    * @param {bigint} inputAmount - The amount of input tokens
    * @returns {Promise<bigint>} The fee amount (denominated in input tokens)
+   *
+   * @example
+   * const fee: bigint = await solverService.getFee(1000000000000000n);
+   * console.log('Fee:', fee);
    */
   public async getFee(inputAmount: bigint): Promise<bigint> {
     if (!this.config.partnerFee) {
@@ -207,14 +221,18 @@ export class SolverService {
    * @returns {Promise<Result<IntentStatusResponse, IntentErrorResponse>>} The intent status response
    *
    * @example
-   * // request
-   * {
+   * const intentStatusRequest = {
    *     "intentHash": "a0dd7652-b360-4123-ab2d-78cfbcd20c6b"
-   * }
-   * // response
-   * {
-   *     "status": 3,
-   *     "intent_hash": "0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af"
+   * } satisfies IntentStatusRequest
+   *
+   * const response = await solverService.getStatus(intentStatusRequest);
+   *
+   * if (response.ok) {
+   *   const { status, intent_hash } = response.value;
+   *   console.log('Status:', status);
+   *   console.log('Intent hash:', intent_hash);
+   * } else {
+   *   // handle error
    * }
    */
   public async getStatus(
@@ -224,26 +242,23 @@ export class SolverService {
   }
 
   /**
-   * Post execution of intent order to Solver API
+   * Post execution of intent order transaction executed on hub chain to Solver API
    * @param {IntentExecutionRequest} intentExecutionRequest - The intent execution request
    * @returns {Promise<Result<IntentExecutionResponse, IntentErrorResponse>>} The intent execution response
    *
    * @example
-   * // request
-   * {
+   * const intentExecutionRequest = {
    *     "intent_tx_hash": "0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af",
-   *     "quote_uuid": "a0dd7652-b360-4123-ab2d-78cfbcd20c6b"
-   * }
+   * } satisfies IntentExecutionRequest
    *
-   * // response
-   * {
-   *   "ok": true,
-   *   "value": {
-   *      "output": {
-   *        "answer":"OK",
-   *        "task_id":"a0dd7652-b360-4123-ab2d-78cfbcd20c6b"
-   *      }
-   *   }
+   * const response = await solverService.postExecution(intentExecutionRequest);
+   *
+   * if (response.ok) {
+   *   const { answer, intent_hash } = response.value;
+   *   console.log('Answer:', answer);
+   *   console.log('Intent hash:', intent_hash);
+   * } else {
+   *   // handle error
    * }
    */
   public async postExecution(
@@ -256,8 +271,35 @@ export class SolverService {
    * Creates an intent and submits it to the Solver API and Relayer API
    * @param {CreateIntentParams} payload - The intent to create
    * @param {ISpokeProvider} spokeProvider - The spoke provider
-   * @param {number} timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
-   * @returns {Promise<Result<IntentExecutionResponse, IntentErrorResponse>>} The encoded contract call
+   * @param {number} timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
+   * @returns {Promise<Result<[IntentExecutionResponse, Intent, PacketData], IntentSubmitError<IntentSubmitErrorCode>>>} The intent execution response, intent, and packet data
+   *
+   * @example
+   * const payload = {
+   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
+   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
+   *     "inputAmount": 1000000000000000n, // The amount of input tokens
+   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
+   *     "deadline": 0n, // Optional timestamp after which intent expires (0 = no deadline)
+   *     "allowPartialFill": false, // Whether the intent can be partially filled
+   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
+   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
+   *     "srcAddress": "0x..", // Source address in bytes (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address in bytes (original address on spoke chain)
+   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
+   *     "data": "0x..", // Additional arbitrary data
+   * } satisfies CreateIntentParams;
+   *
+   * const createAndSubmitIntentResult = await solverService.createAndSubmitIntent(payload, spokeProvider);
+   *
+   * if (createAndSubmitIntentResult.ok) {
+   *   const [intentExecutionResponse, intent, packetData] = createAndSubmitIntentResult.value;
+   *   console.log('Intent execution response:', intentExecutionResponse);
+   *   console.log('Intent:', intent);
+   *   console.log('Packet data:', packetData);
+   * } else {
+   *   // handle error
+   * }
    */
   public async createAndSubmitIntent<S extends SpokeProvider>(
     payload: CreateIntentParams,
@@ -351,6 +393,32 @@ export class SolverService {
    * @param {CreateIntentParams} params - The intent to create
    * @param {SpokeProvider} spokeProvider - The spoke provider
    * @return {Promise<Result<boolean>>} - valid = true, invalid = false
+   *
+   * @example
+   * const payload = {
+   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
+   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
+   *     "inputAmount": 1000000000000000n, // The amount of input tokens
+   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
+   *     "deadline": 0n, // Optional timestamp after which intent expires (0 = no deadline)
+   *     "allowPartialFill": false, // Whether the intent can be partially filled
+   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
+   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
+   *     "srcAddress": "0x..", // Source address in bytes (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address in bytes (original address on spoke chain)
+   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
+   *     "data": "0x..", // Additional arbitrary data
+   * } satisfies CreateIntentParams;
+   *
+   * const isAllowanceValid = await solverService.isAllowanceValid(payload, spokeProvider);
+   *
+   * if (!allowanceValid.ok) {
+   *   // Handle error
+   * }
+   *
+   * if (!allowanceValid.value) {
+   *   // Need to approve
+   * }
    */
   public async isAllowanceValid<S extends SpokeProvider>(
     params: CreateIntentParams,
@@ -381,11 +449,26 @@ export class SolverService {
   }
 
   /**
-   * Approve ERC20 amount spending
+   * Approve amount spending (currently required for EVM only)
    * @param token - ERC20 token address
    * @param amount - Amount to approve
-   * @param address - Address to approve spending for
+   * @param spender - Spender address
    * @param spokeProvider - Spoke provider
+   * @returns {Promise<Result<EvmRawTransactionReceipt>>} - Returns the transaction receipt
+   *
+   * @example
+   * const approveResult = await approve(
+   *   '0x...', // ERC20 token address
+   *   1000n, // Amount to approve (in token decimals)
+   *   '0x...', // Spender address (usually the asset manager contract: spokeProvider.chainConfig.addresses.assetManager)
+   *   spokeProvider
+   * );
+   *
+   * if (!approveResult.ok) {
+   *   // Handle error
+   * }
+   *
+   * const txReceipt = approveResult.value;
    */
   public async approve<S extends SpokeProvider>(
     token: Address,
@@ -417,7 +500,30 @@ export class SolverService {
    * @param {SpokeProvider} spokeProvider - The spoke provider
    * @param {boolean} raw - Whether to return the raw transaction
    * @param {PartnerFee} fee - The fee to apply to the intent
-   * @returns {Promise<[TxReturnType<T, R>, Intent]>} The encoded contract call
+   * @returns {Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount], IntentSubmitError<'CREATION_FAILED'>>>} The encoded contract call
+   *
+   * @example
+   * const payload = {
+   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
+   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
+   *     "inputAmount": 1000000000000000n, // The amount of input tokens
+   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
+   *     "deadline": 0n, // Optional timestamp after which intent expires (0 = no deadline)
+   *     "allowPartialFill": false, // Whether the intent can be partially filled
+   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
+   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
+   *     "srcAddress": "0x..", // Source address in bytes (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address in bytes (original address on spoke chain)
+   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
+   *     "data": "0x..", // Additional arbitrary data
+   * } satisfies CreateIntentParams;
+   *
+   * const createIntentResult = await solverService.createIntent(payload, spokeProvider);
+   *
+   * if (createIntentResult.ok) {
+   *   const [txResult, intent] = createIntentResult.value;
+   *   console.log('Intent:', intent);
+   *
    */
   public async createIntent<S extends SpokeProvider, R extends boolean = false>(
     params: CreateIntentParams,
