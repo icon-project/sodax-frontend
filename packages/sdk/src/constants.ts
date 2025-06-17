@@ -1061,7 +1061,7 @@ const moneyMarketSupportedTokens = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BTCB,
   ] as const,
   [SOLANA_MAINNET_CHAIN_ID]: [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL] as const,
-  [ICON_MAINNET_CHAIN_ID]: [] as const,
+  [ICON_MAINNET_CHAIN_ID]: [spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX] as const,
   [STELLAR_MAINNET_CHAIN_ID]: [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.XLM] as const,
   [SUI_MAINNET_CHAIN_ID]: [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI] as const,
   [INJECTIVE_MAINNET_CHAIN_ID]: [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ] as const,

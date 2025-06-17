@@ -9,7 +9,7 @@ export interface CallData {
   params: string[];
 }
 
-enum SupportedChainId {
+export enum SupportedChainId {
   MAINNET = 1,
 }
 
@@ -22,7 +22,7 @@ interface ChainInfo {
   readonly tracker: string;
 }
 
-const CHAIN_INFO: { readonly [chainId: number]: ChainInfo } = {
+export const CHAIN_INFO: { readonly [chainId: number]: ChainInfo } = {
   [SupportedChainId.MAINNET]: {
     name: 'ICON Mainnet',
     node: 'https://ctz.solidwallet.io',

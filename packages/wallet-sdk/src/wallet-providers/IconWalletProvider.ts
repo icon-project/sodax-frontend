@@ -1,5 +1,5 @@
 import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/types';
-import IconService, { Wallet, Converter, CallTransactionBuilder } from 'icon-sdk-js';
+import { IconService, Wallet, Converter, CallTransactionBuilder } from 'icon-sdk-js';
 
 export class IconWalletProvider implements IIconWalletProvider {
   private readonly wallet: IconWallet;
@@ -61,6 +61,9 @@ export class IconWalletProvider implements IIconWalletProvider {
   }
 
   async getWalletAddress(): Promise<IconEoaAddress> {
+    if (!this.wallet.wallet) {
+      throw new Error('Wallet not initialized');
+    }
     return isIconPkWallet(this.wallet) ? (this.wallet.wallet.getAddress() as IconEoaAddress) : this.wallet.wallet;
   }
 
@@ -87,7 +90,7 @@ export type PrivateKeyIconWalletConfig = {
 };
 
 export type BrowserExtensionIconWalletConfig = {
-  walletAddress: IconEoaAddress;
+  walletAddress?: IconEoaAddress;
   rpcUrl: `http${string}`;
 };
 
@@ -100,7 +103,7 @@ export type IconPkWallet = {
 
 export type IconBrowserExtensionWallet = {
   type: 'BROWSER_EXTENSION';
-  wallet: IconEoaAddress;
+  wallet?: IconEoaAddress;
 };
 
 export type IconWallet = IconPkWallet | IconBrowserExtensionWallet;
@@ -178,7 +181,7 @@ export function isPrivateKeyIconWalletConfig(config: IconWalletConfig): config i
 export function isBrowserExtensionIconWalletConfig(
   config: IconWalletConfig,
 ): config is BrowserExtensionIconWalletConfig {
-  return 'walletAddress' in config && isIconEoaAddress(config.walletAddress);
+  return 'walletAddress' in config && (isIconEoaAddress(config.walletAddress) || !config.walletAddress);
 }
 
 export function isIconAddress(value: unknown): value is IconAddress {
