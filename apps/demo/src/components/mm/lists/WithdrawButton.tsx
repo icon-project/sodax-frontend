@@ -11,11 +11,11 @@ import { useAppStore } from '@/zustand/useAppStore';
 export function WithdrawButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const { selectedChain } = useAppStore();
+  const { selectedChainId } = useAppStore();
 
-  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, selectedChain);
+  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, selectedChainId);
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChain);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
   const handleWithdraw = async () => {
     await withdraw(amount);

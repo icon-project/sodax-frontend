@@ -29,12 +29,8 @@ Object.keys(hubAssets).forEach(xChainId => {
 
 export const getSpokeTokenAddressByVault = (spokeChainId: ChainId, vault: string) => {
   const tokens = hubAssets[spokeChainId];
+  console.log('hub tokens', tokens, vault);
+  const address = Object.keys(tokens).find(tokenAddress => tokens[tokenAddress].vault === vault);
 
-  const token = Object.keys(tokens).find(tokenAddress => tokens[tokenAddress].vault === vault);
-
-  if (!token) {
-    throw new Error('Token not found');
-  }
-
-  return token;
+  return address;
 };

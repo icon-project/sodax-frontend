@@ -4,8 +4,8 @@ import type { StateCreator } from 'zustand';
 import type { ChainId } from '@sodax/types';
 
 type AppStore = {
-  selectedChain: ChainId;
-  changeChain: (chain: ChainId) => void;
+  selectedChainId: ChainId;
+  selectChainId: (chainId: ChainId) => void;
   isWalletModalOpen: boolean;
   openWalletModal: () => void;
   closeWalletModal: () => void;
@@ -13,8 +13,8 @@ type AppStore = {
 
 export const useAppStore = create<AppStore>()(
   immer((set, get) => ({
-    selectedChain: '0xa86a.avax',
-    changeChain: (chain: ChainId) => set({ selectedChain: chain }),
+    selectedChainId: '0xa86a.avax',
+    selectChainId: (chainId: ChainId) => set({ selectedChainId: chainId }),
     isWalletModalOpen: false,
     openWalletModal: () => set({ isWalletModalOpen: true }),
     closeWalletModal: () => set({ isWalletModalOpen: false }),

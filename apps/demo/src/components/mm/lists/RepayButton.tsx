@@ -3,25 +3,25 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useBorrow } from '@sodax/dapp-kit';
+import { useRepay } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 
-export function BorrowButton({ token }: { token: XToken }) {
+export function RepayButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
 
-  const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token, token.xChainId);
+  const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay(token);
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
-  const handleBorrow = async () => {
+  const handleRepay = async () => {
     try {
-      await borrow(amount);
+      await repay(amount);
       setOpen(false);
     } catch (err) {
-      console.error('Error in handleBorrow:', err);
+      console.error('Error in handleRepay:', err);
     }
   };
 
@@ -43,12 +43,12 @@ export function BorrowButton({ token }: { token: XToken }) {
             setOpen(true);
           }}
         >
-          Borrow
+          Repay
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Borrow {token.symbol}</DialogTitle>
+          <DialogTitle>Repay {token.symbol}</DialogTitle>
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -67,8 +67,8 @@ export function BorrowButton({ token }: { token: XToken }) {
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleBorrow} disabled={isPending}>
-              {isPending ? 'Borrowing...' : 'Borrow'}
+            <Button className="w-full" type="button" variant="default" onClick={handleRepay} disabled={isPending}>
+              {isPending ? 'Repaying...' : 'Repay'}
             </Button>
           )}
         </DialogFooter>
