@@ -39,7 +39,7 @@ export function useBorrow(spokeToken: XToken): UseMutationResult<BorrowResponse,
       const response = await sodax.moneyMarket.borrowAndSubmit(
         {
           token: spokeToken.address,
-          amount: parseUnits(amount, spokeToken.decimals),
+          amount: parseUnits(amount, 18),
         },
         spokeProvider,
       );
