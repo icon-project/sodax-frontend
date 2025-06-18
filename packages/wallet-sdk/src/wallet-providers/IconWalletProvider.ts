@@ -1,5 +1,6 @@
 import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/types';
-import { IconService, Wallet, Converter, CallTransactionBuilder } from 'icon-sdk-js';
+import IconService from 'icon-sdk-js';
+import { Wallet, Converter, CallTransactionBuilder } from 'icon-sdk-js';
 
 export class IconWalletProvider implements IIconWalletProvider {
   private readonly wallet: IconWallet;
