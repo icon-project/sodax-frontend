@@ -5,7 +5,7 @@ import {
   TransactionInstruction,
   type AccountMeta
 } from '@solana/web3.js';
-import BN from 'bn.js';
+import type BN from 'bn.js';
 
 const TRANSFER_DISCRIMINATOR = Buffer.from([163, 52, 200, 231, 140, 3, 69, 186]);
 const SEND_MESSAGE_DISCRIMINATOR = Buffer.from([57, 40, 34, 178, 189, 10, 65, 26]);

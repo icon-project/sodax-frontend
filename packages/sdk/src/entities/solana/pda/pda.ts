@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import BN from "bn.js";
+import type BN from "bn.js";
 
 export const RateLimitPDA = {
   config(programId: PublicKey) {
