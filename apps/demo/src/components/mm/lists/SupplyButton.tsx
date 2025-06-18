@@ -80,7 +80,7 @@ export function SupplyButton({ token }: { token: XToken }) {
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={isPending}>
+            <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={!hasAllowed}>
               {isPending ? 'Supplying...' : 'Supply'}
             </Button>
           )}

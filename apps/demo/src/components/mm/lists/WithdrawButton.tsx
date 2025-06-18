@@ -13,7 +13,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
   const [open, setOpen] = useState(false);
   const { selectedChainId } = useAppStore();
 
-  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, selectedChainId);
+  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token);
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
