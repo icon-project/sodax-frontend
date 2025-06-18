@@ -362,7 +362,7 @@ export type IntentErrorResponse = {
 };
 
 export type IntentExecutionRequest = {
-  intent_tx_hash: Hex; // Intent hash of the execution on Sonic
+  intent_tx_hash: Hex; // Intent hash of the execution on Sonic (hub chain)
 };
 
 export type IntentExecutionResponse = {
