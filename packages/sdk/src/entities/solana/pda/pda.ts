@@ -1,5 +1,6 @@
-import type * as anchor from '@coral-xyz/anchor';
 import { PublicKey } from '@solana/web3.js';
+import BN from "bn.js";
+
 export const RateLimitPDA = {
   config(programId: PublicKey) {
     const [pda, bump] = PublicKey.findProgramAddressSync([Buffer.from('rmconfig')], programId);
@@ -19,10 +20,10 @@ export const ConnectionConfigPDA = {
     return { bump, pda };
   },
 
-  receipt(programId: PublicKey, srcChainId: anchor.BN, connectionSn: anchor.BN) {
+  receipt(programId: PublicKey, srcChainId: BN, connectionSn: BN) {
     const [pda, bump] = PublicKey.findProgramAddressSync(
-      [Buffer.from('receipt'), srcChainId.toBuffer(), connectionSn.toBuffer()],
-      programId,
+        [Buffer.from('receipt'), srcChainId.toBuffer(), connectionSn.toBuffer()],
+        programId,
     );
 
     return { bump, pda };
@@ -56,8 +57,8 @@ export const AssetManagerPDA = {
 
   ta_creation_fee_account_pda(programId: PublicKey, mint: PublicKey) {
     const [pda, bump] = PublicKey.findProgramAddressSync(
-      [Buffer.from('ta_creation_account_seed'), mint.toBuffer()],
-      programId,
+        [Buffer.from('ta_creation_account_seed'), mint.toBuffer()],
+        programId,
     );
 
     return { bump, pda };
