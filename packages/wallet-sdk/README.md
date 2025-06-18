@@ -74,6 +74,7 @@ function App() {
           SOLANA: {
             endpoint: 'https://your-rpc-endpoint',
           },
+          ICON: {}
         }}
       >
         <WalletConnect />
