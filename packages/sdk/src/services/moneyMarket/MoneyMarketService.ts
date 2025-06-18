@@ -187,10 +187,24 @@ export class MoneyMarketService {
   }
 
   /**
-   * Check whether assetManager contract is allowed to move the given payload amount
-   * @param {MoneyMarketRepayParams | MoneyMarketSupplyParams} params - Money market params
-   * @param {SpokeProvider} spokeProvider - The spoke provider
-   * @return {Promise<Result<boolean>>} - valid = true, invalid = false
+   * Check if allowance is sufficient for supply or repay operations (currently required for EVM only)
+   * @param {MoneyMarketRepayParams | MoneyMarketSupplyParams} params - Money market params containing token address and amount
+   * @param {SpokeProvider} spokeProvider - The spoke provider instance
+   * @return {Promise<Result<boolean>>} - Returns true if allowance is sufficient, false otherwise
+   *
+   * @example
+   * const allowanceValid = await isAllowanceValid({
+   *   token: '0x...', // Address of the token (spoke chain) to supply
+   *   amount: 1000n, // Amount to supply (in token decimals)
+   * }, spokeProvider);
+   *
+   * if (!allowanceValid.ok) {
+   *   // Handle error
+   * }
+   *
+   * if (!allowanceValid.value) {
+   *   // Need to approve
+   * }
    */
   public async isAllowanceValid<S extends SpokeProvider>(
     params: MoneyMarketRepayParams | MoneyMarketSupplyParams,
@@ -221,11 +235,26 @@ export class MoneyMarketService {
   }
 
   /**
-   * Approve ERC20 amount spending
+   * Approve amount spending (currently required for EVM only)
    * @param token - ERC20 token address
    * @param amount - Amount to approve
    * @param spender - Spender address
    * @param spokeProvider - Spoke provider
+   * @returns {Promise<Result<EvmRawTransactionReceipt>>} - Returns the transaction receipt
+   *
+   * @example
+   * const approveResult = await approve(
+   *   '0x...', // ERC20 token address
+   *   1000n, // Amount to approve (in token decimals)
+   *   '0x...', // Spender address (usually the asset manager contract: spokeProvider.chainConfig.addresses.assetManager)
+   *   spokeProvider
+   * );
+   *
+   * if (!approveResult.ok) {
+   *   // Handle error
+   * }
+   *
+   * const txReceipt = approveResult.value;
    */
   public async approve<S extends SpokeProvider>(
     token: Address,
@@ -251,11 +280,31 @@ export class MoneyMarketService {
   }
 
   /**
-   * Supply tokens to the money market pool and submit the intent to the Solver API
+   * Supply tokens to the money market pool, relay the transaction to the hub and submit the intent to the Solver API
    * @param params - The parameters for the supply transaction.
    * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
-   * @returns [spokeTxHash, hubTxHash]
+   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
+   * @returns {Promise<Result<[Hex, Hex], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
+   *
+   * @example
+   * const result = await moneyMarketService.supplyAndSubmit(
+   *   {
+   *     token: '0x...', // Address of the token (spoke chain address) to supply
+   *     amount: 1000n, // Amount to supply (in token decimals)
+   *   },
+   *   spokeProvider,
+   *   30000 // Optional timeout in milliseconds (default: 60000, i.e. 60 seconds)
+   * );
+   *
+   * if (!result.ok) {
+   *   // Handle error
+   * }
+   *
+   * const [
+   *  spokeTxHash, // transaction hash on the spoke chain
+   *  hubTxHash,   // transaction hash on the hub chain (i.e. the transaction that was relayed to the hub)
+   * ] = result.value;
+   * console.log('Supply transaction hashes:', { spokeTxHash, hubTxHash });
    */
   public async supplyAndSubmit<S extends SpokeProvider>(
     params: MoneyMarketSupplyParams,
@@ -299,12 +348,36 @@ export class MoneyMarketService {
   }
 
   /**
-   * Supply tokens to the money market pool
-   * NOTE: This method does not submit the intent to the Solver API
+   * Supply tokens to the money market pool without submitting the intent to the Solver API
+   * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
+   * In order to successfully supply tokens, you need to:
+   * 1. Check if the allowance is sufficient
+   * 2. Approve the asset manager contract to spend the tokens
+   * 3. Supply the tokens
+   * 4. Submit the intent to the Solver API and await it using relayTxAndWaitPacket method
+   *
    * @param params - The parameters for the supply transaction.
    * @param spokeProvider - The spoke provider.
    * @param raw - Whether to return the raw transaction data.
-   * @returns The transaction result.
+   * @returns {Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>>} - Returns the transaction result.
+   *
+   * @example
+   * const moneyMarketService = new MoneyMarketService(config);
+   * const result = await moneyMarketService.supply(
+   *   {
+   *     token: "0x123...", // token address
+   *     amount: 1000000000000000000n // 1 token in wei
+   *   },
+   *   spokeProvider,
+   *   raw // Optional: true = return the raw transaction data, false = exeute and return the transaction hash (default: false)
+   * );
+   *
+   * if (result.ok) {
+   *   const txHash = result.value;
+   *   console.log('Supply transaction hash:', txHash);
+   * } else {
+   *   console.error('Supply failed:', result.error);
+   * }
    */
   async supply<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
     params: MoneyMarketSupplyParams,
@@ -358,11 +431,31 @@ export class MoneyMarketService {
   }
 
   /**
-   * Borrow tokens from the money market pool and submit the intent to the Solver API
+   * Borrow tokens from the money market pool, relay the transaction to the hub and submit the intent to the Solver API
    * @param params - The parameters for the borrow transaction.
    * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
-   * @returns [spokeTxHash, hubTxHash]
+   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
+   * @returns {Promise<Result<[Hex, Hex], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
+   *
+   * @example
+   * const result = await moneyMarketService.borrowAndSubmit(
+   *   {
+   *     token: '0x...', // Address of the token (spoke chain address) to borrow
+   *     amount: 1000n, // Amount to borrow (in token decimals)
+   *   },
+   *   spokeProvider,
+   *   30000 // Optional timeout in milliseconds (default: 60000, i.e. 60 seconds)
+   * );
+   *
+   * if (!result.ok) {
+   *   // Handle error
+   * }
+   *
+   * const [
+   *  spokeTxHash, // transaction hash on the spoke chain
+   *  hubTxHash,   // transaction hash on the hub chain (i.e. the transaction that was relayed to the hub)
+   * ] = result.value;
+   * console.log('Borrow transaction hashes:', { spokeTxHash, hubTxHash });
    */
   public async borrowAndSubmit<S extends SpokeProvider>(
     params: MoneyMarketSupplyParams,
@@ -406,12 +499,34 @@ export class MoneyMarketService {
   }
 
   /**
-   * Borrow tokens from the money market pool
-   * NOTE: This method does not submit the intent to the Solver API
+   * Borrow tokens from the money market pool without submitting the intent to the Solver API
+   * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
+   * In order to successfully borrow tokens, you need to:
+   * 1. Execute the borrow transaction on the spoke chain
+   * 2. Submit the intent to the Solver API and await it using relayTxAndWaitPacket method
+   *
    * @param params - The parameters for the borrow transaction.
    * @param spokeProvider - The spoke provider.
    * @param raw - Whether to return the raw transaction data.
-   * @returns The transaction result (raw transaction data or transaction hash).
+   * @returns {Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>>} - Returns the transaction result (raw transaction data or transaction hash).
+   *
+   * @example
+   * const moneyMarketService = new MoneyMarketService(config);
+   * const result = await moneyMarketService.borrow(
+   *   {
+   *     token: "0x123...", // token address
+   *     amount: 1000000000000000000n // 1 token in wei
+   *   },
+   *   spokeProvider,
+   *   raw // Optional: true = return the raw transaction data, false = exeute and return the transaction hash (default: false)
+   * );
+   *
+   * if (result.ok) {
+   *   const txHash = result.value;
+   *   console.log('Borrow transaction hash:', txHash);
+   * } else {
+   *   console.error('Borrow failed:', result.error);
+   * }
    */
   async borrow<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
     params: MoneyMarketBorrowParams,
@@ -446,11 +561,32 @@ export class MoneyMarketService {
   }
 
   /**
-   * Withdraw tokens from the money market pool and submit the intent to the Solver API
+   * Withdraw tokens from the money market pool, relay the transaction to the hub and submit the intent to the Solver API
+   *
    * @param params - The parameters for the withdraw transaction.
    * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
-   * @returns [spokeTxHash, hubTxHash]
+   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
+   * @returns {Promise<Result<[Hex, Hex], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
+   *
+   * @example
+   * const result = await moneyMarketService.withdrawAndSubmit(
+   *   {
+   *     token: '0x...', // Address of the token (spoke chain address) to withdraw
+   *     amount: 1000n, // Amount to withdraw (in token decimals)
+   *   },
+   *   spokeProvider,
+   *   30000 // Optional timeout in milliseconds (default: 60000, i.e. 60 seconds)
+   * );
+   *
+   * if (!result.ok) {
+   *   // Handle error
+   * }
+   *
+   * const [
+   *  spokeTxHash, // transaction hash on the spoke chain
+   *  hubTxHash,   // transaction hash on the hub chain (i.e. the transaction that was relayed to the hub)
+   * ] = result.value;
+   * console.log('Withdraw transaction hashes:', { spokeTxHash, hubTxHash });
    */
   public async withdrawAndSubmit<S extends SpokeProvider>(
     params: MoneyMarketWithdrawParams,
@@ -494,12 +630,34 @@ export class MoneyMarketService {
   }
 
   /**
-   * Withdraw tokens from the money market pool
-   * NOTE: This method does not submit the intent to the Solver API
+   * Withdraw tokens from the money market pool without submitting the intent to the Solver API
+   * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
+   * In order to successfully withdraw tokens, you need to:
+   * 1. Execute the withdraw transaction on the spoke chain
+   * 2. Submit the intent to the Solver API and await it using relayTxAndWaitPacket method
+   *
    * @param params - The parameters for the withdraw transaction.
    * @param spokeProvider - The spoke provider.
    * @param raw - Whether to return the raw transaction data.
-   * @returns The transaction result (raw transaction data or transaction hash).
+   * @returns {Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>>} - Returns the transaction result (raw transaction data or transaction hash).
+   *
+   * @example
+   * const moneyMarketService = new MoneyMarketService(config);
+   * const result = await moneyMarketService.withdraw(
+   *   {
+   *     token: "0x123...", // token address
+   *     amount: 1000000000000000000n // 1 token in wei
+   *   },
+   *   spokeProvider,
+   *   raw // Optional: true = return the raw transaction data, false = exeute and return the transaction hash (default: false)
+   * );
+   *
+   * if (result.ok) {
+   *   const txHash = result.value;
+   *   console.log('Withdraw transaction hash:', txHash);
+   * } else {
+   *   console.error('Withdraw failed:', result.error);
+   * }
    */
   async withdraw<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
     params: MoneyMarketWithdrawParams,
@@ -534,11 +692,32 @@ export class MoneyMarketService {
   }
 
   /**
-   * Repay tokens to the money market pool and submit the intent to the Solver API
+   * Repay tokens to the money market pool, relay the transaction to the hub and submit the intent to the Solver API
+   *
    * @param params - The parameters for the repay transaction.
    * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
-   * @returns [spokeTxHash, hubTxHash]
+   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
+   * @returns {Promise<Result<[Hex, Hex], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
+   *
+   * @example
+   * const result = await moneyMarketService.repayAndSubmit(
+   *   {
+   *     token: '0x...', // Address of the token (spoke chain address) to repay
+   *     amount: 1000n, // Amount to repay (in token decimals)
+   *   },
+   *   spokeProvider,
+   *   30000 // Optional timeout in milliseconds (default: 60000, i.e. 60 seconds)
+   * );
+   *
+   * if (!result.ok) {
+   *   // Handle error
+   * }
+   *
+   * const [
+   *  spokeTxHash, // transaction hash on the spoke chain
+   *  hubTxHash,   // transaction hash on the hub chain (i.e. the transaction that was relayed to the hub)
+   * ] = result.value;
+   * console.log('Repay transaction hashes:', { spokeTxHash, hubTxHash });
    */
   public async repayAndSubmit<S extends SpokeProvider>(
     params: MoneyMarketRepayParams,
@@ -582,12 +761,36 @@ export class MoneyMarketService {
   }
 
   /**
-   * Repay tokens to the money market pool
-   * NOTE: This method does not submit the intent to the Solver API
+   * Repay tokens to the money market pool without submitting the intent to the Solver API
+   * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
+   * In order to successfully repay tokens, you need to:
+   * 1. Check if the allowance is sufficient
+   * 2. Approve the asset manager contract to spend the tokens
+   * 3. Execute the repay transaction on the spoke chain
+   * 4. Submit the intent to the Solver API and await it using relayTxAndWaitPacket method
+   *
    * @param params - The parameters for the repay transaction.
    * @param spokeProvider - The spoke provider.
    * @param raw - Whether to return the raw transaction data.
-   * @returns The transaction result (raw transaction data or transaction hash).
+   * @returns {Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>>} The transaction result (raw transaction data or transaction hash) or error.
+   *
+   * @example
+   * const moneyMarketService = new MoneyMarketService(config);
+   * const result = await moneyMarketService.repay(
+   *   {
+   *     token: "0x123...", // token address
+   *     amount: 1000000000000000000n // 1 token in wei
+   *   },
+   *   spokeProvider,
+   *   raw // Optional: true = return the raw transaction data, false = exeute and return the transaction hash (default: false)
+   * );
+   *
+   * if (result.ok) {
+   *   const txHash = result.value;
+   *   console.log('Repay transaction hash:', txHash);
+   * } else {
+   *   console.error('Repay failed:', result.error);
+   * }
    */
   async repay<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
     params: MoneyMarketRepayParams,
@@ -627,12 +830,12 @@ export class MoneyMarketService {
   }
 
   /**
-   * Deposit tokens to the spoke chain and supply to the money market pool
+   * Build transaction data for supplying to the money market pool
    * @param token - The address of the token on spoke chain
-   * @param to The user wallet address on the hub chain
-   * @param amount The amount to deposit
-   * @param spokeChainId The chain ID of the spoke chain
-   * @returns The transaction result (raw transaction data or transaction hash).
+   * @param to - The user wallet address on the hub chain
+   * @param amount - The amount to deposit
+   * @param spokeChainId - The chain ID of the spoke chain
+   * @returns {Hex} The transaction data.
    */
   public supplyData(token: string, to: Address, amount: bigint, spokeChainId: SpokeChainId): Hex {
     const calls: EvmContractCall[] = [];
@@ -659,13 +862,13 @@ export class MoneyMarketService {
   }
 
   /**
-   * Borrow tokens from the money market pool
-   * @param from The user wallet address on the hub chain
-   * @param to The user wallet address on the spoke chain
-   * @param token The address of the token to borrow
-   * @param amount The amount to borrow in hub chain decimals
-   * @param spokeChainId The chain ID of the spoke chain
-   * @returns Transaction object
+   * Build transaction data for borrowing from the money market pool
+   * @param from - The user wallet address on the hub chain
+   * @param to - The user wallet address on the spoke chain
+   * @param token - The address of the token to borrow
+   * @param amount - The amount to borrow in hub chain decimals
+   * @param spokeChainId - The chain ID of the spoke chain
+   * @returns {Hex} The transaction data.
    */
   public borrowData(from: Address, to: Address | Hex, token: string, amount: bigint, spokeChainId: SpokeChainId): Hex {
     invariant(isValidSpokeChainId(spokeChainId), `Invalid spokeChainId: ${spokeChainId}`);
@@ -728,13 +931,13 @@ export class MoneyMarketService {
   }
 
   /**
-   * Withdraw tokens from the money market pool
-   * @param from The user wallet address on the hub chain
-   * @param to The user wallet address on the spoke chain
-   * @param token The address of the token to borrow
-   * @param amount The amount to borrow in hub chain decimals
-   * @param spokeChainId The chain ID of the spoke chain
-   * @returns Transaction object
+   * Build transaction data for withdrawing from the money market pool
+   * @param from - The user wallet address on the hub chain
+   * @param to - The user wallet address on the spoke chain
+   * @param token - The address of the token to borrow
+   * @param amount - The amount to borrow in hub chain decimals
+   * @param spokeChainId - The chain ID of the spoke chain
+   * @returns {Hex} The transaction data.
    */
   public withdrawData(from: Address, to: Address, token: string, amount: bigint, spokeChainId: SpokeChainId): Hex {
     const calls: EvmContractCall[] = [];
@@ -768,13 +971,12 @@ export class MoneyMarketService {
   }
 
   /**
-   * Repay tokens to the money market pool
-   * @param token The address of the token to repay
-   * @param to The user wallet address on the hub chain
-   * @param amount The amount to repay
-   * @param spokeChainId The chain ID of the spoke chain
-   * @param moneyMarketConfig The money market config
-   * @returns Transaction object
+   * Build transaction data for repaying to the money market pool
+   * @param token - The address of the token to repay
+   * @param to - The user wallet address on the hub chain
+   * @param amount - The amount to repay
+   * @param spokeChainId - The chain ID of the spoke chain
+   * @returns {Hex} The transaction data.
    */
   public repayData(token: string, to: Address, amount: bigint, spokeChainId: SpokeChainId): Hex {
     const calls: EvmContractCall[] = [];
@@ -813,7 +1015,7 @@ export class MoneyMarketService {
    * Get the list of all reserves in the pool
    * @param uiPoolDataProvider - The address of the UI Pool Data Provider
    * @param poolAddressesProvider - The address of the Pool Addresses Provider
-   * @returns Array of reserve addresses
+   * @returns {Promise<readonly Address[]>} - Array of reserve addresses
    */
   async getReservesList(uiPoolDataProvider: Address, poolAddressesProvider: Address): Promise<readonly Address[]> {
     return this.hubProvider.publicClient.readContract({
@@ -828,7 +1030,7 @@ export class MoneyMarketService {
    * Get detailed data for all reserves in the pool
    * @param uiPoolDataProvider - The address of the UI Pool Data Provider
    * @param poolAddressesProvider - The address of the Pool Addresses Provider
-   * @returns Tuple containing array of reserve data and base currency info
+   * @returns {Promise<readonly [readonly AggregatedReserveData[], BaseCurrencyInfo]>} - Tuple containing array of reserve data and base currency info
    */
   async getReservesData(
     uiPoolDataProvider: Address,
@@ -847,7 +1049,7 @@ export class MoneyMarketService {
    * @param userAddress Address of the user
    * @param uiPoolDataProvider - The address of the UI Pool Data Provider
    * @param poolAddressesProvider - The address of the Pool Addresses Provider
-   * @returns Tuple containing array of user reserve data and eMode category ID
+   * @returns {Promise<readonly [readonly UserReserveData[], number]>} - Tuple containing array of user reserve data and eMode category ID
    */
   async getUserReservesData(
     userAddress: Address,
@@ -988,7 +1190,7 @@ export class MoneyMarketService {
   /**
    * Get the list of all supported money market tokens (supply / borrow tokens) for a given spoke chain ID
    * @param chainId The chain ID
-   * @returns Array of supported tokens
+   * @returns {readonly Token[]} - Array of supported tokens
    */
   public getSupportedTokens(chainId: SpokeChainId): readonly Token[] {
     return getSupportedMoneyMarketTokens(chainId);
@@ -997,7 +1199,7 @@ export class MoneyMarketService {
   /**
    * Get the list of all supported money market reserves (supply / borrow reserves)
    * NOTE: reserve addresses are on the hub chain and can be of type vault, erc20, etc.
-   * @returns Array of supported reserves
+   * @returns {readonly Address[]} - Array of supported reserves
    */
   public getSupportedReserves(): readonly Address[] {
     return [...moneyMarketReserveAssets];

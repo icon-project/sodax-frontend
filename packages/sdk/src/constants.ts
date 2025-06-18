@@ -1043,28 +1043,70 @@ export const getMoneyMarketConfig = (chainId: HubChainId): MoneyMarketConfig => 
 
 // currently supported spoke chain tokens for money market
 const moneyMarketSupportedTokens = {
-  [AVALANCHE_MAINNET_CHAIN_ID]: [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.AVAX] as const,
+  [AVALANCHE_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.AVAX,
+    spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  ] as const,
   [ARBITRUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.WBTC,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.tBTC,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const,
   [BASE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.cbBTC,
   ] as const,
-  [OPTIMISM_MAINNET_CHAIN_ID]: [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.ETH] as const,
-  [POLYGON_MAINNET_CHAIN_ID]: [] as const,
+  [OPTIMISM_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.ETH,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+  ] as const,
+  [POLYGON_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.POL,
+    spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDC,
+  ] as const,
   [BSC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BNB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.ETHB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BTCB,
+    spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const,
-  [SOLANA_MAINNET_CHAIN_ID]: [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL] as const,
-  [ICON_MAINNET_CHAIN_ID]: [spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX] as const,
-  [STELLAR_MAINNET_CHAIN_ID]: [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.XLM] as const,
-  [SUI_MAINNET_CHAIN_ID]: [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI] as const,
-  [INJECTIVE_MAINNET_CHAIN_ID]: [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ] as const,
+  [SOLANA_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
+    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  ] as const,
+  [ICON_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
+    spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.wICX,
+  ] as const,
+  [STELLAR_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.XLM,
+    spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  ] as const,
+  [SUI_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI,
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  ] as const,
+  [INJECTIVE_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
