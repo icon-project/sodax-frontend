@@ -1,5 +1,5 @@
 import type { SpokeChainId } from '@sodax/sdk';
-import type { ChainId, XToken } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
@@ -19,7 +19,7 @@ interface WithdrawResponse {
  *
  * @example
  * ```typescript
- * const { mutateAsync: withdraw, isPending, error } = useWithdraw(hubToken, spokeChainId);
+ * const { mutateAsync: withdraw, isPending, error } = useWithdraw(spokeToken);
  * await withdraw('100');
  * ```
  *
@@ -27,12 +27,9 @@ interface WithdrawResponse {
  *   - spokeProvider is not available
  *   - Transaction execution fails
  */
-export function useWithdraw(
-  hubToken: XToken,
-  spokeChainId: ChainId,
-): UseMutationResult<WithdrawResponse, Error, string> {
+export function useWithdraw(spokeToken: XToken): UseMutationResult<WithdrawResponse, Error, string> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
+  const spokeProvider = useSpokeProvider(spokeToken.xChainId as SpokeChainId);
 
   return useMutation<WithdrawResponse, Error, string>({
     mutationFn: async (amount: string) => {
@@ -42,8 +39,9 @@ export function useWithdraw(
 
       const response = await sodax.moneyMarket.withdrawAndSubmit(
         {
-          token: hubToken.address,
-          amount: parseUnits(amount, hubToken.decimals),
+          token: spokeToken.address,
+          // vault token on hub chain decimals is 18
+          amount: parseUnits(amount, 18),
         },
         spokeProvider,
       );

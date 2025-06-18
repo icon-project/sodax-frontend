@@ -1,11 +1,5 @@
-import {
-  Connection,
-  type Keypair,
-  PublicKey,
-  TransactionInstruction,
-  type AccountMeta
-} from '@solana/web3.js';
-import BN from 'bn.js';
+import { Connection, type Keypair, PublicKey, TransactionInstruction, type AccountMeta } from '@solana/web3.js';
+import type BN from 'bn.js';
 
 const TRANSFER_DISCRIMINATOR = Buffer.from([163, 52, 200, 231, 140, 3, 69, 186]);
 const SEND_MESSAGE_DISCRIMINATOR = Buffer.from([57, 40, 34, 178, 189, 10, 65, 26]);
@@ -25,7 +19,7 @@ function serializeU64(value: BN): Buffer {
 function serializeU128(value: BN): Buffer {
   const buffer = Buffer.allocUnsafe(16);
   const bigIntValue = BigInt(value.toString());
-  buffer.writeBigUInt64LE(bigIntValue & 0xFFFFFFFFFFFFFFFFn, 0);
+  buffer.writeBigUInt64LE(bigIntValue & 0xffffffffffffffffn, 0);
   buffer.writeBigUInt64LE(bigIntValue >> 64n, 8);
   return buffer;
 }
@@ -100,7 +94,7 @@ class TransferInstructionBuilder implements SolanaInstructionBuilder {
       TRANSFER_DISCRIMINATOR,
       serializeU64(this.amount),
       serializeBytes(this.to),
-      serializeBytes(this.data)
+      serializeBytes(this.data),
     ]);
 
     const keys: AccountMeta[] = [
@@ -126,8 +120,8 @@ class TransferInstructionBuilder implements SolanaInstructionBuilder {
     }
 
     keys.push(
-        { pubkey: this.accountsData.connection, isSigner: false, isWritable: false },
-        { pubkey: this.accountsData.tokenProgram, isSigner: false, isWritable: false },
+      { pubkey: this.accountsData.connection, isSigner: false, isWritable: false },
+      { pubkey: this.accountsData.tokenProgram, isSigner: false, isWritable: false },
     );
 
     keys.push(...this.remaining);
@@ -168,20 +162,18 @@ class SendMessageInstructionBuilder implements SolanaInstructionBuilder {
       SEND_MESSAGE_DISCRIMINATOR,
       serializeU128(this.dstChainId),
       serializeBytes(this.dstAddress),
-      serializeBytes(this.payload)
+      serializeBytes(this.payload),
     ]);
 
-    const keys: AccountMeta[] = [
-      { pubkey: this.accountsData.signer, isSigner: true, isWritable: true },
-    ];
+    const keys: AccountMeta[] = [{ pubkey: this.accountsData.signer, isSigner: true, isWritable: true }];
 
     if (this.accountsData.dapp) {
       keys.push({ pubkey: this.accountsData.dapp, isSigner: true, isWritable: false });
     }
 
     keys.push(
-        { pubkey: this.accountsData.systemProgram, isSigner: false, isWritable: false },
-        { pubkey: this.accountsData.config, isSigner: false, isWritable: true },
+      { pubkey: this.accountsData.systemProgram, isSigner: false, isWritable: false },
+      { pubkey: this.accountsData.config, isSigner: false, isWritable: true },
     );
 
     return new TransactionInstruction({
@@ -195,15 +187,15 @@ class SendMessageInstructionBuilder implements SolanaInstructionBuilder {
 export async function getConnection(rpcUrl: string, wsUrl: string): Promise<Connection> {
   return new Connection(rpcUrl, {
     wsEndpoint: wsUrl,
-    commitment: 'confirmed'
+    commitment: 'confirmed',
   });
 }
 
 export async function getAssetManagerProgram(
-    keypair: Keypair,
-    rpcUrl: string,
-    wsUrl: string,
-    assetManager: string,
+  keypair: Keypair,
+  rpcUrl: string,
+  wsUrl: string,
+  assetManager: string,
 ): Promise<SolanaProgram> {
   const connection = await getConnection(rpcUrl, wsUrl);
   const programId = new PublicKey(assetManager);
@@ -214,16 +206,16 @@ export async function getAssetManagerProgram(
     methods: {
       transfer: (amount: BN, to: Buffer, data: Buffer) => {
         return new TransferInstructionBuilder(programId, amount, to, data);
-      }
-    }
+      },
+    },
   };
 }
 
 export async function getConnectionProgram(
-    keypair: Keypair,
-    rpcUrl: string,
-    wsUrl: string,
-    connection: string,
+  keypair: Keypair,
+  rpcUrl: string,
+  wsUrl: string,
+  connection: string,
 ): Promise<SolanaProgram> {
   const conn = await getConnection(rpcUrl, wsUrl);
   const programId = new PublicKey(connection);
@@ -234,7 +226,7 @@ export async function getConnectionProgram(
     methods: {
       sendMessage: (dstChainId: BN, dstAddress: Buffer, payload: Buffer) => {
         return new SendMessageInstructionBuilder(programId, dstChainId, dstAddress, payload);
-      }
-    }
+      },
+    },
   };
 }

@@ -1,4 +1,4 @@
-import type { ChainId, XToken } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
@@ -18,7 +18,7 @@ interface BorrowResponse {
  *
  * @example
  * ```typescript
- * const { mutateAsync: borrow, isPending, error } = useBorrow(hubToken, spokeChainId);
+ * const { mutateAsync: borrow, isPending, error } = useBorrow(spokeToken);
  * await borrow('100');
  * ```
  *
@@ -26,9 +26,9 @@ interface BorrowResponse {
  *   - spokeProvider is not available
  *   - Transaction execution fails
  */
-export function useBorrow(hubToken: XToken, spokeChainId: ChainId): UseMutationResult<BorrowResponse, Error, string> {
+export function useBorrow(spokeToken: XToken): UseMutationResult<BorrowResponse, Error, string> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
+  const spokeProvider = useSpokeProvider(spokeToken.xChainId as SpokeChainId);
 
   return useMutation<BorrowResponse, Error, string>({
     mutationFn: async (amount: string) => {
@@ -38,13 +38,14 @@ export function useBorrow(hubToken: XToken, spokeChainId: ChainId): UseMutationR
 
       const response = await sodax.moneyMarket.borrowAndSubmit(
         {
-          token: hubToken.address,
-          amount: parseUnits(amount, hubToken.decimals),
+          token: spokeToken.address,
+          amount: parseUnits(amount, 18),
         },
         spokeProvider,
       );
 
       if (!response.ok) {
+        console.log('Failed to borrow tokens', response);
         throw new Error('Failed to borrow tokens');
       }
 

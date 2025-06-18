@@ -5,7 +5,8 @@
   "linter": {
     "rules": {
       "style": {
-        "noUselessElse": "off"
+        "noUselessElse": "off",
+        "noNonNullAssertion": "off"
       },
       "suspicious": {
         "noExplicitAny": "off",
