@@ -2,13 +2,39 @@
 
 The Sodax SDK provides a comprehensive interface for interacting with the Sodax protocol, enabling cross-chain swaps and money market operations.
 
+## Features
+
+### Swaps (Solver / Intents)
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
+  - Sui ✅
+  - Stellar ✅
+  - ICON ✅
+  - Solana ❌ Coming soon
+  - Injective ❌ Coming soon
+  - Havah ❌ Coming soon
+
+### Lend and Borrow (Money Market)
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
+  - Sui ✅
+  - Stellar ✅
+  - ICON ✅
+  - Solana ❌ Coming soon
+  - Injective ❌ Coming soon
+  - Havah ❌ Coming soon
+
+
 ## Installation
 
-### NPM
+```bash
+# Using npm
+npm install @sodax/sdk
 
-Installing through npm:
+# Using yarn
+yarn add @sodax/sdk
 
-`npm i --save @sodax/sdk`
+# Using pnpm
+pnpm add @sodax/sdk
+```
 
 ### Local Installation
 
@@ -149,6 +175,8 @@ SDK includes predefined configurations of supported chains, tokens and other rel
 
 **NOTE** you should generally only use `spokeChains` configuration to retrieve all supported chains and then invoke per spoke chain based configurations. If you are using hub configurations you should know what you are doing.
 
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for more.
+
 ```typescript
 import {
   getHubChainConfig,
@@ -192,6 +220,15 @@ Sodax SDK does not force the usage of a specific wallet or library, but requires
 
 As part of Sodax suite, xWagmi SDK is also going to be provided as one example wallet provider implementation. You are free to choose between using our xWagmi SDK or implementing your own wallet connectivity for each chain.
 
+- Supported Wallet Provider Interface (`IWalletProvider`)
+  - `IEvmWalletProvider`: EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
+  - `ISuiWalletProvider`: Sui ✅
+  - `IIconWalletProvider`: ICON ✅
+  - `IStellarWalletProvider`: Stellar ✅
+  - Solana ❌ Coming soon
+  - Injective ❌ Coming soon
+  - Havah ❌ Coming soon
+
 ### Initialising Spoke Provider
 
 Spoke provider is a main instance used to interact with Sodax features because it contains all the relevant information we need to successfully execute features. You should generally establish SpokeProvider instances for each chain user connects wallet to.
@@ -222,3 +259,39 @@ Sodax feature set currently contain:
 
 Intent relay is internally used to relay transaction information from one chain to another.
 Sodax SDK abstracts the heavy lifting of using the relay, but you can find documentation for Intent Relay API in [INTENT_RELAY_API.md](./docs/INTENT_RELAY_API.md) in case you want to explore it.
+
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build the package
+pnpm build
+
+# Run in development mode
+pnpm dev
+
+# Run type checking
+pnpm checkTs
+
+# Format code
+pnpm pretty
+
+# Lint code
+pnpm lint
+```
+
+## License
+
+[MIT](LICENSE)
+
+## Support
+
+- [GitHub Issues](https://github.com/icon-project/sodax-frontend/issues)
+- [Discord Community](https://discord.gg/xM2Nh4S6vN)
