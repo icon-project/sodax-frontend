@@ -1,13 +1,16 @@
 import { XService } from '@/core/XService';
 import IconService from 'icon-sdk-js';
+import type { ChainId, XToken } from '@sodax/types';
+import { isNativeToken } from '@/utils';
+import { Builder as IconBuilder, Converter as IconConverter } from 'icon-sdk-js';
+export interface CallData {
+  target: string;
+  method: string;
+  params: string[];
+}
 
-enum SupportedChainId {
+export enum SupportedChainId {
   MAINNET = 1,
-  YEOUIDO = 3,
-  SEJONG = 83,
-  BERLIN = 7,
-  LISBON = 2,
-  HAVAH = 0x100,
 }
 
 interface ChainInfo {
@@ -19,7 +22,7 @@ interface ChainInfo {
   readonly tracker: string;
 }
 
-const CHAIN_INFO: { readonly [chainId: number]: ChainInfo } = {
+export const CHAIN_INFO: { readonly [chainId: number]: ChainInfo } = {
   [SupportedChainId.MAINNET]: {
     name: 'ICON Mainnet',
     node: 'https://ctz.solidwallet.io',
@@ -27,47 +30,6 @@ const CHAIN_INFO: { readonly [chainId: number]: ChainInfo } = {
     debugAPIEndpoint: 'https://api.icon.community/api/v3d',
     chainId: 1,
     tracker: 'https://tracker.icon.community',
-  },
-  [SupportedChainId.YEOUIDO]: {
-    name: 'Yeouido',
-    node: 'https://bicon.net.solidwallet.io',
-    APIEndpoint: 'https://bicon.net.solidwallet.io/api/v3',
-    debugAPIEndpoint: 'https://bicon.net.solidwallet.io/api/debug/v3',
-    chainId: 3,
-    tracker: 'https://bicon.tracker.solidwallet.io',
-  },
-  [SupportedChainId.SEJONG]: {
-    name: 'Sejong',
-    node: 'https://sejong.net.solidwallet.io',
-    APIEndpoint: 'https://sejong.net.solidwallet.io/api/v3',
-    debugAPIEndpoint: 'https://sejong.net.solidwallet.io/api/v3d',
-    chainId: 83,
-    tracker: 'https://tracker.sejong.icon.community',
-  },
-  [SupportedChainId.BERLIN]: {
-    name: 'Berlin',
-    node: 'https://berlin.net.solidwallet.io',
-    // APIEndpoint: 'https://berlin.net.solidwallet.io/api/v3',
-    APIEndpoint: 'https://api.berlin.icon.community/api/v3',
-    debugAPIEndpoint: 'https://berlin.net.solidwallet.io/api/v3d',
-    chainId: 7,
-    tracker: 'https://tracker.berlin.icon.community',
-  },
-  [SupportedChainId.LISBON]: {
-    name: 'LISBON',
-    node: 'https://lisbon.net.solidwallet.io',
-    APIEndpoint: 'https://lisbon.net.solidwallet.io/api/v3',
-    debugAPIEndpoint: 'https://lisbon.net.solidwallet.io/api/v3d',
-    chainId: 2,
-    tracker: 'https://tracker.lisbon.icon.community',
-  },
-  [SupportedChainId.HAVAH]: {
-    name: 'HAVAH',
-    node: 'https://ctz.havah.io',
-    APIEndpoint: 'https://ctz.havah.io/api/v3',
-    debugAPIEndpoint: 'https://ctz.havah.io/api/v3d',
-    chainId: 0x100,
-    tracker: 'https://scan.havah.io',
   },
 };
 
@@ -78,7 +40,7 @@ export class IconXService extends XService {
 
   private constructor() {
     super('ICON');
-    this.iconService = new IconService(new IconService.HttpProvider(CHAIN_INFO[1].APIEndpoint));
+    this.iconService = new IconService(new IconService.HttpProvider(CHAIN_INFO[SupportedChainId.MAINNET].APIEndpoint));
   }
 
   public static getInstance(): IconXService {
@@ -86,5 +48,65 @@ export class IconXService extends XService {
       IconXService.instance = new IconXService();
     }
     return IconXService.instance;
+  }
+
+  private async getAggregateData(requireSuccess: boolean, calls: CallData[]) {
+    const rawTx = new IconBuilder.CallBuilder()
+      // muticall address on mainnet
+      .to('cxa4aa9185e23558cff990f494c1fd2845f6cbf741')
+      .method('tryAggregate')
+      .params({ requireSuccess: IconConverter.toHex(requireSuccess ? 1 : 0), calls })
+      .build();
+
+    try {
+      const result = await this.iconService.call(rawTx).execute();
+      const aggs = result['returnData'];
+
+      const data = aggs.map(agg => {
+        if (agg['success'] === '0x0') {
+          return null;
+        }
+        return agg['returnData'];
+      });
+
+      return data;
+    } catch (err) {
+      console.error(err);
+      return Array(calls.length).fill(null);
+    }
+  }
+
+  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: ChainId) {
+    if (!address) return {};
+
+    const balances = {};
+
+    const nativeXToken = xTokens.find(xToken => isNativeToken(xToken));
+    const nonNativeXTokens = xTokens.filter(xToken => !isNativeToken(xToken));
+
+    if (nativeXToken) {
+      const balance = await this.iconService.getBalance(address).execute();
+      balances[nativeXToken.address] = BigInt(balance.toFixed());
+    }
+
+    const cds: CallData[] = nonNativeXTokens.map(token => {
+      return {
+        target: token.address,
+        method: 'balanceOf',
+        params: [address],
+      };
+    });
+
+    const data: string[] = await this.getAggregateData(
+      false,
+      cds.filter(cd => cd.target.startsWith('cx')),
+    );
+
+    return nonNativeXTokens.reduce((agg, token, idx) => {
+      const balance = data[idx];
+      balances[token.address] = BigInt(balance);
+
+      return agg;
+    }, balances);
   }
 }

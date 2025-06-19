@@ -33,10 +33,10 @@ export const xChainTypes: WalletItemProps[] = [
     name: 'Stellar',
     xChainType: 'STELLAR',
   },
-  // {
-  //   name: 'ICON',
-  //   xChainType: 'ICON',
-  // },
+  {
+    name: 'ICON',
+    xChainType: 'ICON',
+  },
   {
     name: 'Havah',
     xChainType: 'HAVAH',

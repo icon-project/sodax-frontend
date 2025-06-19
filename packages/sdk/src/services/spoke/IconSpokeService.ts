@@ -1,4 +1,4 @@
-import IconService from 'icon-sdk-js';
+import { Converter, CallTransactionBuilder, CallBuilder } from 'icon-sdk-js';
 import * as rlp from 'rlp';
 import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
@@ -68,7 +68,7 @@ export class IconSpokeService {
    * @returns {Promise<bigint>} The balance of the token
    */
   public static async getDeposit(token: string, spokeProvider: IconSpokeProvider): Promise<bigint> {
-    const transaction = new IconService.CallBuilder()
+    const transaction = new CallBuilder()
       .to(token)
       .method('balanceOf')
       .params({ _owner: spokeProvider.chainConfig.addresses.assetManager })
@@ -117,11 +117,11 @@ export class IconSpokeService {
     const value: Hex = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? BigIntToHex(amount) : '0x0';
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-    const rawTransaction = IconService.Converter.toRawTransaction(
-      new IconService.CallTransactionBuilder()
+    const rawTransaction = Converter.toRawTransaction(
+      new CallTransactionBuilder()
         .from(walletAddress)
         .to(token)
-        .stepLimit(IconService.Converter.toBigNumber('2000000'))
+        .stepLimit(Converter.toBigNumber('2000000'))
         .nid(spokeProvider.chainConfig.nid)
         .version('0x3')
         .timestamp(new Date().getTime() * 1000)
@@ -163,10 +163,10 @@ export class IconSpokeService {
 
     const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
 
-    const transaction = new IconService.CallTransactionBuilder()
+    const transaction = new CallTransactionBuilder()
       .from(walletAddressBytes)
       .to(spokeProvider.chainConfig.addresses.connection)
-      .stepLimit(IconService.Converter.toBigNumber('2000000'))
+      .stepLimit(Converter.toBigNumber('2000000'))
       .nid(spokeProvider.chainConfig.nid)
       .version('0x3')
       .timestamp(new Date().getTime() * 1000)
@@ -175,7 +175,7 @@ export class IconSpokeService {
       .build();
 
     if (raw) {
-      return IconService.Converter.toRawTransaction(transaction) as IconReturnType<R>;
+      return Converter.toRawTransaction(transaction) as IconReturnType<R>;
     }
 
     return spokeProvider.walletProvider.sendTransaction({
