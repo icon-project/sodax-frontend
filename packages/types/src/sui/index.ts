@@ -35,7 +35,7 @@ export interface SuiPaginatedCoins {
 export interface ISuiWalletProvider extends WalletAddressProvider {
   getWalletAddress: () => Promise<Address>;
   getWalletAddressBytes: () => Promise<Hex>;
-  signAndExecuteTxn: (txn: SuiTransaction) => Promise<Hex>;
+  signAndExecuteTxn: (txn: SuiTransaction) => Promise<string>;
   viewContract(
     tx: SuiTransaction,
     packageId: string,

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { allXTokens, getSpokeTokenAddressByVault, useReservesData, useUserReservesData } from '@sodax/dapp-kit';
+import { allXTokens, getSpokeTokenAddressByVault, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useXAccount, useXBalances } from '@sodax/wallet-sdk';
@@ -20,8 +20,6 @@ export function SupplyAssetsList() {
 
   const userReserves = useUserReservesData(selectedChainId);
 
-  const { data: reservesData } = useReservesData();
-  console.log('reservesData', reservesData);
   return (
     <Card>
       <CardHeader>
