@@ -12,14 +12,10 @@ export default function MoneyMarketPage() {
 
   return (
     <main className="">
-      <div className="container mx-auto p-4 mt-10">
+      <div className="container mx-auto p-4 mt-10 space-y-4">
+        <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
         {xAccount?.address ? (
-          <div className="space-y-4">
-            <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
-
-            {/* Assets to Supply */}
-            <SupplyAssetsList />
-          </div>
+          <SupplyAssetsList />
         ) : (
           <div className="flex justify-center items-center h-[600px] border-2">
             <Button onClick={openWalletModal}>Connect</Button>

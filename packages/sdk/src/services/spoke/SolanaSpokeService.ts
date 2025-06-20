@@ -90,13 +90,8 @@ export class SolanaSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseSolanaTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      from,
-      hubProvider,
-    );
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return SolanaSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);
+    return SolanaSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
 
   private static async transfer<R extends boolean = false>(
