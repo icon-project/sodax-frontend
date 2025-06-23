@@ -3,24 +3,25 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useWithdraw } from '@sodax/dapp-kit';
+import { useAllowance, useSupply, useApprove } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
-import { useAppStore } from '@/zustand/useAppStore';
 
-export function WithdrawButton({ token }: { token: XToken }) {
+export function SupplyButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const { selectedChain } = useAppStore();
+  const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply(token);
 
-  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, selectedChain);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount);
+  const { approve, isLoading: isApproving } = useApprove(token);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChain);
-
-  const handleWithdraw = async () => {
-    await withdraw(amount);
-    if (!error) {
+  const handleSupply = async () => {
+    try {
+      await supply(amount);
       setOpen(false);
+    } catch (err) {
+      console.error('Error in handleSupply:', err);
     }
   };
 
@@ -30,6 +31,10 @@ export function WithdrawButton({ token }: { token: XToken }) {
       setAmount('');
       resetError?.();
     }
+  };
+
+  const handleApprove = async () => {
+    await approve(amount);
   };
 
   return (
@@ -42,12 +47,12 @@ export function WithdrawButton({ token }: { token: XToken }) {
             setOpen(true);
           }}
         >
-          Withdraw
+          Supply
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Withdraw {token.symbol}</DialogTitle>
+          <DialogTitle>Supply {token.symbol}</DialogTitle>
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -58,15 +63,25 @@ export function WithdrawButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
+        {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
         <DialogFooter className="sm:justify-start">
+          <Button
+            className="w-full"
+            type="button"
+            variant="default"
+            onClick={handleApprove}
+            disabled={isAllowanceLoading || hasAllowed || isApproving}
+          >
+            {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+          </Button>
           {isWrongChain && (
             <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
               Switch Chain
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={isPending}>
-              {isPending ? 'Withdrawing...' : 'Withdraw'}
+            <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={!hasAllowed}>
+              {isPending ? 'Supplying...' : 'Supply'}
             </Button>
           )}
         </DialogFooter>

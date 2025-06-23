@@ -5,7 +5,7 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
 ## Features
 - Seamless wallet connectivity for all supported wallets in the Sodax network
   - EVM Wallets: All browser extensions that support [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963) (Hana Wallet, MetaMask, Phantom, etc.) ✅
-  - Sui Wallets: ❌ Coming soon
+  - Sui Wallets: All browser extension that @mysten/dapp-kit supports (Hana, Sui Wallet, Suiet, etc.) ✅
   - Solana Wallets: ❌ Coming soon
   - Stellar Wallets: ❌ Coming soon
   - Injective Wallets: ❌ Coming soon
@@ -14,7 +14,7 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
 
 - Address and connection state management
   - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
-  - Sui ❌ Coming soon
+  - Sui ✅
   - Solana ❌ Coming soon
   - Stellar ❌ Coming soon
   - Injective ❌ Coming soon

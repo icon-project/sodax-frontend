@@ -30,7 +30,6 @@ import {
  * It uses command pattern to execute different spoke chain operations.
  */
 
-// biome-ignore lint/complexity/noStaticOnlyClass:
 export class SpokeService {
   /**
    * Deposit tokens to the spoke chain.

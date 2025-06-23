@@ -1,7 +1,5 @@
-import { SYSTEM_PROGRAM_ID } from '@coral-xyz/anchor/dist/cjs/native/system.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { ComputeBudgetProgram, PublicKey, SystemProgram, type TransactionInstruction } from '@solana/web3.js';
-import { BN } from 'bn.js';
 import { type Address, type Hex, toHex } from 'viem';
 import { getIntentRelayChainId } from '../../constants.js';
 import type { EvmHubProvider } from '../../entities/index.js';
@@ -12,6 +10,7 @@ import { isNative } from '../../entities/solana/utils/utils.js';
 import type { PromiseSolanaTxReturnType, SolanaReturnType } from '../../types.js';
 import type { HubAddress } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import BN from 'bn.js';
 
 export type SolanaSpokeDepositParams = {
   from: PublicKey;
@@ -91,13 +90,8 @@ export class SolanaSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseSolanaTxReturnType<R> {
-    const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      from,
-      hubProvider,
-    );
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return SolanaSpokeService.call(BigInt(relayId), userWallet, payload, spokeProvider, raw);
+    return SolanaSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
 
   private static async transfer<R extends boolean = false>(
@@ -123,53 +117,54 @@ export class SolanaSpokeService {
       wsUrl,
       addresses.connection,
     );
+
     if (isNative(token)) {
-      depositInstruction = await assetManagerProgram.methods
-        .transfer(amountBN, Buffer.from(recipient.slice(2), 'hex'), Buffer.from(data.slice(2), 'hex'))
-        .accountsStrict({
-          signer: walletPublicKey,
-          systemProgram: SystemProgram.programId,
-          config: AssetManagerPDA.config(assetManagerProgram.programId).pda,
-          nativeVaultAccount: AssetManagerPDA.vault_native(assetManagerProgram.programId).pda,
-          tokenVaultAccount: null,
-          signerTokenAccount: null,
-          authority: AssetManagerPDA.authority(assetManagerProgram.programId).pda,
-          mint: null,
-          connection: connectionProgram.programId,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .remainingAccounts([
-          {
-            pubkey: ConnectionConfigPDA.config(connectionProgram.programId).pda,
-            isSigner: false,
-            isWritable: true,
-          },
-        ])
-        .instruction();
+      depositInstruction = await assetManagerProgram.methods.transfer!(
+        amountBN,
+        Buffer.from(recipient.slice(2), 'hex'),
+        Buffer.from(data.slice(2), 'hex'),
+      ).accountsStrict!({
+        signer: walletPublicKey,
+        systemProgram: SystemProgram.programId,
+        config: AssetManagerPDA.config(assetManagerProgram.programId).pda,
+        nativeVaultAccount: AssetManagerPDA.vault_native(assetManagerProgram.programId).pda,
+        tokenVaultAccount: null,
+        signerTokenAccount: null,
+        authority: AssetManagerPDA.authority(assetManagerProgram.programId).pda,
+        mint: null,
+        connection: connectionProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      }).remainingAccounts!([
+        {
+          pubkey: ConnectionConfigPDA.config(connectionProgram.programId).pda,
+          isSigner: false,
+          isWritable: true,
+        },
+      ]).instruction();
     } else {
       const signerTokenAccount = await spokeProvider.walletProvider.getAssociatedTokenAddress(token);
-      depositInstruction = await assetManagerProgram.methods
-        .transfer(amountBN, Buffer.from(recipient.slice(2), 'hex'), Buffer.from(data.slice(2), 'hex'))
-        .accountsStrict({
-          signer: walletPublicKey,
-          systemProgram: SystemProgram.programId,
-          config: AssetManagerPDA.config(assetManagerProgram.programId).pda,
-          nativeVaultAccount: null,
-          tokenVaultAccount: AssetManagerPDA.vault_token(assetManagerProgram.programId, token).pda,
-          signerTokenAccount: signerTokenAccount,
-          authority: AssetManagerPDA.authority(assetManagerProgram.programId).pda,
-          mint: token,
-          connection: connectionProgram.programId,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .remainingAccounts([
-          {
-            pubkey: ConnectionConfigPDA.config(connectionProgram.programId).pda,
-            isSigner: false,
-            isWritable: true,
-          },
-        ])
-        .instruction();
+      depositInstruction = await assetManagerProgram.methods.transfer!(
+        amountBN,
+        Buffer.from(recipient.slice(2), 'hex'),
+        Buffer.from(data.slice(2), 'hex'),
+      ).accountsStrict!({
+        signer: walletPublicKey,
+        systemProgram: SystemProgram.programId,
+        config: AssetManagerPDA.config(assetManagerProgram.programId).pda,
+        nativeVaultAccount: null,
+        tokenVaultAccount: AssetManagerPDA.vault_token(assetManagerProgram.programId, token).pda,
+        signerTokenAccount: signerTokenAccount,
+        authority: AssetManagerPDA.authority(assetManagerProgram.programId).pda,
+        mint: token,
+        connection: connectionProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      }).remainingAccounts!([
+        {
+          pubkey: ConnectionConfigPDA.config(connectionProgram.programId).pda,
+          isSigner: false,
+          isWritable: true,
+        },
+      ]).instruction();
     }
 
     const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
@@ -223,20 +218,16 @@ export class SolanaSpokeService {
       addresses.connection,
     );
     const walletPublicKey = walletProvider.getAddress();
-    const sendMessageInstruction = await connectionProgram.methods
-      .sendMessage(
-        new BN(dstChainId.toString()),
-        Buffer.from(dstAddress.slice(2), 'hex'),
-        Buffer.from(payload.slice(2), 'hex'),
-      )
-      .accounts({
-        signer: walletPublicKey,
-        //@ts-ignore
-        dapp: null,
-        config: ConnectionConfigPDA.config(connectionProgram.programId).pda,
-        systemProgram: SYSTEM_PROGRAM_ID,
-      })
-      .instruction();
+    const sendMessageInstruction = await connectionProgram.methods.sendMessage!(
+      new BN(dstChainId.toString()),
+      Buffer.from(dstAddress.slice(2), 'hex'),
+      Buffer.from(payload.slice(2), 'hex'),
+    ).accounts!({
+      signer: walletPublicKey,
+      dapp: null,
+      config: ConnectionConfigPDA.config(connectionProgram.programId).pda,
+      systemProgram: SystemProgram.programId,
+    }).instruction();
 
     const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
       units: 1000000,

@@ -12,6 +12,7 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Repay borrowed tokens (`useRepay`)
   - Get user reserves data (`useUserReservesData`)
   - Calculate hub wallet address by using spoke chain id and spoke chain wallet address (`useHubWalletAddress`)
+  - Get reserves data (`useReservesData`)
 
 - Swap/Intent
   - Get quote for an intent order (`useQuote`)
@@ -210,8 +211,9 @@ function SwapComponent() {
 - [`useRepay()`](./src/hooks/mm/useRepay.ts) - Repay borrowed tokens
 - [`useSupply()`](./src/hooks/mm/useSupply.ts) - Supply tokens to the money market
 - [`useWithdraw()`](./src/hooks/mm/useWithdraw.ts) - Withdraw supplied tokens
-- [`useUserReservesData()`](./src/hooks/mm/useUserReservesData.ts) - Get list of supplied assets
+- [`useUserReservesData()`](./src/hooks/mm/useUserReservesData.ts) - Get user's reserves data(supplied asset and debt)
 - [`useHubWalletAddress()`](./src/hooks/mm/useHubWalletAddress.ts) - Get hub wallet address for a spoke chain
+- [`useReservesData()`](./src/hooks/mm/useReservesData.ts) - Get reserves data
 
 #### Swap Hooks
 - [`useQuote()`](./src/hooks/swap/useQuote.ts) - Get quote for an intent order

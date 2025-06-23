@@ -1,27 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useBorrow } from '@sodax/dapp-kit';
+import { useWithdraw } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
-import { useState } from 'react';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
+import { useAppStore } from '@/zustand/useAppStore';
 
-export function BorrowButton({ token }: { token: XToken }) {
+export function WithdrawButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
+  const { selectedChainId } = useAppStore();
 
-  const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token, token.xChainId);
+  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token);
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
-  const handleBorrow = async () => {
-    try {
-      await borrow(amount);
+  const handleWithdraw = async () => {
+    await withdraw(amount);
+    if (!error) {
       setOpen(false);
-    } catch (err) {
-      console.error('Error in handleBorrow:', err);
     }
   };
 
@@ -43,12 +42,12 @@ export function BorrowButton({ token }: { token: XToken }) {
             setOpen(true);
           }}
         >
-          Borrow
+          Withdraw
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Borrow {token.symbol}</DialogTitle>
+          <DialogTitle>Withdraw {token.symbol}</DialogTitle>
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -59,7 +58,6 @@ export function BorrowButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
         <DialogFooter className="sm:justify-start">
           {isWrongChain && (
             <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
@@ -67,8 +65,8 @@ export function BorrowButton({ token }: { token: XToken }) {
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleBorrow} disabled={isPending}>
-              {isPending ? 'Borrowing...' : 'Borrow'}
+            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={isPending}>
+              {isPending ? 'Withdrawing...' : 'Withdraw'}
             </Button>
           )}
         </DialogFooter>

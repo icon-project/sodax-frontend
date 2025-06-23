@@ -15,7 +15,7 @@ export class SuiWalletProvider implements ISuiWalletProvider {
     this.wallet = wallet;
     this.account = account;
   }
-  async signAndExecuteTxn(txn: SuiTransaction): Promise<Hex> {
+  async signAndExecuteTxn(txn: SuiTransaction): Promise<string> {
     const { bytes, signature } = await signTransaction(this.wallet, {
       transaction: txn,
       account: this.account,
@@ -30,7 +30,7 @@ export class SuiWalletProvider implements ISuiWalletProvider {
       },
     });
 
-    return `0x${res.digest}`;
+    return res.digest;
   }
 
   async viewContract(
@@ -49,7 +49,7 @@ export class SuiWalletProvider implements ISuiWalletProvider {
 
     const txResults = await this.client.devInspectTransactionBlock({
       transactionBlock: tx,
-      sender: this.account.getPublicKey().toSuiAddress(),
+      sender: this.account.address,
     });
 
     if (txResults.results && txResults.results[0] !== undefined) {
@@ -63,7 +63,7 @@ export class SuiWalletProvider implements ISuiWalletProvider {
   }
 
   async getWalletAddress(): Promise<Address> {
-    return this.account.getPublicKey().toSuiAddress() as Address;
+    return this.account.address;
   }
 
   async getWalletAddressBytes(): Promise<Hex> {

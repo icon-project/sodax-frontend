@@ -578,7 +578,7 @@ export const spokeChainConfig = {
     bnUSD: '0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD',
     rpc_url: 'https://fullnode.mainnet.sui.io:443',
     chain: {
-      name: 'sui',
+      name: 'Sui',
       id: SUI_MAINNET_CHAIN_ID,
       type: 'SUI',
     },
