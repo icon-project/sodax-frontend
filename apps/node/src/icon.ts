@@ -16,7 +16,7 @@ import {
   type SodaxConfig,
   type SolverConfigParams,
 } from '@sodax/sdk';
-import { IconWalletProvider } from './wallet-providers/IconWalletProvider';
+import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 
 // load PK from .env
