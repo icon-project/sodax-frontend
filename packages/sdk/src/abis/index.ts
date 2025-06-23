@@ -7,3 +7,6 @@ export * from './uiPoolData.abi.js';
 export * from './vaultToken.abi.js';
 export * from './walletFactory.abi.js';
 export * from './intents.abi.js';
+export * from './sonicWalletFactory.abi.js';
+export * from './wrappedSonic.abi.js';
+export * from './variableDebtToken.abi.js';

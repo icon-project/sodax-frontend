@@ -7,12 +7,13 @@ import type {
   ISpokeProvider,
   IconSpokeProvider,
   SolanaSpokeProvider,
+  SonicSpokeProvider,
   SpokeProvider,
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from './entities/index.js';
 import type { EVM_CHAIN_IDS, EVM_SPOKE_CHAIN_IDS, INTENT_RELAY_CHAIN_IDS, spokeChainConfig } from './index.js';
-import type { EvmSpokeDepositParams } from './services/index.js';
+import type { EvmSpokeDepositParams, SonicSpokeDepositParams } from './services/index.js';
 import type { CWSpokeDepositParams } from './services/spoke/CWSpokeService.js';
 import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.js';
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
@@ -113,6 +114,14 @@ export type EvmSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
   nativeToken: Address | string;
 };
 
+export type SonicSpokeChainConfig = BaseSpokeChainConfig<'SONIC'> & {
+  addresses: {
+    walletRouter: Address;
+    wrappedSonic: Address;
+  };
+  nativeToken: Address;
+};
+
 export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   addresses: {
     assetManager: string;
@@ -183,6 +192,7 @@ export type HubChainConfig = EvmHubChainConfig;
 
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
+  | SonicSpokeChainConfig
   | CosmosSpokeChainConfig
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
@@ -191,9 +201,11 @@ export type SpokeChainConfig =
 
 export type GetSpokeChainConfigType<T extends ChainType> = T extends 'EVM'
   ? EvmSpokeChainConfig
+  : T extends 'SONIC'
+    ? SonicSpokeChainConfig
   : T extends 'INJECTIVE'
     ? CosmosSpokeChainConfig
-    : T extends 'icon'
+    : T extends 'ICON'
       ? IconSpokeChainConfig
       : T extends 'SUI'
         ? SuiSpokeChainConfig
@@ -308,6 +320,8 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
           ? StellarSpokeDepositParams
           : T extends SolanaSpokeProvider
             ? SolanaSpokeDepositParams
+            : T extends SonicSpokeProvider
+              ? SonicSpokeDepositParams
             : never;
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
@@ -464,6 +478,8 @@ export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chai
           ? SuiReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
             ? CWReturnType<Raw>
+            : T['chainConfig']['chain']['type'] extends 'SONIC'
+              ? EvmReturnType<Raw>
             : never; // TODO extend for each chain implementation
 export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
 export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<TxReturnType<SolanaSpokeProvider, Raw>>;

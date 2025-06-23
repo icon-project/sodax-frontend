@@ -4,6 +4,7 @@ import {
   type EvmHubProvider,
   EvmSpokeProvider,
   SolanaSpokeProvider,
+  SonicSpokeProvider,
   type SpokeProvider,
   StellarSpokeProvider,
   SuiSpokeProvider,
@@ -16,11 +17,13 @@ import { IconSpokeService } from './IconSpokeService.js';
 import { SolanaSpokeService } from './SolanaSpokeService.js';
 import { StellarSpokeService } from './StellarSpokeService.js';
 import { SuiSpokeService } from './SuiSpokeService.js';
+import { SonicSpokeService } from './SonicSpokeService.js';
 import {
   isCWSpokeProvider,
   isEvmSpokeProvider,
   isIconSpokeProvider,
   isSolanaSpokeProvider,
+  isSonicSpokeProvider,
   isStellarSpokeProvider,
   isSuiSpokeProvider,
 } from '../../guards.js';
@@ -30,7 +33,9 @@ import {
  * It uses command pattern to execute different spoke chain operations.
  */
 
-export class SpokeService {
+
+
+export  class SpokeService {
   /**
    * Deposit tokens to the spoke chain.
    * @param {GetSpokeDepositParamsType<T extends SpokeProvider>} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
@@ -44,6 +49,13 @@ export class SpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): Promise<PromiseTxReturnType<T, R>> {
+    if (spokeProvider instanceof SonicSpokeProvider) {
+      return SonicSpokeService.deposit(
+        params as GetSpokeDepositParamsType<SonicSpokeProvider>,
+        spokeProvider,
+        raw,
+      ) as PromiseTxReturnType<T, R>;
+    }
     if (spokeProvider instanceof EvmSpokeProvider) {
       return EvmSpokeService.deposit(
         params as GetSpokeDepositParamsType<EvmSpokeProvider>,
@@ -123,6 +135,9 @@ export class SpokeService {
     if (spokeProvider instanceof SolanaSpokeProvider) {
       return SolanaSpokeService.getDeposit(token, spokeProvider);
     }
+    if (spokeProvider instanceof SonicSpokeProvider) {
+      return SonicSpokeService.getDeposit(token, spokeProvider);
+    }
 
     throw new Error('Invalid spoke provider');
   }
@@ -142,6 +157,12 @@ export class SpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): Promise<TxReturnType<T, R>> {
+    if (isSonicSpokeProvider(spokeProvider)) {
+      return (await SonicSpokeService.callWallet(payload, spokeProvider, raw)) satisfies TxReturnType<
+        SonicSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
+    }
     if (isEvmSpokeProvider(spokeProvider)) {
       return (await EvmSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
         EvmSpokeProvider,

@@ -15,6 +15,7 @@ import {
   type EvmUninitializedBrowserConfig,
   type SpokeProvider,
   EvmSpokeProvider,
+  SonicSpokeProvider,
 } from './entities/index.js';
 import {
   INTENT_RELAY_CHAIN_IDS,
@@ -122,6 +123,15 @@ export function isEvmSpokeProvider(value: SpokeProvider): value is EvmSpokeProvi
     value !== null &&
     value instanceof EvmSpokeProvider &&
     value.chainConfig.chain.type === 'EVM'
+  );
+}
+
+export function isSonicSpokeProvider(value: SpokeProvider): value is SonicSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof SonicSpokeProvider &&
+    value.chainConfig.chain.type === 'SONIC'
   );
 }
 
