@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
-  type Address,
   type CreateIntentParams,
   type Hex,
   type Intent,
@@ -29,26 +28,26 @@ import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useQuote, useCreateIntentOrder } from '@sodax/dapp-kit';
-import { useEvmSwitchChain } from '@sodax/wallet-sdk';
+import { getXChainType, useEvmSwitchChain, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   type ChainId,
   POLYGON_MAINNET_CHAIN_ID,
   type Token,
   type SpokeChainId,
+  type ChainType,
 } from '@sodax/types';
-
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
   setOrders,
-  address,
 }: {
   setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; packet: PacketData }[]>) => void;
-  address: Address;
 }) {
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ARBITRUM_MAINNET_CHAIN_ID);
+  const sourceAccount = useXAccount(sourceChain);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
+  const destAccount = useXAccount(destChain);
   const { openWalletModal } = useAppStore();
   const { mutateAsync: createIntentOrder } = useCreateIntentOrder(sourceChain);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
@@ -135,6 +134,16 @@ export default function SwapCard({
       return;
     }
 
+    if (!sourceAccount.address) {
+      console.error('sourceAccount.address undefined');
+      return;
+    }
+
+    if (!destAccount.address) {
+      console.error('destAccount.address undefined');
+      return;
+    }
+
     const createIntentParams = {
       inputToken: sourceToken.address, // The address of the input token on hub chain
       outputToken: destToken.address, // The address of the output token on hub chain
@@ -144,8 +153,8 @@ export default function SwapCard({
       allowPartialFill: false, // Whether the intent can be partially filled
       srcChain: sourceChain, // Chain ID where input tokens originate
       dstChain: destChain, // Chain ID where output tokens should be delivered
-      srcAddress: address, // Source address in bytes (original address on spoke chain)
-      dstAddress: address, // Destination address in bytes (original address on spoke chain)
+      srcAddress: sourceAccount.address as `0x${string}`, // Source address in bytes (original address on spoke chain)
+      dstAddress: destAccount.address as `0x${string}`, // Destination address in bytes (original address on spoke chain)
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
       data: '0x', // Additional arbitrary data
     } satisfies CreateIntentParams;
@@ -166,6 +175,15 @@ export default function SwapCard({
     } else {
       console.error('Error creating and submitting intent:', result.error);
     }
+  };
+
+  const disconnect = useXDisconnect();
+  const handleSourceAccountDisconnect = () => {
+    disconnect(getXChainType(sourceChain) as ChainType);
+  };
+
+  const handleDestAccountDisconnect = () => {
+    disconnect(getXChainType(destChain) as ChainType);
   };
 
   return (
@@ -214,14 +232,12 @@ export default function SwapCard({
         <div className="flex-grow">
           <Label htmlFor="fromAddress">Source address</Label>
           <div className="flex items-center gap-2">
-            <Input
-              id="fromAddress"
-              type="text"
-              placeholder="0x0000000000000000000000000000000000000000"
-              value={address}
-              disabled={true}
-            />
-            <Button onClick={openWalletModal}>Connect</Button>
+            <Input id="fromAddress" type="text" placeholder="" value={sourceAccount.address || ''} disabled={true} />
+            {sourceAccount.address ? (
+              <Button onClick={handleSourceAccountDisconnect}>Disconnect</Button>
+            ) : (
+              <Button onClick={openWalletModal}>Connect</Button>
+            )}
           </div>
         </div>
         <div className="flex justify-center">
@@ -266,7 +282,14 @@ export default function SwapCard({
         </div>
         <div className="flex-grow">
           <Label htmlFor="toAddress">Destination address</Label>
-          <Input id="toAddress" type="text" value={address} disabled={true} />
+          <div className="flex items-center gap-2">
+            <Input id="toAddress" type="text" value={destAccount.address || ''} placeholder="" disabled={true} />
+            {destAccount.address ? (
+              <Button onClick={handleDestAccountDisconnect}>Disconnect</Button>
+            ) : (
+              <Button onClick={openWalletModal}>Connect</Button>
+            )}
+          </div>
         </div>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
