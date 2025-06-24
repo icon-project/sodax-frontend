@@ -14,10 +14,14 @@ import {
   SonicSpokeService,
   type SpokeChainId,
   erc20Abi,
-  MoneyMarketSupplyParams,
-  MoneyMarketBorrowParams,
-  MoneyMarketWithdrawParams,
-  MoneyMarketRepayParams,
+  type MoneyMarketSupplyParams,
+  type MoneyMarketBorrowParams,
+  type MoneyMarketWithdrawParams,
+  type MoneyMarketRepayParams,
+  type IconAddress,
+  ICON_MAINNET_CHAIN_ID,
+  ICXMigrationService,
+  hubAssets,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
@@ -357,6 +361,46 @@ async function borrowTo(token: Hex, amount: bigint, to: Hex, spokeChainId: Spoke
   const txHash = await SonicSpokeService.callWallet(data, spokeProvider);
   console.log('[borrow] txHash', txHash);
 }
+
+async function reverseMigrate(amount: bigint, to: IconAddress) {
+  const wallet = await spokeProvider.walletProvider.getWalletAddress();
+  const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
+
+  //const approveTxHash = await spokeProvider.walletProvider.sendTransaction({
+  //  to: hubProvider.chainConfig.addresses.sodaToken,
+  //  from: wallet,
+  //  data: encodeFunctionData({
+  //    abi: erc20Abi,
+  //    functionName: 'approve',
+  //    args: [userRouter, amount],
+  //  }),
+  //  value: 0n,
+  //});
+
+  //console.log('[approve] txHash', approveTxHash);
+
+  //await new Promise(f => setTimeout(f, 1000));
+  const wICX = spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken;
+  const data = await ICXMigrationService.revertMigration(hubProvider.chainConfig, {
+    wICX,
+    amount,
+    to: `0x${Buffer.from(to.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex').toString('hex')}`,
+    userWallet: userRouter,
+  });
+
+  const txHash = await SonicSpokeService.deposit(
+    {
+      from: wallet,
+      token: hubProvider.chainConfig.addresses.sodaToken,
+      amount,
+      data,
+    },
+    spokeProvider,
+  );
+
+  console.log('[reverseMigrate] txHash', txHash);
+}
+
 // Main function to decide which function to call
 async function main() {
   const functionName = process.argv[2];
@@ -399,6 +443,10 @@ async function main() {
     const token = process.argv[3] as Address;
     const amount = BigInt(process.argv[4]);
     await repayHighLevel(token, amount);
+  } else if (functionName === 'reverseMigrate') {
+    const amount = BigInt(process.argv[3]);
+    const to = process.argv[4] as IconAddress;
+    await reverseMigrate(amount, to);
   } else {
     console.log(
       'Function not recognized. Please use "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", or "repayHighLevel".',
