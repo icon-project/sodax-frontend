@@ -614,7 +614,7 @@ export const spokeChainConfig = {
         address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
       },
     } as const,
-    nativeToken: 'cx0000000000000000000000000000000000000000' as const,
+    nativeToken: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d' as const,
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
@@ -947,13 +947,6 @@ export const hubAssets: Record<
       symbol: 'bnUSD',
       name: 'bnUSD',
       vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
-    },
-    [spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.wICX.address]: {
-      asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
-      decimal: 18,
-      symbol: 'wICX',
-      name: 'Wrapped ICX',
-      vault: '0x70CB7B199700Ae2B1FAb3d4e6FecDa156FBf8182',
     },
   },
 } as const;
