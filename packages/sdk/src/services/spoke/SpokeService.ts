@@ -33,9 +33,10 @@ import {
  * It uses command pattern to execute different spoke chain operations.
  */
 
+export class SpokeService {
 
+  private constructor() {}
 
-export  class SpokeService {
   /**
    * Deposit tokens to the spoke chain.
    * @param {GetSpokeDepositParamsType<T extends SpokeProvider>} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.

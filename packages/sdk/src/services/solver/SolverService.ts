@@ -548,12 +548,15 @@ export class SolverService {
     try {
       const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
       // derive users hub wallet address
-      const creatorHubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
-        params.srcChain,
-        walletAddressBytes,
-        this.hubProvider,
-        spokeProvider,
-      );
+      const creatorHubWalletAddress =
+        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
+          ? walletAddressBytes
+          : (await WalletAbstractionService.getUserHubWalletAddress(
+              params.srcChain,
+              walletAddressBytes,
+              this.hubProvider,
+              spokeProvider,
+            ));
 
       // construct the intent data
       const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
@@ -612,12 +615,15 @@ export class SolverService {
 
     const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
     // derive users hub wallet address
-    const creatorHubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      walletAddressBytes,
-      this.hubProvider,
-      spokeProvider,
-    );
+    const creatorHubWalletAddress =
+      spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
+        ? walletAddressBytes
+        : await WalletAbstractionService.getUserHubWalletAddress(
+            spokeProvider.chainConfig.chain.id,
+            walletAddressBytes,
+            this.hubProvider,
+            spokeProvider,
+          );
 
     const calls: EvmContractCall[] = [];
     const intentsContract = this.config.intentsContract;

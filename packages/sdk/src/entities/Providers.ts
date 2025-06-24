@@ -11,7 +11,13 @@ import {
   createPublicClient,
 } from 'viem';
 import { getEvmViemChain, getHubChainConfig } from '../constants.js';
-import type { EvmChainId, EvmHubChainConfig, EvmSpokeChainConfig, SonicSpokeChainConfig, SpokeChainConfig } from '../types.js';
+import type {
+  EvmChainId,
+  EvmHubChainConfig,
+  EvmSpokeChainConfig,
+  SonicSpokeChainConfig,
+  SpokeChainConfig,
+} from '../types.js';
 import type { CWSpokeProvider, ICWWalletProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
@@ -90,12 +96,12 @@ export class SonicSpokeProvider implements ISpokeProvider {
     if (rpcUrl) {
       this.publicClient = createPublicClient({
         transport: http(rpcUrl),
-        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
+        chain: getEvmViemChain(chainConfig.chain.id),
       });
     } else {
       this.publicClient = createPublicClient({
-        transport: http(getEvmViemChain(chainConfig.chain.id as EvmChainId).rpcUrls.default.http[0]),
-        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
+        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
+        chain: getEvmViemChain(chainConfig.chain.id),
       });
     }
   }
@@ -112,12 +118,12 @@ export class EvmSpokeProvider implements ISpokeProvider {
     if (rpcUrl) {
       this.publicClient = createPublicClient({
         transport: http(rpcUrl),
-        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
+        chain: getEvmViemChain(chainConfig.chain.id),
       });
     } else {
       this.publicClient = createPublicClient({
-        transport: http(getEvmViemChain(chainConfig.chain.id as EvmChainId).rpcUrls.default.http[0]),
-        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
+        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
+        chain: getEvmViemChain(chainConfig.chain.id),
       });
     }
   }

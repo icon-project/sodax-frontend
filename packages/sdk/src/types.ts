@@ -114,7 +114,7 @@ export type EvmSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
   nativeToken: Address | string;
 };
 
-export type SonicSpokeChainConfig = BaseSpokeChainConfig<'SONIC'> & {
+export type SonicSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
   addresses: {
     walletRouter: Address;
     wrappedSonic: Address;
@@ -199,22 +199,6 @@ export type SpokeChainConfig =
   | StellarSpokeChainConfig
   | SolanaChainConfig;
 
-export type GetSpokeChainConfigType<T extends ChainType> = T extends 'EVM'
-  ? EvmSpokeChainConfig
-  : T extends 'SONIC'
-    ? SonicSpokeChainConfig
-  : T extends 'INJECTIVE'
-    ? CosmosSpokeChainConfig
-    : T extends 'ICON'
-      ? IconSpokeChainConfig
-      : T extends 'SUI'
-        ? SuiSpokeChainConfig
-        : T extends 'STELLAR'
-          ? StellarSpokeChainConfig
-          : T extends 'SOLANA'
-            ? SolanaChainConfig
-            : never;
-
 export type EvmContractCall = {
   address: Address; // Target address of the call
   value: bigint; // Ether value to send (in wei as a string for precision)
@@ -291,20 +275,6 @@ export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionRec
 export type IconAddress = `hx${string}` | `cx${string}`;
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 export type HttpPrefixedUrl = `http${string}`;
-
-export type GetSpokeProviderType<T extends ChainType> = T extends 'EVM'
-  ? EvmSpokeProvider
-  : T extends 'INJECTIVE'
-    ? CWSpokeProvider
-    : T extends 'ICON'
-      ? IconSpokeProvider
-      : T extends 'SUI'
-        ? SuiSpokeProvider
-        : T extends 'STELLAR'
-          ? StellarSpokeProvider
-          : T extends 'SOLANA'
-            ? SolanaSpokeProvider
-            : never;
 
 export type SpokeDepositParams = EvmSpokeDepositParams | CWSpokeDepositParams | IconSpokeDepositParams;
 
@@ -478,8 +448,6 @@ export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chai
           ? SuiReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
             ? CWReturnType<Raw>
-            : T['chainConfig']['chain']['type'] extends 'SONIC'
-              ? EvmReturnType<Raw>
             : never; // TODO extend for each chain implementation
 export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
 export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<TxReturnType<SolanaSpokeProvider, Raw>>;

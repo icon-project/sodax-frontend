@@ -81,6 +81,7 @@ export const EVM_SPOKE_CHAIN_IDS = [
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
 ] as const;
 
 const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
@@ -148,7 +149,7 @@ export const spokeChainConfig = {
     chain: {
       name: 'Sonic',
       id: SONIC_MAINNET_CHAIN_ID,
-      type: 'SONIC',
+      type: 'EVM',
     },
     addresses: {
       walletRouter: '0xC67C3e55c665E78b25dc9829B3Aa5af47d914733',
