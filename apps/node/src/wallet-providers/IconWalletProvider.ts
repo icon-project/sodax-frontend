@@ -1,32 +1,40 @@
 import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/sdk';
-import * as IconService from 'icon-sdk-js';
+// @ts-ignore - icon-sdk-js is a CommonJS module
+import IconService from 'icon-sdk-js';
 
 export class IconWalletProvider implements IIconWalletProvider {
   private readonly wallet: IconWallet;
-  public readonly iconService: IconService.IconService;
+  // @ts-ignore - icon-sdk-js types are not properly exported
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public readonly iconService: any;
 
   constructor(wallet: IconWalletConfig) {
     if (isPrivateKeyIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'PRIVATE_KEY',
+        // @ts-ignore - icon-sdk-js types are not properly exported
         wallet: IconService.Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
       };
+      // @ts-ignore - icon-sdk-js types are not properly exported
       this.iconService = new IconService.IconService(new IconService.HttpProvider(wallet.rpcUrl));
     } else if (isBrowserExtensionIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'BROWSER_EXTENSION',
         wallet: wallet.walletAddress,
       };
-      this.iconService = new IconService.IconService(new IconService.IconService.HttpProvider(wallet.rpcUrl));
+      // @ts-ignore - icon-sdk-js types are not properly exported
+      this.iconService = new IconService.IconService(new IconService.HttpProvider(wallet.rpcUrl));
     } else {
       throw new Error('Invalid Icon wallet config');
     }
   }
 
   public async sendTransaction(tx: IcxCallTransaction): Promise<Hash> {
+    // @ts-ignore - icon-sdk-js types are not properly exported
     const builtTx = new IconService.CallTransactionBuilder()
       .from(tx.from)
       .to(tx.to)
+      // @ts-ignore - icon-sdk-js types are not properly exported
       .stepLimit(IconService.Converter.toBigNumber('2000000'))
       .nid(tx.nid)
       .version(tx.version ?? '0x3')
@@ -42,6 +50,7 @@ export class IconWalletProvider implements IIconWalletProvider {
 
       return result.result satisfies string as Hash;
     }
+    // @ts-ignore - icon-sdk-js types are not properly exported
     const signedTx = new IconService.SignedTransaction(builtTx, this.wallet.wallet);
     const result = await this.iconService.sendTransaction(signedTx).execute();
 
@@ -95,7 +104,8 @@ export type IconWalletConfig = PrivateKeyIconWalletConfig | BrowserExtensionIcon
 
 export type IconPkWallet = {
   type: 'PRIVATE_KEY';
-  wallet: IconService.Wallet;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  wallet: any;
 };
 
 export type IconBrowserExtensionWallet = {
