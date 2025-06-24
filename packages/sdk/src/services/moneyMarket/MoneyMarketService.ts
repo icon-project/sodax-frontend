@@ -954,8 +954,8 @@ export class MoneyMarketService {
     calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount - feeAmount));
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount - feeAmount);
 
-    if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {
-      if (token === spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken) {
+    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
+      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
         const withdrawToCall = {
           address: assetAddress,
           value: 0n,
@@ -1014,8 +1014,8 @@ export class MoneyMarketService {
     calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount));
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount);
 
-    if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {
-      if (token === spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken) {
+    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
+      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
         const withdrawToCall = {
           address: assetAddress,
           value: 0n,
@@ -1145,10 +1145,7 @@ export class MoneyMarketService {
         functionName: 'getReserveNormalizedIncome',
         args: [asset],
       });
-      console.log('[calculateATokenAmount] normalizedIncome', normalizedIncome);
-      console.log('[calculateATokenAmount] amount', amount);
-      console.log('[calculateATokenAmount] amount', (amount * 10n ** 27n) / normalizedIncome);
-      console.log('[calculateATokenAmount] asset', asset);
+
       return (amount * 10n ** 27n) / normalizedIncome + 1n;
     }
 
