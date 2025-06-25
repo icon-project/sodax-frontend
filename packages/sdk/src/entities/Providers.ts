@@ -15,7 +15,6 @@ import type { EvmChainId, EvmHubChainConfig, EvmSpokeChainConfig, SpokeChainConf
 import type { CWSpokeProvider, ICWWalletProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
-import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
 import {
@@ -24,6 +23,7 @@ import {
   type IStellarWalletProvider,
   type ISuiWalletProvider,
   type IIconWalletProvider,
+  type ISolanaWalletProvider,
 } from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
@@ -113,7 +113,7 @@ export type IWalletProvider =
   | IStellarWalletProvider
   | ISuiWalletProvider
   | IIconWalletProvider
-  | SolanaWalletProvider;
+  | ISolanaWalletProvider;
 
 export type SpokeProvider = (
   | EvmSpokeProvider
