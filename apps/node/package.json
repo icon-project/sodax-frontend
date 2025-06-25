@@ -5,6 +5,7 @@
   "scripts": {
     "evm": "pnpm run build && node dist/evm.js",
     "cosmos": "pnpm run build && node dist/cosmos.js",
+    "sonic": "pnpm run build && node dist/sonic.js",
     "sui": "pnpm run build && node dist/sui.js",
     "moneyMarket": "pnpm run build && node dist/moneymarket.js",
     "stellar": "pnpm run build && node dist/stellar.js",

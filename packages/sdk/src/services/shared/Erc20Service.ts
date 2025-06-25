@@ -1,6 +1,6 @@
 import { encodeFunctionData, erc20Abi, type Address } from 'viem';
 import type { EvmContractCall, Result } from '../../types.js';
-import type { EvmSpokeProvider } from '../../entities/Providers.js';
+import type { EvmSpokeProvider, SonicSpokeProvider } from '../../entities/Providers.js';
 import type { EvmRawTransactionReceipt } from '@sodax/types';
 
 export class Erc20Service {
@@ -20,7 +20,7 @@ export class Erc20Service {
     amount: bigint,
     owner: Address,
     spender: Address,
-    spokeProvider: EvmSpokeProvider,
+    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
   ): Promise<Result<boolean>> {
     try {
       if (token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
@@ -60,10 +60,10 @@ export class Erc20Service {
     token: Address,
     amount: bigint,
     spender: Address,
-    spokeProvider: EvmSpokeProvider,
+    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
   ): Promise<Result<EvmRawTransactionReceipt>> {
     try {
-      const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hash = await spokeProvider.walletProvider.sendTransaction({
         from: walletAddress,
         to: token,
@@ -94,7 +94,7 @@ export class Erc20Service {
    * @param amount - The amount of the token to transfer.
    * @returns The encoded contract call.
    */
-  public static encodeTansfer(token: Address, to: Address, amount: bigint): EvmContractCall {
+  public static encodeTransfer(token: Address, to: Address, amount: bigint): EvmContractCall {
     return {
       address: token,
       value: 0n,
@@ -102,6 +102,27 @@ export class Erc20Service {
         abi: erc20Abi,
         functionName: 'transfer',
         args: [to, amount],
+      }),
+    };
+  }
+
+
+  /**
+   * Encodes a transferFrom transaction for a token.
+   * @param token - The address of the token.
+   * @param from - The address to transfer the token from.
+   * @param to - The address to transfer the token to.
+   * @param amount - The amount of the token to transfer.
+   * @returns The encoded contract call.
+   */
+  public static encodeTransferFrom(token: Address, from: Address, to: Address, amount: bigint): EvmContractCall {
+    return {
+      address: token,
+      value: 0n,
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'transferFrom',
+        args: [from, to, amount],
       }),
     };
   }

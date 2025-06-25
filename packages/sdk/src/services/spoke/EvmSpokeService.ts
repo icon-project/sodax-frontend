@@ -111,7 +111,7 @@ export class EvmSpokeService {
       value: token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ? amount : undefined,
     } as const;
 
-    const from = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
+    const from = (await spokeProvider.walletProvider.getWalletAddress());
     const rawTx = {
       from,
       to: txPayload.address,
@@ -141,7 +141,7 @@ export class EvmSpokeService {
    */
   private static async call<R extends boolean = false>(
     dstChainId: bigint,
-    dstAddress: Address,
+    dstAddress: HubAddress,
     payload: Hex,
     spokeProvider: EvmSpokeProvider,
     raw?: R,
@@ -153,7 +153,7 @@ export class EvmSpokeService {
       args: [dstChainId, dstAddress, payload],
     } as const;
 
-    const from = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
+    const from = (await spokeProvider.walletProvider.getWalletAddress());
     const rawTx = {
       from,
       to: txPayload.address,

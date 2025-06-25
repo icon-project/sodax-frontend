@@ -8,9 +8,11 @@ import {
   type IntentRelayRequest,
   type PacketData,
   type RelayErrorCode,
+  SonicSpokeProvider,
   type SpokeProvider,
   SpokeService,
   type WaitUntilIntentExecutedPayload,
+  WalletAbstractionService,
   calculateFeeAmount,
   encodeContractCalls,
   getIntentRelayChainId,
@@ -41,7 +43,6 @@ import type {
   SolverServiceConfig,
   TxReturnType,
 } from '../../types.js';
-import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
 import {
@@ -425,13 +426,15 @@ export class SolverService {
     spokeProvider: S,
   ): Promise<Result<boolean>> {
     try {
-      if (spokeProvider instanceof EvmSpokeProvider) {
-        const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
+      if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
+        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
         return Erc20Service.isAllowanceValid(
           params.inputToken as Address,
           params.inputAmount,
           walletAddress,
-          spokeProvider.chainConfig.addresses.assetManager,
+          spokeProvider instanceof EvmSpokeProvider
+            ? spokeProvider.chainConfig.addresses.assetManager
+            : spokeProvider.chainConfig.addresses.walletRouter,
           spokeProvider,
         );
       }
@@ -477,7 +480,7 @@ export class SolverService {
     spokeProvider: S,
   ): Promise<Result<EvmRawTransactionReceipt>> {
     try {
-      if (spokeProvider instanceof EvmSpokeProvider) {
+      if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
         return Erc20Service.approve(token, amount, address, spokeProvider);
       }
 
@@ -545,11 +548,15 @@ export class SolverService {
     try {
       const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
       // derive users hub wallet address
-      const creatorHubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
-        params.srcChain,
-        walletAddressBytes,
-        this.hubProvider,
-      );
+      const creatorHubWalletAddress =
+        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
+          ? walletAddressBytes
+          : (await WalletAbstractionService.getUserHubWalletAddress(
+              params.srcChain,
+              walletAddressBytes,
+              this.hubProvider,
+              spokeProvider,
+            ));
 
       // construct the intent data
       const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
@@ -559,7 +566,7 @@ export class SolverService {
         fee,
       );
 
-      const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       const txResult = await SpokeService.deposit(
         {
           from: walletAddress,
@@ -608,11 +615,15 @@ export class SolverService {
 
     const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
     // derive users hub wallet address
-    const creatorHubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      walletAddressBytes,
-      this.hubProvider,
-    );
+    const creatorHubWalletAddress =
+      spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
+        ? walletAddressBytes
+        : await WalletAbstractionService.getUserHubWalletAddress(
+            spokeProvider.chainConfig.chain.id,
+            walletAddressBytes,
+            this.hubProvider,
+            spokeProvider,
+          );
 
     const calls: EvmContractCall[] = [];
     const intentsContract = this.config.intentsContract;
