@@ -168,7 +168,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     data: Uint8Array = new Uint8Array([2, 2, 2]),
     raw?: R,
   ) {
-    const funds = coins((BigInt(amount) * 2n).toString(), token);
+    const funds = coins(amount, token);
     return this.transfer(sender, token, to, amount, data, funds, raw);
   }
 

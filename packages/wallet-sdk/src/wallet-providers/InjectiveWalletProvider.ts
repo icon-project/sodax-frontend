@@ -1,19 +1,26 @@
 import { MsgExecuteContract, MsgExecuteContractCompat, MsgSend } from '@injectivelabs/sdk-ts';
 import { toHex } from 'viem';
-import { fromBase64, toBase64, createTransaction } from '@injectivelabs/sdk-ts';
-import type { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
+import { createTransaction } from '@injectivelabs/sdk-ts';
 
 import type { MsgBroadcaster } from '@injectivelabs/wallet-ts';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
 import { InjectiveExecuteResponse, type CWRawTransaction } from '@sodax/types';
-
-globalThis.Buffer = Buffer;
-window.Buffer = Buffer;
+import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
   private client: MsgBroadcaster;
   public walletAddress: InjectiveEoaAddress | undefined;
-  public chainGrpcWasmApi: ChainGrpcWasmApi;
+  private rpcUrl: string;
+
+  constructor({
+    client,
+    walletAddress,
+    rpcUrl,
+  }: { client: MsgBroadcaster; walletAddress: InjectiveEoaAddress | undefined; rpcUrl: string }) {
+    this.client = client;
+    this.walletAddress = walletAddress;
+    this.rpcUrl = rpcUrl;
+  }
 
   getRawTransaction(
     chainId: string,
@@ -53,16 +60,6 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     };
   }
 
-  constructor({
-    client,
-    walletAddress,
-    chainGrpcWasmApi,
-  }: { client: MsgBroadcaster; walletAddress: InjectiveEoaAddress | undefined; chainGrpcWasmApi: ChainGrpcWasmApi }) {
-    this.client = client;
-    this.walletAddress = walletAddress;
-    this.chainGrpcWasmApi = chainGrpcWasmApi;
-  }
-
   async getWalletAddress(): Promise<InjectiveEoaAddress> {
     if (!this.walletAddress) {
       throw new Error('Wallet address not found');
@@ -94,19 +91,16 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       funds: funds as { amount: string; denom: string }[],
     });
 
-    console.log('msgExec', msgExec);
     const txResult = await this.client.broadcastWithFeeDelegation({
       msgs: msgExec,
       injectiveAddress: this.walletAddress,
     });
 
-    console.log('txResult', txResult);
-
     return InjectiveExecuteResponse.fromTxResponse(txResult);
   }
 
   async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {
-    const response: any = await this.chainGrpcWasmApi.fetchSmartContractState(address, toBase64(queryMsg));
-    return fromBase64(response.data);
+    const contractClient = await CosmWasmClient.connect(this.rpcUrl);
+    return contractClient.queryContractSmart(address, queryMsg);
   }
 }
