@@ -6,6 +6,7 @@ import { getWagmiChainId } from '../utils';
 import { useXAccount, useXService } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
+import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 
 export function useWalletProviderOptions(xChainId: ChainId) {
   const xChainType = getXChainType(xChainId);
@@ -31,6 +32,10 @@ export function useWalletProviderOptions(xChainId: ChainId) {
       }
       case 'ICON': {
         return { walletAddress: xAccount.address, rpcUrl: CHAIN_INFO[SupportedChainId.MAINNET].APIEndpoint };
+      }
+      case 'INJECTIVE': {
+        const injectiveXService = xService as InjectiveXService;
+        return { walletAddress: xAccount.address, client: injectiveXService.msgBroadcastClient };
       }
       default:
         return undefined;

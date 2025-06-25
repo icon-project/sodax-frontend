@@ -24,6 +24,7 @@ import {
   type IStellarWalletProvider,
   type ISuiWalletProvider,
   type IIconWalletProvider,
+  type IInjectiveWalletProvider,
 } from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
@@ -102,7 +103,6 @@ export class EvmSpokeProvider implements ISpokeProvider {
 }
 
 export { CWSpokeProvider } from './cosmos/CWSpokeProvider.js';
-export { InjectiveWalletProvider } from './cosmos/InjectiveWalletProvider.js';
 export { CosmosWalletProvider } from './cosmos/CosmosWalletProvider.js';
 export { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 export { getIconAddressBytes } from './icon/utils.js';
@@ -113,6 +113,7 @@ export type IWalletProvider =
   | IStellarWalletProvider
   | ISuiWalletProvider
   | IIconWalletProvider
+  | IInjectiveWalletProvider
   | SolanaWalletProvider;
 
 export type SpokeProvider = (

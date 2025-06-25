@@ -4,3 +4,4 @@ export * from './sui/index.js';
 export * from './icon/index.js';
 export * from './constants/index.js';
 export * from './common/index.js';
+export * from './injective/index.js';

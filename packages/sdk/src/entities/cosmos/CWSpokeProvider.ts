@@ -5,7 +5,7 @@ import type { TxResponse } from '@injectivelabs/sdk-ts';
 import { type Address, type Hex, fromHex } from 'viem';
 import type { CosmosSpokeChainConfig, CWRawTransaction, CWReturnType, PromiseCWTxReturnType } from '../../types.js';
 import type { ISpokeProvider } from '../Providers.js';
-import type { WalletAddressProvider } from '@sodax/types';
+import type { IInjectiveWalletProvider, WalletAddressProvider } from '@sodax/types';
 import { CW20Token } from './CW20Token.js';
 
 export type CWSpokeDepositParams = {
@@ -108,11 +108,11 @@ export interface ICWWalletProvider extends WalletAddressProvider {
 }
 
 export class CWSpokeProvider implements ISpokeProvider {
-  public readonly walletProvider: ICWWalletProvider;
+  public readonly walletProvider: ICWWalletProvider | IInjectiveWalletProvider;
 
   public chainConfig: CosmosSpokeChainConfig;
 
-  constructor(conf: CosmosSpokeChainConfig, walletProvider: ICWWalletProvider) {
+  constructor(conf: CosmosSpokeChainConfig, walletProvider: ICWWalletProvider | IInjectiveWalletProvider) {
     this.chainConfig = conf;
     this.walletProvider = walletProvider;
   }
@@ -149,6 +149,7 @@ export class CWSpokeProvider implements ISpokeProvider {
         data: Array.from(data),
       },
     };
+
     if (raw) {
       return this.walletProvider.getRawTransaction(
         this.chainConfig.networkId,
@@ -159,7 +160,7 @@ export class CWSpokeProvider implements ISpokeProvider {
       ) as CWReturnType<R>;
     }
     const res = await this.walletProvider.execute(
-      senderAddress,
+      senderAddress as `inj${string}`,
       this.chainConfig.addresses.assetManager,
       msg,
       'auto',
@@ -210,7 +211,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     data: Uint8Array = new Uint8Array([2, 2, 2]),
     raw?: R,
   ) {
-    const funds = coins(amount, token);
+    const funds = coins((BigInt(amount) * 2n).toString(), token);
     return this.transfer(sender, token, to, amount, data, funds, raw);
   }
 
