@@ -1,8 +1,7 @@
-import type { Hex, WalletAddressProvider, Hash } from '../common/index.js';
+import type { Hex, WalletAddressProvider } from '../common/index.js';
+import type { JsonObject, CWRawTransaction } from '../cosmos/index.js';
 
-export type InjectiveEoaAddress = `inj${string}`;
-
-export type JsonObject = any;
+export type InjectiveEoaAddress = string;
 
 export interface InjectiveCoin {
   readonly denom: string;
@@ -56,6 +55,14 @@ export class InjectiveExecuteResponse {
 }
 
 export interface IInjectiveWalletProvider extends WalletAddressProvider {
+  getRawTransaction(
+    chainId: string,
+    _: string,
+    senderAddress: string,
+    contractAddress: string,
+    msg: JsonObject,
+    memo?: string,
+  ): CWRawTransaction;
   getWalletAddress: () => Promise<InjectiveEoaAddress>;
   getWalletAddressBytes: () => Promise<Hex>;
   execute: (

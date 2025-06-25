@@ -35,7 +35,11 @@ export function useWalletProviderOptions(xChainId: ChainId) {
       }
       case 'INJECTIVE': {
         const injectiveXService = xService as InjectiveXService;
-        return { walletAddress: xAccount.address, client: injectiveXService.msgBroadcastClient };
+        return {
+          walletAddress: xAccount.address,
+          client: injectiveXService.msgBroadcastClient,
+          chainGrpcWasmApi: injectiveXService.chainGrpcWasmApi,
+        };
       }
       default:
         return undefined;

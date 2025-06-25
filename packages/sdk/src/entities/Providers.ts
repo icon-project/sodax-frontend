@@ -12,7 +12,7 @@ import {
 } from 'viem';
 import { getEvmViemChain, getHubChainConfig } from '../constants.js';
 import type { EvmChainId, EvmHubChainConfig, EvmSpokeChainConfig, SpokeChainConfig } from '../types.js';
-import type { CWSpokeProvider, ICWWalletProvider } from './cosmos/CWSpokeProvider.js';
+import type { CWSpokeProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
 import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
@@ -25,6 +25,7 @@ import {
   type ISuiWalletProvider,
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
+  type ICWWalletProvider,
 } from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
@@ -103,7 +104,6 @@ export class EvmSpokeProvider implements ISpokeProvider {
 }
 
 export { CWSpokeProvider } from './cosmos/CWSpokeProvider.js';
-export { CosmosWalletProvider } from './cosmos/CosmosWalletProvider.js';
 export { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 export { getIconAddressBytes } from './icon/utils.js';
 

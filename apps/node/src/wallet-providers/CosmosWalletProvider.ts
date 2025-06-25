@@ -6,8 +6,8 @@ import { AuthInfo, SignerInfo, TxBody } from 'cosmjs-types/cosmos/tx/v1beta1/tx.
 import { MsgExecuteContract } from 'cosmjs-types/cosmwasm/wasm/v1/tx.js';
 import type { Any } from 'cosmjs-types/google/protobuf/any.js';
 import { toHex } from 'viem';
-import type { CWRawTransaction, CosmosNetworkEnv, Hex } from '../../index.js';
-import { ExecuteResponse, type ICWWalletProvider } from './CWSpokeProvider.js';
+import type { CWRawTransaction, CosmosNetworkEnv, Hex, ICWWalletProvider } from '@sodax/types';
+import { CWExecuteResponse } from '@sodax/types';
 
 // TODO implement browser extension based login
 export interface CosmosWalletConfig {
@@ -122,10 +122,10 @@ export class CosmosWalletProvider implements ICWWalletProvider {
     fee: StdFee | 'auto' | number,
     memo?: string,
     funds?: Coin[],
-  ): Promise<ExecuteResponse> {
+  ): Promise<CWExecuteResponse> {
     const client = await this.getClient();
     const res = await client.execute(senderAddress, contractAddress, msg, fee, memo, funds);
-    return ExecuteResponse.fromExecResult(res);
+    return CWExecuteResponse.fromExecResult(res);
   }
   async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {
     const client = await this.getClient();

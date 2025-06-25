@@ -1,11 +1,8 @@
-import type { ExecuteResult, JsonObject } from '@cosmjs/cosmwasm-stargate';
-
-import { type Coin, type StdFee, coins } from '@cosmjs/stargate';
-import type { TxResponse } from '@injectivelabs/sdk-ts';
+import { type Coin, coins } from '@cosmjs/stargate';
 import { type Address, type Hex, fromHex } from 'viem';
-import type { CosmosSpokeChainConfig, CWRawTransaction, CWReturnType, PromiseCWTxReturnType } from '../../types.js';
+import type { CosmosSpokeChainConfig, CWReturnType, PromiseCWTxReturnType } from '../../types.js';
 import type { ISpokeProvider } from '../Providers.js';
-import type { IInjectiveWalletProvider, WalletAddressProvider } from '@sodax/types';
+import type { IInjectiveWalletProvider, ICWWalletProvider, CWExecuteResponse } from '@sodax/types';
 import { CW20Token } from './CW20Token.js';
 
 export type CWSpokeDepositParams = {
@@ -65,46 +62,6 @@ export interface State {
   hub_asset_manager: Uint8Array;
   hub_chain_id: string; // u128 as string
   owner: string;
-}
-
-export class ExecuteResponse {
-  public height: number | undefined;
-
-  public transactionHash!: string;
-
-  public static fromExecResult(res: ExecuteResult): ExecuteResponse {
-    const response = new ExecuteResponse();
-    response.height = res.height;
-    response.transactionHash = res.transactionHash;
-    return response;
-  }
-
-  public static fromTxResponse(res: TxResponse): ExecuteResponse {
-    const response = new ExecuteResponse();
-    response.height = res.height;
-    response.transactionHash = res.txHash;
-    return response;
-  }
-}
-
-export interface ICWWalletProvider extends WalletAddressProvider {
-  execute(
-    senderAddress: string,
-    contractAddress: string,
-    msg: JsonObject,
-    fee: StdFee | 'auto' | number,
-    memo?: string,
-    funds?: Coin[],
-  ): Promise<ExecuteResponse>;
-  getRawTransaction(
-    chainId: string,
-    prefix: string,
-    senderAddress: string,
-    contractAddress: string,
-    msg: JsonObject,
-    memo?: string,
-  ): CWRawTransaction;
-  queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject>;
 }
 
 export class CWSpokeProvider implements ISpokeProvider {
@@ -232,7 +189,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     connSn: string,
     payload: Uint8Array,
     signatures: Uint8Array[],
-  ): Promise<ExecuteResponse> {
+  ): Promise<CWExecuteResponse> {
     const msg: ExecuteMsg = {
       recv_message: {
         src_chain_id: srcChainId,
@@ -246,7 +203,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
   }
 
-  async setRateLimit(senderAddress: string, rateLimit: string): Promise<ExecuteResponse> {
+  async setRateLimit(senderAddress: string, rateLimit: string): Promise<CWExecuteResponse> {
     const msg: ExecuteMsg = {
       set_rate_limit: {
         rate_limit: rateLimit,
@@ -256,7 +213,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
   }
 
-  async setConnection(senderAddress: string, connection: string): Promise<ExecuteResponse> {
+  async setConnection(senderAddress: string, connection: string): Promise<CWExecuteResponse> {
     const msg: ExecuteMsg = {
       set_connection: {
         connection,
@@ -266,7 +223,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
   }
 
-  async setOwner(senderAddress: string, owner: string): Promise<ExecuteResponse> {
+  async setOwner(senderAddress: string, owner: string): Promise<CWExecuteResponse> {
     const msg: ExecuteMsg = {
       set_owner: {
         owner,

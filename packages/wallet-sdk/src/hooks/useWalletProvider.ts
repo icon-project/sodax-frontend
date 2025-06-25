@@ -7,6 +7,7 @@ import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, Publ
 import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
 import { InjectiveWalletProvider } from '../wallet-providers/InjectiveWalletProvider';
 import type { InjectiveEoaAddress } from '@sodax/types';
+import type { ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
 
 export function useWalletProvider(xChainId: ChainId) {
   const xChainType = getXChainType(xChainId);
@@ -43,10 +44,11 @@ export function useWalletProvider(xChainId: ChainId) {
       }
 
       case 'INJECTIVE': {
-        const { walletAddress, client } = walletProviderOptions;
+        const { walletAddress, client, chainGrpcWasmApi } = walletProviderOptions;
         return new InjectiveWalletProvider({
           walletAddress: walletAddress as InjectiveEoaAddress | undefined,
           client: client,
+          chainGrpcWasmApi: chainGrpcWasmApi as ChainGrpcWasmApi,
         });
       }
 

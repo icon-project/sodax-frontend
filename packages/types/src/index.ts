@@ -5,3 +5,4 @@ export * from './icon/index.js';
 export * from './constants/index.js';
 export * from './common/index.js';
 export * from './injective/index.js';
+export * from './cosmos/index.js';
