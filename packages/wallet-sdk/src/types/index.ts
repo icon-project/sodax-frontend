@@ -35,7 +35,11 @@ export type SolanaConfig = {
 };
 
 export type XConfig = {
-  EVM: EVMConfig;
-  SUI: SuiConfig;
-  SOLANA: SolanaConfig;
+  [key in ChainType]: key extends 'EVM'
+    ? EVMConfig
+    : key extends 'SUI'
+      ? SuiConfig
+      : key extends 'SOLANA'
+        ? SolanaConfig
+        : unknown;
 };
