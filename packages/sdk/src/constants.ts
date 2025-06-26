@@ -155,17 +155,17 @@ export const spokeChainConfig = {
     nativeToken: '11111111111111111111111111111111' as const,
     bnUSD: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
     supportedTokens: {
-      bnUSD: {
-        symbol: 'bnUSD',
-        name: 'bnUSD',
-        decimals: 9,
-        address: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
-      },
       SOL: {
         symbol: 'SOL',
         name: 'Solana',
         decimals: 9,
         address: '11111111111111111111111111111111',
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 9,
+        address: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
       },
     },
     gasPrice: '500000',
@@ -499,17 +499,17 @@ export const spokeChainConfig = {
     bnUSD: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
     networkId: 'injective-1',
     supportedTokens: {
-      bnUSD: {
-        symbol: 'bnUSD',
-        name: 'bnUSD',
-        decimals: 18,
-        address: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
-      },
       INJ: {
         symbol: 'INJ',
         name: 'Injective',
         decimals: 18,
         address: 'inj',
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
       },
     },
     gasPrice: '500000000inj',
@@ -578,7 +578,7 @@ export const spokeChainConfig = {
     bnUSD: '0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD',
     rpc_url: 'https://fullnode.mainnet.sui.io:443',
     chain: {
-      name: 'sui',
+      name: 'Sui',
       id: SUI_MAINNET_CHAIN_ID,
       type: 'SUI',
     },
@@ -947,13 +947,6 @@ export const hubAssets: Record<
       symbol: 'bnUSD',
       name: 'bnUSD',
       vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
-    },
-    [spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.wICX.address]: {
-      asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
-      decimal: 18,
-      symbol: 'wICX',
-      name: 'Wrapped ICX',
-      vault: '0x70CB7B199700Ae2B1FAb3d4e6FecDa156FBf8182',
     },
   },
 } as const;
