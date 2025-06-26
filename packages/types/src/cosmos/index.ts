@@ -2,7 +2,7 @@ import type { Hex, WalletAddressProvider } from '../common/index.js';
 
 export type CosmosNetworkEnv = 'TestNet' | 'DevNet' | 'Mainnet';
 
-export type JsonObject = any;
+export type JsonObject = unknown;
 
 export interface CWCoin {
   readonly denom: string;
@@ -19,12 +19,12 @@ export interface CWStdFee {
 }
 
 export interface CWExecuteResult {
-  readonly logs: readonly any[];
+  readonly logs: readonly unknown[];
   /** Block height in which the transaction is included */
   readonly height: number;
   /** Transaction hash (might be used as transaction ID). Guaranteed to be non-empty upper-case hex */
   readonly transactionHash: string;
-  readonly events: readonly any[];
+  readonly events: readonly unknown[];
   readonly gasWanted: bigint;
   readonly gasUsed: bigint;
 }
@@ -36,12 +36,12 @@ export interface CWTxResponse {
   code: number;
   data?: string;
   rawLog: string;
-  logs?: any[];
+  logs?: unknown[];
   info?: string;
   gasWanted: number;
   gasUsed: number;
   timestamp: string;
-  events?: any[];
+  events?: unknown[];
 }
 
 export interface SignDoc {

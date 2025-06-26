@@ -9,12 +9,12 @@ export interface InjectiveCoin {
 }
 
 export interface InjectiveExecuteResult {
-  readonly logs: readonly any[];
+  readonly logs: readonly unknown[];
   /** Block height in which the transaction is included */
   readonly height: number;
   /** Transaction hash (might be used as transaction ID). Guaranteed to be non-empty upper-case hex */
   readonly transactionHash: string;
-  readonly events: readonly any[];
+  readonly events: readonly unknown[];
   readonly gasWanted: bigint;
   readonly gasUsed: bigint;
 }
@@ -26,12 +26,12 @@ export interface InjectiveTxResponse {
   code: number;
   data?: string;
   rawLog: string;
-  logs?: any[];
+  logs?: unknown[];
   info?: string;
   gasWanted: number;
   gasUsed: number;
   timestamp: string;
-  events?: any[];
+  events?: unknown[];
 }
 
 export class InjectiveExecuteResponse {

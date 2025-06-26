@@ -4,9 +4,7 @@
   "files": {},
   "linter": {
     "rules": {
-      "suspicious": {
-        "noExplicitAny": "off"
-      }
+      "suspicious": {}
     },
     "ignore": []
   }
