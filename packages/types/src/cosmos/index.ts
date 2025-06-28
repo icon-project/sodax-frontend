@@ -2,8 +2,7 @@ import type { Hex, WalletAddressProvider } from '../common/index.js';
 
 export type CosmosNetworkEnv = 'TestNet' | 'DevNet' | 'Mainnet';
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export type JsonObject = any;
+export type JsonObject = unknown;
 
 export interface CWCoin {
   readonly denom: string;

@@ -31,21 +31,21 @@ export class CW20Token {
 
   // Query Methods
   async getTokenInfo(): Promise<TokenInfo> {
-    return await this.client.queryContractSmart(this.contractAddress, {
+    return (await this.client.queryContractSmart(this.contractAddress, {
       token_info: {},
-    });
+    })) as TokenInfo;
   }
 
   async getBalance(address: string): Promise<Balance> {
-    return await this.client.queryContractSmart(this.contractAddress, {
+    return (await this.client.queryContractSmart(this.contractAddress, {
       balance: { address },
-    });
+    })) as Balance;
   }
 
   async getAllowance(owner: string, spender: string): Promise<AllowanceResponse> {
-    return await this.client.queryContractSmart(this.contractAddress, {
+    return (await this.client.queryContractSmart(this.contractAddress, {
       allowance: { owner, spender },
-    });
+    })) as AllowanceResponse;
   }
 
   // Execute Methods (requires SigningCosmWasmClient)

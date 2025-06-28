@@ -37,7 +37,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     const msgExec = MsgExecuteContract.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
-      msg: msg,
+      msg: msg as object,
       funds: [],
     });
     const { txRaw } = createTransaction({
@@ -87,7 +87,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     const msgExec = MsgExecuteContractCompat.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
-      msg: msg,
+      msg: msg as object,
       funds: funds as { amount: string; denom: string }[],
     });
 
