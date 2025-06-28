@@ -3,7 +3,7 @@ import { FREIGHTER_ID, StellarWalletsKit, WalletNetwork, allowAllModules } from 
 import * as StellarSdk from '@stellar/stellar-sdk';
 import CustomSorobanServer from './CustomSorobanServer';
 import { getTokenBalance } from './utils';
-import { XToken } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 
 export class StellarXService extends XService {
   private static instance: StellarXService;
@@ -40,9 +40,7 @@ export class StellarXService extends XService {
     if (xToken.symbol === 'XLM') {
       const xlmBalance = stellarAccount.balances.find(balance => balance.asset_type === 'native');
       if (xlmBalance) {
-        console.log(xlmBalance);
         return BigInt(xlmBalance.balance.replace('.', ''));
-        // return CurrencyAmount.fromRawAmount(xToken, BigInt(xlmBalance.balance.replace('.', '')));
       }
     } else {
       try {
@@ -52,9 +50,6 @@ export class StellarXService extends XService {
         });
 
         const balance = await getTokenBalance(address, xToken.address, txBuilder, this.sorobanServer);
-
-        // return CurrencyAmount.fromRawAmount(xToken, balance);
-        console.log(balance);
         return balance;
       } catch (e) {
         console.error(`Error while fetching token on Stellar: ${xToken.symbol}, Error: ${e}`);
@@ -63,5 +58,4 @@ export class StellarXService extends XService {
 
     return BigInt(0);
   }
-
 }
