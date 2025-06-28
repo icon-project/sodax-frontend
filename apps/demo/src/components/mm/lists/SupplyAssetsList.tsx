@@ -40,27 +40,26 @@ export function SupplyAssetsList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {userReserves &&
-              tokens.map(token => {
-                try {
-                  const userReserve = userReserves?.find(
-                    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset) === token.address,
-                  );
-                  return (
-                    <SupplyAssetsListItem
-                      key={token.address}
-                      token={token}
-                      walletBalance={
-                        balances?.[token.address] ? formatUnits(balances?.[token.address] || 0n, token.decimals) : '-'
-                      }
-                      balance={userReserve ? formatUnits(userReserve?.scaledATokenBalance || 0n, 18) : '-'}
-                      debt={userReserve ? formatUnits(userReserve?.scaledVariableDebt || 0n, 18) : '-'}
-                    />
-                  );
-                } catch {
-                  console.log('error token', token);
-                }
-              })}
+            {tokens.map(token => {
+              try {
+                const userReserve = userReserves?.find(
+                  r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset) === token.address,
+                );
+                return (
+                  <SupplyAssetsListItem
+                    key={token.address}
+                    token={token}
+                    walletBalance={
+                      balances?.[token.address] ? formatUnits(balances?.[token.address] || 0n, token.decimals) : '-'
+                    }
+                    balance={userReserve ? formatUnits(userReserve?.scaledATokenBalance || 0n, 18) : '-'}
+                    debt={userReserve ? formatUnits(userReserve?.scaledVariableDebt || 0n, 18) : '-'}
+                  />
+                );
+              } catch {
+                console.log('error token', token);
+              }
+            })}
           </TableBody>
         </Table>
       </CardContent>

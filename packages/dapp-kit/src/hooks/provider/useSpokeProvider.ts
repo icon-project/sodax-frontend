@@ -6,8 +6,16 @@ import {
   type EvmSpokeChainConfig,
   IconSpokeProvider,
   type IconSpokeChainConfig,
+  CWSpokeProvider,
+  type CosmosSpokeChainConfig,
 } from '@sodax/sdk';
-import type { IEvmWalletProvider, IIconWalletProvider, ISuiWalletProvider, SpokeChainId } from '@sodax/types';
+import type {
+  IEvmWalletProvider,
+  IIconWalletProvider,
+  ISuiWalletProvider,
+  SpokeChainId,
+  IInjectiveWalletProvider,
+} from '@sodax/types';
 import { getXChainType, useWalletProvider } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
 
@@ -34,6 +42,13 @@ export function useSpokeProvider(spokeChainId: SpokeChainId) {
         spokeChainConfig[spokeChainId] as IconSpokeChainConfig,
       );
     }
+    if (xChainType === 'INJECTIVE') {
+      return new CWSpokeProvider(
+        spokeChainConfig[spokeChainId] as CosmosSpokeChainConfig,
+        walletProvider as IInjectiveWalletProvider,
+      );
+    }
+
     return undefined;
   }, [walletProvider, xChainType, spokeChainId]);
 

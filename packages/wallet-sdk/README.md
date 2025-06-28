@@ -8,7 +8,7 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
   - Sui Wallets: All browser extension that @mysten/dapp-kit supports (Hana, Sui Wallet, Suiet, etc.) ✅
   - Solana Wallets: ❌ Coming soon
   - Stellar Wallets: ❌ Coming soon
-  - Injective Wallets: ❌ Coming soon
+  - Injective Wallets: ✅
   - Havah Wallets: ❌ Coming soon
   - ICON Wallets: ✅ (Hana Wallet and other ICON-compatible extensions)
 
@@ -17,7 +17,7 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
   - Sui ✅
   - Solana ❌ Coming soon
   - Stellar ❌ Coming soon
-  - Injective ❌ Coming soon
+  - Injective ✅
   - Havah ❌ Coming soon
   - ICON ✅
 

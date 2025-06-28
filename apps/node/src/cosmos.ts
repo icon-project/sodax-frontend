@@ -1,12 +1,10 @@
 import {
   CWSpokeProvider,
   type CosmosSpokeChainConfig,
-  CosmosWalletProvider,
   EvmAssetManagerService,
   EvmHubProvider,
   type EvmHubProviderConfig,
   EvmWalletAbstraction,
-  InjectiveWalletProvider,
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
@@ -15,6 +13,9 @@ import {
   getMoneyMarketConfig,
   spokeChainConfig,
 } from '@sodax/sdk';
+import { CosmosWalletProvider } from './wallet-providers/CosmosWalletProvider.js';
+import { InjectiveWalletProvider } from './wallet-providers/InjectiveWalletProvider.js';
+
 import { type Address, type Hash, type Hex, toHex } from 'viem';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, INJECTIVE_MAINNET_CHAIN_ID } from '@sodax/types';
 import dotenv from 'dotenv';
