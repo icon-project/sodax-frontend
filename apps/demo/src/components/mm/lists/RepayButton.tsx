@@ -13,7 +13,7 @@ export function RepayButton({ token }: { token: XToken }) {
   const [open, setOpen] = useState(false);
 
   const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay(token);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount, "repay");
   const { approve, isLoading: isApproving } = useApprove(token);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
@@ -35,7 +35,7 @@ export function RepayButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
-    await approve(amount);
+    await approve({ amount, action: "repay" });
   };
 
   return (
