@@ -3,8 +3,8 @@ import type { Coin } from '@cosmjs/proto-signing';
 import type { StdFee } from '@cosmjs/stargate';
 import { Network } from '@injectivelabs/networks';
 import { MsgBroadcasterWithPk, PrivateKey, MsgExecuteContract, createTransaction } from '@injectivelabs/sdk-ts';
-import type { CosmosNetworkEnv, CWRawTransaction, Hex } from '../../index.js';
-import { ExecuteResponse, type ICWWalletProvider } from './CWSpokeProvider.js';
+import type { CosmosNetworkEnv, CWRawTransaction, Hex, ICWWalletProvider } from '@sodax/types';
+import { CWExecuteResponse } from '@sodax/types';
 import { DEFAULT_GAS_LIMIT } from '@injectivelabs/utils';
 import { toHex } from 'viem';
 
@@ -88,7 +88,7 @@ export class InjectiveWalletProvider implements ICWWalletProvider {
     fee: StdFee | 'auto' | number,
     memo?: string,
     funds?: Coin[],
-  ): Promise<ExecuteResponse> {
+  ): Promise<CWExecuteResponse> {
     const msgExec = MsgExecuteContract.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
@@ -96,7 +96,7 @@ export class InjectiveWalletProvider implements ICWWalletProvider {
       funds: funds as { amount: string; denom: string }[],
     });
     const txHash = await this.client.broadcast({ msgs: msgExec, gas: { gas: DEFAULT_GAS_LIMIT } });
-    return ExecuteResponse.fromTxResponse(txHash);
+    return CWExecuteResponse.fromTxResponse(txHash);
   }
 
   async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {

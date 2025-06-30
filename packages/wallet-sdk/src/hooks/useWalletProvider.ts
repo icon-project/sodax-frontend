@@ -1,9 +1,12 @@
 import type { ChainId } from '@sodax/types';
 import { useMemo } from 'react';
-import { EvmWalletProvider, SuiWalletProvider } from '../wallet-providers';
+import { EvmWalletProvider, IconWalletProvider, SuiWalletProvider } from '../wallet-providers';
 import { getXChainType } from '../actions';
 import { useWalletProviderOptions } from './useWalletProviderOptions';
 import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
+import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
+import { InjectiveWalletProvider } from '../wallet-providers/InjectiveWalletProvider';
+import type { InjectiveEoaAddress } from '@sodax/types';
 
 export function useWalletProvider(xChainId: ChainId) {
   const xChainType = getXChainType(xChainId);
@@ -28,6 +31,24 @@ export function useWalletProvider(xChainId: ChainId) {
         const { client, wallet, account } = walletProviderOptions;
 
         return new SuiWalletProvider({ client, wallet, account });
+      }
+
+      case 'ICON': {
+        const { walletAddress, rpcUrl } = walletProviderOptions;
+
+        return new IconWalletProvider({
+          walletAddress: walletAddress as IconEoaAddress | undefined,
+          rpcUrl: rpcUrl as `http${string}`,
+        });
+      }
+
+      case 'INJECTIVE': {
+        const { walletAddress, client, rpcUrl } = walletProviderOptions;
+        return new InjectiveWalletProvider({
+          walletAddress: walletAddress as InjectiveEoaAddress | undefined,
+          client: client,
+          rpcUrl: rpcUrl as string,
+        });
       }
 
       default:

@@ -1,5 +1,4 @@
 import type { PublicKey } from '@solana/web3.js';
-import type { SignDoc } from 'cosmjs-types/cosmos/tx/v1beta1/tx.js';
 import type { TransactionReceipt } from 'viem';
 import type { CWSpokeProvider } from './entities/cosmos/CWSpokeProvider.js';
 import type {
@@ -28,6 +27,8 @@ import type {
   Address,
   EvmRawTransaction,
   StellarRawTransaction,
+  CWRawTransaction,
+  CosmosNetworkEnv,
 } from '@sodax/types';
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
@@ -132,7 +133,6 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   };
   rpc_url: string;
 };
-export type CosmosNetworkEnv = 'TestNet' | 'DevNet' | 'Mainnet';
 
 export type CosmosSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
   rpcUrl: string;
@@ -424,12 +424,6 @@ export type SuiRawTransaction = {
   to: string;
   value: bigint;
   data: Base64String;
-};
-
-export type CWRawTransaction = {
-  from: Hex;
-  to: Hex;
-  signedDoc: SignDoc;
 };
 
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;

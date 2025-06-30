@@ -1,4 +1,4 @@
-import type { ExecuteResponse, ICWWalletProvider } from './CWSpokeProvider.js';
+import type { ICWWalletProvider, CWExecuteResponse } from '@sodax/types';
 
 export interface TokenInfo {
   name: string;
@@ -31,25 +31,25 @@ export class CW20Token {
 
   // Query Methods
   async getTokenInfo(): Promise<TokenInfo> {
-    return await this.client.queryContractSmart(this.contractAddress, {
+    return (await this.client.queryContractSmart(this.contractAddress, {
       token_info: {},
-    });
+    })) as TokenInfo;
   }
 
   async getBalance(address: string): Promise<Balance> {
-    return await this.client.queryContractSmart(this.contractAddress, {
+    return (await this.client.queryContractSmart(this.contractAddress, {
       balance: { address },
-    });
+    })) as Balance;
   }
 
   async getAllowance(owner: string, spender: string): Promise<AllowanceResponse> {
-    return await this.client.queryContractSmart(this.contractAddress, {
+    return (await this.client.queryContractSmart(this.contractAddress, {
       allowance: { owner, spender },
-    });
+    })) as AllowanceResponse;
   }
 
   // Execute Methods (requires SigningCosmWasmClient)
-  async transfer(senderAddress: string, recipientAddress: string, amount: string): Promise<ExecuteResponse> {
+  async transfer(senderAddress: string, recipientAddress: string, amount: string): Promise<CWExecuteResponse> {
     const msg = {
       transfer: {
         recipient: recipientAddress,
@@ -65,7 +65,7 @@ export class CW20Token {
     spenderAddress: string,
     amount: string,
     expires?: { at_height?: number; at_time?: string; never?: {} },
-  ): Promise<ExecuteResponse> {
+  ): Promise<CWExecuteResponse> {
     const msg = {
       increase_allowance: {
         spender: spenderAddress,
@@ -82,7 +82,7 @@ export class CW20Token {
     spenderAddress: string,
     amount: string,
     expires?: { at_height?: number; at_time?: string; never?: {} },
-  ): Promise<ExecuteResponse> {
+  ): Promise<CWExecuteResponse> {
     const msg = {
       decrease_allowance: {
         spender: spenderAddress,
@@ -99,7 +99,7 @@ export class CW20Token {
     ownerAddress: string,
     recipientAddress: string,
     amount: string,
-  ): Promise<ExecuteResponse> {
+  ): Promise<CWExecuteResponse> {
     const msg = {
       transfer_from: {
         owner: ownerAddress,

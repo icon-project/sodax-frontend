@@ -8,18 +8,18 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
   - Sui Wallets: All browser extension that @mysten/dapp-kit supports (Hana, Sui Wallet, Suiet, etc.) ✅
   - Solana Wallets: ❌ Coming soon
   - Stellar Wallets: ❌ Coming soon
-  - Injective Wallets: ❌ Coming soon
+  - Injective Wallets: ✅
   - Havah Wallets: ❌ Coming soon
-  - ICON Wallets: ❌ Coming soon
+  - ICON Wallets: ✅ (Hana Wallet and other ICON-compatible extensions)
 
 - Address and connection state management
   - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
   - Sui ✅
   - Solana ❌ Coming soon
   - Stellar ❌ Coming soon
-  - Injective ❌ Coming soon
+  - Injective ✅
   - Havah ❌ Coming soon
-  - ICON ❌ Coming soon
+  - ICON ✅
 
 
 ## Installation
@@ -74,6 +74,7 @@ function App() {
           SOLANA: {
             endpoint: 'https://your-rpc-endpoint',
           },
+          ICON: {}
         }}
       >
         <WalletConnect />

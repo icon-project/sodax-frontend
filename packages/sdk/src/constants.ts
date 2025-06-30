@@ -196,17 +196,17 @@ export const spokeChainConfig = {
     nativeToken: '11111111111111111111111111111111' as const,
     bnUSD: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
     supportedTokens: {
-      bnUSD: {
-        symbol: 'bnUSD',
-        name: 'bnUSD',
-        decimals: 9,
-        address: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
-      },
       SOL: {
         symbol: 'SOL',
         name: 'Solana',
         decimals: 9,
         address: '11111111111111111111111111111111',
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 9,
+        address: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
       },
     },
     gasPrice: '500000',
@@ -540,17 +540,17 @@ export const spokeChainConfig = {
     bnUSD: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
     networkId: 'injective-1',
     supportedTokens: {
-      bnUSD: {
-        symbol: 'bnUSD',
-        name: 'bnUSD',
-        decimals: 18,
-        address: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
-      },
       INJ: {
         symbol: 'INJ',
         name: 'Injective',
         decimals: 18,
         address: 'inj',
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
       },
     },
     gasPrice: '500000000inj',
@@ -655,7 +655,7 @@ export const spokeChainConfig = {
         address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
       },
     } as const,
-    nativeToken: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d' as const,
+    nativeToken: 'cx0000000000000000000000000000000000000000' as const,
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,

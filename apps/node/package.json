@@ -32,7 +32,18 @@
     "dotenv": "^16.4.7",
     "ethers": "^6.13.5",
     "icon-sdk-js": "catalog:",
-    "viem": "catalog:"
+    "viem": "catalog:",
+    "@cosmjs/cosmwasm-stargate": "0.32.2",
+    "@cosmjs/encoding": "0.32.3",
+    "@cosmjs/proto-signing": "0.32.3",
+    "@cosmjs/stargate": "^0.32.2",
+    "@cosmjs/tendermint-rpc": "0.32.3",
+    "@injectivelabs/networks": "1.14.13",
+    "@injectivelabs/sdk-ts": "1.14.13",
+    "@injectivelabs/ts-types": "1.14.13",
+    "@injectivelabs/utils": "^1.14.13",
+    "@injectivelabs/wallet-ts": "1.14.13",
+    "cosmjs-types": "^0.9.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.6",
