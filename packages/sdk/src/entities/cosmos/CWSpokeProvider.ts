@@ -76,15 +76,15 @@ export class CWSpokeProvider implements ISpokeProvider {
 
   // Query Methods
   async getState(): Promise<State> {
-    return await this.walletProvider.queryContractSmart(this.chainConfig.addresses.assetManager, {
+    return (await this.walletProvider.queryContractSmart(this.chainConfig.addresses.assetManager, {
       get_state: {},
-    });
+    })) as State;
   }
 
   async getBalance(token: String): Promise<number> {
-    return await this.walletProvider.queryContractSmart(this.chainConfig.addresses.assetManager, {
+    return (await this.walletProvider.queryContractSmart(this.chainConfig.addresses.assetManager, {
       get_balance: { denom: token },
-    });
+    })) as number;
   }
 
   // Execute Methods (requires SigningCosmWasmClient)

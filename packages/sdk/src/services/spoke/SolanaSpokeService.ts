@@ -31,10 +31,10 @@ export class SolanaSpokeService {
   private constructor() {}
 
   public static async deposit<R extends boolean = false>(
-    params: SolanaSpokeDepositParams,
-    spokeProvider: SolanaSpokeProvider,
-    hubProvider: EvmHubProvider,
-    raw?: R,
+      params: SolanaSpokeDepositParams,
+      spokeProvider: SolanaSpokeProvider,
+      hubProvider: EvmHubProvider,
+      raw?: R,
   ): PromiseSolanaTxReturnType<R> {
     const userWallet: Address =
       params.to ??
@@ -45,23 +45,23 @@ export class SolanaSpokeService {
       ));
 
     return SolanaSpokeService.transfer(
-      {
-        token: params.token,
-        recipient: userWallet,
-        amount: params.amount.toString(),
-        data: params.data,
-      },
-      spokeProvider,
-      raw,
+        {
+          token: params.token,
+          recipient: userWallet,
+          amount: params.amount.toString(),
+          data: params.data,
+        },
+        spokeProvider,
+        raw,
     );
   }
 
   public static async getDeposit(token: string, spokeProvider: SolanaSpokeProvider): Promise<bigint> {
     const assetManagerProgram = await getAssetManagerProgram(
-      spokeProvider.walletProvider.getWallet(),
-      spokeProvider.chainConfig.rpcUrl,
-      spokeProvider.chainConfig.wsUrl,
-      spokeProvider.chainConfig.addresses.assetManager,
+        spokeProvider.walletProvider.getWallet(),
+        spokeProvider.chainConfig.rpcUrl,
+        spokeProvider.chainConfig.wsUrl,
+        spokeProvider.chainConfig.addresses.assetManager,
     );
     const solToken = new PublicKey(Buffer.from(token, 'hex'));
     if (isNative(new PublicKey(solToken))) {
@@ -95,9 +95,9 @@ export class SolanaSpokeService {
   }
 
   private static async transfer<R extends boolean = false>(
-    { token, recipient, amount, data }: TransferToHubParams,
-    spokeProvider: SolanaSpokeProvider,
-    raw?: R,
+      { token, recipient, amount, data }: TransferToHubParams,
+      spokeProvider: SolanaSpokeProvider,
+      raw?: R,
   ): PromiseSolanaTxReturnType<R> {
     let depositInstruction: TransactionInstruction;
     const amountBN = new BN(amount);
@@ -105,66 +105,66 @@ export class SolanaSpokeService {
     const { rpcUrl, wsUrl, addresses } = chainConfig;
 
     const assetManagerProgram = await getAssetManagerProgram(
-      walletProvider.getWallet(),
-      rpcUrl,
-      wsUrl,
-      addresses.assetManager,
+        walletProvider.getWallet(),
+        rpcUrl,
+        wsUrl,
+        addresses.assetManager,
     );
     const walletPublicKey = walletProvider.getAddress();
     const connectionProgram = await getConnectionProgram(
-      walletProvider.getWallet(),
-      rpcUrl,
-      wsUrl,
-      addresses.connection,
+        walletProvider.getWallet(),
+        rpcUrl,
+        wsUrl,
+        addresses.connection,
     );
 
     if (isNative(token)) {
-      depositInstruction = await assetManagerProgram.methods.transfer!(
-        amountBN,
-        Buffer.from(recipient.slice(2), 'hex'),
-        Buffer.from(data.slice(2), 'hex'),
-      ).accountsStrict!({
-        signer: walletPublicKey,
-        systemProgram: SystemProgram.programId,
-        config: AssetManagerPDA.config(assetManagerProgram.programId).pda,
-        nativeVaultAccount: AssetManagerPDA.vault_native(assetManagerProgram.programId).pda,
-        tokenVaultAccount: null,
-        signerTokenAccount: null,
-        authority: AssetManagerPDA.authority(assetManagerProgram.programId).pda,
-        mint: null,
-        connection: connectionProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      }).remainingAccounts!([
-        {
-          pubkey: ConnectionConfigPDA.config(connectionProgram.programId).pda,
-          isSigner: false,
-          isWritable: true,
-        },
-      ]).instruction();
+      depositInstruction = await assetManagerProgram.methods
+          .transfer(amountBN, Buffer.from(recipient.slice(2), 'hex'), Buffer.from(data.slice(2), 'hex'))
+          .accountsStrict({
+            signer: walletPublicKey,
+            systemProgram: SystemProgram.programId,
+            config: AssetManagerPDA.config(assetManagerProgram.programId).pda,
+            nativeVaultAccount: AssetManagerPDA.vault_native(assetManagerProgram.programId).pda,
+            tokenVaultAccount: null,
+            signerTokenAccount: null,
+            authority: AssetManagerPDA.authority(assetManagerProgram.programId).pda,
+            mint: null,
+            connection: connectionProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .remainingAccounts([
+            {
+              pubkey: ConnectionConfigPDA.config(connectionProgram.programId).pda,
+              isSigner: false,
+              isWritable: true,
+            },
+          ])
+          .instruction();
     } else {
       const signerTokenAccount = await spokeProvider.walletProvider.getAssociatedTokenAddress(token);
-      depositInstruction = await assetManagerProgram.methods.transfer!(
-        amountBN,
-        Buffer.from(recipient.slice(2), 'hex'),
-        Buffer.from(data.slice(2), 'hex'),
-      ).accountsStrict!({
-        signer: walletPublicKey,
-        systemProgram: SystemProgram.programId,
-        config: AssetManagerPDA.config(assetManagerProgram.programId).pda,
-        nativeVaultAccount: null,
-        tokenVaultAccount: AssetManagerPDA.vault_token(assetManagerProgram.programId, token).pda,
-        signerTokenAccount: signerTokenAccount,
-        authority: AssetManagerPDA.authority(assetManagerProgram.programId).pda,
-        mint: token,
-        connection: connectionProgram.programId,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      }).remainingAccounts!([
-        {
-          pubkey: ConnectionConfigPDA.config(connectionProgram.programId).pda,
-          isSigner: false,
-          isWritable: true,
-        },
-      ]).instruction();
+      depositInstruction = await assetManagerProgram.methods
+          .transfer(amountBN, Buffer.from(recipient.slice(2), 'hex'), Buffer.from(data.slice(2), 'hex'))
+          .accountsStrict({
+            signer: walletPublicKey,
+            systemProgram: SystemProgram.programId,
+            config: AssetManagerPDA.config(assetManagerProgram.programId).pda,
+            nativeVaultAccount: null,
+            tokenVaultAccount: AssetManagerPDA.vault_token(assetManagerProgram.programId, token).pda,
+            signerTokenAccount: signerTokenAccount,
+            authority: AssetManagerPDA.authority(assetManagerProgram.programId).pda,
+            mint: token,
+            connection: connectionProgram.programId,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .remainingAccounts([
+            {
+              pubkey: ConnectionConfigPDA.config(connectionProgram.programId).pda,
+              isSigner: false,
+              isWritable: true,
+            },
+          ])
+          .instruction();
     }
 
     const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
@@ -176,8 +176,8 @@ export class SolanaSpokeService {
     });
 
     const transaction = await spokeProvider.walletProvider.buildV0Txn(
-      [modifyComputeUnits, addPriorityFee, depositInstruction],
-      [spokeProvider.walletProvider.getWallet()],
+        [modifyComputeUnits, addPriorityFee, depositInstruction],
+        [spokeProvider.walletProvider.getWallet()],
     );
     if (raw) {
       const serializedTxn = transaction.serialize();
@@ -212,22 +212,25 @@ export class SolanaSpokeService {
     const { walletProvider, chainConfig } = spokeProvider;
     const { rpcUrl, wsUrl, addresses } = chainConfig;
     const connectionProgram = await getConnectionProgram(
-      walletProvider.getWallet(),
-      rpcUrl,
-      wsUrl,
-      addresses.connection,
+        walletProvider.getWallet(),
+        rpcUrl,
+        wsUrl,
+        addresses.connection,
     );
     const walletPublicKey = walletProvider.getAddress();
-    const sendMessageInstruction = await connectionProgram.methods.sendMessage!(
-      new BN(dstChainId.toString()),
-      Buffer.from(dstAddress.slice(2), 'hex'),
-      Buffer.from(payload.slice(2), 'hex'),
-    ).accounts!({
-      signer: walletPublicKey,
-      dapp: null,
-      config: ConnectionConfigPDA.config(connectionProgram.programId).pda,
-      systemProgram: SystemProgram.programId,
-    }).instruction();
+    const sendMessageInstruction = await connectionProgram.methods
+        .sendMessage(
+            new BN(dstChainId.toString()),
+            Buffer.from(dstAddress.slice(2), 'hex'),
+            Buffer.from(payload.slice(2), 'hex'),
+        )
+        .accountsStrict!({
+          signer: walletPublicKey,
+          dapp: null,
+          config: ConnectionConfigPDA.config(connectionProgram.programId).pda,
+          systemProgram: SystemProgram.programId,
+        })
+        .instruction();
 
     const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
       units: 1000000,
@@ -238,8 +241,8 @@ export class SolanaSpokeService {
     });
 
     const transaction = await spokeProvider.walletProvider.buildV0Txn(
-      [modifyComputeUnits, addPriorityFee, sendMessageInstruction],
-      [spokeProvider.walletProvider.getWallet()],
+        [modifyComputeUnits, addPriorityFee, sendMessageInstruction],
+        [spokeProvider.walletProvider.getWallet()],
     );
     if (raw) {
       const serializedTxn = transaction.serialize();
