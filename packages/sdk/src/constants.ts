@@ -12,12 +12,15 @@ import type {
   OriginalAssetAddress,
   SolanaChainConfig,
   SolverConfig,
+  SonicSpokeChainConfig,
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
   VaultType,
 } from './index.js';
-import type { ChainId, Token, SpokeChainId } from '@sodax/types';
 import {
+  type ChainId,
+  type Token,
+  type SpokeChainId,
   AVALANCHE_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
@@ -34,8 +37,6 @@ import {
   type HubChainId,
   SPOKE_CHAIN_IDS,
 } from '@sodax/types';
-
-// TODO ADD DEFAULT CONTRACT ADDRESSES AND SO FORTH FROM WIKI
 
 export const DEFAULT_MAX_RETRY = 3;
 export const DEFAULT_RELAY_TX_TIMEOUT = 60000; // 60 seconds
@@ -80,6 +81,7 @@ export const EVM_SPOKE_CHAIN_IDS = [
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
 ] as const;
 
 const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
@@ -143,6 +145,51 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
 export const getHubChainConfig = (chainId: HubChainId): EvmHubChainConfig => hubChainConfig[chainId];
 
 export const spokeChainConfig = {
+  [SONIC_MAINNET_CHAIN_ID]: {
+    chain: {
+      name: 'Sonic',
+      id: SONIC_MAINNET_CHAIN_ID,
+      type: 'EVM',
+    },
+    addresses: {
+      walletRouter: '0xC67C3e55c665E78b25dc9829B3Aa5af47d914733',
+      wrappedSonic: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000',
+    bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
+    supportedTokens: {
+      Sonic: {
+        symbol: 'Sonic',
+        name: 'Sonic',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+      },
+      WETH: {
+        symbol: 'WETH',
+        name: 'Wrapped Ether',
+        decimals: 18,
+        address: '0x50c42dEAcD8Fc9773493ED674b675bE577f2634b',
+      },
+      USDC: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
+      },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0x6047828dc181963ba44974801FF68e538dA5eaF9',
+      },
+      wSonic: {
+        symbol: 'wSonic',
+        name: 'Wrapped Sonic',
+        decimals: 18,
+        address: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+      }
+    },
+  } as const satisfies SonicSpokeChainConfig,
   [SOLANA_MAINNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'AnCCJjheynmGqPp6Vgat9DTirGKD4CtQzP8cwTYV8qKH',
@@ -624,6 +671,43 @@ export const hubAssets: Record<
   SpokeChainId,
   Record<Address | string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>
 > = {
+  [SONIC_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+      decimal: 18,
+      symbol: 'S',
+      name: 'Sonic',
+      vault: '0x62ecc3Eeb80a162c57624B3fF80313FE69f5203e',
+    },
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic.address]: {
+      asset: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+      decimal: 18,
+      symbol: 'wSonic',
+      name: 'Sonic',
+      vault: '0x62ecc3Eeb80a162c57624B3fF80313FE69f5203e',
+    },
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH.address]: {
+      asset: '0x50c42dEAcD8Fc9773493ED674b675bE577f2634b',
+      decimal: 18,
+      symbol: 'WETH',
+      name: 'Wrapped Ethereum',
+      vault: '0x4effB5813271699683C25c734F4daBc45B363709',
+    },
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
+      asset: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
+      decimal: 6,
+      symbol: 'USDC ',
+      name: 'USD Coin',
+      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
+    },
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x6047828dc181963ba44974801ff68e538da5eaf9',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: '0xbDf1F453FCB61424011BBDDCB96cFDB30f3Fe876',
+    },
+  },
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0xc9e4f0B6195F389D9d2b639f2878B7674eB9D8cD',
@@ -964,6 +1048,12 @@ export const getSolverConfig = (chainId: HubChainId): SolverConfig => solverConf
 
 // currently supported spoke chain tokens for solver
 const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
+  [SONIC_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic,
+  ] as const satisfies Token[],
   [AVALANCHE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.AVAX,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDT,
@@ -1101,6 +1191,13 @@ const moneyMarketSupportedTokens = {
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
+  [SONIC_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.Sonic,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic,
+  ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>

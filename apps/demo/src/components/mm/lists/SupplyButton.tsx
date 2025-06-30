@@ -12,7 +12,7 @@ export function SupplyButton({ token }: { token: XToken }) {
   const [open, setOpen] = useState(false);
   const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply(token);
 
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount, "supply");
   const { approve, isLoading: isApproving } = useApprove(token);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
@@ -34,7 +34,7 @@ export function SupplyButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
-    await approve(amount);
+    await approve({ amount, action: "supply" });
   };
 
   return (

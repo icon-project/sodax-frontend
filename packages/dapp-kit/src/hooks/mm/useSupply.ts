@@ -47,6 +47,7 @@ export function useSupply(spokeToken: XToken): UseMutationResult<SupplyResponse,
         {
           token: spokeToken.address,
           amount: parseUnits(amount, spokeToken.decimals),
+          action: 'supply',
         },
         spokeProvider,
       );
