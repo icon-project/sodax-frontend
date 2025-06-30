@@ -42,6 +42,7 @@ export function useWithdraw(spokeToken: XToken): UseMutationResult<WithdrawRespo
           token: spokeToken.address,
           // vault token on hub chain decimals is 18
           amount: parseUnits(amount, 18),
+          action: 'withdraw',
         },
         spokeProvider,
       );

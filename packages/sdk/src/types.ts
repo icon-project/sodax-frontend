@@ -306,6 +306,8 @@ export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
           ? Hex
           : T extends SolanaSpokeProvider
             ? Hex
+            : T extends SonicSpokeProvider
+              ? Address
             : never;
 
 export type HttpUrl = `http://${string}` | `https://${string}`;

@@ -50,7 +50,6 @@ import {
   type SpokeChainId,
   type Address,
   type Hex,
-  type EvmRawTransactionReceipt,
   type Hash,
 } from '@sodax/types';
 
@@ -457,14 +456,16 @@ export class SolverService {
    * @param amount - Amount to approve
    * @param spender - Spender address
    * @param spokeProvider - Spoke provider
-   * @returns {Promise<Result<EvmRawTransactionReceipt>>} - Returns the transaction receipt
+   * @param raw - Whether to return the raw transaction hash instead of the transaction receipt
+   * @returns {Promise<Result<TxReturnType<S, R>>>} - Returns the raw transaction payload or transaction hash
    *
    * @example
    * const approveResult = await approve(
    *   '0x...', // ERC20 token address
    *   1000n, // Amount to approve (in token decimals)
    *   '0x...', // Spender address (usually the asset manager contract: spokeProvider.chainConfig.addresses.assetManager)
-   *   spokeProvider
+   *   spokeProvider,
+   *   true // if true, returns raw transaction hash instead of raw transaction
    * );
    *
    * if (!approveResult.ok) {
@@ -473,15 +474,21 @@ export class SolverService {
    *
    * const txReceipt = approveResult.value;
    */
-  public async approve<S extends SpokeProvider>(
+  public async approve<S extends SpokeProvider, R extends boolean = false>(
     token: Address,
     amount: bigint,
     address: Address,
     spokeProvider: S,
-  ): Promise<Result<EvmRawTransactionReceipt>> {
+    raw?: R,
+  ): Promise<Result<TxReturnType<S, R>>> {
     try {
       if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
-        return Erc20Service.approve(token, amount, address, spokeProvider);
+        const result = await Erc20Service.approve(token, amount, address, spokeProvider, raw);
+
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<EvmSpokeProvider | SonicSpokeProvider, R> as TxReturnType<S, R>,
+        };
       }
 
       return {

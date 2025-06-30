@@ -3,10 +3,10 @@ import { useSpokeProvider } from '../provider/useSpokeProvider';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Address } from '@sodax/sdk';
+import type { MoneyMarketAction } from '@sodax/sdk';
 
 interface UseApproveReturn {
-  approve: (amount: string) => Promise<boolean>;
+  approve: ({ amount, action }: { amount: string; action: MoneyMarketAction }) => Promise<boolean>;
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
@@ -23,14 +23,16 @@ export function useApprove(token: XToken): UseApproveReturn {
     error,
     reset: resetError,
   } = useMutation({
-    mutationFn: async (amount: string) => {
+    mutationFn: async ({ amount, action }: { amount: string; action: MoneyMarketAction }) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
       const allowance = await sodax.moneyMarket.approve(
-        token.address as Address,
-        parseUnits(amount, token.decimals),
-        spokeProvider.chainConfig.addresses.assetManager as Address,
+        {
+          token: token.address,
+          amount: parseUnits(amount, token.decimals),
+          action,
+        },
         spokeProvider,
       );
       if (!allowance.ok) {
@@ -47,7 +49,7 @@ export function useApprove(token: XToken): UseApproveReturn {
   return {
     approve,
     isLoading: isPending,
-    error: error as Error | null,
+    error: error,
     resetError,
   };
 }

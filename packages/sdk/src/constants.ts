@@ -1042,7 +1042,12 @@ export const getSolverConfig = (chainId: HubChainId): SolverConfig => solverConf
 
 // currently supported spoke chain tokens for solver
 const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
-  [SONIC_MAINNET_CHAIN_ID]: [],
+  [SONIC_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic,
+  ] as const satisfies Token[],
   [AVALANCHE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.AVAX,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDT,
@@ -1180,7 +1185,12 @@ const moneyMarketSupportedTokens = {
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
-  [SONIC_MAINNET_CHAIN_ID]: [] as const,
+  [SONIC_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic,
+  ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>

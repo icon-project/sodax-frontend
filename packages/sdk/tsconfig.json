@@ -23,5 +23,7 @@
     "declarationMap": true,
     "noUnusedLocals": true,
     "noUnusedParameters": false // TODO turn on and fix all the issues
-  }
+  },
+  "exclude": ["coverage", "dist", "node_modules", ".turbo", ".history", ".cursorrules"],
+  "include": ["src"]
 }

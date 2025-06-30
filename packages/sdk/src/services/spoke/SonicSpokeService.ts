@@ -3,9 +3,9 @@ import { sonicWalletFactoryAbi } from '../../abis/sonicWalletFactory.abi.js';
 import { variableDebtTokenAbi } from '../../abis/variableDebtToken.abi.js';
 import { wrappedSonicAbi } from '../../abis/wrappedSonic.abi.js';
 import type { SonicSpokeProvider } from '../../entities/index.js';
-import type { EvmContractCall, EvmReturnType, PromiseEvmTxReturnType } from '../../types.js';
+import type { EvmContractCall, EvmReturnType, PromiseEvmTxReturnType, Result } from '../../types.js';
 import { Erc20Service } from '../index.js';
-import type { MoneyMarketService } from '../moneyMarket/MoneyMarketService.js';
+import { MoneyMarketService } from '../moneyMarket/MoneyMarketService.js';
 import { getHubAssetInfo } from '../../constants.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import type { Hex, HubAddress, SpokeChainId } from '@sodax/types';
@@ -27,6 +27,7 @@ export type WithdrawInfo = {
 export type BorrowInfo = {
   variableDebtTokenAddress: Address;
   vaultAddress: Address;
+  amount: bigint;
 };
 
 export class SonicSpokeService {
@@ -34,9 +35,9 @@ export class SonicSpokeService {
 
   /**
    * Get the derived address of a contract deployed with CREATE3.
-   * @param address User's address on the specified chain as hex
-   * @param provider Spoke provider
-   * @returns The computed contract address as a EVM address (hex) string
+   * @param address - User's address on the specified chain as hex
+   * @param provider - Sonic Spoke provider
+   * @returns {HubAddress} The computed contract address as a EVM address (hex) string
    */
   public static async getUserRouter(address: Address, provider: SonicSpokeProvider): Promise<HubAddress> {
     return provider.publicClient.readContract({
@@ -61,20 +62,22 @@ export class SonicSpokeService {
     const userHubAddress = params.to ?? (await SonicSpokeService.getUserRouter(params.from, spokeProvider));
 
     // Decode the data field which contains the encoded calls array
-    const calls = Array.from(decodeAbiParameters(
-      [
-        {
-          name: 'calls',
-          type: 'tuple[]',
-          components: [
-            { name: 'address', type: 'address' },
-            { name: 'value', type: 'uint256' },
-            { name: 'data', type: 'bytes' },
-          ],
-        },
-      ],
-      params.data,
-    )[0] satisfies readonly EvmContractCall[]);
+    const calls = Array.from(
+      decodeAbiParameters(
+        [
+          {
+            name: 'calls',
+            type: 'tuple[]',
+            components: [
+              { name: 'address', type: 'address' },
+              { name: 'value', type: 'uint256' },
+              { name: 'data', type: 'bytes' },
+            ],
+          },
+        ],
+        params.data,
+      )[0] satisfies readonly EvmContractCall[],
+    );
 
     if (params.token === spokeProvider.chainConfig.nativeToken) {
       // Add a call to wrap the native token
@@ -88,7 +91,12 @@ export class SonicSpokeService {
       } satisfies EvmContractCall;
       calls.unshift(wrapCall);
     } else {
-      const transferFromCall = Erc20Service.encodeTransferFrom(params.token, params.from, userHubAddress, params.amount);
+      const transferFromCall = Erc20Service.encodeTransferFrom(
+        params.token,
+        params.from,
+        userHubAddress,
+        params.amount,
+      );
       calls.unshift(transferFromCall);
     }
 
@@ -118,20 +126,20 @@ export class SonicSpokeService {
     return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
   }
 
-    /**
+  /**
    * Get the balance of the token in the spoke chain.
    * @param {Address} token - The address of the token to get the balance of.
    * @param {SonicSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-    public static async getDeposit(token: Address, spokeProvider: SonicSpokeProvider): Promise<bigint> {
-      return spokeProvider.publicClient.readContract({
-        address: token,
-        abi: erc20Abi,
-        functionName: 'balanceOf',
-        args: [token],
-      });
-    }
+  public static async getDeposit(token: Address, spokeProvider: SonicSpokeProvider): Promise<bigint> {
+    return spokeProvider.publicClient.readContract({
+      address: token,
+      abi: erc20Abi,
+      functionName: 'balanceOf',
+      args: [token],
+    });
+  }
 
   /**
    * Execute a batch of contract calls through the Sonic wallet contract.
@@ -188,11 +196,11 @@ export class SonicSpokeService {
 
   /**
    * Get withdraw information for a given token
-   * @param token The address of the underlying token
-   * @param amount The amount to withdraw
-   * @param spokeProvider The spoke provider
-   * @param moneyMarketService The money market service
-   * @returns WithdrawInfo containing aToken address, amount and vault address
+   * @param token - The address of the underlying token
+   * @param amount - The amount to withdraw
+   * @param spokeProvider - The spoke provider
+   * @param moneyMarketService - The money market service
+   * @returns {WithdrawInfo} WithdrawInfo containing aToken address, amount and vault address
    */
   public static async getWithdrawInfo(
     token: Address,
@@ -207,13 +215,14 @@ export class SonicSpokeService {
     }
 
     const vaultAddress = assetConfig.vault;
-    const reserveData = await moneyMarketService.getReserveData(moneyMarketService.config.lendingPool, vaultAddress);
+
+    const [normalizedIncome, reserveData] = await Promise.all([
+      moneyMarketService.getReserveNormalizedIncome(moneyMarketService.config.lendingPool, vaultAddress),
+      moneyMarketService.getReserveData(moneyMarketService.config.lendingPool, vaultAddress),
+    ]);
+
     const aTokenAddress = reserveData.aTokenAddress;
-    const aTokenAmount = await moneyMarketService.calculateATokenAmount(
-      moneyMarketService.config.lendingPool,
-      amount,
-      vaultAddress,
-    );
+    const aTokenAmount = MoneyMarketService.calculateATokenAmount(amount, normalizedIncome);
 
     return {
       aTokenAddress,
@@ -224,13 +233,15 @@ export class SonicSpokeService {
 
   /**
    * Get borrow information for a given token
-   * @param token The address of the underlying token
-   * @param spokeProvider The spoke provider
-   * @param moneyMarketService The money market service
+   * @param token - The address of the underlying token
+   * @param amount - The amount to borrow
+   * @param chainId - The chain ID
+   * @param moneyMarketService - The money market service
    * @returns BorrowInfo containing variable debt token address and vault address
    */
   public static async getBorrowInfo(
     token: Address,
+    amount: bigint,
     chainId: SpokeChainId,
     moneyMarketService: MoneyMarketService,
   ): Promise<BorrowInfo> {
@@ -240,23 +251,67 @@ export class SonicSpokeService {
       throw new Error('[SonicSpokeService.getBorrowInfo] Hub asset not found');
     }
 
-    const vaultAddress = assetConfig?.vault as Address;
+    const vaultAddress = assetConfig.vault;
     const reserveData = await moneyMarketService.getReserveData(moneyMarketService.config.lendingPool, vaultAddress);
     const variableDebtTokenAddress = reserveData.variableDebtTokenAddress;
 
     return {
       variableDebtTokenAddress,
       vaultAddress,
+      amount,
     };
   }
 
+  /**
+   * Check if the user has approved the withdrawal of tokens from the spoke chain using the Sonic wallet abstraction.
+   * @param from - The address of the user on the spoke chain
+   * @param withdrawInfo - The information about the withdrawal
+   * @param spokeProvider - The spoke provider
+   * @param spender - The address of the spender
+   * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the approval check
+   */
+  public static async isWithdrawApproved(
+    from: Address,
+    withdrawInfo: WithdrawInfo,
+    spokeProvider: SonicSpokeProvider,
+    spender?: HubAddress,
+  ): Promise<Result<boolean>> {
+    try {
+      const spenderAddress = spender ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
+
+      return Erc20Service.isAllowanceValid(
+        withdrawInfo.token,
+        withdrawInfo.aTokenAmount,
+        from,
+        spenderAddress,
+        spokeProvider,
+      );
+    } catch (error) {
+      return {
+        ok: false,
+        error,
+      };
+    }
+  }
+
+  /**
+   * Approve the withdrawal of tokens from the spoke chain using the Sonic wallet abstraction.
+   * @param from - The address of the user on the spoke chain
+   * @param withdrawInfo - The information about the withdrawal
+   * @param spokeProvider - The spoke provider
+   * @param raw - Whether to return the raw transaction data
+   * @returns {PromiseEvmTxReturnType<R>} A promise that resolves to the transaction hash
+   */
   public static async approveWithdraw<R extends boolean = false>(
     from: Address,
     withdrawInfo: WithdrawInfo,
     spokeProvider: SonicSpokeProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
-    const userRouter = await SonicSpokeService.getUserRouter(from, spokeProvider);
+    const [userRouter, walletAddress] = await Promise.all([
+      SonicSpokeService.getUserRouter(from, spokeProvider),
+      spokeProvider.walletProvider.getWalletAddress(),
+    ]);
 
     const txData = encodeFunctionData({
       abi: erc20Abi,
@@ -265,7 +320,7 @@ export class SonicSpokeService {
     });
 
     const rawTx = {
-      from: await spokeProvider.walletProvider.getWalletAddress(),
+      from: walletAddress,
       to: withdrawInfo.aTokenAddress,
       data: txData,
       value: 0n,
@@ -278,23 +333,57 @@ export class SonicSpokeService {
     return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
   }
 
+    /**
+   * Check if the user has approved the borrowing of tokens from the spoke chain using the Sonic wallet abstraction.
+   * @param from - The address of the user on the spoke chain
+   * @param borrowInfo - The information about the borrowing
+   * @param spokeProvider - The spoke provider
+   * @param spender - The address of the spender
+   * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the approval check
+   */
+    public static async isBorrowApproved(
+      from: Address,
+      borrowInfo: BorrowInfo,
+      spokeProvider: SonicSpokeProvider,
+      spender?: HubAddress,
+    ): Promise<Result<boolean>> {
+      try {
+        const spenderAddress = spender ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
+
+        return Erc20Service.isAllowanceValid(
+          borrowInfo.variableDebtTokenAddress,
+          borrowInfo.amount,
+          from,
+          spenderAddress,
+          spokeProvider,
+        );
+      } catch (error) {
+        return {
+          ok: false,
+          error,
+        };
+      }
+    }
+
   public static async approveBorrow<R extends boolean = false>(
     from: Address,
     borrowInfo: BorrowInfo,
-    amount: bigint,
     spokeProvider: SonicSpokeProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
-    const userRouter = await SonicSpokeService.getUserRouter(from, spokeProvider);
+    const [userRouter, walletAddress] = await Promise.all([
+      SonicSpokeService.getUserRouter(from, spokeProvider),
+      spokeProvider.walletProvider.getWalletAddress(),
+    ]);
 
     const txData = encodeFunctionData({
       abi: variableDebtTokenAbi,
       functionName: 'approveDelegation',
-      args: [userRouter, amount],
+      args: [userRouter, borrowInfo.amount],
     });
 
     const rawTx = {
-      from: await spokeProvider.walletProvider.getWalletAddress(),
+      from: walletAddress,
       to: borrowInfo.variableDebtTokenAddress,
       data: txData,
       value: 0n,
