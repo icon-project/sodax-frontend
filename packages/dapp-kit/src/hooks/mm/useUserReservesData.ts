@@ -1,56 +1,51 @@
 import { allXTokens } from '@/core';
-import { getMoneyMarketConfig, type EvmHubProvider } from '@sodax/sdk';
+import { EvmWalletAbstraction, getMoneyMarketConfig, type EvmHubProvider } from '@sodax/sdk';
 import type { HubChainId, SpokeChainId } from '@sodax/types';
-import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
 import type { ChainId } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
 import { useHubProvider } from '../provider/useHubProvider';
-import { useHubWalletAddress } from './useHubWalletAddress';
 import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSpokeProvider } from '../provider/useSpokeProvider';
 
 export function useUserReservesData(spokeChainId: ChainId) {
   const { sodax } = useSodaxContext();
   const hubChainId = (sodax.config?.hubProviderConfig?.chainConfig.chain.id ?? 'sonic') as HubChainId;
-  const hubWalletProvider = useWalletProvider(hubChainId);
   const hubProvider = useHubProvider();
-  const { address } = useXAccount(spokeChainId);
-  const { data: hubWalletAddress } = useHubWalletAddress(
-    spokeChainId as SpokeChainId,
-    address,
-    hubProvider as EvmHubProvider,
-  );
+  const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
 
   const { data: userReserves } = useQuery({
-    queryKey: ['userReserves', hubWalletAddress],
+    queryKey: ['userReserves', spokeChainId],
     queryFn: async () => {
-      if (!hubWalletProvider) {
+      if (!hubProvider) {
         return;
       }
 
-      if (!hubWalletAddress) {
+      if (!spokeProvider) {
         return;
       }
+
+      const addressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+      const hubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeChainId as SpokeChainId,
+        addressBytes,
+        hubProvider as EvmHubProvider,
+      );
 
       const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
-      try {
-        const [res] = await sodax.moneyMarket.getUserReservesData(
-          hubWalletAddress as `0x${string}`,
-          moneyMarketConfig.uiPoolDataProvider,
-          moneyMarketConfig.poolAddressesProvider,
-        );
+      const [res] = await sodax.moneyMarket.getUserReservesData(
+        hubWalletAddress as `0x${string}`,
+        moneyMarketConfig.uiPoolDataProvider,
+        moneyMarketConfig.poolAddressesProvider,
+      );
 
-        return res?.map(r => {
-          return {
-            ...r,
-            token: allXTokens.find(t => t.address === r.underlyingAsset),
-          };
-        });
-      } catch (error) {
-        console.log('error', error);
-        return;
-      }
+      return res?.map(r => {
+        return {
+          ...r,
+          token: allXTokens.find(t => t.address === r.underlyingAsset),
+        };
+      });
     },
-    enabled: !!address && !!hubWalletProvider && !!hubWalletAddress,
+    enabled: !!spokeProvider && !!hubProvider,
     refetchInterval: 5000,
   });
 

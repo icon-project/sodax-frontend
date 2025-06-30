@@ -3,6 +3,11 @@ import { useCallback, useMemo } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
 import type { ChainId } from '@sodax/types';
 import { getXChainType } from '@/actions';
+import type { InjectiveXService } from '@/xchains/injective';
+import { useXService } from '@/hooks/useXService';
+import useEthereumChainId from './useEthereumChainId';
+import { mainnet } from 'viem/chains';
+import { Wallet } from '@injectivelabs/wallet-ts';
 
 interface UseEvmSwitchChainReturn {
   isWrongChain: boolean;
@@ -31,20 +36,51 @@ interface UseEvmSwitchChainReturn {
  * ```
  */
 
+export const switchEthereumChain = async chainId => {
+  const metamaskProvider = (window as any).ethereum as any;
+
+  await Promise.race([
+    metamaskProvider.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: `0x${chainId}` }],
+    }),
+    new Promise<void>(resolve =>
+      metamaskProvider.on('change', ({ chain }: any) => {
+        if (chain?.id === chainId) {
+          resolve();
+        }
+      }),
+    ),
+  ]);
+};
+
 export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
   const xChainType = getXChainType(expectedXChainId);
   const expectedChainId = xChainMap[expectedXChainId].id as number;
 
+  const injectiveXService = useXService('INJECTIVE') as unknown as InjectiveXService;
+  const ethereumChainId = useEthereumChainId();
+
   const { chainId } = useAccount();
   const isWrongChain = useMemo(() => {
-    return xChainType === 'EVM' && chainId !== expectedChainId;
-  }, [xChainType, chainId, expectedChainId]);
+    return (
+      (xChainType === 'EVM' && chainId !== expectedChainId) ||
+      (xChainType === 'INJECTIVE' &&
+        !window?.['ethereum']?.isHanaWallet &&
+        injectiveXService.walletStrategy.getWallet() === Wallet.Metamask &&
+        ethereumChainId !== mainnet.id)
+    );
+  }, [xChainType, chainId, expectedChainId, ethereumChainId, injectiveXService]);
 
   const { switchChain } = useSwitchChain();
 
   const handleSwitchChain = useCallback(() => {
-    switchChain({ chainId: expectedChainId });
-  }, [switchChain, expectedChainId]);
+    if (xChainType === 'INJECTIVE') {
+      switchEthereumChain(mainnet.id);
+    } else {
+      switchChain({ chainId: expectedChainId });
+    }
+  }, [switchChain, expectedChainId, xChainType]);
 
   return useMemo(
     () => ({
