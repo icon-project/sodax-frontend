@@ -333,7 +333,7 @@ export class SonicSpokeService {
     return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
   }
 
-    /**
+  /**
    * Check if the user has approved the borrowing of tokens from the spoke chain using the Sonic wallet abstraction.
    * @param from - The address of the user on the spoke chain
    * @param borrowInfo - The information about the borrowing
@@ -341,33 +341,33 @@ export class SonicSpokeService {
    * @param spender - The address of the spender
    * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the approval check
    */
-    public static async isBorrowApproved(
-      from: Address,
-      borrowInfo: BorrowInfo,
-      spokeProvider: SonicSpokeProvider,
-      spender?: HubAddress,
-    ): Promise<Result<boolean>> {
-      try {
-        const spenderAddress = spender ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
+  public static async isBorrowApproved(
+    from: Address,
+    borrowInfo: BorrowInfo,
+    spokeProvider: SonicSpokeProvider,
+    spender?: HubAddress,
+  ): Promise<Result<boolean>> {
+    try {
+      const spenderAddress = spender ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
 
-        const allowance: bigint = await spokeProvider.publicClient.readContract({
-          address: borrowInfo.variableDebtTokenAddress,
-          abi: variableDebtTokenAbi,
-          functionName: 'borrowAllowance',
-          args: [from, spenderAddress],
-        });
+      const allowance: bigint = await spokeProvider.publicClient.readContract({
+        address: borrowInfo.variableDebtTokenAddress,
+        abi: variableDebtTokenAbi,
+        functionName: 'borrowAllowance',
+        args: [from, spenderAddress],
+      });
 
-        return {
-          ok: true,
-          value: allowance >= borrowInfo.amount,
-        };
-      } catch (error) {
-        return {
-          ok: false,
-          error,
-        };
-      }
+      return {
+        ok: true,
+        value: allowance >= borrowInfo.amount,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error,
+      };
     }
+  }
 
   public static async approveBorrow<R extends boolean = false>(
     from: Address,

@@ -158,6 +158,12 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000',
     bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
     supportedTokens: {
+      Sonic: {
+        symbol: 'Sonic',
+        name: 'Sonic',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+      },
       WETH: {
         symbol: 'WETH',
         name: 'Wrapped Ether',
@@ -1186,6 +1192,7 @@ const moneyMarketSupportedTokens = {
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
   [SONIC_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.Sonic,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
