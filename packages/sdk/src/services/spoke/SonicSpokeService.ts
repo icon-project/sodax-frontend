@@ -350,13 +350,17 @@ export class SonicSpokeService {
       try {
         const spenderAddress = spender ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
 
-        return Erc20Service.isAllowanceValid(
-          borrowInfo.variableDebtTokenAddress,
-          borrowInfo.amount,
-          from,
-          spenderAddress,
-          spokeProvider,
-        );
+        const allowance: bigint = await spokeProvider.publicClient.readContract({
+          address: borrowInfo.variableDebtTokenAddress,
+          abi: variableDebtTokenAbi,
+          functionName: 'borrowAllowance',
+          args: [from, spenderAddress],
+        });
+
+        return {
+          ok: true,
+          value: allowance >= borrowInfo.amount,
+        };
       } catch (error) {
         return {
           ok: false,
