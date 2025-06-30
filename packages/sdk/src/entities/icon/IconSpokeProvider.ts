@@ -1,11 +1,11 @@
 import type { IconSpokeChainConfig } from '../../types.js';
-import IconService from 'icon-sdk-js';
+import { IconService } from 'icon-sdk-js';
 import type { IIconWalletProvider } from '@sodax/types';
 
 export class IconSpokeProvider {
   public readonly walletProvider: IIconWalletProvider;
   public readonly chainConfig: IconSpokeChainConfig;
-  public readonly iconService: IconService.IconService;
+  public readonly iconService: IconService;
 
   constructor(
     walletProvider: IIconWalletProvider,
@@ -14,6 +14,6 @@ export class IconSpokeProvider {
   ) {
     this.walletProvider = walletProvider;
     this.chainConfig = chainConfig;
-    this.iconService = new IconService.IconService(new IconService.HttpProvider(rpcUrl));
+    this.iconService = new IconService(new IconService.HttpProvider(rpcUrl));
   }
 }
