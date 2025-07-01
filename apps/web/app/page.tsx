@@ -17,7 +17,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div>
+    <div className="landing-page">
       <HeroSection toggle={toggle} isOpen={isOpen} />
       <Section1 />
       <Section2 />

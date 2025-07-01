@@ -91,10 +91,10 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
   };
 
   return (
-    <div>
+    <div className="hero-section">
       <div
         className="h-[812px] sm:h-[860px] flex flex-col items-center bg-cherry-soda relative overflow-hidden"
-        onMouseMove={handleMouseMove}
+        // onMouseMove={handleMouseMove}
       >
         <Image
           className="mix-blend-screen absolute bottom-0 right-0 sm:-right-5 sm:bottom-30 lg:left-[50%] lg:bottom-0 w-[375px] h-[562px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
@@ -155,14 +155,13 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
           <div className="text-center">
             <div className="text-content w-[300px] sm:w-[400px] md:w-full mt-[30px] sm:mt-[170px] lg:mt-[140px]">
               <div className="flex items-center">
-                <Label className="text-[12px] sm:text-[14px] md:text-[14px] lg:text-[18px] text-white  mr-5 font-[InterRegular]">
-                  DeFi for all chains - built on
+                <Label className="text-[12px] sm:text-[14px] md:text-[14px] lg:text-[24px] text-white  mr-5 font-[InterRegular] leading-[1.1] font-bold">
+                  No banks, no borders, just freedom.
                 </Label>
-                <Image src="/sonic.png" alt="Sonic Symbol" width={76} height={24} />
               </div>
               <div className="relative">
                 <Label className="mix-blend-hard-light text-[60px] sm:text-[90px] md:text-[138px] lg:text-[184px] leading-none text-yellow-soda font-[InterBlack]">
-                  LIQUIDITY
+                  MONEY
                 </Label>
                 <Image
                   className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[701px] top-[-100px] left-[-170px] sm:top-[-310px] sm:left-[-310px]"
@@ -175,15 +174,15 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
               </div>
 
               <div className="flex">
-                <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none">
-                  when{' '}
+                <Label className="text-white text-[26px] sm:text-3xl md:text-[56px] font-normal font-['InterRegular'] leading-[1.1]">
+                  as it{' '}
                 </Label>
-                <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-normal font-['Shrikhand'] leading-none ml-3 mt-[3px] sm:mt-[5px] md:mt-[10px]">
-                  you
+                <Label className="text-white text-[26px] sm:text-3xl md:text-[56px] font-medium font-['Shrikhand'] leading-[1.1] ml-3 mt-[3px] sm:mt-[5px] md:mt-[10px]">
+                  should
                 </Label>
-                <Label className="text-white text-[26px] sm:text-3xl md:text-6xl font-medium font-['InterMedium'] leading-none ml-3">
+                <Label className="text-white text-[26px] sm:text-3xl md:text-[56px] font-normal font-['InterRegular'] leading-[1.1] ml-3">
                   {' '}
-                  need it.
+                  be.
                 </Label>
               </div>
             </div>
@@ -223,7 +222,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
                 </div>
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
               </div>
-              <div className="inline-flex justify-center items-start relative">
+              <div className="inline-flex justify-center items-start relative mt-4 sm:ml-2 sm:mt-0">
                 <DecoratedButton>pre-register</DecoratedButton>
               </div>
             </div>
@@ -237,21 +236,20 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
             <div className="flex justify-center">
               <Image src="/symbol.png" alt="SODAX Symbol" width={64} height={64} />
             </div>
-            <DialogTitle className="text-center text-white text-[42px] mt-4 font-[InterBlack]">
-              SHAKE IT UP!
-            </DialogTitle>
+            <DialogTitle className="text-center text-white text-[42px] mt-4 font-[InterBlack]">REWARDS!</DialogTitle>
+            <div className="grid">
+              <div className="flex justify-center">
+                <Input
+                  placeholder="Add your X handle"
+                  className="border border-white h-[36px] w-full max-w-[280px] text-white rounded-full border-4 border-white text-center placeholder:text-cream"
+                />
+              </div>
+            </div>
             <DialogDescription className="text-center text-white text-base">
-              SODAX Rewards Coming Soon.
+              Coming soon. Pre-register your EVM wallet.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid">
-            <div className="flex justify-center">
-              <Input
-                placeholder="Add your X handle"
-                className="border border-white h-[36px] w-full max-w-[280px] text-white rounded-full border-4 border-white text-center placeholder:text-cream"
-              />
-            </div>
-          </div>
+
           <DialogFooter>
             <div className="flex justify-center items-center w-full">
               <div className="inline-flex justify-center items-start">
@@ -260,7 +258,7 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
             </div>
           </DialogFooter>
           <div className="flex items-center justify-center space-x-2">
-            <Checkbox id="terms" className="bg-white" />
+            <Checkbox id="terms" className="bg-white rounded-lg" />
             <Label htmlFor="terms" className="text-white">
               Accept terms and conditions
             </Label>

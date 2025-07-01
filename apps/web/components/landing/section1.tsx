@@ -5,7 +5,7 @@ import Image from 'next/image';
 const Section1 = () => {
   return (
     <div
-      className="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white mt-2 pt-[40px] sm:pt-[60px] relative overflow-hidden section1"
+      className="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white mt-4 pt-[40px] sm:pt-[60px] relative overflow-hidden section1"
       id="section1"
     >
       <Image

@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const Footer: React.FC = () => {
   return (
-    <div className="h-[560px] flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center mt-2 bg-almost-white footer pt-[80px]">
+    <div className="h-[560px] flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center mt-4 bg-almost-white footer pt-[80px]">
       <div className="p-4 pl-0 min-w-[200px] ml-[32px]">
         <div className="flex items-center">
           <Image src="/symbol2.png" alt="SODAX Symbol" width={32} height={32} />
@@ -16,8 +16,8 @@ const Footer: React.FC = () => {
           </Label>
         </div>
       </div>
-      <div className="sm:inline-flex sm:justify-end sm:items-start gap-10 p-4 ml-[32px] pl-0 flex flex-wrap lg:ml-[111px]">
-        <div className="inline-flex flex-col justify-start items-start gap-3">
+      <div className="sm:inline-flex sm:justify-start sm:items-start gap-10 p-4 ml-[32px] pl-0 flex flex-wrap lg:ml-[111px]">
+        <div className="inline-flex flex-col justify-start items-start gap-3 w-[152px]">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             using soda
           </div>
@@ -29,11 +29,11 @@ const Footer: React.FC = () => {
             Balanced DeFi
           </FooterLink>
         </div>
-        <div className="inline-flex flex-col justify-start items-start gap-3">
+        <div className="inline-flex flex-col justify-start items-start gap-3 w-[134px]">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             socials
           </div>
-          <FooterLink href="#">Blog</FooterLink>
+          <FooterLink href="#">News</FooterLink>
           <FooterLink href="#" showArrow>
             Discord
           </FooterLink>
@@ -44,19 +44,18 @@ const Footer: React.FC = () => {
             Linktree
           </FooterLink>
         </div>
-        <div className="inline-flex flex-col justify-start items-start gap-3">
+        <div className="inline-flex flex-col justify-start items-start gap-3 w-[134px]">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             resources
           </div>
           <FooterLink href="#" showArrow>
-            Partners
+            Github
           </FooterLink>
-          <FooterLink href="#">Contact Us</FooterLink>
+          <FooterLink href="#">Documentation</FooterLink>
           <FooterLink href="#">Media Kit</FooterLink>
-          <FooterLink href="#">Disclaimer</FooterLink>
-          <FooterLink href="#">Terms & Conditions</FooterLink>
+          <FooterLink href="#">Terms</FooterLink>
         </div>
-        <div className="inline-flex flex-col justify-start items-start gap-3">
+        {/* <div className="inline-flex flex-col justify-start items-start gap-3 w-[134px]">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             more
           </div>
@@ -69,7 +68,7 @@ const Footer: React.FC = () => {
           <FooterLink href="#" showArrow>
             DefiLlama
           </FooterLink>
-        </div>
+        </div> */}
       </div>
     </div>
   );
