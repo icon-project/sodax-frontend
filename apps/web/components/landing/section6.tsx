@@ -22,7 +22,12 @@ const Section6 = () => {
           All platform and partner fees burn $SODA supply.
         </Label>
         <div className="mt-6 z-10">
-          <Button className="rounded-full" variant="subtle" size="lg">
+          <Button
+            className="rounded-full"
+            variant="subtle"
+            size="lg"
+            onClick={() => window.open('https://discord.gg/xM2Nh4S6vN', '_blank')}
+          >
             Join Discord
           </Button>
         </div>
@@ -47,7 +52,12 @@ const Section6 = () => {
           The best value. Delivered with Intents.
         </Label>
         <div className="mt-6">
-          <Button className="rounded-full" variant="subtle" size="lg">
+          <Button
+            className="rounded-full"
+            variant="subtle"
+            size="lg"
+            onClick={() => window.open('https://discord.gg/xM2Nh4S6vN', '_blank')}
+          >
             Join Discord
           </Button>
         </div>

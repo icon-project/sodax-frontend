@@ -42,7 +42,12 @@ const Section4 = () => {
           Crack open a cold one with the team.
         </Label>
         <div className="mt-6">
-          <Button className="rounded-full" variant="subtle" size="lg">
+          <Button
+            className="rounded-full"
+            variant="subtle"
+            size="lg"
+            onClick={() => window.open('https://www.soniclabs.com/summit', '_blank')}
+          >
             Sign up
           </Button>
         </div>
