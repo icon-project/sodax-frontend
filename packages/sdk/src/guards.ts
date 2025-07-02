@@ -1,3 +1,4 @@
+import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import type {
   JsonRpcPayloadResponse,
   ResponseAddressType,
@@ -19,7 +20,6 @@ import {
 } from './entities/index.js';
 import {
   INTENT_RELAY_CHAIN_IDS,
-  SONIC_MAINNET_CHAIN_ID,
   type EvmHubChainConfig,
   type EvmSpokeChainConfig,
   type HubChainConfig,

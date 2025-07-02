@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import type { Address, Hash, Hex } from 'viem';
 import {
   EvmAssetManagerService,
