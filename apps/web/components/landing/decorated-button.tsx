@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import type { ButtonHTMLAttributes } from 'react';
 
 interface DecoratedButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'yellow-dark' | 'yellow-soda' | 'white';
+  variant?: 'yellow-dark' | 'yellow-soda' | 'white' | 'cherry-brighter';
   className?: string;
   children: React.ReactNode;
 }
@@ -20,6 +20,8 @@ export const DecoratedButton = ({
         return 'bg-yellow-dark hover:bg-yellow-soda';
       case 'yellow-soda':
         return 'bg-yellow-soda hover:bg-yellow-soda/80';
+      case 'cherry-brighter':
+        return 'bg-cherry-brighter hover:bg-cherry-brighter/80';
       case 'white':
         return 'bg-white hover:bg-white/80';
       default:
@@ -35,7 +37,7 @@ export const DecoratedButton = ({
     <div className="inline-flex justify-center items-start relative">
       <Button
         className={cn(
-          'w-[183px] h-[40px] font-[Shrikhand] rounded-full text-[16px] z-10 pt-[11px]',
+          'w-[183px] h-[40px] font-[Shrikhand] rounded-full text-[14px] z-10 pt-[11px]',
           getBgColor(),
           getTextColor(),
           'transition-all hover:scale-[102%]',

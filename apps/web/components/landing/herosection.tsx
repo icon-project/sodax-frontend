@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
 import Sidebar from './sidebar';
+import { ArrowLeft } from 'lucide-react';
 import { DecoratedButton } from '@/components/landing/decorated-button';
 
 const carouselItems = [
@@ -39,8 +40,10 @@ const carouselItems = [
 
 const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }): React.ReactElement => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [xHandle, setXHandle] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const constrain = 20;
   const imgRef = useRef<HTMLImageElement>(null);
   const carouselRef = useRef(null);
@@ -89,6 +92,13 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
     }
     setMousePosition({ x: e.clientX, y: e.clientY });
   };
+
+  const handleTermsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsTermsModalOpen(true);
+  };
+
+  const isFormValid = xHandle.trim() !== '' && acceptedTerms;
 
   return (
     <div className="hero-section">
@@ -141,7 +151,8 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
               <DecoratedButton onClick={() => setIsDialogOpen(true)}>join waitlist</DecoratedButton>
             </div>
             <div className="flex lg:hidden ml-3 text-white" onClick={toggle}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-label="Menu">
+                <title>Menu</title>
                 <path fill="#fff" d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z" />
               </svg>
             </div>
@@ -230,40 +241,120 @@ const HeroSection = ({ toggle, isOpen }: { toggle: () => void; isOpen: boolean }
         </div>
       </div>
       {/* Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="min-h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[80px] w-[90%] lg:max-w-[952px] dialog-content">
-          <DialogHeader>
-            <div className="flex justify-center">
-              <Image src="/symbol.png" alt="SODAX Symbol" width={64} height={64} />
-            </div>
-            <DialogTitle className="text-center text-white text-[42px] mt-4 font-[InterBlack]">REWARDS!</DialogTitle>
-            <div className="grid">
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={open => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setIsTermsModalOpen(false);
+          }
+        }}
+      >
+        <div className="relative">
+          <DialogContent className="h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[80px] w-[90%] lg:max-w-[952px] dialog-content">
+            <DialogHeader>
               <div className="flex justify-center">
-                <Input
-                  placeholder="Add your X handle"
-                  className="border border-white h-[36px] w-full max-w-[280px] text-white rounded-full border-4 border-white text-center placeholder:text-cream"
-                />
+                <Image src="/symbol.png" alt="SODAX Symbol" width={64} height={64} />
               </div>
-            </div>
-            <DialogDescription className="text-center text-white text-base">
-              Coming soon. Pre-register your EVM wallet.
-            </DialogDescription>
-          </DialogHeader>
+              <DialogTitle className="text-center text-white text-[42px] mt-6 font-[InterBlack] leading-none">
+                REWARDS!
+              </DialogTitle>
+              <div className="grid">
+                <div className="flex justify-center">
+                  <Input
+                    placeholder="Add your X handle"
+                    value={xHandle}
+                    onChange={e => setXHandle(e.target.value)}
+                    className="border border-white h-[36px] w-full max-w-[280px] text-white rounded-full border-4 border-white text-center placeholder:text-cream"
+                  />
+                </div>
+              </div>
+              <DialogDescription className="text-center text-white text-base">
+                Coming soon. Pre-register your EVM wallet.
+              </DialogDescription>
+            </DialogHeader>
 
-          <DialogFooter>
-            <div className="flex justify-center items-center w-full">
-              <div className="inline-flex justify-center items-start">
-                <DecoratedButton variant="yellow-soda">pre-register</DecoratedButton>
+            <DialogFooter>
+              <div className="flex justify-center items-center w-full mt-2">
+                <div className="inline-flex justify-center items-start">
+                  <DecoratedButton variant={isFormValid ? 'yellow-soda' : 'cherry-brighter'} disabled={!isFormValid}>
+                    pre-register
+                  </DecoratedButton>
+                </div>
               </div>
+            </DialogFooter>
+            <div className="flex items-center justify-center space-x-2 mt-2">
+              <Checkbox
+                id="terms"
+                className="bg-white rounded-lg"
+                checked={acceptedTerms}
+                onCheckedChange={checked => setAcceptedTerms(checked as boolean)}
+              />
+              <Label htmlFor="terms" className="text-white">
+                Accept{' '}
+                <button
+                  type="button"
+                  onClick={handleTermsClick}
+                  className="underline cursor-pointer hover:text-yellow-soda transition-colors"
+                >
+                  terms and conditions
+                </button>
+              </Label>
             </div>
-          </DialogFooter>
-          <div className="flex items-center justify-center space-x-2">
-            <Checkbox id="terms" className="bg-white rounded-lg" />
-            <Label htmlFor="terms" className="text-white">
-              Accept terms and conditions
-            </Label>
-          </div>
-        </DialogContent>
+
+            {/* Terms Modal Overlay */}
+            {isTermsModalOpen && (
+              <div className="absolute inset-0 z-50 flex items-end" onClick={() => setIsTermsModalOpen(false)}>
+                <div
+                  className="bg-cherry-bright bg-white bg-no-repeat bg-center bottom-0 h-[400px] rounded-[32px] px-[32px] pt-[50px] pb-[10px] md:pb-[32px] md:px-[80px] md:pt-[70px] lg:pb-[50px] lg:px-[160px] lg:pt-[100px]"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="flex items-start mb-6 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsTermsModalOpen(false)}
+                      className="flex items-center gap-2 text-white hover:text-yellow-soda transition-colors"
+                    >
+                      <ArrowLeft className="text-espresso"></ArrowLeft>
+                    </button>
+                    <Image src="/symbol.png" alt="SODAX Symbol" width={24} height={24} />
+                    <h2 className="text-center text-black text-lg font-['InterBold'] leading-snug">
+                      Terms and conditions
+                    </h2>
+                  </div>
+                  <div className="relative">
+                    <div className="bg-white text-black rounded-lg max-h-[200px] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-cream [&::-webkit-scrollbar-thumb]:bg-cream [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:h-[108px]">
+                      <div className="space-y-4 text-xs leading-relaxed text-clay mr-6">
+                        <p>
+                          This is randomly generated text. By accessing or using this Web3 DeFi platform ("the
+                          Service"), you acknowledge and agree that all interactions are decentralized and performed at
+                          your own risk. The Service operates through smart contracts on public blockchains, with no
+                          central authority or user fund custody. Users are fully responsible for managing their own
+                          wallets, private keys, and transaction decisions. Any irreversible loss of access or funds due
+                          to user error or technical failure is solely the user's responsibility. This Service is
+                          provided "as is" without warranties, express or implied. We disclaim liability for any issues
+                          arising from code exploits, network outages, or integration failures. You accept that
+                          participation involves significant financial risk, including potential total loss of digital
+                          assets. No guarantees are made regarding functionality, uptime, or financial returns.
+                          Continued use constitutes acceptance of these conditions and acknowledgment that you
+                          understand and assume all associated risks.
+                        </p>
+                        <p>
+                          Additional terms and conditions may apply. Please review all documentation carefully before
+                          proceeding with any transactions. The platform reserves the right to modify these terms at any
+                          time without prior notice. Users are responsible for staying informed about any changes to the
+                          terms of service.
+                        </p>
+                      </div>
+                    </div>
+                    {/* Fade out effect at the bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </div>
       </Dialog>
     </div>
   );
