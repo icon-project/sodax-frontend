@@ -10,6 +10,7 @@ import type {
 export type SolanaWalletConfig = {
     privateKey: Uint8Array;
 };
+export type SolanaEoaAddress = string;
 
 type Hash = `0x${string}`
 
