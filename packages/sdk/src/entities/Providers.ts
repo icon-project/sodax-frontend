@@ -21,6 +21,7 @@ import type {
 import type { CWSpokeProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
+import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
 import {
@@ -31,7 +32,6 @@ import {
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
   type ICWWalletProvider,
-  type ISolanaWalletProvider
 } from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
@@ -142,7 +142,7 @@ export type IWalletProvider =
   | ISuiWalletProvider
   | IIconWalletProvider
   | IInjectiveWalletProvider
-  | ISolanaWalletProvider;
+  | SolanaWalletProvider;
 
 export type SpokeProvider = (
   | EvmSpokeProvider
