@@ -1,5 +1,5 @@
 import 'dotenv/config';
-console.log("ENV:", process.env);
+
 import {
   EvmAssetManagerService,
   EvmHubProvider,
