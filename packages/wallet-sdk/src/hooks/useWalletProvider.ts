@@ -8,12 +8,16 @@ import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
 import { InjectiveWalletProvider } from '../wallet-providers/InjectiveWalletProvider';
 import type { InjectiveEoaAddress } from '@sodax/types';
 
-export function useWalletProvider(xChainId: ChainId) {
+export function useWalletProvider(xChainId: ChainId | undefined) {
   const xChainType = getXChainType(xChainId);
   const walletProviderOptions = useWalletProviderOptions(xChainId);
 
   return useMemo(() => {
     if (!walletProviderOptions) {
+      return undefined;
+    }
+
+    if (!xChainType) {
       return undefined;
     }
 

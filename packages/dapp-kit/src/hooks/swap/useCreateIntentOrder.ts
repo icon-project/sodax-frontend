@@ -1,13 +1,15 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type {
-  CreateIntentParams,
-  SpokeChainId,
-  IntentExecutionResponse,
-  Result,
-  IntentSubmitErrorCode,
-  Intent,
-  PacketData,
-  IntentSubmitError,
+import {
+  type CreateIntentParams,
+  type SpokeChainId,
+  type IntentExecutionResponse,
+  type Result,
+  type IntentSubmitErrorCode,
+  type Intent,
+  type PacketData,
+  type IntentSubmitError,
+  type SpokeProvider,
+  SPOKE_CHAIN_IDS,
 } from '@sodax/sdk';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
@@ -16,6 +18,10 @@ type CreateIntentResult = Result<
   [IntentExecutionResponse, Intent, PacketData],
   IntentSubmitError<IntentSubmitErrorCode>
 >;
+
+export function isSpokeChainId(value: unknown): value is SpokeChainId {
+  return typeof value === 'string' && SPOKE_CHAIN_IDS.includes(value as SpokeChainId);
+}
 
 /**
  * Hook for creating and submitting an intent order for cross-chain swaps.
@@ -41,10 +47,13 @@ type CreateIntentResult = Result<
  * ```
  */
 export function useCreateIntentOrder(
-  chainId: SpokeChainId,
+  chainIdOrProvider: SpokeChainId | SpokeProvider | undefined,
 ): UseMutationResult<CreateIntentResult, Error, CreateIntentParams> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(chainId);
+
+  const spokeProviderFromHook = useSpokeProvider(isSpokeChainId(chainIdOrProvider) ? chainIdOrProvider : undefined);
+  // Use provided provider if it's a SpokeProvider instance, otherwise use the hook result
+  const spokeProvider = isSpokeChainId(chainIdOrProvider) ? spokeProviderFromHook : chainIdOrProvider;
 
   return useMutation<CreateIntentResult, Error, CreateIntentParams>({
     mutationFn: async (params: CreateIntentParams) => {
