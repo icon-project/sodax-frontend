@@ -1,9 +1,8 @@
 import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
-import { useSpokeProvider } from '../provider/useSpokeProvider';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { SpokeChainId } from '@sodax/sdk';
+import type { SpokeProvider } from '@sodax/sdk';
 interface BorrowResponse {
   ok: true;
   value: [`0x${string}`, `0x${string}`];
@@ -16,6 +15,14 @@ interface BorrowResponse {
  * handling the entire borrow process including transaction creation, submission,
  * and cross-chain communication.
  *
+ * @param {XToken} spokeToken - The token to borrow from the spoke chain. Must be an XToken with valid address and chain information.
+ * @param {SpokeProvider} spokeProvider - The spoke provider to use for the borrow transaction. Must be a valid SpokeProvider instance.
+ *
+ * @returns {UseMutationResult<BorrowResponse, Error, string>} A mutation result object with the following properties:
+ *   - mutateAsync: Function to execute the borrow transaction
+ *   - isPending: Boolean indicating if a transaction is in progress
+ *   - error: Error object if the last transaction failed, null otherwise
+ *
  * @example
  * ```typescript
  * const { mutateAsync: borrow, isPending, error } = useBorrow(spokeToken);
@@ -26,9 +33,11 @@ interface BorrowResponse {
  *   - spokeProvider is not available
  *   - Transaction execution fails
  */
-export function useBorrow(spokeToken: XToken): UseMutationResult<BorrowResponse, Error, string> {
+export function useBorrow(
+  spokeToken: XToken,
+  spokeProvider: SpokeProvider | undefined,
+): UseMutationResult<BorrowResponse, Error, string> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(spokeToken.xChainId as SpokeChainId);
 
   return useMutation<BorrowResponse, Error, string>({
     mutationFn: async (amount: string) => {
@@ -46,7 +55,6 @@ export function useBorrow(spokeToken: XToken): UseMutationResult<BorrowResponse,
       );
 
       if (!response.ok) {
-        console.log('Failed to borrow tokens', response);
         throw new Error('Failed to borrow tokens');
       }
 

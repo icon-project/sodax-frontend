@@ -1,17 +1,14 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import {
-  type CreateIntentParams,
-  type SpokeChainId,
-  type IntentExecutionResponse,
-  type Result,
-  type IntentSubmitErrorCode,
-  type Intent,
-  type PacketData,
-  type IntentSubmitError,
-  type SpokeProvider,
-  SPOKE_CHAIN_IDS,
+import type {
+  CreateIntentParams,
+  IntentExecutionResponse,
+  Result,
+  IntentSubmitErrorCode,
+  Intent,
+  PacketData,
+  IntentSubmitError,
+  SpokeProvider,
 } from '@sodax/sdk';
-import { useSpokeProvider } from '../provider/useSpokeProvider';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 
 type CreateIntentResult = Result<
@@ -19,20 +16,16 @@ type CreateIntentResult = Result<
   IntentSubmitError<IntentSubmitErrorCode>
 >;
 
-export function isSpokeChainId(value: unknown): value is SpokeChainId {
-  return typeof value === 'string' && SPOKE_CHAIN_IDS.includes(value as SpokeChainId);
-}
-
 /**
  * Hook for creating and submitting an intent order for cross-chain swaps.
  * Uses React Query's useMutation for better state management and caching.
  *
- * @param {SpokeChainId} chainId - The source chain ID where the swap will originate
+ * @param {SpokeProvider} spokeProvider - The spoke provider to use for the swap
  * @returns {UseMutationResult} Mutation result object containing mutation function and state
  *
  * @example
  * ```typescript
- * const { mutateAsync: createIntent, isPending } = useCreateIntentOrder('0xa4b1.arbitrum');
+ * const { mutateAsync: createIntent, isPending } = useCreateIntentOrder(spokeProvider);
  *
  * const handleSwap = async () => {
  *   const result = await createIntent({
@@ -47,13 +40,9 @@ export function isSpokeChainId(value: unknown): value is SpokeChainId {
  * ```
  */
 export function useCreateIntentOrder(
-  chainIdOrProvider: SpokeChainId | SpokeProvider | undefined,
+  spokeProvider: SpokeProvider | undefined,
 ): UseMutationResult<CreateIntentResult, Error, CreateIntentParams> {
   const { sodax } = useSodaxContext();
-
-  const spokeProviderFromHook = useSpokeProvider(isSpokeChainId(chainIdOrProvider) ? chainIdOrProvider : undefined);
-  // Use provided provider if it's a SpokeProvider instance, otherwise use the hook result
-  const spokeProvider = isSpokeChainId(chainIdOrProvider) ? spokeProviderFromHook : chainIdOrProvider;
 
   return useMutation<CreateIntentResult, Error, CreateIntentParams>({
     mutationFn: async (params: CreateIntentParams) => {

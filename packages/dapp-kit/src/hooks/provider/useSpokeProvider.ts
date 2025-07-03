@@ -8,6 +8,7 @@ import {
   type IconSpokeChainConfig,
   CWSpokeProvider,
   type CosmosSpokeChainConfig,
+  type SpokeProvider,
 } from '@sodax/sdk';
 import type {
   IEvmWalletProvider,
@@ -19,12 +20,25 @@ import type {
 import { getXChainType, useWalletProvider } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
 
-export function useSpokeProvider(spokeChainId: SpokeChainId | undefined) {
+/**
+ * Hook to get the appropriate spoke provider based on the chain type.
+ * Supports EVM, SUI, ICON and INJECTIVE chains.
+ *
+ * @param {SpokeChainId} spokeChainId - The ID of the spoke chain to get the provider for. Can be any valid SpokeChainId value.
+ * @returns {SpokeProvider | undefined} The appropriate spoke provider instance for the given chain ID, or undefined if invalid/unsupported
+ *
+ * @example
+ * ```tsx
+ * // Using a specific SpokeChainId
+ * const spokeProvider = useSpokeProvider('sui');
+ * ```
+ */
+export function useSpokeProvider(spokeChainId: SpokeChainId | undefined): SpokeProvider | undefined {
   const xChainType = getXChainType(spokeChainId);
   const walletProvider = useWalletProvider(spokeChainId);
   const spokeProvider = useMemo(() => {
-    if (!walletProvider) return undefined;
-    if (!spokeChainId) return undefined;
+    if (!walletProvider || !spokeChainId) return undefined;
+
     if (xChainType === 'EVM') {
       return new EvmSpokeProvider(
         walletProvider as IEvmWalletProvider,

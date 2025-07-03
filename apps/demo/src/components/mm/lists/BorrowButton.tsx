@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useBorrow } from '@sodax/dapp-kit';
+import { useBorrow, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
@@ -11,8 +11,8 @@ import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-
-  const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token);
+  const spokeProvider = useSpokeProvider(token.xChainId);
+  const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token, spokeProvider);
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
