@@ -1,7 +1,6 @@
 import { encodeFunctionData, erc20Abi, type Address } from 'viem';
-import type { EvmContractCall, Result } from '../../types.js';
-import type { EvmSpokeProvider } from '../../entities/Providers.js';
-import type { EvmRawTransactionReceipt } from '@sodax/types';
+import type { EvmContractCall, EvmReturnType, PromiseEvmTxReturnType, Result } from '../../types.js';
+import type { EvmSpokeProvider, SonicSpokeProvider } from '../../entities/Providers.js';
 
 export class Erc20Service {
   private constructor() {}
@@ -20,7 +19,7 @@ export class Erc20Service {
     amount: bigint,
     owner: Address,
     spender: Address,
-    spokeProvider: EvmSpokeProvider,
+    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
   ): Promise<Result<boolean>> {
     try {
       if (token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
@@ -56,35 +55,31 @@ export class Erc20Service {
    * @param spender - Spender address
    * @param provider - EVM Provider
    */
-  static async approve(
+  static async approve<R extends boolean = false>(
     token: Address,
     amount: bigint,
     spender: Address,
-    spokeProvider: EvmSpokeProvider,
-  ): Promise<Result<EvmRawTransactionReceipt>> {
-    try {
-      const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
-      const hash = await spokeProvider.walletProvider.sendTransaction({
-        from: walletAddress,
-        to: token,
-        value: 0n,
-        data: encodeFunctionData({
-          abi: erc20Abi,
-          functionName: 'approve',
-          args: [spender, amount],
-        }),
-      });
+    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    raw?: R,
+  ): PromiseEvmTxReturnType<R> {
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      return {
-        ok: true,
-        value: await spokeProvider.walletProvider.waitForTransactionReceipt(hash),
-      };
-    } catch (e) {
-      return {
-        ok: false,
-        error: e,
-      };
+    const rawTx = {
+      from: walletAddress,
+      to: token,
+      value: 0n,
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'approve',
+        args: [spender, amount],
+      }),
+    } satisfies EvmReturnType<true>;
+
+    if (raw) {
+      return rawTx as EvmReturnType<R>;
     }
+
+    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
   }
 
   /**
@@ -94,7 +89,7 @@ export class Erc20Service {
    * @param amount - The amount of the token to transfer.
    * @returns The encoded contract call.
    */
-  public static encodeTansfer(token: Address, to: Address, amount: bigint): EvmContractCall {
+  public static encodeTransfer(token: Address, to: Address, amount: bigint): EvmContractCall {
     return {
       address: token,
       value: 0n,
@@ -102,6 +97,27 @@ export class Erc20Service {
         abi: erc20Abi,
         functionName: 'transfer',
         args: [to, amount],
+      }),
+    };
+  }
+
+
+  /**
+   * Encodes a transferFrom transaction for a token.
+   * @param token - The address of the token.
+   * @param from - The address to transfer the token from.
+   * @param to - The address to transfer the token to.
+   * @param amount - The amount of the token to transfer.
+   * @returns The encoded contract call.
+   */
+  public static encodeTransferFrom(token: Address, from: Address, to: Address, amount: bigint): EvmContractCall {
+    return {
+      address: token,
+      value: 0n,
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: 'transferFrom',
+        args: [from, to, amount],
       }),
     };
   }

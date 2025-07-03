@@ -40,6 +40,7 @@ export function useBorrow(spokeToken: XToken): UseMutationResult<BorrowResponse,
         {
           token: spokeToken.address,
           amount: parseUnits(amount, 18),
+          action: 'borrow',
         },
         spokeProvider,
       );

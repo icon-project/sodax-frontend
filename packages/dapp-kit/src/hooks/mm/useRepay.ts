@@ -41,6 +41,7 @@ export function useRepay(spokeToken: XToken): UseMutationResult<RepayResponse, E
         {
           token: spokeToken.address,
           amount: parseUnits(amount, spokeToken.decimals),
+          action: 'repay',
         },
         spokeProvider,
       );

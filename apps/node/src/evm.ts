@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { encodeFunctionData, type Address, type Hash, type Hex } from 'viem';
 import {
   EvmAssetManagerService,
@@ -19,7 +20,7 @@ import {
   type SolverConfigParams,
   type EvmChainId,
 } from '@sodax/sdk';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 import { SONIC_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
 
 // load PK from .env

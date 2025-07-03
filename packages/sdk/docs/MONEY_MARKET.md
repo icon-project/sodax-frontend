@@ -30,7 +30,11 @@ Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider)
 
 ## Allowance and Approval
 
-Before supplying or repaying tokens, you need to ensure the money market contract has sufficient allowance to spend your tokens. The SDK provides methods to check and set allowances:
+Before making a money market action (supply, repay, withdraw, borrow), you need to ensure the money market contract has sufficient allowance to spend your tokens. The SDK provides methods to check and set allowances for different types of spoke providers:
+
+### Checking Allowance
+
+The `isAllowanceValid` method checks if the current allowance is sufficient for the specified action:
 
 ```typescript
 import { MoneyMarketSupplyParams, MoneyMarketRepayParams } from "@sodax/sdk";
@@ -39,26 +43,122 @@ import { MoneyMarketSupplyParams, MoneyMarketRepayParams } from "@sodax/sdk";
 const supplyParams: MoneyMarketSupplyParams = {
   token: '0x...', // Address of the token (spoke chain) to supply
   amount: 1000n, // Amount to supply (in token decimals)
+  action: 'supply',
 };
 
 const isAllowanceValid = await sodax.moneyMarket.isAllowanceValid(supplyParams, spokeProvider);
 
-if (!isAllowanceValid.ok || !isAllowanceValid.value) {
+if (!isAllowanceValid.ok) {
+  // Handle error
+  return;
+}
+
+if (!isAllowanceValid.value) {
+  // Need to approve - allowance is insufficient
+}
+```
+
+### Setting Allowance
+
+The `approve` method sets the allowance for the specified action. The spender address varies depending on the spoke provider type:
+
+- **EVM Spoke Chains**: The spender is the asset manager contract
+- **Sonic Spoke (Hub) Chain**: The spender is the user router contract (for supply/repay) or specific approval contracts (for withdraw/borrow)
+
+```typescript
+import { MoneyMarketSupplyParams, MoneyMarketRepayParams } from "@sodax/sdk";
+
+// Parameters for supply operation
+const supplyParams: MoneyMarketSupplyParams = {
+  token: '0x...', // Address of the token (spoke chain) to supply
+  amount: 1000n, // Amount to supply (in token decimals)
+  action: 'supply',
+};
+
+// First check if allowance is sufficient
+const isAllowanceValid = await sodax.moneyMarket.isAllowanceValid(supplyParams, spokeProvider);
+
+if (!isAllowanceValid.ok) {
+  // Handle error
+  return;
+}
+
+if (!isAllowanceValid.value) {
   // Approve the money market contract to spend tokens
   const approveResult = await sodax.moneyMarket.approve(
-    supplyParams.token as Address,
-    supplyParams.amount,
-    spokeProvider.chainConfig.addresses.assetManager,
-    spokeProvider
+    supplyParams,
+    spokeProvider,
+    false // Optional: true = return raw transaction data, false = execute and return transaction hash (default: false)
   );
 
   if (!approveResult.ok) {
     // Handle approval error
     return;
   }
+
+  // Transaction hash or raw transaction data
+  const txResult = approveResult.value;
+}
+```
+
+### Supported Actions by Provider Type
+
+The allowance and approval system supports different actions depending on the spoke provider type:
+
+**EVM Spoke Providers:**
+- `supply` - Approves the asset manager contract to spend tokens
+- `repay` - Approves the asset manager contract to spend tokens
+
+**Sonic Spoke Provider (Hub Chain):**
+- `supply` - Approves the user router contract to spend tokens
+- `repay` - Approves the user router contract to spend tokens  
+- `withdraw` - Approves the withdraw operation using SonicSpokeService
+- `borrow` - Approves the borrow operation using SonicSpokeService
+
+### Complete Example
+
+Here's a complete example showing the allowance check and approval flow:
+
+```typescript
+import { MoneyMarketSupplyParams } from "@sodax/sdk";
+
+const supplyParams: MoneyMarketSupplyParams = {
+  token: '0x...', // Address of the token (spoke chain) to supply
+  amount: 1000n, // Amount to supply (in token decimals)
+  action: 'supply',
+};
+
+// Step 1: Check if allowance is sufficient
+const allowanceCheck = await sodax.moneyMarket.isAllowanceValid(supplyParams, spokeProvider);
+
+if (!allowanceCheck.ok) {
+  console.error('Allowance check failed:', allowanceCheck.error);
+  return;
 }
 
-// Now you can proceed with supply
+// Step 2: Approve if allowance is insufficient
+if (!allowanceCheck.value) {
+  console.log('Insufficient allowance, approving...');
+  
+  const approveResult = await sodax.moneyMarket.approve(supplyParams, spokeProvider);
+  
+  if (!approveResult.ok) {
+    console.error('Approval failed:', approveResult.error);
+    return;
+  }
+  
+  console.log('Approval successful:', approveResult.value);
+}
+
+// Step 3: Now you can proceed with supply
+const supplyResult = await sodax.moneyMarket.supplyAndSubmit(supplyParams, spokeProvider);
+
+if (supplyResult.ok) {
+  const [spokeTxHash, hubTxHash] = supplyResult.value;
+  console.log('Supply successful:', { spokeTxHash, hubTxHash });
+} else {
+  console.error('Supply failed:', supplyResult.error);
+}
 ```
 
 ## Supply Tokens

@@ -231,9 +231,11 @@ As part of Sodax suite, xWagmi SDK is also going to be provided as one example w
 
 ### Initialising Spoke Provider
 
-Spoke provider is a main instance used to interact with Sodax features because it contains all the relevant information we need to successfully execute features. You should generally establish SpokeProvider instances for each chain user connects wallet to.
+Spoke provider is a main instance used to interact with Sodax features because it contains all the relevant information we need to successfully execute features. You should generally establish SpokeProvider instances for each chain (e.g. evm, sui, etc..) user connects wallet to.
 
 Spoke is simply a chain you are connecting to and SpokeProvider is a container of relevant wallet provider and chain configuration.
+
+**IMPORTANT**: Sonic Spoke Provider must be instantiated as `SonicSpokeProvider` instance even though it is of `EVM` chain type. This is due to the fact that Sonic chain is a hub chain of Sodax and needs special handling under the hood.
 
 EVM Provider example:
 

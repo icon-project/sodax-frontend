@@ -7,6 +7,13 @@ import type { SpokeChainId } from '@sodax/types';
 export class EvmWalletAbstraction {
   private constructor() {}
 
+  /**
+   * Get the hub wallet address for a given spoke chain and address.
+   * @param chainId - The spoke chain ID.
+   * @param address - The address on the spoke chain.
+   * @param hubProvider - The hub provider.
+   * @returns The hub wallet address.
+   */
   public static async getUserHubWalletAddress(
     chainId: SpokeChainId,
     address: Hex,
@@ -19,4 +26,6 @@ export class EvmWalletAbstraction {
       args: [BigInt(getIntentRelayChainId(chainId)), address],
     });
   }
+
+  
 }

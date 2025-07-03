@@ -6,12 +6,13 @@ import type {
   ISpokeProvider,
   IconSpokeProvider,
   SolanaSpokeProvider,
+  SonicSpokeProvider,
   SpokeProvider,
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from './entities/index.js';
 import type { EVM_CHAIN_IDS, EVM_SPOKE_CHAIN_IDS, INTENT_RELAY_CHAIN_IDS, spokeChainConfig } from './index.js';
-import type { EvmSpokeDepositParams } from './services/index.js';
+import type { EvmSpokeDepositParams, SonicSpokeDepositParams } from './services/index.js';
 import type { CWSpokeDepositParams } from './services/spoke/CWSpokeService.js';
 import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.js';
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
@@ -114,6 +115,14 @@ export type EvmSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
   nativeToken: Address | string;
 };
 
+export type SonicSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
+  addresses: {
+    walletRouter: Address;
+    wrappedSonic: Address;
+  };
+  nativeToken: Address;
+};
+
 export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   addresses: {
     assetManager: string;
@@ -183,25 +192,12 @@ export type HubChainConfig = EvmHubChainConfig;
 
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
+  | SonicSpokeChainConfig
   | CosmosSpokeChainConfig
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
   | SolanaChainConfig;
-
-export type GetSpokeChainConfigType<T extends ChainType> = T extends 'EVM'
-  ? EvmSpokeChainConfig
-  : T extends 'INJECTIVE'
-    ? CosmosSpokeChainConfig
-    : T extends 'icon'
-      ? IconSpokeChainConfig
-      : T extends 'SUI'
-        ? SuiSpokeChainConfig
-        : T extends 'STELLAR'
-          ? StellarSpokeChainConfig
-          : T extends 'SOLANA'
-            ? SolanaChainConfig
-            : never;
 
 export type EvmContractCall = {
   address: Address; // Target address of the call
@@ -280,20 +276,6 @@ export type IconAddress = `hx${string}` | `cx${string}`;
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 export type HttpPrefixedUrl = `http${string}`;
 
-export type GetSpokeProviderType<T extends ChainType> = T extends 'EVM'
-  ? EvmSpokeProvider
-  : T extends 'INJECTIVE'
-    ? CWSpokeProvider
-    : T extends 'ICON'
-      ? IconSpokeProvider
-      : T extends 'SUI'
-        ? SuiSpokeProvider
-        : T extends 'STELLAR'
-          ? StellarSpokeProvider
-          : T extends 'SOLANA'
-            ? SolanaSpokeProvider
-            : never;
-
 export type SpokeDepositParams = EvmSpokeDepositParams | CWSpokeDepositParams | IconSpokeDepositParams;
 
 export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSpokeProvider
@@ -308,6 +290,8 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
           ? StellarSpokeDepositParams
           : T extends SolanaSpokeProvider
             ? SolanaSpokeDepositParams
+            : T extends SonicSpokeProvider
+              ? SonicSpokeDepositParams
             : never;
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
@@ -322,6 +306,8 @@ export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
           ? Hex
           : T extends SolanaSpokeProvider
             ? Hex
+            : T extends SonicSpokeProvider
+              ? Address
             : never;
 
 export type HttpUrl = `http://${string}` | `https://${string}`;
