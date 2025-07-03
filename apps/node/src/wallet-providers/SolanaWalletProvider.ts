@@ -8,11 +8,9 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js';
 import type { Hash, Hex } from 'viem';
-import type { WalletAddressProvider } from '@sodax/types';
+import type { ISolanaWalletProvider, SolanaWalletConfig, } from '@sodax/types';
 
-export type SolanaWalletConfig = { privateKey: Uint8Array };
-
-export class SolanaWalletProvider implements WalletAddressProvider {
+export class SolanaWalletProvider implements ISolanaWalletProvider {
   private readonly wallet: Keypair;
   public readonly connection: Connection;
 

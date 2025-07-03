@@ -4,7 +4,6 @@ import {
   EvmWalletAbstraction,
   type SolanaChainConfig,
   SolanaSpokeProvider,
-  SolanaWalletProvider,
   SpokeService,
   getHubChainConfig,
   spokeChainConfig,
@@ -20,6 +19,7 @@ import * as dotenv from 'dotenv';
 import { keccak256 } from 'ethers';
 import type { Address, Hash, Hex } from 'viem';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
+import { SolanaWalletProvider } from './wallet-providers/SolanaWalletProvider';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
