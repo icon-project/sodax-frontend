@@ -1,10 +1,10 @@
 import * as anchor from '@coral-xyz/anchor';
-import { Connection, type Keypair, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 import type { AssetManager } from './types/asset_manager.js';
 import type { Connection as ConnectionContract } from './types/connection.js';
-export async function getProvider(keypair: Keypair, rpcUrl: string, wsUrl: string): Promise<anchor.AnchorProvider> {
+export async function getProvider(base58PublicKey: string, rpcUrl: string, wsUrl: string): Promise<anchor.AnchorProvider> {
   const wallet = {
-    publicKey: keypair.publicKey,
+    publicKey: new PublicKey(base58PublicKey),
     signTransaction: () => Promise.reject(),
     signAllTransactions: () => Promise.reject(),
   };
@@ -17,22 +17,27 @@ export async function getProvider(keypair: Keypair, rpcUrl: string, wsUrl: strin
 export async function getAssetManagerIdl(assetManager: string, provider: anchor.AnchorProvider) {
   try {
     const idl = await anchor.Program.fetchIdl(new PublicKey(assetManager), provider);
+
     if (!idl) {
       throw new Error('asset manager idl not available');
     }
+
     return idl;
   } catch (err) {
-    console.log('Failed to fetch Program IDl:', err);
+    console.error('Failed to fetch Program IDl:', err);
     throw err;
   }
 }
 
 export async function getConnectionIdl(connection: string, provider: anchor.AnchorProvider) {
   try {
+
     const idl = await anchor.Program.fetchIdl(new PublicKey(connection), provider);
+
     if (!idl) {
       throw new Error('asset manager idl not available');
     }
+
     return idl;
   } catch (err) {
     console.log('Failed to fetch Program IDl:', err);
@@ -41,25 +46,25 @@ export async function getConnectionIdl(connection: string, provider: anchor.Anch
 }
 
 export async function getAssetManagerProgram(
-    keypair: Keypair,
+    base58PublicKey: string,
     rpcUrl: string,
     wsUrl: string,
     assetManager: string,
 ): Promise<anchor.Program<AssetManager>> {
-  const provider = await getProvider(keypair, rpcUrl, wsUrl);
+  const provider = await getProvider(base58PublicKey, rpcUrl, wsUrl);
   const idl = await getAssetManagerIdl(assetManager, provider);
 
-  return new anchor.Program(idl as anchor.Idl, provider) as unknown as anchor.Program<AssetManager>;
+  return new anchor.Program(idl, provider) as unknown as anchor.Program<AssetManager>;
 }
 
 export async function getConnectionProgram(
-    keypair: Keypair,
+    base58PublicKey: string,
     rpcUrl: string,
     wsUrl: string,
     connection: string,
 ): Promise<anchor.Program<ConnectionContract>> {
-  const provider = await getProvider(keypair, rpcUrl, wsUrl);
+  const provider = await getProvider(base58PublicKey, rpcUrl, wsUrl);
   const idl = await getConnectionIdl(connection, provider);
 
-  return new anchor.Program(idl as anchor.Idl, provider) as unknown as anchor.Program<ConnectionContract>;
+  return new anchor.Program(idl, provider) as unknown as anchor.Program<ConnectionContract>;
 }
