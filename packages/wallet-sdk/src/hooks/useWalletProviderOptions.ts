@@ -8,6 +8,7 @@ import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
+import type { SolanaXService } from '../xchains/solana';
 
 export function useWalletProviderOptions(xChainId: ChainId) {
   const xChainType = getXChainType(xChainId);
@@ -43,6 +44,10 @@ export function useWalletProviderOptions(xChainId: ChainId) {
           client: injectiveXService.msgBroadcastClient,
           rpcUrl: endpoints.rpc,
         };
+      }
+      case 'SOLANA': {
+        const solanaXService = xService as SolanaXService;
+        return { wallet: solanaXService.wallet, connection: solanaXService.connection };
       }
       default:
         return undefined;
