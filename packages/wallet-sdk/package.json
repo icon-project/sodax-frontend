@@ -6,10 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "repository": {
     "type": "git",
     "url": "https://github.com/icon-project/sodax-frontend"
@@ -40,7 +37,6 @@
     "@mysten/sui": "^1.21.2",
     "@mysten/wallet-standard": "^0.15.6",
     "@sodax/types": "workspace:*",
-    "@solana/spl-token": "0.4.9",
     "@solana/wallet-adapter-react": "0.15.35",
     "@solana/wallet-adapter-wallets": "0.19.32",
     "@solana/web3.js": "1.98.0",
