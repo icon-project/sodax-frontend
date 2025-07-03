@@ -12,15 +12,15 @@ const Sidebar = ({
   return (
     <>
       {/* Modal overlay */}
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-10" onClick={toggle} />}
+      {isOpen && (
+        <div className="fixed inset-0 bg-black/50 z-10 transition-opacity duration-300 ease-in-out" onClick={toggle} />
+      )}
 
       {/* Sidebar */}
       <div
-        className="sidebar-container fixed w-[295px] h-full overflow-hidden justify-center bg-cherry-soda grid pt-[180px] left-0 z-20"
-        style={{
-          opacity: `${isOpen ? '1' : '0'}`,
-          top: ` ${isOpen ? '0' : '-100%'}`,
-        }}
+        className={`sidebar-container fixed w-[295px] h-full overflow-hidden justify-center bg-cherry-soda grid pt-[180px] left-0 z-20 transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
       >
         <Image className="absolute bottom-0 right-0 " src="/circle4.png" alt="background" width={541} height={811} />
         <Image
