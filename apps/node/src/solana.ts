@@ -2,7 +2,7 @@ import {
   EvmAssetManagerService,
   EvmHubProvider,
   EvmWalletAbstraction,
-  type SolanaChainConfig,
+  type SolanaSpokeChainConfig,
   SolanaSpokeProvider,
   SpokeService,
   getHubChainConfig,
@@ -28,7 +28,7 @@ const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rp
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 const SOLANA_CHAIN_ID = SOLANA_MAINNET_CHAIN_ID;
 
-const solanaSpokeChainConfig: SolanaChainConfig = spokeChainConfig[SOLANA_CHAIN_ID] as SolanaChainConfig;
+const solanaSpokeChainConfig: SolanaSpokeChainConfig = spokeChainConfig[SOLANA_CHAIN_ID] as SolanaSpokeChainConfig;
 
 if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');

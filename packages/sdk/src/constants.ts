@@ -10,7 +10,7 @@ import type {
   IntentRelayChainId,
   MoneyMarketConfig,
   OriginalAssetAddress,
-  SolanaChainConfig,
+  SolanaSpokeChainConfig,
   SolverConfig,
   SonicSpokeChainConfig,
   StellarSpokeChainConfig,
@@ -219,7 +219,7 @@ export const spokeChainConfig = {
     rpcUrl: 'https://api.mainnet-beta.solana.com',
     wsUrl: 'https://api.mainnet-beta.solana.com',
     walletAddress: '',
-  } as const satisfies SolanaChainConfig,
+  } as const satisfies SolanaSpokeChainConfig,
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     chain: {
       name: 'Avalanche',

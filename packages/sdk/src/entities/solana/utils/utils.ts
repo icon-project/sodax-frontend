@@ -1,9 +1,9 @@
 import { PublicKey } from '@solana/web3.js';
 import type { Hex } from 'viem';
 import { spokeChainConfig } from '../../../constants.js';
-import type { SolanaChainConfig } from '../../../types.js';
+import type { SolanaSpokeChainConfig } from '../../../types.js';
 import { SOLANA_MAINNET_CHAIN_ID } from '@sodax/types';
-const solanaSpokeChainConfig = spokeChainConfig[SOLANA_MAINNET_CHAIN_ID] as SolanaChainConfig;
+const solanaSpokeChainConfig = spokeChainConfig[SOLANA_MAINNET_CHAIN_ID] as SolanaSpokeChainConfig;
 
 export function getSolanaAddressBytes(address: PublicKey): Hex {
   return `0x${Buffer.from(address.toBytes()).toString('hex')}` as Hex;

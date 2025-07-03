@@ -1,16 +1,19 @@
 import type { ChainId } from '@sodax/types';
 import { useMemo } from 'react';
-import { EvmWalletProvider, IconWalletProvider, SuiWalletProvider } from '../wallet-providers';
+import { EvmWalletProvider, IconWalletProvider, SuiWalletProvider, SolanaWalletProvider } from '../wallet-providers';
 import { getXChainType } from '../actions';
 import { useWalletProviderOptions } from './useWalletProviderOptions';
 import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
 import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
 import { InjectiveWalletProvider } from '../wallet-providers/InjectiveWalletProvider';
 import type { InjectiveEoaAddress } from '@sodax/types';
+import { useXService } from "@/hooks/useXService";
+import { SolanaXService } from "@/xchains/solana";
 
 export function useWalletProvider(xChainId: ChainId) {
   const xChainType = getXChainType(xChainId);
   const walletProviderOptions = useWalletProviderOptions(xChainId);
+  const xService = useXService(getXChainType(xChainId));
 
   return useMemo(() => {
     if (!walletProviderOptions) {
@@ -50,9 +53,15 @@ export function useWalletProvider(xChainId: ChainId) {
           rpcUrl: rpcUrl as string,
         });
       }
+      
+      case 'SOLANA': {
+        const solanaXService = xService as SolanaXService;
+        const { wallet, connection } = solanaXService;
+        return new SolanaWalletProvider({ wallet, connection});
+      }
 
       default:
         return undefined;
     }
-  }, [xChainType, walletProviderOptions]);
+  }, [xChainType, walletProviderOptions, xService]);
 }

@@ -172,7 +172,7 @@ export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
   nid: Hex;
 };
 
-export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
+export type SolanaSpokeChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
   addresses: {
     assetManager: string;
     connection: string;
@@ -197,7 +197,7 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
-  | SolanaChainConfig;
+  | SolanaSpokeChainConfig;
 
 export type EvmContractCall = {
   address: Address; // Target address of the call
