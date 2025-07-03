@@ -9,6 +9,7 @@ import {
   CWSpokeProvider,
   type CosmosSpokeChainConfig,
   type SpokeProvider,
+  type IWalletProvider,
 } from '@sodax/sdk';
 import type {
   IEvmWalletProvider,
@@ -24,48 +25,55 @@ import { useMemo } from 'react';
  * Hook to get the appropriate spoke provider based on the chain type.
  * Supports EVM, SUI, ICON and INJECTIVE chains.
  *
- * @param {SpokeChainId} spokeChainId - The ID of the spoke chain to get the provider for. Can be any valid SpokeChainId value.
+ * @param {SpokeChainId | undefined} spokeChainId - The spoke chain ID to get the provider for
+ * @param {IWalletProvider | undefined} walletProvider - The wallet provider to use
  * @returns {SpokeProvider | undefined} The appropriate spoke provider instance for the given chain ID, or undefined if invalid/unsupported
  *
  * @example
  * ```tsx
- * // Using a specific SpokeChainId
- * const spokeProvider = useSpokeProvider('sui');
+ * // Using a specific SpokeChainId and wallet provider
+ * const spokeProvider = useSpokeProvider(spokeChainId, walletProvider);
  * ```
  */
-export function useSpokeProvider(spokeChainId: SpokeChainId | undefined): SpokeProvider | undefined {
+export function useSpokeProvider(
+  spokeChainId: SpokeChainId | undefined,
+  walletProvider?: IWalletProvider | undefined,
+): SpokeProvider | undefined {
   const xChainType = getXChainType(spokeChainId);
-  const walletProvider = useWalletProvider(spokeChainId);
+  const walletProvider_ = useWalletProvider(spokeChainId);
+  const _walletProvider = walletProvider ?? walletProvider_;
+
   const spokeProvider = useMemo(() => {
-    if (!walletProvider || !spokeChainId) return undefined;
+    if (!_walletProvider) return undefined;
+    if (!spokeChainId) return undefined;
 
     if (xChainType === 'EVM') {
       return new EvmSpokeProvider(
-        walletProvider as IEvmWalletProvider,
+        _walletProvider as IEvmWalletProvider,
         spokeChainConfig[spokeChainId] as EvmSpokeChainConfig,
       );
     }
     if (xChainType === 'SUI') {
       return new SuiSpokeProvider(
         spokeChainConfig[spokeChainId] as SuiSpokeChainConfig,
-        walletProvider as ISuiWalletProvider,
+        _walletProvider as ISuiWalletProvider,
       );
     }
     if (xChainType === 'ICON') {
       return new IconSpokeProvider(
-        walletProvider as IIconWalletProvider,
+        _walletProvider as IIconWalletProvider,
         spokeChainConfig[spokeChainId] as IconSpokeChainConfig,
       );
     }
     if (xChainType === 'INJECTIVE') {
       return new CWSpokeProvider(
         spokeChainConfig[spokeChainId] as CosmosSpokeChainConfig,
-        walletProvider as IInjectiveWalletProvider,
+        _walletProvider as IInjectiveWalletProvider,
       );
     }
 
     return undefined;
-  }, [walletProvider, xChainType, spokeChainId]);
+  }, [spokeChainId, xChainType, _walletProvider]);
 
   return spokeProvider;
 }
