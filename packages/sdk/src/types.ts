@@ -79,6 +79,8 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     assetManager: Address;
     hubWallet: Address;
     xTokenManager: Address;
+    icxMigration: Address;
+    sodaToken: Address;
   };
 
   nativeToken: Address;

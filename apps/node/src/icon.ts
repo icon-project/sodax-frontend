@@ -16,6 +16,8 @@ import {
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
+  ICXMigrationService,
+  type ICXMigrateParams,
 } from '@sodax/sdk';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
@@ -200,6 +202,63 @@ async function repay(token: IconAddress, amount: bigint) {
   console.log('[repay] txHash', txHash);
 }
 
+/**
+ * Migrates wICX tokens from ICON to the hub chain.
+ * This function handles the migration of wICX tokens to SODA tokens on the hub chain.
+ *
+ * @param wICX - The ICON address of the wICX token to migrate
+ * @param amount - The amount of wICX tokens to migrate
+ * @param recipient - The address that will receive the migrated SODA tokens
+ */
+async function migrate(amount: bigint, recipient: Address): Promise<void> {
+  try {
+    // Get the available amount for migration
+    //const availableAmount = await ICXMigrationService.getAvailableAmount(
+    //  hubProvider.chainConfig,
+    //  hubProvider.publicClient,
+    //);
+    //console.log('[migrate] Available amount for migration:', availableAmount.toString());
+
+    // Check if there's enough liquidity for migration
+    //if (availableAmount < amount) {
+    //  throw new Error(
+    //    `Insufficient liquidity. Available: ${availableAmount.toString()}, Requested: ${amount.toString()}`,
+    //  );
+    //}
+
+    // Prepare migration parameters
+    const migrateParams: ICXMigrateParams = {
+      wICX: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d' as IconAddress,
+      amount,
+      to: recipient,
+    };
+
+    // Generate migration transaction data
+    const migrationData = await ICXMigrationService.migrateData(hubProvider.chainConfig, migrateParams);
+
+    // Get wallet address for the transaction
+    const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
+
+    // Execute the migration transaction
+    const txHash: Hash = await SpokeService.deposit(
+      {
+        from: walletAddress,
+        token: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d' as IconAddress,
+        amount,
+        data: migrationData,
+      },
+      iconSpokeProvider,
+      hubProvider,
+    );
+
+    console.log('[migrate] Migration transaction hash:', txHash);
+    console.log('[migrate] Migration initiated successfully');
+  } catch (error) {
+    console.error('[migrate] Migration failed:', error);
+    throw error;
+  }
+}
+
 // Main function to decide which function to call
 async function main() {
   const functionName = process.argv[2]; // Get function name from command line argument
@@ -230,8 +289,18 @@ async function main() {
     const token = process.argv[3] as IconAddress; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
+  } else if (functionName === 'migrate') {
+    const amount = BigInt(process.argv[3]); // Get amount from command line argument
+    const recipient = process.argv[4] as Address; // Get recipient address from command line argument
+    await migrate(amount, recipient);
   } else {
-    console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
+    console.log(
+      'Function not recognized. Please use one of: "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", or "migrate".',
+    );
+    console.log('Usage examples:');
+    console.log('  npm run icon migrate <wICX_address> <amount> <recipient_address>');
+    console.log('  npm run icon deposit <token_address> <amount> <recipient_address>');
+    console.log('  npm run icon supply <token_address> <amount>');
   }
 }
 

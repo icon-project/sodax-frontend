@@ -1,10 +1,10 @@
 import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/types';
-import * as IconSdk from "icon-sdk-js";
+import * as IconSdk from 'icon-sdk-js';
 
-const IconService = IconSdk.default as unknown as typeof import("icon-sdk-js/build/index");
+const IconService = IconSdk.default as unknown as typeof import('icon-sdk-js/build/index');
 
 const { Wallet, SignedTransaction, Builder: IconBuilder, Converter: IconConverter } = IconService;
-import type { Wallet as IconSdkWallet, IconService as IconSdkService } from "icon-sdk-js";
+import type { Wallet as IconSdkWallet, IconService as IconSdkService } from 'icon-sdk-js';
 
 export class IconWalletProvider implements IIconWalletProvider {
   private readonly wallet: IconWallet;
@@ -14,7 +14,7 @@ export class IconWalletProvider implements IIconWalletProvider {
     if (isPrivateKeyIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'PRIVATE_KEY',
- 
+
         wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
       };
       this.iconService = new IconService.IconService(new IconService.IconService.HttpProvider(wallet.rpcUrl));
@@ -23,7 +23,8 @@ export class IconWalletProvider implements IIconWalletProvider {
         type: 'BROWSER_EXTENSION',
         wallet: wallet.walletAddress,
       };
-      this.iconService = new IconService.IconService(new IconService.IconService.HttpProvider(wallet.rpcUrl));
+      // @ts-ignore - icon-sdk-js types are not properly exported
+      this.iconService = new IconService.IconService(new IconService.HttpProvider(wallet.rpcUrl));
     } else {
       throw new Error('Invalid Icon wallet config');
     }
