@@ -63,7 +63,18 @@
     "bn.js": "^5.2.1",
     "cosmjs-types": "^0.9.0",
     "ethers": "^6.13.5",
-    "tiny-invariant": "1.3.3"
+    "tiny-invariant": "1.3.3",
+    "near-api-js":"6.1.0",
+    "@near-js/accounts": "^2.1.0",
+    "@near-js/crypto": "^2.1.0",
+    "@near-js/keystores-node": "^2.1.0",
+    "@near-js/providers": "^2.1.0",
+    "@near-js/signers": "^2.1.0",
+    "@near-js/tokens": "^2.1.0",
+    "@near-js/transactions": "^2.1.0",
+    "@near-js/utils": "^2.1.0",
+    "@near-js/types":"2.1.0"
+    
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.4",

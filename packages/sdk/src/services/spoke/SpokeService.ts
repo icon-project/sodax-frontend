@@ -22,11 +22,14 @@ import {
   isCWSpokeProvider,
   isEvmSpokeProvider,
   isIconSpokeProvider,
+  isNearSpokeProvider,
   isSolanaSpokeProvider,
   isSonicSpokeProvider,
   isStellarSpokeProvider,
   isSuiSpokeProvider,
 } from '../../guards.js';
+import { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
+import { NearSpokeService } from './NearSpokeService.js';
 
 /**
  * SpokeService is a main class that provides functionalities for dealing with spoke chains.
@@ -107,6 +110,14 @@ export class SpokeService {
         raw,
       ) as PromiseTxReturnType<T, R>;
     }
+     if (spokeProvider instanceof NearSpokeProvider) {
+      return NearSpokeService.deposit(
+        params as GetSpokeDepositParamsType<NearSpokeProvider>,
+        spokeProvider,
+        hubProvider,
+        raw,
+      ) as PromiseTxReturnType<T, R>;
+    }
 
     throw new Error('Invalid spoke provider');
   }
@@ -138,6 +149,9 @@ export class SpokeService {
     }
     if (spokeProvider instanceof SonicSpokeProvider) {
       return SonicSpokeService.getDeposit(token, spokeProvider);
+    }
+     if (spokeProvider instanceof NearSpokeProvider) {
+      return NearSpokeService.getDeposit(token, spokeProvider);
     }
 
     throw new Error('Invalid spoke provider');
@@ -200,6 +214,13 @@ export class SpokeService {
     if (isStellarSpokeProvider(spokeProvider)) {
       return (await StellarSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
         StellarSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
+    }
+
+     if (isNearSpokeProvider(spokeProvider)) {
+      return (await NearSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
+        NearSpokeProvider,
         R
       > as TxReturnType<T, R>;
     }

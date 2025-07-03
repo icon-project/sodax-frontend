@@ -17,6 +17,7 @@ import {
   EvmSpokeProvider,
   SonicSpokeProvider,
 } from './entities/index.js';
+import { NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
 import {
   INTENT_RELAY_CHAIN_IDS,
   SONIC_MAINNET_CHAIN_ID,
@@ -152,6 +153,15 @@ export function isStellarSpokeProvider(value: SpokeProvider): value is StellarSp
     value !== null &&
     value instanceof StellarSpokeProvider &&
     value.chainConfig.chain.type === 'STELLAR'
+  );
+}
+
+export function isNearSpokeProvider(value: SpokeProvider): value is StellarSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof NearSpokeProvider &&
+    value.chainConfig.chain.type === 'NEAR'
   );
 }
 

@@ -30,6 +30,9 @@ import type {
   CWRawTransaction,
   CosmosNetworkEnv,
 } from '@sodax/types';
+import { type Transaction as NearTransaction } from '@near-js/transactions';
+import type { NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
+import type { NearSpokeDepositParams } from './services/spoke/NearSpokeService.js';
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 
@@ -188,6 +191,17 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
   gasPrice: string;
 };
 
+export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  rpc_url: string;
+};
+
 export type HubChainConfig = EvmHubChainConfig;
 
 export type SpokeChainConfig =
@@ -197,7 +211,8 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
-  | SolanaChainConfig;
+  | SolanaChainConfig
+  | NearSpokeChainConfig;
 
 export type EvmContractCall = {
   address: Address; // Target address of the call
@@ -292,7 +307,8 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
             ? SolanaSpokeDepositParams
             : T extends SonicSpokeProvider
               ? SonicSpokeDepositParams
-            : never;
+            : T extends NearSpokeProvider
+              ? NearSpokeDepositParams:never;
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? Address
@@ -432,6 +448,7 @@ export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarR
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
 export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransaction : Hex;
+export type NearReturnType<Raw extends boolean> = Raw extends true ? NearTransaction : Hex;
 export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chainConfig']['chain']['type'] extends 'EVM'
   ? EvmReturnType<Raw>
   : T['chainConfig']['chain']['type'] extends 'SOLANA'
@@ -444,13 +461,16 @@ export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chai
           ? SuiReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
             ? CWReturnType<Raw>
-            : never; // TODO extend for each chain implementation
+            : T['chainConfig']['chain']['type'] extends 'NEAR'
+            ? NearReturnType<Raw>:never; // TODO extend for each chain implementation
 export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
 export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<TxReturnType<SolanaSpokeProvider, Raw>>;
 export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnType<StellarSpokeProvider, Raw>>;
 export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
 export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
 export type PromiseCWTxReturnType<Raw extends boolean> = Promise<TxReturnType<CWSpokeProvider, Raw>>;
+export type PromiseNearTxReturnType<Raw extends boolean> = Promise<TxReturnType<NearSpokeProvider, Raw>>;
+
 
 export type RawTxReturnType =
   | EvmRawTransaction
@@ -475,7 +495,8 @@ export type PromiseTxReturnType<
           ? PromiseSuiTxReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
             ? PromiseCWTxReturnType<Raw>
-            : never;
+            : T['chainConfig']['chain']['type'] extends 'NEAR'
+            ? PromiseNearTxReturnType<Raw>:never;
 
 export type VaultType = {
   address: Address; // vault address
