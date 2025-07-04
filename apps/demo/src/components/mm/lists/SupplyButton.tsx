@@ -13,8 +13,8 @@ export function SupplyButton({ token }: { token: XToken }) {
   const spokeProvider = useSpokeProvider(token.xChainId);
   const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply(token, spokeProvider);
 
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount, 'supply');
-  const { approve, isLoading: isApproving } = useApprove(token);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount, 'supply', spokeProvider);
+  const { approve, isLoading: isApproving } = useApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleSupply = async () => {

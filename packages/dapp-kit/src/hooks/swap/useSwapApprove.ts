@@ -1,11 +1,11 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { XToken } from '@sodax/types';
-import { parseUnits } from 'viem';
+import type { Token } from '@sodax/types';
+import { type Address, parseUnits } from 'viem';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
+import type { SpokeProvider } from '@sodax/sdk';
 
 interface UseApproveReturn {
-  approve: ({ amount, action }: { amount: string; action: MoneyMarketAction }) => Promise<boolean>;
+  approve: ({ amount }: { amount: string }) => Promise<boolean>;
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
@@ -25,7 +25,7 @@ interface UseApproveReturn {
  * ```
  */
 
-export function useApprove(token: XToken, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
+export function useSwapApprove(token: Token, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
@@ -35,16 +35,14 @@ export function useApprove(token: XToken, spokeProvider: SpokeProvider | undefin
     error,
     reset: resetError,
   } = useMutation({
-    mutationFn: async ({ amount, action }: { amount: string; action: MoneyMarketAction }) => {
+    mutationFn: async ({ amount }: { amount: string }) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
-      const allowance = await sodax.moneyMarket.approve(
-        {
-          token: token.address,
-          amount: parseUnits(amount, token.decimals),
-          action,
-        },
+      const allowance = await sodax.solver.approve(
+        token.address as Address,
+        parseUnits(amount, token.decimals),
+        spokeProvider.chainConfig.addresses.assetManager as Address,
         spokeProvider,
       );
       if (!allowance.ok) {

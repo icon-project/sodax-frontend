@@ -28,7 +28,7 @@ import {
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
-import { useQuote, useCreateIntentOrder, useSpokeProvider } from '@sodax/dapp-kit';
+import { useQuote, useCreateIntentOrder, useSpokeProvider, useSwapAllowance, useSwapApprove } from '@sodax/dapp-kit';
 import { getXChainType, useEvmSwitchChain, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
 import {
   type ChainId,
@@ -60,6 +60,8 @@ export default function SwapCard({
   );
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
+  const { approve, isLoading: isApproving } = useSwapApprove(sourceToken!, sourceProvider);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
   const onChangeDirection = () => {
@@ -196,6 +198,10 @@ export default function SwapCard({
 
   const handleDestAccountDisconnect = () => {
     disconnect(getXChainType(destChain) as ChainType);
+  };
+
+  const handleApprove = async () => {
+    await approve({ amount: sourceAmount });
   };
 
   return (
@@ -366,6 +372,16 @@ export default function SwapCard({
               </div>
             </div>
             <DialogFooter>
+              <Button
+                className="w-full"
+                type="button"
+                variant="default"
+                onClick={handleApprove}
+                disabled={isAllowanceLoading || hasAllowed || isApproving}
+              >
+                {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+              </Button>
+
               {isWrongChain && (
                 <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
                   Switch Chain

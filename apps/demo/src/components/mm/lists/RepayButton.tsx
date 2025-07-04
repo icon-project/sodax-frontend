@@ -14,8 +14,8 @@ export function RepayButton({ token }: { token: XToken }) {
 
   const spokeProvider = useSpokeProvider(token.xChainId);
   const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay(token, spokeProvider);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount, 'repay');
-  const { approve, isLoading: isApproving } = useApprove(token);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount, 'repay', spokeProvider);
+  const { approve, isLoading: isApproving } = useApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleRepay = async () => {

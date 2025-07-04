@@ -1,8 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { XToken } from '@sodax/types';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import { parseUnits } from 'viem';
-import type { MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
+import type { CreateIntentParams, SpokeProvider } from '@sodax/sdk';
 
 /**
  * Hook for checking token allowance for money market operations.
@@ -10,9 +8,7 @@ import type { MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
  * This hook verifies if the user has approved enough tokens for a specific money market action
  * (borrow/repay). It automatically queries and tracks the allowance status.
  *
- * @param {XToken} token - The token to check allowance for. Must be an XToken with valid address and chain information.
- * @param {string} amount - The amount to check allowance for, as a decimal string
- * @param {MoneyMarketAction} action - The money market action to check allowance for ('borrow' or 'repay')
+ * @param {CreateIntentParams} params - The parameters for the intent to check allowance for.
  * @param {SpokeProvider} spokeProvider - The spoke provider to use for allowance checks
  *
  * @returns {UseQueryResult<boolean, Error>} A React Query result containing:
@@ -22,36 +18,27 @@ import type { MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
  *
  * @example
  * ```typescript
- * const { data: hasAllowed, isLoading } = useAllowance(token, "100", "repay", provider);
+ * const { data: hasAllowed, isLoading } = useAllowance(params, spokeProvider);
  * ```
  */
-export function useAllowance(
-  token: XToken,
-  amount: string,
-  action: MoneyMarketAction,
+export function useSwapAllowance(
+  params: CreateIntentParams | undefined,
   spokeProvider: SpokeProvider | undefined,
 ): UseQueryResult<boolean, Error> {
   const { sodax } = useSodaxContext();
 
   return useQuery({
-    queryKey: ['allowance', token.address, amount, action],
+    queryKey: ['allowance', params],
     queryFn: async () => {
-      if (!spokeProvider) {
+      if (!spokeProvider || !params) {
         return false;
       }
-      const allowance = await sodax.moneyMarket.isAllowanceValid(
-        {
-          token: token.address,
-          amount: parseUnits(amount, token.decimals),
-          action,
-        },
-        spokeProvider,
-      );
+      const allowance = await sodax.solver.isAllowanceValid(params, spokeProvider);
       if (allowance.ok) {
         return allowance.value;
       }
       return false;
     },
-    enabled: !!spokeProvider,
+    enabled: !!spokeProvider && !!params,
   });
 }

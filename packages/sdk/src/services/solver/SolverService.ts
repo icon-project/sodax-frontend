@@ -45,13 +45,7 @@ import type {
 } from '../../types.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
-import {
-  SONIC_MAINNET_CHAIN_ID,
-  type SpokeChainId,
-  type Address,
-  type Hex,
-  type Hash,
-} from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Address, type Hex, type Hash } from '@sodax/types';
 
 export type CreateIntentParams = {
   inputToken: string; // The address of the input token on spoke chain
@@ -558,12 +552,12 @@ export class SolverService {
       const creatorHubWalletAddress =
         spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
           ? walletAddressBytes
-          : (await WalletAbstractionService.getUserHubWalletAddress(
+          : await WalletAbstractionService.getUserHubWalletAddress(
               params.srcChain,
               walletAddressBytes,
               this.hubProvider,
               spokeProvider,
-            ));
+            );
 
       // construct the intent data
       const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
