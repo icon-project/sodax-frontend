@@ -26,7 +26,7 @@ const Section3 = () => {
         Assets for all tastes. Solved at leading rates.
       </Label>
       <div className="mt-4 z-10">
-        <Button variant="outline" className="px-6 font-['InterMedium']" size="lg">
+        <Button variant="outline" className="px-6 font-['InterMedium'] cursor-pointer" size="lg">
           Follow X for launch
         </Button>
       </div>

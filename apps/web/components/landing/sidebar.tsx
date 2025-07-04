@@ -44,22 +44,28 @@ const Sidebar = ({
         <ul className="sidebar-nav text-center leading-relaxed text-sm text-cream font-[InterRegular] space-y-6">
           <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} className="mx-auto mb-6" />
           <li>
-            <Link href="/about" onClick={toggle}>
+            <Link
+              href="#"
+              onClick={() => {
+                toggle();
+                setIsDialogOpen(true);
+              }}
+            >
               <p>Join waitlist</p>
             </Link>
           </li>
           <li>
-            <Link href="/services" onClick={toggle}>
+            <Link href="#" onClick={toggle}>
               <p>About</p>
             </Link>
           </li>
           <li>
-            <Link href="/contacts" onClick={toggle}>
+            <Link href="https://x.com/gosodax" onClick={toggle}>
               <p>Partners</p>
             </Link>
           </li>
           <li>
-            <Link href="/community" onClick={toggle}>
+            <Link href="https://discord.gg/xM2Nh4S6vN" onClick={toggle}>
               <p>Community</p>
             </Link>
           </li>

@@ -22,10 +22,10 @@ const Footer: React.FC = () => {
             using soda
           </div>
           <FooterLink href="#">Flagship Platform (Soon)</FooterLink>
-          <FooterLink href="#" showArrow>
+          <FooterLink href="https://www.hanawallet.io/" showArrow>
             Hana Wallet
           </FooterLink>
-          <FooterLink href="#" showArrow>
+          <FooterLink href="https://app.balanced.network/" showArrow>
             Balanced DeFi
           </FooterLink>
         </div>
@@ -33,14 +33,14 @@ const Footer: React.FC = () => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             socials
           </div>
-          <FooterLink href="#">News</FooterLink>
-          <FooterLink href="#" showArrow>
+          <FooterLink href="https://news.sodax.com/">News</FooterLink>
+          <FooterLink href="https://discord.gg/xM2Nh4S6vN" showArrow>
             Discord
           </FooterLink>
-          <FooterLink href="#" showArrow>
+          <FooterLink href="https://x.com/gosodax" showArrow>
             X (Twitter)
           </FooterLink>
-          <FooterLink href="#" showArrow>
+          <FooterLink href="https://linktr.ee/go.sodax" showArrow>
             Linktree
           </FooterLink>
         </div>
@@ -48,11 +48,13 @@ const Footer: React.FC = () => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             resources
           </div>
-          <FooterLink href="#" showArrow>
+          <FooterLink href="https://sodax.gitbook.io/sodax/readme-1" showArrow>
             Github
           </FooterLink>
-          <FooterLink href="#">Documentation</FooterLink>
-          <FooterLink href="#">Media Kit</FooterLink>
+          <FooterLink href="https://github.com/icon-project/sodax-frontend">Documentation</FooterLink>
+          <FooterLink href="https://www.figma.com/design/lZi3whUFdj24pQnYDOkIee/SODAX-Brand-guide?node-id=0-1&t=FzVNlqCMO4D36P36-1">
+            Media Kit
+          </FooterLink>
           <FooterLink href="#">Terms</FooterLink>
         </div>
         {/* <div className="inline-flex flex-col justify-start items-start gap-3 w-[134px]">

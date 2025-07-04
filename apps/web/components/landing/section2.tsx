@@ -35,7 +35,7 @@ const Section2 = () => {
         More freedom. Poured at 2% interest.
       </Label>
       <div className="mt-6 z-10">
-        <Button variant="outline" className="px-6 font-['InterMedium']" size="lg">
+        <Button variant="outline" className="px-6 font-['InterMedium'] cursor-pointer" size="lg">
           Follow X for launch
         </Button>
       </div>

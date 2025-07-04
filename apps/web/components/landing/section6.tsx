@@ -23,7 +23,7 @@ const Section6 = () => {
         </Label>
         <div className="mt-6 z-10">
           <Button
-            className="rounded-full"
+            className="rounded-full cursor-pointer"
             variant="subtle"
             size="lg"
             onClick={() => window.open('https://discord.gg/xM2Nh4S6vN', '_blank')}
@@ -53,7 +53,7 @@ const Section6 = () => {
         </Label>
         <div className="mt-6">
           <Button
-            className="rounded-full"
+            className="rounded-full cursor-pointer"
             variant="subtle"
             size="lg"
             onClick={() => window.open('https://discord.gg/xM2Nh4S6vN', '_blank')}

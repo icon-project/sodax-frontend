@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import { Web3Provider } from '../providers';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -22,9 +23,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <div className="h-screen">{children}</div>
+        <div className="h-screen">
+          <Web3Provider>{children}</Web3Provider>
+        </div>
       </body>
     </html>
   );
