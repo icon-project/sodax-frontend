@@ -9,14 +9,14 @@ import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
 
-export function useWalletProviderOptions(xChainId: ChainId) {
+export function useWalletProviderOptions(xChainId: ChainId | undefined) {
   const xChainType = getXChainType(xChainId);
 
   const evmPublicClient = usePublicClient({
-    chainId: getWagmiChainId(xChainId),
+    chainId: xChainId ? getWagmiChainId(xChainId) : undefined,
   });
   const { data: evmWalletClient } = useWalletClient({
-    chainId: getWagmiChainId(xChainId),
+    chainId: xChainId ? getWagmiChainId(xChainId) : undefined,
   });
 
   const xService = useXService(getXChainType(xChainId));

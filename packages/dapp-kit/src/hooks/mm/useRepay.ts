@@ -1,8 +1,7 @@
-import type { SpokeChainId } from '@sodax/sdk';
+import type { SpokeProvider } from '@sodax/sdk';
 import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
-import { useSpokeProvider } from '../provider/useSpokeProvider';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface RepayResponse {
@@ -17,6 +16,14 @@ interface RepayResponse {
  * handling the entire repayment process including transaction creation, submission,
  * and cross-chain communication.
  *
+ * @param {XToken} spokeToken - The token to repay on the spoke chain. Must be an XToken with valid address and chain information.
+ * @param {SpokeProvider} spokeProvider - The spoke provider to use for the repay transaction. Must be a valid SpokeProvider instance.
+ *
+ * @returns {UseMutationResult<RepayResponse, Error, string>} A mutation result object with the following properties:
+ *   - mutateAsync: Function to execute the repay transaction
+ *   - isPending: Boolean indicating if a transaction is in progress
+ *   - error: Error object if the last transaction failed, null otherwise
+ *
  * @example
  * ```typescript
  * const { mutateAsync: repay, isPending, error } = useRepay(spokeToken);
@@ -27,9 +34,11 @@ interface RepayResponse {
  *   - spokeProvider is not available
  *   - Transaction execution fails
  */
-export function useRepay(spokeToken: XToken): UseMutationResult<RepayResponse, Error, string> {
+export function useRepay(
+  spokeToken: XToken,
+  spokeProvider: SpokeProvider | undefined,
+): UseMutationResult<RepayResponse, Error, string> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(spokeToken.xChainId as SpokeChainId);
 
   return useMutation<RepayResponse, Error, string>({
     mutationFn: async (amount: string) => {

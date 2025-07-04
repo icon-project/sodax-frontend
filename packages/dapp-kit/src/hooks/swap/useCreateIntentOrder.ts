@@ -1,15 +1,14 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
 import type {
   CreateIntentParams,
-  SpokeChainId,
   IntentExecutionResponse,
   Result,
   IntentSubmitErrorCode,
   Intent,
   PacketData,
   IntentSubmitError,
+  SpokeProvider,
 } from '@sodax/sdk';
-import { useSpokeProvider } from '../provider/useSpokeProvider';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 
 type CreateIntentResult = Result<
@@ -21,12 +20,12 @@ type CreateIntentResult = Result<
  * Hook for creating and submitting an intent order for cross-chain swaps.
  * Uses React Query's useMutation for better state management and caching.
  *
- * @param {SpokeChainId} chainId - The source chain ID where the swap will originate
+ * @param {SpokeProvider} spokeProvider - The spoke provider to use for the swap
  * @returns {UseMutationResult} Mutation result object containing mutation function and state
  *
  * @example
  * ```typescript
- * const { mutateAsync: createIntent, isPending } = useCreateIntentOrder('0xa4b1.arbitrum');
+ * const { mutateAsync: createIntent, isPending } = useCreateIntentOrder(spokeProvider);
  *
  * const handleSwap = async () => {
  *   const result = await createIntent({
@@ -41,10 +40,9 @@ type CreateIntentResult = Result<
  * ```
  */
 export function useCreateIntentOrder(
-  chainId: SpokeChainId,
+  spokeProvider: SpokeProvider | undefined,
 ): UseMutationResult<CreateIntentResult, Error, CreateIntentParams> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(chainId);
 
   return useMutation<CreateIntentResult, Error, CreateIntentParams>({
     mutationFn: async (params: CreateIntentParams) => {
