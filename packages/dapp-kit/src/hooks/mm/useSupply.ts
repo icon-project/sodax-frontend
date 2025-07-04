@@ -1,8 +1,7 @@
-import type { SpokeChainId } from '@sodax/sdk';
+import type { SpokeProvider } from '@sodax/sdk';
 import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
-import { useSpokeProvider } from '../provider/useSpokeProvider';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface SupplyResponse {
@@ -18,6 +17,7 @@ interface SupplyResponse {
  * and cross-chain communication.
  *
  * @param {XToken} spokeToken - The token to supply on the spoke chain. Must be an XToken with valid address and chain information.
+ * @param {SpokeProvider} spokeProvider - The spoke provider to use for the supply transaction. Must be a valid SpokeProvider instance.
  *
  * @returns {UseMutationResult<SupplyResponse, Error, string>} A mutation result object with the following properties:
  *   - mutateAsync: Function to execute the supply transaction
@@ -33,9 +33,11 @@ interface SupplyResponse {
  * @throws {Error} When:
  *   - spokeProvider is not available
  */
-export function useSupply(spokeToken: XToken): UseMutationResult<SupplyResponse, Error, string> {
+export function useSupply(
+  spokeToken: XToken,
+  spokeProvider: SpokeProvider | undefined,
+): UseMutationResult<SupplyResponse, Error, string> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(spokeToken.xChainId as SpokeChainId);
 
   return useMutation<SupplyResponse, Error, string>({
     mutationFn: async (amount: string) => {
