@@ -39,8 +39,6 @@ const LandingPage = () => {
         isOpen={isOpen}
         isRewardDialogOpen={isRewardDialogOpen}
         onRewardDialogChange={setIsRewardDialogOpen}
-        isTermsModalOpen={isTermsModalOpen}
-        onTermsModalChange={setIsTermsModalOpen}
       />
       <Section1 />
       <Section2 />
