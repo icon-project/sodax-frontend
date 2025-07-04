@@ -48,7 +48,6 @@ const Sidebar = ({
               href="#"
               onClick={() => {
                 toggle();
-                setIsDialogOpen(true);
               }}
             >
               <p>Join waitlist</p>
