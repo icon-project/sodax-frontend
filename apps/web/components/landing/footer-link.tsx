@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 interface FooterLinkProps extends ComponentProps<typeof Link> {
   showArrow?: boolean;
   arrowClassName?: string;
+  onClick?: () => void;
 }
 
 const FooterLink: React.FC<FooterLinkProps> = ({
@@ -14,6 +15,7 @@ const FooterLink: React.FC<FooterLinkProps> = ({
   className,
   showArrow = false,
   arrowClassName,
+  onClick,
   ...props
 }) => {
   return (
@@ -22,6 +24,7 @@ const FooterLink: React.FC<FooterLinkProps> = ({
         'group inline-flex items-center gap-2 text-black text-[13px] font-medium font-["InterMedium"] leading-[16px] hover:text-cherry-bright hover:font-bold transition-colors',
         className,
       )}
+      onClick={onClick}
       {...props}
     >
       {children}
