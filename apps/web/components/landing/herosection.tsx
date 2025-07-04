@@ -195,7 +195,7 @@ const HeroSection = ({
           </div>
         </div>
 
-        <Sidebar isOpen={isOpen} toggle={toggle} />
+        <Sidebar isOpen={isOpen} toggle={toggle} setOpenRewardDialog={onRewardDialogChange} />
 
         {/* Center Content */}
         <div className="w-full flex justify-center h-[700px]">
@@ -290,7 +290,7 @@ const HeroSection = ({
       >
         <div className="relative">
           {!isConnected ? (
-            <DialogContent className="h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[80px] w-[90%] lg:max-w-[952px] dialog-content">
+            <DialogContent className="h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[80px] w-[90%] lg:max-w-[952px] dialog-content transform translate-y-[-65%] lg:mt-0">
               <DialogHeader>
                 <div className="flex justify-center">
                   <Image src="/symbol.png" alt="SODAX Symbol" width={64} height={64} />
@@ -963,7 +963,7 @@ const HeroSection = ({
               )}
             </DialogContent>
           ) : (
-            <DialogContent className="h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[127px] w-[90%] lg:max-w-[952px] dialog-content">
+            <DialogContent className="h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[127px] w-[90%] lg:max-w-[952px] dialog-content mt-5 lg:mt-0">
               <DialogHeader>
                 <div className="flex justify-center">
                   <Image src="/symbol.png" alt="SODAX Symbol" width={64} height={64} />

@@ -54,7 +54,7 @@ export const DecoratedButton = ({
     <div className="inline-flex justify-center items-start relative">
       <Button
         className={cn(
-          'w-[183px] h-[40px] font-[Shrikhand] rounded-full text-[14px] z-10 pt-[11px]',
+          'w-[183px] h-[40px] font-[Shrikhand] rounded-full text-[14px] z-10 pt-[11px] cursor-pointer',
           getBgColor(),
           getTextColor(),
           'transition-all hover:scale-[102%]',

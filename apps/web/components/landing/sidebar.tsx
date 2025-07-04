@@ -5,9 +5,11 @@ import Image from 'next/image';
 const Sidebar = ({
   isOpen,
   toggle,
+  setOpenRewardDialog,
 }: {
   isOpen: boolean;
   toggle: () => void;
+  setOpenRewardDialog: (open: boolean) => void;
 }): React.ReactElement => {
   return (
     <>
@@ -22,9 +24,15 @@ const Sidebar = ({
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <Image className="absolute bottom-0 right-0 " src="/circle4.png" alt="background" width={541} height={811} />
         <Image
-          className="mix-blend-lighten absolute bottom-0 right-0 "
+          className="absolute bottom-0 right-0 z-10"
+          src="/circle4.png"
+          alt="background"
+          width={541}
+          height={811}
+        />
+        <Image
+          className="mix-blend-lighten absolute bottom-0 right-0"
           src="/girl1.png"
           alt="background"
           width={541}
@@ -41,13 +49,14 @@ const Sidebar = ({
           </svg>
         </button>
 
-        <ul className="sidebar-nav text-center leading-relaxed text-sm text-cream font-[InterRegular] space-y-6">
+        <ul className="sidebar-nav text-center leading-relaxed text-sm text-cream font-[InterRegular] space-y-6 z-20">
           <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} className="mx-auto mb-6" />
           <li>
             <Link
               href="#"
               onClick={() => {
                 toggle();
+                setOpenRewardDialog(true);
               }}
             >
               <p>Join waitlist</p>

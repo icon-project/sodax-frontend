@@ -1,8 +1,20 @@
 import { Label } from '@/components/ui/label';
 import { FooterLink } from '@/components/landing/footer-link';
 import Image from 'next/image';
+import { useState } from 'react';
+import TermsModal from '@/components/landing/terms-modal';
 
-const Footer: React.FC = () => {
+interface FooterProps {
+  onTermsClick?: () => void;
+}
+
+const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState<boolean>(false);
+
+  const handleTermsClick = () => {
+    setIsTermsModalOpen(true);
+    onTermsClick?.();
+  };
   return (
     <div className="h-[560px] flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center mt-4 bg-almost-white footer pt-[80px]">
       <div className="p-4 pl-0 min-w-[200px] ml-[32px]">
@@ -55,7 +67,9 @@ const Footer: React.FC = () => {
           <FooterLink href="https://www.figma.com/design/lZi3whUFdj24pQnYDOkIee/SODAX-Brand-guide?node-id=0-1&t=FzVNlqCMO4D36P36-1">
             Media Kit
           </FooterLink>
-          <FooterLink href="#">Terms</FooterLink>
+          <FooterLink href="#" onClick={handleTermsClick}>
+            Terms
+          </FooterLink>
         </div>
         {/* <div className="inline-flex flex-col justify-start items-start gap-3 w-[134px]">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
@@ -72,6 +86,7 @@ const Footer: React.FC = () => {
           </FooterLink>
         </div> */}
       </div>
+      <TermsModal open={isTermsModalOpen} onOpenChange={setIsTermsModalOpen} />
     </div>
   );
 };

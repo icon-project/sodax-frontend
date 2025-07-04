@@ -13,8 +13,10 @@ import Footer from '../components/landing/footer';
 const LandingPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   const toggle = () => {
+    console.log('toggle');
     setIsOpen(!isOpen);
   };
 
@@ -26,6 +28,10 @@ const LandingPage = () => {
     setIsRewardDialogOpen(false);
   };
 
+  const openTermsModal = () => {
+    setIsTermsModalOpen(true);
+  };
+
   return (
     <div className="landing-page">
       <HeroSection
@@ -33,6 +39,8 @@ const LandingPage = () => {
         isOpen={isOpen}
         isRewardDialogOpen={isRewardDialogOpen}
         onRewardDialogChange={setIsRewardDialogOpen}
+        isTermsModalOpen={isTermsModalOpen}
+        onTermsModalChange={setIsTermsModalOpen}
       />
       <Section1 />
       <Section2 />
@@ -40,7 +48,7 @@ const LandingPage = () => {
       <Section4 onOpenRewardDialog={openRewardDialog} />
       {/* <Section5 /> */}
       <Section6 />
-      <Footer />
+      <Footer onTermsClick={openTermsModal} />
     </div>
   );
 };
