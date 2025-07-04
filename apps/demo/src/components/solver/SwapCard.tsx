@@ -51,7 +51,7 @@ export default function SwapCard({
   const destAccount = useXAccount(destChain);
   const destProvider = useSpokeProvider(destChain);
   const { openWalletModal } = useAppStore();
-  const { mutateAsync: createIntentOrder } = useCreateIntentOrder(sourceChain);
+  const { mutateAsync: createIntentOrder } = useCreateIntentOrder(sourceProvider);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
     Object.values(spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens)[0],
   );

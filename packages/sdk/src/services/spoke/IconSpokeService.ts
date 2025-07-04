@@ -1,4 +1,6 @@
-import { Converter, CallTransactionBuilder, CallBuilder } from 'icon-sdk-js';
+import * as IconSdkRaw from 'icon-sdk-js';
+const IconSdk = (IconSdkRaw.default?.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
+const { Converter, CallTransactionBuilder, CallBuilder } = IconSdk;
 import * as rlp from 'rlp';
 import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
