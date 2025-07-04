@@ -1,4 +1,3 @@
-import type { PublicKey } from '@solana/web3.js';
 import type { TransactionReceipt } from 'viem';
 import type { CWSpokeProvider } from './entities/cosmos/CWSpokeProvider.js';
 import type {
@@ -29,6 +28,7 @@ import type {
   StellarRawTransaction,
   CWRawTransaction,
   CosmosNetworkEnv,
+  SolanaBase58PublicKey,
 } from '@sodax/types';
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
@@ -397,8 +397,8 @@ export enum IntentErrorCode {
 type Base64String = string;
 
 export type SolanaRawTransaction = {
-  from: PublicKey;
-  to: PublicKey;
+  from: SolanaBase58PublicKey;
+  to: SolanaBase58PublicKey;
   value: bigint;
   data: Base64String;
 };
