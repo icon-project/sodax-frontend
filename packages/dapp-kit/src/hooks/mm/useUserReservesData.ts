@@ -1,30 +1,24 @@
 import { allXTokens } from '@/core';
-import { EvmWalletAbstraction, getMoneyMarketConfig, type EvmHubProvider } from '@sodax/sdk';
+import { encodeAddress, EvmWalletAbstraction, getMoneyMarketConfig, type EvmHubProvider } from '@sodax/sdk';
 import type { HubChainId, SpokeChainId } from '@sodax/types';
 import type { ChainId } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
 import { useHubProvider } from '../provider/useHubProvider';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import { useSpokeProvider } from '../provider/useSpokeProvider';
 
-export function useUserReservesData(spokeChainId: ChainId) {
+export function useUserReservesData(spokeChainId: ChainId, address: string | undefined) {
   const { sodax } = useSodaxContext();
   const hubChainId = (sodax.config?.hubProviderConfig?.chainConfig.chain.id ?? 'sonic') as HubChainId;
   const hubProvider = useHubProvider();
-  const spokeProvider = useSpokeProvider(spokeChainId as SpokeChainId);
 
   const { data: userReserves } = useQuery({
-    queryKey: ['userReserves', spokeChainId],
+    queryKey: ['userReserves', spokeChainId, address],
     queryFn: async () => {
-      if (!hubProvider) {
+      if (!hubProvider || !address) {
         return;
       }
 
-      if (!spokeProvider) {
-        return;
-      }
-
-      const addressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+      const addressBytes = encodeAddress(spokeChainId, address);
       const hubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
         spokeChainId as SpokeChainId,
         addressBytes,
@@ -45,7 +39,7 @@ export function useUserReservesData(spokeChainId: ChainId) {
         };
       });
     },
-    enabled: !!spokeProvider && !!hubProvider,
+    enabled: !!spokeChainId && !!hubProvider && !!address,
     refetchInterval: 5000,
   });
 

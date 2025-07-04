@@ -1,19 +1,41 @@
 import type { ChainId } from '@sodax/types';
 import { useMemo } from 'react';
-import { EvmWalletProvider, IconWalletProvider, SuiWalletProvider } from '../wallet-providers';
+import { EvmWalletProvider, IconWalletProvider, SuiWalletProvider, InjectiveWalletProvider } from '../wallet-providers';
 import { getXChainType } from '../actions';
 import { useWalletProviderOptions } from './useWalletProviderOptions';
 import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
 import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
-import { InjectiveWalletProvider } from '../wallet-providers/InjectiveWalletProvider';
 import type { InjectiveEoaAddress } from '@sodax/types';
+/**
+ * Hook to get the appropriate wallet provider based on the chain type.
+ * Supports EVM, SUI, ICON and INJECTIVE chains.
+ *
+ * @param {ChainId | undefined} spokeChainId - The chain ID to get the wallet provider for. Can be any valid ChainId value.
+ * @returns {EvmWalletProvider | SuiWalletProvider | IconWalletProvider | InjectiveWalletProvider | undefined}
+ * The appropriate wallet provider instance for the given chain ID, or undefined if:
+ * - No chain ID is provided
+ * - Chain type is not supported
+ * - Required wallet provider options are not available
+ *
+ * @example
+ * ```tsx
+ * // Get wallet provider for a specific chain
+ * const walletProvider = useWalletProvider('sui');
+ * ```
+ */
 
-export function useWalletProvider(xChainId: ChainId) {
-  const xChainType = getXChainType(xChainId);
-  const walletProviderOptions = useWalletProviderOptions(xChainId);
+export function useWalletProvider(
+  spokeChainId: ChainId | undefined,
+): EvmWalletProvider | SuiWalletProvider | IconWalletProvider | InjectiveWalletProvider | undefined {
+  const xChainType = getXChainType(spokeChainId);
+  const walletProviderOptions = useWalletProviderOptions(spokeChainId);
 
   return useMemo(() => {
     if (!walletProviderOptions) {
+      return undefined;
+    }
+
+    if (!xChainType) {
       return undefined;
     }
 

@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
   type CreateIntentParams,
+  encodeAddress,
   type Hex,
   type Intent,
   type IntentQuoteRequest,
@@ -49,9 +50,8 @@ export default function SwapCard({
   const sourceProvider = useSpokeProvider(sourceChain);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const destAccount = useXAccount(destChain);
-  const destProvider = useSpokeProvider(destChain);
   const { openWalletModal } = useAppStore();
-  const { mutateAsync: createIntentOrder } = useCreateIntentOrder(sourceChain);
+  const { mutateAsync: createIntentOrder } = useCreateIntentOrder(sourceProvider);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
     Object.values(spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens)[0],
   );
@@ -151,7 +151,7 @@ export default function SwapCard({
       return;
     }
 
-    if (!sourceProvider || !destProvider) {
+    if (!sourceProvider) {
       console.error('sourceProvider or destProvider undefined');
       return;
     }
@@ -166,7 +166,7 @@ export default function SwapCard({
       srcChain: sourceChain, // Chain ID where input tokens originate
       dstChain: destChain, // Chain ID where output tokens should be delivered
       srcAddress: await sourceProvider.walletProvider.getWalletAddressBytes(), // Source address in bytes (original address on spoke chain)
-      dstAddress: await destProvider.walletProvider.getWalletAddressBytes(), // Destination address in bytes (original address on spoke chain)
+      dstAddress: encodeAddress(destChain, destAccount.address), // Destination address in bytes (original address on spoke chain)
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
       data: '0x', // Additional arbitrary data
     } satisfies CreateIntentParams;

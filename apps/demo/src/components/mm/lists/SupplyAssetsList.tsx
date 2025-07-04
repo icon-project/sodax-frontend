@@ -18,7 +18,7 @@ export function SupplyAssetsList() {
     address,
   });
 
-  const userReserves = useUserReservesData(selectedChainId);
+  const userReserves = useUserReservesData(selectedChainId, address);
 
   return (
     <Card>
