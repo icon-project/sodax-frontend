@@ -1,9 +1,8 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import { useSpokeProvider } from '../provider/useSpokeProvider';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { MoneyMarketAction } from '@sodax/sdk';
+import type { MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
 
 interface UseApproveReturn {
   approve: ({ amount, action }: { amount: string; action: MoneyMarketAction }) => Promise<boolean>;
@@ -12,9 +11,22 @@ interface UseApproveReturn {
   resetError: () => void;
 }
 
-export function useApprove(token: XToken): UseApproveReturn {
+/**
+ * Hook for approving token spending for money market actions
+ * @param token The token to approve spending for
+ * @param spokeProvider The spoke provider instance for the chain
+ * @returns Object containing approve function, loading state, error state and reset function
+ * @example
+ * ```tsx
+ * const { approve, isLoading, error } = useMMApprove(token, spokeProvider);
+ *
+ * // Approve tokens for supply action
+ * await approve({ amount: "100", action: "supply" });
+ * ```
+ */
+
+export function useMMApprove(token: XToken, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(token.xChainId as SpokeChainId);
   const queryClient = useQueryClient();
 
   const {

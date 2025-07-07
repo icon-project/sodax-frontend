@@ -14,10 +14,10 @@ import {
   SonicSpokeService,
   type SpokeChainId,
   erc20Abi,
-  MoneyMarketSupplyParams,
-  MoneyMarketBorrowParams,
-  MoneyMarketWithdrawParams,
-  MoneyMarketRepayParams,
+  type MoneyMarketSupplyParams,
+  type MoneyMarketBorrowParams,
+  type MoneyMarketWithdrawParams,
+  type MoneyMarketRepayParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 

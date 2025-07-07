@@ -45,13 +45,7 @@ import type {
 } from '../../types.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
-import {
-  SONIC_MAINNET_CHAIN_ID,
-  type SpokeChainId,
-  type Address,
-  type Hex,
-  type Hash,
-} from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Address, type Hex, type Hash } from '@sodax/types';
 
 export type CreateIntentParams = {
   inputToken: string; // The address of the input token on spoke chain
@@ -478,13 +472,18 @@ export class SolverService {
   public async approve<S extends SpokeProvider, R extends boolean = false>(
     token: Address,
     amount: bigint,
-    address: Address,
     spokeProvider: S,
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>>> {
     try {
       if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
-        const result = await Erc20Service.approve(token, amount, address, spokeProvider, raw);
+        const result = await Erc20Service.approve(
+          token,
+          amount,
+          spokeProvider.chainConfig.addresses.assetManager as Address,
+          spokeProvider,
+          raw,
+        );
 
         return {
           ok: true,
@@ -559,12 +558,12 @@ export class SolverService {
       const creatorHubWalletAddress =
         spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
           ? walletAddressBytes
-          : (await WalletAbstractionService.getUserHubWalletAddress(
+          : await WalletAbstractionService.getUserHubWalletAddress(
               params.srcChain,
               walletAddressBytes,
               this.hubProvider,
               spokeProvider,
-            ));
+            );
 
       // construct the intent data
       const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
