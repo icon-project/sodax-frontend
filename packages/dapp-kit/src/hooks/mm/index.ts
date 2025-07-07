@@ -5,5 +5,5 @@ export * from './useWithdraw';
 export * from './useUserReservesData';
 export * from './useHubWalletAddress';
 export * from './useReservesData';
-export * from './useAllowance';
-export * from './useApprove';
+export * from './useMMAllowance';
+export * from './useMMApprove';

@@ -18,7 +18,7 @@ import type { CreateIntentParams, SpokeProvider } from '@sodax/sdk';
  *
  * @example
  * ```typescript
- * const { data: hasAllowed, isLoading } = useAllowance(params, spokeProvider);
+ * const { data: hasAllowed, isLoading } = useMMAllowance(params, spokeProvider);
  * ```
  */
 export function useSwapAllowance(

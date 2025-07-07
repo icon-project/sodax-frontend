@@ -13,21 +13,20 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Get user reserves data (`useUserReservesData`)
   - Calculate hub wallet address by using spoke chain id and spoke chain wallet address (`useHubWalletAddress`)
   - Get reserves data (`useReservesData`)
+  - Check token allowance (`useMMAllowance`)
+  - Approve token spending (`useMMApprove`)
 
 - Swap/Intent
   - Get quote for an intent order (`useQuote`)
   - Create and submit an intent order (`useCreateIntentOrder`)
   - Get status of an intent order (`useStatus`)
+  - Check token allowance (`useSwapAllowance`)
+  - Approve token spending (`useSwapApprove`)
 
 - Provider
   - Get hub chain provider (`useHubProvider`)
   - Get spoke chain provider (`useSpokeProvider`)
   - Get wallet provider (`useWalletProvider`)
-
-- Token Management
-  - Check token allowance (`useAllowance`)
-  - Approve token spending (`useApprove`)
-
 
 ## Installation
 
@@ -147,11 +146,11 @@ function MoneyMarketComponent() {
 }
 
 // Token Management
-import { useAllowance, useApprove } from '@sodax/dapp-kit';
+import { useMMAllowance, useApprove } from '@sodax/dapp-kit';
 
 function TokenManagementComponent() {
   // Check token allowance
-  const { data: hasAllowed } = useAllowance(token, amount);
+  const { data: hasAllowed } = useMMAllowance(token, amount);
   
   // Approve token spending
   const { approve, isLoading: isApproving } = useApprove(token);
@@ -214,16 +213,18 @@ function SwapComponent() {
 - [`useUserReservesData()`](./src/hooks/mm/useUserReservesData.ts) - Get user's reserves data(supplied asset and debt)
 - [`useHubWalletAddress()`](./src/hooks/mm/useHubWalletAddress.ts) - Get hub wallet address for a spoke chain
 - [`useReservesData()`](./src/hooks/mm/useReservesData.ts) - Get reserves data
+- [`useMMAllowance()`](./src/hooks/mm/useMMAllowance.ts) - Check token allowance for a specific amount
+- [`useMMApprove()`](./src/hooks/mm/useMMApprove.ts) - Approve token spending
 
 #### Swap Hooks
 - [`useQuote()`](./src/hooks/swap/useQuote.ts) - Get quote for an intent order
 - [`useCreateIntentOrder()`](./src/hooks/swap/useCreateIntentOrder.ts) - Create and submit an intent order
 - [`useStatus()`](./src/hooks/swap/useStatus.ts) - Get status of an intent order
+- [`useSwapAllowance()`](./src/hooks/swap/useSwapAllowance.ts) - Check token allowance for an intent order
+- [`useSwapApprove()`](./src/hooks/swap/useSwapApprove.ts) - Approve token spending
 
 #### Shared Hooks
 - [`useSodaxContext()`](./src/hooks/shared/useSodaxContext.ts) - Access Sodax context and configuration
-- [`useAllowance()`](./src/hooks/shared/useAllowance.ts) - Check token allowance for a specific amount
-- [`useApprove()`](./src/hooks/shared/useApprove.ts) - Approve token spending
 
 
 ## Contributing

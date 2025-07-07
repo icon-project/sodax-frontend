@@ -22,10 +22,10 @@ import type { MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
  *
  * @example
  * ```typescript
- * const { data: hasAllowed, isLoading } = useAllowance(token, "100", "repay", provider);
+ * const { data: hasAllowed, isLoading } = useMMAllowance(token, "100", "repay", provider);
  * ```
  */
-export function useAllowance(
+export function useMMAllowance(
   token: XToken,
   amount: string,
   action: MoneyMarketAction,

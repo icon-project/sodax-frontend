@@ -18,14 +18,14 @@ interface UseApproveReturn {
  * @returns Object containing approve function, loading state, error state and reset function
  * @example
  * ```tsx
- * const { approve, isLoading, error } = useApprove(token, spokeProvider);
+ * const { approve, isLoading, error } = useMMApprove(token, spokeProvider);
  *
  * // Approve tokens for supply action
  * await approve({ amount: "100", action: "supply" });
  * ```
  */
 
-export function useApprove(token: XToken, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
+export function useMMApprove(token: XToken, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
