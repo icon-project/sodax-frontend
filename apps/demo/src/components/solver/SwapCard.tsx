@@ -203,7 +203,7 @@ export default function SwapCard({
   const handleApprove = async () => {
     await approve({ amount: sourceAmount });
   };
-  console.log('hasAllowed', hasAllowed);
+
   return (
     <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
