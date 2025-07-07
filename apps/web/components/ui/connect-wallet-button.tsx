@@ -75,7 +75,6 @@ const ConnectWalletButton = ({
                 connected
                   ? onWalletClick
                   : () => {
-                      onCloseRewardDialog?.();
                       openConnectModal();
                     }
               }

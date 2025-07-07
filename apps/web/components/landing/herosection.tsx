@@ -75,13 +75,6 @@ const HeroSection = ({
     api.on('select', () => {});
   }, [api]);
 
-  useEffect(() => {
-    if (isConnected && !hasBeenConnected) {
-      onRewardDialogChange(true);
-      setHasBeenConnected(true);
-    }
-  }, [isConnected, hasBeenConnected, onRewardDialogChange]);
-
   const handleMouseEnter = () => {
     api?.plugins().autoplay.stop();
   };
@@ -290,7 +283,10 @@ const HeroSection = ({
       >
         <div className="relative">
           {!isConnected ? (
-            <DialogContent className="h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[80px] w-[90%] lg:max-w-[952px] dialog-content transform translate-y-[-65%] lg:mt-0">
+            <DialogContent
+              className="h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[80px] w-[90%] lg:max-w-[952px] dialog-content transform translate-y-[-65%] lg:mt-0"
+              onPointerDownOutside={e => e.preventDefault()}
+            >
               <DialogHeader>
                 <div className="flex justify-center">
                   <Image src="/symbol.png" alt="SODAX Symbol" width={64} height={64} />
