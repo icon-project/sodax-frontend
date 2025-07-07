@@ -41,14 +41,14 @@ export function useWallet() {
       try {
         await registerWalletService(walletAddress);
         setIsRegistered(true);
-        showNotification('success', 'Wallet registered successfully!');
+        // showNotification('success', 'Wallet registered successfully!');
       } catch (error) {
         console.error('Error registering wallet:', error);
         if (error instanceof Error && error.message.includes('E11000 duplicate key error')) {
           setIsRegistered(true);
-          showNotification('warning', 'Wallet exists already.');
+          // showNotification('warning', 'Wallet exists already.');
         } else {
-          showNotification('error', 'Failed to register wallet. Please try again.');
+          // showNotification('error', 'Failed to register wallet. Please try again.');
         }
         throw error;
       } finally {
