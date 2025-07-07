@@ -203,7 +203,7 @@ export default function SwapCard({
   const handleApprove = async () => {
     await approve({ amount: sourceAmount });
   };
-
+  console.log('hasAllowed', hasAllowed);
   return (
     <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
@@ -390,7 +390,7 @@ export default function SwapCard({
 
               {!isWrongChain &&
                 (intentOrderPayload ? (
-                  <Button className="w-full" onClick={() => handleSwap(intentOrderPayload)}>
+                  <Button className="w-full" onClick={() => handleSwap(intentOrderPayload)} disabled={!hasAllowed}>
                     <ArrowLeftRight className="mr-2 h-4 w-4" /> Swap
                   </Button>
                 ) : (
