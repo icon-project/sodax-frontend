@@ -1,7 +1,7 @@
 {
   "name": "@sodax/dapp-kit",
   "license": "MIT",
-  "version": "0.0.1-rc.6",
+  "version": "0.0.1-rc.7",
   "description": "dapp-kit of New World",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
