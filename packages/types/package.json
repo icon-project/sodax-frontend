@@ -15,7 +15,9 @@
     "type": "git",
     "url": "https://github.com/icon-project/sodax-frontend"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "exports": {
     ".": {
