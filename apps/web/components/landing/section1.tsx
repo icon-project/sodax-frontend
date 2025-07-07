@@ -29,7 +29,12 @@ const Section1 = () => {
         Supply for a fully carbonated future.
       </Label>
       <div className="mt-4">
-        <Button variant="outline" className="px-6 font-['InterMedium'] cursor-pointer" size="lg">
+        <Button
+          variant="outline"
+          className="px-6 font-['InterMedium'] cursor-pointer"
+          size="lg"
+          onClick={() => window.open('https://x.com/gosodax', '_blank')}
+        >
           Follow X for launch
         </Button>
       </div>
