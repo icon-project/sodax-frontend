@@ -75,11 +75,12 @@ export function useWallet() {
   // Watch for address changes and check registration when connected
   useEffect(() => {
     if (isConnected && address) {
-      checkRegistration(address);
+      registerWallet(address);
+      // checkRegistration(address);
     } else {
       setIsRegistered(false);
     }
-  }, [isConnected, address, checkRegistration]);
+  }, [isConnected, address, checkRegistration, registerWallet]);
 
   const handleWalletClick = async () => {
     if (isConnected && address) {
