@@ -217,12 +217,13 @@ export class SolverService {
 
   /**
    * Get the status of an intent from Solver API
+   * NOTE: intentHash should be retrieved from relay packet dst_tx_hash property (see createAndSubmitIntent)
    * @param {IntentStatusRequest} intentStatusRequest - The intent status request
    * @returns {Promise<Result<IntentStatusResponse, IntentErrorResponse>>} The intent status response
    *
    * @example
    * const intentStatusRequest = {
-   *     "intentHash": "a0dd7652-b360-4123-ab2d-78cfbcd20c6b"
+   *     "intentHash": "a0dd7652-b360-4123-ab2d-78cfbcd20c6b" // destination tx hash from relay packet
    * } satisfies IntentStatusRequest
    *
    * const response = await solverService.getStatus(intentStatusRequest);
