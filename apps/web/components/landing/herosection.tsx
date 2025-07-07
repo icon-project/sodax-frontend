@@ -116,7 +116,7 @@ const HeroSection = ({
     setIsTermsModalOpen(true);
   };
 
-  const isFormValid = xHandle.trim() !== '' && acceptedTerms;
+  const isFormValid = acceptedTerms;
 
   return (
     <div className="hero-section">
@@ -294,7 +294,7 @@ const HeroSection = ({
                 <DialogTitle className="text-center text-white text-[42px] mt-6 font-[InterBlack] leading-none">
                   REWARDS!
                 </DialogTitle>
-                <div className="grid">
+                {/* <div className="grid">
                   <div className="flex justify-center">
                     <Input
                       placeholder="Add your X handle"
@@ -303,14 +303,11 @@ const HeroSection = ({
                       className="border border-white h-[36px] w-full max-w-[280px] text-white rounded-full border-4 border-white text-center placeholder:text-cream"
                     />
                   </div>
-                </div>
+                </div> */}
                 <DialogDescription className="text-center text-white text-base">
                   Coming soon. Pre-register your EVM wallet.
                 </DialogDescription>
-              </DialogHeader>
-
-              <DialogFooter>
-                <div className="flex justify-center items-center w-full mt-2">
+                <div className="flex justify-center items-center w-full mt-6">
                   <div className="inline-flex justify-center items-start">
                     <ConnectWalletButton
                       onWalletClick={handleWalletClick}
@@ -320,25 +317,25 @@ const HeroSection = ({
                     ></ConnectWalletButton>
                   </div>
                 </div>
-              </DialogFooter>
-              <div className="flex items-center justify-center space-x-2 mt-2">
-                <Checkbox
-                  id="terms"
-                  className="bg-white rounded-lg"
-                  checked={acceptedTerms}
-                  onCheckedChange={checked => setAcceptedTerms(checked as boolean)}
-                />
-                <Label htmlFor="terms" className="text-white">
-                  Accept{' '}
-                  <button
-                    type="button"
-                    onClick={handleTermsClick}
-                    className="underline cursor-pointer hover:text-yellow-soda transition-colors"
-                  >
-                    terms and conditions
-                  </button>
-                </Label>
-              </div>
+                <div className="flex items-center justify-center space-x-2 mt-6">
+                  <Checkbox
+                    id="terms"
+                    className="bg-white rounded-lg"
+                    checked={acceptedTerms}
+                    onCheckedChange={checked => setAcceptedTerms(checked as boolean)}
+                  />
+                  <Label htmlFor="terms" className="text-white">
+                    Accept{' '}
+                    <button
+                      type="button"
+                      onClick={handleTermsClick}
+                      className="underline cursor-pointer hover:text-yellow-soda transition-colors"
+                    >
+                      terms and conditions
+                    </button>
+                  </Label>
+                </div>
+              </DialogHeader>
 
               {/* Terms Modal Overlay */}
               {isTermsModalOpen && (
