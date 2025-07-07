@@ -61,7 +61,7 @@ export default function SwapCard({
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
-  const { approve, isLoading: isApproving } = useSwapApprove(sourceToken!, sourceProvider);
+  const { approve, isLoading: isApproving } = useSwapApprove(sourceToken, sourceProvider);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
   const onChangeDirection = () => {

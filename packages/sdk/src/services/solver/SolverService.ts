@@ -471,13 +471,18 @@ export class SolverService {
   public async approve<S extends SpokeProvider, R extends boolean = false>(
     token: Address,
     amount: bigint,
-    address: Address,
     spokeProvider: S,
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>>> {
     try {
       if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
-        const result = await Erc20Service.approve(token, amount, address, spokeProvider, raw);
+        const result = await Erc20Service.approve(
+          token,
+          amount,
+          spokeProvider.chainConfig.addresses.assetManager as Address,
+          spokeProvider,
+          raw,
+        );
 
         return {
           ok: true,

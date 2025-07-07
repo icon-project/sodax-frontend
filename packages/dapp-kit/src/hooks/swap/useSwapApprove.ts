@@ -25,7 +25,7 @@ interface UseApproveReturn {
  * ```
  */
 
-export function useSwapApprove(token: Token, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
+export function useSwapApprove(token: Token | undefined, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
@@ -39,10 +39,13 @@ export function useSwapApprove(token: Token, spokeProvider: SpokeProvider | unde
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
+      if (!token) {
+        throw new Error('Token not found');
+      }
+
       const allowance = await sodax.solver.approve(
         token.address as Address,
         parseUnits(amount, token.decimals),
-        spokeProvider.chainConfig.addresses.assetManager as Address,
         spokeProvider,
       );
       if (!allowance.ok) {
@@ -52,7 +55,7 @@ export function useSwapApprove(token: Token, spokeProvider: SpokeProvider | unde
     },
     onSuccess: () => {
       // Invalidate allowance query to refetch the new allowance
-      queryClient.invalidateQueries({ queryKey: ['allowance', token.address] });
+      queryClient.invalidateQueries({ queryKey: ['allowance', token?.address] });
     },
   });
 
