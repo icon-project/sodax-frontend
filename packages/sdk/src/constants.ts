@@ -1095,6 +1095,13 @@ export const hubAssets: Record<
       name: 'ICON',
       vault: '0x0000000000000000000000000000000000000000',
     },
+    [spokeChainConfig[ICON_MAINNET_CHAIN_ID].addresses.wICX]: {
+      asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
+      decimal: 18,
+      symbol: 'wICX',
+      name: 'ICON',
+      vault: '0x0000000000000000000000000000000000000000',
+    },
     [spokeChainConfig[ICON_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x654dddf32a9a2ac53f5fb54bf1e93f66791f8047',
       decimal: 18,

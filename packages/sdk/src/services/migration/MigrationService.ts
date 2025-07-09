@@ -21,6 +21,7 @@ import {
   encodeAddress,
   type Prettify,
   type RelayError,
+  isIconAddress,
 } from '../../index.js';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { isAddress } from 'viem';
@@ -120,7 +121,7 @@ export class MigrationService {
     try {
       if (params.action === 'migrate') {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
-        invariant(params.to.length > 0, 'To address is required');
+        invariant(isAddress(params.to) || isIconAddress(params.to), 'To address is required');
         invariant(
           spokeProvider instanceof IconSpokeProvider,
           'Spoke provider must be an instance of IconSpokeProvider',
@@ -141,7 +142,7 @@ export class MigrationService {
 
       if (params.action === 'revert') {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
-        invariant(params.to.length > 0, 'To address is required');
+        invariant(isAddress(params.to) || isIconAddress(params.to), 'To address is required');
         invariant(
           spokeProvider instanceof SonicSpokeProvider,
           'Spoke provider must be an instance of SonicSpokeProvider',
