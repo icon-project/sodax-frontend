@@ -8,6 +8,8 @@ import {
   type IconSpokeChainConfig,
   CWSpokeProvider,
   type CosmosSpokeChainConfig,
+  StellarSpokeProvider,
+  type StellarSpokeChainConfig,
   type SpokeProvider,
   type IWalletProvider,
 } from '@sodax/sdk';
@@ -17,6 +19,7 @@ import type {
   ISuiWalletProvider,
   SpokeChainId,
   IInjectiveWalletProvider,
+  IStellarWalletProvider,
 } from '@sodax/types';
 import { getXChainType, useWalletProvider } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
@@ -69,6 +72,16 @@ export function useSpokeProvider(
       return new CWSpokeProvider(
         spokeChainConfig[spokeChainId] as CosmosSpokeChainConfig,
         _walletProvider as IInjectiveWalletProvider,
+      );
+    }
+
+    if (xChainType === 'STELLAR') {
+      const stellarConfig = spokeChainConfig[spokeChainId] as StellarSpokeChainConfig;
+      return new StellarSpokeProvider(
+        _walletProvider as IStellarWalletProvider,
+        stellarConfig.addresses.assetManager,
+        stellarConfig,
+        stellarConfig.rpc_url,
       );
     }
 
