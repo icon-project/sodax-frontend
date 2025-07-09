@@ -76,11 +76,12 @@ export function useSpokeProvider(
     }
 
     if (xChainType === 'STELLAR') {
+      const stellarConfig = spokeChainConfig[spokeChainId] as StellarSpokeChainConfig;
       return new StellarSpokeProvider(
         _walletProvider as IStellarWalletProvider,
-        spokeChainConfig[spokeChainId].addresses.assetManager,
-        spokeChainConfig[spokeChainId] as StellarSpokeChainConfig,
-        (spokeChainConfig[spokeChainId] as StellarSpokeChainConfig).rpc_url,
+        stellarConfig.addresses.assetManager,
+        stellarConfig,
+        stellarConfig.rpc_url,
       );
     }
 

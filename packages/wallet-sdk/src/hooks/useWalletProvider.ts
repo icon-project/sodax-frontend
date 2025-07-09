@@ -14,20 +14,45 @@ import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
 import { StellarWalletProvider } from '../wallet-providers/StellarWalletProvider';
 
-export function useWalletProvider(xChainId: ChainId) {
-  const xChainType = getXChainType(xChainId);
+/**
+ * Hook to get the appropriate wallet provider based on the chain type.
+ * Supports EVM, SUI, ICON and INJECTIVE chains.
+ *
+ * @param {ChainId | undefined} spokeChainId - The chain ID to get the wallet provider for. Can be any valid ChainId value.
+ * @returns {EvmWalletProvider | SuiWalletProvider | IconWalletProvider | InjectiveWalletProvider | undefined}
+ * The appropriate wallet provider instance for the given chain ID, or undefined if:
+ * - No chain ID is provided
+ * - Chain type is not supported
+ * - Required wallet provider options are not available
+ *
+ * @example
+ * ```tsx
+ * // Get wallet provider for a specific chain
+ * const walletProvider = useWalletProvider('sui');
+ * ```
+ */
+export function useWalletProvider(
+  spokeChainId: ChainId | undefined,
+):
+  | EvmWalletProvider
+  | SuiWalletProvider
+  | IconWalletProvider
+  | InjectiveWalletProvider
+  | StellarWalletProvider
+  | undefined {
+  const xChainType = getXChainType(spokeChainId);
 
   // EVM-specific hooks
   const evmPublicClient = usePublicClient({
-    chainId: getWagmiChainId(xChainId),
+    chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
   });
   const { data: evmWalletClient } = useWalletClient({
-    chainId: getWagmiChainId(xChainId),
+    chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
   });
 
   // Cross-chain hooks
-  const xService = useXService(getXChainType(xChainId));
-  const xAccount = useXAccount(xChainId);
+  const xService = useXService(getXChainType(spokeChainId));
+  const xAccount = useXAccount(spokeChainId);
 
   return useMemo(() => {
     switch (xChainType) {
