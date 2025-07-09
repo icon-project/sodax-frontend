@@ -18,6 +18,7 @@ import {
   type SolverConfigParams,
   ICXMigrationService,
   type ICXMigrateParams,
+  type BalnMigrateParams,
 } from '@sodax/sdk';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
@@ -76,6 +77,8 @@ async function depositTo(token: IconAddress, amount: bigint, recipient: Address)
   );
 
   const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
+  console.log('[depositTo] walletAddress', walletAddress);
+
   const txHash: Hash = await SpokeService.deposit(
     {
       from: walletAddress,
@@ -259,6 +262,51 @@ async function migrate(amount: bigint, recipient: Address): Promise<void> {
   }
 }
 
+/**
+ * Migrates BALN tokens from ICON to the hub chain.
+ * This function handles the migration of BALN tokens to SODA tokens on the hub chain with lockup period.
+ *
+ * @param baln - The ICON address of the BALN token to migrate
+ * @param amount - The amount of BALN tokens to migrate
+ * @param lockupPeriod - The lockup period for the migration (in seconds)
+ * @param to - The address that will receive the migrated SODA tokens
+ */
+async function balnMigrate(baln: IconAddress, amount: bigint, lockupPeriod: bigint, to: Address): Promise<void> {
+  try {
+    // Prepare BALN migration parameters
+    const balnMigrateParams: BalnMigrateParams = {
+      baln,
+      amount,
+      lockupPeriod,
+      to,
+    };
+
+    // Generate BALN migration transaction data
+    const balnMigrationData = await ICXMigrationService.balnMigrateData(hubProvider.chainConfig, balnMigrateParams);
+
+    // Get wallet address for the transaction
+    const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
+
+    // Execute the BALN migration transaction
+    const txHash: Hash = await SpokeService.deposit(
+      {
+        from: walletAddress,
+        token: baln,
+        amount,
+        data: balnMigrationData,
+      },
+      iconSpokeProvider,
+      hubProvider,
+    );
+
+    console.log('[balnMigrate] BALN migration transaction hash:', txHash);
+    console.log('[balnMigrate] BALN migration initiated successfully');
+  } catch (error) {
+    console.error('[balnMigrate] BALN migration failed:', error);
+    throw error;
+  }
+}
+
 // Main function to decide which function to call
 async function main() {
   const functionName = process.argv[2]; // Get function name from command line argument
@@ -293,12 +341,19 @@ async function main() {
     const amount = BigInt(process.argv[3]); // Get amount from command line argument
     const recipient = process.argv[4] as Address; // Get recipient address from command line argument
     await migrate(amount, recipient);
+  } else if (functionName === 'balnMigrate') {
+    const baln = process.argv[3] as IconAddress; // Get BALN token address from command line argument
+    const amount = BigInt(process.argv[4]); // Get amount from command line argument
+    const lockupPeriod = BigInt(process.argv[5]); // Get lockup period from command line argument
+    const recipient = process.argv[6] as Address; // Get recipient address from command line argument
+    await balnMigrate(baln, amount, lockupPeriod, recipient);
   } else {
     console.log(
-      'Function not recognized. Please use one of: "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", or "migrate".',
+      'Function not recognized. Please use one of: "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrate", or "balnMigrate".',
     );
     console.log('Usage examples:');
-    console.log('  npm run icon migrate <wICX_address> <amount> <recipient_address>');
+    console.log('  npm run icon migrate <amount> <recipient_address>');
+    console.log('  npm run icon balnMigrate <baln_address> <amount> <lockup_period> <recipient_address>');
     console.log('  npm run icon deposit <token_address> <amount> <recipient_address>');
     console.log('  npm run icon supply <token_address> <amount>');
   }

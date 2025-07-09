@@ -3,3 +3,4 @@ export * from './EvmWalletAbstraction.js';
 export * from './EvmVaultTokenService.js';
 export * from './WalletAbstractionService.js';
 export * from './ICXMigrationService.js';
+export * from './BalnSwapService.js';

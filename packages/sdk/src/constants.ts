@@ -137,6 +137,7 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
       icxMigration: '0x8Af7cae2c8377BEDD8820A5ad096AaFA29D839cc',
+      balnSwap: '0x0000000000000000000000000000000000000000', // TODO: Replace with actual BALN swap contract address
       sodaToken: '0x8515352CB9832D1d379D52366D1E995ADd358420',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
@@ -189,7 +190,7 @@ export const spokeChainConfig = {
         name: 'Wrapped Sonic',
         decimals: 18,
         address: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
-      }
+      },
     },
   } as const satisfies SonicSpokeChainConfig,
   [SOLANA_MAINNET_CHAIN_ID]: {
