@@ -1,4 +1,4 @@
-import { MsgExecuteContract, MsgExecuteContractCompat, MsgSend } from '@injectivelabs/sdk-ts';
+import { MsgExecuteContract, MsgExecuteContractCompat } from '@injectivelabs/sdk-ts';
 import { toHex } from 'viem';
 import { createTransaction } from '@injectivelabs/sdk-ts';
 

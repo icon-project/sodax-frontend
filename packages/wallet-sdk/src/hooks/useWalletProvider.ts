@@ -1,10 +1,9 @@
 import type { ChainId } from '@sodax/types';
 import { useMemo } from 'react';
-import { EvmWalletProvider, IconWalletProvider, SuiWalletProvider } from '../wallet-providers';
+import { EvmWalletProvider, IconWalletProvider, SuiWalletProvider, InjectiveWalletProvider } from '../wallet-providers';
 import { getXChainType } from '../actions';
 import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
 import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
-import { InjectiveWalletProvider } from '../wallet-providers/InjectiveWalletProvider';
 import type { InjectiveEoaAddress } from '@sodax/types';
 import { usePublicClient, useWalletClient } from 'wagmi';
 import { getWagmiChainId } from '../utils';

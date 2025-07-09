@@ -124,7 +124,7 @@ export class CWSpokeProvider implements ISpokeProvider {
       undefined,
       funds,
     );
-    return `0x${res.transactionHash}` as CWReturnType<R>;
+    return res.transactionHash as CWReturnType<R>;
   }
 
   async depositToken<R extends boolean = false>(
@@ -257,7 +257,7 @@ export class CWSpokeProvider implements ISpokeProvider {
       ) as CWReturnType<R>;
     }
     const res = await this.walletProvider.execute(sender, this.chainConfig.addresses.connection, msg, 'auto');
-    return `0x${res.transactionHash}` as CWReturnType<R>;
+    return res.transactionHash as CWReturnType<R>;
   }
 
   // Helper Methods

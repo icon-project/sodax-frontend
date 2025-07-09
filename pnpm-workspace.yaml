@@ -13,3 +13,4 @@ catalog:
   react: ^19.0.0
   react-dom: ^19.0.0
   "icon-sdk-js": "1.5.3"
+  "@vitest/coverage-v8": "2.1.9"

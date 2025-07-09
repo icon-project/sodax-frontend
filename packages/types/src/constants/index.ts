@@ -15,6 +15,7 @@ export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
 
 // currently supported spoke chains
 export const SPOKE_CHAIN_IDS = [
+  SONIC_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,

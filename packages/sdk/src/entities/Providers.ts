@@ -11,11 +11,16 @@ import {
   createPublicClient,
 } from 'viem';
 import { getEvmViemChain, getHubChainConfig } from '../constants.js';
-import type { EvmChainId, EvmHubChainConfig, EvmSpokeChainConfig, SpokeChainConfig } from '../types.js';
+import type {
+  EvmChainId,
+  EvmHubChainConfig,
+  EvmSpokeChainConfig,
+  SonicSpokeChainConfig,
+  SpokeChainConfig,
+} from '../types.js';
 import type { CWSpokeProvider } from './cosmos/CWSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
-import type { SolanaWalletProvider } from './solana/SolanaWalletProvider.js';
 import type { StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
 import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
 import {
@@ -26,6 +31,7 @@ import {
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
   type ICWWalletProvider,
+  type ISolanaWalletProvider
 } from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
@@ -81,6 +87,28 @@ export class EvmHubProvider {
   }
 }
 
+export class SonicSpokeProvider implements ISpokeProvider {
+  public readonly walletProvider: IEvmWalletProvider;
+  public readonly chainConfig: SonicSpokeChainConfig;
+  public readonly publicClient: PublicClient<HttpTransport>;
+
+  constructor(walletProvider: IEvmWalletProvider, chainConfig: SonicSpokeChainConfig, rpcUrl?: string) {
+    this.walletProvider = walletProvider;
+    this.chainConfig = chainConfig;
+    if (rpcUrl) {
+      this.publicClient = createPublicClient({
+        transport: http(rpcUrl),
+        chain: getEvmViemChain(chainConfig.chain.id),
+      });
+    } else {
+      this.publicClient = createPublicClient({
+        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
+        chain: getEvmViemChain(chainConfig.chain.id),
+      });
+    }
+  }
+}
+
 export class EvmSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: IEvmWalletProvider;
   public readonly chainConfig: EvmSpokeChainConfig;
@@ -92,12 +120,12 @@ export class EvmSpokeProvider implements ISpokeProvider {
     if (rpcUrl) {
       this.publicClient = createPublicClient({
         transport: http(rpcUrl),
-        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
+        chain: getEvmViemChain(chainConfig.chain.id),
       });
     } else {
       this.publicClient = createPublicClient({
-        transport: http(getEvmViemChain(chainConfig.chain.id as EvmChainId).rpcUrls.default.http[0]),
-        chain: getEvmViemChain(chainConfig.chain.id as EvmChainId),
+        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
+        chain: getEvmViemChain(chainConfig.chain.id),
       });
     }
   }
@@ -114,7 +142,7 @@ export type IWalletProvider =
   | ISuiWalletProvider
   | IIconWalletProvider
   | IInjectiveWalletProvider
-  | SolanaWalletProvider;
+  | ISolanaWalletProvider;
 
 export type SpokeProvider = (
   | EvmSpokeProvider
@@ -123,5 +151,6 @@ export type SpokeProvider = (
   | SuiSpokeProvider
   | StellarSpokeProvider
   | SolanaSpokeProvider
+  | SonicSpokeProvider
 ) &
   ISpokeProvider;
