@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAllowance, useSupply, useApprove, useSpokeProvider } from '@sodax/dapp-kit';
+import { useMMAllowance, useSupply, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 
@@ -13,8 +13,8 @@ export function SupplyButton({ token }: { token: XToken }) {
   const spokeProvider = useSpokeProvider(token.xChainId);
   const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply(token, spokeProvider);
 
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount, 'supply');
-  const { approve, isLoading: isApproving } = useApprove(token);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'supply', spokeProvider);
+  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleSupply = async () => {
