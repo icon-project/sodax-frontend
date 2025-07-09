@@ -14,6 +14,7 @@ import {
   type WaitUntilIntentExecutedPayload,
   WalletAbstractionService,
   calculateFeeAmount,
+  encodeAddress,
   encodeContractCalls,
   getIntentRelayChainId,
   getSolverConfig,
@@ -56,8 +57,8 @@ export type CreateIntentParams = {
   allowPartialFill: boolean; // Whether the intent can be partially filled
   srcChain: SpokeChainId; // Chain ID where input tokens originate
   dstChain: SpokeChainId; // Chain ID where output tokens should be delivered
-  srcAddress: Hex; // Source address in bytes (original address on spoke chain)
-  dstAddress: Hex; // Destination address in bytes (original address on spoke chain)
+  srcAddress: string; // Source address (original address on spoke chain)
+  dstAddress: string; // Destination address (original address on spoke chain)
   solver: Address; // Optional specific solver address (address(0) = any solver)
   data: Hex; // Additional arbitrary data
 };
@@ -279,8 +280,8 @@ export class SolverService {
    *     "allowPartialFill": false, // Whether the intent can be partially filled
    *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
    *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
-   *     "srcAddress": "0x..", // Source address in bytes (original address on spoke chain)
-   *     "dstAddress": "0x...", // Destination address in bytes (original address on spoke chain)
+   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
    *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
    *     "data": "0x..", // Additional arbitrary data
    * } satisfies CreateIntentParams;
@@ -399,8 +400,8 @@ export class SolverService {
    *     "allowPartialFill": false, // Whether the intent can be partially filled
    *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
    *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
-   *     "srcAddress": "0x..", // Source address in bytes (original address on spoke chain)
-   *     "dstAddress": "0x...", // Destination address in bytes (original address on spoke chain)
+   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
    *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
    *     "data": "0x..", // Additional arbitrary data
    * } satisfies CreateIntentParams;
@@ -506,7 +507,7 @@ export class SolverService {
   /**
    * Creates an intent by handling token approval and intent creation
    * NOTE: This method does not submit the intent to the Solver API
-   * @param {CreateIntentParams} params - The intent to create
+   * @param {Omit<CreateIntentParams, 'srcAddress'>} params - The intent to create
    * @param {SpokeProvider} spokeProvider - The spoke provider
    * @param {boolean} raw - Whether to return the raw transaction
    * @param {PartnerFee} fee - The fee to apply to the intent
@@ -522,8 +523,8 @@ export class SolverService {
    *     "allowPartialFill": false, // Whether the intent can be partially filled
    *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
    *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
-   *     "srcAddress": "0x..", // Source address in bytes (original address on spoke chain)
-   *     "dstAddress": "0x...", // Destination address in bytes (original address on spoke chain)
+   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
    *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
    *     "data": "0x..", // Additional arbitrary data
    * } satisfies CreateIntentParams;
@@ -553,7 +554,11 @@ export class SolverService {
     invariant(isValidSpokeChainId(params.dstChain), `Invalid spoke chain (params.dstChain): ${params.dstChain}`);
 
     try {
-      const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      invariant(params.srcAddress.toLowerCase() === walletAddress.toLowerCase(), 'srcAddress must be the same as wallet address');
+
+      const walletAddressBytes = encodeAddress(params.srcChain, walletAddress);
+
       // derive users hub wallet address
       const creatorHubWalletAddress =
         spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
@@ -567,13 +572,15 @@ export class SolverService {
 
       // construct the intent data
       const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
-        params,
+        {
+          ...params,
+          srcAddress: walletAddress,
+        },
         creatorHubWalletAddress,
         this.config,
         fee,
       );
 
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       const txResult = await SpokeService.deposit(
         {
           from: walletAddress,
