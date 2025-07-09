@@ -6,10 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "repository": {
     "type": "git",
     "url": "https://github.com/icon-project/sodax-frontend"
@@ -26,6 +23,7 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "0.30.1",
     "@cosmjs/cosmwasm-stargate": "0.32.2",
     "@cosmjs/encoding": "0.32.3",
     "@cosmjs/proto-signing": "0.32.3",
@@ -42,7 +40,7 @@
     "@sodax/types": "workspace:*",
     "@solana/spl-token": "0.4.9",
     "@solana/wallet-adapter-react": "0.15.35",
-    "@solana/wallet-adapter-wallets": "0.19.32",
+    "@solana/wallet-adapter-wallets": "0.19.30",
     "@solana/web3.js": "1.98.0",
     "@stellar/stellar-sdk": "12.3.0",
     "cosmjs-types": "0.9.0",
