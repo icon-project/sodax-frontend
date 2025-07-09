@@ -36,9 +36,7 @@ export function useMMAllowance(
   return useQuery({
     queryKey: ['allowance', token.address, amount, action],
     queryFn: async () => {
-      if (!spokeProvider) {
-        return false;
-      }
+      if (!spokeProvider) throw new Error('Spoke provider is required');
       const allowance = await sodax.moneyMarket.isAllowanceValid(
         {
           token: token.address,
