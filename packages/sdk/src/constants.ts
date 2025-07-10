@@ -1268,6 +1268,7 @@ const moneyMarketSupportedTokens = {
   [INJECTIVE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
   [SONIC_MAINNET_CHAIN_ID]: [
