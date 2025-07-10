@@ -1,4 +1,4 @@
-import { getHubAssetInfo, getOriginalAssetAddress, getSupportedMoneyMarketTokens, spokeChainConfig, supportedSpokeChains } from '../../constants.js';
+import { getHubAssetInfo, getOriginalAssetAddress, getSupportedMoneyMarketTokens, supportedSpokeChains } from '../../constants.js';
 import { describe, expect, it } from 'vitest';
 import { ARBITRUM_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, ICON_MAINNET_CHAIN_ID, INJECTIVE_MAINNET_CHAIN_ID, NIBIRU_MAINNET_CHAIN_ID, OPTIMISM_MAINNET_CHAIN_ID, POLYGON_MAINNET_CHAIN_ID, SOLANA_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId, type Token } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
