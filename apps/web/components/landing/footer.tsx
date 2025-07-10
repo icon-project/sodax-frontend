@@ -60,8 +60,20 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             resources
           </div>
-          <FooterLink href="#" showArrow>
-            Partners
+          <FooterLink href="https://sodax.gitbook.io/sodax/readme-1" showArrow>
+            Documentation
+          </FooterLink>
+          {/* <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
+            Frontend Github
+          </FooterLink> */}
+          <FooterLink
+            href="https://www.figma.com/design/lZi3whUFdj24pQnYDOkIee/SODAX-Brand-guide?node-id=0-1&t=FzVNlqCMO4D36P36-1"
+            showArrow
+          >
+            Media Kit
+          </FooterLink>
+          <FooterLink href="#" onClick={handleTermsClick}>
+            Terms
           </FooterLink>
         </div>
         {/* <div className="inline-flex flex-col justify-start items-start gap-3 w-[134px]">
