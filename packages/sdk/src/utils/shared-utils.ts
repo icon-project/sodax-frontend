@@ -11,6 +11,7 @@ import {
 } from '../index.js';
 import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
+import { Address } from '@stellar/stellar-sdk';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -121,6 +122,9 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
 
     case 'sui':
       return toHex(bcs.Address.serialize(address).toBytes());
+
+    case 'stellar':
+      return `0x${Address.fromString(address).toScVal().toXDR('hex')}`;
 
     default:
       return address as Hex;
