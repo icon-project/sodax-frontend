@@ -183,7 +183,7 @@ export class MigrationService {
    * const result = await migrationService.approve(
    *   {
    *     amount: 1000n, // Amount of SODA tokens to revert
-   *     to: 'hx...', // Icon Address to receive the reverted SODA tokens as wICX
+   *     to: 'hx...', // Icon Address to receive the reverted SODA tokens as ICX
    *     action: 'revert',
    *   },
    *   spokeProvider, // SonicSpokeProvider instance
@@ -313,7 +313,7 @@ export class MigrationService {
   }
 
   /**
-   * Creates a revert migration (SODA to wICX) intent and submits (relays) it to the spoke chain.
+   * Creates a revert migration (SODA to ICX) intent and submits (relays) it to the spoke chain.
    * @param params - The parameters for the revert migration transaction.
    * @param spokeProvider - The SonicSpokeProvider instance.
    * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
@@ -327,7 +327,7 @@ export class MigrationService {
    * const result = await migrationService.createAndSubmitRevertMigrationIntent(
    *   {
    *     amount: 1000n, // Amount of SODA tokens to revert
-   *     to: 'hx...', // Icon Address to receive the reverted SODA tokens as wICX
+   *     to: 'hx...', // Icon Address to receive the reverted SODA tokens as ICX
    *     action: 'revert',
    *   },
    *   spokeProvider, // SonicSpokeProvider instance
@@ -388,8 +388,8 @@ export class MigrationService {
   }
 
   /**
-   * Migrates wICX tokens from ICON to the hub chain.
-   * This function handles the migration of wICX tokens to SODA tokens on the hub chain.
+   * Migrates ICX or wICX tokens from ICON to the hub chain.
+   * This function handles the migration of ICX or wICX tokens to SODA tokens on the hub chain.
    * Note: This function does not relay the transaction to the spoke chain.
    * You should call the `isAllowanceValid` function before calling this function to check if the allowance is valid.
    * You should call the `relayTxAndWaitPacket` function after calling this function to relay the transaction to the spoke chain.
@@ -491,7 +491,7 @@ export class MigrationService {
    * const result = await migrationService.createRevertMigrationIntent(
    *   {
    *     amount: 1000n, // Amount of SODA tokens to revert
-   *     to: 'hx...', // Icon Address to receive the reverted SODA tokens as wICX
+   *     to: 'hx...', // Icon Address to receive the reverted SODA tokens as ICX
    *     action: 'revert',
    *   },
    */

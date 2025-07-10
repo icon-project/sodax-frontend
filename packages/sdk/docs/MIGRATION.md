@@ -1,6 +1,6 @@
 # Migration
 
-Migration part of the SDK provides abstractions to assist you with migrating tokens between ICON and the hub chain (Sonic). The service supports both forward migration (ICX/wICX → SODA) and reverse migration (SODA → wICX).
+Migration part of the SDK provides abstractions to assist you with migrating tokens between ICON and the hub chain (Sonic). The service supports both forward migration (ICX/wICX → SODA) and reverse migration (SODA → ICX).
 
 ## Using SDK Config and Constants
 
@@ -143,7 +143,7 @@ if (result.ok) {
 }
 ```
 
-## Reverse Migration (SODA → wICX)
+## Reverse Migration (SODA → ICX)
 
 ### Check Allowance
 
@@ -345,7 +345,7 @@ async function migrate(amount: bigint, recipient: Address): Promise<void> {
 await migrate(BigInt(1000000000000000000), '0x1234567890123456789012345678901234567890');
 ```
 
-### Reverse Migration Example (SODA → wICX)
+### Reverse Migration Example (SODA → ICX)
 
 ```typescript
 import 'dotenv/config';

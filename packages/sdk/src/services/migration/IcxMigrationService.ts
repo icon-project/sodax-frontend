@@ -22,15 +22,15 @@ export type IcxMigrateParams = {
 
 export type IcxCreateRevertMigrationParams = {
   amount: bigint;     // The amount of wICX to migrate
-  to: IconEoaAddress; // The address that will receive the migrated SODA tokens as wICX
+  to: IconEoaAddress; // The address that will receive the migrated SODA tokens as ICX
   action: 'revert';
 };
 
 export type IcxRevertMigrationParams = {
-  wICX: IconAddress;   // The ICON address of the wICX token to migrate
-  amount: bigint;      // The amount of SODA tokens to migrate to wICX
+  wICX: IconAddress;   // The ICON address of the wICX token
+  amount: bigint;      // The amount of SODA tokens to migrate to ICX
   userWallet: Address; // The hub wallet address that will migrate assets
-  to: Hex;             // The Icon address that will receive the migrated SODA tokens as wICX
+  to: Hex;             // The Icon address that will receive the migrated SODA tokens as ICX
 };
 
 /**
