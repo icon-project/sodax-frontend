@@ -189,7 +189,7 @@ export const spokeChainConfig = {
         name: 'Wrapped Sonic',
         decimals: 18,
         address: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
-      }
+      },
     },
   } as const satisfies SonicSpokeChainConfig,
   [SOLANA_MAINNET_CHAIN_ID]: {
@@ -1058,15 +1058,15 @@ export const hubAssets: Record<
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: '0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3',
+      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
   },
   [SOLANA_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL.address]: {
       asset: '0x0c09e69a4528945de6d16c7e469dea6996fdf636',
       decimal: 9,
-      symbol: 'USDC',
-      name: 'USD Coin',
+      symbol: 'SOL',
+      name: 'Solana',
       vault: '0xdEa692287E2cE8Cb08FA52917Be0F16b1DACDC87',
     },
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].bnUSD]: {
@@ -1077,11 +1077,11 @@ export const hubAssets: Record<
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
-      asset: '0x0c09e69a4528945de6d16c7e469dea6996fdf636',
+      asset: '0xC3f020057510ffE10Ceb882e1B48238b43d78a5e',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: '0xdEa692287E2cE8Cb08FA52917Be0F16b1DACDC87',
+      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
   },
   [ICON_MAINNET_CHAIN_ID]: {
@@ -1263,6 +1263,7 @@ const moneyMarketSupportedTokens = {
   [SUI_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const,
   [INJECTIVE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,

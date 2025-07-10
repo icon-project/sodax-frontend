@@ -334,6 +334,11 @@ export default function SwapCard({
             </span>
           </div>
         </div>
+
+        <div className="">
+          {quoteQuery.data?.ok === false && <div className="text-red-500">{quoteQuery.data.error.detail.message}</div>}
+        </div>
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" onClick={() => createIntentOrderPayload()}>
