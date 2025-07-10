@@ -41,12 +41,14 @@
   --cherry-dark: #9c4846;
   --cherry-soda: #a55c55;
   --cherry-bright: #cc9e9a;
+  --cherry-brighter: #e3bebb;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
   --almost-white: #f8f3f3;
   --espresso: #483534;
   --cream: #eaded4;
+  --clay: #8e7e7d;
 }
 
 .dark {
@@ -85,12 +87,14 @@
   --cherry-dark: #9c4846;
   --cherry-soda: #a55c55;
   --cherry-bright: #cc9e9a;
+  --cherry-brighter: #e3bebb;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
   --almost-white: #f8f3f3;
   --espresso: #483534;
   --cream: #eaded4;
+  --clay: #8e7e7d;
 }
 
 @theme inline {
@@ -139,6 +143,8 @@
   --color-almost-white: var(--almost-white);
   --color-espresso: var(--espresso);
   --color-cream: var(--cream);
+  --color-clay: var(--clay);
+  --color-cherry-brighter: var(--cherry-brighter);
 }
 
 @layer base {
@@ -188,4 +194,8 @@
   font-weight: normal;
   font-style: normal;
   font-display: swap;
+}
+
+.iekbcc0 {
+  pointer-events: auto !important;
 }

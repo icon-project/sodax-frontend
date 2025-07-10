@@ -12,20 +12,41 @@ import Footer from '../components/landing/footer';
 
 const LandingPage = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
   const toggle = () => {
+    console.log('toggle');
     setIsOpen(!isOpen);
   };
 
+  const openRewardDialog = () => {
+    setIsRewardDialogOpen(true);
+  };
+
+  const closeRewardDialog = () => {
+    setIsRewardDialogOpen(false);
+  };
+
+  const openTermsModal = () => {
+    setIsTermsModalOpen(true);
+  };
+
   return (
-    <div>
-      <HeroSection toggle={toggle} isOpen={isOpen} />
+    <div className="landing-page">
+      <HeroSection
+        toggle={toggle}
+        isOpen={isOpen}
+        isRewardDialogOpen={isRewardDialogOpen}
+        onRewardDialogChange={setIsRewardDialogOpen}
+      />
       <Section1 />
       <Section2 />
       <Section3 />
-      <Section4 />
-      <Section5 />
+      <Section4 onOpenRewardDialog={openRewardDialog} />
+      {/* <Section5 /> */}
       <Section6 />
-      <Footer />
+      <Footer onTermsClick={openTermsModal} />
     </div>
   );
 };
