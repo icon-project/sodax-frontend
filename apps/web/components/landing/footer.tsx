@@ -61,11 +61,11 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
             resources
           </div>
           <FooterLink href="https://sodax.gitbook.io/sodax/readme-1" showArrow>
-            Gitbook
+            Documentation
           </FooterLink>
-          <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
+          {/* <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
             Frontend Github
-          </FooterLink>
+          </FooterLink> */}
           <FooterLink
             href="https://www.figma.com/design/lZi3whUFdj24pQnYDOkIee/SODAX-Brand-guide?node-id=0-1&t=FzVNlqCMO4D36P36-1"
             showArrow
