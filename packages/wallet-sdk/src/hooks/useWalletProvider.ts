@@ -7,12 +7,13 @@ import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
 import type { InjectiveEoaAddress } from '@sodax/types';
 import { usePublicClient, useWalletClient } from 'wagmi';
 import { getWagmiChainId } from '../utils';
-import { type StellarXService, useXAccount, useXService } from '..';
+import { type SolanaXService, type StellarXService, useXAccount, useXService } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
 import { StellarWalletProvider } from '../wallet-providers/StellarWalletProvider';
+import { SolanaWalletProvider } from '../wallet-providers/SolanaWalletProvider';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -39,6 +40,7 @@ export function useWalletProvider(
   | IconWalletProvider
   | InjectiveWalletProvider
   | StellarWalletProvider
+  | SolanaWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
 
@@ -109,6 +111,15 @@ export function useWalletProvider(
           type: 'BROWSER_EXTENSION',
           walletsKit: stellarXService.walletsKit,
           network: 'PUBLIC',
+        });
+      }
+
+      case 'SOLANA': {
+        const solanaXService = xService as SolanaXService;
+
+        return new SolanaWalletProvider({
+          wallet: solanaXService.wallet,
+          connection: solanaXService.connection,
         });
       }
 
