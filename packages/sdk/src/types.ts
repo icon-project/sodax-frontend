@@ -29,6 +29,7 @@ import type {
   CWRawTransaction,
   CosmosNetworkEnv,
   SolanaBase58PublicKey,
+  ICON_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
@@ -79,6 +80,8 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     assetManager: Address;
     hubWallet: Address;
     xTokenManager: Address;
+    icxMigration: Address;
+    sodaToken: Address;
   };
 
   nativeToken: Address;
@@ -98,6 +101,7 @@ export type MoneyMarketConfig = {
 
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
+export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 
 export type MoneyMarketConfigParams =
   | Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
@@ -168,6 +172,7 @@ export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
     assetManager: IconAddress;
     connection: IconAddress;
     rateLimit: IconAddress;
+    wICX: `cx${string}`;
   };
   nid: Hex;
 };
@@ -273,6 +278,9 @@ export type FeeAmount = {
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
+export type IcxTokenType =
+  | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['addresses']['wICX']
+  | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['nativeToken'];
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 export type HttpPrefixedUrl = `http${string}`;
 
@@ -292,7 +300,7 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
             ? SolanaSpokeDepositParams
             : T extends SonicSpokeProvider
               ? SonicSpokeDepositParams
-            : never;
+              : never;
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? Address
@@ -308,7 +316,7 @@ export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
             ? Hex
             : T extends SonicSpokeProvider
               ? Address
-            : never;
+              : never;
 
 export type HttpUrl = `http://${string}` | `https://${string}`;
 
