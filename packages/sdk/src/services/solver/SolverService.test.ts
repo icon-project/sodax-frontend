@@ -125,8 +125,8 @@ describe('SolverService', () => {
 
   // Helper function to create mock intent params with resolved addresses
   const createMockIntentParams = async (): Promise<CreateIntentParams> => {
-    const srcAddress = await mockEvmWalletProvider.getWalletAddressBytes();
-    const dstAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+    const srcAddress = await mockEvmWalletProvider.getWalletAddress();
+    const dstAddress = await mockEvmWalletProvider.getWalletAddress();
     return {
       inputToken: bscEthToken,
       outputToken: arbWbtcToken,

@@ -291,7 +291,7 @@ describe('Sodax', () => {
       let mockPacketData: PacketData;
 
       beforeEach(async () => {
-        const walletAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+        const walletAddress = await mockEvmWalletProvider.getWalletAddress();
         mockCreateIntentParams = {
           inputToken: bscEthToken,
           outputToken: arbWbtcToken,
@@ -307,10 +307,11 @@ describe('Sodax', () => {
           data: '0x',
         } satisfies CreateIntentParams;
 
+        const walletAddressBytes = await mockEvmWalletProvider.getWalletAddressBytes();
         const creatorAddress = await mockBscSpokeProvider.walletProvider.getWalletAddress();
         mockIntent = {
           intentId: BigInt(1),
-          creator: creatorAddress as `0x${string}`,
+          creator: creatorAddress,
           inputToken:
             getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
           outputToken:
@@ -321,8 +322,8 @@ describe('Sodax', () => {
           allowPartialFill: mockCreateIntentParams.allowPartialFill,
           srcChain: getIntentRelayChainId(mockCreateIntentParams.srcChain),
           dstChain: getIntentRelayChainId(mockCreateIntentParams.dstChain),
-          srcAddress: walletAddress,
-          dstAddress: walletAddress,
+          srcAddress: walletAddressBytes,
+          dstAddress: walletAddressBytes,
           solver: mockCreateIntentParams.solver,
           data: mockCreateIntentParams.data,
           feeAmount: partnerFeeAmount.amount,
@@ -400,7 +401,7 @@ describe('Sodax', () => {
       let intent: Intent & FeeAmount;
 
       beforeEach(async () => {
-        const walletAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+        const walletAddress = await mockEvmWalletProvider.getWalletAddress();
         mockCreateIntentParams = {
           inputToken: bscEthToken,
           outputToken: arbWbtcToken,
@@ -457,7 +458,7 @@ describe('Sodax', () => {
       let mockIntent: Intent & FeeAmount;
 
       beforeEach(async () => {
-        const walletAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+        const walletAddress = await mockEvmWalletProvider.getWalletAddress();
         mockCreateIntentParams = {
           inputToken: bscEthToken,
           outputToken: arbWbtcToken,
@@ -474,9 +475,10 @@ describe('Sodax', () => {
         } satisfies CreateIntentParams;
 
         const creatorAddress = await mockBscSpokeProvider.walletProvider.getWalletAddress();
+        const walletAddressBytes = await mockEvmWalletProvider.getWalletAddressBytes();
         mockIntent = {
           intentId: BigInt(1),
-          creator: creatorAddress as `0x${string}`,
+          creator: creatorAddress,
           inputToken:
             getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
           outputToken:
@@ -487,8 +489,8 @@ describe('Sodax', () => {
           allowPartialFill: mockCreateIntentParams.allowPartialFill,
           srcChain: getIntentRelayChainId(mockCreateIntentParams.srcChain),
           dstChain: getIntentRelayChainId(mockCreateIntentParams.dstChain),
-          srcAddress: walletAddress,
-          dstAddress: walletAddress,
+          srcAddress: walletAddressBytes,
+          dstAddress: walletAddressBytes,
           solver: mockCreateIntentParams.solver,
           data: mockCreateIntentParams.data,
           feeAmount: partnerFeeAmount.amount,
