@@ -117,10 +117,13 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
       return toHex(Buffer.from(address, 'utf-8'));
 
     case '0x1.icon':
-      return `0x${Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex').toString('hex')}`;
+      return toHex(Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex'));
 
     case 'sui':
       return toHex(bcs.Address.serialize(address).toBytes());
+
+    case 'solana':
+      return toHex(Buffer.from(address, 'utf-8'));
 
     default:
       return address as Hex;
