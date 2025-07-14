@@ -49,6 +49,7 @@
   --espresso: #483534;
   --cream: #eaded4;
   --clay: #8e7e7d;
+  --vibrant-white: #f9f7f5;
 }
 
 .dark {
@@ -95,6 +96,7 @@
   --espresso: #483534;
   --cream: #eaded4;
   --clay: #8e7e7d;
+  --vibrant-white: #f9f7f5;
 }
 
 @theme inline {
@@ -145,6 +147,7 @@
   --color-cream: var(--cream);
   --color-clay: var(--clay);
   --color-cherry-brighter: var(--cherry-brighter);
+  --color-vibrant-white: var(--vibrant-white);
 }
 
 @layer base {

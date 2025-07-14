@@ -14,7 +14,7 @@ const LandingPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
-
+  const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false);
   // Manage body position when sidebar is open/closed
   useEffect(() => {
     if (isOpen) {
@@ -38,11 +38,13 @@ const LandingPage = () => {
   };
 
   const openRewardDialog = () => {
-    setIsRewardDialogOpen(true);
+    // setIsRewardDialogOpen(true);
+    setIsDepositDialogOpen(true);
   };
 
   const closeRewardDialog = () => {
-    setIsRewardDialogOpen(false);
+    // setIsRewardDialogOpen(false);
+    setIsDepositDialogOpen(false);
   };
 
   const openTermsModal = () => {
@@ -55,7 +57,9 @@ const LandingPage = () => {
         toggle={toggle}
         isOpen={isOpen}
         isRewardDialogOpen={isRewardDialogOpen}
+        isDepositDialogOpen={isDepositDialogOpen}
         onRewardDialogChange={setIsRewardDialogOpen}
+        onDepositDialogChange={setIsDepositDialogOpen}
       />
       <Section1 />
       <Section2 />
