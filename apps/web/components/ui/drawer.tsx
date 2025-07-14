@@ -64,6 +64,7 @@ function DrawerContentWithoutOverlay({
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
   return (
     <DrawerPortal data-slot="drawer-portal">
+      <DrawerOverlay className="bg-transparent" />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
         className={cn(
