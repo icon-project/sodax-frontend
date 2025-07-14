@@ -5,21 +5,21 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
 ## Features
 
 ### Swaps (Solver / Intents)
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic) ✅
   - Sui ✅
   - Stellar ✅
   - ICON ✅
-  - Solana ❌ Coming soon
-  - Injective ❌ Coming soon
+  - Solana ✅
+  - Injective ✅
   - Havah ❌ Coming soon
 
 ### Lend and Borrow (Money Market)
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic) ✅
   - Sui ✅
   - Stellar ✅
   - ICON ✅
-  - Solana ❌ Coming soon
-  - Injective ❌ Coming soon
+  - Solana ✅
+  - Injective ✅
   - Havah ❌ Coming soon
 
 

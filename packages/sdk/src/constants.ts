@@ -138,6 +138,8 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
       hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
+      icxMigration: '0x8Af7cae2c8377BEDD8820A5ad096AaFA29D839cc',
+      sodaToken: '0x8515352CB9832D1d379D52366D1E995ADd358420',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     supportedTokens: [],
@@ -667,6 +669,7 @@ export const spokeChainConfig = {
       assetManager: 'cx1be33c283c7dc7617181d1b21a6a2309e71b1ee7',
       connection: 'cxe5cdf3b0f26967b0efc72d470d57bbf534268f94',
       rateLimit: 'cxbbdcea9e6757023a046067ba8daa3c4c50304358',
+      wICX: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d',
     },
     chain: {
       id: ICON_MAINNET_CHAIN_ID,
@@ -1092,6 +1095,13 @@ export const hubAssets: Record<
       name: 'ICON',
       vault: '0x0000000000000000000000000000000000000000',
     },
+    [spokeChainConfig[ICON_MAINNET_CHAIN_ID].addresses.wICX]: {
+      asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
+      decimal: 18,
+      symbol: 'wICX',
+      name: 'ICON',
+      vault: '0x0000000000000000000000000000000000000000',
+    },
     [spokeChainConfig[ICON_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x654dddf32a9a2ac53f5fb54bf1e93f66791f8047',
       decimal: 18,
@@ -1268,6 +1278,7 @@ const moneyMarketSupportedTokens = {
   [INJECTIVE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
   [SONIC_MAINNET_CHAIN_ID]: [
