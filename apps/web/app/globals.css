@@ -48,6 +48,7 @@
   --almost-white: #f8f3f3;
   --espresso: #483534;
   --cream: #eaded4;
+  --cream-white: #ede6e6;
   --clay: #8e7e7d;
   --vibrant-white: #f9f7f5;
 }
@@ -95,6 +96,7 @@
   --almost-white: #f8f3f3;
   --espresso: #483534;
   --cream: #eaded4;
+  --cream-white: #ede6e6;
   --clay: #8e7e7d;
   --vibrant-white: #f9f7f5;
 }
@@ -145,6 +147,7 @@
   --color-almost-white: var(--almost-white);
   --color-espresso: var(--espresso);
   --color-cream: var(--cream);
+  --color-cream-white: var(--cream-white);
   --color-clay: var(--clay);
   --color-cherry-brighter: var(--cherry-brighter);
   --color-vibrant-white: var(--vibrant-white);
