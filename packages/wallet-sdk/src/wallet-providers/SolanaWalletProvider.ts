@@ -123,7 +123,7 @@ export class SolanaWalletProvider implements ISolanaWalletProvider {
   }
 
   public async getWalletAddressBytes(): Promise<Hex> {
-    return `0x${Buffer.from(await this.getWalletAddress()).toString('hex')}`;
+    return `0x${Buffer.from(this.wallet.publicKey.toBytes()).toString('hex')}`;
   }
 
   public async getAssociatedTokenAddress(mint: SolanaBase58PublicKey): Promise<SolanaBase58PublicKey> {

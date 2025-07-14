@@ -11,6 +11,7 @@ import {
 } from '../index.js';
 import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
+import { PublicKey } from '@solana/web3.js';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -123,7 +124,7 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
       return toHex(bcs.Address.serialize(address).toBytes());
 
     case 'solana':
-      return toHex(Buffer.from(address, 'utf-8'));
+      return toHex(Buffer.from(new PublicKey(address).toBytes()));
 
     default:
       return address as Hex;

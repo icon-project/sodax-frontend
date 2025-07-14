@@ -135,7 +135,7 @@ describe('calculatePercentageAmount', () => {
       {
         spokeChainId: 'solana',
         address: 'BsbfLJNfYGcZdCasYUYy9bnqVXLAD3SB48CFQukoVsH8',
-        expected: '0x427362664c4a4e665947635a644361735955597939626e7156584c41443353423438434651756b6f56734838',
+        expected: '0xa18b19d6b7ccfc715c11a14deab8e40f2a815d53ed7e8ff308cf5351df7be24f',
       },
     ];
 

@@ -226,8 +226,8 @@ export const spokeChainConfig = {
       },
     },
     gasPrice: '500000',
-    rpcUrl: 'https://api.mainnet-beta.solana.com',
-    wsUrl: 'https://api.mainnet-beta.solana.com',
+    rpcUrl: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
+    wsUrl: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
     walletAddress: '',
   } as const satisfies SolanaChainConfig,
   [AVALANCHE_MAINNET_CHAIN_ID]: {
