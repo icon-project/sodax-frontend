@@ -1260,6 +1260,7 @@ const moneyMarketSupportedTokens = {
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const,
   [ICON_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
