@@ -15,7 +15,12 @@ const Sidebar = ({
     <>
       {/* Modal overlay */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-10 transition-opacity duration-300 ease-in-out" onClick={toggle} />
+        <div
+          className="fixed inset-0 bg-black/50 z-10 transition-opacity duration-300 ease-in-out"
+          onClick={toggle}
+          onMouseDown={toggle}
+          onTouchStart={toggle}
+        />
       )}
 
       {/* Sidebar */}
