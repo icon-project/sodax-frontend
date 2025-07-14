@@ -290,6 +290,7 @@ const HeroSection = ({
               <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start py-4">
                 <div className="md:w-[264px] lg:w-[304px] p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] md:h-[768px]"></div>
               </div>
+
               <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] min-h-[600px] md:min-h-[800px] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
