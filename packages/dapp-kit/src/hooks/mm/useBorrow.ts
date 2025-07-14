@@ -5,7 +5,7 @@ import { useSodaxContext } from '../shared/useSodaxContext';
 import type { SpokeProvider } from '@sodax/sdk';
 interface BorrowResponse {
   ok: true;
-  value: [`0x${string}`, `0x${string}`];
+  value: [string, string];
 }
 
 /**

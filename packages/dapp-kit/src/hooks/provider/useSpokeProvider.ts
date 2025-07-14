@@ -81,7 +81,10 @@ export function useSpokeProvider(
         _walletProvider as IStellarWalletProvider,
         stellarConfig.addresses.assetManager,
         stellarConfig,
-        stellarConfig.rpc_url,
+        {
+          horizonRpcUrl: stellarConfig.horizonRpcUrl,
+          sorobanRpcUrl: stellarConfig.sorobanRpcUrl,
+        },
       );
     }
 
