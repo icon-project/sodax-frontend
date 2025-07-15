@@ -1,6 +1,6 @@
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { ComputeBudgetProgram, PublicKey, SystemProgram, type TransactionInstruction } from '@solana/web3.js';
-import { type Address, type Hex, toHex } from 'viem';
+import { keccak256, type Address, type Hex } from 'viem';
 import { getIntentRelayChainId } from '../../constants.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { getAssetManagerProgram, getConnectionProgram } from '../../entities/solana/Configs.js';
@@ -11,6 +11,7 @@ import type { PromiseSolanaTxReturnType, SolanaReturnType } from '../../types.js
 import type { HubAddress, SolanaBase58PublicKey } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import BN from 'bn.js';
+import { encodeAddress } from '../../utils/shared-utils.js';
 
 export type SolanaSpokeDepositParams = {
   from: SolanaBase58PublicKey;
@@ -40,7 +41,7 @@ export class SolanaSpokeService {
       params.to ??
       (await EvmWalletAbstraction.getUserHubWalletAddress(
         spokeProvider.chainConfig.chain.id,
-        toHex(new PublicKey(params.from).toBytes()),
+        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
         hubProvider,
       ));
 
@@ -49,7 +50,7 @@ export class SolanaSpokeService {
         token: new PublicKey(params.token),
         recipient: userWallet,
         amount: params.amount.toString(),
-        data: params.data,
+        data: keccak256(params.data),
       },
       spokeProvider,
       raw,
@@ -106,7 +107,7 @@ export class SolanaSpokeService {
     const amountBN = new BN(amount);
     const { walletProvider, chainConfig } = spokeProvider;
     const { rpcUrl, wsUrl, addresses } = chainConfig;
-    const walletPublicKey = new PublicKey(walletProvider.getWalletBase58PublicKey());
+    const walletPublicKey = new PublicKey(walletProvider.getWalletAddress());
 
     const assetManagerProgram = await getAssetManagerProgram(
       walletProvider.getWalletBase58PublicKey(),
