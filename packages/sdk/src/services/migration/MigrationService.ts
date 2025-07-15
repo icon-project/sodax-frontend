@@ -34,7 +34,7 @@ export type GetMigrationFailedPayload<T extends MigrationErrorCode> = T extends 
       ? IcxCreateRevertMigrationParams
       : T extends 'MIGRATION_FAILED'
         ? IcxMigrateParams
-      : never;
+        : never;
 
 export type MigrationFailedErrorData<T extends MigrationErrorCode> = {
   payload: GetMigrationFailedPayload<T>;
@@ -55,7 +55,7 @@ export type MigrationErrorData<T extends MigrationErrorCode> = T extends 'CREATE
       ? MigrationFailedErrorData<T>
       : T extends 'MIGRATION_FAILED'
         ? MigrationFailedErrorData<T>
-      : never;
+        : never;
 
 export type MigrationError<T extends MigrationErrorCode> = {
   code: T;
@@ -288,6 +288,7 @@ export class MigrationService {
 
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
+        undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -363,6 +364,7 @@ export class MigrationService {
 
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
+        undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,

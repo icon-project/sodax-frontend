@@ -20,6 +20,7 @@ import {
   spokeChainConfig,
   SonicSpokeProvider,
   SonicSpokeService,
+  SolanaSpokeProvider,
 } from '../../index.js';
 import type {
   EvmContractCall,
@@ -531,8 +532,12 @@ export class MoneyMarketService {
         };
       }
 
+      const data: { address: Hex; payload: Hex } | undefined =
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
+
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
+        data,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -590,7 +595,7 @@ export class MoneyMarketService {
     params: MoneyMarketSupplyParams,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, MoneyMarketError>> {
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketError> & { data?: { address: Hex; payload: Hex } }> {
     try {
       invariant(params.action === 'supply', 'Invalid action');
       invariant(params.token.length > 0, 'Token is required');
@@ -627,6 +632,10 @@ export class MoneyMarketService {
       return {
         ok: true,
         value: txResult as TxReturnType<S, R>,
+        data: {
+          address: hubWallet,
+          payload: data,
+        },
       };
     } catch (error) {
       return {
@@ -684,8 +693,12 @@ export class MoneyMarketService {
         };
       }
 
+      const data: { address: Hex; payload: Hex } | undefined =
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
+
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
+        data,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -741,7 +754,7 @@ export class MoneyMarketService {
     params: MoneyMarketBorrowParams,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>> {
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode> & { data?: { address: Hex; payload: Hex } }> {
     invariant(params.action === 'borrow', 'Invalid action');
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
@@ -768,7 +781,14 @@ export class MoneyMarketService {
 
     const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
-    return { ok: true, value: txResult as TxReturnType<S, R> };
+    return {
+      ok: true,
+      value: txResult as TxReturnType<S, R>,
+      data: {
+        address: hubWallet,
+        payload: data,
+      },
+    };
   }
 
   /**
@@ -817,8 +837,12 @@ export class MoneyMarketService {
         };
       }
 
+      const data: { address: Hex; payload: Hex } | undefined =
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
+
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
+        data,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -874,7 +898,7 @@ export class MoneyMarketService {
     params: MoneyMarketWithdrawParams,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>> {
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode> & { data?: { address: Hex; payload: Hex } }> {
     invariant(params.action === 'withdraw', 'Invalid action');
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
@@ -901,7 +925,14 @@ export class MoneyMarketService {
 
     const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
-    return { ok: true, value: txResult };
+    return {
+      ok: true,
+      value: txResult,
+      data: {
+        address: hubWallet,
+        payload: data,
+      },
+    };
   }
 
   /**
@@ -950,8 +981,12 @@ export class MoneyMarketService {
         };
       }
 
+      const data: { address: Hex; payload: Hex } | undefined =
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
+
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
+        data,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -1009,7 +1044,7 @@ export class MoneyMarketService {
     params: MoneyMarketRepayParams,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>> {
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode> & { data?: { address: Hex; payload: Hex } }> {
     invariant(params.action === 'repay', 'Invalid action');
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
@@ -1041,7 +1076,14 @@ export class MoneyMarketService {
       raw,
     );
 
-    return { ok: true, value: txResult as TxReturnType<S, R> };
+    return {
+      ok: true,
+      value: txResult as TxReturnType<S, R>,
+      data: {
+        address: hubWallet,
+        payload: data,
+      },
+    };
   }
 
   /**

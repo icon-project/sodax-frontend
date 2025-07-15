@@ -107,7 +107,7 @@ export class SolanaSpokeService {
     const amountBN = new BN(amount);
     const { walletProvider, chainConfig } = spokeProvider;
     const { rpcUrl, wsUrl, addresses } = chainConfig;
-    const walletPublicKey = new PublicKey(walletProvider.getWalletAddress());
+    const walletPublicKey = new PublicKey(walletProvider.getWalletBase58PublicKey());
 
     const assetManagerProgram = await getAssetManagerProgram(
       walletProvider.getWalletBase58PublicKey(),

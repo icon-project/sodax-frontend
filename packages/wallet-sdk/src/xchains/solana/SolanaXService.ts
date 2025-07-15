@@ -28,16 +28,10 @@ export class SolanaXService extends XService {
     const connection = this.connection;
 
     try {
-      console.log('xToken', xToken);
       if (isNativeToken(xToken)) {
         const newBalance = await connection.getBalance(new PublicKey(address));
         return BigInt(newBalance);
       }
-      // const mintAddress = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
-      // const address = 'Gza3H3Pw7cdFWpfqaHZvZAaH1rRuuzuhRE4gK96rZKVS';
-      // const tokenAccountPubkey = getAssociatedTokenAddressSync(new PublicKey(mintAddress), new PublicKey(address));
-      // console.log('tokenAccountPubkey', tokenAccountPubkey.toString());
-      // const tokenAccountPubkey = new PublicKey('CebVkrtQKEWsh5iEcgpTpqnHEiY5dis7Lsckx8N2RsMB');
 
       const tokenAccountPubkey = getAssociatedTokenAddressSync(new PublicKey(xToken.address), new PublicKey(address));
       const tokenAccount = await getAccount(connection, tokenAccountPubkey);
