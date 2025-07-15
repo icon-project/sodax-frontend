@@ -3,6 +3,7 @@ import type React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface TermsModalProps {
   open: boolean;
@@ -26,7 +27,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ open, onOpenChange }) => {
         </div>
 
         <div className="relative">
-          <div className="bg-white text-black rounded-lg max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-cream [&::-webkit-scrollbar-thumb]:bg-cream [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:h-[108px]">
+          <ScrollArea className="bg-white text-black max-h-[60vh] overflow-y-auto">
             <div className="space-y-4 text-xs leading-relaxed text-clay mr-6">
               <p>
                 Acceptance of the Terms of Use; Eligible Users
@@ -567,7 +568,8 @@ const TermsModal: React.FC<TermsModalProps> = ({ open, onOpenChange }) => {
                 <br />
               </p>
             </div>
-          </div>
+            <ScrollBar className="w-1"/>
+          </ScrollArea>
           {/* Fade out effect at the bottom */}
           <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
         </div>

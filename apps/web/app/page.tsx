@@ -52,7 +52,7 @@ const LandingPage = () => {
   };
 
   const closeRewardDialog = () => {
-    // setIsRewardDialogOpen(false);
+    setIsRewardDialogOpen(false);
     setIsDepositDialogOpen(false);
   };
 

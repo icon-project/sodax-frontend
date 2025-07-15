@@ -3,16 +3,17 @@
 
 import type React from 'react';
 import { termsContent } from '@/lib/terms-content';
-
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 export const TermsContent = (): React.ReactElement => {
   return (
-    <div className="space-y-4 text-xs leading-relaxed text-clay mr-6">
+    <ScrollArea className="h-[200px] w-full rounded-none p-0 pr-6">
       {termsContent.map((section, index) => (
         <div key={index}>
-          {section.title && <p className="font-bold mb-2">{section.title}</p>}
-          <p>{section.content}</p>
+          {section.title && <p className="font-bold mb-2 text-xs text-clay">{section.title}</p>}
+          <p className="text-xs text-clay">{section.content}</p>
         </div>
       ))}
-    </div>
+      <ScrollBar className='w-1'/>
+    </ScrollArea>
   );
 };

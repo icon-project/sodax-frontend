@@ -184,7 +184,7 @@ const HeroSection = ({
             </ul>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
               <DecoratedButton
-                onClick={() => onDepositDialogChange(true)}
+                onClick={() => onRewardDialogChange(true)}
                 isConnected={isConnected}
                 address={address}
                 showAddressInfo={true}
@@ -278,63 +278,11 @@ const HeroSection = ({
           </div>
         </div>
       </div>
-      <Dialog
-        open={isDepositDialogOpen}
-        onOpenChange={open => {
-          onDepositDialogChange(open);
-        }}
-      >
-        <DialogPortal>
-          <DialogPrimitive.Content className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none fixed top-[50%] left-[50%] z-50 translate-x-[-50%] translate-y-[-50%]">
-            <div className="flex justify-center items-start min-h-[600px] md:min-h-[800px]">
-              <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start py-4">
-                <div className="md:w-[264px] lg:w-[304px] p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] md:h-[768px]"></div>
-              </div>
-
-              <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] min-h-[600px] md:min-h-[800px] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="80"
-                  viewBox="0 0 16 80"
-                  fill="none"
-                  aria-label="Deposit Dialog"
-                  className="absolute top-[157px] -left-[23px] hidden md:block"
-                >
-                  <title>Deposit Dialog</title>
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M4.76995e-07 40C3.92926e-07 38.125 0.941131 37.1741 1.88235 36.6667C11.1437 31.6736 16 18.033 16 -1.90798e-07L16 80C16 61.967 11.1437 48.3264 1.88235 43.3333C0.941131 42.8259 5.61065e-07 41.875 4.76995e-07 40Z"
-                    fill="#F9F7F5"
-                  />
-                </svg>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="80"
-                  height="16"
-                  viewBox="0 0 80 16"
-                  fill="none"
-                  className="absolute bottom-[-9px] left-[100px] md:hidden transform flex-shrink-0"
-                  aria-label="Deposit Dialog"
-                >
-                  <title>Deposit Dialog</title>
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M40 -1.27146e-06C41.875 -1.27357e-06 42.8259 0.941129 43.3333 1.88235C48.3264 11.1437 61.967 16 80 16L-5.08584e-07 16C18.033 16 31.6736 11.1437 36.6667 1.88235C37.1741 0.941129 38.125 -1.26935e-06 40 -1.27146e-06Z"
-                    fill="oklch(0.57 0.1 28.5)"
-                  />
-                </svg>
-              </div>
-            </div>
-          </DialogPrimitive.Content>
-        </DialogPortal>
-      </Dialog>
       {/* Dialog */}
       <Dialog
         open={isRewardDialogOpen}
         onOpenChange={open => {
+          console.log('event');
           onRewardDialogChange(open);
           if (!open) {
             setIsTermsModalOpen(false);
@@ -345,7 +293,6 @@ const HeroSection = ({
           {!isConnected ? (
             <DialogContent
               className="h-[480px] bg-cherry-bright bg-[url('/circle.png')] bg-no-repeat bg-center bg-bottom py-[80px] w-[90%] lg:max-w-[952px] dialog-content transform translate-y-[-65%] lg:mt-0"
-              onPointerDownOutside={e => e.preventDefault()}
             >
               <DialogHeader>
                 <div className="flex justify-center">
@@ -418,7 +365,7 @@ const HeroSection = ({
                       </h2>
                     </div>
                     <div className="relative">
-                      <div className="bg-white text-black rounded-lg max-h-[200px] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-cream [&::-webkit-scrollbar-thumb]:bg-cream [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:h-[108px] relative">
+                      <div className="bg-white text-black max-h-[200px] overflow-y-auto">
                         <TermsContent />
                         <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                       </div>
