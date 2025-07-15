@@ -23,7 +23,7 @@ export enum WalletId {
 }
 
 export type EVMConfig = {
-  wagmiConfig: Config;
+  chains: string[];
 };
 
 export type SuiConfig = {
