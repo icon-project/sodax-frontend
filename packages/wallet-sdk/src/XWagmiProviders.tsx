@@ -9,8 +9,7 @@ import { SuiClientProvider, WalletProvider as SuiWalletProvider } from '@mysten/
 import { getFullnodeUrl } from '@mysten/sui/client';
 
 // evm
-import { createConfig, http, type Transport, WagmiProvider } from 'wagmi';
-import { mainnet, avalanche, base, optimism, polygon, arbitrum, bsc, sonicBlazeTestnet } from 'wagmi/chains';
+import { WagmiProvider } from 'wagmi';
 
 // solana
 import {
@@ -20,27 +19,8 @@ import {
 import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
 import type { XConfig } from './types';
 import { initXWagmiStore, InitXWagmiStore } from './useXWagmiStore';
-import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  AVALANCHE_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-} from '@sodax/types';
 
-const evmChainMap = {
-  [AVALANCHE_MAINNET_CHAIN_ID]: avalanche,
-  [ARBITRUM_MAINNET_CHAIN_ID]: arbitrum,
-  [BASE_MAINNET_CHAIN_ID]: base,
-  [BSC_MAINNET_CHAIN_ID]: bsc,
-  [SONIC_MAINNET_CHAIN_ID]: sonicBlazeTestnet,
-  [OPTIMISM_MAINNET_CHAIN_ID]: optimism,
-  [POLYGON_MAINNET_CHAIN_ID]: polygon,
-};
-
-type EvmChainId = keyof typeof evmChainMap;
+import { getWagmiConfig } from './xchains/evm/EvmXService';
 
 export const XWagmiProviders = ({ children, config }: { children: React.ReactNode; config: XConfig }) => {
   useEffect(() => {
@@ -55,21 +35,7 @@ export const XWagmiProviders = ({ children, config }: { children: React.ReactNod
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
 
   const wagmiConfig = useMemo(() => {
-    const mappedChains = chains.map(chain => evmChainMap[chain as EvmChainId]);
-    const finalChains = mappedChains.length > 0 ? mappedChains : [mainnet];
-
-    const transports = finalChains.reduce(
-      (acc, chain) => {
-        acc[chain.id] = http();
-        return acc;
-      },
-      {} as Record<number, Transport>,
-    );
-
-    return createConfig({
-      chains: finalChains as [typeof mainnet, ...(typeof mainnet)[]],
-      transports,
-    });
+    return getWagmiConfig(chains);
   }, [chains]);
 
   return (

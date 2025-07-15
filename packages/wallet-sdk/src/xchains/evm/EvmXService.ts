@@ -5,6 +5,48 @@ import { getWagmiChainId, isNativeToken } from '@/utils';
 
 import { type Address, type PublicClient, type WalletClient, erc20Abi } from 'viem';
 import { getPublicClient, getWalletClient } from 'wagmi/actions';
+import { createConfig, http, type Transport, WagmiProvider } from 'wagmi';
+import { mainnet, avalanche, base, optimism, polygon, arbitrum, bsc, sonic } from 'wagmi/chains';
+
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  AVALANCHE_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  OPTIMISM_MAINNET_CHAIN_ID,
+  POLYGON_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+} from '@sodax/types';
+
+const evmChainMap = {
+  [AVALANCHE_MAINNET_CHAIN_ID]: avalanche,
+  [ARBITRUM_MAINNET_CHAIN_ID]: arbitrum,
+  [BASE_MAINNET_CHAIN_ID]: base,
+  [BSC_MAINNET_CHAIN_ID]: bsc,
+  [SONIC_MAINNET_CHAIN_ID]: sonic,
+  [OPTIMISM_MAINNET_CHAIN_ID]: optimism,
+  [POLYGON_MAINNET_CHAIN_ID]: polygon,
+};
+
+type EvmChainId = keyof typeof evmChainMap;
+
+export const getWagmiConfig = (chains: string[]) => {
+  const mappedChains = chains.map(chain => evmChainMap[chain as EvmChainId]);
+  const finalChains = mappedChains.length > 0 ? mappedChains : [mainnet];
+
+  const transports = finalChains.reduce(
+    (acc, chain) => {
+      acc[chain.id] = http();
+      return acc;
+    },
+    {} as Record<number, Transport>,
+  );
+
+  return createConfig({
+    chains: finalChains as [typeof mainnet, ...(typeof mainnet)[]],
+    transports,
+  });
+};
 
 /**
  * Service class for handling EVM chain interactions.
@@ -38,14 +80,15 @@ export class EvmXService extends XService {
       throw new Error('EvmXService: config is not initialized yet');
     }
 
-    return getPublicClient(this.config.wagmiConfig, { chainId });
+    // @ts-ignore
+    return getPublicClient(getWagmiConfig(this.config.chains), { chainId });
   }
 
   public async getWalletClient(chainId: number): Promise<WalletClient> {
     if (!this.config) {
       throw new Error('EvmXService: config is not initialized yet');
     }
-    return await getWalletClient(this.config.wagmiConfig, { chainId });
+    return await getWalletClient(getWagmiConfig(this.config.chains), { chainId });
   }
 
   async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
