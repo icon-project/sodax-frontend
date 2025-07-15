@@ -95,7 +95,7 @@ export class SolanaSpokeService {
     raw?: R,
   ): PromiseSolanaTxReturnType<R> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return SolanaSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
+    return SolanaSpokeService.call(BigInt(relayId), from, keccak256(payload), spokeProvider, raw);
   }
 
   private static async transfer<R extends boolean = false>(

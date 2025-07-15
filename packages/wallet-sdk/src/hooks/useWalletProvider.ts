@@ -117,6 +117,14 @@ export function useWalletProvider(
       case 'SOLANA': {
         const solanaXService = xService as SolanaXService;
 
+        if (!solanaXService.wallet) {
+          throw new Error('Wallet is not initialized');
+        }
+
+        if (!solanaXService.connection) {
+          throw new Error('Connection is not initialized');
+        }
+
         return new SolanaWalletProvider({
           wallet: solanaXService.wallet,
           connection: solanaXService.connection,
