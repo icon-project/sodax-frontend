@@ -51,14 +51,18 @@ This package requires the following peer dependencies:
 ```typescript
 import { XWagmiProviders, useXConnectors, useXConnect, useXAccount } from '@sodax/wallet-sdk';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  AVALANCHE_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  OPTIMISM_MAINNET_CHAIN_ID,
+  POLYGON_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+} from '@sodax/types';
 
 // Create a QueryClient instance
 const queryClient = new QueryClient();
-
-// Your wagmi configuration
-const wagmiConfig = {
-  // ... your wagmi config
-};
 
 function App() {
   return (
@@ -66,7 +70,15 @@ function App() {
       <XWagmiProviders
         config={{
           EVM: {
-            wagmiConfig: wagmiConfig,
+            chains: [
+              ARBITRUM_MAINNET_CHAIN_ID,
+              AVALANCHE_MAINNET_CHAIN_ID,
+              BASE_MAINNET_CHAIN_ID,
+              BSC_MAINNET_CHAIN_ID,
+              OPTIMISM_MAINNET_CHAIN_ID,
+              POLYGON_MAINNET_CHAIN_ID,
+              SONIC_MAINNET_CHAIN_ID,
+            ],
           },
           SUI: {
             isMainnet: true,
@@ -74,7 +86,9 @@ function App() {
           SOLANA: {
             endpoint: 'https://your-rpc-endpoint',
           },
-          ICON: {}
+          ICON: {},
+          INJECTIVE: {},
+          STELLAR: {},
         }}
       >
         <WalletConnect />
