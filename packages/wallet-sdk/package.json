@@ -1,7 +1,7 @@
 {
   "name": "@sodax/wallet-sdk",
   "license": "MIT",
-  "version": "0.0.1-rc.6",
+  "version": "0.0.1-rc.7",
   "description": "Wallet SDK of Sodax",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
