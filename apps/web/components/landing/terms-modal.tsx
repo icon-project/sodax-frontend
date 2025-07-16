@@ -1,8 +1,8 @@
-// apps/web/components/landing/terms-modal.tsx
 import type React from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface TermsModalProps {
   open: boolean;
@@ -12,21 +12,19 @@ interface TermsModalProps {
 const TermsModal: React.FC<TermsModalProps> = ({ open, onOpenChange }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="h-[80vh] w-[90%] lg:max-w-[952px]">
-        <div className="flex items-start mb-6 gap-2 mt-4">
+      <DialogContent className="h-[80vh] w-[90%] lg:max-w-[952px] shadow-none">
+        <div className="flex items-start mb-6 mt-4">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
             className="flex items-center gap-2 text-white hover:text-yellow-soda transition-colors"
-          >
-            {/* <ArrowLeft className="text-espresso"></ArrowLeft> */}
-          </button>
-          <Image src="/symbol.png" alt="SODAX Symbol" width={24} height={24} />
+          ></button>
+          <Image src="/symbol.png" alt="SODAX Symbol" width={24} height={24} className="mr-2" />
           <h2 className="text-center text-black text-lg font-['InterBold'] leading-snug">Terms and conditions</h2>
         </div>
 
-        <div className="relative">
-          <div className="bg-white text-black rounded-lg max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-cream [&::-webkit-scrollbar-thumb]:bg-cream [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:h-[108px]">
+        <div className="flex shadow-none">
+          <ScrollArea className="bg-white text-black max-h-[60vh]">
             <div className="space-y-4 text-xs leading-relaxed text-clay mr-6">
               <p>
                 Acceptance of the Terms of Use; Eligible Users
@@ -567,9 +565,10 @@ const TermsModal: React.FC<TermsModalProps> = ({ open, onOpenChange }) => {
                 <br />
               </p>
             </div>
-          </div>
+            <ScrollBar className="w-1" />
+          </ScrollArea>
           {/* Fade out effect at the bottom */}
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+          <div className="absolute bottom-12 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none rounded-lg"></div>
         </div>
       </DialogContent>
     </Dialog>
