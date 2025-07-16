@@ -532,12 +532,9 @@ export class MoneyMarketService {
         };
       }
 
-      const data: { address: Hex; payload: Hex } | undefined =
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
-
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        data,
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -693,12 +690,9 @@ export class MoneyMarketService {
         };
       }
 
-      const data: { address: Hex; payload: Hex } | undefined =
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
-
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        data,
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -837,12 +831,9 @@ export class MoneyMarketService {
         };
       }
 
-      const data: { address: Hex; payload: Hex } | undefined =
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
-
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        data,
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -981,12 +972,9 @@ export class MoneyMarketService {
         };
       }
 
-      const data: { address: Hex; payload: Hex } | undefined =
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
-
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        data,
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
