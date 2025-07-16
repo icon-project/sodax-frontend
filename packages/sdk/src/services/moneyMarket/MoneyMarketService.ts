@@ -209,6 +209,9 @@ export type MoneyMarketError = {
   error: unknown;
 };
 
+export type MoneyMarketExtraData = { address: Hex; payload: Hex };
+export type MoneyMarketOptionalExtraData = { data?: MoneyMarketExtraData };
+
 export class MoneyMarketService {
   public readonly config: MoneyMarketServiceConfig;
   private readonly hubProvider: EvmHubProvider;
@@ -532,12 +535,9 @@ export class MoneyMarketService {
         };
       }
 
-      const data: { address: Hex; payload: Hex } | undefined =
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
-
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        data,
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -595,7 +595,7 @@ export class MoneyMarketService {
     params: MoneyMarketSupplyParams,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, MoneyMarketError> & { data?: { address: Hex; payload: Hex } }> {
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketError> & MoneyMarketOptionalExtraData> {
     try {
       invariant(params.action === 'supply', 'Invalid action');
       invariant(params.token.length > 0, 'Token is required');
@@ -693,12 +693,9 @@ export class MoneyMarketService {
         };
       }
 
-      const data: { address: Hex; payload: Hex } | undefined =
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
-
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        data,
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -754,7 +751,7 @@ export class MoneyMarketService {
     params: MoneyMarketBorrowParams,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode> & { data?: { address: Hex; payload: Hex } }> {
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode> & MoneyMarketOptionalExtraData> {
     invariant(params.action === 'borrow', 'Invalid action');
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
@@ -837,12 +834,9 @@ export class MoneyMarketService {
         };
       }
 
-      const data: { address: Hex; payload: Hex } | undefined =
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
-
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        data,
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -898,7 +892,7 @@ export class MoneyMarketService {
     params: MoneyMarketWithdrawParams,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode> & { data?: { address: Hex; payload: Hex } }> {
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode> & MoneyMarketOptionalExtraData> {
     invariant(params.action === 'withdraw', 'Invalid action');
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
@@ -981,12 +975,9 @@ export class MoneyMarketService {
         };
       }
 
-      const data: { address: Hex; payload: Hex } | undefined =
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined;
-
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        data,
+        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -1044,7 +1035,7 @@ export class MoneyMarketService {
     params: MoneyMarketRepayParams,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode> & { data?: { address: Hex; payload: Hex } }> {
+  ): Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode> & MoneyMarketOptionalExtraData> {
     invariant(params.action === 'repay', 'Invalid action');
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
