@@ -138,6 +138,8 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
       hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
+      icxMigration: '0x8Af7cae2c8377BEDD8820A5ad096AaFA29D839cc',
+      sodaToken: '0x8515352CB9832D1d379D52366D1E995ADd358420',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     supportedTokens: [],
@@ -189,7 +191,7 @@ export const spokeChainConfig = {
         name: 'Wrapped Sonic',
         decimals: 18,
         address: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
-      }
+      },
     },
   } as const satisfies SonicSpokeChainConfig,
   [SOLANA_MAINNET_CHAIN_ID]: {
@@ -667,6 +669,7 @@ export const spokeChainConfig = {
       assetManager: 'cx1be33c283c7dc7617181d1b21a6a2309e71b1ee7',
       connection: 'cxe5cdf3b0f26967b0efc72d470d57bbf534268f94',
       rateLimit: 'cxbbdcea9e6757023a046067ba8daa3c4c50304358',
+      wICX: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d',
     },
     chain: {
       id: ICON_MAINNET_CHAIN_ID,
@@ -1058,15 +1061,15 @@ export const hubAssets: Record<
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: '0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3',
+      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
   },
   [SOLANA_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL.address]: {
       asset: '0x0c09e69a4528945de6d16c7e469dea6996fdf636',
       decimal: 9,
-      symbol: 'USDC',
-      name: 'USD Coin',
+      symbol: 'SOL',
+      name: 'Solana',
       vault: '0xdEa692287E2cE8Cb08FA52917Be0F16b1DACDC87',
     },
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].bnUSD]: {
@@ -1077,11 +1080,11 @@ export const hubAssets: Record<
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     },
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
-      asset: '0x0c09e69a4528945de6d16c7e469dea6996fdf636',
+      asset: '0xC3f020057510ffE10Ceb882e1B48238b43d78a5e',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: '0xdEa692287E2cE8Cb08FA52917Be0F16b1DACDC87',
+      vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
   },
   [ICON_MAINNET_CHAIN_ID]: {
@@ -1089,6 +1092,13 @@ export const hubAssets: Record<
       asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
       decimal: 18,
       symbol: 'ICX',
+      name: 'ICON',
+      vault: '0x0000000000000000000000000000000000000000',
+    },
+    [spokeChainConfig[ICON_MAINNET_CHAIN_ID].addresses.wICX]: {
+      asset: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
+      decimal: 18,
+      symbol: 'wICX',
       name: 'ICON',
       vault: '0x0000000000000000000000000000000000000000',
     },
@@ -1107,7 +1117,7 @@ export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockcha
 const solverConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
     intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-    solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz', // TODO replace with mainnet
+    solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
   } satisfies SolverConfig,
 };
 
@@ -1263,10 +1273,12 @@ const moneyMarketSupportedTokens = {
   [SUI_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const,
   [INJECTIVE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
   [SONIC_MAINNET_CHAIN_ID]: [

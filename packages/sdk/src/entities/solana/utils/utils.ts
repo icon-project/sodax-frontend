@@ -1,4 +1,4 @@
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, type TransactionInstruction } from '@solana/web3.js';
 import type { Hex } from 'viem';
 import { spokeChainConfig } from '../../../constants.js';
 import type { SolanaChainConfig } from '../../../types.js';
