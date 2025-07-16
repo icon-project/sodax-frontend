@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react';
 
 interface ConnectWalletButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   onWalletClick?: () => void;
+  onConnectModalChange?: (isOpen: boolean) => void;
   isRegistering?: boolean;
   className?: string;
   buttonText?: {
@@ -19,12 +20,11 @@ interface ConnectWalletButtonProps extends ButtonHTMLAttributes<HTMLButtonElemen
   showAddressInfo?: boolean;
   children?: React.ReactNode;
   variant?: 'yellow-dark' | 'yellow-soda' | 'white' | 'cherry-brighter';
-  onCloseRewardDialog?: () => void;
-  onOpenRewardDialog?: () => void;
 }
 
 const ConnectWalletButton = ({
   onWalletClick,
+  onConnectModalChange,
   isRegistering = false,
   className = '',
   buttonText = {
@@ -35,8 +35,6 @@ const ConnectWalletButton = ({
   showAddressInfo = true,
   variant = 'yellow-dark',
   children,
-  onCloseRewardDialog,
-  onOpenRewardDialog,
   ...props
 }: ConnectWalletButtonProps): React.ReactElement => {
   const getBgColor = () => {
@@ -64,7 +62,15 @@ const ConnectWalletButton = ({
 
   return (
     <ConnectButton.Custom>
-      {({ account, chain, openConnectModal, mounted }) => {
+      {({ account, chain, openConnectModal, mounted, connectModalOpen }) => {
+        console.log('connectModalOpen', connectModalOpen);
+
+        useEffect(() => {
+          if (onConnectModalChange) {
+            onConnectModalChange(connectModalOpen);
+          }
+        }, [connectModalOpen, onConnectModalChange]);
+
         const ready = mounted && account;
         const connected = ready && account.address;
         return (
