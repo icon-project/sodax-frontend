@@ -36,6 +36,7 @@ import {
   ICON_MAINNET_CHAIN_ID,
   type HubChainId,
   SPOKE_CHAIN_IDS,
+  NEAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -62,6 +63,7 @@ export const INTENT_RELAY_CHAIN_IDS = {
   POLYGON: 5n,
   ARBITRUM: 23n,
   NIBIRU: 7235938n,
+  NEAR:15n
 } as const;
 
 export const EVM_CHAIN_IDS = [
@@ -100,6 +102,7 @@ const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
   [STELLAR_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
   [ICON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
   [NIBIRU_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.NIBIRU,
+  [NEAR_MAINNET_CHAIN_ID]:INTENT_RELAY_CHAIN_IDS.NEAR
 };
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -700,6 +703,10 @@ export const spokeChainConfig = {
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
+  [NEAR_MAINNET_CHAIN_ID]:{
+    nativeToken:"",
+    supportedTokens:[],
+  },
 } as const;
 
 export const hubAssets: Record<
@@ -1110,6 +1117,9 @@ export const hubAssets: Record<
       vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
     },
   },
+  [NEAR_MAINNET_CHAIN_ID]:{
+
+  }
 } as const;
 
 export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';
@@ -1191,6 +1201,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const satisfies Token[],
+  [NEAR_MAINNET_CHAIN_ID]:[] as const satisfies Token[],
 } as const;
 
 // get supported spoke chain tokens for solver
@@ -1288,6 +1299,7 @@ const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic,
   ] as const,
+  [NEAR_MAINNET_CHAIN_ID]:[] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
@@ -1475,3 +1487,6 @@ export const isNativeToken = (chainId: SpokeChainId, token: Token | string): boo
 
   return token.address.toLowerCase() === spokeChainConfig[chainId].nativeToken.toLowerCase();
 };
+
+
+//export * from "./constants.testnet.js";
