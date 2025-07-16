@@ -8,7 +8,7 @@ export default function OrderStatus({
 }: {
   order: { intentHash: Hex; intent: Intent; packet: PacketData };
 }) {
-  const { data: status } = useStatus(order.packet.dst_tx_hash as Hex);
+  const { data: status } = useStatus((order.packet.payload_tx_hash || order.packet.dst_tx_hash) as Hex);
 
   if (status) {
     if (status.ok) {

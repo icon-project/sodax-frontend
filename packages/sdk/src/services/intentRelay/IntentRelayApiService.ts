@@ -63,6 +63,7 @@ export type PacketData = {
   dst_tx_hash: string;
   signatures: string[];
   payload: string;
+  payload_tx_hash?: string | undefined;
 };
 
 export type GetTransactionPacketsResponse = {
@@ -99,6 +100,7 @@ export type GetRelayResponse<T extends RelayAction> = T extends 'submit'
 export type IntentRelayRequestParams = SubmitTxParams | GetTransactionPacketsParams | GetPacketParams;
 
 export type WaitUntilIntentExecutedPayload = {
+  hasPayload: boolean;
   intentRelayChainId: string;
   spokeTxHash: string;
   timeout: number;
@@ -204,7 +206,13 @@ export async function waitUntilIntentExecuted(
             packet => packet.src_tx_hash.toLowerCase() === payload.spokeTxHash.toLowerCase(),
           );
 
-          if (txPackets.success && txPackets.data.length > 0 && packet && packet.status === 'executed') {
+          if (
+            txPackets.success &&
+            txPackets.data.length > 0 &&
+            packet &&
+            packet.status === 'executed' &&
+            ((payload.hasPayload && packet.payload_tx_hash) || !payload.hasPayload)
+          ) {
             return {
               ok: true,
               value: packet,
@@ -292,6 +300,7 @@ export async function relayTxAndWaitPacket<S extends SpokeProvider>(
     }
 
     const packet = await waitUntilIntentExecuted({
+      hasPayload: !!data,
       intentRelayChainId,
       spokeTxHash,
       timeout,
