@@ -42,7 +42,7 @@ describe('SolverService', () => {
 
   const mockSolverConfig = {
     intentsContract: mockIntentsContract,
-    solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+    solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
   } satisfies SolverConfig;
 
   const mockHubConfig = {
