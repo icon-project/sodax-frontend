@@ -1,11 +1,13 @@
 import type { IconSpokeChainConfig } from '../../types.js';
-import { IconService } from 'icon-sdk-js';
 import type { IIconWalletProvider } from '@sodax/types';
+import pkg from 'icon-sdk-js';
+const { IconService } = pkg;
 
 export class IconSpokeProvider {
   public readonly walletProvider: IIconWalletProvider;
   public readonly chainConfig: IconSpokeChainConfig;
-  public readonly iconService: IconService;
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  public readonly iconService: any;
 
   constructor(
     walletProvider: IIconWalletProvider,

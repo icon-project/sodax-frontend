@@ -12,6 +12,7 @@ export const POLYGON_MAINNET_CHAIN_ID = '0x89.polygon';
 export const SOLANA_MAINNET_CHAIN_ID = 'solana';
 export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
 export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
+export const NEAR_MAINNET_CHAIN_ID = 'near';
 
 // currently supported spoke chains
 export const SPOKE_CHAIN_IDS = [
@@ -28,6 +29,7 @@ export const SPOKE_CHAIN_IDS = [
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID
 ] as const;
 
 export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
@@ -46,4 +48,5 @@ export const CHAIN_IDS = [
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID
 ] as const;

@@ -7,9 +7,11 @@
     "cosmos": "pnpm run build && node dist/cosmos.js",
     "sonic": "pnpm run build && node dist/sonic.js",
     "sui": "pnpm run build && node dist/sui.js",
+    "near": "pnpm run build && node dist/near.js",
     "moneyMarket": "pnpm run build && node dist/moneymarket.js",
     "stellar": "pnpm run build && node dist/stellar.js",
     "icon": "pnpm run build && node dist/icon.js",
+
     "solana": "pnpm run build && node dist/solana.js",
     "example": "pnpm run build && node dist/examples/cosmos/index.js",
     "build": "tsc",

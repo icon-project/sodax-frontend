@@ -1,4 +1,5 @@
-import { Converter, CallTransactionBuilder, CallBuilder } from 'icon-sdk-js';
+import pkg from 'icon-sdk-js';
+const { Converter, CallTransactionBuilder, CallBuilder } = pkg;
 import * as rlp from 'rlp';
 import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';

@@ -72,9 +72,9 @@ export class LocalWalletProvider implements INearWalletProvider {
   account: Account;
   rpcProvider: JsonRpcProvider;
 
-  constructor(rpc: string, accountId: string, secret: KeyPairString) {
+  constructor(rpc: string, accountId: string, secret: string) {
     this.rpcProvider = new JsonRpcProvider({ url: rpc });
-    const signer = KeyPairSigner.fromSecretKey(secret);
+    const signer = KeyPairSigner.fromSecretKey(secret as KeyPairString);
     this.account = new Account(accountId, this.rpcProvider, signer);
   }
   async getWalletAddress(): Promise<string> {
@@ -113,9 +113,9 @@ export class LocalWalletProvider implements INearWalletProvider {
     
     return this.account.signAndSendTransaction({...transaction,throwOnFailure:true,waitUntil:"FINAL"})
   }
-  deployContract(buff:Uint8Array){
-    const res= this.account.deployContract(buff);
-    console.log(res);
+  async deployContract(buff:Uint8Array){
+    const res= await this.account.deployContract(buff);
+    return res;
   }
 }
 
@@ -127,14 +127,15 @@ export class NearSpokeProvider {
     this.chainConfig = config;
   }
 
-  transfer(params: TransferArgs, deposit: bigint = BigInt('0'), gas: bigint = BigInt('30000000000000000')) {
+  transfer(params: TransferArgs, deposit: bigint = BigInt('1'), gas: bigint = BigInt('300000000000000')) {
     if (this.isNative(params.token)) {
+      deposit=BigInt(params.amount);
       return this.depositNear(params, deposit, gas);
     }
     return this.depositToken(params, deposit, gas);
   }
 
-  depositNear(params: TransferArgs, deposit: bigint, gas: bigint):Promise<NearTransaction> {
+  private depositNear(params: TransferArgs, deposit: bigint, gas: bigint):Promise<NearTransaction> {
     return this.walletProvider.getRawTransaction({
       contractId: this.chainConfig.addresses.assetManager,
       method: 'transfer',
@@ -144,7 +145,7 @@ export class NearSpokeProvider {
     });
   }
 
-  depositToken(params: TransferArgs, deposit: bigint, gas: bigint) {
+  private depositToken(params: TransferArgs, deposit: bigint, gas: bigint) {
     return this.walletProvider.getRawTransaction({
       contractId: params.token,
       method: 'ft_transfer_call',
@@ -162,7 +163,7 @@ export class NearSpokeProvider {
     });
   }
 
-  sendMessage(params:SendMsgArgs,deposit:bigint=BigInt("0"),gas:bigint=BigInt("30000000000")){
+  sendMessage(params:SendMsgArgs,deposit:bigint=BigInt("0"),gas:bigint=BigInt("300000000000000")){
     return this.walletProvider.getRawTransaction({
       contractId:this.chainConfig.addresses.connection,
       method:"send_message",
