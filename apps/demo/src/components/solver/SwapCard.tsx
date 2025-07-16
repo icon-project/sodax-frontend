@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
   type CreateIntentParams,
+  encodeAddress,
   type Hex,
   type Intent,
   type IntentQuoteRequest,
@@ -27,7 +28,7 @@ import {
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
-import { useQuote, useCreateIntentOrder, useSpokeProvider } from '@sodax/dapp-kit';
+import { useQuote, useCreateIntentOrder, useSpokeProvider, useSwapAllowance, useSwapApprove } from '@sodax/dapp-kit';
 import { getXChainType, useEvmSwitchChain, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
 import {
   type ChainId,
@@ -49,9 +50,8 @@ export default function SwapCard({
   const sourceProvider = useSpokeProvider(sourceChain);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const destAccount = useXAccount(destChain);
-  const destProvider = useSpokeProvider(destChain);
   const { openWalletModal } = useAppStore();
-  const { mutateAsync: createIntentOrder } = useCreateIntentOrder(sourceChain);
+  const { mutateAsync: createIntentOrder } = useCreateIntentOrder(sourceProvider);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
     Object.values(spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens)[0],
   );
@@ -60,6 +60,8 @@ export default function SwapCard({
   );
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
+  const { approve, isLoading: isApproving } = useSwapApprove(sourceToken, sourceProvider);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
   const onChangeDirection = () => {
@@ -151,7 +153,7 @@ export default function SwapCard({
       return;
     }
 
-    if (!sourceProvider || !destProvider) {
+    if (!sourceProvider) {
       console.error('sourceProvider or destProvider undefined');
       return;
     }
@@ -166,7 +168,7 @@ export default function SwapCard({
       srcChain: sourceChain, // Chain ID where input tokens originate
       dstChain: destChain, // Chain ID where output tokens should be delivered
       srcAddress: await sourceProvider.walletProvider.getWalletAddressBytes(), // Source address in bytes (original address on spoke chain)
-      dstAddress: await destProvider.walletProvider.getWalletAddressBytes(), // Destination address in bytes (original address on spoke chain)
+      dstAddress: encodeAddress(destChain, destAccount.address), // Destination address in bytes (original address on spoke chain)
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
       data: '0x', // Additional arbitrary data
     } satisfies CreateIntentParams;
@@ -196,6 +198,10 @@ export default function SwapCard({
 
   const handleDestAccountDisconnect = () => {
     disconnect(getXChainType(destChain) as ChainType);
+  };
+
+  const handleApprove = async () => {
+    await approve({ amount: sourceAmount });
   };
 
   return (
@@ -328,6 +334,11 @@ export default function SwapCard({
             </span>
           </div>
         </div>
+
+        <div className="">
+          {quoteQuery.data?.ok === false && <div className="text-red-500">{quoteQuery.data.error.detail.message}</div>}
+        </div>
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" onClick={() => createIntentOrderPayload()}>
@@ -366,6 +377,16 @@ export default function SwapCard({
               </div>
             </div>
             <DialogFooter>
+              <Button
+                className="w-full"
+                type="button"
+                variant="default"
+                onClick={handleApprove}
+                disabled={isAllowanceLoading || hasAllowed || isApproving}
+              >
+                {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+              </Button>
+
               {isWrongChain && (
                 <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
                   Switch Chain
@@ -374,7 +395,7 @@ export default function SwapCard({
 
               {!isWrongChain &&
                 (intentOrderPayload ? (
-                  <Button className="w-full" onClick={() => handleSwap(intentOrderPayload)}>
+                  <Button className="w-full" onClick={() => handleSwap(intentOrderPayload)} disabled={!hasAllowed}>
                     <ArrowLeftRight className="mr-2 h-4 w-4" /> Swap
                   </Button>
                 ) : (

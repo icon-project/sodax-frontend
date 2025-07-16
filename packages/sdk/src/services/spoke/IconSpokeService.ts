@@ -1,5 +1,6 @@
-import pkg from 'icon-sdk-js';
-const { Converter, CallTransactionBuilder, CallBuilder } = pkg;
+import * as IconSdkRaw from 'icon-sdk-js';
+const IconSdk = (IconSdkRaw.default?.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
+const { Converter, CallTransactionBuilder, CallBuilder } = IconSdk;
 import * as rlp from 'rlp';
 import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
@@ -139,8 +140,7 @@ export class IconSpokeService {
     return spokeProvider.walletProvider.sendTransaction({
       from: walletAddress,
       to: isNativeToken(spokeProvider.chainConfig.chain.id, token)
-        ? // wICX address
-        'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d'
+        ? spokeProvider.chainConfig.addresses.wICX
         : token,
       value: value,
       nid: spokeProvider.chainConfig.nid,

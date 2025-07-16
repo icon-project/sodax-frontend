@@ -7,7 +7,10 @@ import {
   isPartnerFeePercentage,
   type Hex,
   type PartnerFee,
+  type SpokeChainId,
 } from '../index.js';
+import { toHex } from 'viem';
+import { bcs } from '@mysten/sui/bcs';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -97,4 +100,29 @@ export function calculateFeeAmount(inputAmount: bigint, fee: PartnerFee | undefi
 
 export function BigIntToHex(value: bigint): Hex {
   return `0x${value.toString(16)}`;
+}
+
+export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex {
+  switch (spokeChainId) {
+    case '0xa86a.avax':
+    case '0x2105.base':
+    case '0xa.optimism':
+    case '0x38.bsc':
+    case '0x89.polygon':
+    case '0xa4b1.arbitrum':
+    case 'sonic':
+      return address as Hex;
+
+    case 'injective-1':
+      return toHex(Buffer.from(address, 'utf-8'));
+
+    case '0x1.icon':
+      return `0x${Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex').toString('hex')}`;
+
+    case 'sui':
+      return toHex(bcs.Address.serialize(address).toBytes());
+
+    default:
+      return address as Hex;
+  }
 }

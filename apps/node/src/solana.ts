@@ -1,10 +1,11 @@
+import 'dotenv/config';
+
 import {
   EvmAssetManagerService,
   EvmHubProvider,
   EvmWalletAbstraction,
   type SolanaChainConfig,
   SolanaSpokeProvider,
-  SolanaWalletProvider,
   SpokeService,
   getHubChainConfig,
   spokeChainConfig,
@@ -16,13 +17,12 @@ import {
 } from '@sodax/sdk';
 import { SOLANA_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { Keypair, PublicKey } from '@solana/web3.js';
-import * as dotenv from 'dotenv';
+
 import { keccak256 } from 'ethers';
 import type { Address, Hash, Hex } from 'viem';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
-dotenv.config();
+import { SolanaWalletProvider } from './wallet-providers/SolanaWalletProvider.js';
 
-const privateKey = process.env.PRIVATE_KEY;
+
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
@@ -30,9 +30,7 @@ const SOLANA_CHAIN_ID = SOLANA_MAINNET_CHAIN_ID;
 
 const solanaSpokeChainConfig: SolanaChainConfig = spokeChainConfig[SOLANA_CHAIN_ID] as SolanaChainConfig;
 
-if (!privateKey) {
-  throw new Error('PRIVATE_KEY environment variable is required');
-}
+
 const solanaPrivateKey = process.env.SOLANA_PRIVATE_KEY;
 if (!solanaPrivateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
@@ -40,9 +38,11 @@ if (!solanaPrivateKey) {
 
 const solPrivateKeyUint8 = new Uint8Array(Buffer.from(solanaPrivateKey, 'hex'));
 const keypair = Keypair.fromSecretKey(solPrivateKeyUint8);
-const solanaWallet = new SolanaWalletProvider({ privateKey: keypair.secretKey }, solanaSpokeChainConfig.rpcUrl);
+const solanaWallet = new SolanaWalletProvider({
+  privateKey: keypair.secretKey,
+  endpoint: solanaSpokeChainConfig.rpcUrl,
+});
 
-const sonicTestnetEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
@@ -139,8 +139,8 @@ async function depositTo(token: PublicKey, amount: bigint, recipient: Address) {
 
   const txHash: Hash = await SpokeService.deposit(
     {
-      from: solanaSpokeProvider.walletProvider.getAddress(),
-      token: token,
+      from: await solanaSpokeProvider.walletProvider.getWalletAddress(),
+      token: token.toBase58(),
       amount,
       data: keccak256(data) as Hex,
     },
@@ -150,7 +150,7 @@ async function depositTo(token: PublicKey, amount: bigint, recipient: Address) {
 
   await sleep(10);
   const userWallet = await getUserWallet();
-  const res = await submitData(txHash, userWallet, data as Hex);
+  const res = await submitData(txHash, userWallet, data);
   console.log(res);
 
   console.log('[depositTo] txHash', txHash);
@@ -194,8 +194,8 @@ async function supply(token: PublicKey, amount: bigint) {
 
   const txHash = await SpokeService.deposit(
     {
-      from: solanaSpokeProvider.walletProvider.getAddress(),
-      token: token,
+      from: await solanaSpokeProvider.walletProvider.getWalletAddress(),
+      token: token.toBase58(),
       amount,
       data: keccak256(data) as Hex,
     },
@@ -214,7 +214,7 @@ async function borrow(token: PublicKey, amount: bigint) {
   const walletAddressBytes = await solanaSpokeProvider.walletProvider.getWalletAddressBytes();
   const data: Hex = sodax.moneyMarket.borrowData(
     hubWallet,
-    (await solanaSpokeProvider.walletProvider.getWalletAddressBytes()) as Hex,
+    (await solanaSpokeProvider.walletProvider.getWalletAddressBytes()),
     token.toString(),
     amount,
     solanaSpokeChainConfig.chain.id,
@@ -264,7 +264,7 @@ async function withdraw(token: PublicKey, amount: bigint) {
 async function repay(token: PublicKey, amount: bigint) {
   const [hubWallet, walletAddress] = await Promise.all([
     getUserWallet(),
-    solanaSpokeProvider.walletProvider.getAddress(),
+    solanaSpokeProvider.walletProvider.getWalletAddress(),
   ]);
 
   const data: Hex = sodax.moneyMarket.repayData(token.toString(), hubWallet, amount, solanaSpokeChainConfig.chain.id);
@@ -272,7 +272,7 @@ async function repay(token: PublicKey, amount: bigint) {
   const txHash: Hash = await SpokeService.deposit(
     {
       from: walletAddress,
-      token: token,
+      token: token.toBase58(),
       amount,
       data: keccak256(data) as Hex,
     },

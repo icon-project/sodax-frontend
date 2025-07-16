@@ -1,17 +1,23 @@
-import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/sdk';
-import * as IconService from 'icon-sdk-js';
+import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/types';
+import * as IconSdk from "icon-sdk-js";
+
+const IconService = IconSdk.default as unknown as typeof import("icon-sdk-js/build/index");
+
+const { Wallet, SignedTransaction, Builder: IconBuilder, Converter: IconConverter } = IconService;
+import type { Wallet as IconSdkWallet, IconService as IconSdkService } from "icon-sdk-js";
 
 export class IconWalletProvider implements IIconWalletProvider {
   private readonly wallet: IconWallet;
-  public readonly iconService: IconService.IconService;
+  public readonly iconService: IconSdkService;
 
   constructor(wallet: IconWalletConfig) {
     if (isPrivateKeyIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'PRIVATE_KEY',
-        wallet: IconService.Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
+ 
+        wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
       };
-      this.iconService = new IconService.IconService(new IconService.HttpProvider(wallet.rpcUrl));
+      this.iconService = new IconService.IconService(new IconService.IconService.HttpProvider(wallet.rpcUrl));
     } else if (isBrowserExtensionIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'BROWSER_EXTENSION',
@@ -24,10 +30,10 @@ export class IconWalletProvider implements IIconWalletProvider {
   }
 
   public async sendTransaction(tx: IcxCallTransaction): Promise<Hash> {
-    const builtTx = new IconService.CallTransactionBuilder()
+    const builtTx = new IconBuilder.CallTransactionBuilder()
       .from(tx.from)
       .to(tx.to)
-      .stepLimit(IconService.Converter.toBigNumber('2000000'))
+      .stepLimit(IconConverter.toBigNumber('2000000'))
       .nid(tx.nid)
       .version(tx.version ?? '0x3')
       .timestamp(tx.timestamp ?? new Date().getTime() * 1000)
@@ -42,7 +48,7 @@ export class IconWalletProvider implements IIconWalletProvider {
 
       return result.result satisfies string as Hash;
     }
-    const signedTx = new IconService.SignedTransaction(builtTx, this.wallet.wallet);
+    const signedTx = new SignedTransaction(builtTx, this.wallet.wallet);
     const result = await this.iconService.sendTransaction(signedTx).execute();
 
     return result satisfies string as Hash;
@@ -95,7 +101,7 @@ export type IconWalletConfig = PrivateKeyIconWalletConfig | BrowserExtensionIcon
 
 export type IconPkWallet = {
   type: 'PRIVATE_KEY';
-  wallet: IconService.Wallet;
+  wallet: IconSdkWallet;
 };
 
 export type IconBrowserExtensionWallet = {

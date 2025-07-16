@@ -1,23 +1,25 @@
-// import type { Address, Hash, Hex } from 'viem';
-// import {
-//   EvmAssetManagerService,
-//   EvmHubProvider,
-//   EvmWalletAbstraction,
-//   getHubChainConfig,
-//   spokeChainConfig,
-//   SpokeService,
-//   type IconSpokeChainConfig,
-//   IconSpokeProvider,
-//   type IconAddress,
-//   getIconAddressBytes,
-//   getMoneyMarketConfig,
-//   type EvmHubProviderConfig,
-//   Sodax,
-//   type SodaxConfig,
-//   type SolverConfigParams,
-// } from '@sodax/sdk';
-// import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
-// import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
+import 'dotenv/config';
+import type { Address, Hash, Hex } from 'viem';
+import {
+  EvmAssetManagerService,
+  EvmHubProvider,
+  EvmWalletAbstraction,
+  getHubChainConfig,
+  spokeChainConfig,
+  SpokeService,
+  type IconSpokeChainConfig,
+  IconSpokeProvider,
+  type IconAddress,
+  getIconAddressBytes,
+  getMoneyMarketConfig,
+  type EvmHubProviderConfig,
+  Sodax,
+  type SodaxConfig,
+  type SolverConfigParams,
+  MigrationParams,
+} from '@sodax/sdk';
+import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
+import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 
 // // load PK from .env
 // const privateKey = process.env.PRIVATE_KEY;
@@ -199,39 +201,78 @@
 //   console.log('[repay] txHash', txHash);
 // }
 
-// // Main function to decide which function to call
-// async function main() {
-//   const functionName = process.argv[2]; // Get function name from command line argument
+/**
+ * Migrates wICX tokens from ICON to the hub chain.
+ * This function handles the migration of wICX tokens to SODA tokens on the hub chain.
+ *
+ * @param wICX - The ICON address of the wICX token to migrate
+ * @param amount - The amount of wICX tokens to migrate
+ * @param recipient - The address that will receive the migrated SODA tokens
+ */
+async function migrate(amount: bigint, recipient: Address): Promise<void> {
+  const params = {
+    token: 'ICX',
+    icx: iconSpokeChainConfig.nativeToken,
+    amount,
+    to: recipient,
+    action: 'migrate',
+  } satisfies MigrationParams;
 
-//   if (functionName === 'deposit') {
-//     const token = process.argv[3] as IconAddress; // Get token address from command line argument
-//     const amount = BigInt(process.argv[4]); // Get amount from command line argument
-//     const recipient = process.argv[5] as Address; // Get recipient address from command line argument
-//     await depositTo(token, amount, recipient);
-//   } else if (functionName === 'withdrawAsset') {
-//     const token = process.argv[3] as IconAddress; // Get token address from command line argument
-//     const amount = BigInt(process.argv[4]); // Get amount from command line argument
-//     const recipient = process.argv[5] as IconAddress; // Get recipient address from command line argument
-//     await withdrawAsset(token, amount, recipient);
-//   } else if (functionName === 'supply') {
-//     const token = process.argv[3] as IconAddress; // Get token address from command line argument
-//     const amount = BigInt(process.argv[4]); // Get amount from command line argument
-//     await supply(token, amount);
-//   } else if (functionName === 'borrow') {
-//     const token = process.argv[3] as IconAddress; // Get token address from command line argument
-//     const amount = BigInt(process.argv[4]); // Get amount from command line argument
-//     await borrow(token, amount);
-//   } else if (functionName === 'withdraw') {
-//     const token = process.argv[3] as IconAddress; // Get token address from command line argument
-//     const amount = BigInt(process.argv[4]); // Get amount from command line argument
-//     await withdraw(token, amount);
-//   } else if (functionName === 'repay') {
-//     const token = process.argv[3] as IconAddress; // Get token address from command line argument
-//     const amount = BigInt(process.argv[4]); // Get amount from command line argument
-//     await repay(token, amount);
-//   } else {
-//     console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
-//   }
-// }
+  const result = await sodax.migration.createAndSubmitMigrateIntent(params, iconSpokeProvider);
+
+  if (result.ok) {
+    console.log('[migrate] txHash', result.value);
+    const [hubTxHash, spokeTxHash] = result.value;
+    console.log('[migrate] hubTxHash', hubTxHash);
+    console.log('[migrate] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[migrate] error', result.error);
+  }
+}
+
+// Main function to decide which function to call
+async function main() {
+  const functionName = process.argv[2]; // Get function name from command line argument
+
+  if (functionName === 'deposit') {
+    const token = process.argv[3] as IconAddress; // Get token address from command line argument
+    const amount = BigInt(process.argv[4]); // Get amount from command line argument
+    const recipient = process.argv[5] as Address; // Get recipient address from command line argument
+    await depositTo(token, amount, recipient);
+  } else if (functionName === 'withdrawAsset') {
+    const token = process.argv[3] as IconAddress; // Get token address from command line argument
+    const amount = BigInt(process.argv[4]); // Get amount from command line argument
+    const recipient = process.argv[5] as IconAddress; // Get recipient address from command line argument
+    await withdrawAsset(token, amount, recipient);
+  } else if (functionName === 'supply') {
+    const token = process.argv[3] as IconAddress; // Get token address from command line argument
+    const amount = BigInt(process.argv[4]); // Get amount from command line argument
+    await supply(token, amount);
+  } else if (functionName === 'borrow') {
+    const token = process.argv[3] as IconAddress; // Get token address from command line argument
+    const amount = BigInt(process.argv[4]); // Get amount from command line argument
+    await borrow(token, amount);
+  } else if (functionName === 'withdraw') {
+    const token = process.argv[3] as IconAddress; // Get token address from command line argument
+    const amount = BigInt(process.argv[4]); // Get amount from command line argument
+    await withdraw(token, amount);
+  } else if (functionName === 'repay') {
+    const token = process.argv[3] as IconAddress; // Get token address from command line argument
+    const amount = BigInt(process.argv[4]); // Get amount from command line argument
+    await repay(token, amount);
+  }else if (functionName === 'migrate') {
+    const amount = BigInt(process.argv[3]); // Get amount from command line argument
+    const recipient = process.argv[4] as Address; // Get recipient address from command line argument
+    await migrate(amount, recipient);
+  } else {
+    console.log(
+      'Function not recognized. Please use one of: "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", or "migrate".',
+    );
+    console.log('Usage examples:');
+    console.log('  npm run icon migrate <wICX_address> <amount> <recipient_address>');
+    console.log('  npm run icon deposit <token_address> <amount> <recipient_address>');
+    console.log('  npm run icon supply <token_address> <amount>');
+  }
+}
 
 // main();

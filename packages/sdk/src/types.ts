@@ -1,4 +1,3 @@
-import type { PublicKey } from '@solana/web3.js';
 import type { TransactionReceipt } from 'viem';
 import type { CWSpokeProvider } from './entities/cosmos/CWSpokeProvider.js';
 import type {
@@ -29,6 +28,8 @@ import type {
   StellarRawTransaction,
   CWRawTransaction,
   CosmosNetworkEnv,
+  SolanaBase58PublicKey,
+  ICON_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { type Transaction as NearTransaction } from '@near-js/transactions';
 import type { NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
@@ -82,6 +83,8 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     assetManager: Address;
     hubWallet: Address;
     xTokenManager: Address;
+    icxMigration: Address;
+    sodaToken: Address;
   };
 
   nativeToken: Address;
@@ -101,6 +104,7 @@ export type MoneyMarketConfig = {
 
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
+export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 
 export type MoneyMarketConfigParams =
   | Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
@@ -171,6 +175,7 @@ export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
     assetManager: IconAddress;
     connection: IconAddress;
     rateLimit: IconAddress;
+    wICX: `cx${string}`;
   };
   nid: Hex;
 };
@@ -288,6 +293,9 @@ export type FeeAmount = {
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
+export type IcxTokenType =
+  | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['addresses']['wICX']
+  | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['nativeToken'];
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 export type HttpPrefixedUrl = `http${string}`;
 
@@ -324,7 +332,7 @@ export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
             ? Hex
             : T extends SonicSpokeProvider
               ? Address
-            : never;
+              : never;
 
 export type HttpUrl = `http://${string}` | `https://${string}`;
 
@@ -413,8 +421,8 @@ export enum IntentErrorCode {
 type Base64String = string;
 
 export type SolanaRawTransaction = {
-  from: PublicKey;
-  to: PublicKey;
+  from: SolanaBase58PublicKey;
+  to: SolanaBase58PublicKey;
   value: bigint;
   data: Base64String;
 };

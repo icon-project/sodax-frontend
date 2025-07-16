@@ -5,7 +5,7 @@ import Image from 'next/image';
 const Section1 = () => {
   return (
     <div
-      className="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white mt-2 pt-[40px] sm:pt-[60px] relative overflow-hidden section1"
+      className="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white mt-4 pt-[40px] sm:pt-[60px] relative overflow-hidden section1"
       id="section1"
     >
       <Image
@@ -29,7 +29,12 @@ const Section1 = () => {
         Supply for a fully carbonated future.
       </Label>
       <div className="mt-4">
-        <Button variant="outline" className="px-6 font-['InterMedium']" size="lg">
+        <Button
+          variant="outline"
+          className="px-6 font-['InterMedium'] cursor-pointer"
+          size="lg"
+          onClick={() => window.open('https://x.com/gosodax', '_blank')}
+        >
           Follow X for launch
         </Button>
       </div>

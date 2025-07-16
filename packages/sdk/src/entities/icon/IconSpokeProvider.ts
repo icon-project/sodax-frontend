@@ -1,7 +1,9 @@
 import type { IconSpokeChainConfig } from '../../types.js';
+import * as IconSdkRaw from 'icon-sdk-js';
+const IconSdk = (IconSdkRaw.default?.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
 import type { IIconWalletProvider } from '@sodax/types';
-import pkg from 'icon-sdk-js';
-const { IconService } = pkg;
+
+
 
 export class IconSpokeProvider {
   public readonly walletProvider: IIconWalletProvider;
@@ -16,6 +18,6 @@ export class IconSpokeProvider {
   ) {
     this.walletProvider = walletProvider;
     this.chainConfig = chainConfig;
-    this.iconService = new IconService(new IconService.HttpProvider(rpcUrl));
+    this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(rpcUrl));
   }
 }

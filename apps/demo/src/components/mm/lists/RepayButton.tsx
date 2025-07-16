@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAllowance, useApprove, useRepay } from '@sodax/dapp-kit';
+import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
@@ -12,9 +12,10 @@ export function RepayButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
 
-  const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay(token);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useAllowance(token, amount, "repay");
-  const { approve, isLoading: isApproving } = useApprove(token);
+  const spokeProvider = useSpokeProvider(token.xChainId);
+  const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay(token, spokeProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'repay', spokeProvider);
+  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleRepay = async () => {
@@ -35,7 +36,7 @@ export function RepayButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action: "repay" });
+    await approve({ amount, action: 'repay' });
   };
 
   return (
