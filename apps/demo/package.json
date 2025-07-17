@@ -17,10 +17,6 @@
     "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
   },
   "dependencies": {
-    "@sodax/dapp-kit": "workspace:*",
-    "@sodax/sdk": "workspace:*",
-    "@sodax/wallet-sdk": "workspace:*",
-    "@sodax/types": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-scroll-area": "^1.2.3",
@@ -28,6 +24,10 @@
     "@radix-ui/react-separator": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-visually-hidden": "^1.1.2",
+    "@sodax/dapp-kit": "workspace:*",
+    "@sodax/sdk": "workspace:*",
+    "@sodax/types": "workspace:*",
+    "@sodax/wallet-sdk": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@types/node": "catalog:",
     "@vitejs/plugin-react": "4.2.1",
@@ -41,7 +41,6 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "viem": "catalog:",
-    "wagmi": "catalog:",
     "web-vitals": "^2.1.4",
     "zustand": "4.5.2"
   },
@@ -59,7 +58,15 @@
     "vite-tsconfig-paths": "4.3.1"
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
