@@ -6,7 +6,7 @@ import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface RepayResponse {
   ok: true;
-  value: [`0x${string}`, `0x${string}`];
+  value: [string, string];
 }
 
 /**

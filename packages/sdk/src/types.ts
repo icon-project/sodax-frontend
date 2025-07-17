@@ -164,7 +164,8 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
     rateLimit: string;
     testToken: string;
   };
-  rpc_url: string;
+  horizonRpcUrl: HttpUrl;
+  sorobanRpcUrl: HttpUrl;
 };
 
 export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
@@ -436,7 +437,7 @@ export type SuiRawTransaction = {
 
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
 export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRawTransaction : Hex;
-export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : Hex;
+export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
 export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransaction : Hex;

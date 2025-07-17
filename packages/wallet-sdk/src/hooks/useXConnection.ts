@@ -45,6 +45,7 @@ export function useXConnection(xChainType: ChainType | undefined): XConnection |
           xAccount: { address: evmAddress as string, xChainType },
           xConnectorId: evmConnections?.[0]?.connector.id,
         };
+
       case 'SUI':
         if (suiCurrentWallet.currentWallet && suiCurrentWallet.connectionStatus === 'connected') {
           return {
