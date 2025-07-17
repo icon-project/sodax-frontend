@@ -1,6 +1,6 @@
-import type { Address, Hex, SpokeChainId } from "@sodax/types";
-import { SonicSpokeProvider, type EvmHubProvider, type SpokeProvider } from "../../entities/index.js";
-import { EvmWalletAbstraction, SonicSpokeService } from "../../index.js";
+import type { Address, Hex, SpokeChainId } from '@sodax/types';
+import { SonicSpokeProvider, type EvmHubProvider, type SpokeProvider } from '../../entities/index.js';
+import { EvmWalletAbstraction, SonicSpokeService } from '../../index.js';
 
 /**
  * Service to get valid hub wallet address which may differ based on the spoke chain.
@@ -12,7 +12,7 @@ export class WalletAbstractionService {
     chainId: SpokeChainId,
     address: Hex,
     hubProvider: EvmHubProvider,
-    spokeProvider: SpokeProvider
+    spokeProvider: SpokeProvider,
   ): Promise<Address> {
     // if chainId is the same as the hub chain id, use the user router (sonic)
     if (chainId === hubProvider.chainConfig.chain.id) {
@@ -20,7 +20,9 @@ export class WalletAbstractionService {
         return SonicSpokeService.getUserRouter(address, spokeProvider);
       }
 
-      throw new Error('[WalletAbstractionService.getUserHubWalletAddress] Invalid spoke provider. Sonic spoke provider is required.');
+      throw new Error(
+        '[WalletAbstractionService.getUserHubWalletAddress] Invalid spoke provider. Sonic spoke provider is required.',
+      );
     }
 
     return EvmWalletAbstraction.getUserHubWalletAddress(chainId, address, hubProvider);

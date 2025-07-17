@@ -22,14 +22,12 @@ import { keccak256 } from 'ethers';
 import type { Address, Hash, Hex } from 'viem';
 import { SolanaWalletProvider } from './wallet-providers/SolanaWalletProvider.js';
 
-
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 const SOLANA_CHAIN_ID = SOLANA_MAINNET_CHAIN_ID;
 
 const solanaSpokeChainConfig: SolanaChainConfig = spokeChainConfig[SOLANA_CHAIN_ID] as SolanaChainConfig;
-
 
 const solanaPrivateKey = process.env.SOLANA_PRIVATE_KEY;
 if (!solanaPrivateKey) {
@@ -43,10 +41,9 @@ const solanaWallet = new SolanaWalletProvider({
   endpoint: solanaSpokeChainConfig.rpcUrl,
 });
 
-
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
+  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 
@@ -214,7 +211,7 @@ async function borrow(token: PublicKey, amount: bigint) {
   const walletAddressBytes = await solanaSpokeProvider.walletProvider.getWalletAddressBytes();
   const data: Hex = sodax.moneyMarket.borrowData(
     hubWallet,
-    (await solanaSpokeProvider.walletProvider.getWalletAddressBytes()),
+    await solanaSpokeProvider.walletProvider.getWalletAddressBytes(),
     token.toString(),
     amount,
     solanaSpokeChainConfig.chain.id,

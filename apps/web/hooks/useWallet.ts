@@ -11,7 +11,6 @@ export function useWallet() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
-
   const [isRegistering, setIsRegistering] = useState(false);
   const [isCheckingRegistration, setIsCheckingRegistration] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);

@@ -7,12 +7,7 @@
   "version": "0.0.1-rc.5",
   "license": "MIT",
   "description": "Sodax SDK",
-  "keywords": [
-    "sodax",
-    "sdk",
-    "frontend",
-    "interface"
-  ],
+  "keywords": ["sodax", "sdk", "frontend", "interface"],
   "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/sdk",
   "bugs": {
     "url": "https://github.com/icon-project/sodax-frontend/issues"
@@ -35,15 +30,13 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsup",
     "test": "vitest run --exclude ./src/tests/e2e",
     "test-e2e": "vitest run ./src/tests/e2e",
     "coverage": "vitest run --coverage",
-    "dev": "tsc --watch",
+    "dev": "tsup --watch",
     "ci": "pnpm run pretty && pnpm run build && pnpm run test",
     "checkTs": "tsc --noEmit",
     "pretty": "biome format . --write",

@@ -13,13 +13,13 @@ import {
   type SodaxConfig,
   EvmHubProvider,
   type SolverConfigParams,
+  type HttpUrl,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider';
 import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -31,33 +31,30 @@ if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const hubWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
-
 const stellarConfig = spokeChainConfig[STELLAR_CHAIN_ID] as StellarSpokeChainConfig;
 const STELLAR_SECRET_KEY = process.env.STELLAR_SECRET_KEY ?? '';
-const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL || stellarConfig.rpc_url;
+const STELLAR_SOROBAN_RPC_URL = (process.env.STELLAR_SOROBAN_RPC_URL ?? stellarConfig.sorobanRpcUrl) as HttpUrl;
+const STELLAR_HORIZON_RPC_URL = (process.env.STELLAR_HORIZON_RPC_URL ?? stellarConfig.horizonRpcUrl) as HttpUrl;
 
 // Create Stellar wallet config
 const stellarWalletConfig: StellarWalletConfig = {
   type: 'PRIVATE_KEY',
   privateKey: STELLAR_SECRET_KEY as Hex,
   network: IS_TESTNET ? 'TESTNET' : 'PUBLIC',
-  rpcUrl: STELLAR_RPC_URL,
+  rpcUrl: STELLAR_SOROBAN_RPC_URL,
 };
 
 const stellarWalletProvider = new StellarWalletProvider(stellarWalletConfig);
-const stellarSpokeProvider = new StellarSpokeProvider(
-  stellarWalletProvider,
-  stellarConfig.addresses.assetManager,
-  stellarConfig,
-  STELLAR_RPC_URL,
-);
+const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, stellarConfig, {
+  horizonRpcUrl: STELLAR_HORIZON_RPC_URL,
+  sorobanRpcUrl: STELLAR_SOROBAN_RPC_URL,
+});
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
+  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 
@@ -94,7 +91,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
     stellarSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.deposit(
+  const txHash = await SpokeService.deposit(
     {
       from: walletAddressBytes,
       token,
@@ -129,7 +126,7 @@ async function withdrawAsset(
     hubProvider,
     stellarSpokeProvider.chainConfig.chain.id,
   );
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
+  const txHash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -174,7 +171,7 @@ async function borrow(token: string, amount: bigint) {
     stellarSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
+  const txHash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
@@ -197,7 +194,7 @@ async function withdraw(token: string, amount: bigint) {
     stellarSpokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
+  const txHash = await SpokeService.callWallet(hubWallet, data, stellarSpokeProvider, hubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }
@@ -211,7 +208,7 @@ async function repay(token: string, amount: bigint) {
   );
   const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
 
-  const txHash: Hash = await SpokeService.deposit(
+  const txHash = await SpokeService.deposit(
     {
       from: walletAddressBytes,
       token,

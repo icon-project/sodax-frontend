@@ -1,5 +1,4 @@
 import type { HttpUrl, Result } from '../../types.js';
-import type { Hex } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentSubmitError } from '../solver/SolverService.js';
@@ -252,7 +251,7 @@ export async function waitUntilIntentExecuted(
  * @returns The transaction hash.
  */
 export async function relayTxAndWaitPacket<S extends SpokeProvider>(
-  spokeTxHash: Hex,
+  spokeTxHash: string,
   spokeProvider: S,
   relayerApiEndpoint: HttpUrl,
   timeout = DEFAULT_RELAY_TX_TIMEOUT,
