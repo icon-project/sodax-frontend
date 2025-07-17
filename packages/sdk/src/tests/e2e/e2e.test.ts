@@ -122,6 +122,10 @@ describe('e2e', () => {
 
         console.log(`vaultAddress: ${vaultAddress}, assets:`, vaultAssets);
         console.log(`${spokeChain} ${token.symbol} ${hubAsset.asset} ${vaultAssets.includes(hubAsset.asset.toLowerCase() as Address)}`);
+
+        if (!vaultAssets.includes(hubAsset.asset.toLowerCase() as Address)) {
+          throw new Error(`Hub asset ${hubAsset.asset} not found in vault ${vaultAddress} on chain ${spokeChain}`);
+        }
         expect(vaultAssets.includes(hubAsset.asset.toLowerCase() as Address)).toBe(true);
       }
     }

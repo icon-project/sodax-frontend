@@ -751,12 +751,22 @@ export const HubVaultSymbols = [
   'sodaPOL',
   'sodaNIBI',
   'sodaS',
+  'IbnUSD'
 ] as const;
 
 export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
 
 // All addresses are now lowercase for consistency and correctness
 export const hubVaults = {
+  IbnUSD: {
+    address: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
+    reserves: [
+      // hub asset addresses contained in the vault
+      '0x654DdDf32a9a2aC53f5FB54bf1e93F66791f8047',
+      '0xddf6AD38F9C9451C1F4cDf369040F6869e37393e',
+      '0x1559B52d2e165da1505a542EA37C543c9137f52a',
+    ] as const,
+  },
   sodaS: {
     address: '0x62ecc3eeb80a162c57624b3ff80313fe69f5203e',
     reserves: [
@@ -1355,7 +1365,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: hubVaults.IbnUSD.address,
     },
   },
 } as const;
