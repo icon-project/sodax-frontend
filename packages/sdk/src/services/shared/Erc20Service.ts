@@ -101,7 +101,6 @@ export class Erc20Service {
     };
   }
 
-
   /**
    * Encodes a transferFrom transaction for a token.
    * @param token - The address of the token.

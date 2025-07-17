@@ -555,7 +555,10 @@ export class SolverService {
 
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      invariant(params.srcAddress.toLowerCase() === walletAddress.toLowerCase(), 'srcAddress must be the same as wallet address');
+      invariant(
+        params.srcAddress.toLowerCase() === walletAddress.toLowerCase(),
+        'srcAddress must be the same as wallet address',
+      );
 
       const walletAddressBytes = encodeAddress(params.srcChain, walletAddress);
 
