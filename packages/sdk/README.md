@@ -24,7 +24,7 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
 
 
 ## Installation
-
+ 
 ```bash
 # Using npm
 npm install @sodax/sdk

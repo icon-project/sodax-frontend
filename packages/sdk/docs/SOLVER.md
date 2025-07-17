@@ -80,7 +80,7 @@ import {
 
 const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';  // Address of the ETH token on BSC (spoke chain)
 const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of the wBTC token on ARB (spoke chain)
-const evmWalletAddressBytes = evmWalletProvider.getWalletAddressBytes();
+const evmWalletAddress = evmWalletProvider.getWalletAddress();
 
 // First check if approval is needed
 const isApproved = await sodax.solver.isAllowanceValid(
@@ -93,8 +93,8 @@ const isApproved = await sodax.solver.isAllowanceValid(
     allowPartialFill: false, // Whether the intent can be partially filled
     srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
     dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
-    srcAddress: evmWalletAddressBytes, // Source address in bytes (original address on spoke chain)
-    dstAddress: evmWalletAddressBytes, // Destination address in bytes (original address on spoke chain)
+    srcAddress: evmWalletAddress, // Source address (original address on spoke chain)
+    dstAddress: evmWalletAddress, // Destination address (original address on spoke chain)
     solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
     data: '0x', // Additional arbitrary data
   },
@@ -145,7 +145,7 @@ Example for BSC -> ARB Intent Order:
 
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';  // Address of the ETH token on BSC (spoke chain)
   const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of the wBTC token on ARB (spoke chain)
-  const evmWalletAddressBytes = evmWalletProvider.getWalletAddressBytes();
+  const evmWalletAddress = evmWalletProvider.getWalletAddress();
 
   const createIntentParams = {
     inputToken: bscEthToken,  // The address of the input token on spoke chain
@@ -156,8 +156,8 @@ Example for BSC -> ARB Intent Order:
     allowPartialFill: false, // Whether the intent can be partially filled
     srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
     dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
-    srcAddress: evmWalletAddressBytes, // Source address in bytes (original address on spoke chain)
-    dstAddress: evmWalletAddressBytes, // Destination address in bytes (original address on spoke chain)
+    srcAddress: evmWalletAddress, // Source address (original address on spoke chain)
+    dstAddress: evmWalletAddress, // Destination address (original address on spoke chain)
     solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
     data: '0x', // Additional arbitrary data
   } satisfies CreateIntentParams;

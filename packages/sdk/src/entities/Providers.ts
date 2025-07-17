@@ -31,7 +31,7 @@ import {
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
   type ICWWalletProvider,
-  type ISolanaWalletProvider
+  type ISolanaWalletProvider,
 } from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };

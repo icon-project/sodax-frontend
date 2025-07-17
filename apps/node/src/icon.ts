@@ -16,7 +16,7 @@ import {
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
-  MigrationParams,
+  type MigrationParams,
 } from '@sodax/sdk';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
@@ -260,7 +260,7 @@ async function main() {
     const token = process.argv[3] as IconAddress; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
-  }else if (functionName === 'migrate') {
+  } else if (functionName === 'migrate') {
     const amount = BigInt(process.argv[3]); // Get amount from command line argument
     const recipient = process.argv[4] as Address; // Get recipient address from command line argument
     await migrate(amount, recipient);

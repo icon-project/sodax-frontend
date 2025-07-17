@@ -26,6 +26,4 @@ export class EvmWalletAbstraction {
       args: [BigInt(getIntentRelayChainId(chainId)), address],
     });
   }
-
-  
 }
