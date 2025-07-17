@@ -13,14 +13,13 @@ import {
   type SodaxConfig,
   EvmHubProvider,
   type SolverConfigParams,
-  HttpUrl,
+  type HttpUrl,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider';
 import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -31,8 +30,6 @@ const STELLAR_CHAIN_ID = STELLAR_MAINNET_CHAIN_ID;
 if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
-
-const hubWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
 
 const stellarConfig = spokeChainConfig[STELLAR_CHAIN_ID] as StellarSpokeChainConfig;
 const STELLAR_SECRET_KEY = process.env.STELLAR_SECRET_KEY ?? '';
@@ -48,15 +45,10 @@ const stellarWalletConfig: StellarWalletConfig = {
 };
 
 const stellarWalletProvider = new StellarWalletProvider(stellarWalletConfig);
-const stellarSpokeProvider = new StellarSpokeProvider(
-  stellarWalletProvider,
-  stellarConfig.addresses.assetManager,
-  stellarConfig,
-  {
-    horizonRpcUrl: STELLAR_HORIZON_RPC_URL,
-    sorobanRpcUrl: STELLAR_SOROBAN_RPC_URL,
-  },
-);
+const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, stellarConfig, {
+  horizonRpcUrl: STELLAR_HORIZON_RPC_URL,
+  sorobanRpcUrl: STELLAR_SOROBAN_RPC_URL,
+});
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 

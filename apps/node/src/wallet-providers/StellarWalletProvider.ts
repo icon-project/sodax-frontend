@@ -1,5 +1,5 @@
 import type { Hex, IStellarWalletProvider, StellarRawTransactionReceipt, XDR } from '@sodax/sdk';
-import { Networks, StrKey, Horizon, Transaction, Keypair, Address } from '@stellar/stellar-sdk';
+import { Networks, Horizon, Transaction, Keypair, Address } from '@stellar/stellar-sdk';
 
 import type { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
 

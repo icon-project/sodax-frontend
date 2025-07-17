@@ -192,12 +192,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
   public readonly chainConfig: StellarSpokeChainConfig;
   public readonly walletProvider: IStellarWalletProvider;
 
-  constructor(
-    walletProvider: IStellarWalletProvider,
-    contractAddress: string,
-    config: StellarSpokeChainConfig,
-    rpcConfig?: StellarRpcConfig,
-  ) {
+  constructor(walletProvider: IStellarWalletProvider, config: StellarSpokeChainConfig, rpcConfig?: StellarRpcConfig) {
     this.server = new Horizon.Server(
       rpcConfig && rpcConfig.horizonRpcUrl ? rpcConfig.horizonRpcUrl : config.horizonRpcUrl,
       { allowHttp: true },
@@ -207,7 +202,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
       {},
     );
     this.walletProvider = walletProvider;
-    this.contract = new Contract(contractAddress);
+    this.contract = new Contract(config.addresses.assetManager);
     this.chainConfig = config;
   }
 
@@ -420,11 +415,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
       const stellarAccount = new CustomStellarAccount(accountResponse);
 
       const depositCall = this.buildDepositCall(walletAddress, token, amount, recipient, data);
-      const [priorityTx, simulation] = await this.buildPriorityStellarTransaction(
-        stellarAccount,
-        network,
-        depositCall,
-      );
+      const [priorityTx, simulation] = await this.buildPriorityStellarTransaction(stellarAccount, network, depositCall);
 
       if (raw) {
         const transactionXdr = priorityTx.toXDR();
@@ -476,7 +467,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
           to: this.chainConfig.addresses.assetManager,
           value: 0n,
           data: transactionXdr,
-        } satisfies StellarReturnType<true>  as StellarReturnType<R>;
+        } satisfies StellarReturnType<true> as StellarReturnType<R>;
       }
 
       const hash = await this.submitOrRestoreAndRetry(stellarAccount, network, priorityTx, sendMessageCall, simulation);
