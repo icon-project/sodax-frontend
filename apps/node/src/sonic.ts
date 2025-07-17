@@ -18,6 +18,8 @@ import {
   type MoneyMarketBorrowParams,
   type MoneyMarketWithdrawParams,
   type MoneyMarketRepayParams,
+  IconEoaAddress,
+  IcxCreateRevertMigrationParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
@@ -346,6 +348,47 @@ async function repayHighLevel(token: Address, amount: bigint) {
   }
 }
 
+async function reverseMigrate(amount: bigint, to: IconEoaAddress) {
+  const params = {
+    amount,
+    to,
+    action: 'revert',
+  } satisfies IcxCreateRevertMigrationParams;
+
+  const isAllowed = await sodax.migration.isAllowanceValid(params, spokeProvider);
+
+  if (!isAllowed.ok) {
+    console.error('[reverseMigrate] isAllowed error:', isAllowed.error);
+    return;
+  }
+
+  if (isAllowed.value) {
+    console.log('[reverseMigrate] isAllowed', isAllowed.value);
+  } else {
+    const approveResult = await sodax.migration.approve(params, spokeProvider);
+
+    if (approveResult.ok) {
+      console.log('[reverseMigrate] approveHash', approveResult.value);
+      const approveTxResult = await spokeProvider.walletProvider.waitForTransactionReceipt(approveResult.value);
+      console.log('[reverseMigrate] approveTxResult', approveTxResult);
+    } else {
+      console.error('[reverseMigrate] approve error:', approveResult.error);
+      return;
+    }
+  }
+
+  const result = await sodax.migration.createAndSubmitRevertMigrationIntent(params, spokeProvider);
+
+  if (result.ok) {
+    console.log('[reverseMigrate] txHash', result.value);
+    const [hubTxHash, spokeTxHash] = result.value;
+    console.log('[reverseMigrate] hubTxHash', hubTxHash);
+    console.log('[reverseMigrate] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[reverseMigrate] error', result.error);
+  }
+}
+
 async function borrowTo(token: Hex, amount: bigint, to: Hex, spokeChainId: SpokeChainId) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
   const borrowInfo = await SonicSpokeService.getBorrowInfo(token, amount, spokeChainId, sodax.moneyMarket);
@@ -399,9 +442,13 @@ async function main() {
     const token = process.argv[3] as Address;
     const amount = BigInt(process.argv[4]);
     await repayHighLevel(token, amount);
+  } else if (functionName === 'reverseMigrate') {
+    const amount = BigInt(process.argv[3]);
+    const to = process.argv[4] as IconEoaAddress;
+    await reverseMigrate(amount, to);
   } else {
     console.log(
-      'Function not recognized. Please use "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", or "repayHighLevel".',
+      'Function not recognized. Please use one of: "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", "repayHighLevel", or "reverseMigrate".',
     );
   }
 }
