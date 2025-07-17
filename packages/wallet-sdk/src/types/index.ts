@@ -1,5 +1,5 @@
-import type { Config } from 'wagmi';
 import type { ChainType } from '@sodax/types';
+import type { EvmChainId } from '@/xchains/evm/EvmXService';
 
 export type XAccount = {
   address: string | undefined;
@@ -23,7 +23,7 @@ export enum WalletId {
 }
 
 export type EVMConfig = {
-  chains: string[];
+  chains: EvmChainId[];
 };
 
 export type SuiConfig = {

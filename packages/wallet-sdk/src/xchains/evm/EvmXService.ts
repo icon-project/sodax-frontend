@@ -5,17 +5,18 @@ import { getWagmiChainId, isNativeToken } from '@/utils';
 
 import { type Address, type PublicClient, type WalletClient, erc20Abi } from 'viem';
 import { getPublicClient, getWalletClient } from 'wagmi/actions';
-import { createConfig, http, type Transport, WagmiProvider } from 'wagmi';
-import { mainnet, avalanche, base, optimism, polygon, arbitrum, bsc, sonic } from 'wagmi/chains';
+import { createConfig, http, type Transport } from 'wagmi';
+import { mainnet, avalanche, base, optimism, polygon, arbitrum, bsc, sonic, nibiru } from 'wagmi/chains';
 
 import {
-  ARBITRUM_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
+  ARBITRUM_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
+  NIBIRU_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 const evmChainMap = {
@@ -26,12 +27,13 @@ const evmChainMap = {
   [SONIC_MAINNET_CHAIN_ID]: sonic,
   [OPTIMISM_MAINNET_CHAIN_ID]: optimism,
   [POLYGON_MAINNET_CHAIN_ID]: polygon,
-};
+  [NIBIRU_MAINNET_CHAIN_ID]: nibiru,
+} as const;
 
-type EvmChainId = keyof typeof evmChainMap;
+export type EvmChainId = keyof typeof evmChainMap;
 
-export const getWagmiConfig = (chains: string[]) => {
-  const mappedChains = chains.map(chain => evmChainMap[chain as EvmChainId]);
+export const getWagmiConfig = (chains: EvmChainId[]) => {
+  const mappedChains = chains.map(chain => evmChainMap[chain]);
   const finalChains = mappedChains.length > 0 ? mappedChains : [mainnet];
 
   const transports = finalChains.reduce(
