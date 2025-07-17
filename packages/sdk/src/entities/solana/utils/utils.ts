@@ -21,9 +21,11 @@ export function isNative(address: PublicKey): boolean {
   return false;
 }
 
-export function convertTransactionInstructionToRaw(instruction: TransactionInstruction): SolanaRawTransactionInstruction {
+export function convertTransactionInstructionToRaw(
+  instruction: TransactionInstruction,
+): SolanaRawTransactionInstruction {
   return {
-    keys: instruction.keys.map((key) => ({
+    keys: instruction.keys.map(key => ({
       pubkey: key.pubkey.toBase58(),
       isSigner: key.isSigner,
       isWritable: key.isWritable,
@@ -32,5 +34,3 @@ export function convertTransactionInstructionToRaw(instruction: TransactionInstr
     data: instruction.data,
   };
 }
-
-

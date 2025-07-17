@@ -39,7 +39,7 @@ export const partnerFeePercentage = {
 
 export const mainnetSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
   partnerFee: partnerFeePercentage, // fee to be paid to the partner address
 } satisfies SolverConfigParams;
 

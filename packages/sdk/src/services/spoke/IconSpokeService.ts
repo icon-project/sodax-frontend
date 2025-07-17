@@ -139,9 +139,7 @@ export class IconSpokeService {
 
     return spokeProvider.walletProvider.sendTransaction({
       from: walletAddress,
-      to: isNativeToken(spokeProvider.chainConfig.chain.id, token)
-        ? spokeProvider.chainConfig.addresses.wICX
-        : token,
+      to: isNativeToken(spokeProvider.chainConfig.chain.id, token) ? spokeProvider.chainConfig.addresses.wICX : token,
       value: value,
       nid: spokeProvider.chainConfig.nid,
       method: 'transfer',

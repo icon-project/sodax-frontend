@@ -610,7 +610,7 @@ export class MoneyMarketService {
 
       const data: Hex = this.supplyData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
 
-      const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       const txResult = await SpokeService.deposit(
         {
           from: walletAddress,
@@ -1027,7 +1027,7 @@ export class MoneyMarketService {
     );
     const data: Hex = this.repayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
 
-    const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const txResult = await SpokeService.deposit(
       {
         from: walletAddress,

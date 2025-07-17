@@ -2,7 +2,11 @@ import * as anchor from '@coral-xyz/anchor';
 import { Connection, PublicKey } from '@solana/web3.js';
 import type { AssetManager } from './types/asset_manager.js';
 import type { Connection as ConnectionContract } from './types/connection.js';
-export async function getProvider(base58PublicKey: string, rpcUrl: string, wsUrl: string): Promise<anchor.AnchorProvider> {
+export async function getProvider(
+  base58PublicKey: string,
+  rpcUrl: string,
+  wsUrl: string,
+): Promise<anchor.AnchorProvider> {
   const wallet = {
     publicKey: new PublicKey(base58PublicKey),
     signTransaction: () => Promise.reject(),
@@ -31,7 +35,6 @@ export async function getAssetManagerIdl(assetManager: string, provider: anchor.
 
 export async function getConnectionIdl(connection: string, provider: anchor.AnchorProvider) {
   try {
-
     const idl = await anchor.Program.fetchIdl(new PublicKey(connection), provider);
 
     if (!idl) {
@@ -46,10 +49,10 @@ export async function getConnectionIdl(connection: string, provider: anchor.Anch
 }
 
 export async function getAssetManagerProgram(
-    base58PublicKey: string,
-    rpcUrl: string,
-    wsUrl: string,
-    assetManager: string,
+  base58PublicKey: string,
+  rpcUrl: string,
+  wsUrl: string,
+  assetManager: string,
 ): Promise<anchor.Program<AssetManager>> {
   const provider = await getProvider(base58PublicKey, rpcUrl, wsUrl);
   const idl = await getAssetManagerIdl(assetManager, provider);
@@ -58,10 +61,10 @@ export async function getAssetManagerProgram(
 }
 
 export async function getConnectionProgram(
-    base58PublicKey: string,
-    rpcUrl: string,
-    wsUrl: string,
-    connection: string,
+  base58PublicKey: string,
+  rpcUrl: string,
+  wsUrl: string,
+  connection: string,
 ): Promise<anchor.Program<ConnectionContract>> {
   const provider = await getProvider(base58PublicKey, rpcUrl, wsUrl);
   const idl = await getConnectionIdl(connection, provider);

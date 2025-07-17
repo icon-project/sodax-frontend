@@ -18,8 +18,8 @@ import {
   type MoneyMarketBorrowParams,
   type MoneyMarketWithdrawParams,
   type MoneyMarketRepayParams,
-  IconEoaAddress,
-  IcxCreateRevertMigrationParams,
+  type IconEoaAddress,
+  type IcxCreateRevertMigrationParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 

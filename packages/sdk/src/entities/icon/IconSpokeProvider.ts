@@ -1,7 +1,7 @@
 import type { IconSpokeChainConfig } from '../../types.js';
 import * as IconSdkRaw from 'icon-sdk-js';
 const IconSdk = (IconSdkRaw.default?.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
-import type { IconService } from "icon-sdk-js";
+import type { IconService } from 'icon-sdk-js';
 import type { IIconWalletProvider } from '@sodax/types';
 
 export class IconSpokeProvider {

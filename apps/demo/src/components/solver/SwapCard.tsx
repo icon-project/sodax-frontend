@@ -167,8 +167,8 @@ export default function SwapCard({
       allowPartialFill: false, // Whether the intent can be partially filled
       srcChain: sourceChain, // Chain ID where input tokens originate
       dstChain: destChain, // Chain ID where output tokens should be delivered
-      srcAddress: encodeAddress(sourceChain, sourceAccount.address), // Source address in bytes (original address on spoke chain)
-      dstAddress: encodeAddress(destChain, destAccount.address), // Destination address in bytes (original address on spoke chain)
+      srcAddress: await sourceProvider.walletProvider.getWalletAddress(), // Source address (original address on spoke chain)
+      dstAddress: destAccount.address, // Destination address (original address on spoke chain)
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
       data: '0x', // Additional arbitrary data
     } satisfies CreateIntentParams;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import HeroSection from '../components/landing/herosection';
 import Section1 from '../components/landing/section1';
 import Section2 from '../components/landing/section2';
@@ -14,6 +14,23 @@ const LandingPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRewardDialogOpen, setIsRewardDialogOpen] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
+  // Manage body position when sidebar is open/closed
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.position = '';
+      document.body.style.width = '';
+    }
+
+    // Cleanup function to reset body styles when component unmounts
+    return () => {
+      document.body.style.position = '';
+      document.body.style.width = '';
+    };
+  }, [isOpen]);
 
   const toggle = () => {
     console.log('toggle');
