@@ -1,9 +1,8 @@
 import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/types';
 import * as IconSdk from 'icon-sdk-js';
 
-const IconService = IconSdk.default as unknown as typeof import('icon-sdk-js/build/index');
-
-const { Wallet, SignedTransaction, Builder: IconBuilder, Converter: IconConverter } = IconService;
+// Use the default export for IconService and other classes
+const { Wallet, SignedTransaction, Builder: IconBuilder, Converter: IconConverter, IconService } = IconSdk.default;
 import type { Wallet as IconSdkWallet, IconService as IconSdkService } from 'icon-sdk-js';
 
 export class IconWalletProvider implements IIconWalletProvider {
@@ -14,16 +13,15 @@ export class IconWalletProvider implements IIconWalletProvider {
     if (isPrivateKeyIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'PRIVATE_KEY',
-
         wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
       };
-      this.iconService = new IconService.IconService(new IconService.IconService.HttpProvider(wallet.rpcUrl));
+      this.iconService = new IconService(new IconService.HttpProvider(wallet.rpcUrl));
     } else if (isBrowserExtensionIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'BROWSER_EXTENSION',
         wallet: wallet.walletAddress,
       };
-      this.iconService = new IconService.IconService(new IconService.IconService.HttpProvider(wallet.rpcUrl));
+      this.iconService = new IconService(new IconService.HttpProvider(wallet.rpcUrl));
     } else {
       throw new Error('Invalid Icon wallet config');
     }
@@ -33,7 +31,7 @@ export class IconWalletProvider implements IIconWalletProvider {
     const builtTx = new IconBuilder.CallTransactionBuilder()
       .from(tx.from)
       .to(tx.to)
-      .stepLimit(IconConverter.toBigNumber('2000000'))
+      .stepLimit(IconConverter.toBigNumber('5000000'))
       .nid(tx.nid)
       .version(tx.version ?? '0x3')
       .timestamp(tx.timestamp ?? new Date().getTime() * 1000)
