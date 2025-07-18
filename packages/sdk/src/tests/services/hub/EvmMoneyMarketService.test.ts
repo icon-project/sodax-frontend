@@ -50,12 +50,7 @@ describe('MoneyMarketService', () => {
         });
 
         expect(decoded.functionName).toBe('supply');
-        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
-          mockVault.toLowerCase(),
-          mockAmount,
-          mockUser.toLowerCase(),
-          0,
-        ]);
+        expect(decoded.args).toEqual([mockVault, mockAmount, mockUser, 0]);
       });
     });
 
@@ -75,11 +70,7 @@ describe('MoneyMarketService', () => {
         });
 
         expect(decoded.functionName).toBe('withdraw');
-        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
-          mockVault.toLowerCase(),
-          mockAmount,
-          mockUser.toLowerCase(),
-        ]);
+        expect(decoded.args).toEqual([mockVault, mockAmount, mockUser]);
       });
     });
 
@@ -101,13 +92,7 @@ describe('MoneyMarketService', () => {
         });
 
         expect(decoded.functionName).toBe('borrow');
-        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
-          mockVault.toLowerCase(),
-          mockAmount,
-          2n,
-          0,
-          mockUser.toLowerCase(),
-        ]);
+        expect(decoded.args).toEqual([mockVault, mockAmount, 2n, 0, mockUser]);
       });
     });
 
@@ -128,12 +113,7 @@ describe('MoneyMarketService', () => {
         });
 
         expect(decoded.functionName).toBe('repay');
-        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
-          mockVault.toLowerCase(),
-          mockAmount,
-          2n,
-          mockUser.toLowerCase(),
-        ]);
+        expect(decoded.args).toEqual([mockVault, mockAmount, 2n, mockUser]);
       });
     });
 
@@ -153,11 +133,7 @@ describe('MoneyMarketService', () => {
         });
 
         expect(decoded.functionName).toBe('repayWithATokens');
-        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
-          mockVault.toLowerCase(),
-          mockAmount,
-          2n,
-        ]);
+        expect(decoded.args).toEqual([mockVault, mockAmount, 2n]);
       });
     });
 
