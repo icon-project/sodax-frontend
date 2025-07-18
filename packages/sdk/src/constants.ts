@@ -44,6 +44,8 @@ export const DEFAULT_RETRY_DELAY_MS = 2000;
 export const ICON_TX_RESULT_WAIT_MAX_RETRY = 10;
 export const MAX_UINT256 = (1n << 256n) - 1n;
 export const FEE_PERCENTAGE_SCALE = 10000n; // 100% = 10000
+export const STELLAR_PRIORITY_FEE = '10000';
+export const STELLAR_DEFAULT_TX_TIMEOUT_SECONDS = 100;
 
 export const VAULT_TOKEN_DECIMALS = 18;
 
@@ -618,9 +620,10 @@ export const spokeChainConfig = {
     },
     nativeToken: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA' as const,
     bnUSD: 'CD6YBFFWMU2UJHX2NGRJ7RN76IJVTCC7MRA46DUBXNB7E6W7H7JRJ2CX',
-    rpc_url: 'https://rpc.ankr.com/stellar_soroban',
+    horizonRpcUrl: 'https://horizon.stellar.org',
+    sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
     chain: {
-      name: 'soroban-mainnet',
+      name: 'Stellar',
       id: STELLAR_MAINNET_CHAIN_ID,
       type: 'STELLAR',
     },
@@ -1117,7 +1120,7 @@ export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockcha
 const solverConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
     intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-    solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz', // TODO replace with mainnet
+    solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   } satisfies SolverConfig,
 };
 

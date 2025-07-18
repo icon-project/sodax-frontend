@@ -12,6 +12,7 @@ import {
 import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
+import { Address } from '@stellar/stellar-sdk';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -125,6 +126,9 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
 
     case 'solana':
       return toHex(Buffer.from(new PublicKey(address).toBytes()));
+
+    case 'stellar':
+      return `0x${Address.fromString(address).toScVal().toXDR('hex')}`;
 
     default:
       return address as Hex;

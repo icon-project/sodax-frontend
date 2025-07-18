@@ -7,7 +7,7 @@ export default defineConfig(options => ({
   splitting: false, // Flat output, easier for consumers
   sourcemap: true, // Helpful for debugging
   dts: true, // Type declarations
-  clean: !options.watch,
+  clean: true,
   target: 'node18', // ✅ Use Node 18 baseline (modern features)
   treeshake: true,
   external: [], // Bundle everything (especially CJS like icon-sdk-js)

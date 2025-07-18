@@ -11,11 +11,22 @@ const Sidebar = ({
   toggle: () => void;
   setOpenRewardDialog: (open: boolean) => void;
 }): React.ReactElement => {
+  const handleOverlayInteraction = (e: React.MouseEvent | React.TouchEvent): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle();
+  };
+
   return (
     <>
       {/* Modal overlay */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-10 transition-opacity duration-300 ease-in-out" onClick={toggle} />
+        <div
+          className="fixed inset-0 bg-black/50 z-10 transition-opacity duration-300 ease-in-out"
+          onClick={handleOverlayInteraction}
+          onMouseDown={handleOverlayInteraction}
+          onTouchStart={handleOverlayInteraction}
+        />
       )}
 
       {/* Sidebar */}
@@ -23,6 +34,10 @@ const Sidebar = ({
         className={`sidebar-container fixed w-[295px] h-full overflow-hidden justify-center bg-cherry-soda grid pt-[180px] left-0 z-20 transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
+        onDragStart={e => e.preventDefault()}
+        onDragOver={e => e.preventDefault()}
+        onDrop={e => e.preventDefault()}
+        onMouseDown={e => e.preventDefault()}
       >
         <Image
           className="absolute bottom-0 right-0 z-10"

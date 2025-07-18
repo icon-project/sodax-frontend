@@ -1,4 +1,4 @@
-import type { Chain } from 'viem'
+import type { Chain } from 'viem';
 
 // Define Sonic network configuration
 export const sonic: Chain = {
@@ -16,4 +16,4 @@ export const sonic: Chain = {
     default: { name: 'SonicScan', url: 'https://sonicscan.org' },
   },
   testnet: false,
-} 
+};

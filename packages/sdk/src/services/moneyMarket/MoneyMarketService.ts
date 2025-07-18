@@ -521,7 +521,7 @@ export class MoneyMarketService {
     params: MoneyMarketSupplyParams,
     spokeProvider: S,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
+  ): Promise<Result<[string, string], MoneyMarketError>> {
     try {
       const txResult = await this.supply(params, spokeProvider);
 
@@ -547,7 +547,7 @@ export class MoneyMarketService {
         return packetResult;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
     } catch (error) {
       return {
         ok: false,
@@ -615,7 +615,7 @@ export class MoneyMarketService {
 
       const data: Hex = this.supplyData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
 
-      const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       const txResult = await SpokeService.deposit(
         {
           from: walletAddress,
@@ -653,7 +653,7 @@ export class MoneyMarketService {
    * @param params - The parameters for the borrow transaction.
    * @param spokeProvider - The spoke provider.
    * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[Hex, Hex], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
+   * @returns {Promise<Result<[string, string], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
    *
    * @example
    * const result = await moneyMarketService.borrowAndSubmit(
@@ -679,7 +679,7 @@ export class MoneyMarketService {
     params: MoneyMarketBorrowParams,
     spokeProvider: S,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
+  ): Promise<Result<[string, string], MoneyMarketError>> {
     try {
       const txResult = await this.borrow(params, spokeProvider);
 
@@ -705,7 +705,7 @@ export class MoneyMarketService {
         return packetResult;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
     } catch (error) {
       return {
         ok: false,
@@ -794,7 +794,7 @@ export class MoneyMarketService {
    * @param params - The parameters for the withdraw transaction.
    * @param spokeProvider - The spoke provider.
    * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[Hex, Hex], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
+   * @returns {Promise<Result<[string, string], MoneyMarketError>>} - Returns the spoke and hub transaction hashes or error
    *
    * @example
    * const result = await moneyMarketService.withdrawAndSubmit(
@@ -820,7 +820,7 @@ export class MoneyMarketService {
     params: MoneyMarketWithdrawParams,
     spokeProvider: S,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
+  ): Promise<Result<[string, string], MoneyMarketError>> {
     try {
       const txResult = await this.withdraw(params, spokeProvider);
 
@@ -846,7 +846,7 @@ export class MoneyMarketService {
         return packetResult;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
     } catch (error) {
       return {
         ok: false,
@@ -935,7 +935,7 @@ export class MoneyMarketService {
    * @param params - The parameters for the repay transaction.
    * @param spokeProvider - The spoke provider.
    * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[Hex, Hex], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
+   * @returns {Promise<Result<[string, string], MoneyMarketError>>} - Returns the spoke and hub transaction hashes or error
    *
    * @example
    * const result = await moneyMarketService.repayAndSubmit(
@@ -961,7 +961,7 @@ export class MoneyMarketService {
     params: MoneyMarketRepayParams,
     spokeProvider: S,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[Hex, Hex], MoneyMarketError>> {
+  ): Promise<Result<[string, string], MoneyMarketError>> {
     try {
       const txResult = await this.repay(params, spokeProvider);
 
@@ -987,7 +987,7 @@ export class MoneyMarketService {
         return packetResult;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
     } catch (error) {
       return {
         ok: false,
@@ -1053,7 +1053,7 @@ export class MoneyMarketService {
     );
     const data: Hex = this.repayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
 
-    const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as `0x${string}`;
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const txResult = await SpokeService.deposit(
       {
         from: walletAddress,

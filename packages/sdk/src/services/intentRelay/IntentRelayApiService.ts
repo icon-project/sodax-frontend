@@ -1,10 +1,10 @@
 import type { HttpUrl, Result } from '../../types.js';
-import type { Hex } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentSubmitError } from '../solver/SolverService.js';
 import { DEFAULT_RELAY_TX_TIMEOUT, getIntentRelayChainId } from '../../constants.js';
 import type { SpokeProvider } from '../../entities/Providers.js';
+import type { Hex } from 'viem';
 
 /**
  * The action type for the intent relay service.
@@ -256,7 +256,7 @@ export async function waitUntilIntentExecuted(
  * @returns The transaction hash.
  */
 export async function relayTxAndWaitPacket<S extends SpokeProvider>(
-  spokeTxHash: Hex,
+  spokeTxHash: string,
   data: { address: Hex; payload: Hex } | undefined,
   spokeProvider: S,
   relayerApiEndpoint: HttpUrl,

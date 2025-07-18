@@ -137,6 +137,11 @@ describe('calculatePercentageAmount', () => {
         address: 'BsbfLJNfYGcZdCasYUYy9bnqVXLAD3SB48CFQukoVsH8',
         expected: '0xa18b19d6b7ccfc715c11a14deab8e40f2a815d53ed7e8ff308cf5351df7be24f',
       },
+      {
+        spokeChainId: 'stellar',
+        address: 'GBOKX5FMDSEYOWNOMKVN45Y3KCEAYXAT4WFGX2MLORSTMLXUZIICUE5O',
+        expected: '0x0000001200000000000000005cabf4ac1c898759ae62aade771b50880c5c13e58a6be98b7465362ef4ca102a',
+      },
     ];
 
     testCases.forEach(({ spokeChainId, address, expected }) => {

@@ -20,17 +20,23 @@ import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
 import type { XConfig } from './types';
 import { initXWagmiStore, InitXWagmiStore } from './useXWagmiStore';
 
+import { getWagmiConfig } from './xchains/evm/EvmXService';
+
 export const XWagmiProviders = ({ children, config }: { children: React.ReactNode; config: XConfig }) => {
   useEffect(() => {
     initXWagmiStore(config);
   }, [config]);
 
   const {
-    EVM: { wagmiConfig },
+    EVM: { chains },
     SOLANA: { endpoint },
   } = config;
 
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
+
+  const wagmiConfig = useMemo(() => {
+    return getWagmiConfig(chains);
+  }, [chains]);
 
   return (
     <WagmiProvider config={wagmiConfig}>
