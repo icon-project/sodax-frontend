@@ -20,6 +20,9 @@ import {
   type MoneyMarketRepayParams,
   type IconEoaAddress,
   type IcxCreateRevertMigrationParams,
+  BnUSDMigrationService,
+  type BnUSDRevertMigrationParams,
+  encodeAddress,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
@@ -389,6 +392,61 @@ async function reverseMigrate(amount: bigint, to: IconEoaAddress) {
   }
 }
 
+/**
+ * Migrates new bnUSD tokens back to legacy bnUSD tokens.
+ * This function handles the migration of new bnUSD tokens to legacy bnUSD tokens.
+ *
+ * @param dstChainID - The destination chain ID where the legacy bnUSD token exists
+ * @param legacybnUSD - The address of the legacy bnUSD token to receive
+ * @param amount - The amount of new bnUSD tokens to migrate back
+ * @param recipient - The address that will receive the migrated legacy bnUSD tokens
+ */
+async function reverseMigrateBnUSD(
+  dstChainID: SpokeChainId,
+  legacybnUSD: string,
+  amount: bigint,
+  recipient: Hex,
+): Promise<void> {
+  const bnUSDMigrationService = new BnUSDMigrationService(hubProvider);
+  const newbnUSD = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault as Address;
+  const params: BnUSDRevertMigrationParams = {
+    srcChainID: spokeProvider.chainConfig.chain.id,
+    legacybnUSD,
+    newbnUSD,
+    amount,
+    to: encodeAddress(dstChainID, recipient),
+    dstChainID,
+  };
+
+  const migrationData = bnUSDMigrationService.revertMigrationData(params);
+
+  const wallet = await spokeProvider.walletProvider.getWalletAddress();
+  const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
+  const approveHash = await spokeProvider.walletProvider.sendTransaction({
+    to: newbnUSD,
+    from: wallet,
+    data: encodeFunctionData({
+      abi: erc20Abi,
+      functionName: 'approve',
+      args: [userRouter, amount],
+    }),
+    value: 0n,
+  });
+  console.log('[approve] txHash', approveHash);
+  await new Promise(f => setTimeout(f, 1000));
+  const txHash = await SonicSpokeService.deposit(
+    {
+      from: wallet,
+      token: newbnUSD,
+      amount,
+      data: migrationData,
+    },
+    spokeProvider,
+  );
+
+  console.log('[reverseMigrateBnUSD] txHash', txHash);
+}
+
 async function borrowTo(token: Hex, amount: bigint, to: Hex, spokeChainId: SpokeChainId) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
   const borrowInfo = await SonicSpokeService.getBorrowInfo(token, amount, spokeChainId, sodax.moneyMarket);
@@ -446,9 +504,29 @@ async function main() {
     const amount = BigInt(process.argv[3]);
     const to = process.argv[4] as IconEoaAddress;
     await reverseMigrate(amount, to);
+  } else if (functionName === 'reverseMigrateBnUSD') {
+    const dstChainID = process.argv[3] as SpokeChainId;
+    const legacybnUSD = process.argv[4] as string;
+    const amount = BigInt(process.argv[5]);
+    const recipient = process.argv[6] as Hex;
+    await reverseMigrateBnUSD(dstChainID, legacybnUSD, amount, recipient);
   } else {
     console.log(
-      'Function not recognized. Please use one of: "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", "repayHighLevel", or "reverseMigrate".',
+      'Function not recognized. Please use one of: "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", "repayHighLevel", "reverseMigrate", or "reverseMigrateBnUSD".',
+    );
+    console.log('Usage examples:');
+    console.log('  npm run sonic supply <token_address> <amount>');
+    console.log('  npm run sonic supplyHighLevel <token_address> <amount>');
+    console.log('  npm run sonic borrow <token_address> <amount>');
+    console.log('  npm run sonic borrowHighLevel <token_address> <amount>');
+    console.log('  npm run sonic borrowTo <token_address> <amount> <to_address> <spokeChainId>');
+    console.log('  npm run sonic withdraw <token_address> <amount>');
+    console.log('  npm run sonic withdrawHighLevel <token_address> <amount>');
+    console.log('  npm run sonic repay <token_address> <amount>');
+    console.log('  npm run sonic repayHighLevel <token_address> <amount>');
+    console.log('  npm run sonic reverseMigrate <amount> <to_address>');
+    console.log(
+      '  npm run sonic reverseMigrateBnUSD <newbnUSD_address> <dstChainID> <legacybnUSD_address> <amount> <recipient_address>',
     );
   }
 }

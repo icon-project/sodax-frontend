@@ -141,6 +141,7 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
       icxMigration: '0x8Af7cae2c8377BEDD8820A5ad096AaFA29D839cc',
+      balnSwap: '0x0000000000000000000000000000000000000000', // TODO: Replace with actual BALN swap contract address
       sodaToken: '0x8515352CB9832D1d379D52366D1E995ADd358420',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
@@ -617,6 +618,12 @@ export const spokeChainConfig = {
         decimals: 7,
         address: 'CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75',
       },
+      legacybnUSD: {
+        symbol: 'bnUSD',
+        name: 'legacybnUSD',
+        decimals: 18,
+        address: 'CCT4ZYIYZ3TUO2AWQFEOFGBZ6HQP3GW5TA37CK7CRZVFRDXYTHTYX7KP',
+      },
     },
     nativeToken: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA' as const,
     bnUSD: 'CD6YBFFWMU2UJHX2NGRJ7RN76IJVTCC7MRA46DUBXNB7E6W7H7JRJ2CX',
@@ -656,6 +663,12 @@ export const spokeChainConfig = {
         name: 'USD Coin',
         decimals: 6,
         address: '0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC',
+      },
+      legacybnUSD: {
+        symbol: 'bnUSD',
+        name: 'legacybnUSD',
+        decimals: 9,
+        address: '0x03917a812fe4a6d6bc779c5ab53f8a80ba741f8af04121193fc44e0f662e2ceb::balanced_dollar::BALANCED_DOLLAR',
       },
     },
     nativeToken: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI' as const,
@@ -1043,6 +1056,13 @@ export const hubAssets: Record<
       name: 'USD Coin',
       vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
     },
+    [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD.address]: {
+      asset: '0x1559b52d2e165da1505a542ea37c543c9137f52a',
+      decimal: 18,
+      symbol: 'legacybnUSD',
+      name: 'legacybnUSD',
+      vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
+    },
   },
   [SUI_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SUI_MAINNET_CHAIN_ID].nativeToken]: {
@@ -1065,6 +1085,13 @@ export const hubAssets: Record<
       symbol: 'USDC',
       name: 'USD Coin',
       vault: '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833',
+    },
+    [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD.address]: {
+      asset: '0xddf6ad38f9c9451c1f4cdf369040f6869e37393e',
+      decimal: 9,
+      symbol: 'bnUSD',
+      name: 'legacybnUSD',
+      vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
     },
   },
   [SOLANA_MAINNET_CHAIN_ID]: {

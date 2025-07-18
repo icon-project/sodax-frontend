@@ -13,12 +13,15 @@ import {
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
+  BnUSDMigrationService,
+  type BnUSDMigrateParams,
+  encodeAddress,
 } from '@sodax/sdk';
-import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID } from '@sodax/types';
-import { SuiWalletProvider } from './sui-wallet-provider';
+import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import { SuiWalletProvider } from './sui-wallet-provider.js';
 
 import dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 dotenv.config();
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -67,7 +70,8 @@ if (!suiWalletMnemonics) {
 }
 const suiWalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
 const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
-
+const walletAddress = await suiWalletProvider.getWalletAddress();
+console.log('[walletAddress]:', walletAddress);
 async function getBalance(token: string) {
   const balance = await suiSpokeProvider.getBalance(token);
   console.log('[Balance]:', balance);
@@ -218,6 +222,52 @@ async function repay(token: string, amount: bigint): Promise<void> {
   console.log('[repay] txHash', txHash);
 }
 
+/**
+ * Migrates legacy bnUSD tokens to new bnUSD tokens.
+ * This function handles the migration of legacy bnUSD tokens to new bnUSD tokens.
+ *
+ * @param legacybnUSD - The address of the legacy bnUSD token to migrate
+ * @param dstChainID - The destination chain ID where the new bnUSD token exists
+ * @param newbnUSD - The address of the new bnUSD token to receive
+ * @param amount - The amount of legacy bnUSD tokens to migrate
+ * @param recipient - The address that will receive the migrated new bnUSD tokens
+ */
+async function migrateBnUSD(
+  legacybnUSD: string,
+  dstChainID: SpokeChainId,
+  newbnUSD: string,
+  amount: bigint,
+  recipient: Address,
+): Promise<void> {
+  const bnUSDMigrationService = new BnUSDMigrationService(hubProvider);
+
+  const params: BnUSDMigrateParams = {
+    srcChainID: suiSpokeProvider.chainConfig.chain.id,
+    legacybnUSD,
+    newbnUSD,
+    amount,
+    to: encodeAddress(dstChainID, recipient),
+    dstChainID: dstChainID,
+  };
+
+  const migrationData = bnUSDMigrationService.migrateData(params);
+
+  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+
+  const txHash: Hash = await SpokeService.deposit(
+    {
+      from: walletAddressBytes,
+      token: legacybnUSD as Hex,
+      amount,
+      data: migrationData,
+    },
+    suiSpokeProvider,
+    hubProvider,
+  );
+
+  console.log('[migrateBnUSD] txHash', txHash);
+}
+
 // Main function to decide which function to call
 async function main() {
   console.log(process.argv);
@@ -249,11 +299,31 @@ async function main() {
     const token = process.argv[3] as Address; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
+  } else if (functionName === 'migrateBnUSD') {
+    const legacybnUSD = process.argv[3] as string;
+    const dstChainID = process.argv[4] as SpokeChainId;
+    const newbnUSD = process.argv[5] as string;
+    const amount = BigInt(process.argv[6]);
+    const recipient = process.argv[7] as Address;
+    await migrateBnUSD(legacybnUSD, dstChainID, newbnUSD, amount, recipient);
   } else if (functionName === 'balance') {
     const token = process.argv[3] as string;
     await getBalance(token);
   } else {
-    console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
+    console.log(
+      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrateBnUSD", or "balance".',
+    );
+    console.log('Usage examples:');
+    console.log('  npm run sui deposit <token_address> <amount> <recipient_address>');
+    console.log('  npm run sui withdrawAsset <token_address> <amount> <recipient_address>');
+    console.log('  npm run sui supply <token_address> <amount>');
+    console.log('  npm run sui borrow <token_address> <amount>');
+    console.log('  npm run sui withdraw <token_address> <amount>');
+    console.log('  npm run sui repay <token_address> <amount>');
+    console.log(
+      '  npm run sui migrateBnUSD <legacybnUSD_address> <dstChainID> <newbnUSD_address> <amount> <recipient_address>',
+    );
+    console.log('  npm run sui balance <token_address>');
   }
 }
 
