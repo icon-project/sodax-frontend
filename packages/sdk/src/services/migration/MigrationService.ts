@@ -288,6 +288,7 @@ export class MigrationService {
 
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
+        undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -363,6 +364,7 @@ export class MigrationService {
 
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
+        undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,

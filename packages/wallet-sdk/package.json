@@ -23,6 +23,7 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "0.30.1",
     "@cosmjs/cosmwasm-stargate": "0.32.2",
     "@cosmjs/encoding": "0.32.3",
     "@cosmjs/proto-signing": "0.32.3",
@@ -39,7 +40,7 @@
     "@sodax/types": "workspace:*",
     "@solana/spl-token": "0.4.9",
     "@solana/wallet-adapter-react": "0.15.35",
-    "@solana/wallet-adapter-wallets": "0.19.32",
+    "@solana/wallet-adapter-wallets": "0.19.30",
     "@solana/web3.js": "1.98.0",
     "@stellar/stellar-sdk": "12.3.0",
     "@tanstack/react-query": "catalog:",
@@ -53,7 +54,7 @@
   "devDependencies": {
     "@types/react": "catalog:",
     "knip": "5.30.5",
-    "tsup": "^8.4.0",
+    "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "^2.1.3"
   },

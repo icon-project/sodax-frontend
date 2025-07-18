@@ -1,6 +1,6 @@
 import { defineConfig } from 'tsup';
 
-export default defineConfig({
+export default defineConfig(options => ({
   entry: ['src/index.ts'],
   format: ['esm', 'cjs'], // Dual format: ESM for web, CJS for Node (optionally ESM too)
   outDir: 'dist',
@@ -20,4 +20,4 @@ export default defineConfig({
       js: format === 'esm' ? '.mjs' : '.cjs', // Explicit extensions
     };
   },
-});
+}));

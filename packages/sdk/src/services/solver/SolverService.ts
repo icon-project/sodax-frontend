@@ -46,7 +46,14 @@ import type {
 } from '../../types.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
-import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Address, type Hex, type Hash } from '@sodax/types';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  type SpokeChainId,
+  type Address,
+  type Hex,
+  type Hash,
+  SOLANA_MAINNET_CHAIN_ID,
+} from '@sodax/types';
 
 export type CreateIntentParams = {
   inputToken: string; // The address of the input token on spoke chain
@@ -313,15 +320,28 @@ export class SolverService {
         };
       }
 
-      const [spokeTxHash, intent] = createIntentResult.value;
+      const [spokeTxHash, intent, data] = createIntentResult.value;
       const intentRelayChainId = getIntentRelayChainId(payload.srcChain).toString();
-      const submitPayload: IntentRelayRequest<'submit'> = {
-        action: 'submit',
-        params: {
-          chain_id: intentRelayChainId,
-          tx_hash: spokeTxHash,
-        },
-      };
+      const submitPayload: IntentRelayRequest<'submit'> =
+        payload.srcChain === SOLANA_MAINNET_CHAIN_ID && data
+          ? {
+              action: 'submit',
+              params: {
+                chain_id: intentRelayChainId,
+                tx_hash: spokeTxHash,
+                data: {
+                  address: intent.creator,
+                  payload: data,
+                },
+              },
+            }
+          : {
+              action: 'submit',
+              params: {
+                chain_id: intentRelayChainId,
+                tx_hash: spokeTxHash,
+              },
+            };
 
       const submitResult = await submitTransaction(submitPayload, this.config.relayerApiEndpoint);
 
@@ -541,7 +561,7 @@ export class SolverService {
     spokeProvider: S,
     fee?: PartnerFee,
     raw?: R,
-  ): Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount], IntentSubmitError<'CREATION_FAILED'>>> {
+  ): Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentSubmitError<'CREATION_FAILED'>>> {
     invariant(
       isValidOriginalAssetAddress(params.srcChain, params.inputToken),
       `Unsupported spoke chain token (params.srcChain): ${params.srcChain}, params.inputToken): ${params.inputToken}`,
@@ -599,7 +619,7 @@ export class SolverService {
 
       return {
         ok: true,
-        value: [txResult as TxReturnType<S, R>, { ...intent, feeAmount }] as [TxReturnType<S, R>, Intent & FeeAmount],
+        value: [txResult as TxReturnType<S, R>, { ...intent, feeAmount } as Intent & FeeAmount, data],
       };
     } catch (error) {
       return {

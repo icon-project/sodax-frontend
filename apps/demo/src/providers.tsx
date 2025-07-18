@@ -36,7 +36,7 @@ export default function Providers({ children }: { children: ReactNode }) {
               isMainnet: true,
             },
             SOLANA: {
-              endpoint: 'https://solana-mainnet.g.alchemy.com/v2/nCndZC8P7BdiVKkczCErdwpIgaBQpPFM',
+              endpoint: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
             },
             ICON: {},
             HAVAH: {},

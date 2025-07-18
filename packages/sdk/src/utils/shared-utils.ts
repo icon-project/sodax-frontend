@@ -11,6 +11,7 @@ import {
 } from '../index.js';
 import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
+import { PublicKey } from '@solana/web3.js';
 import { Address } from '@stellar/stellar-sdk';
 
 export async function retry<T>(
@@ -118,10 +119,13 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
       return toHex(Buffer.from(address, 'utf-8'));
 
     case '0x1.icon':
-      return `0x${Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex').toString('hex')}`;
+      return toHex(Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex'));
 
     case 'sui':
       return toHex(bcs.Address.serialize(address).toBytes());
+
+    case 'solana':
+      return toHex(Buffer.from(new PublicKey(address).toBytes()));
 
     case 'stellar':
       return `0x${Address.fromString(address).toScVal().toXDR('hex')}`;

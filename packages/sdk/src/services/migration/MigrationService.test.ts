@@ -633,7 +633,7 @@ describe('MigrationService', () => {
     it('should return error for invalid token', async () => {
       const invalidParams = {
         ...mockMigrationParams,
-        icx: 'cx0000000000000000000000000000000000000000',
+        icx: 'cx000000000000000000000000000000000000111' as IcxTokenType,
       } satisfies MigrationParams;
 
       const result = await migrationService.createMigrateIntent(invalidParams, mockIconSpokeProvider);
@@ -645,7 +645,7 @@ describe('MigrationService', () => {
     });
 
     it('should return error for wrong provider type', async () => {
-      const result = await migrationService.createMigrateIntent(mockMigrationParams, mockIconSpokeProvider);
+      const result = await migrationService.createMigrateIntent(mockMigrationParams, {} as IconSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
