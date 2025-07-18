@@ -358,7 +358,6 @@ export class SolverService {
       }
 
       const packet = await waitUntilIntentExecuted({
-        hasPayload: !!data,
         intentRelayChainId,
         spokeTxHash,
         timeout,
@@ -373,7 +372,7 @@ export class SolverService {
       }
 
       const result = await this.postExecution({
-        intent_tx_hash: (packet.value.payload_tx_hash || packet.value.dst_tx_hash) as `0x${string}`,
+        intent_tx_hash: packet.value.dst_tx_hash as `0x${string}`,
       });
 
       if (!result.ok) {
