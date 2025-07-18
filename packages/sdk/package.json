@@ -33,8 +33,7 @@
   "files": ["dist"],
   "scripts": {
     "build": "tsup",
-    "test": "vitest run --exclude ./src/tests/e2e",
-    "test-e2e": "vitest run ./src/tests/e2e",
+    "test": "vitest run",
     "coverage": "vitest run --coverage",
     "dev": "tsup --watch",
     "ci": "pnpm run pretty && pnpm run build && pnpm run test",
