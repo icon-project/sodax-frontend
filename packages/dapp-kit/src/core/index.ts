@@ -16,14 +16,6 @@ Object.keys(hubAssets).forEach(xChainId => {
       decimals: token.decimal,
       address: tokenAddress,
     });
-
-    allXTokens.push({
-      xChainId: 'sonic',
-      symbol: token.symbol,
-      name: token.name,
-      decimals: token.decimal,
-      address: token.vault,
-    });
   });
 });
 
