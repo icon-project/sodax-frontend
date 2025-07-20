@@ -6,7 +6,7 @@ export type SpokeChainId = (typeof SPOKE_CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export type ChainType = 'ICON' | 'EVM' | 'HAVAH' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA';
+export type ChainType = 'ICON' | 'EVM' | 'HAVAH' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA' | 'STACKS';
 
 export type Chain = {
   id: string | number;

@@ -6,6 +6,7 @@ import {
   SolanaSpokeProvider,
   SonicSpokeProvider,
   type SpokeProvider,
+  StacksSpokeProvider,
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
@@ -27,6 +28,7 @@ import {
   isStellarSpokeProvider,
   isSuiSpokeProvider,
 } from '../../guards.js';
+import { StacksSpokeService } from './StacksSpokeService.js';
 
 /**
  * SpokeService is a main class that provides functionalities for dealing with spoke chains.
@@ -101,6 +103,14 @@ export class SpokeService {
     if (spokeProvider instanceof StellarSpokeProvider) {
       return StellarSpokeService.deposit(
         params as GetSpokeDepositParamsType<StellarSpokeProvider>,
+        spokeProvider,
+        hubProvider,
+        raw,
+      ) as PromiseTxReturnType<T, R>;
+    }
+    if (spokeProvider instanceof StacksSpokeProvider) {
+      return StacksSpokeService.deposit(
+        params as GetSpokeDepositParamsType<StacksSpokeProvider>,
         spokeProvider,
         hubProvider,
         raw,

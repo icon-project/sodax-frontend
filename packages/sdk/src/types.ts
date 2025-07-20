@@ -7,6 +7,7 @@ import type {
   SolanaSpokeProvider,
   SonicSpokeProvider,
   SpokeProvider,
+  StacksSpokeProvider,
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from './entities/index.js';
@@ -31,6 +32,7 @@ import type {
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
 } from '@sodax/types';
+import type { StacksSpokeDepositParams } from './services/spoke/StacksSpokeService.js';
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 
@@ -138,6 +140,15 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   rpc_url: string;
 };
 
+export type StacksSpokeChainConfig = BaseSpokeChainConfig<'STACKS'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    rateLimit: string;
+  };
+  rpcUrl: string;
+};
+
 export type CosmosSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
   rpcUrl: string;
   walletAddress: string;
@@ -203,7 +214,8 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
-  | SolanaChainConfig;
+  | SolanaChainConfig
+  | StacksSpokeChainConfig;
 
 export type EvmContractCall = {
   address: Address; // Target address of the call
@@ -301,6 +313,8 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
             ? SolanaSpokeDepositParams
             : T extends SonicSpokeProvider
               ? SonicSpokeDepositParams
+              : T extends StacksSpokeProvider
+                ? StacksSpokeDepositParams
               : never;
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
@@ -498,4 +512,4 @@ export type Prettify<T> = {
 export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 type ExtractKeys<T> = T extends unknown ? keyof T : never;
 
-export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChainId]['supportedTokens']>;
+export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[keyof typeof spokeChainConfig]['supportedTokens']>;

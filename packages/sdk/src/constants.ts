@@ -13,6 +13,7 @@ import type {
   SolanaChainConfig,
   SolverConfig,
   SonicSpokeChainConfig,
+  StacksSpokeChainConfig,
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
   VaultType,
@@ -36,6 +37,7 @@ import {
   ICON_MAINNET_CHAIN_ID,
   type HubChainId,
   SPOKE_CHAIN_IDS,
+  STACKS_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -64,6 +66,7 @@ export const INTENT_RELAY_CHAIN_IDS = {
   POLYGON: 5n,
   ARBITRUM: 23n,
   NIBIRU: 7235938n,
+  STACKS: 10002n
 } as const;
 
 export const EVM_CHAIN_IDS = [
@@ -102,6 +105,7 @@ const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
   [STELLAR_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
   [ICON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
   [NIBIRU_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.NIBIRU,
+  [STACKS_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STACKS,
 };
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -739,6 +743,35 @@ export const spokeChainConfig = {
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
+  [STACKS_MAINNET_CHAIN_ID]: {
+    chain: {
+      name: 'stacks',
+      id: STACKS_MAINNET_CHAIN_ID,
+      type: 'STACKS',
+    },
+    addresses: {
+      assetManager: '',
+      connection: '',
+      rateLimit: '',
+    },
+    rpcUrl: 'https://stacks-node-api.mainnet.stacks.co',
+    nativeToken: '' as const,
+    bnUSD: '',
+    supportedTokens: {
+      STX: {
+        symbol: 'STX',
+        name: 'Stacks',
+        decimals: 6,
+        address: '',
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 6,
+        address: '',
+      },
+    },
+  } as const satisfies StacksSpokeChainConfig,
 } as const;
 
 export const HubVaultSymbols = [
@@ -1381,6 +1414,15 @@ export const hubAssets: Record<
       vault: hubVaults.IbnUSD.address,
     },
   },
+  [STACKS_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[STACKS_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0x2b1d0da6e0b5f16b1b42a655f7f152d2879a1e1b',
+      decimal: 18,
+      symbol: 'STX',
+      name: 'Stacks',
+      vault: '0x', // no vault yet
+    },
+  }
 } as const;
 
 export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';
@@ -1484,6 +1526,9 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.USDC, // NOTE: Not Implemented
   ] as const satisfies Token[],
+  [STACKS_MAINNET_CHAIN_ID]: [
+    // spokeChainConfig[STACKS_MAINNET_CHAIN_ID].supportedTokens.STX,
+  ]
 } as const;
 
 // get supported spoke chain tokens for solver
@@ -1574,6 +1619,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
+  [STACKS_MAINNET_CHAIN_ID]: [] as const,
   [SONIC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.Sonic,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,

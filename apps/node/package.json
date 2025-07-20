@@ -37,6 +37,8 @@
     "@sodax/types": "workspace:*",
     "@solana/spl-token": "0.4.9",
     "@solana/web3.js": "1.98.0",
+    "@stacks/network": "^7.0.2",
+    "@stacks/transactions": "^7.0.2",
     "@stellar/stellar-sdk": "12.3.0",
     "bn": "^1.0.5",
     "bn.js": "^5.2.1",
