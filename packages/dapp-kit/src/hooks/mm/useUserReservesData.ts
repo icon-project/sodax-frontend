@@ -1,11 +1,10 @@
-import { allXTokens } from '@/core';
 import {
   encodeAddress,
   EvmWalletAbstraction,
   getMoneyMarketConfig,
+  SonicSpokeService,
   SONIC_MAINNET_CHAIN_ID,
   type SonicSpokeProvider,
-  SonicSpokeService,
   type EvmHubProvider,
 } from '@sodax/sdk';
 import type { HubChainId, SpokeChainId } from '@sodax/types';
@@ -48,12 +47,7 @@ export function useUserReservesData(spokeChainId: ChainId, address: string | und
         moneyMarketConfig.poolAddressesProvider,
       );
 
-      return res?.map(r => {
-        return {
-          ...r,
-          token: allXTokens.find(t => t.address === r.underlyingAsset),
-        };
-      });
+      return res;
     },
     enabled: !!spokeChainId && !!hubProvider && !!address,
     refetchInterval: 5000,
