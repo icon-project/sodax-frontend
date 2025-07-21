@@ -1,19 +1,19 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
 import type {
   CreateIntentParams,
-  IntentExecutionResponse,
+  SolverExecutionResponse,
   Result,
-  IntentSubmitErrorCode,
+  IntentErrorCode,
   Intent,
   PacketData,
-  IntentSubmitError,
+  IntentError,
   SpokeProvider,
 } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 
 type CreateIntentResult = Result<
-  [IntentExecutionResponse, Intent, PacketData],
-  IntentSubmitError<IntentSubmitErrorCode>
+  [SolverExecutionResponse, Intent, PacketData],
+  IntentError<IntentErrorCode>
 >;
 
 /**

@@ -8,13 +8,13 @@ import {
   type IEvmWalletProvider,
   type FeeAmount,
   type Intent,
-  IntentErrorCode,
-  type IntentErrorResponse,
-  type IntentExecutionRequest,
-  type IntentExecutionResponse,
-  type IntentQuoteRequest,
-  type IntentStatusRequest,
-  type IntentSubmitError,
+  SolverIntentErrorCode,
+  type SolverErrorResponse,
+  type SolverExecutionRequest,
+  type SolverExecutionResponse,
+  type SolverIntentQuoteRequest,
+  type SolverIntentStatusRequest,
+  type IntentError,
   type PacketData,
   type PartnerFee,
   type RelayTxStatus,
@@ -26,6 +26,11 @@ import {
   getIntentRelayChainId,
   type TxReturnType,
   spokeChainConfig,
+  isIntentSubmitTxFailedError,
+  isIntentCreationFailedError,
+  isIntentPostExecutionFailedError,
+  isWaitUntilIntentExecutedFailed,
+  isIntentCreationUnknownError,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
@@ -59,15 +64,15 @@ describe('SolverService', () => {
     token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
     amount: 1000n,
     quote_type: 'exact_input',
-  } satisfies IntentQuoteRequest;
+  } satisfies SolverIntentQuoteRequest;
 
   const mockExecutionRequest = {
     intent_tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-  } satisfies IntentExecutionRequest;
+  } satisfies SolverExecutionRequest;
 
   const mockStatusRequest = {
     intent_tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-  } satisfies IntentStatusRequest;
+  } satisfies SolverIntentStatusRequest;
 
   const feeAmount = 1000n; // 1000 of input token
   const feePercentage = 100; // 1% fee
@@ -151,7 +156,7 @@ describe('SolverService', () => {
 
     return {
       intentId: BigInt(1),
-      creator: creator as `0x${string}`,
+      creator: creator,
       inputToken: getHubAssetInfo(params.srcChain, params.inputToken)?.asset ?? '0x',
       outputToken: getHubAssetInfo(params.dstChain, params.outputToken)?.asset ?? '0x',
       inputAmount: params.inputAmount,
@@ -206,7 +211,7 @@ describe('SolverService', () => {
         ok: false,
         json: async () => ({
           detail: {
-            code: IntentErrorCode.NO_PATH_FOUND,
+            code: SolverIntentErrorCode.NO_PATH_FOUND,
             message: 'Invalid request parameters',
           },
         }),
@@ -229,7 +234,7 @@ describe('SolverService', () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error).toBeDefined();
-        expect(result.error.detail.code).toBe(IntentErrorCode.UNKNOWN);
+        expect(result.error.detail.code).toBe(SolverIntentErrorCode.UNKNOWN);
       }
     });
   });
@@ -302,10 +307,10 @@ describe('SolverService', () => {
           ({
             answer: 'OK',
             intent_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-          }) satisfies IntentExecutionResponse,
+          }) satisfies SolverExecutionResponse,
       });
 
-      const result: Result<IntentExecutionResponse, IntentErrorResponse> =
+      const result: Result<SolverExecutionResponse, SolverErrorResponse> =
         await solverService.postExecution(mockExecutionRequest);
 
       expect(result.ok).toBe(true);
@@ -330,7 +335,7 @@ describe('SolverService', () => {
         ok: false,
         json: async () => ({
           detail: {
-            code: IntentErrorCode.QUOTE_NOT_FOUND,
+            code: SolverIntentErrorCode.QUOTE_NOT_FOUND,
             message: 'Execution failed',
           },
         }),
@@ -379,7 +384,7 @@ describe('SolverService', () => {
         ok: false,
         json: async () => ({
           detail: {
-            code: IntentErrorCode.NO_PATH_FOUND,
+            code: SolverIntentErrorCode.NO_PATH_FOUND,
             message: 'Intent not found',
           },
         }),
@@ -394,7 +399,15 @@ describe('SolverService', () => {
     });
   });
 
-  describe('createAndSubmitIntent', () => {
+  describe('swap (a.k.a. createAndSubmitIntent)', () => {
+    const mockSubmitPayload = {
+      action: 'submit',
+      params: {
+        chain_id: '4',
+        tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+      },
+    } as const;
+
     it('should successfully create and submit an intent', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
@@ -422,7 +435,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.createAndSubmitIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -442,25 +455,24 @@ describe('SolverService', () => {
       expect(IntentRelayApiService.submitTransaction).toHaveBeenCalled();
     });
 
-    it('should handle postExecution error', async () => {
+    it('should handle createIntent error', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
 
-      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: false,
         error: {
-          detail: {
-            code: IntentErrorCode.UNKNOWN,
-            message: 'Post execution failed',
+          code: 'CREATION_FAILED',
+          data: {
+            payload: mockCreateIntentParams,
+            error: new Error('Create intent failed'),
           },
-        },
+        } satisfies IntentError<'CREATION_FAILED'>,
       });
 
-      const result = await solverService.createAndSubmitIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
 
       expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error).toBeDefined();
-      }
+      expect(!result.ok && isIntentCreationFailedError(result.error)).toBeTruthy();
     });
 
     it('should handle submitTransaction error', async () => {
@@ -484,24 +496,178 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.createAndSubmitIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error).toEqual({
           code: 'SUBMIT_TX_FAILED',
           data: {
-            apiUrl: 'https://xcall-relay.nw.iconblockchain.xyz',
-            payload: {
-              action: 'submit',
-              params: {
-                chain_id: '4',
-                tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-              },
-            },
+            payload: mockSubmitPayload,
+            error: new Error('Transaction submission failed'),
           },
-        } satisfies IntentSubmitError<'SUBMIT_TX_FAILED'>);
+        } satisfies IntentError<'SUBMIT_TX_FAILED'>);
       }
+    });
+
+    it('should handle submitTransaction message error', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
+
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+      });
+      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
+        success: false,
+        message: 'Transaction submission failed',
+      });
+      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          answer: 'OK',
+          intent_hash: mockTxHash,
+        },
+      });
+
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+
+      expect(result.ok).toBe(false);
+      expect(!result.ok && isIntentSubmitTxFailedError(result.error)).toBeTruthy();
+    });
+
+    it('should handle submitTransaction api error with SUBMIT_TX_FAILED error code', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
+
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+      });
+      vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          code: 'SUBMIT_TX_FAILED',
+          data: {
+            payload: mockSubmitPayload,
+            error: new Error('Transaction submission failed'),
+          },
+        },
+      });
+      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          answer: 'OK',
+          intent_hash: mockTxHash,
+        },
+      });
+
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(isIntentSubmitTxFailedError(result.error)).toBeTruthy();
+      }
+    });
+
+    it('should handle waitUntilIntentExecuted error', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
+
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+      });
+      vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          success: true,
+          message: 'Transaction submitted successfully',
+        },
+      });
+
+      vi.spyOn(IntentRelayApiService, 'waitUntilIntentExecuted').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          code: 'RELAY_TIMEOUT',
+          data: {
+            payload: {
+              intentRelayChainId: '4',
+              spokeTxHash: mockTxHash,
+              timeout: 10000,
+              apiUrl: 'https://xcall-relay.nw.iconblockchain.xyz',
+            },
+            error: new Error('Transaction submission failed'),
+          },
+        },
+      });
+
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+
+      expect(result.ok).toBe(false);
+      expect(!result.ok && isWaitUntilIntentExecutedFailed(result.error)).toBeTruthy();
+    });
+
+    it('should handle postExecution error', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
+
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+      });
+      vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          success: true,
+          message: 'Transaction submitted successfully',
+        },
+      });
+
+      vi.spyOn(IntentRelayApiService, 'waitUntilIntentExecuted').mockResolvedValueOnce({
+        ok: true,
+        value: mockPacketData,
+      });
+
+      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          detail: {
+            code: SolverIntentErrorCode.UNKNOWN,
+            message: 'Post execution failed',
+          },
+        },
+      });
+
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+
+      expect(result.ok).toBe(false);
+      expect(!result.ok && isIntentPostExecutionFailedError(result.error)).toBeTruthy();
+    });
+
+    it('should handle swap unknown error', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+
+      vi.spyOn(solverService, 'swap').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          code: 'UNKNOWN',
+          data: {
+            payload: mockCreateIntentParams,
+            error: new Error('Unknown error'),
+          },
+        } satisfies IntentError<'UNKNOWN'>,
+      });
+
+
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+
+      expect(result.ok).toBe(false);
+      expect(!result.ok && isIntentCreationUnknownError(result.error)).toBeTruthy();
     });
   });
 

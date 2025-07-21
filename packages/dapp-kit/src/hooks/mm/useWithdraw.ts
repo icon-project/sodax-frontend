@@ -44,7 +44,7 @@ export function useWithdraw(
         throw new Error('spokeProvider is not found');
       }
 
-      const response = await sodax.moneyMarket.withdrawAndSubmit(
+      const response = await sodax.moneyMarket.withdraw(
         {
           token: spokeToken.address,
           // vault token on hub chain decimals is 18

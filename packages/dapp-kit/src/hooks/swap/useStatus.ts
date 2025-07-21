@@ -1,4 +1,4 @@
-import type { Hex, IntentErrorResponse, IntentStatusResponse, Result } from '@sodax/sdk';
+import type { Hex, SolverErrorResponse, SolverIntentStatusResponse, Result } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
@@ -9,7 +9,7 @@ import { useSodaxContext } from '../shared/useSodaxContext';
  *
  * @param {Hex} intent_tx_hash - The transaction hash of the intent order on the hub chain
  *
- * @returns {UseQueryResult<Result<IntentStatusResponse, IntentErrorResponse> | undefined>} A query result object containing:
+ * @returns {UseQueryResult<Result<SolverIntentStatusResponse, SolverErrorResponse> | undefined>} A query result object containing:
  *   - data: The status result from the solver
  *   - isLoading: Boolean indicating if the status is being fetched
  *   - error: Error object if the status request failed
@@ -32,7 +32,7 @@ import { useSodaxContext } from '../shared/useSodaxContext';
 
 export const useStatus = (
   intent_tx_hash: Hex,
-): UseQueryResult<Result<IntentStatusResponse, IntentErrorResponse> | undefined> => {
+): UseQueryResult<Result<SolverIntentStatusResponse, SolverErrorResponse> | undefined> => {
   const { sodax } = useSodaxContext();
   return useQuery({
     queryKey: [intent_tx_hash],
