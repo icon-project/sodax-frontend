@@ -5,12 +5,12 @@ import {
   EvmSpokeProvider,
   type FeeAmount,
   type Intent,
-  IntentErrorCode,
-  type IntentErrorResponse,
-  type IntentExecutionRequest,
-  type IntentExecutionResponse,
-  type IntentQuoteRequest,
-  type IntentStatusRequest,
+  SolverIntentErrorCode,
+  type SolverErrorResponse,
+  type SolverExecutionRequest,
+  type SolverExecutionResponse,
+  type SolverIntentQuoteRequest,
+  type SolverIntentStatusRequest,
   type PacketData,
   type PartnerFee,
   type RelayTxStatus,
@@ -30,6 +30,7 @@ import {
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+
 
 describe('Sodax', () => {
   const partnerFeePercentage = {
@@ -102,7 +103,7 @@ describe('Sodax', () => {
         token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
         amount: 1000n,
         quote_type: 'exact_input',
-      } satisfies IntentQuoteRequest;
+      } satisfies SolverIntentQuoteRequest;
 
       it('should return a successful quote response', async () => {
         // Mock fetch response
@@ -137,7 +138,7 @@ describe('Sodax', () => {
           ok: false,
           json: async () => ({
             detail: {
-              code: IntentErrorCode.NO_PATH_FOUND,
+              code: SolverIntentErrorCode.NO_PATH_FOUND,
               message: 'Invalid request parameters',
             },
           }),
@@ -160,7 +161,7 @@ describe('Sodax', () => {
         expect(result.ok).toBe(false);
         if (!result.ok) {
           expect(result.error).toBeDefined();
-          expect(result.error.detail.code).toBe(IntentErrorCode.UNKNOWN);
+          expect(result.error.detail.code).toBe(SolverIntentErrorCode.UNKNOWN);
         }
       });
     });
@@ -179,7 +180,7 @@ describe('Sodax', () => {
     describe('postExecution', () => {
       const executionRequest = {
         intent_tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-      } satisfies IntentExecutionRequest;
+      } satisfies SolverExecutionRequest;
 
       it('should return a successful post execution response', async () => {
         // Mock fetch response
@@ -189,10 +190,10 @@ describe('Sodax', () => {
             ({
               answer: 'OK',
               intent_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-            }) satisfies IntentExecutionResponse,
+            }) satisfies SolverExecutionResponse,
         });
 
-        const result: Result<IntentExecutionResponse, IntentErrorResponse> =
+        const result: Result<SolverExecutionResponse, SolverErrorResponse> =
           await sodax.solver.postExecution(executionRequest);
 
         expect(result.ok).toBe(true);
@@ -217,7 +218,7 @@ describe('Sodax', () => {
           ok: false,
           json: async () => ({
             detail: {
-              code: IntentErrorCode.QUOTE_NOT_FOUND,
+              code: SolverIntentErrorCode.QUOTE_NOT_FOUND,
               message: 'Execution failed',
             },
           }),
@@ -235,7 +236,7 @@ describe('Sodax', () => {
     describe('getStatus', () => {
       const statusRequest = {
         intent_tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-      } satisfies IntentStatusRequest;
+      } satisfies SolverIntentStatusRequest;
 
       it('should return a successful status response', async () => {
         // Mock fetch response
@@ -270,7 +271,7 @@ describe('Sodax', () => {
           ok: false,
           json: async () => ({
             detail: {
-              code: IntentErrorCode.NO_PATH_FOUND,
+              code: SolverIntentErrorCode.NO_PATH_FOUND,
               message: 'Intent not found',
             },
           }),
@@ -285,7 +286,7 @@ describe('Sodax', () => {
       });
     });
 
-    describe('createAndSubmitIntent', () => {
+    describe('swap', () => {
       let mockCreateIntentParams: CreateIntentParams;
       let mockIntent: Intent & FeeAmount;
       let mockPacketData: PacketData;
@@ -371,7 +372,7 @@ describe('Sodax', () => {
           },
         });
 
-        const result = await sodax.solver.createAndSubmitIntent(
+        const result = await sodax.solver.swap(
           mockCreateIntentParams,
           mockBscSpokeProvider,
           partnerFeeAmount,
@@ -447,8 +448,11 @@ describe('Sodax', () => {
           },
         } as unknown as SpokeProvider;
 
-        await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).rejects.toThrow(
-          'Invalid spoke provider',
+        await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual(
+          {
+            ok: false,
+            error: new Error('Invalid spoke provider'),
+          }
         );
       });
     });

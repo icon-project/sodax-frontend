@@ -21,6 +21,17 @@ import {
   type MoneyMarketSupplyParams,
   type MoneyMarketWithdrawParams,
   type MoneyMarketAction,
+  isMoneyMarketCreateSupplyIntentFailedError,
+  isMoneyMarketCreateBorrowIntentFailedError,
+  isMoneyMarketCreateWithdrawIntentFailedError,
+  isMoneyMarketCreateRepayIntentFailedError,
+  isMoneyMarketSubmitTxFailedError,
+  isMoneyMarketRelayTimeoutError,
+  isMoneyMarketRepayUnknownError,
+  isMoneyMarketWithdrawUnknownError,
+  isMoneyMarketSupplyUnknownError,
+  type MoneyMarketError,
+  isMoneyMarketBorrowUnknownError,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
@@ -768,13 +779,13 @@ describe('MoneyMarketService', () => {
     });
   });
 
-  describe('general', () => {
+  describe('Core Money Market Actions', () => {
     it('should supply a token', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'supplyData').mockReturnValueOnce('0x');
+      vi.spyOn(moneyMarket, 'buildSupplyData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce('0x');
 
-      const result = await moneyMarket.supply(
+      const result = await moneyMarket.createSupplyIntent(
         {
           token: bscTestToken,
           amount: 1000000000000000000n,
@@ -799,9 +810,9 @@ describe('MoneyMarketService', () => {
       } satisfies EvmRawTransaction;
 
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'supplyData').mockReturnValueOnce('0x');
+      vi.spyOn(moneyMarket, 'buildSupplyData').mockReturnValueOnce('0x');
 
-      const result = await moneyMarket.supply(
+      const result = await moneyMarket.createSupplyIntent(
         {
           token: bscTestToken,
           amount: rawEvmTx.value,
@@ -819,9 +830,9 @@ describe('MoneyMarketService', () => {
 
     it('should supply a token and submit', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'supply').mockReturnValueOnce({
+      vi.spyOn(moneyMarket, 'supply').mockResolvedValueOnce({
         ok: true,
-        value: '0x',
+        value: ['0x', '0x'] as [string, string],
       });
       vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
         ok: true,
@@ -830,7 +841,7 @@ describe('MoneyMarketService', () => {
         } as PacketData,
       });
 
-      const result = await moneyMarket.supplyAndSubmit(
+      const result = await moneyMarket.supply(
         {
           token: bscTestToken,
           amount: 1000000000000000000n,
@@ -848,10 +859,10 @@ describe('MoneyMarketService', () => {
 
     it('should borrow a token', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'borrowData').mockReturnValueOnce('0x');
+      vi.spyOn(moneyMarket, 'buildBorrowData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce('0x');
 
-      const result = await moneyMarket.borrow(
+      const result = await moneyMarket.createBorrowIntent(
         {
           token: bscTestToken,
           amount: 1000000000000000000n,
@@ -876,10 +887,10 @@ describe('MoneyMarketService', () => {
       } satisfies EvmRawTransaction;
 
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'borrowData').mockReturnValueOnce('0x');
+      vi.spyOn(moneyMarket, 'buildBorrowData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce(rawEvmTx);
 
-      const result = await moneyMarket.borrow(
+      const result = await moneyMarket.createBorrowIntent(
         {
           token: bscTestToken,
           amount: rawEvmTx.value,
@@ -897,9 +908,9 @@ describe('MoneyMarketService', () => {
 
     it('should borrow a token and submit', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'borrow').mockReturnValueOnce({
+      vi.spyOn(moneyMarket, 'borrow').mockResolvedValueOnce({
         ok: true,
-        value: '0x',
+        value: ['0x', '0x'] as [string, string],
       });
       vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
         ok: true,
@@ -908,7 +919,7 @@ describe('MoneyMarketService', () => {
         } as PacketData,
       });
 
-      const result = await moneyMarket.borrowAndSubmit(
+      const result = await moneyMarket.borrow(
         {
           token: bscTestToken,
           amount: 1000000000000000000n,
@@ -926,10 +937,10 @@ describe('MoneyMarketService', () => {
 
     it('should withdraw a token', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'withdrawData').mockReturnValueOnce('0x');
+      vi.spyOn(moneyMarket, 'buildWithdrawData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce('0x');
 
-      const result = await moneyMarket.withdraw(
+      const result = await moneyMarket.createWithdrawIntent(
         {
           token: bscTestToken,
           amount: 1000000000000000000n,
@@ -954,10 +965,10 @@ describe('MoneyMarketService', () => {
       } satisfies EvmRawTransaction;
 
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'withdrawData').mockReturnValueOnce('0x');
+      vi.spyOn(moneyMarket, 'buildWithdrawData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce(rawEvmTx);
 
-      const result = await moneyMarket.withdraw(
+      const result = await moneyMarket.createWithdrawIntent(
         {
           token: bscTestToken,
           amount: rawEvmTx.value,
@@ -975,9 +986,9 @@ describe('MoneyMarketService', () => {
 
     it('should withdraw a token and submit', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'withdraw').mockReturnValueOnce({
+      vi.spyOn(moneyMarket, 'withdraw').mockResolvedValueOnce({
         ok: true,
-        value: '0x',
+        value: ['0x', '0x'] as [string, string],
       });
       vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
         ok: true,
@@ -986,7 +997,7 @@ describe('MoneyMarketService', () => {
         } as PacketData,
       });
 
-      const result = await moneyMarket.withdrawAndSubmit(
+      const result = await moneyMarket.withdraw(
         {
           token: bscTestToken,
           amount: 1000000000000000000n,
@@ -1004,10 +1015,10 @@ describe('MoneyMarketService', () => {
 
     it('should repay a token', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'repayData').mockReturnValueOnce('0x');
+      vi.spyOn(moneyMarket, 'buildRepayData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce('0x');
 
-      const result = await moneyMarket.repay(
+      const result = await moneyMarket.createRepayIntent(
         {
           token: bscTestToken,
           amount: 1000000000000000000n,
@@ -1032,10 +1043,10 @@ describe('MoneyMarketService', () => {
       } satisfies EvmRawTransaction;
 
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'repayData').mockReturnValueOnce('0x');
+      vi.spyOn(moneyMarket, 'buildRepayData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(rawEvmTx);
 
-      const result = await moneyMarket.repay(
+      const result = await moneyMarket.createRepayIntent(
         {
           token: bscTestToken,
           amount: rawEvmTx.value,
@@ -1053,9 +1064,9 @@ describe('MoneyMarketService', () => {
 
     it('should repay a token and submit', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
-      vi.spyOn(moneyMarket, 'repay').mockReturnValueOnce({
+      vi.spyOn(moneyMarket, 'repay').mockResolvedValueOnce({
         ok: true,
-        value: '0x',
+        value: ['0x', '0x'] as [string, string],
       });
       vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
         ok: true,
@@ -1064,7 +1075,7 @@ describe('MoneyMarketService', () => {
         } as PacketData,
       });
 
-      const result = await moneyMarket.repayAndSubmit(
+      const result = await moneyMarket.repay(
         {
           token: bscTestToken,
           amount: 1000000000000000000n,
@@ -1087,6 +1098,402 @@ describe('MoneyMarketService', () => {
 
       expect(isMoneyMarketReserveAsset(testAsset)).toBe(true);
       expect(isMoneyMarketReserveAsset(wrongAsset)).toBe(false);
+    });
+
+    describe('Error Handling', () => {
+      describe('Supply Error Handling', () => {
+        it('should handle CREATE_SUPPLY_INTENT_FAILED error', async () => {
+          const mockError = {
+            code: 'CREATE_SUPPLY_INTENT_FAILED' as const,
+            data: {
+              error: new Error('Supply intent creation failed'),
+              payload: {
+                token: bscTestToken,
+                amount: testAmount,
+                action: 'supply' as const,
+              },
+            },
+          };
+
+          vi.spyOn(moneyMarket, 'supply').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.supply(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'supply',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketCreateSupplyIntentFailedError(result.error)).toBeTruthy();
+        });
+
+        it('should handle SUBMIT_TX_FAILED error', async () => {
+          const mockError = {
+            code: 'SUBMIT_TX_FAILED' as const,
+            data: {
+              error: { code: 'SUBMIT_TX_FAILED' as const, error: new Error('Transaction submission failed') },
+              payload: '0x1234567890abcdef',
+            },
+          };
+
+          vi.spyOn(moneyMarket, 'supply').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.supply(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'supply',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketSubmitTxFailedError(result.error)).toBeTruthy();
+        });
+
+        it('should handle RELAY_TIMEOUT error', async () => {
+          const mockError = {
+            code: 'RELAY_TIMEOUT' as const,
+            data: {
+              error: { code: 'RELAY_TIMEOUT' as const, error: new Error('Relay timeout') },
+              payload: '0x1234567890abcdef',
+            },
+          };
+
+          vi.spyOn(moneyMarket, 'supply').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.supply(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'supply',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketRelayTimeoutError(result.error)).toBeTruthy();
+        });
+      });
+
+      describe('Borrow Error Handling', () => {
+        it('should handle CREATE_BORROW_INTENT_FAILED error', async () => {
+          const mockError = {
+            code: 'CREATE_BORROW_INTENT_FAILED' as const,
+            data: {
+              error: new Error('Borrow intent creation failed'),
+              payload: {
+                token: bscTestToken,
+                amount: testAmount,
+                action: 'borrow' as const,
+              },
+            },
+          };
+
+          vi.spyOn(moneyMarket, 'borrow').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.borrow(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'borrow',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketCreateBorrowIntentFailedError(result.error)).toBeTruthy();
+        });
+
+        it('should handle SUBMIT_TX_FAILED error for borrow', async () => {
+          const mockError = {
+            code: 'SUBMIT_TX_FAILED' as const,
+            data: {
+              error: { code: 'SUBMIT_TX_FAILED', error: new Error('Transaction submission failed') },
+              payload: '0x1234567890abcdef',
+            },
+          } satisfies MoneyMarketError<'SUBMIT_TX_FAILED'>;
+
+          vi.spyOn(moneyMarket, 'borrow').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.borrow(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'borrow',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketSubmitTxFailedError(result.error)).toBeTruthy();
+        });
+      });
+
+      describe('Withdraw Error Handling', () => {
+        it('should handle CREATE_WITHDRAW_INTENT_FAILED error', async () => {
+          const mockError = {
+            code: 'CREATE_WITHDRAW_INTENT_FAILED' as const,
+            data: {
+              error: new Error('Withdraw intent creation failed'),
+              payload: {
+                token: bscTestToken,
+                amount: testAmount,
+                action: 'withdraw' as const,
+              },
+            },
+          };
+
+          vi.spyOn(moneyMarket, 'withdraw').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.withdraw(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'withdraw',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketCreateWithdrawIntentFailedError(result.error)).toBeTruthy();
+        });
+
+        it('should handle RELAY_TIMEOUT error for withdraw', async () => {
+          const mockError = {
+            code: 'RELAY_TIMEOUT' as const,
+            data: {
+              error: { code: 'RELAY_TIMEOUT', error: new Error('Relay timeout') },
+              payload: '0x1234567890abcdef',
+            },
+          } satisfies MoneyMarketError<'RELAY_TIMEOUT'>;
+
+          vi.spyOn(moneyMarket, 'withdraw').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.withdraw(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'withdraw',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketRelayTimeoutError(result.error)).toBeTruthy();
+        });
+      });
+
+      describe('Repay Error Handling', () => {
+        it('should handle CREATE_REPAY_INTENT_FAILED error', async () => {
+          const mockError = {
+            code: 'CREATE_REPAY_INTENT_FAILED' as const,
+            data: {
+              error: new Error('Repay intent creation failed'),
+              payload: {
+                token: bscTestToken,
+                amount: testAmount,
+                action: 'repay' as const,
+              },
+            },
+          };
+
+          vi.spyOn(moneyMarket, 'repay').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.repay(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'repay',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketCreateRepayIntentFailedError(result.error)).toBeTruthy();
+        });
+
+        it('should handle SUBMIT_TX_FAILED error for repay', async () => {
+          const mockError = {
+            code: 'SUBMIT_TX_FAILED' as const,
+            data: {
+              error: { code: 'SUBMIT_TX_FAILED', error: new Error('Transaction submission failed') },
+              payload: '0x1234567890abcdef',
+            },
+          } satisfies MoneyMarketError<'SUBMIT_TX_FAILED'>;
+
+          vi.spyOn(moneyMarket, 'repay').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.repay(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'repay',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketSubmitTxFailedError(result.error)).toBeTruthy();
+        });
+      });
+
+      describe('Integration Error Handling', () => {
+        it('should handle UNKNOWN error for supply', async () => {
+          const mockError = {
+            code: 'SUPPLY_UNKNOWN_ERROR' as const,
+            data: {
+              error: new Error('Unknown error occurred'),
+              payload: {
+                token: bscTestToken,
+                amount: testAmount,
+                action: 'supply',
+              } satisfies MoneyMarketSupplyParams,
+            }
+          } satisfies MoneyMarketError<'SUPPLY_UNKNOWN_ERROR'>;
+
+          vi.spyOn(moneyMarket, 'supply').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.supply(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'supply',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketSupplyUnknownError(result.error)).toBeTruthy();
+        });
+
+        it('should handle UNKNOWN error for borrow', async () => {
+          const mockError = {
+            code: 'BORROW_UNKNOWN_ERROR' as const,
+            data: {
+              error: new Error('Unknown error occurred'),
+              payload: {
+                token: bscTestToken,
+                amount: testAmount,
+                action: 'borrow' as const,
+              },
+            },
+          } satisfies MoneyMarketError<'BORROW_UNKNOWN_ERROR'>;
+
+          vi.spyOn(moneyMarket, 'borrow').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.borrow(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'borrow',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketBorrowUnknownError(result.error)).toBeTruthy();
+        });
+
+        it('should handle UNKNOWN error for withdraw', async () => {
+          const mockError = {
+            code: 'WITHDRAW_UNKNOWN_ERROR' as const,
+            data: {
+              error: new Error('Unknown error occurred'),
+              payload: {
+                token: bscTestToken,
+                amount: testAmount,
+                action: 'withdraw' as const,
+              },
+            },
+          } satisfies MoneyMarketError<'WITHDRAW_UNKNOWN_ERROR'>;
+
+          vi.spyOn(moneyMarket, 'withdraw').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.withdraw(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'withdraw',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketWithdrawUnknownError(result.error)).toBeTruthy();
+
+        });
+
+        it('should handle UNKNOWN error for repay', async () => {
+          const mockError = {
+            code: 'REPAY_UNKNOWN_ERROR' as const,
+            data: {
+              error: new Error('Unknown error occurred'),
+              payload: {
+                token: bscTestToken,
+                amount: testAmount,
+                action: 'repay' as const,
+              },
+            },
+          } satisfies MoneyMarketError<'REPAY_UNKNOWN_ERROR'>;
+
+          vi.spyOn(moneyMarket, 'repay').mockResolvedValueOnce({
+            ok: false,
+            error: mockError,
+          });
+
+          const result = await moneyMarket.repay(
+            {
+              token: bscTestToken,
+              amount: testAmount,
+              action: 'repay',
+            },
+            bscSpokeProvider,
+          );
+
+          expect(result.ok).toBe(false);
+          expect(!result.ok && isMoneyMarketRepayUnknownError(result.error)).toBeTruthy();
+        });
+      });
     });
   });
 });

@@ -25,6 +25,7 @@ import {
   type HubChainConfig,
   type IconAddress,
   type IntentRelayChainId,
+  type IntentError,
   type MoneyMarketConfig,
   type MoneyMarketConfigParams,
   type Optional,
@@ -35,6 +36,8 @@ import {
   type SolverConfig,
   type SolverConfigParams,
   type SpokeChainConfig,
+  type MoneyMarketError,
+  type MoneyMarketUnknownError,
 } from './index.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
@@ -205,5 +208,144 @@ export function isConfiguredMoneyMarketConfig(
     'poolAddressesProvider' in value &&
     'bnUSD' in value &&
     'bnUSDVault' in value
+  );
+}
+
+export function isIntentCreationFailedError(error: unknown): error is IntentError<'CREATION_FAILED'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'CREATION_FAILED' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'payload' in error.data &&
+    'error' in error.data
+  );
+}
+
+export function isIntentSubmitTxFailedError(error: unknown): error is IntentError<'SUBMIT_TX_FAILED'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'SUBMIT_TX_FAILED' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'payload' in error.data &&
+    'error' in error.data
+  );
+}
+
+export function isIntentPostExecutionFailedError(error: unknown): error is IntentError<'POST_EXECUTION_FAILED'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'POST_EXECUTION_FAILED' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'detail' in error.data
+  );
+}
+
+export function isWaitUntilIntentExecutedFailed(error: unknown): error is IntentError<'RELAY_TIMEOUT'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'RELAY_TIMEOUT' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'payload' in error.data &&
+    'error' in error.data
+  );
+}
+
+export function isIntentCreationUnknownError(error: unknown): error is IntentError<'UNKNOWN'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'UNKNOWN' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'payload' in error.data &&
+    'error' in error.data
+  );
+}
+
+export function isMoneyMarketSubmitTxFailedError(error: unknown): error is MoneyMarketError<'SUBMIT_TX_FAILED'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'SUBMIT_TX_FAILED';
+}
+
+export function isMoneyMarketRelayTimeoutError(error: unknown): error is MoneyMarketError<'RELAY_TIMEOUT'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'RELAY_TIMEOUT';
+}
+
+export function isMoneyMarketCreateSupplyIntentFailedError(
+  error: unknown,
+): error is MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_SUPPLY_INTENT_FAILED';
+}
+
+export function isMoneyMarketCreateBorrowIntentFailedError(
+  error: unknown,
+): error is MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_BORROW_INTENT_FAILED';
+}
+
+export function isMoneyMarketCreateWithdrawIntentFailedError(
+  error: unknown,
+): error is MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'> {
+  return (
+    typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_WITHDRAW_INTENT_FAILED'
+  );
+}
+
+export function isMoneyMarketCreateRepayIntentFailedError(
+  error: unknown,
+): error is MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_REPAY_INTENT_FAILED';
+}
+
+export function isMoneyMarketSupplyUnknownError(error: unknown): error is MoneyMarketUnknownError<'SUPPLY_UNKNOWN_ERROR'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'SUPPLY_UNKNOWN_ERROR'
+  );
+}
+
+export function isMoneyMarketBorrowUnknownError(error: unknown): error is MoneyMarketUnknownError<'BORROW_UNKNOWN_ERROR'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'BORROW_UNKNOWN_ERROR'
+  );
+}
+
+export function isMoneyMarketWithdrawUnknownError(error: unknown): error is MoneyMarketUnknownError<'WITHDRAW_UNKNOWN_ERROR'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'WITHDRAW_UNKNOWN_ERROR'
+  );
+}
+
+export function isMoneyMarketRepayUnknownError(error: unknown): error is MoneyMarketUnknownError<'REPAY_UNKNOWN_ERROR'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'REPAY_UNKNOWN_ERROR'
   );
 }

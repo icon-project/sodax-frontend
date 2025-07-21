@@ -19,7 +19,7 @@ import {
   encodeAddress,
   type Hex,
   type Intent,
-  type IntentQuoteRequest,
+  type SolverIntentQuoteRequest,
   type PacketData,
   spokeChainConfig,
   supportedSpokeChains,
@@ -97,7 +97,7 @@ export default function SwapCard({
       token_dst_blockchain_id: destChain,
       amount: scaleTokenAmount(sourceAmount, sourceToken.decimals),
       quote_type: 'exact_input',
-    } satisfies IntentQuoteRequest;
+    } satisfies SolverIntentQuoteRequest;
   }, [sourceToken, destToken, sourceChain, destChain, sourceAmount]);
 
   const quoteQuery = useQuote(payload);

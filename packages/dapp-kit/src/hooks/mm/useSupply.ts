@@ -45,7 +45,7 @@ export function useSupply(
         throw new Error('spokeProvider is not found');
       }
 
-      const response = await sodax.moneyMarket.supplyAndSubmit(
+      const response = await sodax.moneyMarket.supply(
         {
           token: spokeToken.address,
           amount: parseUnits(amount, spokeToken.decimals),

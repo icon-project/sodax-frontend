@@ -139,7 +139,7 @@ async function supply(token: string, amount: bigint) {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
@@ -163,7 +163,7 @@ async function borrow(token: string, amount: bigint) {
     hubProvider,
   );
   console.log(hubWallet);
-  const data: Hex = sodax.moneyMarket.borrowData(
+  const data: Hex = sodax.moneyMarket.buildBorrowData(
     hubWallet,
     walletAddressBytes,
     token,
@@ -186,7 +186,7 @@ async function withdraw(token: string, amount: bigint) {
 
   console.log('Hub wallet: ', hubWallet);
 
-  const data: Hex = sodax.moneyMarket.withdrawData(
+  const data: Hex = sodax.moneyMarket.buildWithdrawData(
     hubWallet,
     walletAddressBytes,
     token,
@@ -206,7 +206,7 @@ async function repay(token: string, amount: bigint) {
     walletAddressBytes,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
