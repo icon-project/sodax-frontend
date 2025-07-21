@@ -24,7 +24,7 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
 
 
 ## Installation
-
+ 
 ```bash
 # Using npm
 npm install @sodax/sdk
@@ -62,7 +62,7 @@ How to setup local development
 ## Intent Solver Endpoints
 
 Current Intent Solver API endpoints:
-- **Production (mainnet)**: "https://sodax-solver.iconblockchain.xyz"
+- **Production (mainnet)**: "https://sodax-solver-staging.iconblockchain.xyz"
 - **Staging** (mainnet): "https://sodax-solver-staging.iconblockchain.xyz"
 
 **Note** Staging endpoint contains features to be potentially released and is subject to frequent change!
@@ -135,7 +135,7 @@ const partnerFeeAmount = {
 // example of custom solver config
 const customSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
+  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: partnerFeePercentage, // or partnerFeeAmount
 } satisfies SolverConfigParams;
 

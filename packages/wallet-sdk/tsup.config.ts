@@ -10,6 +10,7 @@ export default defineConfig(options => ({
   clean: !options.watch,
   treeshake: true,
   splitting: true,
+  sourcemap: true,
   onSuccess: async () => {
     exec('tsc --emitDeclarationOnly --declaration', (err, stdout) => {
       if (err) {

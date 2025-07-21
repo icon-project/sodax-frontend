@@ -164,7 +164,8 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
     rateLimit: string;
     testToken: string;
   };
-  rpc_url: string;
+  horizonRpcUrl: HttpUrl;
+  sorobanRpcUrl: HttpUrl;
 };
 
 export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
@@ -331,7 +332,7 @@ export type SolverConfigParams =
 
 export type QuoteType = 'exact_input' | 'exact_output';
 
-export type IntentQuoteRequest = {
+export type SolverIntentQuoteRequest = {
   token_src: string; // Token address on the source chain
   token_src_blockchain_id: SpokeChainId; // Source chain id
   token_dst: string; // Token address on the destination chain
@@ -340,40 +341,40 @@ export type IntentQuoteRequest = {
   quote_type: QuoteType; // Quote type
 };
 
-export type IntentQuoteResponseRaw = {
+export type SolverIntentQuoteResponseRaw = {
   quoted_amount: string;
 };
 
-export type IntentQuoteResponse = {
+export type SolverIntentQuoteResponse = {
   quoted_amount: bigint;
 };
 
-export type IntentErrorResponse = {
+export type SolverErrorResponse = {
   detail: {
-    code: IntentErrorCode;
+    code: SolverIntentErrorCode;
     message: string;
   };
 };
 
-export type IntentExecutionRequest = {
+export type SolverExecutionRequest = {
   intent_tx_hash: Hex; // Intent hash of the execution on Sonic (hub chain)
 };
 
-export type IntentExecutionResponse = {
+export type SolverExecutionResponse = {
   answer: 'OK';
   intent_hash: Hex; // Here, the solver returns the intent_hash, might be helpful for front-end
 };
 
-export type IntentStatusRequest = {
+export type SolverIntentStatusRequest = {
   intent_tx_hash: Hex;
 };
 
-export type IntentStatusResponse = {
-  status: IntentStatusCode;
+export type SolverIntentStatusResponse = {
+  status: SolverIntentStatusCode;
   fill_tx_hash?: string; // defined only if status is 3
 };
 
-export enum IntentStatusCode {
+export enum SolverIntentStatusCode {
   NOT_FOUND = -1,
   NOT_STARTED_YET = 1, // It's in the task pool, but not started yet
   STARTED_NOT_FINISHED = 2,
@@ -381,7 +382,7 @@ export enum IntentStatusCode {
   FAILED = 4,
 }
 
-export enum IntentErrorCode {
+export enum SolverIntentErrorCode {
   NO_PATH_FOUND = -4, // No path to swap Token X to Token Y
   NO_PRIVATE_LIQUIDITY = -5, // Path found, but we have no private liquidity on the dest chain
   NOT_ENOUGH_PRIVATE_LIQUIDITY = -8, // Path found, but not enough private liquidity on the dst chain
@@ -436,7 +437,7 @@ export type SuiRawTransaction = {
 
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
 export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRawTransaction : Hex;
-export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : Hex;
+export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
 export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransaction : Hex;
@@ -498,3 +499,6 @@ export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 type ExtractKeys<T> = T extends unknown ? keyof T : never;
 
 export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChainId]['supportedTokens']>;
+
+export type SpokeTxHash = string;
+export type HubTxHash = string;

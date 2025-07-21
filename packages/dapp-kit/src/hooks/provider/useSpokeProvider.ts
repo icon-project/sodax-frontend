@@ -12,6 +12,8 @@ import {
   type StellarSpokeChainConfig,
   type SpokeProvider,
   type IWalletProvider,
+  SolanaSpokeProvider,
+  type SolanaChainConfig,
 } from '@sodax/sdk';
 import type {
   IEvmWalletProvider,
@@ -20,6 +22,7 @@ import type {
   SpokeChainId,
   IInjectiveWalletProvider,
   IStellarWalletProvider,
+  ISolanaWalletProvider,
 } from '@sodax/types';
 import { getXChainType, useWalletProvider } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
@@ -77,11 +80,16 @@ export function useSpokeProvider(
 
     if (xChainType === 'STELLAR') {
       const stellarConfig = spokeChainConfig[spokeChainId] as StellarSpokeChainConfig;
-      return new StellarSpokeProvider(
-        _walletProvider as IStellarWalletProvider,
-        stellarConfig.addresses.assetManager,
-        stellarConfig,
-        stellarConfig.rpc_url,
+      return new StellarSpokeProvider(_walletProvider as IStellarWalletProvider, stellarConfig, {
+        horizonRpcUrl: stellarConfig.horizonRpcUrl,
+        sorobanRpcUrl: stellarConfig.sorobanRpcUrl,
+      });
+    }
+
+    if (xChainType === 'SOLANA') {
+      return new SolanaSpokeProvider(
+        _walletProvider as ISolanaWalletProvider,
+        spokeChainConfig[spokeChainId] as SolanaChainConfig,
       );
     }
 

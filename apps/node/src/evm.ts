@@ -59,7 +59,7 @@ const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
+  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 
@@ -126,7 +126,7 @@ async function supply(token: Address, amount: bigint) {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
@@ -149,7 +149,7 @@ async function borrow(token: Address, amount: bigint) {
     walletAddress,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.borrowData(
+  const data: Hex = sodax.moneyMarket.buildBorrowData(
     hubWallet,
     walletAddress,
     token,
@@ -170,7 +170,7 @@ async function withdraw(token: Address, amount: bigint) {
     hubProvider,
   );
 
-  const data: Hex = sodax.moneyMarket.withdrawData(
+  const data: Hex = sodax.moneyMarket.buildWithdrawData(
     hubWallet,
     walletAddress,
     token,
@@ -190,7 +190,7 @@ async function repay(token: Address, amount: bigint) {
     walletAddress,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {
@@ -355,9 +355,13 @@ async function fillIntent(
 async function cancelIntent(intentCreateTxHash: string) {
   const intent = await sodax.solver.getIntent(intentCreateTxHash as Hash);
 
-  const txHash: Hash = await sodax.solver.cancelIntent(intent, spokeProvider);
+  const txResult = await sodax.solver.cancelIntent(intent, spokeProvider);
 
-  console.log('[cancelIntent] txHash', txHash);
+  if (txResult.ok) {
+    console.log('[cancelIntent] txHash', txResult.value);
+  } else {
+    console.error('[cancelIntent] error', txResult.error);
+  }
 }
 
 async function getIntent(txHash: string) {

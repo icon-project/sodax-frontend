@@ -34,7 +34,6 @@ import {
  */
 
 export class SpokeService {
-
   private constructor() {}
 
   /**

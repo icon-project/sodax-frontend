@@ -18,8 +18,8 @@ import {
   type MoneyMarketBorrowParams,
   type MoneyMarketWithdrawParams,
   type MoneyMarketRepayParams,
-  IconEoaAddress,
-  IcxCreateRevertMigrationParams,
+  type IconEoaAddress,
+  type IcxCreateRevertMigrationParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
@@ -68,7 +68,7 @@ async function supply(token: Address, amount: bigint) {
     console.log('[approve] txHash', txHash);
     await new Promise(f => setTimeout(f, 1000));
   }
-  const data = sodax.moneyMarket.supplyData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash = await SonicSpokeService.deposit(
     {
@@ -120,7 +120,7 @@ async function supplyHighLevel(token: Address, amount: bigint) {
   }
 
   console.log('[supplyHighLevel] supplying with params:', params);
-  const result = await sodax.moneyMarket.supply(params, spokeProvider);
+  const result = await sodax.moneyMarket.createSupplyIntent(params, spokeProvider);
 
   if (result.ok) {
     console.log('[supply] txHash', result.value);
@@ -144,7 +144,7 @@ async function borrow(token: Address, amount: bigint) {
   console.log('[approve] txHash', approveHash);
 
   await new Promise(f => setTimeout(f, 1000));
-  const data = sodax.moneyMarket.borrowData(wallet, wallet, token, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildBorrowData(wallet, wallet, token, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash = await SonicSpokeService.callWallet(data, spokeProvider);
   console.log('[borrow] txHash', txHash);
@@ -187,7 +187,7 @@ async function borrowHighLevel(token: Address, amount: bigint) {
   }
 
   console.log('[borrowHighLevel] borrowing with params:', params);
-  const result = await sodax.moneyMarket.borrow(params, spokeProvider);
+  const result = await sodax.moneyMarket.createBorrowIntent(params, spokeProvider);
 
   if (result.ok) {
     console.log('[borrow] txHash', result.value);
@@ -206,7 +206,7 @@ async function withdraw(token: Address, amount: bigint) {
   console.log('[approve] txHash', approveHash);
   await new Promise(f => setTimeout(f, 1000));
 
-  const withdrawData = await SonicSpokeService.withdrawData(
+  const withdrawData = await SonicSpokeService.buildWithdrawData(
     wallet,
     withdrawInfo,
     amount,
@@ -256,7 +256,7 @@ async function withdrawHighLevel(token: Address, amount: bigint) {
   }
 
   console.log('[withdrawHighLevel] withdrawing with params:', params);
-  const result = await sodax.moneyMarket.withdraw(params, spokeProvider);
+  const result = await sodax.moneyMarket.createWithdrawIntent(params, spokeProvider);
 
   if (result.ok) {
     console.log('[withdraw] txHash', result.value);
@@ -271,7 +271,7 @@ async function withdrawHighLevel(token: Address, amount: bigint) {
 async function repay(token: Address, amount: bigint) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
   const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
-  const data = sodax.moneyMarket.repayData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildRepayData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
   if (token !== '0x0000000000000000000000000000000000000000') {
     const txHash = await spokeProvider.walletProvider.sendTransaction({
       to: token,
@@ -336,7 +336,7 @@ async function repayHighLevel(token: Address, amount: bigint) {
   }
 
   console.log('[repayHighLevel] repaying with params:', params);
-  const result = await sodax.moneyMarket.repay(params, spokeProvider);
+  const result = await sodax.moneyMarket.createRepayIntent(params, spokeProvider);
 
   if (result.ok) {
     console.log('[withdraw] txHash', result.value);
@@ -395,7 +395,7 @@ async function borrowTo(token: Hex, amount: bigint, to: Hex, spokeChainId: Spoke
   const approveHash = await SonicSpokeService.approveBorrow(wallet, borrowInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
   await new Promise(f => setTimeout(f, 1000));
-  const data = sodax.moneyMarket.borrowData(wallet, to, token, amount, spokeChainId);
+  const data = sodax.moneyMarket.buildBorrowData(wallet, to, token, amount, spokeChainId);
 
   const txHash = await SonicSpokeService.callWallet(data, spokeProvider);
   console.log('[borrow] txHash', txHash);

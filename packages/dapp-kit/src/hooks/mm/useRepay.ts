@@ -6,7 +6,7 @@ import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface RepayResponse {
   ok: true;
-  value: [`0x${string}`, `0x${string}`];
+  value: [string, string];
 }
 
 /**
@@ -46,7 +46,7 @@ export function useRepay(
         throw new Error('spokeProvider is not found');
       }
 
-      const response = await sodax.moneyMarket.repayAndSubmit(
+      const response = await sodax.moneyMarket.repay(
         {
           token: spokeToken.address,
           amount: parseUnits(amount, spokeToken.decimals),

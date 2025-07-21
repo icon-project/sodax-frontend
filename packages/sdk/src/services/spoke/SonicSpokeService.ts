@@ -400,7 +400,7 @@ export class SonicSpokeService {
     return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
   }
 
-  public static async withdrawData(
+  public static async buildWithdrawData(
     from: Address,
     withdrawInfo: WithdrawInfo,
     amount: bigint,
@@ -410,7 +410,7 @@ export class SonicSpokeService {
     const userRouter = await SonicSpokeService.getUserRouter(from, spokeProvider);
 
     // Add withdraw call
-    const withdrawCall = moneyMarketService.withdrawData(
+    const withdrawCall = moneyMarketService.buildWithdrawData(
       userRouter,
       from,
       withdrawInfo.token,

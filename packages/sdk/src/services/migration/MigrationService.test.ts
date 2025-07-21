@@ -46,16 +46,16 @@ const mockRevertMigrationParams: IcxCreateRevertMigrationParams = {
 
 const mockIconWalletProvider = {
   getWalletAddress: vi.fn().mockResolvedValueOnce('hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6'),
-  getWalletAddressBytes: vi.fn().mockResolvedValueOnce(encodeAddress(ICON_MAINNET_CHAIN_ID, 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6')),
+  getWalletAddressBytes: vi
+    .fn()
+    .mockResolvedValueOnce(encodeAddress(ICON_MAINNET_CHAIN_ID, 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6')),
   sendTransaction: vi.fn(),
   waitForTransactionReceipt: vi.fn(),
 } satisfies IIconWalletProvider;
 
 const mockSonicWalletProvider = {
   getWalletAddress: vi.fn().mockResolvedValueOnce(mockEvmAddress),
-  getWalletAddressBytes: vi.fn().mockResolvedValueOnce(
-    encodeAddress(SONIC_MAINNET_CHAIN_ID, mockEvmAddress),
-  ),
+  getWalletAddressBytes: vi.fn().mockResolvedValueOnce(encodeAddress(SONIC_MAINNET_CHAIN_ID, mockEvmAddress)),
   sendTransaction: vi.fn(),
   waitForTransactionReceipt: vi.fn(),
 } satisfies IEvmWalletProvider;
@@ -161,7 +161,10 @@ describe('MigrationService', () => {
       });
 
       it('should return error for wrong provider type', async () => {
-        const result = await migrationService.isAllowanceValid(mockMigrationParams, mockSonicSpokeProvider);
+        const result = await migrationService.isAllowanceValid(
+          mockMigrationParams,
+          {} as unknown as SonicSpokeProvider,
+        );
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -172,7 +175,7 @@ describe('MigrationService', () => {
       it('should return error for invalid token', async () => {
         const invalidParams = {
           ...mockMigrationParams,
-          icx: 'cx0000000000000000000000000000000000000001' as IcxTokenType,
+          icx: 'cx0000000000000000000000000000000000000001' as unknown as IcxTokenType,
         } satisfies MigrationParams;
 
         const result = await migrationService.isAllowanceValid(invalidParams, mockIconSpokeProvider);
@@ -243,7 +246,10 @@ describe('MigrationService', () => {
       });
 
       it('should return error for wrong provider type', async () => {
-        const result = await migrationService.isAllowanceValid(mockRevertMigrationParams, mockIconSpokeProvider);
+        const result = await migrationService.isAllowanceValid(
+          mockRevertMigrationParams,
+          {} as unknown as SonicSpokeProvider,
+        );
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -343,7 +349,7 @@ describe('MigrationService', () => {
     });
 
     it('should return error for wrong provider type', async () => {
-      const result = await migrationService.approve(mockRevertMigrationParams, mockIconSpokeProvider);
+      const result = await migrationService.approve(mockRevertMigrationParams, {} as unknown as SonicSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -633,7 +639,7 @@ describe('MigrationService', () => {
     it('should return error for invalid token', async () => {
       const invalidParams = {
         ...mockMigrationParams,
-        icx: 'cx0000000000000000000000000000000000000000',
+        icx: 'cx0' as unknown as IcxTokenType,
       } satisfies MigrationParams;
 
       const result = await migrationService.createMigrateIntent(invalidParams, mockIconSpokeProvider);
@@ -645,7 +651,10 @@ describe('MigrationService', () => {
     });
 
     it('should return error for wrong provider type', async () => {
-      const result = await migrationService.createMigrateIntent(mockMigrationParams, mockIconSpokeProvider);
+      const result = await migrationService.createMigrateIntent(
+        mockMigrationParams,
+        {} as unknown as IconSpokeProvider,
+      );
 
       expect(result.ok).toBe(false);
       if (!result.ok) {

@@ -11,7 +11,6 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Borrow tokens from the money market (`useBorrow`)
   - Repay borrowed tokens (`useRepay`)
   - Get user reserves data (`useUserReservesData`)
-  - Calculate hub wallet address by using spoke chain id and spoke chain wallet address (`useHubWalletAddress`)
   - Get reserves data (`useReservesData`)
   - Check token allowance (`useMMAllowance`)
   - Approve token spending (`useMMApprove`)
@@ -65,7 +64,7 @@ const sodaxConfig = {
   moneyMarket: getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID),
   solver: {
     intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-    solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
+    solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
     partnerFee: {
       address: '0x0Ab764AB3816cD036Ea951bE973098510D8105A6',
       percentage: 100, // 1%
@@ -211,7 +210,6 @@ function SwapComponent() {
 - [`useSupply()`](./src/hooks/mm/useSupply.ts) - Supply tokens to the money market
 - [`useWithdraw()`](./src/hooks/mm/useWithdraw.ts) - Withdraw supplied tokens
 - [`useUserReservesData()`](./src/hooks/mm/useUserReservesData.ts) - Get user's reserves data(supplied asset and debt)
-- [`useHubWalletAddress()`](./src/hooks/mm/useHubWalletAddress.ts) - Get hub wallet address for a spoke chain
 - [`useReservesData()`](./src/hooks/mm/useReservesData.ts) - Get reserves data
 - [`useMMAllowance()`](./src/hooks/mm/useMMAllowance.ts) - Check token allowance for a specific amount
 - [`useMMApprove()`](./src/hooks/mm/useMMApprove.ts) - Approve token spending

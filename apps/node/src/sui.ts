@@ -47,7 +47,7 @@ const hubConfig = {
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
+  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 
@@ -137,7 +137,7 @@ async function supply(token: string, amount: bigint): Promise<void> {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, suiSpokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, suiSpokeProvider.chainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
@@ -161,7 +161,7 @@ async function borrow(token: string, amount: bigint): Promise<void> {
     hubProvider,
   );
   console.log(hubWallet);
-  const data: Hex = sodax.moneyMarket.borrowData(
+  const data: Hex = sodax.moneyMarket.buildBorrowData(
     hubWallet,
     walletAddressBytes,
     token,
@@ -182,7 +182,7 @@ async function withdraw(token: string, amount: bigint): Promise<void> {
     hubProvider,
   );
 
-  const data: Hex = sodax.moneyMarket.withdrawData(
+  const data: Hex = sodax.moneyMarket.buildWithdrawData(
     hubWallet,
     walletAddressBytes,
     token,
@@ -202,7 +202,7 @@ async function repay(token: string, amount: bigint): Promise<void> {
     walletAddressBytes,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, suiSpokeProvider.chainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, suiSpokeProvider.chainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {

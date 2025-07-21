@@ -1,15 +1,27 @@
 import React, { useMemo } from 'react';
-import { allXTokens, getSpokeTokenAddressByVault, useUserReservesData } from '@sodax/dapp-kit';
+import { getSpokeTokenAddressByVault, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useXAccount, useXBalances } from '@sodax/wallet-sdk';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
+import { moneyMarketSupportedTokens } from '@sodax/sdk';
+import type { Token, XToken } from '@sodax/types';
 
 export function SupplyAssetsList() {
   const { selectedChainId } = useAppStore();
-  const tokens = useMemo(() => allXTokens.filter(token => token.xChainId === selectedChainId), [selectedChainId]);
+
+  const tokens = useMemo(
+    () =>
+      moneyMarketSupportedTokens[selectedChainId].map((t: Token) => {
+        return {
+          ...t,
+          xChainId: selectedChainId,
+        } satisfies XToken;
+      }),
+    [selectedChainId],
+  );
 
   const { address } = useXAccount(selectedChainId);
   const { data: balances } = useXBalances({

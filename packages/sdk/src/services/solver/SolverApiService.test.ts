@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getHubAssetInfo,
   type Hex,
-  IntentErrorCode,
-  type IntentQuoteRequest,
-  type IntentStatusRequest,
+  SolverIntentErrorCode,
+  type SolverIntentQuoteRequest,
+  type SolverIntentStatusRequest,
   type QuoteType,
   type SolverConfig,
 } from '../../index.js';
@@ -44,7 +44,7 @@ describe('SolverApiService', () => {
       token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
       amount: 1000000000000000000n,
       quote_type: 'exact_input' as QuoteType,
-    } satisfies IntentQuoteRequest;
+    } satisfies SolverIntentQuoteRequest;
 
     it('should return a successful quote response', async () => {
       const mockResponse = {
@@ -83,7 +83,7 @@ describe('SolverApiService', () => {
     it('should handle API error response', async () => {
       const mockError = {
         detail: {
-          code: IntentErrorCode.NO_PATH_FOUND,
+          code: SolverIntentErrorCode.NO_PATH_FOUND,
           message: 'No path found',
         },
       };
@@ -108,7 +108,7 @@ describe('SolverApiService', () => {
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect(result.error.detail.code).toBe(IntentErrorCode.UNKNOWN);
+        expect(result.error.detail.code).toBe(SolverIntentErrorCode.UNKNOWN);
       }
     });
   });
@@ -154,7 +154,7 @@ describe('SolverApiService', () => {
     it('should handle API error response', async () => {
       const mockError = {
         detail: {
-          code: IntentErrorCode.QUOTE_NOT_FOUND,
+          code: SolverIntentErrorCode.QUOTE_NOT_FOUND,
           message: 'Quote not found',
         },
       };
@@ -176,7 +176,7 @@ describe('SolverApiService', () => {
   describe('getStatus', () => {
     const validRequest = {
       intent_tx_hash: '0x1234567890123456789012345678901234567890123456789012345678901234' as Hex,
-    } satisfies IntentStatusRequest;
+    } satisfies SolverIntentStatusRequest;
 
     it('should successfully get status', async () => {
       const mockResponse = {
@@ -213,7 +213,7 @@ describe('SolverApiService', () => {
     it('should handle API error response', async () => {
       const mockError = {
         detail: {
-          code: IntentErrorCode.QUOTE_NOT_FOUND,
+          code: SolverIntentErrorCode.QUOTE_NOT_FOUND,
           message: 'Quote not found',
         },
       };

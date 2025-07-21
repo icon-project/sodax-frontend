@@ -16,7 +16,7 @@ import {
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
-  MigrationParams,
+  type MigrationParams,
 } from '@sodax/sdk';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
@@ -54,7 +54,7 @@ const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef', // mainnet
-  solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
+  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 
@@ -119,7 +119,7 @@ async function supply(token: IconAddress, amount: bigint) {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, iconSpokeChainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, iconSpokeChainConfig.chain.id);
 
   const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
   const txHash = await SpokeService.deposit(
@@ -143,7 +143,7 @@ async function borrow(token: IconAddress, amount: bigint) {
     walletAddressBytes,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.borrowData(
+  const data: Hex = sodax.moneyMarket.buildBorrowData(
     hubWallet,
     walletAddressBytes,
     token,
@@ -164,7 +164,7 @@ async function withdraw(token: IconAddress, amount: bigint) {
     hubProvider,
   );
 
-  const data: Hex = sodax.moneyMarket.withdrawData(
+  const data: Hex = sodax.moneyMarket.buildWithdrawData(
     hubWallet,
     walletAddressBytes,
     token,
@@ -184,7 +184,7 @@ async function repay(token: IconAddress, amount: bigint) {
     walletAddressBytes,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, iconSpokeChainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, iconSpokeChainConfig.chain.id);
 
   const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
   const txHash: Hash = await SpokeService.deposit(
@@ -260,7 +260,7 @@ async function main() {
     const token = process.argv[3] as IconAddress; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
-  }else if (functionName === 'migrate') {
+  } else if (functionName === 'migrate') {
     const amount = BigInt(process.argv[3]); // Get amount from command line argument
     const recipient = process.argv[4] as Address; // Get recipient address from command line argument
     await migrate(amount, recipient);

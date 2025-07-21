@@ -1,10 +1,18 @@
 import React, { type ReactNode } from 'react';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { wagmiConfig } from './config';
 import { XWagmiProviders } from '@sodax/wallet-sdk';
 import { SodaxProvider } from '@sodax/dapp-kit';
 import { sodaxConfig } from './constants';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  AVALANCHE_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  OPTIMISM_MAINNET_CHAIN_ID,
+  POLYGON_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+} from '@sodax/types';
 const queryClient = new QueryClient();
 
 export default function Providers({ children }: { children: ReactNode }) {
@@ -14,13 +22,21 @@ export default function Providers({ children }: { children: ReactNode }) {
         <XWagmiProviders
           config={{
             EVM: {
-              wagmiConfig: wagmiConfig,
+              chains: [
+                ARBITRUM_MAINNET_CHAIN_ID,
+                AVALANCHE_MAINNET_CHAIN_ID,
+                BASE_MAINNET_CHAIN_ID,
+                BSC_MAINNET_CHAIN_ID,
+                OPTIMISM_MAINNET_CHAIN_ID,
+                POLYGON_MAINNET_CHAIN_ID,
+                SONIC_MAINNET_CHAIN_ID,
+              ],
             },
             SUI: {
               isMainnet: true,
             },
             SOLANA: {
-              endpoint: 'https://solana-mainnet.g.alchemy.com/v2/nCndZC8P7BdiVKkczCErdwpIgaBQpPFM',
+              endpoint: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
             },
             ICON: {},
             HAVAH: {},
