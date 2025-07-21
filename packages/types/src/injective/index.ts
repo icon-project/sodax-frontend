@@ -1,5 +1,29 @@
 import type { Hex, WalletAddressProvider } from '../common/index.js';
-import type { JsonObject, CWRawTransaction } from '../cosmos/index.js';
+
+export interface SignDoc {
+  /**
+   * body_bytes is protobuf serialization of a TxBody that matches the
+   * representation in TxRaw.
+   */
+  bodyBytes: Uint8Array;
+  /**
+   * auth_info_bytes is a protobuf serialization of an AuthInfo that matches the
+   * representation in TxRaw.
+   */
+  authInfoBytes: Uint8Array;
+  /**
+   * chain_id is the unique identifier of the chain this transaction targets.
+   * It prevents signed transactions from being used on another chain by an
+   * attacker
+   */
+  chainId: string;
+  /** account_number is the account number of the account in state */
+  accountNumber: bigint;
+}
+
+export type JsonObject = unknown;
+
+export type InjectiveNetworkEnv = 'TestNet' | 'DevNet' | 'Mainnet';
 
 export type InjectiveEoaAddress = string;
 
@@ -34,6 +58,12 @@ export interface InjectiveTxResponse {
   events?: unknown[];
 }
 
+export type InjectiveRawTransaction = {
+  from: Hex;
+  to: Hex;
+  signedDoc: SignDoc;
+};
+
 export class InjectiveExecuteResponse {
   public height: number | undefined;
 
@@ -62,7 +92,7 @@ export interface IInjectiveWalletProvider extends WalletAddressProvider {
     contractAddress: string,
     msg: JsonObject,
     memo?: string,
-  ): CWRawTransaction;
+  ): InjectiveRawTransaction;
   getWalletAddress: () => Promise<InjectiveEoaAddress>;
   getWalletAddressBytes: () => Promise<Hex>;
   execute: (

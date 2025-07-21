@@ -1,5 +1,7 @@
 import type { TransactionReceipt } from 'viem';
-import type { CWSpokeProvider } from './entities/cosmos/CWSpokeProvider.js';
+import type {
+  InjectiveSpokeProvider,
+} from './entities/injective/InjectiveSpokeProvider.js';
 import type {
   EvmSpokeProvider,
   ISpokeProvider,
@@ -12,7 +14,6 @@ import type {
 } from './entities/index.js';
 import type { EVM_CHAIN_IDS, EVM_SPOKE_CHAIN_IDS, INTENT_RELAY_CHAIN_IDS, spokeChainConfig } from './index.js';
 import type { EvmSpokeDepositParams, SonicSpokeDepositParams } from './services/index.js';
-import type { CWSpokeDepositParams } from './services/spoke/CWSpokeService.js';
 import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.js';
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
 import type { StellarSpokeDepositParams } from './services/spoke/StellarSpokeService.js';
@@ -26,11 +27,12 @@ import type {
   Address,
   EvmRawTransaction,
   StellarRawTransaction,
-  CWRawTransaction,
-  CosmosNetworkEnv,
+  InjectiveRawTransaction,
+  InjectiveNetworkEnv,
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
 } from '@sodax/types';
+import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 
@@ -138,7 +140,7 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   rpc_url: string;
 };
 
-export type CosmosSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
+export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
   rpcUrl: string;
   walletAddress: string;
   addresses: {
@@ -153,7 +155,7 @@ export type CosmosSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
   gasPrice: string;
   isBrowser: boolean;
   networkId: string;
-  network: CosmosNetworkEnv;
+  network: InjectiveNetworkEnv;
 };
 
 export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
@@ -199,7 +201,7 @@ export type HubChainConfig = EvmHubChainConfig;
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
   | SonicSpokeChainConfig
-  | CosmosSpokeChainConfig
+  | InjectiveSpokeChainConfig
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
@@ -285,12 +287,12 @@ export type IcxTokenType =
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 export type HttpPrefixedUrl = `http${string}`;
 
-export type SpokeDepositParams = EvmSpokeDepositParams | CWSpokeDepositParams | IconSpokeDepositParams;
+export type SpokeDepositParams = EvmSpokeDepositParams | InjectiveSpokeDepositParams | IconSpokeDepositParams;
 
 export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? EvmSpokeDepositParams
-  : T extends CWSpokeProvider
-    ? CWSpokeDepositParams
+  : T extends InjectiveSpokeProvider
+    ? InjectiveSpokeDepositParams
     : T extends SuiSpokeProvider
       ? SuiSpokeDepositParams
       : T extends IconSpokeProvider
@@ -305,7 +307,7 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? Address
-  : T extends CWSpokeProvider
+  : T extends InjectiveSpokeProvider
     ? string
     : T extends StellarSpokeProvider
       ? Hex
@@ -440,7 +442,7 @@ export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRaw
 export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
-export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransaction : Hex;
+export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : Hex;
 export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chainConfig']['chain']['type'] extends 'EVM'
   ? EvmReturnType<Raw>
   : T['chainConfig']['chain']['type'] extends 'SOLANA'
@@ -452,21 +454,21 @@ export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chai
         : T['chainConfig']['chain']['type'] extends 'SUI'
           ? SuiReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-            ? CWReturnType<Raw>
-            : never; // TODO extend for each chain implementation
+            ? InjectiveReturnType<Raw>
+            : never;
 export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
 export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<TxReturnType<SolanaSpokeProvider, Raw>>;
 export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnType<StellarSpokeProvider, Raw>>;
 export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
 export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
-export type PromiseCWTxReturnType<Raw extends boolean> = Promise<TxReturnType<CWSpokeProvider, Raw>>;
+export type PromiseInjectiveTxReturnType<Raw extends boolean> = Promise<TxReturnType<InjectiveSpokeProvider, Raw>>;
 
 export type RawTxReturnType =
   | EvmRawTransaction
   | SolanaRawTransaction
-  | CWRawTransaction
+  | InjectiveRawTransaction
   | IconRawTransaction
-  | SuiRawTransaction; // TODO extend for other chains (Icon, Cosmos, Sui)
+  | SuiRawTransaction;
 export type GetRawTxReturnType<T extends ChainType> = T extends 'EVM' ? PromiseEvmTxReturnType<boolean> : never;
 
 export type PromiseTxReturnType<
@@ -483,7 +485,7 @@ export type PromiseTxReturnType<
         : T['chainConfig']['chain']['type'] extends 'SUI'
           ? PromiseSuiTxReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-            ? PromiseCWTxReturnType<Raw>
+            ? PromiseInjectiveTxReturnType<Raw>
             : never;
 
 export type VaultType = {
