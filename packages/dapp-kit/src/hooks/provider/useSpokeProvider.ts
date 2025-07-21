@@ -14,6 +14,9 @@ import {
   type IWalletProvider,
   SolanaSpokeProvider,
   type SolanaChainConfig,
+  SONIC_MAINNET_CHAIN_ID,
+  SonicSpokeProvider,
+  type SonicSpokeChainConfig,
 } from '@sodax/sdk';
 import type {
   IEvmWalletProvider,
@@ -54,6 +57,12 @@ export function useSpokeProvider(
     if (!spokeChainId) return undefined;
 
     if (xChainType === 'EVM') {
+      if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {
+        return new SonicSpokeProvider(
+          _walletProvider as IEvmWalletProvider,
+          spokeChainConfig[spokeChainId] as SonicSpokeChainConfig,
+        );
+      }
       return new EvmSpokeProvider(
         _walletProvider as IEvmWalletProvider,
         spokeChainConfig[spokeChainId] as EvmSpokeChainConfig,

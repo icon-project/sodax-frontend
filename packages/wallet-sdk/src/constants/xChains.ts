@@ -81,7 +81,7 @@ export const optimism: XChain = {
 };
 
 export const sonic: XChain = {
-  id: 57_054,
+  id: 146,
   name: 'Sonic',
   xChainId: 'sonic',
   xChainType: 'EVM',
