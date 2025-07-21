@@ -6,8 +6,8 @@ import {
   type EvmSpokeChainConfig,
   IconSpokeProvider,
   type IconSpokeChainConfig,
-  CWSpokeProvider,
-  type CosmosSpokeChainConfig,
+  InjectiveSpokeProvider,
+  type InjectiveSpokeChainConfig,
   StellarSpokeProvider,
   type StellarSpokeChainConfig,
   type SpokeProvider,
@@ -72,8 +72,8 @@ export function useSpokeProvider(
       );
     }
     if (xChainType === 'INJECTIVE') {
-      return new CWSpokeProvider(
-        spokeChainConfig[spokeChainId] as CosmosSpokeChainConfig,
+      return new InjectiveSpokeProvider(
+        spokeChainConfig[spokeChainId] as InjectiveSpokeChainConfig,
         _walletProvider as IInjectiveWalletProvider,
       );
     }

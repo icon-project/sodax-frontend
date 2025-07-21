@@ -24,7 +24,7 @@ export class SuiSpokeService {
 
   /**
    * Deposit tokens to the spoke chain.
-   * @param {CWSpokeDepositParams} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
+   * @param {InjectiveSpokeDepositParams} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
    * @param {SuiSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @param {boolean} raw - The return type raw or just transaction hash

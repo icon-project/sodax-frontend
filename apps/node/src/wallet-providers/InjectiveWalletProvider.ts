@@ -3,18 +3,18 @@ import type { Coin } from '@cosmjs/proto-signing';
 import type { StdFee } from '@cosmjs/stargate';
 import { Network } from '@injectivelabs/networks';
 import { MsgBroadcasterWithPk, PrivateKey, MsgExecuteContract, createTransaction } from '@injectivelabs/sdk-ts';
-import type { CosmosNetworkEnv, CWRawTransaction, Hex, ICWWalletProvider } from '@sodax/types';
-import { CWExecuteResponse } from '@sodax/types';
+import type { InjectiveNetworkEnv, InjectiveRawTransaction, Hex, IInjectiveWalletProvider } from '@sodax/types';
+import { InjectiveExecuteResponse } from '@sodax/types';
 import { DEFAULT_GAS_LIMIT } from '@injectivelabs/utils';
 import { toHex } from 'viem';
 
 // TODO implement browser extension based login
 export interface InjectiveWalletConfig {
   mnemonics: string;
-  network: CosmosNetworkEnv;
+  network: InjectiveNetworkEnv;
   rpcUrl: string;
 }
-export class InjectiveWalletProvider implements ICWWalletProvider {
+export class InjectiveWalletProvider implements IInjectiveWalletProvider {
   private config: InjectiveWalletConfig;
   private client: MsgBroadcasterWithPk;
   private cosmosClient: CosmWasmClient | undefined;
@@ -39,7 +39,7 @@ export class InjectiveWalletProvider implements ICWWalletProvider {
     contractAddress: string,
     msg: JsonObject,
     memo?: string,
-  ): CWRawTransaction {
+  ): InjectiveRawTransaction {
     const msgExec = MsgExecuteContract.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
@@ -88,7 +88,7 @@ export class InjectiveWalletProvider implements ICWWalletProvider {
     fee: StdFee | 'auto' | number,
     memo?: string,
     funds?: Coin[],
-  ): Promise<CWExecuteResponse> {
+  ): Promise<InjectiveExecuteResponse> {
     const msgExec = MsgExecuteContract.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
@@ -96,7 +96,7 @@ export class InjectiveWalletProvider implements ICWWalletProvider {
       funds: funds as { amount: string; denom: string }[],
     });
     const txHash = await this.client.broadcast({ msgs: msgExec, gas: { gas: DEFAULT_GAS_LIMIT } });
-    return CWExecuteResponse.fromTxResponse(txHash);
+    return InjectiveExecuteResponse.fromTxResponse(txHash);
   }
 
   async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {

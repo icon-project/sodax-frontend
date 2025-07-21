@@ -1,4 +1,4 @@
-import { CWSpokeProvider } from '../../entities/cosmos/CWSpokeProvider.js';
+import { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeProvider.js';
 import { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import {
   type EvmHubProvider,
@@ -11,7 +11,7 @@ import {
 } from '../../entities/index.js';
 import type { GetSpokeDepositParamsType, PromiseTxReturnType, TxReturnType } from '../../types.js';
 import type { Address, Hex, HubAddress } from '@sodax/types';
-import { CWSpokeService } from './CWSpokeService.js';
+import { InjectiveSpokeService } from './InjectiveSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';
 import { SolanaSpokeService } from './SolanaSpokeService.js';
@@ -19,7 +19,7 @@ import { StellarSpokeService } from './StellarSpokeService.js';
 import { SuiSpokeService } from './SuiSpokeService.js';
 import { SonicSpokeService } from './SonicSpokeService.js';
 import {
-  isCWSpokeProvider,
+  isInjectiveSpokeProvider,
   isEvmSpokeProvider,
   isIconSpokeProvider,
   isSolanaSpokeProvider,
@@ -64,9 +64,9 @@ export class SpokeService {
         raw,
       ) as PromiseTxReturnType<T, R>;
     }
-    if (spokeProvider instanceof CWSpokeProvider) {
-      return CWSpokeService.deposit(
-        params as GetSpokeDepositParamsType<CWSpokeProvider>,
+    if (spokeProvider instanceof InjectiveSpokeProvider) {
+      return InjectiveSpokeService.deposit(
+        params as GetSpokeDepositParamsType<InjectiveSpokeProvider>,
         spokeProvider,
         hubProvider,
         raw,
@@ -120,8 +120,8 @@ export class SpokeService {
     if (spokeProvider instanceof EvmSpokeProvider) {
       return EvmSpokeService.getDeposit(token, spokeProvider);
     }
-    if (spokeProvider instanceof CWSpokeProvider) {
-      return CWSpokeService.getDeposit(token, spokeProvider);
+    if (spokeProvider instanceof InjectiveSpokeProvider) {
+      return InjectiveSpokeService.getDeposit(token, spokeProvider);
     }
     if (spokeProvider instanceof StellarSpokeProvider) {
       return StellarSpokeService.getDeposit(token, spokeProvider);
@@ -169,11 +169,14 @@ export class SpokeService {
         R
       > as TxReturnType<T, R>;
     }
-    if (isCWSpokeProvider(spokeProvider)) {
-      return (await CWSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        CWSpokeProvider,
-        R
-      > as TxReturnType<T, R>;
+    if (isInjectiveSpokeProvider(spokeProvider)) {
+      return (await InjectiveSpokeService.callWallet(
+        from,
+        payload,
+        spokeProvider,
+        hubProvider,
+        raw,
+      )) satisfies TxReturnType<InjectiveSpokeProvider, R> as TxReturnType<T, R>;
     }
     if (isIconSpokeProvider(spokeProvider)) {
       return (await IconSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
