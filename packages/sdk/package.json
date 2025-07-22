@@ -48,9 +48,6 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.30.1",
-    "@cosmjs/cosmwasm-stargate": "0.32.2",
-    "@cosmjs/encoding": "0.32.3",
-    "@cosmjs/proto-signing": "0.32.3",
     "@cosmjs/stargate": "^0.32.2",
     "@sodax/types": "workspace:*",
     "@solana/spl-token": "0.4.9",
@@ -58,7 +55,8 @@
     "@stellar/stellar-sdk": "12.3.0",
     "bn.js": "^5.2.1",
     "cosmjs-types": "^0.9.0",
-    "tiny-invariant": "1.3.3"
+    "tiny-invariant": "1.3.3",
+    "rlp": "3.0.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.4",
@@ -75,7 +73,6 @@
     "@mysten/wallet-standard": "^0.13.16",
     "bignumber.js": "9.1.2",
     "icon-sdk-js": "catalog:",
-    "rlp": "3.0.0",
     "viem": "catalog:"
   }
 }
