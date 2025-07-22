@@ -159,14 +159,14 @@ const AppsContainer = () => {
           </div>
         </div>
       </div>
-      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 absolute left-[50%] translate-x-[-50%] top-[96px] md:top-[120px]  h-[calc(100vh-96px)] md:h-[calc(100vh-120px)]">
+      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 absolute left-[50%] translate-x-[-50%] top-[96px] md:top-[104px]  h-[calc(100vh-96px)] md:h-[calc(100vh-104px)]">
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation="vertical" className="w-full">
-          <div className="flex justify-center items-start h-[calc(100vh-240px)]">
+          <div className="flex justify-center items-start h-[calc(100vh-192px)] md:h-[calc(100vh-224px)]">
             {/* Desktop sidebar */}
             <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start py-4">
               <div
                 ref={tabsContainerRef}
-                className="md:w-[264px] lg:w-[304px] p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-272px)]"
+                className="md:w-[264px] lg:w-[304px] p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-256px)]"
               >
                 <TabsList data-orientation="vertical" className="grid min-w-25 gap-y-8 shrink-0 bg-transparent">
                   <TabsTrigger
@@ -322,7 +322,7 @@ const AppsContainer = () => {
               </div>
             </div>
 
-            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-192px)] md:h-[calc(100vh-240px)] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
+            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-192px)] md:h-[calc(100vh-224px)] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
