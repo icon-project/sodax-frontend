@@ -39,7 +39,7 @@ const AppsContainer = () => {
         const containerRect = containerElement.getBoundingClientRect();
         const tabRect = desktopActiveTabElement.getBoundingClientRect();
         const relativeTop = tabRect.top - containerRect.top;
-        setArrowPosition(relativeTop - 15); // 40px offset to center the arrow on the tab
+        setArrowPosition(tabRect.top - 104 - 32); // 40px offset to center the arrow on the tab
       }
 
       // Update mobile arrow position
@@ -70,7 +70,7 @@ const AppsContainer = () => {
         const containerRect = containerElement.getBoundingClientRect();
         const tabRect = desktopActiveTabElement.getBoundingClientRect();
         const relativeTop = tabRect.top - containerRect.top;
-        setArrowPosition(relativeTop - 15);
+        setArrowPosition(tabRect.top - 104 - 32); // 40px offset to center the arrow on the tab
       }
 
       // Update mobile arrow position
@@ -199,10 +199,10 @@ const AppsContainer = () => {
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation="vertical" className="w-full">
           <div className="flex justify-center items-start h-[calc(100vh-192px)] md:h-[calc(100vh-224px)]">
             {/* Desktop sidebar */}
-            <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start py-4">
+            <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start lg:py-4">
               <div
                 ref={tabsContainerRef}
-                className="md:w-[264px] lg:w-[304px] p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-256px)]"
+                className="md:w-[264px] lg:w-[304px] p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-224px)] lg:h-[calc(100vh-256px)]"
               >
                 <TabsList data-orientation="vertical" className="grid min-w-25 gap-y-8 shrink-0 bg-transparent">
                   {tabConfigs.map(tab => (
