@@ -104,7 +104,7 @@ const AppsContainer = () => {
 
   return (
     <div className="w-full bg-cream-white min-h-screen">
-      <div className="self-stretch h-60 px-8 lg:px-28 py-9 relative inline-flex flex-col justify-start items-center gap-2 w-full">
+      <div className="self-stretch h-60 px-6 lg:px-28 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
         <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
         <div className="w-full max-w-[1200px] justify-between items-center h-10 z-1 inline-flex">
           <div className="flex justify-start items-center">
@@ -159,14 +159,14 @@ const AppsContainer = () => {
           </div>
         </div>
       </div>
-      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 absolute left-[50%] translate-x-[-50%] top-[120px]  h-[calc(100vh-120px)]">
+      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 absolute left-[50%] translate-x-[-50%] top-[96px] md:top-[120px]  h-[calc(100vh-96px)] md:h-[calc(100vh-120px)]">
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation="vertical" className="w-full">
           <div className="flex justify-center items-start h-[calc(100vh-240px)]">
             {/* Desktop sidebar */}
-            <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start lg:py-4">
+            <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start py-4">
               <div
                 ref={tabsContainerRef}
-                className="md:w-[264px] lg:w-[304px] p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] md:h-[calc(100vh-240px)] lg:h-[calc(100vh-272px)]"
+                className="md:w-[264px] lg:w-[304px] p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-272px)]"
               >
                 <TabsList data-orientation="vertical" className="grid min-w-25 gap-y-8 shrink-0 bg-transparent">
                   <TabsTrigger
@@ -322,7 +322,7 @@ const AppsContainer = () => {
               </div>
             </div>
 
-            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-240px)] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
+            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-192px)] md:h-[calc(100vh-240px)] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -356,7 +356,7 @@ const AppsContainer = () => {
                   fillRule="evenodd"
                   clipRule="evenodd"
                   d="M40 -1.27146e-06C41.875 -1.27357e-06 42.8259 0.941129 43.3333 1.88235C48.3264 11.1437 61.967 16 80 16L-5.08584e-07 16C18.033 16 31.6736 11.1437 36.6667 1.88235C37.1741 0.941129 38.125 -1.26935e-06 40 -1.27146e-06Z"
-                  fill="#A55C55"
+                  fill="#CC9E9A"
                 />
               </svg>
               <TabsContent value="portfolio">
@@ -406,11 +406,11 @@ const AppsContainer = () => {
             </div>
 
             {/* Mobile bottom tabs */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[120px] ">
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[96px] ">
               <div className="relative">
                 <div
                   ref={mobileTabsContainerRef}
-                  className="w-full px-4 py-4 bg-cherry-soda h-[120px] flex align-center"
+                  className="w-full px-4 py-4 bg-cherry-bright h-[96px] flex align-center"
                 >
                   <TabsList data-orientation="horizontal" className="grid grid-cols-4 gap-4 bg-transparent h-20">
                     <TabsTrigger
