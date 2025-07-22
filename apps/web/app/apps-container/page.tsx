@@ -11,7 +11,7 @@ import { ChevronRight, ArrowUpFromLine, ArrowDownToLine } from 'lucide-react';
 const AppsContainer = () => {
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('portfolio');
-  const [arrowPosition, setArrowPosition] = useState(157);
+  const [arrowPosition, setArrowPosition] = useState(110);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);
   const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
 
@@ -49,6 +49,41 @@ const AppsContainer = () => {
     // Update position after a short delay to ensure DOM is updated
     const timeoutId = setTimeout(updateArrowPosition, 100);
     return () => clearTimeout(timeoutId);
+  }, [activeTab]);
+
+  // Update arrow position when window is resized
+  useEffect(() => {
+    const handleResize = (): void => {
+      const desktopActiveTabElement = desktopTabRefs.current[activeTab];
+      const mobileActiveTabElement = mobileTabRefs.current[activeTab];
+      const containerElement = tabsContainerRef.current;
+      const mobileContainerElement = mobileTabsContainerRef.current;
+
+      // Update desktop arrow position
+      if (desktopActiveTabElement && containerElement) {
+        const containerRect = containerElement.getBoundingClientRect();
+        const tabRect = desktopActiveTabElement.getBoundingClientRect();
+        const relativeTop = tabRect.top - containerRect.top;
+        setArrowPosition(relativeTop - 15);
+      }
+
+      // Update mobile arrow position
+      if (mobileActiveTabElement && mobileContainerElement) {
+        const mobileContainerRect = mobileContainerElement.getBoundingClientRect();
+        const tabRect = mobileActiveTabElement.getBoundingClientRect();
+        const relativeLeft = tabRect.left - mobileContainerRect.left;
+        const tabWidth = tabRect.width;
+        setMobileArrowPosition(relativeLeft + tabWidth / 2 - 50);
+      }
+    };
+
+    // Add resize event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup event listener on unmount
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, [activeTab]);
 
   const handleTabChange = (value: string): void => {
