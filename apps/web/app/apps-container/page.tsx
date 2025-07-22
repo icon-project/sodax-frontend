@@ -322,7 +322,7 @@ const AppsContainer = () => {
               </div>
             </div>
 
-            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-240px)] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16">
+            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-240px)] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -348,7 +348,7 @@ const AppsContainer = () => {
                 viewBox="0 0 80 16"
                 fill="none"
                 className="absolute transition-all duration-300 ease-in-out md:hidden"
-                style={{ bottom: '-9px', left: `${mobileArrowPosition}px` }}
+                style={{ bottom: '-1px', left: `${mobileArrowPosition}px` }}
                 aria-label="Deposit Dialog"
               >
                 <title>Deposit Dialog</title>
