@@ -127,6 +127,7 @@ const AppsContainer = () => {
             >
               <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} className="mr-2" />
               <svg
+                className="hidden lg:block"
                 xmlns="http://www.w3.org/2000/svg"
                 width="84"
                 height="18"
