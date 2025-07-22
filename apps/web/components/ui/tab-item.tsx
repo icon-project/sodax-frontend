@@ -1,0 +1,59 @@
+// apps/web/components/ui/tab-item.tsx
+import type React from 'react';
+import { TabsTrigger } from '@/components/ui/tabs';
+import TabIcon, { type TabIconType } from './tab-icon';
+
+interface TabItemProps {
+  value: string;
+  type: TabIconType;
+  label: string;
+  isActive: boolean;
+  isMobile?: boolean;
+  setTabRef?: (el: HTMLButtonElement | null) => void;
+  className?: string;
+}
+
+const TabItem: React.FC<TabItemProps> = ({
+  value,
+  type,
+  label,
+  isActive,
+  isMobile = false,
+  setTabRef,
+  className = '',
+}) => {
+  const getTextClassName = (): string => {
+    if (isMobile) {
+      return `text-xs font-normal leading-snug ${
+        isActive ? "text-yellow-soda font-['Shrikhand']" : "text-white font-['InterRegular']"
+      }`;
+    }
+    return `mix-blend-multiply justify-end text-base font-normal leading-snug ${
+      isActive ? "text-espresso font-['Shrikhand']" : "text-clay font-['InterRegular']"
+    }`;
+  };
+
+  const getContainerClassName = (): string => {
+    if (isMobile) {
+      return `flex flex-col items-center gap-2 w-[25vw] ${className}`;
+    }
+    return `inline-flex items-center gap-4 w-25 ${className}`;
+  };
+
+  return (
+    <TabsTrigger
+      ref={setTabRef}
+      value={value}
+      className="data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+    >
+      <div className={getContainerClassName()}>
+        <TabIcon type={type} isActive={isActive} isMobile={isMobile} />
+        <div className={isMobile ? 'flex justify-start items-center' : 'flex justify-start items-center gap-1'}>
+          <div className={getTextClassName()}>{label}</div>
+        </div>
+      </div>
+    </TabsTrigger>
+  );
+};
+
+export default TabItem;
