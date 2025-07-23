@@ -1,25 +1,24 @@
-import { MsgExecuteContract, MsgExecuteContractCompat } from '@injectivelabs/sdk-ts';
+import { MsgExecuteContract, MsgExecuteContractCompat, toBase64 } from '@injectivelabs/sdk-ts';
 import { toHex } from 'viem';
-import { createTransaction } from '@injectivelabs/sdk-ts';
-
-import type { MsgBroadcaster } from '@injectivelabs/wallet-ts';
+import { createTransaction, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
+import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
 import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
-import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
 
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
   private client: MsgBroadcaster;
   public walletAddress: InjectiveEoaAddress | undefined;
-  private rpcUrl: string;
+  private chainGrpcWasmApi: ChainGrpcWasmApi;
 
   constructor({
     client,
     walletAddress,
-    rpcUrl,
   }: { client: MsgBroadcaster; walletAddress: InjectiveEoaAddress | undefined; rpcUrl: string }) {
     this.client = client;
     this.walletAddress = walletAddress;
-    this.rpcUrl = rpcUrl;
+    const endpoints = getNetworkEndpoints(Network.Mainnet);
+    this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
   }
 
   getRawTransaction(
@@ -76,8 +75,6 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     senderAddress: string,
     contractAddress: string,
     msg: JsonObject,
-    fee: 'auto' | number,
-    memo?: string,
     funds?: InjectiveCoin[],
   ): Promise<InjectiveExecuteResponse> {
     if (!this.walletAddress) {
@@ -100,7 +97,6 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
   }
 
   async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {
-    const contractClient = await CosmWasmClient.connect(this.rpcUrl);
-    return contractClient.queryContractSmart(address, queryMsg);
+    return this.chainGrpcWasmApi.fetchSmartContractState(address, toBase64(queryMsg as object));
   }
 }

@@ -90,6 +90,10 @@ export function useWalletProvider(
 
       case 'INJECTIVE': {
         const injectiveXService = xService as InjectiveXService;
+        if (!injectiveXService) {
+          return undefined;
+          // throw new Error('InjectiveXService is not initialized');
+        }
         const endpoints = getNetworkEndpoints(Network.Mainnet);
         const { walletAddress, client, rpcUrl } = {
           walletAddress: xAccount.address,

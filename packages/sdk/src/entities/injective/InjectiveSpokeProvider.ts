@@ -1,8 +1,7 @@
-import { type Coin, coins } from '@cosmjs/stargate';
 import { type Address, type Hex, fromHex } from 'viem';
 import type { InjectiveSpokeChainConfig, InjectiveReturnType, PromiseInjectiveTxReturnType } from '../../types.js';
 import type { ISpokeProvider } from '../Providers.js';
-import type { IInjectiveWalletProvider, InjectiveExecuteResponse } from '@sodax/types';
+import type { IInjectiveWalletProvider, InjectiveExecuteResponse, InjectiveCoin } from '@sodax/types';
 import { Injective20Token } from './Injective20Token.js';
 
 export interface InstantiateMsg {
@@ -87,7 +86,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     to: Uint8Array,
     amount: string,
     data: Uint8Array = new Uint8Array(),
-    funds: Coin[] = [],
+    funds: InjectiveCoin[] = [],
     raw?: R,
   ): PromiseInjectiveTxReturnType<R> {
     const msg: ExecuteMsg = {
@@ -112,8 +111,6 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       senderAddress as `inj${string}`,
       this.chainConfig.addresses.assetManager,
       msg,
-      'auto',
-      undefined,
       funds,
     );
     return res.transactionHash as InjectiveReturnType<R>;
@@ -141,7 +138,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     provider: InjectiveSpokeProvider,
     raw?: R,
   ): PromiseInjectiveTxReturnType<R> {
-    const isNative = await provider.isNative(token_address);
+    const isNative = provider.isNative(token_address);
     const toBytes = fromHex(to, 'bytes');
     const dataBytes = fromHex(data, 'bytes');
 
@@ -160,21 +157,12 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     data: Uint8Array = new Uint8Array([2, 2, 2]),
     raw?: R,
   ) {
-    const funds = coins(amount, token);
+    const funds = [{ amount, denom: token }];
     return this.transfer(sender, token, to, amount, data, funds, raw);
   }
 
-  async isNative(token: string): Promise<boolean> {
-    let isNative = true;
-    const injective20Token = new Injective20Token(this.walletProvider, token);
-    try {
-      await injective20Token.getTokenInfo();
-      isNative = false;
-    } catch (err) {
-      console.log('[InjectiveSpokeProvider] isNative error', err);
-      throw err;
-    }
-    return isNative;
+  isNative(token: string): boolean {
+    return token === 'inj';
   }
 
   async receiveMessage(
@@ -195,7 +183,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       },
     };
 
-    return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
+    return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg);
   }
 
   async setRateLimit(senderAddress: string, rateLimit: string): Promise<InjectiveExecuteResponse> {
@@ -205,7 +193,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       },
     };
 
-    return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
+    return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg);
   }
 
   async setConnection(senderAddress: string, connection: string): Promise<InjectiveExecuteResponse> {
@@ -215,7 +203,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       },
     };
 
-    return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
+    return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg);
   }
 
   async setOwner(senderAddress: string, owner: string): Promise<InjectiveExecuteResponse> {
@@ -225,7 +213,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       },
     };
 
-    return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
+    return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg);
   }
 
   async send_message<R extends boolean = false>(
@@ -251,7 +239,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
         msg,
       ) as InjectiveReturnType<R>;
     }
-    const res = await this.walletProvider.execute(sender, this.chainConfig.addresses.connection, msg, 'auto');
+    const res = await this.walletProvider.execute(sender, this.chainConfig.addresses.connection, msg);
     return res.transactionHash as InjectiveReturnType<R>;
   }
 

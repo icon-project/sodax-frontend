@@ -7,7 +7,7 @@ import type { InjectiveXService } from '@/xchains/injective';
 import { useXService } from '@/hooks/useXService';
 import useEthereumChainId from './useEthereumChainId';
 import { mainnet } from 'viem/chains';
-import { Wallet } from '@injectivelabs/wallet-ts';
+import { Wallet } from '@injectivelabs/wallet-base';
 
 interface UseEvmSwitchChainReturn {
   isWrongChain: boolean;
@@ -36,7 +36,7 @@ interface UseEvmSwitchChainReturn {
  * ```
  */
 
-export const switchEthereumChain = async chainId => {
+export const switchEthereumChain = async (chainId: number) => {
   const metamaskProvider = (window as any).ethereum as any;
 
   await Promise.race([
@@ -45,7 +45,7 @@ export const switchEthereumChain = async chainId => {
       params: [{ chainId: `0x${chainId}` }],
     }),
     new Promise<void>(resolve =>
-      metamaskProvider.on('change', ({ chain }: any) => {
+      metamaskProvider.on('change', ({ chain }: { chain: { id: number } }) => {
         if (chain?.id === chainId) {
           resolve();
         }
@@ -66,6 +66,7 @@ export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainR
     return (
       (xChainType === 'EVM' && chainId !== expectedChainId) ||
       (xChainType === 'INJECTIVE' &&
+        injectiveXService &&
         !window?.['ethereum']?.isHanaWallet &&
         injectiveXService.walletStrategy.getWallet() === Wallet.Metamask &&
         ethereumChainId !== mainnet.id)

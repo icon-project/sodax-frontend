@@ -1,9 +1,20 @@
-import { CosmWasmClient, type JsonObject } from '@cosmjs/cosmwasm-stargate';
-import type { Coin } from '@cosmjs/proto-signing';
-import type { StdFee } from '@cosmjs/stargate';
-import { Network } from '@injectivelabs/networks';
-import { MsgBroadcasterWithPk, PrivateKey, MsgExecuteContract, createTransaction } from '@injectivelabs/sdk-ts';
-import type { InjectiveNetworkEnv, InjectiveRawTransaction, Hex, IInjectiveWalletProvider } from '@sodax/types';
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
+import {
+  MsgBroadcasterWithPk,
+  PrivateKey,
+  MsgExecuteContract,
+  createTransaction,
+  ChainGrpcWasmApi,
+  toBase64,
+} from '@injectivelabs/sdk-ts';
+import type {
+  InjectiveNetworkEnv,
+  InjectiveRawTransaction,
+  Hex,
+  IInjectiveWalletProvider,
+  InjectiveCoin,
+  JsonObject,
+} from '@sodax/types';
 import { InjectiveExecuteResponse } from '@sodax/types';
 import { DEFAULT_GAS_LIMIT } from '@injectivelabs/utils';
 import { toHex } from 'viem';
@@ -12,14 +23,14 @@ import { toHex } from 'viem';
 export interface InjectiveWalletConfig {
   mnemonics: string;
   network: InjectiveNetworkEnv;
-  rpcUrl: string;
 }
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
+  public pubkey: Uint8Array;
+
   private config: InjectiveWalletConfig;
   private client: MsgBroadcasterWithPk;
-  private cosmosClient: CosmWasmClient | undefined;
   private address: string;
-  public pubkey: Uint8Array;
+  private chainGrpcWasmApi: ChainGrpcWasmApi;
 
   constructor(config: InjectiveWalletConfig) {
     this.config = config;
@@ -30,6 +41,8 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       privateKey: privateKey,
       network: this.config.network === 'Mainnet' ? Network.Mainnet : Network.Testnet,
     });
+    const endpoints = getNetworkEndpoints(Network.Mainnet);
+    this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
   }
 
   getRawTransaction(
@@ -38,12 +51,11 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     senderAddress: string,
     contractAddress: string,
     msg: JsonObject,
-    memo?: string,
   ): InjectiveRawTransaction {
     const msgExec = MsgExecuteContract.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
-      msg: msg,
+      msg: msg as object,
       funds: [],
     });
     const { txRaw } = createTransaction({
@@ -66,13 +78,6 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     };
   }
 
-  async getCosmwasmClient(): Promise<CosmWasmClient> {
-    if (this.cosmosClient === undefined) {
-      this.cosmosClient = await CosmWasmClient.connect(this.config.rpcUrl);
-    }
-    return this.cosmosClient;
-  }
-
   async getWalletAddress(): Promise<string> {
     return Promise.resolve(this.address);
   }
@@ -85,22 +90,19 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     senderAddress: string,
     contractAddress: string,
     msg: JsonObject,
-    fee: StdFee | 'auto' | number,
-    memo?: string,
-    funds?: Coin[],
+    funds?: InjectiveCoin[],
   ): Promise<InjectiveExecuteResponse> {
     const msgExec = MsgExecuteContract.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
-      msg: msg,
-      funds: funds as { amount: string; denom: string }[],
+      msg: msg as object,
+      funds: funds,
     });
     const txHash = await this.client.broadcast({ msgs: msgExec, gas: { gas: DEFAULT_GAS_LIMIT } });
     return InjectiveExecuteResponse.fromTxResponse(txHash);
   }
 
   async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {
-    const contractClient = await CosmWasmClient.connect(this.config.rpcUrl);
-    return contractClient.queryContractSmart(address, queryMsg);
+    return this.chainGrpcWasmApi.fetchSmartContractState(address, toBase64(queryMsg as object));
   }
 }
