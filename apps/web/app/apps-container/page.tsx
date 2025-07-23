@@ -126,8 +126,8 @@ const AppsContainer = () => {
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} className="mr-2" />
-              <span className="font-black text-2xl text-white logo-word hidden sm:flex">SODAX</span>
-              {/* <svg
+              {/* <span className="font-black text-2xl text-white logo-word hidden sm:flex">SODAX</span> */}
+              <svg
                 className="hidden lg:block"
                 xmlns="http://www.w3.org/2000/svg"
                 width="84"
@@ -157,7 +157,7 @@ const AppsContainer = () => {
                   d="M77.7194 16.9281H83.3332L77.6591 8.50752L82.7597 1.05273H77.5987L75.0937 5.61012L72.5584 1.05273H67.0956L72.317 8.47734L66.5523 16.9281H71.8944L74.8522 11.9482L77.7194 16.9281Z"
                   fill="white"
                 />
-              </svg> */}
+              </svg>
             </div>
             <div className="justify-center text-cream hidden sm:flex ml-8 gap-1">
               <span className="text-xs font-bold font-['InterRegular'] leading-none">Money, as it</span>
@@ -166,7 +166,7 @@ const AppsContainer = () => {
             </div>
           </div>
           <div className="flex justify-end items-center">
-            <div className="hidden lg:flex justify-end items-center gap-6">
+            <div className="hidden lg:flex justify-end items-center gap-4">
               <Link href="/">
                 <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                   About

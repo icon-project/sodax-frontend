@@ -34,6 +34,7 @@ import { useWallet } from '../../hooks/useWallet';
 import { Notification } from '../Notification';
 import ConnectWalletButton from '@/components/ui/connect-wallet-button';
 import { TermsContent } from './terms-content';
+import { LaunchButton } from './launch-button';
 
 const carouselItems = [
   { id: 1, src: '/coin/base.png', alt: 'BASE' },
@@ -119,8 +120,8 @@ const HeroSection = ({
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} className="mr-2" />
-              <span className="font-black text-2xl text-white logo-word hidden sm:flex">SODAX</span>
-              {/* <svg
+              {/* <span className="font-black text-2xl text-white logo-word hidden sm:flex">SODAX</span> */}
+              <svg
                 className="hidden sm:flex"
                 xmlns="http://www.w3.org/2000/svg"
                 width="84"
@@ -150,7 +151,7 @@ const HeroSection = ({
                   d="M77.7194 16.9281H83.3332L77.6591 8.50752L82.7597 1.05273H77.5987L75.0937 5.61012L72.5584 1.05273H67.0956L72.317 8.47734L66.5523 16.9281H71.8944L74.8522 11.9482L77.7194 16.9281Z"
                   fill="white"
                 />
-              </svg> */}
+              </svg>
             </div>
           </div>
           <div className="flex items-center">
@@ -163,7 +164,7 @@ const HeroSection = ({
                   </span>
                 </ScrollLink>
               </li>
-              {/* <li>
+              <li>
                 <Link href="/docs" passHref>
                   <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                     Partners
@@ -176,17 +177,18 @@ const HeroSection = ({
                     Community
                   </span>
                 </Link>
-              </li> */}
+              </li>
             </ul>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-              <DecoratedButton
+              {/* <DecoratedButton
                 onClick={() => onRewardDialogChange(true)}
                 isConnected={isConnected}
                 address={address}
                 showAddressInfo={true}
               >
                 join waitlist
-              </DecoratedButton>
+              </DecoratedButton> */}
+              <LaunchButton>launch apps</LaunchButton>
             </div>
           </div>
         </div>
@@ -266,9 +268,10 @@ const HeroSection = ({
                 <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
               </div>
               <div className="inline-flex justify-center items-start relative mt-4 sm:ml-2 sm:mt-0">
-                <DecoratedButton onClick={() => onRewardDialogChange(true)} isConnected={isConnected}>
+                {/* <DecoratedButton onClick={() => onRewardDialogChange(true)} isConnected={isConnected}>
                   join waitlist
-                </DecoratedButton>
+                </DecoratedButton> */}
+                <LaunchButton>launch apps</LaunchButton>
               </div>
             </div>
           </div>

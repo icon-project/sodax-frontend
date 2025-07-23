@@ -35,7 +35,7 @@ const Section1 = () => {
           size="lg"
           onClick={() => window.open('https://x.com/gosodax', '_blank')}
         >
-          Follow X for launch
+          Launch Savings
         </Button>
       </div>
     </div>
