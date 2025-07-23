@@ -113,7 +113,7 @@ const AppsContainer = () => {
       <Sidebar isOpen={isOpen} toggle={toggle} setOpenRewardDialog={setOpenRewardDialog} />
       <div className="self-stretch h-60 px-6 lg:px-28 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
         <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
-        <div className="w-full max-w-[1200px] justify-between items-center h-10 z-1 inline-flex">
+        <div className="w-full max-w-[1200px] justify-between items-center h-10 z-1 inline-flex px-6">
           <div className="flex justify-start items-center">
             <div className="flex lg:hidden mr-2 text-white cursor-pointer" onClick={toggle}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-label="Menu">
@@ -126,7 +126,8 @@ const AppsContainer = () => {
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
               <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} className="mr-2" />
-              <svg
+              <span className="font-black text-2xl text-white logo-word hidden sm:flex">SODAX</span>
+              {/* <svg
                 className="hidden lg:block"
                 xmlns="http://www.w3.org/2000/svg"
                 width="84"
@@ -156,7 +157,7 @@ const AppsContainer = () => {
                   d="M77.7194 16.9281H83.3332L77.6591 8.50752L82.7597 1.05273H77.5987L75.0937 5.61012L72.5584 1.05273H67.0956L72.317 8.47734L66.5523 16.9281H71.8944L74.8522 11.9482L77.7194 16.9281Z"
                   fill="white"
                 />
-              </svg>
+              </svg> */}
             </div>
             <div className="justify-center text-cream hidden sm:flex ml-8 gap-1">
               <span className="text-xs font-bold font-['InterRegular'] leading-none">Money, as it</span>
@@ -164,25 +165,25 @@ const AppsContainer = () => {
               <span className="text-xs font-bold font-['InterRegular'] leading-none">be</span>
             </div>
           </div>
-          <div className="flex justify-end items-center gap-8">
+          <div className="flex justify-end items-center">
             <div className="hidden lg:flex justify-end items-center gap-6">
               <Link href="/">
-                <div className="justify-center text-cream text-sm font-medium font-['InterRegular'] leading-tight">
+                <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                   About
-                </div>
+                </span>
               </Link>
               <Link href="/">
-                <div className="justify-center text-cream text-sm font-medium font-['InterRegular'] leading-tight">
+                <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                   Partners
-                </div>
+                </span>
               </Link>
               <Link href="/">
-                <div className="justify-center text-cream text-sm font-medium font-['InterRegular'] leading-tight">
+                <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
                   Community
-                </div>
+                </span>
               </Link>
             </div>
-            <div data-property-1="Default" className="w-44 min-w-44 flex justify-center items-center">
+            <div className="inline-flex justify-center items-start relative mr-2 ml-5">
               <ConnectWalletButton
                 onWalletClick={handleWalletClick}
                 onConnectModalChange={setConnectModalOpen}

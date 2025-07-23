@@ -86,7 +86,7 @@ const ConnectWalletButton = ({
               }
               disabled={isRegistering}
               className={cn(
-                'w-[172px] h-[40px] font-[Shrikhand] rounded-full text-[14px] z-10 pt-[11px] cursor-pointer',
+                'min-w-[183px] h-[40px] font-[Shrikhand] rounded-full text-[14px] z-10 pt-[11px] cursor-pointer',
                 getBgColor(),
                 getTextColor(),
                 'transition-all hover:scale-[102%]',
