@@ -30,7 +30,7 @@ const Section1 = () => {
       </Label>
       <div className="mt-4">
         <Button
-          variant="outline"
+          variant="cherry"
           className="px-6 font-['InterMedium'] cursor-pointer"
           size="lg"
           onClick={() => window.open('https://x.com/gosodax', '_blank')}

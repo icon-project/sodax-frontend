@@ -19,6 +19,8 @@ const buttonVariants = cva(
           'bg-transparent text-white outline outline-4 outline-solid outline-offset-[-4px] outline-cream hover:outline-white dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
         subtle: 'text-black bg-white hover:text-yellow-dark',
+        cherry:
+          'bg-cherry-soda text-white shadow-xs hover:bg-cherry-soda/90 focus-visible:ring-cherry-soda/20 dark:focus-visible:ring-cherry-soda/40 dark:bg-cherry-soda/60',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
