@@ -1,8 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const Section1 = () => {
+  const router = useRouter();
+
   return (
     <div
       className="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white mt-4 pt-[40px] sm:pt-[60px] relative overflow-hidden section1"
@@ -33,7 +36,7 @@ const Section1 = () => {
           variant="cherry"
           className="px-6 font-['InterMedium'] cursor-pointer"
           size="lg"
-          onClick={() => window.open('https://x.com/gosodax', '_blank')}
+          onClick={() => router.push('/apps-container')}
         >
           Launch Savings
         </Button>
