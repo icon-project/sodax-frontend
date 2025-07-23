@@ -119,4 +119,27 @@ export class NearSpokeService {
     const hash= await spokeProvider.submit(txn);
     return hash as NearReturnType<R>;
   }
+
+  /**
+   * Get Max Withdrawable Balance for the token.
+   * @param {Address} token - The address of the token to get the balance of.
+   * @param {NearSpokeProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The max limit of the token.
+   */
+  public static async getLimit(token: string, spokeProvider: NearSpokeProvider): Promise<bigint> {
+    const rate_limit= await spokeProvider.getRateLimit(token);
+    return BigInt(rate_limit.maxAvailable);
+
+  }
+
+  /**
+   * Get available withdrawable amount for the token.
+   * @param {Address} token - The address of the token to get the balance of.
+   * @param {NearSpokeProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The available withdrawable amount of the token.
+   */
+  public static async getAvailable(token: string, spokeProvider: NearSpokeProvider): Promise<bigint> {
+    const rate_limit= await spokeProvider.getRateLimit(token);
+    return BigInt(rate_limit.available)
+  }
 }

@@ -519,3 +519,10 @@ export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 type ExtractKeys<T> = T extends unknown ? keyof T : never;
 
 export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChainId]['supportedTokens']>;
+
+export type RateLimitConfig = {
+    maxAvailable:number,
+    ratePerSecond:number,
+    available:number,
+
+}

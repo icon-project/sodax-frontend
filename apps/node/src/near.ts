@@ -5,7 +5,7 @@ import {
   EvmHubProvider,
   type EvmHubProviderConfig,
   EvmWalletAbstraction,
-  NearSpokeChainConfig,
+  type NearSpokeChainConfig,
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
@@ -13,6 +13,8 @@ import {
   getHubChainConfig,
   getMoneyMarketConfig,
   spokeChainConfig,
+  NearSpokeProvider,
+  LocalWalletProvider
 } from '@sodax/sdk';
 import { CosmosWalletProvider } from './wallet-providers/CosmosWalletProvider.js';
 import { InjectiveWalletProvider } from './wallet-providers/InjectiveWalletProvider.js';
@@ -20,7 +22,7 @@ import { InjectiveWalletProvider } from './wallet-providers/InjectiveWalletProvi
 import { type Address, type Hash, type Hex, toHex } from 'viem';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, INJECTIVE_MAINNET_CHAIN_ID, NEAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import dotenv from 'dotenv';
-import { LocalWalletProvider, NearSpokeProvider } from '@sodax/sdk/dist/entities/near/NearSpokeProvider.js';
+
 import fs from "node:fs";
 dotenv.config();
 
@@ -230,6 +232,17 @@ async function repay(token: string, amount: bigint): Promise<void> {
   console.log('[repay] txHash', txHash);
 }
 
+async function getAvailable(token: string) {
+  const balance = await SpokeService.getAvailable(token, spokeProvider);
+  console.log('[Available]:', balance);
+}
+
+
+async function getLimit(token: string) {
+  const balance = await SpokeService.getLimit(token, spokeProvider);
+  console.log('[Limit]:', balance);
+}
+
 // Main function to decide which function to call
 async function main() {
   console.log(process.argv);
@@ -261,7 +274,13 @@ async function main() {
     const token = process.argv[3] as Address; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
-  } else {
+  }else if (functionName === 'get_limit') {
+    const token = process.argv[3] as string;
+    await getLimit(token);
+  }  else if (functionName === 'get_available') {
+    const token = process.argv[3] as string;
+    await getAvailable(token);
+  }  else {
     console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
   }
 }

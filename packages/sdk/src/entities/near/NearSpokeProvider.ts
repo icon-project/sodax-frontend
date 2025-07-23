@@ -5,7 +5,7 @@ import type { KeyPairString } from '@near-js/crypto';
 import type { FinalExecutionOutcome } from "@near-js/types";
 import { toHex, type Hex } from 'viem';
 import { actionCreators, type Transaction as NearTransaction } from '@near-js/transactions';
-import type { NearSpokeChainConfig } from '../../types.js';
+import type { NearSpokeChainConfig,RateLimitConfig } from '../../types.js';
 
 export type QueryResponse = string | number | boolean | object | undefined;
 export type CallResponse = string | number | object;
@@ -189,4 +189,24 @@ export class NearSpokeProvider {
      const res= await this.walletProvider.signAndSubmitTxn(transaction);
      return res.transaction_outcome.id as Hex;
   }
+
+  async getRateLimit(token:string):Promise<RateLimitConfig>{
+    const balance= await this.getBalance(token) as string;
+    const res= await this.walletProvider.queryContract(this.chainConfig.addresses.rateLimit,'get_rate_limit',{token:token,balance:balance})as {max_available:number,available:number,rate_per_second:number}|undefined;
+    if(res== null || res === undefined){
+      return {
+        maxAvailable:0,
+        available:0,
+        ratePerSecond:0
+      }
+    }
+    return {
+      maxAvailable:res.max_available,
+      available:res.available,
+      ratePerSecond:res.rate_per_second,
+    } as RateLimitConfig
+
+
+  }
+
 }
