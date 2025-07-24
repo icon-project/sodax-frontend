@@ -51,13 +51,13 @@ const TabItem: React.FC<TabItemProps> = ({
         <TabIcon type={type} isActive={isActive} isMobile={isMobile} />
         <div className={isMobile ? 'flex justify-start items-center' : 'flex justify-start items-center ml-2'}>
           <div className={getTextClassName()}>{label}</div>
-          {isMobile && (
+          {isMobile && value !== 'migrate' && (
             <Badge variant="mobile" className="px-0">
               (SOON)
             </Badge>
           )}
         </div>
-        {!isMobile && <Badge variant="desktop">SOON</Badge>}
+        {!isMobile && value !== 'migrate' && <Badge variant="desktop">SOON</Badge>}
       </div>
     </TabsTrigger>
   );
