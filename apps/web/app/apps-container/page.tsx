@@ -13,8 +13,8 @@ import Sidebar from '@/components/landing/sidebar';
 
 const AppsContainer = () => {
   const [connectModalOpen, setConnectModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('portfolio');
-  const [arrowPosition, setArrowPosition] = useState(110);
+  const [activeTab, setActiveTab] = useState('swap');
+  const [arrowPosition, setArrowPosition] = useState(100);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);
   const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
 
