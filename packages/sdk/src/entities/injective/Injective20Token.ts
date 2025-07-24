@@ -1,4 +1,4 @@
-import type { ICWWalletProvider, CWExecuteResponse } from '@sodax/types';
+import type { IInjectiveWalletProvider, InjectiveExecuteResponse } from '@sodax/types';
 
 export interface TokenInfo {
   name: string;
@@ -20,11 +20,11 @@ export interface AllowanceResponse {
   };
 }
 
-export class CW20Token {
-  private client: ICWWalletProvider;
+export class Injective20Token {
+  private client: IInjectiveWalletProvider;
   private contractAddress: string;
 
-  constructor(client: ICWWalletProvider, contractAddress: string) {
+  constructor(client: IInjectiveWalletProvider, contractAddress: string) {
     this.client = client;
     this.contractAddress = contractAddress;
   }
@@ -49,7 +49,7 @@ export class CW20Token {
   }
 
   // Execute Methods (requires SigningCosmWasmClient)
-  async transfer(senderAddress: string, recipientAddress: string, amount: string): Promise<CWExecuteResponse> {
+  async transfer(senderAddress: string, recipientAddress: string, amount: string): Promise<InjectiveExecuteResponse> {
     const msg = {
       transfer: {
         recipient: recipientAddress,
@@ -65,7 +65,7 @@ export class CW20Token {
     spenderAddress: string,
     amount: string,
     expires?: { at_height?: number; at_time?: string; never?: {} },
-  ): Promise<CWExecuteResponse> {
+  ): Promise<InjectiveExecuteResponse> {
     const msg = {
       increase_allowance: {
         spender: spenderAddress,
@@ -82,7 +82,7 @@ export class CW20Token {
     spenderAddress: string,
     amount: string,
     expires?: { at_height?: number; at_time?: string; never?: {} },
-  ): Promise<CWExecuteResponse> {
+  ): Promise<InjectiveExecuteResponse> {
     const msg = {
       decrease_allowance: {
         spender: spenderAddress,
@@ -99,7 +99,7 @@ export class CW20Token {
     ownerAddress: string,
     recipientAddress: string,
     amount: string,
-  ): Promise<CWExecuteResponse> {
+  ): Promise<InjectiveExecuteResponse> {
     const msg = {
       transfer_from: {
         owner: ownerAddress,

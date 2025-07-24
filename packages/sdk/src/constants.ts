@@ -1,7 +1,7 @@
 import type { Address, Chain } from 'viem';
 import { arbitrum, avalanche, base, bsc, nibiru, optimism, polygon, sonic } from 'viem/chains';
 import type {
-  CosmosSpokeChainConfig,
+  InjectiveSpokeChainConfig,
   EvmChainId,
   EvmHubChainConfig,
   EvmSpokeChainConfig,
@@ -589,7 +589,7 @@ export const spokeChainConfig = {
     isBrowser: false,
     rpcUrl: 'https://injective-rpc.publicnode.com:443',
     walletAddress: '',
-  } as const satisfies CosmosSpokeChainConfig,
+  } as const satisfies InjectiveSpokeChainConfig,
   [STELLAR_MAINNET_CHAIN_ID]: {
     addresses: {
       connection: 'CDFQDDPUPAM3XPGORHDOEFRNLMKOH3N3X6XTXNLSXJQXIU3RVCM3OPEP',

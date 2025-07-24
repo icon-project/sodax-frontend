@@ -1,16 +1,9 @@
 import { type Coin, coins } from '@cosmjs/stargate';
 import { type Address, type Hex, fromHex } from 'viem';
-import type { CosmosSpokeChainConfig, CWReturnType, PromiseCWTxReturnType } from '../../types.js';
+import type { InjectiveSpokeChainConfig, InjectiveReturnType, PromiseInjectiveTxReturnType } from '../../types.js';
 import type { ISpokeProvider } from '../Providers.js';
-import type { IInjectiveWalletProvider, ICWWalletProvider, CWExecuteResponse } from '@sodax/types';
-import { CW20Token } from './CW20Token.js';
-
-export type CWSpokeDepositParams = {
-  from: string; // The address of the user on the spoke chain
-  token: string; // The address of the token to deposit
-  amount: string; // The amount of tokens to deposit
-  data: Hex; // The data to send with the deposit
-};
+import type { IInjectiveWalletProvider, InjectiveExecuteResponse } from '@sodax/types';
+import { Injective20Token } from './Injective20Token.js';
 
 export interface InstantiateMsg {
   connection: string;
@@ -22,17 +15,17 @@ export interface InstantiateMsg {
 export interface ConnMsg {
   send_message?: {
     dst_chain_id: number;
-    dst_address: Array<Number>;
-    payload: Array<Number>;
+    dst_address: Array<number>;
+    payload: Array<number>;
   };
 }
 
 export interface ExecuteMsg {
   transfer?: {
     token: string;
-    to: Array<Number>;
+    to: Array<number>;
     amount: string; // should be string for u128 , but in injective it fails in type conversion.
-    data: Array<Number>;
+    data: Array<number>;
   };
   recv_message?: {
     src_chain_id: string; // u128 as string
@@ -64,12 +57,11 @@ export interface State {
   owner: string;
 }
 
-export class CWSpokeProvider implements ISpokeProvider {
-  public readonly walletProvider: ICWWalletProvider | IInjectiveWalletProvider;
+export class InjectiveSpokeProvider implements ISpokeProvider {
+  public readonly walletProvider: IInjectiveWalletProvider;
+  public chainConfig: InjectiveSpokeChainConfig;
 
-  public chainConfig: CosmosSpokeChainConfig;
-
-  constructor(conf: CosmosSpokeChainConfig, walletProvider: ICWWalletProvider | IInjectiveWalletProvider) {
+  constructor(conf: InjectiveSpokeChainConfig, walletProvider: IInjectiveWalletProvider) {
     this.chainConfig = conf;
     this.walletProvider = walletProvider;
   }
@@ -97,7 +89,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     data: Uint8Array = new Uint8Array(),
     funds: Coin[] = [],
     raw?: R,
-  ): PromiseCWTxReturnType<R> {
+  ): PromiseInjectiveTxReturnType<R> {
     const msg: ExecuteMsg = {
       transfer: {
         token,
@@ -114,7 +106,7 @@ export class CWSpokeProvider implements ISpokeProvider {
         senderAddress,
         this.chainConfig.addresses.connection,
         msg,
-      ) as CWReturnType<R>;
+      ) as InjectiveReturnType<R>;
     }
     const res = await this.walletProvider.execute(
       senderAddress as `inj${string}`,
@@ -124,7 +116,7 @@ export class CWSpokeProvider implements ISpokeProvider {
       undefined,
       funds,
     );
-    return res.transactionHash as CWReturnType<R>;
+    return res.transactionHash as InjectiveReturnType<R>;
   }
 
   async depositToken<R extends boolean = false>(
@@ -135,8 +127,8 @@ export class CWSpokeProvider implements ISpokeProvider {
     data: Uint8Array = new Uint8Array(),
     raw?: R,
   ) {
-    const cw20Token = new CW20Token(this.walletProvider, tokenAddress);
-    await cw20Token.increaseAllowance(sender, this.chainConfig.addresses.assetManager, amount);
+    const injective20Token = new Injective20Token(this.walletProvider, tokenAddress);
+    await injective20Token.increaseAllowance(sender, this.chainConfig.addresses.assetManager, amount);
     return this.transfer(sender, tokenAddress, to, amount, data, [], raw);
   }
 
@@ -146,9 +138,9 @@ export class CWSpokeProvider implements ISpokeProvider {
     to: Address,
     amount: string,
     data: Hex = '0x',
-    provider: CWSpokeProvider,
+    provider: InjectiveSpokeProvider,
     raw?: R,
-  ): PromiseCWTxReturnType<R> {
+  ): PromiseInjectiveTxReturnType<R> {
     const isNative = await provider.isNative(token_address);
     const toBytes = fromHex(to, 'bytes');
     const dataBytes = fromHex(data, 'bytes');
@@ -174,11 +166,14 @@ export class CWSpokeProvider implements ISpokeProvider {
 
   async isNative(token: string): Promise<boolean> {
     let isNative = true;
-    const cw20Token = new CW20Token(this.walletProvider, token);
+    const injective20Token = new Injective20Token(this.walletProvider, token);
     try {
-      await cw20Token.getTokenInfo();
+      await injective20Token.getTokenInfo();
       isNative = false;
-    } catch (err) {}
+    } catch (err) {
+      console.log('[InjectiveSpokeProvider] isNative error', err);
+      throw err;
+    }
     return isNative;
   }
 
@@ -189,7 +184,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     connSn: string,
     payload: Uint8Array,
     signatures: Uint8Array[],
-  ): Promise<CWExecuteResponse> {
+  ): Promise<InjectiveExecuteResponse> {
     const msg: ExecuteMsg = {
       recv_message: {
         src_chain_id: srcChainId,
@@ -203,7 +198,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
   }
 
-  async setRateLimit(senderAddress: string, rateLimit: string): Promise<CWExecuteResponse> {
+  async setRateLimit(senderAddress: string, rateLimit: string): Promise<InjectiveExecuteResponse> {
     const msg: ExecuteMsg = {
       set_rate_limit: {
         rate_limit: rateLimit,
@@ -213,7 +208,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
   }
 
-  async setConnection(senderAddress: string, connection: string): Promise<CWExecuteResponse> {
+  async setConnection(senderAddress: string, connection: string): Promise<InjectiveExecuteResponse> {
     const msg: ExecuteMsg = {
       set_connection: {
         connection,
@@ -223,7 +218,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg, 'auto');
   }
 
-  async setOwner(senderAddress: string, owner: string): Promise<CWExecuteResponse> {
+  async setOwner(senderAddress: string, owner: string): Promise<InjectiveExecuteResponse> {
     const msg: ExecuteMsg = {
       set_owner: {
         owner,
@@ -239,7 +234,7 @@ export class CWSpokeProvider implements ISpokeProvider {
     dst_address: Hex,
     payload: Hex,
     raw?: R,
-  ): PromiseCWTxReturnType<R> {
+  ): PromiseInjectiveTxReturnType<R> {
     const msg: ConnMsg = {
       send_message: {
         dst_chain_id: Number.parseInt(dst_chain_id),
@@ -254,10 +249,10 @@ export class CWSpokeProvider implements ISpokeProvider {
         sender,
         this.chainConfig.addresses.connection,
         msg,
-      ) as CWReturnType<R>;
+      ) as InjectiveReturnType<R>;
     }
     const res = await this.walletProvider.execute(sender, this.chainConfig.addresses.connection, msg, 'auto');
-    return res.transactionHash as CWReturnType<R>;
+    return res.transactionHash as InjectiveReturnType<R>;
   }
 
   // Helper Methods
