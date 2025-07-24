@@ -16,7 +16,7 @@ const badgeVariants = cva(
         outline: 'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
         desktop:
           'text-clay bg-cream-white text-[10px] text-align: center; text-transform: uppercase; mix-blend-multiply',
-        mobile: 'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
+        mobile: 'text-cherry-grey bg-transparent text-[11px]',
       },
     },
     defaultVariants: {

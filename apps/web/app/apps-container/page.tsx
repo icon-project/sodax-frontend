@@ -261,14 +261,23 @@ const AppsContainer = () => {
               </svg>
               {tabConfigs.map(tab => (
                 <TabsContent key={tab.value} value={tab.value}>
-                  <div className="mix-blend-multiply justify-end">
-                    <span className="text-yellow-dark text-3xl font-bold font-['InterRegular'] leading-9">
-                      Savings app with
-                      <br />
-                    </span>
-                    <span className="text-yellow-dark text-3xl font-normal font-['Shrikhand'] leading-9">
-                      {tab.content}
-                    </span>
+                  <div
+                    data-property-1="Default"
+                    className="self-stretch inline-flex flex-col justify-start items-start gap-4"
+                  >
+                    <div className="self-stretch mix-blend-multiply justify-end">
+                      <span className="text-yellow-dark text-[24px] md:text-[28px] lg:text-3xl font-bold font-['InterRegular'] leading-9">
+                        This is the title
+                        <br />
+                        for{' '}
+                      </span>
+                      <span className="text-yellow-dark text-[24px] md:text-[28px] lg:text-3xl font-normal font-['Shrikhand'] leading-9">
+                        the app
+                      </span>
+                    </div>
+                    <div className="self-stretch mix-blend-multiply justify-start text-clay-light text-normal md:text-[17px] lg:text-lg  font-normal font-['InterRegular'] leading-snug">
+                      Up to 24.1% with no lockups.
+                    </div>
                   </div>
                 </TabsContent>
               ))}

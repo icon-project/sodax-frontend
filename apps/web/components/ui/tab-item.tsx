@@ -29,7 +29,7 @@ const TabItem: React.FC<TabItemProps> = ({
         isActive ? "text-espresso font-['Shrikhand']" : "text-clay-light font-['InterRegular']"
       }`;
     }
-    return `mix-blend-multiply justify-end text-base font-normal leading-snug ${
+    return `mix-blend-multiply justify-end text-base font-[11px] leading-snug ${
       isActive ? "text-espresso font-['Shrikhand']" : "text-clay font-['InterRegular']"
     }`;
   };
@@ -51,8 +51,12 @@ const TabItem: React.FC<TabItemProps> = ({
         <TabIcon type={type} isActive={isActive} isMobile={isMobile} />
         <div className={isMobile ? 'flex justify-start items-center' : 'flex justify-start items-center ml-2'}>
           <div className={getTextClassName()}>{label}</div>
+          {isMobile && (
+            <Badge variant="mobile" className="px-0">
+              (SOON)
+            </Badge>
+          )}
         </div>
-        {isMobile && <Badge variant="mobile">SOON</Badge>}
         {!isMobile && <Badge variant="desktop">SOON</Badge>}
       </div>
     </TabsTrigger>
