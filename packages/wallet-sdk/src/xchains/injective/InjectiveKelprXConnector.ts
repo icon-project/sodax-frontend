@@ -1,7 +1,7 @@
 import type { XAccount } from '@/types';
 
 import { XConnector } from '@/core';
-import { Wallet } from '@injectivelabs/wallet-ts';
+import { Wallet } from '@injectivelabs/wallet-base';
 import { InjectiveXService } from './InjectiveXService';
 
 export class InjectiveKelprXConnector extends XConnector {

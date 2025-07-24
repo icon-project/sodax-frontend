@@ -1,5 +1,5 @@
 import type { InjectiveXService } from '@/xchains/injective';
-import { Wallet } from '@injectivelabs/wallet-ts';
+import { Wallet } from '@injectivelabs/wallet-base';
 import React from 'react';
 import { useEffect } from 'react';
 import { useXService } from './useXService';

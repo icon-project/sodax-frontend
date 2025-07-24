@@ -35,8 +35,8 @@
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@tanstack/react-query": "catalog:",
-    "react": "catalog:"
+    "@tanstack/react-query": "5.x",
+    "react": ">=18"
   },
   "engines": {
     "node": ">=18.0.0"

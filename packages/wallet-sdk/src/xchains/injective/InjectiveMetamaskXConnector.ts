@@ -2,7 +2,7 @@ import type { XAccount } from '@/types';
 
 import { XConnector } from '@/core';
 import { getInjectiveAddress } from '@injectivelabs/sdk-ts';
-import { Wallet } from '@injectivelabs/wallet-ts';
+import { Wallet } from '@injectivelabs/wallet-base';
 import { InjectiveXService } from './InjectiveXService';
 
 export class InjectiveMetamaskXConnector extends XConnector {

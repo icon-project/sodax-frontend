@@ -57,7 +57,7 @@ export class Injective20Token {
       },
     };
 
-    return await this.client.execute(senderAddress, this.contractAddress, msg, 'auto');
+    return await this.client.execute(senderAddress, this.contractAddress, msg);
   }
 
   async increaseAllowance(
@@ -74,7 +74,7 @@ export class Injective20Token {
       },
     };
 
-    return await this.client.execute(senderAddress, this.contractAddress, msg, 'auto');
+    return await this.client.execute(senderAddress, this.contractAddress, msg);
   }
 
   async decreaseAllowance(
@@ -91,7 +91,7 @@ export class Injective20Token {
       },
     };
 
-    return await this.client.execute(senderAddress, this.contractAddress, msg, 'auto');
+    return await this.client.execute(senderAddress, this.contractAddress, msg);
   }
 
   async transferFrom(
@@ -108,6 +108,6 @@ export class Injective20Token {
       },
     };
 
-    return await this.client.execute(senderAddress, this.contractAddress, msg, 'auto');
+    return await this.client.execute(senderAddress, this.contractAddress, msg);
   }
 }

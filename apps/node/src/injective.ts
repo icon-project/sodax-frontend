@@ -26,14 +26,9 @@ const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_RPC_URL = 'https://rpc.soniclabs.com';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 
-const DEFAULT_SPOKE_RPC_URL = IS_TESTNET
-  ? 'https://injective-testnet-rpc.publicnode.com:443'
-  : 'https://injective-rpc.publicnode.com:443';
-
 const DEFAULT_SPOKE_CHAIN_ID = INJECTIVE_MAINNET_CHAIN_ID;
 
 const SPOKE_CHAIN_ID = (process.env.SPOKE_CHAIN_ID || DEFAULT_SPOKE_CHAIN_ID) as SpokeChainId; // Default to Injective
-const SPOKE_RPC_URL = process.env.SPOKE_RPC_URL || DEFAULT_SPOKE_RPC_URL;
 
 if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
@@ -51,8 +46,7 @@ if (!mnemonics) {
 const walletProvider = new InjectiveWalletProvider({
   mnemonics: mnemonics,
   network: network,
-  rpcUrl: SPOKE_RPC_URL,
-})
+});
 
 const spokeProvider = new InjectiveSpokeProvider(config, walletProvider);
 
@@ -104,11 +98,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
   console.log('[depositTo] txHash', txHash);
 }
 
-async function withdrawAsset(
-  token: string,
-  amount: bigint,
-  recipient: string,
-): Promise<void> {
+async function withdrawAsset(token: string, amount: bigint, recipient: string): Promise<void> {
   const data = EvmAssetManagerService.withdrawAssetData(
     {
       token,
