@@ -11,6 +11,7 @@
     "stellar": "pnpm run build && node dist/stellar.js",
     "icon": "pnpm run build && node dist/icon.js",
     "solana": "pnpm run build && node dist/solana.js",
+    "dex": "pnpm run build && node dist/dex.js",
     "example": "pnpm run build && node dist/examples/cosmos/index.js",
     "build": "tsc",
     "checkTs": "tsc --noEmit",

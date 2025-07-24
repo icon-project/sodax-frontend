@@ -9,6 +9,7 @@ import type {
   IconSpokeChainConfig,
   IntentRelayChainId,
   MoneyMarketConfig,
+  ConcentratedLiquidityConfig,
   OriginalAssetAddress,
   SolanaChainConfig,
   SolverConfig,
@@ -1503,7 +1504,24 @@ const moneyMarketConfig = {
   } satisfies MoneyMarketConfig,
 } as const;
 
+const concentratedLiquidityConfig = {
+  [SONIC_MAINNET_CHAIN_ID]: {
+    permit2: '0x000000000022D473030F116dDEE9F6B43aC78BA3',
+    clPoolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43',
+    router: '0x5bFB058c65E4c1DEC1cFF0Ff2cBd8522b4c3feBB',
+    clPositionManager: '0xcc08a04d9E5766c7A20FE6bb32cAa40EA0e7e9e1',
+    clPositionDescriptor: '0x83Ff9FC474DBe927BA5BB822571e0814122655bB',
+    clQuoter: '0x5f46CB668D39496b41CE8E19D6A7fE893826E363',
+    clTickLens: '0xb3e77dD9b1f206A2b797B3fE900b50cC92A38d26',
+    defaultHook: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229',
+    defaultTickSpacing: 60,
+    defaultBitmap: 16383n,
+  } satisfies ConcentratedLiquidityConfig,
+} as const;
+
 export const getMoneyMarketConfig = (chainId: HubChainId): MoneyMarketConfig => moneyMarketConfig[chainId];
+export const getConcentratedLiquidityConfig = (chainId: HubChainId): ConcentratedLiquidityConfig =>
+  concentratedLiquidityConfig[chainId];
 
 // currently supported spoke chain tokens for money market
 export const moneyMarketSupportedTokens = {

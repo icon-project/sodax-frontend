@@ -38,6 +38,8 @@ import {
   type SpokeChainConfig,
   type MoneyMarketError,
   type MoneyMarketUnknownError,
+  type ConcentratedLiquidityConfig,
+  type ConcentratedLiquidityConfigParams,
 } from './index.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
@@ -211,6 +213,22 @@ export function isConfiguredMoneyMarketConfig(
   );
 }
 
+export function isConfiguredConcentratedLiquidityConfig(
+  value: ConcentratedLiquidityConfigParams,
+): value is Prettify<ConcentratedLiquidityConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'permit2' in value &&
+    'clPoolManager' in value &&
+    'router' in value &&
+    'clPositionManager' in value &&
+    'clPositionDescriptor' in value &&
+    'clQuoter' in value &&
+    'clTickLens' in value
+  );
+}
+
 export function isIntentCreationFailedError(error: unknown): error is IntentError<'CREATION_FAILED'> {
   return (
     typeof error === 'object' &&
@@ -314,38 +332,26 @@ export function isMoneyMarketCreateRepayIntentFailedError(
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_REPAY_INTENT_FAILED';
 }
 
-export function isMoneyMarketSupplyUnknownError(error: unknown): error is MoneyMarketUnknownError<'SUPPLY_UNKNOWN_ERROR'> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'SUPPLY_UNKNOWN_ERROR'
-  );
+export function isMoneyMarketSupplyUnknownError(
+  error: unknown,
+): error is MoneyMarketUnknownError<'SUPPLY_UNKNOWN_ERROR'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'SUPPLY_UNKNOWN_ERROR';
 }
 
-export function isMoneyMarketBorrowUnknownError(error: unknown): error is MoneyMarketUnknownError<'BORROW_UNKNOWN_ERROR'> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'BORROW_UNKNOWN_ERROR'
-  );
+export function isMoneyMarketBorrowUnknownError(
+  error: unknown,
+): error is MoneyMarketUnknownError<'BORROW_UNKNOWN_ERROR'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'BORROW_UNKNOWN_ERROR';
 }
 
-export function isMoneyMarketWithdrawUnknownError(error: unknown): error is MoneyMarketUnknownError<'WITHDRAW_UNKNOWN_ERROR'> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'WITHDRAW_UNKNOWN_ERROR'
-  );
+export function isMoneyMarketWithdrawUnknownError(
+  error: unknown,
+): error is MoneyMarketUnknownError<'WITHDRAW_UNKNOWN_ERROR'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'WITHDRAW_UNKNOWN_ERROR';
 }
 
-export function isMoneyMarketRepayUnknownError(error: unknown): error is MoneyMarketUnknownError<'REPAY_UNKNOWN_ERROR'> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'REPAY_UNKNOWN_ERROR'
-  );
+export function isMoneyMarketRepayUnknownError(
+  error: unknown,
+): error is MoneyMarketUnknownError<'REPAY_UNKNOWN_ERROR'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'REPAY_UNKNOWN_ERROR';
 }
