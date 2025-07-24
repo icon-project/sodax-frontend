@@ -204,7 +204,7 @@ const AppsContainer = () => {
             <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start lg:py-4">
               <div
                 ref={tabsContainerRef}
-                className="md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-224px)] lg:h-[calc(100vh-256px)]"
+                className="md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-224px)] lg:h-[calc(100vh-256px)]"
               >
                 <TabsList data-orientation="vertical" className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
                   {tabConfigs.map(tab => (
@@ -222,7 +222,7 @@ const AppsContainer = () => {
               </div>
             </div>
 
-            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-192px)] md:h-[calc(100vh-224px)] p-[80px_24px] md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
+            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-192px)] md:h-[calc(100vh-224px)] p-[80px_24px] md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-[8px] rounded-[2rem] border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
