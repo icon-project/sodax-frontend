@@ -39,7 +39,7 @@ const AppsContainer = () => {
         const containerRect = containerElement.getBoundingClientRect();
         const tabRect = desktopActiveTabElement.getBoundingClientRect();
         const relativeTop = tabRect.top - containerRect.top;
-        setArrowPosition(tabRect.top - 104 - 32); // 40px offset to center the arrow on the tab
+        setArrowPosition(tabRect.top - 104 - 36); // 40px offset to center the arrow on the tab
       }
 
       // Update mobile arrow position
@@ -204,9 +204,9 @@ const AppsContainer = () => {
             <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start lg:py-4">
               <div
                 ref={tabsContainerRef}
-                className="md:w-[264px] lg:w-[304px] p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-224px)] lg:h-[calc(100vh-256px)]"
+                className="md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-lg bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-224px)] lg:h-[calc(100vh-256px)]"
               >
-                <TabsList data-orientation="vertical" className="grid min-w-25 gap-y-8 shrink-0 bg-transparent">
+                <TabsList data-orientation="vertical" className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
                   {tabConfigs.map(tab => (
                     <TabItem
                       key={tab.value}
@@ -215,13 +215,14 @@ const AppsContainer = () => {
                       label={tab.label}
                       isActive={activeTab === tab.value}
                       setTabRef={setDesktopTabRef(tab.value)}
+                      className="px-0"
                     />
                   ))}
                 </TabsList>
               </div>
             </div>
 
-            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-192px)] md:h-[calc(100vh-224px)] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
+            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-192px)] md:h-[calc(100vh-224px)] p-[80px_24px] md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -255,7 +256,7 @@ const AppsContainer = () => {
                   fillRule="evenodd"
                   clipRule="evenodd"
                   d="M40 -1.27146e-06C41.875 -1.27357e-06 42.8259 0.941129 43.3333 1.88235C48.3264 11.1437 61.967 16 80 16L-5.08584e-07 16C18.033 16 31.6736 11.1437 36.6667 1.88235C37.1741 0.941129 38.125 -1.26935e-06 40 -1.27146e-06Z"
-                  fill="#CC9E9A"
+                  fill="#EDE6E6"
                 />
               </svg>
               {tabConfigs.map(tab => (
@@ -276,11 +277,8 @@ const AppsContainer = () => {
             {/* Mobile bottom tabs */}
             <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[96px] ">
               <div className="relative">
-                <div
-                  ref={mobileTabsContainerRef}
-                  className="w-full px-4 py-4 bg-cherry-bright h-[96px] flex align-center"
-                >
-                  <TabsList data-orientation="horizontal" className="grid grid-cols-4 gap-4 bg-transparent h-20">
+                <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-[96px] flex">
+                  <TabsList data-orientation="horizontal" className="grid grid-cols-4 gap-4 bg-transparent py-0">
                     {tabConfigs.map(tab => (
                       <TabItem
                         key={tab.value}

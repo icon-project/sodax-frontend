@@ -42,6 +42,7 @@
   --cherry-soda: #a55c55;
   --cherry-bright: #cc9e9a;
   --cherry-brighter: #e3bebb;
+  --cherry-grey: #d7cdcb;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
@@ -91,6 +92,7 @@
   --cherry-soda: #a55c55;
   --cherry-bright: #cc9e9a;
   --cherry-brighter: #e3bebb;
+  --cherry-grey: #d7cdcb;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
@@ -143,6 +145,7 @@
   --color-cherry-dark: var(--cherry-dark);
   --color-cherry-soda: var(--cherry-soda);
   --color-cherry-bright: var(--cherry-bright);
+  --color-cherry-grey: var(--cherry-grey);
   --color-yellow-soda: var(--yellow-soda);
   --color-yellow-dark: var(--yellow-dark);
   --color-orange-sonic: var(--orange-sonic);

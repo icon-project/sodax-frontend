@@ -10,15 +10,15 @@ export interface TabConfig {
 
 export const tabConfigs: TabConfig[] = [
   {
-    value: 'portfolio',
-    type: 'portfolio',
-    label: 'Portfolio',
-    content: 'a quick portfolio',
+    value: 'swap',
+    type: 'swap',
+    label: 'Swap',
+    content: 'a quick swap',
   },
   {
     value: 'savings',
     type: 'savings',
-    label: 'savings',
+    label: 'Savings',
     content: 'a quick savings',
   },
   {
