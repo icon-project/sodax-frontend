@@ -1,8 +1,15 @@
 import { type Address, type Hex, toHex } from 'viem';
 import { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeProvider.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { type HubAddress, type PromiseInjectiveTxReturnType, getIntentRelayChainId } from '../../index.js';
+import {
+  type HubAddress,
+  type InjectiveGasEstimate,
+  type InjectiveRawTransaction,
+  type PromiseInjectiveTxReturnType,
+  getIntentRelayChainId,
+} from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx.js';
 
 export type InjectiveSpokeDepositParams = {
   from: string; // The address of the user on the spoke chain
@@ -21,6 +28,30 @@ export type InjectiveTransferToHubParams = {
 
 export class InjectiveSpokeService {
   private constructor() {}
+
+  /**
+   * Estimate the gas for a transaction.
+   * @param {InjectiveRawTransaction} rawTx - The raw transaction to estimate the gas for.
+   * @param {InjectiveSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @returns {Promise<InjectiveGasEstimate>} The estimated gas for the transaction.
+   */
+  public static async estimateGas(
+    rawTx: InjectiveRawTransaction,
+    spokeProvider: InjectiveSpokeProvider,
+  ): Promise<InjectiveGasEstimate> {
+    const txRaw = TxRaw.fromPartial({
+      bodyBytes: rawTx.signedDoc.bodyBytes,
+      authInfoBytes: rawTx.signedDoc.authInfoBytes,
+      signatures: [], // not required for simulation
+    });
+
+    const { gasInfo } = await spokeProvider.txClient.simulate(txRaw);
+
+    return {
+      gasWanted: gasInfo.gasWanted,
+      gasUsed: gasInfo.gasUsed,
+    } satisfies InjectiveGasEstimate;
+  }
 
   /**
    * Deposit tokens to the spoke chain.
