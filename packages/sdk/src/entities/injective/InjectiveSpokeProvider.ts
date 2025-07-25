@@ -172,7 +172,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       isNative = false;
     } catch (err) {
       console.log('[InjectiveSpokeProvider] isNative error', err);
-      throw err;
+      // throw err;
     }
     return isNative;
   }
