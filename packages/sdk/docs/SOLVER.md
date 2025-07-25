@@ -129,6 +129,60 @@ if (!isApproved.ok) {
 // ... continue with createIntent or createAndSubmitIntent ...
 ```
 
+### Estimate Gas for Raw Transactions
+
+The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for intent creation and approval transactions to provide users with accurate gas estimates.
+
+```typescript
+import {
+  SolverService,
+  BSC_MAINNET_CHAIN_ID,
+  ARBITRUM_MAINNET_CHAIN_ID
+} from "@sodax/sdk"
+
+// Example: Estimate gas for an intent creation transaction
+const createIntentResult = await sodax.solver.createIntent(
+  createIntentParams,
+  bscSpokeProvider,
+  partnerFeeAmount,
+  true, // true = get raw transaction
+);
+
+if (createIntentResult.ok) {
+  const [rawTx, intent] = createIntentResult.value;
+  
+  // Estimate gas for the raw transaction
+  const gasEstimate = await SolverService.estimateGas(rawTx, bscSpokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas for an approval transaction
+const approveResult = await sodax.solver.approve(
+  bscEthToken,
+  BigInt(1000000),
+  bscSpokeProvider,
+  true // true = get raw transaction
+);
+
+if (approveResult.ok) {
+  const rawTx = approveResult.value;
+  
+  // Estimate gas for the approval transaction
+  const gasEstimate = await SolverService.estimateGas(rawTx, bscSpokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for approval:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for approval:', gasEstimate.error);
+  }
+}
+```
+
 ### Create And Submit Intent Order (Swap)
 
 Creating Intent Order requires creating spoke provider for the chain that intent is going to be created on (`srcChain`).

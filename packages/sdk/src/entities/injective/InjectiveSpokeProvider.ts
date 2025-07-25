@@ -4,6 +4,8 @@ import type { InjectiveSpokeChainConfig, InjectiveReturnType, PromiseInjectiveTx
 import type { ISpokeProvider } from '../Providers.js';
 import type { IInjectiveWalletProvider, InjectiveExecuteResponse } from '@sodax/types';
 import { Injective20Token } from './Injective20Token.js';
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
+import { TxGrpcClient } from '@injectivelabs/sdk-ts';
 
 export interface InstantiateMsg {
   connection: string;
@@ -59,11 +61,15 @@ export interface State {
 
 export class InjectiveSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: IInjectiveWalletProvider;
-  public chainConfig: InjectiveSpokeChainConfig;
+  public readonly chainConfig: InjectiveSpokeChainConfig;
+  public readonly txClient: TxGrpcClient;
 
   constructor(conf: InjectiveSpokeChainConfig, walletProvider: IInjectiveWalletProvider) {
     this.chainConfig = conf;
     this.walletProvider = walletProvider;
+    this.txClient = new TxGrpcClient(
+      getNetworkEndpoints(this.chainConfig.network === 'Mainnet' ? Network.Mainnet : Network.Testnet).grpc,
+    );
   }
 
   // Query Methods
@@ -171,7 +177,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       await injective20Token.getTokenInfo();
       isNative = false;
     } catch (err) {
-      console.log('[InjectiveSpokeProvider] isNative error', err);
+      console.error('[InjectiveSpokeProvider] isNative error', err);
       throw err;
     }
     return isNative;

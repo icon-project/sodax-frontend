@@ -23,7 +23,6 @@ import {
   getMoneyMarketConfig,
   type SpokeProvider,
   type IEvmWalletProvider,
-  type TxReturnType,
   spokeChainConfig,
   type SolverConfigParams,
 } from '../index.js';
@@ -350,10 +349,7 @@ describe('Sodax', () => {
 
         vi.spyOn(sodax.solver, 'createIntent').mockResolvedValueOnce({
           ok: true,
-          value: [
-            mockTxHash as TxReturnType<EvmSpokeProvider, false>,
-            { ...mockIntent, feeAmount: partnerFeeAmount.amount },
-          ],
+          value: [mockTxHash, { ...mockIntent, feeAmount: partnerFeeAmount.amount }, '0x'],
         });
         vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(walletAddress);
         vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
@@ -430,10 +426,14 @@ describe('Sodax', () => {
 
       it('should successfully cancel an intent for EVM chain', async () => {
         const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
-        vi.spyOn(sodax.solver, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
+        vi.spyOn(sodax.solver, 'cancelIntent').mockResolvedValueOnce({
+          ok: true,
+          value: mockTxHash,
+        });
         const result = await sodax.solver.cancelIntent(intent, mockBscSpokeProvider, false);
 
-        expect(result).toBe(mockTxHash);
+        expect(result.ok).toBe(true);
+        expect(result.ok && result.value).toBe(mockTxHash);
       });
 
       it('should throw error for invalid spoke provider', async () => {
