@@ -67,7 +67,6 @@ export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainR
       (xChainType === 'EVM' && chainId !== expectedChainId) ||
       (xChainType === 'INJECTIVE' &&
         injectiveXService &&
-        !window?.['ethereum']?.isHanaWallet &&
         injectiveXService.walletStrategy.getWallet() === Wallet.Metamask &&
         ethereumChainId !== mainnet.id)
     );
