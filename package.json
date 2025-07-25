@@ -13,7 +13,7 @@
     "lint": "turbo run lint",
     "checkTs": "turbo run checkTs",
     "test": "turbo run test",
-    "clean": "turbo clean && rm -rf pnpm-lock.yaml && rm -rf node_modules dist .turbo && rm -rf apps/*/node_modules apps/*/dist apps/*/.turbo && rm -rf packages/*/node_modules packages/*/dist packages/*/.turbo",
+    "clean": "turbo clean && rm -rf node_modules dist .turbo && rm -rf apps/*/node_modules apps/*/dist apps/*/.turbo && rm -rf packages/*/node_modules packages/*/dist packages/*/.turbo",
     "prepare": "husky"
   },
   "devDependencies": {
