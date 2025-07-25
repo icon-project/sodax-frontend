@@ -4,6 +4,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-family-app-title: "InterRegular", "Inter", system-ui, sans-serif;
+  --font-family-shrikhand: "Shrikhand", cursive;
+  --font-family-inter-regular: "InterRegular", "Inter", system-ui, sans-serif;
+  --font-family-inter-medium: "InterMedium", "Inter", system-ui, sans-serif;
+  --font-family-inter-bold: "InterBold", "Inter", system-ui, sans-serif;
+  --font-family-inter-black: "InterBlack", "Inter", system-ui, sans-serif;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -56,15 +65,23 @@
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
   --body-comfortable-desktop: 14px;
+  --body-comfortable: var(--body-comfortable-mobile);
   --body-super-comfortable-mobile: 13px;
   --body-super-comfortable-tablet: 15px;
   --body-super-comfortable-desktop: 16px;
+  --body-super-comfortable: var(--body-super-comfortable-mobile);
   --subtitle-mobile: 16px;
   --subtitle-tablet: 17px;
   --subtitle-desktop: 18px;
+  --subtitle: var(--subtitle-mobile);
   --app-title-mobile: 24px;
   --app-title-tablet: 28px;
   --app-title-desktop: 32px;
+  --app-title: var(--app-title-mobile);
+  --body-small-mobile: 11px;
+  --body-small-tablet: 11px;
+  --body-small-desktop: 12px;
+  --body-small: var(--body-small-mobile);
 }
 
 .dark {
@@ -127,6 +144,9 @@
   --app-title-mobile: 24px;
   --app-title-tablet: 28px;
   --app-title-desktop: 32px;
+  --body-small-mobile: 11px;
+  --body-small-tablet: 11px;
+  --body-small-desktop: 12px;
 }
 
 @theme inline {
@@ -181,27 +201,30 @@
   --color-clay: var(--clay);
   --color-clay-light: var(--clay-light);
   --color-cherry-brighter: var(--cherry-brighter);
-  --font-app-title: var(--app-title-mobile);
-  --font-body-comfortable: var(--body-comfortable-mobile);
-  --font-body-super-comfortable: var(--body-super-comfortable-mobile);
-  --font-subtitle: var(--subtitle-mobile);
+  --text-app-title: var(--app-title-mobile);
+  --text-body-comfortable: var(--body-comfortable-mobile);
+  --text-body-super-comfortable: var(--body-super-comfortable-mobile);
+  --text-subtitle: var(--subtitle-mobile);
+  --text-body-small: var(--body-small-mobile);
 }
 
 @media (min-width: 768px) {
   :root {
-    --font-app-title: var(--app-title-tablet);
-    --font-body-comfortable: var(--body-comfortable-tablet);
-    --font-body-super-comfortable: var(--body-super-comfortable-tablet);
-    --font-subtitle: var(--subtitle-tablet);
+    --app-title: var(--app-title-tablet);
+    --body-comfortable: var(--body-comfortable-tablet);
+    --body-super-comfortable: var(--body-super-comfortable-tablet);
+    --subtitle: var(--subtitle-tablet);
+    --body-small: var(--body-small-tablet);
   }
 }
 
 @media (min-width: 1024px) {
   :root {
-    --font-app-title: var(--app-title-desktop);
-    --font-body-comfortable: var(--body-comfortable-desktop);
-    --font-body-super-comfortable: var(--body-super-comfortable-desktop);
-    --font-subtitle: var(--subtitle-desktop);
+    --app-title: var(--app-title-desktop);
+    --body-comfortable: var(--body-comfortable-desktop);
+    --body-super-comfortable: var(--body-super-comfortable-desktop);
+    --subtitle: var(--subtitle-desktop);
+    --body-small: var(--body-small-desktop);
   }
 }
 

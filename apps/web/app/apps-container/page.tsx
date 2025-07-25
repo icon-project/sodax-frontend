@@ -160,25 +160,34 @@ const AppsContainer = () => {
               </svg>
             </div>
             <div className="justify-center text-cream hidden sm:flex ml-8 gap-1">
-              <span className="text-xs font-bold font-['InterRegular'] leading-none">Money, as it</span>
-              <span className="text-xs font-normal font-['Shrikhand'] leading-none mt-[1px]">should</span>
-              <span className="text-xs font-bold font-['InterRegular'] leading-none">be</span>
+              <span className="text-xs font-bold font-[InterRegular] leading-none">Money, as it</span>
+              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-[1px]">should</span>
+              <span className="text-xs font-bold font-[InterRegular] leading-none">be</span>
             </div>
           </div>
           <div className="flex justify-end items-center">
             <div className="hidden lg:flex justify-end items-center gap-4">
               <Link href="/">
-                <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
+                <span
+                  className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer"
+                  style={{ fontSize: 'var(--body-comfortable)' }}
+                >
                   About
                 </span>
               </Link>
               <Link href="/">
-                <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
+                <span
+                  className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer"
+                  style={{ fontSize: 'var(--body-comfortable)' }}
+                >
                   Partners
                 </span>
               </Link>
               <Link href="/">
-                <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
+                <span
+                  className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer"
+                  style={{ fontSize: 'var(--body-comfortable)' }}
+                >
                   Community
                 </span>
               </Link>
@@ -266,16 +275,22 @@ const AppsContainer = () => {
                     className="self-stretch inline-flex flex-col justify-start items-start gap-4"
                   >
                     <div className="self-stretch mix-blend-multiply justify-end">
-                      <span className="text-yellow-dark text-[24px] md:text-[28px] lg:text-3xl font-bold font-['InterRegular'] leading-9">
+                      <span className="text-yellow-dark font-bold leading-9" style={{ fontSize: 'var(--app-title)' }}>
                         This is the title
                         <br />
                         for{' '}
                       </span>
-                      <span className="text-yellow-dark text-[24px] md:text-[28px] lg:text-3xl font-normal font-['Shrikhand'] leading-9">
+                      <span
+                        className="text-yellow-dark font-normal font-[shrikhand] leading-9"
+                        style={{ fontSize: 'var(--app-title)' }}
+                      >
                         the app
                       </span>
                     </div>
-                    <div className="self-stretch mix-blend-multiply justify-start text-clay-light text-normal md:text-[17px] lg:text-lg  font-normal font-['InterRegular'] leading-snug">
+                    <div
+                      className="self-stretch mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug"
+                      style={{ fontSize: 'var(--subtitle)' }}
+                    >
                       Up to 24.1% with no lockups.
                     </div>
                   </div>
