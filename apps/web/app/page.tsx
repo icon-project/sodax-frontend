@@ -50,7 +50,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="landing-page">
+    <div className="landing-page w-[100vw] overflow-x-hidden">
       <HeroSection
         toggle={toggle}
         isOpen={isOpen}

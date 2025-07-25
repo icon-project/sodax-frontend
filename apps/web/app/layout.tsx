@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <div className="h-screen">
+        <div className="h-screen overflow-x-hidden">
           <Web3Provider>{children}</Web3Provider>
         </div>
       </body>
