@@ -53,6 +53,18 @@
   --vibrant-white: #f9f7f5;
   --clay-light: #b9acab;
   --clay: #8e7e7d;
+  --body-comfortable-mobile: 12px;
+  --body-comfortable-tablet: 13px;
+  --body-comfortable-desktop: 14px;
+  --body-super-comfortable-mobile: 13px;
+  --body-super-comfortable-tablet: 15px;
+  --body-super-comfortable-desktop: 16px;
+  --subtitle-mobile: 16px;
+  --subtitle-tablet: 17px;
+  --subtitle-desktop: 18px;
+  --app-title-mobile: 24px;
+  --app-title-tablet: 28px;
+  --app-title-desktop: 32px;
 }
 
 .dark {
@@ -103,6 +115,18 @@
   --clay-light: #b9acab;
   --vibrant-white: #f9f7f5;
   --clay: #8e7e7d;
+  --body-comfortable-mobile: 12px;
+  --body-comfortable-tablet: 13px;
+  --body-comfortable-desktop: 14px;
+  --body-super-comfortable-mobile: 13px;
+  --body-super-comfortable-tablet: 15px;
+  --body-super-comfortable-desktop: 16px;
+  --subtitle-mobile: 16px;
+  --subtitle-tablet: 17px;
+  --subtitle-desktop: 18px;
+  --app-title-mobile: 24px;
+  --app-title-tablet: 28px;
+  --app-title-desktop: 32px;
 }
 
 @theme inline {
@@ -157,6 +181,28 @@
   --color-clay: var(--clay);
   --color-clay-light: var(--clay-light);
   --color-cherry-brighter: var(--cherry-brighter);
+  --font-app-title: var(--app-title-mobile);
+  --font-body-comfortable: var(--body-comfortable-mobile);
+  --font-body-super-comfortable: var(--body-super-comfortable-mobile);
+  --font-subtitle: var(--subtitle-mobile);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --font-app-title: var(--app-title-tablet);
+    --font-body-comfortable: var(--body-comfortable-tablet);
+    --font-body-super-comfortable: var(--body-super-comfortable-tablet);
+    --font-subtitle: var(--subtitle-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --font-app-title: var(--app-title-desktop);
+    --font-body-comfortable: var(--body-comfortable-desktop);
+    --font-body-super-comfortable: var(--body-super-comfortable-desktop);
+    --font-subtitle: var(--subtitle-desktop);
+  }
 }
 
 @layer base {
