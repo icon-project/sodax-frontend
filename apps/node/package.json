@@ -23,7 +23,7 @@
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^1.7.5",
     "@injectivelabs/networks": "1.15.41",
-    "@injectivelabs/sdk-ts": "1.15.41",
+    "@injectivelabs/sdk-ts": "1.15.43",
     "@injectivelabs/ts-types": "1.15.41",
     "@injectivelabs/utils": "1.15.41",
     "@mysten/sui": "^1.21.2",

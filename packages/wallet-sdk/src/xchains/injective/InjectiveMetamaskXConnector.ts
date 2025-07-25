@@ -2,7 +2,7 @@ import type { XAccount } from '@/types';
 
 import { XConnector } from '@/core';
 import { getInjectiveAddress } from '@injectivelabs/sdk-ts';
-import { Wallet } from '@injectivelabs/wallet-base';
+import { isEvmBrowserWallet, Wallet } from '@injectivelabs/wallet-base';
 import { InjectiveXService } from './InjectiveXService';
 
 export class InjectiveMetamaskXConnector extends XConnector {
@@ -15,8 +15,7 @@ export class InjectiveMetamaskXConnector extends XConnector {
   }
 
   async connect(): Promise<XAccount | undefined> {
-    const { ethereum } = window as any;
-    if (!ethereum) {
+    if (!isEvmBrowserWallet(Wallet.Metamask)) {
       window.open('https://chromewebstore.google.com/detail/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn?hl=en', '_blank');
       return;
     }

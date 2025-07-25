@@ -85,7 +85,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       contractAddress: contractAddress,
       sender: senderAddress,
       msg: msg as object,
-      funds: funds as { amount: string; denom: string }[],
+      funds: funds || [],
     });
 
     const txResult = await this.client.broadcastWithFeeDelegation({
