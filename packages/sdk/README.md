@@ -251,6 +251,86 @@ const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
 );
 ```
 
+### Estimate Gas for Raw Transactions
+
+The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for all Sodax operations (swaps, money market operations, approvals) to provide users with accurate gas estimates.
+
+The function is available on all service classes:
+- `SolverService.estimateGas()` - for solver/intent operations
+- `MoneyMarketService.estimateGas()` - for money market operations
+- `SpokeService.estimateGas()` - for general spoke chain operations
+
+```typescript
+import { 
+  SolverService, 
+  MoneyMarketService, 
+  SpokeService,
+  MoneyMarketSupplyParams 
+} from "@sodax/sdk";
+
+// Example: Estimate gas for a solver swap transaction
+const createIntentResult = await sodax.solver.createIntent(
+  createIntentParams,
+  bscSpokeProvider,
+  partnerFeeAmount,
+  true, // true = get raw transaction
+);
+
+if (createIntentResult.ok) {
+  const [rawTx, intent] = createIntentResult.value;
+  
+  // Estimate gas for the raw transaction
+  const gasEstimate = await SolverService.estimateGas(rawTx, bscSpokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for swap:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for swap:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas for a money market supply transaction
+const supplyResult = await sodax.moneyMarket.createSupplyIntent(
+  supplyParams,
+  bscSpokeProvider,
+  true, // true = get raw transaction
+);
+
+if (supplyResult.ok) {
+  const rawTx = supplyResult.value;
+  
+  // Estimate gas for the raw transaction
+  const gasEstimate = await MoneyMarketService.estimateGas(rawTx, bscSpokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for supply:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for supply:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas for an approval transaction
+const approveResult = await sodax.solver.approve(
+  tokenAddress,
+  amount,
+  bscSpokeProvider,
+  true // true = get raw transaction
+);
+
+if (approveResult.ok) {
+  const rawTx = approveResult.value;
+  
+  // Estimate gas for the approval transaction
+  const gasEstimate = await SpokeService.estimateGas(rawTx, bscSpokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for approval:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for approval:', gasEstimate.error);
+  }
+}
+```
+
 ### Accessing Sodax Features
 
 Sodax feature set currently contain:
