@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateFeeAmount, calculatePercentageFeeAmount, encodeAddress } from './shared-utils.js';
+import { calculateFeeAmount, calculatePercentageFeeAmount, encodeAddress, hexToBigInt } from './shared-utils.js';
 import type { SpokeChainId } from '@sodax/types';
 
 describe('calculatePercentageAmount', () => {
@@ -148,5 +148,11 @@ describe('calculatePercentageAmount', () => {
       const result = encodeAddress(spokeChainId, address);
       expect(result).toBe(expected);
     });
+  });
+
+  it('should convert hex to bigint correctly', () => {
+    expect(BigInt('0x1234567890abcdef')).toBe(hexToBigInt('0x1234567890abcdef'));
+    expect(BigInt('0x1234567890abcdef')).toBe(hexToBigInt('1234567890abcdef'));
+    expect(BigInt('0x1234567890abcdef1234567890abcdef')).toBe(hexToBigInt('0x1234567890abcdef1234567890abcdef'));
   });
 });

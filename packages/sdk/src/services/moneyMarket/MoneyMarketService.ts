@@ -26,6 +26,7 @@ import {
 import type {
   EvmContractCall,
   GetAddressType,
+  GetEstimateGasReturnType,
   GetSpokeDepositParamsType,
   HttpUrl,
   HubTxHash,
@@ -267,7 +268,7 @@ export type GetMoneyMarketError<T extends MoneyMarketErrorCode> = T extends 'SUB
             ? MoneyMarketRepayFailedError
             : T extends MoneyMarketUnknownErrorCode
               ? MoneyMarketUnknownError<T>
-            : never;
+              : never;
 
 export type MoneyMarketError<T extends MoneyMarketErrorCode> = {
   code: T;
@@ -302,6 +303,19 @@ export class MoneyMarketService {
       };
     }
     this.hubProvider = hubProvider;
+  }
+
+  /**
+   * Estimate the gas for a raw transaction.
+   * @param {TxReturnType<T, true>} params - The parameters for the raw transaction.
+   * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
+   */
+  public static async estimateGas<T extends SpokeProvider = SpokeProvider>(
+    params: TxReturnType<T, true>,
+    spokeProvider: T,
+  ): Promise<GetEstimateGasReturnType<T>> {
+    return SpokeService.estimateGas(params, spokeProvider) as Promise<GetEstimateGasReturnType<T>>;
   }
 
   /**
