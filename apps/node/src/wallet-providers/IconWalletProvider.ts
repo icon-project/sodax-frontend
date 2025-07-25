@@ -1,37 +1,37 @@
 import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/types';
-import * as IconSdk from 'icon-sdk-js';
-
-// Use the default export for IconService and other classes
-const { Wallet, SignedTransaction, Builder: IconBuilder, Converter: IconConverter, IconService } = IconSdk.default;
-import type { Wallet as IconSdkWallet, IconService as IconSdkService } from 'icon-sdk-js';
+import type { IconService, Wallet as IconSdkWallet } from 'icon-sdk-js';
+import * as IconSdkRaw from 'icon-sdk-js';
+const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
+const { Converter, CallTransactionBuilder, Wallet, SignedTransaction } = IconSdk;
 
 export class IconWalletProvider implements IIconWalletProvider {
   private readonly wallet: IconWallet;
-  public readonly iconService: IconSdkService;
+  public readonly iconService: IconService;
 
   constructor(wallet: IconWalletConfig) {
     if (isPrivateKeyIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'PRIVATE_KEY',
+
         wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
       };
-      this.iconService = new IconService(new IconService.HttpProvider(wallet.rpcUrl));
+      this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(wallet.rpcUrl));
     } else if (isBrowserExtensionIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'BROWSER_EXTENSION',
         wallet: wallet.walletAddress,
       };
-      this.iconService = new IconService(new IconService.HttpProvider(wallet.rpcUrl));
+      this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(wallet.rpcUrl));
     } else {
       throw new Error('Invalid Icon wallet config');
     }
   }
 
   public async sendTransaction(tx: IcxCallTransaction): Promise<Hash> {
-    const builtTx = new IconBuilder.CallTransactionBuilder()
+    const builtTx = new CallTransactionBuilder()
       .from(tx.from)
       .to(tx.to)
-      .stepLimit(IconConverter.toBigNumber('5000000'))
+      .stepLimit(Converter.toBigNumber('2000000'))
       .nid(tx.nid)
       .version(tx.version ?? '0x3')
       .timestamp(tx.timestamp ?? new Date().getTime() * 1000)

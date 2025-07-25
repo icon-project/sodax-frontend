@@ -18,7 +18,7 @@ import type {
   SonicSpokeChainConfig,
   SpokeChainConfig,
 } from '../types.js';
-import type { CWSpokeProvider } from './cosmos/CWSpokeProvider.js';
+import type { InjectiveSpokeProvider } from './injective/InjectiveSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
 import type { StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
@@ -30,7 +30,6 @@ import {
   type ISuiWalletProvider,
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
-  type ICWWalletProvider,
   type ISolanaWalletProvider,
 } from '@sodax/types';
 
@@ -131,13 +130,13 @@ export class EvmSpokeProvider implements ISpokeProvider {
   }
 }
 
-export { CWSpokeProvider } from './cosmos/CWSpokeProvider.js';
+export { InjectiveSpokeProvider } from './injective/InjectiveSpokeProvider.js';
 export { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 export { getIconAddressBytes } from './icon/utils.js';
 
 export type IWalletProvider =
   | IEvmWalletProvider
-  | ICWWalletProvider
+  | IInjectiveWalletProvider
   | IStellarWalletProvider
   | ISuiWalletProvider
   | IIconWalletProvider
@@ -146,7 +145,7 @@ export type IWalletProvider =
 
 export type SpokeProvider = (
   | EvmSpokeProvider
-  | CWSpokeProvider
+  | InjectiveSpokeProvider
   | IconSpokeProvider
   | SuiSpokeProvider
   | StellarSpokeProvider

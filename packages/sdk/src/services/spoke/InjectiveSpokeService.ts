@@ -1,10 +1,17 @@
 import { type Address, type Hex, toHex } from 'viem';
-import { CWSpokeProvider } from '../../entities/cosmos/CWSpokeProvider.js';
+import { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeProvider.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { type HubAddress, type PromiseCWTxReturnType, getIntentRelayChainId } from '../../index.js';
+import {
+  type HubAddress,
+  type InjectiveGasEstimate,
+  type InjectiveRawTransaction,
+  type PromiseInjectiveTxReturnType,
+  getIntentRelayChainId,
+} from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import { TxRaw } from 'cosmjs-types/cosmos/tx/v1beta1/tx.js';
 
-export type CWSpokeDepositParams = {
+export type InjectiveSpokeDepositParams = {
   from: string; // The address of the user on the spoke chain
   to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: string; // The address of the token to deposit
@@ -12,30 +19,54 @@ export type CWSpokeDepositParams = {
   data: Hex; // The data to send with the deposit
 };
 
-export type TransferToHubParams = {
+export type InjectiveTransferToHubParams = {
   token: string;
   recipient: Address;
   amount: string;
   data: Hex;
 };
 
-export class CWSpokeService {
+export class InjectiveSpokeService {
   private constructor() {}
 
   /**
+   * Estimate the gas for a transaction.
+   * @param {InjectiveRawTransaction} rawTx - The raw transaction to estimate the gas for.
+   * @param {InjectiveSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @returns {Promise<InjectiveGasEstimate>} The estimated gas for the transaction.
+   */
+  public static async estimateGas(
+    rawTx: InjectiveRawTransaction,
+    spokeProvider: InjectiveSpokeProvider,
+  ): Promise<InjectiveGasEstimate> {
+    const txRaw = TxRaw.fromPartial({
+      bodyBytes: rawTx.signedDoc.bodyBytes,
+      authInfoBytes: rawTx.signedDoc.authInfoBytes,
+      signatures: [], // not required for simulation
+    });
+
+    const { gasInfo } = await spokeProvider.txClient.simulate(txRaw);
+
+    return {
+      gasWanted: gasInfo.gasWanted,
+      gasUsed: gasInfo.gasUsed,
+    } satisfies InjectiveGasEstimate;
+  }
+
+  /**
    * Deposit tokens to the spoke chain.
-   * @param {CWSpokeDepositParams} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
-   * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {InjectiveSpokeDepositParams} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
+   * @param {InjectiveSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {PromiseCWTxReturnType<R>} A promise that resolves to the transaction hash.
+   * @returns {PromiseInjectiveTxReturnType<R>} A promise that resolves to the transaction hash.
    */
   public static async deposit<R extends boolean = false>(
-    params: CWSpokeDepositParams,
-    spokeProvider: CWSpokeProvider,
+    params: InjectiveSpokeDepositParams,
+    spokeProvider: InjectiveSpokeProvider,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseCWTxReturnType<R> {
+  ): PromiseInjectiveTxReturnType<R> {
     const userWallet: Address =
       params.to ??
       (await EvmWalletAbstraction.getUserHubWalletAddress(
@@ -44,7 +75,7 @@ export class CWSpokeService {
         hubProvider,
       ));
 
-    return CWSpokeService.transfer(
+    return InjectiveSpokeService.transfer(
       {
         token: params.token,
         recipient: userWallet,
@@ -59,10 +90,10 @@ export class CWSpokeService {
   /**
    * Get the balance of the token in the spoke chain.
    * @param {Address} token - The address of the token to get the balance of.
-   * @param {CWSpokeProvider} spokeProvider - The spoke provider.
+   * @param {InjectiveSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static async getDeposit(token: String, spokeProvider: CWSpokeProvider): Promise<bigint> {
+  public static async getDeposit(token: String, spokeProvider: InjectiveSpokeProvider): Promise<bigint> {
     const bal = await spokeProvider.getBalance(token);
     return BigInt(bal);
   }
@@ -71,39 +102,39 @@ export class CWSpokeService {
    * Calls a contract on the spoke chain using the user's wallet.
    * @param {HubAddress} from - The address of the user on the hub chain.
    * @param {Hex} payload - The payload to send to the contract.
-   * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {InjectiveSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {PromiseCWTxReturnType<R>} A promise that resolves to the transaction hash.
+   * @returns {PromiseInjectiveTxReturnType<R>} A promise that resolves to the transaction hash.
    */
   public static async callWallet<R extends boolean = false>(
     from: HubAddress,
     payload: Hex,
-    spokeProvider: CWSpokeProvider,
+    spokeProvider: InjectiveSpokeProvider,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseCWTxReturnType<R> {
+  ): PromiseInjectiveTxReturnType<R> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return CWSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
+    return InjectiveSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
 
   /**
    * Transfers tokens to the hub chain.
-   * @param {TransferToHubParams} params - The parameters for the transfer, including:
+   * @param {InjectiveTransferToHubParams} params - The parameters for the transfer, including:
    *   - {string} token: The address of the token to transfer (use address(0) for native token).
    *   - {Uint8Array} recipient: The recipient address on the hub chain.
    *   - {string} amount: The amount to transfer.
    *   - {Uint8Array} [data=new Uint8Array([])]: Additional data for the transfer.
-   * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {InjectiveSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {PromiseCWTxReturnType<R>} A promise that resolves to the transaction hash.
+   * @returns {PromiseInjectiveTxReturnType<R>} A promise that resolves to the transaction hash.
    */
   private static async transfer<R extends boolean = false>(
-    { token, recipient, amount, data = '0x' }: TransferToHubParams,
-    spokeProvider: CWSpokeProvider,
+    { token, recipient, amount, data = '0x' }: InjectiveTransferToHubParams,
+    spokeProvider: InjectiveSpokeProvider,
     raw?: R,
-  ): PromiseCWTxReturnType<R> {
+  ): PromiseInjectiveTxReturnType<R> {
     const sender = await spokeProvider.walletProvider.getWalletAddress();
-    return CWSpokeProvider.deposit(sender, token, recipient, amount, data, spokeProvider, raw);
+    return InjectiveSpokeProvider.deposit(sender, token, recipient, amount, data, spokeProvider, raw);
   }
 
   /**
@@ -111,16 +142,16 @@ export class CWSpokeService {
    * @param {bigint} dstChainId - The chain ID of the hub chain.
    * @param {Address} dstAddress - The address on the hub chain.
    * @param {Hex} payload - The payload to send.
-   * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
-   * @returns {PromiseCWTxReturnType<R>} A promise that resolves to the transaction hash.
+   * @param {InjectiveSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @returns {PromiseInjectiveTxReturnType<R>} A promise that resolves to the transaction hash.
    */
   private static async call<R extends boolean = false>(
     dstChainId: bigint,
     dstAddress: Hex,
     payload: Hex,
-    spokeProvider: CWSpokeProvider,
+    spokeProvider: InjectiveSpokeProvider,
     raw?: R,
-  ): PromiseCWTxReturnType<R> {
+  ): PromiseInjectiveTxReturnType<R> {
     const sender = await spokeProvider.walletProvider.getWalletAddress();
     return spokeProvider.send_message(sender, dstChainId.toString(), dstAddress, payload, raw);
   }

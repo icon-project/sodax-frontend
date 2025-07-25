@@ -45,7 +45,7 @@ export function useBorrow(
         throw new Error('spokeProvider is not found');
       }
 
-      const response = await sodax.moneyMarket.borrowAndSubmit(
+      const response = await sodax.moneyMarket.borrow(
         {
           token: spokeToken.address,
           amount: parseUnits(amount, 18),

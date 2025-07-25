@@ -1,4 +1,4 @@
-import type { IntentErrorResponse, IntentQuoteRequest, IntentQuoteResponse, Result } from '@sodax/sdk';
+import type { SolverErrorResponse, SolverIntentQuoteRequest, SolverIntentQuoteResponse, Result } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
@@ -7,9 +7,9 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
  *
  * This hook provides real-time quote data for an intent-based swap.
  *
- * @param {IntentQuoteRequest | undefined} payload - The intent quote request parameters. If undefined, the query will be disabled.
+ * @param {SolverIntentQuoteRequest | undefined} payload - The intent quote request parameters. If undefined, the query will be disabled.
  *
- * @returns {UseQueryResult<Result<IntentQuoteResponse, IntentErrorResponse> | undefined>} A query result object containing:
+ * @returns {UseQueryResult<Result<SolverIntentQuoteResponse, SolverErrorResponse> | undefined>} A query result object containing:
  *   - data: The quote result from the solver
  *   - isLoading: Boolean indicating if the quote is being fetched
  *   - error: Error object if the quote request failed
@@ -38,8 +38,8 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
  * - Uses React Query for efficient caching and state management
  */
 export const useQuote = (
-  payload: IntentQuoteRequest | undefined,
-): UseQueryResult<Result<IntentQuoteResponse, IntentErrorResponse> | undefined> => {
+  payload: SolverIntentQuoteRequest | undefined,
+): UseQueryResult<Result<SolverIntentQuoteResponse, SolverErrorResponse> | undefined> => {
   const { sodax } = useSodaxContext();
   return useQuery({
     queryKey: [payload],

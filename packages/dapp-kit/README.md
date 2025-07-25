@@ -223,6 +223,7 @@ function SwapComponent() {
 
 #### Shared Hooks
 - [`useSodaxContext()`](./src/hooks/shared/useSodaxContext.ts) - Access Sodax context and configuration
+- [`useEstimateGas()`](./src/hooks/shared/useEstimateGas.ts) - Estimate gas costs for transactions
 
 
 ## Contributing

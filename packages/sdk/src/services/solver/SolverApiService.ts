@@ -1,17 +1,17 @@
 import invariant from 'tiny-invariant';
 import {
   getHubAssetInfo,
-  IntentErrorCode,
+  SolverIntentErrorCode,
   isValidOriginalAssetAddress,
   retry,
-  type IntentErrorResponse,
-  type IntentExecutionRequest,
-  type IntentExecutionResponse,
-  type IntentQuoteRequest,
-  type IntentQuoteResponse,
-  type IntentQuoteResponseRaw,
-  type IntentStatusRequest,
-  type IntentStatusResponse,
+  type SolverErrorResponse,
+  type SolverExecutionRequest,
+  type SolverExecutionResponse,
+  type SolverIntentQuoteRequest,
+  type SolverIntentQuoteResponse,
+  type SolverIntentQuoteResponseRaw,
+  type SolverIntentStatusRequest,
+  type SolverIntentStatusResponse,
   type Result,
   type SolverConfig,
 } from '../../index.js';
@@ -32,9 +32,9 @@ export class SolverApiService {
    * }
    */
   public static async getQuote(
-    payload: IntentQuoteRequest,
+    payload: SolverIntentQuoteRequest,
     config: SolverConfig,
-  ): Promise<Result<IntentQuoteResponse, IntentErrorResponse>> {
+  ): Promise<Result<SolverIntentQuoteResponse, SolverErrorResponse>> {
     invariant(payload.token_src.length > 0, 'Empty token_src');
     invariant(payload.token_src_blockchain_id.length > 0, 'Empty token_src_blockchain_id');
     invariant(payload.token_dst.length > 0, 'Empty token_dst');
@@ -76,13 +76,13 @@ export class SolverApiService {
         };
       }
 
-      const quoteResponse: IntentQuoteResponseRaw = await response.json();
+      const quoteResponse: SolverIntentQuoteResponseRaw = await response.json();
 
       return {
         ok: true,
         value: {
           quoted_amount: BigInt(quoteResponse.quoted_amount),
-        } satisfies IntentQuoteResponse,
+        } satisfies SolverIntentQuoteResponse,
       };
     } catch (e: unknown) {
       console.error(`[SolverApiService.getQuote] failed. Details: ${JSON.stringify(e)}`);
@@ -90,7 +90,7 @@ export class SolverApiService {
         ok: false,
         error: {
           detail: {
-            code: IntentErrorCode.UNKNOWN,
+            code: SolverIntentErrorCode.UNKNOWN,
             message: e ? JSON.stringify(e) : 'Unknown error',
           },
         },
@@ -119,9 +119,9 @@ export class SolverApiService {
    * }
    */
   public static async postExecution(
-    intentExecutionRequest: IntentExecutionRequest,
+    request: SolverExecutionRequest,
     config: SolverConfig,
-  ): Promise<Result<IntentExecutionResponse, IntentErrorResponse>> {
+  ): Promise<Result<SolverExecutionResponse, SolverErrorResponse>> {
     try {
       const response = await retry(() =>
         fetch(`${config.solverApiEndpoint}/execute`, {
@@ -129,7 +129,7 @@ export class SolverApiService {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(intentExecutionRequest),
+          body: JSON.stringify(request),
         }),
       );
 
@@ -150,7 +150,7 @@ export class SolverApiService {
         ok: false,
         error: {
           detail: {
-            code: IntentErrorCode.UNKNOWN,
+            code: SolverIntentErrorCode.UNKNOWN,
             message: e ? JSON.stringify(e) : 'Unknown error',
           },
         },
@@ -159,17 +159,17 @@ export class SolverApiService {
   }
 
   public static async getStatus(
-    intentStatusRequest: IntentStatusRequest,
+    request: SolverIntentStatusRequest,
     config: SolverConfig,
-  ): Promise<Result<IntentStatusResponse, IntentErrorResponse>> {
-    invariant(intentStatusRequest.intent_tx_hash.length > 0, 'Empty intent_tx_hash');
+  ): Promise<Result<SolverIntentStatusResponse, SolverErrorResponse>> {
+    invariant(request.intent_tx_hash.length > 0, 'Empty intent_tx_hash');
     try {
       const response = await fetch(`${config.solverApiEndpoint}/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(intentStatusRequest),
+        body: JSON.stringify(request),
       });
 
       if (!response.ok) {
@@ -189,7 +189,7 @@ export class SolverApiService {
         ok: false,
         error: {
           detail: {
-            code: IntentErrorCode.UNKNOWN,
+            code: SolverIntentErrorCode.UNKNOWN,
             message: e ? JSON.stringify(e) : 'Unknown error',
           },
         },

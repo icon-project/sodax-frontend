@@ -1,7 +1,7 @@
 import type { HttpUrl, Result } from '../../types.js';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
-import type { IntentSubmitError } from '../solver/SolverService.js';
+import type { IntentError } from '../solver/SolverService.js';
 import { DEFAULT_RELAY_TX_TIMEOUT, getIntentRelayChainId } from '../../constants.js';
 import type { SpokeProvider } from '../../entities/Providers.js';
 import type { Hex } from 'viem';
@@ -23,7 +23,7 @@ export type RelayAction = 'submit' | 'get_transaction_packets' | 'get_packet';
  */
 export type RelayTxStatus = 'pending' | 'validating' | 'executing' | 'executed';
 
-export type RelayErrorCode = 'UNKNOWN' | 'SUBMIT_TX_FAILED' | 'POST_EXECUTION_FAILED' | 'TIMEOUT';
+export type RelayErrorCode = 'SUBMIT_TX_FAILED' | 'RELAY_TIMEOUT';
 
 export type RelayError = {
   code: RelayErrorCode;
@@ -182,7 +182,7 @@ export async function getPacket(
 
 export async function waitUntilIntentExecuted(
   payload: WaitUntilIntentExecutedPayload,
-): Promise<Result<PacketData, IntentSubmitError<'TIMEOUT'>>> {
+): Promise<Result<PacketData, IntentError<'RELAY_TIMEOUT'>>> {
   try {
     const startTime = Date.now();
 
@@ -214,14 +214,14 @@ export async function waitUntilIntentExecuted(
       } catch (e) {
         console.error('Error getting transaction packets', e);
       }
-      // wait one second before retrying
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // wait two seconds before retrying
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     return {
       ok: false,
       error: {
-        code: 'TIMEOUT',
+        code: 'RELAY_TIMEOUT',
         data: {
           payload: payload,
           error: {
@@ -235,7 +235,7 @@ export async function waitUntilIntentExecuted(
     return {
       ok: false,
       error: {
-        code: 'TIMEOUT',
+        code: 'RELAY_TIMEOUT',
         data: {
           payload: payload,
           error: e,
@@ -302,7 +302,7 @@ export async function relayTxAndWaitPacket<S extends SpokeProvider>(
       return {
         ok: false,
         error: {
-          code: 'TIMEOUT',
+          code: 'RELAY_TIMEOUT',
           error: packet.error,
         },
       };
@@ -316,7 +316,7 @@ export async function relayTxAndWaitPacket<S extends SpokeProvider>(
     return {
       ok: false,
       error: {
-        code: 'UNKNOWN',
+        code: 'SUBMIT_TX_FAILED',
         error: error,
       },
     };
