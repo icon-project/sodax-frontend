@@ -66,6 +66,7 @@ export type BaseSpokeChainConfig<T extends ChainType> = {
   supportedTokens: Record<string, Token>;
   nativeToken: Address | string;
   bnUSD: Address | string;
+  gasThreshold: number;
 };
 
 export type BaseHubChainConfig<T extends ChainType> = {

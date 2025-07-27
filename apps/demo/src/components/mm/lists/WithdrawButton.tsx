@@ -8,7 +8,7 @@ import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 
-export function WithdrawButton({ token }: { token: XToken }) {
+export function WithdrawButton({ token, maxAmount }: { token: XToken; maxAmount: string }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const { selectedChainId } = useAppStore();
@@ -42,6 +42,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
             resetError?.();
             setOpen(true);
           }}
+          disabled={!Number.parseFloat(maxAmount) || Number.parseFloat(maxAmount) <= 0}
         >
           Withdraw
         </Button>
@@ -52,7 +53,12 @@ export function WithdrawButton({ token }: { token: XToken }) {
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <div className="grid w-full max-w-sm items-center gap-1.5">
-            <Label htmlFor="amount">Amount</Label>
+            <div className="flex items-center ">
+              <Label htmlFor="amount">Amount</Label>
+              <Button variant="link" size="sm" onClick={() => setAmount(maxAmount)}>
+                Max
+              </Button>
+            </div>
             <div className="flex items-center gap-2">
               <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} />
               <span>{token.symbol}</span>

@@ -201,6 +201,7 @@ export const spokeChainConfig = {
         address: '0x7c7d53EEcda37a87ce0D5bf8E0b24512A48dC963',
       },
     },
+    gasThreshold: 0.01,
   } as const satisfies SonicSpokeChainConfig,
   [SOLANA_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -237,6 +238,7 @@ export const spokeChainConfig = {
     rpcUrl: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
     wsUrl: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
     walletAddress: '',
+    gasThreshold: 0.01,
   } as const satisfies SolanaChainConfig,
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     chain: {
@@ -276,6 +278,7 @@ export const spokeChainConfig = {
         address: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
       },
     },
+    gasThreshold: 0.01,
   } as const satisfies EvmSpokeChainConfig,
   [NIBIRU_MAINNET_CHAIN_ID]: {
     chain: {
@@ -303,6 +306,7 @@ export const spokeChainConfig = {
         address: '0x043fb7e23350Dd5b77dE5E228B528763DEcb9131',
       },
     },
+    gasThreshold: 0.01,
   } as const satisfies EvmSpokeChainConfig,
   [ARBITRUM_MAINNET_CHAIN_ID]: {
     chain: {
@@ -366,6 +370,7 @@ export const spokeChainConfig = {
         address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
       },
     } as const,
+    gasThreshold: 0.01,
   } as const satisfies EvmSpokeChainConfig,
   [BASE_MAINNET_CHAIN_ID]: {
     chain: {
@@ -417,6 +422,7 @@ export const spokeChainConfig = {
         address: '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf',
       },
     } as const,
+    gasThreshold: 0.01,
   } as const satisfies EvmSpokeChainConfig,
   [OPTIMISM_MAINNET_CHAIN_ID]: {
     chain: {
@@ -468,6 +474,7 @@ export const spokeChainConfig = {
         address: '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58',
       },
     } as const,
+    gasThreshold: 0.01,
   } as const satisfies EvmSpokeChainConfig,
   [BSC_MAINNET_CHAIN_ID]: {
     chain: {
@@ -513,6 +520,7 @@ export const spokeChainConfig = {
         address: '0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d',
       },
     },
+    gasThreshold: 0.01,
   } as const satisfies EvmSpokeChainConfig,
   [POLYGON_MAINNET_CHAIN_ID]: {
     chain: {
@@ -546,6 +554,7 @@ export const spokeChainConfig = {
         address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
       },
     } as const,
+    gasThreshold: 0.01,
   } as const satisfies EvmSpokeChainConfig,
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -589,6 +598,7 @@ export const spokeChainConfig = {
     isBrowser: false,
     rpcUrl: 'https://injective-rpc.publicnode.com:443',
     walletAddress: '',
+    gasThreshold: 0.01,
   } as const satisfies CosmosSpokeChainConfig,
   [STELLAR_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -627,6 +637,7 @@ export const spokeChainConfig = {
       id: STELLAR_MAINNET_CHAIN_ID,
       type: 'STELLAR',
     },
+    gasThreshold: 0.01,
   } as const satisfies StellarSpokeChainConfig,
   [SUI_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -702,6 +713,7 @@ export const spokeChainConfig = {
       id: SUI_MAINNET_CHAIN_ID,
       type: 'SUI',
     },
+    gasThreshold: 0.01,
   } as const satisfies SuiSpokeChainConfig,
   [ICON_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -738,6 +750,7 @@ export const spokeChainConfig = {
     nativeToken: 'cx0000000000000000000000000000000000000000' as const,
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
+    gasThreshold: 0.01,
   } as const satisfies IconSpokeChainConfig,
 } as const;
 
