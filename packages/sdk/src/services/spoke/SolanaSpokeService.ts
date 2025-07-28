@@ -1,5 +1,12 @@
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { ComputeBudgetProgram, PublicKey, SystemProgram, type TransactionInstruction } from '@solana/web3.js';
+import {
+  ComputeBudgetProgram,
+  Connection,
+  PublicKey,
+  SystemProgram,
+  VersionedTransaction,
+  type TransactionInstruction,
+} from '@solana/web3.js';
 import { keccak256, type Address, type Hex } from 'viem';
 import { getIntentRelayChainId } from '../../constants.js';
 import type { EvmHubProvider } from '../../entities/index.js';
@@ -7,7 +14,7 @@ import { getAssetManagerProgram, getConnectionProgram } from '../../entities/sol
 import type { SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvider.js';
 import { AssetManagerPDA, ConnectionConfigPDA } from '../../entities/solana/pda/pda.js';
 import { convertTransactionInstructionToRaw, isNative } from '../../entities/solana/utils/utils.js';
-import type { PromiseSolanaTxReturnType, SolanaReturnType } from '../../types.js';
+import type { PromiseSolanaTxReturnType, SolanaGasEstimate, SolanaRawTransaction, SolanaReturnType } from '../../types.js';
 import type { HubAddress, SolanaBase58PublicKey } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import BN from 'bn.js';
@@ -30,6 +37,30 @@ export type TransferToHubParams = {
 
 export class SolanaSpokeService {
   private constructor() {}
+
+  /**
+   * Estimate the gas for a transaction.
+   * @param {SolanaRawTransaction} rawTx - The raw transaction to estimate the gas for.
+   * @param {SolanaSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @returns {Promise<number | undefined>} The units consumed for the transaction.
+   */
+  public static async estimateGas(
+    rawTx: SolanaRawTransaction,
+    spokeProvider: SolanaSpokeProvider,
+  ): Promise<SolanaGasEstimate> {
+    const connection = new Connection(spokeProvider.chainConfig.rpcUrl, 'confirmed');
+
+    const serializedTxBytes = Buffer.from(rawTx.data, 'base64');
+    const versionedTx = VersionedTransaction.deserialize(serializedTxBytes);
+
+    const { value } = await connection.simulateTransaction(versionedTx);
+
+    if (value.err) {
+      throw new Error(`Failed to simulate transaction: ${JSON.stringify(value.err, null, 2)}`);
+    }
+
+    return value.unitsConsumed;
+  }
 
   public static async deposit<R extends boolean = false>(
     params: SolanaSpokeDepositParams,

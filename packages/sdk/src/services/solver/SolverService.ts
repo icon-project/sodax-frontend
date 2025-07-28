@@ -44,6 +44,7 @@ import type {
   SolverConfigParams,
   SolverServiceConfig,
   TxReturnType,
+  GetEstimateGasReturnType,
 } from '../../types.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
@@ -173,6 +174,19 @@ export class SolverService {
       };
     }
     this.hubProvider = hubProvider;
+  }
+
+  /**
+   * Estimate the gas for a raw transaction.
+   * @param {TxReturnType<T, true>} params - The parameters for the raw transaction.
+   * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
+   */
+  public static async estimateGas<T extends SpokeProvider = SpokeProvider>(
+    params: TxReturnType<T, true>,
+    spokeProvider: T,
+  ): Promise<GetEstimateGasReturnType<T>> {
+    return SpokeService.estimateGas(params, spokeProvider) as Promise<GetEstimateGasReturnType<T>>;
   }
 
   /**
@@ -768,7 +782,13 @@ export class SolverService {
       const intentsContract = this.config.intentsContract;
       calls.push(EvmSolverService.encodeCancelIntent(intent, intentsContract));
       const data = encodeContractCalls(calls);
-      const txResult = await SpokeService.callWallet(creatorHubWalletAddress, data, spokeProvider, this.hubProvider, raw);
+      const txResult = await SpokeService.callWallet(
+        creatorHubWalletAddress,
+        data,
+        spokeProvider,
+        this.hubProvider,
+        raw,
+      );
 
       return {
         ok: true,
