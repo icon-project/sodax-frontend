@@ -1,4 +1,6 @@
 import type { IInjectiveWalletProvider, InjectiveExecuteResponse } from '@sodax/types';
+import { ChainGrpcWasmApi, toBase64 } from '@injectivelabs/sdk-ts';
+import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
 
 export interface TokenInfo {
   name: string;
@@ -21,31 +23,42 @@ export interface AllowanceResponse {
 }
 
 export class Injective20Token {
-  private client: IInjectiveWalletProvider;
+  private walletProvider: IInjectiveWalletProvider;
+  private chainGrpcWasmApi: ChainGrpcWasmApi;
   private contractAddress: string;
 
-  constructor(client: IInjectiveWalletProvider, contractAddress: string) {
-    this.client = client;
+  constructor(walletProvider: IInjectiveWalletProvider, contractAddress: string) {
+    this.walletProvider = walletProvider;
     this.contractAddress = contractAddress;
+    const endpoints = getNetworkEndpoints(Network.Mainnet);
+    this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
   }
 
-  // Query Methods
   async getTokenInfo(): Promise<TokenInfo> {
-    return (await this.client.queryContractSmart(this.contractAddress, {
-      token_info: {},
-    })) as TokenInfo;
+    return this.chainGrpcWasmApi.fetchSmartContractState(
+      this.contractAddress,
+      toBase64({
+        token_info: {},
+      }),
+    ) as unknown as Promise<TokenInfo>;
   }
 
   async getBalance(address: string): Promise<Balance> {
-    return (await this.client.queryContractSmart(this.contractAddress, {
-      balance: { address },
-    })) as Balance;
+    return this.chainGrpcWasmApi.fetchSmartContractState(
+      this.contractAddress,
+      toBase64({
+        balance: { address },
+      }),
+    ) as unknown as Promise<Balance>;
   }
 
   async getAllowance(owner: string, spender: string): Promise<AllowanceResponse> {
-    return (await this.client.queryContractSmart(this.contractAddress, {
-      allowance: { owner, spender },
-    })) as AllowanceResponse;
+    return this.chainGrpcWasmApi.fetchSmartContractState(
+      this.contractAddress,
+      toBase64({
+        allowance: { owner, spender },
+      }),
+    ) as unknown as Promise<AllowanceResponse>;
   }
 
   // Execute Methods (requires SigningCosmWasmClient)
@@ -57,7 +70,7 @@ export class Injective20Token {
       },
     };
 
-    return await this.client.execute(senderAddress, this.contractAddress, msg);
+    return await this.walletProvider.execute(senderAddress, this.contractAddress, msg);
   }
 
   async increaseAllowance(
@@ -74,7 +87,7 @@ export class Injective20Token {
       },
     };
 
-    return await this.client.execute(senderAddress, this.contractAddress, msg);
+    return await this.walletProvider.execute(senderAddress, this.contractAddress, msg);
   }
 
   async decreaseAllowance(
@@ -91,7 +104,7 @@ export class Injective20Token {
       },
     };
 
-    return await this.client.execute(senderAddress, this.contractAddress, msg);
+    return await this.walletProvider.execute(senderAddress, this.contractAddress, msg);
   }
 
   async transferFrom(
@@ -108,6 +121,6 @@ export class Injective20Token {
       },
     };
 
-    return await this.client.execute(senderAddress, this.contractAddress, msg);
+    return await this.walletProvider.execute(senderAddress, this.contractAddress, msg);
   }
 }

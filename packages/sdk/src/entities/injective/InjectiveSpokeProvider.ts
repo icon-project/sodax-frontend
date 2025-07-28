@@ -3,6 +3,8 @@ import type { InjectiveSpokeChainConfig, InjectiveReturnType, PromiseInjectiveTx
 import type { ISpokeProvider } from '../Providers.js';
 import type { IInjectiveWalletProvider, InjectiveExecuteResponse, InjectiveCoin } from '@sodax/types';
 import { Injective20Token } from './Injective20Token.js';
+import { toBase64, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
+import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 
 export interface InstantiateMsg {
   connection: string;
@@ -59,23 +61,32 @@ export interface State {
 export class InjectiveSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: IInjectiveWalletProvider;
   public chainConfig: InjectiveSpokeChainConfig;
+  private chainGrpcWasmApi: ChainGrpcWasmApi;
 
   constructor(conf: InjectiveSpokeChainConfig, walletProvider: IInjectiveWalletProvider) {
     this.chainConfig = conf;
     this.walletProvider = walletProvider;
+    const endpoints = getNetworkEndpoints(Network.Mainnet);
+    this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
   }
 
   // Query Methods
   async getState(): Promise<State> {
-    return (await this.walletProvider.queryContractSmart(this.chainConfig.addresses.assetManager, {
-      get_state: {},
-    })) as State;
+    return this.chainGrpcWasmApi.fetchSmartContractState(
+      this.chainConfig.addresses.assetManager,
+      toBase64({
+        get_state: {},
+      }),
+    ) as unknown as Promise<State>;
   }
 
   async getBalance(token: String): Promise<number> {
-    return (await this.walletProvider.queryContractSmart(this.chainConfig.addresses.assetManager, {
-      get_balance: { denom: token },
-    })) as number;
+    return this.chainGrpcWasmApi.fetchSmartContractState(
+      this.chainConfig.addresses.assetManager,
+      toBase64({
+        get_balance: { denom: token },
+      }),
+    ) as unknown as Promise<number>;
   }
 
   // Execute Methods (requires SigningCosmWasmClient)
@@ -116,6 +127,9 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     return res.transactionHash as InjectiveReturnType<R>;
   }
 
+  /**
+   * Deposit tokens to Injective Asset Manager.
+   **/
   async depositToken<R extends boolean = false>(
     sender: string,
     tokenAddress: string,
@@ -129,6 +143,9 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     return this.transfer(sender, tokenAddress, to, amount, data, [], raw);
   }
 
+  /**
+   * Deposit tokens including native token to Injective Asset Manager.
+   **/
   static async deposit<R extends boolean = false>(
     sender: string,
     token_address: string,
@@ -149,6 +166,9 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     return provider.depositToken(sender, token_address, toBytes, amount, dataBytes, raw);
   }
 
+  /**
+   * Deposit native tokens to Injective Asset Manager.
+   **/
   async depositNative<R extends boolean = false>(
     sender: string,
     token: string,

@@ -19,6 +19,15 @@ export type InjectiveTransferToHubParams = {
   data: Hex;
 };
 
+/**
+ * InjectiveSpokeService provides methods for interacting with the Injective spoke chain,
+ * specifically for managing token deposits and transfers between the spoke chain and hub chain.
+ * It handles the cross-chain communication and token bridging functionality, allowing users to:
+ * - Deposit tokens from Injective to the hub chain
+ * - Check token balances on the spoke chain
+ * - Transfer tokens with custom data payloads
+ */
+
 export class InjectiveSpokeService {
   private constructor() {}
 
@@ -57,7 +66,7 @@ export class InjectiveSpokeService {
   }
 
   /**
-   * Get the balance of the token in the spoke chain.
+   * Get the balance of the token that deposited in the spoke chain Asset Manager.
    * @param {Address} token - The address of the token to get the balance of.
    * @param {InjectiveSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.

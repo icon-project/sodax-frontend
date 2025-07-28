@@ -1,4 +1,4 @@
-import { MsgExecuteContract, MsgExecuteContractCompat, toBase64 } from '@injectivelabs/sdk-ts';
+import { MsgExecuteContract, MsgExecuteContractCompat } from '@injectivelabs/sdk-ts';
 import { toHex } from 'viem';
 import { createTransaction, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
 import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
@@ -94,9 +94,5 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     });
 
     return InjectiveExecuteResponse.fromTxResponse(txResult);
-  }
-
-  async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {
-    return this.chainGrpcWasmApi.fetchSmartContractState(address, toBase64(queryMsg as object));
   }
 }
