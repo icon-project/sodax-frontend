@@ -171,16 +171,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
   }
 
   async isNative(token: string): Promise<boolean> {
-    let isNative = true;
-    const injective20Token = new Injective20Token(this.walletProvider, token);
-    try {
-      await injective20Token.getTokenInfo();
-      isNative = false;
-    } catch (err) {
-      console.error('[InjectiveSpokeProvider] isNative error', err);
-      throw err;
-    }
-    return isNative;
+    return token === 'inj';
   }
 
   async receiveMessage(
