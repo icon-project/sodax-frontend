@@ -1,5 +1,5 @@
 import * as IconSdkRaw from 'icon-sdk-js';
-const IconSdk = (IconSdkRaw.default?.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
+const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
 const { Converter, CallTransactionBuilder, CallBuilder } = IconSdk;
 import * as rlp from 'rlp';
 import type { Address, Hex } from 'viem';
@@ -7,9 +7,10 @@ import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { BigIntToHex, getIntentRelayChainId, isNativeToken } from '../../index.js';
-import type { IconAddress, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
+import type { IconAddress, IconGasEstimate, IconRawTransaction, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
 import type { HubAddress } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import { estimateStepCost } from '../../utils/icon-utils.js';
 
 export type IconSpokeDepositParams = {
   from: IconAddress; // The address of the user on the spoke chain
@@ -28,6 +29,10 @@ export type TransferToHubParams = {
 
 export class IconSpokeService {
   private constructor() {}
+
+  public static async estimateGas(rawTx: IconRawTransaction, spokeProvider: IconSpokeProvider): Promise<IconGasEstimate> {
+    return estimateStepCost(rawTx, spokeProvider.debugRpcUrl);
+  }
 
   /**
    * Deposit tokens to the spoke chain.
@@ -118,11 +123,12 @@ export class IconSpokeService {
 
     const value: Hex = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? BigIntToHex(amount) : '0x0';
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const to = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? spokeProvider.chainConfig.addresses.wICX : token;
 
     const rawTransaction = Converter.toRawTransaction(
       new CallTransactionBuilder()
         .from(walletAddress)
-        .to(token)
+        .to(to)
         .stepLimit(Converter.toBigNumber('2000000'))
         .nid(spokeProvider.chainConfig.nid)
         .version('0x3')
@@ -139,7 +145,7 @@ export class IconSpokeService {
 
     return spokeProvider.walletProvider.sendTransaction({
       from: walletAddress,
-      to: isNativeToken(spokeProvider.chainConfig.chain.id, token) ? spokeProvider.chainConfig.addresses.wICX : token,
+      to: to,
       value: value,
       nid: spokeProvider.chainConfig.nid,
       method: 'transfer',

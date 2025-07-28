@@ -3,7 +3,7 @@ import type { InjectiveSpokeChainConfig, InjectiveReturnType, PromiseInjectiveTx
 import type { ISpokeProvider } from '../Providers.js';
 import type { IInjectiveWalletProvider, InjectiveExecuteResponse, InjectiveCoin } from '@sodax/types';
 import { Injective20Token } from './Injective20Token.js';
-import { toBase64, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
+import { toBase64, ChainGrpcWasmApi, TxGrpcApi } from '@injectivelabs/sdk-ts';
 import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 
 export interface InstantiateMsg {
@@ -60,14 +60,16 @@ export interface State {
 
 export class InjectiveSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: IInjectiveWalletProvider;
-  public chainConfig: InjectiveSpokeChainConfig;
+  public readonly chainConfig: InjectiveSpokeChainConfig;
   private chainGrpcWasmApi: ChainGrpcWasmApi;
+  public readonly txClient: TxGrpcApi;
 
   constructor(conf: InjectiveSpokeChainConfig, walletProvider: IInjectiveWalletProvider) {
     this.chainConfig = conf;
     this.walletProvider = walletProvider;
     const endpoints = getNetworkEndpoints(Network.Mainnet);
     this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+    this.txClient = new TxGrpcApi(endpoints.grpc);
   }
 
   // Query Methods
@@ -155,7 +157,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     provider: InjectiveSpokeProvider,
     raw?: R,
   ): PromiseInjectiveTxReturnType<R> {
-    const isNative = provider.isNative(token_address);
+    const isNative = await provider.isNative(token_address);
     const toBytes = fromHex(to, 'bytes');
     const dataBytes = fromHex(data, 'bytes');
 
@@ -181,7 +183,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     return this.transfer(sender, token, to, amount, data, funds, raw);
   }
 
-  isNative(token: string): boolean {
+  async isNative(token: string): Promise<boolean> {
     return token === 'inj';
   }
 
