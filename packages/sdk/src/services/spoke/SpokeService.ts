@@ -1,4 +1,4 @@
-import { CWSpokeProvider } from '../../entities/cosmos/CWSpokeProvider.js';
+import { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeProvider.js';
 import { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import {
   type EvmHubProvider,
@@ -9,9 +9,14 @@ import {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
-import type { GetSpokeDepositParamsType, PromiseTxReturnType, TxReturnType } from '../../types.js';
+import type {
+  GetEstimateGasReturnType,
+  GetSpokeDepositParamsType,
+  PromiseTxReturnType,
+  TxReturnType,
+} from '../../types.js';
 import type { Address, Hex, HubAddress } from '@sodax/types';
-import { CWSpokeService } from './CWSpokeService.js';
+import { InjectiveSpokeService } from './InjectiveSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';
 import { SolanaSpokeService } from './SolanaSpokeService.js';
@@ -19,7 +24,7 @@ import { StellarSpokeService } from './StellarSpokeService.js';
 import { SuiSpokeService } from './SuiSpokeService.js';
 import { SonicSpokeService } from './SonicSpokeService.js';
 import {
-  isCWSpokeProvider,
+  isInjectiveSpokeProvider,
   isEvmSpokeProvider,
   isIconSpokeProvider,
   isSolanaSpokeProvider,
@@ -35,6 +40,62 @@ import {
 
 export class SpokeService {
   private constructor() {}
+
+  /**
+   * Estimate the gas for a raw transaction.
+   * @param {TxReturnType<T, true>} params - The parameters for the raw transaction.
+   * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
+   */
+  public static async estimateGas<T extends SpokeProvider = SpokeProvider>(
+    params: TxReturnType<T, true>,
+    spokeProvider: T,
+  ): Promise<GetEstimateGasReturnType<T>> {
+    if (spokeProvider instanceof EvmSpokeProvider) {
+      return EvmSpokeService.estimateGas(
+        params as TxReturnType<EvmSpokeProvider, true>,
+        spokeProvider,
+      ) satisfies Promise<GetEstimateGasReturnType<EvmSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
+    }
+    if (spokeProvider instanceof SonicSpokeProvider) {
+      return SonicSpokeService.estimateGas(
+        params as TxReturnType<SonicSpokeProvider, true>,
+        spokeProvider,
+      ) satisfies Promise<GetEstimateGasReturnType<SonicSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
+    }
+    if (spokeProvider instanceof InjectiveSpokeProvider) {
+      return InjectiveSpokeService.estimateGas(
+        params as TxReturnType<InjectiveSpokeProvider, true>,
+        spokeProvider,
+      ) satisfies Promise<GetEstimateGasReturnType<InjectiveSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
+    }
+    if (spokeProvider instanceof IconSpokeProvider) {
+      return IconSpokeService.estimateGas(
+        params as TxReturnType<IconSpokeProvider, true>,
+        spokeProvider,
+      ) satisfies Promise<GetEstimateGasReturnType<IconSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
+    }
+    if (spokeProvider instanceof SuiSpokeProvider) {
+      return SuiSpokeService.estimateGas(
+        params as TxReturnType<SuiSpokeProvider, true>,
+        spokeProvider,
+      ) satisfies Promise<GetEstimateGasReturnType<SuiSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
+    }
+    if (spokeProvider instanceof SolanaSpokeProvider) {
+      return SolanaSpokeService.estimateGas(
+        params as TxReturnType<SolanaSpokeProvider, true>,
+        spokeProvider,
+      ) satisfies Promise<GetEstimateGasReturnType<SolanaSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
+    }
+    if (spokeProvider instanceof StellarSpokeProvider) {
+      return StellarSpokeService.estimateGas(
+        params as TxReturnType<StellarSpokeProvider, true>,
+        spokeProvider,
+      ) satisfies Promise<GetEstimateGasReturnType<StellarSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
+    }
+
+    throw new Error('Invalid spoke provider');
+  }
 
   /**
    * Deposit tokens to the spoke chain.
@@ -64,9 +125,9 @@ export class SpokeService {
         raw,
       ) as PromiseTxReturnType<T, R>;
     }
-    if (spokeProvider instanceof CWSpokeProvider) {
-      return CWSpokeService.deposit(
-        params as GetSpokeDepositParamsType<CWSpokeProvider>,
+    if (spokeProvider instanceof InjectiveSpokeProvider) {
+      return InjectiveSpokeService.deposit(
+        params as GetSpokeDepositParamsType<InjectiveSpokeProvider>,
         spokeProvider,
         hubProvider,
         raw,
@@ -120,8 +181,8 @@ export class SpokeService {
     if (spokeProvider instanceof EvmSpokeProvider) {
       return EvmSpokeService.getDeposit(token, spokeProvider);
     }
-    if (spokeProvider instanceof CWSpokeProvider) {
-      return CWSpokeService.getDeposit(token, spokeProvider);
+    if (spokeProvider instanceof InjectiveSpokeProvider) {
+      return InjectiveSpokeService.getDeposit(token, spokeProvider);
     }
     if (spokeProvider instanceof StellarSpokeProvider) {
       return StellarSpokeService.getDeposit(token, spokeProvider);
@@ -169,11 +230,14 @@ export class SpokeService {
         R
       > as TxReturnType<T, R>;
     }
-    if (isCWSpokeProvider(spokeProvider)) {
-      return (await CWSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        CWSpokeProvider,
-        R
-      > as TxReturnType<T, R>;
+    if (isInjectiveSpokeProvider(spokeProvider)) {
+      return (await InjectiveSpokeService.callWallet(
+        from,
+        payload,
+        spokeProvider,
+        hubProvider,
+        raw,
+      )) satisfies TxReturnType<InjectiveSpokeProvider, R> as TxReturnType<T, R>;
     }
     if (isIconSpokeProvider(spokeProvider)) {
       return (await IconSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<

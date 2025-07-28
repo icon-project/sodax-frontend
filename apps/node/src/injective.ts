@@ -1,6 +1,6 @@
 import {
-  CWSpokeProvider,
-  type CosmosSpokeChainConfig,
+  InjectiveSpokeProvider,
+  type InjectiveSpokeChainConfig,
   EvmAssetManagerService,
   EvmHubProvider,
   type EvmHubProviderConfig,
@@ -13,7 +13,6 @@ import {
   getMoneyMarketConfig,
   spokeChainConfig,
 } from '@sodax/sdk';
-import { CosmosWalletProvider } from './wallet-providers/CosmosWalletProvider.js';
 import { InjectiveWalletProvider } from './wallet-providers/InjectiveWalletProvider.js';
 
 import { type Address, type Hash, type Hex, toHex } from 'viem';
@@ -40,31 +39,22 @@ if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const cosmosConfig = spokeChainConfig[SPOKE_CHAIN_ID] as CosmosSpokeChainConfig;
-const cosmosNetwork = IS_TESTNET ? 'TestNet' : 'Mainnet';
+const config = spokeChainConfig[SPOKE_CHAIN_ID] as InjectiveSpokeChainConfig;
+const network = IS_TESTNET ? 'TestNet' : 'Mainnet';
 
-const cosmosWalletMnemonics = process.env.MNEMONICS;
+const mnemonics = process.env.MNEMONICS;
 
-if (!cosmosWalletMnemonics) {
+if (!mnemonics) {
   throw new Error('MNEMONICS environment variable is required');
 }
 
-const cosmosWalletProvider =
-  cosmosConfig.chain.id === INJECTIVE_MAINNET_CHAIN_ID
-    ? new InjectiveWalletProvider({
-        mnemonics: cosmosWalletMnemonics,
-        network: cosmosNetwork,
-        rpcUrl: SPOKE_RPC_URL,
-      })
-    : new CosmosWalletProvider({
-        gasPrice: cosmosConfig.gasPrice,
-        mnemonics: cosmosWalletMnemonics,
-        network: cosmosNetwork,
-        prefix: cosmosConfig.prefix,
-        rpcUrl: cosmosConfig.rpcUrl,
-      });
+const walletProvider = new InjectiveWalletProvider({
+  mnemonics: mnemonics,
+  network: network,
+  rpcUrl: SPOKE_RPC_URL,
+})
 
-const cwSpokeProvider = new CWSpokeProvider(cosmosConfig, cosmosWalletProvider);
+const spokeProvider = new InjectiveSpokeProvider(config, walletProvider);
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
@@ -97,9 +87,9 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
       to: recipient,
       amount,
     },
-    cwSpokeProvider.chainConfig.chain.id,
+    spokeProvider.chainConfig.chain.id,
   );
-  const walletAddress = await cwSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
   const txHash: Hash = await SpokeService.deposit(
     {
       from: walletAddress,
@@ -107,7 +97,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
       amount,
       data,
     },
-    cwSpokeProvider,
+    spokeProvider,
     evmHubProvider,
   );
 
@@ -117,7 +107,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
 async function withdrawAsset(
   token: string,
   amount: bigint,
-  recipient: string, // cosmos address
+  recipient: string,
 ): Promise<void> {
   const data = EvmAssetManagerService.withdrawAssetData(
     {
@@ -126,30 +116,30 @@ async function withdrawAsset(
       amount,
     },
     evmHubProvider,
-    cwSpokeProvider.chainConfig.chain.id,
+    spokeProvider.chainConfig.chain.id,
   );
-  const walletAddressBytes = await cwSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
-    cwSpokeProvider.chainConfig.chain.id,
+    spokeProvider.chainConfig.chain.id,
     walletAddressBytes,
     evmHubProvider,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, cwSpokeProvider, evmHubProvider);
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
 
 async function supply(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await cwSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
-    cwSpokeProvider.chainConfig.chain.id,
+    spokeProvider.chainConfig.chain.id,
     walletAddressBytes,
     evmHubProvider,
   );
 
-  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, cwSpokeProvider.chainConfig.chain.id);
-  const walletAddress = await cwSpokeProvider.walletProvider.getWalletAddress();
+  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
   const txHash = await SpokeService.deposit(
     {
@@ -158,7 +148,7 @@ async function supply(token: string, amount: bigint): Promise<void> {
       amount,
       data,
     },
-    cwSpokeProvider,
+    spokeProvider,
     evmHubProvider,
   );
 
@@ -166,57 +156,57 @@ async function supply(token: string, amount: bigint): Promise<void> {
 }
 
 async function borrow(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await cwSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
-    cwSpokeProvider.chainConfig.chain.id,
+    spokeProvider.chainConfig.chain.id,
     walletAddressBytes,
     evmHubProvider,
   );
   console.log(hubWallet);
 
-  const data: Hex = sodax.moneyMarket.borrowData(
+  const data: Hex = sodax.moneyMarket.buildBorrowData(
     hubWallet,
     walletAddressBytes,
     token,
     amount,
-    cwSpokeProvider.chainConfig.chain.id,
+    spokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, cwSpokeProvider, evmHubProvider);
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
 
 async function withdraw(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await cwSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
-    cwSpokeProvider.chainConfig.chain.id,
+    spokeProvider.chainConfig.chain.id,
     walletAddressBytes,
     evmHubProvider,
   );
 
-  const data: Hex = sodax.moneyMarket.withdrawData(
+  const data: Hex = sodax.moneyMarket.buildWithdrawData(
     hubWallet,
     walletAddressBytes,
     token,
     amount,
-    cwSpokeProvider.chainConfig.chain.id,
+    spokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, cwSpokeProvider, evmHubProvider);
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }
 
 async function repay(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await cwSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
-    cwSpokeProvider.chainConfig.chain.id,
+    spokeProvider.chainConfig.chain.id,
     walletAddressBytes,
     evmHubProvider,
   );
-  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, cwSpokeProvider.chainConfig.chain.id);
-  const walletAddress = await cwSpokeProvider.walletProvider.getWalletAddress();
+  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
   const txHash: Hash = await SpokeService.deposit(
     {
@@ -225,7 +215,7 @@ async function repay(token: string, amount: bigint): Promise<void> {
       amount,
       data,
     },
-    cwSpokeProvider,
+    spokeProvider,
     evmHubProvider,
   );
 

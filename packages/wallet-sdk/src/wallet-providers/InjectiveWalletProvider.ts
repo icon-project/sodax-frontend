@@ -4,7 +4,7 @@ import { createTransaction } from '@injectivelabs/sdk-ts';
 
 import type { MsgBroadcaster } from '@injectivelabs/wallet-ts';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
-import { InjectiveExecuteResponse, type CWRawTransaction } from '@sodax/types';
+import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
@@ -29,7 +29,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     contractAddress: string,
     msg: JsonObject,
     memo?: string,
-  ): CWRawTransaction {
+  ): InjectiveRawTransaction {
     if (!this.walletAddress) {
       throw new Error('Wallet address not found');
     }
