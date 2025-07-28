@@ -3,6 +3,7 @@ import { Wallet } from '@injectivelabs/wallet-base';
 import React from 'react';
 import { useEffect } from 'react';
 import { useXService } from './useXService';
+import type { EvmWalletStrategy } from '@injectivelabs/wallet-evm';
 
 /**
  * React hook that returns the current Ethereum chain ID when using MetaMask wallet for Injective.
@@ -18,23 +19,17 @@ export default function useEthereumChainId(): number | null {
   const injectiveXService = useXService('INJECTIVE') as unknown as InjectiveXService;
   const [ethereumChainId, setEthereumChainId] = React.useState<number | null>(null);
   useEffect(() => {
-    if (!injectiveXService?.walletStrategy) {
-      return;
-    }
-
+    if (!injectiveXService?.walletStrategy?.getWallet()) return;
     const walletStrategy = injectiveXService.walletStrategy;
+    if (walletStrategy.getWallet() !== Wallet.Metamask) return;
+
     const getEthereumChainId = async () => {
-      if (walletStrategy.getWallet() === Wallet.Metamask) {
-        const chainId = await walletStrategy.getEthereumChainId();
-        setEthereumChainId(Number.parseInt(chainId));
-      }
+      const chainId = await walletStrategy.getEthereumChainId();
+      setEthereumChainId(Number.parseInt(chainId));
     };
-
-    if (walletStrategy.getWallet() === Wallet.Metamask) {
-      walletStrategy.onChainIdChange(getEthereumChainId);
-    }
-
     getEthereumChainId();
+
+    (walletStrategy.getStrategy() as EvmWalletStrategy).onChainIdChanged(getEthereumChainId);
   }, [injectiveXService?.walletStrategy]);
 
   return ethereumChainId;
