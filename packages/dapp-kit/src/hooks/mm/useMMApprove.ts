@@ -54,7 +54,12 @@ export function useMMApprove(token: XToken, spokeProvider: SpokeProvider | undef
     },
     onSuccess: () => {
       // Invalidate allowance query to refetch the new allowance
-      queryClient.invalidateQueries({ queryKey: ['allowance', token.address] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({
+          queryKey: ['allowance', token.address],
+          exact: false,
+        });
+      }, 1000);
     },
   });
 
