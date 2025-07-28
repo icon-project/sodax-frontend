@@ -225,8 +225,8 @@ As part of Sodax suite, xWagmi SDK is also going to be provided as one example w
   - `ISuiWalletProvider`: Sui ✅
   - `IIconWalletProvider`: ICON ✅
   - `IStellarWalletProvider`: Stellar ✅
-  - Solana ❌ Coming soon
-  - Injective ❌ Coming soon
+  - Solana ✅
+  - Injective ✅
   - Havah ❌ Coming soon
 
 ### Initialising Spoke Provider

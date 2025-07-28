@@ -188,7 +188,6 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
   };
   chain: SpokeChainInfo<'SOLANA'>;
   rpcUrl: string;
-  wsUrl: string;
   walletAddress: string;
   nativeToken: string;
   gasPrice: string;
