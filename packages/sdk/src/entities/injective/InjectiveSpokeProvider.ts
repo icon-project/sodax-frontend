@@ -106,7 +106,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     };
 
     if (raw) {
-      return this.walletProvider.getRawTransaction(
+      return await this.walletProvider.getRawTransaction(
         this.chainConfig.networkId,
         this.chainConfig.prefix,
         senderAddress,
@@ -240,7 +240,7 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       },
     };
     if (raw) {
-      return this.walletProvider.getRawTransaction(
+      return await this.walletProvider.getRawTransaction(
         this.chainConfig.networkId,
         this.chainConfig.prefix,
         sender,

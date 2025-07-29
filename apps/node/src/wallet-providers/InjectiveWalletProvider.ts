@@ -39,7 +39,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     contractAddress: string,
     msg: JsonObject,
     memo?: string,
-  ): InjectiveRawTransaction {
+  ): Promise<InjectiveRawTransaction> {
     const msgExec = MsgExecuteContract.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
@@ -54,7 +54,8 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       accountNumber: 0,
       chainId: chainId,
     });
-    return {
+    
+    const rawTx = {
       from: senderAddress as Hex,
       to: contractAddress as Hex,
       signedDoc: {
@@ -64,6 +65,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
         authInfoBytes: txRaw.authInfoBytes,
       },
     };
+    return Promise.resolve(rawTx);
   }
 
   async getCosmwasmClient(): Promise<CosmWasmClient> {
