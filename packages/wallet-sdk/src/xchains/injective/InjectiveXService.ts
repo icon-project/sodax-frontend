@@ -5,7 +5,7 @@ import { ChainId as InjectiveChainId, EthereumChainId } from '@injectivelabs/ts-
 import { EvmWalletStrategy } from '@injectivelabs/wallet-evm';
 import { MsgBroadcaster, BaseWalletStrategy } from '@injectivelabs/wallet-core';
 import { Wallet } from '@injectivelabs/wallet-base';
-import { CosmosWalletStrategy } from '@injectivelabs/wallet-cosmos';
+// import { CosmosWalletStrategy } from '@injectivelabs/wallet-cosmos';
 import type { XToken } from '@sodax/types';
 import { mainnet } from 'wagmi/chains';
 
@@ -32,10 +32,10 @@ export class InjectiveXService extends XService {
             rpcUrl: mainnet.rpcUrls.default.http[0],
           },
         }),
-        [Wallet.Keplr]: new CosmosWalletStrategy({
-          chainId: InjectiveChainId.Mainnet,
-          wallet: Wallet.Keplr,
-        }),
+        // [Wallet.Keplr]: new CosmosWalletStrategy({
+        //   chainId: InjectiveChainId.Mainnet,
+        //   wallet: Wallet.Keplr,
+        // }),
       },
     });
     this.indexerGrpcAccountPortfolioApi = new IndexerGrpcAccountPortfolioApi(endpoints.indexer);
