@@ -99,9 +99,6 @@ export interface IInjectiveWalletProvider extends WalletAddressProvider {
     senderAddress: InjectiveEoaAddress,
     contractAddress: string,
     msg: JsonObject,
-    fee: 'auto' | number,
-    memo?: string,
     funds?: InjectiveCoin[],
   ) => Promise<InjectiveExecuteResponse>;
-  queryContractSmart: (address: string, queryMsg: JsonObject) => Promise<JsonObject>;
 }
