@@ -348,7 +348,7 @@ const AppsContainer = () => {
     };
 
   return (
-    <div className="w-full bg-cream-white min-h-screen pb-24 md:pb-30">
+    <div className="bg-cream-white min-h-screen pb-24 md:pb-30  w-[100vw] overflow-x-hidden">
       <Sidebar isOpen={isOpen} toggle={toggle} setOpenRewardDialog={setOpenRewardDialog} />
       <div className="self-stretch h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
         <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
