@@ -82,6 +82,18 @@
   --body-small-tablet: 11px;
   --body-small-desktop: 12px;
   --body-small: var(--body-small-mobile);
+  --layout-space-comfortable-mobile: 16px;
+  --layout-space-comfortable-tablet: 24px;
+  --layout-space-comfortable-desktop: 32px;
+  --layout-space-comfortable: var(--layout-space-comfortable-mobile);
+  --layout-space-big-mobile: 24px;
+  --layout-space-big-tablet: 32px;
+  --layout-space-big-desktop: 40px;
+  --layout-space-big: var(--layout-space-big-mobile);
+  --layout-space-normal-mobile: 8px;
+  --layout-space-normal-tablet: 16px;
+  --layout-space-normal-desktop: 24px;
+  --layout-space-normal: var(--layout-space-normal-mobile);
 }
 
 .dark {
@@ -147,6 +159,15 @@
   --body-small-mobile: 11px;
   --body-small-tablet: 11px;
   --body-small-desktop: 12px;
+  --layout-space-comfortable-mobile: 16px;
+  --layout-space-comfortable-tablet: 24px;
+  --layout-space-comfortable-desktop: 32px;
+  --layout-space-big-mobile: 24px;
+  --layout-space-big-tablet: 32px;
+  --layout-space-big-desktop: 40px;
+  --layout-space-normal-mobile: 8px;
+  --layout-space-normal-tablet: 16px;
+  --layout-space-normal-desktop: 24px;
 }
 
 @theme inline {
@@ -206,6 +227,9 @@
   --text-body-super-comfortable: var(--body-super-comfortable-mobile);
   --text-subtitle: var(--subtitle-mobile);
   --text-body-small: var(--body-small-mobile);
+  --layout-space-comfortable: var(--layout-space-comfortable-mobile);
+  --layout-space-big: var(--layout-space-big-mobile);
+  --layout-space-normal: var(--layout-space-normal-mobile);
 }
 
 @media (min-width: 768px) {
@@ -215,6 +239,9 @@
     --body-super-comfortable: var(--body-super-comfortable-tablet);
     --subtitle: var(--subtitle-tablet);
     --body-small: var(--body-small-tablet);
+    --layout-space-comfortable: var(--layout-space-comfortable-tablet);
+    --layout-space-big: var(--layout-space-big-tablet);
+    --layout-space-normal: var(--layout-space-normal-tablet);
   }
 }
 
@@ -225,6 +252,9 @@
     --body-super-comfortable: var(--body-super-comfortable-desktop);
     --subtitle: var(--subtitle-desktop);
     --body-small: var(--body-small-desktop);
+    --layout-space-comfortable: var(--layout-space-comfortable-desktop);
+    --layout-space-big: var(--layout-space-big-desktop);
+    --layout-space-normal: var(--layout-space-normal-desktop);
   }
 }
 

@@ -1,5 +1,6 @@
 'use client';
 
+import type React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -8,13 +9,252 @@ import { useWallet } from '../../hooks/useWallet';
 import { Tabs, TabsContent, TabsList } from '@/components/ui/tabs';
 import TabItem from '@/components/ui/tab-item';
 import { tabConfigs } from '@/components/ui/tab-config';
-import { ChevronRight, ArrowUpFromLine, ArrowDownToLine } from 'lucide-react';
+import { ChevronRight, ArrowUpFromLine, ArrowDownToLine, ArrowDownUp } from 'lucide-react';
 import Sidebar from '@/components/landing/sidebar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
+// Shared content component
+const SharedContent = (): React.JSX.Element => {
+  return (
+    <div data-property-1="Default" className="self-stretch inline-flex flex-col justify-start items-start gap-4">
+      <div className="self-stretch mix-blend-multiply justify-end">
+        <span className="text-yellow-dark font-bold leading-9" style={{ fontSize: 'var(--app-title)' }}>
+          SODAX{' '}
+        </span>
+        <span
+          className="text-yellow-dark font-normal font-[shrikhand] leading-9"
+          style={{ fontSize: 'var(--app-title)' }}
+        >
+          migration
+        </span>
+      </div>
+      <div
+        className="self-stretch mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug"
+        style={{ fontSize: 'var(--subtitle)' }}
+      >
+        Swap 1:1 between ICX and SODA.
+      </div>
+    </div>
+  );
+};
+
+// Tab-specific content components
+const SwapContent = (): React.JSX.Element => {
+  return <div className="mt-8"></div>;
+};
+
+const SavingsContent = (): React.JSX.Element => {
+  return <div className="mt-8"></div>;
+};
+
+const LoansContent = (): React.JSX.Element => {
+  return <div className="mt-8"></div>;
+};
+
+const MigrateContent = (): React.JSX.Element => {
+  return (
+    <div style={{ gap: 'var(--layout-space-comfortable)' }} className="flex flex-col">
+      <div className="self-stretch inline-flex flex-col justify-start items-start gap-2">
+        <div className="self-stretch flex flex-col justify-start items-start gap-2">
+          <div
+            className="self-stretch relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center"
+            style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
+          >
+            <div className="flex justify-start items-center gap-2">
+              <div className="w-16 h-14 relative">
+                <div data-property-1="Default" className="w-12 h-12 left-[8px] top-[4px] absolute">
+                  <div className="w-12 h-12 left-0 top-0 absolute bg-gradient-to-br from-white to-zinc-100 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.20)]" />
+                  <div
+                    data-property-1="Default"
+                    className="left-[12px] top-[12px] absolute bg-White rounded-[256px] inline-flex flex-col justify-start items-start overflow-hidden"
+                  >
+                    <img data-property-1="ICX" className="w-6 h-6 rounded-[256px]" src="/coin/icx.png" />
+                  </div>
+                  <div
+                    data-property-1="Active"
+                    className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.40)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
+                  >
+                    <img data-property-1="ICON" className="w-4 h-4" src="/coin/icx1.png" />
+                  </div>
+                </div>
+              </div>
+              <div className="inline-flex flex-col justify-center items-start gap-1">
+                <div
+                  className="justify-center text-clay-light font-['InterRegular'] leading-tight"
+                  style={{ fontSize: 'var(--body-comfortable)' }}
+                >
+                  From
+                </div>
+                <div
+                  className="justify-center text-espresso font-['InterRegular'] leading-snug"
+                  style={{ fontSize: 'var(--body-super-comfortable)' }}
+                >
+                  ICON Network
+                </div>
+              </div>
+            </div>
+            <div
+              className="inline-flex flex-col justify-center items-end gap-1"
+              style={{ paddingRight: 'var(--layout-space-normal)' }}
+            >
+              <div
+                className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight"
+                style={{ fontSize: 'var(--body-comfortable)' }}
+              >
+                0 available
+              </div>
+              <div className="inline-flex gap-1 items-center">
+                <div
+                  className="text-right justify-center text-espresso font-['InterRegular'] font-bold"
+                  style={{ fontSize: 'var(--subtitle)' }}
+                >
+                  0
+                </div>
+                <div
+                  className="text-right justify-center text-espresso font-['InterRegular'] font-normal"
+                  style={{ fontSize: 'var(--body-super-comfortable)' }}
+                >
+                  ICX
+                </div>
+                <Badge variant="desktop" className="ml-1">
+                  MAX
+                </Badge>
+              </div>
+            </div>
+            <div className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] outline outline-4 outline-offset-[-4px] outline-stone-100 flex justify-center items-center">
+              <ArrowDownUp className="w-3 h-3 text-espresso text-bold" />
+            </div>
+          </div>
+          <div
+            className="self-stretch rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center"
+            style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
+          >
+            <div className="flex justify-start items-center gap-2">
+              <div className="w-16 h-14 relative">
+                <div data-property-1="Default" className="w-14 h-14 left-0 top-0 absolute">
+                  <div className="w-14 h-1.5 left-0 top-[50px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_var(--Espresso,_#483534)_0%,_rgba(71.72,_53.14,_52.29,_0)_100%)] rounded-full" />
+                  <div className="w-9 h-1 left-[10px] top-[51px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_var(--Espresso,_#483534)_0%,_rgba(71.72,_53.14,_52.29,_0)_100%)] rounded-full" />
+                  <img className="w-9 h-14 left-[9px] top-0 absolute" src="/can.png" />
+                  <img
+                    data-property-1="SODA"
+                    className="w-5 h-5 left-[18px] top-[14px] absolute mix-blend-multiply rounded-[256px]"
+                    src="/coin/soda.png"
+                  />
+                  <div
+                    data-property-1="Active"
+                    className="h-4 left-[36px] top-[36px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.40)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
+                  >
+                    <img data-property-1="Sonic" className="w-4 h-4" src="/coin/s1.png" />
+                  </div>
+                </div>
+              </div>
+              <div className="inline-flex flex-col justify-center items-start gap-1">
+                <div
+                  className="justify-center text-clay-light font-['InterRegular'] leading-tight"
+                  style={{ fontSize: 'var(--body-comfortable)' }}
+                >
+                  To
+                </div>
+                <div
+                  className="justify-center text-espresso font-['InterRegular'] leading-snug"
+                  style={{ fontSize: 'var(--body-super-comfortable)' }}
+                >
+                  Sonic Network
+                </div>
+              </div>
+            </div>
+            <div
+              className="inline-flex flex-col justify-center items-end gap-1"
+              style={{ paddingRight: 'var(--layout-space-normal)' }}
+            >
+              <div
+                className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight"
+                style={{ fontSize: 'var(--body-comfortable)' }}
+              >
+                Receive
+              </div>
+              <div className="inline-flex justify-end items-baseline gap-1">
+                <div
+                  className="text-right justify-center text-espresso font-['InterRegular'] font-black"
+                  style={{ fontSize: 'var(--subtitle)' }}
+                >
+                  0
+                </div>
+                <div
+                  className="text-right justify-center text-espresso font-['InterRegular'] leading-snug"
+                  style={{ fontSize: 'var(--body-super-comfortable)' }}
+                >
+                  SODA
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex md:flex-col flex-col-reverse" style={{ gap: 'var(--layout-space-comfortable)' }}>
+        <div className="inline-flex flex-col justify-start items-start gap-4">
+          <Button
+            variant="cherry"
+            className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer"
+            style={{ fontSize: 'var(--body-comfortable)' }}
+          >
+            Connect ICON & Sonic
+          </Button>
+          <div
+            className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight"
+            style={{ fontSize: 'var(--body-comfortable)' }}
+          >
+            Takes ~1 min · Network fee: ~0.02 ICX
+          </div>
+        </div>
+        <div
+          className="self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2"
+          style={{ padding: 'var(--layout-space-comfortable)' }}
+        >
+          <div className="self-stretch inline-flex justify-center items-center gap-2">
+            <div className="w-4 h-4 relative mix-blend-multiply">
+              <img src="/symbol.png" alt="" />
+            </div>
+            <div
+              className="flex-1 justify-center text-espresso font-bold font-['InterRegular'] leading-snug"
+              style={{ fontSize: 'var(--body-super-comfortable)' }}
+            >
+              You're migrating to Sonic
+            </div>
+          </div>
+          <div
+            className="self-stretch justify-center text-clay font-['InterRegular'] leading-tight"
+            style={{ fontSize: 'var(--body-comfortable)' }}
+          >
+            You won't need S token to receive your SODA. But you will for any future transactions on Sonic.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Content mapping
+const getTabContent = (tabValue: string): React.JSX.Element => {
+  switch (tabValue) {
+    case 'swap':
+      return <SwapContent />;
+    case 'savings':
+      return <SavingsContent />;
+    case 'loans':
+      return <LoansContent />;
+    case 'migrate':
+      return <MigrateContent />;
+    default:
+      return <SwapContent />;
+  }
+};
 
 const AppsContainer = () => {
   const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('swap');
-  const [arrowPosition, setArrowPosition] = useState(100);
+  const [arrowPosition, setArrowPosition] = useState(90);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);
   const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
 
@@ -33,13 +273,12 @@ const AppsContainer = () => {
       const mobileActiveTabElement = mobileTabRefs.current[activeTab];
       const containerElement = tabsContainerRef.current;
       const mobileContainerElement = mobileTabsContainerRef.current;
-
       // Update desktop arrow position
       if (desktopActiveTabElement && containerElement) {
         const containerRect = containerElement.getBoundingClientRect();
         const tabRect = desktopActiveTabElement.getBoundingClientRect();
         const relativeTop = tabRect.top - containerRect.top;
-        setArrowPosition(tabRect.top - 104 - 36); // 40px offset to center the arrow on the tab
+        setArrowPosition(relativeTop - 30); // Use relative position from parent container
       }
 
       // Update mobile arrow position
@@ -48,13 +287,13 @@ const AppsContainer = () => {
         const tabRect = mobileActiveTabElement.getBoundingClientRect();
         const relativeLeft = tabRect.left - mobileContainerRect.left;
         const tabWidth = tabRect.width;
-        setMobileArrowPosition(relativeLeft + tabWidth / 2 - 50); // Center the arrow on the tab
+        setMobileArrowPosition(relativeLeft + tabWidth / 2 - 48); // Center the arrow on the tab
       }
     };
 
-    // Update position after a short delay to ensure DOM is updated
-    const timeoutId = setTimeout(updateArrowPosition, 100);
-    return () => clearTimeout(timeoutId);
+    updateArrowPosition();
+    // const timeoutId = setTimeout(updateArrowPosition, 100);
+    // return () => clearTimeout(timeoutId);
   }, [activeTab]);
 
   // Update arrow position when window is resized
@@ -70,7 +309,7 @@ const AppsContainer = () => {
         const containerRect = containerElement.getBoundingClientRect();
         const tabRect = desktopActiveTabElement.getBoundingClientRect();
         const relativeTop = tabRect.top - containerRect.top;
-        setArrowPosition(tabRect.top - 104 - 32); // 40px offset to center the arrow on the tab
+        setArrowPosition(relativeTop - 30); // Use relative position from parent container
       }
 
       // Update mobile arrow position
@@ -109,7 +348,7 @@ const AppsContainer = () => {
     };
 
   return (
-    <div className="w-full bg-cream-white min-h-screen">
+    <div className="w-full bg-cream-white min-h-screen pb-24 md:pb-30">
       <Sidebar isOpen={isOpen} toggle={toggle} setOpenRewardDialog={setOpenRewardDialog} />
       <div className="self-stretch h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
         <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
@@ -206,14 +445,17 @@ const AppsContainer = () => {
           </div>
         </div>
       </div>
-      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 absolute left-[50%] translate-x-[-50%] top-[96px] md:top-[104px]  h-[calc(100vh-96px)] md:h-[calc(100vh-104px)]">
+      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 m-auto lg:-mt-30 md:-mt-34 -mt-36 h-wekit">
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation="vertical" className="w-full">
-          <div className="flex justify-center items-start h-[calc(100vh-192px)] md:h-[calc(100vh-224px)]">
+          <div className="flex justify-center items-start min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)] z-50">
             {/* Desktop sidebar */}
-            <div className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start lg:py-4">
+            <div
+              className="hidden md:flex md:w-[264px] lg:w-[304px] flex flex-col justify-center items-start lg:py-4"
+              style={{ height: '-webkit-fill-available' }}
+            >
               <div
                 ref={tabsContainerRef}
-                className="md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] h-[calc(100vh-224px)] lg:h-[calc(100vh-256px)]"
+                className="md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] min-h-[calc(100vh-224px)] lg:min-h-[calc(100vh-256px)] h-full relative"
               >
                 <TabsList data-orientation="vertical" className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
                   {tabConfigs.map(tab => (
@@ -224,32 +466,32 @@ const AppsContainer = () => {
                       label={tab.label}
                       isActive={activeTab === tab.value}
                       setTabRef={setDesktopTabRef(tab.value)}
-                      className="px-0"
+                      className="px-0 cursor-pointer"
                     />
                   ))}
                 </TabsList>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="80"
+                  viewBox="0 0 16 80"
+                  fill="none"
+                  aria-label="Deposit Dialog"
+                  className="absolute hidden md:block transition-all duration-300 ease-in-out z-51"
+                  style={{ top: `${arrowPosition}px`, right: '63px' }}
+                >
+                  <title>Deposit Dialog</title>
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M4.76995e-07 40C3.92926e-07 38.125 0.941131 37.1741 1.88235 36.6667C11.1437 31.6736 16 18.033 16 -1.90798e-07L16 80C16 61.967 11.1437 48.3264 1.88235 43.3333C0.941131 42.8259 5.61065e-07 41.875 4.76995e-07 40Z"
+                    fill="#F9F7F5"
+                  />
+                </svg>
               </div>
             </div>
 
-            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-192px)] md:h-[calc(100vh-224px)] p-[80px_24px] md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-[8px] rounded-[2rem] border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="80"
-                viewBox="0 0 16 80"
-                fill="none"
-                aria-label="Deposit Dialog"
-                className="absolute hidden md:block transition-all duration-300 ease-in-out"
-                style={{ top: `${arrowPosition}px`, left: '-23px' }}
-              >
-                <title>Deposit Dialog</title>
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M4.76995e-07 40C3.92926e-07 38.125 0.941131 37.1741 1.88235 36.6667C11.1437 31.6736 16 18.033 16 -1.90798e-07L16 80C16 61.967 11.1437 48.3264 1.88235 43.3333C0.941131 42.8259 5.61065e-07 41.875 4.76995e-07 40Z"
-                  fill="#F9F7F5"
-                />
-              </svg>
+            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)] p-[80px_16px] pb-10 md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-[8px] rounded-[2rem] border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="80"
@@ -270,29 +512,9 @@ const AppsContainer = () => {
               </svg>
               {tabConfigs.map(tab => (
                 <TabsContent key={tab.value} value={tab.value}>
-                  <div
-                    data-property-1="Default"
-                    className="self-stretch inline-flex flex-col justify-start items-start gap-4"
-                  >
-                    <div className="self-stretch mix-blend-multiply justify-end">
-                      <span className="text-yellow-dark font-bold leading-9" style={{ fontSize: 'var(--app-title)' }}>
-                        This is the title
-                        <br />
-                        for{' '}
-                      </span>
-                      <span
-                        className="text-yellow-dark font-normal font-[shrikhand] leading-9"
-                        style={{ fontSize: 'var(--app-title)' }}
-                      >
-                        the app
-                      </span>
-                    </div>
-                    <div
-                      className="self-stretch mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug"
-                      style={{ fontSize: 'var(--subtitle)' }}
-                    >
-                      Up to 24.1% with no lockups.
-                    </div>
+                  <div className="flex flex-col" style={{ gap: 'var(--layout-space-comfortable)' }}>
+                    <SharedContent />
+                    {getTabContent(tab.value)}
                   </div>
                 </TabsContent>
               ))}
