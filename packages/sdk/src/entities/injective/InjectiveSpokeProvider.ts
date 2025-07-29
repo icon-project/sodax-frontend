@@ -119,13 +119,13 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     const funds = [{ amount, denom: token_address }];
 
     if (raw) {
-      return spokeProvider.walletProvider.getRawTransaction(
+      return (await spokeProvider.walletProvider.getRawTransaction(
         spokeProvider.chainConfig.networkId,
         spokeProvider.chainConfig.prefix,
         sender,
         spokeProvider.chainConfig.addresses.assetManager,
         msg,
-      ) as InjectiveReturnType<R>;
+      )) as InjectiveReturnType<R>;
     }
 
     const res = await spokeProvider.walletProvider.execute(
@@ -203,13 +203,13 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       },
     };
     if (raw) {
-      return this.walletProvider.getRawTransaction(
+      return (await this.walletProvider.getRawTransaction(
         this.chainConfig.networkId,
         this.chainConfig.prefix,
         sender,
         this.chainConfig.addresses.connection,
         msg,
-      ) as InjectiveReturnType<R>;
+      )) as InjectiveReturnType<R>;
     }
     const res = await this.walletProvider.execute(sender, this.chainConfig.addresses.connection, msg);
     return res.transactionHash as InjectiveReturnType<R>;

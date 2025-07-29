@@ -92,7 +92,7 @@ export interface IInjectiveWalletProvider extends WalletAddressProvider {
     contractAddress: string,
     msg: JsonObject,
     memo?: string,
-  ): InjectiveRawTransaction;
+  ): Promise<InjectiveRawTransaction>;
   getWalletAddress: () => Promise<InjectiveEoaAddress>;
   getWalletAddressBytes: () => Promise<Hex>;
   execute: (
