@@ -1,7 +1,8 @@
 import type { XAccount } from '@/types';
 
 import { XConnector } from '@/core';
-import { Wallet } from '@injectivelabs/wallet-ts';
+import { Wallet } from '@injectivelabs/wallet-base';
+import { isCosmosWalletInstalled } from '@injectivelabs/wallet-cosmos';
 import { InjectiveXService } from './InjectiveXService';
 
 export class InjectiveKelprXConnector extends XConnector {
@@ -14,8 +15,7 @@ export class InjectiveKelprXConnector extends XConnector {
   }
 
   async connect(): Promise<XAccount | undefined> {
-    const { keplr } = window as any;
-    if (!keplr) {
+    if (!isCosmosWalletInstalled(Wallet.Keplr)) {
       window.open('https://chrome.google.com/webstore/detail/keplr/dmkamcknogkgcdfhhbddcghachkejeap?hl=en', '_blank');
       return;
     }

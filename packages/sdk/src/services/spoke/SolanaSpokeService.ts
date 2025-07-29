@@ -92,7 +92,6 @@ export class SolanaSpokeService {
     const assetManagerProgram = await getAssetManagerProgram(
       spokeProvider.walletProvider.getWalletBase58PublicKey(),
       spokeProvider.chainConfig.rpcUrl,
-      spokeProvider.chainConfig.wsUrl,
       spokeProvider.chainConfig.addresses.assetManager,
     );
     const solToken = new PublicKey(Buffer.from(token, 'hex'));
@@ -137,20 +136,18 @@ export class SolanaSpokeService {
     let depositInstruction: TransactionInstruction;
     const amountBN = new BN(amount);
     const { walletProvider, chainConfig } = spokeProvider;
-    const { rpcUrl, wsUrl, addresses } = chainConfig;
+    const { rpcUrl, addresses } = chainConfig;
     const walletPublicKey = new PublicKey(walletProvider.getWalletBase58PublicKey());
 
     const assetManagerProgram = await getAssetManagerProgram(
       walletProvider.getWalletBase58PublicKey(),
       rpcUrl,
-      wsUrl,
       addresses.assetManager,
     );
 
     const connectionProgram = await getConnectionProgram(
       walletProvider.getWalletBase58PublicKey(),
       rpcUrl,
-      wsUrl,
       addresses.connection,
     );
 
@@ -246,13 +243,12 @@ export class SolanaSpokeService {
     raw?: R,
   ): PromiseSolanaTxReturnType<R> {
     const { walletProvider, chainConfig } = spokeProvider;
-    const { rpcUrl, wsUrl, addresses } = chainConfig;
+    const { rpcUrl, addresses } = chainConfig;
     const walletPublicKey = new PublicKey(walletProvider.getWalletBase58PublicKey());
 
     const connectionProgram = await getConnectionProgram(
       walletProvider.getWalletBase58PublicKey(),
       rpcUrl,
-      wsUrl,
       addresses.connection,
     );
 
