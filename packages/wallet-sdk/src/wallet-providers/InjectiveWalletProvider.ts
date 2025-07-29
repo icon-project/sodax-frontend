@@ -1,15 +1,13 @@
 import { MsgExecuteContract, MsgExecuteContractCompat } from '@injectivelabs/sdk-ts';
 import { toHex } from 'viem';
-import { createTransaction, ChainGrpcWasmApi } from '@injectivelabs/sdk-ts';
+import { createTransaction } from '@injectivelabs/sdk-ts';
 import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
 import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
 
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
   private client: MsgBroadcaster;
   public walletAddress: InjectiveEoaAddress | undefined;
-  private chainGrpcWasmApi: ChainGrpcWasmApi;
 
   constructor({
     client,
@@ -17,8 +15,6 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
   }: { client: MsgBroadcaster; walletAddress: InjectiveEoaAddress | undefined; rpcUrl: string }) {
     this.client = client;
     this.walletAddress = walletAddress;
-    const endpoints = getNetworkEndpoints(Network.Mainnet);
-    this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
   }
 
   getRawTransaction(
