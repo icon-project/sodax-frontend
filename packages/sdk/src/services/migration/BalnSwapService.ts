@@ -1,9 +1,16 @@
+import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 // packages/sdk/src/services/hub/BalnSwapService.ts
 import { type Address, type Hex, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { balnSwapAbi } from '../../abis/balnSwap.abi.js';
-import type { EvmContractCall, EvmHubChainConfig, EvmReturnType, PromiseEvmTxReturnType } from '../../types.js';
-import { encodeContractCalls, Erc20Service } from '../../index.js';
-import type { SonicSpokeProvider } from '../../entities/index.js';
+import type {
+  EvmContractCall,
+  EvmReturnType,
+  IconContractAddress,
+  PromiseEvmTxReturnType,
+} from '../../types.js';
+import { encodeContractCalls, Erc20Service, getHubAssetInfo } from '../../index.js';
+import type { EvmHubProvider, SonicSpokeProvider } from '../../entities/index.js';
+import invariant from 'tiny-invariant';
 
 /**
  * Lockup periods in seconds
@@ -62,7 +69,7 @@ export type DetailedLock = {
 /**
  * Parameters for BALN swap operations.
  */
-export type BalnSwapParams = {
+export type BalnMigrateParams = {
   /** The amount of BALN tokens to swap */
   amount: bigint;
   /** The lockup period for the swap */
@@ -85,13 +92,19 @@ export type BalnLockParams = {
  * Service for handling BALN swap operations on the hub chain.
  * Provides functionality to interact directly with the BALN swap contract.
  */
-export namespace BalnSwapService {
+export class BalnSwapService {
+  private readonly hubProvider: EvmHubProvider;
+
+  constructor(hubProvider: EvmHubProvider) {
+    this.hubProvider = hubProvider;
+  }
+
   /**
    * Gets the multiplier for a given lockup period.
    * @param lockupPeriod - The lockup period
    * @returns The multiplier in basis points
    */
-  export function getMultiplierForPeriod(lockupPeriod: LockupPeriod): bigint {
+  getMultiplierForPeriod(lockupPeriod: LockupPeriod): bigint {
     switch (lockupPeriod) {
       case LockupPeriod.NO_LOCKUP:
         return BigInt(LockupMultiplier.NO_LOCKUP_MULTIPLIER);
@@ -114,8 +127,8 @@ export namespace BalnSwapService {
    * @param lockupPeriod - The lockup period
    * @returns The calculated SODA amount
    */
-  export function calculateSodaAmount(balnAmount: bigint, lockupPeriod: LockupPeriod): bigint {
-    const multiplier = getMultiplierForPeriod(lockupPeriod);
+  calculateSodaAmount(balnAmount: bigint, lockupPeriod: LockupPeriod): bigint {
+    const multiplier = this.getMultiplierForPeriod(lockupPeriod);
     const basisPoints = 10000n;
 
     // SODA amount = BALN amount * multiplier / basis points
@@ -128,112 +141,102 @@ export namespace BalnSwapService {
    * 1. Approve the BALN swap contract to spend the BALN tokens
    * 2. Execute the BALN swap with lockup period
    *
-   * @param hubChainConfig - The hub chain configuration containing contract addresses
    * @param balnToken - The address of the BALN token
    * @param params - The BALN swap parameters including amount, lockup period, and recipient
    * @returns Encoded transaction data for the BALN swap operation
    */
-  export async function swapData(
-    hubChainConfig: EvmHubChainConfig,
-    balnToken: Address,
-    params: BalnSwapParams,
-  ): Promise<Hex> {
+  async swapData(balnToken: IconContractAddress, params: BalnMigrateParams): Promise<Hex> {
+    const assetConfig = getHubAssetInfo(ICON_MAINNET_CHAIN_ID, balnToken);
+    invariant(assetConfig, `hub asset not found for baln token: ${balnToken}`);
+
     const calls: EvmContractCall[] = [];
 
     // Approve BALN tokens for the swap contract
-    calls.push(Erc20Service.encodeApprove(balnToken, hubChainConfig.addresses.balnSwap, params.amount));
-    calls.push(encodeSwap(hubChainConfig, params.amount, params.lockupPeriod, params.to, params.stake));
+    calls.push(
+      Erc20Service.encodeApprove(assetConfig.asset, this.hubProvider.chainConfig.addresses.balnSwap, params.amount),
+    );
+    calls.push(this.encodeSwap(params.amount, params.lockupPeriod, params.to, params.stake));
 
     return encodeContractCalls(calls);
   }
 
   /**
    * Executes a claim operation directly through the wallet provider.
-   * @param hubChainConfig - The hub chain configuration
    * @param params - The lock parameters including lock ID
    * @param spokeProvider - The Sonic spoke provider
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  export async function claim<R extends boolean = false>(
-    hubChainConfig: EvmHubChainConfig,
+  async claim<R extends boolean = false>(
     params: BalnLockParams,
     spokeProvider: SonicSpokeProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
-    const claimTx = encodeClaim(hubChainConfig, params.lockId);
-    return await call(spokeProvider, claimTx, raw);
+    const claimTx = this.encodeClaim(params.lockId);
+    return await this.call(spokeProvider, claimTx, raw);
   }
 
   /**
    * Executes a claim unstaked operation directly through the wallet provider.
-   * @param hubChainConfig - The hub chain configuration
    * @param params - The lock parameters including lock ID
    * @param spokeProvider - The Sonic spoke provider
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  export async function claimUnstaked<R extends boolean = false>(
-    hubChainConfig: EvmHubChainConfig,
+  async claimUnstaked<R extends boolean = false>(
     params: BalnLockParams,
     spokeProvider: SonicSpokeProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
-    const claimUnstakedTx = encodeClaimUnstaked(hubChainConfig, params.lockId);
-    return await call(spokeProvider, claimUnstakedTx, raw);
+    const claimUnstakedTx = this.encodeClaimUnstaked(params.lockId);
+    return await this.call(spokeProvider, claimUnstakedTx, raw);
   }
 
   /**
    * Executes a stake operation directly through the wallet provider.
-   * @param hubChainConfig - The hub chain configuration
    * @param params - The lock parameters including lock ID
    * @param spokeProvider - The Sonic spoke provider
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  export async function stake<R extends boolean = false>(
-    hubChainConfig: EvmHubChainConfig,
+  async stake<R extends boolean = false>(
     params: BalnLockParams,
     spokeProvider: SonicSpokeProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
-    const stakeTx = encodeStake(hubChainConfig, params.lockId);
-    return await call(spokeProvider, stakeTx, raw);
+    const stakeTx = this.encodeStake(params.lockId);
+    return await this.call(spokeProvider, stakeTx, raw);
   }
 
   /**
    * Executes an unstake operation directly through the wallet provider.
-   * @param hubChainConfig - The hub chain configuration
    * @param params - The lock parameters including lock ID
    * @param spokeProvider - The Sonic spoke provider
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  export async function unstake<R extends boolean = false>(
-    hubChainConfig: EvmHubChainConfig,
+  async unstake<R extends boolean = false>(
     params: BalnLockParams,
     spokeProvider: SonicSpokeProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
-    const unstakeTx = encodeUnstake(hubChainConfig, params.lockId);
-    return await call(spokeProvider, unstakeTx, raw);
+    const unstakeTx = this.encodeUnstake(params.lockId);
+    return await this.call(spokeProvider, unstakeTx, raw);
   }
 
   /**
    * Gets detailed locks for a specific user including unstake requests and staked amounts.
    *
-   * @param hubChainConfig - The hub chain configuration containing contract addresses
    * @param publicClient - The public client for reading contract state
    * @param user - The user address
    * @returns Array of detailed lock information for the user
    */
-  export async function getDetailedUserLocks(
-    hubChainConfig: EvmHubChainConfig,
+  async getDetailedUserLocks(
     publicClient: PublicClient<HttpTransport>,
     user: Address,
   ): Promise<readonly DetailedLock[]> {
     return await publicClient.readContract({
-      address: hubChainConfig.addresses.balnSwap,
+      address: this.hubProvider.chainConfig.addresses.balnSwap,
       abi: balnSwapAbi,
       functionName: 'getDetailedUserLocks',
       args: [user],
@@ -245,22 +248,15 @@ export namespace BalnSwapService {
   /**
    * Encodes a swap transaction for the BALN swap contract.
    *
-   * @param hubChainConfig - The hub chain configuration containing contract addresses
    * @param amount - The amount of BALN tokens to swap
    * @param lockupPeriod - The lockup period for the swap
    * @param to - The address that will receive the swapped SODA tokens
    * @param stake - Whether to stake the SODA tokens
    * @returns The encoded contract call for the swap operation
    */
-  export function encodeSwap(
-    hubChainConfig: EvmHubChainConfig,
-    amount: bigint,
-    lockupPeriod: LockupPeriod,
-    to: Address,
-    stake: boolean,
-  ): EvmContractCall {
+  encodeSwap(amount: bigint, lockupPeriod: LockupPeriod, to: Address, stake: boolean): EvmContractCall {
     return {
-      address: hubChainConfig.addresses.balnSwap,
+      address: this.hubProvider.chainConfig.addresses.balnSwap,
       value: 0n,
       data: encodeFunctionData({
         abi: balnSwapAbi,
@@ -273,13 +269,12 @@ export namespace BalnSwapService {
   /**
    * Encodes a claim transaction for the BALN swap contract.
    *
-   * @param hubChainConfig - The hub chain configuration containing contract addresses
    * @param lockId - The lock ID to claim from
    * @returns The encoded contract call for the claim operation
    */
-  export function encodeClaim(hubChainConfig: EvmHubChainConfig, lockId: bigint): EvmContractCall {
+  encodeClaim(lockId: bigint): EvmContractCall {
     return {
-      address: hubChainConfig.addresses.balnSwap,
+      address: this.hubProvider.chainConfig.addresses.balnSwap,
       value: 0n,
       data: encodeFunctionData({
         abi: balnSwapAbi,
@@ -292,13 +287,12 @@ export namespace BalnSwapService {
   /**
    * Encodes a claim unstaked transaction for the BALN swap contract.
    *
-   * @param hubChainConfig - The hub chain configuration containing contract addresses
    * @param lockId - The lock ID to claim unstaked tokens from
    * @returns The encoded contract call for the claim unstaked operation
    */
-  export function encodeClaimUnstaked(hubChainConfig: EvmHubChainConfig, lockId: bigint): EvmContractCall {
+  encodeClaimUnstaked(lockId: bigint): EvmContractCall {
     return {
-      address: hubChainConfig.addresses.balnSwap,
+      address: this.hubProvider.chainConfig.addresses.balnSwap,
       value: 0n,
       data: encodeFunctionData({
         abi: balnSwapAbi,
@@ -311,13 +305,12 @@ export namespace BalnSwapService {
   /**
    * Encodes a stake transaction for the BALN swap contract.
    *
-   * @param hubChainConfig - The hub chain configuration containing contract addresses
    * @param lockId - The lock ID to stake
    * @returns The encoded contract call for the stake operation
    */
-  export function encodeStake(hubChainConfig: EvmHubChainConfig, lockId: bigint): EvmContractCall {
+  encodeStake(lockId: bigint): EvmContractCall {
     return {
-      address: hubChainConfig.addresses.balnSwap,
+      address: this.hubProvider.chainConfig.addresses.balnSwap,
       value: 0n,
       data: encodeFunctionData({
         abi: balnSwapAbi,
@@ -330,13 +323,12 @@ export namespace BalnSwapService {
   /**
    * Encodes an unstake transaction for the BALN swap contract.
    *
-   * @param hubChainConfig - The hub chain configuration containing contract addresses
    * @param lockId - The lock ID to unstake
    * @returns The encoded contract call for the unstake operation
    */
-  export function encodeUnstake(hubChainConfig: EvmHubChainConfig, lockId: bigint): EvmContractCall {
+  encodeUnstake(lockId: bigint): EvmContractCall {
     return {
-      address: hubChainConfig.addresses.balnSwap,
+      address: this.hubProvider.chainConfig.addresses.balnSwap,
       value: 0n,
       data: encodeFunctionData({
         abi: balnSwapAbi,
@@ -355,7 +347,7 @@ export namespace BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async function call<R extends boolean = false>(
+  async call<R extends boolean = false>(
     spokeProvider: SonicSpokeProvider,
     rawTx: EvmContractCall,
     raw?: R,

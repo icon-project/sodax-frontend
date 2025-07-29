@@ -1,5 +1,5 @@
 import type { Address, Hex } from 'viem';
-import type { EvmContractCall } from '../../types.js';
+import type { bnUSDLegacyAddress, bnUSDLegacySpokeChainId, EvmContractCall } from '../../types.js';
 import {
   encodeContractCalls,
   Erc20Service,
@@ -10,24 +10,24 @@ import {
   getMoneyMarketConfig,
 } from '../../index.js';
 import invariant from 'tiny-invariant';
-import { type SpokeChainId, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  type HubChainId,
+} from '@sodax/types';
 
 export type BnUSDMigrateParams = {
-  srcChainID: SpokeChainId; // The source chain ID where the legacy bnUSD token exists
-  legacybnUSD: string; // The ICON address of the legacy bnUSD token to migrate
-  newbnUSD: string; // The ICON address of the new bnUSD token to receive
+  address: bnUSDLegacyAddress; // The legacy bnUSD token address to migrate
+  srcChainID: bnUSDLegacySpokeChainId; // The source chain ID where the legacy bnUSD token exists
   amount: bigint; // The amount of legacy bnUSD to migrate
-  to: Address; // The address that will receive the migrated assets
-  dstChainID: SpokeChainId; // The destination chain ID for the migration
+  to: Address; // The hub (sonic) wallet address that will receive the migrated assets
+  dstChainID: HubChainId; // The destination chain ID for the migration
 };
 
 export type BnUSDRevertMigrationParams = {
-  srcChainID: SpokeChainId; // The source chain ID where the new bnUSD token exists
-  legacybnUSD: string; // The ICON address of the legacy bnUSD token to receive
-  newbnUSD: string; // The ICON address of the new bnUSD token to migrate from
+  srcChainID: HubChainId; // The source chain ID where the new bnUSD token exists
   amount: bigint; // The amount of new bnUSD tokens to migrate back
-  to: Hex; // The Icon address that will receive the migrated legacy bnUSD tokens
-  dstChainID: SpokeChainId; // The destination chain ID for the migration
+  to: Hex; // The spoke chain address that will receive the migrated legacy bnUSD tokens
+  dstChainID: bnUSDLegacySpokeChainId; // The destination chain ID for the migration
 };
 
 /**
@@ -52,7 +52,7 @@ export class BnUSDMigrationService {
    * @returns Encoded transaction data for the migration operation
    * @throws Will throw an error if the hub asset configuration is not found
    */
-  public migrateData(params: BnUSDMigrateParams): Hex {
+  public migrateData(params: BnUSDMigrateParams & { legacybnUSD: string; newbnUSD: string }): Hex {
     const calls: EvmContractCall[] = [];
     const assetConfig = getHubAssetInfo(params.srcChainID, params.legacybnUSD);
     invariant(assetConfig, `hub asset not found for legacy bnUSD token: ${params.legacybnUSD}`);
@@ -105,7 +105,7 @@ export class BnUSDMigrationService {
    * @returns Encoded transaction data for the migration operation
    * @throws Will throw an error if the hub asset configuration is not found
    */
-  public revertMigrationData(params: BnUSDRevertMigrationParams): Hex {
+  public revertMigrationData(params: BnUSDRevertMigrationParams & { legacybnUSD: string; newbnUSD: string }): Hex {
     const calls: EvmContractCall[] = [];
     const bnUSDVault = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault as Address;
 

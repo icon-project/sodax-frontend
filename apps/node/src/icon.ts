@@ -20,6 +20,7 @@ import {
   BnUSDMigrationService,
   type BnUSDMigrateParams,
   encodeAddress,
+  bnUSDLegacyAddress,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
@@ -213,16 +214,14 @@ async function repay(token: IconAddress, amount: bigint) {
  * @param amount - The amount of wICX tokens to migrate
  * @param recipient - The address that will receive the migrated SODA tokens
  */
-async function migrate(amount: bigint, recipient: Address): Promise<void> {
+async function migrateIcxToSoda(amount: bigint, recipient: Address): Promise<void> {
   const params = {
-    token: 'ICX',
-    icx: iconSpokeChainConfig.nativeToken,
+    address: iconSpokeChainConfig.nativeToken,
     amount,
     to: recipient,
-    action: 'migrate',
   } satisfies MigrationParams;
 
-  const result = await sodax.migration.createAndSubmitMigrateIntent(params, iconSpokeProvider);
+  const result = await sodax.migration.migrateIcxToSoda(params, iconSpokeProvider);
 
   if (result.ok) {
     console.log('[migrate] txHash', result.value);
@@ -245,39 +244,27 @@ async function migrate(amount: bigint, recipient: Address): Promise<void> {
  * @param recipient - The address that will receive the migrated new bnUSD tokens
  */
 async function migrateBnUSD(
-  legacybnUSD: string,
-  dstChainID: SpokeChainId,
-  newbnUSD: string,
+  legacybnUSD: bnUSDLegacyAddress,
+  dstChainID: HubChainId,
   amount: bigint,
   recipient: Address,
 ): Promise<void> {
-  const bnUSDMigrationService = new BnUSDMigrationService(hubProvider);
-
-  const params: BnUSDMigrateParams = {
+  const result = await sodax.migration.migratebnUSD({
+    address: legacybnUSD,
     srcChainID: iconSpokeChainConfig.chain.id,
-    legacybnUSD,
-    newbnUSD,
     amount,
-    to: encodeAddress(dstChainID, recipient),
+    to: recipient,
     dstChainID: dstChainID,
-  };
+  }, iconSpokeProvider);
 
-  const migrationData = bnUSDMigrationService.migrateData(params);
-
-  const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
-
-  const txHash: Hash = await SpokeService.deposit(
-    {
-      from: walletAddress,
-      token: legacybnUSD as IconAddress,
-      amount,
-      data: migrationData,
-    },
-    iconSpokeProvider,
-    hubProvider,
-  );
-
-  console.log('[migrateBnUSD] txHash', txHash);
+  if (result.ok) {
+    console.log('[migrateBnUSD] txHash', result.value);
+    const [spokeTxHash, hubTxHash] = result.value;
+    console.log('[migrateBnUSD] hubTxHash', hubTxHash);
+    console.log('[migrateBnUSD] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[migrateBnUSD] error', result.error);
+  }
 }
 
 ///**
@@ -358,14 +345,13 @@ async function main() {
   } else if (functionName === 'migrate') {
     const amount = BigInt(process.argv[3]); // Get amount from command line argument
     const recipient = process.argv[4] as Address; // Get recipient address from command line argument
-    await migrate(amount, recipient);
+    await migrateIcxToSoda(amount, recipient);
   } else if (functionName === 'migrateBnUSD') {
-    const legacybnUSD = process.argv[3] as string; // Get legacy bnUSD address from command line argument
-    const dstChainID = process.argv[4] as SpokeChainId; // Get destination chain ID from command line argument
-    const newbnUSD = process.argv[5] as string; // Get new bnUSD address from command line argument
-    const amount = BigInt(process.argv[6]); // Get amount from command line argument
-    const recipient = process.argv[7] as Address; // Get recipient address from command line argument
-    await migrateBnUSD(legacybnUSD, dstChainID, newbnUSD, amount, recipient);
+    const legacybnUSD = process.argv[3] as bnUSDLegacyAddress; // Get legacy bnUSD address from command line argument
+    const dstChainID = process.argv[4] as HubChainId; // Get destination chain ID from command line argument
+    const amount = BigInt(process.argv[5]); // Get amount from command line argument
+    const recipient = process.argv[6] as Address; // Get recipient address from command line argument
+    await migrateBnUSD(legacybnUSD, dstChainID, amount, recipient);
     // } else if (functionName === 'balnMigrate') {
     //   const baln = process.argv[3] as IconAddress; // Get BALN token address from command line argument
     //   const amount = BigInt(process.argv[4]); // Get amount from command line argument

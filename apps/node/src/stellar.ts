@@ -1,4 +1,4 @@
-import type { Hash, Hex, Address } from 'viem';
+import type { Hex, Address } from 'viem';
 import {
   EvmAssetManagerService,
   EvmWalletAbstraction,
@@ -13,18 +13,14 @@ import {
   type SodaxConfig,
   EvmHubProvider,
   type SolverConfigParams,
-  BnUSDMigrationService,
-  type BnUSDMigrateParams,
-  type BnUSDRevertMigrationParams,
   type HttpUrl,
-  encodeAddress,
+  bnUSDLegacyAddress,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
-import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import { HubChainId, SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -238,84 +234,27 @@ async function repay(token: string, amount: bigint) {
  * @param recipient - The address that will receive the migrated new bnUSD tokens
  */
 async function migrateBnUSD(
-  legacybnUSD: string,
-  dstChainID: string,
-  newbnUSD: string,
+  legacybnUSD: bnUSDLegacyAddress,
+  dstChainID: HubChainId,
   amount: bigint,
   recipient: Address,
 ): Promise<void> {
-  const bnUSDMigrationService = new BnUSDMigrationService(hubProvider);
-
-  const params: BnUSDMigrateParams = {
-    srcChainID: stellarSpokeProvider.chainConfig.chain.id,
-    legacybnUSD,
-    newbnUSD,
+  const result = await sodax.migration.migratebnUSD({
+    address: legacybnUSD,
+    srcChainID: stellarSpokeProvider.chainConfig.chain.id as typeof STELLAR_MAINNET_CHAIN_ID,
     amount,
-    to: encodeAddress(dstChainID as SpokeChainId, recipient),
-    dstChainID: dstChainID as SpokeChainId,
-  };
+    to: recipient,
+    dstChainID: dstChainID,
+  }, stellarSpokeProvider);
 
-  const migrationData = bnUSDMigrationService.migrateData(params);
-
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
-
-  const txHash = await SpokeService.deposit(
-    {
-      from: walletAddressBytes,
-      token: legacybnUSD as Hex,
-      amount,
-      data: migrationData,
-    },
-    stellarSpokeProvider,
-    hubProvider,
-  );
-
-  console.log('[migrateBnUSD] txHash', txHash);
-}
-
-/**
- * Migrates new bnUSD tokens back to legacy bnUSD tokens.
- * This function handles the migration of new bnUSD tokens to legacy bnUSD tokens.
- *
- * @param dstChainID - The destination chain ID where the legacy bnUSD token exists
- * @param legacybnUSD - The address of the legacy bnUSD token to receive
- * @param amount - The amount of new bnUSD tokens to migrate back
- * @param recipient - The address that will receive the migrated legacy bnUSD tokens
- */
-async function reverseMigrateBnUSD(
-  dstChainID: string,
-  legacybnUSD: string,
-  amount: bigint,
-  recipient: Address,
-): Promise<void> {
-  const bnUSDMigrationService = new BnUSDMigrationService(hubProvider);
-  const newbnUSD = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault as Address;
-
-  const params: BnUSDRevertMigrationParams = {
-    srcChainID: stellarSpokeProvider.chainConfig.chain.id,
-    legacybnUSD,
-    newbnUSD,
-    amount,
-    to: encodeAddress(dstChainID as SpokeChainId, recipient),
-    dstChainID: dstChainID as SpokeChainId,
-  };
-
-  const migrationData = bnUSDMigrationService.revertMigrationData(params);
-
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
-
-  const txHash = await SpokeService.deposit(
-    {
-      from: walletAddressBytes,
-      token: newbnUSD,
-      amount,
-      data: migrationData,
-    },
-    stellarSpokeProvider,
-    hubProvider,
-  );
-
-  console.log('[reverseMigrateBnUSD] txHash', txHash);
+  if (result.ok) {
+    console.log('[migrateBnUSD] txHash', result.value);
+    const [spokeTxHash, hubTxHash] = result.value;
+    console.log('[migrateBnUSD] hubTxHash', hubTxHash);
+    console.log('[migrateBnUSD] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[migrateBnUSD] error', result.error);
+  }
 }
 
 // Main function to decide which function to call
@@ -351,24 +290,17 @@ async function main() {
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
   } else if (functionName === 'migrateBnUSD') {
-    const legacybnUSD = process.argv[3] as string;
-    const dstChainID = process.argv[4] as string;
-    const newbnUSD = process.argv[5] as string;
-    const amount = BigInt(process.argv[6]);
-    const recipient = process.argv[7] as Address;
-    await migrateBnUSD(legacybnUSD, dstChainID, newbnUSD, amount, recipient);
-  } else if (functionName === 'reverseMigrateBnUSD') {
-    const dstChainID = process.argv[3] as string;
-    const legacybnUSD = process.argv[4] as string;
+    const legacybnUSD = process.argv[3] as bnUSDLegacyAddress;
+    const dstChainID = process.argv[4] as HubChainId;
     const amount = BigInt(process.argv[5]);
     const recipient = process.argv[6] as Address;
-    await reverseMigrateBnUSD(dstChainID, legacybnUSD, amount, recipient);
+    await migrateBnUSD(legacybnUSD, dstChainID, amount, recipient);
   } else if (functionName === 'balance') {
     const token = process.argv[3] as string;
     await getBalance(token);
   } else {
     console.log(
-      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrateBnUSD", "reverseMigrateBnUSD", or "balance".',
+      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrateBnUSD", or "balance".',
     );
     console.log('Usage examples:');
     console.log('  npm run stellar deposit <token_address> <amount> <recipient_address>');
@@ -379,9 +311,6 @@ async function main() {
     console.log('  npm run stellar repay <token_address> <amount>');
     console.log(
       '  npm run stellar migrateBnUSD <legacybnUSD_address> <dstChainID> <newbnUSD_address> <amount> <recipient_address>',
-    );
-    console.log(
-      '  npm run stellar reverseMigrateBnUSD <dstChainID> <legacybnUSD_address> <amount> <recipient_address>',
     );
     console.log('  npm run stellar balance <token_address>');
   }

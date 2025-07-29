@@ -140,9 +140,9 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
       hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
-      icxMigration: '0x8Af7cae2c8377BEDD8820A5ad096AaFA29D839cc',
-      balnSwap: '0x0000000000000000000000000000000000000000', // TODO: Replace with actual BALN swap contract address
-      sodaToken: '0x8515352CB9832D1d379D52366D1E995ADd358420',
+      icxMigration: '0x8Af7cae2c8377BEDD8820A5ad096AaFA29D839cc', // TODO update with "final" address before migration
+      balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10', // TODO update with "final" address before migration
+      sodaToken: '0x8515352CB9832D1d379D52366D1E995ADd358420', // TODO update with "final" address before migration
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     supportedTokens: [],
@@ -746,6 +746,12 @@ export const spokeChainConfig = {
         name: 'bnUSD',
         decimals: 18,
         address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
+      },
+      BALN: {
+        symbol: 'BALN',
+        name: 'BALN',
+        decimals: 18,
+        address: 'cxf61cd5a45dc9f91c15aa65831a30a90d59a09619',
       },
     } as const,
     nativeToken: 'cx0000000000000000000000000000000000000000' as const,
@@ -1610,6 +1616,29 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic,
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
+
+export const migrationConfig = {
+  bnUSD: {
+    [ICON_MAINNET_CHAIN_ID]: {
+      legacybnUSD: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+      newbnUSD: hubVaults.bnUSD.address,
+    },
+    [SUI_MAINNET_CHAIN_ID]: {
+      legacybnUSD: spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
+      newbnUSD: hubVaults.bnUSD.address,
+    },
+    [STELLAR_MAINNET_CHAIN_ID]: {
+      legacybnUSD: spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
+      newbnUSD: hubVaults.bnUSD.address,
+    },
+  },
+  ICX: {
+    [ICON_MAINNET_CHAIN_ID]: {
+      icx: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['nativeToken'],
+      wICX: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['addresses']['wICX'],
+    },
+  }
+} as const;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
   moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());

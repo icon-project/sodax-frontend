@@ -16,8 +16,9 @@ import {
   BnUSDMigrationService,
   type BnUSDMigrateParams,
   encodeAddress,
+  bnUSDLegacyAddress,
 } from '@sodax/sdk';
-import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import { HubChainId, SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { SuiWalletProvider } from './sui-wallet-provider.js';
 
 import dotenv from 'dotenv';
@@ -224,6 +225,8 @@ async function repay(token: string, amount: bigint): Promise<void> {
 
 /**
  * Migrates legacy bnUSD tokens to new bnUSD tokens.
+/**
+ * Migrates legacy bnUSD tokens to new bnUSD tokens.
  * This function handles the migration of legacy bnUSD tokens to new bnUSD tokens.
  *
  * @param legacybnUSD - The address of the legacy bnUSD token to migrate
@@ -233,39 +236,27 @@ async function repay(token: string, amount: bigint): Promise<void> {
  * @param recipient - The address that will receive the migrated new bnUSD tokens
  */
 async function migrateBnUSD(
-  legacybnUSD: string,
-  dstChainID: SpokeChainId,
-  newbnUSD: string,
+  legacybnUSD: bnUSDLegacyAddress,
+  dstChainID: HubChainId,
   amount: bigint,
   recipient: Address,
 ): Promise<void> {
-  const bnUSDMigrationService = new BnUSDMigrationService(hubProvider);
-
-  const params: BnUSDMigrateParams = {
-    srcChainID: suiSpokeProvider.chainConfig.chain.id,
-    legacybnUSD,
-    newbnUSD,
+  const result = await sodax.migration.migratebnUSD({
+    address: legacybnUSD,
+    srcChainID: suiSpokeProvider.chainConfig.chain.id as typeof SUI_MAINNET_CHAIN_ID,
     amount,
-    to: encodeAddress(dstChainID, recipient),
+    to: recipient,
     dstChainID: dstChainID,
-  };
+  }, suiSpokeProvider);
 
-  const migrationData = bnUSDMigrationService.migrateData(params);
-
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
-
-  const txHash: Hash = await SpokeService.deposit(
-    {
-      from: walletAddressBytes,
-      token: legacybnUSD as Hex,
-      amount,
-      data: migrationData,
-    },
-    suiSpokeProvider,
-    hubProvider,
-  );
-
-  console.log('[migrateBnUSD] txHash', txHash);
+  if (result.ok) {
+    console.log('[migrateBnUSD] txHash', result.value);
+    const [spokeTxHash, hubTxHash] = result.value;
+    console.log('[migrateBnUSD] hubTxHash', hubTxHash);
+    console.log('[migrateBnUSD] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[migrateBnUSD] error', result.error);
+  }
 }
 
 // Main function to decide which function to call
@@ -300,12 +291,11 @@ async function main() {
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
   } else if (functionName === 'migrateBnUSD') {
-    const legacybnUSD = process.argv[3] as string;
-    const dstChainID = process.argv[4] as SpokeChainId;
-    const newbnUSD = process.argv[5] as string;
-    const amount = BigInt(process.argv[6]);
-    const recipient = process.argv[7] as Address;
-    await migrateBnUSD(legacybnUSD, dstChainID, newbnUSD, amount, recipient);
+    const legacybnUSD = process.argv[3] as bnUSDLegacyAddress;
+    const dstChainID = process.argv[4] as HubChainId;
+    const amount = BigInt(process.argv[5]);
+    const recipient = process.argv[6] as Address;
+    await migrateBnUSD(legacybnUSD, dstChainID, amount, recipient);
   } else if (functionName === 'balance') {
     const token = process.argv[3] as string;
     await getBalance(token);
