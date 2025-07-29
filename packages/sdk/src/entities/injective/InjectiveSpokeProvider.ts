@@ -1,8 +1,7 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { InjectiveSpokeChainConfig, InjectiveReturnType, PromiseInjectiveTxReturnType } from '../../types.js';
 import type { ISpokeProvider } from '../Providers.js';
-import type { IInjectiveWalletProvider, InjectiveExecuteResponse, InjectiveCoin } from '@sodax/types';
-import { Injective20Token } from './Injective20Token.js';
+import type { IInjectiveWalletProvider, InjectiveExecuteResponse } from '@sodax/types';
 import { toBase64, ChainGrpcWasmApi, TxGrpcApi } from '@injectivelabs/sdk-ts';
 import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 
@@ -93,58 +92,6 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
 
   // Execute Methods (requires SigningCosmWasmClient)
 
-  private async transfer<R extends boolean = false>(
-    senderAddress: string,
-    token: string,
-    to: Uint8Array,
-    amount: string,
-    data: Uint8Array = new Uint8Array(),
-    funds: InjectiveCoin[] = [],
-    raw?: R,
-  ): PromiseInjectiveTxReturnType<R> {
-    const msg: ExecuteMsg = {
-      transfer: {
-        token,
-        to: Array.from(to),
-        amount: amount,
-        data: Array.from(data),
-      },
-    };
-
-    if (raw) {
-      return this.walletProvider.getRawTransaction(
-        this.chainConfig.networkId,
-        this.chainConfig.prefix,
-        senderAddress,
-        this.chainConfig.addresses.connection,
-        msg,
-      ) as InjectiveReturnType<R>;
-    }
-    const res = await this.walletProvider.execute(
-      senderAddress as `inj${string}`,
-      this.chainConfig.addresses.assetManager,
-      msg,
-      funds,
-    );
-    return res.transactionHash as InjectiveReturnType<R>;
-  }
-
-  /**
-   * Deposit tokens to Injective Asset Manager.
-   **/
-  async depositToken<R extends boolean = false>(
-    sender: string,
-    tokenAddress: string,
-    to: Uint8Array,
-    amount: string,
-    data: Uint8Array = new Uint8Array(),
-    raw?: R,
-  ) {
-    const injective20Token = new Injective20Token(this.walletProvider, tokenAddress);
-    await injective20Token.increaseAllowance(sender, this.chainConfig.addresses.assetManager, amount);
-    return this.transfer(sender, tokenAddress, to, amount, data, [], raw);
-  }
-
   /**
    * Deposit tokens including native token to Injective Asset Manager.
    **/
@@ -154,37 +101,40 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     to: Address,
     amount: string,
     data: Hex = '0x',
-    provider: InjectiveSpokeProvider,
+    spokeProvider: InjectiveSpokeProvider,
     raw?: R,
   ): PromiseInjectiveTxReturnType<R> {
-    const isNative = await provider.isNative(token_address);
     const toBytes = fromHex(to, 'bytes');
     const dataBytes = fromHex(data, 'bytes');
 
-    if (isNative) {
-      return provider.depositNative(sender, token_address, toBytes, amount, dataBytes, raw);
+    const msg: ExecuteMsg = {
+      transfer: {
+        token: token_address,
+        to: Array.from(toBytes),
+        amount: amount,
+        data: Array.from(dataBytes),
+      },
+    };
+
+    const funds = [{ amount, denom: token_address }];
+
+    if (raw) {
+      return spokeProvider.walletProvider.getRawTransaction(
+        spokeProvider.chainConfig.networkId,
+        spokeProvider.chainConfig.prefix,
+        sender,
+        spokeProvider.chainConfig.addresses.assetManager,
+        msg,
+      ) as InjectiveReturnType<R>;
     }
 
-    return provider.depositToken(sender, token_address, toBytes, amount, dataBytes, raw);
-  }
-
-  /**
-   * Deposit native tokens to Injective Asset Manager.
-   **/
-  async depositNative<R extends boolean = false>(
-    sender: string,
-    token: string,
-    to: Uint8Array,
-    amount: string,
-    data: Uint8Array = new Uint8Array([2, 2, 2]),
-    raw?: R,
-  ) {
-    const funds = [{ amount, denom: token }];
-    return this.transfer(sender, token, to, amount, data, funds, raw);
-  }
-
-  async isNative(token: string): Promise<boolean> {
-    return token === 'inj';
+    const res = await spokeProvider.walletProvider.execute(
+      sender as `inj${string}`,
+      spokeProvider.chainConfig.addresses.assetManager,
+      msg,
+      funds,
+    );
+    return res.transactionHash as InjectiveReturnType<R>;
   }
 
   async receiveMessage(
