@@ -279,12 +279,12 @@ async function migrateBaln(
   }, iconSpokeProvider);
 
   if (result.ok) {
-    console.log('[migrateBnUSD] txHash', result.value);
+    console.log('[migrateBaln] txHash', result.value);
     const [spokeTxHash, hubTxHash] = result.value;
-    console.log('[migrateBnUSD] hubTxHash', hubTxHash);
-    console.log('[migrateBnUSD] spokeTxHash', spokeTxHash);
+    console.log('[migrateBaln] hubTxHash', hubTxHash);
+    console.log('[migrateBaln] spokeTxHash', spokeTxHash);
   } else {
-    console.error('[migrateBnUSD] error', result.error);
+    console.error('[migrateBaln] error', result.error);
   }
 }
 
