@@ -1,4 +1,4 @@
-import type { Hash, Hex, Address } from 'viem';
+import type { Hex, Address } from 'viem';
 import {
   EvmAssetManagerService,
   EvmWalletAbstraction,
@@ -14,10 +14,11 @@ import {
   EvmHubProvider,
   type SolverConfigParams,
   type HttpUrl,
+  bnUSDLegacyAddress,
 } from '@sodax/sdk';
 
-import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider';
-import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
+import { HubChainId, SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -222,9 +223,38 @@ async function repay(token: string, amount: bigint) {
   console.log('[repay] txHash', txHash);
 }
 
+/**
+ * Migrates legacy bnUSD tokens to new bnUSD tokens.
+ * This function handles the migration of legacy bnUSD tokens to new bnUSD tokens.
+ *
+ * @param newbnUSD - The address of the new bnUSD token to receive
+ * @param amount - The amount of legacy bnUSD tokens to migrate
+ * @param recipient - The address that will receive the migrated new bnUSD tokens
+ */
+async function migrateBnUSD(
+  amount: bigint,
+  recipient: Address,
+): Promise<void> {
+  const result = await sodax.migration.migratebnUSD({
+    srcChainID: stellarSpokeProvider.chainConfig.chain.id as typeof STELLAR_MAINNET_CHAIN_ID,
+    amount,
+    to: recipient,
+  }, stellarSpokeProvider);
+
+  if (result.ok) {
+    console.log('[migrateBnUSD] txHash', result.value);
+    const [spokeTxHash, hubTxHash] = result.value;
+    console.log('[migrateBnUSD] hubTxHash', hubTxHash);
+    console.log('[migrateBnUSD] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[migrateBnUSD] error', result.error);
+  }
+}
+
 // Main function to decide which function to call
 async function main() {
   console.log(process.argv);
+  console.log(await stellarWalletProvider.getWalletAddress());
   const functionName = process.argv[2];
 
   if (functionName === 'deposit') {
@@ -253,11 +283,28 @@ async function main() {
     const token = process.argv[3] as Address; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
+  } else if (functionName === 'migrateBnUSD') {
+    const amount = BigInt(process.argv[3]);
+    const recipient = process.argv[4] as Address;
+    await migrateBnUSD(amount, recipient);
   } else if (functionName === 'balance') {
     const token = process.argv[3] as string;
     await getBalance(token);
   } else {
-    console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
+    console.log(
+      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrateBnUSD", or "balance".',
+    );
+    console.log('Usage examples:');
+    console.log('  npm run stellar deposit <token_address> <amount> <recipient_address>');
+    console.log('  npm run stellar withdrawAsset <token_address> <amount> <recipient_address>');
+    console.log('  npm run stellar supply <token_address> <amount>');
+    console.log('  npm run stellar borrow <token_address> <amount>');
+    console.log('  npm run stellar withdraw <token_address> <amount>');
+    console.log('  npm run stellar repay <token_address> <amount>');
+    console.log(
+      '  npm run stellar migrateBnUSD <legacybnUSD_address> <dstChainID> <newbnUSD_address> <amount> <recipient_address>',
+    );
+    console.log('  npm run stellar balance <token_address>');
   }
 }
 

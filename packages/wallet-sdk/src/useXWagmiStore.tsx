@@ -92,7 +92,7 @@ const initXServices = (config: XConfig) => {
         break;
       case 'INJECTIVE':
         xServices[xChainType] = InjectiveXService.getInstance();
-        xServices[xChainType].setXConnectors([new InjectiveMetamaskXConnector(), new InjectiveKelprXConnector()]);
+        xServices[xChainType].setXConnectors([new InjectiveMetamaskXConnector()]);
         break;
       case 'STELLAR':
         xServices[xChainType] = StellarXService.getInstance();
