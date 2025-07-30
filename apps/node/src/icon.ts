@@ -17,12 +17,14 @@ import {
   type SodaxConfig,
   type SolverConfigParams,
   type MigrationParams,
+  bnUSDLegacyAddress,
+  LockupPeriod,
 } from '@sodax/sdk';
+import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
-import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 
 // load PK from .env
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey = process.env.ICON_PRIVATE_KEY;
 
 if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
@@ -75,6 +77,7 @@ async function depositTo(token: IconAddress, amount: bigint, recipient: Address)
   );
 
   const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
+
   const txHash: Hash = await SpokeService.deposit(
     {
       from: walletAddress,
@@ -209,16 +212,14 @@ async function repay(token: IconAddress, amount: bigint) {
  * @param amount - The amount of wICX tokens to migrate
  * @param recipient - The address that will receive the migrated SODA tokens
  */
-async function migrate(amount: bigint, recipient: Address): Promise<void> {
+async function migrateIcxToSoda(amount: bigint, recipient: Address): Promise<void> {
   const params = {
-    token: 'ICX',
-    icx: iconSpokeChainConfig.nativeToken,
+    address: iconSpokeChainConfig.nativeToken,
     amount,
     to: recipient,
-    action: 'migrate',
   } satisfies MigrationParams;
 
-  const result = await sodax.migration.createAndSubmitMigrateIntent(params, iconSpokeProvider);
+  const result = await sodax.migration.migrateIcxToSoda(params, iconSpokeProvider);
 
   if (result.ok) {
     console.log('[migrate] txHash', result.value);
@@ -227,6 +228,63 @@ async function migrate(amount: bigint, recipient: Address): Promise<void> {
     console.log('[migrate] spokeTxHash', spokeTxHash);
   } else {
     console.error('[migrate] error', result.error);
+  }
+}
+
+/**
+ * Migrates legacy bnUSD tokens to new bnUSD tokens.
+ * This function handles the migration of legacy bnUSD tokens to new bnUSD tokens.
+ *
+ * @param amount - The amount of legacy bnUSD tokens to migrate
+ * @param recipient - The address that will receive the migrated new bnUSD tokens
+ */
+async function migrateBnUSD(
+  amount: bigint,
+  recipient: Address,
+): Promise<void> {
+  const result = await sodax.migration.migratebnUSD({
+    srcChainID: iconSpokeChainConfig.chain.id,
+    amount,
+    to: recipient,
+  }, iconSpokeProvider);
+
+  if (result.ok) {
+    console.log('[migrateBnUSD] txHash', result.value);
+    const [spokeTxHash, hubTxHash] = result.value;
+    console.log('[migrateBnUSD] hubTxHash', hubTxHash);
+    console.log('[migrateBnUSD] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[migrateBnUSD] error', result.error);
+  }
+}
+
+/**
+ * Migrates Icon BALN tokens to Sonic BALN tokens.
+ * This function handles the migration of BALN tokens to SODA tokens.
+ *
+ * @param amount - The amount of BALN tokens to migrate
+ * @param recipient - The address that will receive the migrated BALN tokens
+ * @param lockupPeriod - The lockup period for the BALN tokens
+ */
+async function migrateBaln(
+  amount: bigint,
+  recipient: Address,
+  lockupPeriod: LockupPeriod,
+): Promise<void> {
+  const result = await sodax.migration.migrateBaln({
+    lockupPeriod,
+    stake: false,
+    amount,
+    to: recipient,
+  }, iconSpokeProvider);
+
+  if (result.ok) {
+    console.log('[migrateBaln] txHash', result.value);
+    const [spokeTxHash, hubTxHash] = result.value;
+    console.log('[migrateBaln] hubTxHash', hubTxHash);
+    console.log('[migrateBaln] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[migrateBaln] error', result.error);
   }
 }
 
@@ -260,16 +318,33 @@ async function main() {
     const token = process.argv[3] as IconAddress; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
-  } else if (functionName === 'migrate') {
+  } else if (functionName === 'migrateIcxToSoda') {
     const amount = BigInt(process.argv[3]); // Get amount from command line argument
     const recipient = process.argv[4] as Address; // Get recipient address from command line argument
-    await migrate(amount, recipient);
+    await migrateIcxToSoda(amount, recipient);
+  } else if (functionName === 'migrateBnUSD') {
+    const amount = BigInt(process.argv[3]); // Get amount from command line argument
+    const recipient = process.argv[4] as Address; // Get recipient address from command line argument
+    await migrateBnUSD(amount, recipient);
+    } else if (functionName === 'migrateBaln') {
+      const amount = BigInt(process.argv[3]); // Get amount from command line argument
+      const recipient = process.argv[4] as Address; // Get recipient address from command line argument
+      let lockupPeriod = LockupPeriod.NO_LOCKUP;
+      if (process.argv.length >= 6) {
+        lockupPeriod = Number.parseInt(process.argv[5]) as LockupPeriod; // Get lockup period from command line argument
+      }
+
+      await migrateBaln(amount, recipient, lockupPeriod);
   } else {
     console.log(
-      'Function not recognized. Please use one of: "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", or "migrate".',
+      'Function not recognized. Please use one of: "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrate", "migrateBnUSD", or "migrateBaln".',
     );
     console.log('Usage examples:');
-    console.log('  npm run icon migrate <wICX_address> <amount> <recipient_address>');
+    console.log('  npm run icon migrate <amount> <recipient_address>');
+    console.log(
+      '  npm run icon migrateBnUSD <srcChainID> <legacybnUSD_address> <newbnUSD_address> <amount> <recipient_address>',
+    );
+    console.log('  npm run icon migrateBaln <amount> <recipient_address> <lockup_period>');
     console.log('  npm run icon deposit <token_address> <amount> <recipient_address>');
     console.log('  npm run icon supply <token_address> <amount>');
   }

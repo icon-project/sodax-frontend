@@ -29,8 +29,19 @@ import type {
   InjectiveNetworkEnv,
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
+  SUI_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
+import type { migrationConfig } from './constants.js';
+
+export type bnUSDLegacySpokeChainId = typeof ICON_MAINNET_CHAIN_ID | typeof SUI_MAINNET_CHAIN_ID | typeof STELLAR_MAINNET_CHAIN_ID;
+export type bnUSDLegacyMigrationProviders = IconSpokeProvider | SuiSpokeProvider | StellarSpokeProvider;
+
+export type bnUSDLegacyAddress =
+  | (typeof migrationConfig)['bnUSD'][typeof ICON_MAINNET_CHAIN_ID]['legacybnUSD']['address']
+  | (typeof migrationConfig)['bnUSD'][typeof SUI_MAINNET_CHAIN_ID]['legacybnUSD']['address']
+  | (typeof migrationConfig)['bnUSD'][typeof STELLAR_MAINNET_CHAIN_ID]['legacybnUSD']['address'];
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 
@@ -81,6 +92,7 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     hubWallet: Address;
     xTokenManager: Address;
     icxMigration: Address;
+    balnSwap: Address;
     sodaToken: Address;
   };
 
@@ -278,6 +290,7 @@ export type FeeAmount = {
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
+export type IconContractAddress = `cx${string}`;
 export type IcxTokenType =
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['addresses']['wICX']
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['nativeToken'];

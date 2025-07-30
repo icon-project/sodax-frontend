@@ -22,6 +22,7 @@ import {
   type PacketData,
   getIntentRelayChainId,
   type IcxTokenType,
+  type MigrationAction,
 } from '../../index.js';
 import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import type { IIconWalletProvider, IEvmWalletProvider } from '@sodax/types';
@@ -31,17 +32,14 @@ const mockEvmAddress = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' satisfies `0
 
 // Mock payloads and parameters at the top for re-use
 const mockMigrationParams: MigrationParams = {
-  token: 'ICX',
-  icx: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d', // wICX address
+  address: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d', // wICX address
   amount: 1000000000000000000n, // 1 ICX with 18 decimals
   to: mockEvmAddress,
-  action: 'migrate',
 } satisfies MigrationParams;
 
 const mockRevertMigrationParams: IcxCreateRevertMigrationParams = {
   amount: 1000000000000000000n, // 1 SODA token with 18 decimals
   to: 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6', // Icon address
-  action: 'revert',
 } satisfies IcxCreateRevertMigrationParams;
 
 const mockIconWalletProvider = {
@@ -113,18 +111,10 @@ describe('MigrationService', () => {
     });
   });
 
-  describe('migrateData', () => {
-    it('should return migration data as hex', async () => {
-      const result = await migrationService.migrateData(mockMigrationParams);
-      expect(typeof result).toBe('string');
-      expect(result.startsWith('0x')).toBe(true);
-    });
-  });
-
   describe('isAllowanceValid', () => {
     describe('migrate action', () => {
       it('should return true for valid migration params with IconSpokeProvider', async () => {
-        const result = await migrationService.isAllowanceValid(mockMigrationParams, mockIconSpokeProvider);
+        const result = await migrationService.isAllowanceValid(mockMigrationParams, 'migrate', mockIconSpokeProvider);
 
         expect(result.ok).toBe(true);
         if (result.ok) {
@@ -138,7 +128,7 @@ describe('MigrationService', () => {
           amount: 0n,
         } satisfies MigrationParams;
 
-        const result = await migrationService.isAllowanceValid(invalidParams, mockIconSpokeProvider);
+        const result = await migrationService.isAllowanceValid(invalidParams, 'migrate', mockIconSpokeProvider);
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -152,7 +142,7 @@ describe('MigrationService', () => {
           to: '0x' as `0x${string}`,
         } satisfies MigrationParams;
 
-        const result = await migrationService.isAllowanceValid(invalidParams, mockIconSpokeProvider);
+        const result = await migrationService.isAllowanceValid(invalidParams, 'migrate', mockIconSpokeProvider);
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -163,36 +153,9 @@ describe('MigrationService', () => {
       it('should return error for wrong provider type', async () => {
         const result = await migrationService.isAllowanceValid(
           mockMigrationParams,
+          'migrate',
           {} as unknown as SonicSpokeProvider,
         );
-
-        expect(result.ok).toBe(false);
-        if (!result.ok) {
-          expect(result.error).toBeInstanceOf(Error);
-        }
-      });
-
-      it('should return error for invalid token', async () => {
-        const invalidParams = {
-          ...mockMigrationParams,
-          icx: 'cx0000000000000000000000000000000000000001' as unknown as IcxTokenType,
-        } satisfies MigrationParams;
-
-        const result = await migrationService.isAllowanceValid(invalidParams, mockIconSpokeProvider);
-
-        expect(result.ok).toBe(false);
-        if (!result.ok) {
-          expect(result.error).toBeInstanceOf(Error);
-        }
-      });
-
-      it('should return error for wrong token type', async () => {
-        const invalidParams = {
-          ...mockMigrationParams,
-          token: 'INVALID' as never,
-        } satisfies MigrationParams;
-
-        const result = await migrationService.isAllowanceValid(invalidParams, mockIconSpokeProvider);
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -209,7 +172,7 @@ describe('MigrationService', () => {
           value: true,
         });
 
-        const result = await migrationService.isAllowanceValid(mockRevertMigrationParams, mockSonicSpokeProvider);
+        const result = await migrationService.isAllowanceValid(mockRevertMigrationParams, 'revert', mockSonicSpokeProvider);
 
         expect(result.ok).toBe(true);
         if (result.ok) {
@@ -223,7 +186,7 @@ describe('MigrationService', () => {
           amount: 0n,
         } satisfies IcxCreateRevertMigrationParams;
 
-        const result = await migrationService.isAllowanceValid(invalidParams, mockSonicSpokeProvider);
+        const result = await migrationService.isAllowanceValid(invalidParams, 'revert', mockSonicSpokeProvider);
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -237,7 +200,7 @@ describe('MigrationService', () => {
           to: 'hx' as `hx${string}`,
         } satisfies IcxCreateRevertMigrationParams;
 
-        const result = await migrationService.isAllowanceValid(invalidParams, mockSonicSpokeProvider);
+        const result = await migrationService.isAllowanceValid(invalidParams, 'revert', mockSonicSpokeProvider);
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -248,6 +211,7 @@ describe('MigrationService', () => {
       it('should return error for wrong provider type', async () => {
         const result = await migrationService.isAllowanceValid(
           mockRevertMigrationParams,
+          'revert',
           {} as unknown as SonicSpokeProvider,
         );
 
@@ -264,7 +228,7 @@ describe('MigrationService', () => {
           error: new Error('Allowance check failed'),
         });
 
-        const result = await migrationService.isAllowanceValid(mockRevertMigrationParams, mockSonicSpokeProvider);
+        const result = await migrationService.isAllowanceValid(mockRevertMigrationParams, 'revert', mockSonicSpokeProvider);
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -276,10 +240,9 @@ describe('MigrationService', () => {
     it('should return error for invalid action', async () => {
       const invalidParams = {
         ...mockMigrationParams,
-        action: 'invalid' as never,
       } satisfies MigrationParams;
 
-      const result = await migrationService.isAllowanceValid(invalidParams, mockIconSpokeProvider);
+      const result = await migrationService.isAllowanceValid(invalidParams, 'migrate1' as MigrationAction, mockIconSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -293,7 +256,7 @@ describe('MigrationService', () => {
       vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0xUserRouterAddress');
       vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockTxHash);
 
-      const result = await migrationService.approve(mockRevertMigrationParams, mockSonicSpokeProvider);
+      const result = await migrationService.approve(mockRevertMigrationParams, 'revert', mockSonicSpokeProvider);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -312,7 +275,7 @@ describe('MigrationService', () => {
       vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0xUserRouterAddress');
       vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockRawTx);
 
-      const result = await migrationService.approve(mockRevertMigrationParams, mockSonicSpokeProvider, true);
+      const result = await migrationService.approve(mockRevertMigrationParams, 'revert', mockSonicSpokeProvider, true);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -326,7 +289,7 @@ describe('MigrationService', () => {
         amount: 0n,
       } satisfies IcxCreateRevertMigrationParams;
 
-      const result = await migrationService.approve(invalidParams, mockSonicSpokeProvider);
+      const result = await migrationService.approve(invalidParams, 'revert', mockSonicSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -340,7 +303,7 @@ describe('MigrationService', () => {
         to: 'hx' as `hx${string}`,
       } satisfies IcxCreateRevertMigrationParams;
 
-      const result = await migrationService.approve(invalidParams, mockSonicSpokeProvider);
+      const result = await migrationService.approve(invalidParams, 'revert', mockSonicSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -349,7 +312,7 @@ describe('MigrationService', () => {
     });
 
     it('should return error for wrong provider type', async () => {
-      const result = await migrationService.approve(mockRevertMigrationParams, {} as unknown as SonicSpokeProvider);
+      const result = await migrationService.approve(mockRevertMigrationParams, 'revert', {} as unknown as SonicSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -361,7 +324,7 @@ describe('MigrationService', () => {
       vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0xUserRouterAddress');
       vi.spyOn(Erc20Service, 'approve').mockRejectedValueOnce(new Error('Approve failed'));
 
-      const result = await migrationService.approve(mockRevertMigrationParams, mockSonicSpokeProvider);
+      const result = await migrationService.approve(mockRevertMigrationParams, 'revert', mockSonicSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -372,10 +335,9 @@ describe('MigrationService', () => {
     it('should return error for invalid action', async () => {
       const invalidParams = {
         ...mockRevertMigrationParams,
-        action: 'invalid' as never,
       } satisfies IcxCreateRevertMigrationParams;
 
-      const result = await migrationService.approve(invalidParams, mockSonicSpokeProvider);
+      const result = await migrationService.approve(invalidParams, 'revert', mockSonicSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -386,7 +348,7 @@ describe('MigrationService', () => {
 
   describe('createAndSubmitMigrateIntent', () => {
     it('should successfully create and submit migration intent', async () => {
-      vi.spyOn(migrationService, 'createMigrateIntent').mockResolvedValueOnce({
+      vi.spyOn(migrationService, 'createMigrateIcxToSodaIntent').mockResolvedValueOnce({
         ok: true,
         value: mockTxHash,
       });
@@ -395,7 +357,7 @@ describe('MigrationService', () => {
         value: mockPacketData,
       });
 
-      const result = await migrationService.createAndSubmitMigrateIntent(
+      const result = await migrationService.migrateIcxToSoda(
         mockMigrationParams,
         mockIconSpokeProvider,
         DEFAULT_RELAY_TX_TIMEOUT,
@@ -407,7 +369,7 @@ describe('MigrationService', () => {
       }
     });
 
-    it('should handle createMigrateIntent failure', async () => {
+    it('should handle createMigrateIcxToSodaIntent failure', async () => {
       const mockError: MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> = {
         code: 'CREATE_MIGRATION_INTENT_FAILED',
         data: {
@@ -416,12 +378,12 @@ describe('MigrationService', () => {
         },
       };
 
-      vi.spyOn(migrationService, 'createMigrateIntent').mockResolvedValueOnce({
+      vi.spyOn(migrationService, 'createMigrateIcxToSodaIntent').mockResolvedValueOnce({
         ok: false,
         error: mockError,
       });
 
-      const result = await migrationService.createAndSubmitMigrateIntent(
+      const result = await migrationService.migrateIcxToSoda(
         mockMigrationParams,
         mockIconSpokeProvider,
         DEFAULT_RELAY_TX_TIMEOUT,
@@ -439,7 +401,7 @@ describe('MigrationService', () => {
         error: 'Relay failed',
       };
 
-      vi.spyOn(migrationService, 'createMigrateIntent').mockResolvedValueOnce({
+      vi.spyOn(migrationService, 'createMigrateIcxToSodaIntent').mockResolvedValueOnce({
         ok: true,
         value: mockTxHash,
       });
@@ -448,7 +410,7 @@ describe('MigrationService', () => {
         error: mockRelayError,
       });
 
-      const result = await migrationService.createAndSubmitMigrateIntent(
+      const result = await migrationService.migrateIcxToSoda(
         mockMigrationParams,
         mockIconSpokeProvider,
         DEFAULT_RELAY_TX_TIMEOUT,
@@ -461,9 +423,9 @@ describe('MigrationService', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      vi.spyOn(migrationService, 'createMigrateIntent').mockRejectedValue(new Error('Unexpected error'));
+      vi.spyOn(migrationService, 'createMigrateIcxToSodaIntent').mockRejectedValue(new Error('Unexpected error'));
 
-      const result = await migrationService.createAndSubmitMigrateIntent(
+      const result = await migrationService.migrateIcxToSoda(
         mockMigrationParams,
         mockIconSpokeProvider,
         DEFAULT_RELAY_TX_TIMEOUT,
@@ -481,7 +443,7 @@ describe('MigrationService', () => {
 
   describe('createAndSubmitRevertMigrationIntent', () => {
     it('should successfully create and submit revert migration intent', async () => {
-      vi.spyOn(migrationService, 'createRevertMigrationIntent').mockResolvedValueOnce({
+      vi.spyOn(migrationService, 'createRevertSodaToIcxMigrationIntent').mockResolvedValueOnce({
         ok: true,
         value: mockTxHash,
       });
@@ -490,7 +452,7 @@ describe('MigrationService', () => {
         value: mockPacketData,
       });
 
-      const result = await migrationService.createAndSubmitRevertMigrationIntent(
+      const result = await migrationService.revertMigrateSodaToIcx(
         mockRevertMigrationParams,
         mockSonicSpokeProvider,
         DEFAULT_RELAY_TX_TIMEOUT,
@@ -511,12 +473,12 @@ describe('MigrationService', () => {
         },
       };
 
-      vi.spyOn(migrationService, 'createRevertMigrationIntent').mockResolvedValueOnce({
+      vi.spyOn(migrationService, 'createRevertSodaToIcxMigrationIntent').mockResolvedValueOnce({
         ok: false,
         error: mockError,
       });
 
-      const result = await migrationService.createAndSubmitRevertMigrationIntent(
+      const result = await migrationService.revertMigrateSodaToIcx(
         mockRevertMigrationParams,
         mockSonicSpokeProvider,
         DEFAULT_RELAY_TX_TIMEOUT,
@@ -534,7 +496,7 @@ describe('MigrationService', () => {
         error: 'Relay failed',
       };
 
-      vi.spyOn(migrationService, 'createRevertMigrationIntent').mockResolvedValueOnce({
+      vi.spyOn(migrationService, 'createRevertSodaToIcxMigrationIntent').mockResolvedValueOnce({
         ok: true,
         value: mockTxHash,
       });
@@ -543,7 +505,7 @@ describe('MigrationService', () => {
         error: mockRelayError,
       });
 
-      const result = await migrationService.createAndSubmitRevertMigrationIntent(
+      const result = await migrationService.revertMigrateSodaToIcx(
         mockRevertMigrationParams,
         mockSonicSpokeProvider,
         DEFAULT_RELAY_TX_TIMEOUT,
@@ -556,9 +518,9 @@ describe('MigrationService', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      vi.spyOn(migrationService, 'createRevertMigrationIntent').mockRejectedValue(new Error('Unexpected error'));
+      vi.spyOn(migrationService, 'createRevertSodaToIcxMigrationIntent').mockRejectedValue(new Error('Unexpected error'));
 
-      const result = await migrationService.createAndSubmitRevertMigrationIntent(
+      const result = await migrationService.revertMigrateSodaToIcx(
         mockRevertMigrationParams,
         mockSonicSpokeProvider,
         DEFAULT_RELAY_TX_TIMEOUT,
@@ -580,7 +542,7 @@ describe('MigrationService', () => {
       vi.spyOn(migrationService['icxMigration'], 'migrateData').mockReturnValue('0xmigrationdata');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
 
-      const result = await migrationService.createMigrateIntent(mockMigrationParams, mockIconSpokeProvider);
+      const result = await migrationService.createMigrateIcxToSodaIntent(mockMigrationParams, mockIconSpokeProvider);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -600,7 +562,11 @@ describe('MigrationService', () => {
       vi.spyOn(migrationService['icxMigration'], 'migrateData').mockReturnValue('0xmigrationdata');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockRawTx);
 
-      const result = await migrationService.createMigrateIntent(mockMigrationParams, mockIconSpokeProvider, true);
+      const result = await migrationService.createMigrateIcxToSodaIntent(
+        mockMigrationParams,
+        mockIconSpokeProvider,
+        true,
+      );
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -614,7 +580,7 @@ describe('MigrationService', () => {
         amount: 0n,
       } satisfies MigrationParams;
 
-      const result = await migrationService.createMigrateIntent(invalidParams, mockIconSpokeProvider);
+      const result = await migrationService.createMigrateIcxToSodaIntent(invalidParams, mockIconSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -628,7 +594,7 @@ describe('MigrationService', () => {
         to: '0xinvalid' as `0x${string}`,
       } satisfies MigrationParams;
 
-      const result = await migrationService.createMigrateIntent(invalidParams, mockIconSpokeProvider);
+      const result = await migrationService.createMigrateIcxToSodaIntent(invalidParams, mockIconSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -639,10 +605,10 @@ describe('MigrationService', () => {
     it('should return error for invalid token', async () => {
       const invalidParams = {
         ...mockMigrationParams,
-        icx: 'cx0' as unknown as IcxTokenType,
+        address: 'cx0' as unknown as IcxTokenType,
       } satisfies MigrationParams;
 
-      const result = await migrationService.createMigrateIntent(invalidParams, mockIconSpokeProvider);
+      const result = await migrationService.createMigrateIcxToSodaIntent(invalidParams, mockIconSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -651,7 +617,7 @@ describe('MigrationService', () => {
     });
 
     it('should return error for wrong provider type', async () => {
-      const result = await migrationService.createMigrateIntent(
+      const result = await migrationService.createMigrateIcxToSodaIntent(
         mockMigrationParams,
         {} as unknown as IconSpokeProvider,
       );
@@ -662,24 +628,10 @@ describe('MigrationService', () => {
       }
     });
 
-    it('should return error for wrong token type', async () => {
-      const invalidParams = {
-        ...mockMigrationParams,
-        token: 'INVALID' as never,
-      } satisfies MigrationParams;
-
-      const result = await migrationService.createMigrateIntent(invalidParams, mockIconSpokeProvider);
-
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error.code).toBe('CREATE_MIGRATION_INTENT_FAILED');
-      }
-    });
-
     it('should return error for insufficient liquidity', async () => {
       vi.spyOn(migrationService['icxMigration'], 'getAvailableAmount').mockResolvedValueOnce(100000000000000000n);
 
-      const result = await migrationService.createMigrateIntent(mockMigrationParams, mockIconSpokeProvider);
+      const result = await migrationService.createMigrateIcxToSodaIntent(mockMigrationParams, mockIconSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -692,7 +644,7 @@ describe('MigrationService', () => {
       vi.spyOn(migrationService['icxMigration'], 'migrateData').mockReturnValue('0xmigrationdata');
       vi.spyOn(SpokeService, 'deposit').mockRejectedValue(new Error('Deposit failed'));
 
-      const result = await migrationService.createMigrateIntent(mockMigrationParams, mockIconSpokeProvider);
+      const result = await migrationService.createMigrateIcxToSodaIntent(mockMigrationParams, mockIconSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -707,7 +659,7 @@ describe('MigrationService', () => {
       vi.spyOn(migrationService['icxMigration'], 'revertMigration').mockReturnValue('0xrevertdata');
       vi.spyOn(SonicSpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
 
-      const result = await migrationService.createRevertMigrationIntent(
+      const result = await migrationService.createRevertSodaToIcxMigrationIntent(
         mockRevertMigrationParams,
         mockSonicSpokeProvider,
       );
@@ -730,7 +682,7 @@ describe('MigrationService', () => {
       vi.spyOn(migrationService['icxMigration'], 'revertMigration').mockReturnValue('0xrevertdata');
       vi.spyOn(SonicSpokeService, 'deposit').mockResolvedValueOnce(mockRawTx);
 
-      const result = await migrationService.createRevertMigrationIntent(
+      const result = await migrationService.createRevertSodaToIcxMigrationIntent(
         mockRevertMigrationParams,
         mockSonicSpokeProvider,
         true,
@@ -745,7 +697,7 @@ describe('MigrationService', () => {
     it('should return error when SonicSpokeService.getUserRouter fails', async () => {
       vi.spyOn(SonicSpokeService, 'getUserRouter').mockRejectedValue(new Error('Get user router failed'));
 
-      const result = await migrationService.createRevertMigrationIntent(
+      const result = await migrationService.createRevertSodaToIcxMigrationIntent(
         mockRevertMigrationParams,
         mockSonicSpokeProvider,
       );
@@ -761,7 +713,7 @@ describe('MigrationService', () => {
       vi.spyOn(migrationService['icxMigration'], 'revertMigration').mockReturnValue('0xrevertdata');
       vi.spyOn(SonicSpokeService, 'deposit').mockRejectedValue(new Error('Deposit failed'));
 
-      const result = await migrationService.createRevertMigrationIntent(
+      const result = await migrationService.createRevertSodaToIcxMigrationIntent(
         mockRevertMigrationParams,
         mockSonicSpokeProvider,
       );
@@ -779,7 +731,7 @@ describe('MigrationService', () => {
       vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0xUserRouterAddress');
       vi.spyOn(SonicSpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
 
-      await migrationService.createRevertMigrationIntent(mockRevertMigrationParams, mockSonicSpokeProvider);
+      await migrationService.createRevertSodaToIcxMigrationIntent(mockRevertMigrationParams, mockSonicSpokeProvider);
 
       expect(revertMigrationSpy).toHaveBeenCalledWith({
         wICX: spokeChainConfig[ICON_MAINNET_CHAIN_ID].addresses.wICX,

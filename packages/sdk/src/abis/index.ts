@@ -1,4 +1,5 @@
 export * from './asset-manager.abi.js';
+export * from './balnSwap.abi.js';
 export * from './connection.abi.js';
 export * from './erc20.abi.js';
 export * from './pool.abi.js';
