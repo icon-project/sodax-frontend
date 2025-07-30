@@ -17,16 +17,14 @@ import {
   type SodaxConfig,
   type SolverConfigParams,
   type MigrationParams,
-  BnUSDMigrationService,
-  type BnUSDMigrateParams,
-  encodeAddress,
   bnUSDLegacyAddress,
+  LockupPeriod,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
 
 // load PK from .env
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey = process.env.ICON_PRIVATE_KEY;
 
 if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
@@ -237,24 +235,17 @@ async function migrateIcxToSoda(amount: bigint, recipient: Address): Promise<voi
  * Migrates legacy bnUSD tokens to new bnUSD tokens.
  * This function handles the migration of legacy bnUSD tokens to new bnUSD tokens.
  *
- * @param legacybnUSD - The address of the legacy bnUSD token to migrate
- * @param dstChainID - The destination chain ID where the new bnUSD token exists
- * @param newbnUSD - The address of the new bnUSD token to receive
  * @param amount - The amount of legacy bnUSD tokens to migrate
  * @param recipient - The address that will receive the migrated new bnUSD tokens
  */
 async function migrateBnUSD(
-  legacybnUSD: bnUSDLegacyAddress,
-  dstChainID: HubChainId,
   amount: bigint,
   recipient: Address,
 ): Promise<void> {
   const result = await sodax.migration.migratebnUSD({
-    address: legacybnUSD,
     srcChainID: iconSpokeChainConfig.chain.id,
     amount,
     to: recipient,
-    dstChainID: dstChainID,
   }, iconSpokeProvider);
 
   if (result.ok) {
@@ -267,50 +258,35 @@ async function migrateBnUSD(
   }
 }
 
-///**
-// * Migrates BALN tokens from ICON to the hub chain.
-// * This function handles the migration of BALN tokens to SODA tokens on the hub chain with lockup period.
-// *
-// * @param baln - The ICON address of the BALN token to migrate
-// * @param amount - The amount of BALN tokens to migrate
-// * @param lockupPeriod - The lockup period for the migration (in seconds)
-// * @param to - The address that will receive the migrated SODA tokens
-// */
-//async function balnMigrate(baln: IconAddress, amount: bigint, lockupPeriod: bigint, to: Address): Promise<void> {
-//  try {
-//    // Prepare BALN migration parameters
-//    const balnMigrateParams: BalnMigrateParams = {
-//      baln,
-//      amount,
-//      lockupPeriod,
-//      to,
-//    };
-//
-//    // Generate BALN migration transaction data
-//    const balnMigrationData = await ICXMigrationService.balnMigrateData(hubProvider.chainConfig, balnMigrateParams);
-//
-//    // Get wallet address for the transaction
-//    const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
-//
-//    // Execute the BALN migration transaction
-//    const txHash: Hash = await SpokeService.deposit(
-//      {
-//        from: walletAddress,
-//        token: baln,
-//        amount,
-//        data: balnMigrationData,
-//      },
-//      iconSpokeProvider,
-//      hubProvider,
-//    );
-//
-//    console.log('[balnMigrate] BALN migration transaction hash:', txHash);
-//    console.log('[balnMigrate] BALN migration initiated successfully');
-//  } catch (error) {
-//    console.error('[balnMigrate] BALN migration failed:', error);
-//    throw error;
-//  }
-//}
+/**
+ * Migrates Icon BALN tokens to Sonic BALN tokens.
+ * This function handles the migration of BALN tokens to SODA tokens.
+ *
+ * @param amount - The amount of BALN tokens to migrate
+ * @param recipient - The address that will receive the migrated BALN tokens
+ * @param lockupPeriod - The lockup period for the BALN tokens
+ */
+async function migrateBaln(
+  amount: bigint,
+  recipient: Address,
+  lockupPeriod: LockupPeriod,
+): Promise<void> {
+  const result = await sodax.migration.migrateBaln({
+    lockupPeriod,
+    stake: false,
+    amount,
+    to: recipient,
+  }, iconSpokeProvider);
+
+  if (result.ok) {
+    console.log('[migrateBnUSD] txHash', result.value);
+    const [spokeTxHash, hubTxHash] = result.value;
+    console.log('[migrateBnUSD] hubTxHash', hubTxHash);
+    console.log('[migrateBnUSD] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[migrateBnUSD] error', result.error);
+  }
+}
 
 // Main function to decide which function to call
 async function main() {
@@ -342,32 +318,33 @@ async function main() {
     const token = process.argv[3] as IconAddress; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
-  } else if (functionName === 'migrate') {
+  } else if (functionName === 'migrateIcxToSoda') {
     const amount = BigInt(process.argv[3]); // Get amount from command line argument
     const recipient = process.argv[4] as Address; // Get recipient address from command line argument
     await migrateIcxToSoda(amount, recipient);
   } else if (functionName === 'migrateBnUSD') {
-    const legacybnUSD = process.argv[3] as bnUSDLegacyAddress; // Get legacy bnUSD address from command line argument
-    const dstChainID = process.argv[4] as HubChainId; // Get destination chain ID from command line argument
-    const amount = BigInt(process.argv[5]); // Get amount from command line argument
-    const recipient = process.argv[6] as Address; // Get recipient address from command line argument
-    await migrateBnUSD(legacybnUSD, dstChainID, amount, recipient);
-    // } else if (functionName === 'balnMigrate') {
-    //   const baln = process.argv[3] as IconAddress; // Get BALN token address from command line argument
-    //   const amount = BigInt(process.argv[4]); // Get amount from command line argument
-    //   const lockupPeriod = BigInt(process.argv[5]); // Get lockup period from command line argument
-    //   const recipient = process.argv[6] as Address; // Get recipient address from command line argument
-    //   await balnMigrate(baln, amount, lockupPeriod, recipient);
+    const amount = BigInt(process.argv[3]); // Get amount from command line argument
+    const recipient = process.argv[4] as Address; // Get recipient address from command line argument
+    await migrateBnUSD(amount, recipient);
+    } else if (functionName === 'migrateBaln') {
+      const amount = BigInt(process.argv[3]); // Get amount from command line argument
+      const recipient = process.argv[4] as Address; // Get recipient address from command line argument
+      let lockupPeriod = LockupPeriod.NO_LOCKUP;
+      if (process.argv.length >= 6) {
+        lockupPeriod = Number.parseInt(process.argv[5]) as LockupPeriod; // Get lockup period from command line argument
+      }
+
+      await migrateBaln(amount, recipient, lockupPeriod);
   } else {
     console.log(
-      'Function not recognized. Please use one of: "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrate", or "migrateBnUSD".',
+      'Function not recognized. Please use one of: "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrate", "migrateBnUSD", or "migrateBaln".',
     );
     console.log('Usage examples:');
     console.log('  npm run icon migrate <amount> <recipient_address>');
     console.log(
       '  npm run icon migrateBnUSD <srcChainID> <legacybnUSD_address> <newbnUSD_address> <amount> <recipient_address>',
     );
-    console.log('  npm run icon balnMigrate <baln_address> <amount> <lockup_period> <recipient_address>');
+    console.log('  npm run icon migrateBaln <amount> <recipient_address> <lockup_period>');
     console.log('  npm run icon deposit <token_address> <amount> <recipient_address>');
     console.log('  npm run icon supply <token_address> <amount>');
   }

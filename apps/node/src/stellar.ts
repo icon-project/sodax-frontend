@@ -227,24 +227,18 @@ async function repay(token: string, amount: bigint) {
  * Migrates legacy bnUSD tokens to new bnUSD tokens.
  * This function handles the migration of legacy bnUSD tokens to new bnUSD tokens.
  *
- * @param legacybnUSD - The address of the legacy bnUSD token to migrate
- * @param dstChainID - The destination chain ID where the new bnUSD token exists
  * @param newbnUSD - The address of the new bnUSD token to receive
  * @param amount - The amount of legacy bnUSD tokens to migrate
  * @param recipient - The address that will receive the migrated new bnUSD tokens
  */
 async function migrateBnUSD(
-  legacybnUSD: bnUSDLegacyAddress,
-  dstChainID: HubChainId,
   amount: bigint,
   recipient: Address,
 ): Promise<void> {
   const result = await sodax.migration.migratebnUSD({
-    address: legacybnUSD,
     srcChainID: stellarSpokeProvider.chainConfig.chain.id as typeof STELLAR_MAINNET_CHAIN_ID,
     amount,
     to: recipient,
-    dstChainID: dstChainID,
   }, stellarSpokeProvider);
 
   if (result.ok) {
@@ -290,11 +284,9 @@ async function main() {
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
   } else if (functionName === 'migrateBnUSD') {
-    const legacybnUSD = process.argv[3] as bnUSDLegacyAddress;
-    const dstChainID = process.argv[4] as HubChainId;
-    const amount = BigInt(process.argv[5]);
-    const recipient = process.argv[6] as Address;
-    await migrateBnUSD(legacybnUSD, dstChainID, amount, recipient);
+    const amount = BigInt(process.argv[3]);
+    const recipient = process.argv[4] as Address;
+    await migrateBnUSD(amount, recipient);
   } else if (functionName === 'balance') {
     const token = process.argv[3] as string;
     await getBalance(token);

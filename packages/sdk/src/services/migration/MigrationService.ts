@@ -781,7 +781,7 @@ export class MigrationService {
 
       const migrationData = this.bnUSDMigrationService.migrateData({
         ...params,
-        to: encodeAddress(params.dstChainID, params.to),
+        to: encodeAddress(this.hubProvider.chainConfig.chain.id, params.to),
         legacybnUSD: legacybnUSD.address,
         newbnUSD,
       });

@@ -1410,7 +1410,14 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.IbnUSD.address,
+      vault: hubVaults.bnUSD.address,
+    },
+    [spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.BALN.address]: {
+      asset: '0xde8e19a099fedf9d617599f62c5f7f020d92b572',
+      decimal: 18,
+      symbol: 'BALN',
+      name: 'BALN',
+      vault: '0x', // no vault yet
     },
   },
 } as const;

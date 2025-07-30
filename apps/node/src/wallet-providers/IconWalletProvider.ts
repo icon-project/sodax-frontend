@@ -12,7 +12,6 @@ export class IconWalletProvider implements IIconWalletProvider {
     if (isPrivateKeyIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'PRIVATE_KEY',
-
         wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
       };
       this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(wallet.rpcUrl));
