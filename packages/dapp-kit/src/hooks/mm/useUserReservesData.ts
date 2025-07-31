@@ -1,19 +1,10 @@
-import {
-  encodeAddress,
-  EvmWalletAbstraction,
-  getMoneyMarketConfig,
-  SonicSpokeService,
-  SONIC_MAINNET_CHAIN_ID,
-  type SonicSpokeProvider,
-  type EvmHubProvider,
-} from '@sodax/sdk';
-import type { HubChainId, SpokeChainId } from '@sodax/types';
+import { getMoneyMarketConfig, WalletAbstractionService } from '@sodax/sdk';
+import type { HubChainId } from '@sodax/types';
 import type { ChainId } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
 import { useHubProvider } from '../provider/useHubProvider';
 import { useSodaxContext } from '../shared/useSodaxContext';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
-import type { Address } from 'viem';
 
 export function useUserReservesData(spokeChainId: ChainId, address: string | undefined) {
   const { sodax } = useSodaxContext();
@@ -24,25 +15,19 @@ export function useUserReservesData(spokeChainId: ChainId, address: string | und
   const { data: userReserves } = useQuery({
     queryKey: ['userReserves', spokeChainId, address],
     queryFn: async () => {
-      if (!hubProvider || !address) {
+      if (!hubProvider || !spokeProvider || !address) {
         return;
       }
 
-      const addressBytes = encodeAddress(spokeChainId, address);
-      const hubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeChainId as SpokeChainId,
-        addressBytes,
-        hubProvider as EvmHubProvider,
+      const hubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
+        address,
+        spokeProvider,
+        hubProvider,
       );
-
-      let userAddress: Address = hubWalletAddress;
-      if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {
-        userAddress = await SonicSpokeService.getUserRouter(address as Address, spokeProvider as SonicSpokeProvider);
-      }
 
       const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
       const [res] = await sodax.moneyMarket.getUserReservesData(
-        userAddress,
+        hubWalletAddress,
         moneyMarketConfig.uiPoolDataProvider,
         moneyMarketConfig.poolAddressesProvider,
       );
