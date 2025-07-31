@@ -12,7 +12,7 @@ interface TabIconProps {
 
 const TabIcon: React.FC<TabIconProps> = ({ type, isActive, isMobile = false, className = '' }) => {
   const activeColor = isMobile ? '#B9ACAB' : '#8E7E7D';
-  const inactiveColor = isMobile ? '#D7CDCB' : '#EDE6E6';
+  const inactiveColor = isMobile ? '#B9ACAB' : '#EDE6E6';
 
   const iconComponents: Record<TabIconType, React.ReactNode> = {
     swap: (
