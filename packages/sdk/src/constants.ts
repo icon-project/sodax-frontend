@@ -929,42 +929,42 @@ export const hubAssets: Record<
 > = {
   [SONIC_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
       decimal: 18,
       symbol: 'S',
       name: 'Sonic',
       vault: hubVaults.sodaS.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address]: {
-      asset: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
       decimal: 18,
       symbol: 'wS',
       name: 'Sonic',
       vault: hubVaults.sodaS.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH.address]: {
-      asset: '0x50c42dEAcD8Fc9773493ED674b675bE577f2634b',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH.address,
       decimal: 18,
       symbol: 'WETH',
       name: 'Wrapped Ethereum',
       vault: hubVaults.sodaETH.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
-      asset: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address,
       decimal: 6,
       symbol: 'USDC ',
       name: 'USD Coin',
       vault: hubVaults.sodaUSDC.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
-      asset: '0x6047828dc181963ba44974801ff68e538da5eaf9',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.address,
       decimal: 6,
       symbol: 'USDT',
       name: 'Tether USD',
       vault: hubVaults.sodaUSDT.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
-      asset: '0x7c7d53EEcda37a87ce0D5bf8E0b24512A48dC963',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA.address,
       decimal: 18,
       symbol: 'SODA',
       name: 'SODA',
