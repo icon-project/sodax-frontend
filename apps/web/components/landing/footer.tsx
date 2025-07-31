@@ -67,10 +67,18 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
             Frontend Github
           </FooterLink> */}
           <FooterLink
-            href="https://www.figma.com/design/lZi3whUFdj24pQnYDOkIee/SODAX-Brand-guide?node-id=0-1&t=FzVNlqCMO4D36P36-1"
-            showArrow
+            href="/SODAX.logos.and.token.zip"
+            showArrowDown={true}
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = '/SODAX.logos.and.token.zip';
+              link.download = 'SODAX.logos.and.token.zip';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
           >
-            Media Kit
+            Brand Kit
           </FooterLink>
           <FooterLink href="#" onClick={handleTermsClick}>
             Terms

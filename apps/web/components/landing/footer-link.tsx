@@ -1,4 +1,4 @@
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDown } from 'lucide-react';
 import Link from 'next/link';
 import type { ComponentProps } from 'react';
 
@@ -6,14 +6,16 @@ import { cn } from '@/lib/utils';
 
 interface FooterLinkProps extends ComponentProps<typeof Link> {
   showArrow?: boolean;
+  showArrowDown?: boolean;
   arrowClassName?: string;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
 const FooterLink: React.FC<FooterLinkProps> = ({
   children,
   className,
   showArrow = false,
+  showArrowDown = false,
   arrowClassName,
   onClick,
   href,
@@ -44,6 +46,13 @@ const FooterLink: React.FC<FooterLinkProps> = ({
             className={cn('text-cherry-bright group-hover:stroke-[3.5] transition-all', arrowClassName)}
           />
         )}
+        {showArrowDown && (
+          <ArrowDown
+            width={16}
+            height={16}
+            className={cn('text-cherry-bright group-hover:stroke-[3.5] transition-all', arrowClassName)}
+          />
+        )}
       </a>
     );
   }
@@ -62,6 +71,13 @@ const FooterLink: React.FC<FooterLinkProps> = ({
       {children}
       {showArrow && (
         <ArrowUpRight
+          width={16}
+          height={16}
+          className={cn('text-cherry-bright group-hover:stroke-[3.5] transition-all', arrowClassName)}
+        />
+      )}
+      {showArrowDown && (
+        <ArrowDown
           width={16}
           height={16}
           className={cn('text-cherry-bright group-hover:stroke-[3.5] transition-all', arrowClassName)}
