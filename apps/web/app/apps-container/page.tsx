@@ -90,7 +90,7 @@ const MigrateContent = (): React.JSX.Element => {
                   className="justify-center text-espresso font-['InterRegular'] leading-snug"
                   style={{ fontSize: 'var(--body-super-comfortable)' }}
                 >
-                  ICON Network
+                  ICON <span className="hidden sm:inline">Network</span>
                 </div>
               </div>
             </div>
@@ -117,14 +117,20 @@ const MigrateContent = (): React.JSX.Element => {
                 >
                   ICX
                 </div>
-                <Badge variant="desktop" className="ml-1">
+                <button
+                  type="button"
+                  className="ml-1 px-2 py-1 bg-cream-white text-clay rounded text-xs font-medium hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso disabled:bg-cream-white disabled:text-clay-light transition-colors duration-200 cursor-pointer font-['InterBold'] text-[9px] leading-[1.2] rounded-full h-4"
+                >
                   MAX
-                </Badge>
+                </button>
               </div>
             </div>
-            <div className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] outline outline-4 outline-offset-[-4px] outline-stone-100 flex justify-center items-center">
+            <button
+              type="button"
+              className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] border-4 border-offset-[-4px] border-[#F5F2F2] flex justify-center items-center hover:bg-cherry-grey hover:outline-cherry-grey hover:scale-110 cursor-pointer transition-all duration-200 active:bg-cream-white"
+            >
               <ArrowDownUp className="w-3 h-3 text-espresso text-bold" />
-            </div>
+            </button>
           </div>
           <div
             className="self-stretch rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center"
@@ -160,7 +166,7 @@ const MigrateContent = (): React.JSX.Element => {
                   className="justify-center text-espresso font-['InterRegular'] leading-snug"
                   style={{ fontSize: 'var(--body-super-comfortable)' }}
                 >
-                  Sonic Network
+                  Sonic <span className="hidden sm:inline">Network</span>
                 </div>
               </div>
             </div>
