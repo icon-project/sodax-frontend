@@ -350,8 +350,8 @@ const AppsContainer = () => {
   return (
     <div className="bg-cream-white min-h-screen pb-24 md:pb-0 w-[100vw] overflow-x-hidden">
       <Sidebar isOpen={isOpen} toggle={toggle} setOpenRewardDialog={setOpenRewardDialog} />
-      <div className="self-stretch h-31 md:h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
-        <div className="w-full h-31 md:h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
+      <div className="self-stretch h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
+        <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
         <div className="w-full max-w-[1200px] justify-between items-center h-10 z-1 inline-flex px-6">
           <div className="flex justify-start items-center">
             <div className="flex lg:hidden mr-2 text-white cursor-pointer" onClick={toggle}>
@@ -445,7 +445,7 @@ const AppsContainer = () => {
           </div>
         </div>
       </div>
-      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 m-auto lg:-mt-30 md:-mt-34 -mt-7 h-wekit">
+      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 m-auto lg:-mt-30 md:-mt-34 -mt-36 h-wekit">
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation="vertical" className="w-full">
           <div className="flex justify-center items-start min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)] z-50">
             {/* Desktop sidebar */}
@@ -491,7 +491,10 @@ const AppsContainer = () => {
               </div>
             </div>
 
-            <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] p-[80px_16px] pb-10 md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-[8px] rounded-tl-[2rem] rounded-tr-[2rem] border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0">
+            <div
+              className="w-full md:w-[calc(100%-200px)] lg:w-[784px] min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] p-[80px_16px] pb-10 md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-[8px] rounded-tl-[2rem] rounded-tr-[2rem] border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0"
+              style={{ backgroundColor: '#F5F2F2' }}
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="80"
