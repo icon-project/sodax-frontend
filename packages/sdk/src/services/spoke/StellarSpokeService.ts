@@ -9,7 +9,7 @@ import {
   getIntentRelayChainId,
 } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
-import { FeeBumpTransaction, Transaction, TransactionBuilder, rpc } from '@stellar/stellar-sdk';
+import { FeeBumpTransaction, type Transaction, TransactionBuilder, rpc } from '@stellar/stellar-sdk';
 
 export type StellarSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
