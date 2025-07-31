@@ -20,5 +20,5 @@ export default defineConfig(options => ({
     return {
       js: format === 'esm' ? '.mjs' : '.cjs', // Explicit extensions
     };
-  }
+  },
 }));

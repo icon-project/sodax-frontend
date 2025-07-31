@@ -1379,7 +1379,7 @@ describe('MoneyMarketService', () => {
                 amount: testAmount,
                 action: 'supply',
               } satisfies MoneyMarketSupplyParams,
-            }
+            },
           } satisfies MoneyMarketError<'SUPPLY_UNKNOWN_ERROR'>;
 
           vi.spyOn(moneyMarket, 'supply').mockResolvedValueOnce({
@@ -1460,7 +1460,6 @@ describe('MoneyMarketService', () => {
 
           expect(result.ok).toBe(false);
           expect(!result.ok && isMoneyMarketWithdrawUnknownError(result.error)).toBeTruthy();
-
         });
 
         it('should handle UNKNOWN error for repay', async () => {

@@ -7,7 +7,13 @@ import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { BigIntToHex, getIntentRelayChainId, isNativeToken } from '../../index.js';
-import type { IconAddress, IconGasEstimate, IconRawTransaction, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
+import type {
+  IconAddress,
+  IconGasEstimate,
+  IconRawTransaction,
+  IconReturnType,
+  PromiseIconTxReturnType,
+} from '../../types.js';
 import type { HubAddress } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { estimateStepCost } from '../../utils/icon-utils.js';
@@ -30,7 +36,10 @@ export type TransferToHubParams = {
 export class IconSpokeService {
   private constructor() {}
 
-  public static async estimateGas(rawTx: IconRawTransaction, spokeProvider: IconSpokeProvider): Promise<IconGasEstimate> {
+  public static async estimateGas(
+    rawTx: IconRawTransaction,
+    spokeProvider: IconSpokeProvider,
+  ): Promise<IconGasEstimate> {
     return estimateStepCost(rawTx, spokeProvider.debugRpcUrl);
   }
 
@@ -123,7 +132,9 @@ export class IconSpokeService {
 
     const value: Hex = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? BigIntToHex(amount) : '0x0';
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const to = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? spokeProvider.chainConfig.addresses.wICX : token;
+    const to = isNativeToken(spokeProvider.chainConfig.chain.id, token)
+      ? spokeProvider.chainConfig.addresses.wICX
+      : token;
 
     const rawTransaction = Converter.toRawTransaction(
       new CallTransactionBuilder()

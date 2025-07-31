@@ -415,7 +415,11 @@ export class StellarSpokeProvider implements ISpokeProvider {
       const stellarAccount = new CustomStellarAccount(accountResponse);
 
       const depositCall = this.buildDepositCall(walletAddress, token, amount, recipient, data);
-      const [rawPriorityTx, simulation] = await this.buildPriorityStellarTransaction(stellarAccount, network, depositCall);
+      const [rawPriorityTx, simulation] = await this.buildPriorityStellarTransaction(
+        stellarAccount,
+        network,
+        depositCall,
+      );
       const assembledPriorityTx = SorobanRpc.assembleTransaction(rawPriorityTx, simulation).build();
       if (raw) {
         const transactionXdr = rawPriorityTx.toXDR();
@@ -428,7 +432,13 @@ export class StellarSpokeProvider implements ISpokeProvider {
         } satisfies StellarReturnType<true> as StellarReturnType<R>;
       }
 
-      const hash = await this.submitOrRestoreAndRetry(stellarAccount, network, assembledPriorityTx, depositCall, simulation);
+      const hash = await this.submitOrRestoreAndRetry(
+        stellarAccount,
+        network,
+        assembledPriorityTx,
+        depositCall,
+        simulation,
+      );
 
       return `${hash}` as StellarReturnType<R>;
     } catch (error) {

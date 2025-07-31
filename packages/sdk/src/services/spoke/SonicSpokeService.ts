@@ -33,8 +33,7 @@ export type BorrowInfo = {
 export class SonicSpokeService {
   private constructor() {}
 
-
-    /**
+  /**
    /**
     * Estimates the gas necessary to complete a transaction without submitting it to the network.
     *
@@ -58,10 +57,7 @@ export class SonicSpokeService {
     * const estimatedGas = await EvmSpokeService.estimateGas(rawTx, spokeProvider);
     * console.log(`Estimated gas: ${estimatedGas}`);
     */
-   public static async estimateGas(
-    rawTx: EvmRawTransaction,
-    spokeProvider: SonicSpokeProvider,
-  ): Promise<bigint> {
+  public static async estimateGas(rawTx: EvmRawTransaction, spokeProvider: SonicSpokeProvider): Promise<bigint> {
     // Use viem's estimateGas with explicit parameter types
     return spokeProvider.publicClient.estimateGas({
       account: rawTx.from,

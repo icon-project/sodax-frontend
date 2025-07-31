@@ -1,6 +1,6 @@
-import type { Address, Hex, SpokeChainId } from '@sodax/types';
+import type { Address } from '@sodax/types';
 import { SonicSpokeProvider, type EvmHubProvider, type SpokeProvider } from '../../entities/index.js';
-import { EvmWalletAbstraction, SonicSpokeService } from '../../index.js';
+import { encodeAddress, EvmWalletAbstraction, SonicSpokeService } from '../../index.js';
 
 /**
  * Service to get valid hub wallet address which may differ based on the spoke chain.
@@ -8,16 +8,23 @@ import { EvmWalletAbstraction, SonicSpokeService } from '../../index.js';
 export class WalletAbstractionService {
   private constructor() {}
 
+  /**
+   * Gets the hub wallet address for a user based on their spoke chain address.
+   * @param address - The user's address on the spoke chain
+   * @param spokeProvider - The provider for interacting with the spoke chain
+   * @param hubProvider - The provider for interacting with the hub chain
+   * @returns The user's hub wallet address
+   */
   public static async getUserHubWalletAddress(
-    chainId: SpokeChainId,
-    address: Hex,
-    hubProvider: EvmHubProvider,
+    address: string,
     spokeProvider: SpokeProvider,
+    hubProvider: EvmHubProvider,
   ): Promise<Address> {
-    // if chainId is the same as the hub chain id, use the user router (sonic)
-    if (chainId === hubProvider.chainConfig.chain.id) {
+    const encodedAddress = encodeAddress(spokeProvider.chainConfig.chain.id, address);
+    // if spoke chain id is the same as the hub chain id, use the user router (sonic)
+    if (spokeProvider.chainConfig.chain.id === hubProvider.chainConfig.chain.id) {
       if (spokeProvider instanceof SonicSpokeProvider) {
-        return SonicSpokeService.getUserRouter(address, spokeProvider);
+        return SonicSpokeService.getUserRouter(encodedAddress, spokeProvider);
       }
 
       throw new Error(
@@ -25,6 +32,10 @@ export class WalletAbstractionService {
       );
     }
 
-    return EvmWalletAbstraction.getUserHubWalletAddress(chainId, address, hubProvider);
+    return EvmWalletAbstraction.getUserHubWalletAddress(
+      spokeProvider.chainConfig.chain.id,
+      encodedAddress,
+      hubProvider,
+    );
   }
 }

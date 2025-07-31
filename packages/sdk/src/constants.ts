@@ -165,8 +165,8 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000',
     bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
     supportedTokens: {
-      Sonic: {
-        symbol: 'Sonic',
+      S: {
+        symbol: 'S',
         name: 'Sonic',
         decimals: 18,
         address: '0x0000000000000000000000000000000000000000',
@@ -189,8 +189,8 @@ export const spokeChainConfig = {
         decimals: 6,
         address: '0x6047828dc181963ba44974801FF68e538dA5eaF9',
       },
-      wSonic: {
-        symbol: 'wSonic',
+      wS: {
+        symbol: 'wS',
         name: 'Wrapped Sonic',
         decimals: 18,
         address: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
@@ -948,42 +948,42 @@ export const hubAssets: Record<
 > = {
   [SONIC_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
       decimal: 18,
       symbol: 'S',
       name: 'Sonic',
       vault: hubVaults.sodaS.address,
     },
-    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic.address]: {
-      asset: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address]: {
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
       decimal: 18,
-      symbol: 'wSonic',
+      symbol: 'wS',
       name: 'Sonic',
       vault: hubVaults.sodaS.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH.address]: {
-      asset: '0x50c42dEAcD8Fc9773493ED674b675bE577f2634b',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH.address,
       decimal: 18,
       symbol: 'WETH',
       name: 'Wrapped Ethereum',
       vault: hubVaults.sodaETH.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
-      asset: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address,
       decimal: 6,
       symbol: 'USDC ',
       name: 'USD Coin',
       vault: hubVaults.sodaUSDC.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
-      asset: '0x6047828dc181963ba44974801ff68e538da5eaf9',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.address,
       decimal: 6,
       symbol: 'USDT',
       name: 'Tether USD',
       vault: hubVaults.sodaUSDT.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
-      asset: '0x7c7d53EEcda37a87ce0D5bf8E0b24512A48dC963',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA.address,
       decimal: 18,
       symbol: 'SODA',
       name: 'SODA',
@@ -1436,10 +1436,11 @@ export const getSolverConfig = (chainId: HubChainId): SolverConfig => solverConf
 // currently supported spoke chain tokens for solver
 const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   [SONIC_MAINNET_CHAIN_ID]: [
-    // spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH, // NOTE: Planned for next release (1 - 2 weeks)
-    // spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC, // NOTE: Planned for next release (1 - 2 weeks)
-    // spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT, // NOTE: Planned for next release (1 - 2 weeks)
-    // spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic, // NOTE: Planned for next release (1 - 2 weeks)
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
   ] as const satisfies Token[],
   [AVALANCHE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.AVAX,
@@ -1615,11 +1616,11 @@ export const moneyMarketSupportedTokens = {
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
   [SONIC_MAINNET_CHAIN_ID]: [
-    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.Sonic,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
-    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wSonic,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 

@@ -7,7 +7,6 @@ import {
   EvmSpokeProvider,
   type GetRelayResponse,
   type IntentRelayRequest,
-  type PacketData,
   type RelayErrorCode,
   SonicSpokeProvider,
   type SpokeProvider,
@@ -389,7 +388,7 @@ export class SolverService {
     spokeProvider: S,
     fee?: PartnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[SolverExecutionResponse, Intent, PacketData], IntentError<IntentErrorCode>>> {
+  ): Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>> {
     return this.createAndSubmitIntent(payload, spokeProvider, fee, timeout);
   }
 
@@ -398,7 +397,7 @@ export class SolverService {
    * @param {CreateIntentParams} payload - The intent to create
    * @param {ISpokeProvider} spokeProvider - The spoke provider
    * @param {number} timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[SolverExecutionResponse, Intent, PacketData], IntentError<IntentErrorCode>>>} The solver execution response, intent, and packet data
+   * @returns {Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>>} The solver execution response, intent, and packet data
    *
    * @example
    * const payload = {
@@ -432,7 +431,7 @@ export class SolverService {
     spokeProvider: S,
     fee?: PartnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[SolverExecutionResponse, Intent, PacketData], IntentError<IntentErrorCode>>> {
+  ): Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>> {
     try {
       // first create the deposit with intent data on spoke chain
       const createIntentResult = await this.createIntent(payload, spokeProvider, fee, false);
@@ -443,52 +442,60 @@ export class SolverService {
 
       // then submit the deposit tx hash of spoke chain to the intent relay
       const [spokeTxHash, intent, data] = createIntentResult.value;
-      const intentRelayChainId = getIntentRelayChainId(payload.srcChain).toString();
-      const submitPayload: IntentRelayRequest<'submit'> =
-        payload.srcChain === SOLANA_MAINNET_CHAIN_ID && data
-          ? {
-              action: 'submit',
-              params: {
-                chain_id: intentRelayChainId,
-                tx_hash: spokeTxHash,
-                data: {
-                  address: intent.creator,
-                  payload: data,
+
+      let intentTxHash: string | null = null;
+
+      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+        const intentRelayChainId = getIntentRelayChainId(payload.srcChain).toString();
+        const submitPayload: IntentRelayRequest<'submit'> =
+          payload.srcChain === SOLANA_MAINNET_CHAIN_ID && data
+            ? {
+                action: 'submit',
+                params: {
+                  chain_id: intentRelayChainId,
+                  tx_hash: spokeTxHash,
+                  data: {
+                    address: intent.creator,
+                    payload: data,
+                  },
                 },
-              },
-            }
-          : {
-              action: 'submit',
-              params: {
-                chain_id: intentRelayChainId,
-                tx_hash: spokeTxHash,
-              },
-            };
+              }
+            : {
+                action: 'submit',
+                params: {
+                  chain_id: intentRelayChainId,
+                  tx_hash: spokeTxHash,
+                },
+              };
 
-      const submitResult = await this.submitIntent(submitPayload);
+        const submitResult = await this.submitIntent(submitPayload);
 
-      if (!submitResult.ok) {
-        return submitResult;
-      }
+        if (!submitResult.ok) {
+          return submitResult;
+        }
 
-      // then wait until the intent is executed on the intent relay
-      const packet = await waitUntilIntentExecuted({
-        intentRelayChainId,
-        spokeTxHash,
-        timeout,
-        apiUrl: this.config.relayerApiEndpoint,
-      });
+        // then wait until the intent is executed on the intent relay
+        const packet = await waitUntilIntentExecuted({
+          intentRelayChainId,
+          spokeTxHash,
+          timeout,
+          apiUrl: this.config.relayerApiEndpoint,
+        });
 
-      if (!packet.ok) {
-        return {
-          ok: false,
-          error: packet.error,
-        };
+        if (!packet.ok) {
+          return {
+            ok: false,
+            error: packet.error,
+          };
+        }
+        intentTxHash = packet.value.dst_tx_hash;
+      } else {
+        intentTxHash = spokeTxHash;
       }
 
       // then post execution of intent order transaction executed on hub chain to Solver API
       const result = await this.postExecution({
-        intent_tx_hash: packet.value.dst_tx_hash as `0x${string}`,
+        intent_tx_hash: intentTxHash as `0x${string}`,
       });
 
       if (!result.ok) {
@@ -503,7 +510,7 @@ export class SolverService {
 
       return {
         ok: true,
-        value: [result.value, intent, packet.value],
+        value: [result.value, intent, intentTxHash as `0x${string}`],
       };
     } catch (error) {
       return {
@@ -701,12 +708,7 @@ export class SolverService {
       const creatorHubWalletAddress =
         spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
           ? walletAddressBytes
-          : await WalletAbstractionService.getUserHubWalletAddress(
-              params.srcChain,
-              walletAddressBytes,
-              this.hubProvider,
-              spokeProvider,
-            );
+          : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
 
       // construct the intent data
       const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
@@ -766,17 +768,13 @@ export class SolverService {
       invariant(isValidIntentRelayChainId(intent.srcChain), `Invalid intent.srcChain: ${intent.srcChain}`);
       invariant(isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
 
-      const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const walletAddressBytes = encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress);
       // derive users hub wallet address
       const creatorHubWalletAddress =
         spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
           ? walletAddressBytes
-          : await WalletAbstractionService.getUserHubWalletAddress(
-              spokeProvider.chainConfig.chain.id,
-              walletAddressBytes,
-              this.hubProvider,
-              spokeProvider,
-            );
+          : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
 
       const calls: EvmContractCall[] = [];
       const intentsContract = this.config.intentsContract;

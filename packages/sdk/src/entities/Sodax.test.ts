@@ -30,7 +30,6 @@ import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
-
 describe('Sodax', () => {
   const partnerFeePercentage = {
     address: '0x0000000000000000000000000000000000000000', // NOTE: replace with actual partner address
@@ -368,11 +367,7 @@ describe('Sodax', () => {
           },
         });
 
-        const result = await sodax.solver.swap(
-          mockCreateIntentParams,
-          mockBscSpokeProvider,
-          partnerFeeAmount,
-        );
+        const result = await sodax.solver.swap(mockCreateIntentParams, mockBscSpokeProvider, partnerFeeAmount);
 
         expect(result.ok).toBe(true);
         if (result.ok) {
@@ -444,16 +439,14 @@ describe('Sodax', () => {
             },
           },
           walletProvider: {
-            getWalletAddressBytes: () => '0x1234567890123456789012345678901234567890',
+            getWalletAddress: () => '0x1234567890123456789012345678901234567890',
           },
         } as unknown as SpokeProvider;
 
-        await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual(
-          {
-            ok: false,
-            error: new Error('Invalid spoke provider'),
-          }
-        );
+        await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual({
+          ok: false,
+          error: new Error('Invalid spoke provider'),
+        });
       });
     });
 

@@ -16,11 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
   type CreateIntentParams,
-  encodeAddress,
   type Hex,
   type Intent,
   type SolverIntentQuoteRequest,
-  type PacketData,
   spokeChainConfig,
   supportedSpokeChains,
   supportedTokensPerChain,
@@ -43,7 +41,7 @@ import { useAppStore } from '@/zustand/useAppStore';
 export default function SwapCard({
   setOrders,
 }: {
-  setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; packet: PacketData }[]>) => void;
+  setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; intentTxHash: Hex }[]>) => void;
 }) {
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
@@ -183,9 +181,9 @@ export default function SwapCard({
     const result = await createIntentOrder(intentOrderPayload);
 
     if (result.ok) {
-      const [response, intent, packet] = result.value;
+      const [response, intent, intentTxHash] = result.value;
 
-      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, packet }]);
+      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, intentTxHash }]);
     } else {
       console.error('Error creating and submitting intent:', result.error);
     }
