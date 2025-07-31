@@ -1,7 +1,13 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { SuiSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
-import { type HubAddress, type PromiseSuiTxReturnType, type SuiGasEstimate, type SuiRawTransaction, getIntentRelayChainId } from '../../index.js';
+import {
+  type HubAddress,
+  type PromiseSuiTxReturnType,
+  type SuiGasEstimate,
+  type SuiRawTransaction,
+  getIntentRelayChainId,
+} from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { Transaction } from '@mysten/sui/transactions';
 
@@ -29,10 +35,7 @@ export class SuiSpokeService {
    * @param {SuiSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The estimated computation cost.
    */
-  public static async estimateGas(
-    rawTx: SuiRawTransaction,
-    spokeProvider: SuiSpokeProvider,
-  ): Promise<SuiGasEstimate> {
+  public static async estimateGas(rawTx: SuiRawTransaction, spokeProvider: SuiSpokeProvider): Promise<SuiGasEstimate> {
     const txb = Transaction.fromKind(rawTx.data);
     const result = await spokeProvider.publicClient.devInspectTransactionBlock({
       sender: rawTx.from,

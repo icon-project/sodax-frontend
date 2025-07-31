@@ -206,7 +206,12 @@ async function repay(token: string, amount: bigint) {
     walletAddressBytes,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(
+    token,
+    hubWallet,
+    amount,
+    stellarSpokeProvider.chainConfig.chain.id,
+  );
 
   const txHash = await SpokeService.deposit(
     {

@@ -175,7 +175,7 @@ export class SuiSpokeProvider implements ISpokeProvider {
         onlyTransactionKind: true,
       });
       const transactionRawBase64String = Buffer.from(transactionRaw).toString('base64');
-      
+
       return {
         from: walletAddress,
         to: `${connection.packageId}::${connection.moduleId}::send_message_ua`,

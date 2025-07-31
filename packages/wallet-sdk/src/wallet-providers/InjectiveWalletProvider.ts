@@ -43,7 +43,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       accountNumber: 0,
       chainId: chainId,
     });
-    
+
     const rawTx = {
       from: senderAddress as Hex,
       to: contractAddress as Hex,
