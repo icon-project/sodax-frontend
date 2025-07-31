@@ -6,8 +6,15 @@ import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { BigIntToHex, getIntentRelayChainId, isNativeToken } from '../../index.js';
-import type { IconAddress, IconGasEstimate, IconRawTransaction, IconReturnType, PromiseIconTxReturnType } from '../../types.js';
+import { BigIntToHex, encodeAddress, getIntentRelayChainId, isNativeToken } from '../../index.js';
+import type {
+  DepositSimulationParams,
+  IconAddress,
+  IconGasEstimate,
+  IconRawTransaction,
+  IconReturnType,
+  PromiseIconTxReturnType,
+} from '../../types.js';
 import type { HubAddress } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { estimateStepCost } from '../../utils/icon-utils.js';
@@ -30,7 +37,10 @@ export type TransferToHubParams = {
 export class IconSpokeService {
   private constructor() {}
 
-  public static async estimateGas(rawTx: IconRawTransaction, spokeProvider: IconSpokeProvider): Promise<IconGasEstimate> {
+  public static async estimateGas(
+    rawTx: IconRawTransaction,
+    spokeProvider: IconSpokeProvider,
+  ): Promise<IconGasEstimate> {
     return estimateStepCost(rawTx, spokeProvider.debugRpcUrl);
   }
 
@@ -105,6 +115,40 @@ export class IconSpokeService {
   }
 
   /**
+   * Generate simulation parameters for deposit from IconSpokeDepositParams.
+   * @param {IconSpokeDepositParams} params - The deposit parameters.
+   * @param {IconSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
+   */
+  public static async getSimulateDepositParams(
+    params: IconSpokeDepositParams,
+    spokeProvider: IconSpokeProvider,
+    hubProvider: EvmHubProvider,
+  ): Promise<DepositSimulationParams> {
+    const to =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        getIconAddressBytes(params.from),
+        hubProvider,
+      ));
+
+    return {
+      spokeChainID: spokeProvider.chainConfig.chain.id,
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+      to,
+      amount: params.amount,
+      data: params.data,
+      srcAddress: encodeAddress(
+        spokeProvider.chainConfig.chain.id,
+        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
+      ),
+    };
+  }
+
+  /**
    * Transfers tokens to the hub chain.
    */
   private static async transfer<R extends boolean = false>(
@@ -123,7 +167,9 @@ export class IconSpokeService {
 
     const value: Hex = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? BigIntToHex(amount) : '0x0';
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const to = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? spokeProvider.chainConfig.addresses.wICX : token;
+    const to = isNativeToken(spokeProvider.chainConfig.chain.id, token)
+      ? spokeProvider.chainConfig.addresses.wICX
+      : token;
 
     const rawTransaction = Converter.toRawTransaction(
       new CallTransactionBuilder()

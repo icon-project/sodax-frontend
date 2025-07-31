@@ -35,7 +35,10 @@ import type {
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 import type { migrationConfig } from './constants.js';
 
-export type bnUSDLegacySpokeChainId = typeof ICON_MAINNET_CHAIN_ID | typeof SUI_MAINNET_CHAIN_ID | typeof STELLAR_MAINNET_CHAIN_ID;
+export type bnUSDLegacySpokeChainId =
+  | typeof ICON_MAINNET_CHAIN_ID
+  | typeof SUI_MAINNET_CHAIN_ID
+  | typeof STELLAR_MAINNET_CHAIN_ID;
 export type bnUSDLegacyMigrationProviders = IconSpokeProvider | SuiSpokeProvider | StellarSpokeProvider;
 
 export type bnUSDLegacyAddress =
@@ -111,12 +114,33 @@ export type MoneyMarketConfig = {
   bnUSDVault: Address;
 };
 
+export type ConcentratedLiquidityConfig = {
+  permit2: Address;
+  clPoolManager: Address;
+  router: Address;
+  clPositionManager: Address;
+  clPositionDescriptor: Address;
+  clQuoter: Address;
+  clTickLens: Address;
+  defaultHook: Address;
+  stataTokenFactory: Address;
+  defaultTickSpacing: number;
+  defaultBitmap: bigint;
+};
+
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
+export type ConcentratedLiquidityServiceConfig = Prettify<
+  ConcentratedLiquidityConfig & PartnerFeeConfig & RelayerApiConfig
+>;
 export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 
 export type MoneyMarketConfigParams =
   | Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
+  | Optional<PartnerFeeConfig, 'partnerFee'>;
+
+export type ConcentratedLiquidityConfigParams =
+  | Prettify<ConcentratedLiquidityConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
   | Optional<PartnerFeeConfig, 'partnerFee'>;
 
 export type Default = {
@@ -249,6 +273,23 @@ export type TokenInfo = {
 export type VaultReserves = {
   tokens: readonly Address[];
   balances: readonly bigint[];
+};
+
+export type DepositSimulationParams = {
+  spokeChainID: SpokeChainId;
+  token: Hex;
+  from: Hex;
+  to: Hex;
+  amount: bigint;
+  data: Hex;
+  srcAddress: Hex;
+};
+
+export type WalletSimulationParams = {
+  target: Address;
+  srcChainId: bigint;
+  srcAddress: Hex;
+  payload: Hex;
 };
 
 /**

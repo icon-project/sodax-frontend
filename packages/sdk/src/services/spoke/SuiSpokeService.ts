@@ -1,7 +1,15 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { SuiSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
-import { type HubAddress, type PromiseSuiTxReturnType, type SuiGasEstimate, type SuiRawTransaction, getIntentRelayChainId } from '../../index.js';
+import {
+  type DepositSimulationParams,
+  type HubAddress,
+  type PromiseSuiTxReturnType,
+  type SuiGasEstimate,
+  encodeAddress,
+  type SuiRawTransaction,
+  getIntentRelayChainId,
+} from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { Transaction } from '@mysten/sui/transactions';
 
@@ -29,10 +37,7 @@ export class SuiSpokeService {
    * @param {SuiSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The estimated computation cost.
    */
-  public static async estimateGas(
-    rawTx: SuiRawTransaction,
-    spokeProvider: SuiSpokeProvider,
-  ): Promise<SuiGasEstimate> {
+  public static async estimateGas(rawTx: SuiRawTransaction, spokeProvider: SuiSpokeProvider): Promise<SuiGasEstimate> {
     const txb = Transaction.fromKind(rawTx.data);
     const result = await spokeProvider.publicClient.devInspectTransactionBlock({
       sender: rawTx.from,
@@ -84,6 +89,40 @@ export class SuiSpokeService {
    */
   public static async getDeposit(token: string, spokeProvider: SuiSpokeProvider): Promise<bigint> {
     return spokeProvider.getBalance(token);
+  }
+
+  /**
+   * Generate simulation parameters for deposit from SuiSpokeDepositParams.
+   * @param {SuiSpokeDepositParams} params - The deposit parameters.
+   * @param {SuiSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
+   */
+  public static async getSimulateDepositParams(
+    params: SuiSpokeDepositParams,
+    spokeProvider: SuiSpokeProvider,
+    hubProvider: EvmHubProvider,
+  ): Promise<DepositSimulationParams> {
+    const to =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        params.from,
+        hubProvider,
+      ));
+
+    return {
+      spokeChainID: spokeProvider.chainConfig.chain.id,
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+      to,
+      amount: params.amount,
+      data: params.data,
+      srcAddress: encodeAddress(
+        spokeProvider.chainConfig.chain.id,
+        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
+      ),
+    };
   }
 
   /**

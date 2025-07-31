@@ -21,6 +21,7 @@ import type {
   SolanaRawTransactionInstruction,
   TransactionSignature,
 } from '@sodax/types';
+import { encodeAddress, SOLANA_MAINNET_CHAIN_ID } from '@sodax/sdk';
 
 export type SolanaPkWalletConfig = {
   privateKey: Uint8Array;
@@ -123,7 +124,7 @@ export class SolanaWalletProvider implements ISolanaWalletProvider {
   }
 
   public async getWalletAddressBytes(): Promise<Hex> {
-    return `0x${Buffer.from(await this.getWalletAddress()).toString('hex')}`;
+    return encodeAddress(SOLANA_MAINNET_CHAIN_ID, await this.getWalletAddress());
   }
 
   public async getAssociatedTokenAddress(mint: SolanaBase58PublicKey): Promise<SolanaBase58PublicKey> {

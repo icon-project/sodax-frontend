@@ -19,15 +19,17 @@ import {
   type EvmRawTransaction,
   type SolverConfigParams,
   type EvmChainId,
+  ConcentratedLiquidityService,
+  getConcentratedLiquidityConfig,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
-import { SONIC_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, ARBITRUM_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
-const DEFAULT_SPOKE_RPC_URL = IS_TESTNET ? 'https://avalanche-fuji.drpc.org' : 'https://api.avax.network/ext/bc/C/rpc';
-const DEFAULT_SPOKE_CHAIN_ID = AVALANCHE_MAINNET_CHAIN_ID;
+const DEFAULT_SPOKE_RPC_URL = IS_TESTNET ? 'https://arbitrum-sepolia.drpc.org' : 'https://arb1.arbitrum.io/rpc';
+const DEFAULT_SPOKE_CHAIN_ID = ARBITRUM_MAINNET_CHAIN_ID;
 const HUB_CHAIN_ID: HubChainId = SONIC_MAINNET_CHAIN_ID;
 const HUB_RPC_URL = 'https://rpc.soniclabs.com';
 
@@ -68,6 +70,28 @@ const sodax = new Sodax({
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
+
+// Initialize ConcentratedLiquidityService
+const concentratedLiquidityConfig = getConcentratedLiquidityConfig(HUB_CHAIN_ID);
+const concentratedLiquidityService = new ConcentratedLiquidityService(concentratedLiquidityConfig, hubProvider);
+
+async function depositRaw(token: Address, amount: bigint) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
+  console.log(walletAddress);
+
+  const txHash: Hash = await SpokeService.deposit(
+    {
+      from: walletAddress,
+      token,
+      amount,
+      data: '0x',
+    },
+    spokeProvider,
+    hubProvider,
+  );
+
+  console.log('[depositTo] txHash', txHash);
+}
 
 async function depositTo(token: Address, amount: bigint, recipient: Address) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
@@ -369,11 +393,170 @@ async function getIntent(txHash: string) {
   console.log(intent);
 }
 
+// requires 2 raw deposits to be made first
+// uses max amounts so needs some buffer
+async function supplyLiquidity(
+  token0: Address,
+  token1: Address,
+  tickLower: bigint,
+  tickUpper: bigint,
+  liquidity: bigint,
+  amount0: bigint,
+  amount1: bigint,
+) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+    spokeProvider.chainConfig.chain.id,
+    walletAddress,
+    hubProvider,
+  );
+
+  // Get position manager address from config
+  const positionManager = concentratedLiquidityService.config.clPositionManager;
+
+  // Encode the crosschain supply liquidity call
+  const data: Hex = await concentratedLiquidityService.encodeCrosschainSupplyLiquidity(
+    spokeProvider.chainConfig.chain.id,
+    token0,
+    token1,
+    tickLower,
+    tickUpper,
+    liquidity,
+    amount0,
+    amount1,
+    hubWallet,
+    positionManager,
+  );
+
+  // Execute the transaction via wallet call
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
+
+  console.log('[supplyLiquidity] txHash', txHash);
+}
+
+// requires 2 raw deposits to be made first
+async function burnPosition(
+  currency0: Address,
+  currency1: Address,
+  tokenId: bigint,
+  minAmount0: bigint,
+  minAmount1: bigint,
+) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+    spokeProvider.chainConfig.chain.id,
+    walletAddress,
+    hubProvider,
+  );
+
+  // Get position manager address from config
+  const positionManager = concentratedLiquidityService.config.clPositionManager;
+
+  // Encode the crosschain supply liquidity call
+  const data: Hex = await concentratedLiquidityService.encodeCrosschainBurnPosition(
+    spokeProvider.chainConfig.chain.id,
+    currency0,
+    currency1,
+    tokenId,
+    minAmount0,
+    minAmount1,
+    hubWallet,
+    walletAddress,
+    positionManager,
+  );
+
+  // Execute the transaction via wallet call
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
+
+  console.log('[Burn positions  ] txHash', txHash);
+}
+
+// requires 2 raw deposits to be made first
+async function increaseLiquidity(
+  token0: Address,
+  token1: Address,
+  tokenId: bigint,
+  liquidity: bigint,
+  amount0Max: bigint,
+  amount1Max: bigint,
+) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+    spokeProvider.chainConfig.chain.id,
+    walletAddress,
+    hubProvider,
+  );
+
+  // Get position manager address from config
+  const positionManager = concentratedLiquidityService.config.clPositionManager;
+
+  // Encode the crosschain increase liquidity call
+  const data: Hex = await concentratedLiquidityService.encodeCrosschainIncreaseLiquidity(
+    spokeProvider.chainConfig.chain.id,
+    token0,
+    token1,
+    tokenId,
+    liquidity,
+    amount0Max,
+    amount1Max,
+    positionManager,
+    hubWallet,
+  );
+
+  // Execute the transaction via wallet call
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
+
+  console.log('[increaseLiquidity] txHash', txHash);
+}
+
+// requires raw deposits to be made first for unwrapping tokens
+async function decreaseLiquidity(
+  token0: Address,
+  token1: Address,
+  tokenId: bigint,
+  liquidity: bigint,
+  amount0Min: bigint,
+  amount1Min: bigint,
+) {
+  const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+    spokeProvider.chainConfig.chain.id,
+    walletAddress,
+    hubProvider,
+  );
+
+  // Get position manager address from config
+  const positionManager = concentratedLiquidityService.config.clPositionManager;
+
+  // Encode the crosschain decrease liquidity call
+  const data: Hex = await concentratedLiquidityService.encodeCrosschainDecreaseLiquidity(
+    spokeProvider.chainConfig.chain.id,
+    token0,
+    token1,
+    tokenId,
+    liquidity,
+    amount0Min,
+    amount1Min,
+    hubWallet,
+    walletAddress,
+    positionManager,
+  );
+
+  // Execute the transaction via wallet call
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, hubProvider);
+
+  console.log('[decreaseLiquidity] txHash', txHash);
+}
+
 // Main function to decide which function to call
 async function main() {
   const functionName = process.argv[2]; // Get function name from command line argument
 
-  if (functionName === 'deposit') {
+  if (functionName === 'depositRaw') {
+    const token = process.argv[3] as Address; // Get token address from command line argument
+    const amount = BigInt(process.argv[4]); // Get amount from command line argument
+    await depositRaw(token, amount);
+  } else if (functionName === 'deposit') {
     const token = process.argv[3] as Address; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     const recipient = process.argv[5] as Address; // Get recipient address from command line argument
@@ -418,9 +601,41 @@ async function main() {
   } else if (functionName === 'getIntent') {
     const txHash = process.argv[3]; // Get txHash from command line argument
     await getIntent(txHash);
+  } else if (functionName === 'supplyLiquidity') {
+    const token0 = process.argv[3] as Address; // Get token0 address from command line argument
+    const token1 = process.argv[4] as Address; // Get token1 address from command line argument
+    const tickLower = BigInt(process.argv[5]); // Get tickLower from command line argument
+    const tickUpper = BigInt(process.argv[6]); // Get tickUpper from command line argument
+    const liquidity = BigInt(process.argv[7]); // Get liquidity from command line argument
+    const amount0 = BigInt(process.argv[8]); // Get amount0 from command line argument
+    const amount1 = BigInt(process.argv[9]); // Get amount1 from command line argument
+    await supplyLiquidity(token0, token1, tickLower, tickUpper, liquidity, amount0, amount1);
+  } else if (functionName === 'burnPosition') {
+    const currency0 = process.argv[3] as Address; // Get currency0 address from command line argument
+    const currency1 = process.argv[4] as Address; // Get currency1 address from command line argument
+    const tokenId = BigInt(process.argv[5]); // Get tokenId from command line argument
+    const minAmount0 = BigInt(process.argv[6]); // Get minAmount0 from command line argument
+    const minAmount1 = BigInt(process.argv[7]); // Get minAmount1 from command line argument
+    await burnPosition(currency0, currency1, tokenId, minAmount0, minAmount1);
+  } else if (functionName === 'increaseLiquidity') {
+    const token0 = process.argv[3] as Address; // Get token0 address from command line argument
+    const token1 = process.argv[4] as Address; // Get token1 address from command line argument
+    const tokenId = BigInt(process.argv[5]); // Get tokenId from command line argument
+    const liquidity = BigInt(process.argv[6]); // Get liquidity from command line argument
+    const amount0Max = BigInt(process.argv[7]); // Get amount0Max from command line argument
+    const amount1Max = BigInt(process.argv[8]); // Get amount1Max from command line argument
+    await increaseLiquidity(token0, token1, tokenId, liquidity, amount0Max, amount1Max);
+  } else if (functionName === 'decreaseLiquidity') {
+    const token0 = process.argv[3] as Address; // Get token0 address from command line argument
+    const token1 = process.argv[4] as Address; // Get token1 address from command line argument
+    const tokenId = BigInt(process.argv[5]); // Get tokenId from command line argument
+    const liquidity = BigInt(process.argv[6]); // Get liquidity from command line argument
+    const amount0Min = BigInt(process.argv[7]); // Get amount0Min from command line argument
+    const amount1Min = BigInt(process.argv[8]); // Get amount1Min from command line argument
+    await decreaseLiquidity(token0, token1, tokenId, liquidity, amount0Min, amount1Min);
   } else {
     console.log(
-      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "createIntent", "fillIntent", or "cancelIntent".',
+      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "createIntent", "fillIntent", "cancelIntent", "getIntent", "supplyLiquidity", "burnPosition", "increaseLiquidity", or "decreaseLiquidity".',
     );
   }
 }
