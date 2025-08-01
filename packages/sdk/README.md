@@ -11,7 +11,6 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
   - ICON ✅
   - Solana ✅
   - Injective ✅
-  - Havah ❌ Coming soon
 
 ### Lend and Borrow (Money Market)
   - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic) ✅
@@ -20,7 +19,6 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
   - ICON ✅
   - Solana ✅
   - Injective ✅
-  - Havah ❌ Coming soon
 
 
 ## Installation
@@ -225,9 +223,8 @@ As part of Sodax suite, xWagmi SDK is also going to be provided as one example w
   - `ISuiWalletProvider`: Sui ✅
   - `IIconWalletProvider`: ICON ✅
   - `IStellarWalletProvider`: Stellar ✅
-  - Solana ✅
-  - Injective ✅
-  - Havah ❌ Coming soon
+  - `ISolanaWalletProvider`: Solana ✅
+  - `IInjectiveWalletProvider`: Injective ✅
 
 ### Initialising Spoke Provider
 

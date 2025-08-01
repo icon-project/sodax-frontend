@@ -5,7 +5,6 @@ export * from './core';
 export * from './utils';
 
 export * from './xchains/evm';
-export * from './xchains/havah';
 export * from './xchains/icon';
 export * from './xchains/injective';
 export * from './xchains/solana';

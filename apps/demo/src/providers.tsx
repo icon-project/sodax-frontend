@@ -39,7 +39,6 @@ export default function Providers({ children }: { children: ReactNode }) {
               endpoint: 'https://api.mainnet-beta.solana.com',
             },
             ICON: {},
-            HAVAH: {},
             INJECTIVE: {},
             STELLAR: {},
           }}

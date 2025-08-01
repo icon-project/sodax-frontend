@@ -19,7 +19,6 @@ export enum WalletId {
   PHANTOM = 'phantom',
   SUI = 'sui',
   KEPLR = 'keplr',
-  HAVAH = 'havah',
 }
 
 export type EVMConfig = {
