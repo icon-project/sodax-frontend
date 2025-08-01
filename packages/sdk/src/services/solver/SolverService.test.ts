@@ -24,13 +24,13 @@ import {
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
-  type TxReturnType,
   spokeChainConfig,
   isIntentSubmitTxFailedError,
   isIntentCreationFailedError,
   isIntentPostExecutionFailedError,
   isWaitUntilIntentExecutedFailed,
   isIntentCreationUnknownError,
+  WalletAbstractionService,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
@@ -416,9 +416,9 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, mockIntentWithFee],
+        value: [mockTxHash, mockIntentWithFee, '0x'],
       });
-      vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+      vi.spyOn(WalletAbstractionService, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
         success: true,
         message: 'Transaction submitted successfully',
@@ -482,7 +482,7 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
         success: false,
@@ -517,7 +517,7 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
         success: false,
@@ -544,7 +544,7 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
       vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
         ok: false,
@@ -579,7 +579,7 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
       vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
         ok: true,
@@ -618,7 +618,7 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
       vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
         ok: true,
@@ -663,7 +663,6 @@ describe('SolverService', () => {
         } satisfies IntentError<'UNKNOWN'>,
       });
 
-
       const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
 
       expect(result.ok).toBe(false);
@@ -680,7 +679,7 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, mockIntentWithFee],
+        value: [mockTxHash, mockIntentWithFee, '0x'],
       });
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
 
@@ -701,10 +700,14 @@ describe('SolverService', () => {
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
-      vi.spyOn(solverService, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
+      vi.spyOn(solverService, 'cancelIntent').mockResolvedValueOnce({
+        ok: true,
+        value: mockTxHash,
+      });
       const result = await solverService.cancelIntent(mockIntent, mockBscSpokeProvider, false);
 
-      expect(result).toBe(mockTxHash);
+      expect(result.ok).toBe(true);
+      expect(result.ok && result.value).toBe(mockTxHash);
     });
   });
 

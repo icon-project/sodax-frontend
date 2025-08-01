@@ -186,8 +186,8 @@ export type StellarRpcConfig = {
 };
 
 export class StellarSpokeProvider implements ISpokeProvider {
-  private readonly server: Horizon.Server;
-  private readonly sorobanServer: CustomSorobanServer;
+  public readonly server: Horizon.Server;
+  public readonly sorobanServer: CustomSorobanServer;
   private readonly contract: Contract;
   public readonly chainConfig: StellarSpokeChainConfig;
   public readonly walletProvider: IStellarWalletProvider;
@@ -270,7 +270,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
 
     const simulation = await this.sorobanServer.simulateTransaction(priorityTransaction);
 
-    return [SorobanRpc.assembleTransaction(priorityTransaction, simulation).build(), simulation];
+    return [priorityTransaction, simulation];
   }
 
   private handleSendTransactionError(
@@ -415,10 +415,14 @@ export class StellarSpokeProvider implements ISpokeProvider {
       const stellarAccount = new CustomStellarAccount(accountResponse);
 
       const depositCall = this.buildDepositCall(walletAddress, token, amount, recipient, data);
-      const [priorityTx, simulation] = await this.buildPriorityStellarTransaction(stellarAccount, network, depositCall);
-
+      const [rawPriorityTx, simulation] = await this.buildPriorityStellarTransaction(
+        stellarAccount,
+        network,
+        depositCall,
+      );
+      const assembledPriorityTx = SorobanRpc.assembleTransaction(rawPriorityTx, simulation).build();
       if (raw) {
-        const transactionXdr = priorityTx.toXDR();
+        const transactionXdr = rawPriorityTx.toXDR();
 
         return {
           from: walletAddress,
@@ -428,7 +432,13 @@ export class StellarSpokeProvider implements ISpokeProvider {
         } satisfies StellarReturnType<true> as StellarReturnType<R>;
       }
 
-      const hash = await this.submitOrRestoreAndRetry(stellarAccount, network, priorityTx, depositCall, simulation);
+      const hash = await this.submitOrRestoreAndRetry(
+        stellarAccount,
+        network,
+        assembledPriorityTx,
+        depositCall,
+        simulation,
+      );
 
       return `${hash}` as StellarReturnType<R>;
     } catch (error) {

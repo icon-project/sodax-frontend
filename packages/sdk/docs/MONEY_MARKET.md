@@ -161,6 +161,114 @@ if (supplyResult.ok) {
 }
 ```
 
+### Estimate Gas for Raw Transactions
+
+The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for money market operations (supply, borrow, withdraw, repay) and approval transactions to provide users with accurate gas estimates.
+
+```typescript
+import { MoneyMarketService, MoneyMarketSupplyParams } from "@sodax/sdk";
+
+// Example: Estimate gas for a supply transaction
+const supplyResult = await sodax.moneyMarket.createSupplyIntent(
+  supplyParams,
+  spokeProvider,
+  true, // true = get raw transaction
+);
+
+if (supplyResult.ok) {
+  const rawTx = supplyResult.value;
+  
+  // Estimate gas for the raw transaction
+  const gasEstimate = await MoneyMarketService.estimateGas(rawTx, spokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for supply:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for supply:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas for an approval transaction
+const approveResult = await sodax.moneyMarket.approve(
+  supplyParams,
+  spokeProvider,
+  true // true = get raw transaction
+);
+
+if (approveResult.ok) {
+  const rawTx = approveResult.value;
+  
+  // Estimate gas for the approval transaction
+  const gasEstimate = await MoneyMarketService.estimateGas(rawTx, spokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for approval:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for approval:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas for a borrow transaction
+const borrowResult = await sodax.moneyMarket.createBorrowIntent(
+  borrowParams,
+  spokeProvider,
+  true // true = get raw transaction
+);
+
+if (borrowResult.ok) {
+  const rawTx = borrowResult.value;
+  
+  // Estimate gas for the borrow transaction
+  const gasEstimate = await MoneyMarketService.estimateGas(rawTx, spokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for borrow:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for borrow:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas for a withdraw transaction
+const withdrawResult = await sodax.moneyMarket.createWithdrawIntent(
+  withdrawParams,
+  spokeProvider,
+  true // true = get raw transaction
+);
+
+if (withdrawResult.ok) {
+  const rawTx = withdrawResult.value;
+  
+  // Estimate gas for the withdraw transaction
+  const gasEstimate = await MoneyMarketService.estimateGas(rawTx, spokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for withdraw:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for withdraw:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas for a repay transaction
+const repayResult = await sodax.moneyMarket.createRepayIntent(
+  repayParams,
+  spokeProvider,
+  true // true = get raw transaction
+);
+
+if (repayResult.ok) {
+  const rawTx = repayResult.value;
+  
+  // Estimate gas for the repay transaction
+  const gasEstimate = await MoneyMarketService.estimateGas(rawTx, spokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for repay:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for repay:', gasEstimate.error);
+  }
+}
+```
+
 ## Supply Tokens
 
 Supply tokens to the money market pool. There are two methods available:

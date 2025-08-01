@@ -1,25 +1,20 @@
 import { MsgExecuteContract, MsgExecuteContractCompat } from '@injectivelabs/sdk-ts';
 import { toHex } from 'viem';
 import { createTransaction } from '@injectivelabs/sdk-ts';
-
-import type { MsgBroadcaster } from '@injectivelabs/wallet-ts';
+import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
 import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
-import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
   private client: MsgBroadcaster;
   public walletAddress: InjectiveEoaAddress | undefined;
-  private rpcUrl: string;
 
   constructor({
     client,
     walletAddress,
-    rpcUrl,
   }: { client: MsgBroadcaster; walletAddress: InjectiveEoaAddress | undefined; rpcUrl: string }) {
     this.client = client;
     this.walletAddress = walletAddress;
-    this.rpcUrl = rpcUrl;
   }
 
   getRawTransaction(
@@ -29,7 +24,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     contractAddress: string,
     msg: JsonObject,
     memo?: string,
-  ): InjectiveRawTransaction {
+  ): Promise<InjectiveRawTransaction> {
     if (!this.walletAddress) {
       throw new Error('Wallet address not found');
     }
@@ -48,7 +43,8 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       accountNumber: 0,
       chainId: chainId,
     });
-    return {
+
+    const rawTx = {
       from: senderAddress as Hex,
       to: contractAddress as Hex,
       signedDoc: {
@@ -58,6 +54,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
         authInfoBytes: txRaw.authInfoBytes,
       },
     };
+    return Promise.resolve(rawTx);
   }
 
   async getWalletAddress(): Promise<InjectiveEoaAddress> {
@@ -76,8 +73,6 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     senderAddress: string,
     contractAddress: string,
     msg: JsonObject,
-    fee: 'auto' | number,
-    memo?: string,
     funds?: InjectiveCoin[],
   ): Promise<InjectiveExecuteResponse> {
     if (!this.walletAddress) {
@@ -88,7 +83,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       contractAddress: contractAddress,
       sender: senderAddress,
       msg: msg as object,
-      funds: funds as { amount: string; denom: string }[],
+      funds: funds || [],
     });
 
     const txResult = await this.client.broadcastWithFeeDelegation({
@@ -97,10 +92,5 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     });
 
     return InjectiveExecuteResponse.fromTxResponse(txResult);
-  }
-
-  async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {
-    const contractClient = await CosmWasmClient.connect(this.rpcUrl);
-    return contractClient.queryContractSmart(address, queryMsg);
   }
 }

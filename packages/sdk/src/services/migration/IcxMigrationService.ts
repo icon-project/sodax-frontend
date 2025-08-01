@@ -13,16 +13,14 @@ import invariant from 'tiny-invariant';
 import { ICON_MAINNET_CHAIN_ID, type IconEoaAddress } from '@sodax/types';
 
 export type IcxMigrateParams = {
-  icx: IcxTokenType; // The ICON address of the ICX or wICX token to migrate
+  address: IcxTokenType; // The ICON address of the ICX or wICX token to migrate
   amount: bigint; // The amount of ICX or wICX to migrate
   to: Address; // The address that will receive the migrated assets
-  action: 'migrate';
 };
 
 export type IcxCreateRevertMigrationParams = {
   amount: bigint; // The amount of wICX to migrate
   to: IconEoaAddress; // The address that will receive the migrated SODA tokens as ICX
-  action: 'revert';
 };
 
 export type IcxRevertMigrationParams = {
@@ -72,8 +70,8 @@ export class IcxMigrationService {
    */
   public migrateData(params: IcxMigrateParams): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.icx);
-    invariant(assetConfig, `hub asset not found for spoke chain token (token): ${params.icx}`);
+    const assetConfig = getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.address);
+    invariant(assetConfig, `hub asset not found for spoke chain token (token): ${params.address}`);
 
     calls.push(
       Erc20Service.encodeApprove(assetConfig.asset, this.hubProvider.chainConfig.addresses.icxMigration, params.amount),

@@ -26,6 +26,7 @@ import {
 import type {
   EvmContractCall,
   GetAddressType,
+  GetEstimateGasReturnType,
   GetSpokeDepositParamsType,
   HttpUrl,
   HubTxHash,
@@ -35,7 +36,7 @@ import type {
   SpokeTxHash,
   TxReturnType,
 } from '../../types.js';
-import { calculateFeeAmount, encodeContractCalls } from '../../utils/index.js';
+import { calculateFeeAmount, encodeAddress, encodeContractCalls } from '../../utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService, WalletAbstractionService } from '../hub/index.js';
 import { Erc20Service } from '../shared/index.js';
 import invariant from 'tiny-invariant';
@@ -267,7 +268,7 @@ export type GetMoneyMarketError<T extends MoneyMarketErrorCode> = T extends 'SUB
             ? MoneyMarketRepayFailedError
             : T extends MoneyMarketUnknownErrorCode
               ? MoneyMarketUnknownError<T>
-            : never;
+              : never;
 
 export type MoneyMarketError<T extends MoneyMarketErrorCode> = {
   code: T;
@@ -302,6 +303,19 @@ export class MoneyMarketService {
       };
     }
     this.hubProvider = hubProvider;
+  }
+
+  /**
+   * Estimate the gas for a raw transaction.
+   * @param {TxReturnType<T, true>} params - The parameters for the raw transaction.
+   * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
+   */
+  public static async estimateGas<T extends SpokeProvider = SpokeProvider>(
+    params: TxReturnType<T, true>,
+    spokeProvider: T,
+  ): Promise<GetEstimateGasReturnType<T>> {
+    return SpokeService.estimateGas(params, spokeProvider) as Promise<GetEstimateGasReturnType<T>>;
   }
 
   /**
@@ -599,28 +613,35 @@ export class MoneyMarketService {
         return txResult;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
-        spokeProvider,
-        this.config.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          spokeProvider,
+          this.config.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              },
             },
-          },
-        };
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       return {
         ok: false,
@@ -683,12 +704,11 @@ export class MoneyMarketService {
         `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
       );
 
-      const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        walletAddressBytes,
-        this.hubProvider,
+        walletAddress,
         spokeProvider,
+        this.hubProvider,
       );
 
       const data: Hex = this.buildSupplyData(
@@ -698,7 +718,6 @@ export class MoneyMarketService {
         spokeProvider.chainConfig.chain.id,
       );
 
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       const txResult = await SpokeService.deposit(
         {
           from: walletAddress,
@@ -778,28 +797,35 @@ export class MoneyMarketService {
         return txResult;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
-        spokeProvider,
-        this.config.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          spokeProvider,
+          this.config.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              },
             },
-          },
-        };
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       return {
         ok: false,
@@ -859,17 +885,17 @@ export class MoneyMarketService {
       `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
-    const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const encodedAddress = encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress);
     const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      walletAddressBytes,
-      this.hubProvider,
+      walletAddress,
       spokeProvider,
+      this.hubProvider,
     );
 
     const data: Hex = this.buildBorrowData(
       hubWallet,
-      walletAddressBytes,
+      encodedAddress,
       params.token,
       params.amount,
       spokeProvider.chainConfig.chain.id,
@@ -932,28 +958,35 @@ export class MoneyMarketService {
         return txResult;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
-        spokeProvider,
-        this.config.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          spokeProvider,
+          this.config.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              },
             },
-          },
-        };
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       return {
         ok: false,
@@ -1013,17 +1046,17 @@ export class MoneyMarketService {
       `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
-    const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const encodedAddress = encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress);
     const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      walletAddressBytes,
-      this.hubProvider,
+      walletAddress,
       spokeProvider,
+      this.hubProvider,
     );
 
     const data: Hex = this.buildWithdrawData(
       hubWallet,
-      walletAddressBytes,
+      encodedAddress,
       params.token,
       params.amount,
       spokeProvider.chainConfig.chain.id,
@@ -1086,28 +1119,35 @@ export class MoneyMarketService {
         return txResult;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
-        spokeProvider,
-        this.config.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          spokeProvider,
+          this.config.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              },
             },
-          },
-        };
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       return {
         ok: false,
@@ -1169,16 +1209,14 @@ export class MoneyMarketService {
       `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
-    const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
-      spokeProvider.chainConfig.chain.id,
-      walletAddressBytes,
-      this.hubProvider,
+      walletAddress,
       spokeProvider,
+      this.hubProvider,
     );
     const data: Hex = this.buildRepayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
 
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const txResult = await SpokeService.deposit(
       {
         from: walletAddress,

@@ -11,8 +11,7 @@ import { getXService } from '.';
 import type { XService } from './core';
 import type { XConnection } from './types';
 import { EvmXService } from './xchains/evm';
-import { HavahHanaXConnector, HavahXConnector, HavahXService } from './xchains/havah';
-import { InjectiveKelprXConnector, InjectiveMetamaskXConnector, InjectiveXService } from './xchains/injective';
+import { InjectiveMetamaskXConnector, InjectiveXService } from './xchains/injective';
 import { SolanaXService } from './xchains/solana/SolanaXService';
 import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
@@ -86,13 +85,9 @@ const initXServices = (config: XConfig) => {
           xServices[xChainType].setConfig(config[xChainType]);
         }
         break;
-      case 'HAVAH':
-        xServices[xChainType] = HavahXService.getInstance();
-        xServices[xChainType].setXConnectors([new HavahHanaXConnector(), new HavahXConnector()]);
-        break;
       case 'INJECTIVE':
         xServices[xChainType] = InjectiveXService.getInstance();
-        xServices[xChainType].setXConnectors([new InjectiveMetamaskXConnector(), new InjectiveKelprXConnector()]);
+        xServices[xChainType].setXConnectors([new InjectiveMetamaskXConnector()]);
         break;
       case 'STELLAR':
         xServices[xChainType] = StellarXService.getInstance();

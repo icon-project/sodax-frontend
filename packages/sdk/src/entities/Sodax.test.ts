@@ -23,14 +23,12 @@ import {
   getMoneyMarketConfig,
   type SpokeProvider,
   type IEvmWalletProvider,
-  type TxReturnType,
   spokeChainConfig,
   type SolverConfigParams,
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-
 
 describe('Sodax', () => {
   const partnerFeePercentage = {
@@ -350,10 +348,7 @@ describe('Sodax', () => {
 
         vi.spyOn(sodax.solver, 'createIntent').mockResolvedValueOnce({
           ok: true,
-          value: [
-            mockTxHash as TxReturnType<EvmSpokeProvider, false>,
-            { ...mockIntent, feeAmount: partnerFeeAmount.amount },
-          ],
+          value: [mockTxHash, { ...mockIntent, feeAmount: partnerFeeAmount.amount }, '0x'],
         });
         vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(walletAddress);
         vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
@@ -372,11 +367,7 @@ describe('Sodax', () => {
           },
         });
 
-        const result = await sodax.solver.swap(
-          mockCreateIntentParams,
-          mockBscSpokeProvider,
-          partnerFeeAmount,
-        );
+        const result = await sodax.solver.swap(mockCreateIntentParams, mockBscSpokeProvider, partnerFeeAmount);
 
         expect(result.ok).toBe(true);
         if (result.ok) {
@@ -430,10 +421,14 @@ describe('Sodax', () => {
 
       it('should successfully cancel an intent for EVM chain', async () => {
         const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
-        vi.spyOn(sodax.solver, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
+        vi.spyOn(sodax.solver, 'cancelIntent').mockResolvedValueOnce({
+          ok: true,
+          value: mockTxHash,
+        });
         const result = await sodax.solver.cancelIntent(intent, mockBscSpokeProvider, false);
 
-        expect(result).toBe(mockTxHash);
+        expect(result.ok).toBe(true);
+        expect(result.ok && result.value).toBe(mockTxHash);
       });
 
       it('should throw error for invalid spoke provider', async () => {
@@ -444,16 +439,14 @@ describe('Sodax', () => {
             },
           },
           walletProvider: {
-            getWalletAddressBytes: () => '0x1234567890123456789012345678901234567890',
+            getWalletAddress: () => '0x1234567890123456789012345678901234567890',
           },
         } as unknown as SpokeProvider;
 
-        await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual(
-          {
-            ok: false,
-            error: new Error('Invalid spoke provider'),
-          }
-        );
+        await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual({
+          ok: false,
+          error: new Error('Invalid spoke provider'),
+        });
       });
     });
 

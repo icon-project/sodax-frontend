@@ -2,23 +2,23 @@ import { exec } from 'child_process';
 import { defineConfig } from 'tsup';
 
 export default defineConfig(options => ({
-  entry: {
-    index: './src/index.ts',
-  },
-  format: ['esm', 'cjs'],
-  dts: false,
-  clean: !options.watch,
+  entry: ['src/index.ts'],
+  format: ['esm', 'cjs'], // Dual format: ESM for web, CJS for Node (optionally ESM too)
+  outDir: 'dist',
+  splitting: false, // Flat output, easier for consumers
+  sourcemap: true, // Helpful for debugging
+  dts: true, // Type declarations
+  clean: true,
+  target: 'node18', // ✅ Use Node 18 baseline (modern features)
   treeshake: true,
-  splitting: true,
-  sourcemap: true,
-  onSuccess: async () => {
-    exec('tsc --emitDeclarationOnly --declaration', (err, stdout) => {
-      if (err) {
-        console.error(stdout);
-        if (!options.watch) {
-          process.exit(1);
-        }
-      }
-    });
+  external: [], // Bundle everything (especially CJS like icon-sdk-js)
+  esbuildOptions(options) {
+    options.platform = 'neutral'; // Don't assume node/browser — supports both
+    options.mainFields = ['module', 'main'];
+  },
+  outExtension({ format }) {
+    return {
+      js: format === 'esm' ? '.mjs' : '.cjs', // Explicit extensions
+    };
   },
 }));

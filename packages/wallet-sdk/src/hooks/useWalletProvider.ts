@@ -1,6 +1,13 @@
 import type { ChainId } from '@sodax/types';
 import { useMemo } from 'react';
-import { EvmWalletProvider, IconWalletProvider, SuiWalletProvider, InjectiveWalletProvider } from '../wallet-providers';
+import {
+  EvmWalletProvider,
+  IconWalletProvider,
+  SuiWalletProvider,
+  InjectiveWalletProvider,
+  StellarWalletProvider,
+  SolanaWalletProvider,
+} from '../wallet-providers';
 import { getXChainType } from '../actions';
 import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
 import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
@@ -12,8 +19,6 @@ import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
-import { StellarWalletProvider } from '../wallet-providers/StellarWalletProvider';
-import { SolanaWalletProvider } from '../wallet-providers/SolanaWalletProvider';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -90,6 +95,10 @@ export function useWalletProvider(
 
       case 'INJECTIVE': {
         const injectiveXService = xService as InjectiveXService;
+        if (!injectiveXService) {
+          return undefined;
+          // throw new Error('InjectiveXService is not initialized');
+        }
         const endpoints = getNetworkEndpoints(Network.Mainnet);
         const { walletAddress, client, rpcUrl } = {
           walletAddress: xAccount.address,

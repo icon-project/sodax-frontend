@@ -1,8 +1,15 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { SuiSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
-import { type HubAddress, type PromiseSuiTxReturnType, getIntentRelayChainId } from '../../index.js';
+import {
+  type HubAddress,
+  type PromiseSuiTxReturnType,
+  type SuiGasEstimate,
+  type SuiRawTransaction,
+  getIntentRelayChainId,
+} from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import { Transaction } from '@mysten/sui/transactions';
 
 export type SuiSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
@@ -12,7 +19,7 @@ export type SuiSpokeDepositParams = {
   data: Hex; // The data to send with the deposit
 };
 
-export type TransferToHubParams = {
+export type SuiTransferToHubParams = {
   token: string;
   recipient: Address;
   amount: bigint;
@@ -21,6 +28,22 @@ export type TransferToHubParams = {
 
 export class SuiSpokeService {
   private constructor() {}
+
+  /**
+   * Estimate the gas for a transaction.
+   * @param {SuiRawTransaction} rawTx - The raw transaction to estimate the gas for.
+   * @param {SuiSpokeProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The estimated computation cost.
+   */
+  public static async estimateGas(rawTx: SuiRawTransaction, spokeProvider: SuiSpokeProvider): Promise<SuiGasEstimate> {
+    const txb = Transaction.fromKind(rawTx.data);
+    const result = await spokeProvider.publicClient.devInspectTransactionBlock({
+      sender: rawTx.from,
+      transactionBlock: txb,
+    });
+
+    return result.effects.gasUsed;
+  }
 
   /**
    * Deposit tokens to the spoke chain.
@@ -88,7 +111,7 @@ export class SuiSpokeService {
 
   /**
    * Transfers tokens to the hub chain.
-   * @param {TransferToHubParams} params - The parameters for the transfer, including:
+   * @param {SuiTransferToHubParams} params - The parameters for the transfer, including:
    *   - {string} token: The address of the token to transfer (use address(0) for native token).
    *   - {Uint8Array} recipient: The recipient address on the hub chain.
    *   - {string} amount: The amount to transfer.
@@ -98,7 +121,7 @@ export class SuiSpokeService {
    * @returns {PromiseSuiTxReturnType<R>} A promise that resolves to the transaction hash or raw transaction base64 string.
    */
   private static async transfer<R extends boolean = false>(
-    { token, recipient, amount, data = '0x' }: TransferToHubParams,
+    { token, recipient, amount, data = '0x' }: SuiTransferToHubParams,
     spokeProvider: SuiSpokeProvider,
     raw?: R,
   ): PromiseSuiTxReturnType<R> {

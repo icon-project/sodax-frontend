@@ -6,19 +6,17 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
 - Seamless wallet connectivity for all supported wallets in the Sodax network
   - EVM Wallets: All browser extensions that support [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963) (Hana Wallet, MetaMask, Phantom, etc.) ✅
   - Sui Wallets: All browser extension that @mysten/dapp-kit supports (Hana, Sui Wallet, Suiet, etc.) ✅
-  - Solana Wallets: ❌ Coming soon
-  - Stellar Wallets: ❌ Coming soon
+  - Solana Wallets: ✅
+  - Stellar Wallets: ✅
   - Injective Wallets: ✅
-  - Havah Wallets: ❌ Coming soon
   - ICON Wallets: ✅ (Hana Wallet and other ICON-compatible extensions)
 
 - Address and connection state management
   - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
   - Sui ✅
-  - Solana ❌ Coming soon
-  - Stellar ❌ Coming soon
+  - Solana ✅
+  - Stellar ✅
   - Injective ✅
-  - Havah ❌ Coming soon
   - ICON ✅
 
 
@@ -197,7 +195,6 @@ This example demonstrates:
 - [`StellarXConnector`](./src/xchains/stellar/StellarWalletsKitXConnector.ts) - Stellar wallet connector
 - [`InjectiveMetamaskXConnector`](./src/xchains/injective/InjectiveMetamaskXConnector.ts) - Injective MetaMask connector
 - [`InjectiveKelprXConnector`](./src/xchains/injective/InjectiveKelprXConnector.ts) - Injective Keplr connector
-- [`HavahXConnector`](./src/xchains/havah/HavahXConnector.ts) - Havah wallet connector
 - [`IconXConnector`](./src/xchains/icon/IconHanaXConnector.ts) - ICON wallet connector
 
 ## Contributing

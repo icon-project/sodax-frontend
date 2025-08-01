@@ -1,7 +1,5 @@
 import type { TransactionReceipt } from 'viem';
-import type {
-  InjectiveSpokeProvider,
-} from './entities/injective/InjectiveSpokeProvider.js';
+import type { InjectiveSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import type {
   EvmSpokeProvider,
   ISpokeProvider,
@@ -31,8 +29,19 @@ import type {
   InjectiveNetworkEnv,
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
+  SUI_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
+import type { migrationConfig } from './constants.js';
+
+export type bnUSDLegacySpokeChainId = typeof ICON_MAINNET_CHAIN_ID | typeof SUI_MAINNET_CHAIN_ID | typeof STELLAR_MAINNET_CHAIN_ID;
+export type bnUSDLegacyMigrationProviders = IconSpokeProvider | SuiSpokeProvider | StellarSpokeProvider;
+
+export type bnUSDLegacyAddress =
+  | (typeof migrationConfig)['bnUSD'][typeof ICON_MAINNET_CHAIN_ID]['legacybnUSD']['address']
+  | (typeof migrationConfig)['bnUSD'][typeof SUI_MAINNET_CHAIN_ID]['legacybnUSD']['address']
+  | (typeof migrationConfig)['bnUSD'][typeof STELLAR_MAINNET_CHAIN_ID]['legacybnUSD']['address'];
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 
@@ -83,6 +92,7 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     hubWallet: Address;
     xTokenManager: Address;
     icxMigration: Address;
+    balnSwap: Address;
     sodaToken: Address;
   };
 
@@ -190,7 +200,6 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
   };
   chain: SpokeChainInfo<'SOLANA'>;
   rpcUrl: string;
-  wsUrl: string;
   walletAddress: string;
   nativeToken: string;
   gasPrice: string;
@@ -281,6 +290,7 @@ export type FeeAmount = {
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
+export type IconContractAddress = `cx${string}`;
 export type IcxTokenType =
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['addresses']['wICX']
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['nativeToken'];
@@ -443,6 +453,23 @@ export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarR
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
 export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : Hex;
+
+export type HashTxReturnType =
+  | EvmReturnType<false>
+  | SolanaReturnType<false>
+  | IconReturnType<false>
+  | SuiReturnType<false>
+  | InjectiveReturnType<false>
+  | StellarReturnType<false>;
+
+export type RawTxReturnType =
+  | EvmRawTransaction
+  | SolanaRawTransaction
+  | InjectiveRawTransaction
+  | IconRawTransaction
+  | SuiRawTransaction
+  | StellarRawTransaction;
+
 export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chainConfig']['chain']['type'] extends 'EVM'
   ? EvmReturnType<Raw>
   : T['chainConfig']['chain']['type'] extends 'SOLANA'
@@ -455,21 +482,16 @@ export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chai
           ? SuiReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
             ? InjectiveReturnType<Raw>
-            : never;
+            : Raw extends true
+              ? RawTxReturnType
+              : HashTxReturnType;
+
 export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
 export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<TxReturnType<SolanaSpokeProvider, Raw>>;
 export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnType<StellarSpokeProvider, Raw>>;
 export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
 export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
 export type PromiseInjectiveTxReturnType<Raw extends boolean> = Promise<TxReturnType<InjectiveSpokeProvider, Raw>>;
-
-export type RawTxReturnType =
-  | EvmRawTransaction
-  | SolanaRawTransaction
-  | InjectiveRawTransaction
-  | IconRawTransaction
-  | SuiRawTransaction;
-export type GetRawTxReturnType<T extends ChainType> = T extends 'EVM' ? PromiseEvmTxReturnType<boolean> : never;
 
 export type PromiseTxReturnType<
   T extends ISpokeProvider,
@@ -504,3 +526,42 @@ export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChain
 
 export type SpokeTxHash = string;
 export type HubTxHash = string;
+
+export type SolanaGasEstimate = number | undefined;
+export type EvmGasEstimate = bigint;
+export type StellarGasEstimate = bigint;
+export type IconGasEstimate = bigint;
+
+export type SuiGasEstimate = {
+  computationCost: string;
+  nonRefundableStorageFee: string;
+  storageCost: string;
+  storageRebate: string;
+};
+
+export type InjectiveGasEstimate = {
+  gasWanted: number;
+  gasUsed: number;
+};
+
+export type GasEstimateType =
+  | EvmGasEstimate
+  | SolanaGasEstimate
+  | StellarGasEstimate
+  | IconGasEstimate
+  | SuiGasEstimate
+  | InjectiveGasEstimate;
+
+export type GetEstimateGasReturnType<T extends SpokeProvider> = T['chainConfig']['chain']['type'] extends 'EVM'
+  ? EvmGasEstimate
+  : T['chainConfig']['chain']['type'] extends 'SOLANA'
+    ? SolanaGasEstimate
+    : T['chainConfig']['chain']['type'] extends 'STELLAR'
+      ? StellarGasEstimate
+      : T['chainConfig']['chain']['type'] extends 'ICON'
+        ? IconGasEstimate
+        : T['chainConfig']['chain']['type'] extends 'SUI'
+          ? SuiGasEstimate
+          : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+            ? InjectiveGasEstimate
+            : GasEstimateType; // default to all gas estimate types union type

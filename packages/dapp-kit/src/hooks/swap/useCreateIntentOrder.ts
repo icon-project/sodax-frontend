@@ -5,16 +5,13 @@ import type {
   Result,
   IntentErrorCode,
   Intent,
-  PacketData,
   IntentError,
   SpokeProvider,
+  Hex,
 } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 
-type CreateIntentResult = Result<
-  [SolverExecutionResponse, Intent, PacketData],
-  IntentError<IntentErrorCode>
->;
+type CreateIntentResult = Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>;
 
 /**
  * Hook for creating and submitting an intent order for cross-chain swaps.

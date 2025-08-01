@@ -9,12 +9,12 @@ import type { XConnector } from './XConnector';
  * 1. Managing wallet connectors for different blockchain types
  * 2. Querying token balances across different chains
  *
- * Each blockchain implementation (e.g., Solana, Havah, EVM chains) extends this class
+ * Each blockchain implementation (e.g., Solana, EVM chains) extends this class
  * to provide chain-specific functionality while maintaining a consistent interface.
  *
  * @abstract
  * @class XService
- * @property {ChainType} xChainType - The blockchain type this service handles (e.g., 'SOLANA', 'HAVAH', 'EVM')
+ * @property {ChainType} xChainType - The blockchain type this service handles (e.g., 'SOLANA', 'EVM')
  * @property {XConnector[]} xConnectors - Available wallet connectors for this chain
  *
  */

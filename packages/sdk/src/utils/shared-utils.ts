@@ -134,3 +134,21 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
       return address as Hex;
   }
 }
+
+/**
+ * Convert a valid hexadecimal string (with or without "0x") to BigInt.
+ * Throws on invalid hex.
+ */
+export function hexToBigInt(hex: string): bigint {
+  const trimmed = hex.trim().toLowerCase();
+
+  // Validate hex: only digits 0-9 and letters a-f, optional 0x prefix
+  const isValid = /^(0x)?[0-9a-f]+$/.test(trimmed);
+  if (!isValid) {
+    throw new Error(`Invalid hex string: "${hex}"`);
+  }
+
+  // Normalize with 0x prefix to make BigInt parse it as hexadecimal
+  const normalized = trimmed.startsWith('0x') ? trimmed : `0x${trimmed}`;
+  return BigInt(normalized);
+}
