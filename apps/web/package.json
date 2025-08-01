@@ -42,14 +42,8 @@
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.8",
     "tailwindcss-animate": "^1.0.7",
-    "@sodax/dapp-kit": "workspace:*",
-    "@sodax/sdk": "workspace:*",
-    "@sodax/types": "workspace:*",
-    "@sodax/wallet-sdk": "workspace:*",
-    "viem": "catalog:",
-    "wagmi": "catalog:",
-    "zustand": "4.5.2",
-    "bignumber.js": "^9.1.2"
+    "viem": "2.x",
+    "wagmi": "^2.15.6"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
