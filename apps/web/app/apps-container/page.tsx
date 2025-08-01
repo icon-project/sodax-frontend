@@ -198,14 +198,14 @@ const MigrateContent = (): React.JSX.Element => {
           </div>
         </div>
       </div>
-      <div className="flex md:flex-col flex-col-reverse" style={{ gap: 'var(--layout-space-comfortable)' }}>
+      <div className="flex flex-col" style={{ gap: 'var(--layout-space-comfortable)' }}>
         <div className="inline-flex flex-col justify-start items-start gap-4">
           <Button
             variant="cherry"
             className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer"
             style={{ fontSize: 'var(--body-comfortable)' }}
           >
-            Connect ICON & Sonic
+            Connect wallets
           </Button>
           <div
             className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight"
