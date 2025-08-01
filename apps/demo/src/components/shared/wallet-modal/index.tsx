@@ -37,10 +37,6 @@ export const xChainTypes: WalletItemProps[] = [
     name: 'ICON',
     xChainType: 'ICON',
   },
-  {
-    name: 'Havah',
-    xChainType: 'HAVAH',
-  },
 ];
 
 export const WalletModal = ({ isOpen, onDismiss }: WalletModalProps) => {
