@@ -1,24 +1,25 @@
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { XWagmiProviders } from '@sodax/wallet-sdk';
+import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { mainnet, sepolia } from 'wagmi/chains';
 import { sonic } from '../config/web3';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { WagmiProvider } from 'wagmi';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { http } from 'wagmi';
+import '@rainbow-me/rainbowkit/styles.css';
 
-// Define XConfig type locally since it's not exported from wallet-sdk
-type XConfig = {
-  EVM: {
-    chains: number[];
-  };
-  SUI: {
-    isMainnet: boolean;
-  };
-  SOLANA: {
-    endpoint: string;
-  };
-  ICON: Record<string, never>;
-  INJECTIVE: Record<string, never>;
-  STELLAR: Record<string, never>;
-};
+const config = getDefaultConfig({
+  appName: 'SODAX',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '',
+  chains: [sonic, mainnet, sepolia],
+  ssr: true,
+  transports: {
+    [sonic.id]: http(process.env.NEXT_PUBLIC_SONIC_RPC_URL || 'https://rpc.soniclabs.com'),
+    [mainnet.id]: http(process.env.NEXT_PUBLIC_MAINNET_RPC_URL || 'https://eth-mainnet.g.alchemy.com/v2/demo'),
+    [sepolia.id]: http(process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2/demo'),
+  },
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,27 +30,12 @@ const queryClient = new QueryClient({
   },
 });
 
-const xConfig: XConfig = {
-  EVM: {
-    chains: [sonic.id, 1, 11155111], // sonic, mainnet, sepolia
-  },
-  SUI: {
-    isMainnet: true,
-  },
-  SOLANA: {
-    endpoint: process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',
-  },
-  ICON: {},
-  INJECTIVE: {},
-  STELLAR: {},
-};
-
 export function Web3Provider({ children }: { children: React.ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <XWagmiProviders config={xConfig}>
-        {children}
-      </XWagmiProviders>
-    </QueryClientProvider>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>{children}</RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }
