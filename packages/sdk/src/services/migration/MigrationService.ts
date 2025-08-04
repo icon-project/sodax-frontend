@@ -1,3 +1,4 @@
+import { isValidSpokeChainId } from './../../constants.js';
 import invariant from 'tiny-invariant';
 import {
   type EvmHubProvider,
@@ -23,9 +24,7 @@ import {
   isIconAddress,
   type BnUSDMigrateParams,
   BnUSDMigrationService,
-  migrationConfig,
   type GetSpokeDepositParamsType,
-  type bnUSDLegacyMigrationProviders,
   type BnUSDRevertMigrationParams,
   SuiSpokeProvider,
   StellarSpokeProvider,
@@ -267,7 +266,7 @@ export class MigrationService {
    */
   async migratebnUSD(
     params: BnUSDMigrateParams,
-    spokeProvider: bnUSDLegacyMigrationProviders,
+    spokeProvider: SpokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<
     Result<
@@ -651,18 +650,16 @@ export class MigrationService {
     raw?: R,
   ): Promise<Result<TxReturnType<SonicSpokeProvider, R>, MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'>>> {
     try {
-      const { legacybnUSD, newbnUSD } = migrationConfig.bnUSD[params.dstChainID];
-
       const migrationData = this.bnUSDMigrationService.revertMigrationData({
         ...params,
-        legacybnUSD: legacybnUSD.address,
-        newbnUSD,
+        legacybnUSD: params.legacybnUSD,
+        newbnUSD: params.newbnUSD,
       });
 
       const txResult = await SpokeService.deposit(
         {
           from: await spokeProvider.walletProvider.getWalletAddressBytes(),
-          token: newbnUSD,
+          token: params.newbnUSD,
           amount: params.amount,
           data: migrationData,
         } as GetSpokeDepositParamsType<SonicSpokeProvider>,
@@ -771,28 +768,31 @@ export class MigrationService {
    * );
    *
    */
-  async createMigratebnUSDIntent<R extends boolean = false>(
+  async createMigratebnUSDIntent<S extends SpokeProvider, R extends boolean = false>(
     params: BnUSDMigrateParams,
-    spokeProvider: bnUSDLegacyMigrationProviders,
+    spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<bnUSDLegacyMigrationProviders, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+  ): Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
-      const { legacybnUSD, newbnUSD } = migrationConfig.bnUSD[params.srcChainID];
+      invariant(isValidSpokeChainId(params.srcChainID), 'Invalid spoke source chain ID');
+      invariant(isValidSpokeChainId(params.dstChainID), 'Invalid spoke destination chain ID');
+      invariant(params.legacybnUSD.length > 0, 'Legacy bnUSD token address is required');
+      invariant(params.newbnUSD.length > 0, 'New bnUSD token address is required');
+      invariant(params.amount > 0, 'Amount must be greater than 0');
+      invariant(params.to.length > 0, 'Recipient address is required');
 
       const migrationData = this.bnUSDMigrationService.migrateData({
         ...params,
         to: encodeAddress(this.hubProvider.chainConfig.chain.id, params.to),
-        legacybnUSD: legacybnUSD.address,
-        newbnUSD,
       });
 
       const txResult = await SpokeService.deposit(
         {
           from: await spokeProvider.walletProvider.getWalletAddress(),
-          token: legacybnUSD.address,
+          token: params.legacybnUSD,
           amount: params.amount,
           data: migrationData,
-        } as GetSpokeDepositParamsType<bnUSDLegacyMigrationProviders>,
+        } as GetSpokeDepositParamsType<S>,
         spokeProvider,
         this.hubProvider,
         raw,
@@ -800,7 +800,7 @@ export class MigrationService {
 
       return {
         ok: true,
-        value: txResult as TxReturnType<bnUSDLegacyMigrationProviders, R>,
+        value: txResult as TxReturnType<S, R>,
       };
     } catch (error) {
       return {

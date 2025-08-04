@@ -1624,29 +1624,6 @@ export const moneyMarketSupportedTokens = {
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
-export const migrationConfig = {
-  bnUSD: {
-    [ICON_MAINNET_CHAIN_ID]: {
-      legacybnUSD: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-      newbnUSD: hubVaults.bnUSD.address,
-    },
-    [SUI_MAINNET_CHAIN_ID]: {
-      legacybnUSD: spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
-      newbnUSD: hubVaults.bnUSD.address,
-    },
-    [STELLAR_MAINNET_CHAIN_ID]: {
-      legacybnUSD: spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
-      newbnUSD: hubVaults.bnUSD.address,
-    },
-  },
-  ICX: {
-    [ICON_MAINNET_CHAIN_ID]: {
-      icx: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['nativeToken'],
-      wICX: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['addresses']['wICX'],
-    },
-  }
-} as const;
-
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
   moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
 

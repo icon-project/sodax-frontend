@@ -29,19 +29,8 @@ import type {
   InjectiveNetworkEnv,
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
-  SUI_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
-import type { migrationConfig } from './constants.js';
-
-export type bnUSDLegacySpokeChainId = typeof ICON_MAINNET_CHAIN_ID | typeof SUI_MAINNET_CHAIN_ID | typeof STELLAR_MAINNET_CHAIN_ID;
-export type bnUSDLegacyMigrationProviders = IconSpokeProvider | SuiSpokeProvider | StellarSpokeProvider;
-
-export type bnUSDLegacyAddress =
-  | (typeof migrationConfig)['bnUSD'][typeof ICON_MAINNET_CHAIN_ID]['legacybnUSD']['address']
-  | (typeof migrationConfig)['bnUSD'][typeof SUI_MAINNET_CHAIN_ID]['legacybnUSD']['address']
-  | (typeof migrationConfig)['bnUSD'][typeof STELLAR_MAINNET_CHAIN_ID]['legacybnUSD']['address'];
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 
