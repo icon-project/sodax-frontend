@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import Link from 'next/link';
 import ConnectWalletButton from '@/components/ui/connect-wallet-button';
-import { useWallet } from '../../hooks/useWallet';
+// import { useWallet } from '../../hooks/useWallet';
 import { useState, useEffect, useRef } from 'react';
 
 interface DepositDialogProps {
@@ -16,7 +16,7 @@ const DepositDialog: React.FC<DepositDialogProps> = ({ className = '' }) => {
   const [activeTab, setActiveTab] = useState('portfolio');
   const [arrowPosition, setArrowPosition] = useState(110);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);
-  const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
+  // const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});

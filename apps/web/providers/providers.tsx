@@ -43,7 +43,6 @@ export default function Providers({ children }: { children: ReactNode }) {
             ICON: {},
             INJECTIVE: {},
             STELLAR: {},
-            HAVAH: {},
           }}
         >
           {children}
