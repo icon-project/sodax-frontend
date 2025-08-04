@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
-import { Web3Provider } from '../providers';
+import Providers from '../providers/providers';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <div className="h-screen overflow-x-hidden">
-          <Web3Provider>{children}</Web3Provider>
+          <Providers>{children}</Providers>
         </div>
       </body>
     </html>

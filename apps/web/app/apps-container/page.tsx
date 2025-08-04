@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import ConnectWalletButton from '@/components/ui/connect-wallet-button';
-import { useWallet } from '../../hooks/useWallet';
+import TermsConfirmationModal from '@/components/ui/terms-confirmation-modal';
+// import { useWallet } from '../../hooks/useWallet';
 import { Tabs, TabsContent, TabsList } from '@/components/ui/tabs';
 import TabItem from '@/components/ui/tab-item';
 import { tabConfigs } from '@/components/ui/tab-config';
@@ -13,6 +14,7 @@ import { ChevronRight, ArrowUpFromLine, ArrowDownToLine, ArrowDownUp } from 'luc
 import Sidebar from '@/components/landing/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DecoratedButton } from '@/components/landing/decorated-button';
 
 // Shared content component
 const SharedContent = (): React.JSX.Element => {
@@ -53,6 +55,21 @@ const LoansContent = (): React.JSX.Element => {
 };
 
 const MigrateContent = (): React.JSX.Element => {
+  const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
+  const [shouldTriggerWallet, setShouldTriggerWallet] = useState<boolean>(false);
+
+  const handleConnectWallets = (): void => {
+    setShowTermsModal(true);
+  };
+
+  const handleAcceptTerms = (): void => {
+    setShouldTriggerWallet(true);
+  };
+
+  const handleWalletTriggered = (): void => {
+    setShouldTriggerWallet(false);
+  };
+
   return (
     <div style={{ gap: 'var(--layout-space-comfortable)' }} className="flex flex-col">
       <div className="self-stretch inline-flex flex-col justify-start items-start gap-2">
@@ -204,6 +221,7 @@ const MigrateContent = (): React.JSX.Element => {
             variant="cherry"
             className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer"
             style={{ fontSize: 'var(--body-comfortable)' }}
+            onClick={handleConnectWallets}
           >
             Connect wallets
           </Button>
@@ -237,6 +255,8 @@ const MigrateContent = (): React.JSX.Element => {
           </div>
         </div>
       </div>
+
+      <TermsConfirmationModal open={showTermsModal} onOpenChange={setShowTermsModal} onAccept={handleAcceptTerms} />
     </div>
   );
 };
@@ -262,7 +282,7 @@ const AppsContainer = () => {
   const [activeTab, setActiveTab] = useState('swap');
   const [arrowPosition, setArrowPosition] = useState(90);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);
-  const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
+  // const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
@@ -383,7 +403,7 @@ const AppsContainer = () => {
               >
                 <title>SODAX</title>
                 <path
-                  d="M10.5058 7.32721C10.0229 7.20648 9.53998 7.08576 9.05708 6.96503C7.30656 6.54249 5.76732 6.18032 5.70696 5.15415C5.70696 3.97708 7.18584 3.91672 7.63856 3.91672C8.24219 3.91672 8.81563 4.06762 9.20799 4.33926C9.66071 4.64107 9.90216 5.09379 9.87198 5.60687H14.2785C14.037 1.26076 10.0531 0.626953 7.66874 0.626953C4.71097 0.626953 1.30048 1.98511 1.30048 5.81814C1.30048 8.86646 3.89607 9.59081 6.40112 10.285L6.67276 10.3755C9.44944 11.1602 10.2643 11.4017 10.2643 12.3675C10.2643 13.5747 9.11744 13.9973 8.0611 13.9973C6.70294 13.9973 5.85786 13.5747 5.52587 12.7297C5.40514 12.458 5.34478 12.126 5.34478 11.7639H0.666672C0.817578 17.0154 6.49167 17.2871 7.63856 17.2871C9.3589 17.2871 14.9726 16.8947 14.9726 11.8544C14.9726 8.957 12.709 7.93084 10.5058 7.32721Z"
+                  d="M10.5058 7.32721C10.0229 7.20648 9.53998 7.08576 9.05708 6.96503C7.30656 6.54249 5.76732 6.18032 5.70696 5.15415C5.70696 3.97708 7.18584 3.91672 7.63856 3.91672C8.24219 3.91672 8.81563 4.06762 9.20799 4.33926C9.66071 4.64107 9.90216 5.09379 9.87198 5.60687H14.2785C14.037 1.26076 10.0531 0.626953 7.66874 0.626953C4.71097 0.626953 1.30048 1.98511 1.30048 5.81814C1.30048 8.86646 3.89607 9.59081 6.40112 10.285L6.67276 10.3755C9.44944 11.1602 10.2643 11.4017 10.2643 12.3675C10.2643 13.5747 9.11744 13.9973 8.06110 13.9973C6.70294 13.9973 5.85786 13.5747 5.52587 12.7297C5.40514 12.458 5.34478 12.126 5.34478 11.7639H0.666672C0.817578 17.0154 6.49167 17.2871 7.63856 17.2871C9.35890 17.2871 14.9726 16.8947 14.9726 11.8544C14.9726 8.957 12.7090 7.93084 10.5058 7.32721Z"
                   fill="white"
                 />
                 <path
@@ -438,7 +458,7 @@ const AppsContainer = () => {
               </Link>
             </div>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-              <ConnectWalletButton
+              {/* <ConnectWalletButton
                 onWalletClick={handleWalletClick}
                 onConnectModalChange={setConnectModalOpen}
                 buttonText={{
@@ -446,7 +466,8 @@ const AppsContainer = () => {
                   connecting: 'connecting...',
                   registering: 'registering...',
                 }}
-              ></ConnectWalletButton>
+              ></ConnectWalletButton> */}
+              <DecoratedButton className="w-[172px]">connect</DecoratedButton>
             </div>
           </div>
         </div>

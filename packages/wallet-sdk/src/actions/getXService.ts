@@ -19,5 +19,7 @@ export function getXService(xChainType: ChainType): XService {
       return InjectiveXService.getInstance();
     case 'STELLAR':
       return StellarXService.getInstance();
+    default:
+      throw new Error(`Unsupported chain type: ${xChainType}`);
   }
 }

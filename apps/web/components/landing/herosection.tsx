@@ -30,7 +30,7 @@ import Autoplay from 'embla-carousel-autoplay';
 import Sidebar from './sidebar';
 import { ArrowLeft } from 'lucide-react';
 import { DecoratedButton } from '@/components/landing/decorated-button';
-import { useWallet } from '../../hooks/useWallet';
+// import { useWallet } from '../../hooks/useWallet';
 import { Notification } from '../Notification';
 import ConnectWalletButton from '@/components/ui/connect-wallet-button';
 import { TermsContent } from './terms-content';
@@ -69,7 +69,8 @@ const HeroSection = ({
   const imgRef = useRef<HTMLImageElement>(null);
   const carouselRef = useRef(null);
   const [api, setApi] = useState<CarouselApi>();
-  const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
+  const [isConnected, setIsConnected] = useState(false);
+  // const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
 
   useEffect(() => {
     if (!api) {
@@ -97,7 +98,7 @@ const HeroSection = ({
   return (
     <div className="hero-section">
       <div className="h-[812px] sm:h-[860px] flex flex-col items-center bg-cherry-soda relative overflow-hidden">
-        <Notification type={notification?.type || null} message={notification?.message || null} />
+        {/* <Notification type={notification?.type || null} message={notification?.message || null} /> */}
 
         <Image
           className="mix-blend-screen absolute bottom-0 right-0 sm:-right-5 sm:bottom-30 lg:left-[50%] lg:bottom-0 w-[375px] h-[562px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
@@ -315,11 +316,11 @@ const HeroSection = ({
                 </DialogDescription>
                 <div className="flex justify-center items-center w-full mt-6">
                   <div className="inline-flex justify-center items-start">
-                    <ConnectWalletButton
+                    {/* <ConnectWalletButton
                       onWalletClick={handleWalletClick}
                       onConnectModalChange={setConnectModalOpen}
                       isRegistering={!isFormValid}
-                    ></ConnectWalletButton>
+                    ></ConnectWalletButton> */}
                   </div>
                 </div>
                 <div className="flex items-center justify-center space-x-2 mt-6">
