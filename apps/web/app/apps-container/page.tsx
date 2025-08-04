@@ -137,7 +137,7 @@ const MigrateContent = (): React.JSX.Element => {
                   className="text-right justify-center text-espresso font-['InterRegular'] font-bold"
                   style={{ fontSize: 'var(--subtitle)' }}
                 >
-                  <Input type="number" value={icxInputValue} onChange={handleIcxInputChange} className='rounded-full border-4 border-cream-white'/>
+                  <Input type="number" value={icxInputValue} onChange={handleIcxInputChange} className='rounded-full border-4 border-cream-white text-right'/>
                 </div>
                 <div
                   className="text-right justify-center text-espresso font-['InterRegular'] font-normal"
@@ -213,7 +213,7 @@ const MigrateContent = (): React.JSX.Element => {
                   className="text-right justify-center text-espresso font-['InterRegular'] font-black"
                   style={{ fontSize: 'var(--subtitle)' }}
                 >
-                  <Input type="number" value={sodaInputValue} onChange={handleSodaInputChange} className='rounded-full border-4 border-cream-white'/>
+                  <Input type="number" value={sodaInputValue} onChange={handleSodaInputChange} className='rounded-full border-4 border-cream-white text-right'/>
                 </div>
                 <div
                   className="text-right justify-center text-espresso font-['InterRegular'] leading-snug"
