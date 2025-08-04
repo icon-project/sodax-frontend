@@ -264,7 +264,12 @@ async function repay(token: PublicKey, amount: bigint) {
     solanaSpokeProvider.walletProvider.getWalletAddress(),
   ]);
 
-  const data: Hex = sodax.moneyMarket.buildRepayData(token.toString(), hubWallet, amount, solanaSpokeChainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(
+    token.toString(),
+    hubWallet,
+    amount,
+    solanaSpokeChainConfig.chain.id,
+  );
 
   const txHash: Hash = await SpokeService.deposit(
     {

@@ -25,11 +25,11 @@ import {
   type IEvmWalletProvider,
   spokeChainConfig,
   type SolverConfigParams,
+  getSpokeChainIdFromIntentRelayChainId,
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-
 
 describe('Sodax', () => {
   const partnerFeePercentage = {
@@ -368,11 +368,7 @@ describe('Sodax', () => {
           },
         });
 
-        const result = await sodax.solver.swap(
-          mockCreateIntentParams,
-          mockBscSpokeProvider,
-          partnerFeeAmount,
-        );
+        const result = await sodax.solver.swap(mockCreateIntentParams, mockBscSpokeProvider, partnerFeeAmount);
 
         expect(result.ok).toBe(true);
         if (result.ok) {
@@ -444,16 +440,14 @@ describe('Sodax', () => {
             },
           },
           walletProvider: {
-            getWalletAddressBytes: () => '0x1234567890123456789012345678901234567890',
+            getWalletAddress: () => '0x1234567890123456789012345678901234567890',
           },
         } as unknown as SpokeProvider;
 
-        await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual(
-          {
-            ok: false,
-            error: new Error('Invalid spoke provider'),
-          }
-        );
+        await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual({
+          ok: false,
+          error: new Error('Invalid spoke provider'),
+        });
       });
     });
 
@@ -507,6 +501,16 @@ describe('Sodax', () => {
         const result = await sodax.solver.getIntent(mockTxHash);
 
         expect(result).toEqual(mockIntent);
+      });
+
+      it('should should successfully get an intent for EVM chain and format src and dst chain ids using getSpokeChainIdFromIntentRelayChainId', async () => {
+        const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+        vi.spyOn(EvmSolverService, 'getIntent').mockResolvedValueOnce(mockIntent);
+        const result = await sodax.solver.getIntent(mockTxHash);
+
+        expect(result).toEqual(mockIntent);
+        expect(mockCreateIntentParams.srcChain).toEqual(getSpokeChainIdFromIntentRelayChainId(mockIntent.srcChain));
+        expect(mockCreateIntentParams.dstChain).toEqual(getSpokeChainIdFromIntentRelayChainId(mockIntent.dstChain));
       });
     });
   });

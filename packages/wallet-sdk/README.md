@@ -9,7 +9,6 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
   - Solana Wallets: ✅
   - Stellar Wallets: ✅
   - Injective Wallets: ✅
-  - Havah Wallets: ❌ Coming soon
   - ICON Wallets: ✅ (Hana Wallet and other ICON-compatible extensions)
 
 - Address and connection state management
@@ -18,7 +17,6 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
   - Solana ✅
   - Stellar ✅
   - Injective ✅
-  - Havah ❌ Coming soon
   - ICON ✅
 
 
@@ -197,7 +195,6 @@ This example demonstrates:
 - [`StellarXConnector`](./src/xchains/stellar/StellarWalletsKitXConnector.ts) - Stellar wallet connector
 - [`InjectiveMetamaskXConnector`](./src/xchains/injective/InjectiveMetamaskXConnector.ts) - Injective MetaMask connector
 - [`InjectiveKelprXConnector`](./src/xchains/injective/InjectiveKelprXConnector.ts) - Injective Keplr connector
-- [`HavahXConnector`](./src/xchains/havah/HavahXConnector.ts) - Havah wallet connector
 - [`IconXConnector`](./src/xchains/icon/IconHanaXConnector.ts) - ICON wallet connector
 
 ## Contributing

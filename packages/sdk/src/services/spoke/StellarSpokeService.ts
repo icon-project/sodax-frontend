@@ -1,9 +1,15 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
-import { type HubAddress, type PromiseStellarTxReturnType, type StellarGasEstimate, type StellarRawTransaction, getIntentRelayChainId } from '../../index.js';
+import {
+  type HubAddress,
+  type PromiseStellarTxReturnType,
+  type StellarGasEstimate,
+  type StellarRawTransaction,
+  getIntentRelayChainId,
+} from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
-import { FeeBumpTransaction, Transaction, TransactionBuilder, rpc } from '@stellar/stellar-sdk';
+import { FeeBumpTransaction, type Transaction, TransactionBuilder, rpc } from '@stellar/stellar-sdk';
 
 export type StellarSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
@@ -29,7 +35,10 @@ export class StellarSpokeService {
    * @param spokeProvider - The spoke provider.
    * @returns The estimated gas (minResourceFee) for the transaction.
    */
-  public static async estimateGas(rawTx: StellarRawTransaction, spokeProvider: StellarSpokeProvider): Promise<StellarGasEstimate> {
+  public static async estimateGas(
+    rawTx: StellarRawTransaction,
+    spokeProvider: StellarSpokeProvider,
+  ): Promise<StellarGasEstimate> {
     const network = await spokeProvider.sorobanServer.getNetwork();
     let tx: Transaction | FeeBumpTransaction = TransactionBuilder.fromXDR(rawTx.data, network.passphrase);
 

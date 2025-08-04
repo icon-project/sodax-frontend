@@ -4,7 +4,7 @@ import type { Hex, Intent, PacketData } from '@sodax/sdk';
 import OrderStatus from '@/components/solver/OrderStatus';
 
 export default function SolverPage() {
-  const [orders, setOrders] = useState<{ intentHash: Hex; intent: Intent; packet: PacketData }[]>([]);
+  const [orders, setOrders] = useState<{ intentHash: Hex; intent: Intent; intentTxHash: Hex }[]>([]);
 
   return (
     <div className="flex flex-col items-center content-center justify-center h-screen">

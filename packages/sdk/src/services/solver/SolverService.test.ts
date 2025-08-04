@@ -30,6 +30,7 @@ import {
   isIntentPostExecutionFailedError,
   isWaitUntilIntentExecutedFailed,
   isIntentCreationUnknownError,
+  WalletAbstractionService,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
@@ -417,7 +418,7 @@ describe('SolverService', () => {
         ok: true,
         value: [mockTxHash, mockIntentWithFee, '0x'],
       });
-      vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+      vi.spyOn(WalletAbstractionService, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
         success: true,
         message: 'Transaction submitted successfully',
@@ -661,7 +662,6 @@ describe('SolverService', () => {
           },
         } satisfies IntentError<'UNKNOWN'>,
       });
-
 
       const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
 

@@ -1,5 +1,5 @@
-import type { HttpUrl, IconRawTransaction } from "../types.js";
-import { hexToBigInt } from "./shared-utils.js";
+import type { HttpUrl, IconRawTransaction } from '../types.js';
+import { hexToBigInt } from './shared-utils.js';
 
 export async function estimateStepCost(rawTx: IconRawTransaction, debugRpcUrl: HttpUrl): Promise<bigint> {
   try {

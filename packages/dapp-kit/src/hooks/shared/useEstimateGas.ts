@@ -4,7 +4,6 @@ import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 export function useEstimateGas<T extends SpokeProvider = SpokeProvider>(
   spokeProvider: T | undefined,
 ): UseMutationResult<GetEstimateGasReturnType<T>, Error, TxReturnType<T, true>> {
-
   return useMutation<GetEstimateGasReturnType<T>, Error, TxReturnType<T, true>>({
     mutationFn: async (rawTx: TxReturnType<T, true>) => {
       if (!spokeProvider) {
@@ -17,4 +16,3 @@ export function useEstimateGas<T extends SpokeProvider = SpokeProvider>(
     },
   });
 }
-
