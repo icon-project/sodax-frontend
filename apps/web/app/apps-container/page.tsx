@@ -23,20 +23,12 @@ const SharedContent = (): React.JSX.Element => {
   return (
     <div data-property-1="Default" className="self-stretch inline-flex flex-col justify-start items-start gap-4">
       <div className="self-stretch mix-blend-multiply justify-end">
-        <span className="text-yellow-dark font-bold leading-9" style={{ fontSize: 'var(--app-title)' }}>
-          SODAX{' '}
-        </span>
-        <span
-          className="text-yellow-dark font-normal font-[shrikhand] leading-9"
-          style={{ fontSize: 'var(--app-title)' }}
-        >
+        <span className="text-yellow-dark font-bold leading-9 !text-(size:--app-title)">SODAX </span>
+        <span className="text-yellow-dark font-normal font-[shrikhand] leading-9 !text-(size:--app-title)">
           migration
         </span>
       </div>
-      <div
-        className="self-stretch mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug"
-        style={{ fontSize: 'var(--subtitle)' }}
-      >
+      <div className="self-stretch mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(size:--subtitle)">
         Swap 1:1 between ICX and SODA.
       </div>
     </div>
@@ -59,8 +51,8 @@ const LoansContent = (): React.JSX.Element => {
 const MigrateContent = (): React.JSX.Element => {
   const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
   const [shouldTriggerWallet, setShouldTriggerWallet] = useState<boolean>(false);
-  const [icxInputValue, setIcxInputValue] = useState<string>('0');
-  const [sodaInputValue, setSodaInputValue] = useState<string>('0');
+  const [icxInputValue, setIcxInputValue] = useState<string>('');
+  const [sodaInputValue, setSodaInputValue] = useState<string>('');
 
   const handleConnectWallets = (): void => {
     setShowTermsModal(true);
@@ -109,16 +101,10 @@ const MigrateContent = (): React.JSX.Element => {
                 </div>
               </div>
               <div className="inline-flex flex-col justify-center items-start gap-1">
-                <div
-                  className="justify-center text-clay-light font-['InterRegular'] leading-tight"
-                  style={{ fontSize: 'var(--body-comfortable)' }}
-                >
+                <div className="justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
                   From
                 </div>
-                <div
-                  className="justify-center text-espresso font-['InterRegular'] leading-snug"
-                  style={{ fontSize: 'var(--body-super-comfortable)' }}
-                >
+                <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) w-40">
                   ICON <span className="hidden sm:inline">Network</span>
                 </div>
               </div>
@@ -127,28 +113,19 @@ const MigrateContent = (): React.JSX.Element => {
               className="inline-flex flex-col justify-center items-end gap-1"
               style={{ paddingRight: 'var(--layout-space-normal)' }}
             >
-              <div
-                className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight"
-                style={{ fontSize: 'var(--body-comfortable)' }}
-              >
+              <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
                 0 available
               </div>
               <div className="inline-flex gap-1 items-center">
-                <div
-                  className="text-right justify-center text-espresso font-['InterRegular'] font-bold"
-                  style={{ fontSize: 'var(--subtitle)' }}
-                >
+                <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold text-(size:--subtitle)">
                   <NumberInput
-                    value={Number(icxInputValue)}
+                    value={icxInputValue === '' ? undefined : Number(icxInputValue)}
                     onChange={handleIcxInputChange}
                     placeholder="0"
                     className="rounded-full text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
                   />
                 </div>
-                <div
-                  className="text-right justify-center text-espresso font-['InterRegular'] font-normal"
-                  style={{ fontSize: 'var(--body-super-comfortable)' }}
-                >
+                <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(size:--body-super-comfortable)">
                   ICX
                 </div>
                 <button
@@ -190,16 +167,10 @@ const MigrateContent = (): React.JSX.Element => {
                 </div>
               </div>
               <div className="inline-flex flex-col justify-center items-start gap-1">
-                <div
-                  className="justify-center text-clay-light font-['InterRegular'] leading-tight"
-                  style={{ fontSize: 'var(--body-comfortable)' }}
-                >
+                <div className="justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
                   To
                 </div>
-                <div
-                  className="justify-center text-espresso font-['InterRegular'] leading-snug"
-                  style={{ fontSize: 'var(--body-super-comfortable)' }}
-                >
+                <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable)">
                   Sonic <span className="hidden sm:inline">Network</span>
                 </div>
               </div>
@@ -208,28 +179,19 @@ const MigrateContent = (): React.JSX.Element => {
               className="inline-flex flex-col justify-center items-end gap-1"
               style={{ paddingRight: 'var(--layout-space-normal)' }}
             >
-              <div
-                className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight"
-                style={{ fontSize: 'var(--body-comfortable)' }}
-              >
+              <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
                 Receive
               </div>
               <div className="inline-flex justify-end items-center gap-1">
-                <div
-                  className="text-right justify-center text-espresso font-['InterRegular'] font-black"
-                  style={{ fontSize: 'var(--subtitle)' }}
-                >
+                <div className="text-right justify-center text-espresso font-['InterRegular'] font-black text-(size:--subtitle)">
                   <NumberInput
-                    value={Number(sodaInputValue)}
+                    value={sodaInputValue === '' ? undefined : Number(sodaInputValue)}
                     onChange={handleSodaInputChange}
                     placeholder="0"
                     className="rounded-full text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
                   />
                 </div>
-                <div
-                  className="text-right justify-center text-espresso font-['InterRegular'] leading-snug"
-                  style={{ fontSize: 'var(--body-super-comfortable)' }}
-                >
+                <div className="text-right justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable)">
                   SODA
                 </div>
               </div>
@@ -241,16 +203,12 @@ const MigrateContent = (): React.JSX.Element => {
         <div className="inline-flex flex-col justify-start items-start gap-4">
           <Button
             variant="cherry"
-            className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer"
-            style={{ fontSize: 'var(--body-comfortable)' }}
+            className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white"
             onClick={handleConnectWallets}
           >
             Connect wallets
           </Button>
-          <div
-            className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight"
-            style={{ fontSize: 'var(--body-comfortable)' }}
-          >
+          <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
             Takes ~1 min · Network fee: ~0.02 ICX
           </div>
         </div>
@@ -262,17 +220,11 @@ const MigrateContent = (): React.JSX.Element => {
             <div className="w-4 h-4 relative mix-blend-multiply">
               <img src="/symbol.png" alt="" />
             </div>
-            <div
-              className="flex-1 justify-center text-espresso font-bold font-['InterRegular'] leading-snug"
-              style={{ fontSize: 'var(--body-super-comfortable)' }}
-            >
+            <div className="flex-1 justify-center text-espresso font-bold font-['InterRegular'] leading-snug text-(size:--body-super-comfortable)">
               You're migrating to Sonic
             </div>
           </div>
-          <div
-            className="self-stretch justify-center text-clay font-['InterRegular'] leading-tight"
-            style={{ fontSize: 'var(--body-comfortable)' }}
-          >
+          <div className="self-stretch justify-center text-clay font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
             You won't need S token to receive your SODA. But you will for any future transactions on Sonic.
           </div>
         </div>
@@ -455,26 +407,17 @@ const AppsContainer = () => {
           <div className="flex justify-end items-center">
             <div className="hidden lg:flex justify-end items-center gap-4">
               <Link href="/">
-                <span
-                  className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer"
-                  style={{ fontSize: 'var(--body-comfortable)' }}
-                >
+                <span className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer text-(size:--body-comfortable)">
                   About
                 </span>
               </Link>
               <Link href="/">
-                <span
-                  className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer"
-                  style={{ fontSize: 'var(--body-comfortable)' }}
-                >
+                <span className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer text-(size:--body-comfortable)">
                   Partners
                 </span>
               </Link>
               <Link href="/">
-                <span
-                  className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer"
-                  style={{ fontSize: 'var(--body-comfortable)' }}
-                >
+                <span className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer text-(size:--body-comfortable)">
                   Community
                 </span>
               </Link>
