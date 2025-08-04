@@ -15,7 +15,8 @@ import Sidebar from '@/components/landing/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DecoratedButton } from '@/components/landing/decorated-button';
-import { Input } from '@/components/ui/input';
+// import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
 
 // Shared content component
 const SharedContent = (): React.JSX.Element => {
@@ -137,7 +138,12 @@ const MigrateContent = (): React.JSX.Element => {
                   className="text-right justify-center text-espresso font-['InterRegular'] font-bold"
                   style={{ fontSize: 'var(--subtitle)' }}
                 >
-                  <Input type="number" value={icxInputValue} onChange={handleIcxInputChange} className='rounded-full border-4 border-cream-white text-right'/>
+                  <NumberInput
+                    value={Number(icxInputValue)}
+                    onChange={handleIcxInputChange}
+                    placeholder="0"
+                    className="rounded-full text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
+                  />
                 </div>
                 <div
                   className="text-right justify-center text-espresso font-['InterRegular'] font-normal"
@@ -208,12 +214,17 @@ const MigrateContent = (): React.JSX.Element => {
               >
                 Receive
               </div>
-              <div className="inline-flex justify-end items-baseline gap-1">
+              <div className="inline-flex justify-end items-center gap-1">
                 <div
                   className="text-right justify-center text-espresso font-['InterRegular'] font-black"
                   style={{ fontSize: 'var(--subtitle)' }}
                 >
-                  <Input type="number" value={sodaInputValue} onChange={handleSodaInputChange} className='rounded-full border-4 border-cream-white text-right'/>
+                  <NumberInput
+                    value={Number(sodaInputValue)}
+                    onChange={handleSodaInputChange}
+                    placeholder="0"
+                    className="rounded-full text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
+                  />
                 </div>
                 <div
                   className="text-right justify-center text-espresso font-['InterRegular'] leading-snug"

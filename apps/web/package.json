@@ -41,6 +41,7 @@
     "postcss": "^8.5.3",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-number-format": "^5.4.4",
     "react-scroll": "^1.9.3",
     "react-slick": "^0.30.3",
     "slick-carousel": "^1.8.1",
