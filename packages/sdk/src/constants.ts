@@ -1644,7 +1644,7 @@ export const migrationConfig = {
       icx: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['nativeToken'],
       wICX: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['addresses']['wICX'],
     },
-  }
+  },
 } as const;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
