@@ -40,9 +40,9 @@ export default function Providers({ children }: { children: ReactNode }) {
             SOLANA: {
               endpoint: 'https://api.mainnet-beta.solana.com',
             },
-            ICON: {},
-            INJECTIVE: {},
-            STELLAR: {},
+            ICON: undefined as unknown,
+            INJECTIVE: undefined as unknown,
+            STELLAR: undefined as unknown,
           }}
         >
           {children}
