@@ -25,6 +25,7 @@ import {
   type IEvmWalletProvider,
   spokeChainConfig,
   type SolverConfigParams,
+  getSpokeChainIdFromIntentRelayChainId,
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
@@ -500,6 +501,16 @@ describe('Sodax', () => {
         const result = await sodax.solver.getIntent(mockTxHash);
 
         expect(result).toEqual(mockIntent);
+      });
+
+      it('should should successfully get an intent for EVM chain and format src and dst chain ids using getSpokeChainIdFromIntentRelayChainId', async () => {
+        const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+        vi.spyOn(EvmSolverService, 'getIntent').mockResolvedValueOnce(mockIntent);
+        const result = await sodax.solver.getIntent(mockTxHash);
+
+        expect(result).toEqual(mockIntent);
+        expect(mockCreateIntentParams.srcChain).toEqual(getSpokeChainIdFromIntentRelayChainId(mockIntent.srcChain));
+        expect(mockCreateIntentParams.dstChain).toEqual(getSpokeChainIdFromIntentRelayChainId(mockIntent.dstChain));
       });
     });
   });
