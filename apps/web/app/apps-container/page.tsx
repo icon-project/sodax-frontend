@@ -15,6 +15,7 @@ import Sidebar from '@/components/landing/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DecoratedButton } from '@/components/landing/decorated-button';
+import { Input } from '@/components/ui/input';
 
 // Shared content component
 const SharedContent = (): React.JSX.Element => {
@@ -57,6 +58,8 @@ const LoansContent = (): React.JSX.Element => {
 const MigrateContent = (): React.JSX.Element => {
   const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
   const [shouldTriggerWallet, setShouldTriggerWallet] = useState<boolean>(false);
+  const [icxInputValue, setIcxInputValue] = useState<string>('0');
+  const [sodaInputValue, setSodaInputValue] = useState<string>('0');
 
   const handleConnectWallets = (): void => {
     setShowTermsModal(true);
@@ -68,6 +71,14 @@ const MigrateContent = (): React.JSX.Element => {
 
   const handleWalletTriggered = (): void => {
     setShouldTriggerWallet(false);
+  };
+
+  const handleIcxInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setIcxInputValue(e.target.value);
+  };
+
+  const handleSodaInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setSodaInputValue(e.target.value);
   };
 
   return (
@@ -126,7 +137,7 @@ const MigrateContent = (): React.JSX.Element => {
                   className="text-right justify-center text-espresso font-['InterRegular'] font-bold"
                   style={{ fontSize: 'var(--subtitle)' }}
                 >
-                  0
+                  <Input type="number" value={icxInputValue} onChange={handleIcxInputChange} className='rounded-full border-4 border-cream-white'/>
                 </div>
                 <div
                   className="text-right justify-center text-espresso font-['InterRegular'] font-normal"
@@ -202,7 +213,7 @@ const MigrateContent = (): React.JSX.Element => {
                   className="text-right justify-center text-espresso font-['InterRegular'] font-black"
                   style={{ fontSize: 'var(--subtitle)' }}
                 >
-                  0
+                  <Input type="number" value={sodaInputValue} onChange={handleSodaInputChange} className='rounded-full border-4 border-cream-white'/>
                 </div>
                 <div
                   className="text-right justify-center text-espresso font-['InterRegular'] leading-snug"
