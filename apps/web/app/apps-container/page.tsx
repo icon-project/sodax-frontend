@@ -21,11 +21,9 @@ import { NumberInput } from '@/components/ui/number-input';
 import { useXAccounts, useXConnect } from '@sodax/wallet-sdk';
 import type { XConnector } from '@sodax/wallet-sdk';
 
-// Connected chains display component
 const ConnectedChainsDisplay = ({ onClick }: { onClick?: () => void }): React.JSX.Element => {
   const xAccounts = useXAccounts();
 
-  // Get connected chains
   const connectedChains = Object.entries(xAccounts)
     .filter(([_, account]) => account?.address)
     .map(([chainType, account]) => ({
@@ -64,7 +62,6 @@ const ConnectedChainsDisplay = ({ onClick }: { onClick?: () => void }): React.JS
   );
 };
 
-// Shared content component
 const SharedContent = (): React.JSX.Element => {
   return (
     <div data-property-1="Default" className="self-stretch inline-flex flex-col justify-start items-start gap-4">
@@ -81,7 +78,6 @@ const SharedContent = (): React.JSX.Element => {
   );
 };
 
-// Tab-specific content components
 const SwapContent = (): React.JSX.Element => {
   return <div className="mt-8"></div>;
 };
@@ -101,7 +97,6 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
   const [sodaInputValue, setSodaInputValue] = useState<string>('');
   const xAccounts = useXAccounts();
 
-  // Check if two wallets are connected
   const connectedWalletsCount = Object.values(xAccounts).filter(xAccount => xAccount?.address).length;
   const hasTwoWalletsConnected = connectedWalletsCount >= 2;
 
@@ -277,7 +272,6 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
   );
 };
 
-// Content mapping
 const getTabContent = (tabValue: string, onOpenWalletModal?: () => void): React.JSX.Element => {
   switch (tabValue) {
     case 'swap':
@@ -305,11 +299,7 @@ const AppsContainer = () => {
   const [activeTab, setActiveTab] = useState('swap');
   const [arrowPosition, setArrowPosition] = useState(90);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);
-
-  // Wallet connection hook
   const { mutateAsync: xConnect } = useXConnect();
-
-  // Track connected wallets
   const xAccounts = useXAccounts();
   const connectedChains = Object.entries(xAccounts)
     .filter(([_, account]) => account?.address)
@@ -324,50 +314,41 @@ const AppsContainer = () => {
   };
 
   const handleWalletSelected = async (xConnector: XConnector, xChainType: string): Promise<void> => {
-    // Store the pending connection and show terms modal first
-    setPendingWalletConnection({ xConnector, xChainType });
-    setShowWalletModal(false);
-
-    // Extract wallet name from the connector
     const walletName =
       typeof xConnector === 'object' && xConnector !== null && 'name' in xConnector
         ? (xConnector as { name: string }).name
         : 'Wallet';
     setConnectedWalletName(walletName);
 
-    // Show terms modal before connecting wallet
-    setShowTermsModal(true);
+    try {
+      // await xConnect(xConnector);
+      setPendingWalletConnection({ xConnector, xChainType });
+      setShowTermsModal(true);
+    } catch (error) {
+      console.error('Failed to connect wallet:', error);
+      setConnectedWalletName('');
+      setShowWalletModal(true);
+    }
   };
 
   const handleTermsAccepted = async (): Promise<void> => {
     if (pendingWalletConnection) {
       try {
-        console.log('Connecting wallet after terms accepted:', pendingWalletConnection);
-
-        // Actually connect the wallet using the stored connector
+        console.log('Terms accepted, completing wallet connection flow:', pendingWalletConnection);
         const { xConnector, xChainType } = pendingWalletConnection;
 
-        // Connect the wallet using the xConnect function
-        await xConnect(xConnector);
-
-        console.log('Wallet connected successfully:', { xConnector, xChainType });
-
-        // Clear pending connection and wallet name
         setPendingWalletConnection(null);
         setConnectedWalletName('');
         setShowTermsModal(false);
 
-        // Show wallet modal again for additional connections if needed
         setShowWalletModal(true);
-
-        // Auto-close wallet modal if two wallets are already connected
-        if (connectedChains.length >= 1) {
+        if (connectedChains.length >= 2) {
           setTimeout(() => {
             setShowWalletModal(false);
           }, 1000);
         }
       } catch (error) {
-        console.error('Failed to connect wallet after terms acceptance:', error);
+        console.error('Failed to complete wallet connection flow:', error);
         setPendingWalletConnection(null);
         setConnectedWalletName('');
         setShowTermsModal(false);
@@ -413,7 +394,6 @@ const AppsContainer = () => {
     // return () => clearTimeout(timeoutId);
   }, [activeTab]);
 
-  // Update arrow position when window is resized
   useEffect(() => {
     const handleResize = (): void => {
       const desktopActiveTabElement = desktopTabRefs.current[activeTab];
@@ -439,10 +419,8 @@ const AppsContainer = () => {
       }
     };
 
-    // Add resize event listener
     window.addEventListener('resize', handleResize);
 
-    // Cleanup event listener on unmount
     return () => {
       window.removeEventListener('resize', handleResize);
     };

@@ -70,24 +70,22 @@ const WalletItem = ({
     async (xConnector: XConnector) => {
       setConnectingXConnector(xConnector);
       try {
-        // Don't connect immediately - just call onWalletSelected to trigger terms modal
+        await xConnect(xConnector);
         if (onWalletSelected) {
           onWalletSelected(xConnector, xChainType);
         }
-
-        // Close the connector selection UI
-        setShowConnectorModal(false);
-        setShowConnectors(false);
         if (onConnectorsHidden) {
           onConnectorsHidden();
         }
       } catch (error) {
-        console.error(error);
+        console.error('Wallet connection failed:', error);
+        setConnectingXConnector(null);
+        return;
       } finally {
         setConnectingXConnector(null);
       }
     },
-    [onConnectorsHidden, onWalletSelected, xChainType],
+    [onConnectorsHidden, onWalletSelected, xChainType, xConnect],
   );
 
   const handleDisconnect = useCallback(() => {
