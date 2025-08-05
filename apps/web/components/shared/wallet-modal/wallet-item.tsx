@@ -15,7 +15,7 @@ export type WalletItemProps = {
   onConnectorsShown?: () => void;
   onConnectorsHidden?: () => void;
   forceShowConnectors?: boolean;
-  onWalletSelected?: (xConnector: unknown, xChainType: string) => void;
+  onWalletSelected?: (xConnector: XConnector, xChainType: string) => void;
 };
 
 export function shortenAddress(address: string, chars = 7): string {
@@ -42,11 +42,9 @@ const WalletItem = ({
   const [copiedFadingOut, setCopiedFadingOut] = useState(false);
   const [logoFadingOut, setLogoFadingOut] = useState(false);
 
-  // Store callbacks in refs to avoid dependency issues
   const onConnectorsShownRef = useRef(onConnectorsShown);
   const onConnectorsHiddenRef = useRef(onConnectorsHidden);
 
-  // Update refs when callbacks change
   useEffect(() => {
     onConnectorsShownRef.current = onConnectorsShown;
     onConnectorsHiddenRef.current = onConnectorsHidden;
@@ -56,12 +54,10 @@ const WalletItem = ({
   const { mutateAsync: xConnect, isPending } = useXConnect();
   const xDisconnect = useXDisconnect();
 
-  // Update showConnectors when forceShowConnectors changes
   useEffect(() => {
     setShowConnectors(forceShowConnectors);
   }, [forceShowConnectors]);
 
-  // Notify parent when connectors are shown/hidden
   useEffect(() => {
     if (showConnectors && onConnectorsShownRef.current) {
       onConnectorsShownRef.current();
@@ -74,22 +70,16 @@ const WalletItem = ({
     async (xConnector: XConnector) => {
       setConnectingXConnector(xConnector);
       try {
+        // Don't connect immediately - just call onWalletSelected to trigger terms modal
         if (onWalletSelected) {
-          // If onWalletSelected is provided, call it instead of connecting
           onWalletSelected(xConnector, xChainType);
-          setShowConnectors(false);
-          if (onConnectorsHidden) {
-            onConnectorsHidden();
-          }
-        } else {
-          // Original behavior - actually connect the wallet
-          await xConnect(xConnector);
-          setSelectedConnector(xConnector);
-          setShowConnectorModal(false);
-          setShowConnectors(false);
-          if (onConnectorsHidden) {
-            onConnectorsHidden();
-          }
+        }
+
+        // Close the connector selection UI
+        setShowConnectorModal(false);
+        setShowConnectors(false);
+        if (onConnectorsHidden) {
+          onConnectorsHidden();
         }
       } catch (error) {
         console.error(error);
@@ -97,7 +87,7 @@ const WalletItem = ({
         setConnectingXConnector(null);
       }
     },
-    [xConnect, onConnectorsHidden, onWalletSelected, xChainType],
+    [onConnectorsHidden, onWalletSelected, xChainType],
   );
 
   const handleDisconnect = useCallback(() => {
@@ -118,16 +108,12 @@ const WalletItem = ({
       setCopiedFadingOut(false);
       setLogoFadingOut(false);
 
-      // Copy to clipboard
       navigator.clipboard.writeText(address);
-
-      // Start fading out both the "Copied" text and logo overlay after 1 second
       setTimeout(() => {
         setCopiedFadingOut(true);
         setLogoFadingOut(true);
       }, 1000);
 
-      // Reset all states after fade-out completes (1s + 2s = 3s total)
       setTimeout(() => {
         setIsClicked(false);
         setShowCopied(false);
@@ -199,7 +185,9 @@ const WalletItem = ({
           <div className="flex justify-between items-center w-full">
             <div className="flex items-center gap-1">
               <div className="flex flex-col">
-                <span className="text-xs text-gray-500">{shortenAddress(address, 4)}</span>
+                <span className="text-espresso text-(size:--body-comfortable) leading-[1.4] font-medium">
+                  {shortenAddress(address, 4)}
+                </span>
               </div>
               <Button
                 variant="default"

@@ -11,13 +11,58 @@ import { WalletModal } from '@/components/shared/wallet-modal';
 import { Tabs, TabsContent, TabsList } from '@/components/ui/tabs';
 import TabItem from '@/components/ui/tab-item';
 import { tabConfigs } from '@/components/ui/tab-config';
-import { ChevronRight, ArrowUpFromLine, ArrowDownToLine, ArrowDownUp } from 'lucide-react';
+import { ChevronRight, ArrowUpFromLine, ArrowDownToLine, ArrowDownUp, Settings } from 'lucide-react';
 import Sidebar from '@/components/landing/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DecoratedButton } from '@/components/landing/decorated-button';
 // import { Input } from '@/components/ui/input';
 import { NumberInput } from '@/components/ui/number-input';
+import { useXAccounts, useXConnect } from '@sodax/wallet-sdk';
+import type { XConnector } from '@sodax/wallet-sdk';
+
+// Connected chains display component
+const ConnectedChainsDisplay = ({ onClick }: { onClick?: () => void }): React.JSX.Element => {
+  const xAccounts = useXAccounts();
+
+  // Get connected chains
+  const connectedChains = Object.entries(xAccounts)
+    .filter(([_, account]) => account?.address)
+    .map(([chainType, account]) => ({
+      chainType,
+      address: account?.address,
+      icon: chainType === 'ICON' ? '/coin/icx1.png' : '/coin/s1.png',
+    }));
+
+  if (connectedChains.length === 0) {
+    return <></>;
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      <div className="flex items-center cursor-pointer" onClick={onClick}>
+        {connectedChains.map((chain, index) => (
+          <div key={chain.chainType} className="relative">
+            <Image
+              data-property-1={chain.chainType}
+              className="rounded shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.20)] outline outline-3 outline-white"
+              src={chain.icon}
+              alt={chain.chainType}
+              width={20}
+              height={20}
+            />
+          </div>
+        ))}
+      </div>
+      <Button
+        variant="cherry"
+        className="w-10 h-10 p-3 bg-cherry-bright rounded-[256px] inline-flex justify-center items-center gap-2 cursor-pointer"
+      >
+        <Settings className="w-4 h-4 text-white" />
+      </Button>
+    </div>
+  );
+};
 
 // Shared content component
 const SharedContent = (): React.JSX.Element => {
@@ -49,21 +94,19 @@ const LoansContent = (): React.JSX.Element => {
   return <div className="mt-8"></div>;
 };
 
-const MigrateContent = (): React.JSX.Element => {
+const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }): React.JSX.Element => {
   const [showTermsModal, setShowTermsModal] = useState<boolean>(false);
   const [shouldTriggerWallet, setShouldTriggerWallet] = useState<boolean>(false);
   const [icxInputValue, setIcxInputValue] = useState<string>('');
   const [sodaInputValue, setSodaInputValue] = useState<string>('');
+  const xAccounts = useXAccounts();
+
+  // Check if two wallets are connected
+  const connectedWalletsCount = Object.values(xAccounts).filter(xAccount => xAccount?.address).length;
+  const hasTwoWalletsConnected = connectedWalletsCount >= 2;
+
   const handleConnectWallets = (): void => {
-    setShowTermsModal(true);
-  };
-
-  const handleAcceptTerms = (): void => {
-    setShouldTriggerWallet(true);
-  };
-
-  const handleWalletTriggered = (): void => {
-    setShouldTriggerWallet(false);
+    onOpenWalletModal();
   };
 
   const handleIcxInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -205,8 +248,9 @@ const MigrateContent = (): React.JSX.Element => {
             variant="cherry"
             className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white"
             onClick={handleConnectWallets}
+            disabled={hasTwoWalletsConnected}
           >
-            Connect wallets
+            {hasTwoWalletsConnected ? 'Enter amount' : 'Connect wallets'}
           </Button>
           <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
             Takes ~1 min · Network fee: ~0.02 ICX
@@ -229,14 +273,12 @@ const MigrateContent = (): React.JSX.Element => {
           </div>
         </div>
       </div>
-
-      <TermsConfirmationModal open={showTermsModal} onOpenChange={setShowTermsModal} onAccept={handleAcceptTerms} />
     </div>
   );
 };
 
 // Content mapping
-const getTabContent = (tabValue: string): React.JSX.Element => {
+const getTabContent = (tabValue: string, onOpenWalletModal?: () => void): React.JSX.Element => {
   switch (tabValue) {
     case 'swap':
       return <SwapContent />;
@@ -245,7 +287,7 @@ const getTabContent = (tabValue: string): React.JSX.Element => {
     case 'loans':
       return <LoansContent />;
     case 'migrate':
-      return <MigrateContent />;
+      return <MigrateContent onOpenWalletModal={onOpenWalletModal || (() => {})} />;
     default:
       return <SwapContent />;
   }
@@ -256,31 +298,80 @@ const AppsContainer = () => {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [pendingWalletConnection, setPendingWalletConnection] = useState<{
-    xConnector: unknown;
+    xConnector: XConnector;
     xChainType: string;
   } | null>(null);
+  const [connectedWalletName, setConnectedWalletName] = useState<string>('');
   const [activeTab, setActiveTab] = useState('swap');
   const [arrowPosition, setArrowPosition] = useState(90);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);
+
+  // Wallet connection hook
+  const { mutateAsync: xConnect } = useXConnect();
+
+  // Track connected wallets
+  const xAccounts = useXAccounts();
+  const connectedChains = Object.entries(xAccounts)
+    .filter(([_, account]) => account?.address)
+    .map(([chainType, account]) => ({
+      chainType,
+      address: account?.address,
+    }));
   // const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
 
   const handleConnectWallets = (): void => {
     setShowWalletModal(true);
   };
 
-  const handleWalletSelected = (xConnector: unknown, xChainType: string): void => {
+  const handleWalletSelected = async (xConnector: XConnector, xChainType: string): Promise<void> => {
+    // Store the pending connection and show terms modal first
     setPendingWalletConnection({ xConnector, xChainType });
     setShowWalletModal(false);
+
+    // Extract wallet name from the connector
+    const walletName =
+      typeof xConnector === 'object' && xConnector !== null && 'name' in xConnector
+        ? (xConnector as { name: string }).name
+        : 'Wallet';
+    setConnectedWalletName(walletName);
+
+    // Show terms modal before connecting wallet
     setShowTermsModal(true);
   };
 
-  const handleTermsAccepted = (): void => {
+  const handleTermsAccepted = async (): Promise<void> => {
     if (pendingWalletConnection) {
-      // Here you would actually connect the wallet
-      console.log('Connecting wallet:', pendingWalletConnection);
-      // TODO: Implement actual wallet connection logic
-      setPendingWalletConnection(null);
-      setShowTermsModal(false);
+      try {
+        console.log('Connecting wallet after terms accepted:', pendingWalletConnection);
+
+        // Actually connect the wallet using the stored connector
+        const { xConnector, xChainType } = pendingWalletConnection;
+
+        // Connect the wallet using the xConnect function
+        await xConnect(xConnector);
+
+        console.log('Wallet connected successfully:', { xConnector, xChainType });
+
+        // Clear pending connection and wallet name
+        setPendingWalletConnection(null);
+        setConnectedWalletName('');
+        setShowTermsModal(false);
+
+        // Show wallet modal again for additional connections if needed
+        setShowWalletModal(true);
+
+        // Auto-close wallet modal if two wallets are already connected
+        if (connectedChains.length >= 1) {
+          setTimeout(() => {
+            setShowWalletModal(false);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Failed to connect wallet after terms acceptance:', error);
+        setPendingWalletConnection(null);
+        setConnectedWalletName('');
+        setShowTermsModal(false);
+      }
     }
   };
 
@@ -458,7 +549,15 @@ const AppsContainer = () => {
                   registering: 'registering...',
                 }}
               ></ConnectWalletButton> */}
-              <DecoratedButton onClick={() => setShowWalletModal(true)}>connect</DecoratedButton>
+              {(() => {
+                const xAccounts = useXAccounts();
+                const connectedWalletsCount = Object.values(xAccounts).filter(xAccount => xAccount?.address).length;
+
+                if (connectedWalletsCount >= 2) {
+                  return <ConnectedChainsDisplay onClick={() => setShowWalletModal(true)} />;
+                }
+                return <DecoratedButton onClick={() => setShowWalletModal(true)}>connect</DecoratedButton>;
+              })()}
             </div>
           </div>
         </div>
@@ -535,7 +634,7 @@ const AppsContainer = () => {
                 <TabsContent key={tab.value} value={tab.value}>
                   <div className="flex flex-col" style={{ gap: 'var(--layout-space-comfortable)' }}>
                     <SharedContent />
-                    {getTabContent(tab.value)}
+                    {getTabContent(tab.value, () => setShowWalletModal(true))}
                   </div>
                 </TabsContent>
               ))}
@@ -571,7 +670,12 @@ const AppsContainer = () => {
         onWalletSelected={handleWalletSelected}
       />
 
-      <TermsConfirmationModal open={showTermsModal} onOpenChange={setShowTermsModal} onAccept={handleTermsAccepted} />
+      <TermsConfirmationModal
+        open={showTermsModal}
+        onOpenChange={setShowTermsModal}
+        onAccept={handleTermsAccepted}
+        walletName={connectedWalletName}
+      />
     </div>
   );
 };

@@ -9,11 +9,12 @@ import WalletItem from './wallet-item';
 import Image from 'next/image';
 import { ArrowLeftIcon, XIcon } from 'lucide-react';
 import { useXAccounts } from '@sodax/wallet-sdk';
+import type { XConnector } from '@sodax/wallet-sdk';
 
 type WalletModalProps = {
   isOpen: boolean;
   onDismiss: () => void;
-  onWalletSelected?: (xConnector: unknown, xChainType: string) => void;
+  onWalletSelected?: (xConnector: XConnector, xChainType: string) => void;
 };
 
 export const xChainTypes: WalletItemProps[] = [
@@ -148,27 +149,30 @@ export const WalletModal = ({ isOpen, onDismiss, onWalletSelected }: WalletModal
               {!showingConnectors ? (
                 <>
                   <Separator className="h-1 bg-clay opacity-30" />
-                  {xChainTypes.map(wallet => (
-                    <React.Fragment key={`wallet_${wallet.xChainType}`}>
-                      <div
-                        className={`flex flex-row items-center transition-opacity duration-200 cursor-pointer ${
-                          hoveredWallet === wallet.xChainType ? 'opacity-100 ' : 'opacity-40'
-                        }`}
-                        onMouseEnter={() => setHoveredWallet(wallet.xChainType)}
-                        onMouseLeave={() => setHoveredWallet(null)}
-                      >
-                        <WalletItem
-                          icon={wallet.icon}
-                          name={wallet.name}
-                          xChainType={wallet.xChainType}
-                          onConnectorsShown={() => handleConnectorsShown(wallet.xChainType)}
-                          onConnectorsHidden={handleConnectorsHidden}
-                          onWalletSelected={onWalletSelected}
-                        />
-                      </div>
-                      <Separator className="h-1 bg-clay opacity-30" />
-                    </React.Fragment>
-                  ))}
+                  {xChainTypes.map(wallet => {
+                    const isConnected = xAccounts[wallet.xChainType]?.address;
+                    return (
+                      <React.Fragment key={`wallet_${wallet.xChainType}`}>
+                        <div
+                          className={`flex flex-row items-center transition-opacity duration-200 cursor-pointer ${
+                            hoveredWallet === wallet.xChainType || isConnected ? 'opacity-100 ' : 'opacity-40'
+                          }`}
+                          onMouseEnter={() => setHoveredWallet(wallet.xChainType)}
+                          onMouseLeave={() => setHoveredWallet(null)}
+                        >
+                          <WalletItem
+                            icon={wallet.icon}
+                            name={wallet.name}
+                            xChainType={wallet.xChainType}
+                            onConnectorsShown={() => handleConnectorsShown(wallet.xChainType)}
+                            onConnectorsHidden={handleConnectorsHidden}
+                            onWalletSelected={onWalletSelected}
+                          />
+                        </div>
+                        <Separator className="h-1 bg-clay opacity-30" />
+                      </React.Fragment>
+                    );
+                  })}
                 </>
               ) : (
                 <div className="w-full">

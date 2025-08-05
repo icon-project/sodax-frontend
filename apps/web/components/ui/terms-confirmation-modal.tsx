@@ -10,17 +10,22 @@ import { ArrowRight, XIcon } from 'lucide-react';
 interface TermsConfirmationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAccept: () => void;
+  onAccept: () => void | Promise<void>;
+  walletName?: string;
 }
 
-const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({ open, onOpenChange, onAccept }) => {
+const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
+  open,
+  onOpenChange,
+  onAccept,
+  walletName,
+}) => {
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
   const [showWalletModal, setShowWalletModal] = useState<boolean>(false);
 
-  const handleAccept = (): void => {
+  const handleAccept = async (): Promise<void> => {
     if (acceptedTerms) {
-      setShowWalletModal(true);
-      onOpenChange(false);
+      await onAccept();
       setAcceptedTerms(false); // Reset for next time
     }
   };
@@ -30,10 +35,13 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({ open, o
     setAcceptedTerms(false); // Reset for next time
   };
 
-  const handleWalletModalDismiss = (): void => {
+  const handleWalletModalDismiss = async (): Promise<void> => {
     setShowWalletModal(false);
-    onAccept(); // Call the original onAccept callback
+    await onAccept(); // Call the original onAccept callback
   };
+
+  // Default button text if no wallet name is provided
+  const buttonText = walletName ? `Wallet sign-in ${walletName}` : 'Continue to wallets';
 
   return (
     <>
