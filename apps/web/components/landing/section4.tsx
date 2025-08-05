@@ -3,11 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import ConnectWalletButton from '../ui/connect-wallet-button';
-import { useWallet } from '../../hooks/useWallet';
+// import { useWallet } from '../../hooks/useWallet';
 import { Notification } from '../Notification';
 
 const Section4 = ({ onOpenRewardDialog }: { onOpenRewardDialog: () => void }) => {
-  const { isRegistering, notification, mounted, handleWalletClick, isConnected } = useWallet();
+  // const { isRegistering, notification, mounted, handleWalletClick, isConnected } = useWallet();
 
   return (
     <div className="flex flex-col lg:flex-row section4">
@@ -26,9 +26,9 @@ const Section4 = ({ onOpenRewardDialog }: { onOpenRewardDialog: () => void }) =>
           Points with every order.
         </Label>
         <div className="mt-6">
-          <DecoratedButton variant="white" isConnected={isConnected} onClick={onOpenRewardDialog}>
+          {/* <DecoratedButton variant="white" isConnected={isConnected} onClick={onOpenRewardDialog}>
             join waitlist
-          </DecoratedButton>
+          </DecoratedButton> */}
         </div>
       </div>
       <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] h-[440px] sm:h-[480px] md:h-[480px] mt-4 bg-[radial-gradient(circle_at_center,_#5C3623,_#1C1C24)] relative z-1">
