@@ -1,50 +1,103 @@
-import { XIcon, Loader2, PlusIcon } from 'lucide-react';
-import React, { useCallback, useMemo, useState } from 'react';
-
+import { XIcon, Loader2, PlusIcon, MinusIcon, CopyIcon } from 'lucide-react';
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import type { ChainType } from '@sodax/types';
 import type { XConnector } from '@sodax/wallet-sdk';
 import { useXAccount, useXConnect, useXConnection, useXConnectors, useXDisconnect } from '@sodax/wallet-sdk';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
 
 export type WalletItemProps = {
   name: string;
   xChainType: ChainType;
   icon: string;
+  onConnectorsShown?: () => void;
+  onConnectorsHidden?: () => void;
+  forceShowConnectors?: boolean;
+  onWalletSelected?: (xConnector: unknown, xChainType: string) => void;
 };
 
 export function shortenAddress(address: string, chars = 7): string {
   return `${address.substring(0, chars + 2)}...${address.substring(address.length - chars)}`;
 }
 
-const WalletItem = ({ icon, name, xChainType }: WalletItemProps) => {
+const WalletItem = ({
+  icon,
+  name,
+  xChainType,
+  onConnectorsShown,
+  onConnectorsHidden,
+  forceShowConnectors = false,
+  onWalletSelected,
+}: WalletItemProps) => {
   const xConnection = useXConnection(xChainType);
   const { address } = useXAccount(xChainType);
-
   const [connectingXConnector, setConnectingXConnector] = useState<XConnector | null>(null);
   const [showConnectorModal, setShowConnectorModal] = useState<boolean>(false);
   const [selectedConnector, setSelectedConnector] = useState<XConnector | null>(null);
-  const [showConnectors, setShowConnectors] = useState<boolean>(false);
+  const [showConnectors, setShowConnectors] = useState<boolean>(forceShowConnectors);
+  const [isClicked, setIsClicked] = useState(false);
+  const [showCopied, setShowCopied] = useState(false);
+  const [copiedFadingOut, setCopiedFadingOut] = useState(false);
+  const [logoFadingOut, setLogoFadingOut] = useState(false);
+
+  // Store callbacks in refs to avoid dependency issues
+  const onConnectorsShownRef = useRef(onConnectorsShown);
+  const onConnectorsHiddenRef = useRef(onConnectorsHidden);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onConnectorsShownRef.current = onConnectorsShown;
+    onConnectorsHiddenRef.current = onConnectorsHidden;
+  });
 
   const xConnectors = useXConnectors(xChainType);
   const { mutateAsync: xConnect, isPending } = useXConnect();
   const xDisconnect = useXDisconnect();
 
+  // Update showConnectors when forceShowConnectors changes
+  useEffect(() => {
+    setShowConnectors(forceShowConnectors);
+  }, [forceShowConnectors]);
+
+  // Notify parent when connectors are shown/hidden
+  useEffect(() => {
+    if (showConnectors && onConnectorsShownRef.current) {
+      onConnectorsShownRef.current();
+    } else if (!showConnectors && onConnectorsHiddenRef.current) {
+      onConnectorsHiddenRef.current();
+    }
+  }, [showConnectors]);
+
   const handleConnect = useCallback(
     async (xConnector: XConnector) => {
       setConnectingXConnector(xConnector);
       try {
-        await xConnect(xConnector);
-        setSelectedConnector(xConnector);
-        setShowConnectorModal(false);
+        if (onWalletSelected) {
+          // If onWalletSelected is provided, call it instead of connecting
+          onWalletSelected(xConnector, xChainType);
+          setShowConnectors(false);
+          if (onConnectorsHidden) {
+            onConnectorsHidden();
+          }
+        } else {
+          // Original behavior - actually connect the wallet
+          await xConnect(xConnector);
+          setSelectedConnector(xConnector);
+          setShowConnectorModal(false);
+          setShowConnectors(false);
+          if (onConnectorsHidden) {
+            onConnectorsHidden();
+          }
+        }
       } catch (error) {
         console.error(error);
       } finally {
         setConnectingXConnector(null);
       }
     },
-    [xConnect],
+    [xConnect, onConnectorsHidden, onWalletSelected, xChainType],
   );
 
   const handleDisconnect = useCallback(() => {
@@ -58,7 +111,32 @@ const WalletItem = ({ icon, name, xChainType }: WalletItemProps) => {
     setShowConnectorModal(false);
   }, []);
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
+  const handleCopyClick = useCallback(() => {
+    if (address) {
+      setIsClicked(true);
+      setShowCopied(true);
+      setCopiedFadingOut(false);
+      setLogoFadingOut(false);
+
+      // Copy to clipboard
+      navigator.clipboard.writeText(address);
+
+      // Start fading out both the "Copied" text and logo overlay after 1 second
+      setTimeout(() => {
+        setCopiedFadingOut(true);
+        setLogoFadingOut(true);
+      }, 1000);
+
+      // Reset all states after fade-out completes (1s + 2s = 3s total)
+      setTimeout(() => {
+        setIsClicked(false);
+        setShowCopied(false);
+        setCopiedFadingOut(false);
+        setLogoFadingOut(false);
+      }, 3000);
+    }
+  }, [address]);
+
   const activeXConnector = useMemo(() => {
     return xConnectors.find(connector => connector.id === xConnection?.xConnectorId);
   }, [xConnectors, xConnection]);
@@ -66,57 +144,93 @@ const WalletItem = ({ icon, name, xChainType }: WalletItemProps) => {
   const sortedXConnectors = useMemo(() => {
     const hanaWallet = xConnectors.find(connector => connector.name === 'Hana Wallet');
     if (!hanaWallet) return xConnectors;
-
     const filteredConnectors = xConnectors.filter(connector => connector.name !== 'Hana Wallet');
     return [hanaWallet, ...filteredConnectors];
   }, [xConnectors]);
 
+  const isHanaOnly = useMemo(() => {
+    const hanaConnectors = xConnectors.filter(
+      connector =>
+        connector.name === 'Hana Wallet' || connector.name === 'Hana' || connector.name.toLowerCase().includes('hana'),
+    );
+    return hanaConnectors.length === 1 && xConnectors.length === 1;
+  }, [xConnectors]);
+
+  const handlePlusButtonClick = useCallback(() => {
+    if (isHanaOnly) {
+      const hanaConnector = xConnectors.find(
+        connector =>
+          connector.name === 'Hana Wallet' ||
+          connector.name === 'Hana' ||
+          connector.name.toLowerCase().includes('hana'),
+      );
+      if (hanaConnector) {
+        handleConnect(hanaConnector);
+      }
+    } else {
+      setShowConnectors(true);
+    }
+  }, [isHanaOnly, xConnectors, handleConnect]);
+
+  const isConnecting = isPending && connectingXConnector !== null;
+
   return (
-    <div className="flex items-center gap-6 text-[#0d0229]">
-      <div className="inline-flex justify-start items-center gap-4">
-        <div
-          data-property-1="Default"
-          className="rounded-md border border-4 border-white inline-flex flex-col justify-center items-center overflow-hidden"
-          style={{
-            boxShadow: ' rgba(185, 172, 171, 0.2) 0px 4px 8px 0px',
-          }}
-        >
-          <Image src={icon} alt={name} width={24} height={24} className="rounded-md" />
-        </div>
-        <div className="flex justify-start items-center gap-1">
-          <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
-            {name}
+    <div className="flex items-center w-full text-[#0d0229]">
+      {!forceShowConnectors && (
+        <div className="inline-flex justify-start items-center gap-4">
+          <div
+            data-property-1="Default"
+            className="rounded-md border border-4 border-white inline-flex flex-col justify-center items-center overflow-hidden"
+            style={{
+              boxShadow: 'rgba(185, 172, 171, 0.2) 0px 4px 8px 0px',
+            }}
+          >
+            <Image src={icon} alt={name} width={24} height={24} className="rounded-md" />
+          </div>
+          <div className="flex justify-start items-center gap-1">
+            <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
+              {isConnecting ? 'Waiting for wallet' : address ? '' : name}
+            </div>
           </div>
         </div>
-      </div>
-
+      )}
       <div className="flex flex-wrap justify-start gap-2 grow">
         {address ? (
           <div className="flex justify-between items-center w-full">
-            <div className="flex items-center gap-2">
-              <div className="cursor-pointer w-10 h-10 p-1 bg-white rounded-[11px] justify-center items-center inline-flex">
-                <img src={activeXConnector?.icon} className="w-full h-full rounded-lg" />
-              </div>
-
+            <div className="flex items-center gap-1">
               <div className="flex flex-col">
-                <span className="text-sm font-medium">{activeXConnector?.name}</span>
                 <span className="text-xs text-gray-500">{shortenAddress(address, 4)}</span>
               </div>
-            </div>
-
-            <div className="flex gap-1 items-center">
-              {/* <Button
+              <Button
                 variant="default"
                 size="sm"
-                className="w-6 h-6 p-0 rounded-full bg-cherry-bright hover:bg-cherry-brighter cursor-pointer"
-                onClick={() => setShowConnectorModal(true)}
+                className="w-6 h-6 p-0 rounded-full bg-transparent text-cherry-grey hover:bg-transparent hover:text-clay cursor-pointer"
+                onClick={handleCopyClick}
               >
-                <PlusIcon className="w-4 h-4" />
-              </Button> */}
-
-              <div className="text-body cursor-pointer" onClick={handleDisconnect}>
-                <XIcon />
-              </div>
+                <CopyIcon className="w-4 h-4" />
+              </Button>
+              {showCopied && (
+                <div
+                  className={`flex flex-col font-['InterRegular'] text-espresso leading-[1.4] text-(size:--body-comfortable) text-nowrap transition-opacity ${
+                    copiedFadingOut ? 'duration-[2000ms] opacity-0' : 'duration-100 opacity-100'
+                  }`}
+                >
+                  <p className="block leading-[1.4] whitespace-pre">Copied</p>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-1 items-center">
+              <span className="text-(size:--body-small) text-clay-light leading-[1.4] font-['InterRegular']">
+                {activeXConnector?.name}
+              </span>
+              <Button
+                variant="default"
+                size="sm"
+                className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
+                onClick={handleDisconnect}
+              >
+                <MinusIcon className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         ) : (
@@ -128,28 +242,56 @@ const WalletItem = ({ icon, name, xChainType }: WalletItemProps) => {
                   <Button
                     variant="default"
                     size="sm"
-                    className="w-6 h-6 p-0 rounded-full bg-cherry-bright hover:bg-cherry-brighter cursor-pointer"
-                    onClick={() => setShowConnectors(true)}
+                    className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
+                    onClick={handlePlusButtonClick}
+                    disabled={isConnecting}
                   >
-                    <PlusIcon className="w-4 h-4" />
+                    {isConnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlusIcon className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-4 w-full">
+                <Separator className="h-1 bg-clay opacity-30" />
                 {sortedXConnectors.map(xConnector => {
+                  const isConnectingToThis = isPending && connectingXConnector?.id === xConnector.id;
                   return (
-                    <Button
-                      key={`${xChainType}-${xConnector.name}`}
-                      className="cursor-pointer w-10 h-10 p-1 bg-[#d4c5f9] rounded-[11px] justify-center items-center inline-flex"
-                      onClick={() => handleConnect(xConnector)}
-                      disabled={isPending && connectingXConnector?.id === xConnector.id}
-                    >
-                      {isPending && connectingXConnector?.id === xConnector.id && <Loader2 className="animate-spin" />}
-                      {!(isPending && connectingXConnector?.id === xConnector.id) && (
-                        <img src={xConnector.icon} className="w-full h-full rounded-lg" />
-                      )}
-                    </Button>
+                    <>
+                      <div
+                        key={`${xChainType}-${xConnector.name}`}
+                        className="self-stretch inline-flex justify-between items-center transition-opacity duration-200 hover:opacity-100 opacity-60 cursor-pointer"
+                      >
+                        <div className="flex justify-start items-center gap-4">
+                          <div className="flex justify-start items-center flex-wrap content-center">
+                            <div className="flex justify-start items-center flex-wrap content-center">
+                              <div className="w-6 relative rounded-md shadow-[-4px_0px_4px_0px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-start items-start overflow-hidden ml-1">
+                                <Image src={icon} alt={name} width={24} height={24} className="rounded-md" />
+                                <div className="w-6 h-6 left-0 top-0 absolute bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_rgba(237,_230,_230,_0.40)_0%,_rgba(237.22,_230.40,_230.40,_0.60)_100%)]" />
+                              </div>
+                            </div>
+                            <div
+                              data-property-1="Active"
+                              className="rounded-md shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.40)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden z-51"
+                            >
+                              <img src={xConnector.icon} className="w-6 h-6 rounded-lg" />
+                            </div>
+                          </div>
+                          <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
+                            {isConnectingToThis ? 'Waiting for wallet' : xConnector.name}
+                          </div>
+                        </div>
+                        <Button
+                          key={`${xChainType}-${xConnector.name}`}
+                          className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
+                          onClick={() => handleConnect(xConnector)}
+                          disabled={isPending && connectingXConnector?.id === xConnector.id}
+                        >
+                          {isConnectingToThis && <Loader2 className="animate-spin" />}
+                          {!isConnectingToThis && <PlusIcon className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                      <Separator className="h-1 bg-clay opacity-30" key={`${xChainType}-${xConnector.name}`} />
+                    </>
                   );
                 })}
               </div>
@@ -157,14 +299,11 @@ const WalletItem = ({ icon, name, xChainType }: WalletItemProps) => {
           </>
         )}
       </div>
-
-      {/* XConnector Selection Modal */}
       <Dialog open={showConnectorModal} onOpenChange={setShowConnectorModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Select Wallet</DialogTitle>
           </DialogHeader>
-
           <div className="grid grid-cols-2 gap-3 py-4">
             {sortedXConnectors.map(xConnector => (
               <Button

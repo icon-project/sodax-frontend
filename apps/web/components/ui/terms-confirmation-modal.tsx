@@ -1,11 +1,11 @@
 import type React from 'react';
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 import { WalletModal } from '@/components/shared/wallet-modal';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, XIcon } from 'lucide-react';
 
 interface TermsConfirmationModalProps {
   open: boolean;
@@ -38,13 +38,21 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({ open, o
   return (
     <>
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="max-w-full h-[calc(100vh-205px)] sm:h-fit md:max-w-[480px] shadow-none bg-white py-22 md:py-10 px-12 gap-6 fixed bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0 sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-t-[32px] rounded-b-[0px] sm:rounded-[32px] flex flex-col">
+        <DialogContent
+          className="max-w-full h-[calc(100vh-205px)] sm:h-fit md:max-w-[480px] shadow-none bg-white py-22 md:py-10 px-12 gap-6 fixed bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0 sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-t-[32px] rounded-b-[0px] sm:rounded-[32px] flex flex-col"
+          hideCloseButton
+        >
           <DialogTitle>
-            <div className="inline-flex justify-start items-center gap-2">
-              <Image src="/symbol.png" alt="SODAX Symbol" width={24} height={24} />
-              <div className="mix-blend-multiply justify-end text-espresso font-['InterBold'] leading-snug text-(size:--subtitle)">
-                Confirm terms
+            <div className="flex flex-row justify-between items-center">
+              <div className="inline-flex justify-start items-center gap-2">
+                <Image src="/symbol.png" alt="SODAX Symbol" width={24} height={24} />
+                <div className="mix-blend-multiply justify-end text-espresso font-['InterRegular'] font-bold leading-snug text-(size:--subtitle)">
+                  Confirm terms
+                </div>
               </div>
+              <DialogClose asChild>
+                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
+              </DialogClose>
             </div>
           </DialogTitle>
 
@@ -74,7 +82,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({ open, o
               variant="cherry"
               onClick={handleAccept}
               disabled={!acceptedTerms}
-              className="flex-1 bg-cherry-bright hover:bg-cherry-brighter disabled:bg-cherry-grey disabled:cursor-not-allowed lg:max-w-[197px] md:max-w-[188px] h-10 font-['InterRegular']"
+              className="flex-1 bg-cherry-bright hover:bg-cherry-brighter disabled:bg-cherry-grey disabled:cursor-not-allowed lg:max-w-[197px] md:max-w-[188px] h-10 font-['InterRegular'] cursor-pointer"
             >
               Continue to wallets
               <ArrowRight className="w-4 h-4" />

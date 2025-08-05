@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ConnectWalletButton from '@/components/ui/connect-wallet-button';
 import TermsConfirmationModal from '@/components/ui/terms-confirmation-modal';
+import { WalletModal } from '@/components/shared/wallet-modal';
 // import { useWallet } from '../../hooks/useWallet';
 import { Tabs, TabsContent, TabsList } from '@/components/ui/tabs';
 import TabItem from '@/components/ui/tab-item';
@@ -53,7 +54,6 @@ const MigrateContent = (): React.JSX.Element => {
   const [shouldTriggerWallet, setShouldTriggerWallet] = useState<boolean>(false);
   const [icxInputValue, setIcxInputValue] = useState<string>('');
   const [sodaInputValue, setSodaInputValue] = useState<string>('');
-
   const handleConnectWallets = (): void => {
     setShowTermsModal(true);
   };
@@ -253,10 +253,36 @@ const getTabContent = (tabValue: string): React.JSX.Element => {
 
 const AppsContainer = () => {
   const [connectModalOpen, setConnectModalOpen] = useState(false);
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [pendingWalletConnection, setPendingWalletConnection] = useState<{
+    xConnector: unknown;
+    xChainType: string;
+  } | null>(null);
   const [activeTab, setActiveTab] = useState('swap');
   const [arrowPosition, setArrowPosition] = useState(90);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);
   // const { isRegistering, notification, mounted, handleWalletClick, isConnected, address } = useWallet();
+
+  const handleConnectWallets = (): void => {
+    setShowWalletModal(true);
+  };
+
+  const handleWalletSelected = (xConnector: unknown, xChainType: string): void => {
+    setPendingWalletConnection({ xConnector, xChainType });
+    setShowWalletModal(false);
+    setShowTermsModal(true);
+  };
+
+  const handleTermsAccepted = (): void => {
+    if (pendingWalletConnection) {
+      // Here you would actually connect the wallet
+      console.log('Connecting wallet:', pendingWalletConnection);
+      // TODO: Implement actual wallet connection logic
+      setPendingWalletConnection(null);
+      setShowTermsModal(false);
+    }
+  };
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
@@ -432,7 +458,9 @@ const AppsContainer = () => {
                   registering: 'registering...',
                 }}
               ></ConnectWalletButton> */}
-              <DecoratedButton className="w-[172px]">connect</DecoratedButton>
+              <DecoratedButton className="w-[172px]" onClick={() => setShowWalletModal(true)}>
+                connect
+              </DecoratedButton>
             </div>
           </div>
         </div>
@@ -538,6 +566,14 @@ const AppsContainer = () => {
           </div>
         </Tabs>
       </div>
+
+      <WalletModal
+        isOpen={showWalletModal}
+        onDismiss={() => setShowWalletModal(false)}
+        onWalletSelected={handleWalletSelected}
+      />
+
+      <TermsConfirmationModal open={showTermsModal} onOpenChange={setShowTermsModal} onAccept={handleTermsAccepted} />
     </div>
   );
 };
