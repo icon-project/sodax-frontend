@@ -323,10 +323,6 @@ export function requestJsonRpc(rawTransaction: unknown, id = 99999): Promise<Jso
   });
 }
 
-/**
- * Icon Utils
- */
-
 export function BigNumberToBigInt(bigNumber: BigNumber): bigint {
   if (!bigNumber.isInteger()) {
     throw new Error('Cannot convert decimal number to BigInt');
