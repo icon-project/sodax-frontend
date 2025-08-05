@@ -639,6 +639,8 @@ export const spokeChainConfig = {
     addresses: {
       connection:
         '0xf3b1e696a66d02cb776dc15aae73c68bc8f03adcb6ba0ec7f6332d9d90a6a3d2::connectionv3::0x3ee76d13909ac58ae13baab4c9be5a5142818d9a387aed641825e5d4356969bf',
+      assetManagerId:
+        '0xa17a409164d1676db71b411ab50813ba2c7dd547d2df538c699049566f1ff922::asset_manager::0xcb7346339340b7f8dea40fcafb70721dc2fcfa7e8626a89fd954d46c1f928b61',
       assetManager:
         '0x897f911a4b7691870a1a2513af7e85fdee8de275615c77068fd8b90b8e78c678::asset_manager::0xcb7346339340b7f8dea40fcafb70721dc2fcfa7e8626a89fd954d46c1f928b61',
       xTokenManager: '',
@@ -1411,7 +1413,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: hubVaults.IbnUSD.address,
     },
     [spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.BALN.address]: {
       asset: '0xde8e19a099fedf9d617599f62c5f7f020d92b572',
@@ -1714,6 +1716,9 @@ export const chainIdToHubAssetsMap: Map<SpokeChainId, Map<Address, HubAssetInfo>
 export const supportedHubAssets: Set<Address> = new Set(
   Object.values(hubAssets).flatMap(assets => Object.values(assets).map(info => info.asset.toLowerCase() as Address)),
 );
+export const supportedVaults: Set<Address> = new Set(
+  Object.values(hubAssets).flatMap(assets => Object.values(assets).map(info => info.vault.toLowerCase() as Address)),
+);
 export const spokeChainIdsSet = new Set(SPOKE_CHAIN_IDS);
 
 export const getHubAssetInfo = (chainId: SpokeChainId, asset: OriginalAssetAddress): HubAssetInfo | undefined =>
@@ -1724,6 +1729,7 @@ export const getOriginalAssetAddress = (chainId: SpokeChainId, hubAsset: Address
   hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
 export const isValidHubAsset = (hubAsset: Address): boolean =>
   supportedHubAssets.has(hubAsset.toLowerCase() as Address);
+export const isValidVault = (vault: Address): boolean => supportedVaults.has(vault.toLowerCase() as Address);
 export const isValidChainHubAsset = (chainId: SpokeChainId, hubAsset: Address): boolean =>
   chainIdToHubAssetsMap.get(chainId)?.has(hubAsset.toLowerCase() as Address) ?? false;
 export const isValidSpokeChainId = (chainId: SpokeChainId): boolean => spokeChainIdsSet.has(chainId);

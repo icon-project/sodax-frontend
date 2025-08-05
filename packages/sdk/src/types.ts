@@ -165,6 +165,7 @@ export type SonicSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
 
 export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   addresses: {
+    assetManagerId: string;
     assetManager: string;
     connection: string;
     xTokenManager: string;

@@ -1,4 +1,4 @@
-import { type Address, type Hex, fromHex } from 'viem';
+import { type Address, type Hex, fromHex, toHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { SuiSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
 import {
@@ -110,18 +110,17 @@ export class SuiSpokeService {
         params.from,
         hubProvider,
       ));
-
+    const encoder = new TextEncoder();
+    console.log(toHex(encoder.encode(params.token)));
+    console.log(toHex(encoder.encode(spokeProvider.chainConfig.addresses.assetManager)));
     return {
       spokeChainID: spokeProvider.chainConfig.chain.id,
-      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      token: toHex(encoder.encode(params.token)),
       from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
       to,
       amount: params.amount,
       data: params.data,
-      srcAddress: encodeAddress(
-        spokeProvider.chainConfig.chain.id,
-        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
-      ),
+      srcAddress: toHex(encoder.encode(spokeProvider.chainConfig.addresses.assetManagerId)),
     };
   }
 
