@@ -97,7 +97,10 @@ export const WalletModal = ({ isOpen, onDismiss, onWalletSelected }: WalletModal
 
   return (
     <Dialog open={isOpen} onOpenChange={handleDismiss}>
-      <DialogContent className="md:max-w-[480px] p-12 w-[90%] shadow-none bg-white gap-4 h-fit" hideCloseButton>
+      <DialogContent
+        className="max-w-full w-full md:max-w-[480px] p-12 w-[90%] shadow-none bg-white gap-4 h-fit"
+        hideCloseButton
+      >
         <DialogTitle>
           {!showingConnectors ? (
             <div className="flex flex-row justify-between items-center">

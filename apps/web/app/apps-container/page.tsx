@@ -433,17 +433,17 @@ const AppsContainer = () => {
           <div className="flex justify-end items-center">
             <div className="hidden lg:flex justify-end items-center gap-4">
               <Link href="/">
-                <span className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer text-(size:--body-comfortable)">
+                <span className="text-cream font-[InterMedium] transition-all hover:text-vibrant-white cursor-pointer text-(size:--body-comfortable)">
                   About
                 </span>
               </Link>
               <Link href="/">
-                <span className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer text-(size:--body-comfortable)">
+                <span className="text-cream font-[InterMedium] transition-all hover:text-vibrant-white cursor-pointer text-(size:--body-comfortable)">
                   Partners
                 </span>
               </Link>
               <Link href="/">
-                <span className="text-white font-[InterMedium] transition-all hover:font-bold cursor-pointer text-(size:--body-comfortable)">
+                <span className="text-cream font-[InterMedium] transition-all hover:text-vibrant-white cursor-pointer text-(size:--body-comfortable)">
                   Community
                 </span>
               </Link>
@@ -458,14 +458,12 @@ const AppsContainer = () => {
                   registering: 'registering...',
                 }}
               ></ConnectWalletButton> */}
-              <DecoratedButton className="w-[172px]" onClick={() => setShowWalletModal(true)}>
-                connect
-              </DecoratedButton>
+              <DecoratedButton onClick={() => setShowWalletModal(true)}>connect</DecoratedButton>
             </div>
           </div>
         </div>
       </div>
-      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 m-auto lg:-mt-30 md:-mt-34 -mt-36 h-wekit">
+      <div className="w-full max-w-[100vw] md:w-[full] md:max-w-[100vw] lg:w-[1024px] lg:max-w-[1024px] bg-transparent p-0 shadow-none border-0 data-[state=open]:animate-none z-50 m-auto md:-mt-34 -mt-36 h-wekit">
         <Tabs value={activeTab} onValueChange={handleTabChange} orientation="vertical" className="w-full">
           <div className="flex justify-center items-start min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)] z-50">
             {/* Desktop sidebar */}
@@ -512,7 +510,7 @@ const AppsContainer = () => {
             </div>
 
             <div
-              className="w-full md:w-[calc(100%-200px)] lg:w-[784px] min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)] p-[80px_16px] pb-10 md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-[8px] rounded-tl-[2rem] rounded-tr-[2rem] border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0"
+              className="w-full md:w-[calc(100%-200px)] lg:w-[784px] min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] p-[80px_16px] pb-10 md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-[8px] rounded-tl-[2rem] rounded-tr-[2rem] border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0"
               style={{ backgroundColor: '#F5F2F2' }}
             >
               <svg
