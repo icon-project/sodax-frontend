@@ -12,15 +12,14 @@ import {
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
-  type SolverConfigParams,
   type HttpUrl,
-  bnUSDLegacyAddress,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
 import { HubChainId, SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
+import { solverConfig } from './config.js';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -52,12 +51,6 @@ const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, ste
 });
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
-
-const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: undefined,
-} satisfies SolverConfigParams;
 
 const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const hubConfig = {
@@ -236,15 +229,15 @@ async function repay(token: string, amount: bigint) {
  * @param amount - The amount of legacy bnUSD tokens to migrate
  * @param recipient - The address that will receive the migrated new bnUSD tokens
  */
-async function migrateBnUSD(
-  amount: bigint,
-  recipient: Address,
-): Promise<void> {
-  const result = await sodax.migration.migratebnUSD({
-    srcChainID: stellarSpokeProvider.chainConfig.chain.id as typeof STELLAR_MAINNET_CHAIN_ID,
-    amount,
-    to: recipient,
-  }, stellarSpokeProvider);
+async function migrateBnUSD(amount: bigint, recipient: Address): Promise<void> {
+  const result = await sodax.migration.migratebnUSD(
+    {
+      srcChainID: stellarSpokeProvider.chainConfig.chain.id as typeof STELLAR_MAINNET_CHAIN_ID,
+      amount,
+      to: recipient,
+    },
+    stellarSpokeProvider,
+  );
 
   if (result.ok) {
     console.log('[migrateBnUSD] txHash', result.value);

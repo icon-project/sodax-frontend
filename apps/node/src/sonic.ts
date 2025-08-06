@@ -401,11 +401,7 @@ async function reverseMigrateSodaToIcx(amount: bigint, to: IconEoaAddress) {
  * @param amount - The amount of new bnUSD tokens to migrate back
  * @param recipient - The address that will receive the migrated legacy bnUSD tokens
  */
-async function reverseMigrateBnUSD(
-  dstChainID: bnUSDLegacySpokeChainId,
-  amount: bigint,
-  recipient: Hex,
-): Promise<void> {
+async function reverseMigrateBnUSD(dstChainID: bnUSDLegacySpokeChainId, amount: bigint, recipient: Hex): Promise<void> {
   const params = {
     srcChainID: HUB_CHAIN_ID,
     amount,

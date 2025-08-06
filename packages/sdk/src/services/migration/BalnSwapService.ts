@@ -2,12 +2,7 @@ import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 // packages/sdk/src/services/hub/BalnSwapService.ts
 import { type Address, type Hex, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { balnSwapAbi } from '../../abis/balnSwap.abi.js';
-import type {
-  EvmContractCall,
-  EvmReturnType,
-  IconContractAddress,
-  PromiseEvmTxReturnType,
-} from '../../types.js';
+import type { EvmContractCall, EvmReturnType, IconContractAddress, PromiseEvmTxReturnType } from '../../types.js';
 import { encodeContractCalls, Erc20Service, getHubAssetInfo } from '../../index.js';
 import type { EvmHubProvider, SonicSpokeProvider } from '../../entities/index.js';
 import invariant from 'tiny-invariant';

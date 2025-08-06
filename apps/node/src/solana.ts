@@ -13,7 +13,6 @@ import {
   getMoneyMarketConfig,
   Sodax,
   type SodaxConfig,
-  type SolverConfigParams,
 } from '@sodax/sdk';
 import { SOLANA_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { Keypair, PublicKey } from '@solana/web3.js';
@@ -21,6 +20,7 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { keccak256 } from 'ethers';
 import type { Address, Hash, Hex } from 'viem';
 import { SolanaWalletProvider } from './wallet-providers/SolanaWalletProvider.js';
+import { solverConfig } from './config.js';
 
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
@@ -40,12 +40,6 @@ const solanaWallet = new SolanaWalletProvider({
   privateKey: keypair.secretKey,
   endpoint: solanaSpokeChainConfig.rpcUrl,
 });
-
-const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: undefined,
-} satisfies SolverConfigParams;
 
 const solanaSpokeProvider = new SolanaSpokeProvider(solanaWallet, solanaSpokeChainConfig);
 
