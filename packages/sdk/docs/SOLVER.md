@@ -67,6 +67,25 @@ const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of
   }
 ```
 
+### Create Intent Params
+
+```typescript
+const createIntentParams = {
+  inputToken: '0x..',  // The address of the input token on spoke chain
+  outputToken: '0x..',  // The address of the output token on spoke chain
+  inputAmount: BigInt(1000000), // The amount of input tokens
+  minOutputAmount: BigInt(900000), // min amount you are expecting to receive
+  deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
+  allowPartialFill: false, // Whether the intent can be partially filled
+  srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
+  dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+  srcAddress: '0x..', // Source address (original address on spoke chain)
+  dstAddress: '0x..', // Destination address (original address on spoke chain)
+  solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
+  data: '0x', // Additional arbitrary data
+} satisfies CreateIntentParams;
+```
+
 ### Token Approval Flow
 
 Before creating an intent, you need to ensure that the Asset Manager contract has permission to spend your tokens. Here's how to handle the approval flow:
@@ -78,26 +97,11 @@ import {
   ARBITRUM_MAINNET_CHAIN_ID
 } from "@sodax/sdk"
 
-const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';  // Address of the ETH token on BSC (spoke chain)
-const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of the wBTC token on ARB (spoke chain)
 const evmWalletAddress = evmWalletProvider.getWalletAddress();
 
 // First check if approval is needed
 const isApproved = await sodax.solver.isAllowanceValid(
-  {
-    inputToken: bscEthToken,  // The address of the input token on spoke chain
-    outputToken: arbWbtcToken,  // The address of the output token on spoke chain
-    inputAmount: BigInt(1000000), // The amount of input tokens
-    minOutputAmount: BigInt(900000), // min amount you are expecting to receive
-    deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
-    allowPartialFill: false, // Whether the intent can be partially filled
-    srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
-    dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
-    srcAddress: evmWalletAddress, // Source address (original address on spoke chain)
-    dstAddress: evmWalletAddress, // Destination address (original address on spoke chain)
-    solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
-    data: '0x', // Additional arbitrary data
-  },
+  createIntentParams,
   bscSpokeProvider
 );
 
@@ -108,10 +112,10 @@ if (!isApproved.ok) {
   // Approval needed - get the Asset Manager address from the chain config
   const assetManagerAddress = bscSpokeProvider.chainConfig.addresses.assetManager;
   
-  // Approve the Asset Manager to spend your tokens
+  // Approve the Asset Manager to transfer your tokens
   const approveResult = await sodax.solver.approve(
     bscEthToken,
-    BigInt(1000000), // Amount to approve
+    createIntentParams.inputAmount, // Amount to approve
     assetManagerAddress,
     bscSpokeProvider
   );
@@ -164,7 +168,7 @@ if (createIntentResult.ok) {
 // Example: Estimate gas for an approval transaction
 const approveResult = await sodax.solver.approve(
   bscEthToken,
-  BigInt(1000000),
+  createIntentParams.inputAmount,
   bscSpokeProvider,
   true // true = get raw transaction
 );
@@ -197,25 +201,7 @@ Example for BSC -> ARB Intent Order:
     ARBITRUM_MAINNET_CHAIN_ID
   } from "@sodax/sdk"
 
-  const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';  // Address of the ETH token on BSC (spoke chain)
-  const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of the wBTC token on ARB (spoke chain)
-
-  const createIntentParams = {
-    inputToken: bscEthToken,  // The address of the input token on spoke chain
-    outputToken: arbWbtcToken,  // The address of the output token on spoke chain
-    inputAmount: BigInt(1000000), // The amount of input tokens
-    minOutputAmount: BigInt(900000), // min amount you are expecting to receive
-    deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
-    allowPartialFill: false, // Whether the intent can be partially filled
-    srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
-    dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
-    srcAddress: '0x..', // Source address (original address on spoke chain)
-    dstAddress: '0x..', // Destination address (original address on spoke chain)
-    solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
-    data: '0x', // Additional arbitrary data
-  } satisfies CreateIntentParams;
-
-    /**
+/**
    *
    * Create swap which does following steps for you
    * 1. create intent deposit tx on spoke (source) chain - createIntent function
