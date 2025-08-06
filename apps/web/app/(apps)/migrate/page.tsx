@@ -18,8 +18,15 @@ import { Button } from '@/components/ui/button';
 import { DecoratedButton } from '@/components/landing/decorated-button';
 // import { Input } from '@/components/ui/input';
 import { NumberInput } from '@/components/ui/number-input';
-import { useXAccounts, useXConnect } from '@sodax/wallet-sdk';
+import { useXAccounts, useXConnect, useXDisconnect, useXAccount, useXBalances } from '@sodax/wallet-sdk';
 import type { XConnector } from '@sodax/wallet-sdk';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { AnimatedTooltip } from '@/components/ui/AnimatedTooltip';
+import type { ChainType, XToken } from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
+import { formatUnits } from 'viem';
+import { spokeChainConfig } from '@sodax/sdk';
 
 const ConnectedChainsDisplay = ({ onClick }: { onClick?: () => void }): React.JSX.Element => {
   const xAccounts = useXAccounts();
@@ -95,7 +102,24 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
   const [shouldTriggerWallet, setShouldTriggerWallet] = useState<boolean>(false);
   const [icxInputValue, setIcxInputValue] = useState<string>('');
   const [sodaInputValue, setSodaInputValue] = useState<string>('');
+  const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
+  const [showTooltip, setShowTooltip] = useState<boolean>(false);
   const xAccounts = useXAccounts();
+
+  // Get ICON account and balance
+  const { address: iconAddress } = useXAccount(ICON_MAINNET_CHAIN_ID);
+  const icxToken = {
+    ...spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
+    xChainId: ICON_MAINNET_CHAIN_ID,
+  } as XToken;
+  const { data: balances } = useXBalances({
+    xChainId: ICON_MAINNET_CHAIN_ID,
+    xTokens: [icxToken],
+    address: iconAddress,
+  });
+
+  const icxBalance = balances?.[icxToken.address] || 0n;
+  const formattedIcxBalance = formatUnits(icxBalance, icxToken.decimals);
 
   const connectedWalletsCount = Object.values(xAccounts).filter(xAccount => xAccount?.address).length;
   const hasTwoWalletsConnected = connectedWalletsCount >= 2;
@@ -110,6 +134,24 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
 
   const handleSodaInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setSodaInputValue(e.target.value);
+  };
+
+  const handleIcxInputFocus = (): void => {
+    setShowTooltip(true);
+  };
+
+  const handleTooltipComplete = (): void => {
+    setShowTooltip(false);
+  };
+
+  const handleMaxClick = (): void => {
+    if (iconAddress && icxBalance > 0n) {
+      setIcxInputValue(formattedIcxBalance);
+    }
+  };
+
+  const handleMigrate = (): void => {
+    console.log('Migrate');
   };
 
   return (
@@ -152,22 +194,32 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
               style={{ paddingRight: 'var(--layout-space-normal)' }}
             >
               <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-                0 available
+                {iconAddress ? `${formattedIcxBalance} available` : '0 available'}
               </div>
               <div className="inline-flex gap-1 items-center">
                 <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold text-(size:--subtitle)">
-                  <NumberInput
-                    value={icxInputValue === '' ? undefined : Number(icxInputValue)}
-                    onChange={handleIcxInputChange}
-                    placeholder="0"
-                    className="rounded-full text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
-                  />
+                  <div className="relative">
+                    <NumberInput
+                      value={icxInputValue === '' ? undefined : Number(icxInputValue)}
+                      onChange={handleIcxInputChange}
+                      onFocus={handleIcxInputFocus}
+                      placeholder="0"
+                      className="rounded-full text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
+                    />
+                    {showTooltip && (
+                      <div className="absolute -top-20 left-15 mt-2 z-50">
+                        <AnimatedTooltip onComplete={handleTooltipComplete} />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(size:--body-super-comfortable)">
                   ICX
                 </div>
                 <button
                   type="button"
+                  onClick={handleMaxClick}
+                  disabled={!iconAddress || icxBalance === 0n}
                   className="ml-1 px-2 py-1 bg-cream-white text-clay rounded text-xs font-medium hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso disabled:bg-cream-white disabled:text-clay-light transition-colors duration-200 cursor-pointer font-['InterBold'] text-[9px] leading-[1.2] rounded-full h-4"
                 >
                   MAX
@@ -226,6 +278,7 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
                     value={sodaInputValue === '' ? undefined : Number(sodaInputValue)}
                     onChange={handleSodaInputChange}
                     placeholder="0"
+                    readOnly
                     className="rounded-full text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
                   />
                 </div>
@@ -242,10 +295,10 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
           <Button
             variant="cherry"
             className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white"
-            onClick={handleConnectWallets}
-            disabled={hasTwoWalletsConnected}
+            onClick={!hasTwoWalletsConnected ? handleConnectWallets : handleMigrate}
+            disabled={hasTwoWalletsConnected && Number(icxInputValue) < 1}
           >
-            {hasTwoWalletsConnected ? 'Enter amount' : 'Connect wallets'}
+            {!hasTwoWalletsConnected ? 'Connect wallets' : Number(icxInputValue) >= 1 ? 'Migrate' : 'Enter amount'}
           </Button>
           <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
             Takes ~1 min · Network fee: ~0.02 ICX
@@ -300,6 +353,7 @@ const AppsContainer = () => {
   const [arrowPosition, setArrowPosition] = useState(252);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);
   const { mutateAsync: xConnect } = useXConnect();
+  const xDisconnect = useXDisconnect();
   const xAccounts = useXAccounts();
   const connectedChains = Object.entries(xAccounts)
     .filter(([_, account]) => account?.address)
@@ -353,6 +407,13 @@ const AppsContainer = () => {
         setConnectedWalletName('');
         setShowTermsModal(false);
       }
+    }
+  };
+
+  const handleDisconnect = async (): Promise<void> => {
+    if (pendingWalletConnection) {
+      const { xChainType } = pendingWalletConnection;
+      xDisconnect(xChainType as ChainType);
     }
   };
 
@@ -652,6 +713,7 @@ const AppsContainer = () => {
         open={showTermsModal}
         onOpenChange={setShowTermsModal}
         onAccept={handleTermsAccepted}
+        onDisconnect={handleDisconnect}
         walletName={connectedWalletName}
       />
     </div>

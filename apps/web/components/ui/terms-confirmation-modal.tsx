@@ -11,6 +11,7 @@ interface TermsConfirmationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAccept: () => void | Promise<void>;
+  onDisconnect: () => void | Promise<void>;
   walletName?: string;
 }
 
@@ -18,6 +19,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
   open,
   onOpenChange,
   onAccept,
+  onDisconnect,
   walletName,
 }) => {
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
@@ -40,6 +42,11 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
     await onAccept(); // Call the original onAccept callback
   };
 
+  const disconnectWallet = async (): Promise<void> => {
+    await onDisconnect();
+    handleClose();
+  };
+
   // Default button text if no wallet name is provided
   const buttonText = walletName ? `Wallet sign-in ${walletName}` : 'Continue to wallets';
 
@@ -49,6 +56,9 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
         <DialogContent
           className="max-w-full h-[calc(100vh-205px)] sm:h-fit md:max-w-[480px] shadow-none bg-white py-22 md:py-10 px-12 gap-6 fixed bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0 sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-t-[32px] rounded-b-[0px] sm:rounded-[32px] flex flex-col"
           hideCloseButton
+          onInteractOutside={e => {
+            e.preventDefault();
+          }}
         >
           <DialogTitle>
             <div className="flex flex-row justify-between items-center">
@@ -58,9 +68,6 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
                   Confirm terms
                 </div>
               </div>
-              <DialogClose asChild>
-                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
-              </DialogClose>
             </div>
           </DialogTitle>
 
@@ -85,15 +92,22 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
             </label>
           </div>
 
-          <div className="flex">
+          <div className="flex gap-2">
             <Button
               variant="cherry"
               onClick={handleAccept}
               disabled={!acceptedTerms}
-              className="flex-1 bg-cherry-bright hover:bg-cherry-brighter disabled:bg-cherry-grey disabled:cursor-not-allowed lg:max-w-[197px] md:max-w-[188px] h-10 font-['InterRegular'] cursor-pointer"
+              className="bg-cherry-bright hover:bg-cherry-brighter disabled:bg-cherry-grey disabled:cursor-not-allowed lg:max-w-[197px] md:max-w-[188px] h-10 font-['InterRegular'] cursor-pointer w-38"
             >
-              Continue to wallets
+              Accept terms
               <ArrowRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="cream"
+              onClick={disconnectWallet}
+              className="h-10 font-['InterRegular'] cursor-pointer w-30"
+            >
+              Disconnect
             </Button>
           </div>
         </DialogContent>

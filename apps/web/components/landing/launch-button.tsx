@@ -40,7 +40,7 @@ export const LaunchButton = ({
   };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    router.push('/apps-container');
+    router.push('/migrate');
   };
 
   return (
