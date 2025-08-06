@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CircularProgress } from './CircularProgress';
 import svgPaths from '@/components/ui/imports/svg-epkf1qslqq';
@@ -76,12 +76,12 @@ export function AnimatedTooltip({ onComplete }: AnimatedTooltipProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  const animationRef = useRef<number>();
-  const startTimeRef = useRef<number>();
-  const pauseTimeRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
+  const startTimeRef = useRef<number | undefined>(undefined);
+  const pauseTimeRef = useRef<number | undefined>(undefined);
   const elapsedWhenPausedRef = useRef<number>(0);
 
-  const hideTooltip = () => {
+  const hideTooltip = useCallback(() => {
     setIsVisible(false);
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
@@ -90,7 +90,7 @@ export function AnimatedTooltip({ onComplete }: AnimatedTooltipProps) {
     setTimeout(() => {
       onComplete?.();
     }, 300);
-  };
+  }, [onComplete]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -191,7 +191,7 @@ export function AnimatedTooltip({ onComplete }: AnimatedTooltipProps) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [onComplete, isPaused, isHovered]);
+  }, [hideTooltip, isPaused, isHovered]);
 
   // Handle completion when progress reaches 100% and user stops hovering
   useEffect(() => {
@@ -201,7 +201,7 @@ export function AnimatedTooltip({ onComplete }: AnimatedTooltipProps) {
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [progress, isHovered, isVisible]);
+  }, [progress, isHovered, isVisible, hideTooltip]);
 
   return (
     <AnimatePresence>

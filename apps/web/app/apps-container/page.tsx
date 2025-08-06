@@ -648,12 +648,12 @@ const AppsContainer = () => {
         onWalletSelected={handleWalletSelected}
       />
 
-      <TermsConfirmationModal
+      {/* <TermsConfirmationModal
         open={showTermsModal}
         onOpenChange={setShowTermsModal}
         onAccept={handleTermsAccepted}
         walletName={connectedWalletName}
-      />
+      /> */}
     </div>
   );
 };
