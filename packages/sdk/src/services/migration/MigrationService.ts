@@ -84,11 +84,11 @@ export const SupportedMigrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;
 export type MigrationTokens = (typeof SupportedMigrationTokens)[number];
 
 export class MigrationService {
-  private readonly icxMigration: IcxMigrationService;
-  private readonly bnUSDMigrationService: BnUSDMigrationService;
-  private readonly balnSwapService: BalnSwapService;
-  private readonly hubProvider: EvmHubProvider;
-  private readonly config: MigrationServiceConfig;
+  readonly icxMigration: IcxMigrationService;
+  readonly bnUSDMigrationService: BnUSDMigrationService;
+  readonly balnSwapService: BalnSwapService;
+  readonly hubProvider: EvmHubProvider;
+  readonly config: MigrationServiceConfig;
 
   constructor(hubProvider: EvmHubProvider, config?: MigrationServiceConfig) {
     this.hubProvider = hubProvider;
@@ -694,8 +694,8 @@ export class MigrationService {
             'srcChainId must be a legacy bnUSD chain (icon, sui, stellar) if srcbnUSD is a legacy bnUSD token',
           );
           invariant(
-            isLegacybnUSDChainId(params.dstChainId),
-            'dstChainId must be a legacy bnUSD chain (icon, sui, stellar) if dstbnUSD is a legacy bnUSD token',
+            isNewbnUSDChainId(params.dstChainId),
+            'dstChainId must be a new bnUSD chain (all spoke chains besides Icon) if dstbnUSD is a legacy bnUSD token',
           );
         }
 
