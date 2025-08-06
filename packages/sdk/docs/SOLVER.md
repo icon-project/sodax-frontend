@@ -229,7 +229,6 @@ Example for BSC -> ARB Intent Order:
   const swapResult = await sodax.solver.swap(
     createIntentParams,
     bscSpokeProvider,
-    partnerFeeAmount,
   );
 
     if (!swapResult.ok) {
