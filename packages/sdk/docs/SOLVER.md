@@ -109,14 +109,10 @@ if (!isApproved.ok) {
   // Handle error
   console.error('Failed to check allowance:', isApproved.error);
 } else if (!isApproved.value) {
-  // Approval needed - get the Asset Manager address from the chain config
-  const assetManagerAddress = bscSpokeProvider.chainConfig.addresses.assetManager;
-  
-  // Approve the Asset Manager to transfer your tokens
+  // Approve Sodax to transfer your tokens
   const approveResult = await sodax.solver.approve(
     bscEthToken,
     createIntentParams.inputAmount, // Amount to approve
-    assetManagerAddress,
     bscSpokeProvider
   );
 
