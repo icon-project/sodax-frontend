@@ -12,7 +12,6 @@ import {
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
-  type SolverConfigParams,
   type HttpUrl,
   UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
@@ -21,6 +20,7 @@ import { StellarWalletProvider, type StellarWalletConfig } from './wallet-provid
 import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
+import { solverConfig } from './config.js';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -52,12 +52,6 @@ const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, ste
 });
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
-
-const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: undefined,
-} satisfies SolverConfigParams;
 
 const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const hubConfig = {

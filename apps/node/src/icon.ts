@@ -15,13 +15,13 @@ import {
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
-  type SolverConfigParams,
   type MigrationParams,
   LockupPeriod,
   type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
+import { solverConfig } from './config.js';
 
 // load PK from .env
 const privateKey = process.env.ICON_PRIVATE_KEY;
@@ -53,12 +53,6 @@ const hubConfig = {
 const hubProvider = new EvmHubProvider(hubConfig);
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
-
-const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef', // mainnet
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: undefined,
-} satisfies SolverConfigParams;
 
 const sodax = new Sodax({
   solver: solverConfig,

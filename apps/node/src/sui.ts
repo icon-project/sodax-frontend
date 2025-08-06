@@ -20,6 +20,7 @@ import { SuiWalletProvider } from './sui-wallet-provider.js';
 
 import dotenv from 'dotenv';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
+import { solverConfig } from './config.js';
 dotenv.config();
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -45,12 +46,6 @@ const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
   chainConfig: getHubChainConfig(HUB_CHAIN_ID),
 } satisfies EvmHubProviderConfig;
-
-const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: undefined,
-} satisfies SolverConfigParams;
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
