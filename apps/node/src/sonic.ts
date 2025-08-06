@@ -20,10 +20,7 @@ import {
   type MoneyMarketRepayParams,
   type IconEoaAddress,
   type IcxCreateRevertMigrationParams,
-  BnUSDMigrationService,
-  type BnUSDRevertMigrationParams,
-  encodeAddress,
-  bnUSDLegacySpokeChainId,
+  type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
@@ -402,16 +399,20 @@ async function reverseMigrateSodaToIcx(amount: bigint, to: IconEoaAddress) {
  * @param recipient - The address that will receive the migrated legacy bnUSD tokens
  */
 async function reverseMigrateBnUSD(
-  dstChainID: bnUSDLegacySpokeChainId,
+  dstChainID: SpokeChainId,
   amount: bigint,
   recipient: Hex,
+  legacybnUSD: string,
+  newbnUSD: string,
 ): Promise<void> {
   const params = {
-    srcChainID: HUB_CHAIN_ID,
+    srcChainId: HUB_CHAIN_ID,
+    srcbnUSD: newbnUSD,
+    dstChainId: dstChainID,
+    dstbnUSD: legacybnUSD,
     amount,
     to: recipient,
-    dstChainID: dstChainID,
-  } satisfies BnUSDRevertMigrationParams;
+  } satisfies UnifiedBnUSDMigrateParams;
 
   const isAllowed = await sodax.migration.isAllowanceValid(params, 'revert', spokeProvider);
 
@@ -435,15 +436,15 @@ async function reverseMigrateBnUSD(
     }
   }
 
-  const result = await sodax.migration.reverseMigratebnUSD(params, spokeProvider);
+  const result = await sodax.migration.migratebnUSD(params, spokeProvider);
 
   if (result.ok) {
-    console.log('[migrateBnUSD] txHash', result.value);
+    console.log('[reverseMigrateBnUSD] txHash', result.value);
     const [spokeTxHash, hubTxHash] = result.value;
-    console.log('[migrateBnUSD] hubTxHash', hubTxHash);
-    console.log('[migrateBnUSD] spokeTxHash', spokeTxHash);
+    console.log('[reverseMigrateBnUSD] hubTxHash', hubTxHash);
+    console.log('[reverseMigrateBnUSD] spokeTxHash', spokeTxHash);
   } else {
-    console.error('[migrateBnUSD] error', result.error);
+    console.error('[reverseMigrateBnUSD] error', result.error);
   }
 }
 
@@ -505,10 +506,12 @@ async function main() {
     const to = process.argv[4] as IconEoaAddress;
     await reverseMigrateSodaToIcx(amount, to);
   } else if (functionName === 'reverseMigrateBnUSD') {
-    const dstChainID = process.argv[3] as bnUSDLegacySpokeChainId;
+    const dstChainID = process.argv[3] as SpokeChainId;
     const amount = BigInt(process.argv[4]);
     const recipient = process.argv[5] as Hex;
-    await reverseMigrateBnUSD(dstChainID, amount, recipient);
+    const legacybnUSD = process.argv[6] as string;
+    const newbnUSD = process.argv[7] as string;
+    await reverseMigrateBnUSD(dstChainID, amount, recipient, legacybnUSD, newbnUSD);
   } else {
     console.log(
       'Function not recognized. Please use one of: "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", "repayHighLevel", "reverseMigrate", or "reverseMigrateBnUSD".',

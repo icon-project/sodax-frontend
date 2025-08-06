@@ -1,4 +1,10 @@
-import { isValidSpokeChainId } from './../../constants.js';
+import {
+  isLegacybnUSDChainId,
+  isLegacybnUSDToken,
+  isNewbnUSDChainId,
+  isNewbnUSDToken,
+  isValidSpokeChainId,
+} from './../../constants.js';
 import invariant from 'tiny-invariant';
 import {
   type EvmHubProvider,
@@ -22,26 +28,25 @@ import {
   encodeAddress,
   type RelayError,
   isIconAddress,
-  type BnUSDMigrateParams,
   BnUSDMigrationService,
   type GetSpokeDepositParamsType,
-  type BnUSDRevertMigrationParams,
   SuiSpokeProvider,
   StellarSpokeProvider,
   BalnSwapService,
   type BalnMigrateParams,
+  type UnifiedBnUSDMigrateParams,
 } from '../../index.js';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { isAddress } from 'viem';
 
 export type GetMigrationFailedPayload<T extends MigrationErrorCode> = T extends 'CREATE_MIGRATION_INTENT_FAILED'
-  ? IcxMigrateParams | BnUSDMigrateParams | BalnMigrateParams
+  ? IcxMigrateParams | UnifiedBnUSDMigrateParams | BalnMigrateParams
   : T extends 'CREATE_REVERT_MIGRATION_INTENT_FAILED'
-    ? IcxCreateRevertMigrationParams | BnUSDRevertMigrationParams
+    ? IcxCreateRevertMigrationParams
     : T extends 'REVERT_MIGRATION_FAILED'
-      ? IcxCreateRevertMigrationParams | BnUSDRevertMigrationParams
+      ? IcxCreateRevertMigrationParams | UnifiedBnUSDMigrateParams
       : T extends 'MIGRATION_FAILED'
-        ? IcxMigrateParams | BnUSDMigrateParams | BalnMigrateParams
+        ? IcxMigrateParams | UnifiedBnUSDMigrateParams | BalnMigrateParams
         : never;
 
 export type MigrationFailedErrorData<T extends MigrationErrorCode> = {
@@ -72,8 +77,8 @@ export type MigrationError<T extends MigrationErrorCode> = {
 
 export type MigrationAction = 'migrate' | 'revert';
 
-export type MigrationParams = IcxMigrateParams | BnUSDMigrateParams | BalnMigrateParams;
-export type MigrationRevertParams = IcxCreateRevertMigrationParams | BnUSDRevertMigrationParams;
+export type MigrationParams = IcxMigrateParams | UnifiedBnUSDMigrateParams | BalnMigrateParams;
+export type MigrationRevertParams = IcxCreateRevertMigrationParams | UnifiedBnUSDMigrateParams;
 
 export const SupportedMigrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;
 export type MigrationTokens = (typeof SupportedMigrationTokens)[number];
@@ -189,7 +194,7 @@ export class MigrationService {
    *
    */
   public async approve<S extends SpokeProvider, R extends boolean = false>(
-    params: IcxCreateRevertMigrationParams | BnUSDRevertMigrationParams,
+    params: IcxCreateRevertMigrationParams | UnifiedBnUSDMigrateParams,
     action: MigrationAction,
     spokeProvider: S,
     raw?: R,
@@ -233,26 +238,36 @@ export class MigrationService {
   }
 
   /**
-   * Migrates legacy bnUSD tokens to new bnUSD tokens on the hub chain (sonic).
-   * This function handles the migration of legacy bnUSD tokens to new bnUSD tokens.
+   * Migrates bnUSD tokens between legacy and new formats across supported spoke chains via the hub chain (sonic).
+   * Handles both legacy-to-new and new-to-legacy bnUSD migrations, enforcing validation and relaying the transaction.
    *
-   * @param params - The parameters for the migration transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
+   * @param params - Migration parameters, including source/destination chain IDs, token addresses, amount, and recipient.
+   * @param spokeProvider - The SpokeProvider instance for the source chain.
+   * @param timeout - Optional timeout in milliseconds for the relay operation (default: 60 seconds).
+   * @param unchecked - Optional flag to skip validation checks (default: false).
    * @returns {Promise<Result<[string, Hex], MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError>>}
-   * Returns a Result containing a tuple of [spokeTxHash, hubTxHash] if successful,
-   * or an error describing why the migration or relay failed.
-   *
+   *   Result containing a tuple: [spokeTxHash, hubTxHash] if successful, or an error describing the failure.
    *
    * @example
-   * // Example: Migrate legacy bnUSD tokens to new bnUSD tokens on the hub chain (sonic)
+   * // Migrate legacy bnUSD to new bnUSD
    * const result = await sodax.migration.migratebnUSD({
-   *   address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // mock legacy bnUSD address
-   *   srcChainID: '0x1.icon', // source chain ID (e.g., ICON_MAINNET_CHAIN_ID)
-   *   amount: 1000000000000000000n,
-   *   to: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd', // recipient address
-   *   dstChainID: 'sonic', // destination hub chain ID (e.g., SONIC_MAINNET_CHAIN_ID)
+   *   srcChainId: '0x1.icon', // Source chain ID (legacy)
+   *   dstChainId: 'sonic',    // Destination chain ID (new)
+   *   srcbnUSD: 'cx...',      // Legacy bnUSD token address
+   *   dstbnUSD: '0x...',      // New bnUSD token address
+   *   amount: 1000n,          // Amount to migrate
+   *   to: '0x...',            // Recipient address on destination chain
    * }, iconSpokeProvider);
+   *
+   * // Reverse migration: new bnUSD to legacy bnUSD
+   * const result = await sodax.migration.migratebnUSD({
+   *   srcChainId: 'sonic',    // Source chain ID (new)
+   *   dstChainId: '0x1.icon', // Destination chain ID (legacy)
+   *   srcbnUSD: '0x...',      // New bnUSD token address
+   *   dstbnUSD: 'cx...',      // Legacy bnUSD token address
+   *   amount: 1000n,          // Amount to migrate
+   *   to: 'hx...',            // Recipient address on destination chain
+   * }, sonicSpokeProvider);
    *
    * if (result.ok) {
    *   // result.value is a tuple: [spokeTxHash, hubTxHash]
@@ -265,9 +280,10 @@ export class MigrationService {
    * }
    */
   async migratebnUSD(
-    params: BnUSDMigrateParams,
+    params: UnifiedBnUSDMigrateParams,
     spokeProvider: SpokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
+    unchecked = false,
   ): Promise<
     Result<
       [string, Hex],
@@ -275,7 +291,7 @@ export class MigrationService {
     >
   > {
     try {
-      const txResult = await this.createMigratebnUSDIntent(params, spokeProvider);
+      const txResult = await this.createMigratebnUSDIntent(params, spokeProvider, unchecked);
 
       if (!txResult.ok) {
         return {
@@ -302,84 +318,6 @@ export class MigrationService {
         ok: false,
         error: {
           code: 'MIGRATION_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
-      };
-    }
-  }
-
-  /**
-   * Reverses the migration of legacy bnUSD tokens to new bnUSD tokens on the hub chain (sonic).
-   * This function handles the reversal of the migration of legacy bnUSD tokens to new bnUSD tokens.
-   *
-   * @param params - The parameters for the migration transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[string, Hex], MigrationError<'REVERT_MIGRATION_FAILED'> | MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'> | RelayError>>}
-   * Returns a Result containing a tuple of [spokeTxHash, hubTxHash] if successful,
-   * or an error describing why the revert migration or relay failed.
-   *
-   *
-   * @example
-   * // Example: Reverse the migration of legacy bnUSD tokens to new bnUSD tokens on the hub chain (sonic)
-   * const result = await sodax.migration.reverseMigratebnUSD({
-   *   srcChainID: 'sonic', // source chain ID (e.g., SONIC_MAINNET_CHAIN_ID)
-   *   amount: 1000000000000000000n,
-   *   to: '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd', // The spoke chain address that will receive the migrated legacy bnUSD tokens
-   *   dstChainID: '0x1.icon', // destination chain ID of type bnUSDLegacySpokeChainId (e.g., ICON_MAINNET_CHAIN_ID)
-   * }, iconSpokeProvider);
-   *
-   * if (result.ok) {
-   *   // result.value is a tuple: [spokeTxHash, hubTxHash]
-   *   const [spokeTxHash, hubTxHash] = result.value;
-   *   console.log('[reverseMigrateBnUSD] hubTxHash', hubTxHash);
-   *   console.log('[reverseMigrateBnUSD] spokeTxHash', spokeTxHash);
-   * } else {
-   *   // Handle revert migration error
-   *   console.error('[reverseMigrateBnUSD] error', result.error);
-   * }
-   */
-  async reverseMigratebnUSD(
-    params: BnUSDRevertMigrationParams,
-    spokeProvider: SonicSpokeProvider,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<
-    Result<
-      [string, Hex],
-      MigrationError<'REVERT_MIGRATION_FAILED'> | MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'> | RelayError
-    >
-  > {
-    try {
-      const txResult = await this.createRevertMigratebnUSDIntent(params, spokeProvider);
-
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: txResult.error,
-        };
-      }
-
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        undefined,
-        spokeProvider,
-        this.config.relayerApiEndpoint,
-        timeout,
-      );
-
-      if (!packetResult.ok) {
-        return packetResult;
-      }
-
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'REVERT_MIGRATION_FAILED',
           data: {
             payload: params,
             error: error,
@@ -468,7 +406,7 @@ export class MigrationService {
     }
   }
 
-    /**
+  /**
    * Creates a revert migration (SODA to ICX) intent and submits (relays) it to the spoke chain.
    * @param params - The parameters for the revert migration transaction.
    * @param spokeProvider - The SonicSpokeProvider instance.
@@ -499,52 +437,51 @@ export class MigrationService {
    * ] = result.value;
    * console.log('Revert migration transaction hashes:', { hubTxHash, spokeTxHash });
    */
-    async revertMigrateSodaToIcx(
-      params: Omit<IcxCreateRevertMigrationParams, 'wICX'>,
-      spokeProvider: SonicSpokeProvider,
-      timeout = DEFAULT_RELAY_TX_TIMEOUT,
-    ): Promise<
-      Result<
-        [Hex, Hex],
-        MigrationError<'REVERT_MIGRATION_FAILED'> | MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'> | RelayError
-      >
-    > {
-      try {
-        const txResult = await this.createRevertSodaToIcxMigrationIntent(params, spokeProvider);
-  
-        if (!txResult.ok) {
-          return txResult;
-        }
-  
-        const packetResult = await relayTxAndWaitPacket(
-          txResult.value,
-          undefined,
-          spokeProvider,
-          this.config.relayerApiEndpoint,
-          timeout,
-        );
-  
-        if (!packetResult.ok) {
-          return packetResult;
-        }
-  
-        return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
-      } catch (error) {
-        return {
-          ok: false,
-          error: {
-            code: 'REVERT_MIGRATION_FAILED',
-            data: {
-              payload: params,
-              error: error,
-            },
-          },
-        };
-      }
-    }
-  
+  async revertMigrateSodaToIcx(
+    params: Omit<IcxCreateRevertMigrationParams, 'wICX'>,
+    spokeProvider: SonicSpokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  ): Promise<
+    Result<
+      [Hex, Hex],
+      MigrationError<'REVERT_MIGRATION_FAILED'> | MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'> | RelayError
+    >
+  > {
+    try {
+      const txResult = await this.createRevertSodaToIcxMigrationIntent(params, spokeProvider);
 
-    /**
+      if (!txResult.ok) {
+        return txResult;
+      }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        undefined,
+        spokeProvider,
+        this.config.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return packetResult;
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'REVERT_MIGRATION_FAILED',
+          data: {
+            payload: params,
+            error: error,
+          },
+        },
+      };
+    }
+  }
+
+  /**
    * Migrates BALN tokens to SODA tokens on the hub chain (sonic).
    * This function handles the migration of BALN tokens to SODA tokens.
    *
@@ -577,106 +514,44 @@ export class MigrationService {
    * ] = result.value;
    * console.log('Migration transaction hashes:', { spokeTxHash, hubTxHash });
    */
-    async migrateBaln(
-      params: BalnMigrateParams,
-      spokeProvider: IconSpokeProvider,
-      timeout = DEFAULT_RELAY_TX_TIMEOUT,
-    ): Promise<
-      Result<
-        [Hex, Hex],
-        MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError
-      >
-    > {
-      try {
-        const txResult = await this.createMigrateBalnIntent(params, spokeProvider);
-  
-        if (!txResult.ok) {
-          return {
-            ok: false,
-            error: txResult.error,
-          };
-        }
-  
-        const packetResult = await relayTxAndWaitPacket(
-          txResult.value,
-          undefined,
-          spokeProvider,
-          this.config.relayerApiEndpoint,
-          timeout,
-        );
-  
-        if (!packetResult.ok) {
-          return packetResult;
-        }
-  
-        return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
-      } catch (error) {
+  async migrateBaln(
+    params: BalnMigrateParams,
+    spokeProvider: IconSpokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  ): Promise<
+    Result<
+      [Hex, Hex],
+      MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError
+    >
+  > {
+    try {
+      const txResult = await this.createMigrateBalnIntent(params, spokeProvider);
+
+      if (!txResult.ok) {
         return {
           ok: false,
-          error: {
-            code: 'MIGRATION_FAILED',
-            data: {
-              payload: params,
-              error: error,
-            },
-          },
+          error: txResult.error,
         };
       }
-    }
 
-  /**
-   * Creates a revert migration intent and submits (relays) it to the spoke chain.
-   * @param params - The parameters for the revert migration transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param raw - Whether to return the raw transaction hash instead of the transaction receipt
-   * @returns {Promise<Result<TxReturnType<bnUSDLegacyMigrationProviders, R>>>} - Returns the raw transaction payload or transaction hash
-   *
-   * @example
-   * const result = await migrationService.createRevertMigratebnUSDIntent(
-   *   {
-   *     srcChainID: 'sonic', // The source chain ID where the new bnUSD token exists (hub chain)
-   *     amount: 1000n,     // The amount of new bnUSD tokens to migrate back
-   *     to: '0x...',       // The spoke chain address that will receive the migrated legacy bnUSD tokens
-   *     dstChainID: '0x1.icon',  // The destination chain ID for the migration (spoke chain)
-   *   },
-   *   spokeProvider, // IconSpokeProvider instance
-   *   true // Optional raw flag to return the raw transaction hash instead of the transaction receipt
-   * );
-   *
-   */
-  async createRevertMigratebnUSDIntent<R extends boolean = false>(
-    params: BnUSDRevertMigrationParams,
-    spokeProvider: SonicSpokeProvider,
-    raw?: R,
-  ): Promise<Result<TxReturnType<SonicSpokeProvider, R>, MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'>>> {
-    try {
-      const migrationData = this.bnUSDMigrationService.revertMigrationData({
-        ...params,
-        legacybnUSD: params.legacybnUSD,
-        newbnUSD: params.newbnUSD,
-      });
-
-      const txResult = await SpokeService.deposit(
-        {
-          from: await spokeProvider.walletProvider.getWalletAddressBytes(),
-          token: params.newbnUSD,
-          amount: params.amount,
-          data: migrationData,
-        } as GetSpokeDepositParamsType<SonicSpokeProvider>,
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        undefined,
         spokeProvider,
-        this.hubProvider,
-        raw,
+        this.config.relayerApiEndpoint,
+        timeout,
       );
 
-      return {
-        ok: true,
-        value: txResult as TxReturnType<SonicSpokeProvider, R>,
-      };
+      if (!packetResult.ok) {
+        return packetResult;
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
     } catch (error) {
       return {
         ok: false,
         error: {
-          code: 'CREATE_REVERT_MIGRATION_INTENT_FAILED',
+          code: 'MIGRATION_FAILED',
           data: {
             payload: params,
             error: error,
@@ -748,48 +623,123 @@ export class MigrationService {
   }
 
   /**
-   * Creates a bnUSD migration intent on spoke chain (icon).
+   * Creates a bnUSD migration or reverse migration (legacy bnUSD to new bnUSD or vice versa) intent on a spoke chain.
    *
-   * @param params - The parameters for the bnUSD migration transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param raw - Whether to return the raw transaction hash instead of the transaction receipt
-   * @returns {Promise<Result<TxReturnType<bnUSDLegacyMigrationProviders, R>>>} - Returns the raw transaction payload or transaction hash
+   * This function prepares the transaction data for migrating legacy bnUSD to new bnUSD,
+   * or for reverting (migrating new bnUSD back to legacy bnUSD), depending on the provided parameters.
+   * It performs validation on chain IDs and token addresses unless `unchecked` is set to true.
+   *
+   * @param params - The parameters for the bnUSD migration or reverse migration transaction.
+   * @param spokeProvider - The spoke provider instance for the source chain.
+   * @param unchecked - If true, skips input validation (use with caution).
+   * @param raw - If true, returns the raw transaction hash instead of the transaction receipt.
+   * @returns {Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>>}
+   *   Returns a Result containing the transaction payload or hash, or an error if creation failed.
    *
    * @example
+   * // Migrate legacy bnUSD to new bnUSD
    * const result = await migrationService.createMigratebnUSDIntent(
    *   {
-   *     srcChainID: 'sonic', // The source chain ID where the legacy bnUSD token exists (spoke chain)
-   *     amount: 1000n,     // The amount of legacy bnUSD tokens to migrate
-   *     to: '0x...',       // The hub (sonic) chain address that will receive the migrated new bnUSD tokens
-   *     dstChainID: '0x1.icon',  // The destination chain ID for the migration (hub chain)
-   *   },
-   *   spokeProvider, // IconSpokeProvider instance
-   *   true // Optional raw flag to return the raw transaction hash instead of the transaction receipt
+   *     srcChainId: '0x1.icon', // Source chain ID (legacy bnUSD chain)
+   *     dstChainId: 'sonic',    // Destination chain ID (new bnUSD chain)
+   *     srcbnUSD: 'cx...',      // Legacy bnUSD token address
+   *     dstbnUSD: '0x...',      // New bnUSD token address
+   *     amount: 1000n,          // Amount to migrate
+   *     to: '0x...',            // Recipient address on destination chain
+   *   } satisfies UnifiedBnUSDMigrateParams,
+   *   spokeProvider, // SpokeProvider instance
+   *   false,         // Optional unchecked flag (validation is skipped)
+   *   true           // Optional raw flag
    * );
    *
+   * // Reverse migration: new bnUSD to legacy bnUSD
+   * const result = await migrationService.createMigratebnUSDIntent(
+   *   {
+   *     srcChainId: 'sonic',    // Source chain ID (new bnUSD chain)
+   *     dstChainId: '0x1.icon', // Destination chain ID (legacy bnUSD chain)
+   *     srcbnUSD: '0x...',      // New bnUSD token address
+   *     dstbnUSD: 'cx...',      // Legacy bnUSD token address
+   *     amount: 1000n,          // Amount to migrate
+   *     to: 'hx...',            // Recipient address on destination chain
+   *   } satisfies UnifiedBnUSDMigrateParams,
+   *   spokeProvider
+   * );
    */
   async createMigratebnUSDIntent<S extends SpokeProvider, R extends boolean = false>(
-    params: BnUSDMigrateParams,
+    params: UnifiedBnUSDMigrateParams,
     spokeProvider: S,
+    unchecked = false,
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
-      invariant(isValidSpokeChainId(params.srcChainID), 'Invalid spoke source chain ID');
-      invariant(isValidSpokeChainId(params.dstChainID), 'Invalid spoke destination chain ID');
-      invariant(params.legacybnUSD.length > 0, 'Legacy bnUSD token address is required');
-      invariant(params.newbnUSD.length > 0, 'New bnUSD token address is required');
-      invariant(params.amount > 0, 'Amount must be greater than 0');
-      invariant(params.to.length > 0, 'Recipient address is required');
+      if (!unchecked) {
+        invariant(isValidSpokeChainId(params.srcChainId), 'Invalid spoke source chain ID');
+        invariant(isValidSpokeChainId(params.dstChainId), 'Invalid spoke destination chain ID');
+        invariant(params.srcbnUSD.length > 0, 'Legacy bnUSD token address is required');
+        invariant(params.dstbnUSD.length > 0, 'New bnUSD token address is required');
+        invariant(params.amount > 0, 'Amount must be greater than 0');
+        invariant(params.to.length > 0, 'Recipient address is required');
+        invariant(
+          !(isLegacybnUSDToken(params.srcbnUSD) && isLegacybnUSDToken(params.dstbnUSD)),
+          'srcbnUSD and dstbnUSD cannot both be legacy bnUSD tokens',
+        );
+      }
 
-      const migrationData = this.bnUSDMigrationService.migrateData({
-        ...params,
-        to: encodeAddress(this.hubProvider.chainConfig.chain.id, params.to),
-      });
+      let migrationData: Hex;
+      if (isLegacybnUSDToken(params.srcbnUSD)) {
+        // migration from legacy bnUSD to new bnUSD
+        if (!unchecked) {
+          invariant(
+            isLegacybnUSDChainId(params.srcChainId),
+            'srcChainId must be a legacy bnUSD chain (icon, sui, stellar) if srcbnUSD is a legacy bnUSD token',
+          );
+          invariant(
+            isLegacybnUSDChainId(params.dstChainId),
+            'dstChainId must be a legacy bnUSD chain (icon, sui, stellar) if dstbnUSD is a legacy bnUSD token',
+          );
+        }
+
+        migrationData = this.bnUSDMigrationService.migrateData({
+          srcChainId: params.srcChainId,
+          legacybnUSD: params.srcbnUSD,
+          newbnUSD: params.dstbnUSD,
+          dstChainId: params.dstChainId,
+          amount: params.amount,
+          to: encodeAddress(params.dstChainId, params.to),
+        });
+      } else if (isLegacybnUSDToken(params.dstbnUSD)) {
+        // reverse migration from new bnUSD to legacy bnUSD
+        if (!unchecked) {
+          invariant(
+            isLegacybnUSDChainId(params.dstChainId),
+            'dstChainId must be a legacy bnUSD chain (sui, stellar, icon) if dstbnUSD is a legacy bnUSD token',
+          );
+          invariant(
+            isNewbnUSDToken(params.srcbnUSD),
+            'srcbnUSD must be a new bnUSD token if dstbnUSD is a legacy bnUSD token',
+          );
+          invariant(
+            isNewbnUSDChainId(params.srcChainId),
+            'srcChainId must be a new bnUSD chain (all spoke chains besides Icon) if srcbnUSD is a new bnUSD token',
+          );
+        }
+
+        migrationData = this.bnUSDMigrationService.revertMigrationData({
+          srcChainId: params.srcChainId,
+          legacybnUSD: params.dstbnUSD,
+          newbnUSD: params.srcbnUSD,
+          dstChainId: params.dstChainId,
+          amount: params.amount,
+          to: encodeAddress(params.dstChainId, params.to),
+        });
+      } else {
+        throw new Error('srcbnUSD or dstbnUSD must be a legacy bnUSD token');
+      }
 
       const txResult = await SpokeService.deposit(
         {
           from: await spokeProvider.walletProvider.getWalletAddress(),
-          token: params.legacybnUSD,
+          token: params.srcbnUSD,
           amount: params.amount,
           data: migrationData,
         } as GetSpokeDepositParamsType<S>,
