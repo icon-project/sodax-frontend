@@ -120,8 +120,7 @@ if (!isApproved.ok) {
     // Handle error
     console.error('Failed to approve tokens:', approveResult.error);
   } else {
-    // Wait for approval transaction to be mined
-    await approveResult.value.wait();
+    // wait for tx hash from approveResult.value to be mined before proceeding
   }
 }
 
