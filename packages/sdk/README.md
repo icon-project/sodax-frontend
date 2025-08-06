@@ -217,7 +217,7 @@ const supportedMoneyMarketTokens: readonly Token[] = getSupportedMoneyMarketToke
 
 Sodax SDK does not force the usage of a specific wallet or library, but requires client to provide implementation of `IWalletProvider` interfaces (e.g. for EVM chains `IEvmWalletProvider` has to be implemented).
 
-As part of Sodax suite, xWagmi SDK is also going to be provided as one example wallet provider implementation. You are free to choose between using our xWagmi SDK or implementing your own wallet connectivity for each chain.
+As part of Sodax suite, Wallet SDK is also going to be provided as one example wallet provider implementation. You are free to choose between using our Wallet SDK or implementing your own wallet connectivity for each chain.
 
 - Supported Wallet Provider Interface (`IWalletProvider`)
   - `IEvmWalletProvider`: EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
@@ -240,7 +240,7 @@ EVM Provider example:
 ```typescript
 import { EvmProvider, EvmHubProvider, EvmSpokeProvider, AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from "@sodax/sdk"
 
-const evmWalletProvider: IEvmWalletProvider = // injected by xWagmi SDK or your own implementation
+const evmWalletProvider: IEvmWalletProvider = // injected by Wallet SDK or your own implementation
 
 // spoke provider represents connection to a specific chain, should be instantiated for each supported chain when user connects wallet
 const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
