@@ -245,7 +245,7 @@ const evmWalletProvider: IEvmWalletProvider = // injected by Wallet SDK or your 
 // spoke provider represents connection to a specific chain, should be instantiated for each supported chain when user connects wallet
 const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
   evmWalletProvider, // user connected wallet
-  spokeChainConfig[BSC_MAINNET_CHAIN_ID] as EvmSpokeChainConfig, // connected chain config
+  spokeChainConfig[BSC_MAINNET_CHAIN_ID], // connected chain config
 );
 ```
 
