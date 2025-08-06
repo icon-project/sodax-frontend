@@ -1145,7 +1145,7 @@ describe('MigrationService', () => {
         }
       });
 
-      it("should return error if neither srcbnUSD nor dstbnUSD is a legacy bnUSD token (even if unchecked)", async () => {
+      it('should return error if neither srcbnUSD nor dstbnUSD is a legacy bnUSD token (even if unchecked)', async () => {
         const invalidParams = {
           ...mockBnUSDLegacyToNewParams,
           srcChainId: 'invalid-chain' as SpokeChainId,
