@@ -10,10 +10,7 @@ import {
   getMoneyMarketConfig,
 } from '../../index.js';
 import invariant from 'tiny-invariant';
-import {
-  SONIC_MAINNET_CHAIN_ID,
-  type HubChainId,
-} from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
 
 export type BnUSDMigrateParams = {
   srcChainID: bnUSDLegacySpokeChainId; // The source chain ID where the legacy bnUSD token exists

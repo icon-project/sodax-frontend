@@ -469,7 +469,7 @@ export class MigrationService {
     }
   }
 
-    /**
+  /**
    * Creates a revert migration (SODA to ICX) intent and submits (relays) it to the spoke chain.
    * @param params - The parameters for the revert migration transaction.
    * @param spokeProvider - The SonicSpokeProvider instance.
@@ -500,52 +500,51 @@ export class MigrationService {
    * ] = result.value;
    * console.log('Revert migration transaction hashes:', { hubTxHash, spokeTxHash });
    */
-    async revertMigrateSodaToIcx(
-      params: Omit<IcxCreateRevertMigrationParams, 'wICX'>,
-      spokeProvider: SonicSpokeProvider,
-      timeout = DEFAULT_RELAY_TX_TIMEOUT,
-    ): Promise<
-      Result<
-        [Hex, Hex],
-        MigrationError<'REVERT_MIGRATION_FAILED'> | MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'> | RelayError
-      >
-    > {
-      try {
-        const txResult = await this.createRevertSodaToIcxMigrationIntent(params, spokeProvider);
-  
-        if (!txResult.ok) {
-          return txResult;
-        }
-  
-        const packetResult = await relayTxAndWaitPacket(
-          txResult.value,
-          undefined,
-          spokeProvider,
-          this.config.relayerApiEndpoint,
-          timeout,
-        );
-  
-        if (!packetResult.ok) {
-          return packetResult;
-        }
-  
-        return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
-      } catch (error) {
-        return {
-          ok: false,
-          error: {
-            code: 'REVERT_MIGRATION_FAILED',
-            data: {
-              payload: params,
-              error: error,
-            },
-          },
-        };
-      }
-    }
-  
+  async revertMigrateSodaToIcx(
+    params: Omit<IcxCreateRevertMigrationParams, 'wICX'>,
+    spokeProvider: SonicSpokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  ): Promise<
+    Result<
+      [Hex, Hex],
+      MigrationError<'REVERT_MIGRATION_FAILED'> | MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'> | RelayError
+    >
+  > {
+    try {
+      const txResult = await this.createRevertSodaToIcxMigrationIntent(params, spokeProvider);
 
-    /**
+      if (!txResult.ok) {
+        return txResult;
+      }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        undefined,
+        spokeProvider,
+        this.config.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return packetResult;
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'REVERT_MIGRATION_FAILED',
+          data: {
+            payload: params,
+            error: error,
+          },
+        },
+      };
+    }
+  }
+
+  /**
    * Migrates BALN tokens to SODA tokens on the hub chain (sonic).
    * This function handles the migration of BALN tokens to SODA tokens.
    *
@@ -578,52 +577,52 @@ export class MigrationService {
    * ] = result.value;
    * console.log('Migration transaction hashes:', { spokeTxHash, hubTxHash });
    */
-    async migrateBaln(
-      params: BalnMigrateParams,
-      spokeProvider: IconSpokeProvider,
-      timeout = DEFAULT_RELAY_TX_TIMEOUT,
-    ): Promise<
-      Result<
-        [Hex, Hex],
-        MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError
-      >
-    > {
-      try {
-        const txResult = await this.createMigrateBalnIntent(params, spokeProvider);
-  
-        if (!txResult.ok) {
-          return {
-            ok: false,
-            error: txResult.error,
-          };
-        }
-  
-        const packetResult = await relayTxAndWaitPacket(
-          txResult.value,
-          undefined,
-          spokeProvider,
-          this.config.relayerApiEndpoint,
-          timeout,
-        );
-  
-        if (!packetResult.ok) {
-          return packetResult;
-        }
-  
-        return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
-      } catch (error) {
+  async migrateBaln(
+    params: BalnMigrateParams,
+    spokeProvider: IconSpokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  ): Promise<
+    Result<
+      [Hex, Hex],
+      MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError
+    >
+  > {
+    try {
+      const txResult = await this.createMigrateBalnIntent(params, spokeProvider);
+
+      if (!txResult.ok) {
         return {
           ok: false,
-          error: {
-            code: 'MIGRATION_FAILED',
-            data: {
-              payload: params,
-              error: error,
-            },
-          },
+          error: txResult.error,
         };
       }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        undefined,
+        spokeProvider,
+        this.config.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return packetResult;
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'MIGRATION_FAILED',
+          data: {
+            payload: params,
+            error: error,
+          },
+        },
+      };
     }
+  }
 
   /**
    * Creates a revert migration intent and submits (relays) it to the spoke chain.

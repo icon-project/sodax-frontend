@@ -88,7 +88,7 @@ export const EVM_SPOKE_CHAIN_IDS = [
   SONIC_MAINNET_CHAIN_ID,
 ] as const;
 
-const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
+export const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
   [AVALANCHE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.AVAX,
   [ARBITRUM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ARBITRUM,
   [BASE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.BASE,
@@ -102,7 +102,7 @@ const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
   [STELLAR_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
   [ICON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
   [NIBIRU_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.NIBIRU,
-};
+} as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
 
@@ -1644,7 +1644,7 @@ export const migrationConfig = {
       icx: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['nativeToken'],
       wICX: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['addresses']['wICX'],
     },
-  }
+  },
 } as const;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>

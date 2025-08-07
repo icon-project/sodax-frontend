@@ -23,6 +23,7 @@ import { SuiWalletProvider } from './sui-wallet-provider.js';
 
 import dotenv from 'dotenv';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
+import { solverConfig } from './config.js';
 dotenv.config();
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -48,12 +49,6 @@ const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
   chainConfig: getHubChainConfig(HUB_CHAIN_ID),
 } satisfies EvmHubProviderConfig;
-
-const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: undefined,
-} satisfies SolverConfigParams;
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
@@ -233,15 +228,15 @@ async function repay(token: string, amount: bigint): Promise<void> {
  * @param amount - The amount of legacy bnUSD tokens to migrate
  * @param recipient - The address that will receive the migrated new bnUSD tokens
  */
-async function migrateBnUSD(
-  amount: bigint,
-  recipient: Address,
-): Promise<void> {
-  const result = await sodax.migration.migratebnUSD({
-    srcChainID: suiSpokeProvider.chainConfig.chain.id as typeof SUI_MAINNET_CHAIN_ID,
-    amount,
-    to: recipient,
-  }, suiSpokeProvider);
+async function migrateBnUSD(amount: bigint, recipient: Address): Promise<void> {
+  const result = await sodax.migration.migratebnUSD(
+    {
+      srcChainID: suiSpokeProvider.chainConfig.chain.id as typeof SUI_MAINNET_CHAIN_ID,
+      amount,
+      to: recipient,
+    },
+    suiSpokeProvider,
+  );
 
   if (result.ok) {
     console.log('[migrateBnUSD] txHash', result.value);

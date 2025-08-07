@@ -3,16 +3,19 @@ import { avalanche, sonic } from 'viem/chains';
 // packages/sdk/src/constants.test.ts
 import { describe, expect, it } from 'vitest';
 import {
+  ChainIdToIntentRelayChainId,
   getEvmViemChain,
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
   getMoneyMarketConfig,
   getOriginalAssetAddress,
+  getSpokeChainIdFromIntentRelayChainId,
   hubAssetToOriginalAssetMap,
+  intentRelayChainIdToSpokeChainIdMap,
   originalAssetTohubAssetMap,
 } from './index.js';
-import type { EvmChainId } from './index.js';
+import type { EvmChainId, IntentRelayChainId } from './index.js';
 import {
   AVALANCHE_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
@@ -169,5 +172,32 @@ describe('Constants', () => {
         console.warn(`No hub assets found for chain ${chainId} in test`);
       }
     });
+
+  // Tests for getSpokeChainIdFromIntentRelayChainId
+  describe('getSpokeChainIdFromIntentRelayChainId', () => {
+    it('should return the correct SpokeChainId for a valid IntentRelayChainId', () => {
+      for (const [chainId, intentRelayChainId] of Object.entries(ChainIdToIntentRelayChainId)) {
+        expect(getSpokeChainIdFromIntentRelayChainId(intentRelayChainId)).toBe(chainId);
+      }
+    });
+
+    it('should throw an error for an invalid IntentRelayChainId', () => {
+      // Use a value not present in the map
+      const invalidIntentRelayChainId = 999999999999999999n;
+      expect(() => getSpokeChainIdFromIntentRelayChainId(invalidIntentRelayChainId as IntentRelayChainId)).toThrow(
+        /Invalid intent relay chain id/
+      );
+    });
+
+    it('should work for lower and upper bound of known intent relay chain ids', () => {
+      const ids = Array.from(intentRelayChainIdToSpokeChainIdMap.keys());
+      if (ids.length > 0) {
+        const minId = ids.reduce((a, b) => (a < b ? a : b));
+        const maxId = ids.reduce((a, b) => (a > b ? a : b));
+        expect(getSpokeChainIdFromIntentRelayChainId(minId)).toBe(intentRelayChainIdToSpokeChainIdMap.get(minId));
+        expect(getSpokeChainIdFromIntentRelayChainId(maxId)).toBe(intentRelayChainIdToSpokeChainIdMap.get(maxId));
+      }
+    });
+  });
   });
 });

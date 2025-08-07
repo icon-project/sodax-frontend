@@ -35,7 +35,10 @@ import type {
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 import type { migrationConfig } from './constants.js';
 
-export type bnUSDLegacySpokeChainId = typeof ICON_MAINNET_CHAIN_ID | typeof SUI_MAINNET_CHAIN_ID | typeof STELLAR_MAINNET_CHAIN_ID;
+export type bnUSDLegacySpokeChainId =
+  | typeof ICON_MAINNET_CHAIN_ID
+  | typeof SUI_MAINNET_CHAIN_ID
+  | typeof STELLAR_MAINNET_CHAIN_ID;
 export type bnUSDLegacyMigrationProviders = IconSpokeProvider | SuiSpokeProvider | StellarSpokeProvider;
 
 export type bnUSDLegacyAddress =

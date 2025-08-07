@@ -435,7 +435,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -446,7 +446,7 @@ describe('SolverService', () => {
       expect(solverService['createIntent']).toHaveBeenCalledWith(
         mockCreateIntentParams,
         mockBscSpokeProvider,
-        mockFee,
+        solverService.config.partnerFee,
         false,
       );
       expect(solverService['postExecution']).toHaveBeenCalledWith({
@@ -469,7 +469,7 @@ describe('SolverService', () => {
         } satisfies IntentError<'CREATION_FAILED'>,
       });
 
-      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider);
 
       expect(result.ok).toBe(false);
       expect(!result.ok && isIntentCreationFailedError(result.error)).toBeTruthy();
@@ -496,7 +496,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -531,7 +531,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider);
 
       expect(result.ok).toBe(false);
       expect(!result.ok && isIntentSubmitTxFailedError(result.error)).toBeTruthy();
@@ -564,7 +564,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -605,7 +605,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider);
 
       expect(result.ok).toBe(false);
       expect(!result.ok && isWaitUntilIntentExecutedFailed(result.error)).toBeTruthy();
@@ -643,7 +643,7 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider);
 
       expect(result.ok).toBe(false);
       expect(!result.ok && isIntentPostExecutionFailedError(result.error)).toBeTruthy();
@@ -663,7 +663,7 @@ describe('SolverService', () => {
         } satisfies IntentError<'UNKNOWN'>,
       });
 
-      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap(mockCreateIntentParams, mockBscSpokeProvider);
 
       expect(result.ok).toBe(false);
       expect(!result.ok && isIntentCreationUnknownError(result.error)).toBeTruthy();

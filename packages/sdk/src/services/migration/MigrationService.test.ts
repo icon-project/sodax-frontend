@@ -172,7 +172,11 @@ describe('MigrationService', () => {
           value: true,
         });
 
-        const result = await migrationService.isAllowanceValid(mockRevertMigrationParams, 'revert', mockSonicSpokeProvider);
+        const result = await migrationService.isAllowanceValid(
+          mockRevertMigrationParams,
+          'revert',
+          mockSonicSpokeProvider,
+        );
 
         expect(result.ok).toBe(true);
         if (result.ok) {
@@ -228,7 +232,11 @@ describe('MigrationService', () => {
           error: new Error('Allowance check failed'),
         });
 
-        const result = await migrationService.isAllowanceValid(mockRevertMigrationParams, 'revert', mockSonicSpokeProvider);
+        const result = await migrationService.isAllowanceValid(
+          mockRevertMigrationParams,
+          'revert',
+          mockSonicSpokeProvider,
+        );
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -242,7 +250,11 @@ describe('MigrationService', () => {
         ...mockMigrationParams,
       } satisfies MigrationParams;
 
-      const result = await migrationService.isAllowanceValid(invalidParams, 'migrate1' as MigrationAction, mockIconSpokeProvider);
+      const result = await migrationService.isAllowanceValid(
+        invalidParams,
+        'migrate1' as MigrationAction,
+        mockIconSpokeProvider,
+      );
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -312,7 +324,11 @@ describe('MigrationService', () => {
     });
 
     it('should return error for wrong provider type', async () => {
-      const result = await migrationService.approve(mockRevertMigrationParams, 'revert', {} as unknown as SonicSpokeProvider);
+      const result = await migrationService.approve(
+        mockRevertMigrationParams,
+        'revert',
+        {} as unknown as SonicSpokeProvider,
+      );
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -518,7 +534,9 @@ describe('MigrationService', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      vi.spyOn(migrationService, 'createRevertSodaToIcxMigrationIntent').mockRejectedValue(new Error('Unexpected error'));
+      vi.spyOn(migrationService, 'createRevertSodaToIcxMigrationIntent').mockRejectedValue(
+        new Error('Unexpected error'),
+      );
 
       const result = await migrationService.revertMigrateSodaToIcx(
         mockRevertMigrationParams,
