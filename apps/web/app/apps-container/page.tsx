@@ -64,14 +64,14 @@ const ConnectedChainsDisplay = ({ onClick }: { onClick?: () => void }): React.JS
 
 const SharedContent = (): React.JSX.Element => {
   return (
-    <div data-property-1="Default" className="self-stretch inline-flex flex-col justify-start items-start gap-4">
-      <div className="self-stretch mix-blend-multiply justify-end">
+    <div data-property-1="Default" className=" inline-flex flex-col justify-start items-start gap-4">
+      <div className=" mix-blend-multiply justify-end">
         <span className="text-yellow-dark font-bold leading-9 !text-(size:--app-title)">SODAX </span>
         <span className="text-yellow-dark font-normal font-[shrikhand] leading-9 !text-(size:--app-title)">
           migration
         </span>
       </div>
-      <div className="self-stretch mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(size:--subtitle)">
+      <div className=" mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(size:--subtitle)">
         Swap 1:1 between ICX and SODA.
       </div>
     </div>
@@ -114,10 +114,10 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
 
   return (
     <div style={{ gap: 'var(--layout-space-comfortable)' }} className="flex flex-col">
-      <div className="self-stretch inline-flex flex-col justify-start items-start gap-2">
-        <div className="self-stretch flex flex-col justify-start items-start gap-2">
+      <div className=" inline-flex flex-col justify-start items-start gap-2">
+        <div className=" flex flex-col justify-start items-start gap-2">
           <div
-            className="self-stretch relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center"
+            className=" relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center"
             style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
           >
             <div className="flex justify-start items-center gap-2">
@@ -182,7 +182,7 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
             </button>
           </div>
           <div
-            className="self-stretch rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center"
+            className=" rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center"
             style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
           >
             <div className="flex justify-start items-center gap-2">
@@ -252,10 +252,10 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
           </div>
         </div>
         <div
-          className="self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2"
+          className=" mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2"
           style={{ padding: 'var(--layout-space-comfortable)' }}
         >
-          <div className="self-stretch inline-flex justify-center items-center gap-2">
+          <div className=" inline-flex justify-center items-center gap-2">
             <div className="w-4 h-4 relative mix-blend-multiply">
               <img src="/symbol.png" alt="" />
             </div>
@@ -263,7 +263,7 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
               You're migrating to Sonic
             </div>
           </div>
-          <div className="self-stretch justify-center text-clay font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
+          <div className=" justify-center text-clay font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
             You won't need S token to receive your SODA. But you will for any future transactions on Sonic.
           </div>
         </div>
@@ -445,7 +445,7 @@ const AppsContainer = () => {
   return (
     <div className="bg-cream-white min-h-screen pb-24 md:pb-0 w-[100vw] overflow-x-hidden">
       <Sidebar isOpen={isOpen} toggle={toggle} setOpenRewardDialog={setOpenRewardDialog} />
-      <div className="self-stretch h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
+      <div className=" h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
         <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
         <div className="w-full max-w-[1200px] justify-between items-center h-10 z-1 inline-flex px-6">
           <div className="flex justify-start items-center">

@@ -105,7 +105,7 @@ export const WalletModal = ({ isOpen, onDismiss, onWalletSelected }: WalletModal
         <DialogTitle>
           {!showingConnectors ? (
             <div className="flex flex-row justify-between items-center">
-              <div className="self-stretch inline-flex justify-center items-center gap-2">
+              <div className=" inline-flex justify-center items-center gap-2">
                 <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
                 <div className="flex-1 justify-center text-espresso text-base font-['InterRegular'] font-bold leading-snug">
                   Connect wallets
@@ -139,7 +139,7 @@ export const WalletModal = ({ isOpen, onDismiss, onWalletSelected }: WalletModal
           )}
         </DialogTitle>
         {!showingConnectors && (
-          <div className="self-stretch justify-start text-clay-light text-sm font-medium font-['InterRegular'] leading-tight">
+          <div className=" justify-start text-clay-light text-sm font-medium font-['InterRegular'] leading-tight">
             You will need to connect on both networks
           </div>
         )}
@@ -191,7 +191,7 @@ export const WalletModal = ({ isOpen, onDismiss, onWalletSelected }: WalletModal
           </ScrollArea>
         </div>
         {!showingConnectors && (
-          <div className="self-stretch justify-start flex gap-1">
+          <div className=" justify-start flex gap-1">
             <span className="text-clay-light text-sm font-medium font-['InterRegular'] leading-tight">
               Need help? Check our guide{' '}
             </span>

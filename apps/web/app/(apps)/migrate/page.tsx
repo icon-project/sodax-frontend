@@ -11,13 +11,11 @@ import { WalletModal } from '@/components/shared/wallet-modal';
 import { Tabs, TabsContent, TabsList } from '@/components/ui/tabs';
 import TabItem from '@/components/ui/tab-item';
 import { tabConfigs } from '@/components/ui/tab-config';
-import { ChevronRight, ArrowUpFromLine, ArrowDownToLine, ArrowDownUp, Settings } from 'lucide-react';
+import { ChevronRight, ArrowUpFromLine, ArrowDownToLine, ArrowDownUp, Settings, Loader2, Check } from 'lucide-react';
 import Sidebar from '@/components/landing/sidebar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DecoratedButton } from '@/components/landing/decorated-button';
-// import { Input } from '@/components/ui/input';
-import { NumberInput } from '@/components/ui/number-input';
 import { useXAccounts, useXConnect, useXDisconnect, useXAccount, useXBalances } from '@sodax/wallet-sdk';
 import type { XConnector } from '@sodax/wallet-sdk';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -26,7 +24,19 @@ import { AnimatedTooltip } from '@/components/ui/AnimatedTooltip';
 import type { ChainType, XToken } from '@sodax/types';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { formatUnits } from 'viem';
-import { spokeChainConfig } from '@sodax/sdk';
+import {
+  spokeChainConfig,
+  Sodax,
+  type IconSpokeProvider,
+  getHubChainConfig,
+  SONIC_MAINNET_CHAIN_ID,
+  type IcxCreateRevertMigrationParams,
+  type SonicSpokeProvider,
+} from '@sodax/sdk';
+import { parseUnits } from 'viem';
+import { useSpokeProvider } from '@sodax/dapp-kit';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import NetworkInputDisplay from '@/components/ui/network-input-display';
 
 const ConnectedChainsDisplay = ({ onClick }: { onClick?: () => void }): React.JSX.Element => {
   const xAccounts = useXAccounts();
@@ -71,14 +81,14 @@ const ConnectedChainsDisplay = ({ onClick }: { onClick?: () => void }): React.JS
 
 const SharedContent = (): React.JSX.Element => {
   return (
-    <div data-property-1="Default" className="self-stretch inline-flex flex-col justify-start items-start gap-4">
-      <div className="self-stretch mix-blend-multiply justify-end">
+    <div data-property-1="Default" className=" inline-flex flex-col justify-start items-start gap-4">
+      <div className=" mix-blend-multiply justify-end">
         <span className="text-yellow-dark font-bold leading-9 !text-(size:--app-title)">SODAX </span>
         <span className="text-yellow-dark font-normal font-[shrikhand] leading-9 !text-(size:--app-title)">
           migration
         </span>
       </div>
-      <div className="self-stretch mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(size:--subtitle)">
+      <div className=" mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(size:--subtitle)">
         Swap 1:1 between ICX and SODA.
       </div>
     </div>
@@ -104,7 +114,21 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
   const [sodaInputValue, setSodaInputValue] = useState<string>('');
   const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
   const [showTooltip, setShowTooltip] = useState<boolean>(false);
+  const [isMigrating, setIsMigrating] = useState<boolean>(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState<boolean>(false);
+  const [showErrorDialog, setShowErrorDialog] = useState<boolean>(false);
+  const [migrationResult, setMigrationResult] = useState<{ spokeTxHash: string; hubTxHash: string } | null>(null);
+  const [migrationError, setMigrationError] = useState<string>('');
+  const [isICXToSoda, setIsICXToSoda] = useState<boolean>(true);
+
+  // Approval states for SODA->ICX migration
+  const [isApprovalNeeded, setIsApprovalNeeded] = useState<boolean>(false);
+  const [isApproving, setIsApproving] = useState<boolean>(false);
+  const [approvalChecked, setApprovalChecked] = useState<boolean>(false);
+
   const xAccounts = useXAccounts();
+  const iconSpokeProvider = useSpokeProvider(ICON_MAINNET_CHAIN_ID);
+  const sonicSpokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID);
 
   // Get ICON account and balance
   const { address: iconAddress } = useXAccount(ICON_MAINNET_CHAIN_ID);
@@ -120,9 +144,152 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
 
   const icxBalance = balances?.[icxToken.address] || 0n;
   const formattedIcxBalance = formatUnits(icxBalance, icxToken.decimals);
+  const formattedIcxBalanceFixed = Number(formattedIcxBalance).toFixed(2);
 
   const connectedWalletsCount = Object.values(xAccounts).filter(xAccount => xAccount?.address).length;
   const hasTwoWalletsConnected = connectedWalletsCount >= 2;
+
+  // Get Sonic account (Sonic uses EVM chain type)
+  const { address: sonicAddress } = useXAccount('EVM');
+
+  // Get SODA balance for Sonic network
+  const sodaToken = {
+    address: '0x8515352CB9832D1d379D52366D1E995ADd358420', // SODA token address on Sonic
+    decimals: 18,
+    symbol: 'SODA',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  } as XToken;
+
+  const { data: sodaBalances } = useXBalances({
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+    xTokens: [sodaToken],
+    address: sonicAddress,
+  });
+
+  const sodaBalance = sodaBalances?.[sodaToken.address] || 0n;
+  const formattedSodaBalance = formatUnits(sodaBalance, sodaToken.decimals);
+  const formattedSodaBalanceFixed = Number(formattedSodaBalance).toFixed(2);
+
+  // Check approval status for SODA->ICX migration
+  const checkApprovalStatus = async (): Promise<void> => {
+    if (!sonicAddress || !iconAddress || isICXToSoda) {
+      setApprovalChecked(true);
+      return;
+    }
+
+    try {
+      const sodax = new Sodax({
+        hubProviderConfig: {
+          hubRpcUrl: 'https://rpc.soniclabs.com',
+          chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+        },
+      });
+
+      const inputValue = sodaInputValue;
+      if (!inputValue || Number(inputValue) <= 0) {
+        setIsApprovalNeeded(false);
+        setApprovalChecked(true);
+        return;
+      }
+
+      const amountToMigrate = parseUnits(inputValue, 18);
+      const revertParams = {
+        amount: amountToMigrate,
+        to: iconAddress as `hx${string}`,
+      } satisfies IcxCreateRevertMigrationParams;
+
+      if (!sonicSpokeProvider) {
+        console.error('Sonic spoke provider not available');
+        setIsApprovalNeeded(true);
+        setApprovalChecked(true);
+        return;
+      }
+
+      const isAllowedResult = await sodax.migration.isAllowanceValid(revertParams, 'revert', sonicSpokeProvider);
+
+      if (isAllowedResult.ok) {
+        setIsApprovalNeeded(!isAllowedResult.value);
+      } else {
+        console.error('Failed to check allowance:', isAllowedResult.error);
+        setIsApprovalNeeded(true);
+      }
+    } catch (error) {
+      console.error('Error checking approval status:', error);
+      setIsApprovalNeeded(true);
+    } finally {
+      setApprovalChecked(true);
+    }
+  };
+
+  // Handle approval for SODA tokens
+  const handleApprove = async (): Promise<void> => {
+    if (!sonicAddress || !iconAddress) {
+      console.error('Sonic or ICON address not connected');
+      return;
+    }
+
+    const inputValue = sodaInputValue;
+    if (!inputValue || Number(inputValue) <= 0) {
+      console.error('Invalid SODA amount');
+      return;
+    }
+
+    setIsApproving(true);
+
+    try {
+      const sodax = new Sodax({
+        hubProviderConfig: {
+          hubRpcUrl: 'https://rpc.soniclabs.com',
+          chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+        },
+      });
+
+      const amountToMigrate = parseUnits(inputValue, 18);
+      const revertParams = {
+        amount: amountToMigrate,
+        to: iconAddress as `hx${string}`,
+      } satisfies IcxCreateRevertMigrationParams;
+
+      if (!sonicSpokeProvider) {
+        console.error('Sonic spoke provider not available');
+        setMigrationError('Sonic spoke provider not available');
+        setShowErrorDialog(true);
+        return;
+      }
+
+      const approveResult = await sodax.migration.approve(revertParams, 'revert', sonicSpokeProvider, false);
+
+      if (approveResult.ok) {
+        console.log('Approval transaction hash:', approveResult.value);
+        // const approveTxResult = await sonicSpokeProvider.walletProvider.waitForTransactionReceipt(approveResult.value);
+        // console.log('Approval transaction confirmed:', approveTxResult);
+
+        setIsApprovalNeeded(false);
+        setApprovalChecked(false);
+        await checkApprovalStatus();
+      } else {
+        console.error('Failed to approve tokens:', approveResult.error);
+        setMigrationError('Failed to approve SODA tokens. Please try again.');
+        setShowErrorDialog(true);
+      }
+    } catch (error) {
+      console.error('Approval error:', error);
+      setMigrationError(error instanceof Error ? error.message : 'An unexpected error occurred during approval.');
+      setShowErrorDialog(true);
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isICXToSoda && sonicAddress && iconAddress) {
+      setApprovalChecked(false);
+      checkApprovalStatus();
+    } else {
+      setApprovalChecked(true);
+      setIsApprovalNeeded(false);
+    }
+  }, [isICXToSoda, sonicAddress, iconAddress, sodaInputValue]);
 
   const handleConnectWallets = (): void => {
     onOpenWalletModal();
@@ -130,10 +297,16 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
 
   const handleIcxInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setIcxInputValue(e.target.value);
+    if (isICXToSoda) {
+      setSodaInputValue(e.target.value);
+    }
   };
 
   const handleSodaInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setSodaInputValue(e.target.value);
+    if (!isICXToSoda) {
+      setIcxInputValue(e.target.value);
+    }
   };
 
   const handleIcxInputFocus = (): void => {
@@ -146,181 +319,472 @@ const MigrateContent = ({ onOpenWalletModal }: { onOpenWalletModal: () => void }
 
   const handleMaxClick = (): void => {
     if (iconAddress && icxBalance > 0n) {
-      setIcxInputValue(formattedIcxBalance);
+      setIcxInputValue(formattedIcxBalanceFixed);
+      if (isICXToSoda) {
+        setSodaInputValue(formattedIcxBalanceFixed);
+      }
     }
   };
 
-  const handleMigrate = (): void => {
-    console.log('Migrate');
+  const handleSodaMaxClick = (): void => {
+    if (sonicAddress && sodaBalance > 0n) {
+      const formattedSodaBalanceFixed = Number(formattedSodaBalance).toFixed(2);
+      setSodaInputValue(formattedSodaBalanceFixed);
+      if (!isICXToSoda) {
+        setIcxInputValue(formattedSodaBalanceFixed);
+      }
+    }
   };
 
+  // Sync input values when direction changes
+  useEffect(() => {
+    if (isICXToSoda) {
+      setSodaInputValue(icxInputValue);
+    } else {
+      setIcxInputValue(sodaInputValue);
+    }
+  }, [isICXToSoda, icxInputValue, sodaInputValue]);
+
+  const handleMigrate = async (): Promise<void> => {
+    if (!sonicAddress) {
+      console.error('Sonic address not connected');
+      return;
+    }
+
+    if (!iconAddress) {
+      console.error('ICON address not connected');
+      return;
+    }
+
+    const inputValue = isICXToSoda ? icxInputValue : sodaInputValue;
+    if (!inputValue || Number(inputValue) <= 0) {
+      console.error(`Invalid ${isICXToSoda ? 'ICX' : 'SODA'} amount`);
+      return;
+    }
+
+    setIsMigrating(true);
+
+    try {
+      // Initialize SODAX SDK
+      const sodax = new Sodax({
+        hubProviderConfig: {
+          hubRpcUrl: 'https://rpc.soniclabs.com',
+          chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+        },
+      });
+
+      // Convert input amount to bigint (assuming 18 decimals)
+      const amountToMigrate = parseUnits(inputValue, 18);
+
+      if (isICXToSoda) {
+        // ICX to SODA migration
+        const migrationParams = {
+          address: spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken, // ICX native token address
+          amount: amountToMigrate,
+          to: sonicAddress as `0x${string}`, // Recipient address on Sonic
+        };
+
+        const result = await sodax.migration.migrateIcxToSoda(
+          migrationParams,
+          iconSpokeProvider as IconSpokeProvider,
+          30000, // 30 second timeout
+        );
+
+        if (result.ok) {
+          const [spokeTxHash, hubTxHash] = result.value;
+
+          setMigrationResult({
+            spokeTxHash,
+            hubTxHash,
+          });
+          setShowSuccessDialog(true);
+
+          // Clear input values after successful migration
+          setIcxInputValue('');
+          setSodaInputValue('');
+        } else {
+          setMigrationError('ICX to SODA migration failed. Please try again.');
+          setShowErrorDialog(true);
+        }
+      } else {
+        // SODA to ICX migration
+        const revertParams = {
+          amount: amountToMigrate,
+          to: iconAddress as `hx${string}`,
+        } satisfies IcxCreateRevertMigrationParams;
+
+        const result = await sodax.migration.revertMigrateSodaToIcx(
+          revertParams,
+          sonicSpokeProvider as SonicSpokeProvider,
+          30000, // 30 second timeout
+        );
+
+        if (result.ok) {
+          const [hubTxHash, spokeTxHash] = result.value;
+
+          setMigrationResult({
+            spokeTxHash,
+            hubTxHash,
+          });
+          setShowSuccessDialog(true);
+
+          // Clear input values after successful migration
+          setIcxInputValue('');
+          setSodaInputValue('');
+        } else {
+          setMigrationError('SODA to ICX migration failed. Please try again.');
+          setShowErrorDialog(true);
+        }
+      }
+    } catch (error) {
+      console.error('Migration error:', error);
+      setMigrationError(error instanceof Error ? error.message : 'An unexpected error occurred.');
+      setShowErrorDialog(true);
+    } finally {
+      setIsMigrating(false);
+    }
+  };
+
+  // Determine button states for different scenarios
+  const getButtonStates = (): {
+    showTwoButtons: boolean;
+    approveButton: {
+      text: string;
+      disabled: boolean;
+      onClick: () => void;
+      loading: boolean;
+    };
+    migrateButton: {
+      text: string;
+      disabled: boolean;
+      onClick: () => void;
+      loading: boolean;
+    };
+    singleButton: {
+      text: string;
+      disabled: boolean;
+      onClick: () => void;
+      loading: boolean;
+    };
+  } => {
+    if (!hasTwoWalletsConnected) {
+      return {
+        showTwoButtons: false,
+        approveButton: { text: '', disabled: true, onClick: () => {}, loading: false },
+        migrateButton: { text: '', disabled: true, onClick: () => {}, loading: false },
+        singleButton: {
+          text: 'Connect wallets',
+          disabled: false,
+          onClick: handleConnectWallets,
+          loading: false,
+        },
+      };
+    }
+
+    const inputValue = isICXToSoda ? icxInputValue : sodaInputValue;
+    const hasValidAmount = Number(inputValue) >= 1;
+
+    if (!hasValidAmount) {
+      return {
+        showTwoButtons: false,
+        approveButton: { text: '', disabled: true, onClick: () => {}, loading: false },
+        migrateButton: { text: '', disabled: true, onClick: () => {}, loading: false },
+        singleButton: {
+          text: 'Enter amount',
+          disabled: true,
+          onClick: () => {},
+          loading: false,
+        },
+      };
+    }
+
+    if (isMigrating) {
+      return {
+        showTwoButtons: true,
+        approveButton: { text: 'Approved', disabled: true, onClick: () => {}, loading: false },
+        migrateButton: { text: '', disabled: true, onClick: () => {}, loading: false },
+        singleButton: {
+          text: 'Migrating',
+          disabled: true,
+          onClick: () => {},
+          loading: true,
+        },
+      };
+    }
+
+    // For soda->icx case, show two buttons when approval is needed
+    if (!isICXToSoda && isApprovalNeeded) {
+      return {
+        showTwoButtons: true,
+        approveButton: {
+          text: isApproving ? 'Approving' : 'Approve',
+          disabled: isApproving,
+          onClick: handleApprove,
+          loading: isApproving,
+        },
+        migrateButton: {
+          text: 'Migrate',
+          disabled: true, // Disabled until approval is successful
+          onClick: handleMigrate,
+          loading: false,
+        },
+        singleButton: { text: '', disabled: true, onClick: () => {}, loading: false },
+      };
+    }
+
+    // For soda->icx case when approval is not needed (after successful approval)
+    if (!isICXToSoda && !isApprovalNeeded && approvalChecked) {
+      return {
+        showTwoButtons: true,
+        approveButton: {
+          text: 'Approved',
+          disabled: true,
+          onClick: () => {},
+          loading: false,
+        },
+        migrateButton: {
+          text: 'Migrate',
+          disabled: false, // Enabled after approval is successful
+          onClick: handleMigrate,
+          loading: false,
+        },
+        singleButton: { text: '', disabled: true, onClick: () => {}, loading: false },
+      };
+    }
+
+    // For all other cases, show single button
+    return {
+      showTwoButtons: false,
+      approveButton: { text: '', disabled: true, onClick: () => {}, loading: false },
+      migrateButton: { text: '', disabled: true, onClick: () => {}, loading: false },
+      singleButton: {
+        text: 'Migrate',
+        disabled: false,
+        onClick: handleMigrate,
+        loading: false,
+      },
+    };
+  };
+
+  const buttonStates = getButtonStates();
+
   return (
-    <div style={{ gap: 'var(--layout-space-comfortable)' }} className="flex flex-col">
-      <div className="self-stretch inline-flex flex-col justify-start items-start gap-2">
-        <div className="self-stretch flex flex-col justify-start items-start gap-2">
-          <div
-            className="self-stretch relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center"
-            style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
-          >
-            <div className="flex justify-start items-center gap-2">
-              <div className="w-16 h-14 relative">
-                <div data-property-1="Default" className="w-12 h-12 left-[8px] top-[4px] absolute">
-                  <div className="w-12 h-12 left-0 top-0 absolute bg-gradient-to-br from-white to-zinc-100 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.20)]" />
-                  <div
-                    data-property-1="Default"
-                    className="left-[12px] top-[12px] absolute bg-White rounded-[256px] inline-flex flex-col justify-start items-start overflow-hidden"
-                  >
-                    <img data-property-1="ICX" className="w-6 h-6 rounded-[256px]" src="/coin/icx.png" />
-                  </div>
-                  <div
-                    data-property-1="Active"
-                    className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.40)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
-                  >
-                    <img data-property-1="ICON" className="w-4 h-4" src="/coin/icx1.png" />
-                  </div>
-                </div>
-              </div>
-              <div className="inline-flex flex-col justify-center items-start gap-1">
-                <div className="justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-                  From
-                </div>
-                <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) w-40">
-                  ICON <span className="hidden sm:inline">Network</span>
-                </div>
-              </div>
-            </div>
-            <div
-              className="inline-flex flex-col justify-center items-end gap-1"
-              style={{ paddingRight: 'var(--layout-space-normal)' }}
+    <div style={{ gap: 'var(--layout-space-comfortable)' }} className="flex flex-col w-full">
+      <div className="inline-flex flex-col justify-start items-start gap-2">
+        <div className=" flex flex-col justify-start items-start gap-2">
+          <div className="relative">
+            <NetworkInputDisplay
+              iconSrc={isICXToSoda ? '/coin/icx.png' : '/coin/soda.png'}
+              secondaryIconSrc={isICXToSoda ? '/coin/icx1.png' : '/coin/s1.png'}
+              label={isICXToSoda ? 'ICON Network' : 'Sonic Network'}
+              description="From"
+              tokenSymbol={isICXToSoda ? 'ICX' : 'SODA'}
+              availableAmount={
+                isICXToSoda
+                  ? iconAddress
+                    ? `${formattedIcxBalanceFixed} available`
+                    : '0 available'
+                  : sonicAddress
+                    ? `${formattedSodaBalanceFixed} available`
+                    : '0 available'
+              }
+              inputValue={isICXToSoda ? icxInputValue : sodaInputValue}
+              onInputChange={isICXToSoda ? handleIcxInputChange : handleSodaInputChange}
+              onInputFocus={isICXToSoda ? handleIcxInputFocus : undefined}
+              onMaxClick={isICXToSoda ? handleMaxClick : handleSodaMaxClick}
+              disabled={isICXToSoda ? !iconAddress || icxBalance === 0n : !sonicAddress || sodaBalance === 0n}
             >
-              <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-                {iconAddress ? `${formattedIcxBalance} available` : '0 available'}
-              </div>
-              <div className="inline-flex gap-1 items-center">
-                <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold text-(size:--subtitle)">
-                  <div className="relative">
-                    <NumberInput
-                      value={icxInputValue === '' ? undefined : Number(icxInputValue)}
-                      onChange={handleIcxInputChange}
-                      onFocus={handleIcxInputFocus}
-                      placeholder="0"
-                      className="rounded-full text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
-                    />
-                    {showTooltip && (
-                      <div className="absolute -top-20 left-15 mt-2 z-50">
-                        <AnimatedTooltip onComplete={handleTooltipComplete} />
-                      </div>
-                    )}
-                  </div>
+              {showTooltip && isICXToSoda && (
+                <div className="absolute -top-20 left-15 mt-2 z-50">
+                  <AnimatedTooltip onComplete={handleTooltipComplete} />
                 </div>
-                <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(size:--body-super-comfortable)">
-                  ICX
-                </div>
-                <button
-                  type="button"
-                  onClick={handleMaxClick}
-                  disabled={!iconAddress || icxBalance === 0n}
-                  className="ml-1 px-2 py-1 bg-cream-white text-clay rounded text-xs font-medium hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso disabled:bg-cream-white disabled:text-clay-light transition-colors duration-200 cursor-pointer font-['InterBold'] text-[9px] leading-[1.2] rounded-full h-4"
-                >
-                  MAX
-                </button>
-              </div>
-            </div>
+              )}
+            </NetworkInputDisplay>
             <button
               type="button"
-              className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] border-4 border-offset-[-4px] border-[#F5F2F2] flex justify-center items-center hover:bg-cherry-grey hover:outline-cherry-grey hover:scale-110 cursor-pointer transition-all duration-200 active:bg-cream-white"
+              className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] border-4 border-offset-[-4px] border-[#F5F2F2] flex justify-center items-center hover:bg-cherry-grey hover:outline-cherry-grey hover:scale-110 cursor-pointer transition-all duration-200 active:bg-cream-white z-50"
+              onClick={() => setIsICXToSoda(!isICXToSoda)}
             >
-              <ArrowDownUp className="w-3 h-3 text-espresso text-bold" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <title>Arrow down</title>
+                <g clip-path="url(#clip0_9664_9869)">
+                  <path
+                    d="M5.5 8.5L3.5 10.5L1.5 8.5"
+                    stroke="#483534"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M3.5 10.5V4.5"
+                    stroke="#483534"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M10.5 3.5L8.5 1.5L6.5 3.5"
+                    stroke="black"
+                    stroke-width="1.33333"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M8.5 7.5V1.5"
+                    stroke="black"
+                    stroke-width="1.33333"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_9664_9869">
+                    <rect width="12" height="12" fill="white" />
+                  </clipPath>
+                </defs>
+              </svg>
             </button>
           </div>
-          <div
-            className="self-stretch rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center"
-            style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
-          >
-            <div className="flex justify-start items-center gap-2">
-              <div className="w-16 h-14 relative">
-                <div data-property-1="Default" className="w-14 h-14 left-0 top-0 absolute">
-                  <div className="w-14 h-1.5 left-0 top-[50px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_var(--Espresso,_#483534)_0%,_rgba(71.72,_53.14,_52.29,_0)_100%)] rounded-full" />
-                  <div className="w-9 h-1 left-[10px] top-[51px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_var(--Espresso,_#483534)_0%,_rgba(71.72,_53.14,_52.29,_0)_100%)] rounded-full" />
-                  <img className="w-9 h-14 left-[9px] top-0 absolute" src="/can.png" />
-                  <img
-                    data-property-1="SODA"
-                    className="w-5 h-5 left-[18px] top-[14px] absolute mix-blend-multiply rounded-[256px]"
-                    src="/coin/soda.png"
-                  />
-                  <div
-                    data-property-1="Active"
-                    className="h-4 left-[36px] top-[36px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.40)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
-                  >
-                    <img data-property-1="Sonic" className="w-4 h-4" src="/coin/s1.png" />
-                  </div>
-                </div>
-              </div>
-              <div className="inline-flex flex-col justify-center items-start gap-1">
-                <div className="justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-                  To
-                </div>
-                <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable)">
-                  Sonic <span className="hidden sm:inline">Network</span>
-                </div>
-              </div>
-            </div>
-            <div
-              className="inline-flex flex-col justify-center items-end gap-1"
-              style={{ paddingRight: 'var(--layout-space-normal)' }}
-            >
-              <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-                Receive
-              </div>
-              <div className="inline-flex justify-end items-center gap-1">
-                <div className="text-right justify-center text-espresso font-['InterRegular'] font-black text-(size:--subtitle)">
-                  <NumberInput
-                    value={sodaInputValue === '' ? undefined : Number(sodaInputValue)}
-                    onChange={handleSodaInputChange}
-                    placeholder="0"
-                    readOnly
-                    className="rounded-full text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
-                  />
-                </div>
-                <div className="text-right justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable)">
-                  SODA
-                </div>
-              </div>
-            </div>
-          </div>
+          <NetworkInputDisplay
+            iconSrc={isICXToSoda ? '/coin/soda.png' : '/coin/icx.png'}
+            secondaryIconSrc={isICXToSoda ? '/coin/s1.png' : '/coin/icx1.png'}
+            label={isICXToSoda ? 'Sonic Network' : 'ICON Network'}
+            description="To"
+            tokenSymbol={isICXToSoda ? 'SODA' : 'ICX'}
+            availableAmount={isICXToSoda ? 'Receive' : 'Receive'}
+            inputValue={isICXToSoda ? sodaInputValue : icxInputValue}
+            onInputChange={isICXToSoda ? handleSodaInputChange : handleIcxInputChange}
+            readOnly
+            showMaxButton={false}
+          />
         </div>
       </div>
       <div className="flex flex-col" style={{ gap: 'var(--layout-space-comfortable)' }}>
         <div className="inline-flex flex-col justify-start items-start gap-4">
-          <Button
-            variant="cherry"
-            className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white"
-            onClick={!hasTwoWalletsConnected ? handleConnectWallets : handleMigrate}
-            disabled={hasTwoWalletsConnected && Number(icxInputValue) < 1}
-          >
-            {!hasTwoWalletsConnected ? 'Connect wallets' : Number(icxInputValue) >= 1 ? 'Migrate' : 'Enter amount'}
-          </Button>
+          {buttonStates.showTwoButtons ? (
+            <div className="flex gap-2">
+              <Button
+                variant="cherry"
+                className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-34"
+                onClick={buttonStates.approveButton.onClick}
+                disabled={buttonStates.approveButton.disabled}
+              >
+                {buttonStates.approveButton.loading ? (
+                  <>
+                    {buttonStates.approveButton.text}
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  </>
+                ) : (
+                  <>
+                    {buttonStates.approveButton.text}
+                    {buttonStates.approveButton.text === 'Approved' && <Check className="w-4 h-4 ml-2" />}
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="cherry"
+                className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-58"
+                onClick={buttonStates.migrateButton.onClick}
+                disabled={buttonStates.migrateButton.disabled}
+              >
+                {buttonStates.migrateButton.loading ? (
+                  <>
+                    {buttonStates.migrateButton.text}
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  </>
+                ) : (
+                  buttonStates.migrateButton.text
+                )}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="cherry"
+              className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white"
+              onClick={buttonStates.singleButton.onClick}
+              disabled={buttonStates.singleButton.disabled}
+            >
+              {buttonStates.singleButton.loading ? (
+                <>
+                  {buttonStates.singleButton.text}
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                </>
+              ) : (
+                buttonStates.singleButton.text
+              )}
+            </Button>
+          )}
           <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
             Takes ~1 min · Network fee: ~0.02 ICX
           </div>
         </div>
         <div
-          className="self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2"
+          className=" mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2"
           style={{ padding: 'var(--layout-space-comfortable)' }}
         >
-          <div className="self-stretch inline-flex justify-center items-center gap-2">
+          <div className=" inline-flex justify-center items-center gap-2">
             <div className="w-4 h-4 relative mix-blend-multiply">
               <img src="/symbol.png" alt="" />
             </div>
             <div className="flex-1 justify-center text-espresso font-bold font-['InterRegular'] leading-snug text-(size:--body-super-comfortable)">
-              You're migrating to Sonic
+              {isICXToSoda ? "You're migrating to Sonic" : "You're migrating to ICON"}
             </div>
           </div>
-          <div className="self-stretch justify-center text-clay font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-            You won't need S token to receive your SODA. But you will for any future transactions on Sonic.
+          <div className=" justify-center text-clay font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
+            {isICXToSoda
+              ? "You won't need S token to receive your SODA. But you will for any future transactions on Sonic."
+              : "You won't need S token to receive your ICX. But you will for any future transactions on ICON."}
           </div>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md md:max-w-[480px] p-12">
+          <DialogHeader>
+            <div className="flex flex-row justify-between items-center">
+              <div className="inline-flex justify-start items-center gap-2">
+                <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
+                <div className="mix-blend-multiply justify-end text-espresso font-['InterRegular'] font-bold leading-snug text-(size:--subtitle)">
+                  Transaction completed
+                </div>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="text-clay-light">
+            <p className="font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable)">
+              Your new assets are now in your wallet. Make sure you have native gas to transact with them.
+            </p>
+          </div>
+          <div className="text-clay-light font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable)">
+            Need help?{' '}
+            <span className="underline hover:text-cherry-brighter transition-colors cursor-pointer">
+              Join our Discord
+            </span>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Error Dialog */}
+      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <DialogContent className="sm:max-w-md md:max-w-[480px] p-12">
+          <DialogHeader>
+            <div className="flex flex-row justify-between items-center">
+              <div className="inline-flex justify-start items-center gap-2">
+                <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
+                <div className="mix-blend-multiply justify-end text-espresso font-['InterRegular'] font-bold leading-snug text-(size:--subtitle)">
+                  Transaction failed
+                </div>
+              </div>
+            </div>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-clay-light font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable)">
+              {migrationError || 'An error occurred during migration. Please try again.'}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
@@ -506,7 +970,7 @@ const AppsContainer = () => {
   return (
     <div className="bg-cream-white min-h-screen pb-24 md:pb-0 w-[100vw] overflow-x-hidden">
       <Sidebar isOpen={isOpen} toggle={toggle} setOpenRewardDialog={setOpenRewardDialog} />
-      <div className="self-stretch h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
+      <div className=" h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
         <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
         <div className="w-full max-w-[1200px] justify-between items-center h-10 z-1 inline-flex px-6">
           <div className="flex justify-start items-center">
@@ -671,7 +1135,7 @@ const AppsContainer = () => {
               </svg>
               {tabConfigs.map(tab => (
                 <TabsContent key={tab.value} value={tab.value}>
-                  <div className="flex flex-col" style={{ gap: 'var(--layout-space-comfortable)' }}>
+                  <div className="flex flex-col w-full" style={{ gap: 'var(--layout-space-comfortable)' }}>
                     <SharedContent />
                     {getTabContent(tab.value, () => setShowWalletModal(true))}
                   </div>

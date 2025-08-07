@@ -245,7 +245,7 @@ const WalletItem = ({
                     <>
                       <div
                         key={`${xChainType}-${xConnector.name}`}
-                        className="self-stretch inline-flex justify-between items-center transition-opacity duration-200 hover:opacity-100 opacity-60 cursor-pointer"
+                        className=" inline-flex justify-between items-center transition-opacity duration-200 hover:opacity-100 opacity-60 cursor-pointer"
                       >
                         <div className="flex justify-start items-center gap-4">
                           <div className="flex justify-start items-center flex-wrap content-center">
