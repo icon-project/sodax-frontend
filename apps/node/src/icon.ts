@@ -17,6 +17,7 @@ import {
   type SodaxConfig,
   type MigrationParams,
   LockupPeriod,
+  type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
@@ -231,13 +232,22 @@ async function migrateIcxToSoda(amount: bigint, recipient: Address): Promise<voi
  * @param amount - The amount of legacy bnUSD tokens to migrate
  * @param recipient - The address that will receive the migrated new bnUSD tokens
  */
-async function migrateBnUSD(amount: bigint, recipient: Address): Promise<void> {
+async function migrateBnUSD(
+  amount: bigint,
+  recipient: Address,
+  legacybnUSD: string,
+  newbnUSD: string,
+  dstChainId: SpokeChainId,
+): Promise<void> {
   const result = await sodax.migration.migratebnUSD(
     {
-      srcChainID: iconSpokeChainConfig.chain.id,
+      srcChainId: iconSpokeChainConfig.chain.id,
+      dstChainId: dstChainId,
+      srcbnUSD: legacybnUSD,
+      dstbnUSD: newbnUSD,
       amount,
       to: recipient,
-    },
+    } satisfies UnifiedBnUSDMigrateParams,
     iconSpokeProvider,
   );
 
@@ -317,7 +327,10 @@ async function main() {
   } else if (functionName === 'migrateBnUSD') {
     const amount = BigInt(process.argv[3]); // Get amount from command line argument
     const recipient = process.argv[4] as Address; // Get recipient address from command line argument
-    await migrateBnUSD(amount, recipient);
+    const legacybnUSD = process.argv[5] as string; // Get legacy bnUSD address from command line argument
+    const newbnUSD = process.argv[6] as string; // Get new bnUSD address from command line argument
+    const dstChainID = process.argv[7] as SpokeChainId; // Get destination chain ID from command line argument
+    await migrateBnUSD(amount, recipient, legacybnUSD, newbnUSD, dstChainID);
   } else if (functionName === 'migrateBaln') {
     const amount = BigInt(process.argv[3]); // Get amount from command line argument
     const recipient = process.argv[4] as Address; // Get recipient address from command line argument

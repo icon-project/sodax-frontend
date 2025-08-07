@@ -34,9 +34,8 @@ The MigrationService supports multiple types of migrations:
 
 1. **ICX/wICX → SODA**: Migrate ICX or wICX tokens from ICON to SODA tokens on the hub chain
 2. **SODA → wICX**: Revert SODA tokens from the hub chain back to wICX tokens on ICON
-3. **bnUSD Legacy → New bnUSD**: Migrate legacy bnUSD tokens to new bnUSD tokens on the hub chain
-4. **New bnUSD → Legacy bnUSD**: Revert new bnUSD tokens back to legacy bnUSD tokens
-5. **BALN → SODA**: Migrate BALN tokens to SODA tokens on the hub chain
+3. **bnUSD Legacy ↔ New bnUSD**: Unified migration between legacy and new bnUSD tokens across supported chains
+4. **BALN → SODA**: Migrate BALN tokens to SODA tokens on the hub chain
 
 ## Common Operations
 
@@ -182,22 +181,75 @@ if (result.ok) {
 }
 ```
 
-## bnUSD Migration (Legacy → New bnUSD)
+## bnUSD Migration (Legacy ↔ New bnUSD)
+
+The bnUSD migration now uses a unified API that handles both forward (legacy → new) and reverse (new → legacy) migrations. The system automatically determines the migration direction based on the token addresses provided.
+
+### bnUSD Constants and Helper Functions
+
+The SDK provides several constants and helper functions to work with legacy and new bnUSD tokens across different chains:
+
+```typescript
+import {
+  bnUSDLegacySpokeChainIds,
+  newbnUSDSpokeChainIds,
+  bnUSDLegacyTokens,
+  bnUSDNewTokens,
+  isLegacybnUSDChainId,
+  isNewbnUSDChainId,
+  isLegacybnUSDToken,
+  isNewbnUSDToken,
+  getAllLegacybnUSDTokens,
+} from '@sodax/sdk';
+
+// Get all chains that support legacy bnUSD
+console.log('Legacy bnUSD chains:', bnUSDLegacySpokeChainIds);
+// Output: ['0x1.icon', 'sui', 'stellar']
+
+// Get all chains that support new bnUSD
+console.log('New bnUSD chains:', newbnUSDSpokeChainIds);
+// Output: ['sonic', 'arbitrum', 'base', 'polygon', ...] (all chains except Icon)
+
+// Get all legacy bnUSD token configurations
+console.log('Legacy bnUSD tokens:', bnUSDLegacyTokens);
+// Output: Array of token objects with address, symbol, name, decimals
+
+// Get all new bnUSD token configurations
+console.log('New bnUSD tokens:', bnUSDNewTokens);
+// Output: Array of token objects with address, symbol, name, decimals
+
+// Check if a chain supports legacy bnUSD
+const isLegacyChain = isLegacybnUSDChainId('0x1.icon'); // true
+const isNewChain = isNewbnUSDChainId('sonic'); // true
+
+// Check if a token address is legacy bnUSD
+const isLegacyToken = isLegacybnUSDToken('cx88fd7df7ddff82f7cc735c871dc519838cb235bb'); // true
+const isNewToken = isNewbnUSDToken('0xE801CA34E19aBCbFeA12025378D19c4FBE250131'); // true
+
+// Get all legacy bnUSD tokens with their chain information
+const allLegacyTokens = getAllLegacybnUSDTokens();
+// Output: [
+//   { token: { address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', ... }, chainId: '0x1.icon' },
+//   { token: { address: '0x...', ... }, chainId: 'sui' },
+//   { token: { address: '0x...', ... }, chainId: 'stellar' }
+// ]
+```
 
 ### Migrate Legacy bnUSD to New bnUSD
 
-Migrate legacy bnUSD tokens to new bnUSD tokens on the hub chain.
+Migrate legacy bnUSD tokens to new bnUSD tokens on any spoke chain (besides Icon - which has only legacy bnUSD).
 
 ```typescript
 const sodax = new Sodax();
 
 const migrationParams = {
-  address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // Legacy bnUSD address
-  srcChainID: '0x1.icon', // Source chain ID (ICON)
+  srcChainId: '0x1.icon', // Source chain ID (ICON)
+  dstChainId: 'sonic', // Destination chain ID (spoke chain)
+  srcbnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // Legacy bnUSD address
+  dstbnUSD: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // New bnUSD address
   amount: BigInt(1000000000000000000), // 1 bnUSD (18 decimals)
   to: '0x1234567890123456789012345678901234567890', // Recipient address on hub chain
-  dstChainID: 'sonic', // Destination chain ID (hub chain)
-} satisfies BnUSDMigrateParams;
+} satisfies UnifiedBnUSDMigrateParams;
 
 // Migrate legacy bnUSD to new bnUSD
 const result = await sodax.migration.migratebnUSD(
@@ -216,24 +268,51 @@ if (result.ok) {
 }
 ```
 
-## Reverse bnUSD Migration (New bnUSD → Legacy bnUSD)
-
 ### Reverse Migrate New bnUSD to Legacy bnUSD
 
-Revert new bnUSD tokens back to legacy bnUSD tokens.
+Revert new bnUSD tokens back to legacy bnUSD tokens. Legacy bnUSD exists on Icon, Sui or Stellar chains.
 
 ```typescript
 const sodax = new Sodax();
 
 const revertParams = {
-  srcChainID: 'sonic', // Source chain ID (hub chain)
+  srcChainId: 'sonic', // Source chain ID (any spoke chain besides Icon)
+  dstChainId: '0x1.icon', // Destination chain ID (ICON) where legacy bnUSD exists (Sui, Stellar or Icon)
+  srcbnUSD: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // New bnUSD address
+  dstbnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // Legacy bnUSD address
   amount: BigInt(1000000000000000000), // 1 new bnUSD (18 decimals)
-  to: '0x1234567890123456789012345678901234567890', // Recipient address on spoke chain
-  dstChainID: '0x1.icon', // Destination chain ID (ICON)
-} satisfies BnUSDRevertMigrationParams;
+  to: 'hx1234567890123456789012345678901234567890', // Recipient address on spoke chain
+} satisfies UnifiedBnUSDMigrateParams;
+
+// Check allowance for reverse migration
+const isAllowed = await sodax.migration.isAllowanceValid(
+  revertParams,
+  'revert',
+  sonicSpokeProvider
+);
+
+if (!isAllowed.ok) {
+  console.error('Failed to check allowance:', isAllowed.error);
+} else if (!isAllowed.value) {
+  // Approve if needed
+  const approveResult = await sodax.migration.approve(
+    revertParams,
+    'revert',
+    sonicSpokeProvider
+  );
+  
+  if (approveResult.ok) {
+    console.log('Approval transaction hash:', approveResult.value);
+    // Wait for approval transaction to be mined
+    await sonicSpokeProvider.walletProvider.waitForTransactionReceipt(approveResult.value);
+  } else {
+    console.error('Failed to approve tokens:', approveResult.error);
+    return;
+  }
+}
 
 // Reverse migrate new bnUSD to legacy bnUSD
-const result = await sodax.migration.reverseMigratebnUSD(
+const result = await sodax.migration.migratebnUSD(
   revertParams,
   sonicSpokeProvider,
   30000 // Optional timeout in milliseconds (default: 60000)
@@ -366,14 +445,21 @@ await reverseMigrateIcx(BigInt(1000000000000000000), 'hx123456789012345678901234
 ```typescript
 const sodax = new Sodax();
 
-async function migrateBnUSD(amount: bigint, recipient: Address): Promise<void> {
+async function migrateBnUSD(
+  amount: bigint, 
+  recipient: Address, 
+  legacybnUSD: string, 
+  newbnUSD: string, 
+  dstChainId: SpokeChainId
+): Promise<void> {
   const params = {
-    address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // Legacy bnUSD address
-    srcChainID: '0x1.icon',
+    srcChainId: '0x1.icon', // Source chain ID (ICON)
+    dstChainId: dstChainId,
+    srcbnUSD: legacybnUSD, // Legacy bnUSD address
+    dstbnUSD: newbnUSD, // New bnUSD address
     amount,
     to: recipient,
-    dstChainID: 'sonic',
-  } satisfies BnUSDMigrateParams;
+  } satisfies UnifiedBnUSDMigrateParams;
 
   const result = await sodax.migration.migratebnUSD(params, iconSpokeProvider);
 
@@ -387,8 +473,23 @@ async function migrateBnUSD(amount: bigint, recipient: Address): Promise<void> {
   }
 }
 
-// Usage
-await migrateBnUSD(BigInt(1000000000000000000), '0x1234567890123456789012345678901234567890');
+// Usage - Forward migration (legacy to new)
+await migrateBnUSD(
+  BigInt(1000000000000000000), 
+  '0x1234567890123456789012345678901234567890',
+  'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // Legacy bnUSD
+  '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // New bnUSD
+  'sonic' // Destination chain
+);
+
+// Usage - Reverse migration (new to legacy)
+await migrateBnUSD(
+  BigInt(1000000000000000000), 
+  'hx1234567890123456789012345678901234567890',
+  '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // New bnUSD
+  'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // Legacy bnUSD
+  '0x1.icon' // Destination chain
+);
 ```
 
 ### BALN Migration Example

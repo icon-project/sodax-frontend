@@ -173,31 +173,31 @@ describe('Constants', () => {
       }
     });
 
-  // Tests for getSpokeChainIdFromIntentRelayChainId
-  describe('getSpokeChainIdFromIntentRelayChainId', () => {
-    it('should return the correct SpokeChainId for a valid IntentRelayChainId', () => {
-      for (const [chainId, intentRelayChainId] of Object.entries(ChainIdToIntentRelayChainId)) {
-        expect(getSpokeChainIdFromIntentRelayChainId(intentRelayChainId)).toBe(chainId);
-      }
-    });
+    // Tests for getSpokeChainIdFromIntentRelayChainId
+    describe('getSpokeChainIdFromIntentRelayChainId', () => {
+      it('should return the correct SpokeChainId for a valid IntentRelayChainId', () => {
+        for (const [chainId, intentRelayChainId] of Object.entries(ChainIdToIntentRelayChainId)) {
+          expect(getSpokeChainIdFromIntentRelayChainId(intentRelayChainId)).toBe(chainId);
+        }
+      });
 
-    it('should throw an error for an invalid IntentRelayChainId', () => {
-      // Use a value not present in the map
-      const invalidIntentRelayChainId = 999999999999999999n;
-      expect(() => getSpokeChainIdFromIntentRelayChainId(invalidIntentRelayChainId as IntentRelayChainId)).toThrow(
-        /Invalid intent relay chain id/
-      );
-    });
+      it('should throw an error for an invalid IntentRelayChainId', () => {
+        // Use a value not present in the map
+        const invalidIntentRelayChainId = 999999999999999999n;
+        expect(() => getSpokeChainIdFromIntentRelayChainId(invalidIntentRelayChainId as IntentRelayChainId)).toThrow(
+          /Invalid intent relay chain id/,
+        );
+      });
 
-    it('should work for lower and upper bound of known intent relay chain ids', () => {
-      const ids = Array.from(intentRelayChainIdToSpokeChainIdMap.keys());
-      if (ids.length > 0) {
-        const minId = ids.reduce((a, b) => (a < b ? a : b));
-        const maxId = ids.reduce((a, b) => (a > b ? a : b));
-        expect(getSpokeChainIdFromIntentRelayChainId(minId)).toBe(intentRelayChainIdToSpokeChainIdMap.get(minId));
-        expect(getSpokeChainIdFromIntentRelayChainId(maxId)).toBe(intentRelayChainIdToSpokeChainIdMap.get(maxId));
-      }
+      it('should work for lower and upper bound of known intent relay chain ids', () => {
+        const ids = Array.from(intentRelayChainIdToSpokeChainIdMap.keys());
+        if (ids.length > 0) {
+          const minId = ids.reduce((a, b) => (a < b ? a : b));
+          const maxId = ids.reduce((a, b) => (a > b ? a : b));
+          expect(getSpokeChainIdFromIntentRelayChainId(minId)).toBe(intentRelayChainIdToSpokeChainIdMap.get(minId));
+          expect(getSpokeChainIdFromIntentRelayChainId(maxId)).toBe(intentRelayChainIdToSpokeChainIdMap.get(maxId));
+        }
+      });
     });
-  });
   });
 });

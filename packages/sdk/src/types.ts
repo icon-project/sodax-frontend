@@ -10,7 +10,15 @@ import type {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from './entities/index.js';
-import type { EVM_CHAIN_IDS, EVM_SPOKE_CHAIN_IDS, INTENT_RELAY_CHAIN_IDS, spokeChainConfig } from './index.js';
+import type {
+  bnUSDLegacySpokeChainIds,
+  bnUSDLegacyTokens,
+  EVM_CHAIN_IDS,
+  EVM_SPOKE_CHAIN_IDS,
+  INTENT_RELAY_CHAIN_IDS,
+  newbnUSDSpokeChainIds,
+  spokeChainConfig,
+} from './index.js';
 import type { EvmSpokeDepositParams, SonicSpokeDepositParams } from './services/index.js';
 import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.js';
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
@@ -29,22 +37,13 @@ import type {
   InjectiveNetworkEnv,
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
-  SUI_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
-import type { migrationConfig } from './constants.js';
 
-export type bnUSDLegacySpokeChainId =
-  | typeof ICON_MAINNET_CHAIN_ID
-  | typeof SUI_MAINNET_CHAIN_ID
-  | typeof STELLAR_MAINNET_CHAIN_ID;
-export type bnUSDLegacyMigrationProviders = IconSpokeProvider | SuiSpokeProvider | StellarSpokeProvider;
-
-export type bnUSDLegacyAddress =
-  | (typeof migrationConfig)['bnUSD'][typeof ICON_MAINNET_CHAIN_ID]['legacybnUSD']['address']
-  | (typeof migrationConfig)['bnUSD'][typeof SUI_MAINNET_CHAIN_ID]['legacybnUSD']['address']
-  | (typeof migrationConfig)['bnUSD'][typeof STELLAR_MAINNET_CHAIN_ID]['legacybnUSD']['address'];
+export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
+export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
+export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
+export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 

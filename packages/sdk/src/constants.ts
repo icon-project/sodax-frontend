@@ -16,6 +16,9 @@ import type {
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
   VaultType,
+  LegacybnUSDChainId,
+  LegacybnUSDToken,
+  NewbnUSDChainId,
 } from './index.js';
 import {
   type ChainId,
@@ -163,13 +166,19 @@ export const spokeChainConfig = {
       wrappedSonic: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
-    bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
+    bnUSD: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     supportedTokens: {
       S: {
         symbol: 'S',
         name: 'Sonic',
         decimals: 18,
         address: '0x0000000000000000000000000000000000000000',
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
       },
       WETH: {
         symbol: 'WETH',
@@ -741,6 +750,14 @@ export const spokeChainConfig = {
         address: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d',
       },
       bnUSD: {
+        // same as legacy
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
+      },
+      legacybnUSD: {
+        // duplicate of bnUSD  purely for consistency with other legacy tokens chains (sui, stellar)
         symbol: 'bnUSD',
         name: 'bnUSD',
         decimals: 18,
@@ -783,6 +800,7 @@ export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
 // All addresses are now lowercase for consistency and correctness
 export const hubVaults = {
   IbnUSD: {
+    // ICON bnUSD (Migration) vault on Sonic contains legacy bnUSD tokens (stellar, sui, icon)
     address: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
     reserves: [
       // hub asset addresses contained in the vault
@@ -813,6 +831,7 @@ export const hubVaults = {
     ] as const,
   },
   bnUSD: {
+    // new bnUSD vault on Sonic (also contains IbnUSD vault token as part of it)
     address: '0xe801ca34e19abcbfea12025378d19c4fbe250131',
     reserves: [
       // hub asset addresses contained in the vault
@@ -941,6 +960,54 @@ export const hubVaults = {
     ] as const,
   },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
+
+// bnUSD Migration configs
+export const bnUSDLegacySpokeChainIds = [
+  ICON_MAINNET_CHAIN_ID,
+  SUI_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
+] as const;
+export const newbnUSDSpokeChainIds = SPOKE_CHAIN_IDS.filter(chainId => chainId !== ICON_MAINNET_CHAIN_ID);
+export const bnUSDLegacyTokens = [
+  spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
+  spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
+] as const;
+export const bnUSDNewTokens = newbnUSDSpokeChainIds.map(chainId => spokeChainConfig[chainId].supportedTokens.bnUSD);
+
+export const isLegacybnUSDChainId = (chainId: SpokeChainId): boolean => {
+  return bnUSDLegacySpokeChainIds.includes(chainId as LegacybnUSDChainId);
+};
+
+export const isNewbnUSDChainId = (chainId: SpokeChainId): boolean => {
+  return newbnUSDSpokeChainIds.includes(chainId as NewbnUSDChainId);
+};
+
+export const isLegacybnUSDToken = (token: Token | string): boolean => {
+  if (typeof token === 'string') {
+    return bnUSDLegacyTokens.some(t => t.address.toLowerCase() === token.toLowerCase());
+  }
+
+  return bnUSDLegacyTokens.some(t => t.address.toLowerCase() === token.address.toLowerCase());
+};
+
+export const isNewbnUSDToken = (token: Token | string): boolean => {
+  if (typeof token === 'string') {
+    return newbnUSDSpokeChainIds
+      .map(chainId => spokeChainConfig[chainId].supportedTokens.bnUSD)
+      .some(t => t.address.toLowerCase() === token.toLowerCase());
+  }
+  return newbnUSDSpokeChainIds
+    .map(chainId => spokeChainConfig[chainId].supportedTokens.bnUSD)
+    .some(t => t.address.toLowerCase() === token.address.toLowerCase());
+};
+
+export const getAllLegacybnUSDTokens = (): { token: LegacybnUSDToken; chainId: LegacybnUSDChainId }[] => {
+  return bnUSDLegacySpokeChainIds.map(chainId => ({
+    token: spokeChainConfig[chainId].supportedTokens.legacybnUSD,
+    chainId,
+  }));
+};
 
 export const hubAssets: Record<
   SpokeChainId,
@@ -1292,7 +1359,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'legacybnUSD',
       name: 'legacybnUSD',
-      vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
+      vault: hubVaults.IbnUSD.address,
     },
   },
   [SUI_MAINNET_CHAIN_ID]: {
@@ -1364,7 +1431,7 @@ export const hubAssets: Record<
       decimal: 9,
       symbol: 'bnUSD',
       name: 'legacybnUSD',
-      vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
+      vault: hubVaults.IbnUSD.address,
     },
   },
   [SOLANA_MAINNET_CHAIN_ID]: {
@@ -1410,7 +1477,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: hubVaults.IbnUSD.address,
     },
     [spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.BALN.address]: {
       asset: '0xde8e19a099fedf9d617599f62c5f7f020d92b572',
@@ -1623,29 +1690,6 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
-
-export const migrationConfig = {
-  bnUSD: {
-    [ICON_MAINNET_CHAIN_ID]: {
-      legacybnUSD: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-      newbnUSD: hubVaults.bnUSD.address,
-    },
-    [SUI_MAINNET_CHAIN_ID]: {
-      legacybnUSD: spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
-      newbnUSD: hubVaults.bnUSD.address,
-    },
-    [STELLAR_MAINNET_CHAIN_ID]: {
-      legacybnUSD: spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
-      newbnUSD: hubVaults.bnUSD.address,
-    },
-  },
-  ICX: {
-    [ICON_MAINNET_CHAIN_ID]: {
-      icx: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['nativeToken'],
-      wICX: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['addresses']['wICX'],
-    },
-  },
-} as const;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
   moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
