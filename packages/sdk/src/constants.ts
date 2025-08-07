@@ -1359,7 +1359,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'legacybnUSD',
       name: 'legacybnUSD',
-      vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
+      vault: hubVaults.IbnUSD.address,
     },
   },
   [SUI_MAINNET_CHAIN_ID]: {
@@ -1431,7 +1431,7 @@ export const hubAssets: Record<
       decimal: 9,
       symbol: 'bnUSD',
       name: 'legacybnUSD',
-      vault: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
+      vault: hubVaults.IbnUSD.address,
     },
   },
   [SOLANA_MAINNET_CHAIN_ID]: {
@@ -1477,7 +1477,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: hubVaults.IbnUSD.address,
     },
     [spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.BALN.address]: {
       asset: '0xde8e19a099fedf9d617599f62c5f7f020d92b572',

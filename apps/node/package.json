@@ -10,6 +10,7 @@
     "moneyMarket": "pnpm run build && node dist/moneymarket.js",
     "stellar": "pnpm run build && node dist/stellar.js",
     "icon": "pnpm run build && node dist/icon.js",
+    "bnusd-migration-test": "pnpm run build && node dist/bnusd-migration.test.js",
     "solana": "pnpm run build && node dist/solana.js",
     "example": "pnpm run build && node dist/examples/injective/index.js",
     "build": "tsc",

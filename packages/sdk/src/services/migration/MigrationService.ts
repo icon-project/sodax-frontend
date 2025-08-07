@@ -30,13 +30,16 @@ import {
   isIconAddress,
   BnUSDMigrationService,
   type GetSpokeDepositParamsType,
-  SuiSpokeProvider,
-  StellarSpokeProvider,
   BalnSwapService,
   type BalnMigrateParams,
   type UnifiedBnUSDMigrateParams,
+  isIcxMigrateParams,
+  isBalnMigrateParams,
+  isUnifiedBnUSDMigrateParams,
+  EvmSpokeProvider,
+  isIcxCreateRevertMigrationParams,
 } from '../../index.js';
-import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 import { isAddress } from 'viem';
 
 export type GetMigrationFailedPayload<T extends MigrationErrorCode> = T extends 'CREATE_MIGRATION_INTENT_FAILED'
@@ -129,13 +132,32 @@ export class MigrationService {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
         invariant(isAddress(params.to) || isIconAddress(params.to), 'To address is required');
         invariant(
-          spokeProvider instanceof IconSpokeProvider ||
-            spokeProvider instanceof SuiSpokeProvider ||
-            spokeProvider instanceof StellarSpokeProvider,
-          'Spoke provider must be an instance of IconSpokeProvider, SuiSpokeProvider, or StellarSpokeProvider',
+          isIcxMigrateParams(params) || isBalnMigrateParams(params) || isUnifiedBnUSDMigrateParams(params),
+          'Invalid params',
         );
 
-        // migrate action chains does not require allowance check, thus just return true
+        if (spokeProvider instanceof IconSpokeProvider && (isIcxMigrateParams(params) || isBalnMigrateParams(params))) {
+          // icx and baln migration does not require allowance check since they originate from icon, thus just return true
+          return {
+            ok: true,
+            value: true,
+          };
+        }
+
+        // bnUSD only requires allowance check for EVM spoke chains
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          return await Erc20Service.isAllowanceValid(
+            params.srcbnUSD as Address,
+            params.amount,
+            await evmSpokeProvider.walletProvider.getWalletAddress(),
+            evmSpokeProvider instanceof EvmSpokeProvider
+              ? evmSpokeProvider.chainConfig.addresses.assetManager
+              : evmSpokeProvider.chainConfig.bnUSD as Address,
+            evmSpokeProvider,
+          );
+        }
+
         return {
           ok: true,
           value: true,
@@ -145,21 +167,33 @@ export class MigrationService {
       if (action === 'revert') {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
         invariant(params.to.length > 0, 'To address is required');
-        invariant(
-          spokeProvider instanceof SonicSpokeProvider,
-          'Spoke provider must be an instance of SonicSpokeProvider',
-        );
+        invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
-        const wallet = await spokeProvider.walletProvider.getWalletAddress();
-        const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
+        if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
+          const wallet = await spokeProvider.walletProvider.getWalletAddress();
+          const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
 
-        return await Erc20Service.isAllowanceValid(
-          this.hubProvider.chainConfig.addresses.sodaToken,
-          params.amount,
-          wallet,
-          userRouter,
-          spokeProvider,
-        );
+          return await Erc20Service.isAllowanceValid(
+            this.hubProvider.chainConfig.addresses.sodaToken,
+            params.amount,
+            wallet,
+            userRouter,
+            spokeProvider,
+          );
+        }
+
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          return await Erc20Service.isAllowanceValid(
+            params.srcbnUSD as Address,
+            params.amount,
+            await evmSpokeProvider.walletProvider.getWalletAddress(),
+            evmSpokeProvider instanceof EvmSpokeProvider
+              ? evmSpokeProvider.chainConfig.addresses.assetManager
+              : evmSpokeProvider.chainConfig.bnUSD as Address,
+            evmSpokeProvider,
+          );
+        }
       }
 
       return {
@@ -200,28 +234,78 @@ export class MigrationService {
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>>> {
     try {
+      if (action === 'migrate') {
+        invariant(params.amount > 0n, 'Amount must be greater than 0');
+        invariant(params.to.length > 0, 'To address is required');
+        invariant(isUnifiedBnUSDMigrateParams(params), 'Invalid params');
+
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          const result = await Erc20Service.approve(
+            params.srcbnUSD as Address,
+            params.amount,
+            evmSpokeProvider instanceof EvmSpokeProvider
+              ? evmSpokeProvider.chainConfig.addresses.assetManager
+              : evmSpokeProvider.chainConfig.bnUSD as Address,
+            evmSpokeProvider,
+            raw
+          );
+
+          return {
+            ok: true,
+            value: result satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<S, R>,
+          };
+        }
+
+        return {
+          ok: false,
+          error: new Error('Invalid params for migrate action'),
+        };
+      }
       if (action === 'revert') {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
         invariant(params.to.length > 0, 'To address is required');
-        invariant(
-          spokeProvider instanceof SonicSpokeProvider,
-          'Spoke provider must be an instance of SonicSpokeProvider',
-        );
+        invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
-        const wallet = await spokeProvider.walletProvider.getWalletAddress();
-        const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
+        if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
+          const wallet = await spokeProvider.walletProvider.getWalletAddress();
+          const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
 
-        const result = await Erc20Service.approve(
-          this.hubProvider.chainConfig.addresses.sodaToken,
-          params.amount,
-          userRouter,
-          spokeProvider,
-          raw,
-        );
+          const result = await Erc20Service.approve(
+            this.hubProvider.chainConfig.addresses.sodaToken,
+            params.amount,
+            userRouter,
+            spokeProvider,
+            raw,
+          );
+
+          return {
+            ok: true,
+            value: result satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<S, R>,
+          };
+        }
+
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          const result = await Erc20Service.approve(
+            params.srcbnUSD as Address,
+            params.amount,
+            evmSpokeProvider instanceof EvmSpokeProvider
+              ? evmSpokeProvider.chainConfig.addresses.assetManager
+              : evmSpokeProvider.chainConfig.bnUSD as Address,
+            evmSpokeProvider,
+            raw,
+          );
+
+          return {
+            ok: true,
+            value: result satisfies TxReturnType<EvmSpokeProvider | SonicSpokeProvider, R> as TxReturnType<S, R>,
+          };
+        }
 
         return {
-          ok: true,
-          value: result satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<S, R>,
+          ok: false,
+          error: new Error('Invalid params or chain type for revert action'),
         };
       }
 

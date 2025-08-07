@@ -177,19 +177,6 @@ describe('MigrationService', () => {
           expect(result.error).toBeInstanceOf(Error);
         }
       });
-
-      it('should return error for wrong provider type', async () => {
-        const result = await migrationService.isAllowanceValid(
-          mockMigrationParams,
-          'migrate',
-          {} as unknown as SonicSpokeProvider,
-        );
-
-        expect(result.ok).toBe(false);
-        if (!result.ok) {
-          expect(result.error).toBeInstanceOf(Error);
-        }
-      });
     });
 
     describe('revert action', () => {
