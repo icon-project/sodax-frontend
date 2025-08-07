@@ -368,7 +368,7 @@ describe('Sodax', () => {
           },
         });
 
-        const result = await sodax.solver.swap(mockCreateIntentParams, mockBscSpokeProvider, partnerFeeAmount);
+        const result = await sodax.solver.swap(mockCreateIntentParams, mockBscSpokeProvider);
 
         expect(result.ok).toBe(true);
         if (result.ok) {
@@ -379,7 +379,7 @@ describe('Sodax', () => {
         expect(sodax.solver['createIntent']).toHaveBeenCalledWith(
           mockCreateIntentParams,
           mockBscSpokeProvider,
-          partnerFeeAmount,
+          sodax.solver.config.partnerFee,
           false,
         );
         expect(sodax.solver['postExecution']).toHaveBeenCalledWith({
