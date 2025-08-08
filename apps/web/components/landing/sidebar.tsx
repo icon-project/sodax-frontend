@@ -22,7 +22,7 @@ const Sidebar = ({
       {/* Modal overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-10 transition-opacity duration-300 ease-in-out"
+          className="fixed inset-0 bg-black/50 z-99 transition-opacity duration-300 ease-in-out"
           onClick={handleOverlayInteraction}
           onMouseDown={handleOverlayInteraction}
           onTouchStart={handleOverlayInteraction}
@@ -31,7 +31,7 @@ const Sidebar = ({
 
       {/* Sidebar */}
       <div
-        className={`sidebar-container fixed w-[295px] h-full overflow-hidden justify-center bg-cherry-soda grid pt-[180px] left-0 z-20 transition-transform duration-300 ease-in-out ${
+        className={`sidebar-container fixed w-[295px] h-full overflow-hidden justify-center bg-cherry-soda grid pt-[180px] left-0 transition-transform duration-300 ease-in-out z-100 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         onDragStart={e => e.preventDefault()}
