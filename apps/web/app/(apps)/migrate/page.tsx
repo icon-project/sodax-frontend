@@ -490,7 +490,7 @@ export default function MigratePage() {
             </Button>
             <Button
               variant="cherry"
-              className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[232px]"
+              className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px] md:w-[232px]"
               onClick={buttonStates.migrate.onClick}
               disabled={buttonStates.migrate.disabled}
             >
