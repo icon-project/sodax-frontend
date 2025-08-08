@@ -239,14 +239,11 @@ const WalletItem = ({
             ) : (
               <div className="flex flex-col gap-4 w-full">
                 <Separator className="h-1 bg-clay opacity-30" />
-                {sortedXConnectors.map(xConnector => {
+                {sortedXConnectors.map((xConnector, index) => {
                   const isConnectingToThis = isPending && connectingXConnector?.id === xConnector.id;
                   return (
-                    <>
-                      <div
-                        key={`${xChainType}-${xConnector.name}`}
-                        className=" inline-flex justify-between items-center transition-opacity duration-200 hover:opacity-100 opacity-60 cursor-pointer"
-                      >
+                    <React.Fragment key={`${xChainType}-${xConnector.name}-${index}`}>
+                      <div className=" inline-flex justify-between items-center transition-opacity duration-200 hover:opacity-100 opacity-60 cursor-pointer">
                         <div className="flex justify-start items-center gap-4">
                           <div className="flex justify-start items-center flex-wrap content-center">
                             <div className="flex justify-start items-center flex-wrap content-center">
@@ -267,7 +264,6 @@ const WalletItem = ({
                           </div>
                         </div>
                         <Button
-                          key={`${xChainType}-${xConnector.name}`}
                           className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
                           onClick={() => handleConnect(xConnector)}
                           disabled={isPending && connectingXConnector?.id === xConnector.id}
@@ -276,8 +272,8 @@ const WalletItem = ({
                           {!isConnectingToThis && <PlusIcon className="w-4 h-4" />}
                         </Button>
                       </div>
-                      <Separator className="h-1 bg-clay opacity-30" key={`${xChainType}-${xConnector.name}`} />
-                    </>
+                      <Separator className="h-1 bg-clay opacity-30" />
+                    </React.Fragment>
                   );
                 })}
               </div>

@@ -41,8 +41,9 @@ const NetworkDisplay: React.FC<NetworkDisplayProps> = ({
         <div className="justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
           {description}
         </div>
-        <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) w-40">
+        <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) inline-flex gap-1">
           {label}
+          <span className="hidden md:inline">Network</span>
         </div>
       </div>
     </div>

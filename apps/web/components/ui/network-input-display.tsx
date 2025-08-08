@@ -42,7 +42,7 @@ const NetworkInputDisplay: React.FC<NetworkInputDisplayProps> = ({
 }: NetworkInputDisplayProps) => {
   return (
     <div
-      className={` relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center ${className}`}
+      className={`w-full relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center ${className}`}
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
     >
       <NetworkDisplay iconSrc={iconSrc} secondaryIconSrc={secondaryIconSrc} label={label} description={description} />
