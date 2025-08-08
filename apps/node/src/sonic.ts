@@ -20,6 +20,11 @@ import {
   type MoneyMarketRepayParams,
   type IconEoaAddress,
   type IcxCreateRevertMigrationParams,
+  BridgeService,
+  type BridgeParams,
+  type PartnerFee,
+  DEFAULT_RELAYER_API_ENDPOINT,
+  encodeAddress,
   type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
@@ -43,6 +48,10 @@ const hubConfig = {
 
 const hubProvider = new EvmHubProvider(hubConfig);
 const spokeProvider = new SonicSpokeProvider(spokeEvmWallet, spokeChainConfig[HUB_CHAIN_ID]);
+
+// Initialize BridgeService
+const relayerApiEndpoint = DEFAULT_RELAYER_API_ENDPOINT;
+const bridgeService = new BridgeService(hubProvider, relayerApiEndpoint);
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
@@ -459,6 +468,61 @@ async function borrowTo(token: Hex, amount: bigint, to: Hex, spokeChainId: Spoke
   const txHash = await SonicSpokeService.callWallet(data, spokeProvider);
   console.log('[borrow] txHash', txHash);
 }
+
+/**
+ * Bridge tokens from one chain to another
+ * @param srcChainId - The source chain ID
+ * @param srcAsset - The source asset address
+ * @param amount - The amount to bridge
+ * @param dstChainId - The destination chain ID
+ * @param dstAsset - The destination asset address
+ * @param recipient - The recipient address on the destination chain
+ * @param partnerFee - Optional partner fee configuration
+ */
+async function bridge(
+  srcChainId: SpokeChainId,
+  srcAsset: string,
+  amount: bigint,
+  dstChainId: SpokeChainId,
+  dstAsset: string,
+  recipient: Hex,
+  partnerFee?: PartnerFee,
+): Promise<void> {
+  const bridgeParams: BridgeParams = {
+    srcChainId,
+    srcAsset,
+    amount,
+    dstChainId,
+    dstAsset,
+    recipient: encodeAddress(dstChainId, recipient),
+    partnerFee,
+  };
+
+  // For Sonic as source chain, use SonicSpokeProvider
+  if (srcChainId === SONIC_MAINNET_CHAIN_ID) {
+    const isAllowed = await bridgeService.isAllowanceValid(bridgeParams, spokeProvider);
+    console.log('[bridge] isAllowed', isAllowed);
+    if (!isAllowed.ok || !isAllowed.value) {
+      await bridgeService.approve(bridgeParams, spokeProvider);
+      console.log('[bridge] approved');
+      return;
+    }
+
+    const result = await bridgeService.bridge(bridgeParams, spokeProvider);
+
+    if (result.ok) {
+      const [spokeTxHash, hubTxHash] = result.value;
+      console.log('[bridge] spokeTxHash:', spokeTxHash);
+      console.log('[bridge] hubTxHash:', hubTxHash);
+      console.log('[bridge] Bridge transaction completed successfully');
+    } else {
+      console.error('[bridge] Bridge failed:', result.error);
+    }
+  } else {
+    console.error('[bridge] Source chain not supported for bridging from this script');
+  }
+}
+
 // Main function to decide which function to call
 async function main() {
   const functionName = process.argv[2];
@@ -512,9 +576,23 @@ async function main() {
     const legacybnUSD = process.argv[6] as string;
     const newbnUSD = process.argv[7] as string;
     await reverseMigrateBnUSD(dstChainID, amount, recipient, legacybnUSD, newbnUSD);
+  } else if (functionName === 'bridge') {
+    const srcChainId = process.argv[3] as SpokeChainId;
+    const srcAsset = process.argv[4] as string;
+    const amount = BigInt(process.argv[5]);
+    const dstChainId = process.argv[6] as SpokeChainId;
+    const dstAsset = process.argv[7] as string;
+    const recipient = process.argv[8] as Hex;
+    const partnerFeeAddress = process.argv[9] as Hex | undefined;
+    const partnerFeeAmount = process.argv[10] ? BigInt(process.argv[10]) : undefined;
+
+    const partnerFee =
+      partnerFeeAddress && partnerFeeAmount ? { address: partnerFeeAddress, amount: partnerFeeAmount } : undefined;
+
+    await bridge(srcChainId, srcAsset, amount, dstChainId, dstAsset, recipient, partnerFee);
   } else {
     console.log(
-      'Function not recognized. Please use one of: "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", "repayHighLevel", "reverseMigrate", or "reverseMigrateBnUSD".',
+      'Function not recognized. Please use one of: "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", "repayHighLevel", "reverseMigrate", "reverseMigrateBnUSD", or "bridge".',
     );
     console.log('Usage examples:');
     console.log('  npm run sonic supply <token_address> <amount>');
@@ -529,6 +607,9 @@ async function main() {
     console.log('  npm run sonic reverseMigrate <amount> <to_address>');
     console.log(
       '  npm run sonic reverseMigrateBnUSD <newbnUSD_address> <dstChainID> <legacybnUSD_address> <amount> <recipient_address>',
+    );
+    console.log(
+      '  npm run sonic bridge <srcChainId> <srcAsset> <amount> <dstChainId> <dstAsset> <recipient> [partnerFeeAddress] [partnerFeeAmount]',
     );
   }
 }
