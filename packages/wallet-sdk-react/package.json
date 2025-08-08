@@ -1,5 +1,5 @@
 {
-  "name": "@sodax/wallet-sdk",
+  "name": "@sodax/wallet-sdk-react",
   "license": "MIT",
   "version": "0.0.1-test",
   "description": "Wallet SDK of Sodax",

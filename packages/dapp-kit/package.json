@@ -25,7 +25,7 @@
   "dependencies": {
     "@sodax/sdk": "workspace:*",
     "@sodax/types": "workspace:*",
-    "@sodax/wallet-sdk": "workspace:*",
+    "@sodax/wallet-sdk-react": "workspace:*",
     "viem": "catalog:"
   },
   "devDependencies": {

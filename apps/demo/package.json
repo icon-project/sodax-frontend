@@ -27,7 +27,7 @@
     "@sodax/dapp-kit": "workspace:*",
     "@sodax/sdk": "workspace:*",
     "@sodax/types": "workspace:*",
-    "@sodax/wallet-sdk": "workspace:*",
+    "@sodax/wallet-sdk-react": "workspace:*",
     "@tanstack/react-query": "catalog:",
     "@types/node": "catalog:",
     "@vitejs/plugin-react": "4.2.1",

@@ -1,4 +1,4 @@
-# @sodax/wallet-sdk
+# @sodax/wallet-sdk-react
 
 A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet connectivity across multiple blockchain networks.
 
@@ -24,13 +24,13 @@ A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet 
 
 ```bash
 # Using npm
-npm install @sodax/wallet-sdk
+npm install @sodax/wallet-sdk-react
 
 # Using yarn
-yarn add @sodax/wallet-sdk
+yarn add @sodax/wallet-sdk-react
 
 # Using pnpm
-pnpm add @sodax/wallet-sdk
+pnpm add @sodax/wallet-sdk-react
 ```
 
 ## Peer Dependencies
@@ -47,7 +47,7 @@ This package requires the following peer dependencies:
 ## Quick Start
 
 ```typescript
-import { XWagmiProviders, useXConnectors, useXConnect, useXAccount } from '@sodax/wallet-sdk';
+import { XWagmiProviders, useXConnectors, useXConnect, useXAccount } from '@sodax/wallet-sdk-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
