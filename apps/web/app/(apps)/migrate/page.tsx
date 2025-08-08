@@ -242,6 +242,23 @@ export default function MigratePage() {
     const n = Number(inputValue);
     if (!inputValue || isNaN(n) || n <= 0) return;
 
+    // Validate balance before migration
+    if (isICXToSoda) {
+      const inputAmount = parseUnits(inputValue, 18);
+      if (inputAmount > icxBalance) {
+        setMigrationError('Please insert available amount.');
+        setShowErrorDialog(true);
+        return;
+      }
+    } else {
+      const inputAmount = parseUnits(inputValue, 18);
+      if (inputAmount > sodaBalance) {
+        setMigrationError('Please insert available amount.');
+        setShowErrorDialog(true);
+        return;
+      }
+    }
+
     setIsMigrating(true);
     try {
       const sodax = new Sodax({
@@ -388,7 +405,11 @@ export default function MigratePage() {
           <button
             type="button"
             className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] border-4 border-[#F5F2F2] flex justify-center items-center hover:bg-cherry-grey hover:outline-cherry-grey hover:scale-110 cursor-pointer transition-all duration-200 active:bg-cream-white z-50"
-            onClick={() => setIsICXToSoda(v => !v)}
+            onClick={() => {
+              setIsICXToSoda(v => !v);
+              setIcxInputValue(0);
+              setSodaInputValue(0);
+            }}
             aria-label="Switch direction"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -545,7 +566,7 @@ export default function MigratePage() {
               </div>
             </div>
           </DialogHeader>
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col gap-4">
             <p className="text-clay-light font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable)">
               {migrationError || 'An error occurred during migration. Please try again.'}
             </p>
