@@ -2,9 +2,16 @@ import { type Address, encodeFunctionData } from 'viem';
 import { erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
 import type { EvmHubProvider, EvmSpokeProvider } from '../../entities/index.js';
 import { connectionAbi, getIntentRelayChainId } from '../../index.js';
-import type { EvmReturnType, EvmTransferToHubParams, PromiseEvmTxReturnType, TxReturnType } from '../../types.js';
+import type {
+  DepositSimulationParams,
+  EvmReturnType,
+  EvmTransferToHubParams,
+  PromiseEvmTxReturnType,
+  TxReturnType,
+} from '../../types.js';
 import type { EvmRawTransaction, Hex, HubAddress } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
+import { encodeAddress } from '../../utils/shared-utils.js';
 
 export type EvmSpokeDepositParams = {
   from: Address; // The address of the user on the spoke chain
@@ -96,6 +103,40 @@ export class EvmSpokeService {
       functionName: 'balanceOf',
       args: [token],
     });
+  }
+
+  /**
+   * Generate simulation parameters for deposit from EvmSpokeDepositParams.
+   * @param {EvmSpokeDepositParams} params - The deposit parameters.
+   * @param {EvmSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
+   */
+  public static async getSimulateDepositParams(
+    params: EvmSpokeDepositParams,
+    spokeProvider: EvmSpokeProvider,
+    hubProvider: EvmHubProvider,
+  ): Promise<DepositSimulationParams> {
+    const to =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        params.from,
+        hubProvider,
+      ));
+
+    return {
+      spokeChainID: spokeProvider.chainConfig.chain.id,
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+      to,
+      amount: params.amount,
+      data: params.data,
+      srcAddress: encodeAddress(
+        spokeProvider.chainConfig.chain.id,
+        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
+      ),
+    };
   }
 
   /**
