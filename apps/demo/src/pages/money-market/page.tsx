@@ -3,7 +3,7 @@ import React from 'react';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
 import { Button } from '@/components/ui/button';
-import { useXAccount } from '@sodax/wallet-sdk';
+import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function MoneyMarketPage() {

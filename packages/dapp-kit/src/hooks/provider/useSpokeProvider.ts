@@ -27,7 +27,7 @@ import type {
   IStellarWalletProvider,
   ISolanaWalletProvider,
 } from '@sodax/types';
-import { getXChainType, useWalletProvider } from '@sodax/wallet-sdk';
+import { getXChainType, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useMemo } from 'react';
 
 /**
