@@ -1741,6 +1741,9 @@ export const chainIdToHubAssetsMap: Map<SpokeChainId, Map<Address, HubAssetInfo>
 export const supportedHubAssets: Set<Address> = new Set(
   Object.values(hubAssets).flatMap(assets => Object.values(assets).map(info => info.asset.toLowerCase() as Address)),
 );
+export const supportedSodaAssets: Set<Address> = new Set(
+  Object.values(hubAssets).flatMap(assets => Object.values(assets).map(info => info.vault.toLowerCase() as Address)),
+);
 export const spokeChainIdsSet = new Set(SPOKE_CHAIN_IDS);
 
 export const getHubAssetInfo = (chainId: SpokeChainId, asset: OriginalAssetAddress): HubAssetInfo | undefined =>
@@ -1751,6 +1754,7 @@ export const getOriginalAssetAddress = (chainId: SpokeChainId, hubAsset: Address
   hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
 export const isValidHubAsset = (hubAsset: Address): boolean =>
   supportedHubAssets.has(hubAsset.toLowerCase() as Address);
+export const isValidVault = (vault: Address): boolean => supportedSodaAssets.has(vault.toLowerCase() as Address);
 export const isValidChainHubAsset = (chainId: SpokeChainId, hubAsset: Address): boolean =>
   chainIdToHubAssetsMap.get(chainId)?.has(hubAsset.toLowerCase() as Address) ?? false;
 export const isValidSpokeChainId = (chainId: SpokeChainId): boolean => spokeChainIdsSet.has(chainId);
