@@ -12,15 +12,15 @@ import {
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
-  type SolverConfigParams,
   type HttpUrl,
-  bnUSDLegacyAddress,
+  UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
-import { HubChainId, SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
+import { solverConfig } from './config.js';
 dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -52,12 +52,6 @@ const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, ste
 });
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
-
-const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: undefined,
-} satisfies SolverConfigParams;
 
 const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const hubConfig = {
@@ -239,12 +233,18 @@ async function repay(token: string, amount: bigint) {
 async function migrateBnUSD(
   amount: bigint,
   recipient: Address,
+  legacybnUSD: string,
+  newbnUSD: string,
+  dstChainID: SpokeChainId,
 ): Promise<void> {
   const result = await sodax.migration.migratebnUSD({
-    srcChainID: stellarSpokeProvider.chainConfig.chain.id as typeof STELLAR_MAINNET_CHAIN_ID,
+    srcChainId: stellarSpokeProvider.chainConfig.chain.id,
+    srcbnUSD: legacybnUSD,
+    dstbnUSD: newbnUSD,
+    dstChainId: dstChainID,
     amount,
     to: recipient,
-  }, stellarSpokeProvider);
+  } satisfies UnifiedBnUSDMigrateParams, stellarSpokeProvider);
 
   if (result.ok) {
     console.log('[migrateBnUSD] txHash', result.value);
@@ -291,7 +291,10 @@ async function main() {
   } else if (functionName === 'migrateBnUSD') {
     const amount = BigInt(process.argv[3]);
     const recipient = process.argv[4] as Address;
-    await migrateBnUSD(amount, recipient);
+    const legacybnUSD = process.argv[5] as string;
+    const newbnUSD = process.argv[6] as string;
+    const dstChainID = process.argv[7] as SpokeChainId;
+    await migrateBnUSD(amount, recipient, legacybnUSD, newbnUSD, dstChainID);
   } else if (functionName === 'balance') {
     const token = process.argv[3] as string;
     await getBalance(token);

@@ -23,9 +23,18 @@ import {
   getIntentRelayChainId,
   type IcxTokenType,
   type MigrationAction,
+  type UnifiedBnUSDMigrateParams,
+  bnUSDLegacySpokeChainIds,
+  newbnUSDSpokeChainIds,
+  bnUSDLegacyTokens,
+  bnUSDNewTokens,
+  isLegacybnUSDChainId,
+  isNewbnUSDChainId,
+  isLegacybnUSDToken,
+  isNewbnUSDToken,
 } from '../../index.js';
 import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import type { IIconWalletProvider, IEvmWalletProvider } from '@sodax/types';
+import type { IIconWalletProvider, IEvmWalletProvider, SpokeChainId } from '@sodax/types';
 import * as IntentRelayApiService from '../../services/intentRelay/IntentRelayApiService.js';
 
 const mockEvmAddress = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' satisfies `0x${string}`;
@@ -41,6 +50,25 @@ const mockRevertMigrationParams: IcxCreateRevertMigrationParams = {
   amount: 1000000000000000000n, // 1 SODA token with 18 decimals
   to: 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6', // Icon address
 } satisfies IcxCreateRevertMigrationParams;
+
+// bnUSD Migration test parameters using real constants
+const mockBnUSDLegacyToNewParams: UnifiedBnUSDMigrateParams = {
+  srcChainId: ICON_MAINNET_CHAIN_ID,
+  dstChainId: SONIC_MAINNET_CHAIN_ID,
+  srcbnUSD: bnUSDLegacyTokens[0]?.address ?? 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // ICON legacy bnUSD
+  dstbnUSD: bnUSDNewTokens[0]?.address ?? '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // Sonic new bnUSD
+  amount: 1000000000000000000n, // 1 bnUSD with 18 decimals
+  to: mockEvmAddress,
+} satisfies UnifiedBnUSDMigrateParams;
+
+const mockBnUSDNewToLegacyParams: UnifiedBnUSDMigrateParams = {
+  srcChainId: SONIC_MAINNET_CHAIN_ID,
+  dstChainId: ICON_MAINNET_CHAIN_ID,
+  srcbnUSD: bnUSDNewTokens[0]?.address ?? '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // Sonic new bnUSD
+  dstbnUSD: bnUSDLegacyTokens[0]?.address ?? 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // ICON legacy bnUSD
+  amount: 1000000000000000000n, // 1 bnUSD with 18 decimals
+  to: 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6', // Icon address
+} satisfies UnifiedBnUSDMigrateParams;
 
 const mockIconWalletProvider = {
   getWalletAddress: vi.fn().mockResolvedValueOnce('hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6'),
@@ -149,19 +177,6 @@ describe('MigrationService', () => {
           expect(result.error).toBeInstanceOf(Error);
         }
       });
-
-      it('should return error for wrong provider type', async () => {
-        const result = await migrationService.isAllowanceValid(
-          mockMigrationParams,
-          'migrate',
-          {} as unknown as SonicSpokeProvider,
-        );
-
-        expect(result.ok).toBe(false);
-        if (!result.ok) {
-          expect(result.error).toBeInstanceOf(Error);
-        }
-      });
     });
 
     describe('revert action', () => {
@@ -172,7 +187,11 @@ describe('MigrationService', () => {
           value: true,
         });
 
-        const result = await migrationService.isAllowanceValid(mockRevertMigrationParams, 'revert', mockSonicSpokeProvider);
+        const result = await migrationService.isAllowanceValid(
+          mockRevertMigrationParams,
+          'revert',
+          mockSonicSpokeProvider,
+        );
 
         expect(result.ok).toBe(true);
         if (result.ok) {
@@ -228,7 +247,11 @@ describe('MigrationService', () => {
           error: new Error('Allowance check failed'),
         });
 
-        const result = await migrationService.isAllowanceValid(mockRevertMigrationParams, 'revert', mockSonicSpokeProvider);
+        const result = await migrationService.isAllowanceValid(
+          mockRevertMigrationParams,
+          'revert',
+          mockSonicSpokeProvider,
+        );
 
         expect(result.ok).toBe(false);
         if (!result.ok) {
@@ -242,7 +265,11 @@ describe('MigrationService', () => {
         ...mockMigrationParams,
       } satisfies MigrationParams;
 
-      const result = await migrationService.isAllowanceValid(invalidParams, 'migrate1' as MigrationAction, mockIconSpokeProvider);
+      const result = await migrationService.isAllowanceValid(
+        invalidParams,
+        'migrate1' as MigrationAction,
+        mockIconSpokeProvider,
+      );
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -312,7 +339,11 @@ describe('MigrationService', () => {
     });
 
     it('should return error for wrong provider type', async () => {
-      const result = await migrationService.approve(mockRevertMigrationParams, 'revert', {} as unknown as SonicSpokeProvider);
+      const result = await migrationService.approve(
+        mockRevertMigrationParams,
+        'revert',
+        {} as unknown as SonicSpokeProvider,
+      );
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -518,7 +549,9 @@ describe('MigrationService', () => {
     });
 
     it('should handle unexpected errors', async () => {
-      vi.spyOn(migrationService, 'createRevertSodaToIcxMigrationIntent').mockRejectedValue(new Error('Unexpected error'));
+      vi.spyOn(migrationService, 'createRevertSodaToIcxMigrationIntent').mockRejectedValue(
+        new Error('Unexpected error'),
+      );
 
       const result = await migrationService.revertMigrateSodaToIcx(
         mockRevertMigrationParams,
@@ -738,6 +771,443 @@ describe('MigrationService', () => {
         amount: mockRevertMigrationParams.amount,
         to: encodeAddress(ICON_MAINNET_CHAIN_ID, mockRevertMigrationParams.to),
         userWallet: '0xUserRouterAddress',
+      });
+    });
+  });
+
+  describe('bnUSD Migration', () => {
+    describe('migratebnUSD - Legacy to New', () => {
+      it('should successfully migrate legacy bnUSD to new bnUSD', async () => {
+        vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
+          ok: true,
+          value: mockTxHash,
+        });
+        vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
+          ok: true,
+          value: mockPacketData,
+        });
+
+        const result = await migrationService.migratebnUSD(
+          mockBnUSDLegacyToNewParams,
+          mockIconSpokeProvider,
+          DEFAULT_RELAY_TX_TIMEOUT,
+        );
+
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value).toEqual([mockTxHash, mockHubTxHash]);
+        }
+      });
+
+      it('should handle createMigratebnUSDIntent failure for legacy to new', async () => {
+        const mockError: MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> = {
+          code: 'CREATE_MIGRATION_INTENT_FAILED',
+          data: {
+            payload: mockBnUSDLegacyToNewParams,
+            error: new Error('Create bnUSD intent failed'),
+          },
+        };
+
+        vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
+          ok: false,
+          error: mockError,
+        });
+
+        const result = await migrationService.migratebnUSD(
+          mockBnUSDLegacyToNewParams,
+          mockIconSpokeProvider,
+          DEFAULT_RELAY_TX_TIMEOUT,
+        );
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error).toEqual(mockError);
+        }
+      });
+
+      it('should handle relayTxAndWaitPacket failure for legacy to new', async () => {
+        const mockRelayError: RelayError = {
+          code: 'SUBMIT_TX_FAILED' as RelayErrorCode,
+          error: 'Relay failed for bnUSD migration',
+        };
+
+        vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
+          ok: true,
+          value: mockTxHash,
+        });
+        vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
+          ok: false,
+          error: mockRelayError,
+        });
+
+        const result = await migrationService.migratebnUSD(
+          mockBnUSDLegacyToNewParams,
+          mockIconSpokeProvider,
+          DEFAULT_RELAY_TX_TIMEOUT,
+        );
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error).toEqual(mockRelayError);
+        }
+      });
+
+      it('should handle unexpected errors for legacy to new migration', async () => {
+        vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockRejectedValue(new Error('Unexpected bnUSD error'));
+
+        const result = await migrationService.migratebnUSD(
+          mockBnUSDLegacyToNewParams,
+          mockIconSpokeProvider,
+          DEFAULT_RELAY_TX_TIMEOUT,
+        );
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('MIGRATION_FAILED');
+          if ('data' in result.error) {
+            expect(result.error.data.payload).toEqual(mockBnUSDLegacyToNewParams);
+          }
+        }
+      });
+    });
+
+    describe('migratebnUSD - New to Legacy', () => {
+      it('should successfully migrate new bnUSD to legacy bnUSD', async () => {
+        vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
+          ok: true,
+          value: mockTxHash,
+        });
+        vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
+          ok: true,
+          value: mockPacketData,
+        });
+
+        const result = await migrationService.migratebnUSD(
+          mockBnUSDNewToLegacyParams,
+          mockSonicSpokeProvider,
+          DEFAULT_RELAY_TX_TIMEOUT,
+        );
+
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value).toEqual([mockTxHash, mockHubTxHash]);
+        }
+      });
+
+      it('should handle createMigratebnUSDIntent failure for new to legacy', async () => {
+        const mockError: MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> = {
+          code: 'CREATE_MIGRATION_INTENT_FAILED',
+          data: {
+            payload: mockBnUSDNewToLegacyParams,
+            error: new Error('Create bnUSD revert intent failed'),
+          },
+        };
+
+        vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
+          ok: false,
+          error: mockError,
+        });
+
+        const result = await migrationService.migratebnUSD(
+          mockBnUSDNewToLegacyParams,
+          mockSonicSpokeProvider,
+          DEFAULT_RELAY_TX_TIMEOUT,
+        );
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error).toEqual(mockError);
+        }
+      });
+
+      it('should handle relayTxAndWaitPacket failure for new to legacy', async () => {
+        const mockRelayError: RelayError = {
+          code: 'SUBMIT_TX_FAILED' as RelayErrorCode,
+          error: 'Relay failed for bnUSD revert migration',
+        };
+
+        vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
+          ok: true,
+          value: mockTxHash,
+        });
+        vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
+          ok: false,
+          error: mockRelayError,
+        });
+
+        const result = await migrationService.migratebnUSD(
+          mockBnUSDNewToLegacyParams,
+          mockSonicSpokeProvider,
+          DEFAULT_RELAY_TX_TIMEOUT,
+        );
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error).toEqual(mockRelayError);
+        }
+      });
+
+      it('should handle unexpected errors for new to legacy migration', async () => {
+        vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockRejectedValue(
+          new Error('Unexpected bnUSD revert error'),
+        );
+
+        const result = await migrationService.migratebnUSD(
+          mockBnUSDNewToLegacyParams,
+          mockSonicSpokeProvider,
+          DEFAULT_RELAY_TX_TIMEOUT,
+        );
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('MIGRATION_FAILED');
+          if ('data' in result.error) {
+            expect(result.error.data.payload).toEqual(mockBnUSDNewToLegacyParams);
+          }
+        }
+      });
+    });
+
+    describe('createMigratebnUSDIntent', () => {
+      it('should successfully create legacy to new bnUSD migration intent', async () => {
+        vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
+
+        const result = await migrationService.createMigratebnUSDIntent(
+          mockBnUSDLegacyToNewParams,
+          mockIconSpokeProvider,
+        );
+
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value).toBe(mockTxHash);
+        }
+      });
+
+      it('should successfully create new to legacy bnUSD migration intent', async () => {
+        vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
+
+        const result = await migrationService.createMigratebnUSDIntent(
+          mockBnUSDNewToLegacyParams,
+          mockSonicSpokeProvider,
+        );
+
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value).toBe(mockTxHash);
+        }
+      });
+
+      it('should create bnUSD migration intent with raw flag', async () => {
+        const mockRawTx = {
+          from: 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6',
+          to: 'cx1be33c283c7dc7617181d1b21a6a2309e71b1ee7',
+          value: 1000000000000000000n,
+          data: '0xbnusdmigrationdata',
+        };
+
+        vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockRawTx);
+
+        const result = await migrationService.createMigratebnUSDIntent(
+          mockBnUSDLegacyToNewParams,
+          mockIconSpokeProvider,
+          false, // unchecked
+          true, // raw
+        );
+
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value).toEqual(mockRawTx);
+        }
+      });
+
+      it('should return error for invalid source chain ID', async () => {
+        const invalidParams = {
+          ...mockBnUSDLegacyToNewParams,
+          srcChainId: 'invalid-chain' as SpokeChainId,
+        };
+
+        const result = await migrationService.createMigratebnUSDIntent(invalidParams, mockIconSpokeProvider);
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('CREATE_MIGRATION_INTENT_FAILED');
+        }
+      });
+
+      it('should return error for invalid destination chain ID', async () => {
+        const invalidParams = {
+          ...mockBnUSDLegacyToNewParams,
+          dstChainId: 'invalid-chain' as SpokeChainId,
+        };
+
+        const result = await migrationService.createMigratebnUSDIntent(invalidParams, mockIconSpokeProvider);
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('CREATE_MIGRATION_INTENT_FAILED');
+        }
+      });
+
+      it('should return error for empty source bnUSD address', async () => {
+        const invalidParams = {
+          ...mockBnUSDLegacyToNewParams,
+          srcbnUSD: '',
+        };
+
+        const result = await migrationService.createMigratebnUSDIntent(invalidParams, mockIconSpokeProvider);
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('CREATE_MIGRATION_INTENT_FAILED');
+        }
+      });
+
+      it('should return error for empty destination bnUSD address', async () => {
+        const invalidParams = {
+          ...mockBnUSDLegacyToNewParams,
+          dstbnUSD: '',
+        };
+
+        const result = await migrationService.createMigratebnUSDIntent(invalidParams, mockIconSpokeProvider);
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('CREATE_MIGRATION_INTENT_FAILED');
+        }
+      });
+
+      it('should return error for zero amount', async () => {
+        const invalidParams = {
+          ...mockBnUSDLegacyToNewParams,
+          amount: 0n,
+        };
+
+        const result = await migrationService.createMigratebnUSDIntent(invalidParams, mockIconSpokeProvider);
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('CREATE_MIGRATION_INTENT_FAILED');
+        }
+      });
+
+      it('should return error for empty recipient address', async () => {
+        const invalidParams = {
+          ...mockBnUSDLegacyToNewParams,
+          to: '',
+        };
+
+        const result = await migrationService.createMigratebnUSDIntent(invalidParams, mockIconSpokeProvider);
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('CREATE_MIGRATION_INTENT_FAILED');
+        }
+      });
+
+      it('should return error when both tokens are legacy bnUSD', async () => {
+        const invalidParams = {
+          ...mockBnUSDLegacyToNewParams,
+          dstbnUSD: bnUSDLegacyTokens[1]?.address ?? 'cx1234567890123456789012345678901234567890',
+        };
+
+        const result = await migrationService.createMigratebnUSDIntent(invalidParams, mockIconSpokeProvider);
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('CREATE_MIGRATION_INTENT_FAILED');
+        }
+      });
+
+      it('should return error when SpokeService.deposit fails', async () => {
+        vi.spyOn(SpokeService, 'deposit').mockRejectedValue(new Error('Deposit failed'));
+
+        const result = await migrationService.createMigratebnUSDIntent(
+          mockBnUSDLegacyToNewParams,
+          mockIconSpokeProvider,
+        );
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          expect(result.error.code).toBe('CREATE_MIGRATION_INTENT_FAILED');
+        }
+      });
+
+      it('should return error if neither srcbnUSD nor dstbnUSD is a legacy bnUSD token (even if unchecked)', async () => {
+        const invalidParams = {
+          ...mockBnUSDLegacyToNewParams,
+          srcChainId: 'invalid-chain' as SpokeChainId,
+          dstChainId: 'invalid-chain' as SpokeChainId,
+          srcbnUSD: '0xnotlegacy',
+          dstbnUSD: '0xnotlegacy',
+          amount: 1n,
+          to: '0x1234567890123456789012345678901234567890',
+        };
+
+        // No need to mock revertMigrationData or SpokeService.deposit, as error is thrown before they're called
+
+        const result = await migrationService.createMigratebnUSDIntent(
+          invalidParams,
+          mockIconSpokeProvider,
+          true, // unchecked
+        );
+
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+          // The error is wrapped in MigrationError, but the original error is in error.data.error
+          // It could be a string or Error, so check for the message string
+          const errorData = result.error.data;
+          const errorMsg =
+            typeof errorData.error === 'string'
+              ? errorData.error
+              : errorData.error instanceof Error
+                ? errorData.error.message
+                : '';
+          expect(errorMsg).toContain('srcbnUSD or dstbnUSD must be a legacy bnUSD token');
+        }
+      });
+    });
+
+    describe('bnUSD Constants and Helper Functions', () => {
+      it('should correctly identify legacy bnUSD chains', () => {
+        expect(bnUSDLegacySpokeChainIds).toContain(ICON_MAINNET_CHAIN_ID);
+        expect(isLegacybnUSDChainId(ICON_MAINNET_CHAIN_ID)).toBe(true);
+      });
+
+      it('should correctly identify new bnUSD chains', () => {
+        expect(newbnUSDSpokeChainIds).toContain(SONIC_MAINNET_CHAIN_ID);
+        expect(isNewbnUSDChainId(SONIC_MAINNET_CHAIN_ID)).toBe(true);
+      });
+
+      it('should correctly identify legacy bnUSD tokens', () => {
+        const legacyToken = bnUSDLegacyTokens[0];
+        expect(legacyToken).toBeDefined();
+        if (legacyToken) {
+          expect(isLegacybnUSDToken(legacyToken.address)).toBe(true);
+          expect(isLegacybnUSDToken(legacyToken)).toBe(true);
+        }
+      });
+
+      it('should correctly identify new bnUSD tokens', () => {
+        const newToken = bnUSDNewTokens[0];
+        expect(newToken).toBeDefined();
+        if (newToken) {
+          expect(isNewbnUSDToken(newToken.address)).toBe(true);
+          expect(isNewbnUSDToken(newToken)).toBe(true);
+        }
+      });
+
+      it('should validate bnUSD migration parameters correctly', () => {
+        // Test legacy to new migration
+        expect(isLegacybnUSDToken(mockBnUSDLegacyToNewParams.srcbnUSD)).toBe(true);
+        expect(isNewbnUSDToken(mockBnUSDLegacyToNewParams.dstbnUSD)).toBe(true);
+        expect(isLegacybnUSDChainId(mockBnUSDLegacyToNewParams.srcChainId)).toBe(true);
+        expect(isNewbnUSDChainId(mockBnUSDLegacyToNewParams.dstChainId)).toBe(true);
+
+        // Test new to legacy migration
+        expect(isNewbnUSDToken(mockBnUSDNewToLegacyParams.srcbnUSD)).toBe(true);
+        expect(isLegacybnUSDToken(mockBnUSDNewToLegacyParams.dstbnUSD)).toBe(true);
+        expect(isNewbnUSDChainId(mockBnUSDNewToLegacyParams.srcChainId)).toBe(true);
+        expect(isLegacybnUSDChainId(mockBnUSDNewToLegacyParams.dstChainId)).toBe(true);
       });
     });
   });

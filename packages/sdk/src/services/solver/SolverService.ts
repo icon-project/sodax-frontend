@@ -144,8 +144,8 @@ export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
 };
 
 export class SolverService {
-  private readonly config: SolverServiceConfig;
-  private readonly hubProvider: EvmHubProvider;
+  readonly config: SolverServiceConfig;
+  readonly hubProvider: EvmHubProvider;
 
   public constructor(
     config: SolverConfigParams | undefined,
@@ -386,10 +386,9 @@ export class SolverService {
   public async swap<S extends SpokeProvider>(
     payload: CreateIntentParams,
     spokeProvider: S,
-    fee?: PartnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>> {
-    return this.createAndSubmitIntent(payload, spokeProvider, fee, timeout);
+    return this.createAndSubmitIntent(payload, spokeProvider, this.config.partnerFee, timeout);
   }
 
   /**
@@ -429,7 +428,7 @@ export class SolverService {
   public async createAndSubmitIntent<S extends SpokeProvider>(
     payload: CreateIntentParams,
     spokeProvider: S,
-    fee?: PartnerFee,
+    fee= this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>> {
     try {

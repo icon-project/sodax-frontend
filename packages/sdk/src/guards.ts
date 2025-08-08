@@ -38,6 +38,10 @@ import {
   type SpokeChainConfig,
   type MoneyMarketError,
   type MoneyMarketUnknownError,
+  type IcxMigrateParams,
+  type UnifiedBnUSDMigrateParams,
+  type BalnMigrateParams,
+  type IcxCreateRevertMigrationParams,
 } from './index.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
@@ -336,4 +340,41 @@ export function isMoneyMarketRepayUnknownError(
   error: unknown,
 ): error is MoneyMarketUnknownError<'REPAY_UNKNOWN_ERROR'> {
   return typeof error === 'object' && error !== null && 'code' in error && error.code === 'REPAY_UNKNOWN_ERROR';
+}
+
+export function isIcxMigrateParams(value: unknown): value is IcxMigrateParams {
+  return typeof value === 'object' && value !== null && 'address' in value && 'amount' in value && 'to' in value;
+}
+
+export function isUnifiedBnUSDMigrateParams(value: unknown): value is UnifiedBnUSDMigrateParams {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'srcChainId' in value &&
+    'srcbnUSD' in value &&
+    'dstChainId' in value &&
+    'dstbnUSD' in value &&
+    'amount' in value &&
+    'to' in value
+  );
+}
+
+export function isBalnMigrateParams(value: unknown): value is BalnMigrateParams {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'amount' in value &&
+    'lockupPeriod' in value &&
+    'to' in value &&
+    'stake' in value
+  );
+}
+
+export function isIcxCreateRevertMigrationParams(value: unknown): value is IcxCreateRevertMigrationParams {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'amount' in value &&
+    'to' in value
+  );
 }
