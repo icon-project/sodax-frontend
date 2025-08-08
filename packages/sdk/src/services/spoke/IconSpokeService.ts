@@ -6,8 +6,9 @@ import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { BigIntToHex, getIntentRelayChainId, isNativeToken } from '../../index.js';
+import { BigIntToHex, encodeAddress, getIntentRelayChainId, isNativeToken } from '../../index.js';
 import type {
+  DepositSimulationParams,
   IconAddress,
   IconGasEstimate,
   IconRawTransaction,
@@ -111,6 +112,40 @@ export class IconSpokeService {
   ): PromiseIconTxReturnType<R> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return IconSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
+  }
+
+  /**
+   * Generate simulation parameters for deposit from IconSpokeDepositParams.
+   * @param {IconSpokeDepositParams} params - The deposit parameters.
+   * @param {IconSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
+   */
+  public static async getSimulateDepositParams(
+    params: IconSpokeDepositParams,
+    spokeProvider: IconSpokeProvider,
+    hubProvider: EvmHubProvider,
+  ): Promise<DepositSimulationParams> {
+    const to =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        getIconAddressBytes(params.from),
+        hubProvider,
+      ));
+
+    return {
+      spokeChainID: spokeProvider.chainConfig.chain.id,
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+      to,
+      amount: params.amount,
+      data: params.data,
+      srcAddress: encodeAddress(
+        spokeProvider.chainConfig.chain.id,
+        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
+      ),
+    };
   }
 
   /**
