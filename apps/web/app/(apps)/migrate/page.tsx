@@ -24,6 +24,7 @@ import { parseUnits, formatUnits } from 'viem';
 
 import NetworkInputDisplay from '@/components/ui/network-input-display';
 import { SuccessDialog, ErrorDialog } from './_components';
+import { SwitchDirectionIcon } from '@/components/icons';
 
 function SharedContent() {
   return (
@@ -370,7 +371,6 @@ export default function MigratePage() {
   return (
     <div className="flex flex-col w-full" style={{ gap: 'var(--layout-space-comfortable)' }}>
       <SharedContent />
-
       {/* Inputs + direction toggle */}
       <div className="inline-flex flex-col justify-start items-start gap-2">
         <div className="relative w-full">
@@ -400,55 +400,18 @@ export default function MigratePage() {
             )}
           </NetworkInputDisplay>
 
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="icon"
             className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] border-4 border-[#F5F2F2] flex justify-center items-center hover:bg-cherry-grey hover:outline-cherry-grey hover:scale-110 cursor-pointer transition-all duration-200 active:bg-cream-white z-50"
             onClick={() => {
               setIsICXToSoda(v => !v);
-              setIcxInputValue(0);
-              setSodaInputValue(0);
+              setIcxInputValue('0');
+              setSodaInputValue('0');
             }}
-            aria-label="Switch direction"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <title>Arrow down</title>
-              <g clipPath="url(#clip0_9664_9869)">
-                <path
-                  d="M5.5 8.5L3.5 10.5L1.5 8.5"
-                  stroke="#483534"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M3.5 10.5V4.5"
-                  stroke="#483534"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M10.5 3.5L8.5 1.5L6.5 3.5"
-                  stroke="black"
-                  strokeWidth="1.33333"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M8.5 7.5V1.5"
-                  stroke="black"
-                  strokeWidth="1.33333"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </g>
-              <defs>
-                <clipPath id="clip0_9664_9869">
-                  <rect width="12" height="12" fill="white" />
-                </clipPath>
-              </defs>
-            </svg>
-          </button>
+            <SwitchDirectionIcon className="w-4 h-4" />
+          </Button>
         </div>
 
         <NetworkInputDisplay
