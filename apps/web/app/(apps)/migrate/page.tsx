@@ -2,13 +2,11 @@
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Loader2, Check } from 'lucide-react';
 
 import { useWalletUI } from '../_context/wallet-ui';
 
-// SODAX SDK + hooks
 import { useXAccounts, useXAccount, useXBalances } from '@sodax/wallet-sdk';
 import { useSpokeProvider } from '@sodax/dapp-kit';
 import {
@@ -24,8 +22,8 @@ import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import type { XToken } from '@sodax/types';
 import { parseUnits, formatUnits } from 'viem';
 
-import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import NetworkInputDisplay from '@/components/ui/network-input-display';
+import { SuccessDialog, ErrorDialog } from './_components';
 
 function SharedContent() {
   return (
@@ -524,55 +522,30 @@ export default function MigratePage() {
         <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
           Typically ~1 min. Network fee applies.
         </div>
+
+        <div className="self-stretch p-6 mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2">
+          <div className="self-stretch inline-flex justify-center items-center gap-2">
+            <div className="w-4 h-4 relative mix-blend-multiply">
+              <div className="w-1.5 h-1 left-[0.67px] top-[2.90px] absolute bg-Yellow-dark" />
+              <div className="w-1.5 h-1 left-[9.38px] top-[2.90px] absolute bg-Yellow-dark" />
+              <div className="w-[2.46px] h-[4.88px] left-[6.76px] top-0 absolute bg-Yellow-dark" />
+              <div className="w-3.5 h-2.5 left-[0.67px] top-[6.55px] absolute bg-Yellow-dark" />
+            </div>
+            <div className="flex-1 justify-center text-Espresso text-base font-bold font-['Inter'] leading-tight">
+              You're migrating back to ICON
+            </div>
+          </div>
+          <div className="self-stretch justify-center text-Clay text-xs font-medium font-['Inter'] leading-tight">
+            ICX will be sent to your connected ICON wallet.
+          </div>
+        </div>
       </div>
 
       {/* Success Dialog */}
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md md:max-w-[480px] p-12">
-          <DialogHeader>
-            <div className="flex flex-row justify-between items-center">
-              <div className="inline-flex justify-start items-center gap-2">
-                <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
-                <div className="mix-blend-multiply text-espresso font-['InterRegular'] font-bold leading-snug text-(size:--subtitle)">
-                  Transaction completed
-                </div>
-              </div>
-            </div>
-          </DialogHeader>
-          <div className="text-clay-light">
-            <p className="font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable)">
-              Your new assets are now in your wallet. Make sure you have native gas to transact with them.
-            </p>
-          </div>
-          <div className="text-clay-light font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable)">
-            Need help?{' '}
-            <span className="underline hover:text-cherry-brighter transition-colors cursor-pointer">
-              Join our Discord
-            </span>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <SuccessDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
 
       {/* Error Dialog */}
-      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-        <DialogContent className="sm:max-w-md md:max-w-[480px] p-12">
-          <DialogHeader>
-            <div className="flex flex-row justify-between items-center">
-              <div className="inline-flex justify-start items-center gap-2">
-                <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
-                <div className="mix-blend-multiply text-espresso font-['InterRegular'] font-bold leading-snug text-(size:--subtitle)">
-                  Transaction failed
-                </div>
-              </div>
-            </div>
-          </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <p className="text-clay-light font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable)">
-              {migrationError || 'An error occurred during migration. Please try again.'}
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ErrorDialog open={showErrorDialog} onOpenChange={setShowErrorDialog} errorMessage={migrationError} />
     </div>
   );
 }
