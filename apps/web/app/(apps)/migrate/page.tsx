@@ -44,6 +44,8 @@ function SharedContent() {
 
 export default function MigratePage() {
   const { openWalletModal } = useWalletUI();
+  const { address: iconAddress } = useXAccount('ICON');
+  const { address: sonicAddress } = useXAccount('EVM');
 
   // migration state (ported from your tab)
   const [icxInputValue, setIcxInputValue] = useState('');
@@ -71,7 +73,6 @@ export default function MigratePage() {
   const sonicSpokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID);
 
   // ICON account + balance
-  const { address: iconAddress } = useXAccount(ICON_MAINNET_CHAIN_ID);
   const icxToken = {
     ...spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
     xChainId: ICON_MAINNET_CHAIN_ID,
@@ -86,7 +87,6 @@ export default function MigratePage() {
   const formattedIcxBalanceFixed = Number(formattedIcxBalance).toFixed(2);
 
   // Sonic account + SODA balance
-  const { address: sonicAddress } = useXAccount('EVM');
   const sodaToken = {
     address: '0x8515352CB9832D1d379D52366D1E995ADd358420',
     decimals: 18,
@@ -429,9 +429,9 @@ export default function MigratePage() {
 
       {/* CTAs */}
       <div className="inline-flex flex-col justify-start items-start gap-4">
-        {buttonStates.mode === 'dual' ? (
+        {iconAddress && sonicAddress ? (
           <div className="flex gap-2">
-            <Button
+            {/* <Button
               variant="cherry"
               className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px]"
               onClick={buttonStates.approve.onClick}
@@ -463,7 +463,7 @@ export default function MigratePage() {
               ) : (
                 buttonStates.migrate.text
               )}
-            </Button>
+            </Button> */}
           </div>
         ) : (
           <Button
@@ -504,10 +504,7 @@ export default function MigratePage() {
         </div>
       </div>
 
-      {/* Success Dialog */}
       <SuccessDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
-
-      {/* Error Dialog */}
       <ErrorDialog open={showErrorDialog} onOpenChange={setShowErrorDialog} errorMessage={migrationError} />
     </div>
   );
