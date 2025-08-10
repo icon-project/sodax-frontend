@@ -22,6 +22,8 @@ import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import type { XToken } from '@sodax/types';
 import { parseUnits, formatUnits } from 'viem';
 
+import { useCounterStore } from './_stores/counter-store-provider'
+
 import NetworkInputDisplay from '@/components/ui/network-input-display';
 import { SuccessDialog, ErrorDialog } from './_components';
 import { SwitchDirectionIcon } from '@/components/icons';
@@ -371,6 +373,7 @@ export default function MigratePage() {
   return (
     <div className="flex flex-col w-full" style={{ gap: 'var(--layout-space-comfortable)' }}>
       <SharedContent />
+
       {/* Inputs + direction toggle */}
       <div className="inline-flex flex-col justify-start items-start gap-2">
         <div className="relative w-full">
