@@ -483,7 +483,7 @@ export default function MigratePage() {
           </Button>
         )}
         <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-          Typically ~1 min. Network fee applies.
+          Takes ~1 min · Network fee: {isICXToSoda ? '~0.02 ICX' : '~0.1 SODA'}
         </div>
 
         <div className="self-stretch p-6 mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2">
