@@ -173,7 +173,7 @@ const WalletItem = ({
           </div>
           <div className="flex justify-start items-center gap-1">
             <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
-              {isConnecting ? 'Waiting for wallet' : address ? '' : name}
+              {isConnecting ? 'Waiting for wallet' : address ? '' : name }
             </div>
           </div>
         </div>
@@ -207,7 +207,7 @@ const WalletItem = ({
             </div>
             <div className="flex gap-1 items-center">
               <span className="text-(size:--body-small) text-clay-light leading-[1.4] font-['InterRegular']">
-                {activeXConnector?.name}
+                {activeXConnector && activeXConnector.name.replace('Hana Wallet', 'Hana')}
               </span>
               <Button
                 variant="default"
@@ -260,7 +260,7 @@ const WalletItem = ({
                             </div>
                           </div>
                           <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
-                            {isConnectingToThis ? 'Waiting for wallet' : xConnector.name}
+                            {isConnectingToThis ? 'Waiting for wallet' : xConnector.name }
                           </div>
                         </div>
                         <Button
