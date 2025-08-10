@@ -1,9 +1,9 @@
-import { CounterStoreProvider } from './_stores/counter-store-provider'
+import {MigrationStoreProvider } from './_stores/migration-store-provider'
 
 export default function MigratePageLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <CounterStoreProvider>{children}</CounterStoreProvider>
+  return <MigrationStoreProvider>{children}</MigrationStoreProvider>
 }
