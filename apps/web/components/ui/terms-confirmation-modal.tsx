@@ -102,7 +102,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
           </div>
 
           <div
-            className={`transition-all duration-300 ease-in-out ${
+            className={`transition-all duration-300 ease-in-out relative ${
               isTermsExpanded ? 'max-h-96 opacity-100 mt-6 mb-6' : 'max-h-0 opacity-0 mt-6'
             }`}
           >
@@ -125,6 +125,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
               </p>
               <ScrollBar className="w-1" />
             </ScrollArea>
+            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
           </div>
 
           <div className="flex gap-2">
