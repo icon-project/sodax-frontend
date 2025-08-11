@@ -273,8 +273,8 @@ if (repayResult.ok) {
 
 Supply tokens to the money market pool. There are two methods available:
 
-1. `supplyAndSubmit`: Supplies tokens and submits the intent to the Solver API
-2. `supply`: Supplies tokens without submitting to the Solver API
+1. `supply`: Supply tokens to the money market pool, relay the transaction to the hub and submit the intent to the Solver API
+2. `createSupplyIntent`: Create supply intent only (without relay and submit to Solver API)
 
 ```typescript
 import { MoneyMarketSupplyParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
@@ -335,8 +335,8 @@ if (supplyResult.ok) {
 
 Borrow tokens from the money market pool. There are two methods available:
 
-1. `borrowAndSubmit`: Borrows tokens and submits the intent to the Solver API
-2. `borrow`: Borrows tokens without submitting to the Solver API
+1. `borrow`: Borrow tokens from the money market pool, relay the transaction to the hub and submit the intent to the Solver API
+2. `createBorrowIntent`: Create borrow intent only (without relay and submit to Solver API)
 
 ```typescript
 import { MoneyMarketBorrowParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
@@ -380,8 +380,8 @@ if (borrowResult.ok) {
 
 Withdraw tokens from the money market pool. There are two methods available:
 
-1. `withdrawAndSubmit`: Withdraws tokens and submits the intent to the Solver API
-2. `withdraw`: Withdraws tokens without submitting to the Solver API
+1. `withdraw`: Withdraw tokens from the money market pool, relay the transaction to the hub and submit the intent to the Solver API
+2. `createWithdrawIntent`: Create withdraw intent only (without relay and submit to Solver API)
 
 ```typescript
 import { MoneyMarketWithdrawParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
@@ -425,8 +425,8 @@ if (withdrawResult.ok) {
 
 Repay tokens to the money market pool. There are two methods available:
 
-1. `repayAndSubmit`: Repays tokens and submits the intent to the Solver API
-2. `repay`: Repays tokens without submitting to the Solver API
+1. `repay`: Repay tokens to the money market pool, relay the transaction to the hub and submit the intent to the Solver API
+2. `createRepayIntent`: Create repay intent only (without relay and submit to Solver API)
 
 ```typescript
 import { MoneyMarketRepayParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";

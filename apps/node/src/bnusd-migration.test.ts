@@ -2,12 +2,12 @@ import 'dotenv/config';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   EvmSpokeProvider,
-  Hex,
+  type Hex,
   ICON_MAINNET_CHAIN_ID,
   IconSpokeProvider,
   Sodax,
   spokeChainConfig,
-  UnifiedBnUSDMigrateParams,
+  type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
@@ -50,7 +50,7 @@ async function iconToArbTwoWayMigration() {
 
   // wait 30 seconds
   console.log('waiting 30 seconds...');
-  await new Promise((resolve) => setTimeout(resolve, 30000));
+  await new Promise(resolve => setTimeout(resolve, 30000));
 
   const arbToIconParams = {
     srcChainId: evmSpokeProvider.chainConfig.chain.id,
@@ -59,7 +59,7 @@ async function iconToArbTwoWayMigration() {
     dstbnUSD: iconSpokeProvider.chainConfig.bnUSD,
     amount: BigInt(1e17), // test with 0.1 bnUSD
     to: await iconSpokeProvider.walletProvider.getWalletAddress(),
-  } satisfies UnifiedBnUSDMigrateParams
+  } satisfies UnifiedBnUSDMigrateParams;
 
   const isAllowed = await sodax.migration.isAllowanceValid(arbToIconParams, 'revert', evmSpokeProvider);
 
@@ -84,10 +84,7 @@ async function iconToArbTwoWayMigration() {
   }
 
   // migrate from new bnUSD from ARB to the legacy bnUSD on Icon
-  const arbToIconResult = await sodax.migration.migratebnUSD(
-    arbToIconParams,
-    evmSpokeProvider,
-  );
+  const arbToIconResult = await sodax.migration.migratebnUSD(arbToIconParams, evmSpokeProvider);
 
   if (arbToIconResult.ok) {
     const [spokeTxHash, hubTxHash] = arbToIconResult.value;

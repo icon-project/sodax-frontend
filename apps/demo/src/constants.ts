@@ -37,16 +37,22 @@ export const partnerFeePercentage = {
   percentage: 100, // 100 basis points = 1%
 } satisfies PartnerFee;
 
-export const mainnetSolverConfig = {
+export const stagingSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
+  partnerFee: partnerFeePercentage, // fee to be paid to the partner address
+} satisfies SolverConfigParams;
+
+export const productionSolverConfig = {
+  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
+  solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
   partnerFee: partnerFeePercentage, // fee to be paid to the partner address
 } satisfies SolverConfigParams;
 
 export const sodaxConfig = {
   hubProviderConfig: hubConfig,
   moneyMarket: moneyMarketConfig,
-  solver: mainnetSolverConfig,
+  solver: stagingSolverConfig,
   relayerApiEndpoint: testnet
     ? 'https://testnet-xcall-relay.nw.iconblockchain.xyz'
     : 'https://xcall-relay.nw.iconblockchain.xyz',
