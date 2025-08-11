@@ -57,13 +57,7 @@ export default function MigratePage() {
   };
 
   const spokeProvider = useSpokeProvider(direction.from);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(
-    currencies.from,
-    typedValue,
-    iconAddress,
-    spokeProvider,
-  );
-  console.log('hasAllowed', hasAllowed);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(currencies.from, typedValue, iconAddress, spokeProvider);
   const { approve, isLoading: isApproving } = useMigrationApprove(currencies.from, iconAddress, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
@@ -114,7 +108,7 @@ export default function MigratePage() {
           currency={currencies.to}
           currencyBalance={direction.to === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance}
           inputValue={typedValue}
-          // onInputChange={e => setTypedValue(e.target.value)}
+        // onInputChange={e => setTypedValue(e.target.value)}
         />
       </div>
 
@@ -122,7 +116,7 @@ export default function MigratePage() {
         {iconAddress && sonicAddress ? (
           <div className="flex gap-2">
             {isWrongChain ? (
-              <Button variant="cherry" onClick={handleSwitchChain}>
+              <Button variant="cherry" className='w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white' onClick={handleSwitchChain}>
                 Switch to {direction.from === ICON_MAINNET_CHAIN_ID ? 'ICON' : 'Sonic'}
               </Button>
             ) : (
@@ -139,10 +133,7 @@ export default function MigratePage() {
                   </Button>
                 )}
 
-                <Button
-                  className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px] md:w-[232px]
-              disabled:opacity-100 disabled:bg-cream-white disabled:text-clay-light
-              bg-cherry-soda text-white shadow-xs hover:bg-cherry-soda/90 focus-visible:ring-cherry-soda/20 dark:focus-visible:ring-cherry-soda/40 dark:bg-cherry-soda/60"
+                <Button variant="cherry" className='w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white'
                   onClick={async () => {
                     try {
                       await migrate();
@@ -166,14 +157,13 @@ export default function MigratePage() {
             )}
           </div>
         ) : (
-          <Button
-            variant="default"
-            className="w-full sm:w-[232px] bg-cherry-bright hover:bg-cherry-brighter h-10 cursor-pointer text-(size:--body-comfortable) text-white"
+          <Button variant="cherry" className='w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white'
             onClick={() => openWalletModal()}
           >
             Connect wallets
           </Button>
         )}
+
         <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
           Takes ~1 min · Network fee: {direction.from === ICON_MAINNET_CHAIN_ID ? '~0.02 ICX' : '~0.1 SODA'}
         </div>

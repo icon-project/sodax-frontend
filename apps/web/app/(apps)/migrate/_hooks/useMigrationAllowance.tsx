@@ -2,7 +2,8 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { XToken } from '@sodax/types';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { parseUnits } from 'viem';
-import type { IcxCreateRevertMigrationParams, MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
+import type { IcxCreateRevertMigrationParams, SpokeProvider } from '@sodax/sdk';
+import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 
 /**
  * Hook for checking token allowance for money market operations.
@@ -34,8 +35,11 @@ export function useMigrationAllowance(
     const { sodax } = useSodaxContext();
 
     return useQuery({
-        queryKey: ['allowance', token.address, amount, iconAddress],
+        queryKey: ['allowance', token.xChainId, token.address, amount, iconAddress],
         queryFn: async () => {
+            if (token.xChainId === ICON_MAINNET_CHAIN_ID) {
+                return true;
+            }
             if (!spokeProvider) throw new Error('Spoke provider is required');
             const amountToMigrate = parseUnits(amount, token.decimals);
             const params = {
