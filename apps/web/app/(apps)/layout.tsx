@@ -259,9 +259,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    console.log('showWalletModalOnTwoWallets', showWalletModalOnTwoWallets);
-    console.log('showWalletModal', showWalletModal);
-    console.log('connectedWalletsCount', connectedWalletsCount);
     if (showWalletModalOnTwoWallets && showWalletModal && connectedWalletsCount >= 2) {
       const t = setTimeout(() => {
         setShowWalletModal(false);

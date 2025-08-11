@@ -1,5 +1,6 @@
 // apps/web/components/ui/network-input-display.tsx
 import type React from 'react';
+import { useEffect, useRef } from 'react';
 import CurrencyLogoICX from './currency-logo-icx';
 import CurrencyLogoSoda from './currency-logo-soda';
 import { ICON_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
@@ -36,17 +37,28 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
 }: CurrencyInputPanelProps) => {
   const formattedBalance = formatUnits(currencyBalance, currency.decimals);
   const formattedBalanceFixed = Number(formattedBalance).toFixed(2);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (type === CurrencyInputPanelType.INPUT && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [type]);
 
   return (
     <div
-      className={`w-full relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center ${className}`}
+      className={`w-full relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center hover:outline-6 group ${className}`}
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
     >
       <div className="flex justify-start items-center gap-2">
-        {chainId === ICON_MAINNET_CHAIN_ID ? <CurrencyLogoICX /> : <CurrencyLogoSoda />}
+        {chainId === ICON_MAINNET_CHAIN_ID ? (
+          <CurrencyLogoICX className="group-hover:scale-106 transition-transform duration-200" />
+        ) : (
+          <CurrencyLogoSoda className="group-hover:scale-106 transition-transform duration-200" />
+        )}
 
         <div className="inline-flex flex-col justify-center items-start gap-1">
-          <div className="justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
+          <div className="justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable) group-hover:text-clay">
             {type === CurrencyInputPanelType.INPUT ? 'From' : 'To'}
           </div>
           <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) inline-flex gap-1">
@@ -60,13 +72,14 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         className="inline-flex flex-col justify-center items-end gap-1"
         style={{ paddingRight: 'var(--layout-space-normal)' }}
       >
-        <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
+        <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)  group-hover:text-clay">
           {type === CurrencyInputPanelType.INPUT ? `${formattedBalanceFixed} available` : 'Receive'}
         </div>
         <div className="inline-flex gap-1 items-center">
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold">
             <div className="relative">
               <NumberInput
+                ref={inputRef}
                 value={inputValue === '' ? 0 : Number(inputValue)}
                 onChange={onInputChange}
                 onFocus={onInputFocus}

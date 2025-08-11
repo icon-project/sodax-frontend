@@ -57,7 +57,12 @@ export default function MigratePage() {
   };
 
   const spokeProvider = useSpokeProvider(direction.from);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(currencies.from, typedValue, iconAddress, spokeProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(
+    currencies.from,
+    typedValue,
+    iconAddress,
+    spokeProvider,
+  );
   console.log('hasAllowed', hasAllowed);
   const { approve, isLoading: isApproving } = useMigrationApprove(currencies.from, iconAddress, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
@@ -109,7 +114,7 @@ export default function MigratePage() {
           currency={currencies.to}
           currencyBalance={direction.to === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance}
           inputValue={typedValue}
-        // onInputChange={e => setTypedValue(e.target.value)}
+          // onInputChange={e => setTypedValue(e.target.value)}
         />
       </div>
 
@@ -122,15 +127,17 @@ export default function MigratePage() {
               </Button>
             ) : (
               <>
-                {direction.from === SONIC_MAINNET_CHAIN_ID && <Button
-                  className="w-full"
-                  type="button"
-                  variant="default"
-                  onClick={handleApprove}
-                  disabled={isAllowanceLoading || hasAllowed || isApproving || !!error}
-                >
-                  {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
-                </Button>}
+                {direction.from === SONIC_MAINNET_CHAIN_ID && (
+                  <Button
+                    className="w-full"
+                    type="button"
+                    variant="default"
+                    onClick={handleApprove}
+                    disabled={isAllowanceLoading || hasAllowed || isApproving || !!error}
+                  >
+                    {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+                  </Button>
+                )}
 
                 <Button
                   className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px] md:w-[232px]

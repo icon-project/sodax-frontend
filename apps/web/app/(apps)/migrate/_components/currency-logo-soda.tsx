@@ -1,6 +1,12 @@
-const CurrencyLogoSoda = () => {
+import React from 'react';
+
+interface CurrencyLogoSodaProps {
+  className?: string;
+}
+
+const CurrencyLogoSoda: React.FC<CurrencyLogoSodaProps> = ({ className = '' }) => {
   return (
-    <div className="w-16 h-14 relative">
+    <div className={`w-16 h-14 relative ${className}`}>
         <div data-property-1="Default" className="w-12 h-12 left-[8px] top-[4px] absolute">
           <div className="w-12 h-12 left-0 top-0 absolute bg-gradient-to-br from-white to-zinc-100 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.20)]" />
           <div
