@@ -428,7 +428,7 @@ export class SolverService {
   public async createAndSubmitIntent<S extends SpokeProvider>(
     payload: CreateIntentParams,
     spokeProvider: S,
-    fee= this.config.partnerFee,
+    fee = this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>> {
     try {
