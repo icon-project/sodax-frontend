@@ -63,12 +63,12 @@ export default function MigratePage() {
     iconAddress,
     spokeProvider,
   );
-  const { approve, isLoading: isApproving } = useMigrationApprove(currencies.from, iconAddress, spokeProvider);
+  const { approve, isLoading: isApproving } = useMigrationApprove(currencies.from, typedValue, iconAddress, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
   const { mutateAsync: migrate, isPending } = useMigrate();
   const handleApprove = async () => {
-    await approve({ amount: typedValue });
+    await approve();
   };
 
   return (
@@ -113,7 +113,7 @@ export default function MigratePage() {
           currency={currencies.to}
           currencyBalance={direction.to === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance}
           inputValue={typedValue}
-          // onInputChange={e => setTypedValue(e.target.value)}
+        // onInputChange={e => setTypedValue(e.target.value)}
         />
       </div>
 
@@ -138,8 +138,8 @@ export default function MigratePage() {
                     onClick={handleApprove}
                     disabled={isApproving || isAllowanceLoading || hasAllowed || !!error}
                   >
-                    {isApproving || isAllowanceLoading ? 'Approving' : hasAllowed ? 'Approved' : 'Approve'}
-                    {(isApproving || isAllowanceLoading) && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isApproving ? 'Approving' : hasAllowed ? 'Approved' : 'Approve'}
+                    {(isApproving) && <Loader2 className="w-4 h-4 animate-spin" />}
                     {hasAllowed && <Check className="w-4 h-4 text-clay-light" />}
                   </Button>
                 )}

@@ -27,16 +27,19 @@ import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
  * ```
  */
 export function useMigrationAllowance(
-    token: XToken,
-    amount: string,
+    token: XToken | undefined,
+    amount: string | undefined,
     iconAddress: string | undefined,
     spokeProvider: SpokeProvider | undefined,
 ): UseQueryResult<boolean, Error> {
     const { sodax } = useSodaxContext();
 
     return useQuery({
-        queryKey: ['allowance', token.xChainId, token.address, amount, iconAddress],
+        queryKey: ['allowance', token?.xChainId, token?.address, amount, iconAddress],
         queryFn: async () => {
+            if (!token) throw new Error('Token is required');
+            if (!amount) throw new Error('Amount is required');
+
             if (token.xChainId === ICON_MAINNET_CHAIN_ID) {
                 return true;
             }
@@ -54,5 +57,6 @@ export function useMigrationAllowance(
             return false;
         },
         enabled: !!spokeProvider,
+        refetchInterval: 2000,
     });
 }
