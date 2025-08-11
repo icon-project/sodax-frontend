@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 import { WalletModal } from '@/components/shared/wallet-modal';
-import { ArrowRight, XIcon } from 'lucide-react';
+import { ArrowRight, XIcon, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TermsConfirmationModalProps {
   open: boolean;
@@ -24,6 +24,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
 }) => {
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
   const [showWalletModal, setShowWalletModal] = useState<boolean>(false);
+  const [isTermsExpanded, setIsTermsExpanded] = useState<boolean>(false);
 
   const handleAccept = async (): Promise<void> => {
     if (acceptedTerms) {
@@ -54,7 +55,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
     <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
-          className="max-w-full h-[calc(100vh-205px)] sm:h-fit md:max-w-[480px] shadow-none bg-white py-22 md:py-10 px-12 gap-6 fixed bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0 sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-t-[32px] rounded-b-[0px] sm:rounded-[32px] flex flex-col"
+          className="gap-0 max-w-full h-[calc(100vh-205px)] sm:h-fit md:max-w-[480px] shadow-none bg-white py-22 md:py-10 px-12 fixed bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0 sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-t-[32px] rounded-b-[0px] sm:rounded-[32px] flex flex-col"
           hideCloseButton
           onInteractOutside={e => {
             e.preventDefault();
@@ -64,32 +65,64 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
             <div className="flex flex-row justify-between items-center">
               <div className="inline-flex justify-start items-center gap-2">
                 <Image src="/symbol.png" alt="SODAX Symbol" width={24} height={24} />
-                <div className="mix-blend-multiply justify-end text-espresso font-['InterRegular'] font-bold leading-snug text-(size:--subtitle)">
+                <div className="mix-blend-multiply justify-end text-espresso font-['InterRegular'] font-bold leading-snug text-(length:--subtitle)">
                   Confirm terms
                 </div>
               </div>
             </div>
           </DialogTitle>
 
-          <div className="text-clay-light">
-            <p className="font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable)">
+          <div className="text-clay-light mt-6">
+            <p className="font-['InterRegular'] font-medium leading-[1.4] text-(length:--body-comfortable)">
               SODAX is a decentralized, non-custodial DeFi platform. By connecting to SODAX, you agree to the following
               terms.
             </p>
           </div>
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center mt-6">
             <Checkbox
               id="accept-terms"
               checked={acceptedTerms}
               onCheckedChange={checked => setAcceptedTerms(checked as boolean)}
             />
-            <label htmlFor="accept-terms" className="text-sm text-espresso cursor-pointer font-['InterRegular']">
+            <label
+              htmlFor="accept-terms"
+              className="text-sm text-espresso cursor-pointer font-['InterRegular'] inline-flex items-center gap-1"
+            >
               Accept{' '}
-              <button type="button" className="underline hover:text-cherry-brighter transition-colors">
+              <button
+                type="button"
+                className="underline hover:text-cherry-brighter transition-colors flex items-center gap-1 cursor-pointer"
+                onClick={() => setIsTermsExpanded(!isTermsExpanded)}
+              >
                 terms and conditions
               </button>
             </label>
+          </div>
+
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              isTermsExpanded ? 'max-h-96 opacity-100 mt-6 mb-6' : 'max-h-0 opacity-0 mt-6'
+            }`}
+          >
+            <div className="text-(length:--body-comfortable) text-clay font-['InterRegular'] leading-relaxed">
+              <p className="mb-3">Use the same terms present in the landing page please.</p>
+              <p className="mb-3">
+                This is randomly generated text. By accessing or using this Web3 DeFi platform ("the Service"), you
+                acknowledge and agree that all interactions are decentralized and performed at your own risk. The
+                Service operates through smart contracts on public blockchains, with no central authority or user fund
+                custody. Users are fully responsible for managing their own wallets, private keys, and transaction
+                decisions. Any irreversible loss of access or funds due to user error or technical failure is solely the
+                user's responsibility.
+              </p>
+              <p className="mb-3">
+                This Service is provided "as is" without warranties, express or implied. We disclaim liability for any
+                issues arising from code exploits, network outages, or integration failures. You accept that
+                participation involves significant financial risk, including potential total loss of digital assets. No
+                guarantees are made regarding functionality, uptime, or financial returns. Continued use constitutes
+                acceptance of these conditions and acknowledgment that you understand and assume all associated risks.
+              </p>
+            </div>
           </div>
 
           <div className="flex gap-2">
@@ -103,7 +136,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
               <ArrowRight className="w-4 h-4" />
             </Button>
             <Button
-              variant="cream"
+              variant="outline"
               onClick={disconnectWallet}
               className="h-10 font-['InterRegular'] cursor-pointer w-30"
             >
