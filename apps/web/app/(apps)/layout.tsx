@@ -255,11 +255,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         : 'Wallet';
     setConnectedWalletName(walletName);
     setPendingWalletConnection({ xConnector, xChainType });
-    if (xChainType !== 'ICON') setShowWalletModal(true);
+    if (xChainType !== 'ICON') setShowTermsModal(true);
   };
 
   useEffect(() => {
-    if (showWalletModalOnTwoWallets && showWalletModal && connectedWalletsCount >= 2) {
+    if (!showTermsModal && showWalletModalOnTwoWallets && showWalletModal && connectedWalletsCount >= 2) {
       const t = setTimeout(() => {
         setShowWalletModal(false);
       }, 2000);
@@ -269,7 +269,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (connectedWalletsCount < 2) {
       setShowWalletModalOnTwoWallets(true);
     }
-  }, [connectedWalletsCount, showWalletModal, showWalletModalOnTwoWallets]);
+  }, [connectedWalletsCount, showWalletModal, showWalletModalOnTwoWallets, showTermsModal]);
 
   const handleTermsAccepted = async () => {
     if (!pendingWalletConnection) return;
