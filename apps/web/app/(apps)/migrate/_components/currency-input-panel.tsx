@@ -2,7 +2,7 @@
 import type React from 'react';
 import CurrencyLogoICX from './currency-logo-icx';
 import CurrencyLogoSoda from './currency-logo-soda';
-import { ICON_MAINNET_CHAIN_ID, XToken, type SpokeChainId } from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
 import { NumberInput } from '@/components/ui/number-input';
 import { formatUnits } from 'viem';
 
@@ -64,15 +64,15 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           {type === CurrencyInputPanelType.INPUT ? `${formattedBalanceFixed} available` : 'Receive'}
         </div>
         <div className="inline-flex gap-1 items-center">
-          <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold text-(size:--subtitle)">
+          <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold">
             <div className="relative">
-                <NumberInput
-                  value={inputValue === '' ? 0 : Number(inputValue)}
-                  onChange={onInputChange}
-                  onFocus={onInputFocus}
-                  placeholder="0"
-                  className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !text-(size:--subtitle) !pr-0"
-                />
+              <NumberInput
+                value={inputValue === '' ? 0 : Number(inputValue)}
+                onChange={onInputChange}
+                onFocus={onInputFocus}
+                placeholder="0"
+                className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle)"
+              />
             </div>
           </div>
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(size:--body-super-comfortable)">

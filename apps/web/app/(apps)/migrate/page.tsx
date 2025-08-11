@@ -16,6 +16,7 @@ import { icxToken, sodaToken } from './_stores/migration-store';
 import { formatUnits } from 'viem';
 import { useMigrate } from './_hooks/useMigrate';
 import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 export default function MigratePage() {
   const { openWalletModal } = useWalletUI();
@@ -105,9 +106,9 @@ export default function MigratePage() {
         {iconAddress && sonicAddress ? (
           <div className="flex gap-2">
             <Button
-              className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px] md:w-[232px]
-              disabled:opacity-100 disabled:bg-cream-white disabled:text-clay-light
-              bg-cherry-soda text-white shadow-xs hover:bg-cherry-soda/90 focus-visible:ring-cherry-soda/20 dark:focus-visible:ring-cherry-soda/40 dark:bg-cherry-soda/60"
+              variant="default"
+              className="w-full bg-cherry-bright hover:bg-cherry-brighter h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px] md:w-[232px]
+              disabled:opacity-100 disabled:bg-cream-white disabled:text-clay-light"
               onClick={async () => {
                 try {
                   await migrate();
@@ -130,8 +131,8 @@ export default function MigratePage() {
           </div>
         ) : (
           <Button
-            variant="cherry"
-            className="w-full sm:w-[232px] bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white"
+            variant="default"
+            className="w-full sm:w-[232px] bg-cherry-bright hover:bg-cherry-brighter h-10 cursor-pointer text-(size:--body-comfortable) text-white"
             onClick={() => openWalletModal()}
           >
             Connect wallets
@@ -141,14 +142,16 @@ export default function MigratePage() {
           Takes ~1 min · Network fee: {direction.from === ICON_MAINNET_CHAIN_ID ? '~0.02 ICX' : '~0.1 SODA'}
         </div>
 
-        <div className="self-stretch p-6 mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2">
+        <div className="self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 p-(--layout-space-comfortable) lg:mt-4 mt-2">
           <div className="self-stretch inline-flex justify-center items-center gap-2">
-            <div className="w-4 h-4 relative mix-blend-multiply"></div>
-            <div className="flex-1 justify-center text-Espresso text-base font-bold font-['Inter'] leading-tight">
+            <div className="w-4 h-4 relative mix-blend-multiply">
+              <Image src="/symbol.png" alt="" width={16} height={16} />
+            </div>
+            <div className="flex-1 justify-center text-espresso text-base font-bold font-['InterRegular'] text-(size:--body-super-comfortable) leading-tight">
               {direction.from === ICON_MAINNET_CHAIN_ID ? "You're migrating to Sonic" : "You're migrating back to ICON"}
             </div>
           </div>
-          <div className="self-stretch justify-center text-Clay text-xs font-medium font-['Inter'] leading-tight">
+          <div className="self-stretch justify-center text-clay text-xs font-medium font-['InterRegular'] text-(size:--body-comfortable) leading-tight">
             {direction.from === ICON_MAINNET_CHAIN_ID
               ? "You won't need S token to receive your SODA. But you will for any future transactions on Sonic."
               : 'ICX will be sent to your connected ICON wallet.'}
