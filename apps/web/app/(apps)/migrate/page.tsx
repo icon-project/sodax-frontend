@@ -4,28 +4,30 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useWalletUI } from '../_context/wallet-ui';
 
-import {  useXAccount, useXBalances } from '@sodax/wallet-sdk';
-import {  SONIC_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk';
+import { SONIC_MAINNET_CHAIN_ID } from '@sodax/sdk';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 
 import { SuccessDialog, ErrorDialog } from './_components';
 import { SwitchDirectionIcon } from '@/components/icons';
 import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/currency-input-panel';
-import { useMigrationStore } from './_stores/migration-store-provider';
+import { useMigrationInfo, useMigrationStore } from './_stores/migration-store-provider';
 import { icxToken, sodaToken } from './_stores/migration-store';
 import { formatUnits } from 'viem';
+import { useMigrate } from './_hooks/useMigrate';
+import { Loader2 } from 'lucide-react';
 
 export default function MigratePage() {
   const { openWalletModal } = useWalletUI();
   const { address: iconAddress } = useXAccount('ICON');
   const { address: sonicAddress } = useXAccount('EVM');
 
+  const { error } = useMigrationInfo();
   const direction = useMigrationStore(state => state.direction);
   const typedValue = useMigrationStore(state => state.typedValue);
   const currencies = useMigrationStore(state => state.currencies);
   const switchDirection = useMigrationStore(state => state.switchDirection);
   const setTypedValue = useMigrationStore(state => state.setTypedValue);
-  
 
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -46,10 +48,12 @@ export default function MigratePage() {
   const sodaBalance = sodaBalances?.[sodaToken.address] || 0n;
 
   const handleMaxClick = () => {
-    const value = direction.from === ICON_MAINNET_CHAIN_ID ? icxBalance-1000000000000000000n : sodaBalance-1000000000000000000n;
+    const value =
+      direction.from === ICON_MAINNET_CHAIN_ID ? icxBalance - 1000000000000000000n : sodaBalance - 1000000000000000000n;
     setTypedValue(Number(formatUnits(value, currencies.from.decimals)).toFixed(2));
-  }
+  };
 
+  const { mutateAsync: migrate, isPending } = useMigrate();
 
   return (
     <div className="flex flex-col w-full" style={{ gap: 'var(--layout-space-comfortable)' }}>
@@ -101,10 +105,27 @@ export default function MigratePage() {
         {iconAddress && sonicAddress ? (
           <div className="flex gap-2">
             <Button
-              variant="cherry"
-              className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px] md:w-[232px]"
+              className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px] md:w-[232px]
+              disabled:opacity-100 disabled:bg-cream-white disabled:text-clay-light
+              bg-cherry-soda text-white shadow-xs hover:bg-cherry-soda/90 focus-visible:ring-cherry-soda/20 dark:focus-visible:ring-cherry-soda/40 dark:bg-cherry-soda/60"
+              onClick={async () => {
+                try {
+                  await migrate();
+                  setShowSuccessDialog(true);
+                } catch (error) {
+                  console.error(error);
+                }
+              }}
+              disabled={isPending || !!error}
             >
-              Migrate
+              {error ? (
+                error
+              ) : (
+                <>
+                  {isPending ? 'Migrating' : 'Migrate'}
+                  {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                </>
+              )}
             </Button>
           </div>
         ) : (

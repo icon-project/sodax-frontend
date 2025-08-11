@@ -1,62 +1,56 @@
 // src/providers/counter-store-provider.tsx
-'use client'
+'use client';
 
-import { type ReactNode, createContext, useRef, useContext } from 'react'
-import { useStore } from 'zustand'
+import { type ReactNode, createContext, useRef, useContext, useMemo } from 'react';
+import { useStore } from 'zustand';
 
 import {
   type MigrationStore,
   createMigrationStore,
   // initMigrationStore,
-} from './migration-store'
+} from './migration-store';
 
-export type MigrationStoreApi = ReturnType<typeof createMigrationStore>
+export type MigrationStoreApi = ReturnType<typeof createMigrationStore>;
 
-export const MigrationStoreContext = createContext<MigrationStoreApi | undefined>(
-  undefined,
-)
+export const MigrationStoreContext = createContext<MigrationStoreApi | undefined>(undefined);
 
 export interface MigrationStoreProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
-export const MigrationStoreProvider = ({
-  children,
-}: MigrationStoreProviderProps) => {
-  const storeRef = useRef<MigrationStoreApi | null>(null)
+export const MigrationStoreProvider = ({ children }: MigrationStoreProviderProps) => {
+  const storeRef = useRef<MigrationStoreApi | null>(null);
   if (storeRef.current === null) {
     // storeRef.current = createMigrationStore(initMigrationStore())
-    storeRef.current = createMigrationStore()
+    storeRef.current = createMigrationStore();
   }
 
-  return (
-    <MigrationStoreContext.Provider value={storeRef.current}>
-      {children}
-    </MigrationStoreContext.Provider>
-  )
-}
+  return <MigrationStoreContext.Provider value={storeRef.current}>{children}</MigrationStoreContext.Provider>;
+};
 
-export const useMigrationStore = <T,>(
-  selector: (store: MigrationStore) => T,
-): T => {
-  const counterStoreContext = useContext(MigrationStoreContext)
+export const useMigrationStore = <T,>(selector: (store: MigrationStore) => T): T => {
+  const counterStoreContext = useContext(MigrationStoreContext);
 
   if (!counterStoreContext) {
-    throw new Error('useMigrationStore must be used within MigrationStoreProvider')
+    throw new Error('useMigrationStore must be used within MigrationStoreProvider');
   }
 
-  return useStore(counterStoreContext, selector)
-}
+  return useStore(counterStoreContext, selector);
+};
 
-// export const useMigrationInfo = () => {
-//   const { direction, currencies } = useMigrationStore(state => state)
-//   const { address: iconAddress } = useXAccount('ICON');
-//   const { address: sonicAddress } = useXAccount('EVM');
+export const useMigrationInfo = () => {
+  const { direction, currencies } = useMigrationStore(state => state);
+  const typedValue = useMigrationStore(state => state.typedValue);
+  const error = useMemo(() => {
+    if (typedValue === '' || Number(typedValue) <= 0) {
+      return 'Enter Amount';
+    }
+    return null;
+  }, [typedValue]);
 
-//   return {
-//     direction,
-//     currencies,
-//     iconAddress,
-//     sonicAddress,
-//   }
-// }
+  return {
+    direction,
+    currencies,
+    error,
+  };
+};
