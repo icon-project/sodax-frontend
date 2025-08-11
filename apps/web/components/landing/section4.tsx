@@ -5,6 +5,7 @@ import Image from 'next/image';
 import ConnectWalletButton from '../ui/connect-wallet-button';
 // import { useWallet } from '../../hooks/useWallet';
 import { Notification } from '../Notification';
+import { LaunchButton } from './launch-button';
 
 const Section4 = ({ onOpenRewardDialog }: { onOpenRewardDialog: () => void }) => {
   // const { isRegistering, notification, mounted, handleWalletClick, isConnected } = useWallet();
@@ -29,6 +30,7 @@ const Section4 = ({ onOpenRewardDialog }: { onOpenRewardDialog: () => void }) =>
           {/* <DecoratedButton variant="white" isConnected={isConnected} onClick={onOpenRewardDialog}>
             join waitlist
           </DecoratedButton> */}
+          <LaunchButton variant="white">launch apps</LaunchButton>
         </div>
       </div>
       <div className="w-full lg:w-1/2 flex flex-col items-center pt-[40px] sm:pt-[60px] h-[440px] sm:h-[480px] md:h-[480px] mt-4 bg-[radial-gradient(circle_at_center,_#5C3623,_#1C1C24)] relative z-1">
