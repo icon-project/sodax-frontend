@@ -88,6 +88,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 onFocus={onInputFocus}
                 placeholder="0"
                 className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle)"
+                readOnly={type===CurrencyInputPanelType.OUTPUT}
               />
               {/* <NumberInput  
                 ref={inputRef}
