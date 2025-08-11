@@ -14,9 +14,11 @@ import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/curren
 import { useMigrationInfo, useMigrationStore } from './_stores/migration-store-provider';
 import { icxToken, sodaToken } from './_stores/migration-store';
 import { formatUnits } from 'viem';
-import { useMigrate } from './_hooks/useMigrate';
+import { useMigrate, useMigrationAllowance, useMigrationApprove } from './_hooks';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useSpokeProvider } from '@sodax/dapp-kit';
+import { useEvmSwitchChain } from '@sodax/wallet-sdk';
 
 export default function MigratePage() {
   const { openWalletModal } = useWalletUI();
@@ -54,7 +56,16 @@ export default function MigratePage() {
     setTypedValue(Number(formatUnits(value, currencies.from.decimals)).toFixed(2));
   };
 
+  const spokeProvider = useSpokeProvider(direction.from);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(currencies.from, typedValue, iconAddress, spokeProvider);
+  console.log('hasAllowed', hasAllowed);
+  const { approve, isLoading: isApproving } = useMigrationApprove(currencies.from, iconAddress, spokeProvider);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
+
   const { mutateAsync: migrate, isPending } = useMigrate();
+  const handleApprove = async () => {
+    await approve({ amount: typedValue });
+  };
 
   return (
     <div className="flex flex-col w-full" style={{ gap: 'var(--layout-space-comfortable)' }}>
@@ -98,36 +109,54 @@ export default function MigratePage() {
           currency={currencies.to}
           currencyBalance={direction.to === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance}
           inputValue={typedValue}
-          // onInputChange={e => setTypedValue(e.target.value)}
+        // onInputChange={e => setTypedValue(e.target.value)}
         />
       </div>
 
       <div className="inline-flex flex-col justify-start items-start gap-4">
         {iconAddress && sonicAddress ? (
           <div className="flex gap-2">
-            <Button
-              variant="default"
-              className="w-full bg-cherry-bright hover:bg-cherry-brighter h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px] md:w-[232px]
-              disabled:opacity-100 disabled:bg-cream-white disabled:text-clay-light"
-              onClick={async () => {
-                try {
-                  await migrate();
-                  setShowSuccessDialog(true);
-                } catch (error) {
-                  console.error(error);
-                }
-              }}
-              disabled={isPending || !!error}
-            >
-              {error ? (
-                error
-              ) : (
-                <>
-                  {isPending ? 'Migrating' : 'Migrate'}
-                  {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                </>
-              )}
-            </Button>
+            {isWrongChain ? (
+              <Button variant="cherry" onClick={handleSwitchChain}>
+                Switch to {direction.from === ICON_MAINNET_CHAIN_ID ? 'ICON' : 'Sonic'}
+              </Button>
+            ) : (
+              <>
+                {direction.from === SONIC_MAINNET_CHAIN_ID && <Button
+                  className="w-full"
+                  type="button"
+                  variant="default"
+                  onClick={handleApprove}
+                  disabled={isAllowanceLoading || hasAllowed || isApproving || !!error}
+                >
+                  {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+                </Button>}
+
+                <Button
+                  className="w-full bg-cherry-bright h-10 cursor-pointer text-(size:--body-comfortable) text-white w-[136px] md:w-[232px]
+              disabled:opacity-100 disabled:bg-cream-white disabled:text-clay-light
+              bg-cherry-soda text-white shadow-xs hover:bg-cherry-soda/90 focus-visible:ring-cherry-soda/20 dark:focus-visible:ring-cherry-soda/40 dark:bg-cherry-soda/60"
+                  onClick={async () => {
+                    try {
+                      await migrate();
+                      setShowSuccessDialog(true);
+                    } catch (error) {
+                      console.error(error);
+                    }
+                  }}
+                  disabled={isPending || !!error || !hasAllowed || isApproving}
+                >
+                  {error ? (
+                    error
+                  ) : (
+                    <>
+                      {isPending ? 'Migrating' : 'Migrate'}
+                      {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </div>
         ) : (
           <Button
