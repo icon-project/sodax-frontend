@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 import { WalletModal } from '@/components/shared/wallet-modal';
 import { ArrowRight, XIcon, ChevronDown, ChevronUp } from 'lucide-react';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface TermsConfirmationModalProps {
   open: boolean;
@@ -101,11 +102,11 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
           </div>
 
           <div
-            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            className={`transition-all duration-300 ease-in-out ${
               isTermsExpanded ? 'max-h-96 opacity-100 mt-6 mb-6' : 'max-h-0 opacity-0 mt-6'
             }`}
           >
-            <div className="text-(length:--body-comfortable) text-clay font-['InterRegular'] leading-relaxed">
+            <ScrollArea className="text-(length:--body-comfortable) text-clay font-['InterRegular'] leading-relaxed h-[100px] md:h-[380px] pr-2">
               <p className="mb-3">Use the same terms present in the landing page please.</p>
               <p className="mb-3">
                 This is randomly generated text. By accessing or using this Web3 DeFi platform ("the Service"), you
@@ -122,7 +123,8 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
                 guarantees are made regarding functionality, uptime, or financial returns. Continued use constitutes
                 acceptance of these conditions and acknowledgment that you understand and assume all associated risks.
               </p>
-            </div>
+              <ScrollBar className="w-1" />
+            </ScrollArea>
           </div>
 
           <div className="flex gap-2">
