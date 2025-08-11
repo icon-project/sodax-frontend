@@ -657,7 +657,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Create supply intent only (without submitting to Solver API)
+   * Create supply intent only (without relay submit to Solver API)
    * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
    * In order to successfully supply tokens, you need to:
    * 1. Check if the allowance is sufficient
@@ -841,7 +841,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Create borrow intent only (without submitting to Solver API)
+   * Create borrow intent only (without relay and submit to Solver API)
    * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
    * In order to successfully borrow tokens, you need to:
    * 1. Execute the borrow transaction on the spoke chain
@@ -1002,7 +1002,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Create withdraw intent only (without submitting to Solver API)
+   * Create withdraw intent only (without relay and submit to Solver API)
    * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
    * In order to successfully withdraw tokens, you need to:
    * 1. Execute the withdraw transaction on the spoke chain
@@ -1163,7 +1163,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Create repay intent only (without submitting to Solver API)
+   * Create repay intent only (without relay and submit to Solver API)
    * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
    * In order to successfully repay tokens, you need to:
    * 1. Check if the allowance is sufficient
