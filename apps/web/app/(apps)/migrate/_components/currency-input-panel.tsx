@@ -7,6 +7,7 @@ import { ICON_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/ty
 import { NumberInput } from '@/components/ui/number-input';
 import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
+import { Button } from '@/components/ui/button';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -102,13 +103,22 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             {currency.symbol}
           </div>
           {type === CurrencyInputPanelType.INPUT && (
-            <button
-              type="button"
+            // <button
+            //   type="button"
+            //   onClick={onMaxClick}
+            //   className="ml-1 px-2 py-1 bg-cream-white text-clay rounded text-xs font-medium hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso disabled:bg-cream-white disabled:text-clay-light transition-colors duration-200 cursor-pointer font-['InterBold'] text-[9px] leading-none rounded-full h-4"
+            // >
+            //   MAX
+            // </button>
+            <Button
+              variant="cherry"
+              className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] inline-flex flex-col justify-center items-center gap-2"
               onClick={onMaxClick}
-              className="ml-1 px-2 py-1 bg-cream-white text-clay rounded text-xs font-medium hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso disabled:bg-cream-white disabled:text-clay-light transition-colors duration-200 cursor-pointer font-['InterBold'] text-[9px] leading-[1.2] rounded-full h-4"
             >
-              MAX
-            </button>
+              <div className="text-center justify-center text-clay text-[9px] font-bold font-['InterRegular'] uppercase leading-3">
+                MAX
+              </div>
+            </Button>
           )}
         </div>
       </div>
