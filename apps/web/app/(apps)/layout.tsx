@@ -220,13 +220,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Wallet modal + terms gating
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [showWalletModalOnTwoWallets, setShowWalletModalOnTwoWallets] = useState(true);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [pendingWalletConnection, setPendingWalletConnection] = useState<{
     xConnector: XConnector;
     xChainType: string;
   } | null>(null);
   const [connectedWalletName, setConnectedWalletName] = useState<string>('');
-  const [autoCloseOnTwoWallets, setAutoCloseOnTwoWallets] = useState(false);
   const { mutateAsync: xConnect } = useXConnect();
   const xDisconnect = useXDisconnect();
   const xAccounts = useXAccounts();
@@ -255,21 +255,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         : 'Wallet';
     setConnectedWalletName(walletName);
     setPendingWalletConnection({ xConnector, xChainType });
-    setShowTermsModal(true);
+    if (xChainType !== 'ICON') setShowWalletModal(true);
   };
 
   useEffect(() => {
-    console.log('autoCloseOnTwoWallets', autoCloseOnTwoWallets);
+    console.log('showWalletModalOnTwoWallets', showWalletModalOnTwoWallets);
+    console.log('showWalletModal', showWalletModal);
     console.log('connectedWalletsCount', connectedWalletsCount);
-    if (autoCloseOnTwoWallets && connectedWalletsCount >= 2) {
-      // small delay keeps UX consistent with your original behavior
+    if (showWalletModalOnTwoWallets && showWalletModal && connectedWalletsCount >= 2) {
       const t = setTimeout(() => {
         setShowWalletModal(false);
-        setAutoCloseOnTwoWallets(false);
-      }, 800);
+      }, 2000);
       return () => clearTimeout(t);
     }
-  }, [autoCloseOnTwoWallets, connectedWalletsCount]);
+
+    if (connectedWalletsCount < 2) {
+      setShowWalletModalOnTwoWallets(true);
+    }
+  }, [connectedWalletsCount, showWalletModal, showWalletModalOnTwoWallets]);
 
   const handleTermsAccepted = async () => {
     if (!pendingWalletConnection) return;
@@ -281,12 +284,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       setPendingWalletConnection(null);
       setConnectedWalletName('');
       setShowWalletModal(true);
-      setAutoCloseOnTwoWallets(wasOneConnected);
     } catch {
       setShowTermsModal(false);
       setPendingWalletConnection(null);
       setConnectedWalletName('');
-      setAutoCloseOnTwoWallets(false);
     }
   };
 
@@ -349,7 +350,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
               <div className="inline-flex justify-center items-start relative mr-2 ml-5">
                 {connectedWalletsCount >= 2 ? (
-                  <ConnectedChainsDisplay onClick={() => setShowWalletModal(true)} />
+                  <ConnectedChainsDisplay
+                    onClick={() => {
+                      setShowWalletModalOnTwoWallets(false);
+                      setShowWalletModal(true);
+                    }}
+                  />
                 ) : (
                   <DecoratedButton onClick={() => setShowWalletModal(true)}>connect</DecoratedButton>
                 )}
@@ -379,6 +385,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           isOpen={showWalletModal}
           onDismiss={() => setShowWalletModal(false)}
           onWalletSelected={handleWalletSelected}
+          onSetShowWalletModalOnTwoWallets={setShowWalletModalOnTwoWallets}
         />
         <TermsConfirmationModal
           open={showTermsModal}

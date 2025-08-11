@@ -15,6 +15,7 @@ type WalletModalProps = {
   isOpen: boolean;
   onDismiss: () => void;
   onWalletSelected?: (xConnector: XConnector, xChainType: string) => void;
+  onSetShowWalletModalOnTwoWallets?: (value: boolean) => void;
 };
 
 export const xChainTypes: WalletItemProps[] = [
@@ -55,7 +56,12 @@ export const xChainTypes: WalletItemProps[] = [
   // },
 ];
 
-export const WalletModal = ({ isOpen, onDismiss, onWalletSelected }: WalletModalProps) => {
+export const WalletModal = ({
+  isOpen,
+  onDismiss,
+  onWalletSelected,
+  onSetShowWalletModalOnTwoWallets,
+}: WalletModalProps) => {
   const [hoveredWallet, setHoveredWallet] = useState<string | null>(null);
   const [showingConnectors, setShowingConnectors] = useState<boolean>(false);
   const [selectedChainType, setSelectedChainType] = useState<string | null>(null);
@@ -74,7 +80,6 @@ export const WalletModal = ({ isOpen, onDismiss, onWalletSelected }: WalletModal
     setSelectedChainType(null);
   }, []);
 
-  // Reset showingConnectors when modal closes
   useEffect(() => {
     if (!isOpen) {
       setShowingConnectors(false);
@@ -82,17 +87,16 @@ export const WalletModal = ({ isOpen, onDismiss, onWalletSelected }: WalletModal
     }
   }, [isOpen]);
 
-  // Custom dismiss handler that prevents auto-closing when 2 wallets are connected
   const handleDismiss = () => {
-    // Only allow dismissal if less than 2 wallets are connected
-    // or if user explicitly closes the modal (not auto-close)
     if (connectedWalletsCount < 2) {
       onDismiss();
     }
   };
 
-  // Manual close handler that allows explicit closing even with 2 wallets connected
   const handleManualClose = () => {
+    if (onSetShowWalletModalOnTwoWallets) {
+      onSetShowWalletModalOnTwoWallets(true);
+    }
     onDismiss();
   };
 
