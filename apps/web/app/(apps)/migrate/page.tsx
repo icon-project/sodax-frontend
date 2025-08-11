@@ -15,7 +15,7 @@ import { useMigrationInfo, useMigrationStore } from './_stores/migration-store-p
 import { icxToken, sodaToken } from './_stores/migration-store';
 import { formatUnits } from 'viem';
 import { useMigrate, useMigrationAllowance, useMigrationApprove } from './_hooks';
-import { Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useSpokeProvider } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk';
@@ -57,7 +57,12 @@ export default function MigratePage() {
   };
 
   const spokeProvider = useSpokeProvider(direction.from);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(currencies.from, typedValue, iconAddress, spokeProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(
+    currencies.from,
+    typedValue,
+    iconAddress,
+    spokeProvider,
+  );
   const { approve, isLoading: isApproving } = useMigrationApprove(currencies.from, iconAddress, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
@@ -108,7 +113,7 @@ export default function MigratePage() {
           currency={currencies.to}
           currencyBalance={direction.to === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance}
           inputValue={typedValue}
-        // onInputChange={e => setTypedValue(e.target.value)}
+          // onInputChange={e => setTypedValue(e.target.value)}
         />
       </div>
 
@@ -116,24 +121,32 @@ export default function MigratePage() {
         {iconAddress && sonicAddress ? (
           <div className="flex gap-2">
             {isWrongChain ? (
-              <Button variant="cherry" className='w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white' onClick={handleSwitchChain}>
+              <Button
+                variant="cherry"
+                className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
+                onClick={handleSwitchChain}
+              >
                 Switch to {direction.from === ICON_MAINNET_CHAIN_ID ? 'ICON' : 'Sonic'}
               </Button>
             ) : (
               <>
                 {direction.from === SONIC_MAINNET_CHAIN_ID && (
                   <Button
-                    className="w-full"
+                    className="w-34"
                     type="button"
-                    variant="default"
+                    variant="cherry"
                     onClick={handleApprove}
-                    disabled={isAllowanceLoading || hasAllowed || isApproving || !!error}
+                    disabled={isApproving || isAllowanceLoading || hasAllowed || !!error}
                   >
-                    {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+                    {isApproving || isAllowanceLoading ? 'Approving' : hasAllowed ? 'Approved' : 'Approve'}
+                    {(isApproving || isAllowanceLoading) && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {hasAllowed && <Check className="w-4 h-4 text-clay-light" />}
                   </Button>
                 )}
 
-                <Button variant="cherry" className='w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white'
+                <Button
+                  variant="cherry"
+                  className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
                   onClick={async () => {
                     try {
                       await migrate();
@@ -157,7 +170,9 @@ export default function MigratePage() {
             )}
           </div>
         ) : (
-          <Button variant="cherry" className='w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white'
+          <Button
+            variant="cherry"
+            className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
             onClick={() => openWalletModal()}
           >
             Connect wallets
