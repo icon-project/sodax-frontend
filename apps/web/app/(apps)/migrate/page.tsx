@@ -48,11 +48,14 @@ export default function MigratePage() {
     xTokens: [sodaToken],
     address: sonicAddress,
   });
-  const sodaBalance = sodaBalances?.[sodaToken.address] || 0n;
+  const sodaBalance = BigInt(sodaBalances?.[sodaToken.address] || 0);
 
   const handleMaxClick = () => {
+    console.log('icxBalance', icxBalance);
+    console.log('sodaBalance', sodaBalance);
     const value =
       direction.from === ICON_MAINNET_CHAIN_ID ? icxBalance - 1000000000000000000n : sodaBalance - 1000000000000000000n;
+    console.log('value', value);
     setTypedValue(Number(formatUnits(value, currencies.from.decimals)).toFixed(2));
   };
 
@@ -63,7 +66,12 @@ export default function MigratePage() {
     iconAddress,
     spokeProvider,
   );
-  const { approve, isLoading: isApproving } = useMigrationApprove(currencies.from, typedValue, iconAddress, spokeProvider);
+  const { approve, isLoading: isApproving } = useMigrationApprove(
+    currencies.from,
+    typedValue,
+    iconAddress,
+    spokeProvider,
+  );
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
   const { mutateAsync: migrate, isPending } = useMigrate();
@@ -113,7 +121,7 @@ export default function MigratePage() {
           currency={currencies.to}
           currencyBalance={direction.to === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance}
           inputValue={typedValue}
-        // onInputChange={e => setTypedValue(e.target.value)}
+          // onInputChange={e => setTypedValue(e.target.value)}
         />
       </div>
 
@@ -139,7 +147,7 @@ export default function MigratePage() {
                     disabled={isApproving || isAllowanceLoading || hasAllowed || !!error}
                   >
                     {isApproving ? 'Approving' : hasAllowed ? 'Approved' : 'Approve'}
-                    {(isApproving) && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
                     {hasAllowed && <Check className="w-4 h-4 text-clay-light" />}
                   </Button>
                 )}

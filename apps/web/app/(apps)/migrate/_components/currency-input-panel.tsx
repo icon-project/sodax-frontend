@@ -88,29 +88,14 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 onFocus={onInputFocus}
                 placeholder="0"
                 className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle)"
-                readOnly={type===CurrencyInputPanelType.OUTPUT}
+                readOnly={type === CurrencyInputPanelType.OUTPUT}
               />
-              {/* <NumberInput  
-                ref={inputRef}
-                value={inputValue === '' ? 0 : Number(inputValue)}
-                onChange={onInputChange}
-                onFocus={onInputFocus}
-                placeholder="0"
-                className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle)"
-              /> */}
             </div>
           </div>
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(size:--body-super-comfortable)">
             {currency.symbol}
           </div>
           {type === CurrencyInputPanelType.INPUT && (
-            // <button
-            //   type="button"
-            //   onClick={onMaxClick}
-            //   className="ml-1 px-2 py-1 bg-cream-white text-clay rounded text-xs font-medium hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso disabled:bg-cream-white disabled:text-clay-light transition-colors duration-200 cursor-pointer font-['InterBold'] text-[9px] leading-none rounded-full h-4"
-            // >
-            //   MAX
-            // </button>
             <Button
               variant="cherry"
               className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] inline-flex flex-col justify-center items-center gap-2"
