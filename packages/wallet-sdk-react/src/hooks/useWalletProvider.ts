@@ -63,9 +63,16 @@ export function useWalletProvider(
   return useMemo(() => {
     switch (xChainType) {
       case 'EVM': {
+        if (!evmWalletClient) {
+          return undefined;
+        }
+        if (!evmPublicClient) {
+          return undefined;
+        }
+
         return new EvmWalletProvider({
-          walletClient: evmWalletClient as WalletClient<CustomTransport | HttpTransport, Chain, Account> | undefined,
-          publicClient: evmPublicClient as PublicClient<CustomTransport | HttpTransport>,
+          walletClient: evmWalletClient,
+          publicClient: evmPublicClient,
         });
       }
 

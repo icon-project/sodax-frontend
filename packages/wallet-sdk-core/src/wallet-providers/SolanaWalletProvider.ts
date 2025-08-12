@@ -22,7 +22,7 @@ import type {
 } from '@sodax/types';
 import type { SignerWalletAdapterProps } from '@solana/wallet-adapter-base';
 interface WalletContextState {
-  publicKey: PublicKey;
+  publicKey: PublicKey | null;
   signTransaction: SignerWalletAdapterProps['signTransaction'] | undefined;
 }
 

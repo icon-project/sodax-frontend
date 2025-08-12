@@ -50,14 +50,14 @@
     "@solana/wallet-adapter-wallets": "0.19.30",
     "@solana/web3.js": "1.98.0",
     "@stellar/stellar-sdk": "12.3.0",
-    "icon-sdk-js": "1.5.3",
+    "icon-sdk-js": "catalog:",
     "immer": "10.1.1",
-    "viem": "catalog:",
+    "viem": "2.29.2",
     "wagmi": "catalog:",
     "zustand": "4.5.2"
   },
   "devDependencies": {
-    "@types/react": "catalog:",
+    "@types/react": "^19.0.8",
     "knip": "5.30.5",
     "tsup": "catalog:",
     "typescript": "catalog:",

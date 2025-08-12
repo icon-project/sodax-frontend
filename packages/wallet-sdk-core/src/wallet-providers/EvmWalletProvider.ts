@@ -1,16 +1,16 @@
 import type { EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@sodax/types';
-import type { Account, Address, Chain, CustomTransport, Hash, HttpTransport, PublicClient, WalletClient } from 'viem';
+import type { Account, Address, Chain, Transport, Hash, PublicClient, WalletClient } from 'viem';
 
 export class EvmWalletProvider implements IEvmWalletProvider {
-  private readonly _walletClient?: WalletClient<CustomTransport | HttpTransport, Chain, Account>;
-  public readonly publicClient: PublicClient<CustomTransport | HttpTransport>;
+  private readonly _walletClient?: WalletClient<Transport, Chain, Account>;
+  public readonly publicClient: PublicClient;
 
   constructor({
     publicClient,
     walletClient,
   }: {
-    publicClient: PublicClient<CustomTransport | HttpTransport>;
-    walletClient: WalletClient<CustomTransport | HttpTransport, Chain, Account> | undefined;
+    publicClient: PublicClient;
+    walletClient: WalletClient<Transport, Chain, Account> | undefined;
   }) {
     this._walletClient = walletClient;
     this.publicClient = publicClient;
