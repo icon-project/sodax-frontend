@@ -7,10 +7,9 @@ import {
   InjectiveWalletProvider,
   StellarWalletProvider,
   SolanaWalletProvider,
-} from '../wallet-providers';
+} from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
 import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
-import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
 import type { InjectiveEoaAddress } from '@sodax/types';
 import { usePublicClient, useWalletClient } from 'wagmi';
 import { getWagmiChainId } from '../utils';
@@ -88,7 +87,7 @@ export function useWalletProvider(
         };
 
         return new IconWalletProvider({
-          walletAddress: walletAddress as IconEoaAddress | undefined,
+          walletAddress: walletAddress as `hx${string}` | undefined,
           rpcUrl: rpcUrl as `http${string}`,
         });
       }

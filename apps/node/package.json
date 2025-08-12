@@ -22,7 +22,6 @@
   },
   "main": "dist/main.js",
   "dependencies": {
-    "@creit.tech/stellar-wallets-kit": "^1.7.5",
     "@injectivelabs/networks": "1.15.41",
     "@injectivelabs/sdk-ts": "1.15.43",
     "@injectivelabs/ts-types": "1.15.41",

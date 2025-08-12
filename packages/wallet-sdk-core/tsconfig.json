@@ -15,14 +15,12 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "module": "NodeNext",
-    "moduleResolution": "NodeNext",
     "outDir": "dist",
     "rootDir": "src",
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": false // TODO turn on and fix all the issues
+    "noUnusedLocals": true
   },
   "exclude": ["coverage", "dist", "node_modules", ".turbo", ".history", ".cursorrules"],
   "include": ["src"]

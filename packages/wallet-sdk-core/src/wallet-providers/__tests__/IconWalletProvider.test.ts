@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { IconWalletProvider, type IconWalletConfig } from '../IconWalletProvider';
+import { IconWalletProvider, type IconWalletConfig } from '../IconWalletProvider.js';
 
 describe('IconWalletProvider', () => {
   const mockRpcUrl = 'https://ctz.solidwallet.io/api/v3';
   const mockPrivateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
   const mockWalletAddress = 'hx1234567890abcdef1234567890abcdef12345678';
-  const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+  // const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
 
   beforeEach(() => {
     vi.clearAllMocks();

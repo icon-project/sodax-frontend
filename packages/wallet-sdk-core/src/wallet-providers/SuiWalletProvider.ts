@@ -10,7 +10,7 @@ export class SuiWalletProvider implements ISuiWalletProvider {
   private client: SuiClient;
   private wallet: any;
   private account: any;
-  constructor({ client, wallet, account }) {
+  constructor({ client, wallet, account }: { client: SuiClient; wallet: any; account: any }) {
     this.client = client;
     this.wallet = wallet;
     this.account = account;
