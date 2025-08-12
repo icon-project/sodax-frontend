@@ -19,7 +19,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
       icon: chainType === 'ICON' ? '/coin/icx1.png' : '/coin/s1.png',
     }));
 
-  if (connectedChains.length === 0) return null;
+  if (connectedChains.length === 0) return <></>;
 
   return (
     <div className="flex items-center gap-4">
