@@ -53,7 +53,7 @@ export default function ClientShell({ children }: { children: ReactNode }) {
               className="w-full md:w-[calc(100%-200px)] lg:w-[784px] min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)]
                          p-[80px_16px] pb-10 md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-2
                          rounded-tl-2xl rounded-tr-2xl border-8 border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)]
-                         border-b-0 z-50 -ml-16"
+                         border-b-0 z-50 ml-0 md:-ml-16"
               style={{ backgroundColor: '#F5F2F2' }}
             >
               {children}
