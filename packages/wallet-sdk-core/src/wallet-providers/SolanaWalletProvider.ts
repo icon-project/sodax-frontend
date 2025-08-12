@@ -20,7 +20,11 @@ import type {
   SolanaRawTransactionInstruction,
   TransactionSignature,
 } from '@sodax/types';
-import type { WalletContextState } from '@solana/wallet-adapter-react';
+import type { SignerWalletAdapterProps } from '@solana/wallet-adapter-base';
+interface WalletContextState {
+  publicKey: PublicKey;
+  signTransaction: SignerWalletAdapterProps['signTransaction'] | undefined;
+}
 
 export type SolanaWalletConfig = {
   wallet: WalletContextState;
