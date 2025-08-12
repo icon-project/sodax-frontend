@@ -192,13 +192,7 @@ export function isSuiSpokeProvider(value: SpokeProvider): value is SuiSpokeProvi
 export function isConfiguredSolverConfig(
   value: SolverConfigParams,
 ): value is Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'intentsContract' in value &&
-    'solverApiEndpoint' in value &&
-    'relayerApiEndpoint' in value
-  );
+  return typeof value === 'object' && value !== null && 'intentsContract' in value && 'solverApiEndpoint' in value;
 }
 
 export function isConfiguredMoneyMarketConfig(
@@ -371,10 +365,5 @@ export function isBalnMigrateParams(value: unknown): value is BalnMigrateParams 
 }
 
 export function isIcxCreateRevertMigrationParams(value: unknown): value is IcxCreateRevertMigrationParams {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'amount' in value &&
-    'to' in value
-  );
+  return typeof value === 'object' && value !== null && 'amount' in value && 'to' in value;
 }

@@ -13,7 +13,7 @@ import {
   Sodax,
   type SodaxConfig,
   type SolverConfigParams,
-  UnifiedBnUSDMigrateParams,
+  type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { SuiWalletProvider } from './sui-wallet-provider.js';
@@ -232,14 +232,17 @@ async function migrateBnUSD(
   newbnUSD: string,
   dstChainId: SpokeChainId,
 ): Promise<void> {
-  const result = await sodax.migration.migratebnUSD({
-    srcChainId: suiSpokeProvider.chainConfig.chain.id,
-    srcbnUSD: legacybnUSD,
-    dstbnUSD: newbnUSD,
-    dstChainId: dstChainId,
-    amount,
-    to: recipient,
-  } satisfies UnifiedBnUSDMigrateParams, suiSpokeProvider);
+  const result = await sodax.migration.migratebnUSD(
+    {
+      srcChainId: suiSpokeProvider.chainConfig.chain.id,
+      srcbnUSD: legacybnUSD,
+      dstbnUSD: newbnUSD,
+      dstChainId: dstChainId,
+      amount,
+      to: recipient,
+    } satisfies UnifiedBnUSDMigrateParams,
+    suiSpokeProvider,
+  );
 
   if (result.ok) {
     console.log('[migrateBnUSD] txHash', result.value);

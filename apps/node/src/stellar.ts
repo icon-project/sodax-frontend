@@ -13,7 +13,7 @@ import {
   type SodaxConfig,
   EvmHubProvider,
   type HttpUrl,
-  UnifiedBnUSDMigrateParams,
+  type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
@@ -237,14 +237,17 @@ async function migrateBnUSD(
   newbnUSD: string,
   dstChainID: SpokeChainId,
 ): Promise<void> {
-  const result = await sodax.migration.migratebnUSD({
-    srcChainId: stellarSpokeProvider.chainConfig.chain.id,
-    srcbnUSD: legacybnUSD,
-    dstbnUSD: newbnUSD,
-    dstChainId: dstChainID,
-    amount,
-    to: recipient,
-  } satisfies UnifiedBnUSDMigrateParams, stellarSpokeProvider);
+  const result = await sodax.migration.migratebnUSD(
+    {
+      srcChainId: stellarSpokeProvider.chainConfig.chain.id,
+      srcbnUSD: legacybnUSD,
+      dstbnUSD: newbnUSD,
+      dstChainId: dstChainID,
+      amount,
+      to: recipient,
+    } satisfies UnifiedBnUSDMigrateParams,
+    stellarSpokeProvider,
+  );
 
   if (result.ok) {
     console.log('[migrateBnUSD] txHash', result.value);

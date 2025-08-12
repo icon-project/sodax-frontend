@@ -143,9 +143,9 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
       hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
-      icxMigration: '0x8Af7cae2c8377BEDD8820A5ad096AaFA29D839cc', // TODO update with "final" address before migration
-      balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10', // TODO update with "final" address before migration
-      sodaToken: '0x8515352CB9832D1d379D52366D1E995ADd358420', // TODO update with "final" address before migration
+      icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
+      balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',
+      sodaToken: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     supportedTokens: [],
