@@ -181,7 +181,7 @@ export default function MigratePage() {
         ) : (
           <Button
             variant="cherry"
-            className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
+            className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
             onClick={() => openWalletModal()}
           >
             Connect wallets
