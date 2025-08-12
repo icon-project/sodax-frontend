@@ -13,10 +13,11 @@ import {
   type SodaxConfig,
   EvmHubProvider,
   type HttpUrl,
+  type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
-import { HubChainId, SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
 import { solverConfig } from './config.js';
@@ -229,13 +230,22 @@ async function repay(token: string, amount: bigint) {
  * @param amount - The amount of legacy bnUSD tokens to migrate
  * @param recipient - The address that will receive the migrated new bnUSD tokens
  */
-async function migrateBnUSD(amount: bigint, recipient: Address): Promise<void> {
+async function migrateBnUSD(
+  amount: bigint,
+  recipient: Address,
+  legacybnUSD: string,
+  newbnUSD: string,
+  dstChainID: SpokeChainId,
+): Promise<void> {
   const result = await sodax.migration.migratebnUSD(
     {
-      srcChainID: stellarSpokeProvider.chainConfig.chain.id as typeof STELLAR_MAINNET_CHAIN_ID,
+      srcChainId: stellarSpokeProvider.chainConfig.chain.id,
+      srcbnUSD: legacybnUSD,
+      dstbnUSD: newbnUSD,
+      dstChainId: dstChainID,
       amount,
       to: recipient,
-    },
+    } satisfies UnifiedBnUSDMigrateParams,
     stellarSpokeProvider,
   );
 
@@ -284,7 +294,10 @@ async function main() {
   } else if (functionName === 'migrateBnUSD') {
     const amount = BigInt(process.argv[3]);
     const recipient = process.argv[4] as Address;
-    await migrateBnUSD(amount, recipient);
+    const legacybnUSD = process.argv[5] as string;
+    const newbnUSD = process.argv[6] as string;
+    const dstChainID = process.argv[7] as SpokeChainId;
+    await migrateBnUSD(amount, recipient, legacybnUSD, newbnUSD, dstChainID);
   } else if (functionName === 'balance') {
     const token = process.argv[3] as string;
     await getBalance(token);
