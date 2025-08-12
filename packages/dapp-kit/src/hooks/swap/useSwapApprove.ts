@@ -1,11 +1,9 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { Token } from '@sodax/types';
-import { type Address, parseUnits } from 'viem';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { SpokeProvider } from '@sodax/sdk';
+import type { CreateIntentParams, SpokeProvider } from '@sodax/sdk';
 
 interface UseApproveReturn {
-  approve: ({ amount }: { amount: string }) => Promise<boolean>;
+  approve: ({ params }: { params: CreateIntentParams }) => Promise<boolean>;
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
@@ -25,7 +23,10 @@ interface UseApproveReturn {
  * ```
  */
 
-export function useSwapApprove(token: Token | undefined, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
+export function useSwapApprove(
+  params: CreateIntentParams | undefined,
+  spokeProvider: SpokeProvider | undefined,
+): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
@@ -35,27 +36,26 @@ export function useSwapApprove(token: Token | undefined, spokeProvider: SpokePro
     error,
     reset: resetError,
   } = useMutation({
-    mutationFn: async ({ amount }: { amount: string }) => {
+    mutationFn: async ({ params }: { params: CreateIntentParams | undefined }) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
-      if (!token) {
-        throw new Error('Token not found');
+      if (!params) {
+        throw new Error('Swap Params not found');
       }
 
-      const allowance = await sodax.solver.approve(
-        token.address as Address,
-        parseUnits(amount, token.decimals),
+      const allowance = await sodax.solver.approve({
+        intentParams: params,
         spokeProvider,
-      );
+      });
       if (!allowance.ok) {
-        throw new Error('Failed to approve tokens');
+        throw new Error('Failed to approve input token');
       }
       return allowance.ok;
     },
     onSuccess: () => {
       // Invalidate allowance query to refetch the new allowance
-      queryClient.invalidateQueries({ queryKey: ['allowance', token?.address] });
+      queryClient.invalidateQueries({ queryKey: ['allowance', params?.inputToken] });
     },
   });
 

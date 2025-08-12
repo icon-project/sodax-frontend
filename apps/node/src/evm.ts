@@ -219,7 +219,10 @@ async function createIntent(amount: bigint, nativeToken: Address, inputToken: Ad
     data: '0x',
   } satisfies CreateIntentParams;
 
-  const txHash = await sodax.solver.createIntent(intent, spokeProvider);
+  const txHash = await sodax.solver.createIntent({
+    intentParams: intent,
+    spokeProvider,
+  });
 
   console.log('[createIntent] txHash', txHash);
 }

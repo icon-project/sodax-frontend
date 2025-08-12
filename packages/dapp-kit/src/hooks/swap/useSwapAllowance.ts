@@ -33,7 +33,10 @@ export function useSwapAllowance(
       if (!spokeProvider || !params) {
         return false;
       }
-      const allowance = await sodax.solver.isAllowanceValid(params, spokeProvider);
+      const allowance = await sodax.solver.isAllowanceValid({
+        intentParams: params,
+        spokeProvider,
+      });
       if (allowance.ok) {
         return allowance.value;
       }

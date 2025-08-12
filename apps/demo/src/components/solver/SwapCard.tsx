@@ -26,7 +26,7 @@ import {
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
-import { useQuote, useCreateIntentOrder, useSpokeProvider, useSwapAllowance, useSwapApprove } from '@sodax/dapp-kit';
+import { useQuote, useSwap, useSpokeProvider, useSwapAllowance, useSwapApprove } from '@sodax/dapp-kit';
 import { getXChainType, useEvmSwitchChain, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
 import {
   type ChainId,
@@ -49,7 +49,7 @@ export default function SwapCard({
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const destAccount = useXAccount(destChain);
   const { openWalletModal } = useAppStore();
-  const { mutateAsync: createIntentOrder } = useCreateIntentOrder(sourceProvider);
+  const { mutateAsync: swap } = useSwap(sourceProvider);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
     Object.values(spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens)[0],
   );
@@ -59,7 +59,7 @@ export default function SwapCard({
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
-  const { approve, isLoading: isApproving } = useSwapApprove(sourceToken, sourceProvider);
+  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceProvider);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
   const onChangeDirection = () => {
@@ -178,7 +178,7 @@ export default function SwapCard({
 
   const handleSwap = async (intentOrderPayload: CreateIntentParams) => {
     setOpen(false);
-    const result = await createIntentOrder(intentOrderPayload);
+    const result = await swap(intentOrderPayload);
 
     if (result.ok) {
       const [response, intent, intentTxHash] = result.value;
@@ -199,7 +199,12 @@ export default function SwapCard({
   };
 
   const handleApprove = async () => {
-    await approve({ amount: sourceAmount });
+    if (!intentOrderPayload) {
+      console.error('intentOrderPayload undefined');
+      return;
+    }
+
+    await approve({ params: intentOrderPayload });
   };
 
   return (
