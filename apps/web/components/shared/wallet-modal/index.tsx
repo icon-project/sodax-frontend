@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import type { ChainType } from '@sodax/types';
-import type { WalletItemProps } from './wallet-item';
 import WalletItem from './wallet-item';
 import Image from 'next/image';
 import { ArrowLeftIcon, XIcon } from 'lucide-react';
-import { useXAccounts } from '@sodax/wallet-sdk';
 import type { XConnector } from '@sodax/wallet-sdk';
+import { xChainTypes } from '@/constants/wallet';
+import { useWalletModal } from '@/hooks/useWalletModal';
 
 type WalletModalProps = {
   isOpen: boolean;
@@ -18,90 +18,27 @@ type WalletModalProps = {
   onSetShowWalletModalOnTwoWallets?: (value: boolean) => void;
 };
 
-export const xChainTypes: WalletItemProps[] = [
-  {
-    name: 'ICON',
-    xChainType: 'ICON',
-    icon: '/coin/icx1.png',
-  },
-  // {
-  //   name: 'EVM',
-  //   xChainType: 'EVM',
-  //   icon: '/coin/eth1.png',
-  // },
-  {
-    name: 'SONIC',
-    xChainType: 'EVM',
-    icon: '/coin/s1.png',
-  },
-  // {
-  //   name: 'Injective',
-  //   xChainType: 'INJECTIVE',
-  //   icon: '/coin/inj1.png',
-  // },
-  // {
-  //   name: 'Solana',
-  //   xChainType: 'SOLANA',
-  //   icon: '/coin/sol.png',
-  // },
-  // {
-  //   name: 'Sui',
-  //   xChainType: 'SUI',
-  //   icon: '/coin/sui1.png',
-  // },
-  // {
-  //   name: 'Stellar',
-  //   xChainType: 'STELLAR',
-  //   icon: '/coin/ste1.png',
-  // },
-];
-
 export const WalletModal = ({
   isOpen,
   onDismiss,
   onWalletSelected,
   onSetShowWalletModalOnTwoWallets,
 }: WalletModalProps) => {
-  const [hoveredWallet, setHoveredWallet] = useState<string | null>(null);
-  const [showingConnectors, setShowingConnectors] = useState<boolean>(false);
-  const [selectedChainType, setSelectedChainType] = useState<string | null>(null);
-  const xAccounts = useXAccounts();
-
-  // Count connected wallets
-  const connectedWalletsCount = Object.values(xAccounts).filter(xAccount => xAccount?.address).length;
-
-  const handleConnectorsShown = useCallback((chainType: string) => {
-    setShowingConnectors(true);
-    setSelectedChainType(chainType);
-  }, []);
-
-  const handleConnectorsHidden = useCallback(() => {
-    setShowingConnectors(false);
-    setSelectedChainType(null);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setShowingConnectors(false);
-      setSelectedChainType(null);
-    }
-  }, [isOpen]);
-
-  const handleDismiss = () => {
-    if (connectedWalletsCount < 2) {
-      onDismiss();
-    }
-  };
-
-  const handleManualClose = () => {
-    if (onSetShowWalletModalOnTwoWallets) {
-      onSetShowWalletModalOnTwoWallets(true);
-    }
-    onDismiss();
-  };
+  const {
+    hoveredWallet,
+    setHoveredWallet,
+    showingConnectors,
+    selectedChainType,
+    xAccounts,
+    connectedWalletsCount,
+    handleConnectorsShown,
+    handleConnectorsHidden,
+    handleDismiss,
+    handleManualClose,
+  } = useWalletModal(isOpen);
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleDismiss}>
+    <Dialog open={isOpen} onOpenChange={() => handleDismiss(onDismiss)}>
       <DialogContent
         className="max-w-full w-full md:max-w-[480px] p-12 w-[90%] shadow-none bg-white gap-4 h-fit"
         hideCloseButton
@@ -116,7 +53,10 @@ export const WalletModal = ({
                 </div>
               </div>
               <DialogClose asChild>
-                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" onClick={handleManualClose} />
+                <XIcon
+                  className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay"
+                  onClick={() => handleManualClose(onDismiss, onSetShowWalletModalOnTwoWallets)}
+                />
               </DialogClose>
             </div>
           ) : (
@@ -124,10 +64,7 @@ export const WalletModal = ({
               <div
                 data-property-1="Left default"
                 className="w-6 h-6 bg-cream-white hover:bg-cherry-bright hover:text-white rounded-[80px] inline-flex justify-center items-center cursor-pointer transition-colors duration-200"
-                onClick={() => {
-                  setShowingConnectors(false);
-                  setSelectedChainType(null);
-                }}
+                onClick={handleConnectorsHidden}
               >
                 <ArrowLeftIcon className="w-3 h-3" />
               </div>

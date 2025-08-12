@@ -1,22 +1,13 @@
 import { XIcon, Loader2, PlusIcon, MinusIcon, CopyIcon } from 'lucide-react';
-import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
+import React from 'react';
 import type { ChainType } from '@sodax/types';
 import type { XConnector } from '@sodax/wallet-sdk';
-import { useXAccount, useXConnect, useXConnection, useXConnectors, useXDisconnect } from '@sodax/wallet-sdk';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import Image from 'next/image';
-
-export type WalletItemProps = {
-  name: string;
-  xChainType: ChainType;
-  icon: string;
-  onConnectorsShown?: () => void;
-  onConnectorsHidden?: () => void;
-  forceShowConnectors?: boolean;
-  onWalletSelected?: (xConnector: XConnector, xChainType: string) => void;
-};
+import { useWalletItem } from '@/hooks/useWalletItem';
+import type { WalletItemProps } from '@/constants/wallet';
 
 export function shortenAddress(address: string, chars = 7): string {
   return `${address.substring(0, chars + 2)}...${address.substring(address.length - chars)}`;
@@ -31,132 +22,30 @@ const WalletItem = ({
   forceShowConnectors = false,
   onWalletSelected,
 }: WalletItemProps) => {
-  const xConnection = useXConnection(xChainType);
-  const { address } = useXAccount(xChainType);
-  const [connectingXConnector, setConnectingXConnector] = useState<XConnector | null>(null);
-  const [showConnectorModal, setShowConnectorModal] = useState<boolean>(false);
-  const [selectedConnector, setSelectedConnector] = useState<XConnector | null>(null);
-  const [showConnectors, setShowConnectors] = useState<boolean>(forceShowConnectors);
-  const [isClicked, setIsClicked] = useState(false);
-  const [showCopied, setShowCopied] = useState(false);
-  const [copiedFadingOut, setCopiedFadingOut] = useState(false);
-  const [logoFadingOut, setLogoFadingOut] = useState(false);
-
-  const onConnectorsShownRef = useRef(onConnectorsShown);
-  const onConnectorsHiddenRef = useRef(onConnectorsHidden);
-
-  useEffect(() => {
-    onConnectorsShownRef.current = onConnectorsShown;
-    onConnectorsHiddenRef.current = onConnectorsHidden;
-  });
-
-  const xConnectors = useXConnectors(xChainType);
-  const { mutateAsync: xConnect, isPending } = useXConnect();
-  const xDisconnect = useXDisconnect();
-
-  useEffect(() => {
-    setShowConnectors(forceShowConnectors);
-  }, [forceShowConnectors]);
-
-  useEffect(() => {
-    if (showConnectors && onConnectorsShownRef.current) {
-      onConnectorsShownRef.current();
-    } else if (!showConnectors && onConnectorsHiddenRef.current) {
-      onConnectorsHiddenRef.current();
-    }
-  }, [showConnectors]);
-
-  const handleConnect = useCallback(
-    async (xConnector: XConnector) => {
-      setConnectingXConnector(xConnector);
-      try {
-        await xConnect(xConnector);
-        if (onWalletSelected) {
-          onWalletSelected(xConnector, xChainType);
-        }
-        if (onConnectorsHidden) {
-          onConnectorsHidden();
-        }
-      } catch (error) {
-        console.error('Wallet connection failed:', error);
-        setConnectingXConnector(null);
-        return;
-      } finally {
-        setConnectingXConnector(null);
-      }
-    },
-    [onConnectorsHidden, onWalletSelected, xChainType, xConnect],
-  );
-
-  const handleDisconnect = useCallback(() => {
-    setConnectingXConnector(null);
-    setSelectedConnector(null);
-    xDisconnect(xChainType);
-  }, [xDisconnect, xChainType]);
-
-  const handleConnectorSelect = useCallback((xConnector: XConnector) => {
-    setSelectedConnector(xConnector);
-    setShowConnectorModal(false);
-  }, []);
-
-  const handleCopyClick = useCallback(() => {
-    if (address) {
-      setIsClicked(true);
-      setShowCopied(true);
-      setCopiedFadingOut(false);
-      setLogoFadingOut(false);
-
-      navigator.clipboard.writeText(address);
-      setTimeout(() => {
-        setCopiedFadingOut(true);
-        setLogoFadingOut(true);
-      }, 1000);
-
-      setTimeout(() => {
-        setIsClicked(false);
-        setShowCopied(false);
-        setCopiedFadingOut(false);
-        setLogoFadingOut(false);
-      }, 3000);
-    }
-  }, [address]);
-
-  const activeXConnector = useMemo(() => {
-    return xConnectors.find(connector => connector.id === xConnection?.xConnectorId);
-  }, [xConnectors, xConnection]);
-
-  const sortedXConnectors = useMemo(() => {
-    const hanaWallet = xConnectors.find(connector => connector.name === 'Hana Wallet');
-    if (!hanaWallet) return xConnectors;
-    const filteredConnectors = xConnectors.filter(connector => connector.name !== 'Hana Wallet');
-    return [hanaWallet, ...filteredConnectors];
-  }, [xConnectors]);
-
-  const isHanaOnly = useMemo(() => {
-    const hanaConnectors = xConnectors.filter(
-      connector =>
-        connector.name === 'Hana Wallet' || connector.name === 'Hana' || connector.name.toLowerCase().includes('hana'),
-    );
-    return hanaConnectors.length === 1 && xConnectors.length === 1;
-  }, [xConnectors]);
-
-  const handlePlusButtonClick = useCallback(() => {
-    if (isHanaOnly) {
-      const hanaConnector = xConnectors.find(
-        connector =>
-          connector.name === 'Hana Wallet' ||
-          connector.name === 'Hana' ||
-          connector.name.toLowerCase().includes('hana'),
-      );
-      if (hanaConnector) {
-        handleConnect(hanaConnector);
-      }
-    } else {
-      setShowConnectors(true);
-    }
-  }, [isHanaOnly, xConnectors, handleConnect]);
-
-  const isConnecting = isPending && connectingXConnector !== null;
+  const {
+    address,
+    connectingXConnector,
+    showConnectorModal,
+    selectedConnector,
+    showConnectors,
+    isClicked,
+    showCopied,
+    copiedFadingOut,
+    logoFadingOut,
+    xConnectors,
+    isPending,
+    activeXConnector,
+    sortedXConnectors,
+    isHanaOnly,
+    isConnecting,
+    setShowConnectorModal,
+    setShowConnectors,
+    handleConnect,
+    handleDisconnect,
+    handleConnectorSelect,
+    handleCopyClick,
+    handlePlusButtonClick,
+  } = useWalletItem(xChainType, onConnectorsShown, onConnectorsHidden, forceShowConnectors, onWalletSelected);
 
   return (
     <div className="flex items-center w-full text-[#0d0229]">
@@ -173,7 +62,7 @@ const WalletItem = ({
           </div>
           <div className="flex justify-start items-center gap-1">
             <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
-              {isConnecting ? 'Waiting for wallet' : address ? '' : name }
+              {isConnecting ? 'Waiting for wallet' : address ? '' : name}
             </div>
           </div>
         </div>
@@ -260,7 +149,7 @@ const WalletItem = ({
                             </div>
                           </div>
                           <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
-                            {isConnectingToThis ? 'Waiting for wallet' : xConnector.name }
+                            {isConnectingToThis ? 'Waiting for wallet' : xConnector.name}
                           </div>
                         </div>
                         <Button
@@ -281,26 +170,6 @@ const WalletItem = ({
           </>
         )}
       </div>
-      <Dialog open={showConnectorModal} onOpenChange={setShowConnectorModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Select Wallet</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-3 py-4">
-            {sortedXConnectors.map(xConnector => (
-              <Button
-                key={xConnector.id}
-                variant="outline"
-                className="flex flex-col items-center gap-2 p-4 h-auto"
-                onClick={() => handleConnectorSelect(xConnector)}
-              >
-                <img src={xConnector.icon} className="w-8 h-8 rounded-lg" />
-                <span className="text-sm font-medium">{xConnector.name}</span>
-              </Button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

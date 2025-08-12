@@ -1,7 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useXAccounts, useXConnect, useXDisconnect } from '@sodax/wallet-sdk';
+import {
+  useXAccounts,
+  useXConnect,
+  useXDisconnect,
+  useXConnection,
+  useXConnectors,
+  useXAccount,
+} from '@sodax/wallet-sdk';
 import type { XConnector } from '@sodax/wallet-sdk';
 import type { ChainType } from '@sodax/types';
 import { TIMEOUT_CLOSE_MS } from '@/constants/ui';
@@ -25,7 +32,7 @@ export function useWalletConnection() {
       Object.entries(xAccounts)
         .filter(([, account]) => account?.address)
         .map(([chainType, account]) => ({ chainType, address: account?.address })),
-    [xAccounts]
+    [xAccounts],
   );
   const connectedWalletsCount = connectedChains.length;
 
@@ -34,7 +41,6 @@ export function useWalletConnection() {
     connectedWalletsCountRef.current = connectedWalletsCount;
   }, [connectedWalletsCount]);
 
-  // Auto-close wallet modal when 2+ wallets connected (unless overridden)
   useEffect(() => {
     if (!showTermsModal && showWalletModalOnTwoWallets && showWalletModal && connectedWalletsCount >= 2) {
       const t = setTimeout(() => setShowWalletModal(false), TIMEOUT_CLOSE_MS);
