@@ -42,7 +42,7 @@ export function RouteTabs(): React.JSX.Element {
       const tabRect = activeMobile.getBoundingClientRect();
       const relativeLeft = tabRect.left - mobileRect.left;
       const tabWidth = tabRect.width;
-      setMobileArrowPosition(relativeLeft + tabWidth / 2 - 48);
+      setMobileArrowPosition(relativeLeft + tabWidth / 2 - 40);
     }
   };
 
