@@ -128,7 +128,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
             <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 z-60">
             <Button
               variant="cherry"
               onClick={handleAccept}

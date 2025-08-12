@@ -1,1 +1,11 @@
 export { SwitchDirectionIcon } from './switch-direction-icon';
+export { MenuIcon } from './menu-icon';
+export { CloseIcon } from './close-icon';
+export { ArrowRightIcon } from './arrow-right-icon';
+export { ArrowUpIcon } from './arrow-up-icon';
+export { SwapIcon } from './swap-icon';
+export { SavingsIcon } from './savings-icon';
+export { LoansIcon } from './loans-icon';
+export { MigrateIcon } from './migrate-icon';
+export { DepositDialogArrowIcon } from './deposit-dialog-arrow-icon';
+export { DepositDialogArrowMobileIcon } from './deposit-dialog-arrow-mobile-icon';

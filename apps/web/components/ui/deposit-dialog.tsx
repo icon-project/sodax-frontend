@@ -4,6 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import Link from 'next/link';
 import ConnectWalletButton from '@/components/ui/connect-wallet-button';
+import {
+  SavingsIcon,
+  LoansIcon,
+  MigrateIcon,
+  DepositDialogArrowIcon,
+  DepositDialogArrowMobileIcon,
+} from '@/components/icons';
 // import { useWallet } from '../../hooks/useWallet';
 import { useState, useEffect, useRef } from 'react';
 
@@ -155,29 +162,7 @@ const DepositDialog: React.FC<DepositDialogProps> = ({ className = '' }) => {
                 >
                   <div className="inline-flex items-center gap-4 w-25">
                     <div data-property-1="Savings" className="w-4 h-4 relative mix-blend-multiply">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        aria-label="Savings"
-                      >
-                        <title>Savings</title>
-                        <g style={{ mixBlendMode: 'multiply' as const }}>
-                          <path
-                            d="M15.3333 5.76276L9.22082 9.39145L7.99177 10.1172L0.666626 5.76276L1.89568 3.56867L5.55005 5.74588C5.66476 5.81339 5.79586 5.86403 5.94335 5.86403C6.40219 5.86403 6.76272 5.49272 6.76272 5.02014V0.665711H9.22082V5.02014C9.22082 5.49272 9.58134 5.86403 10.0402 5.86403C10.1877 5.86403 10.3188 5.81339 10.4335 5.74588L14.1042 3.58555L15.3333 5.76276Z"
-                            fill={activeTab === 'savings' ? '#483534' : '#B9ACAB'}
-                          />
-                          <rect
-                            x="0.666626"
-                            y="12.666"
-                            width="14.6667"
-                            height="2.66667"
-                            fill={activeTab === 'savings' ? '#483534' : '#B9ACAB'}
-                          />
-                        </g>
-                      </svg>
+                      <SavingsIcon fill={activeTab === 'savings' ? '#483534' : '#B9ACAB'} />
                     </div>
                     <div className="flex justify-start items-center gap-2">
                       <div
@@ -195,29 +180,7 @@ const DepositDialog: React.FC<DepositDialogProps> = ({ className = '' }) => {
                 >
                   <div className="inline-flex items-center gap-4 w-25">
                     <div data-property-1="Loan" className="w-4 h-4 relative mix-blend-multiply">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        aria-label="Loan"
-                      >
-                        <title>Loan</title>
-                        <g style={{ mixBlendMode: 'multiply' as const }}>
-                          <path
-                            d="M15.3333 5.02044L9.22082 1.39175L7.99177 0.666016L0.666626 5.02044L1.89568 7.21454L5.55005 5.03732C5.66476 4.96981 5.79586 4.91918 5.94335 4.91918C6.40219 4.91918 6.76272 5.29048 6.76272 5.76306V10.1175H9.22082V5.76306C9.22082 5.29048 9.58134 4.91918 10.0402 4.91918C10.1877 4.91918 10.3188 4.96981 10.4335 5.03732L14.1042 7.19766L15.3333 5.02044Z"
-                            fill={activeTab === 'loans' ? '#483534' : '#B9ACAB'}
-                          />
-                          <rect
-                            x="0.666626"
-                            y="12.666"
-                            width="14.6667"
-                            height="2.66667"
-                            fill={activeTab === 'loans' ? '#483534' : '#B9ACAB'}
-                          />
-                        </g>
-                      </svg>
+                      <LoansIcon fill={activeTab === 'loans' ? '#483534' : '#B9ACAB'} />
                     </div>
                     <div className="flex justify-start items-center gap-1">
                       <div
@@ -235,26 +198,7 @@ const DepositDialog: React.FC<DepositDialogProps> = ({ className = '' }) => {
                 >
                   <div className="inline-flex items-center gap-4 w-25">
                     <div data-property-1="Migrate" className="w-4 h-4 relative mix-blend-multiply">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        aria-label="Migrate"
-                      >
-                        <title>Migrate</title>
-                        <g style={{ mixBlendMode: 'multiply' as const }}>
-                          <path
-                            d="M10.9199 0.667318L14.5486 6.77979L15.2743 8.00884L10.9199 15.334L8.72577 14.1049C9.70829 12.4558 12.4895 8.00884 12.4895 8.00884C12.4895 8.00884 9.71318 3.54545 8.74265 1.89637L10.9199 0.667318Z"
-                            fill={activeTab === 'migrate' ? '#483534' : '#B9ACAB'}
-                          />
-                          <path
-                            d="M2.97895 0.667318L6.60764 6.77979L7.33337 8.00884L2.97895 15.334L0.784853 14.1049C1.76737 12.4558 4.54854 8.00884 4.54854 8.00884C4.54854 8.00884 1.77226 3.54545 0.801731 1.89637L2.97895 0.667318Z"
-                            fill={activeTab === 'migrate' ? '#483534' : '#B9ACAB'}
-                          />
-                        </g>
-                      </svg>
+                      <MigrateIcon fill={activeTab === 'migrate' ? '#483534' : '#B9ACAB'} />
                     </div>
                     <div className="flex justify-start items-center gap-1">
                       <div
@@ -270,42 +214,15 @@ const DepositDialog: React.FC<DepositDialogProps> = ({ className = '' }) => {
           </div>
 
           <div className="w-full md:w-[calc(100%-200px)] lg:w-[784px] h-[calc(100vh-192px)] md:h-[calc(100vh-224px)] p-[120px_80px] flex items-start gap-[8px] rounded-lg border-[8px] border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] to-transparent relative md:-ml-16 border-b-0 md:border-b-8">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="80"
-              viewBox="0 0 16 80"
-              fill="none"
-              aria-label="Deposit Dialog"
+            <DepositDialogArrowIcon
               className="absolute hidden md:block transition-all duration-300 ease-in-out"
               style={{ top: `${arrowPosition}px`, left: '-23px' }}
-            >
-              <title>Deposit Dialog</title>
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M4.76995e-07 40C3.92926e-07 38.125 0.941131 37.1741 1.88235 36.6667C11.1437 31.6736 16 18.033 16 -1.90798e-07L16 80C16 61.967 11.1437 48.3264 1.88235 43.3333C0.941131 42.8259 5.61065e-07 41.875 4.76995e-07 40Z"
-                fill="#F9F7F5"
-              />
-            </svg>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="80"
-              height="16"
-              viewBox="0 0 80 16"
-              fill="none"
+            />
+            <DepositDialogArrowMobileIcon
               className="absolute transition-all duration-300 ease-in-out md:hidden"
               style={{ bottom: '-1px', left: `${mobileArrowPosition}px` }}
-              aria-label="Deposit Dialog"
-            >
-              <title>Deposit Dialog</title>
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M40 -1.27146e-06C41.875 -1.27357e-06 42.8259 0.941129 43.3333 1.88235C48.3264 11.1437 61.967 16 80 16L-5.08584e-07 16C18.033 16 31.6736 11.1437 36.6667 1.88235C37.1741 0.941129 38.125 -1.26935e-06 40 -1.27146e-06Z"
-                fill="#CC9E9A"
-              />
-            </svg>
+              fill="#CC9E9A"
+            />
             <TabsContent value="portfolio">
               <div className="mix-blend-multiply justify-end">
                 <span className="text-yellow-dark text-3xl font-bold font-['InterRegular'] leading-9">
