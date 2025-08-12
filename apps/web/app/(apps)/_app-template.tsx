@@ -9,12 +9,11 @@ import { WalletUIProvider } from './_context/wallet-ui';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
 
 const WalletModal = dynamic(() => import('@/components/shared/wallet-modal').then(m => m.WalletModal), { ssr: false });
-const TermsConfirmationModal = dynamic(
-  () => import('@/components/ui/terms-confirmation-modal').then(m => m.default),
-  { ssr: false }
-);
+const TermsConfirmationModal = dynamic(() => import('@/components/ui/terms-confirmation-modal').then(m => m.default), {
+  ssr: false,
+});
 
-export default function ClientShell({ children }: { children: ReactNode }) {
+export default function AppTemplate({ children }: { children: ReactNode }) {
   const {
     isSidebarOpen,
     toggleSidebar,
