@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import Image from 'next/image';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface ErrorDialogProps {
   open: boolean;
@@ -17,9 +17,9 @@ export function ErrorDialog({ open, onOpenChange, errorMessage }: ErrorDialogPro
           <div className="flex flex-row justify-between items-center">
             <div className="inline-flex justify-start items-center gap-2">
               <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
-              <div className="mix-blend-multiply text-espresso font-['InterRegular'] font-bold leading-snug text-(size:--subtitle)">
+              <DialogTitle className="mix-blend-multiply text-espresso font-['InterRegular'] font-bold leading-snug text-(size:--subtitle)">
                 Transaction failed
-              </div>
+              </DialogTitle>
             </div>
           </div>
         </DialogHeader>
