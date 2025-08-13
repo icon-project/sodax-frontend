@@ -6,6 +6,12 @@ settings:
 
 catalogs:
   default:
+    '@arethetypeswrong/cli':
+      specifier: ^0.17.4
+      version: 0.17.4
+    '@changesets/cli':
+      specifier: ^2.27.9
+      version: 2.29.4
     '@tanstack/react-query':
       specifier: ^5.66.9
       version: 5.77.2
@@ -30,6 +36,9 @@ catalogs:
     viem:
       specifier: ^2.29.2
       version: 2.30.1
+    vitest:
+      specifier: ^2.1.3
+      version: 2.1.9
     wagmi:
       specifier: ^2.14.12
       version: 2.15.4
@@ -434,10 +443,10 @@ importers:
         version: 2.30.1(bufferutil@4.0.9)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.28)
     devDependencies:
       '@arethetypeswrong/cli':
-        specifier: ^0.17.4
+        specifier: 'catalog:'
         version: 0.17.4
       '@changesets/cli':
-        specifier: ^2.27.9
+        specifier: 'catalog:'
         version: 2.29.4
       '@types/bn.js':
         specifier: ^5.1.6
@@ -455,7 +464,7 @@ importers:
         specifier: 'catalog:'
         version: 5.5.4
       vitest:
-        specifier: ^2.1.3
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@22.15.21)(lightningcss@1.30.1)(terser@5.39.2)
 
   packages/types:
@@ -506,10 +515,10 @@ importers:
         version: 2.29.2(bufferutil@4.0.9)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.28)
     devDependencies:
       '@arethetypeswrong/cli':
-        specifier: ^0.17.4
+        specifier: 'catalog:'
         version: 0.17.4
       '@changesets/cli':
-        specifier: ^2.27.9
+        specifier: 'catalog:'
         version: 2.29.4
       '@types/node':
         specifier: 'catalog:'
@@ -524,7 +533,7 @@ importers:
         specifier: 'catalog:'
         version: 5.5.4
       vitest:
-        specifier: ^2.1.3
+        specifier: 'catalog:'
         version: 2.1.9(@types/node@22.15.21)(lightningcss@1.30.1)(terser@5.39.2)
 
   packages/wallet-sdk-react:
