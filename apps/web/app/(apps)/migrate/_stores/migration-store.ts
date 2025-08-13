@@ -31,7 +31,7 @@ export const icxToken = {
 } as XToken;
 
 export const sodaToken = {
-  address: '0x8515352CB9832D1d379D52366D1E995ADd358420',
+  address: '0x7c7d53EEcda37a87ce0D5bf8E0b24512A48dC963',
   decimals: 18,
   symbol: 'SODA',
   xChainId: SONIC_MAINNET_CHAIN_ID,
