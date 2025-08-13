@@ -1,29 +1,39 @@
-// apps/web/hooks/useWalletModal.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useXAccounts } from '@sodax/wallet-sdk';
+import type { XConnector } from '@sodax/wallet-sdk';
 
-export const useWalletModal = (isOpen: boolean) => {
+export const useWalletModal = (
+  isOpen: boolean,
+  onWalletSelected: (xConnector: XConnector, xChainType: string) => void,
+) => {
   const [hoveredWallet, setHoveredWallet] = useState<string | null>(null);
-  const [showingConnectors, setShowingConnectors] = useState<boolean>(false);
+  const [showWalletList, setShowWalletList] = useState<boolean>(false);
   const [selectedChainType, setSelectedChainType] = useState<string | null>(null);
   const xAccounts = useXAccounts();
 
-  // Count connected wallets
   const connectedWalletsCount = Object.values(xAccounts).filter(xAccount => xAccount?.address).length;
 
   const handleConnectorsShown = useCallback((chainType: string) => {
-    setShowingConnectors(true);
+    setShowWalletList(true);
     setSelectedChainType(chainType);
   }, []);
 
   const handleConnectorsHidden = useCallback(() => {
-    setShowingConnectors(false);
+    setShowWalletList(false);
     setSelectedChainType(null);
   }, []);
 
+  const handleWalletSelected = useCallback(
+    (xConnector: XConnector, xChainType: string) => {
+      onWalletSelected(xConnector, xChainType);
+      setShowWalletList(false);
+    },
+    [onWalletSelected],
+  );
+
   useEffect(() => {
     if (!isOpen) {
-      setShowingConnectors(false);
+      setShowWalletList(false);
       setSelectedChainType(null);
     }
   }, [isOpen]);
@@ -44,7 +54,7 @@ export const useWalletModal = (isOpen: boolean) => {
   return {
     hoveredWallet,
     setHoveredWallet,
-    showingConnectors,
+    showWalletList,
     selectedChainType,
     xAccounts,
     connectedWalletsCount,
@@ -52,5 +62,6 @@ export const useWalletModal = (isOpen: boolean) => {
     handleConnectorsHidden,
     handleDismiss,
     handleManualClose,
+    handleWalletSelected,
   };
 };

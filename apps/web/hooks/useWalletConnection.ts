@@ -82,17 +82,14 @@ export function useWalletConnection() {
   }, [pending, xDisconnect]);
 
   return {
-    // state
     isSidebarOpen,
     showWalletModal,
     showTermsModal,
     connectedWalletName,
     connectedWalletsCount,
-    // setters
     setShowWalletModal,
     setShowTermsModal,
     setShowWalletModalOnTwoWallets,
-    // actions
     toggleSidebar,
     handleWalletSelected,
     handleTermsAccepted,

@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import type { ChainType } from '@sodax/types';
-import WalletItem from './wallet-item';
+import { ChainWalletItem } from './chain-wallet-item';
 import Image from 'next/image';
 import { ArrowLeftIcon, XIcon } from 'lucide-react';
 import type { XConnector } from '@sodax/wallet-sdk';
@@ -27,7 +27,7 @@ export const WalletModal = ({
   const {
     hoveredWallet,
     setHoveredWallet,
-    showingConnectors,
+    showWalletList,
     selectedChainType,
     xAccounts,
     connectedWalletsCount,
@@ -35,7 +35,10 @@ export const WalletModal = ({
     handleConnectorsHidden,
     handleDismiss,
     handleManualClose,
-  } = useWalletModal(isOpen);
+    handleWalletSelected,
+  } = useWalletModal(isOpen, onWalletSelected);
+
+  const selectedChain = xChainTypes.find(w => w.xChainType === selectedChainType);
 
   return (
     <Dialog open={isOpen} onOpenChange={() => handleDismiss(onDismiss)}>
@@ -44,7 +47,7 @@ export const WalletModal = ({
         hideCloseButton
       >
         <DialogTitle>
-          {!showingConnectors ? (
+          {!showWalletList ? (
             <div className="flex flex-row justify-between items-center">
               <div className=" inline-flex justify-center items-center gap-2">
                 <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
@@ -79,7 +82,7 @@ export const WalletModal = ({
             </div>
           )}
         </DialogTitle>
-        {!showingConnectors && (
+        {!showWalletList && (
           <div className=" justify-start text-clay-light text-sm font-medium font-['InterRegular'] leading-tight">
             You will need to connect on both networks
           </div>
@@ -87,7 +90,7 @@ export const WalletModal = ({
         <div className={cn('flex flex-col justify-between')}>
           <ScrollArea className="h-full">
             <div className="w-full flex flex-col gap-4">
-              {!showingConnectors ? (
+              {!showWalletList ? (
                 <>
                   <Separator className="h-1 bg-clay opacity-30" />
                   {xChainTypes.map(wallet => {
@@ -101,13 +104,14 @@ export const WalletModal = ({
                           onMouseEnter={() => setHoveredWallet(wallet.xChainType)}
                           onMouseLeave={() => setHoveredWallet(null)}
                         >
-                          <WalletItem
+                          <ChainWalletItem
                             icon={wallet.icon}
                             name={wallet.name}
                             xChainType={wallet.xChainType}
                             onConnectorsShown={() => handleConnectorsShown(wallet.xChainType)}
                             onConnectorsHidden={handleConnectorsHidden}
-                            onWalletSelected={onWalletSelected}
+                            onWalletSelected={handleWalletSelected}
+                            showWalletList={showWalletList}
                           />
                         </div>
                         <Separator className="h-1 bg-clay opacity-30" />
@@ -117,21 +121,23 @@ export const WalletModal = ({
                 </>
               ) : (
                 <div className="w-full">
-                  <WalletItem
-                    icon={xChainTypes.find(w => w.xChainType === selectedChainType)?.icon || ''}
-                    name={xChainTypes.find(w => w.xChainType === selectedChainType)?.name || ''}
-                    xChainType={selectedChainType as ChainType}
-                    onConnectorsShown={() => selectedChainType && handleConnectorsShown(selectedChainType)}
-                    onConnectorsHidden={handleConnectorsHidden}
-                    forceShowConnectors={true}
-                    onWalletSelected={onWalletSelected}
-                  />
+                  {selectedChain && (
+                    <ChainWalletItem
+                      icon={selectedChain.icon}
+                      name={selectedChain.name}
+                      xChainType={selectedChain.xChainType}
+                      onConnectorsShown={() => selectedChainType && handleConnectorsShown(selectedChainType)}
+                      onConnectorsHidden={handleConnectorsHidden}
+                      onWalletSelected={handleWalletSelected}
+                      showWalletList={showWalletList}
+                    />
+                  )}
                 </div>
               )}
             </div>
           </ScrollArea>
         </div>
-        {!showingConnectors && (
+        {!showWalletList && (
           <div className=" justify-start flex gap-1">
             <span className="text-clay-light text-sm font-medium font-['InterRegular'] leading-tight">
               Need help? Check our guide{' '}
