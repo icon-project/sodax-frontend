@@ -1,10 +1,9 @@
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import type { ChainType } from '@sodax/types';
-import { ChainWalletItem } from './chain-wallet-item';
+import { WalletModalItem } from './wallet-modal-item';
 import Image from 'next/image';
 import { ArrowLeftIcon, XIcon } from 'lucide-react';
 import type { XConnector } from '@sodax/wallet-sdk';
@@ -30,13 +29,12 @@ export const WalletModal = ({
     showWalletList,
     selectedChainType,
     xAccounts,
-    connectedWalletsCount,
     handleConnectorsShown,
     handleConnectorsHidden,
     handleDismiss,
     handleManualClose,
     handleWalletSelected,
-  } = useWalletModal(isOpen, onWalletSelected);
+  } = useWalletModal(isOpen, onWalletSelected || (() => {}));
 
   const selectedChain = xChainTypes.find(w => w.xChainType === selectedChainType);
 
@@ -104,7 +102,7 @@ export const WalletModal = ({
                           onMouseEnter={() => setHoveredWallet(wallet.xChainType)}
                           onMouseLeave={() => setHoveredWallet(null)}
                         >
-                          <ChainWalletItem
+                          <WalletModalItem
                             icon={wallet.icon}
                             name={wallet.name}
                             xChainType={wallet.xChainType}
@@ -122,7 +120,7 @@ export const WalletModal = ({
               ) : (
                 <div className="w-full">
                   {selectedChain && (
-                    <ChainWalletItem
+                    <WalletModalItem
                       icon={selectedChain.icon}
                       name={selectedChain.name}
                       xChainType={selectedChain.xChainType}

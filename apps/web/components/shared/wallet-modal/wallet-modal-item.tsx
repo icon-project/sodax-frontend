@@ -5,7 +5,7 @@ import { useChainItem } from '@/hooks/useChainItem';
 import type { ChainType } from '@sodax/types';
 import type { XConnector } from '@sodax/wallet-sdk';
 
-export type ChainWalletItemProps = {
+export type WalletModalItemProps = {
   icon: string;
   name: string;
   xChainType: ChainType;
@@ -16,7 +16,7 @@ export type ChainWalletItemProps = {
   showWalletList?: boolean;
 };
 
-export const ChainWalletItem: React.FC<ChainWalletItemProps> = ({
+export const WalletModalItem: React.FC<WalletModalItemProps> = ({
   icon,
   name,
   xChainType,
