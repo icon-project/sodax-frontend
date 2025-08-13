@@ -1,4 +1,5 @@
 import type React from 'react';
+import Image from 'next/image';
 
 interface CurrencyLogoICXProps {
   className?: string;
@@ -13,13 +14,13 @@ const CurrencyLogoICX: React.FC<CurrencyLogoICXProps> = ({ className = '' }) => 
           data-property-1="Default"
           className="left-[12px] top-[12px] absolute bg-White rounded-[256px] inline-flex flex-col justify-start items-start overflow-hidden"
         >
-          <img className="w-6 h-6 rounded-[256px]" src="/coin/icx.png" alt="ICON" />
+          <Image className="w-6 h-6 rounded-[256px]" src="/coin/icx.png" alt="ICON" width={24} height={24} />
         </div>
         <div
           data-property-1="Active"
           className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.40)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
         >
-          <img className="w-4 h-4" src="/coin/icx1.png" alt="ICX" />
+          <Image className="w-4 h-4" src="/coin/icx1.png" alt="ICX" width={16} height={16} />
         </div>
       </div>
     </div>

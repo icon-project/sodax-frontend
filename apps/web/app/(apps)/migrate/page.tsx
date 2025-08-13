@@ -51,12 +51,7 @@ export default function MigratePage() {
   const sodaBalance = BigInt(sodaBalances?.[sodaToken.address] || 0);
 
   const handleMaxClick = () => {
-    console.log('icxBalance', icxBalance);
-    console.log('sodaBalance', sodaBalance);
-    // const value =
-    //   direction.from === ICON_MAINNET_CHAIN_ID ? icxBalance - 1000000000000000000n : sodaBalance - 1000000000000000000n;
     const value = direction.from === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance;
-    console.log('value', value);
     setTypedValue(Number(formatUnits(value, currencies.from.decimals)).toFixed(2));
   };
 

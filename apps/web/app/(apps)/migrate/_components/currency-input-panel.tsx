@@ -42,6 +42,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    console.log('inputRef', inputRef.current);
     if (type === CurrencyInputPanelType.INPUT && inputRef.current) {
       inputRef.current.focus();
     }

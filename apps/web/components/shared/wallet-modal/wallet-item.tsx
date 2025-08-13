@@ -145,7 +145,13 @@ const WalletItem = ({
                               data-property-1="Active"
                               className="rounded-md shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.40)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden z-51"
                             >
-                              <img src={xConnector.icon} className="w-6 h-6 rounded-lg" />
+                              <Image
+                                src={xConnector.icon || ''}
+                                alt={xConnector.name}
+                                width={24}
+                                height={24}
+                                className="rounded-lg"
+                              />
                             </div>
                           </div>
                           <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
