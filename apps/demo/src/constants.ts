@@ -2,7 +2,6 @@ import {
   type CustomProvider,
   getHubChainConfig,
   getMoneyMarketConfig,
-  type PartnerFee,
   type SodaxConfig,
   type SolverConfigParams,
   spokeChainConfig,
@@ -32,21 +31,14 @@ const hubConfig = {
 
 const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
 
-export const partnerFeePercentage = {
-  address: '0x0Ab764AB3816cD036Ea951bE973098510D8105A6', // NOTE: replace with actual partner address
-  percentage: 100, // 100 basis points = 1%
-} satisfies PartnerFee;
-
 export const stagingSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: partnerFeePercentage, // fee to be paid to the partner address
 } satisfies SolverConfigParams;
 
 export const productionSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
-  partnerFee: partnerFeePercentage, // fee to be paid to the partner address
 } satisfies SolverConfigParams;
 
 export const sodaxConfig = {

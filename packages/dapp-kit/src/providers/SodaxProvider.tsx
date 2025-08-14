@@ -7,7 +7,7 @@ import type { RpcConfig } from '@/types';
 interface SodaxProviderProps {
   children: ReactNode;
   testnet?: boolean;
-  config: SodaxConfig;
+  config?: SodaxConfig;
   rpcConfig: RpcConfig;
 }
 
