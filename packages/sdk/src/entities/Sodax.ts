@@ -22,8 +22,8 @@ export class Sodax {
   public readonly solver: SolverService; // Solver service enabling intent based swaps
   public readonly moneyMarket: MoneyMarketService; // Money Market service enabling cross-chain lending and borrowing
   public readonly migration: MigrationService; // ICX migration service enabling ICX migration to SODA
+  public readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
 
-  private readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
   private readonly relayerApiEndpoint: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
 
   constructor(config?: SodaxConfig) {

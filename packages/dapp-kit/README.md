@@ -51,31 +51,16 @@ pnpm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { XWagmiProviders } from '@sodax/wallet-sdk';
 import { SodaxProvider } from '@sodax/dapp-kit';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 const queryClient = new QueryClient();
 
-// Configure Sodax
-const sodaxConfig = {
-  hubProviderConfig: {
-    hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
-  },
-  moneyMarket: getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID),
-  solver: {
-    intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-    solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-    partnerFee: {
-      address: '0x0Ab764AB3816cD036Ea951bE973098510D8105A6',
-      percentage: 100, // 1%
-    },
-  },
-  relayerApiEndpoint: 'https://xcall-relay.nw.iconblockchain.xyz',
+const rpcConfig = {
+  "solana": "private rpc url",
 };
 
 function App() {
   return (
-    <SodaxProvider testnet={false} config={sodaxConfig}>
+    <SodaxProvider testnet={false} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
         <XWagmiProviders
           config={{
