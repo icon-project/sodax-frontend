@@ -42,7 +42,7 @@ pnpm add @sodax/dapp-kit
 1. First, install the required dependencies:
 
 ```bash
-npm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
+pnpm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
 ```
 
 2. Set up the providers in your app:

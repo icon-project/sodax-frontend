@@ -27,7 +27,7 @@ import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import { useQuote, useSwap, useSpokeProvider, useSwapAllowance, useSwapApprove } from '@sodax/dapp-kit';
-import { getXChainType, useEvmSwitchChain, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
+import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
 import {
   type ChainId,
   POLYGON_MAINNET_CHAIN_ID,
@@ -45,7 +45,8 @@ export default function SwapCard({
 }) {
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
-  const sourceProvider = useSpokeProvider(sourceChain);
+  const sourceWalletProvider = useWalletProvider(sourceChain);
+  const sourceProvider = useSpokeProvider(sourceChain, sourceWalletProvider);
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const destAccount = useXAccount(destChain);
   const { openWalletModal } = useAppStore();
