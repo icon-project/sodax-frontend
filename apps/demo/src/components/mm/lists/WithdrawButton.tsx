@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
-import { useEvmSwitchChain } from '@sodax/wallet-sdk';
+import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export function WithdrawButton({ token }: { token: XToken }) {
@@ -13,7 +13,8 @@ export function WithdrawButton({ token }: { token: XToken }) {
   const [open, setOpen] = useState(false);
   const { selectedChainId } = useAppStore();
 
-  const spokeProvider = useSpokeProvider(token.xChainId);
+  const walletProvider = useWalletProvider(token.xChainId);
+  const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, spokeProvider);
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
