@@ -2,7 +2,7 @@ import React, { useMemo, type ReactNode } from 'react';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { XWagmiProviders } from '@sodax/wallet-sdk';
-import { SodaxProvider } from '@sodax/dapp-kit';
+import { SodaxProvider, type RpcConfig } from '@sodax/dapp-kit';
 import { productionSolverConfig, stagingSolverConfig, sodaxConfig } from './constants';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -18,6 +18,11 @@ import { useAppStore } from './zustand/useAppStore';
 
 const queryClient = new QueryClient();
 
+const rpcConfig: RpcConfig = {
+  //solana
+  solana: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
+};
+
 export default function Providers({ children }: { children: ReactNode }) {
   const { isSolverProduction } = useAppStore();
 
@@ -29,7 +34,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   }, [isSolverProduction]);
 
   return (
-    <SodaxProvider testnet={false} config={_sodaxConfig}>
+    <SodaxProvider testnet={false} config={_sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
         <XWagmiProviders
           config={{
@@ -48,7 +53,7 @@ export default function Providers({ children }: { children: ReactNode }) {
               isMainnet: true,
             },
             SOLANA: {
-              endpoint: 'https://api.mainnet-beta.solana.com',
+              endpoint: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
             },
             ICON: {},
             INJECTIVE: {},
