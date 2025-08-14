@@ -371,9 +371,6 @@ importers:
       '@sodax/types':
         specifier: workspace:*
         version: link:../types
-      '@sodax/wallet-sdk-react':
-        specifier: workspace:*
-        version: link:../wallet-sdk-react
       '@tanstack/react-query':
         specifier: 5.x
         version: 5.77.2(react@19.1.0)

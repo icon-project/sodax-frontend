@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import { getSpokeTokenAddressByVault, useUserReservesData } from '@sodax/dapp-kit';
+import { getSpokeTokenAddressByVault, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { useXAccount, useXBalances, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
@@ -24,13 +24,15 @@ export function SupplyAssetsList() {
   );
 
   const { address } = useXAccount(selectedChainId);
+  const walletProvider = useWalletProvider(selectedChainId);
+  const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
   const { data: balances } = useXBalances({
     xChainId: selectedChainId,
     xTokens: tokens,
     address,
   });
 
-  const userReserves = useUserReservesData(selectedChainId, address);
+  const userReserves = useUserReservesData(address, spokeProvider);
 
   return (
     <Card>

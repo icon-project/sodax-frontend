@@ -6,12 +6,13 @@ import { Label } from '@/components/ui/label';
 import { useBorrow, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
-import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
+import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 
 export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const spokeProvider = useSpokeProvider(token.xChainId);
+  const walletProvider = useWalletProvider(token.xChainId);
+  const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token, spokeProvider);
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
