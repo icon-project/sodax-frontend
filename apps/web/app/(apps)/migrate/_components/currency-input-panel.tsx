@@ -72,7 +72,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       </div>
 
       <div
-        className="inline-flex flex-col justify-center items-end gap-1"
+        className="inline-flex flex-col justify-center items-end"
         style={{ paddingRight: 'var(--layout-space-normal)' }}
       >
         <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)  group-hover:text-clay">
@@ -99,12 +99,10 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           {type === CurrencyInputPanelType.INPUT && (
             <Button
               variant="cherry"
-              className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] inline-flex flex-col justify-center items-center gap-2"
+              className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] inline-flex flex-col justify-center items-center gap-2 text-[9px] font-bold font-['InterRegular'] uppercase text-clay-light"
               onClick={onMaxClick}
             >
-              <div className="text-center justify-center text-clay text-[9px] font-bold font-['InterRegular'] uppercase leading-3">
-                MAX
-              </div>
+              MAX
             </Button>
           )}
         </div>

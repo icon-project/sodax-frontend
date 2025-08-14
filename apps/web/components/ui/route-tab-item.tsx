@@ -61,13 +61,13 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
           >
             {label}
           </div>
-          {isMobile && value !== 'migrate' && (
+          {isMobile && value !== 'migrate' && value !== 'swap' && (
             <span className="text-clay-light text-[11px] mix-blend-multiply leading-[1.4] font-['InterRegular']">
               (SOON)
             </span>
           )}
         </div>
-        {!isMobile && value !== 'migrate' && <Badge variant="desktop">SOON</Badge>}
+        {!isMobile && value !== 'migrate' && value !== 'swap' && <Badge variant="desktop">SOON</Badge>}
       </div>
     </Link>
   );

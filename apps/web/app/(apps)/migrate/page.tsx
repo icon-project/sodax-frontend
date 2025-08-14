@@ -79,8 +79,10 @@ export default function MigratePage() {
     <div className="flex flex-col w-full" style={{ gap: 'var(--layout-space-comfortable)' }}>
       <div className="inline-flex flex-col justify-start items-start gap-4">
         <div className="mix-blend-multiply justify-end">
-          <span className="text-yellow-dark font-bold leading-9 !text-(size:--app-title)">SODAX </span>
-          <span className="text-yellow-dark font-normal font-[shrikhand] leading-9 !text-(size:--app-title)">
+          <span className="text-yellow-dark font-bold leading-9 font-['InterRegular'] !text-(size:--app-title)">
+            SODAX{' '}
+          </span>
+          <span className="text-yellow-dark font-normal font-['Shrikhand'] leading-9 !text-(size:--app-title)">
             migration
           </span>
         </div>

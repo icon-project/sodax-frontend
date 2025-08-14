@@ -1,4 +1,3 @@
-// apps/web/components/ui/route-tabs.tsx
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
@@ -8,15 +7,15 @@ import { tabConfigs } from '@/components/ui/tab-config';
 
 export function RouteTabs(): React.JSX.Element {
   const pathname = usePathname();
-  const current = pathname.split('/').pop() || 'migrate'; // default
+  const current = pathname.split('/').pop() || 'migrate';
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const mobileTabsContainerRef = useRef<HTMLDivElement>(null);
 
-  const [arrowPosition, setArrowPosition] = useState(252);
-  const [mobileArrowPosition, setMobileArrowPosition] = useState(280);
+  const [arrowPosition, setArrowPosition] = useState(current === 'migrate' ? 252 : 90);
+  const [mobileArrowPosition, setMobileArrowPosition] = useState(current === 'migrate' ? 280 : 13);
 
   const setDesktopTabRef = (value: string) => (el: HTMLAnchorElement | null) => {
     desktopTabRefs.current[value] = el;
