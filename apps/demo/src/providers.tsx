@@ -3,7 +3,7 @@ import React, { useMemo, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { XWagmiProviders } from '@sodax/wallet-sdk';
 import { SodaxProvider, type RpcConfig } from '@sodax/dapp-kit';
-import { productionSolverConfig, stagingSolverConfig, sodaxConfig } from './constants';
+import { productionSolverConfig, stagingSolverConfig } from './constants';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -26,15 +26,14 @@ const rpcConfig: RpcConfig = {
 export default function Providers({ children }: { children: ReactNode }) {
   const { isSolverProduction } = useAppStore();
 
-  const _sodaxConfig = useMemo(() => {
+  const sodaxConfig = useMemo(() => {
     return {
-      ...sodaxConfig,
       solver: isSolverProduction ? productionSolverConfig : stagingSolverConfig,
     } satisfies SodaxConfig;
   }, [isSolverProduction]);
 
   return (
-    <SodaxProvider testnet={false} config={_sodaxConfig} rpcConfig={rpcConfig}>
+    <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
         <XWagmiProviders
           config={{

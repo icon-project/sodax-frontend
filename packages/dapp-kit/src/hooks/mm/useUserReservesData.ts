@@ -1,16 +1,13 @@
 import { getMoneyMarketConfig, type SpokeProvider, WalletAbstractionService } from '@sodax/sdk';
-import type { HubChainId } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
-import { useHubProvider } from '../provider/useHubProvider';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
 export function useUserReservesData(address: string | undefined, spokeProvider: SpokeProvider | undefined) {
   const { sodax } = useSodaxContext();
-  const hubChainId = (sodax.config?.hubProviderConfig?.chainConfig.chain.id ?? 'sonic') as HubChainId;
-  const hubProvider = useHubProvider();
+  const { hubProvider } = sodax;
 
   const { data: userReserves } = useQuery({
-    queryKey: ['userReserves', hubChainId, address],
+    queryKey: ['userReserves', address],
     queryFn: async () => {
       if (!hubProvider || !spokeProvider || !address) {
         return;
@@ -22,7 +19,7 @@ export function useUserReservesData(address: string | undefined, spokeProvider: 
         hubProvider,
       );
 
-      const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
+      const moneyMarketConfig = getMoneyMarketConfig(hubProvider.chainConfig.chain.id);
       const [res] = await sodax.moneyMarket.getUserReservesData(
         hubWalletAddress,
         moneyMarketConfig.uiPoolDataProvider,
@@ -31,7 +28,7 @@ export function useUserReservesData(address: string | undefined, spokeProvider: 
 
       return res;
     },
-    enabled: !!spokeProvider && !!hubChainId && !!hubProvider && !!address,
+    enabled: !!spokeProvider && !!hubProvider && !!address,
     refetchInterval: 5000,
   });
 
