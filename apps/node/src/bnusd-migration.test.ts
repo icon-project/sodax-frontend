@@ -9,7 +9,7 @@ import {
   spokeChainConfig,
   type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
-import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
+import { IconWalletProvider } from '@sodax/wallet-sdk-core';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
 async function iconToArbTwoWayMigration() {

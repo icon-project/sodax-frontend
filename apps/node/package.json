@@ -29,6 +29,7 @@
     "@mysten/sui": "^1.21.2",
     "@sodax/sdk": "workspace:*",
     "@sodax/types": "workspace:*",
+    "@sodax/wallet-sdk-core": "workspace:*",
     "@solana/spl-token": "0.4.9",
     "@solana/web3.js": "1.98.0",
     "@stellar/stellar-sdk": "12.3.0",
@@ -36,7 +37,6 @@
     "bn.js": "^5.2.1",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.5",
-    "icon-sdk-js": "catalog:",
     "viem": "catalog:"
   },
   "devDependencies": {
