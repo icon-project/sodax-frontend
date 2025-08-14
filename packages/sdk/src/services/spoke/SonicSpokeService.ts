@@ -440,8 +440,9 @@ export class SonicSpokeService {
     amount: bigint,
     spokeProvider: SonicSpokeProvider,
     moneyMarketService: MoneyMarketService,
+    userRouterAddress?: HubAddress,
   ): Promise<Hex> {
-    const userRouter = await SonicSpokeService.getUserRouter(from, spokeProvider);
+    const userRouter = userRouterAddress ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
 
     // Add withdraw call
     const withdrawCall = moneyMarketService.buildWithdrawData(

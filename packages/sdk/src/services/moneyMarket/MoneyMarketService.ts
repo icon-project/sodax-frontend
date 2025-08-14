@@ -705,6 +705,7 @@ export class MoneyMarketService {
       );
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
       const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
         walletAddress,
         spokeProvider,
@@ -713,7 +714,9 @@ export class MoneyMarketService {
 
       const data: Hex = this.buildSupplyData(
         params.token,
-        hubWallet,
+        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id
+          ? (walletAddress as Address)
+          : hubWallet,
         params.amount,
         spokeProvider.chainConfig.chain.id,
       );
@@ -1054,13 +1057,32 @@ export class MoneyMarketService {
       this.hubProvider,
     );
 
-    const data: Hex = this.buildWithdrawData(
-      hubWallet,
-      encodedAddress,
-      params.token,
-      params.amount,
-      spokeProvider.chainConfig.chain.id,
-    );
+    let data: Hex;
+    if (spokeProvider instanceof SonicSpokeProvider) {
+      const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
+        params.token as GetAddressType<SonicSpokeProvider>,
+        params.amount,
+        spokeProvider,
+        this,
+      );
+
+      data = await SonicSpokeService.buildWithdrawData(
+        walletAddress as GetAddressType<SonicSpokeProvider>,
+        withdrawInfo,
+        params.amount,
+        spokeProvider,
+        this,
+        hubWallet,
+      );
+    } else {
+      data = this.buildWithdrawData(
+        hubWallet,
+        encodedAddress,
+        params.token,
+        params.amount,
+        spokeProvider.chainConfig.chain.id,
+      );
+    }
 
     const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
@@ -1215,7 +1237,14 @@ export class MoneyMarketService {
       spokeProvider,
       this.hubProvider,
     );
-    const data: Hex = this.buildRepayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
+    const data: Hex = this.buildRepayData(
+      params.token,
+      spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id
+        ? (walletAddress as Address)
+        : hubWallet,
+      params.amount,
+      spokeProvider.chainConfig.chain.id,
+    );
 
     const txResult = await SpokeService.deposit(
       {
