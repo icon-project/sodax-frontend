@@ -1,3 +1,4 @@
+import { useSodaxContext } from '@/index';
 import {
   EvmSpokeProvider,
   spokeChainConfig,
@@ -47,12 +48,14 @@ export function useSpokeProvider(
   spokeChainId: SpokeChainId | undefined,
   walletProvider?: IWalletProvider | undefined,
 ): SpokeProvider | undefined {
+  const { rpcConfig } = useSodaxContext();
   const xChainType = spokeChainId ? spokeChainConfig[spokeChainId]?.chain.type : undefined;
 
   const spokeProvider = useMemo(() => {
     if (!walletProvider) return undefined;
     if (!spokeChainId) return undefined;
     if (!xChainType) return undefined;
+    if (!rpcConfig) return undefined;
 
     if (xChainType === 'EVM') {
       if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {
@@ -66,18 +69,21 @@ export function useSpokeProvider(
         spokeChainConfig[spokeChainId] as EvmSpokeChainConfig,
       );
     }
+
     if (xChainType === 'SUI') {
       return new SuiSpokeProvider(
         spokeChainConfig[spokeChainId] as SuiSpokeChainConfig,
         walletProvider as ISuiWalletProvider,
       );
     }
+
     if (xChainType === 'ICON') {
       return new IconSpokeProvider(
         walletProvider as IIconWalletProvider,
         spokeChainConfig[spokeChainId] as IconSpokeChainConfig,
       );
     }
+
     if (xChainType === 'INJECTIVE') {
       return new InjectiveSpokeProvider(
         spokeChainConfig[spokeChainId] as InjectiveSpokeChainConfig,
@@ -96,12 +102,17 @@ export function useSpokeProvider(
     if (xChainType === 'SOLANA') {
       return new SolanaSpokeProvider(
         walletProvider as ISolanaWalletProvider,
-        spokeChainConfig[spokeChainId] as SolanaChainConfig,
+        rpcConfig.solana
+          ? ({
+              ...spokeChainConfig[spokeChainId],
+              rpcUrl: rpcConfig.solana,
+            } as SolanaChainConfig)
+          : (spokeChainConfig[spokeChainId] as SolanaChainConfig),
       );
     }
 
     return undefined;
-  }, [spokeChainId, xChainType, walletProvider]);
+  }, [spokeChainId, xChainType, walletProvider, rpcConfig]);
 
   return spokeProvider;
 }
