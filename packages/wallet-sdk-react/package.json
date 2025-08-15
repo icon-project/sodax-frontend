@@ -22,7 +22,6 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch ./src",
-    "test": "vitest run",
     "prepublishOnly": "tsup",
     "clean": "rm -rf dist && rm -rf node_modules && rm -rf .turbo",
     "pretty": "biome format . --write",
