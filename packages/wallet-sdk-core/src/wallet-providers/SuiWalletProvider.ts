@@ -1,25 +1,83 @@
 import { bcs } from '@mysten/sui/bcs';
-import type { SuiClient } from '@mysten/sui/client';
+import { SuiClient } from '@mysten/sui/client';
+import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
-import { type Address, toHex } from 'viem';
+import { toHex } from 'viem';
 import type { Hex } from '@sodax/types';
 import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@sodax/types';
 import { signTransaction } from '@mysten/wallet-standard';
+
+// Private key wallet config
+export type SuiPkWalletConfig = {
+  rpcUrl: string;
+  mnemonics: string;
+};
+
+// Browser extension wallet config
+export type SuiBrowserExtensionWalletConfig = {
+  client: SuiClient;
+  wallet: any;
+  account: any;
+};
+
+// Unified config type
+export type SuiWalletConfig = SuiPkWalletConfig | SuiBrowserExtensionWalletConfig;
+
+// Type guards
+function isPkWalletConfig(walletConfig: SuiWalletConfig): walletConfig is SuiPkWalletConfig {
+  return 'mnemonics' in walletConfig;
+}
+
+function isBrowserExtensionWalletConfig(
+  walletConfig: SuiWalletConfig,
+): walletConfig is SuiBrowserExtensionWalletConfig {
+  return 'wallet' in walletConfig && 'account' in walletConfig;
+}
 
 export class SuiWalletProvider implements ISuiWalletProvider {
   private client: SuiClient;
   private wallet: any;
   private account: any;
-  constructor({ client, wallet, account }: { client: SuiClient; wallet: any; account: any }) {
-    this.client = client;
-    this.wallet = wallet;
-    this.account = account;
+  private keyPair: Ed25519Keypair | undefined;
+  private isPkMode: boolean;
+
+  constructor(walletConfig: SuiWalletConfig) {
+    if (isPkWalletConfig(walletConfig)) {
+      this.client = new SuiClient({ url: walletConfig.rpcUrl });
+      this.keyPair = Ed25519Keypair.deriveKeypair(walletConfig.mnemonics);
+      this.isPkMode = true;
+    } else if (isBrowserExtensionWalletConfig(walletConfig)) {
+      this.client = walletConfig.client;
+      this.wallet = walletConfig.wallet;
+      this.account = walletConfig.account;
+      this.isPkMode = false;
+    } else {
+      throw new Error('Invalid wallet configuration');
+    }
   }
+
   async signAndExecuteTxn(txn: SuiTransaction): Promise<string> {
-    const { bytes, signature } = await signTransaction(this.wallet, {
+    if (this.isPkMode && this.keyPair) {
+      const res = await this.client.signAndExecuteTransaction({
+        transaction: txn as unknown as Transaction,
+        signer: this.keyPair,
+      });
+      return res.digest;
+    }
+
+    const browserWallet = this.wallet;
+    const browserAccount = this.account;
+    if (browserAccount.chains.length === 0) {
+      throw new Error('No chains available for wallet account');
+    }
+    const chain = browserAccount.chains[0];
+    if (!chain) {
+      throw new Error('No chain available for wallet account');
+    }
+    const { bytes, signature } = await signTransaction(browserWallet, {
       transaction: txn,
-      account: this.account,
-      chain: this.account.chains[0],
+      account: browserAccount,
+      chain,
     });
 
     const res = await this.client.executeTransactionBlock({
@@ -47,9 +105,12 @@ export class SuiWalletProvider implements ISuiWalletProvider {
       typeArguments: typeArgs,
     });
 
+    const sender =
+      this.isPkMode && this.keyPair ? this.keyPair.getPublicKey().toSuiAddress() : (this.account as any).address;
+
     const txResults = await this.client.devInspectTransactionBlock({
       transactionBlock: tx,
-      sender: this.account.address,
+      sender,
     });
 
     if (txResults.results && txResults.results[0] !== undefined) {
@@ -62,8 +123,13 @@ export class SuiWalletProvider implements ISuiWalletProvider {
     return this.client.getCoins({ owner: address, coinType: token, limit: 10 });
   }
 
-  async getWalletAddress(): Promise<Address> {
-    return this.account.address;
+  async getWalletAddress(): Promise<string> {
+    if (this.isPkMode && this.keyPair) {
+      return this.keyPair.toSuiAddress();
+    }
+
+    const browserAccount = this.account as any;
+    return browserAccount.address;
   }
 
   async getWalletAddressBytes(): Promise<Hex> {

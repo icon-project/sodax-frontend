@@ -16,7 +16,7 @@ import {
   type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
-import { SuiWalletProvider } from './sui-wallet-provider.js';
+import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 
 import dotenv from 'dotenv';
 import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
@@ -65,7 +65,7 @@ const suiWalletMnemonics = process.env.MNEMONICS;
 if (!suiWalletMnemonics) {
   throw new Error('SUI_MNEMONICS environment variable is required');
 }
-const suiWalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
+const suiWalletProvider = new SuiWalletProvider({ rpcUrl: SUI_RPC_URL, mnemonics: suiWalletMnemonics });
 const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
 const walletAddress = await suiWalletProvider.getWalletAddress();
 console.log('[walletAddress]:', walletAddress);
