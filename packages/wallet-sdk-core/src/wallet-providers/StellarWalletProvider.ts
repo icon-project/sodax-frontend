@@ -1,7 +1,6 @@
-import type { Hex, IStellarWalletProvider, StellarRawTransactionReceipt, XDR } from '@sodax/sdk';
+import type { Hex, IStellarWalletProvider, StellarRawTransactionReceipt, XDR } from '@sodax/types';
 import { Networks, Horizon, Transaction, Keypair, Address } from '@stellar/stellar-sdk';
 
-// Define interface for StellarWalletsKit since it's not exported from the package
 interface StellarWalletsKit {
   getAddress(): Promise<{ address: string }>;
   signTransaction(tx: XDR, options: { networkPassphrase: string }): Promise<{ signedTxXdr: XDR }>;

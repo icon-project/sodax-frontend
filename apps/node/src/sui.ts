@@ -16,10 +16,10 @@ import {
   type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
-import { SuiWalletProvider } from './sui-wallet-provider.js';
+import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 
 import dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
+import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 import { solverConfig } from './config.js';
 dotenv.config();
 // load PK from .env
@@ -34,7 +34,11 @@ if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const hubEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
+const hubEvmWallet = new EvmWalletProvider({
+  privateKey: privateKey as Hex,
+  chainId: SONIC_MAINNET_CHAIN_ID,
+  rpcUrl: HUB_RPC_URL as `http${string}`,
+});
 
 const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const hubProvider = new EvmHubProvider({
@@ -61,7 +65,7 @@ const suiWalletMnemonics = process.env.MNEMONICS;
 if (!suiWalletMnemonics) {
   throw new Error('SUI_MNEMONICS environment variable is required');
 }
-const suiWalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
+const suiWalletProvider = new SuiWalletProvider({ rpcUrl: SUI_RPC_URL, mnemonics: suiWalletMnemonics });
 const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
 const walletAddress = await suiWalletProvider.getWalletAddress();
 console.log('[walletAddress]:', walletAddress);

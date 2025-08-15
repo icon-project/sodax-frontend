@@ -20,7 +20,7 @@ import {
   type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
-import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
+import { IconWalletProvider } from '@sodax/wallet-sdk-core';
 import { solverConfig } from './config.js';
 
 // load PK from .env

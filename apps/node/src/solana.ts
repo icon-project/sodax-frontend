@@ -19,7 +19,7 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 
 import { keccak256 } from 'ethers';
 import type { Address, Hash, Hex } from 'viem';
-import { SolanaWalletProvider } from './wallet-providers/SolanaWalletProvider.js';
+import { SolanaWalletProvider } from '@sodax/wallet-sdk-core';
 import { solverConfig } from './config.js';
 
 const IS_TESTNET = process.env.IS_TESTNET === 'true';

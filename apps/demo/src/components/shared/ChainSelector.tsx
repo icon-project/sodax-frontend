@@ -1,6 +1,6 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { xChains } from '@sodax/wallet-sdk';
+import { xChains } from '@sodax/wallet-sdk-react';
 import type { ChainId } from '@sodax/types';
 
 export function ChainSelector({
