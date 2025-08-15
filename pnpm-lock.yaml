@@ -414,9 +414,6 @@ importers:
       '@sodax/types':
         specifier: workspace:*
         version: link:../types
-      '@sodax/wallet-sdk':
-        specifier: workspace:*
-        version: link:../wallet-sdk
       '@tanstack/react-query':
         specifier: 5.x
         version: 5.77.2(react@19.1.0)
@@ -26202,11 +26199,14 @@ snapshots:
       - utf-8-validate
     optional: true
 
+<<<<<<< HEAD
   react-number-format@5.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
+=======
+>>>>>>> main
   react-qr-reader@2.2.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       jsqr: 1.4.0

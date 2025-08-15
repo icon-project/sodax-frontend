@@ -17,7 +17,7 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
 
 - Swap/Intent
   - Get quote for an intent order (`useQuote`)
-  - Create and submit an intent order (`useCreateIntentOrder`)
+  - Create and submit an swap intent order (`useSwap`)
   - Get status of an intent order (`useStatus`)
   - Check token allowance (`useSwapAllowance`)
   - Approve token spending (`useSwapApprove`)
@@ -42,7 +42,7 @@ pnpm add @sodax/dapp-kit
 1. First, install the required dependencies:
 
 ```bash
-npm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
+pnpm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
 ```
 
 2. Set up the providers in your app:
@@ -51,31 +51,16 @@ npm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { XWagmiProviders } from '@sodax/wallet-sdk';
 import { SodaxProvider } from '@sodax/dapp-kit';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 const queryClient = new QueryClient();
 
-// Configure Sodax
-const sodaxConfig = {
-  hubProviderConfig: {
-    hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
-  },
-  moneyMarket: getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID),
-  solver: {
-    intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-    solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-    partnerFee: {
-      address: '0x0Ab764AB3816cD036Ea951bE973098510D8105A6',
-      percentage: 100, // 1%
-    },
-  },
-  relayerApiEndpoint: 'https://xcall-relay.nw.iconblockchain.xyz',
+const rpcConfig = {
+  "solana": "private rpc url",
 };
 
 function App() {
   return (
-    <SodaxProvider testnet={false} config={sodaxConfig}>
+    <SodaxProvider testnet={false} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
         <XWagmiProviders
           config={{
@@ -159,7 +144,7 @@ function TokenManagementComponent() {
 }
 
 // Swap Operations
-import { useQuote, useCreateIntentOrder, useStatus } from '@sodax/dapp-kit';
+import { useQuote, useSwap, useStatus } from '@sodax/dapp-kit';
 
 function SwapComponent() {
   // Get quote for an intent order
@@ -173,9 +158,9 @@ function SwapComponent() {
   });
 
   // Create and submit an intent order
-  const { mutateAsync: createOrder, isPending: isCreating } = useCreateIntentOrder();
-  const handleCreateOrder = async () => {
-    const order = await createOrder({
+  const { mutateAsync: swap, isPending: isCreating } = useSwap();
+  const handleSwap = async () => {
+    const order = await swap({
       token_src: '0x...',
       token_src_blockchain_id: '0xa86a.avax',
       token_dst: '0x...',
@@ -216,7 +201,7 @@ function SwapComponent() {
 
 #### Swap Hooks
 - [`useQuote()`](./src/hooks/swap/useQuote.ts) - Get quote for an intent order
-- [`useCreateIntentOrder()`](./src/hooks/swap/useCreateIntentOrder.ts) - Create and submit an intent order
+- [`useSwap()`](./src/hooks/swap/useSwap.ts) - Create and submit an intent order
 - [`useStatus()`](./src/hooks/swap/useStatus.ts) - Get status of an intent order
 - [`useSwapAllowance()`](./src/hooks/swap/useSwapAllowance.ts) - Check token allowance for an intent order
 - [`useSwapApprove()`](./src/hooks/swap/useSwapApprove.ts) - Approve token spending

@@ -14,7 +14,7 @@ import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 type CreateIntentResult = Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>;
 
 /**
- * Hook for creating and submitting an intent order for cross-chain swaps.
+ * Hook for creating and submitting an swap intent order for cross-chain swaps.
  * Uses React Query's useMutation for better state management and caching.
  *
  * @param {SpokeProvider} spokeProvider - The spoke provider to use for the swap
@@ -22,10 +22,10 @@ type CreateIntentResult = Result<[SolverExecutionResponse, Intent, Hex], IntentE
  *
  * @example
  * ```typescript
- * const { mutateAsync: createIntent, isPending } = useCreateIntentOrder(spokeProvider);
+ * const { mutateAsync: swap, isPending } = useSwap(spokeProvider);
  *
  * const handleSwap = async () => {
- *   const result = await createIntent({
+ *   const result = await swap({
  *     token_src: '0x...',
  *     token_src_blockchain_id: 'arbitrum',
  *     token_dst: '0x...',
@@ -36,7 +36,7 @@ type CreateIntentResult = Result<[SolverExecutionResponse, Intent, Hex], IntentE
  * };
  * ```
  */
-export function useCreateIntentOrder(
+export function useSwap(
   spokeProvider: SpokeProvider | undefined,
 ): UseMutationResult<CreateIntentResult, Error, CreateIntentParams> {
   const { sodax } = useSodaxContext();
@@ -46,7 +46,10 @@ export function useCreateIntentOrder(
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
-      return sodax.solver.createAndSubmitIntent(params, spokeProvider);
+      return sodax.solver.swap({
+        intentParams: params,
+        spokeProvider,
+      });
     },
   });
 }

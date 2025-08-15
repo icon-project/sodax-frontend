@@ -289,6 +289,8 @@ export type FeeAmount = {
   feeAmount: bigint;
 };
 
+export type OptionalFee = { fee?: PartnerFee };
+
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
@@ -567,3 +569,6 @@ export type GetEstimateGasReturnType<T extends SpokeProvider> = T['chainConfig']
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
             ? InjectiveGasEstimate
             : GasEstimateType; // default to all gas estimate types union type
+
+export type OptionalRaw<R extends boolean = false> = { raw?: R };
+export type OptionalTimeout = { timeout?: number };
