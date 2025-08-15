@@ -1,26 +1,68 @@
-import type { EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@sodax/types';
+import type { ChainId, EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@sodax/types';
 import type { Account, Address, Chain, Transport, Hash, PublicClient, WalletClient } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
+import { createWalletClient, createPublicClient, http } from 'viem';
+import { sonic, avalanche, arbitrum, base, optimism, bsc, polygon, nibiru } from 'viem/chains';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  AVALANCHE_MAINNET_CHAIN_ID,
+  ARBITRUM_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  OPTIMISM_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  POLYGON_MAINNET_CHAIN_ID,
+  NIBIRU_MAINNET_CHAIN_ID,
+} from '@sodax/types';
+
+export function getEvmViemChain(id: ChainId): Chain {
+  switch (id) {
+    case SONIC_MAINNET_CHAIN_ID:
+      return sonic;
+    case AVALANCHE_MAINNET_CHAIN_ID:
+      return avalanche;
+    case ARBITRUM_MAINNET_CHAIN_ID:
+      return arbitrum;
+    case BASE_MAINNET_CHAIN_ID:
+      return base;
+    case OPTIMISM_MAINNET_CHAIN_ID:
+      return optimism;
+    case BSC_MAINNET_CHAIN_ID:
+      return bsc;
+    case POLYGON_MAINNET_CHAIN_ID:
+      return polygon;
+    case NIBIRU_MAINNET_CHAIN_ID:
+      return nibiru;
+    default:
+      throw new Error(`Unsupported EVM chain ID: ${id}`);
+  }
+}
 
 export class EvmWalletProvider implements IEvmWalletProvider {
-  private readonly _walletClient?: WalletClient<Transport, Chain, Account>;
+  private readonly walletClient: WalletClient<Transport, Chain, Account>;
   public readonly publicClient: PublicClient;
 
-  constructor({
-    publicClient,
-    walletClient,
-  }: {
-    publicClient: PublicClient;
-    walletClient: WalletClient<Transport, Chain, Account> | undefined;
-  }) {
-    this._walletClient = walletClient;
-    this.publicClient = publicClient;
+  constructor(config: EvmWalletConfig) {
+    if (isPrivateKeyEvmWalletConfig(config)) {
+      const chain = getEvmViemChain(config.chainId);
+      this.walletClient = createWalletClient({
+        chain,
+        transport: http(config.rpcUrl ?? chain.rpcUrls.default.http[0]),
+        account: privateKeyToAccount(config.privateKey),
+      });
+      this.publicClient = createPublicClient({
+        chain,
+        transport: http(config.rpcUrl ?? chain.rpcUrls.default.http[0]),
+      });
+    } else if (isWalletClientEvmWalletConfig(config)) {
+      this.walletClient = config.walletClient;
+      this.publicClient = config.publicClient;
+    } else {
+      throw new Error('Invalid EVM wallet config');
+    }
   }
 
-  sendTransaction(evmRawTx: EvmRawTransaction) {
-    if (!this._walletClient) {
-      throw new Error('Wallet client not initialized');
-    }
-    return this._walletClient.sendTransaction(evmRawTx);
+  async sendTransaction(evmRawTx: EvmRawTransaction): Promise<Hash> {
+    return this.walletClient.sendTransaction(evmRawTx);
   }
 
   async waitForTransactionReceipt(txHash: Hash): Promise<EvmRawTransactionReceipt> {
@@ -43,16 +85,39 @@ export class EvmWalletProvider implements IEvmWalletProvider {
   }
 
   async getWalletAddress(): Promise<Address> {
-    if (!this._walletClient) {
-      throw new Error('Wallet client not initialized');
-    }
-    return this._walletClient.account.address;
+    return this.walletClient.account.address;
   }
 
   async getWalletAddressBytes(): Promise<Hex> {
-    if (!this._walletClient) {
-      throw new Error('Wallet client not initialized');
-    }
-    return this._walletClient.account.address;
+    return this.walletClient.account.address;
   }
+}
+
+/**
+ * EVM Wallet Configuration Types
+ */
+
+export type PrivateKeyEvmWalletConfig = {
+  privateKey: `0x${string}`;
+  chainId: ChainId;
+  rpcUrl?: `http${string}`;
+};
+
+export type WalletClientEvmWalletConfig = {
+  walletClient: WalletClient<Transport, Chain, Account>;
+  publicClient: PublicClient;
+};
+
+export type EvmWalletConfig = PrivateKeyEvmWalletConfig | WalletClientEvmWalletConfig;
+
+/**
+ * EVM Type Guards
+ */
+
+export function isPrivateKeyEvmWalletConfig(config: EvmWalletConfig): config is PrivateKeyEvmWalletConfig {
+  return 'privateKey' in config && config.privateKey.startsWith('0x');
+}
+
+export function isWalletClientEvmWalletConfig(config: EvmWalletConfig): config is WalletClientEvmWalletConfig {
+  return 'walletClient' in config && 'publicClient' in config;
 }

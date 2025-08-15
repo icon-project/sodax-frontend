@@ -49,7 +49,7 @@
   "dependencies": {
     "@sodax/types": "workspace:*",
     "icon-sdk-js": "1.5.3",
-    "viem": "2.29.2",
+    "viem": "catalog:",
     "@injectivelabs/sdk-ts": "1.15.43",
     "@injectivelabs/wallet-core": "1.15.43",
     "@solana/spl-token": "0.4.9",
@@ -67,8 +67,5 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  },
-  "peerDependencies": {
-    "viem": "<=2.29.2"
   }
 }

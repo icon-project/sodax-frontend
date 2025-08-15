@@ -52,7 +52,7 @@
     "@stellar/stellar-sdk": "12.3.0",
     "icon-sdk-js": "catalog:",
     "immer": "10.1.1",
-    "viem": "2.29.2",
+    "viem": "catalog:",
     "wagmi": "catalog:",
     "zustand": "4.5.2"
   },

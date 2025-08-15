@@ -19,7 +19,7 @@ import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from 
 import { SuiWalletProvider } from './sui-wallet-provider.js';
 
 import dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
+import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 import { solverConfig } from './config.js';
 dotenv.config();
 // load PK from .env
@@ -34,7 +34,11 @@ if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const hubEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
+const hubEvmWallet = new EvmWalletProvider({
+  privateKey: privateKey as Hex,
+  chainId: SONIC_MAINNET_CHAIN_ID,
+  rpcUrl: HUB_RPC_URL as `http${string}`,
+});
 
 const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const hubProvider = new EvmHubProvider({

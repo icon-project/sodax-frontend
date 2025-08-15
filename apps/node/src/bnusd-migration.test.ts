@@ -9,8 +9,7 @@ import {
   spokeChainConfig,
   type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
-import { IconWalletProvider } from '@sodax/wallet-sdk-core';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
+import { IconWalletProvider, EvmWalletProvider } from '@sodax/wallet-sdk-core';
 
 async function iconToArbTwoWayMigration() {
   const sodax = new Sodax();
@@ -24,7 +23,10 @@ async function iconToArbTwoWayMigration() {
   );
 
   const evmSpokeProvider = new EvmSpokeProvider(
-    new EvmWalletProvider(process.env.EVM_PRIVATE_KEY as Hex, ARBITRUM_MAINNET_CHAIN_ID),
+    new EvmWalletProvider({
+      privateKey: process.env.EVM_PRIVATE_KEY as Hex,
+      chainId: ARBITRUM_MAINNET_CHAIN_ID,
+    }),
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID],
   );
   // // migrate from legacy bnUSD from Icon to the new bnUSD on ARB
