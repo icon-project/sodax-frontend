@@ -1,13 +1,11 @@
 // apps/web/components/ui/network-input-display.tsx
 import type React from 'react';
 import { useEffect, useRef } from 'react';
-import CurrencyLogoICX from './currency-logo-icx';
-import CurrencyLogoSoda from './currency-logo-soda';
 import { ICON_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
-import { NumberInput } from '@/components/ui/number-input';
 import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
+import CurrencyLogo from '@/components/shared/currency-logo';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -42,7 +40,6 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    console.log('inputRef', inputRef.current);
     if (type === CurrencyInputPanelType.INPUT && inputRef.current) {
       inputRef.current.focus();
     }
@@ -54,18 +51,14 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
     >
       <div className="flex justify-start items-center gap-2">
-        {chainId === ICON_MAINNET_CHAIN_ID ? (
-          <CurrencyLogoICX className="group-hover:scale-106 transition-transform duration-200" />
-        ) : (
-          <CurrencyLogoSoda className="group-hover:scale-106 transition-transform duration-200" />
-        )}
+        <CurrencyLogo currency={currency} />
 
         <div className="inline-flex flex-col justify-center items-start gap-1">
           <div className="justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable) group-hover:text-clay">
             {type === CurrencyInputPanelType.INPUT ? 'From' : 'To'}
           </div>
           <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) inline-flex gap-1">
-            {chainId === ICON_MAINNET_CHAIN_ID ? 'ICON' : 'SODA'}
+            {chainId === ICON_MAINNET_CHAIN_ID ? 'ICON' : 'Sonic'}
             <span className="hidden md:inline">Network</span>
           </div>
         </div>
@@ -98,8 +91,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           </div>
           {type === CurrencyInputPanelType.INPUT && (
             <Button
-              variant="cherry"
-              className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] inline-flex flex-col justify-center items-center gap-2 text-[9px] font-bold font-['InterRegular'] uppercase text-clay-light"
+              variant="default"
+              className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
               onClick={onMaxClick}
             >
               MAX

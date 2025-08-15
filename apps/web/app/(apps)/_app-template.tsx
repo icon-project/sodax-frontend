@@ -4,14 +4,17 @@ import type { ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import Sidebar from '@/components/landing/sidebar';
 import { Header } from '@/components/shared/header';
-import { RouteTabs } from '@/components/ui/route-tabs';
+import { RouteTabs } from '@/components/shared/route-tabs';
 import { WalletUIProvider } from './_context/wallet-ui';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
 
 const WalletModal = dynamic(() => import('@/components/shared/wallet-modal').then(m => m.WalletModal), { ssr: false });
-const TermsConfirmationModal = dynamic(() => import('@/components/ui/terms-confirmation-modal').then(m => m.default), {
-  ssr: false,
-});
+const TermsConfirmationModal = dynamic(
+  () => import('@/components/shared/terms-confirmation-modal').then(m => m.default),
+  {
+    ssr: false,
+  },
+);
 
 export default function AppTemplate({ children }: { children: ReactNode }) {
   const {

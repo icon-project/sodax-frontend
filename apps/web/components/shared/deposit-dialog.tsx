@@ -3,7 +3,7 @@ import type React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Image from 'next/image';
 import Link from 'next/link';
-import ConnectWalletButton from '@/components/ui/connect-wallet-button';
+import ConnectWalletButton from '@/components/shared/connect-wallet-button';
 import {
   SavingsIcon,
   LoansIcon,

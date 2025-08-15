@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import svgPaths from '@/components/ui/imports/svg-wvqxyi2334';
+import svgPaths from '@/components/shared/imports/svg-wvqxyi2334';
 
 interface AnimatedCircularProgressProps {
   progress: number;

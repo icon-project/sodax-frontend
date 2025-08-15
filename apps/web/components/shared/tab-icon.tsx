@@ -1,4 +1,4 @@
-// apps/web/components/ui/tab-icon.tsx
+// apps/web/components/shared/tab-icon.tsx
 import type React from 'react';
 import { SwapIcon, SavingsIcon, LoansIcon, MigrateIcon } from '@/components/icons';
 

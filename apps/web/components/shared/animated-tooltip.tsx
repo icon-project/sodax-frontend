@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CircularProgress } from './CircularProgress';
-import svgPaths from '@/components/ui/imports/svg-epkf1qslqq';
+import { CircularProgress } from '@/components/shared/circular-progress';
+import svgPaths from '@/components/shared/imports/svg-epkf1qslqq';
 
 function Frame176({ progress }: { progress: number }) {
   return (

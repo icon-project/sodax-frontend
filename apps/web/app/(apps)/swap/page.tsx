@@ -1,11 +1,30 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/currency-input-panel';
 import { Button } from '@/components/ui/button';
 import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
+import type { XToken } from '@sodax/types';
+import { useWalletUI } from '../_context/wallet-ui';
 
 export default function SwapPage() {
+  const { openWalletModal } = useWalletUI();
+  const [inputCurrency, setInputCurrency] = useState<XToken>({
+    name: 'ETH',
+    symbol: 'ETH',
+    decimals: 18,
+    xChainId: '0x2105.base',
+    address: '0x0000000000000000000000000000000000000000',
+  });
+
+  const [outputCurrency, setOutputCurrency] = useState<XToken>({
+    name: 'USDT',
+    symbol: 'USDT',
+    decimals: 18,
+    xChainId: 'solana',
+    address: '0x0000000000000000000000000000000000000000',
+  });
+
   return (
     <div className="inline-flex flex-col justify-start items-start gap-(--layout-space-comfortable) w-full">
       <div className="inline-flex flex-col justify-start items-start gap-4">
@@ -27,17 +46,12 @@ export default function SwapPage() {
           <CurrencyInputPanel
             type={CurrencyInputPanelType.INPUT}
             chainId={'sonic'}
-            currency={{
-              name: 'ETH',
-              symbol: 'ETH',
-              decimals: 18,
-              xChainId: '0x2105.base',
-              address: '0x0000000000000000000000000000000000000000',
-            }}
+            currency={inputCurrency}
             currencyBalance={0n}
             inputValue={''}
             onInputChange={e => {}}
             onMaxClick={() => {}}
+            onCurrencyChange={setInputCurrency}
           />
 
           <Button
@@ -53,15 +67,10 @@ export default function SwapPage() {
         <CurrencyInputPanel
           type={CurrencyInputPanelType.OUTPUT}
           chainId={'solana'}
-          currency={{
-            name: 'USDT',
-            symbol: 'USDT',
-            decimals: 18,
-            xChainId: 'solana',
-            address: '0x0000000000000000000000000000000000000000',
-          }}
+          currency={outputCurrency}
           currencyBalance={0n}
           inputValue={''}
+          onCurrencyChange={setOutputCurrency}
           // onInputChange={e => setTypedValue(e.target.value)}
         />
       </div>
@@ -69,7 +78,7 @@ export default function SwapPage() {
       <Button
         variant="cherry"
         className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
-        // onClick={() => openWalletModal()}
+        onClick={() => openWalletModal()}
       >
         Connect wallets
       </Button>

@@ -1,9 +1,9 @@
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import RouteTabItem from '@/components/ui/route-tab-item';
+import RouteTabItem from '@/components/shared/route-tab-item';
 import { ArrowRightIcon, ArrowUpIcon } from '@/components/icons';
-import { tabConfigs } from '@/components/ui/tab-config';
+import { tabConfigs } from '@/components/shared/tab-config';
 
 export function RouteTabs(): React.JSX.Element {
   const pathname = usePathname();

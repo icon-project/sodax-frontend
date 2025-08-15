@@ -1,11 +1,12 @@
 import type React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ICON_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
 import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
-import CurrencyLogo from './currency-logo';
+import CurrencyLogo from '@/components/shared/currency-logo';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
+import TokenSelectorDialog from './token-selector-dialog';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -21,6 +22,7 @@ interface CurrencyInputPanelProps {
   onInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onInputFocus?: () => void;
   onMaxClick?: () => void;
+  onCurrencyChange?: (currency: XToken) => void;
   className?: string;
 }
 
@@ -33,11 +35,13 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   onInputChange,
   onInputFocus,
   onMaxClick,
+  onCurrencyChange,
   className = '',
 }: CurrencyInputPanelProps) => {
   const formattedBalance = formatUnits(currencyBalance, currency.decimals);
   const formattedBalanceFixed = Number(formattedBalance).toFixed(2);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
 
   useEffect(() => {
     console.log('inputRef', inputRef.current);
@@ -45,6 +49,12 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       inputRef.current.focus();
     }
   }, [type]);
+
+  const handleTokenSelect = (selectedToken: XToken): void => {
+    if (onCurrencyChange) {
+      onCurrencyChange(selectedToken);
+    }
+  };
 
   return (
     <div
@@ -54,7 +64,10 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       <div className="inline-flex justify-start items-center gap-4">
         <CurrencyLogo className="group-hover:scale-106 transition-transform duration-200" currency={currency} />
         <div className="inline-flex flex-col justify-center items-start gap-1">
-          <div className="inline-flex justify-start items-center gap-2">
+          <div
+            className="inline-flex justify-start items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setIsTokenSelectorOpen(false)}
+          >
             <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-snug">
               {currency.symbol}
             </div>
@@ -67,8 +80,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             </div>
             {type === CurrencyInputPanelType.INPUT && (
               <Button
-                variant="cherry"
-                className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] inline-flex flex-col justify-center items-center gap-2 text-[9px] font-bold font-['InterRegular'] uppercase text-clay-light -mt-[2px]"
+                variant="default"
+                className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
                 onClick={onMaxClick}
               >
                 MAX
@@ -95,6 +108,14 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           Sell $0
         </div>
       </div>
+
+      <TokenSelectorDialog
+        isOpen={isTokenSelectorOpen}
+        onClose={() => setIsTokenSelectorOpen(false)}
+        onTokenSelect={handleTokenSelect}
+        chainId={chainId}
+        selectedToken={currency}
+      />
     </div>
   );
 };
