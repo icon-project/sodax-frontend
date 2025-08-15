@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CircularProgress } from '@/components/shared/circular-progress';
-import svgPaths from '@/components/shared/imports/svg-epkf1qslqq';
+import { RoundedPillIcon } from '@/components/icons';
 
 function Frame176({ progress }: { progress: number }) {
   return (
@@ -41,12 +41,7 @@ function Bubble({
 function Tip() {
   return (
     <div className="h-10 relative w-2" data-name="Tip">
-      <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 8 40" aria-label="Tip">
-        <title>Tip</title>
-        <g id="Tip">
-          <path clipRule="evenodd" d={svgPaths.p2fae6ab0} fill="white" fillRule="evenodd" id="Subtract" />
-        </g>
-      </svg>
+      <RoundedPillIcon width={8} height={40} fill="white" className="block size-full" />
     </div>
   );
 }

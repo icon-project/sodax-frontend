@@ -9,3 +9,5 @@ export { LoansIcon } from './loans-icon';
 export { MigrateIcon } from './migrate-icon';
 export { DepositDialogArrowIcon } from './deposit-dialog-arrow-icon';
 export { DepositDialogArrowMobileIcon } from './deposit-dialog-arrow-mobile-icon';
+export { RoundedPillIcon } from './rounded-pill-icon';
+export { CircularProgressIcon } from './circular-progress-icon';
