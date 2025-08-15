@@ -4,8 +4,11 @@ import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import CurrencyLogo from '@/components/shared/currency-logo';
+import TokenGroupLogo from '@/components/shared/token-group-logo';
+import TokenChainSelector from '@/components/shared/token-chain-selector';
 import { ChevronDownIcon, ChevronUpIcon, Search, SearchIcon, XIcon } from 'lucide-react';
 import { getAllSupportedSolverTokens } from '@/lib/utils';
+import { getUniqueTokenSymbols } from '@/lib/token-utils';
 import { type XToken, type SpokeChainId, SPOKE_CHAIN_IDS } from '@sodax/types';
 import Image from 'next/image';
 import { Button } from 'react-scroll';
@@ -45,21 +48,54 @@ const TokenSelectorDialog: React.FC<TokenSelectorDialogProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState<boolean>(false);
   const [selectedChainFilter, setSelectedChainFilter] = useState<SpokeChainId | 'all'>('all');
+  const [chainSelectorOpen, setChainSelectorOpen] = useState<boolean>(false);
+  const [selectedTokensForChain, setSelectedTokensForChain] = useState<{ symbol: string; tokens: XToken[] } | null>(
+    null,
+  );
 
   const allSupportedTokens = getAllSupportedSolverTokens();
+  console.log('allSuppotedToken', allSupportedTokens);
+  const uniqueTokenSymbols = getUniqueTokenSymbols(allSupportedTokens);
 
-  const filteredTokens = allSupportedTokens.filter(token => {
+  const filteredTokenSymbols = uniqueTokenSymbols.filter(({ symbol, tokens }) => {
     const matchesSearch =
-      token.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      token.name.toLowerCase().includes(searchQuery.toLowerCase());
+      symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tokens.some(token => token.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const matchesChain = selectedChainFilter === 'all' || token.xChainId === selectedChainFilter;
+    const matchesChain = selectedChainFilter === 'all' || tokens.some(token => token.xChainId === selectedChainFilter);
 
     return matchesSearch && matchesChain;
   });
 
-  const handleTokenClick = (token: XToken): void => {
+  const handleTokenClick = (tokenSymbol: string, tokens: XToken[]): void => {
+    // Ensure we have tokens to work with
+    if (tokens.length === 0) {
+      return;
+    }
+
+    const firstToken = tokens[0];
+    if (!firstToken) {
+      return;
+    }
+
+    // If there's only one token for this symbol, select it directly
+    if (tokens.length === 1) {
+      onTokenSelect(firstToken);
+      onClose();
+      setSearchQuery('');
+      setSelectedChainFilter('all');
+      return;
+    }
+
+    // If there are multiple tokens, show the chain selector
+    setSelectedTokensForChain({ symbol: tokenSymbol, tokens });
+    setChainSelectorOpen(true);
+  };
+
+  const handleChainTokenSelect = (token: XToken): void => {
     onTokenSelect(token);
+    setChainSelectorOpen(false);
+    setSelectedTokensForChain(null);
     onClose();
     setSearchQuery('');
     setSelectedChainFilter('all');
@@ -174,28 +210,32 @@ const TokenSelectorDialog: React.FC<TokenSelectorDialogProps> = ({
 
         <ScrollArea className="h-71">
           <div className="grid grid-cols-3 md:grid-cols-5 gap-y-4">
-            {filteredTokens.map(token => {
-              return (
-                <div
-                  key={`${token.xChainId}-${token.address}`}
-                  className={`flex flex-col items-center gap-2 px-4 rounded-lg cursor-pointer transition-colors text-clay hover:text-espresso hover:scale-110 ${
-                    selectedToken?.address === token.address && selectedToken?.xChainId === token.xChainId
-                      ? 'text-espresso'
-                      : ''
-                  }`}
-                  onClick={() => handleTokenClick(token)}
-                >
-                  <div className="relative">
-                    <CurrencyLogo currency={token} className="w-12 h-10" />
+            {filteredTokenSymbols
+              .filter(({ tokens }) => tokens.length > 0) // Only show groups with tokens
+              .map(({ symbol, tokens }) => {
+                const isSelected = tokens.some(
+                  token => selectedToken?.address === token.address && selectedToken?.xChainId === token.xChainId,
+                );
+
+                return (
+                  <div
+                    key={symbol}
+                    className={`flex flex-col items-center gap-2 px-4 rounded-lg cursor-pointer transition-colors text-clay hover:text-espresso hover:scale-110 ${
+                      isSelected ? 'text-espresso' : ''
+                    }`}
+                    onClick={() => handleTokenClick(symbol, tokens)}
+                  >
+                    <div className="relative">
+                      <TokenGroupLogo tokens={tokens} symbol={symbol} className="w-12 h-10" />
+                    </div>
+                    <div className="flex flex-col items-center text-center">
+                      <span className="text-(length:--body-small) font-medium font-['InterRegular'] text-sm">
+                        {symbol}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-center text-center">
-                    <span className="text-(length:--body-small) font-medium font-['InterRegular'] text-sm">
-                      {token.symbol}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </ScrollArea>
 
@@ -208,6 +248,20 @@ const TokenSelectorDialog: React.FC<TokenSelectorDialogProps> = ({
           </button>
         </div>
       </DialogContent>
+
+      {/* Chain Selector Dialog */}
+      {selectedTokensForChain && (
+        <TokenChainSelector
+          isOpen={chainSelectorOpen}
+          onClose={() => {
+            setChainSelectorOpen(false);
+            setSelectedTokensForChain(null);
+          }}
+          onTokenSelect={handleChainTokenSelect}
+          tokens={selectedTokensForChain.tokens}
+          symbol={selectedTokensForChain.symbol}
+        />
+      )}
     </Dialog>
   );
 };
