@@ -66,7 +66,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         <div className="inline-flex flex-col justify-center items-start gap-1">
           <div
             className="inline-flex justify-start items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => setIsTokenSelectorOpen(false)}
+            onClick={() => setIsTokenSelectorOpen(true)}
           >
             <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-snug">
               {currency.symbol}
