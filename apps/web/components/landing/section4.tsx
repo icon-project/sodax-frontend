@@ -2,7 +2,7 @@ import { DecoratedButton } from '@/components/landing/decorated-button';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
-import ConnectWalletButton from '../ui/connect-wallet-button';
+import ConnectWalletButton from '@/components/shared/connect-wallet-button';
 // import { useWallet } from '../../hooks/useWallet';
 import { Notification } from '../Notification';
 import { LaunchButton } from './launch-button';

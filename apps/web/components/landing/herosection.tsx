@@ -32,7 +32,7 @@ import { ArrowLeft } from 'lucide-react';
 import { DecoratedButton } from '@/components/landing/decorated-button';
 // import { useWallet } from '../../hooks/useWallet';
 import { Notification } from '../Notification';
-import ConnectWalletButton from '@/components/ui/connect-wallet-button';
+import ConnectWalletButton from '@/components/shared/connect-wallet-button';
 import { TermsContent } from './terms-content';
 import { LaunchButton } from './launch-button';
 
