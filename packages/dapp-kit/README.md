@@ -10,10 +10,14 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Withdraw tokens from the money market (`useWithdraw`)
   - Borrow tokens from the money market (`useBorrow`)
   - Repay borrowed tokens (`useRepay`)
-  - Get user reserves data (`useUserReservesData`)
-  - Get reserves data (`useReservesData`)
   - Check token allowance (`useMMAllowance`)
   - Approve token spending (`useMMApprove`)
+  - Get user reserves data (`useUserReservesData`)
+  - Get reserves data (`useReservesData`)
+  - Get humanized reserves data (`useReservesHumanized`)
+  - Get list of reserves (`useReservesList`)
+  - Get USD formatted reserves data (`useReservesUsdFormat`)
+  - Get formatted user portfolio summary (`useUserFormattedSummary`)
 
 - Swap/Intent
   - Get quote for an intent order (`useQuote`)

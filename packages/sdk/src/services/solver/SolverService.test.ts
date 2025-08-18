@@ -1,3 +1,4 @@
+import { WalletAbstractionService } from '@sodax/sdk';
 import type { Address } from 'viem';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -30,7 +31,6 @@ import {
   isIntentPostExecutionFailedError,
   isWaitUntilIntentExecutedFailed,
   isIntentCreationUnknownError,
-  WalletAbstractionService,
   Erc20Service,
   calculateFeeAmount,
   type SpokeProvider,
