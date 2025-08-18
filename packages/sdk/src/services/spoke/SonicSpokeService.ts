@@ -5,10 +5,11 @@ import { wrappedSonicAbi } from '../../abis/wrappedSonic.abi.js';
 import type { SonicSpokeProvider } from '../../entities/index.js';
 import type { EvmContractCall, EvmReturnType, PromiseEvmTxReturnType, Result } from '../../types.js';
 import { Erc20Service } from '../index.js';
-import { MoneyMarketService } from '../moneyMarket/MoneyMarketService.js';
+import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
 import { getHubAssetInfo } from '../../constants.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import type { EvmRawTransaction, Hex, HubAddress, SpokeChainId } from '@sodax/types';
+import type { MoneyMarketDataService } from '../../moneyMarket/MoneyMarketDataService.js';
 
 export type SonicSpokeDepositParams = {
   from: Address; // The address of the user on the spoke chain
@@ -240,7 +241,7 @@ export class SonicSpokeService {
     token: Address,
     amount: bigint,
     spokeProvider: SonicSpokeProvider,
-    moneyMarketService: MoneyMarketService,
+    dataService: MoneyMarketDataService,
   ): Promise<WithdrawInfo> {
     const assetConfig = getHubAssetInfo(spokeProvider.chainConfig.chain.id, token);
 
@@ -251,8 +252,8 @@ export class SonicSpokeService {
     const vaultAddress = assetConfig.vault;
 
     const [normalizedIncome, reserveData] = await Promise.all([
-      moneyMarketService.getReserveNormalizedIncome(moneyMarketService.config.lendingPool, vaultAddress),
-      moneyMarketService.getReserveData(moneyMarketService.config.lendingPool, vaultAddress),
+      dataService.getReserveNormalizedIncome(vaultAddress),
+      dataService.getReserveData(vaultAddress),
     ]);
 
     const aTokenAddress = reserveData.aTokenAddress;
@@ -277,7 +278,7 @@ export class SonicSpokeService {
     token: Address,
     amount: bigint,
     chainId: SpokeChainId,
-    moneyMarketService: MoneyMarketService,
+    dataService: MoneyMarketDataService,
   ): Promise<BorrowInfo> {
     const assetConfig = getHubAssetInfo(chainId, token);
 
@@ -286,7 +287,7 @@ export class SonicSpokeService {
     }
 
     const vaultAddress = assetConfig.vault;
-    const reserveData = await moneyMarketService.getReserveData(moneyMarketService.config.lendingPool, vaultAddress);
+    const reserveData = await dataService.getReserveData(vaultAddress);
     const variableDebtTokenAddress = reserveData.variableDebtTokenAddress;
 
     return {
