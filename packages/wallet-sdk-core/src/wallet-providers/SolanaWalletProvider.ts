@@ -30,26 +30,30 @@ interface WalletContextState {
 }
 
 // Direct keypair pattern configs
-export type SolanaPkWalletConfig = {
+export type PrivateKeySolanaWalletConfig = {
   privateKey: Uint8Array;
   endpoint: string;
 };
 
 // Wallet adapter pattern config
-export type SolanaWalletAdapterConfig = {
+export type BrowserExtensionSolanaWalletConfig = {
   wallet: WalletContextState;
   connection: Connection;
 };
 
 // Unified config type
-export type SolanaWalletConfig = SolanaPkWalletConfig | SolanaWalletAdapterConfig;
+export type SolanaWalletConfig = PrivateKeySolanaWalletConfig | BrowserExtensionSolanaWalletConfig;
 
 // Type guards
-function isPkWalletConfig(walletConfig: SolanaWalletConfig): walletConfig is SolanaPkWalletConfig {
+function isPrivateKeySolanaWalletConfig(
+  walletConfig: SolanaWalletConfig,
+): walletConfig is PrivateKeySolanaWalletConfig {
   return 'privateKey' in walletConfig;
 }
 
-function isWalletAdapterConfig(walletConfig: SolanaWalletConfig): walletConfig is SolanaWalletAdapterConfig {
+function isBrowserExtensionSolanaWalletConfig(
+  walletConfig: SolanaWalletConfig,
+): walletConfig is BrowserExtensionSolanaWalletConfig {
   return 'wallet' in walletConfig && !(walletConfig.wallet instanceof Keypair);
 }
 
@@ -59,11 +63,11 @@ export class SolanaWalletProvider implements ISolanaWalletProvider {
   private readonly isAdapterMode: boolean;
 
   constructor(walletConfig: SolanaWalletConfig) {
-    if (isPkWalletConfig(walletConfig)) {
+    if (isPrivateKeySolanaWalletConfig(walletConfig)) {
       this.wallet = Keypair.fromSecretKey(walletConfig.privateKey);
       this.connection = new Connection(walletConfig.endpoint, 'confirmed');
       this.isAdapterMode = false;
-    } else if (isWalletAdapterConfig(walletConfig)) {
+    } else if (isBrowserExtensionSolanaWalletConfig(walletConfig)) {
       this.wallet = walletConfig.wallet;
       this.connection = walletConfig.connection;
       this.isAdapterMode = true;

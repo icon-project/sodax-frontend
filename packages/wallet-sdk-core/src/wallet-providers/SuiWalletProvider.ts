@@ -8,29 +8,29 @@ import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginat
 import { signTransaction } from '@mysten/wallet-standard';
 
 // Private key wallet config
-export type SuiPkWalletConfig = {
+export type PrivateKeySuiWalletConfig = {
   rpcUrl: string;
   mnemonics: string;
 };
 
 // Browser extension wallet config
-export type SuiBrowserExtensionWalletConfig = {
+export type BrowserExtensionSuiWalletConfig = {
   client: SuiClient;
   wallet: any;
   account: any;
 };
 
 // Unified config type
-export type SuiWalletConfig = SuiPkWalletConfig | SuiBrowserExtensionWalletConfig;
+export type SuiWalletConfig = PrivateKeySuiWalletConfig | BrowserExtensionSuiWalletConfig;
 
 // Type guards
-function isPkWalletConfig(walletConfig: SuiWalletConfig): walletConfig is SuiPkWalletConfig {
+function isPrivateKeySuiWalletConfig(walletConfig: SuiWalletConfig): walletConfig is PrivateKeySuiWalletConfig {
   return 'mnemonics' in walletConfig;
 }
 
-function isBrowserExtensionWalletConfig(
+function isBrowserExtensionSuiWalletConfig(
   walletConfig: SuiWalletConfig,
-): walletConfig is SuiBrowserExtensionWalletConfig {
+): walletConfig is BrowserExtensionSuiWalletConfig {
   return 'wallet' in walletConfig && 'account' in walletConfig;
 }
 
@@ -42,11 +42,11 @@ export class SuiWalletProvider implements ISuiWalletProvider {
   private isPkMode: boolean;
 
   constructor(walletConfig: SuiWalletConfig) {
-    if (isPkWalletConfig(walletConfig)) {
+    if (isPrivateKeySuiWalletConfig(walletConfig)) {
       this.client = new SuiClient({ url: walletConfig.rpcUrl });
       this.keyPair = Ed25519Keypair.deriveKeypair(walletConfig.mnemonics);
       this.isPkMode = true;
-    } else if (isBrowserExtensionWalletConfig(walletConfig)) {
+    } else if (isBrowserExtensionSuiWalletConfig(walletConfig)) {
       this.client = walletConfig.client;
       this.wallet = walletConfig.wallet;
       this.account = walletConfig.account;

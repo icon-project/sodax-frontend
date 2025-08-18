@@ -53,7 +53,7 @@ export class EvmWalletProvider implements IEvmWalletProvider {
         chain,
         transport: http(config.rpcUrl ?? chain.rpcUrls.default.http[0]),
       });
-    } else if (isWalletClientEvmWalletConfig(config)) {
+    } else if (isBrowserExtensionEvmWalletConfig(config)) {
       this.walletClient = config.walletClient;
       this.publicClient = config.publicClient;
     } else {
@@ -103,12 +103,12 @@ export type PrivateKeyEvmWalletConfig = {
   rpcUrl?: `http${string}`;
 };
 
-export type WalletClientEvmWalletConfig = {
+export type BrowserExtensionEvmWalletConfig = {
   walletClient: WalletClient<Transport, Chain, Account>;
   publicClient: PublicClient;
 };
 
-export type EvmWalletConfig = PrivateKeyEvmWalletConfig | WalletClientEvmWalletConfig;
+export type EvmWalletConfig = PrivateKeyEvmWalletConfig | BrowserExtensionEvmWalletConfig;
 
 /**
  * EVM Type Guards
@@ -118,6 +118,6 @@ export function isPrivateKeyEvmWalletConfig(config: EvmWalletConfig): config is 
   return 'privateKey' in config && config.privateKey.startsWith('0x');
 }
 
-export function isWalletClientEvmWalletConfig(config: EvmWalletConfig): config is WalletClientEvmWalletConfig {
+export function isBrowserExtensionEvmWalletConfig(config: EvmWalletConfig): config is BrowserExtensionEvmWalletConfig {
   return 'walletClient' in config && 'publicClient' in config;
 }
