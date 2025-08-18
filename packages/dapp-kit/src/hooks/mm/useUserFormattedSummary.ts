@@ -22,7 +22,7 @@ import { useSpokeProvider } from '../provider/useSpokeProvider';
  *   - error: Any error that occurred during data fetching
  */
 export function useUserFormattedSummary(
-  spokeChainId: ChainId,
+  spokeChainId: ChainId | undefined,
   address: string | undefined,
 ): UseQueryResult<FormatUserSummaryResponse<FormatReserveUSDResponse> | undefined, Error> {
   const { sodax } = useSodaxContext();

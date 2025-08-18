@@ -21,7 +21,7 @@ import { useSpokeProvider } from '../provider/useSpokeProvider';
  *   - error: Any error that occurred during data fetching
  */
 export function useUserReservesData(
-  spokeChainId: ChainId,
+  spokeChainId: ChainId | undefined,
   address: string | undefined,
   refetchInterval = 5000,
 ): UseQueryResult<readonly [readonly UserReserveData[], number] | undefined, Error> {
