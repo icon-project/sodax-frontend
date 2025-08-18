@@ -1,12 +1,12 @@
-import BigNumber from 'bignumber.js';
-import { type BigNumberValue } from '../../bignumber.js';
+import type BigNumber from 'bignumber.js';
+import type { BigNumberValue } from '../../bignumber.js';
 import {
   getLinearBalance,
   getMarketReferenceCurrencyAndUsdBalance,
   getCompoundedBalance,
 } from '../../pool-math.js';
-import { type FormatReserveUSDResponse } from '../reserve/index.js';
-import { type CombinedReserveData } from './index.js';
+import type { FormatReserveUSDResponse } from '../reserve/index.js';
+import type { CombinedReserveData } from './index.js';
 
 export interface UserReserveSummaryRequest<
   T extends FormatReserveUSDResponse = FormatReserveUSDResponse,

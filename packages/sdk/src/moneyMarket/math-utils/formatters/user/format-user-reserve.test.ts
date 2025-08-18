@@ -5,7 +5,7 @@ import {
   type UserReserveSummaryResponse,
 } from './generate-user-reserve-summary.js';
 
-import { type ComputedUserReserve } from './index.js';
+import type { ComputedUserReserve } from './index.js';
 import { describe, expect, it } from 'vitest';
 
 describe('formatUserReserve', () => {

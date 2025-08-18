@@ -4,10 +4,10 @@ import {
   calculateAvailableBorrowsMarketReferenceCurrency,
   calculateHealthFactorFromBalances,
 } from '../../pool-math.js';
-import { type FormatReserveUSDResponse } from '../reserve/index.js';
+import type { FormatReserveUSDResponse } from '../reserve/index.js';
 import { normalizedToUsd } from '../usd/normalized-to-usd.js';
 import { calculateUserReserveTotals } from './calculate-user-reserve-totals.js';
-import { type UserReserveSummaryResponse } from './generate-user-reserve-summary.js';
+import type { UserReserveSummaryResponse } from './generate-user-reserve-summary.js';
 
 export interface RawUserSummaryRequest {
   userReserves: UserReserveSummaryResponse[];

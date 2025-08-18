@@ -37,7 +37,7 @@ export function calculateAccruedIncentives({
 
   const timeDelta = actualCurrentTimestamp - reserveIndexTimestamp;
 
-  let currentReserveIndex;
+  let currentReserveIndex: BigNumber;
   if (
     reserveIndexTimestamp >= Number(currentTimestamp) ||
     reserveIndexTimestamp >= emissionEndTimestamp

@@ -2,10 +2,10 @@ import BigNumber from 'bignumber.js';
 import { normalize } from '../../bignumber.js';
 import { rayDiv } from '../../ray.math.js';
 import { calculateAccruedIncentives } from './calculate-accrued-incentives.js';
-import {
-  type ReservesIncentiveDataHumanized,
-  type UserReservesIncentivesDataHumanized,
-  type UserReserveCalculationData,
+import type {
+  ReservesIncentiveDataHumanized,
+  UserReservesIncentivesDataHumanized,
+  UserReserveCalculationData,
 } from './types.js';
 
 export interface CalculateUserReserveIncentivesRequest {

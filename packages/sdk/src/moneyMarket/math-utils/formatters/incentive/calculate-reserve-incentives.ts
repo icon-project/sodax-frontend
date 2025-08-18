@@ -1,6 +1,6 @@
 import { normalize } from '../../bignumber.js';
 import { calculateIncentiveAPR } from './calculate-incentive-apr.js';
-import { type ReservesIncentiveDataHumanized, type RewardInfoHumanized } from './types.js';
+import type { ReservesIncentiveDataHumanized, RewardInfoHumanized } from './types.js';
 
 export interface CalculateReserveIncentivesRequest {
   reserves: Array<{

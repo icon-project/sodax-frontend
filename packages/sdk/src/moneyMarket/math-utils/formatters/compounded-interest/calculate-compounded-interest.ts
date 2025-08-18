@@ -1,8 +1,8 @@
-import BigNumber from 'bignumber.js';
+import type BigNumber from 'bignumber.js';
 import { valueToZDBigNumber } from '../../bignumber.js';
 import { SECONDS_PER_YEAR } from '../../constants.js';
 import { RAY, rayPow } from '../../ray.math.js';
-import { type CalculateCompoundedRateRequest } from './types.js';
+import type { CalculateCompoundedRateRequest } from './types.js';
 
 export function calculateCompoundedRate({
   rate,

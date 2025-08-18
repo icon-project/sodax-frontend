@@ -2,10 +2,10 @@ import {
   calculateUserReserveIncentives,
   type UserReserveIncentive,
 } from './calculate-user-reserve-incentives.js';
-import {
-  type ReservesIncentiveDataHumanized,
-  type UserReservesIncentivesDataHumanized,
-  type UserReserveCalculationData,
+import type {
+  ReservesIncentiveDataHumanized,
+  UserReservesIncentivesDataHumanized,
+  UserReserveCalculationData,
 } from './types.js';
 
 // Indexed by reward token address
@@ -35,7 +35,7 @@ export function calculateAllUserIncentives({
 }: CalculateAllUserIncentivesRequest): UserIncentiveDict {
   // calculate incentive per token
   const allRewards = userIncentives
-    .map((userIncentive: UserReservesIncentivesDataHumanized) => {
+    .flatMap((userIncentive: UserReservesIncentivesDataHumanized) => {
       const reserve: ReservesIncentiveDataHumanized | undefined =
         reserveIncentives.find(
           (reserve: ReservesIncentiveDataHumanized) =>
@@ -59,8 +59,7 @@ export function calculateAllUserIncentives({
       }
 
       return [];
-    })
-    .flat();
+    });
 
   // From the array of all deposit and borrow incentives, create dictionary indexed by reward token address
   const incentiveDict: UserIncentiveDict = {};

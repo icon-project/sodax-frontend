@@ -2,9 +2,9 @@ import {
   calculateReserveIncentives,
   type CalculateReserveIncentivesResponse,
 } from './calculate-reserve-incentives.js';
-import {
-  type ReserveCalculationData,
-  type ReservesIncentiveDataHumanized,
+import type {
+  ReserveCalculationData,
+  ReservesIncentiveDataHumanized,
 } from './types.js';
 
 // Indexed by reserve underlyingAsset address

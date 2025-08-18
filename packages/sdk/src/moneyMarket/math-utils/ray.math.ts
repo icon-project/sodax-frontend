@@ -1,4 +1,4 @@
-import BigNumber from 'bignumber.js';
+import type BigNumber from 'bignumber.js';
 import { type BigNumberValue, valueToZDBigNumber } from './bignumber.js';
 
 export const WAD = valueToZDBigNumber(10).pow(18);

@@ -1,4 +1,4 @@
-import { type ReservesDataHumanized } from '@sodax/sdk';
+import type { ReservesDataHumanized } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 /**

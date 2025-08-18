@@ -1,4 +1,4 @@
-import { type BigNumberValue } from '../../bignumber.js';
+import type { BigNumberValue } from '../../bignumber.js';
 
 export interface CalculateCompoundedRateRequest {
   rate: BigNumberValue;

@@ -1,7 +1,7 @@
-import BigNumber from 'bignumber.js';
+import type BigNumber from 'bignumber.js';
 import { valueToBigNumber, valueToZDBigNumber } from '../../bignumber.js';
-import { type FormatReserveUSDResponse } from '../reserve/index.js';
-import { type UserReserveSummaryResponse } from './generate-user-reserve-summary.js';
+import type { FormatReserveUSDResponse } from '../reserve/index.js';
+import type { UserReserveSummaryResponse } from './generate-user-reserve-summary.js';
 
 interface UserReserveTotalsRequest {
   userReserves: UserReserveSummaryResponse[];
