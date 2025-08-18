@@ -105,7 +105,6 @@ describe('SolverService', () => {
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
     getWalletAddress: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999' as `0x${string}`),
-    getWalletAddressBytes: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999' as `0x${string}`),
     waitForTransactionReceipt: vi.fn(),
   } as unknown as IEvmWalletProvider;
 
@@ -154,8 +153,8 @@ describe('SolverService', () => {
   // Helper function to create mock intent with resolved addresses
   const createMockIntent = async (params: CreateIntentParams): Promise<Intent> => {
     const creator = await mockBscSpokeProvider.walletProvider.getWalletAddress();
-    const srcAddress = await mockEvmWalletProvider.getWalletAddressBytes();
-    const dstAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+    const srcAddress = await mockEvmWalletProvider.getWalletAddress();
+    const dstAddress = await mockEvmWalletProvider.getWalletAddress();
 
     return {
       intentId: BigInt(1),

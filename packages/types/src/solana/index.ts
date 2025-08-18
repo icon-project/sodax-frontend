@@ -98,7 +98,6 @@ export type RawTransaction = {
 
 export interface ISolanaWalletProvider extends WalletAddressProvider {
   getWalletAddress: () => Promise<string>;
-  getWalletAddressBytes: () => Promise<`0x${string}`>;
   sendTransaction: (rawTransaction: Uint8Array | Array<number>) => Promise<TransactionSignature>;
   waitForConfirmation: (
     signature: TransactionSignature,

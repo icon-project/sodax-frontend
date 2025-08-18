@@ -1,5 +1,4 @@
 import { MsgExecuteContract, MsgExecuteContractCompat } from '@injectivelabs/sdk-ts';
-import { toHex } from 'viem';
 import { createTransaction } from '@injectivelabs/sdk-ts';
 import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
@@ -63,10 +62,6 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     }
 
     return Promise.resolve(this.walletAddress);
-  }
-
-  async getWalletAddressBytes(): Promise<Hex> {
-    return toHex(Buffer.from(await this.getWalletAddress(), 'utf-8'));
   }
 
   async execute(

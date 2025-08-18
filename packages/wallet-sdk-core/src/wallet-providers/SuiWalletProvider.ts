@@ -1,9 +1,6 @@
-import { bcs } from '@mysten/sui/bcs';
 import { SuiClient } from '@mysten/sui/client';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
-import { toHex } from 'viem';
-import type { Hex } from '@sodax/types';
 import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@sodax/types';
 import { signTransaction } from '@mysten/wallet-standard';
 
@@ -130,10 +127,5 @@ export class SuiWalletProvider implements ISuiWalletProvider {
 
     const browserAccount = this.account as any;
     return browserAccount.address;
-  }
-
-  async getWalletAddressBytes(): Promise<Hex> {
-    const walletAddress = await this.getWalletAddress();
-    return toHex(bcs.Address.serialize(walletAddress).toBytes());
   }
 }

@@ -18,6 +18,7 @@ import {
   type MigrationParams,
   LockupPeriod,
   type UnifiedBnUSDMigrateParams,
+  encodeAddress,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, ICON_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { IconWalletProvider } from '@sodax/wallet-sdk-core';
@@ -87,7 +88,8 @@ async function depositTo(token: IconAddress, amount: bigint, recipient: Address)
 }
 
 async function withdrawAsset(token: IconAddress, amount: bigint, recipient: IconAddress) {
-  const walletAddressBytes = await iconSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await iconSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(ICON_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -109,7 +111,8 @@ async function withdrawAsset(token: IconAddress, amount: bigint, recipient: Icon
 }
 
 async function supply(token: IconAddress, amount: bigint) {
-  const walletAddressBytes = await iconSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await iconSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(ICON_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -118,7 +121,6 @@ async function supply(token: IconAddress, amount: bigint) {
 
   const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, iconSpokeChainConfig.chain.id);
 
-  const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
   const txHash = await SpokeService.deposit(
     {
       from: walletAddress,
@@ -134,7 +136,8 @@ async function supply(token: IconAddress, amount: bigint) {
 }
 
 async function borrow(token: IconAddress, amount: bigint) {
-  const walletAddressBytes = await iconSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await iconSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(ICON_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -154,7 +157,8 @@ async function borrow(token: IconAddress, amount: bigint) {
 }
 
 async function withdraw(token: IconAddress, amount: bigint) {
-  const walletAddressBytes = await iconSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await iconSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(ICON_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -175,7 +179,8 @@ async function withdraw(token: IconAddress, amount: bigint) {
 }
 
 async function repay(token: IconAddress, amount: bigint) {
-  const walletAddressBytes = await iconSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await iconSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(ICON_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     iconSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -183,7 +188,6 @@ async function repay(token: IconAddress, amount: bigint) {
   );
   const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, iconSpokeChainConfig.chain.id);
 
-  const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;
   const txHash: Hash = await SpokeService.deposit(
     {
       from: walletAddress,

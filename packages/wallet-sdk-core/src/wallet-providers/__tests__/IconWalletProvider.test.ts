@@ -57,25 +57,4 @@ describe('IconWalletProvider', () => {
       await expect(provider.getWalletAddress()).rejects.toThrow('Wallet not initialized');
     });
   });
-
-  describe('getWalletAddressBytes', () => {
-    it('should convert hx address to bytes', async () => {
-      const provider = new IconWalletProvider({
-        walletAddress: mockWalletAddress,
-        rpcUrl: mockRpcUrl,
-      });
-
-      const bytes = await provider.getWalletAddressBytes();
-      expect(bytes).toBe(`0x00${mockWalletAddress.slice(2)}`);
-    });
-
-    it('should throw error if wallet is not initialized', async () => {
-      const provider = new IconWalletProvider({
-        walletAddress: undefined,
-        rpcUrl: mockRpcUrl,
-      });
-
-      await expect(provider.getWalletAddressBytes()).rejects.toThrow('Wallet not initialized');
-    });
-  });
 });

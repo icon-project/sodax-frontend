@@ -147,10 +147,12 @@ export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   data: IntentErrorData<T>;
 };
 
-export type SwapParams<S extends SpokeProvider> = Prettify<{
-  intentParams: CreateIntentParams;
-  spokeProvider: S;
-} & OptionalFee>;
+export type SwapParams<S extends SpokeProvider> = Prettify<
+  {
+    intentParams: CreateIntentParams;
+    spokeProvider: S;
+  } & OptionalFee
+>;
 
 export class SolverService {
   readonly config: SolverServiceConfig;
@@ -463,7 +465,9 @@ export class SolverService {
     spokeProvider,
     fee = this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>> {
+  }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<
+    Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>
+  > {
     try {
       // first create the deposit with intent data on spoke chain
       const createIntentResult = await this.createIntent({

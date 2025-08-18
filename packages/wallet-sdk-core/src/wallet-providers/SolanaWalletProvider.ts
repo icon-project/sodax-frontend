@@ -11,7 +11,6 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js';
 import type {
-  Hex,
   ISolanaWalletProvider,
   SolanaAccountMeta,
   SolanaBase58PublicKey,
@@ -181,13 +180,6 @@ export class SolanaWalletProvider implements ISolanaWalletProvider {
 
   public async getWalletAddress(): Promise<string> {
     return this.getWalletBase58PublicKey();
-  }
-
-  public async getWalletAddressBytes(): Promise<Hex> {
-    if (!this.wallet.publicKey) {
-      throw new Error('Wallet public key is not initialized');
-    }
-    return `0x${Buffer.from(this.wallet.publicKey.toBytes()).toString('hex')}`;
   }
 
   public async getAssociatedTokenAddress(mint: SolanaBase58PublicKey): Promise<SolanaBase58PublicKey> {

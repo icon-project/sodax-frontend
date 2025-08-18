@@ -72,16 +72,12 @@ const mockBnUSDNewToLegacyParams: UnifiedBnUSDMigrateParams = {
 
 const mockIconWalletProvider = {
   getWalletAddress: vi.fn().mockResolvedValueOnce('hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6'),
-  getWalletAddressBytes: vi
-    .fn()
-    .mockResolvedValueOnce(encodeAddress(ICON_MAINNET_CHAIN_ID, 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6')),
   sendTransaction: vi.fn(),
   waitForTransactionReceipt: vi.fn(),
 } satisfies IIconWalletProvider;
 
 const mockSonicWalletProvider = {
   getWalletAddress: vi.fn().mockResolvedValueOnce(mockEvmAddress),
-  getWalletAddressBytes: vi.fn().mockResolvedValueOnce(encodeAddress(SONIC_MAINNET_CHAIN_ID, mockEvmAddress)),
   sendTransaction: vi.fn(),
   waitForTransactionReceipt: vi.fn(),
 } satisfies IEvmWalletProvider;

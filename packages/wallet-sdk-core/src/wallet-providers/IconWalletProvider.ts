@@ -69,11 +69,6 @@ export class IconWalletProvider implements IIconWalletProvider {
     }
     return isIconPkWallet(this.wallet) ? (this.wallet.wallet.getAddress() as IconEoaAddress) : this.wallet.wallet;
   }
-
-  async getWalletAddressBytes(): Promise<Hex> {
-    const address = await this.getWalletAddress();
-    return `0x${Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex').toString('hex')}`;
-  }
 }
 
 /**

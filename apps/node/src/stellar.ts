@@ -76,7 +76,8 @@ async function getBalance(token: string) {
 }
 
 async function depositTo(token: string, amount: bigint, recipient: Address) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const data = EvmAssetManagerService.depositToData(
     {
       token,
@@ -105,7 +106,8 @@ async function withdrawAsset(
   amount: bigint,
   recipient: string, // stellar address
 ) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -127,7 +129,8 @@ async function withdrawAsset(
 }
 
 async function supply(token: string, amount: bigint) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -151,7 +154,8 @@ async function supply(token: string, amount: bigint) {
 }
 
 async function borrow(token: string, amount: bigint) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -172,7 +176,8 @@ async function borrow(token: string, amount: bigint) {
 }
 
 async function withdraw(token: string, amount: bigint) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -195,7 +200,8 @@ async function withdraw(token: string, amount: bigint) {
 }
 
 async function repay(token: string, amount: bigint) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,

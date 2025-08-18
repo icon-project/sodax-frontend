@@ -13,6 +13,7 @@ import {
   getMoneyMarketConfig,
   Sodax,
   type SodaxConfig,
+  encodeAddress,
 } from '@sodax/sdk';
 import { SOLANA_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { Keypair, PublicKey } from '@solana/web3.js';
@@ -167,7 +168,8 @@ async function withdrawAsset(token: PublicKey, amount: bigint, recipient: Addres
     solanaSpokeChainConfig.chain.id,
   );
 
-  const walletAddressBytes = await solanaSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await solanaSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(SOLANA_MAINNET_CHAIN_ID, walletAddress);
   const txHash: Hash = await SpokeService.callWallet(walletAddressBytes, data, solanaSpokeProvider, hubProvider);
 
   await sleep(3);
@@ -202,10 +204,11 @@ async function supply(token: PublicKey, amount: bigint) {
 
 async function borrow(token: PublicKey, amount: bigint) {
   const hubWallet = await getUserWallet();
-  const walletAddressBytes = await solanaSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await solanaSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(SOLANA_MAINNET_CHAIN_ID, walletAddress);
   const data: Hex = sodax.moneyMarket.buildBorrowData(
     hubWallet,
-    await solanaSpokeProvider.walletProvider.getWalletAddressBytes(),
+    walletAddressBytes,
     token.toString(),
     amount,
     solanaSpokeChainConfig.chain.id,
@@ -226,10 +229,11 @@ async function borrow(token: PublicKey, amount: bigint) {
 }
 
 async function withdraw(token: PublicKey, amount: bigint) {
-  const [hubWallet, walletAddressBytes] = await Promise.all([
+  const [hubWallet, walletAddress] = await Promise.all([
     getUserWallet(),
-    solanaSpokeProvider.walletProvider.getWalletAddressBytes(),
+    solanaSpokeProvider.walletProvider.getWalletAddress(),
   ]);
+  const walletAddressBytes = encodeAddress(SOLANA_MAINNET_CHAIN_ID, walletAddress);
   const data: Hex = sodax.moneyMarket.buildWithdrawData(
     hubWallet,
     walletAddressBytes,
@@ -288,7 +292,8 @@ const sleep = (seconds: number) => {
 };
 
 async function getUserWallet() {
-  const walletAddressBytes = await solanaSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await solanaSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(SOLANA_MAINNET_CHAIN_ID, walletAddress);
   return await EvmWalletAbstraction.getUserHubWalletAddress(
     solanaSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,

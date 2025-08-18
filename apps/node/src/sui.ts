@@ -14,6 +14,7 @@ import {
   type SodaxConfig,
   type SolverConfigParams,
   type UnifiedBnUSDMigrateParams,
+  encodeAddress,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
@@ -75,7 +76,8 @@ async function getBalance(token: string) {
 }
 
 async function depositTo(token: string, amount: bigint, recipient: Address): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -110,7 +112,8 @@ async function withdrawAsset(
   amount: bigint,
   recipient: string, // sui address
 ): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -119,7 +122,7 @@ async function withdrawAsset(
   const data = EvmAssetManagerService.withdrawAssetData(
     {
       token,
-      to: SuiSpokeProvider.getAddressBCSBytes(recipient),
+      to: encodeAddress(SUI_MAINNET_CHAIN_ID, recipient),
       amount,
     },
     hubProvider,
@@ -131,7 +134,8 @@ async function withdrawAsset(
 }
 
 async function supply(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -155,7 +159,8 @@ async function supply(token: string, amount: bigint): Promise<void> {
 }
 
 async function borrow(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -176,7 +181,8 @@ async function borrow(token: string, amount: bigint): Promise<void> {
 }
 
 async function withdraw(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -197,7 +203,8 @@ async function withdraw(token: string, amount: bigint): Promise<void> {
 }
 
 async function repay(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,

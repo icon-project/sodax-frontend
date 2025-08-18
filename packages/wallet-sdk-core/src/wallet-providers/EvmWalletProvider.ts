@@ -1,4 +1,4 @@
-import type { ChainId, EvmRawTransaction, EvmRawTransactionReceipt, Hex, IEvmWalletProvider } from '@sodax/types';
+import type { ChainId, EvmRawTransaction, EvmRawTransactionReceipt, IEvmWalletProvider } from '@sodax/types';
 import type { Account, Address, Chain, Transport, Hash, PublicClient, WalletClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createWalletClient, createPublicClient, http } from 'viem';
@@ -85,10 +85,6 @@ export class EvmWalletProvider implements IEvmWalletProvider {
   }
 
   async getWalletAddress(): Promise<Address> {
-    return this.walletClient.account.address;
-  }
-
-  async getWalletAddressBytes(): Promise<Hex> {
     return this.walletClient.account.address;
   }
 }

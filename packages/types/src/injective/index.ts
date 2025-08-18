@@ -94,7 +94,6 @@ export interface IInjectiveWalletProvider extends WalletAddressProvider {
     memo?: string,
   ): Promise<InjectiveRawTransaction>;
   getWalletAddress: () => Promise<InjectiveEoaAddress>;
-  getWalletAddressBytes: () => Promise<Hex>;
   execute: (
     senderAddress: InjectiveEoaAddress,
     contractAddress: string,
