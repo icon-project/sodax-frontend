@@ -6,13 +6,14 @@ import { Label } from '@/components/ui/label';
 import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
-import { useEvmSwitchChain } from '@sodax/wallet-sdk';
+import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
 
 export function RepayButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
 
-  const spokeProvider = useSpokeProvider(token.xChainId);
+  const walletProvider = useWalletProvider(token.xChainId);
+  const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay(token, spokeProvider);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'repay', spokeProvider);
   const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);

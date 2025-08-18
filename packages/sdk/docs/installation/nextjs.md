@@ -44,49 +44,8 @@ yarn add @sodax/sdk @sodax/types viem
 pnpm add @sodax/sdk @sodax/types viem
 ```
 
-## Step 3: Configure SodaxConfig and Create Sodax Instance
+## Step 3: Create Sodax Instance
 
-Create a configuration file for your Sodax setup. Create `lib/sodax-config.ts` in your project:
-
-```typescript
-// lib/sodax-config.ts
-import {
-    getHubChainConfig,
-    getMoneyMarketConfig,
-    type PartnerFee,
-    type SodaxConfig,
-    type SolverConfigParams,
-} from '@sodax/sdk';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-
-const hubChainId = SONIC_MAINNET_CHAIN_ID;
-const hubRpcUrl = 'https://rpc.soniclabs.com';
-
-const hubConfig = {
-    hubRpcUrl,
-    chainConfig: getHubChainConfig(hubChainId),
-} satisfies SodaxConfig['hubProviderConfig'];
-
-const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
-
-export const partnerFeePercentage = {
-    address: '0x0Ab764AB3816cD036Ea951bE973098510D8105A6', // NOTE: replace with actual partner address
-    percentage: 100, // 100 basis points = 1%
-} satisfies PartnerFee;
-
-export const solverConfig = {
-    intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-    solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-    partnerFee: partnerFeePercentage,
-} satisfies SolverConfigParams;
-
-export const sodaxConfig = {
-    hubProviderConfig: hubConfig,
-    moneyMarket: moneyMarketConfig,
-    solver: solverConfig,
-    relayerApiEndpoint: 'https://xcall-relay.nw.iconblockchain.xyz',
-} satisfies SodaxConfig;
-```
 
 Create a Sodax instance provider. Create `providers/SodaxProvider.tsx`:
 
@@ -96,10 +55,9 @@ Create a Sodax instance provider. Create `providers/SodaxProvider.tsx`:
 
 import { createContext, useContext, type ReactNode } from 'react';
 import { Sodax } from '@sodax/sdk';
-import { sodaxConfig } from '@/lib/sodax-config';
 
 // Create Sodax instance
-const sodaxInstance = new Sodax(sodaxConfig);
+const sodaxInstance = new Sodax();
 
 // Create context
 const SodaxContext = createContext<Sodax | null>(null);
