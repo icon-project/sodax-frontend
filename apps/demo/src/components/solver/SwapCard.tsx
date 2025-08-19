@@ -18,6 +18,7 @@ import {
   type CreateIntentParams,
   type Hex,
   type Intent,
+  IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
   spokeChainConfig,
   supportedSpokeChains,
@@ -41,7 +42,7 @@ import { useAppStore } from '@/zustand/useAppStore';
 export default function SwapCard({
   setOrders,
 }: {
-  setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; intentTxHash: Hex }[]>) => void;
+  setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>) => void;
 }) {
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
@@ -182,9 +183,9 @@ export default function SwapCard({
     const result = await swap(intentOrderPayload);
 
     if (result.ok) {
-      const [response, intent, intentTxHash] = result.value;
+      const [response, intent, intentDeliveryInfo] = result.value;
 
-      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, intentTxHash }]);
+      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, intentDeliveryInfo }]);
     } else {
       console.error('Error creating and submitting intent:', result.error);
     }

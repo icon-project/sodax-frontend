@@ -6,6 +6,7 @@ import {
   type EvmHubProvider,
   EvmSpokeProvider,
   type GetRelayResponse,
+  type IntentDeliveryInfo,
   type IntentRelayRequest,
   type RelayErrorCode,
   SonicSpokeProvider,
@@ -147,10 +148,12 @@ export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   data: IntentErrorData<T>;
 };
 
-export type SwapParams<S extends SpokeProvider> = Prettify<{
-  intentParams: CreateIntentParams;
-  spokeProvider: S;
-} & OptionalFee>;
+export type SwapParams<S extends SpokeProvider> = Prettify<
+  {
+    intentParams: CreateIntentParams;
+    spokeProvider: S;
+  } & OptionalFee
+>;
 
 export class SolverService {
   readonly config: SolverServiceConfig;
@@ -366,8 +369,8 @@ export class SolverService {
    *   - spokeProvider: The spoke provider instance.
    *   - fee: (Optional) Partner fee configuration.
    *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
-   * @returns {Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>>}
-   *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and packet data (Hex),
+   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>}
+   *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info,
    *   or an IntentError if the operation fails.
    *
    * @example
@@ -392,10 +395,10 @@ export class SolverService {
    * });
    *
    * if (swapResult.ok) {
-   *   const [solverExecutionResponse, intent, packetData] = swapResult.value;
+   *   const [solverExecutionResponse, intent, intentDeliveryInfo] = swapResult.value;
    *   console.log('Intent execution response:', solverExecutionResponse);
    *   console.log('Intent:', intent);
-   *   console.log('Packet data:', packetData);
+   *   console.log('Intent delivery info:', intentDeliveryInfo);
    * } else {
    *   // handle error
    * }
@@ -406,7 +409,7 @@ export class SolverService {
     fee = this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<
-    Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>
+    Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
   > {
     return this.createAndSubmitIntent({
       intentParams: params,
@@ -423,8 +426,8 @@ export class SolverService {
    *   - spokeProvider: The spoke provider instance.
    *   - fee: (Optional) Partner fee configuration.
    *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
-   * @returns {Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>>}
-   *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and packet data (Hex),
+   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>}
+   *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info,
    *   or an IntentError if the operation fails.
    *
    * @example
@@ -450,10 +453,10 @@ export class SolverService {
    *
    *
    * if (createAndSubmitIntentResult.ok) {
-   *   const [solverExecutionResponse, intent, packetData] = createAndSubmitIntentResult.value;
+   *   const [solverExecutionResponse, intent, intentDeliveryInfo] = createAndSubmitIntentResult.value;
    *   console.log('Intent execution response:', solverExecutionResponse);
    *   console.log('Intent:', intent);
-   *   console.log('Packet data:', packetData);
+   *   console.log('Intent delivery info:', intentDeliveryInfo);
    * } else {
    *   // handle error
    * }
@@ -463,7 +466,9 @@ export class SolverService {
     spokeProvider,
     fee = this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>> {
+  }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<
+    Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
+  > {
     try {
       // first create the deposit with intent data on spoke chain
       const createIntentResult = await this.createIntent({
@@ -480,9 +485,9 @@ export class SolverService {
       // then submit the deposit tx hash of spoke chain to the intent relay
       const [spokeTxHash, intent, data] = createIntentResult.value;
 
-      let intentTxHash: string | null = null;
+      let dstIntentTxHash: string;
 
-      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const intentRelayChainId = getIntentRelayChainId(params.srcChain).toString();
         const submitPayload: IntentRelayRequest<'submit'> =
           params.srcChain === SOLANA_MAINNET_CHAIN_ID && data
@@ -525,14 +530,14 @@ export class SolverService {
             error: packet.error,
           };
         }
-        intentTxHash = packet.value.dst_tx_hash;
+        dstIntentTxHash = packet.value.dst_tx_hash;
       } else {
-        intentTxHash = spokeTxHash;
+        dstIntentTxHash = spokeTxHash;
       }
 
       // then post execution of intent order transaction executed on hub chain to Solver API
       const result = await this.postExecution({
-        intent_tx_hash: intentTxHash as `0x${string}`,
+        intent_tx_hash: dstIntentTxHash as `0x${string}`,
       });
 
       if (!result.ok) {
@@ -547,7 +552,18 @@ export class SolverService {
 
       return {
         ok: true,
-        value: [result.value, intent, intentTxHash as `0x${string}`],
+        value: [
+          result.value,
+          intent,
+          {
+            srcChainId: params.srcChain,
+            srcTxHash: spokeTxHash,
+            srcAddress: params.srcAddress,
+            dstChainId: params.dstChain,
+            dstTxHash: dstIntentTxHash,
+            dstAddress: params.dstAddress,
+          } satisfies IntentDeliveryInfo,
+        ],
       };
     } catch (error) {
       return {
@@ -713,7 +729,7 @@ export class SolverService {
    *   - spokeProvider: The spoke provider instance.
    *   - fee: (Optional) Partner fee configuration.
    *   - raw: (Optional) Whether to return the raw transaction data instead of executing it
-   * @returns {Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount], IntentError<'CREATION_FAILED'>>>} The encoded contract call or raw transaction data
+   * @returns {Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>>} The encoded contract call or raw transaction data, Intent and intent data as hex
    *
    * @example
    * const payload = {
@@ -739,9 +755,10 @@ export class SolverService {
    * });
    *
    * if (createIntentResult.ok) {
-   *   const [txResult, intent] = createIntentResult.value;
+   *   const [txResult, intent, intentData] = createIntentResult.value;
+   *   console.log('Transaction result:', txResult);
    *   console.log('Intent:', intent);
-   *   console.log('Packet data:', packetData);
+   *   console.log('Intent data:', intentData);
    * } else {
    *   // handle error
    * }
