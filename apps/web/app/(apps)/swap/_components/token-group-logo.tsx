@@ -24,9 +24,9 @@ const TokenGroupLogo: React.FC<TokenGroupLogoProps> = ({ className = '', tokens,
   return (
     <div className={`relative ${className}`}>
       {tokenCount > 1 ? (
-        <CurrencyGroupLogo currency={primaryToken as XToken} className="w-12 h-10" count={tokenCount} />
+        <CurrencyGroupLogo currency={primaryToken as XToken} count={tokenCount} />
       ) : (
-        <CurrencyLogo currency={primaryToken as XToken} className="w-12 h-10" />
+        <CurrencyLogo currency={primaryToken as XToken} />
       )}
     </div>
   );

@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import CurrencyLogo from '@/components/shared/currency-logo';
-import TokenGroupLogo from '@/components/shared/token-group-logo';
+import TokenGroupLogo from './token-group-logo';
 import TokenChainSelector from '@/components/shared/token-chain-selector';
 import { ChevronDownIcon, ChevronUpIcon, Search, SearchIcon, XIcon } from 'lucide-react';
 import { getAllSupportedSolverTokens } from '@/lib/utils';
@@ -220,13 +219,13 @@ const TokenSelectorDialog: React.FC<TokenSelectorDialogProps> = ({
                 return (
                   <div
                     key={symbol}
-                    className={`flex flex-col items-center gap-2 px-4 rounded-lg cursor-pointer transition-colors text-clay hover:text-espresso hover:scale-110 ${
+                    className={`flex flex-col items-center gap-2 px-4 rounded-lg cursor-pointer transition-colors text-clay hover:text-espresso hover:scale-110 transition-all duration-200 ${
                       isSelected ? 'text-espresso' : ''
                     }`}
                     onClick={() => handleTokenClick(symbol, tokens)}
                   >
                     <div className="relative">
-                      <TokenGroupLogo tokens={tokens} symbol={symbol} className="w-12 h-10" />
+                      <TokenGroupLogo tokens={tokens} symbol={symbol} />
                     </div>
                     <div className="flex flex-col items-center text-center">
                       <span className="text-(length:--body-small) font-medium font-['InterRegular'] text-sm">

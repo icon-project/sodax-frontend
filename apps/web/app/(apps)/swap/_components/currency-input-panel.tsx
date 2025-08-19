@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 import TokenSelectorDialog from './token-selector-dialog';
+import InteractiveModal from './interactive-modal';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -109,12 +110,10 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         </div>
       </div>
 
-      <TokenSelectorDialog
+      <InteractiveModal
         isOpen={isTokenSelectorOpen}
         onClose={() => setIsTokenSelectorOpen(false)}
         onTokenSelect={handleTokenSelect}
-        chainId={chainId}
-        selectedToken={currency}
       />
     </div>
   );
