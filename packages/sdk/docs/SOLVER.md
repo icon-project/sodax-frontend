@@ -246,8 +246,8 @@ Example for BSC -> ARB Intent Order:
     // handle error as described in Error Handling section
   }
 
-  // txHash, created Intent data as Intent & FeeAmount type, and packet data from relay
-  const [txHash, intent, packetData] = swapResult.value;
+  // solverExecutionResponse, created Intent data, and intent delivery info
+  const [solverExecutionResponse, intent, intentDeliveryInfo] = swapResult.value;
 
   /**
    *
@@ -269,8 +269,8 @@ Example for BSC -> ARB Intent Order:
     // handle error
   }
 
-  // txHash/rawTx, Intent & FeeAmount, and packet data (Hex)
-  const [rawTx, intent, packetData] = createIntentResult.value;
+  // txHash/rawTx, Intent & FeeAmount, and create intent data (Hex) - for createIntent
+  const [rawTx, intent, intentDataHex] = createIntentResult.value;
 ```
 
 ### Submit Intent to Relay API
@@ -336,6 +336,7 @@ const result = await sodax.solver.getStatus({
     intent_tx_hash: '0x...', // tx hash of create intent blockchain transaction
   } satisfies SolverIntentStatusRequest);
 ```
+
 
 ### Get Intent Hash
 
