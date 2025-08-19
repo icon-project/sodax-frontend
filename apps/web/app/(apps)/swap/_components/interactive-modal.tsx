@@ -146,7 +146,7 @@ function NetworkIcon({
 
   return (
     <div
-      className="p-2 cursor-pointer transition-all duration-200"
+      className="p-2 cursor-pointer transition-all duration-200 pointer-events-auto"
       data-name="Networks hit area"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -170,7 +170,7 @@ function NetworkIcon({
         </div>
         <div
           aria-hidden="true"
-          className="absolute border-2 border-white border-solid inset-[-2px] pointer-events-none rounded-md shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.1)]"
+          className="absolute border-2 border-white border-solid inset-[-2px] rounded-md shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.1)]"
         />
       </div>
     </div>
@@ -199,7 +199,7 @@ function StackedNetworks({
   const networkInfos = chainIds.map(chainId => getNetworkInfo(chainId));
 
   const handleNetworkClick = (chainId: string) => {
-    console.log('123');
+    console.log('handleNetworkClick', chainId);
     if (onChainClick) {
       const token = allSupportedTokens.find(token => token.symbol === tokenSymbol && token.xChainId === chainId);
       if (token) {
@@ -213,7 +213,7 @@ function StackedNetworks({
   }
 
   return (
-    <div className="absolute -top-6 z-10000">
+    <div className="absolute -top-6 z-10000 pointer-events-auto">
       <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mt-4 mb-2 text-center">
         {hoveredIcon !== null && networkInfos[hoveredIcon] ? (
           <>
@@ -224,7 +224,7 @@ function StackedNetworks({
         )}
       </div>
       <div
-        className="[flex-flow:wrap] box-border content-start flex gap-1 items-start justify-center p-0 relative shrink-0 w-[164px] z-51 overflow-visible"
+        className="[flex-flow:wrap] box-border content-start flex gap-1 items-start justify-center p-0 relative shrink-0 w-[164px] z-51 overflow-visible pointer-events-auto"
         data-name="Stacked networks"
       >
         {networkInfos.map((networkInfo, index) => (
@@ -396,13 +396,13 @@ function StackedNetworksPortal({
       if (!container) {
         container = document.createElement('div');
         container.id = 'stacked-networks-portal';
-        // container.style.position = 'fixed';
-        // container.style.top = '0';
-        // container.style.left = '0';
-        // container.style.width = '100%';
-        // container.style.height = '100%';
-        // container.style.pointerEvents = 'none';
-        // container.style.zIndex = '9999';
+        container.style.position = 'fixed';
+        container.style.top = '0';
+        container.style.left = '0';
+        container.style.width = '100%';
+        container.style.height = '100%';
+        container.style.pointerEvents = 'none';
+        container.style.zIndex = '9999';
         document.body.appendChild(container);
       }
       setPortalContainer(container);
@@ -435,6 +435,9 @@ function StackedNetworksPortal({
         left: targetRect.left - 40,
         pointerEvents: 'auto',
       }}
+      // NEW: stop events so the document listener never sees them
+      onMouseDown={e => e.stopPropagation()}
+      onClick={e => e.stopPropagation()}
     >
       <StackedNetworks
         isClicked={isClicked}
