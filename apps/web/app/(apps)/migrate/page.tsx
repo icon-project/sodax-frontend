@@ -64,18 +64,20 @@ export default function MigratePage() {
     iconAddress,
     spokeProvider,
   );
-  const { approve, isLoading: isApproving } = useMigrationApprove(
-    currencies.from,
-    typedValue,
-    iconAddress,
-    spokeProvider,
-  );
+  const {
+    approve,
+    isLoading: isApproving,
+    isApproved,
+  } = useMigrationApprove(currencies.from, typedValue, iconAddress, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
   const { mutateAsync: migrate, isPending } = useMigrate();
   const handleApprove = async () => {
     await approve();
   };
+
+  // Combine allowance check with approval state for immediate UI feedback
+  const hasSufficientAllowance = hasAllowed || isApproved;
 
   return (
     <div className="flex flex-col w-full" style={{ gap: 'var(--layout-space-comfortable)' }}>
@@ -144,11 +146,11 @@ export default function MigratePage() {
                     type="button"
                     variant="cherry"
                     onClick={handleApprove}
-                    disabled={isApproving || isAllowanceLoading || hasAllowed || !!error}
+                    disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!error}
                   >
-                    {isApproving ? 'Approving' : hasAllowed ? 'Approved' : 'Approve'}
+                    {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
                     {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {hasAllowed && <Check className="w-4 h-4 text-clay-light" />}
+                    {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
                   </Button>
                 )}
 
@@ -164,7 +166,9 @@ export default function MigratePage() {
                     }
                   }}
                   disabled={
-                    isPending || !!error || (direction.from === SONIC_MAINNET_CHAIN_ID && (!hasAllowed || isApproving))
+                    isPending ||
+                    !!error ||
+                    (direction.from === SONIC_MAINNET_CHAIN_ID && (!hasSufficientAllowance || isApproving))
                   }
                 >
                   {error ? (
