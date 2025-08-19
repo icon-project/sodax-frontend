@@ -6,13 +6,13 @@ import {
   type EvmHubProvider,
   EvmSpokeProvider,
   type GetRelayResponse,
+  type IntentDeliveryInfo,
   type IntentRelayRequest,
   type RelayErrorCode,
   SonicSpokeProvider,
   type SpokeProvider,
   SpokeService,
   type WaitUntilIntentExecutedPayload,
-  WalletAbstractionService,
   calculateFeeAmount,
   encodeAddress,
   encodeContractCalls,
@@ -38,13 +38,18 @@ import type {
   IntentRelayChainId,
   SolverIntentStatusRequest,
   SolverIntentStatusResponse,
-  PartnerFee,
   Result,
   SolverConfigParams,
   SolverServiceConfig,
   TxReturnType,
   GetEstimateGasReturnType,
+  GetAddressType,
+  OptionalRaw,
+  Prettify,
+  OptionalTimeout,
+  OptionalFee,
 } from '../../types.js';
+import { WalletAbstractionService } from '../hub/WalletAbstractionService.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
 import {
@@ -143,6 +148,13 @@ export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   data: IntentErrorData<T>;
 };
 
+export type SwapParams<S extends SpokeProvider> = Prettify<
+  {
+    intentParams: CreateIntentParams;
+    spokeProvider: S;
+  } & OptionalFee
+>;
+
 export class SolverService {
   readonly config: SolverServiceConfig;
   readonly hubProvider: EvmHubProvider;
@@ -227,7 +239,7 @@ export class SolverService {
    * const fee: bigint = await solverService.getFee(1000000000000000n);
    * console.log('Fee:', fee);
    */
-  public async getFee(inputAmount: bigint): Promise<bigint> {
+  public getFee(inputAmount: bigint): bigint {
     if (!this.config.partnerFee) {
       return 0n;
     }
@@ -350,90 +362,121 @@ export class SolverService {
   }
 
   /**
-   * Swap is a syntatic sugar for createAndSubmitIntent that creates an intent and submits it to the Solver API and Relayer API
-   * @param {CreateIntentParams} payload - The intent to create
-   * @param {ISpokeProvider} spokeProvider - The spoke provider
-   * @param {number} timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[SolverExecutionResponse, Intent, PacketData], IntentError<IntentErrorCode>>>} The solver execution response, intent, and packet data
+   * Syntactic sugar for createAndSubmitIntent: creates an intent and submits it to the Solver API and Relayer API.
+   *
+   * @param {Prettify<SwapParams<S> & OptionalTimeout>} params - Object containing:
+   *   - intentParams: The parameters for creating the intent.
+   *   - spokeProvider: The spoke provider instance.
+   *   - fee: (Optional) Partner fee configuration.
+   *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
+   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>}
+   *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info,
+   *   or an IntentError if the operation fails.
    *
    * @example
-   * const payload = {
-   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
-   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
-   *     "inputAmount": 1000000000000000n, // The amount of input tokens
-   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
-   *     "deadline": 0n, // Optional timestamp after which intent expires (0 = no deadline)
-   *     "allowPartialFill": false, // Whether the intent can be partially filled
-   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
-   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
-   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
-   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
-   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
-   *     "data": "0x..", // Additional arbitrary data
-   * } satisfies CreateIntentParams;
-   *
-   * const swapResult = await solverService.swap(payload, spokeProvider);
+   * const swapResult = await solverService.swap({
+   *   intentParams: {
+   *     inputToken: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+   *     outputToken: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+   *     inputAmount: 1000000000000000n,
+   *     minOutputAmount: 900000000000000n,
+   *     deadline: 0n,
+   *     allowPartialFill: false,
+   *     srcChain: "0x38.bsc",
+   *     dstChain: "0xa4b1.arbitrum",
+   *     srcAddress: "0x..",
+   *     dstAddress: "0x...",
+   *     solver: "0x..",
+   *     data: "0x..",
+   *   },
+   *   spokeProvider,
+   *   fee, // optional
+   *   timeout, // optional
+   * });
    *
    * if (swapResult.ok) {
-   *   const [solverExecutionResponse, intent, packetData] = swapResult.value;
+   *   const [solverExecutionResponse, intent, intentDeliveryInfo] = swapResult.value;
    *   console.log('Intent execution response:', solverExecutionResponse);
    *   console.log('Intent:', intent);
-   *   console.log('Packet data:', packetData);
+   *   console.log('Intent delivery info:', intentDeliveryInfo);
    * } else {
    *   // handle error
    * }
    */
-  public async swap<S extends SpokeProvider>(
-    payload: CreateIntentParams,
-    spokeProvider: S,
+  public async swap<S extends SpokeProvider>({
+    intentParams: params,
+    spokeProvider,
+    fee = this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>> {
-    return this.createAndSubmitIntent(payload, spokeProvider, this.config.partnerFee, timeout);
+  }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<
+    Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
+  > {
+    return this.createAndSubmitIntent({
+      intentParams: params,
+      spokeProvider,
+      fee,
+      timeout,
+    });
   }
 
   /**
    * Creates an intent and submits it to the Solver API and Relayer API
-   * @param {CreateIntentParams} payload - The intent to create
-   * @param {ISpokeProvider} spokeProvider - The spoke provider
-   * @param {number} timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>>} The solver execution response, intent, and packet data
+   * @param {Prettify<SwapParams<S> & OptionalTimeout>} params - Object containing:
+   *   - intentParams: The parameters for creating the intent.
+   *   - spokeProvider: The spoke provider instance.
+   *   - fee: (Optional) Partner fee configuration.
+   *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
+   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>}
+   *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info,
+   *   or an IntentError if the operation fails.
    *
    * @example
-   * const payload = {
-   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
-   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
-   *     "inputAmount": 1000000000000000n, // The amount of input tokens
-   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
-   *     "deadline": 0n, // Optional timestamp after which intent expires (0 = no deadline)
-   *     "allowPartialFill": false, // Whether the intent can be partially filled
-   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
-   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
-   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
-   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
-   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
-   *     "data": "0x..", // Additional arbitrary data
-   * } satisfies CreateIntentParams;
+   * const createAndSubmitIntentResult = await solverService.createAndSubmitIntent({
+   *   intentParams: {
+   *     inputToken: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
+   *     outputToken: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+   *     inputAmount: 1000000000000000n,
+   *     minOutputAmount: 900000000000000n,
+   *     deadline: 0n,
+   *     allowPartialFill: false,
+   *     srcChain: "0x38.bsc",
+   *     dstChain: "0xa4b1.arbitrum",
+   *     srcAddress: "0x..",
+   *     dstAddress: "0x...",
+   *     solver: "0x..",
+   *     data: "0x..",
+   *   },
+   *   spokeProvider,
+   *   fee, // optional
+   *   timeout, // optional
+   * });
    *
-   * const createAndSubmitIntentResult = await solverService.createAndSubmitIntent(payload, spokeProvider);
    *
    * if (createAndSubmitIntentResult.ok) {
-   *   const [solverExecutionResponse, intent, packetData] = createAndSubmitIntentResult.value;
+   *   const [solverExecutionResponse, intent, intentDeliveryInfo] = createAndSubmitIntentResult.value;
    *   console.log('Intent execution response:', solverExecutionResponse);
    *   console.log('Intent:', intent);
-   *   console.log('Packet data:', packetData);
+   *   console.log('Intent delivery info:', intentDeliveryInfo);
    * } else {
    *   // handle error
    * }
    */
-  public async createAndSubmitIntent<S extends SpokeProvider>(
-    payload: CreateIntentParams,
-    spokeProvider: S,
+  public async createAndSubmitIntent<S extends SpokeProvider>({
+    intentParams: params,
+    spokeProvider,
     fee = this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[SolverExecutionResponse, Intent, Hex], IntentError<IntentErrorCode>>> {
+  }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<
+    Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
+  > {
     try {
       // first create the deposit with intent data on spoke chain
-      const createIntentResult = await this.createIntent(payload, spokeProvider, fee, false);
+      const createIntentResult = await this.createIntent({
+        intentParams: params,
+        spokeProvider,
+        fee,
+        raw: false,
+      });
 
       if (!createIntentResult.ok) {
         return createIntentResult;
@@ -442,12 +485,12 @@ export class SolverService {
       // then submit the deposit tx hash of spoke chain to the intent relay
       const [spokeTxHash, intent, data] = createIntentResult.value;
 
-      let intentTxHash: string | null = null;
+      let dstIntentTxHash: string;
 
-      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
-        const intentRelayChainId = getIntentRelayChainId(payload.srcChain).toString();
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const intentRelayChainId = getIntentRelayChainId(params.srcChain).toString();
         const submitPayload: IntentRelayRequest<'submit'> =
-          payload.srcChain === SOLANA_MAINNET_CHAIN_ID && data
+          params.srcChain === SOLANA_MAINNET_CHAIN_ID && data
             ? {
                 action: 'submit',
                 params: {
@@ -487,14 +530,14 @@ export class SolverService {
             error: packet.error,
           };
         }
-        intentTxHash = packet.value.dst_tx_hash;
+        dstIntentTxHash = packet.value.dst_tx_hash;
       } else {
-        intentTxHash = spokeTxHash;
+        dstIntentTxHash = spokeTxHash;
       }
 
       // then post execution of intent order transaction executed on hub chain to Solver API
       const result = await this.postExecution({
-        intent_tx_hash: intentTxHash as `0x${string}`,
+        intent_tx_hash: dstIntentTxHash as `0x${string}`,
       });
 
       if (!result.ok) {
@@ -509,7 +552,18 @@ export class SolverService {
 
       return {
         ok: true,
-        value: [result.value, intent, intentTxHash as `0x${string}`],
+        value: [
+          result.value,
+          intent,
+          {
+            srcChainId: params.srcChain,
+            srcTxHash: spokeTxHash,
+            srcAddress: params.srcAddress,
+            dstChainId: params.dstChain,
+            dstTxHash: dstIntentTxHash,
+            dstAddress: params.dstAddress,
+          } satisfies IntentDeliveryInfo,
+        ],
       };
     } catch (error) {
       return {
@@ -517,7 +571,7 @@ export class SolverService {
         error: {
           code: 'UNKNOWN',
           data: {
-            payload: payload,
+            payload: params,
             error: error,
           },
         } satisfies IntentError<'UNKNOWN'>,
@@ -526,47 +580,54 @@ export class SolverService {
   }
 
   /**
-   * Check whether assetManager contract is allowed to move the given payload amount
-   * @param {CreateIntentParams} params - The intent to create
-   * @param {SpokeProvider} spokeProvider - The spoke provider
-   * @return {Promise<Result<boolean>>} - valid = true, invalid = false
+   * Check whether the Asset Manager contract is allowed to spend the specified amount of tokens
+   * @param {Prettify<SwapParams<S>} params - Object containing:
+   *   - intentParams: The parameters for creating the intent.
+   *   - spokeProvider: The spoke provider instance.
+   *   - fee: (Optional) Partner fee configuration.
+   * @returns {Promise<Result<boolean>>} - Returns true if allowance is sufficient, false if approval is needed
    *
    * @example
-   * const payload = {
-   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
-   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
-   *     "inputAmount": 1000000000000000n, // The amount of input tokens
-   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
-   *     "deadline": 0n, // Optional timestamp after which intent expires (0 = no deadline)
-   *     "allowPartialFill": false, // Whether the intent can be partially filled
-   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
-   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
-   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
-   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
-   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
-   *     "data": "0x..", // Additional arbitrary data
+   * const createIntentParams = {
+   *   inputToken: '0x2170Ed0880ac9A755fd29B2688956BD959F933F8', // BSC ETH token address
+   *   outputToken: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f', // ARB WBTC token address
+   *   inputAmount: 1000000000000000n, // The amount of input tokens
+   *   minOutputAmount: 900000000000000n, // min amount you are expecting to receive
+   *   deadline: 0n, // Optional timestamp after which intent expires (0 = no deadline)
+   *   allowPartialFill: false, // Whether the intent can be partially filled
+   *   srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
+   *   dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+   *   srcAddress: '0x..', // Source address (original address on spoke chain)
+   *   dstAddress: '0x...', // Destination address (original address on spoke chain)
+   *   solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address
+   *   data: '0x', // Additional arbitrary data
    * } satisfies CreateIntentParams;
    *
-   * const isAllowanceValid = await solverService.isAllowanceValid(payload, spokeProvider);
+   * const isAllowanceValid = await sodax.solver.isAllowanceValid({
+   *   intentParams: createIntentParams,
+   *   spokeProvider: bscSpokeProvider,
+   * });
    *
-   * if (!allowanceValid.ok) {
+   * if (!isAllowanceValid.ok) {
    *   // Handle error
-   * }
-   *
-   * if (!allowanceValid.value) {
-   *   // Need to approve
+   *   console.error('Failed to check allowance:', isAllowanceValid.error);
+   * } else if (!isAllowanceValid.value) {
+   *   // Need to approve tokens
+   *   console.log('Approval required');
    * }
    */
-  public async isAllowanceValid<S extends SpokeProvider>(
-    params: CreateIntentParams,
-    spokeProvider: S,
-  ): Promise<Result<boolean>> {
+  public async isAllowanceValid<S extends SpokeProvider>({
+    intentParams: params,
+    spokeProvider,
+    fee = this.config.partnerFee,
+  }: SwapParams<S>): Promise<Result<boolean>> {
+    // apply fee to input amount without changing original params
     try {
       if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
         const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-        return Erc20Service.isAllowanceValid(
+        return await Erc20Service.isAllowanceValid(
           params.inputToken as Address,
-          params.inputAmount,
+          params.inputAmount + calculateFeeAmount(params.inputAmount, fee),
           walletAddress,
           spokeProvider instanceof EvmSpokeProvider
             ? spokeProvider.chainConfig.addresses.assetManager
@@ -588,41 +649,56 @@ export class SolverService {
   }
 
   /**
-   * Approve amount spending (currently required for EVM only)
-   * @param token - ERC20 token address
-   * @param amount - Amount to approve
-   * @param spender - Spender address
-   * @param spokeProvider - Spoke provider
-   * @param raw - Whether to return the raw transaction hash instead of the transaction receipt
-   * @returns {Promise<Result<TxReturnType<S, R>>>} - Returns the raw transaction payload or transaction hash
+   * Approve the Asset Manager contract to spend tokens on behalf of the user (required for EVM chains)
+   * @param {Prettify<SwapParams<S> & OptionalRaw<R>>} params - Object containing:
+   *   - intentParams: The parameters for creating the intent.
+   *   - spokeProvider: The spoke provider instance.
+   *   - fee: (Optional) Partner fee configuration.
+   *   - raw: (Optional) Whether to return the raw transaction data instead of executing it
+   * @returns {Promise<Result<TxReturnType<S, R>>>} - Returns transaction hash or raw transaction data
    *
    * @example
-   * const approveResult = await approve(
-   *   '0x...', // ERC20 token address
-   *   1000n, // Amount to approve (in token decimals)
-   *   '0x...', // Spender address (usually the asset manager contract: spokeProvider.chainConfig.addresses.assetManager)
-   *   spokeProvider,
-   *   true // if true, returns raw transaction hash instead of raw transaction
-   * );
+   * const createIntentParams = {
+   *   inputToken: '0x2170Ed0880ac9A755fd29B2688956BD959F933F8', // BSC ETH token address
+   *   outputToken: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f', // ARB WBTC token address
+   *   inputAmount: 1000000000000000n, // The amount of input tokens
+   *   minOutputAmount: 900000000000000n, // min amount you are expecting to receive
+   *   deadline: 0n, // Optional timestamp after which intent expires (0 = no deadline)
+   *   allowPartialFill: false, // Whether the intent can be partially filled
+   *   srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
+   *   dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+   *   srcAddress: '0x..', // Source address (original address on spoke chain)
+   *   dstAddress: '0x...', // Destination address (original address on spoke chain)
+   *   solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address
+   *   data: '0x', // Additional arbitrary data
+   * } satisfies CreateIntentParams;
+   *
+   * const approveResult = await sodax.solver.approve({
+   *   intentParams: createIntentParams,
+   *   spokeProvider: bscSpokeProvider,
+   * });
    *
    * if (!approveResult.ok) {
    *   // Handle error
+   *   console.error('Failed to approve tokens:', approveResult.error);
+   * } else {
+   *   // Transaction hash or raw transaction data
+   *   const txHash = approveResult.value;
+   *   console.log('Approval transaction:', txHash);
    * }
-   *
-   * const txReceipt = approveResult.value;
    */
-  public async approve<S extends SpokeProvider, R extends boolean = false>(
-    token: Address,
-    amount: bigint,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<Result<TxReturnType<S, R>>> {
+  public async approve<S extends SpokeProvider, R extends boolean = false>({
+    intentParams: params,
+    spokeProvider,
+    fee = this.config.partnerFee,
+    raw,
+  }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>>> {
     try {
       if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
         const result = await Erc20Service.approve(
-          token,
-          amount,
-          spokeProvider.chainConfig.addresses.assetManager as Address,
+          params.inputToken as GetAddressType<EvmSpokeProvider | SonicSpokeProvider>,
+          params.inputAmount + calculateFeeAmount(params.inputAmount, fee),
+          spokeProvider.chainConfig.addresses.assetManager as GetAddressType<EvmSpokeProvider | SonicSpokeProvider>,
           spokeProvider,
           raw,
         );
@@ -648,11 +724,12 @@ export class SolverService {
   /**
    * Creates an intent by handling token approval and intent creation
    * NOTE: This method does not submit the intent to the Solver API
-   * @param {Omit<CreateIntentParams, 'srcAddress'>} params - The intent to create
-   * @param {SpokeProvider} spokeProvider - The spoke provider
-   * @param {boolean} raw - Whether to return the raw transaction
-   * @param {PartnerFee} fee - The fee to apply to the intent
-   * @returns {Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount], IntentError<'CREATION_FAILED'>>>} The encoded contract call
+   * @param {Prettify<SwapParams<S> & OptionalRaw<R>>} params - Object containing:
+   *   - intentParams: The parameters for creating the intent.
+   *   - spokeProvider: The spoke provider instance.
+   *   - fee: (Optional) Partner fee configuration.
+   *   - raw: (Optional) Whether to return the raw transaction data instead of executing it
+   * @returns {Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>>} The encoded contract call or raw transaction data, Intent and intent data as hex
    *
    * @example
    * const payload = {
@@ -670,19 +747,30 @@ export class SolverService {
    *     "data": "0x..", // Additional arbitrary data
    * } satisfies CreateIntentParams;
    *
-   * const createIntentResult = await solverService.createIntent(payload, spokeProvider);
+   * const createIntentResult = await solverService.createIntent({
+   *   intentParams: payload,
+   *   spokeProvider,
+   *   fee, // optional
+   *   raw, // optional
+   * });
    *
    * if (createIntentResult.ok) {
-   *   const [txResult, intent] = createIntentResult.value;
+   *   const [txResult, intent, intentData] = createIntentResult.value;
+   *   console.log('Transaction result:', txResult);
    *   console.log('Intent:', intent);
-   *
+   *   console.log('Intent data:', intentData);
+   * } else {
+   *   // handle error
+   * }
    */
-  public async createIntent<S extends SpokeProvider, R extends boolean = false>(
-    params: CreateIntentParams,
-    spokeProvider: S,
-    fee?: PartnerFee,
-    raw?: R,
-  ): Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
+  public async createIntent<S extends SpokeProvider, R extends boolean = false>({
+    intentParams: params,
+    spokeProvider,
+    fee = this.config.partnerFee,
+    raw,
+  }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<
+    Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>
+  > {
     invariant(
       isValidOriginalAssetAddress(params.srcChain, params.inputToken),
       `Unsupported spoke chain token (params.srcChain): ${params.srcChain}, params.inputToken): ${params.inputToken}`,

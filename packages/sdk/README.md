@@ -254,8 +254,8 @@ const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
 The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for all Sodax operations (swaps, money market operations, approvals) to provide users with accurate gas estimates.
 
 The function is available on all service classes:
-- `SolverService.estimateGas()` - for solver/intent operations
-- `MoneyMarketService.estimateGas()` - for money market operations
+- `SolverService.estimateGas()` - for solver/intent operations (reachable through `sodax.solver`)
+- `MoneyMarketService.estimateGas()` - for money market operations (reachable through `sodax.moneyMarket`)
 - `SpokeService.estimateGas()` - for general spoke chain operations
 
 ```typescript
