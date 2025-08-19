@@ -70,6 +70,7 @@ export default function TokenSelectDialog({
           isChainSelectorOpen={isChainSelectorOpen}
           handleShowAllChains={handleShowAllChains}
           handleChainSelect={handleChainSelect}
+          selectedChainId={selectedChainFilter}
         />
 
         <TokenList

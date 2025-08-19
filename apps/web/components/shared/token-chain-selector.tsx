@@ -15,22 +15,7 @@ interface TokenChainSelectorProps {
   symbol: string;
 }
 
-// Available chains data (same as in token-selector-dialog)
-const availableChains = [
-  { id: '0x1.sonic', name: 'Sonic', icon: '/chain/sonic.png' },
-  { id: '0xa86a.avax', name: 'Avalanche', icon: '/chain/0xa86a.avax.png' },
-  { id: '0xa4b1.arbitrum', name: 'Arbitrum', icon: '/chain/0xa4b1.arbitrum.png' },
-  { id: '0x2105.base', name: 'Base', icon: '/chain/0x2105.base.png' },
-  { id: '0x38.bsc', name: 'BSC', icon: '/chain/0x38.bsc.png' },
-  { id: 'injective-1', name: 'Injective', icon: '/chain/injective-1.png' },
-  { id: 'sui', name: 'Sui', icon: '/chain/sui.png' },
-  { id: '0xa.optimism', name: 'Optimism', icon: '/chain/0xa.optimism.png' },
-  { id: '0x89.polygon', name: 'Polygon', icon: '/chain/0x89.polygon.png' },
-  { id: 'solana', name: 'Solana', icon: '/chain/solana.png' },
-  { id: 'stellar', name: 'Stellar', icon: '/chain/stellar.png' },
-  { id: '0x1.icon', name: 'Icon', icon: '/chain/0x1.icon.png' },
-  { id: 'nibiru', name: 'Nibiru', icon: '/chain/nibiru.png' },
-];
+import { availableChains } from '@/constants/chains';
 
 const TokenChainSelector: React.FC<TokenChainSelectorProps> = ({
   isOpen,

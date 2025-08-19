@@ -3,13 +3,7 @@ import type React from 'react';
 import Image from 'next/image';
 import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-
-const availableChains = [
-  { id: '0x2105', name: 'Base', icon: '/chain/0x2105.base.png' },
-  { id: '0x1', name: 'Solana', icon: '/chain/solana.png' },
-  { id: '0xa4b1', name: 'Arbitrum', icon: '/chain/0xa4b1.arbitrum.png' },
-  { id: '0x2', name: 'Sui', icon: '/chain/sui.png' },
-];
+import { availableChains, getChainIcon } from '@/constants/chains';
 
 interface SearchBarProps {
   isUsdtClicked: boolean;
@@ -19,6 +13,7 @@ interface SearchBarProps {
   isChainSelectorOpen: boolean;
   handleShowAllChains: () => void;
   handleChainSelect: (chainId: string) => void;
+  selectedChainId?: string | null;
 }
 
 export function SearchBar({
@@ -29,6 +24,7 @@ export function SearchBar({
   isChainSelectorOpen,
   handleShowAllChains,
   handleChainSelect,
+  selectedChainId,
 }: SearchBarProps): React.JSX.Element {
   return (
     <div
@@ -64,12 +60,35 @@ export function SearchBar({
             <div className="flex justify-start items-center gap-2 cursor-pointer" onClick={handleChainSelectorClick}>
               <div
                 data-property-1="Search networks"
-                className="w-6 h-6 rounded-sm shadow-[-4px_0px_10px_0px_rgba(175,145,145,0.04)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden"
+                className="w-6 h-6 rounded-sm shadow-[-4px_0px_10px_0px_rgba(175,145,145,0.2)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden"
               >
-                <Image src="/chain/0x2105.base.png" alt="Base" width={8} height={8} className="rounded-[2px]" />
-                <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" />
-                <Image src="/chain/0xa4b1.arbitrum.png" alt="Arbitrum" width={8} height={8} className="rounded-[2px]" />
-                <Image src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" />
+                {selectedChainId ? (
+                  <div
+                    data-property-1="Default"
+                    className="rounded-md shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.5)] border border-3 border-white inline-flex flex-col justify-center items-center overflow-hidden"
+                  >
+                    <Image
+                      src={getChainIcon(selectedChainId) || '/chain/0x2105.base.png'}
+                      alt="Selected Chain"
+                      width={24}
+                      height={24}
+                      className="rounded-[2px]"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <Image src="/chain/0x2105.base.png" alt="Base" width={8} height={8} className="rounded-[2px]" />
+                    <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" />
+                    <Image
+                      src="/chain/0xa4b1.arbitrum.png"
+                      alt="Arbitrum"
+                      width={8}
+                      height={8}
+                      className="rounded-[2px]"
+                    />
+                    <Image src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" />
+                  </>
+                )}
               </div>
               {isChainSelectorOpen ? (
                 <ChevronUpIcon className="w-4 h-4 text-clay transition-transform duration-200" />
