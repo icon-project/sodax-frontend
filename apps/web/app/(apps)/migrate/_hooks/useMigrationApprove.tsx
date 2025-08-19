@@ -77,23 +77,18 @@ export function useMigrationApprove(
 
       const result = await sodax.migration.approve(revertParams, 'revert', spokeProvider, false);
       if (!result.ok) {
-        setIsLoading(false);
         throw new Error('Failed to approve tokens');
       }
 
-      // Immediately set approved state for instant UI feedback
       setIsApproved(true);
-
-      // Refetch allowance in background to keep data in sync
-      refetchAllowance();
-
-      setIsLoading(false);
+      // refetchAllowance();
       return result.ok;
     } catch (err) {
       const error = err instanceof Error ? err : new Error('An unknown error occurred');
       setError(error);
       throw error;
     } finally {
+      setIsLoading(false);
     }
   }, [spokeProvider, token, amount, iconAddress, sodax, refetchAllowance]);
 
