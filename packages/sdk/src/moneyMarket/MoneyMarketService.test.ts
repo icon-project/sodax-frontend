@@ -32,8 +32,8 @@ import {
   isMoneyMarketSupplyUnknownError,
   type MoneyMarketError,
   isMoneyMarketBorrowUnknownError,
-} from '../../index.js';
-import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
+} from '../index.js';
+import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
 import { BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 describe('MoneyMarketService', () => {
@@ -215,7 +215,7 @@ describe('MoneyMarketService', () => {
         sonicTestToken,
         testAmount,
         sonicSpokeProvider,
-        moneyMarket,
+        moneyMarket.data,
       );
       expect(SonicSpokeService.isWithdrawApproved).toHaveBeenCalledWith(
         '0x8888888888888888888888888888888888888888',
@@ -249,7 +249,7 @@ describe('MoneyMarketService', () => {
         sonicTestToken,
         testAmount,
         sonicSpokeProvider.chainConfig.chain.id,
-        moneyMarket,
+        moneyMarket.data,
       );
       expect(SonicSpokeService.isBorrowApproved).toHaveBeenCalledWith(
         '0x8888888888888888888888888888888888888888',
@@ -411,7 +411,7 @@ describe('MoneyMarketService', () => {
           tokenAddress as Address,
           testAmount,
           sonicSpokeProvider,
-          moneyMarket,
+          moneyMarket.data,
         );
         expect(result).toEqual(mockApprovalResult);
       });

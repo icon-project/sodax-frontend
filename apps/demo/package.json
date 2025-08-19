@@ -32,7 +32,7 @@
     "@tanstack/react-query": "catalog:",
     "@types/node": "catalog:",
     "@vitejs/plugin-react": "4.2.1",
-    "bignumber.js": "^9.1.2",
+    "bignumber.js": "catalog:",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.456.0",

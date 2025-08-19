@@ -32,7 +32,7 @@ export function SupplyAssetsList() {
     address,
   });
 
-  const userReserves = useUserReservesData(address, spokeProvider);
+  const { data: userReserves } = useUserReservesData(spokeProvider?.chainConfig.chain.id, address);
 
   return (
     <Card>
@@ -56,7 +56,7 @@ export function SupplyAssetsList() {
           <TableBody>
             {tokens.map(token => {
               try {
-                const userReserve = userReserves?.find(
+                const userReserve = userReserves?.[0]?.find(
                   r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset) === token.address,
                 );
                 return (

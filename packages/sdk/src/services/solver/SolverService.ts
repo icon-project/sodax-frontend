@@ -12,7 +12,6 @@ import {
   type SpokeProvider,
   SpokeService,
   type WaitUntilIntentExecutedPayload,
-  WalletAbstractionService,
   calculateFeeAmount,
   encodeAddress,
   encodeContractCalls,
@@ -49,6 +48,7 @@ import type {
   OptionalTimeout,
   OptionalFee,
 } from '../../types.js';
+import { WalletAbstractionService } from '../hub/WalletAbstractionService.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
 import {
