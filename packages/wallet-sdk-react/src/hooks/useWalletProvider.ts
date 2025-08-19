@@ -7,10 +7,8 @@ import {
   InjectiveWalletProvider,
   StellarWalletProvider,
   SolanaWalletProvider,
-} from '../wallet-providers';
+} from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
-import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
-import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
 import type { InjectiveEoaAddress } from '@sodax/types';
 import { usePublicClient, useWalletClient } from 'wagmi';
 import { getWagmiChainId } from '../utils';
@@ -18,7 +16,6 @@ import { type SolanaXService, type StellarXService, useXAccount, useXService } f
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -64,9 +61,16 @@ export function useWalletProvider(
   return useMemo(() => {
     switch (xChainType) {
       case 'EVM': {
+        if (!evmWalletClient) {
+          return undefined;
+        }
+        if (!evmPublicClient) {
+          return undefined;
+        }
+
         return new EvmWalletProvider({
-          walletClient: evmWalletClient as WalletClient<CustomTransport | HttpTransport, Chain, Account> | undefined,
-          publicClient: evmPublicClient as PublicClient<CustomTransport | HttpTransport>,
+          walletClient: evmWalletClient,
+          publicClient: evmPublicClient,
         });
       }
 
@@ -88,7 +92,7 @@ export function useWalletProvider(
         };
 
         return new IconWalletProvider({
-          walletAddress: walletAddress as IconEoaAddress | undefined,
+          walletAddress: walletAddress as `hx${string}` | undefined,
           rpcUrl: rpcUrl as `http${string}`,
         });
       }
@@ -99,17 +103,15 @@ export function useWalletProvider(
           return undefined;
           // throw new Error('InjectiveXService is not initialized');
         }
-        const endpoints = getNetworkEndpoints(Network.Mainnet);
-        const { walletAddress, client, rpcUrl } = {
+
+        const { walletAddress, msgBroadcaster } = {
           walletAddress: xAccount.address,
-          client: injectiveXService.msgBroadcastClient,
-          rpcUrl: endpoints.rpc,
+          msgBroadcaster: injectiveXService.msgBroadcaster,
         };
 
         return new InjectiveWalletProvider({
           walletAddress: walletAddress as InjectiveEoaAddress | undefined,
-          client: client,
-          rpcUrl: rpcUrl as string,
+          msgBroadcaster: msgBroadcaster,
         });
       }
 

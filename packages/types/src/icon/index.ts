@@ -33,7 +33,6 @@ export type IconTransactionResult = {
 
 export interface IIconWalletProvider extends WalletAddressProvider {
   getWalletAddress: () => Promise<IconEoaAddress>;
-  getWalletAddressBytes: () => Promise<Hex>;
   sendTransaction: (iconRawTx: IcxCallTransaction) => Promise<Hash>;
   waitForTransactionReceipt: (txHash: Hash) => Promise<IconTransactionResult>;
 }

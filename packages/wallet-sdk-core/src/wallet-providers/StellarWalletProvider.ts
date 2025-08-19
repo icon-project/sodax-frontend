@@ -1,7 +1,6 @@
-import type { Hex, IStellarWalletProvider, StellarRawTransactionReceipt, XDR } from '@sodax/sdk';
-import { Networks, Horizon, Transaction, Keypair, Address } from '@stellar/stellar-sdk';
+import type { Hex, IStellarWalletProvider, StellarRawTransactionReceipt, XDR } from '@sodax/types';
+import { Networks, Horizon, Transaction, Keypair } from '@stellar/stellar-sdk';
 
-// Define interface for StellarWalletsKit since it's not exported from the package
 interface StellarWalletsKit {
   getAddress(): Promise<{ address: string }>;
   signTransaction(tx: XDR, options: { networkPassphrase: string }): Promise<{ signedTxXdr: XDR }>;
@@ -153,18 +152,6 @@ export class StellarWalletProvider implements IStellarWalletProvider {
     } catch (error) {
       throw new StellarWalletError(
         error instanceof Error ? error.message : 'Failed to get wallet address',
-        'INVALID_CONFIG',
-      );
-    }
-  }
-
-  public async getWalletAddressBytes(): Promise<Hex> {
-    try {
-      const address = await this.getWalletAddress();
-      return `0x${Address.fromString(address).toScVal().toXDR('hex')}`;
-    } catch (error) {
-      throw new StellarWalletError(
-        error instanceof Error ? error.message : 'Failed to get wallet address bytes',
         'INVALID_CONFIG',
       );
     }

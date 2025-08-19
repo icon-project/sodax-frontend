@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { getSpokeTokenAddressByVault, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk';
+import { useXAccount, useXBalances, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
@@ -32,7 +32,7 @@ export function SupplyAssetsList() {
     address,
   });
 
-  const { data: userReserves } = useUserReservesData(spokeProvider?.chainConfig.chain.id, address);
+  const { data: userReserves } = useUserReservesData(address, spokeProvider);
 
   return (
     <Card>

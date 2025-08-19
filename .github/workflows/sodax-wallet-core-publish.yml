@@ -1,9 +1,9 @@
-name: Publish @sodax/wallet-sdk Package to npmjs
+name: Publish @sodax/wallet-sdk-core Package to npmjs
 
 on:
   push:
     tags:
-      - '@sodax/wallet-sdk@*.*.*'
+      - '@sodax/wallet-sdk-core@*.*.*'
 
 jobs:
   publish-npm:
@@ -35,7 +35,7 @@ jobs:
         run: pnpm build:packages
       - name: Publish package
         run: |
-          cd packages/wallet-sdk
+          cd packages/wallet-sdk-core
           pnpm publish --no-git-checks --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.SODAX_FRONTEND_NPM_TOKEN}}

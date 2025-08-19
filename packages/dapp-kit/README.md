@@ -46,14 +46,14 @@ pnpm add @sodax/dapp-kit
 1. First, install the required dependencies:
 
 ```bash
-pnpm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
+pnpm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk-react
 ```
 
 2. Set up the providers in your app:
 
 ```typescript
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { XWagmiProviders } from '@sodax/wallet-sdk';
+import { XWagmiProviders } from '@sodax/wallet-sdk-react';
 import { SodaxProvider } from '@sodax/dapp-kit';
 
 const queryClient = new QueryClient();
@@ -91,7 +91,7 @@ function App() {
 
 ```typescript
 // Connect Wallet Operations
-import { useXConnectors, useXConnect, useXAccount } from '@sodax/wallet-sdk';
+import { useXConnectors, useXConnect, useXAccount } from '@sodax/wallet-sdk-react';
 const evmConnectors = useXConnectors('EVM');
 const { mutateAsync: connect, isPending } = useXConnect();
 const account = useXAccount('EVM');

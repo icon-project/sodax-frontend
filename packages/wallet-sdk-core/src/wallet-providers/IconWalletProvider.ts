@@ -2,7 +2,7 @@ import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } f
 import type { IconService, Wallet as IconSdkWallet } from 'icon-sdk-js';
 import * as IconSdkRaw from 'icon-sdk-js';
 const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
-const { Converter, CallTransactionBuilder, Wallet, SignedTransaction } = IconSdk;
+const { Converter, CallTransactionBuilder, Wallet } = IconSdk;
 
 export class IconWalletProvider implements IIconWalletProvider {
   private readonly wallet: IconWallet;
@@ -30,10 +30,10 @@ export class IconWalletProvider implements IIconWalletProvider {
     const builtTx = new CallTransactionBuilder()
       .from(tx.from)
       .to(tx.to)
-      .stepLimit(Converter.toBigNumber(2000000 * 3))
+      .stepLimit(Converter.toHex(2000000))
       .nid(tx.nid)
       .version(tx.version ?? '0x3')
-      .timestamp(tx.timestamp ?? new Date().getTime() * 1000)
+      .timestamp(Converter.toHex(tx.timestamp ?? new Date().getTime() * 1000))
       .value(tx.value)
       .method(tx.method)
       .params(tx.params)
@@ -45,7 +45,7 @@ export class IconWalletProvider implements IIconWalletProvider {
 
       return result.result satisfies string as Hash;
     }
-    const signedTx = new SignedTransaction(builtTx, this.wallet.wallet);
+    const signedTx = new IconSdk.IconService.SignedTransaction(builtTx, this.wallet.wallet);
     const result = await this.iconService.sendTransaction(signedTx).execute();
 
     return result satisfies string as Hash;
@@ -64,12 +64,10 @@ export class IconWalletProvider implements IIconWalletProvider {
   }
 
   async getWalletAddress(): Promise<IconEoaAddress> {
+    if (!this.wallet.wallet) {
+      throw new Error('Wallet not initialized');
+    }
     return isIconPkWallet(this.wallet) ? (this.wallet.wallet.getAddress() as IconEoaAddress) : this.wallet.wallet;
-  }
-
-  async getWalletAddressBytes(): Promise<Hex> {
-    const address = await this.getWalletAddress();
-    return `0x${Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex').toString('hex')}`;
   }
 }
 
@@ -90,7 +88,7 @@ export type PrivateKeyIconWalletConfig = {
 };
 
 export type BrowserExtensionIconWalletConfig = {
-  walletAddress: IconEoaAddress;
+  walletAddress?: IconEoaAddress;
   rpcUrl: `http${string}`;
 };
 
@@ -103,7 +101,7 @@ export type IconPkWallet = {
 
 export type IconBrowserExtensionWallet = {
   type: 'BROWSER_EXTENSION';
-  wallet: IconEoaAddress;
+  wallet?: IconEoaAddress;
 };
 
 export type IconWallet = IconPkWallet | IconBrowserExtensionWallet;
@@ -181,7 +179,7 @@ export function isPrivateKeyIconWalletConfig(config: IconWalletConfig): config i
 export function isBrowserExtensionIconWalletConfig(
   config: IconWalletConfig,
 ): config is BrowserExtensionIconWalletConfig {
-  return 'walletAddress' in config && isIconEoaAddress(config.walletAddress);
+  return 'walletAddress' in config && (isIconEoaAddress(config.walletAddress) || !config.walletAddress);
 }
 
 export function isIconAddress(value: unknown): value is IconAddress {

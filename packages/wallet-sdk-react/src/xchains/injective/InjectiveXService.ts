@@ -15,7 +15,7 @@ export class InjectiveXService extends XService {
   public walletStrategy: BaseWalletStrategy;
   public indexerGrpcAccountPortfolioApi: IndexerGrpcAccountPortfolioApi;
   public chainGrpcWasmApi: ChainGrpcWasmApi;
-  public msgBroadcastClient: MsgBroadcaster;
+  public msgBroadcaster: MsgBroadcaster;
 
   private constructor() {
     super('INJECTIVE');
@@ -40,7 +40,7 @@ export class InjectiveXService extends XService {
     });
     this.indexerGrpcAccountPortfolioApi = new IndexerGrpcAccountPortfolioApi(endpoints.indexer);
     this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
-    this.msgBroadcastClient = new MsgBroadcaster({
+    this.msgBroadcaster = new MsgBroadcaster({
       walletStrategy: this.walletStrategy,
       network: Network.Mainnet,
       endpoints,

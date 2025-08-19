@@ -1,4 +1,4 @@
-import { type UserReserveData, WalletAbstractionService } from '@sodax/sdk';
+import { type SpokeProvider, type UserReserveData, WalletAbstractionService } from '@sodax/sdk';
 import type { ChainId } from '@sodax/types';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
@@ -21,29 +21,24 @@ import { useSpokeProvider } from '../provider/useSpokeProvider';
  *   - error: Any error that occurred during data fetching
  */
 export function useUserReservesData(
-  spokeChainId: ChainId | undefined,
   address: string | undefined,
+  spokeProvider: SpokeProvider | undefined,
   refetchInterval = 5000,
 ): UseQueryResult<readonly [readonly UserReserveData[], number] | undefined, Error> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(spokeChainId);
 
   return useQuery({
-    queryKey: ['userReserves', spokeChainId, address],
+    queryKey: ['userReserves', spokeProvider?.chainConfig.chain.id, address],
     queryFn: async () => {
-      if (!spokeProvider || !address) {
-        return undefined;
-      }
-
+      if (!spokeProvider || !address) return undefined;
       const hubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
         address,
         spokeProvider,
         sodax.hubProvider,
       );
-
       return await sodax.moneyMarket.data.getUserReservesData(hubWalletAddress);
     },
-    enabled: !!spokeChainId && !!address,
+    enabled: !!spokeProvider && !!spokeProvider.chainConfig.chain.id && !!address,
     refetchInterval,
   });
 }

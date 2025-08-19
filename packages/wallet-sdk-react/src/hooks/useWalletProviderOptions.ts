@@ -40,7 +40,7 @@ export function useWalletProviderOptions(xChainId: ChainId | undefined) {
 
         return {
           walletAddress: xAccount.address,
-          client: injectiveXService.msgBroadcastClient,
+          msgBroadcaster: injectiveXService.msgBroadcaster,
           rpcUrl: endpoints.rpc,
         };
       }

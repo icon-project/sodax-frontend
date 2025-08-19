@@ -26,6 +26,7 @@ import {
   spokeChainConfig,
   type SolverConfigParams,
   getSpokeChainIdFromIntentRelayChainId,
+  encodeAddress,
 } from '../index.js';
 import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
@@ -88,7 +89,6 @@ describe('Sodax', () => {
     const mockEvmWalletProvider = {
       sendTransaction: vi.fn(),
       getWalletAddress: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999'),
-      getWalletAddressBytes: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999'),
       waitForTransactionReceipt: vi.fn(),
     } as unknown as IEvmWalletProvider;
 
@@ -307,7 +307,7 @@ describe('Sodax', () => {
           data: '0x',
         } satisfies CreateIntentParams;
 
-        const walletAddressBytes = await mockEvmWalletProvider.getWalletAddressBytes();
+        const walletAddressBytes = await mockEvmWalletProvider.getWalletAddress();
         const creatorAddress = await mockBscSpokeProvider.walletProvider.getWalletAddress();
         mockIntent = {
           intentId: BigInt(1),
@@ -345,7 +345,7 @@ describe('Sodax', () => {
 
       it('should successfully create and submit an intent', async () => {
         const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
-        const walletAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+        const walletAddress = await mockEvmWalletProvider.getWalletAddress();
 
         vi.spyOn(sodax.solver, 'createIntent').mockResolvedValueOnce({
           ok: true,
@@ -476,7 +476,7 @@ describe('Sodax', () => {
         } satisfies CreateIntentParams;
 
         const creatorAddress = await mockBscSpokeProvider.walletProvider.getWalletAddress();
-        const walletAddressBytes = await mockEvmWalletProvider.getWalletAddressBytes();
+        const walletAddressBytes = encodeAddress(BSC_MAINNET_CHAIN_ID, walletAddress);
         mockIntent = {
           intentId: BigInt(1),
           creator: creatorAddress,

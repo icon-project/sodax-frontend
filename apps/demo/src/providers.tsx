@@ -1,8 +1,8 @@
 import React, { useMemo, type ReactNode } from 'react';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { XWagmiProviders } from '@sodax/wallet-sdk';
-import { SodaxProvider, type RpcConfig } from '@sodax/dapp-kit';
+import { XWagmiProviders } from '@sodax/wallet-sdk-react';
+import { type RpcConfig, SodaxProvider } from '@sodax/dapp-kit';
 import { productionSolverConfig, stagingSolverConfig } from './constants';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { IconWalletProvider, type IconWalletConfig } from '../IconWalletProvider';
+import { IconWalletProvider, type IconWalletConfig } from '../IconWalletProvider.js';
 
 describe('IconWalletProvider', () => {
   const mockRpcUrl = 'https://ctz.solidwallet.io/api/v3';
   const mockPrivateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
   const mockWalletAddress = 'hx1234567890abcdef1234567890abcdef12345678';
-  const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+  // const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -55,27 +55,6 @@ describe('IconWalletProvider', () => {
       });
 
       await expect(provider.getWalletAddress()).rejects.toThrow('Wallet not initialized');
-    });
-  });
-
-  describe('getWalletAddressBytes', () => {
-    it('should convert hx address to bytes', async () => {
-      const provider = new IconWalletProvider({
-        walletAddress: mockWalletAddress,
-        rpcUrl: mockRpcUrl,
-      });
-
-      const bytes = await provider.getWalletAddressBytes();
-      expect(bytes).toBe(`0x00${mockWalletAddress.slice(2)}`);
-    });
-
-    it('should throw error if wallet is not initialized', async () => {
-      const provider = new IconWalletProvider({
-        walletAddress: undefined,
-        rpcUrl: mockRpcUrl,
-      });
-
-      await expect(provider.getWalletAddressBytes()).rejects.toThrow('Wallet not initialized');
     });
   });
 });
