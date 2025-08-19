@@ -228,7 +228,10 @@ export class SolverService {
     payload: SolverIntentQuoteRequest,
   ): Promise<Result<SolverIntentQuoteResponse, SolverErrorResponse>> {
     // reduce the input amount by the fee amount
-    payload.amount = payload.amount - this.getFee(payload.amount);
+    payload = {
+      ...payload,
+      amount: payload.amount - this.getFee(payload.amount),
+    } satisfies SolverIntentQuoteRequest;
     return SolverApiService.getQuote(payload, this.config);
   }
 
