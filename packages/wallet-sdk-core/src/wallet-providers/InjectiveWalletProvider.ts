@@ -1,19 +1,41 @@
+import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import { MsgExecuteContract, MsgExecuteContractCompat } from '@injectivelabs/sdk-ts';
 import { createTransaction } from '@injectivelabs/sdk-ts';
-import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
 import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
 
+/**
+ * Injective Wallet Configuration Types
+ */
+
+export type BrowserExtensionInjectiveWalletConfig = {
+  msgBroadcaster: MsgBroadcaster;
+  walletAddress: InjectiveEoaAddress | undefined;
+};
+
+export type InjectiveWalletConfig = BrowserExtensionInjectiveWalletConfig;
+
+/**
+ * Injective Type Guards
+ */
+
+export function isBrowserExtensionInjectiveWalletConfig(
+  config: InjectiveWalletConfig,
+): config is BrowserExtensionInjectiveWalletConfig {
+  return 'msgBroadcaster' in config && 'walletAddress' in config;
+}
+
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
-  private client: MsgBroadcaster;
+  private msgBroadcaster: MsgBroadcaster;
   public walletAddress: InjectiveEoaAddress | undefined;
 
-  constructor({
-    client,
-    walletAddress,
-  }: { client: MsgBroadcaster; walletAddress: InjectiveEoaAddress | undefined; rpcUrl: string }) {
-    this.client = client;
-    this.walletAddress = walletAddress;
+  constructor(config: InjectiveWalletConfig) {
+    if (isBrowserExtensionInjectiveWalletConfig(config)) {
+      this.msgBroadcaster = config.msgBroadcaster;
+      this.walletAddress = config.walletAddress;
+    } else {
+      throw new Error('Invalid Injective wallet config');
+    }
   }
 
   getRawTransaction(
@@ -81,7 +103,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       funds: funds || [],
     });
 
-    const txResult = await this.client.broadcastWithFeeDelegation({
+    const txResult = await this.msgBroadcaster.broadcastWithFeeDelegation({
       msgs: msgExec,
       injectiveAddress: this.walletAddress,
     });

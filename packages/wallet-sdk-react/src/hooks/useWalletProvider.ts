@@ -9,7 +9,6 @@ import {
   SolanaWalletProvider,
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
-import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
 import type { InjectiveEoaAddress } from '@sodax/types';
 import { usePublicClient, useWalletClient } from 'wagmi';
 import { getWagmiChainId } from '../utils';
@@ -17,7 +16,6 @@ import { type SolanaXService, type StellarXService, useXAccount, useXService } f
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
-import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -105,17 +103,15 @@ export function useWalletProvider(
           return undefined;
           // throw new Error('InjectiveXService is not initialized');
         }
-        const endpoints = getNetworkEndpoints(Network.Mainnet);
-        const { walletAddress, client, rpcUrl } = {
+
+        const { walletAddress, msgBroadcaster } = {
           walletAddress: xAccount.address,
-          client: injectiveXService.msgBroadcastClient,
-          rpcUrl: endpoints.rpc,
+          msgBroadcaster: injectiveXService.msgBroadcaster,
         };
 
         return new InjectiveWalletProvider({
           walletAddress: walletAddress as InjectiveEoaAddress | undefined,
-          client: client,
-          rpcUrl: rpcUrl as string,
+          msgBroadcaster: msgBroadcaster,
         });
       }
 
