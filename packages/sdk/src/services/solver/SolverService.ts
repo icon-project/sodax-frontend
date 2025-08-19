@@ -227,6 +227,8 @@ export class SolverService {
   public async getQuote(
     payload: SolverIntentQuoteRequest,
   ): Promise<Result<SolverIntentQuoteResponse, SolverErrorResponse>> {
+    // reduce the input amount by the fee amount
+    payload.amount = payload.amount - this.getFee(payload.amount);
     return SolverApiService.getQuote(payload, this.config);
   }
 
@@ -584,7 +586,6 @@ export class SolverService {
    * @param {Prettify<SwapParams<S>} params - Object containing:
    *   - intentParams: The parameters for creating the intent.
    *   - spokeProvider: The spoke provider instance.
-   *   - fee: (Optional) Partner fee configuration.
    * @returns {Promise<Result<boolean>>} - Returns true if allowance is sufficient, false if approval is needed
    *
    * @example
@@ -619,7 +620,6 @@ export class SolverService {
   public async isAllowanceValid<S extends SpokeProvider>({
     intentParams: params,
     spokeProvider,
-    fee = this.config.partnerFee,
   }: SwapParams<S>): Promise<Result<boolean>> {
     // apply fee to input amount without changing original params
     try {
@@ -627,7 +627,7 @@ export class SolverService {
         const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
         return await Erc20Service.isAllowanceValid(
           params.inputToken as Address,
-          params.inputAmount + calculateFeeAmount(params.inputAmount, fee),
+          params.inputAmount,
           walletAddress,
           spokeProvider instanceof EvmSpokeProvider
             ? spokeProvider.chainConfig.addresses.assetManager
@@ -653,7 +653,6 @@ export class SolverService {
    * @param {Prettify<SwapParams<S> & OptionalRaw<R>>} params - Object containing:
    *   - intentParams: The parameters for creating the intent.
    *   - spokeProvider: The spoke provider instance.
-   *   - fee: (Optional) Partner fee configuration.
    *   - raw: (Optional) Whether to return the raw transaction data instead of executing it
    * @returns {Promise<Result<TxReturnType<S, R>>>} - Returns transaction hash or raw transaction data
    *
@@ -690,14 +689,13 @@ export class SolverService {
   public async approve<S extends SpokeProvider, R extends boolean = false>({
     intentParams: params,
     spokeProvider,
-    fee = this.config.partnerFee,
     raw,
   }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>>> {
     try {
       if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
         const result = await Erc20Service.approve(
           params.inputToken as GetAddressType<EvmSpokeProvider | SonicSpokeProvider>,
-          params.inputAmount + calculateFeeAmount(params.inputAmount, fee),
+          params.inputAmount,
           spokeProvider.chainConfig.addresses.assetManager as GetAddressType<EvmSpokeProvider | SonicSpokeProvider>,
           spokeProvider,
           raw,
@@ -813,7 +811,7 @@ export class SolverService {
           from: walletAddress,
           to: creatorHubWalletAddress,
           token: params.inputToken,
-          amount: params.inputAmount + feeAmount,
+          amount: params.inputAmount,
           data: data,
         } as GetSpokeDepositParamsType<S>,
         spokeProvider satisfies S,
