@@ -5,7 +5,7 @@ import React, { type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { XWagmiProviders } from '@sodax/wallet-sdk';
 import { SodaxProvider } from '@sodax/dapp-kit';
-import { sodaxConfig } from './constants';
+import { sodaxConfig, rpcConfig } from './constants';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -19,7 +19,7 @@ const queryClient = new QueryClient();
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
-    <SodaxProvider testnet={false} config={sodaxConfig}>
+    <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
         <XWagmiProviders
           config={{

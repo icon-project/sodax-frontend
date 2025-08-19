@@ -18,7 +18,7 @@ import { useMigrate, useMigrationAllowance, useMigrationApprove } from './_hooks
 import { Check, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useSpokeProvider } from '@sodax/dapp-kit';
-import { useEvmSwitchChain } from '@sodax/wallet-sdk';
+import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
 
 export default function MigratePage() {
   const { openWalletModal } = useWalletUI();
@@ -55,7 +55,9 @@ export default function MigratePage() {
     setTypedValue(Number(formatUnits(value, currencies.from.decimals)).toFixed(2));
   };
 
-  const spokeProvider = useSpokeProvider(direction.from);
+  // Get wallet provider for the source chain
+  const walletProvider = useWalletProvider(direction.from);
+  const spokeProvider = useSpokeProvider(direction.from, walletProvider);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(
     currencies.from,
     typedValue,
@@ -161,7 +163,9 @@ export default function MigratePage() {
                       console.error(error);
                     }
                   }}
-                  disabled={isPending || !!error || !hasAllowed || isApproving}
+                  disabled={
+                    isPending || !!error || (direction.from === SONIC_MAINNET_CHAIN_ID && (!hasAllowed || isApproving))
+                  }
                 >
                   {error ? (
                     error

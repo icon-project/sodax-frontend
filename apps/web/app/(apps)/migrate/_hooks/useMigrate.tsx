@@ -1,7 +1,7 @@
 import { parseUnits } from 'viem';
 import { spokeChainConfig, type IconSpokeProvider, type SonicSpokeProvider } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
-import { useXAccount } from '@sodax/wallet-sdk';
+import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
 import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useMigrationStore } from '../_stores/migration-store-provider';
 import { useMutation } from '@tanstack/react-query';
@@ -17,8 +17,14 @@ export function useMigrate() {
   const { typedValue, direction, currencies } = useMigrationStore(state => state);
 
   const { sodax } = useSodaxContext();
-  const iconSpokeProvider = useSpokeProvider(ICON_MAINNET_CHAIN_ID) as IconSpokeProvider;
-  const sonicSpokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID) as SonicSpokeProvider;
+
+  // Get wallet providers first
+  const iconWalletProvider = useWalletProvider(ICON_MAINNET_CHAIN_ID);
+  const sonicWalletProvider = useWalletProvider(SONIC_MAINNET_CHAIN_ID);
+
+  // Then get spoke providers with wallet providers
+  const iconSpokeProvider = useSpokeProvider(ICON_MAINNET_CHAIN_ID, iconWalletProvider) as IconSpokeProvider;
+  const sonicSpokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID, sonicWalletProvider) as SonicSpokeProvider;
 
   return useMutation({
     mutationFn: async () => {
