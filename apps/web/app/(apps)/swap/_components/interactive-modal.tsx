@@ -199,6 +199,7 @@ function StackedNetworks({
   const networkInfos = chainIds.map(chainId => getNetworkInfo(chainId));
 
   const handleNetworkClick = (chainId: string) => {
+    console.log('123');
     if (onChainClick) {
       const token = allSupportedTokens.find(token => token.symbol === tokenSymbol && token.xChainId === chainId);
       if (token) {
@@ -374,7 +375,6 @@ function DynamicFullAssetBig({
   );
 }
 
-// Portal component for StackedNetworks to render outside scroll area
 function StackedNetworksPortal({
   isClicked,
   chainIds,
@@ -392,18 +392,17 @@ function StackedNetworksPortal({
 
   useEffect(() => {
     if (isClicked && targetRef.current) {
-      // Create a portal container if it doesn't exist
       let container = document.getElementById('stacked-networks-portal');
       if (!container) {
         container = document.createElement('div');
         container.id = 'stacked-networks-portal';
-        container.style.position = 'fixed';
-        container.style.top = '0';
-        container.style.left = '0';
-        container.style.width = '100%';
-        container.style.height = '100%';
-        container.style.pointerEvents = 'none';
-        container.style.zIndex = '9999';
+        // container.style.position = 'fixed';
+        // container.style.top = '0';
+        // container.style.left = '0';
+        // container.style.width = '100%';
+        // container.style.height = '100%';
+        // container.style.pointerEvents = 'none';
+        // container.style.zIndex = '9999';
         document.body.appendChild(container);
       }
       setPortalContainer(container);
