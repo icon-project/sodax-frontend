@@ -77,18 +77,17 @@ export class EvmSolverService {
       ...createIntentParams,
       inputToken,
       outputToken,
+      inputAmount: createIntentParams.inputAmount - feeAmount,
       srcChain: getIntentRelayChainId(createIntentParams.srcChain),
       dstChain: getIntentRelayChainId(createIntentParams.dstChain),
       srcAddress: encodeAddress(createIntentParams.srcChain, createIntentParams.srcAddress),
       dstAddress: encodeAddress(createIntentParams.dstChain, createIntentParams.dstAddress),
       intentId: randomUint256(),
       creator: creatorHubWalletAddress,
-      data: feeData,
+      data: feeData, // fee amount will be deducted from the input amount
     } satisfies Intent;
 
-    // user has to send input amount + fee amount to the Hub intent contract
-    const totalInputAmount = intent.inputAmount + feeAmount;
-    calls.push(Erc20Service.encodeApprove(intent.inputToken, intentsContract, totalInputAmount));
+    calls.push(Erc20Service.encodeApprove(intent.inputToken, intentsContract, createIntentParams.inputAmount));
     calls.push(EvmSolverService.encodeCreateIntent(intent, intentsContract));
     return [encodeContractCalls(calls), intent, feeAmount];
   }

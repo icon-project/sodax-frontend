@@ -1,4 +1,4 @@
-import { argv } from 'node:process';
+import 'dotenv/config';
 import {
   type AggregatedReserveData,
   type BaseCurrencyInfo,
@@ -8,19 +8,16 @@ import {
   type MoneyMarketConfig,
   Sodax,
   type SodaxConfig,
-  type UserReserveData,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
-import type { Address } from 'viem';
 
 // load PK from .env
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey = process.env.EVM_PRIVATE_KEY;
 
 if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_CHAIN_ID: HubChainId = SONIC_MAINNET_CHAIN_ID;
 const HUB_RPC_URL = 'https://rpc.soniclabs.com';
 
@@ -100,49 +97,63 @@ function displayBaseCurrencyInfo(info: BaseCurrencyInfo) {
   console.log('- Network Base Token Price Decimals:', info.networkBaseTokenPriceDecimals);
 }
 
+async function displayFormattedData() {
+  // fetch reserves
+  const reserves = await sodax.moneyMarket.data.getReservesHumanized();
+
+  // format reserves
+  const formattedReserves = sodax.moneyMarket.data.formatReservesUSD(
+    sodax.moneyMarket.data.buildReserveDataWithPrice(reserves),
+  );
+
+  // fetch user reserves
+  const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized("0x0Ab764AB3816cD036Ea951bE973098510D8105A6");
+
+  // format user summary
+  const userSummary = sodax.moneyMarket.data.formatUserSummary(
+    sodax.moneyMarket.data.buildUserSummaryRequest(reserves, formattedReserves, userReserves),
+  );
+
+  // display formatted data
+  console.log('formattedReserves:', formattedReserves);
+  console.log('userSummary:', userSummary);
+}
+
 // Main function to fetch and display pool data
 async function main() {
   try {
-    // Get list of reserves
-    console.log('Fetching reserves list...');
-    const reserves = await sodax.moneyMarket.getReservesList(
-      moneyMarketConfig.uiPoolDataProvider,
-      moneyMarketConfig.poolAddressesProvider,
-    );
-    console.log('Available Reserves:', reserves);
+    // // // Get list of reserves
+    // console.log('Fetching reserves list...');
+    // const reserves = await sodax.moneyMarket.dataService.getReservesList();
+    // console.log('Available Reserves:', reserves);
 
-    // Get detailed reserve data
-    console.log('\nFetching detailed reserve data...');
-    const [reservesData, baseCurrencyInfo] = await sodax.moneyMarket.getReservesData(
-      moneyMarketConfig.uiPoolDataProvider,
-      moneyMarketConfig.poolAddressesProvider,
-    );
+    // // Get detailed reserve data
+    // console.log('\nFetching detailed reserve data...');
+    // const [reservesData, baseCurrencyInfo] = await sodax.moneyMarket.data.getReservesData();
 
-    // Display data for each reserve
-    for (const reserve of reservesData) {
-      await displayReserveData(reserve);
-    }
+    // // Display data for each reserve
+    // for (const reserve of reservesData) {
+    //   await displayReserveData(reserve);
+    // }
 
-    // Display base currency info
-    displayBaseCurrencyInfo(baseCurrencyInfo);
+    // // Display base currency info
+    // displayBaseCurrencyInfo(baseCurrencyInfo);
 
-    const userAddress = argv[2] as Address;
-    const [userReserves, eModeCategory] = await sodax.moneyMarket.getUserReservesData(
-      userAddress,
-      moneyMarketConfig.uiPoolDataProvider,
-      moneyMarketConfig.poolAddressesProvider,
-    );
+    // const userAddress = argv[2] as Address;
+    // const [userReserves, eModeCategory] = await sodax.moneyMarket.data.getUserReservesData(userAddress);
 
-    console.log('\nUser Position:');
-    console.log('E-Mode Category:', eModeCategory);
-    userReserves.forEach((reserve: UserReserveData) => {
-      if (Number(reserve.scaledATokenBalance) > 0 || Number(reserve.scaledVariableDebt) > 0) {
-        console.log(`\nAsset ${reserve.underlyingAsset}:`);
-        console.log('- Supplied:', reserve.scaledATokenBalance);
-        console.log('- Borrowed:', reserve.scaledVariableDebt);
-        console.log('- Used as Collateral:', reserve.usageAsCollateralEnabledOnUser ? 'Yes' : 'No');
-      }
-    });
+    // console.log('\nUser Position:');
+    // console.log('E-Mode Category:', eModeCategory);
+    // userReserves.forEach((reserve: UserReserveData) => {
+    //   if (Number(reserve.scaledATokenBalance) > 0 || Number(reserve.scaledVariableDebt) > 0) {
+    //     console.log(`\nAsset ${reserve.underlyingAsset}:`);
+    //     console.log('- Supplied:', reserve.scaledATokenBalance);
+    //     console.log('- Borrowed:', reserve.scaledVariableDebt);
+    //     console.log('- Used as Collateral:', reserve.usageAsCollateralEnabledOnUser ? 'Yes' : 'No');
+    //   }
+    // });
+
+    await displayFormattedData();
   } catch (error) {
     console.error('Error:', error);
   }

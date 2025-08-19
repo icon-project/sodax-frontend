@@ -1,5 +1,6 @@
 import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
-import { MoneyMarketService, SolverService, MigrationService } from '../services/index.js';
+import { MoneyMarketService } from '../index.js';
+import { SolverService, MigrationService } from '../services/index.js';
 import type { HttpUrl, SolverConfigParams, MoneyMarketConfigParams, MigrationServiceConfig } from '../types.js';
 import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 
@@ -23,8 +24,8 @@ export class Sodax {
   public readonly moneyMarket: MoneyMarketService; // Money Market service enabling cross-chain lending and borrowing
   public readonly migration: MigrationService; // ICX migration service enabling ICX migration to SODA
 
-  private readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
-  private readonly relayerApiEndpoint: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
+  public readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
+  public readonly relayerApiEndpoint: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
 
   constructor(config?: SodaxConfig) {
     this.config = config;
