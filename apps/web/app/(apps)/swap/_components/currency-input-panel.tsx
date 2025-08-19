@@ -6,8 +6,7 @@ import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
-import TokenSelectorDialog from './token-selector-dialog';
-import InteractiveModal from './interactive-modal';
+import TokenSelectDialog from './token-select-modal';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -110,7 +109,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         </div>
       </div>
 
-      <InteractiveModal
+      <TokenSelectDialog
         isOpen={isTokenSelectorOpen}
         onClose={() => setIsTokenSelectorOpen(false)}
         onTokenSelect={handleTokenSelect}

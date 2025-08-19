@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import type React from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -9,6 +10,7 @@ import { getUniqueTokenSymbols } from '@/lib/token-utils';
 import { Dialog, DialogTitle, DialogContent, DialogHeader, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import CurrencyLogo from '@/components/shared/currency-logo';
 
 const availableChains = [
   { id: SPOKE_CHAIN_IDS[0], name: 'Sonic', icon: '/chain/sonic.png' },
@@ -214,7 +216,7 @@ function StackedNetworks({
 
   return (
     <div className="absolute -top-6 z-10000 pointer-events-auto">
-      <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mt-4 mb-2 text-center">
+      <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mt-6 mb-2 text-center">
         {hoveredIcon !== null && networkInfos[hoveredIcon] ? (
           <>
             {tokenSymbol} <span className="font-bold">on {networkInfos[hoveredIcon].name}</span>
@@ -244,110 +246,7 @@ function StackedNetworks({
   );
 }
 
-function SingleNetworkBadge({
-  networkImage,
-  isHovered,
-  tokenSymbol,
-  chainName,
-}: {
-  networkImage: string;
-  isHovered?: boolean;
-  tokenSymbol?: string;
-  chainName?: string;
-}) {
-  return (
-    <div className="relative w-15 h-12">
-      <div
-        className="absolute bg-white bottom-[4.17%] rounded top-[62.5%] translate-x-[-50%] transition-transform duration-200"
-        data-name="Networks medium"
-        style={{
-          left: 'calc(50% + 14px)',
-          transform: `translateX(-50%) ${isHovered ? 'scale(1.2)' : 'scale(1)'}`,
-        }}
-      >
-        <div className="box-border content-stretch flex flex-col h-full items-center justify-center overflow-clip p-0 relative">
-          <img
-            src={networkImage}
-            alt={`${chainName || 'Network'} badge`}
-            className="shrink-0 size-4 rounded"
-            onError={e => {
-              console.warn(`Failed to load network image: ${networkImage}`);
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-        </div>
-        <div
-          aria-hidden="true"
-          className="absolute border-2 border-white border-solid inset-[-2px] pointer-events-none rounded-md shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.4)]"
-        />
-      </div>
-    </div>
-  );
-}
-
-function CounterBadge({ count, isHovered }: { count: string; isHovered?: boolean }) {
-  return (
-    <div
-      className="absolute bg-white bottom-[4.17%] box-border content-stretch flex flex-col items-center justify-center p-0 rounded top-[62.5%] translate-x-[-50%] w-4 transition-transform duration-200"
-      data-name="Networks medium"
-      style={{
-        left: 'calc(50% + 14px)',
-        transform: `translateX(-50%) ${isHovered ? 'scale(1.2)' : 'scale(1)'}`,
-      }}
-    >
-      <div
-        aria-hidden="true"
-        className="absolute border-2 border-white border-solid inset-[-2px] pointer-events-none rounded-md shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.1)]"
-      />
-      <div
-        className="absolute bg-white h-4 left-1 mix-blend-multiply rounded top-0 w-3"
-        data-name="Networks medium/Variant8"
-      >
-        <div
-          aria-hidden="true"
-          className="absolute border-2 border-white border-solid inset-[-2px] pointer-events-none rounded-md shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.1)]"
-        />
-      </div>
-      <div
-        className="absolute box-border content-stretch flex flex-row items-center justify-start p-0 top-[3px] translate-x-[-50%]"
-        data-name="Counter"
-        style={{ left: 'calc(50% + 2px)' }}
-      >
-        <div
-          className={`font-['Inter:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-espresso text-[8px] text-left text-nowrap transition-all duration-200 ${
-            isHovered ? 'font-bold' : 'font-medium'
-          }`}
-        >
-          <p className="block leading-[1.2] whitespace-pre">{count}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Dynamic Asset Image component
-function DynamicAssetsImg({ symbol }: { symbol: string }) {
-  return (
-    <div
-      className="bg-no-repeat bg-size-[100%_100%] bg-top-left rounded-[256px] shrink-0 size-6"
-      data-name="Assets IMG"
-      style={{ backgroundImage: `url('/coin/${symbol.toLowerCase()}.png')` }}
-    />
-  );
-}
-
-function DynamicAssetsBig({ symbol }: { symbol: string }) {
-  return (
-    <div
-      className="absolute bg-white bottom-1/4 box-border content-stretch flex flex-col items-start justify-start left-1/2 overflow-clip p-0 rounded-[256px] top-1/4 translate-x-[-50%]"
-      data-name="Assets big"
-    >
-      <DynamicAssetsImg symbol={symbol} />
-    </div>
-  );
-}
-
-function DynamicFullAssetBig({
+function CurrencyGroupLogo({
   symbol,
   tokenCount,
   isClicked,
@@ -359,19 +258,75 @@ function DynamicFullAssetBig({
   isHovered?: boolean;
 }) {
   return (
-    <div
-      className="relative shrink-0 size-12 transition-all duration-200 ease-out"
-      data-name="Full asset big"
-      style={{
-        transform: isClicked ? 'translateY(-8px)' : 'translateY(0px)',
-      }}
-    >
-      <div className="absolute inset-0 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.2)]" />
-      <DynamicAssetsBig symbol={symbol} />
-      <div className="transition-opacity duration-200" style={{ opacity: isClicked ? 0 : 1 }}>
-        <CounterBadge count={tokenCount.toString()} isHovered={isHovered} />
+    <>
+      <div className="w-16 h-14 relative">
+        <div data-property-1="Default" className="w-12 h-12 left-[8px] top-[4px] absolute">
+          <div className="w-12 h-12 left-0 top-0 absolute bg-gradient-to-br from-white to-zinc-100 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.20)]" />
+          <div
+            data-property-1="Default"
+            className="left-[12px] top-[12px] absolute bg-White rounded-[256px] inline-flex flex-col justify-start items-start overflow-hidden"
+          >
+            <Image
+              className="w-6 h-6 rounded-[256px]"
+              src={`/coin/${symbol.toLowerCase()}.png`}
+              alt={symbol}
+              width={24}
+              height={24}
+            />
+          </div>
+          <div className="transition-opacity duration-200" style={{ opacity: isClicked ? 0 : 1 }}>
+            <div
+              className="absolute bg-white bottom-[4.17%] box-border content-stretch flex flex-col items-center justify-center p-0 rounded top-[62.5%] translate-x-[-50%] w-4 transition-transform duration-200"
+              data-name="Networks medium"
+              style={{
+                left: 'calc(50% + 14px)',
+                transform: `translateX(-50%) ${isHovered ? 'scale(1.2)' : 'scale(1)'}`,
+              }}
+            >
+              <div
+                aria-hidden="true"
+                className="absolute border-2 border-white border-solid inset-[-2px] pointer-events-none rounded-md shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.1)]"
+              />
+              <div
+                className="absolute bg-white h-4 left-1 mix-blend-multiply rounded top-0 w-3"
+                data-name="Networks medium/Variant8"
+              >
+                <div
+                  aria-hidden="true"
+                  className="absolute border-2 border-white border-solid inset-[-2px] pointer-events-none rounded-md shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.1)]"
+                />
+              </div>
+              <div
+                className="absolute box-border content-stretch flex flex-row items-center justify-start p-0 top-[3px] translate-x-[-50%]"
+                data-name="Counter"
+                style={{ left: 'calc(50% + 2px)' }}
+              >
+                <div
+                  className={`font-['InterRegular'] leading-[0] not-italic relative shrink-0 text-espresso text-[8px] text-left text-nowrap transition-all duration-200 ${
+                    isHovered ? 'font-bold' : 'font-medium'
+                  }`}
+                >
+                  <p className="block leading-[1.2] whitespace-pre">{tokenCount}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+      <div className="relative h-6 w-full">
+        <div
+          className={`font-['InterRegular'] leading-[0] not-italic absolute inset-0 flex items-center justify-center text-[12px] transition-all duration-200 ${
+            isClicked
+              ? 'opacity-0'
+              : isHovered
+                ? 'opacity-100 text-espresso font-bold'
+                : 'opacity-100 text-clay font-medium'
+          }`}
+        >
+          <p className="block leading-[1.4] whitespace-pre">{symbol}</p>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -497,20 +452,7 @@ function GroupAsset({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        <DynamicFullAssetBig symbol={symbol} tokenCount={tokenCount} isClicked={isClicked} isHovered={isHovered} />
-        <div className="relative h-6 w-full">
-          <div
-            className={`font-['Inter:Medium',_sans-serif] leading-[0] not-italic absolute inset-0 flex items-center justify-center text-[12px] transition-all duration-200 ${
-              isClicked
-                ? 'opacity-0'
-                : isHovered
-                  ? 'opacity-100 text-espresso font-bold'
-                  : 'opacity-100 text-clay font-medium'
-            }`}
-          >
-            <p className="block leading-[1.4] whitespace-pre">{symbol}</p>
-          </div>
-        </div>
+        <CurrencyGroupLogo symbol={symbol} tokenCount={tokenCount} isClicked={isClicked} isHovered={isHovered} />
       </motion.div>
       <StackedNetworksPortal
         isClicked={isClicked}
@@ -525,8 +467,7 @@ function GroupAsset({
 
 function SimpleAsset({
   name,
-  imageUrl,
-  networkBadge,
+  token,
   isClickBlurred,
   isHoverDimmed,
   isHovered,
@@ -535,8 +476,7 @@ function SimpleAsset({
   onClick,
 }: {
   name: string;
-  imageUrl: string;
-  networkBadge?: React.ReactNode;
+  token: XToken;
   isClickBlurred: boolean;
   isHoverDimmed: boolean;
   isHovered: boolean;
@@ -562,28 +502,17 @@ function SimpleAsset({
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      <div className="relative shrink-0 size-12" data-name="Full asset big">
-        <div className="absolute inset-0 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.2)]" />
-        <div
-          className="absolute bg-white bottom-1/4 box-border content-stretch flex flex-col items-start justify-start left-1/2 overflow-clip p-0 rounded-[256px] top-1/4 translate-x-[-50%]"
-          data-name="Assets big"
-        >
-          <div
-            className="bg-center bg-cover bg-no-repeat rounded-[256px] shrink-0 size-6"
-            data-name="Assets IMG"
-            style={{ backgroundImage: `url('${imageUrl}')` }}
-          />
-        </div>
-        {React.isValidElement(networkBadge)
-          ? React.cloneElement(networkBadge as React.ReactElement, { isHovered } as { isHovered?: boolean })
-          : networkBadge}
+      <div className="relative">
+        <CurrencyLogo currency={token} />
       </div>
-      <div
-        className={`font-['Inter:Medium',_sans-serif] leading-[0] not-italic relative shrink-0 text-[12px] text-left text-nowrap transition-all duration-200 ${
-          isHovered ? 'text-espresso font-bold' : 'text-clay font-medium'
-        }`}
-      >
-        <p className="block leading-[1.4] whitespace-pre">{name}</p>
+      <div className="relative h-6 w-full">
+        <div
+          className={`font-['InterRegular'] leading-[0] not-italic absolute inset-0 flex items-center justify-center text-[12px] transition-all duration-200 ${
+            isHovered ? 'opacity-100 text-espresso font-bold' : 'opacity-100 text-clay font-medium'
+          }`}
+        >
+          <p className="block leading-[1.4] whitespace-pre">{name}</p>
+        </div>
       </div>
     </motion.div>
   );
@@ -630,7 +559,6 @@ function Assets({
     };
   }, [clickedAsset, onClickOutside]);
 
-  // Filter unique token symbols based on search query
   const filteredTokenSymbols = uniqueTokenSymbols.filter(({ symbol }) =>
     symbol.toLowerCase().includes(searchQuery.toLowerCase()),
   );
@@ -645,7 +573,6 @@ function Assets({
   };
 
   const handleChainClick = (token: XToken) => {
-    console.log('handleChainClick called with token:', token);
     if (onTokenSelect) {
       onTokenSelect(token);
       onClose();
@@ -668,7 +595,6 @@ function Assets({
       onMouseLeave: () => shouldApplyHover && setHoveredAsset(null),
     };
 
-    // When token count > 1, use GroupAsset component
     if (tokenCount > 1) {
       return (
         <GroupAsset
@@ -690,29 +616,11 @@ function Assets({
     const singleToken = tokens[0];
     if (!singleToken) return null;
 
-    const getChainName = (chainId: string): string => {
-      const chain = availableChains.find(chain => chain.id === chainId);
-      return chain?.name || 'Unknown';
-    };
-
-    const getChainImagePath = (chainId: string): string => {
-      const chain = availableChains.find(chain => chain.id === chainId);
-      return chain?.icon || '/chain/sonic.png'; // fallback to sonic
-    };
-
     return (
       <SimpleAsset
         key={symbol}
         name={symbol}
-        imageUrl={`/coin/${symbol.toLowerCase()}.png`}
-        networkBadge={
-          <SingleNetworkBadge
-            networkImage={getChainImagePath(singleToken.xChainId)}
-            isHovered={isHovered}
-            tokenSymbol={symbol}
-            chainName={getChainName(singleToken.xChainId)}
-          />
-        }
+        token={singleToken}
         onClick={() => handleSimpleAssetClick(singleToken)}
         {...commonProps}
       />
@@ -730,7 +638,9 @@ function Assets({
     >
       <AnimatePresence mode="popLayout">
         <ScrollArea className="h-71 !overflow-visible">
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-4">{filteredTokenSymbols.map(renderTokenSymbol)}</div>
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-[10px]">
+            {filteredTokenSymbols.map(renderTokenSymbol)}
+          </div>
         </ScrollArea>
       </AnimatePresence>
     </motion.div>
@@ -820,7 +730,7 @@ function Container({
   );
 }
 
-export default function InteractiveModal({
+export default function TokenSelectDialog({
   isOpen,
   onClose,
   onTokenSelect,
