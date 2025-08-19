@@ -81,7 +81,7 @@ export function useMigrationApprove(
       }
 
       setIsApproved(true);
-      // refetchAllowance();
+      refetchAllowance();
       return result.ok;
     } catch (err) {
       const error = err instanceof Error ? err : new Error('An unknown error occurred');
