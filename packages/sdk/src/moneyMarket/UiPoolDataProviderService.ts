@@ -119,6 +119,10 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
     });
   }
 
+  /**
+   * Get the reserves data humanized
+   * @returns {Promise<ReservesDataHumanized>} - The reserves data humanized
+   */
   public async getReservesHumanized(): Promise<ReservesDataHumanized> {
     const [reservesRaw, poolBaseCurrencyRaw] = await this.getReservesData();
 

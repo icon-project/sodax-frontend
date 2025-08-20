@@ -66,6 +66,9 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <FooterLink href="https://sodax-1.gitbook.io/sodax-docs/readme-1" showArrow>
             Documentation
           </FooterLink>
+          <FooterLink href="https://sodaxscan.com/" showArrow>
+            SODAX Scan
+          </FooterLink>
           <FooterLink
             href="/SODAX.logos.and.token.zip"
             showArrowDown={true}

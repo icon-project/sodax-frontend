@@ -35,13 +35,7 @@ export function useUserReservesData(
         return undefined;
       }
 
-      const hubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
-        address,
-        spokeProvider,
-        sodax.hubProvider,
-      );
-
-      return await sodax.moneyMarket.data.getUserReservesData(hubWalletAddress);
+      return await sodax.moneyMarket.data.getUserReservesData(spokeProvider);
     },
     enabled: !!spokeChainId && !!address,
     refetchInterval,
