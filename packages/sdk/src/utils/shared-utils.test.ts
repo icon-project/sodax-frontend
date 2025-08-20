@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateFeeAmount, calculatePercentageFeeAmount, encodeAddress, hexToBigInt } from './shared-utils.js';
+import { adjustAmountByFee, calculateFeeAmount, calculatePercentageFeeAmount, encodeAddress, hexToBigInt } from './shared-utils.js';
 import type { SpokeChainId } from '@sodax/types';
 
 describe('calculatePercentageAmount', () => {
@@ -154,5 +154,17 @@ describe('calculatePercentageAmount', () => {
     expect(BigInt('0x1234567890abcdef')).toBe(hexToBigInt('0x1234567890abcdef'));
     expect(BigInt('0x1234567890abcdef')).toBe(hexToBigInt('1234567890abcdef'));
     expect(BigInt('0x1234567890abcdef1234567890abcdef')).toBe(hexToBigInt('0x1234567890abcdef1234567890abcdef'));
+  });
+
+  it('should adjust amount by fee correctly', () => {
+    const testCases = [
+      { amount: 1000n, fee: { amount: 100n, address }, quoteType: 'exact_input', expected: 900n },
+      { amount: 1000n, fee: { amount: 100n, address }, quoteType: 'exact_output', expected: 1100n },
+    ] as const;
+
+    for (const { amount, fee, quoteType, expected } of testCases) {
+      const result = adjustAmountByFee(amount, fee, quoteType);
+      expect(result).toBe(expected);
+    }
   });
 });
