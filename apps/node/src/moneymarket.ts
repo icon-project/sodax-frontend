@@ -8,8 +8,11 @@ import {
   type MoneyMarketConfig,
   Sodax,
   type SodaxConfig,
+  SonicSpokeProvider,
+  spokeChainConfig,
 } from '@sodax/sdk';
-import { SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
+import { Hex, SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
 // load PK from .env
 const privateKey = process.env.EVM_PRIVATE_KEY;
@@ -27,6 +30,9 @@ const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
   chainConfig: getHubChainConfig(HUB_CHAIN_ID),
 } satisfies EvmHubProviderConfig;
+
+const spokeEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
+const spokeProvider = new SonicSpokeProvider(spokeEvmWallet, spokeChainConfig[HUB_CHAIN_ID]);
 
 const sodax = new Sodax({
   moneyMarket: moneyMarketConfig,
@@ -107,7 +113,7 @@ async function displayFormattedData() {
   );
 
   // fetch user reserves
-  const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized("0x0Ab764AB3816cD036Ea951bE973098510D8105A6");
+  const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
 
   // format user summary
   const userSummary = sodax.moneyMarket.data.formatUserSummary(

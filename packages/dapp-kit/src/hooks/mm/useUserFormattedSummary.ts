@@ -36,10 +36,7 @@ export function useUserFormattedSummary(
       }
 
       // fetch reserves and hub wallet address
-      const [hubWalletAddress, reserves] = await Promise.all([
-        WalletAbstractionService.getUserHubWalletAddress(address, spokeProvider, sodax.hubProvider),
-        sodax.moneyMarket.data.getReservesHumanized(),
-      ]);
+      const reserves = await sodax.moneyMarket.data.getReservesHumanized();
 
       // format reserves
       const formattedReserves = sodax.moneyMarket.data.formatReservesUSD(
@@ -47,7 +44,7 @@ export function useUserFormattedSummary(
       );
 
       // fetch user reserves
-      const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(hubWalletAddress);
+      const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
 
       // format user summary
       return sodax.moneyMarket.data.formatUserSummary(
