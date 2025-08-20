@@ -715,8 +715,8 @@ The SDK provides several methods to retrieve different types of data:
 - `getReserveNormalizedIncome(asset)` - Get normalized income for a specific asset
 
 #### User Data
-- `getUserReservesData(userAddress)` - Get raw user reserve data
-- `getUserReservesHumanized(userAddress)` - Get humanized user reserve data
+- `getUserReservesData(spokeProvider)` - Get raw user reserve data
+- `getUserReservesHumanized(spokeProvider)` - Get humanized user reserve data
 
 #### E-Mode Data
 - `getEModes()` - Get raw E-Mode data
@@ -749,7 +749,7 @@ const formattedReserves = sodax.moneyMarket.data.formatReservesUSD(
 );
 
 // Fetch user reserves data
-const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized("0x..."); // wallet address
+const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
 
 // Format user summary with USD conversions
 const userSummary = sodax.moneyMarket.data.formatUserSummary(
@@ -771,8 +771,8 @@ First, retrieve the raw data from the blockchain:
 // Get humanized reserves data (normalized decimals)
 const reserves = await sodax.moneyMarket.data.getReservesHumanized();
 
-// Get user reserves data for a specific address
-const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(userAddress);
+// Get user reserves data for a specific spoke provider
+const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
 ```
 
 #### 2. Build Formatting Requests
