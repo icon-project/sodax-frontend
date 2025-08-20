@@ -13,8 +13,8 @@ import {
   type SpokeProvider,
   SpokeService,
   type WaitUntilIntentExecutedPayload,
+  adjustAmountByFee,
   calculateFeeAmount,
-  encodeAddress,
   encodeContractCalls,
   getIntentRelayChainId,
   getSolverConfig,
@@ -227,10 +227,9 @@ export class SolverService {
   public async getQuote(
     payload: SolverIntentQuoteRequest,
   ): Promise<Result<SolverIntentQuoteResponse, SolverErrorResponse>> {
-    // reduce the input amount by the fee amount
     payload = {
       ...payload,
-      amount: payload.amount - this.getFee(payload.amount),
+      amount: adjustAmountByFee(payload.amount, this.config.partnerFee, payload.quote_type),
     } satisfies SolverIntentQuoteRequest;
     return SolverApiService.getQuote(payload, this.config);
   }
@@ -790,12 +789,10 @@ export class SolverService {
         'srcAddress must be the same as wallet address',
       );
 
-      const walletAddressBytes = encodeAddress(params.srcChain, walletAddress);
-
       // derive users hub wallet address
       const creatorHubWalletAddress =
         spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
-          ? walletAddressBytes
+          ? (walletAddress as Address)
           : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
 
       // construct the intent data
@@ -857,11 +854,10 @@ export class SolverService {
       invariant(isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const walletAddressBytes = encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress);
       // derive users hub wallet address
       const creatorHubWalletAddress =
         spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
-          ? walletAddressBytes
+          ? (walletAddress as Address)
           : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
 
       const calls: EvmContractCall[] = [];
