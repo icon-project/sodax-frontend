@@ -12,7 +12,7 @@ export * from './xchains/stellar';
 export * from './xchains/sui';
 export * from './hooks';
 export * from './useXWagmiStore';
-export * from './XWagmiProviders';
+export * from './SodaxWalletProvider';
 
 export * from './types';
 export type * from './types';

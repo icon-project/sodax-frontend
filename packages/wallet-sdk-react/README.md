@@ -47,7 +47,7 @@ This package requires the following peer dependencies:
 ## Quick Start
 
 ```typescript
-import { XWagmiProviders, useXConnectors, useXConnect, useXAccount } from '@sodax/wallet-sdk-react';
+import { SodaxWalletProvider, useXConnectors, useXConnect, useXAccount } from '@sodax/wallet-sdk-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -65,7 +65,7 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <XWagmiProviders
+      <SodaxWalletProvider
         config={{
           EVM: {
             chains: [
@@ -90,7 +90,7 @@ function App() {
         }}
       >
         <WalletConnect />
-      </XWagmiProviders>
+              </SodaxWalletProvider>
     </QueryClientProvider>
   );
 }
@@ -140,7 +140,7 @@ function WalletConnect() {
 ```
 
 This example demonstrates:
-1. Setting up the required providers (`QueryClientProvider` and `XWagmiProviders`)
+1. Setting up the required providers (`QueryClientProvider` and `SodaxWalletProvider`)
 2. Using `useXConnectors` to get available wallet connectors
 3. Using `useXConnect` to handle wallet connections
 4. Using `useXAccount` to display the connected wallet address
@@ -158,7 +158,7 @@ This example demonstrates:
 
 ### Components
 
-- [`XWagmiProviders`](./src/providers/XWagmiProviders.tsx) - Main provider component for wallet connectivity
+- [`SodaxWalletProvider`](./src/SodaxWalletProvider.tsx) - Main provider component for wallet connectivity
 
 ### Hooks
 

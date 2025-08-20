@@ -22,7 +22,7 @@ import { initXWagmiStore, InitXWagmiStore } from './useXWagmiStore';
 
 import { getWagmiConfig } from './xchains/evm/EvmXService';
 
-export const XWagmiProviders = ({ children, config }: { children: React.ReactNode; config: XConfig }) => {
+export const SodaxWalletProvider = ({ children, config }: { children: React.ReactNode; config: XConfig }) => {
   useEffect(() => {
     initXWagmiStore(config);
   }, [config]);

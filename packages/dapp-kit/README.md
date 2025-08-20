@@ -53,7 +53,7 @@ pnpm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk-react
 
 ```typescript
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { XWagmiProviders } from '@sodax/wallet-sdk-react';
+import { SodaxWalletProvider } from '@sodax/wallet-sdk-react';
 import { SodaxProvider } from '@sodax/dapp-kit';
 
 const queryClient = new QueryClient();
@@ -66,7 +66,7 @@ function App() {
   return (
     <SodaxProvider testnet={false} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
-        <XWagmiProviders
+        <SodaxWalletProvider
           config={{
             EVM: {
               wagmiConfig: wagmiConfig,
@@ -80,7 +80,7 @@ function App() {
           }}
         >
           <YourApp />
-        </XWagmiProviders>
+        </SodaxWalletProvider>
       </QueryClientProvider>
     </SodaxProvider>
   );
