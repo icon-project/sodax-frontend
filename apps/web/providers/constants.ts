@@ -8,6 +8,7 @@ import {
   spokeChainConfig,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, ARBITRUM_MAINNET_CHAIN_ID } from '@sodax/types';
+import type { RpcConfig } from '@sodax/dapp-kit';
 
 declare global {
   interface Window {
@@ -51,3 +52,20 @@ export const sodaxConfig = {
     ? 'https://testnet-xcall-relay.nw.iconblockchain.xyz'
     : 'https://xcall-relay.nw.iconblockchain.xyz',
 } satisfies SodaxConfig;
+
+export const rpcConfig: RpcConfig = {
+  // EVM chains
+  sonic: 'https://rpc.soniclabs.com',
+  '0xa86a.avax': 'https://api.avax.network/ext/bc/C/rpc',
+  '0xa4b1.arbitrum': 'https://arb1.arbitrum.io/rpc',
+  '0x2105.base': 'https://mainnet.base.org',
+  '0x38.bsc': 'https://bsc-dataseed1.binance.org',
+  '0xa.optimism': 'https://mainnet.optimism.io',
+  '0x89.polygon': 'https://polygon-rpc.com',
+
+  // Other chains
+  '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
+  solana: 'https://api.mainnet-beta.solana.com',
+  sui: 'https://fullnode.mainnet.sui.io',
+  'injective-1': 'https://sentry.tm.injective.network:26657',
+};

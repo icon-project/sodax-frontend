@@ -10,10 +10,14 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Withdraw tokens from the money market (`useWithdraw`)
   - Borrow tokens from the money market (`useBorrow`)
   - Repay borrowed tokens (`useRepay`)
-  - Get user reserves data (`useUserReservesData`)
-  - Get reserves data (`useReservesData`)
   - Check token allowance (`useMMAllowance`)
   - Approve token spending (`useMMApprove`)
+  - Get user reserves data (`useUserReservesData`)
+  - Get reserves data (`useReservesData`)
+  - Get humanized reserves data (`useReservesHumanized`)
+  - Get list of reserves (`useReservesList`)
+  - Get USD formatted reserves data (`useReservesUsdFormat`)
+  - Get formatted user portfolio summary (`useUserFormattedSummary`)
 
 - Swap/Intent
   - Get quote for an intent order (`useQuote`)
@@ -21,6 +25,7 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Get status of an intent order (`useStatus`)
   - Check token allowance (`useSwapAllowance`)
   - Approve token spending (`useSwapApprove`)
+  - Cancel a swap intent order (`useCancelSwap`)
 
 - Provider
   - Get hub chain provider (`useHubProvider`)
@@ -205,6 +210,7 @@ function SwapComponent() {
 - [`useStatus()`](./src/hooks/swap/useStatus.ts) - Get status of an intent order
 - [`useSwapAllowance()`](./src/hooks/swap/useSwapAllowance.ts) - Check token allowance for an intent order
 - [`useSwapApprove()`](./src/hooks/swap/useSwapApprove.ts) - Approve token spending
+- [`useCancelSwap()`](./src/hooks/swap/useCancelSwap.ts) - Cancel a swap intent order
 
 #### Shared Hooks
 - [`useSodaxContext()`](./src/hooks/shared/useSodaxContext.ts) - Access Sodax context and configuration

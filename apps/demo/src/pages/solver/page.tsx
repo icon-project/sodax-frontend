@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import SwapCard from '@/components/solver/SwapCard';
-import type { Hex, Intent } from '@sodax/sdk';
+import type { Hex, Intent, IntentDeliveryInfo } from '@sodax/sdk';
 import OrderStatus from '@/components/solver/OrderStatus';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SolverPage() {
   const { setIsSolverProduction, isSolverProduction } = useAppStore();
-  const [orders, setOrders] = useState<{ intentHash: Hex; intent: Intent; intentTxHash: Hex }[]>([]);
+  const [orders, setOrders] = useState<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>([]);
 
   return (
     <div className="flex flex-col items-center content-center justify-center h-screen">

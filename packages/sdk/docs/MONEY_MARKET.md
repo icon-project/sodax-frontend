@@ -698,3 +698,221 @@ type MoneyMarketUnknownError<T extends MoneyMarketUnknownErrorCode> = {
 7. **Monitor timeouts**: Use appropriate timeout values and inform users when operations take longer than expected.
 
 8. **Check transaction status**: After timeouts, check the actual transaction status on the blockchain to determine if the operation succeeded despite the timeout.
+
+## Data Retrieval and Formatting
+
+The Money Market SDK provides comprehensive data retrieval and formatting capabilities through the `MoneyMarketDataService`. This service allows you to fetch reserve data, user data, and format them into human-readable values with USD conversions.
+
+### Available Data Methods
+
+The SDK provides several methods to retrieve different types of data:
+
+#### Reserve Data
+- `getReservesList()` - Get list of all reserve addresses
+- `getReservesData()` - Get raw aggregated reserve data
+- `getReservesHumanized()` - Get humanized reserve data with normalized decimals
+- `getReserveData(asset)` - Get specific reserve data for an asset
+- `getReserveNormalizedIncome(asset)` - Get normalized income for a specific asset
+
+#### User Data
+- `getUserReservesData(spokeProvider)` - Get raw user reserve data
+- `getUserReservesHumanized(spokeProvider)` - Get humanized user reserve data
+
+#### E-Mode Data
+- `getEModes()` - Get raw E-Mode data
+- `getEModesHumanized()` - Get humanized E-Mode data
+
+### Data Formatting
+
+The SDK provides powerful formatting capabilities to convert raw blockchain data into human-readable values with USD conversions:
+
+#### Formatting Reserve Data
+- `formatReservesUSD()` - Format reserves with USD conversions
+- `formatReserveUSD()` - Format a single reserve with USD conversion
+
+#### Formatting User Data
+- `formatUserSummary()` - Format user portfolio summary with USD conversions
+
+**NOTE** if you need more customized formatting checkout [math-utils](../src/services/moneyMarket/math-utils/).
+
+### Complete Example: Fetching and Formatting Data
+
+Here's a complete example showing how to retrieve and format money market data:
+
+```typescript
+// Fetch reserves data
+const reserves = await sodax.moneyMarket.data.getReservesHumanized();
+
+// Format reserves with USD conversions
+const formattedReserves = sodax.moneyMarket.data.formatReservesUSD(
+  sodax.moneyMarket.data.buildReserveDataWithPrice(reserves),
+);
+
+// Fetch user reserves data
+const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
+
+// Format user summary with USD conversions
+const userSummary = sodax.moneyMarket.data.formatUserSummary(
+  sodax.moneyMarket.data.buildUserSummaryRequest(reserves, formattedReserves, userReserves),
+);
+
+// Display formatted data
+console.log('formattedReserves:', formattedReserves);
+console.log('userSummary:', userSummary);
+```
+
+### Step-by-Step Data Retrieval Process
+
+#### 1. Fetch Raw Data
+
+First, retrieve the raw data from the blockchain:
+
+```typescript
+// Get humanized reserves data (normalized decimals)
+const reserves = await sodax.moneyMarket.data.getReservesHumanized();
+
+// Get user reserves data for a specific spoke provider
+const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
+```
+
+#### 2. Build Formatting Requests
+
+Use the helper methods to build the formatting requests:
+
+```typescript
+// Build request for reserve formatting
+const reserveFormatRequest = sodax.moneyMarket.data.buildReserveDataWithPrice(reserves);
+
+// Build request for user summary formatting
+const userSummaryRequest = sodax.moneyMarket.data.buildUserSummaryRequest(
+  reserves,
+  formattedReserves,
+  userReserves,
+);
+```
+
+#### 3. Format Data
+
+Apply the formatting to get human-readable values with USD conversions:
+
+```typescript
+// Format reserves with USD values
+const formattedReserves = sodax.moneyMarket.data.formatReservesUSD(reserveFormatRequest);
+
+// Format user summary with USD values
+const userSummary = sodax.moneyMarket.data.formatUserSummary(userSummaryRequest);
+```
+
+### Data Structure Examples
+
+#### Formatted Reserve Data
+
+The `formattedReserves` array contains objects with the following structure:
+
+```typescript
+type FormattedReserve = {
+  // Basic reserve information
+  symbol: string;
+  name: string;
+  decimals: number;
+  address: string;
+  
+  // Supply information
+  totalScaledVariableDebt: string;
+  availableLiquidity: string;
+  totalPrincipalStableDebt: string;
+  averageStableRate: string;
+  liquidityIndex: string;
+  variableBorrowIndex: string;
+  lastUpdateTimestamp: number;
+  
+  // USD values
+  totalLiquidityUSD: string;
+  totalVariableDebtUSD: string;
+  totalStableDebtUSD: string;
+  availableLiquidityUSD: string;
+  
+  // Rates and factors
+  liquidityRate: string;
+  variableBorrowRate: string;
+  stableBorrowRate: string;
+  averageStableRate: string;
+  liquidityIndex: string;
+  variableBorrowIndex: string;
+  
+  // Configuration
+  usageAsCollateralEnabledOnUser: boolean;
+  borrowingEnabled: boolean;
+  stableBorrowRateEnabled: boolean;
+  isActive: boolean;
+  isFrozen: boolean;
+  
+  // E-Mode
+  eModeCategoryId: number;
+  
+  // Price information
+  priceInMarketReferenceCurrency: string;
+  priceInUsd: string;
+};
+```
+
+#### Formatted User Summary
+
+The `userSummary` object contains the user's portfolio information:
+
+```typescript
+type FormattedUserSummary = {
+  // Total portfolio values
+  totalCollateralUSD: string;
+  totalBorrowsUSD: string;
+  totalLiquidityUSD: string;
+  totalFeesUSD: string;
+  totalRewardsUSD: string;
+  
+  // Health factor and borrowing power
+  healthFactor: string;
+  availableBorrowsUSD: string;
+  availableBorrowsMarketReferenceCurrency: string;
+  
+  // Liquidation information
+  totalCollateralMarketReferenceCurrency: string;
+  totalBorrowsMarketReferenceCurrency: string;
+  totalFeesMarketReferenceCurrency: string;
+  totalRewardsMarketReferenceCurrency: string;
+  
+  // Current timestamp
+  currentTimestamp: number;
+  
+  // Market reference currency info
+  marketReferenceCurrencyDecimals: number;
+  marketReferenceCurrencyPriceInUsd: string;
+  
+  // E-Mode information
+  userEmodeCategoryId: number;
+};
+```
+
+### Utility Functions
+
+The SDK also provides utility functions for formatting specific values:
+
+```typescript
+import { formatPercentage, formatBasisPoints } from '@sodax/sdk';
+
+// Format percentage values (e.g., interest rates)
+// rateValue is a bigint representing the rate with 27 decimals
+const rateValue = 52500000000000000000000000n; // 5.25% with 27 decimals
+const formattedRate = formatPercentage(rateValue, 27); // Returns "5.25%"
+
+// Format basis points
+// basisPointsValue is a bigint representing basis points (1 basis point = 0.01%)
+const basisPointsValue = 250n; // 250 basis points = 2.50%
+const formattedBasisPoints = formatBasisPoints(basisPointsValue); // Returns "2.50%"
+
+// Example with different values
+const highRate = 150000000000000000000000000n; // 15% with 27 decimals
+const highRateFormatted = formatPercentage(highRate, 27); // Returns "15.00%"
+
+const lowBasisPoints = 50n; // 50 basis points = 0.50%
+const lowBasisPointsFormatted = formatBasisPoints(lowBasisPoints); // Returns "0.50%"
+```

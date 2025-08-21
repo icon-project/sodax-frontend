@@ -18,6 +18,7 @@ import {
   type CreateIntentParams,
   type Hex,
   type Intent,
+  IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
   spokeChainConfig,
   supportedSpokeChains,
@@ -41,7 +42,7 @@ import { useAppStore } from '@/zustand/useAppStore';
 export default function SwapCard({
   setOrders,
 }: {
-  setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; intentTxHash: Hex }[]>) => void;
+  setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>) => void;
 }) {
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
@@ -162,7 +163,7 @@ export default function SwapCard({
       outputToken: destToken.address, // The address of the output token on hub chain
       inputAmount: scaleTokenAmount(sourceAmount, sourceToken.decimals), // The amount of input tokens
       minOutputAmount: BigInt(minOutputAmount.toFixed(0)), // The minimum amount of output tokens to accept
-      deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
+      deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires (0 = no deadline)
       allowPartialFill: false, // Whether the intent can be partially filled
       srcChain: sourceChain, // Chain ID where input tokens originate
       dstChain: destChain, // Chain ID where output tokens should be delivered
@@ -182,9 +183,9 @@ export default function SwapCard({
     const result = await swap(intentOrderPayload);
 
     if (result.ok) {
-      const [response, intent, intentTxHash] = result.value;
+      const [response, intent, intentDeliveryInfo] = result.value;
 
-      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, intentTxHash }]);
+      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, intentDeliveryInfo }]);
     } else {
       console.error('Error creating and submitting intent:', result.error);
     }
@@ -365,7 +366,7 @@ export default function SwapCard({
                 <div>
                   inputAmount: {normaliseTokenAmount(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}
                 </div>
-                <div>deadline: {intentOrderPayload?.deadline.toString()}</div>
+                <div>deadline: {new Date(Number(intentOrderPayload?.deadline) * 1000).toLocaleString()}</div>
                 <div>allowPartialFill: {intentOrderPayload?.allowPartialFill.toString()}</div>
                 <div>srcAddress: {intentOrderPayload?.srcAddress}</div>
                 <div>dstAddress: {intentOrderPayload?.dstAddress}</div>

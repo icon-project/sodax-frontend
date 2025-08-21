@@ -1,7 +1,7 @@
 import type { Token, XToken } from '@sodax/types';
 import { type Address, parseUnits } from 'viem';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import type { IcxCreateRevertMigrationParams, SpokeProvider } from '@sodax/sdk';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { useMigrationAllowance } from './useMigrationAllowance';
@@ -11,6 +11,8 @@ interface UseApproveReturn {
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
+  isApproved: boolean;
+  resetApproval: () => void;
 }
 
 /**
@@ -27,17 +29,30 @@ interface UseApproveReturn {
  * ```
  */
 
-export function useMigrationApprove(token: XToken | undefined, amount: string | undefined, iconAddress: string | undefined, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
+export function useMigrationApprove(
+  token: XToken | undefined,
+  amount: string | undefined,
+  iconAddress: string | undefined,
+  spokeProvider: SpokeProvider | undefined,
+): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isApproved, setIsApproved] = useState(false);
 
-  const { refetch: refetchAllowance } = useMigrationAllowance(
-    token,
-    amount,
-    iconAddress,
-    spokeProvider,
-  );
+  const { refetch: refetchAllowance } = useMigrationAllowance(token, amount, iconAddress, spokeProvider);
+
+  // Track previous values to reset approval state when needed
+  const prevTokenAddress = useRef<string | undefined>(undefined);
+  const prevAmount = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (prevTokenAddress.current !== token?.address || prevAmount.current !== amount) {
+      setIsApproved(false);
+      prevTokenAddress.current = token?.address;
+      prevAmount.current = amount;
+    }
+  }, [token?.address, amount]);
 
   const approve = useCallback(async () => {
     try {
@@ -65,7 +80,8 @@ export function useMigrationApprove(token: XToken | undefined, amount: string | 
         throw new Error('Failed to approve tokens');
       }
 
-      await refetchAllowance();
+      setIsApproved(true);
+      refetchAllowance();
       return result.ok;
     } catch (err) {
       const error = err instanceof Error ? err : new Error('An unknown error occurred');
@@ -80,10 +96,16 @@ export function useMigrationApprove(token: XToken | undefined, amount: string | 
     setError(null);
   }, []);
 
+  const resetApproval = useCallback(() => {
+    setIsApproved(false);
+  }, []);
+
   return {
     approve,
     isLoading,
     error,
     resetError,
+    isApproved,
+    resetApproval,
   };
 }

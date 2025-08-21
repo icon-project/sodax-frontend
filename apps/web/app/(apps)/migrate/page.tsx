@@ -18,7 +18,7 @@ import { useMigrate, useMigrationAllowance, useMigrationApprove } from './_hooks
 import { Check, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useSpokeProvider } from '@sodax/dapp-kit';
-import { useEvmSwitchChain } from '@sodax/wallet-sdk';
+import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
 
 export default function MigratePage() {
   const { openWalletModal } = useWalletUI();
@@ -55,25 +55,29 @@ export default function MigratePage() {
     setTypedValue(Number(formatUnits(value, currencies.from.decimals)).toFixed(2));
   };
 
-  const spokeProvider = useSpokeProvider(direction.from);
+  // Get wallet provider for the source chain
+  const walletProvider = useWalletProvider(direction.from);
+  const spokeProvider = useSpokeProvider(direction.from, walletProvider);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(
     currencies.from,
     typedValue,
     iconAddress,
     spokeProvider,
   );
-  const { approve, isLoading: isApproving } = useMigrationApprove(
-    currencies.from,
-    typedValue,
-    iconAddress,
-    spokeProvider,
-  );
+  const {
+    approve,
+    isLoading: isApproving,
+    isApproved,
+  } = useMigrationApprove(currencies.from, typedValue, iconAddress, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
   const { mutateAsync: migrate, isPending } = useMigrate();
   const handleApprove = async () => {
     await approve();
   };
+
+  // Combine allowance check with approval state for immediate UI feedback
+  const hasSufficientAllowance = hasAllowed || isApproved;
 
   return (
     <div className="flex flex-col w-full" style={{ gap: 'var(--layout-space-comfortable)' }}>
@@ -142,11 +146,11 @@ export default function MigratePage() {
                     type="button"
                     variant="cherry"
                     onClick={handleApprove}
-                    disabled={isApproving || isAllowanceLoading || hasAllowed || !!error}
+                    disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!error}
                   >
-                    {isApproving ? 'Approving' : hasAllowed ? 'Approved' : 'Approve'}
+                    {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
                     {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {hasAllowed && <Check className="w-4 h-4 text-clay-light" />}
+                    {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
                   </Button>
                 )}
 
@@ -161,7 +165,11 @@ export default function MigratePage() {
                       console.error(error);
                     }
                   }}
-                  disabled={isPending || !!error || !hasAllowed || isApproving}
+                  disabled={
+                    isPending ||
+                    !!error ||
+                    (direction.from === SONIC_MAINNET_CHAIN_ID && (!hasSufficientAllowance || isApproving))
+                  }
                 >
                   {error ? (
                     error
