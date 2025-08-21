@@ -32,7 +32,7 @@ export function SupplyAssetsList() {
     address,
   });
 
-  const { data: userReserves } = useUserReservesData(spokeProvider?.chainConfig.chain.id, address);
+  const { data: userReserves } = useUserReservesData(spokeProvider, address);
 
   return (
     <Card>
