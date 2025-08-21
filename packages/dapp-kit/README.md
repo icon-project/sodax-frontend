@@ -25,6 +25,7 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Get status of an intent order (`useStatus`)
   - Check token allowance (`useSwapAllowance`)
   - Approve token spending (`useSwapApprove`)
+  - Cancel a swap intent order (`useCancelSwap`)
 
 - Provider
   - Get hub chain provider (`useHubProvider`)
@@ -209,6 +210,7 @@ function SwapComponent() {
 - [`useStatus()`](./src/hooks/swap/useStatus.ts) - Get status of an intent order
 - [`useSwapAllowance()`](./src/hooks/swap/useSwapAllowance.ts) - Check token allowance for an intent order
 - [`useSwapApprove()`](./src/hooks/swap/useSwapApprove.ts) - Approve token spending
+- [`useCancelSwap()`](./src/hooks/swap/useCancelSwap.ts) - Cancel a swap intent order
 
 #### Shared Hooks
 - [`useSodaxContext()`](./src/hooks/shared/useSodaxContext.ts) - Access Sodax context and configuration

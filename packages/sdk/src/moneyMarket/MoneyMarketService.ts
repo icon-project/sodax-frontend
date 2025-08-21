@@ -616,6 +616,7 @@ export class MoneyMarketService {
       );
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
       const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
         walletAddress,
         spokeProvider,
@@ -965,13 +966,32 @@ export class MoneyMarketService {
       this.hubProvider,
     );
 
-    const data: Hex = this.buildWithdrawData(
-      hubWallet,
-      encodedAddress,
-      params.token,
-      params.amount,
-      spokeProvider.chainConfig.chain.id,
-    );
+    let data: Hex;
+    if (spokeProvider instanceof SonicSpokeProvider) {
+      const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
+        params.token as GetAddressType<SonicSpokeProvider>,
+        params.amount,
+        spokeProvider,
+        this.data,
+      );
+
+      data = await SonicSpokeService.buildWithdrawData(
+        walletAddress as GetAddressType<SonicSpokeProvider>,
+        withdrawInfo,
+        params.amount,
+        spokeProvider,
+        this,
+        hubWallet,
+      );
+    } else {
+      data = this.buildWithdrawData(
+        hubWallet,
+        encodedAddress,
+        params.token,
+        params.amount,
+        spokeProvider.chainConfig.chain.id,
+      );
+    }
 
     const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
@@ -1126,7 +1146,12 @@ export class MoneyMarketService {
       spokeProvider,
       this.hubProvider,
     );
-    const data: Hex = this.buildRepayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
+    const data: Hex = this.buildRepayData(
+      params.token,
+      hubWallet,
+      params.amount,
+      spokeProvider.chainConfig.chain.id,
+    );
 
     const txResult = await SpokeService.deposit(
       {
@@ -1165,9 +1190,15 @@ export class MoneyMarketService {
 
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
 
-    const assetAddress = assetConfig.asset;
+    let assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const lendingPool = this.config.lendingPool;
+
+    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
+      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
+        assetAddress = spokeChainConfig[this.hubProvider.chainConfig.chain.id].supportedTokens.wS.address;
+      }
+    }
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
@@ -1209,10 +1240,16 @@ export class MoneyMarketService {
 
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
 
-    const assetAddress = assetConfig.asset;
+    let assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
+
+    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
+      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
+        assetAddress = spokeChainConfig[this.hubProvider.chainConfig.chain.id].supportedTokens.wS.address;
+      }
+    }
 
     const feeAmount = calculateFeeAmount(amount, this.config.partnerFee);
     const calls: EvmContractCall[] = [];
@@ -1351,10 +1388,16 @@ export class MoneyMarketService {
       throw new Error('[buildRepayData] Hub asset not found');
     }
 
-    const assetAddress = assetConfig.asset;
+    let assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
+
+    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
+      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
+        assetAddress = spokeChainConfig[this.hubProvider.chainConfig.chain.id].supportedTokens.wS.address;
+      }
+    }
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
