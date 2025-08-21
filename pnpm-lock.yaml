@@ -26216,20 +26216,11 @@ snapshots:
       - utf-8-validate
     optional: true
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> feat/migration-page
   react-number-format@5.4.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
-<<<<<<< HEAD
-=======
->>>>>>> main
-=======
->>>>>>> feat/migration-page
   react-qr-reader@2.2.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       jsqr: 1.4.0
