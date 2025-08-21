@@ -44,8 +44,8 @@ export function calculateAllUserIncentives({
       const userReserve: UserReserveCalculationData | undefined =
         userReserves.find(
           (userReserve: UserReserveCalculationData) =>
-            userReserve.reserve.underlyingAsset ===
-            userIncentive.underlyingAsset,
+            userReserve.reserve.underlyingAsset.toLowerCase() ===
+            userIncentive.underlyingAsset.toLowerCase(),
         );
       if (reserve) {
         const reserveRewards: UserReserveIncentive[] =

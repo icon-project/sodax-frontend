@@ -89,10 +89,11 @@ export class MoneyMarketDataService {
   ): Promise<readonly [readonly UserReserveData[], number]> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     // derive users hub wallet address
-    const hubWalletAddress =
-      spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
-        ? (walletAddress as Address)
-        : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
+    const hubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
+      walletAddress,
+      spokeProvider,
+      this.hubProvider,
+    );
     return this.uiPoolDataProviderService.getUserReservesData(hubWalletAddress);
   }
 
@@ -131,10 +132,11 @@ export class MoneyMarketDataService {
   }> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     // derive users hub wallet address
-    const hubWalletAddress =
-      spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
-        ? (walletAddress as Address)
-        : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
+    const hubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
+      walletAddress,
+      spokeProvider,
+      this.hubProvider,
+    );
     return this.uiPoolDataProviderService.getUserReservesHumanized(hubWalletAddress);
   }
 
