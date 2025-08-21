@@ -1,8 +1,6 @@
-import { type UserReserveData, WalletAbstractionService } from '@sodax/sdk';
-import type { ChainId } from '@sodax/types';
+import { SpokeProvider, type UserReserveData } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import { useSpokeProvider } from '../provider/useSpokeProvider';
 
 /**
  * Hook for fetching user reserves data from the Sodax money market.
@@ -12,7 +10,7 @@ import { useSpokeProvider } from '../provider/useSpokeProvider';
  *
  * @example
  * ```typescript
- * const { data: userReservesData, isLoading, error } = useUserReservesData();
+ * const { data: userReservesData, isLoading, error } = useUserReservesData(spokeProvider, address);
  * ```
  *
  * @returns A React Query result object containing:
@@ -21,23 +19,22 @@ import { useSpokeProvider } from '../provider/useSpokeProvider';
  *   - error: Any error that occurred during data fetching
  */
 export function useUserReservesData(
-  spokeChainId: ChainId | undefined,
+  spokeProvider: SpokeProvider | undefined,
   address: string | undefined,
   refetchInterval = 5000,
-): UseQueryResult<readonly [readonly UserReserveData[], number] | undefined, Error> {
+): UseQueryResult<readonly [readonly UserReserveData[], number], Error> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(spokeChainId);
 
   return useQuery({
-    queryKey: ['userReserves', spokeChainId, address],
+    queryKey: ['userReserves', spokeProvider?.chainConfig.chain.id, address],
     queryFn: async () => {
-      if (!spokeProvider || !address) {
-        return undefined;
+      if (!spokeProvider) {
+        throw new Error('Spoke provider or address is not defined');
       }
 
       return await sodax.moneyMarket.data.getUserReservesData(spokeProvider);
     },
-    enabled: !!spokeChainId && !!address,
+    enabled: !!spokeProvider && !!address,
     refetchInterval,
   });
 }
