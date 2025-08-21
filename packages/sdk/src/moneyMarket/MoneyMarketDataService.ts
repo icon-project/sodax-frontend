@@ -1,4 +1,4 @@
-import type { EvmHubProvider } from '../entities/Providers.js';
+import type {  EvmHubProvider, SpokeProvider } from '../entities/Providers.js';
 import type {
   AggregatedReserveData,
   BaseCurrencyInfo,
@@ -24,12 +24,15 @@ import {
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
 import type { Address } from '@sodax/types';
+import { WalletAbstractionService } from '../index.js';
 
 export class MoneyMarketDataService {
-  private readonly uiPoolDataProviderService: UiPoolDataProviderService;
-  private readonly lendingPoolService: LendingPoolService;
+  public readonly uiPoolDataProviderService: UiPoolDataProviderService;
+  public readonly lendingPoolService: LendingPoolService;
+  public readonly hubProvider: EvmHubProvider;
 
   constructor(hubProvider: EvmHubProvider) {
+    this.hubProvider = hubProvider;
     this.uiPoolDataProviderService = new UiPoolDataProviderService(hubProvider);
     this.lendingPoolService = new LendingPoolService(hubProvider);
   }
@@ -38,10 +41,20 @@ export class MoneyMarketDataService {
    * LendingPool
    */
 
+  /**
+   * Get the normalized income for a reserve
+   * @param asset - The address of the asset
+   * @returns {Promise<bigint>} - Normalized income
+   */
   public async getReserveNormalizedIncome(asset: Address): Promise<bigint> {
     return this.lendingPoolService.getReserveNormalizedIncome(asset);
   }
 
+  /**
+   * Get the reserve data for an asset
+   * @param asset - The address of the asset
+   * @returns {Promise<ReserveDataLegacy>} - The reserve data
+   */
   public async getReserveData(asset: Address): Promise<ReserveDataLegacy> {
     return this.lendingPoolService.getReserveData(asset);
   }
@@ -50,35 +63,79 @@ export class MoneyMarketDataService {
    * UiPoolDataProvider
    */
 
+  /**
+   * Get the reserves list
+   * @returns {Promise<readonly Address[]>} - List of reserve asset addresses
+   */
   public async getReservesList(): Promise<readonly Address[]> {
     return this.uiPoolDataProviderService.getReservesList();
   }
 
+  /**
+   * Get the reserves data
+   * @returns {Promise<readonly [readonly AggregatedReserveData[], BaseCurrencyInfo]>} - The reserves data
+   */
   public async getReservesData(): Promise<readonly [readonly AggregatedReserveData[], BaseCurrencyInfo]> {
     return this.uiPoolDataProviderService.getReservesData();
   }
 
-  public async getUserReservesData(userAddress: Address): Promise<readonly [readonly UserReserveData[], number]> {
-    return this.uiPoolDataProviderService.getUserReservesData(userAddress);
+  /**
+   * Get the user reserves data
+   * @param spokeProvider - The spoke provider
+   * @returns {Promise<readonly [readonly UserReserveData[], number]>} - The user reserves data
+   */
+  public async getUserReservesData(
+    spokeProvider: SpokeProvider,
+  ): Promise<readonly [readonly UserReserveData[], number]> {
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    // derive users hub wallet address
+    const hubWalletAddress =
+      spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
+        ? (walletAddress as Address)
+        : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
+    return this.uiPoolDataProviderService.getUserReservesData(hubWalletAddress);
   }
 
+  /**
+   * Get the list of all eModes in the pool
+   * @returns {Promise<readonly EModeData[]>} - Array of eMode data
+   */
   public async getEModes(): Promise<readonly EModeData[]> {
     return this.uiPoolDataProviderService.getEModes();
   }
 
+  /**
+   * Get the list of all eModes in the pool humanized
+   * @returns {Promise<EmodeDataHumanized[]>} - Array of eMode data humanized
+   */
   public async getEModesHumanized(): Promise<EmodeDataHumanized[]> {
     return this.uiPoolDataProviderService.getEModesHumanized();
   }
 
+  /**
+   * Get the reserves data humanized
+   * @returns {Promise<ReservesDataHumanized>} - The reserves data humanized
+   */
   public async getReservesHumanized(): Promise<ReservesDataHumanized> {
     return this.uiPoolDataProviderService.getReservesHumanized();
   }
 
-  public async getUserReservesHumanized(userAddress: Address): Promise<{
+  /**
+   * Get the user reserves humanized
+   * @param spokeProvider - The spoke provider
+   * @returns {Promise<{userReserves: UserReserveDataHumanized[], userEmodeCategoryId: number}>} - The user reserves humanized
+   */
+  public async getUserReservesHumanized(spokeProvider: SpokeProvider): Promise<{
     userReserves: UserReserveDataHumanized[];
     userEmodeCategoryId: number;
   }> {
-    return this.uiPoolDataProviderService.getUserReservesHumanized(userAddress);
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    // derive users hub wallet address
+    const hubWalletAddress =
+      spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
+        ? (walletAddress as Address)
+        : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
+    return this.uiPoolDataProviderService.getUserReservesHumanized(hubWalletAddress);
   }
 
   /**
@@ -86,7 +143,7 @@ export class MoneyMarketDataService {
    */
 
   /**
-   * @description builds the request for the formatReserves function
+   * @description Util function to build the request for the formatReserves function
    */
   public buildReserveDataWithPrice(reserves: ReservesDataHumanized): FormatReservesUSDRequest<ReserveDataWithPrice> {
     // Current UNIX timestamp in seconds
@@ -102,7 +159,7 @@ export class MoneyMarketDataService {
   }
 
   /**
-   * @description builds the request for the formatReserves function
+   * @description Util function to build the request for the formatReserves function
    */
   public buildUserSummaryRequest(
     reserves: ReservesDataHumanized,

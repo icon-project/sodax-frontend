@@ -73,7 +73,7 @@ const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of
 const createIntentParams = {
   inputToken: '0x..',  // The address of the input token on spoke chain
   outputToken: '0x..',  // The address of the output token on spoke chain
-  inputAmount: BigInt(1000000), // The amount of input tokens
+  inputAmount: BigInt(1000000), // The amount of input tokens (fee will be deducted from this amount)
   minOutputAmount: BigInt(900000), // min amount you are expecting to receive
   deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
   allowPartialFill: false, // Whether the intent can be partially filled
@@ -92,7 +92,7 @@ All solver functions use object parameters for better readability and extensibil
 
 - **`intentParams`**: The `CreateIntentParams` object containing swap details
 - **`spokeProvider`**: The spoke provider instance for the source chain
-- **`fee`**: (Optional) Partner fee configuration. If not provided, uses the default partner fee from config
+- **`fee`**: (Optional) Partner fee configuration. If not provided, uses the default partner fee from config. **Note**: Fees are now deducted from the input amount rather than added to it.
 - **`raw`**: (Optional) Whether to return raw transaction data instead of executing the transaction
 - **`timeout`**: (Optional) Timeout in milliseconds for relay operations (default: 60 seconds)
 
@@ -109,9 +109,10 @@ const fee = sodax.solver.getFee(inputAmount);
 
 console.log('Fee amount:', fee); // Fee in input token units
 console.log('Fee percentage:', Number(fee) / Number(inputAmount) * 100); // Fee as percentage
+console.log('Amount after fee deduction:', inputAmount - fee); // Actual amount used for swap
 ```
 
-**Note**: If no partner fee is configured, the function returns `0n`.
+**Note**: If no partner fee is configured, the function returns `0n`. The fee is deducted from the input amount, so the actual amount used for the swap will be `inputAmount - fee`.
 
 ### Token Approval Flow
 
@@ -130,7 +131,6 @@ const evmWalletAddress = evmWalletProvider.getWalletAddress();
 const isApproved = await sodax.solver.isAllowanceValid({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
-  fee, // optional - uses configured partner fee if not provided
 });
 
 if (!isApproved.ok) {
@@ -141,7 +141,6 @@ if (!isApproved.ok) {
   const approveResult = await sodax.solver.approve({
     intentParams: createIntentParams,
     spokeProvider: bscSpokeProvider,
-    fee, // optional - uses configured partner fee if not provided
   });
 
   if (!approveResult.ok) {
@@ -155,6 +154,8 @@ if (!isApproved.ok) {
 // Now you can proceed with creating the intent
 // ... continue with createIntent or createAndSubmitIntent ...
 ```
+
+**Important**: The approval amount is now the same as the `inputAmount` specified in your intent parameters. The fee is automatically deducted from this amount during intent creation, so you only need to approve the exact amount you want to swap.
 
 ### Estimate Gas for Raw Transactions
 
@@ -192,7 +193,6 @@ if (createIntentResult.ok) {
 const approveResult = await sodax.solver.approve({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
-  fee, // optional - uses configured partner fee if not provided
   raw: true // true = get raw transaction
 });
 
@@ -272,6 +272,8 @@ Example for BSC -> ARB Intent Order:
   // txHash/rawTx, Intent & FeeAmount, and create intent data (Hex) - for createIntent
   const [rawTx, intent, intentDataHex] = createIntentResult.value;
 ```
+
+**Important**: When creating an intent, the fee is automatically deducted from the `inputAmount` specified in your `createIntentParams`. The actual amount used for the swap will be `inputAmount - feeAmount`. Make sure your `inputAmount` is sufficient to cover both the swap amount and the fee.
 
 ### Submit Intent to Relay API
 
@@ -383,7 +385,7 @@ if (!swapResult.ok) {
   if (isIntentCreationFailedError(error)) {
     // Intent creation failed on the spoke chain
     // This could be due to:
-    // - Insufficient token balance
+    // - Insufficient token balance (including fee)
     // - Invalid token addresses
     // - Network issues on the spoke chain
     // - Invalid parameters (chain IDs, addresses, etc.)
@@ -455,14 +457,14 @@ if (!createIntentResult.ok) {
     console.error('Original error:', error.data.error);
 
     // Common causes:
-    // - Insufficient token balance (including fee)
+    // - Insufficient token balance (the inputAmount should cover both the swap amount and fee)
     // - Invalid token addresses or chain IDs
     // - Network issues on the spoke chain
     // - Invalid wallet address or permissions
     // - Contract interaction failures
 
     // You may want to:
-    // - Check user's token balance
+    // - Check user's token balance (ensure it's >= inputAmount)
     // - Verify token addresses and chain configurations
     // - Retry with different parameters
   }

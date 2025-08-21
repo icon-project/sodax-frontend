@@ -42,7 +42,7 @@ export class LendingPoolService {
 
   /**
    * Get the normalized income for a reserve
-   * @param asset The address of the asset
+   * @param asset - The address of the asset
    * @returns {Promise<bigint>} - Normalized income
    */
   async getReserveNormalizedIncome(asset: Address): Promise<bigint> {
