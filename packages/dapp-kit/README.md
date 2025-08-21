@@ -10,10 +10,14 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Withdraw tokens from the money market (`useWithdraw`)
   - Borrow tokens from the money market (`useBorrow`)
   - Repay borrowed tokens (`useRepay`)
-  - Get user reserves data (`useUserReservesData`)
-  - Get reserves data (`useReservesData`)
   - Check token allowance (`useMMAllowance`)
   - Approve token spending (`useMMApprove`)
+  - Get user reserves data (`useUserReservesData`)
+  - Get reserves data (`useReservesData`)
+  - Get humanized reserves data (`useReservesHumanized`)
+  - Get list of reserves (`useReservesList`)
+  - Get USD formatted reserves data (`useReservesUsdFormat`)
+  - Get formatted user portfolio summary (`useUserFormattedSummary`)
 
 - Swap/Intent
   - Get quote for an intent order (`useQuote`)
@@ -21,6 +25,7 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Get status of an intent order (`useStatus`)
   - Check token allowance (`useSwapAllowance`)
   - Approve token spending (`useSwapApprove`)
+  - Cancel a swap intent order (`useCancelSwap`)
 
 - Provider
   - Get hub chain provider (`useHubProvider`)
@@ -42,7 +47,7 @@ pnpm add @sodax/dapp-kit
 1. First, install the required dependencies:
 
 ```bash
-npm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
+pnpm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
 ```
 
 2. Set up the providers in your app:
@@ -51,31 +56,16 @@ npm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { XWagmiProviders } from '@sodax/wallet-sdk';
 import { SodaxProvider } from '@sodax/dapp-kit';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 const queryClient = new QueryClient();
 
-// Configure Sodax
-const sodaxConfig = {
-  hubProviderConfig: {
-    hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
-  },
-  moneyMarket: getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID),
-  solver: {
-    intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-    solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-    partnerFee: {
-      address: '0x0Ab764AB3816cD036Ea951bE973098510D8105A6',
-      percentage: 100, // 1%
-    },
-  },
-  relayerApiEndpoint: 'https://xcall-relay.nw.iconblockchain.xyz',
+const rpcConfig = {
+  "solana": "private rpc url",
 };
 
 function App() {
   return (
-    <SodaxProvider testnet={false} config={sodaxConfig}>
+    <SodaxProvider testnet={false} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
         <XWagmiProviders
           config={{
@@ -220,6 +210,7 @@ function SwapComponent() {
 - [`useStatus()`](./src/hooks/swap/useStatus.ts) - Get status of an intent order
 - [`useSwapAllowance()`](./src/hooks/swap/useSwapAllowance.ts) - Check token allowance for an intent order
 - [`useSwapApprove()`](./src/hooks/swap/useSwapApprove.ts) - Approve token spending
+- [`useCancelSwap()`](./src/hooks/swap/useCancelSwap.ts) - Cancel a swap intent order
 
 #### Shared Hooks
 - [`useSodaxContext()`](./src/hooks/shared/useSodaxContext.ts) - Access Sodax context and configuration

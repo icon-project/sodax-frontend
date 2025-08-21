@@ -1,0 +1,115 @@
+import BigNumber from 'bignumber.js';
+import { normalize } from '../../bignumber.js';
+import {
+  ReserveIncentiveMock,
+  ReserveMock,
+  UserIncentiveMock,
+  UserReserveMock,
+} from '../../mocks.js';
+import { calculateReserveDebt } from '../reserve/calculate-reserve-debt.js';
+import {
+  calculateUserReserveIncentives,
+  type CalculateUserReserveIncentivesRequest,
+} from './calculate-user-reserve-incentives.js';
+import { describe, expect, it } from 'vitest';
+
+describe('calculateUserReserveIncentives', () => {
+  const reserveMock = new ReserveMock().addLiquidity(100).addVariableDebt(200);
+  const userMock = new UserReserveMock().supply(100).variableBorrow(200);
+  const reserveIncentiveMock = new ReserveIncentiveMock();
+  const userIncentiveMock = new UserIncentiveMock();
+  const currentTimestamp = 1;
+  const { totalLiquidity } = calculateReserveDebt(
+    reserveMock.reserve,
+    currentTimestamp,
+  );
+  const userETHReserveIncentiveRequest: CalculateUserReserveIncentivesRequest =
+    {
+      reserveIncentives: reserveIncentiveMock.reserveIncentive,
+      userIncentives: userIncentiveMock.userIncentive,
+      userReserveData: {
+        ...userMock.userReserve,
+        reserve: {
+          ...userMock.reserve,
+          totalLiquidity: totalLiquidity.toString(),
+        },
+      },
+      currentTimestamp,
+    };
+
+  it('should calculate the correct aWETH incentives', () => {
+    const result = calculateUserReserveIncentives(
+      userETHReserveIncentiveRequest,
+    );
+    let total = new BigNumber(0);
+    result.forEach(reward => {
+      total = total.plus(reward.accruedRewards);
+    });
+    expect(normalize(total, 18)).toBe('300000000000'); // 1 from deposit + 2 from variableDebt
+    const aReward = result.find(
+      reward =>
+        reward.tokenAddress === '0x0000000000000000000000000000000000000000',
+    );
+    if (aReward) {
+      expect(normalize(aReward.accruedRewards, 18)).toBe('100000000000'); // 1 from deposit
+    }
+  });
+
+  it('should calculate userUnclaimedRewards but zero accruedRewards if userReserves is empty', () => {
+    const emptyUserReservesRequest: CalculateUserReserveIncentivesRequest = {
+      ...userETHReserveIncentiveRequest,
+      userReserveData: undefined,
+    };
+    const result = calculateUserReserveIncentives(emptyUserReservesRequest);
+    let total = new BigNumber(0);
+    result.forEach(reward => {
+      total = total.plus(reward.accruedRewards);
+    });
+    const aReward = result.find(
+      reward =>
+        reward.tokenAddress === '0x0000000000000000000000000000000000000000',
+    );
+    const vReward = result.find(
+      reward =>
+        reward.tokenAddress === '0x0000000000000000000000000000000000000000',
+    );
+    if (aReward) {
+      expect(normalize(aReward.unclaimedRewards, 18)).toBe(
+        '0.000000000000000001',
+      );
+    }
+
+    if (vReward) {
+      expect(normalize(vReward.unclaimedRewards, 18)).toBe(
+        '0.000000000000000001',
+      );
+    }
+
+    expect(normalize(total, 18)).toBe('0');
+  });
+
+  it('should return an empty array if there are no matching reserveIncentives', () => {
+    const emptyReserveIncentivesRequest: CalculateUserReserveIncentivesRequest =
+      {
+        ...userETHReserveIncentiveRequest,
+        reserveIncentives: {
+          underlyingAsset: '0x0',
+          aIncentiveData: {
+            tokenAddress: '0x0',
+            incentiveControllerAddress: '0x0',
+            rewardsTokenInformation: [],
+          },
+          vIncentiveData: {
+            tokenAddress: '0x0',
+            incentiveControllerAddress: '0x0',
+            rewardsTokenInformation: [],
+          },
+        },
+      };
+    const result = calculateUserReserveIncentives(
+      emptyReserveIncentivesRequest,
+    );
+
+    expect(result.length).toBe(0);
+  });
+});

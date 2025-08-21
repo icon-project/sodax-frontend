@@ -139,7 +139,7 @@ async function borrow(token: Address, amount: bigint) {
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
-    sodax.moneyMarket,
+    sodax.moneyMarket.data,
   );
   const approveHash = await SonicSpokeService.approveBorrow(wallet, borrowInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
@@ -202,7 +202,7 @@ async function borrowHighLevel(token: Address, amount: bigint) {
 
 async function withdraw(token: Address, amount: bigint) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
-  const withdrawInfo = await SonicSpokeService.getWithdrawInfo(token, amount, spokeProvider, sodax.moneyMarket);
+  const withdrawInfo = await SonicSpokeService.getWithdrawInfo(token, amount, spokeProvider, sodax.moneyMarket.data);
   const approveHash = await SonicSpokeService.approveWithdraw(wallet, withdrawInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
   await new Promise(f => setTimeout(f, 1000));
@@ -450,7 +450,7 @@ async function reverseMigrateBnUSD(
 
 async function borrowTo(token: Hex, amount: bigint, to: Hex, spokeChainId: SpokeChainId) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
-  const borrowInfo = await SonicSpokeService.getBorrowInfo(token, amount, spokeChainId, sodax.moneyMarket);
+  const borrowInfo = await SonicSpokeService.getBorrowInfo(token, amount, spokeChainId, sodax.moneyMarket.data);
   const approveHash = await SonicSpokeService.approveBorrow(wallet, borrowInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
   await new Promise(f => setTimeout(f, 1000));

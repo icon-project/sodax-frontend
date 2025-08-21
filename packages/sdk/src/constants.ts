@@ -1494,7 +1494,7 @@ export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockcha
 const solverConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
     intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-    solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
+    solverApiEndpoint: 'https://sodax-solver.iconblockchain.xyz',
   } satisfies SolverConfig,
 };
 

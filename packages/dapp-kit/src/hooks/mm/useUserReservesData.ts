@@ -1,42 +1,43 @@
-import { getMoneyMarketConfig, WalletAbstractionService } from '@sodax/sdk';
-import type { HubChainId } from '@sodax/types';
+import { type UserReserveData, WalletAbstractionService } from '@sodax/sdk';
 import type { ChainId } from '@sodax/types';
-import { useQuery } from '@tanstack/react-query';
-import { useHubProvider } from '../provider/useHubProvider';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 import { useSpokeProvider } from '../provider/useSpokeProvider';
 
-export function useUserReservesData(spokeChainId: ChainId, address: string | undefined) {
+/**
+ * Hook for fetching user reserves data from the Sodax money market.
+ *
+ * This hook provides access to the current state of user reserves in the money market protocol.
+ * The data is automatically fetched and cached using React Query.
+ *
+ * @example
+ * ```typescript
+ * const { data: userReservesData, isLoading, error } = useUserReservesData();
+ * ```
+ *
+ * @returns A React Query result object containing:
+ *   - data: The user reserves data when available
+ *   - isLoading: Loading state indicator
+ *   - error: Any error that occurred during data fetching
+ */
+export function useUserReservesData(
+  spokeChainId: ChainId | undefined,
+  address: string | undefined,
+  refetchInterval = 5000,
+): UseQueryResult<readonly [readonly UserReserveData[], number] | undefined, Error> {
   const { sodax } = useSodaxContext();
-  const hubChainId = (sodax.config?.hubProviderConfig?.chainConfig.chain.id ?? 'sonic') as HubChainId;
-  const hubProvider = useHubProvider();
   const spokeProvider = useSpokeProvider(spokeChainId);
 
-  const { data: userReserves } = useQuery({
+  return useQuery({
     queryKey: ['userReserves', spokeChainId, address],
     queryFn: async () => {
-      if (!hubProvider || !spokeProvider || !address) {
-        return;
+      if (!spokeProvider || !address) {
+        return undefined;
       }
 
-      const hubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
-        address,
-        spokeProvider,
-        hubProvider,
-      );
-
-      const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
-      const [res] = await sodax.moneyMarket.getUserReservesData(
-        hubWalletAddress,
-        moneyMarketConfig.uiPoolDataProvider,
-        moneyMarketConfig.poolAddressesProvider,
-      );
-
-      return res;
+      return await sodax.moneyMarket.data.getUserReservesData(spokeProvider);
     },
-    enabled: !!spokeChainId && !!hubProvider && !!address,
-    refetchInterval: 5000,
+    enabled: !!spokeChainId && !!address,
+    refetchInterval,
   });
-
-  return userReserves;
 }
