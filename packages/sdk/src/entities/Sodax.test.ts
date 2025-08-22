@@ -419,6 +419,7 @@ describe('Sodax', () => {
           mockCreatorHubWalletAddress,
           solverConfig,
           partnerFeeAmount,
+          sodax.hubProvider,
         );
         intent = { ...constructedIntent, feeAmount: partnerFeeAmount.amount } satisfies Intent & FeeAmount;
       });

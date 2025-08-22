@@ -56,8 +56,17 @@ export class EvmSolverService {
     creatorHubWalletAddress: Address,
     solverConfig: SolverConfig,
     fee: PartnerFee | undefined,
+    hubProvider: EvmHubProvider,
   ): [Hex, Intent, bigint] {
-    const inputToken = getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset;
+    let inputToken = getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset;
+
+    if (
+      createIntentParams.srcChain === hubProvider.chainConfig.chain.id &&
+      createIntentParams.inputToken.toLowerCase() === hubProvider.chainConfig.nativeToken.toLowerCase()
+    ) {
+      inputToken = hubProvider.chainConfig.wrappedNativeToken;
+    }
+
     const outputToken = getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset;
 
     invariant(

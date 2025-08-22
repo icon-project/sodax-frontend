@@ -99,6 +99,7 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
   };
 
   nativeToken: Address;
+  wrappedNativeToken: Address;
 };
 
 export type RelayerApiConfig = {

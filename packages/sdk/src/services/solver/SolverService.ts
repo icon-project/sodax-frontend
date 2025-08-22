@@ -804,6 +804,7 @@ export class SolverService {
         creatorHubWalletAddress,
         this.config,
         fee,
+        this.hubProvider,
       );
 
       const txResult = await SpokeService.deposit(
