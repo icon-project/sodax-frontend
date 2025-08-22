@@ -10,6 +10,7 @@ import {
   type IntentRelayRequest,
   type RelayErrorCode,
   SonicSpokeProvider,
+  SonicSpokeService,
   type SpokeProvider,
   SpokeService,
   type WaitUntilIntentExecutedPayload,
@@ -630,15 +631,24 @@ export class SolverService {
   }: SwapParams<S>): Promise<Result<boolean>> {
     // apply fee to input amount without changing original params
     try {
-      if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
+      if (spokeProvider instanceof EvmSpokeProvider) {
         const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
         return await Erc20Service.isAllowanceValid(
-          params.inputToken as Address,
+          params.inputToken as GetAddressType<EvmSpokeProvider>,
           params.inputAmount,
           walletAddress,
-          spokeProvider instanceof EvmSpokeProvider
-            ? spokeProvider.chainConfig.addresses.assetManager
-            : spokeProvider.chainConfig.addresses.walletRouter,
+          spokeProvider.chainConfig.addresses.assetManager,
+          spokeProvider,
+        );
+      }
+
+      if (spokeProvider instanceof SonicSpokeProvider) {
+        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+        return await Erc20Service.isAllowanceValid(
+          params.inputToken as GetAddressType<SonicSpokeProvider>,
+          params.inputAmount,
+          walletAddress,
+          getSolverConfig(SONIC_MAINNET_CHAIN_ID).intentsContract,
           spokeProvider,
         );
       }
@@ -699,18 +709,33 @@ export class SolverService {
     raw,
   }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>>> {
     try {
-      if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
+      if (spokeProvider instanceof EvmSpokeProvider) {
         const result = await Erc20Service.approve(
-          params.inputToken as GetAddressType<EvmSpokeProvider | SonicSpokeProvider>,
+          params.inputToken as GetAddressType<EvmSpokeProvider>,
           params.inputAmount,
-          spokeProvider.chainConfig.addresses.assetManager as GetAddressType<EvmSpokeProvider | SonicSpokeProvider>,
+          spokeProvider.chainConfig.addresses.assetManager,
           spokeProvider,
           raw,
         );
 
         return {
           ok: true,
-          value: result satisfies TxReturnType<EvmSpokeProvider | SonicSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<S, R>,
+        };
+      }
+
+      if (spokeProvider instanceof SonicSpokeProvider) {
+        const result = await Erc20Service.approve(
+          params.inputToken as GetAddressType<SonicSpokeProvider>,
+          params.inputAmount,
+          getSolverConfig(SONIC_MAINNET_CHAIN_ID).intentsContract,
+          spokeProvider,
+          raw,
+        );
+
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<S, R>,
         };
       }
 
@@ -800,35 +825,60 @@ export class SolverService {
           ? (walletAddress as Address)
           : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
 
-      // construct the intent data
-      const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
-        {
-          ...params,
-          srcAddress: walletAddress,
-        },
-        creatorHubWalletAddress,
-        this.config,
-        fee,
-        this.hubProvider,
-      );
+      if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
+        // on hub chain create intent directly
 
-      const txResult = await SpokeService.deposit(
-        {
-          from: walletAddress,
-          to: creatorHubWalletAddress,
-          token: params.inputToken,
-          amount: params.inputAmount,
-          data: data,
-        } as GetSpokeDepositParamsType<S>,
-        spokeProvider satisfies S,
-        this.hubProvider,
-        raw,
-      );
+        const [txResult, intent, feeAmount, data] = await SonicSpokeService.createSwapIntent(
+          params,
+          creatorHubWalletAddress,
+          this.config,
+          fee,
+          spokeProvider as SonicSpokeProvider,
+          this.hubProvider,
+          raw,
+        );
 
-      return {
-        ok: true,
-        value: [txResult as TxReturnType<S, R>, { ...intent, feeAmount } as Intent & FeeAmount, data],
-      };
+        return {
+          ok: true,
+          value: [
+            txResult satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<S, R>,
+            { ...intent, feeAmount } as Intent & FeeAmount,
+            data,
+          ],
+        };
+      }
+
+      {
+        // construct the intent data
+        const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
+          {
+            ...params,
+            srcAddress: walletAddress,
+          },
+          creatorHubWalletAddress,
+          this.config,
+          fee,
+          this.hubProvider,
+        );
+
+        const txResult = await SpokeService.deposit(
+          {
+            from: walletAddress,
+            to: creatorHubWalletAddress,
+            token: params.inputToken,
+            amount: params.inputAmount,
+            data: data,
+          } as GetSpokeDepositParamsType<S>,
+          spokeProvider satisfies S,
+          this.hubProvider,
+          raw,
+        );
+
+        return {
+          ok: true,
+          value: [txResult as TxReturnType<S, R>, { ...intent, feeAmount } as Intent & FeeAmount, data],
+        };
+      }
     } catch (error) {
       return {
         ok: false,
