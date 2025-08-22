@@ -5,6 +5,7 @@ import type { IntentError } from '../solver/SolverService.js';
 import { DEFAULT_RELAY_TX_TIMEOUT, getIntentRelayChainId } from '../../constants.js';
 import type { SpokeProvider } from '../../entities/Providers.js';
 import type { Hex } from 'viem';
+import type { SpokeChainId } from '@sodax/types';
 
 /**
  * The action type for the intent relay service.
@@ -63,6 +64,15 @@ export type PacketData = {
   dst_tx_hash: string;
   signatures: string[];
   payload: string;
+};
+
+export type IntentDeliveryInfo = {
+  srcChainId: SpokeChainId; // The chain ID where the transaction was submitted
+  srcTxHash: string; // The transaction hash of the submitted transaction
+  srcAddress: string; // The wallet address which submitted the transaction
+  dstChainId: SpokeChainId; // The destination chain ID
+  dstTxHash: string; // The transaction hash of the submitted transaction on the destination chain
+  dstAddress: string; // The destination wallet address on the destination chain
 };
 
 export type GetTransactionPacketsResponse = {

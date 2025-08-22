@@ -153,7 +153,7 @@ export class MigrationService {
             await evmSpokeProvider.walletProvider.getWalletAddress(),
             evmSpokeProvider instanceof EvmSpokeProvider
               ? evmSpokeProvider.chainConfig.addresses.assetManager
-              : evmSpokeProvider.chainConfig.bnUSD as Address,
+              : (evmSpokeProvider.chainConfig.bnUSD as Address),
             evmSpokeProvider,
           );
         }
@@ -190,7 +190,7 @@ export class MigrationService {
             await evmSpokeProvider.walletProvider.getWalletAddress(),
             evmSpokeProvider instanceof EvmSpokeProvider
               ? evmSpokeProvider.chainConfig.addresses.assetManager
-              : evmSpokeProvider.chainConfig.bnUSD as Address,
+              : (evmSpokeProvider.chainConfig.bnUSD as Address),
             evmSpokeProvider,
           );
         }
@@ -246,9 +246,9 @@ export class MigrationService {
             params.amount,
             evmSpokeProvider instanceof EvmSpokeProvider
               ? evmSpokeProvider.chainConfig.addresses.assetManager
-              : evmSpokeProvider.chainConfig.bnUSD as Address,
+              : (evmSpokeProvider.chainConfig.bnUSD as Address),
             evmSpokeProvider,
-            raw
+            raw,
           );
 
           return {
@@ -292,7 +292,7 @@ export class MigrationService {
             params.amount,
             evmSpokeProvider instanceof EvmSpokeProvider
               ? evmSpokeProvider.chainConfig.addresses.assetManager
-              : evmSpokeProvider.chainConfig.bnUSD as Address,
+              : (evmSpokeProvider.chainConfig.bnUSD as Address),
             evmSpokeProvider,
             raw,
           );
