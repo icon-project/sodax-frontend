@@ -152,6 +152,7 @@ export type SwapParams<S extends SpokeProvider> = Prettify<
   {
     intentParams: CreateIntentParams;
     spokeProvider: S;
+    skipSimulation?: boolean;
   } & OptionalFee
 >;
 
@@ -412,6 +413,7 @@ export class SolverService {
     spokeProvider,
     fee = this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
+    skipSimulation = false,
   }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<
     Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
   > {
@@ -420,6 +422,7 @@ export class SolverService {
       spokeProvider,
       fee,
       timeout,
+      skipSimulation,
     });
   }
 
@@ -470,6 +473,7 @@ export class SolverService {
     spokeProvider,
     fee = this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
+    skipSimulation = false,
   }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<
     Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
   > {
@@ -480,6 +484,7 @@ export class SolverService {
         spokeProvider,
         fee,
         raw: false,
+        skipSimulation,
       });
 
       if (!createIntentResult.ok) {
@@ -804,6 +809,7 @@ export class SolverService {
         creatorHubWalletAddress,
         this.config,
         fee,
+        this.hubProvider,
       );
 
       const txResult = await SpokeService.deposit(

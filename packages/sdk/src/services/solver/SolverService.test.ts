@@ -453,6 +453,7 @@ describe('SolverService', () => {
         spokeProvider: mockBscSpokeProvider,
         fee: solverService.config.partnerFee,
         raw: false,
+        skipSimulation: false,
       });
       expect(solverService['postExecution']).toHaveBeenCalledWith({
         intent_tx_hash: mockTxHash,

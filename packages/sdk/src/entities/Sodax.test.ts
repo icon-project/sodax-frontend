@@ -384,6 +384,7 @@ describe('Sodax', () => {
           spokeProvider: mockBscSpokeProvider,
           fee: sodax.solver.config.partnerFee,
           raw: false,
+          skipSimulation: false,
         });
         expect(sodax.solver['postExecution']).toHaveBeenCalledWith({
           intent_tx_hash: mockTxHash,
@@ -419,6 +420,7 @@ describe('Sodax', () => {
           mockCreatorHubWalletAddress,
           solverConfig,
           partnerFeeAmount,
+          sodax.hubProvider,
         );
         intent = { ...constructedIntent, feeAmount: partnerFeeAmount.amount } satisfies Intent & FeeAmount;
       });
@@ -446,6 +448,10 @@ describe('Sodax', () => {
             getWalletAddress: () => '0x1234567890123456789012345678901234567890',
           },
         } as unknown as SpokeProvider;
+
+        vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
+          '0x1234567890123456789012345678901234567890',
+        );
 
         await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual({
           ok: false,
