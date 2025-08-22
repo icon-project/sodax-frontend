@@ -2,10 +2,12 @@ import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
 import {
+  type DepositSimulationParams,
   type HubAddress,
   type PromiseStellarTxReturnType,
   type StellarGasEstimate,
   type StellarRawTransaction,
+  encodeAddress,
   getIntentRelayChainId,
 } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
@@ -83,6 +85,40 @@ export class StellarSpokeService {
 
   public static async getDeposit(token: string, spokeProvider: StellarSpokeProvider): Promise<bigint> {
     return BigInt(await spokeProvider.getBalance(token));
+  }
+
+  /**
+   * Generate simulation parameters for deposit from StellarSpokeDepositParams.
+   * @param {StellarSpokeDepositParams} params - The deposit parameters.
+   * @param {StellarSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
+   */
+  public static async getSimulateDepositParams(
+    params: StellarSpokeDepositParams,
+    spokeProvider: StellarSpokeProvider,
+    hubProvider: EvmHubProvider,
+  ): Promise<DepositSimulationParams> {
+    const to =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        params.from,
+        hubProvider,
+      ));
+
+    return {
+      spokeChainID: spokeProvider.chainConfig.chain.id,
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      from: params.from,
+      to,
+      amount: params.amount,
+      data: params.data,
+      srcAddress: encodeAddress(
+        spokeProvider.chainConfig.chain.id,
+        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
+      ),
+    };
   }
 
   /**

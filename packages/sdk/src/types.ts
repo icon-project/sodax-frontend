@@ -144,6 +144,7 @@ export type SonicSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
 export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   addresses: {
     assetManager: string;
+    assetManagerId: string;
     connection: string;
     xTokenManager: string;
     rateLimit: string;
@@ -251,6 +252,23 @@ export type TokenInfo = {
 export type VaultReserves = {
   tokens: readonly Address[];
   balances: readonly bigint[];
+};
+
+export type DepositSimulationParams = {
+  spokeChainID: SpokeChainId;
+  token: Hex;
+  from: Hex;
+  to: Hex;
+  amount: bigint;
+  data: Hex;
+  srcAddress: Hex;
+};
+
+export type WalletSimulationParams = {
+  target: Address;
+  srcChainId: bigint;
+  srcAddress: Hex;
+  payload: Hex;
 };
 
 /**
