@@ -7,14 +7,17 @@ import type { XToken } from '@sodax/types';
  * @returns Object with symbol as key and array of tokens as value
  */
 export const groupTokensBySymbol = (tokens: XToken[]): Record<string, XToken[]> => {
-  return tokens.reduce((groups, token) => {
-    const symbol = token.symbol.toLowerCase();
-    if (!groups[symbol]) {
-      groups[symbol] = [];
-    }
-    groups[symbol].push(token);
-    return groups;
-  }, {} as Record<string, XToken[]>);
+  return tokens.reduce(
+    (groups, token) => {
+      const symbol = token.symbol.toLowerCase();
+      if (!groups[symbol]) {
+        groups[symbol] = [];
+      }
+      groups[symbol].push(token);
+      return groups;
+    },
+    {} as Record<string, XToken[]>,
+  );
 };
 
 /**
@@ -24,9 +27,9 @@ export const groupTokensBySymbol = (tokens: XToken[]): Record<string, XToken[]> 
  */
 export const getUniqueTokenSymbols = (tokens: XToken[]): Array<{ symbol: string; tokens: XToken[] }> => {
   const grouped = groupTokensBySymbol(tokens);
-  
+
   return Object.entries(grouped).map(([symbol, tokenArray]) => ({
-    symbol: tokenArray[0].symbol, // Use the original case from the first token
+    symbol: tokenArray[0]?.symbol || '', // Use the original case from the first token
     tokens: tokenArray,
   }));
 };
@@ -38,11 +41,7 @@ export const getUniqueTokenSymbols = (tokens: XToken[]): Array<{ symbol: string;
  * @param chainId Optional chain ID to filter by
  * @returns Array of filtered tokens
  */
-export const filterTokensBySymbolAndChain = (
-  tokens: XToken[], 
-  symbol: string, 
-  chainId?: string
-): XToken[] => {
+export const filterTokensBySymbolAndChain = (tokens: XToken[], symbol: string, chainId?: string): XToken[] => {
   return tokens.filter(token => {
     const symbolMatch = token.symbol.toLowerCase() === symbol.toLowerCase();
     const chainMatch = !chainId || token.xChainId === chainId;
