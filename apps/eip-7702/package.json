@@ -1,0 +1,25 @@
+{
+  "name": "eip-7702-testing",
+  "version": "1.0.0",
+  "description": "Testing environment for EIP-7702 using Foundry and Viem",
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "test:verbose": "forge test -vvv",
+    "deploy": "forge script script/Deploy.s.sol",
+    "coverage": "forge coverage",
+    "clean": "forge clean",
+    "test:viem": "ts-node examples/eip7702-delegation.ts",
+    "test:delegation": "ts-node examples/delegation-test.ts"
+  },
+  "dependencies": {
+    "viem": "^2.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^20.0.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.0",
+    "chai": "^4.3.0"
+  }
+}
