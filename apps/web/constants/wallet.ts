@@ -13,38 +13,33 @@ export type WalletItemProps = {
 
 export const xChainTypes: WalletItemProps[] = [
   {
-    name: 'ICON',
-    xChainType: 'ICON',
-    icon: '/coin/icx1.png',
-  },
-  // {
-  //   name: 'EVM',
-  //   xChainType: 'EVM',
-  //   icon: '/coin/eth1.png',
-  // },
-  {
-    name: 'SONIC',
+    name: 'EVM',
     xChainType: 'EVM',
     icon: '/coin/s1.png',
   },
-  // {
-  //   name: 'Injective',
-  //   xChainType: 'INJECTIVE',
-  //   icon: '/coin/inj1.png',
-  // },
-  // {
-  //   name: 'Solana',
-  //   xChainType: 'SOLANA',
-  //   icon: '/coin/sol.png',
-  // },
-  // {
-  //   name: 'Sui',
-  //   xChainType: 'SUI',
-  //   icon: '/coin/sui1.png',
-  // },
-  // {
-  //   name: 'Stellar',
-  //   xChainType: 'STELLAR',
-  //   icon: '/coin/ste1.png',
-  // },
+  {
+    name: 'ICON',
+    xChainType: 'ICON',
+    icon: '/chain/0x1.icon.png',
+  },
+  {
+    name: 'Injective',
+    xChainType: 'INJECTIVE',
+    icon: '/chain/injective-1.png',
+  },
+  {
+    name: 'Solana',
+    xChainType: 'SOLANA',
+    icon: '/chain/solana.png',
+  },
+  {
+    name: 'Sui',
+    xChainType: 'SUI',
+    icon: '/chain/sui.png',
+  },
+  {
+    name: 'Stellar',
+    xChainType: 'STELLAR',
+    icon: '/chain/stellar.png',
+  },
 ];

@@ -64,31 +64,19 @@ export function useChainItem(
     return xConnectors.find(connector => connector.id === xConnection?.xConnectorId);
   }, [xConnectors, xConnection]);
 
-  const isHanaOnly = useMemo(() => {
-    const hanaConnectors = xConnectors.filter(
-      connector =>
-        connector.name === 'Hana Wallet' || connector.name === 'Hana' || connector.name.toLowerCase().includes('hana'),
-    );
-    return hanaConnectors.length === 1 && xConnectors.length === 1;
+  const isOnlyOneWallet = useMemo(() => {
+    return xConnectors.length === 1;
   }, [xConnectors]);
 
   const handleShowWallets = useCallback(() => {
-    if (isHanaOnly) {
-      const hanaConnector = xConnectors.find(
-        connector =>
-          connector.name === 'Hana Wallet' ||
-          connector.name === 'Hana' ||
-          connector.name.toLowerCase().includes('hana'),
-      );
-      if (hanaConnector) {
-        handleConnect(hanaConnector);
-      }
+    if (isOnlyOneWallet) {
+      handleConnect(xConnectors[0] as XConnector);
     } else if (xConnectors.length >= 2) {
       if (onConnectorsShown) {
         onConnectorsShown();
       }
     }
-  }, [isHanaOnly, xConnectors, handleConnect, onConnectorsShown]);
+  }, [isOnlyOneWallet, xConnectors, handleConnect, onConnectorsShown]);
 
   const isConnecting = isPending && connectingXConnector !== null;
 
@@ -100,7 +88,7 @@ export function useChainItem(
     xConnectors,
     isPending,
     activeXConnector,
-    isHanaOnly,
+    isOnlyOneWallet,
     isConnecting,
     handleConnect,
     handleDisconnect,

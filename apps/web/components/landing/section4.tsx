@@ -4,7 +4,6 @@ import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import ConnectWalletButton from '@/components/shared/connect-wallet-button';
 // import { useWallet } from '../../hooks/useWallet';
-import { Notification } from '../Notification';
 import { LaunchButton } from './launch-button';
 
 const Section4 = ({ onOpenRewardDialog }: { onOpenRewardDialog: () => void }) => {

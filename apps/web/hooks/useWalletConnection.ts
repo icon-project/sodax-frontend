@@ -41,13 +41,13 @@ export function useWalletConnection() {
     connectedWalletsCountRef.current = connectedWalletsCount;
   }, [connectedWalletsCount]);
 
-  useEffect(() => {
-    if (!showTermsModal && showWalletModalOnTwoWallets && showWalletModal && connectedWalletsCount >= 2) {
-      const t = setTimeout(() => setShowWalletModal(false), TIMEOUT_CLOSE_MS);
-      return () => clearTimeout(t);
-    }
-    if (connectedWalletsCount < 2) setShowWalletModalOnTwoWallets(true);
-  }, [connectedWalletsCount, showWalletModal, showWalletModalOnTwoWallets, showTermsModal]);
+  // useEffect(() => {
+  //   if (!showTermsModal && showWalletModalOnTwoWallets && showWalletModal && connectedWalletsCount >= 2) {
+  //     const t = setTimeout(() => setShowWalletModal(false), TIMEOUT_CLOSE_MS);
+  //     return () => clearTimeout(t);
+  //   }
+  //   if (connectedWalletsCount < 2) setShowWalletModalOnTwoWallets(true);
+  // }, [connectedWalletsCount, showWalletModal, showWalletModalOnTwoWallets, showTermsModal]);
 
   const toggleSidebar = useCallback(() => setIsSidebarOpen(v => !v), []);
 

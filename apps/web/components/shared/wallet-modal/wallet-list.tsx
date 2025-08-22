@@ -39,7 +39,7 @@ export const WalletList: React.FC<WalletListProps> = ({
   }, [xConnectors]);
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col w-full">
       <Separator className="h-1 bg-clay opacity-30" />
       {sortedConnectors.map((xConnector, index) => {
         const isConnectingToThis = isPending && connectingConnector?.id === xConnector.id;

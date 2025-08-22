@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { useXAccounts } from '@sodax/wallet-sdk';
+import { getChainIconByName } from '@/constants/chains';
 
 interface ConnectedChainsDisplayProps {
   onClick?: () => void;
@@ -16,7 +17,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
     .map(([chainType, account]) => ({
       chainType,
       address: account?.address,
-      icon: chainType === 'ICON' ? '/coin/icx1.png' : '/coin/s1.png',
+      icon: getChainIconByName(chainType),
     }));
 
   if (connectedChains.length === 0) return <></>;
@@ -28,7 +29,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
           <div key={chain.chainType} className="relative">
             <Image
               className="rounded shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.20)] outline outline-3 outline-white"
-              src={chain.icon}
+              src={chain.chainType === 'EVM' ? '/coin/s1.png' : chain.icon || ''}
               alt={chain.chainType}
               width={20}
               height={20}

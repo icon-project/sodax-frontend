@@ -11,3 +11,4 @@ export { DepositDialogArrowIcon } from './deposit-dialog-arrow-icon';
 export { DepositDialogArrowMobileIcon } from './deposit-dialog-arrow-mobile-icon';
 export { RoundedPillIcon } from './rounded-pill-icon';
 export { CircularProgressIcon } from './circular-progress-icon';
+export { EvmMultiConnectIcon } from './evm-multi-connect-icon';

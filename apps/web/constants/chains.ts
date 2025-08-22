@@ -47,3 +47,12 @@ export const getChainName = (chainId: string): string | undefined => {
 export const getChainIcon = (chainId: string): string | undefined => {
   return getChainUI(chainId)?.icon;
 };
+
+/**
+ * Helper function to get chain icon by chain name
+ * Searches for a chain by its display name and returns the icon path
+ */
+export const getChainIconByName = (chainName: string): string | undefined => {
+  const chain = availableChains.find(chain => chain.name.toLowerCase() === chainName.toLowerCase());
+  return chain?.icon;
+};

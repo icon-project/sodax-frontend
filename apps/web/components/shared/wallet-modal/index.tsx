@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
@@ -9,6 +9,8 @@ import { ArrowLeftIcon, XIcon } from 'lucide-react';
 import type { XConnector } from '@sodax/wallet-sdk';
 import { xChainTypes } from '@/constants/wallet';
 import { useWalletModal } from '@/hooks/useWalletModal';
+import { AllSupportItem } from './all-support-item';
+import { usePathname } from 'next/navigation';
 
 type WalletModalProps = {
   isOpen: boolean;
@@ -23,6 +25,10 @@ export const WalletModal = ({
   onWalletSelected,
   onSetShowWalletModalOnTwoWallets,
 }: WalletModalProps) => {
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const pathname = usePathname();
+  const isMigrateRoute = pathname.includes('migrate');
+
   const {
     hoveredWallet,
     setHoveredWallet,
@@ -38,27 +44,61 @@ export const WalletModal = ({
 
   const selectedChain = xChainTypes.find(w => w.xChainType === selectedChainType);
 
+  // When on migrate route, only show ICON and EVM chains
+  const availableChains = isMigrateRoute
+    ? xChainTypes.filter(w => w.xChainType === 'ICON' || w.xChainType === 'EVM')
+    : xChainTypes;
+
+  // When on migrate route, always show ICON first, then EVM
+  const mainChain = isMigrateRoute
+    ? availableChains.find(w => w.xChainType === 'ICON')
+    : isExpanded
+      ? availableChains.find(w => w.xChainType === 'EVM')
+      : availableChains.find(w => w.xChainType === 'SOLANA');
+
+  const otherChains = isMigrateRoute
+    ? availableChains.filter(w => w.xChainType !== 'ICON')
+    : isExpanded
+      ? availableChains.filter(w => w.xChainType !== 'EVM')
+      : availableChains.filter(w => w.xChainType !== 'SOLANA');
+
+  const handleToggleExpanded = (expanded: boolean): void => {
+    setIsExpanded(expanded);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={() => handleDismiss(onDismiss)}>
       <DialogContent
-        className="max-w-full w-full md:max-w-[480px] p-12 w-[90%] shadow-none bg-white gap-4 h-fit"
+        className="max-w-full w-full md:max-w-[480px] p-12 w-[90%] shadow-none bg-white gap-4"
         hideCloseButton
       >
         <DialogTitle>
           {!showWalletList ? (
             <div className="flex flex-row justify-between items-center">
-              <div className=" inline-flex justify-center items-center gap-2">
-                <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
-                <div className="flex-1 justify-center text-espresso text-base font-['InterRegular'] font-bold leading-snug">
-                  Connect wallets
+              {!isExpanded && (
+                <div className="inline-flex justify-center items-center gap-2">
+                  <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
+                  <div className="flex-1 justify-center text-espresso text-base font-['InterRegular'] font-bold leading-snug">
+                    Connect wallets
+                  </div>
                 </div>
-              </div>
-              <DialogClose asChild>
-                <XIcon
-                  className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay"
-                  onClick={() => handleManualClose(onDismiss, onSetShowWalletModalOnTwoWallets)}
-                />
-              </DialogClose>
+              )}
+              {!isExpanded && (
+                <DialogClose asChild>
+                  <XIcon
+                    className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay"
+                    onClick={() => handleManualClose(onDismiss, onSetShowWalletModalOnTwoWallets)}
+                  />
+                </DialogClose>
+              )}
+              {isExpanded && (
+                <div className="flex flex-row justify-end w-full">
+                  <XIcon
+                    className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay"
+                    onClick={() => setIsExpanded(false)}
+                  />
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-row justify-between items-center">
@@ -71,7 +111,7 @@ export const WalletModal = ({
               </div>
               <div className="flex flex-row justify-between items-center gap-4">
                 <div className="text-right justify-end text-clay-light text-(size:--body-small) font-medium font-['InterRegular'] leading-none">
-                  Connect your Sonic wallet
+                  Connect your {isMigrateRoute ? 'Sonic' : selectedChain?.name || 'wallet'} wallet
                 </div>
                 <DialogClose asChild>
                   <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
@@ -80,42 +120,79 @@ export const WalletModal = ({
             </div>
           )}
         </DialogTitle>
-        {!showWalletList && (
+        {!showWalletList && !isExpanded && (
           <div className=" justify-start text-clay-light text-sm font-medium font-['InterRegular'] leading-tight">
-            You will need to connect on both networks
+            {isMigrateRoute
+              ? 'You will need to connect on both networks.'
+              : 'You will need to connect your wallet to proceed.'}
           </div>
         )}
         <div className={cn('flex flex-col justify-between')}>
           <ScrollArea className="h-full">
-            <div className="w-full flex flex-col gap-4">
+            <div className="w-full flex flex-col">
               {!showWalletList ? (
                 <>
-                  <Separator className="h-1 bg-clay opacity-30" />
-                  {xChainTypes.map(wallet => {
-                    const isConnected = xAccounts[wallet.xChainType]?.address;
-                    return (
-                      <React.Fragment key={`wallet_${wallet.xChainType}`}>
-                        <div
-                          className={`flex flex-row items-center transition-opacity duration-200 cursor-pointer ${
-                            hoveredWallet === wallet.xChainType || isConnected ? 'opacity-100 ' : 'opacity-40'
-                          }`}
-                          onMouseEnter={() => setHoveredWallet(wallet.xChainType)}
-                          onMouseLeave={() => setHoveredWallet(null)}
-                        >
-                          <WalletModalItem
-                            icon={wallet.icon}
-                            name={wallet.name}
-                            xChainType={wallet.xChainType}
-                            onConnectorsShown={() => handleConnectorsShown(wallet.xChainType)}
-                            onConnectorsHidden={handleConnectorsHidden}
-                            onWalletSelected={handleWalletSelected}
-                            showWalletList={showWalletList}
-                          />
-                        </div>
-                        <Separator className="h-1 bg-clay opacity-30" />
-                      </React.Fragment>
-                    );
-                  })}
+                  {!isExpanded && <Separator className="h-1 bg-clay opacity-30" />}
+
+                  {/* Show main chain first */}
+                  {mainChain && (
+                    <React.Fragment>
+                      <div
+                        className={`flex flex-row items-center transition-opacity duration-200 cursor-pointer ${
+                          hoveredWallet === mainChain.xChainType || xAccounts[mainChain.xChainType]?.address
+                            ? 'opacity-100 '
+                            : 'opacity-40'
+                        }`}
+                        onMouseEnter={() => setHoveredWallet(mainChain.xChainType)}
+                        onMouseLeave={() => setHoveredWallet(null)}
+                      >
+                        <WalletModalItem
+                          icon={mainChain.icon}
+                          name={mainChain.name}
+                          xChainType={mainChain.xChainType}
+                          onConnectorsShown={() => handleConnectorsShown(mainChain.xChainType)}
+                          onConnectorsHidden={handleConnectorsHidden}
+                          onWalletSelected={handleWalletSelected}
+                          showWalletList={showWalletList}
+                        />
+                      </div>
+                    </React.Fragment>
+                  )}
+
+                  {!isExpanded && !isMigrateRoute && (
+                    <>
+                      <Separator className="h-1 bg-clay opacity-30" />
+                      <AllSupportItem onToggleExpanded={handleToggleExpanded} isExpanded={isExpanded} />
+                    </>
+                  )}
+
+                  {/* Show other chains when expanded or on migration route */}
+                  {(isExpanded || isMigrateRoute) &&
+                    otherChains.map(wallet => {
+                      const isConnected = xAccounts[wallet.xChainType]?.address;
+                      return (
+                        <React.Fragment key={`wallet_${wallet.xChainType}`}>
+                          <Separator className="h-1 bg-clay opacity-30" />
+                          <div
+                            className={`flex flex-row items-center transition-opacity duration-200 cursor-pointer ${
+                              hoveredWallet === wallet.xChainType || isConnected ? 'opacity-100 ' : 'opacity-40'
+                            }`}
+                            onMouseEnter={() => setHoveredWallet(wallet.xChainType)}
+                            onMouseLeave={() => setHoveredWallet(null)}
+                          >
+                            <WalletModalItem
+                              icon={wallet.icon}
+                              name={wallet.name}
+                              xChainType={wallet.xChainType}
+                              onConnectorsShown={() => handleConnectorsShown(wallet.xChainType)}
+                              onConnectorsHidden={handleConnectorsHidden}
+                              onWalletSelected={handleWalletSelected}
+                              showWalletList={showWalletList}
+                            />
+                          </div>
+                        </React.Fragment>
+                      );
+                    })}
                 </>
               ) : (
                 <div className="w-full">
@@ -135,7 +212,7 @@ export const WalletModal = ({
             </div>
           </ScrollArea>
         </div>
-        {!showWalletList && (
+        {!showWalletList && !isExpanded && (
           <div className=" justify-start flex gap-1">
             <span className="text-clay-light text-sm font-medium font-['InterRegular'] leading-tight">
               Need help? Check our guide{' '}
