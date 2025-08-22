@@ -784,6 +784,7 @@ describe('MoneyMarketService', () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
       vi.spyOn(moneyMarket, 'buildSupplyData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce('0x');
+      vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createSupplyIntent(
         {
@@ -811,6 +812,7 @@ describe('MoneyMarketService', () => {
 
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
       vi.spyOn(moneyMarket, 'buildSupplyData').mockReturnValueOnce('0x');
+      vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createSupplyIntent(
         {
@@ -861,6 +863,7 @@ describe('MoneyMarketService', () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
       vi.spyOn(moneyMarket, 'buildBorrowData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce('0x');
+      vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createBorrowIntent(
         {
@@ -889,6 +892,7 @@ describe('MoneyMarketService', () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
       vi.spyOn(moneyMarket, 'buildBorrowData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce(rawEvmTx);
+      vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createBorrowIntent(
         {
@@ -939,6 +943,7 @@ describe('MoneyMarketService', () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
       vi.spyOn(moneyMarket, 'buildWithdrawData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce('0x');
+      vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createWithdrawIntent(
         {
@@ -967,6 +972,7 @@ describe('MoneyMarketService', () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
       vi.spyOn(moneyMarket, 'buildWithdrawData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'callWallet').mockResolvedValueOnce(rawEvmTx);
+      vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createWithdrawIntent(
         {
@@ -1017,6 +1023,7 @@ describe('MoneyMarketService', () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
       vi.spyOn(moneyMarket, 'buildRepayData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce('0x');
+      vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createRepayIntent(
         {
@@ -1045,6 +1052,7 @@ describe('MoneyMarketService', () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
       vi.spyOn(moneyMarket, 'buildRepayData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(rawEvmTx);
+      vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createRepayIntent(
         {
