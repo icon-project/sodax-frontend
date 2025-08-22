@@ -22,6 +22,7 @@ export function useWalletConnection() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [pending, setPending] = useState<Pending>(null);
   const [connectedWalletName, setConnectedWalletName] = useState('');
+  const [targetChainType, setTargetChainType] = useState<ChainType | undefined>(undefined);
 
   const { mutateAsync: xConnect } = useXConnect();
   const xDisconnect = useXDisconnect();
@@ -87,9 +88,11 @@ export function useWalletConnection() {
     showTermsModal,
     connectedWalletName,
     connectedWalletsCount,
+    targetChainType,
     setShowWalletModal,
     setShowTermsModal,
     setShowWalletModalOnTwoWallets,
+    setTargetChainType,
     toggleSidebar,
     handleWalletSelected,
     handleTermsAccepted,

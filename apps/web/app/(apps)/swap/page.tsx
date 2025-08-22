@@ -1,14 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/currency-input-panel';
 import { Button } from '@/components/ui/button';
 import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
-import type { XToken } from '@sodax/types';
+import type { XToken, SpokeChainId, ChainType } from '@sodax/types';
 import { useWalletUI } from '../_context/wallet-ui';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk';
+import { getXChainType } from '@sodax/wallet-sdk';
+import { chainIdToChainName } from '@/providers/constants';
 
 export default function SwapPage() {
   const { openWalletModal } = useWalletUI();
+  const [inputAmount, setInputAmount] = useState<string>('');
+
   const [inputCurrency, setInputCurrency] = useState<XToken>({
     name: 'ETH',
     symbol: 'ETH',
@@ -24,6 +30,107 @@ export default function SwapPage() {
     xChainId: 'solana',
     address: '0x0000000000000000000000000000000000000000',
   });
+
+  // Get wallet addresses for the chains
+  const inputChainType = getXChainType(inputCurrency.xChainId);
+  const outputChainType = getXChainType(outputCurrency.xChainId);
+
+  const { address: inputAddress } = useXAccount(inputChainType);
+  const { address: outputAddress } = useXAccount(outputChainType);
+
+  // Fetch balances for input currency
+  const { data: inputBalances } = useXBalances({
+    xChainId: inputCurrency.xChainId,
+    xTokens: [inputCurrency],
+    address: inputAddress,
+  });
+
+  // Fetch balances for output currency
+  const { data: outputBalances } = useXBalances({
+    xChainId: outputCurrency.xChainId,
+    xTokens: [outputCurrency],
+    address: outputAddress,
+  });
+
+  // Get the actual balance values
+  const inputBalance = inputBalances?.[inputCurrency.address] || 0n;
+  const outputBalance = outputBalances?.[outputCurrency.address] || 0n;
+
+  // Determine which chain needs to be connected and get target chain type
+  const getTargetChainType = (): ChainType | undefined => {
+    // Check if input chain is not connected
+    if (!inputAddress) {
+      return inputChainType;
+    }
+
+    // Check if output chain is not connected
+    if (!outputAddress) {
+      return outputChainType;
+    }
+
+    // Both chains are connected
+    return undefined;
+  };
+
+  // Determine button text and state based on connection status and amount
+  const getButtonState = (): { text: string; disabled: boolean; action: 'connect' | 'enter-amount' | 'review' } => {
+    // Check if input chain is not connected
+    if (!inputAddress) {
+      return {
+        text: `Connect to ${chainIdToChainName(inputCurrency.xChainId as SpokeChainId)}`,
+        disabled: false,
+        action: 'connect',
+      };
+    }
+
+    // Check if input amount is not set
+    if (!inputAmount || inputAmount === '0' || inputAmount === '') {
+      return {
+        text: 'Enter amount',
+        disabled: true,
+        action: 'enter-amount',
+      };
+    }
+
+    // Check if output chain is not connected (user has source network connected + set amount)
+    if (!outputAddress) {
+      return {
+        text: 'Connect recipient',
+        disabled: false,
+        action: 'connect',
+      };
+    }
+
+    // All conditions met - ready for swap
+    return {
+      text: 'Review for swap',
+      disabled: false,
+      action: 'review',
+    };
+  };
+
+  const handleOpenWalletModal = (): void => {
+    const buttonState = getButtonState();
+
+    if (buttonState.action === 'connect') {
+      const targetChainType = getTargetChainType();
+      openWalletModal(targetChainType);
+    } else if (buttonState.action === 'review') {
+      // TODO: Implement swap review logic
+      console.log('Review swap logic here');
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setInputAmount(e.target.value);
+  };
+
+  const handleMaxClick = (): void => {
+    // TODO: Implement max amount logic
+    console.log('Max amount clicked');
+  };
+
+  const buttonState = getButtonState();
 
   return (
     <div className="inline-flex flex-col justify-start items-start gap-(--layout-space-comfortable) w-full">
@@ -45,12 +152,12 @@ export default function SwapPage() {
         <div className="relative w-full">
           <CurrencyInputPanel
             type={CurrencyInputPanelType.INPUT}
-            chainId={'sonic'}
+            chainId={inputCurrency.xChainId as SpokeChainId}
             currency={inputCurrency}
-            currencyBalance={0n}
-            inputValue={''}
-            onInputChange={e => {}}
-            onMaxClick={() => {}}
+            currencyBalance={inputBalance}
+            inputValue={inputAmount}
+            onInputChange={handleInputChange}
+            onMaxClick={handleMaxClick}
             onCurrencyChange={setInputCurrency}
           />
 
@@ -66,9 +173,9 @@ export default function SwapPage() {
 
         <CurrencyInputPanel
           type={CurrencyInputPanelType.OUTPUT}
-          chainId={'solana'}
+          chainId={outputCurrency.xChainId as SpokeChainId}
           currency={outputCurrency}
-          currencyBalance={0n}
+          currencyBalance={outputBalance}
           inputValue={''}
           onCurrencyChange={setOutputCurrency}
           // onInputChange={e => setTypedValue(e.target.value)}
@@ -78,9 +185,10 @@ export default function SwapPage() {
       <Button
         variant="cherry"
         className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
-        onClick={() => openWalletModal()}
+        onClick={handleOpenWalletModal}
+        disabled={buttonState.disabled}
       >
-        Connect wallets
+        {buttonState.text}
       </Button>
     </div>
   );

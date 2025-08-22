@@ -7,6 +7,7 @@ import { WalletModalItem } from './wallet-modal-item';
 import Image from 'next/image';
 import { ArrowLeftIcon, XIcon } from 'lucide-react';
 import type { XConnector } from '@sodax/wallet-sdk';
+import type { ChainType } from '@sodax/types';
 import { xChainTypes } from '@/constants/wallet';
 import { useWalletModal } from '@/hooks/useWalletModal';
 import { AllSupportItem } from './all-support-item';
@@ -17,6 +18,7 @@ type WalletModalProps = {
   onDismiss: () => void;
   onWalletSelected?: (xConnector: XConnector, xChainType: string) => void;
   onSetShowWalletModalOnTwoWallets?: (value: boolean) => void;
+  targetChainType?: ChainType;
 };
 
 export const WalletModal = ({
@@ -24,6 +26,7 @@ export const WalletModal = ({
   onDismiss,
   onWalletSelected,
   onSetShowWalletModalOnTwoWallets,
+  targetChainType,
 }: WalletModalProps) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const pathname = usePathname();
@@ -49,18 +52,31 @@ export const WalletModal = ({
     ? xChainTypes.filter(w => w.xChainType === 'ICON' || w.xChainType === 'EVM')
     : xChainTypes;
 
-  // When on migrate route, always show ICON first, then EVM
-  const mainChain = isMigrateRoute
-    ? availableChains.find(w => w.xChainType === 'ICON')
-    : isExpanded
-      ? availableChains.find(w => w.xChainType === 'EVM')
-      : availableChains.find(w => w.xChainType === 'SOLANA');
+  // Intelligent mainChain selection based on targetChainType
+  const getMainChain = (): (typeof availableChains)[0] | undefined => {
+    if (isMigrateRoute) {
+      return availableChains.find(w => w.xChainType === 'ICON');
+    }
+
+    if (isExpanded) {
+      return availableChains.find(w => w.xChainType === 'EVM');
+    }
+
+    if (targetChainType) {
+      const targetChain = availableChains.find(w => w.xChainType === targetChainType);
+      if (targetChain) {
+        return targetChain;
+      }
+    }
+
+    return availableChains.find(w => w.xChainType === 'SOLANA');
+  };
+
+  const mainChain = getMainChain();
 
   const otherChains = isMigrateRoute
     ? availableChains.filter(w => w.xChainType !== 'ICON')
-    : isExpanded
-      ? availableChains.filter(w => w.xChainType !== 'EVM')
-      : availableChains.filter(w => w.xChainType !== 'SOLANA');
+    : availableChains.filter(w => w.xChainType !== mainChain?.xChainType);
 
   const handleToggleExpanded = (expanded: boolean): void => {
     setIsExpanded(expanded);

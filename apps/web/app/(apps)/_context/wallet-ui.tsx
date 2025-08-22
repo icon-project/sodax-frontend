@@ -2,9 +2,10 @@
 
 import type React from 'react';
 import { createContext, useContext } from 'react';
+import type { ChainType } from '@sodax/types';
 
 type WalletUIContextValue = {
-  openWalletModal: () => void;
+  openWalletModal: (targetChainType?: ChainType) => void;
 };
 
 const WalletUIContext = createContext<WalletUIContextValue | null>(null);

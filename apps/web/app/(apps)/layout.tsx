@@ -7,6 +7,7 @@ import { Header } from '@/components/shared/header';
 import { RouteTabs } from '@/components/shared/route-tabs';
 import { WalletUIProvider } from './_context/wallet-ui';
 import { useWalletConnection } from '@/hooks/useWalletConnection';
+import type { ChainType } from '@sodax/types';
 import '../globals.css';
 
 const WalletModal = dynamic(() => import('@/components/shared/wallet-modal').then(m => m.WalletModal), { ssr: false });
@@ -31,19 +32,26 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     handleTermsAccepted,
     handleDisconnect,
     setShowWalletModalOnTwoWallets,
+    targetChainType,
+    setTargetChainType,
   } = useWalletConnection();
 
+  const openWalletModal = (targetChainType?: ChainType) => {
+    setTargetChainType(targetChainType);
+    setShowWalletModal(true);
+  };
+
   return (
-    <WalletUIProvider value={{ openWalletModal: () => setShowWalletModal(true) }}>
+    <WalletUIProvider value={{ openWalletModal }}>
       <div className="bg-cream-white min-h-screen pb-24 md:pb-0 w-screen overflow-x-hidden">
         <Sidebar isOpen={isSidebarOpen} toggle={toggleSidebar} setOpenRewardDialog={() => {}} />
         <Header
           isSidebarOpen={isSidebarOpen}
           toggleSidebar={toggleSidebar}
           connectedWalletsCount={connectedWalletsCount}
-          onOpenWalletModal={() => setShowWalletModal(true)}
+          onOpenWalletModal={() => openWalletModal()}
           onOpenWalletModalWithTwoWallets={() => {
-            setShowWalletModal(true);
+            openWalletModal();
             setShowTermsModal(false);
             setShowWalletModalOnTwoWallets(false);
           }}
@@ -69,6 +77,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           onDismiss={() => setShowWalletModal(false)}
           onWalletSelected={handleWalletSelected}
           onSetShowWalletModalOnTwoWallets={setShowWalletModalOnTwoWallets}
+          targetChainType={targetChainType}
         />
         <TermsConfirmationModal
           open={showTermsModal}
