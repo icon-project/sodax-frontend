@@ -106,11 +106,11 @@ export class StellarSpokeService {
         params.from,
         hubProvider,
       ));
-
+    console.log('to', to);
     return {
       spokeChainID: spokeProvider.chainConfig.chain.id,
       token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
-      from: params.from,
+      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
       to,
       amount: params.amount,
       data: params.data,
