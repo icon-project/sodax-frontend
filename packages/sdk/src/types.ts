@@ -203,6 +203,7 @@ export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
     xTokenManager: string;
     rateLimit: string;
     testToken: string;
+    intentFiller:string;
   };
   rpc_url: string;
 };

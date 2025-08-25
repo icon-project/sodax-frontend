@@ -5,6 +5,7 @@ export type EvmRawTransaction = {
   to: Address;
   value: bigint;
   data: Hex;
+  gasLimit?:number;
 };
 
 // Ethereum JSON-RPC Spec based logs
