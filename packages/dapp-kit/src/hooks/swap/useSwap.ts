@@ -9,7 +9,7 @@ import type {
   SpokeProvider,
   IntentDeliveryInfo,
 } from '@sodax/sdk';
-import { useMutation, type UseMutationResult } from '@tanstack/react-query';
+import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
 
 type CreateIntentResult = Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>;
 
@@ -40,6 +40,7 @@ export function useSwap(
   spokeProvider: SpokeProvider | undefined,
 ): UseMutationResult<CreateIntentResult, Error, CreateIntentParams> {
   const { sodax } = useSodaxContext();
+  const queryClient = useQueryClient();
 
   return useMutation<CreateIntentResult, Error, CreateIntentParams>({
     mutationFn: async (params: CreateIntentParams) => {
@@ -50,6 +51,10 @@ export function useSwap(
         intentParams: params,
         spokeProvider,
       });
+    },
+    onSuccess: () => {
+      // Invalidate balance queries to refresh both source and destination token balances
+      queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     },
   });
 }
