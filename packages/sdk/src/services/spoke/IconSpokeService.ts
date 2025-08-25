@@ -134,9 +134,12 @@ export class IconSpokeService {
         hubProvider,
       ));
 
+    const token = isNativeToken(spokeProvider.chainConfig.chain.id, params.token)
+      ? spokeProvider.chainConfig.addresses.wICX
+      : params.token;
     return {
       spokeChainID: spokeProvider.chainConfig.chain.id,
-      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, token),
       from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
       to,
       amount: params.amount,
