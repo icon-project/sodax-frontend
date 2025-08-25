@@ -26,6 +26,9 @@ interface SwapConfirmDialogProps {
   estimatedGasFee?: string;
   error?: string;
   minOutputAmount?: string; // Add minOutputAmount prop
+  sourceAddress?: string;
+  destinationAddress?: string;
+  isSwapAndSend?: boolean;
 }
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
@@ -43,6 +46,9 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   estimatedGasFee,
   error,
   minOutputAmount, // Add minOutputAmount to destructuring
+  sourceAddress,
+  destinationAddress,
+  isSwapAndSend = false,
 }: SwapConfirmDialogProps) => {
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -52,7 +58,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const formatToSixDecimals = (value: string): string => {
     const num = Number.parseFloat(value);
     if (Number.isNaN(num)) return value;
-    return num.toFixed(6);
+    return num.toFixed(4);
   };
 
   const handleConfirm = async (): Promise<void> => {
@@ -99,7 +105,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
               <div className="flex flex-col justify-start items-center gap-2">
                 <div className="inline-flex justify-start items-center gap-1">
                   <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                    {formatToSixDecimals(sourceAmount)}
+                    {sourceAmount}
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
                     {sourceToken.symbol}
@@ -256,6 +262,20 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                           <span className="text-clay-light">Via:</span>
                           <span className="text-espresso font-medium">SODAX SDK</span>
                         </div>
+                        {sourceAddress && (
+                          <div className="flex justify-between">
+                            <span className="text-clay-light">From:</span>
+                            <span className="text-espresso font-medium">{shortenAddress(sourceAddress)}</span>
+                          </div>
+                        )}
+                        {destinationAddress && (
+                          <div className="flex justify-between">
+                            <span className="text-clay-light">
+                              {isSwapAndSend ? 'To (Custom):' : 'To:'}
+                            </span>
+                            <span className="text-espresso font-medium">{shortenAddress(destinationAddress)}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

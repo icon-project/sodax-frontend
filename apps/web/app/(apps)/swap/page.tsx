@@ -44,6 +44,8 @@ export default function SwapPage() {
   const [destinationAmount, setDestinationAmount] = useState<string>('');
   const [isSwapConfirmOpen, setIsSwapConfirmOpen] = useState<boolean>(false);
   const [swapError, setSwapError] = useState<string>('');
+  const [isSwapAndSend, setIsSwapAndSend] = useState<boolean>(false);
+  const [customDestinationAddress, setCustomDestinationAddress] = useState<string>('');
 
   const [sourceToken, setSourceToken] = useState<XToken>({
     name: 'ETH',
@@ -222,12 +224,25 @@ export default function SwapPage() {
       };
     }
 
-    if (!destinationAddress) {
-      return {
-        text: 'Connect recipient',
-        disabled: false,
-        action: 'connect',
-      };
+    // Check destination address based on toggle state
+    if (isSwapAndSend) {
+      // When toggle is ON, require custom destination address
+      if (!customDestinationAddress || customDestinationAddress.trim() === '') {
+        return {
+          text: 'Enter destination address',
+          disabled: true,
+          action: 'enter-amount',
+        };
+      }
+    } else {
+      // When toggle is OFF, require connected destination wallet
+      if (!destinationAddress) {
+        return {
+          text: 'Connect recipient',
+          disabled: false,
+          action: 'connect',
+        };
+      }
     }
 
     // Check if quote is loading or has error
@@ -298,7 +313,11 @@ export default function SwapPage() {
         throw new Error('Source address not available');
       }
 
-      if (!destinationAddress) {
+      // Use custom destination address if toggle is enabled, otherwise use connected wallet address
+      const finalDestinationAddress =
+        isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress;
+
+      if (!finalDestinationAddress) {
         throw new Error('Destination address not available');
       }
 
@@ -338,7 +357,7 @@ export default function SwapPage() {
         minOutputAmount,
         exchangeRate: exchangeRate?.toString(),
         sourceAddress,
-        destinationAddress,
+        destinationAddress: finalDestinationAddress,
       });
 
       // Execute the actual swap
@@ -352,7 +371,7 @@ export default function SwapPage() {
         srcChain: sourceToken.xChainId as SpokeChainId,
         dstChain: destinationToken.xChainId as SpokeChainId,
         srcAddress: sourceAddress,
-        dstAddress: destinationAddress,
+        dstAddress: finalDestinationAddress,
         solver: '0x0000000000000000000000000000000000000000',
         data: '0x',
       });
@@ -431,6 +450,10 @@ export default function SwapPage() {
           inputValue={destinationAmount}
           onCurrencyChange={setDestinationToken}
           isChainConnected={isDestinationChainConnected}
+          isSwapAndSend={isSwapAndSend}
+          onSwapAndSendToggle={setIsSwapAndSend}
+          customDestinationAddress={customDestinationAddress}
+          onCustomDestinationAddressChange={setCustomDestinationAddress}
         />
       </div>
 
@@ -496,6 +519,9 @@ export default function SwapPage() {
         estimatedGasFee="~$2.50"
         error={swapError}
         minOutputAmount={minOutputAmount}
+        sourceAddress={sourceAddress}
+        destinationAddress={isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress}
+        isSwapAndSend={isSwapAndSend}
       />
     </div>
   );

@@ -23,7 +23,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
   if (connectedChains.length === 0) return <></>;
 
   return (
-    <div className="flex justify-center gap-4 w-[183px]">
+    <div className="flex justify-end gap-4 w-[183px]">
       <div className="flex items-center cursor-pointer" onClick={onClick}>
         {connectedChains.map(chain => (
           <div key={chain.chainType} className="relative">
