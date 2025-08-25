@@ -7,10 +7,13 @@ import {
   isPartnerFeePercentage,
   type Hex,
   type PartnerFee,
+  type QuoteType,
   type SpokeChainId,
 } from '../index.js';
 import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
+import { PublicKey } from '@solana/web3.js';
+import { Address } from '@stellar/stellar-sdk';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -98,6 +101,31 @@ export function calculateFeeAmount(inputAmount: bigint, fee: PartnerFee | undefi
   return feeAmount;
 }
 
+/**
+ * Adjust the amount by the fee amount based on the quote type
+ * @param {bigint} amount - The amount to adjust
+ * @param {PartnerFee | undefined} fee - The fee to adjust
+ * @param {QuoteType} quoteType - The quote type
+ * @returns {bigint} The adjusted amount
+ */
+export function adjustAmountByFee(
+  amount: bigint,
+  fee: PartnerFee | undefined,
+  quoteType: QuoteType,
+): bigint {
+  invariant(amount > 0n, 'Amount must be greater than 0');
+  invariant(quoteType === 'exact_input' || quoteType === 'exact_output', 'Invalid quote type');
+
+  if (quoteType === 'exact_input') {
+    return amount - calculateFeeAmount(amount, fee);
+  }
+  if (quoteType === 'exact_output') {
+    return amount + calculateFeeAmount(amount, fee);
+  }
+
+  throw new Error('Invalid quote type');
+}
+
 export function BigIntToHex(value: bigint): Hex {
   return `0x${value.toString(16)}`;
 }
@@ -117,12 +145,36 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
       return toHex(Buffer.from(address, 'utf-8'));
 
     case '0x1.icon':
-      return `0x${Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex').toString('hex')}`;
+      return toHex(Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex'));
 
     case 'sui':
       return toHex(bcs.Address.serialize(address).toBytes());
 
+    case 'solana':
+      return toHex(Buffer.from(new PublicKey(address).toBytes()));
+
+    case 'stellar':
+      return `0x${Address.fromString(address).toScVal().toXDR('hex')}`;
+
     default:
       return address as Hex;
   }
+}
+
+/**
+ * Convert a valid hexadecimal string (with or without "0x") to BigInt.
+ * Throws on invalid hex.
+ */
+export function hexToBigInt(hex: string): bigint {
+  const trimmed = hex.trim().toLowerCase();
+
+  // Validate hex: only digits 0-9 and letters a-f, optional 0x prefix
+  const isValid = /^(0x)?[0-9a-f]+$/.test(trimmed);
+  if (!isValid) {
+    throw new Error(`Invalid hex string: "${hex}"`);
+  }
+
+  // Normalize with 0x prefix to make BigInt parse it as hexadecimal
+  const normalized = trimmed.startsWith('0x') ? trimmed : `0x${trimmed}`;
+  return BigInt(normalized);
 }

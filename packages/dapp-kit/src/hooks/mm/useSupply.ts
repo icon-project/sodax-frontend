@@ -6,7 +6,7 @@ import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface SupplyResponse {
   ok: true;
-  value: [`0x${string}`, `0x${string}`];
+  value: [string, string];
 }
 
 /**
@@ -45,7 +45,7 @@ export function useSupply(
         throw new Error('spokeProvider is not found');
       }
 
-      const response = await sodax.moneyMarket.supplyAndSubmit(
+      const response = await sodax.moneyMarket.supply(
         {
           token: spokeToken.address,
           amount: parseUnits(amount, spokeToken.decimals),

@@ -25,18 +25,17 @@
   "dependencies": {
     "@sodax/sdk": "workspace:*",
     "@sodax/types": "workspace:*",
-    "@sodax/wallet-sdk": "workspace:*",
     "viem": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",
     "knip": "5.30.5",
-    "tsup": "^8.4.0",
+    "tsup": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@tanstack/react-query": "catalog:",
-    "react": "catalog:"
+    "@tanstack/react-query": "5.x",
+    "react": ">=18"
   },
   "engines": {
     "node": ">=18.0.0"

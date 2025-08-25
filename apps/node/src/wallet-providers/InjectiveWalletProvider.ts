@@ -1,106 +1,110 @@
-import { CosmWasmClient, type JsonObject } from '@cosmjs/cosmwasm-stargate';
-import type { Coin } from '@cosmjs/proto-signing';
-import type { StdFee } from '@cosmjs/stargate';
-import { Network } from '@injectivelabs/networks';
-import { MsgBroadcasterWithPk, PrivateKey, MsgExecuteContract, createTransaction } from '@injectivelabs/sdk-ts';
-import type { CosmosNetworkEnv, CWRawTransaction, Hex, ICWWalletProvider } from '@sodax/types';
-import { CWExecuteResponse } from '@sodax/types';
-import { DEFAULT_GAS_LIMIT } from '@injectivelabs/utils';
-import { toHex } from 'viem';
+// import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
+// import {
+//   MsgBroadcasterWithPk,
+//   PrivateKey,
+//   MsgExecuteContract,
+//   createTransaction,
+//   ChainGrpcWasmApi,
+//   toBase64,
+// } from '@injectivelabs/sdk-ts';
+// import type {
+//   InjectiveNetworkEnv,
+//   InjectiveRawTransaction,
+//   Hex,
+//   IInjectiveWalletProvider,
+//   InjectiveCoin,
+//   JsonObject,
+// } from '@sodax/types';
+// import { InjectiveExecuteResponse } from '@sodax/types';
+// import { DEFAULT_GAS_LIMIT } from '@injectivelabs/utils';
+// import { toHex } from 'viem';
 
-// TODO implement browser extension based login
-export interface InjectiveWalletConfig {
-  mnemonics: string;
-  network: CosmosNetworkEnv;
-  rpcUrl: string;
-}
-export class InjectiveWalletProvider implements ICWWalletProvider {
-  private config: InjectiveWalletConfig;
-  private client: MsgBroadcasterWithPk;
-  private cosmosClient: CosmWasmClient | undefined;
-  private address: string;
-  public pubkey: Uint8Array;
+// // TODO implement browser extension based login
+// export interface InjectiveWalletConfig {
+//   mnemonics: string;
+//   network: InjectiveNetworkEnv;
+// }
+// export class InjectiveWalletProvider implements IInjectiveWalletProvider {
+//   public pubkey: Uint8Array;
 
-  constructor(config: InjectiveWalletConfig) {
-    this.config = config;
-    const privateKey = PrivateKey.fromMnemonic(config.mnemonics);
-    this.pubkey = privateKey.toPublicKey().toPubKeyBytes();
-    this.address = privateKey.toAddress().toBech32();
-    this.client = new MsgBroadcasterWithPk({
-      privateKey: privateKey,
-      network: this.config.network === 'Mainnet' ? Network.Mainnet : Network.Testnet,
-    });
-  }
+//   private config: InjectiveWalletConfig;
+//   private client: MsgBroadcasterWithPk;
+//   private address: string;
+//   private chainGrpcWasmApi: ChainGrpcWasmApi;
 
-  getRawTransaction(
-    chainId: string,
-    _: string,
-    senderAddress: string,
-    contractAddress: string,
-    msg: JsonObject,
-    memo?: string,
-  ): CWRawTransaction {
-    const msgExec = MsgExecuteContract.fromJSON({
-      contractAddress: contractAddress,
-      sender: senderAddress,
-      msg: msg,
-      funds: [],
-    });
-    const { txRaw } = createTransaction({
-      message: msgExec,
-      memo: '',
-      pubKey: Buffer.from(this.pubkey).toString(),
-      sequence: 0,
-      accountNumber: 0,
-      chainId: chainId,
-    });
-    return {
-      from: senderAddress as Hex,
-      to: contractAddress as Hex,
-      signedDoc: {
-        bodyBytes: txRaw.bodyBytes,
-        chainId: chainId,
-        accountNumber: BigInt(0),
-        authInfoBytes: txRaw.authInfoBytes,
-      },
-    };
-  }
+//   constructor(config: InjectiveWalletConfig) {
+//     this.config = config;
+//     const privateKey = PrivateKey.fromMnemonic(config.mnemonics);
+//     this.pubkey = privateKey.toPublicKey().toPubKeyBytes();
+//     this.address = privateKey.toAddress().toBech32();
+//     this.client = new MsgBroadcasterWithPk({
+//       privateKey: privateKey,
+//       network: this.config.network === 'Mainnet' ? Network.Mainnet : Network.Testnet,
+//     });
+//     const endpoints = getNetworkEndpoints(Network.Mainnet);
+//     this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
+//   }
 
-  async getCosmwasmClient(): Promise<CosmWasmClient> {
-    if (this.cosmosClient === undefined) {
-      this.cosmosClient = await CosmWasmClient.connect(this.config.rpcUrl);
-    }
-    return this.cosmosClient;
-  }
+//   getRawTransaction(
+//     chainId: string,
+//     _: string,
+//     senderAddress: string,
+//     contractAddress: string,
+//     msg: JsonObject,
+//   ): Promise<InjectiveRawTransaction> {
+//     const msgExec = MsgExecuteContract.fromJSON({
+//       contractAddress: contractAddress,
+//       sender: senderAddress,
+//       msg: msg as object,
+//       funds: [],
+//     });
+//     const { txRaw } = createTransaction({
+//       message: msgExec,
+//       memo: '',
+//       pubKey: Buffer.from(this.pubkey).toString(),
+//       sequence: 0,
+//       accountNumber: 0,
+//       chainId: chainId,
+//     });
 
-  async getWalletAddress(): Promise<string> {
-    return Promise.resolve(this.address);
-  }
+//     const rawTx = {
+//       from: senderAddress as Hex,
+//       to: contractAddress as Hex,
+//       signedDoc: {
+//         bodyBytes: txRaw.bodyBytes,
+//         chainId: chainId,
+//         accountNumber: BigInt(0),
+//         authInfoBytes: txRaw.authInfoBytes,
+//       },
+//     };
+//     return Promise.resolve(rawTx);
+//   }
 
-  async getWalletAddressBytes(): Promise<Hex> {
-    return toHex(Buffer.from(await this.getWalletAddress(), 'utf-8'));
-  }
+//   async getWalletAddress(): Promise<string> {
+//     return Promise.resolve(this.address);
+//   }
 
-  async execute(
-    senderAddress: string,
-    contractAddress: string,
-    msg: JsonObject,
-    fee: StdFee | 'auto' | number,
-    memo?: string,
-    funds?: Coin[],
-  ): Promise<CWExecuteResponse> {
-    const msgExec = MsgExecuteContract.fromJSON({
-      contractAddress: contractAddress,
-      sender: senderAddress,
-      msg: msg,
-      funds: funds as { amount: string; denom: string }[],
-    });
-    const txHash = await this.client.broadcast({ msgs: msgExec, gas: { gas: DEFAULT_GAS_LIMIT } });
-    return CWExecuteResponse.fromTxResponse(txHash);
-  }
+//   async getWalletAddressBytes(): Promise<Hex> {
+//     return toHex(Buffer.from(await this.getWalletAddress(), 'utf-8'));
+//   }
 
-  async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {
-    const contractClient = await CosmWasmClient.connect(this.config.rpcUrl);
-    return contractClient.queryContractSmart(address, queryMsg);
-  }
-}
+//   async execute(
+//     senderAddress: string,
+//     contractAddress: string,
+//     msg: JsonObject,
+//     funds?: InjectiveCoin[],
+//   ): Promise<InjectiveExecuteResponse> {
+//     const msgExec = MsgExecuteContract.fromJSON({
+//       contractAddress: contractAddress,
+//       sender: senderAddress,
+//       msg: msg as object,
+//       funds: funds,
+//     });
+//     const txHash = await this.client.broadcast({ msgs: msgExec, gas: { gas: DEFAULT_GAS_LIMIT } });
+//     return InjectiveExecuteResponse.fromTxResponse(txHash);
+//   }
+
+//   async queryContractSmart(address: string, queryMsg: JsonObject): Promise<JsonObject> {
+//     return this.chainGrpcWasmApi.fetchSmartContractState(address, toBase64(queryMsg as object));
+//   }
+// }

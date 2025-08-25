@@ -9,14 +9,18 @@ type AppStore = {
   isWalletModalOpen: boolean;
   openWalletModal: () => void;
   closeWalletModal: () => void;
+  isSolverProduction: boolean;
+  setIsSolverProduction: (isSolverProduction: boolean) => void;
 };
 
 export const useAppStore = create<AppStore>()(
   immer((set, get) => ({
-    selectedChainId: '0xa86a.avax',
+    selectedChainId: 'injective-1',
     selectChainId: (chainId: ChainId) => set({ selectedChainId: chainId }),
     isWalletModalOpen: false,
     openWalletModal: () => set({ isWalletModalOpen: true }),
     closeWalletModal: () => set({ isWalletModalOpen: false }),
+    isSolverProduction: true,
+    setIsSolverProduction: (isSolverProduction: boolean) => set({ isSolverProduction }),
   })) as StateCreator<AppStore, [], []>,
 );

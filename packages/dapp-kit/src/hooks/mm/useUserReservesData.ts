@@ -1,47 +1,40 @@
-import { allXTokens } from '@/core';
-import { encodeAddress, EvmWalletAbstraction, getMoneyMarketConfig, type EvmHubProvider } from '@sodax/sdk';
-import type { HubChainId, SpokeChainId } from '@sodax/types';
-import type { ChainId } from '@sodax/types';
-import { useQuery } from '@tanstack/react-query';
-import { useHubProvider } from '../provider/useHubProvider';
+import { SpokeProvider, type UserReserveData } from '@sodax/sdk';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-export function useUserReservesData(spokeChainId: ChainId, address: string | undefined) {
+/**
+ * Hook for fetching user reserves data from the Sodax money market.
+ *
+ * This hook provides access to the current state of user reserves in the money market protocol.
+ * The data is automatically fetched and cached using React Query.
+ *
+ * @example
+ * ```typescript
+ * const { data: userReservesData, isLoading, error } = useUserReservesData(spokeProvider, address);
+ * ```
+ *
+ * @returns A React Query result object containing:
+ *   - data: The user reserves data when available
+ *   - isLoading: Loading state indicator
+ *   - error: Any error that occurred during data fetching
+ */
+export function useUserReservesData(
+  spokeProvider: SpokeProvider | undefined,
+  address: string | undefined,
+  refetchInterval = 5000,
+): UseQueryResult<readonly [readonly UserReserveData[], number], Error> {
   const { sodax } = useSodaxContext();
-  const hubChainId = (sodax.config?.hubProviderConfig?.chainConfig.chain.id ?? 'sonic') as HubChainId;
-  const hubProvider = useHubProvider();
 
-  const { data: userReserves } = useQuery({
-    queryKey: ['userReserves', spokeChainId, address],
+  return useQuery({
+    queryKey: ['userReserves', spokeProvider?.chainConfig.chain.id, address],
     queryFn: async () => {
-      if (!hubProvider || !address) {
-        return;
+      if (!spokeProvider) {
+        throw new Error('Spoke provider or address is not defined');
       }
 
-      const addressBytes = encodeAddress(spokeChainId, address);
-      const hubWalletAddress = await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeChainId as SpokeChainId,
-        addressBytes,
-        hubProvider as EvmHubProvider,
-      );
-
-      const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
-      const [res] = await sodax.moneyMarket.getUserReservesData(
-        hubWalletAddress as `0x${string}`,
-        moneyMarketConfig.uiPoolDataProvider,
-        moneyMarketConfig.poolAddressesProvider,
-      );
-
-      return res?.map(r => {
-        return {
-          ...r,
-          token: allXTokens.find(t => t.address === r.underlyingAsset),
-        };
-      });
+      return await sodax.moneyMarket.data.getUserReservesData(spokeProvider);
     },
-    enabled: !!spokeChainId && !!hubProvider && !!address,
-    refetchInterval: 5000,
+    enabled: !!spokeProvider && !!address,
+    refetchInterval,
   });
-
-  return userReserves;
 }

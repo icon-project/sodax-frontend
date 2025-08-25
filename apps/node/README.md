@@ -43,11 +43,11 @@ pnpm run dev moneymarket <user_address>
 ```
 
 ```bash
-pnpm cosmos borrow <token> <amount>
+pnpm injective borrow <token> <amount>
 ```
 
 ```bash
-pnpm cosmos supply <token> <amount>
+pnpm injective supply <token> <amount>
 ```
 
 

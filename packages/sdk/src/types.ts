@@ -1,5 +1,5 @@
 import type { TransactionReceipt } from 'viem';
-import type { CWSpokeProvider } from './entities/cosmos/CWSpokeProvider.js';
+import type { InjectiveSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import type {
   EvmSpokeProvider,
   ISpokeProvider,
@@ -10,9 +10,16 @@ import type {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from './entities/index.js';
-import type { EVM_CHAIN_IDS, EVM_SPOKE_CHAIN_IDS, INTENT_RELAY_CHAIN_IDS, spokeChainConfig } from './index.js';
+import type {
+  bnUSDLegacySpokeChainIds,
+  bnUSDLegacyTokens,
+  EVM_CHAIN_IDS,
+  EVM_SPOKE_CHAIN_IDS,
+  INTENT_RELAY_CHAIN_IDS,
+  newbnUSDSpokeChainIds,
+  spokeChainConfig,
+} from './index.js';
 import type { EvmSpokeDepositParams, SonicSpokeDepositParams } from './services/index.js';
-import type { CWSpokeDepositParams } from './services/spoke/CWSpokeService.js';
 import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.js';
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
 import type { StellarSpokeDepositParams } from './services/spoke/StellarSpokeService.js';
@@ -26,14 +33,20 @@ import type {
   Address,
   EvmRawTransaction,
   StellarRawTransaction,
-  CWRawTransaction,
-  CosmosNetworkEnv,
+  InjectiveRawTransaction,
+  InjectiveNetworkEnv,
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { type Transaction as NearTransaction } from '@near-js/transactions';
 import type { NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
 import type { NearSpokeDepositParams } from './services/spoke/NearSpokeService.js';
+import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
+
+export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
+export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
+export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
+export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
 export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
 
@@ -84,10 +97,12 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     hubWallet: Address;
     xTokenManager: Address;
     icxMigration: Address;
+    balnSwap: Address;
     sodaToken: Address;
   };
 
   nativeToken: Address;
+  wrappedNativeToken: Address;
 };
 
 export type RelayerApiConfig = {
@@ -133,6 +148,7 @@ export type SonicSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
 export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   addresses: {
     assetManager: string;
+    assetManagerId: string;
     connection: string;
     xTokenManager: string;
     rateLimit: string;
@@ -141,7 +157,7 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   rpc_url: string;
 };
 
-export type CosmosSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
+export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
   rpcUrl: string;
   walletAddress: string;
   addresses: {
@@ -156,7 +172,7 @@ export type CosmosSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
   gasPrice: string;
   isBrowser: boolean;
   networkId: string;
-  network: CosmosNetworkEnv;
+  network: InjectiveNetworkEnv;
 };
 
 export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
@@ -167,7 +183,8 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
     rateLimit: string;
     testToken: string;
   };
-  rpc_url: string;
+  horizonRpcUrl: HttpUrl;
+  sorobanRpcUrl: HttpUrl;
 };
 
 export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
@@ -190,7 +207,6 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
   };
   chain: SpokeChainInfo<'SOLANA'>;
   rpcUrl: string;
-  wsUrl: string;
   walletAddress: string;
   nativeToken: string;
   gasPrice: string;
@@ -213,7 +229,7 @@ export type HubChainConfig = EvmHubChainConfig;
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
   | SonicSpokeChainConfig
-  | CosmosSpokeChainConfig
+  | InjectiveSpokeChainConfig
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
@@ -255,6 +271,23 @@ export type VaultReserves = {
   balances: readonly bigint[];
 };
 
+export type DepositSimulationParams = {
+  spokeChainID: SpokeChainId;
+  token: Hex;
+  from: Hex;
+  to: Hex;
+  amount: bigint;
+  data: Hex;
+  srcAddress: Hex;
+};
+
+export type WalletSimulationParams = {
+  target: Address;
+  srcChainId: bigint;
+  srcAddress: Hex;
+  payload: Hex;
+};
+
 /**
  * Fee type for transaction fees.
  * @property address - The address to which the fee is sent.
@@ -291,21 +324,24 @@ export type FeeAmount = {
   feeAmount: bigint;
 };
 
+export type OptionalFee = { fee?: PartnerFee };
+
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
+export type IconContractAddress = `cx${string}`;
 export type IcxTokenType =
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['addresses']['wICX']
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['nativeToken'];
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 export type HttpPrefixedUrl = `http${string}`;
 
-export type SpokeDepositParams = EvmSpokeDepositParams | CWSpokeDepositParams | IconSpokeDepositParams;
+export type SpokeDepositParams = EvmSpokeDepositParams | InjectiveSpokeDepositParams | IconSpokeDepositParams;
 
 export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? EvmSpokeDepositParams
-  : T extends CWSpokeProvider
-    ? CWSpokeDepositParams
+  : T extends InjectiveSpokeProvider
+    ? InjectiveSpokeDepositParams
     : T extends SuiSpokeProvider
       ? SuiSpokeDepositParams
       : T extends IconSpokeProvider
@@ -321,7 +357,7 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? Address
-  : T extends CWSpokeProvider
+  : T extends InjectiveSpokeProvider
     ? string
     : T extends StellarSpokeProvider
       ? Hex
@@ -348,7 +384,7 @@ export type SolverConfigParams =
 
 export type QuoteType = 'exact_input' | 'exact_output';
 
-export type IntentQuoteRequest = {
+export type SolverIntentQuoteRequest = {
   token_src: string; // Token address on the source chain
   token_src_blockchain_id: SpokeChainId; // Source chain id
   token_dst: string; // Token address on the destination chain
@@ -357,40 +393,40 @@ export type IntentQuoteRequest = {
   quote_type: QuoteType; // Quote type
 };
 
-export type IntentQuoteResponseRaw = {
+export type SolverIntentQuoteResponseRaw = {
   quoted_amount: string;
 };
 
-export type IntentQuoteResponse = {
+export type SolverIntentQuoteResponse = {
   quoted_amount: bigint;
 };
 
-export type IntentErrorResponse = {
+export type SolverErrorResponse = {
   detail: {
-    code: IntentErrorCode;
+    code: SolverIntentErrorCode;
     message: string;
   };
 };
 
-export type IntentExecutionRequest = {
+export type SolverExecutionRequest = {
   intent_tx_hash: Hex; // Intent hash of the execution on Sonic (hub chain)
 };
 
-export type IntentExecutionResponse = {
+export type SolverExecutionResponse = {
   answer: 'OK';
   intent_hash: Hex; // Here, the solver returns the intent_hash, might be helpful for front-end
 };
 
-export type IntentStatusRequest = {
+export type SolverIntentStatusRequest = {
   intent_tx_hash: Hex;
 };
 
-export type IntentStatusResponse = {
-  status: IntentStatusCode;
+export type SolverIntentStatusResponse = {
+  status: SolverIntentStatusCode;
   fill_tx_hash?: string; // defined only if status is 3
 };
 
-export enum IntentStatusCode {
+export enum SolverIntentStatusCode {
   NOT_FOUND = -1,
   NOT_STARTED_YET = 1, // It's in the task pool, but not started yet
   STARTED_NOT_FINISHED = 2,
@@ -398,7 +434,7 @@ export enum IntentStatusCode {
   FAILED = 4,
 }
 
-export enum IntentErrorCode {
+export enum SolverIntentErrorCode {
   NO_PATH_FOUND = -4, // No path to swap Token X to Token Y
   NO_PRIVATE_LIQUIDITY = -5, // Path found, but we have no private liquidity on the dest chain
   NOT_ENOUGH_PRIVATE_LIQUIDITY = -8, // Path found, but not enough private liquidity on the dst chain
@@ -453,11 +489,32 @@ export type SuiRawTransaction = {
 
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
 export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRawTransaction : Hex;
-export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : Hex;
+export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
+<<<<<<< HEAD
 export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransaction : Hex;
 export type NearReturnType<Raw extends boolean> = Raw extends true ? NearTransaction : Hex;
+=======
+export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : Hex;
+
+export type HashTxReturnType =
+  | EvmReturnType<false>
+  | SolanaReturnType<false>
+  | IconReturnType<false>
+  | SuiReturnType<false>
+  | InjectiveReturnType<false>
+  | StellarReturnType<false>;
+
+export type RawTxReturnType =
+  | EvmRawTransaction
+  | SolanaRawTransaction
+  | InjectiveRawTransaction
+  | IconRawTransaction
+  | SuiRawTransaction
+  | StellarRawTransaction;
+
+>>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88
 export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chainConfig']['chain']['type'] extends 'EVM'
   ? EvmReturnType<Raw>
   : T['chainConfig']['chain']['type'] extends 'SOLANA'
@@ -469,14 +526,23 @@ export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chai
         : T['chainConfig']['chain']['type'] extends 'SUI'
           ? SuiReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+<<<<<<< HEAD
             ? CWReturnType<Raw>
             : T['chainConfig']['chain']['type'] extends 'NEAR'
             ? NearReturnType<Raw>:never; // TODO extend for each chain implementation
+=======
+            ? InjectiveReturnType<Raw>
+            : Raw extends true
+              ? RawTxReturnType
+              : HashTxReturnType;
+
+>>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88
 export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
 export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<TxReturnType<SolanaSpokeProvider, Raw>>;
 export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnType<StellarSpokeProvider, Raw>>;
 export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
 export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
+<<<<<<< HEAD
 export type PromiseCWTxReturnType<Raw extends boolean> = Promise<TxReturnType<CWSpokeProvider, Raw>>;
 export type PromiseNearTxReturnType<Raw extends boolean> = Promise<TxReturnType<NearSpokeProvider, Raw>>;
 
@@ -488,6 +554,9 @@ export type RawTxReturnType =
   | IconRawTransaction
   | SuiRawTransaction; // TODO extend for other chains (Icon, Cosmos, Sui)
 export type GetRawTxReturnType<T extends ChainType> = T extends 'EVM' ? PromiseEvmTxReturnType<boolean> : never;
+=======
+export type PromiseInjectiveTxReturnType<Raw extends boolean> = Promise<TxReturnType<InjectiveSpokeProvider, Raw>>;
+>>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88
 
 export type PromiseTxReturnType<
   T extends ISpokeProvider,
@@ -503,9 +572,14 @@ export type PromiseTxReturnType<
         : T['chainConfig']['chain']['type'] extends 'SUI'
           ? PromiseSuiTxReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+<<<<<<< HEAD
             ? PromiseCWTxReturnType<Raw>
             : T['chainConfig']['chain']['type'] extends 'NEAR'
             ? PromiseNearTxReturnType<Raw>:never;
+=======
+            ? PromiseInjectiveTxReturnType<Raw>
+            : never;
+>>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88
 
 export type VaultType = {
   address: Address; // vault address
@@ -521,9 +595,56 @@ type ExtractKeys<T> = T extends unknown ? keyof T : never;
 
 export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChainId]['supportedTokens']>;
 
+<<<<<<< HEAD
 export type RateLimitConfig = {
     maxAvailable:number,
     ratePerSecond:number,
     available:number,
 
 }
+=======
+export type SpokeTxHash = string;
+export type HubTxHash = string;
+
+export type SolanaGasEstimate = number | undefined;
+export type EvmGasEstimate = bigint;
+export type StellarGasEstimate = bigint;
+export type IconGasEstimate = bigint;
+
+export type SuiGasEstimate = {
+  computationCost: string;
+  nonRefundableStorageFee: string;
+  storageCost: string;
+  storageRebate: string;
+};
+
+export type InjectiveGasEstimate = {
+  gasWanted: number;
+  gasUsed: number;
+};
+
+export type GasEstimateType =
+  | EvmGasEstimate
+  | SolanaGasEstimate
+  | StellarGasEstimate
+  | IconGasEstimate
+  | SuiGasEstimate
+  | InjectiveGasEstimate;
+
+export type GetEstimateGasReturnType<T extends SpokeProvider> = T['chainConfig']['chain']['type'] extends 'EVM'
+  ? EvmGasEstimate
+  : T['chainConfig']['chain']['type'] extends 'SOLANA'
+    ? SolanaGasEstimate
+    : T['chainConfig']['chain']['type'] extends 'STELLAR'
+      ? StellarGasEstimate
+      : T['chainConfig']['chain']['type'] extends 'ICON'
+        ? IconGasEstimate
+        : T['chainConfig']['chain']['type'] extends 'SUI'
+          ? SuiGasEstimate
+          : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+            ? InjectiveGasEstimate
+            : GasEstimateType; // default to all gas estimate types union type
+
+export type OptionalRaw<R extends boolean = false> = { raw?: R };
+export type OptionalTimeout = { timeout?: number };
+>>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88

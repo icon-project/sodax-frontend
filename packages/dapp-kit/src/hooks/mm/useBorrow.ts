@@ -5,7 +5,7 @@ import { useSodaxContext } from '../shared/useSodaxContext';
 import type { SpokeProvider } from '@sodax/sdk';
 interface BorrowResponse {
   ok: true;
-  value: [`0x${string}`, `0x${string}`];
+  value: [string, string];
 }
 
 /**
@@ -45,7 +45,7 @@ export function useBorrow(
         throw new Error('spokeProvider is not found');
       }
 
-      const response = await sodax.moneyMarket.borrowAndSubmit(
+      const response = await sodax.moneyMarket.borrow(
         {
           token: spokeToken.address,
           amount: parseUnits(amount, 18),

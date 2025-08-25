@@ -1,18 +1,24 @@
 import type { ChainId } from '@sodax/types';
 import { useMemo } from 'react';
-import { EvmWalletProvider, IconWalletProvider, SuiWalletProvider, InjectiveWalletProvider } from '../wallet-providers';
+import {
+  EvmWalletProvider,
+  IconWalletProvider,
+  SuiWalletProvider,
+  InjectiveWalletProvider,
+  StellarWalletProvider,
+  SolanaWalletProvider,
+} from '../wallet-providers';
 import { getXChainType } from '../actions';
 import type { Account, Chain, CustomTransport, HttpTransport, WalletClient, PublicClient } from 'viem';
 import type { IconEoaAddress } from '../wallet-providers/IconWalletProvider';
 import type { InjectiveEoaAddress } from '@sodax/types';
 import { usePublicClient, useWalletClient } from 'wagmi';
 import { getWagmiChainId } from '../utils';
-import { type StellarXService, useXAccount, useXService } from '..';
+import { type SolanaXService, type StellarXService, useXAccount, useXService } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import { getNetworkEndpoints, Network } from '@injectivelabs/networks';
-import { StellarWalletProvider } from '../wallet-providers/StellarWalletProvider';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -39,6 +45,7 @@ export function useWalletProvider(
   | IconWalletProvider
   | InjectiveWalletProvider
   | StellarWalletProvider
+  | SolanaWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
 
@@ -88,6 +95,10 @@ export function useWalletProvider(
 
       case 'INJECTIVE': {
         const injectiveXService = xService as InjectiveXService;
+        if (!injectiveXService) {
+          return undefined;
+          // throw new Error('InjectiveXService is not initialized');
+        }
         const endpoints = getNetworkEndpoints(Network.Mainnet);
         const { walletAddress, client, rpcUrl } = {
           walletAddress: xAccount.address,
@@ -109,6 +120,23 @@ export function useWalletProvider(
           type: 'BROWSER_EXTENSION',
           walletsKit: stellarXService.walletsKit,
           network: 'PUBLIC',
+        });
+      }
+
+      case 'SOLANA': {
+        const solanaXService = xService as SolanaXService;
+
+        if (!solanaXService.wallet) {
+          throw new Error('Wallet is not initialized');
+        }
+
+        if (!solanaXService.connection) {
+          throw new Error('Connection is not initialized');
+        }
+
+        return new SolanaWalletProvider({
+          wallet: solanaXService.wallet,
+          connection: solanaXService.connection,
         });
       }
 

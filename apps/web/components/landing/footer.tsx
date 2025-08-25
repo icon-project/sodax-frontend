@@ -60,17 +60,28 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             resources
           </div>
-          <FooterLink href="https://sodax.gitbook.io/sodax/readme-1" showArrow>
+          <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
+            Github
+          </FooterLink>
+          <FooterLink href="https://sodax-1.gitbook.io/sodax-docs/readme-1" showArrow>
             Documentation
           </FooterLink>
-          {/* <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
-            Frontend Github
-          </FooterLink> */}
+          <FooterLink href="https://sodaxscan.com/" showArrow>
+            SODAX Scan
+          </FooterLink>
           <FooterLink
-            href="https://www.figma.com/design/lZi3whUFdj24pQnYDOkIee/SODAX-Brand-guide?node-id=0-1&t=FzVNlqCMO4D36P36-1"
-            showArrow
+            href="/SODAX.logos.and.token.zip"
+            showArrowDown={true}
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = '/SODAX.logos.and.token.zip';
+              link.download = 'SODAX.logos.and.token.zip';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
           >
-            Media Kit
+            Brand Kit
           </FooterLink>
           <FooterLink href="#" onClick={handleTermsClick}>
             Terms

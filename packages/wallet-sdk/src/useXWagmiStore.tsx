@@ -11,13 +11,14 @@ import { getXService } from '.';
 import type { XService } from './core';
 import type { XConnection } from './types';
 import { EvmXService } from './xchains/evm';
-import { HavahHanaXConnector, HavahXConnector, HavahXService } from './xchains/havah';
-import { InjectiveKelprXConnector, InjectiveMetamaskXConnector, InjectiveXService } from './xchains/injective';
+import { InjectiveMetamaskXConnector, InjectiveXService } from './xchains/injective';
 import { SolanaXService } from './xchains/solana/SolanaXService';
 import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
 import { IconXService } from './xchains/icon';
 import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
+import { useAnchorProvider } from './xchains/solana/hooks/useAnchorProvider';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
 type XWagmiStore = {
   xServices: Partial<Record<ChainType, XService>>;
@@ -84,13 +85,9 @@ const initXServices = (config: XConfig) => {
           xServices[xChainType].setConfig(config[xChainType]);
         }
         break;
-      case 'HAVAH':
-        xServices[xChainType] = HavahXService.getInstance();
-        xServices[xChainType].setXConnectors([new HavahHanaXConnector(), new HavahXConnector()]);
-        break;
       case 'INJECTIVE':
         xServices[xChainType] = InjectiveXService.getInstance();
-        xServices[xChainType].setXConnectors([new InjectiveMetamaskXConnector(), new InjectiveKelprXConnector()]);
+        xServices[xChainType].setXConnectors([new InjectiveMetamaskXConnector()]);
         break;
       case 'STELLAR':
         xServices[xChainType] = StellarXService.getInstance();
@@ -123,6 +120,7 @@ export const initXWagmiStore = (config: XConfig) => {
 };
 
 export const InitXWagmiStore = () => {
+  // sui
   const suiClient = useSuiClient();
   useEffect(() => {
     if (suiClient) {
@@ -141,6 +139,26 @@ export const InitXWagmiStore = () => {
       SuiXService.getInstance().suiAccount = suiAccount;
     }
   }, [suiAccount]);
+
+  // solana
+  const { connection: solanaConnection } = useConnection();
+  const solanaWallet = useWallet();
+  const solanaProvider = useAnchorProvider();
+  useEffect(() => {
+    if (solanaConnection) {
+      SolanaXService.getInstance().connection = solanaConnection;
+    }
+  }, [solanaConnection]);
+  useEffect(() => {
+    if (solanaWallet) {
+      SolanaXService.getInstance().wallet = solanaWallet;
+    }
+  }, [solanaWallet]);
+  useEffect(() => {
+    if (solanaProvider) {
+      SolanaXService.getInstance().provider = solanaProvider;
+    }
+  }, [solanaProvider]);
 
   return <></>;
 };

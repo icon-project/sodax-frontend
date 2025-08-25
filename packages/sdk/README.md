@@ -4,27 +4,26 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
 
 ## Features
 
-### Swaps (Solver / Intents)
+### Swaps (Solver / Intents) [📖](./docs/SOLVER.md)
   - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic) ✅
   - Sui ✅
   - Stellar ✅
   - ICON ✅
   - Solana ✅
   - Injective ✅
-  - Havah ❌ Coming soon
 
-### Lend and Borrow (Money Market)
+### Lend and Borrow (Money Market) [📖](./docs/MONEY_MARKET.md)
   - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic) ✅
   - Sui ✅
   - Stellar ✅
   - ICON ✅
   - Solana ✅
   - Injective ✅
-  - Havah ❌ Coming soon
 
+### Migration [📖](./docs/MIGRATION.md)
 
 ## Installation
-
+ 
 ```bash
 # Using npm
 npm install @sodax/sdk
@@ -62,8 +61,8 @@ How to setup local development
 ## Intent Solver Endpoints
 
 Current Intent Solver API endpoints:
-- **Production (mainnet)**: "TODO"
-- **Staging** (mainnet): "https://staging-new-world.iconblockchain.xyz"
+- **Production (mainnet)**: "https://sodax-solver-staging.iconblockchain.xyz"
+- **Staging** (mainnet): "https://sodax-solver-staging.iconblockchain.xyz"
 
 **Note** Staging endpoint contains features to be potentially released and is subject to frequent change!
 
@@ -135,7 +134,7 @@ const partnerFeeAmount = {
 // example of custom solver config
 const customSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: partnerFeePercentage, // or partnerFeeAmount
 } satisfies SolverConfigParams;
 
@@ -218,16 +217,15 @@ const supportedMoneyMarketTokens: readonly Token[] = getSupportedMoneyMarketToke
 
 Sodax SDK does not force the usage of a specific wallet or library, but requires client to provide implementation of `IWalletProvider` interfaces (e.g. for EVM chains `IEvmWalletProvider` has to be implemented).
 
-As part of Sodax suite, xWagmi SDK is also going to be provided as one example wallet provider implementation. You are free to choose between using our xWagmi SDK or implementing your own wallet connectivity for each chain.
+As part of Sodax suite, Wallet SDK is also going to be provided as one example wallet provider implementation. You are free to choose between using our Wallet SDK or implementing your own wallet connectivity for each chain.
 
 - Supported Wallet Provider Interface (`IWalletProvider`)
   - `IEvmWalletProvider`: EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
   - `ISuiWalletProvider`: Sui ✅
   - `IIconWalletProvider`: ICON ✅
   - `IStellarWalletProvider`: Stellar ✅
-  - Solana ❌ Coming soon
-  - Injective ❌ Coming soon
-  - Havah ❌ Coming soon
+  - `ISolanaWalletProvider`: Solana ✅
+  - `IInjectiveWalletProvider`: Injective ✅
 
 ### Initialising Spoke Provider
 
@@ -242,13 +240,93 @@ EVM Provider example:
 ```typescript
 import { EvmProvider, EvmHubProvider, EvmSpokeProvider, AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from "@sodax/sdk"
 
-const evmWalletProvider: IEvmWalletProvider = // injected by xWagmi SDK or your own implementation
+const evmWalletProvider: IEvmWalletProvider = // injected by Wallet SDK or your own implementation
 
 // spoke provider represents connection to a specific chain, should be instantiated for each supported chain when user connects wallet
 const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
   evmWalletProvider, // user connected wallet
-  spokeChainConfig[BSC_MAINNET_CHAIN_ID] as EvmSpokeChainConfig, // connected chain config
+  spokeChainConfig[BSC_MAINNET_CHAIN_ID], // connected chain config
 );
+```
+
+### Estimate Gas for Raw Transactions
+
+The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for all Sodax operations (swaps, money market operations, approvals) to provide users with accurate gas estimates.
+
+The function is available on all service classes:
+- `SolverService.estimateGas()` - for solver/intent operations (reachable through `sodax.solver`)
+- `MoneyMarketService.estimateGas()` - for money market operations (reachable through `sodax.moneyMarket`)
+- `SpokeService.estimateGas()` - for general spoke chain operations
+
+```typescript
+import { 
+  SolverService, 
+  MoneyMarketService, 
+  SpokeService,
+  MoneyMarketSupplyParams 
+} from "@sodax/sdk";
+
+// Example: Estimate gas for a solver swap transaction
+const createIntentResult = await sodax.solver.createIntent(
+  createIntentParams,
+  bscSpokeProvider,
+  partnerFeeAmount,
+  true, // true = get raw transaction
+);
+
+if (createIntentResult.ok) {
+  const [rawTx, intent] = createIntentResult.value;
+  
+  // Estimate gas for the raw transaction
+  const gasEstimate = await SolverService.estimateGas(rawTx, bscSpokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for swap:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for swap:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas for a money market supply transaction
+const supplyResult = await sodax.moneyMarket.createSupplyIntent(
+  supplyParams,
+  bscSpokeProvider,
+  true, // true = get raw transaction
+);
+
+if (supplyResult.ok) {
+  const rawTx = supplyResult.value;
+  
+  // Estimate gas for the raw transaction
+  const gasEstimate = await MoneyMarketService.estimateGas(rawTx, bscSpokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for supply:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for supply:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas for an approval transaction
+const approveResult = await sodax.solver.approve(
+  tokenAddress,
+  amount,
+  bscSpokeProvider,
+  true // true = get raw transaction
+);
+
+if (approveResult.ok) {
+  const rawTx = approveResult.value;
+  
+  // Estimate gas for the approval transaction
+  const gasEstimate = await SpokeService.estimateGas(rawTx, bscSpokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas for approval:', gasEstimate.value);
+  } else {
+    console.error('Failed to estimate gas for approval:', gasEstimate.error);
+  }
+}
 ```
 
 ### Accessing Sodax Features

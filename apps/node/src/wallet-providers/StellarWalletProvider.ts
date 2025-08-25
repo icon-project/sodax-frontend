@@ -1,7 +1,11 @@
 import type { Hex, IStellarWalletProvider, StellarRawTransactionReceipt, XDR } from '@sodax/sdk';
-import { Networks, StrKey, Horizon, Transaction, Keypair } from '@stellar/stellar-sdk';
+import { Networks, Horizon, Transaction, Keypair, Address } from '@stellar/stellar-sdk';
 
-import type { StellarWalletsKit } from '@creit.tech/stellar-wallets-kit';
+// Define interface for StellarWalletsKit since it's not exported from the package
+interface StellarWalletsKit {
+  getAddress(): Promise<{ address: string }>;
+  signTransaction(tx: XDR, options: { networkPassphrase: string }): Promise<{ signedTxXdr: XDR }>;
+}
 
 export type StellarNetwork = 'TESTNET' | 'PUBLIC';
 
@@ -157,7 +161,7 @@ export class StellarWalletProvider implements IStellarWalletProvider {
   public async getWalletAddressBytes(): Promise<Hex> {
     try {
       const address = await this.getWalletAddress();
-      return `0x${StrKey.decodeEd25519PublicKey(address).toString('hex')}`;
+      return `0x${Address.fromString(address).toScVal().toXDR('hex')}`;
     } catch (error) {
       throw new StellarWalletError(
         error instanceof Error ? error.message : 'Failed to get wallet address bytes',

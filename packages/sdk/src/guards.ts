@@ -5,7 +5,7 @@ import type {
   ResponseSigningType,
 } from './entities/icon/HanaWalletConnector.js';
 import {
-  CWSpokeProvider,
+  InjectiveSpokeProvider,
   IconSpokeProvider,
   SolanaSpokeProvider,
   StellarSpokeProvider,
@@ -26,6 +26,7 @@ import {
   type HubChainConfig,
   type IconAddress,
   type IntentRelayChainId,
+  type IntentError,
   type MoneyMarketConfig,
   type MoneyMarketConfigParams,
   type Optional,
@@ -36,6 +37,12 @@ import {
   type SolverConfig,
   type SolverConfigParams,
   type SpokeChainConfig,
+  type MoneyMarketError,
+  type MoneyMarketUnknownError,
+  type IcxMigrateParams,
+  type UnifiedBnUSDMigrateParams,
+  type BalnMigrateParams,
+  type IcxCreateRevertMigrationParams,
 } from './index.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
@@ -165,11 +172,11 @@ export function isNearSpokeProvider(value: SpokeProvider): value is StellarSpoke
   );
 }
 
-export function isCWSpokeProvider(value: SpokeProvider): value is CWSpokeProvider {
+export function isInjectiveSpokeProvider(value: SpokeProvider): value is InjectiveSpokeProvider {
   return (
     typeof value === 'object' &&
     value !== null &&
-    value instanceof CWSpokeProvider &&
+    value instanceof InjectiveSpokeProvider &&
     value.chainConfig.chain.type === 'INJECTIVE'
   );
 }
@@ -195,13 +202,7 @@ export function isSuiSpokeProvider(value: SpokeProvider): value is SuiSpokeProvi
 export function isConfiguredSolverConfig(
   value: SolverConfigParams,
 ): value is Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'intentsContract' in value &&
-    'solverApiEndpoint' in value &&
-    'relayerApiEndpoint' in value
-  );
+  return typeof value === 'object' && value !== null && 'intentsContract' in value && 'solverApiEndpoint' in value;
 }
 
 export function isConfiguredMoneyMarketConfig(
@@ -216,4 +217,163 @@ export function isConfiguredMoneyMarketConfig(
     'bnUSD' in value &&
     'bnUSDVault' in value
   );
+}
+
+export function isIntentCreationFailedError(error: unknown): error is IntentError<'CREATION_FAILED'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'CREATION_FAILED' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'payload' in error.data &&
+    'error' in error.data
+  );
+}
+
+export function isIntentSubmitTxFailedError(error: unknown): error is IntentError<'SUBMIT_TX_FAILED'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'SUBMIT_TX_FAILED' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'payload' in error.data &&
+    'error' in error.data
+  );
+}
+
+export function isIntentPostExecutionFailedError(error: unknown): error is IntentError<'POST_EXECUTION_FAILED'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'POST_EXECUTION_FAILED' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'detail' in error.data
+  );
+}
+
+export function isWaitUntilIntentExecutedFailed(error: unknown): error is IntentError<'RELAY_TIMEOUT'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'RELAY_TIMEOUT' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'payload' in error.data &&
+    'error' in error.data
+  );
+}
+
+export function isIntentCreationUnknownError(error: unknown): error is IntentError<'UNKNOWN'> {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 'UNKNOWN' &&
+    'data' in error &&
+    typeof error.data === 'object' &&
+    error.data !== null &&
+    'payload' in error.data &&
+    'error' in error.data
+  );
+}
+
+export function isMoneyMarketSubmitTxFailedError(error: unknown): error is MoneyMarketError<'SUBMIT_TX_FAILED'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'SUBMIT_TX_FAILED';
+}
+
+export function isMoneyMarketRelayTimeoutError(error: unknown): error is MoneyMarketError<'RELAY_TIMEOUT'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'RELAY_TIMEOUT';
+}
+
+export function isMoneyMarketCreateSupplyIntentFailedError(
+  error: unknown,
+): error is MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_SUPPLY_INTENT_FAILED';
+}
+
+export function isMoneyMarketCreateBorrowIntentFailedError(
+  error: unknown,
+): error is MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_BORROW_INTENT_FAILED';
+}
+
+export function isMoneyMarketCreateWithdrawIntentFailedError(
+  error: unknown,
+): error is MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'> {
+  return (
+    typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_WITHDRAW_INTENT_FAILED'
+  );
+}
+
+export function isMoneyMarketCreateRepayIntentFailedError(
+  error: unknown,
+): error is MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_REPAY_INTENT_FAILED';
+}
+
+export function isMoneyMarketSupplyUnknownError(
+  error: unknown,
+): error is MoneyMarketUnknownError<'SUPPLY_UNKNOWN_ERROR'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'SUPPLY_UNKNOWN_ERROR';
+}
+
+export function isMoneyMarketBorrowUnknownError(
+  error: unknown,
+): error is MoneyMarketUnknownError<'BORROW_UNKNOWN_ERROR'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'BORROW_UNKNOWN_ERROR';
+}
+
+export function isMoneyMarketWithdrawUnknownError(
+  error: unknown,
+): error is MoneyMarketUnknownError<'WITHDRAW_UNKNOWN_ERROR'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'WITHDRAW_UNKNOWN_ERROR';
+}
+
+export function isMoneyMarketRepayUnknownError(
+  error: unknown,
+): error is MoneyMarketUnknownError<'REPAY_UNKNOWN_ERROR'> {
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'REPAY_UNKNOWN_ERROR';
+}
+
+export function isIcxMigrateParams(value: unknown): value is IcxMigrateParams {
+  return typeof value === 'object' && value !== null && 'address' in value && 'amount' in value && 'to' in value;
+}
+
+export function isUnifiedBnUSDMigrateParams(value: unknown): value is UnifiedBnUSDMigrateParams {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'srcChainId' in value &&
+    'srcbnUSD' in value &&
+    'dstChainId' in value &&
+    'dstbnUSD' in value &&
+    'amount' in value &&
+    'to' in value
+  );
+}
+
+export function isBalnMigrateParams(value: unknown): value is BalnMigrateParams {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'amount' in value &&
+    'lockupPeriod' in value &&
+    'to' in value &&
+    'stake' in value
+  );
+}
+
+export function isIcxCreateRevertMigrationParams(value: unknown): value is IcxCreateRevertMigrationParams {
+  return typeof value === 'object' && value !== null && 'amount' in value && 'to' in value;
 }

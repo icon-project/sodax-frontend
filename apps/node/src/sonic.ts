@@ -18,8 +18,9 @@ import {
   type MoneyMarketBorrowParams,
   type MoneyMarketWithdrawParams,
   type MoneyMarketRepayParams,
-  IconEoaAddress,
-  IcxCreateRevertMigrationParams,
+  type IconEoaAddress,
+  type IcxCreateRevertMigrationParams,
+  type UnifiedBnUSDMigrateParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
@@ -68,7 +69,7 @@ async function supply(token: Address, amount: bigint) {
     console.log('[approve] txHash', txHash);
     await new Promise(f => setTimeout(f, 1000));
   }
-  const data = sodax.moneyMarket.supplyData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash = await SonicSpokeService.deposit(
     {
@@ -120,7 +121,7 @@ async function supplyHighLevel(token: Address, amount: bigint) {
   }
 
   console.log('[supplyHighLevel] supplying with params:', params);
-  const result = await sodax.moneyMarket.supply(params, spokeProvider);
+  const result = await sodax.moneyMarket.createSupplyIntent(params, spokeProvider);
 
   if (result.ok) {
     console.log('[supply] txHash', result.value);
@@ -138,13 +139,13 @@ async function borrow(token: Address, amount: bigint) {
     token,
     amount,
     spokeProvider.chainConfig.chain.id,
-    sodax.moneyMarket,
+    sodax.moneyMarket.data,
   );
   const approveHash = await SonicSpokeService.approveBorrow(wallet, borrowInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
 
   await new Promise(f => setTimeout(f, 1000));
-  const data = sodax.moneyMarket.borrowData(wallet, wallet, token, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildBorrowData(wallet, wallet, token, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash = await SonicSpokeService.callWallet(data, spokeProvider);
   console.log('[borrow] txHash', txHash);
@@ -187,7 +188,7 @@ async function borrowHighLevel(token: Address, amount: bigint) {
   }
 
   console.log('[borrowHighLevel] borrowing with params:', params);
-  const result = await sodax.moneyMarket.borrow(params, spokeProvider);
+  const result = await sodax.moneyMarket.createBorrowIntent(params, spokeProvider);
 
   if (result.ok) {
     console.log('[borrow] txHash', result.value);
@@ -201,12 +202,12 @@ async function borrowHighLevel(token: Address, amount: bigint) {
 
 async function withdraw(token: Address, amount: bigint) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
-  const withdrawInfo = await SonicSpokeService.getWithdrawInfo(token, amount, spokeProvider, sodax.moneyMarket);
+  const withdrawInfo = await SonicSpokeService.getWithdrawInfo(token, amount, spokeProvider, sodax.moneyMarket.data);
   const approveHash = await SonicSpokeService.approveWithdraw(wallet, withdrawInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
   await new Promise(f => setTimeout(f, 1000));
 
-  const withdrawData = await SonicSpokeService.withdrawData(
+  const withdrawData = await SonicSpokeService.buildWithdrawData(
     wallet,
     withdrawInfo,
     amount,
@@ -256,7 +257,7 @@ async function withdrawHighLevel(token: Address, amount: bigint) {
   }
 
   console.log('[withdrawHighLevel] withdrawing with params:', params);
-  const result = await sodax.moneyMarket.withdraw(params, spokeProvider);
+  const result = await sodax.moneyMarket.createWithdrawIntent(params, spokeProvider);
 
   if (result.ok) {
     console.log('[withdraw] txHash', result.value);
@@ -271,7 +272,7 @@ async function withdrawHighLevel(token: Address, amount: bigint) {
 async function repay(token: Address, amount: bigint) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
   const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
-  const data = sodax.moneyMarket.repayData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildRepayData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
   if (token !== '0x0000000000000000000000000000000000000000') {
     const txHash = await spokeProvider.walletProvider.sendTransaction({
       to: token,
@@ -336,7 +337,7 @@ async function repayHighLevel(token: Address, amount: bigint) {
   }
 
   console.log('[repayHighLevel] repaying with params:', params);
-  const result = await sodax.moneyMarket.repay(params, spokeProvider);
+  const result = await sodax.moneyMarket.createRepayIntent(params, spokeProvider);
 
   if (result.ok) {
     console.log('[withdraw] txHash', result.value);
@@ -348,14 +349,13 @@ async function repayHighLevel(token: Address, amount: bigint) {
   }
 }
 
-async function reverseMigrate(amount: bigint, to: IconEoaAddress) {
+async function reverseMigrateSodaToIcx(amount: bigint, to: IconEoaAddress) {
   const params = {
     amount,
     to,
-    action: 'revert',
   } satisfies IcxCreateRevertMigrationParams;
 
-  const isAllowed = await sodax.migration.isAllowanceValid(params, spokeProvider);
+  const isAllowed = await sodax.migration.isAllowanceValid(params, 'revert', spokeProvider);
 
   if (!isAllowed.ok) {
     console.error('[reverseMigrate] isAllowed error:', isAllowed.error);
@@ -365,7 +365,7 @@ async function reverseMigrate(amount: bigint, to: IconEoaAddress) {
   if (isAllowed.value) {
     console.log('[reverseMigrate] isAllowed', isAllowed.value);
   } else {
-    const approveResult = await sodax.migration.approve(params, spokeProvider);
+    const approveResult = await sodax.migration.approve(params, 'revert', spokeProvider);
 
     if (approveResult.ok) {
       console.log('[reverseMigrate] approveHash', approveResult.value);
@@ -377,7 +377,7 @@ async function reverseMigrate(amount: bigint, to: IconEoaAddress) {
     }
   }
 
-  const result = await sodax.migration.createAndSubmitRevertMigrationIntent(params, spokeProvider);
+  const result = await sodax.migration.revertMigrateSodaToIcx(params, spokeProvider);
 
   if (result.ok) {
     console.log('[reverseMigrate] txHash', result.value);
@@ -389,13 +389,72 @@ async function reverseMigrate(amount: bigint, to: IconEoaAddress) {
   }
 }
 
+/**
+ * Migrates new bnUSD tokens back to legacy bnUSD tokens.
+ * This function handles the migration of new bnUSD tokens to legacy bnUSD tokens.
+ *
+ * @param dstChainID - The destination chain ID where the legacy bnUSD token exists
+ * @param legacybnUSD - The address of the legacy bnUSD token to receive
+ * @param amount - The amount of new bnUSD tokens to migrate back
+ * @param recipient - The address that will receive the migrated legacy bnUSD tokens
+ */
+async function reverseMigrateBnUSD(
+  dstChainID: SpokeChainId,
+  amount: bigint,
+  recipient: Hex,
+  legacybnUSD: string,
+  newbnUSD: string,
+): Promise<void> {
+  const params = {
+    srcChainId: HUB_CHAIN_ID,
+    srcbnUSD: newbnUSD,
+    dstChainId: dstChainID,
+    dstbnUSD: legacybnUSD,
+    amount,
+    to: recipient,
+  } satisfies UnifiedBnUSDMigrateParams;
+
+  const isAllowed = await sodax.migration.isAllowanceValid(params, 'revert', spokeProvider);
+
+  if (!isAllowed.ok) {
+    console.error('[reverseMigrateBnUSD] isAllowed error:', isAllowed.error);
+    return;
+  }
+
+  if (isAllowed.value) {
+    console.log('[reverseMigrateBnUSD] isAllowed', isAllowed.value);
+  } else {
+    const approveResult = await sodax.migration.approve(params, 'revert', spokeProvider);
+
+    if (approveResult.ok) {
+      console.log('[reverseMigrateBnUSD] approveHash', approveResult.value);
+      const approveTxResult = await spokeProvider.walletProvider.waitForTransactionReceipt(approveResult.value);
+      console.log('[reverseMigrateBnUSD] approveTxResult', approveTxResult);
+    } else {
+      console.error('[reverseMigrateBnUSD] approve error:', approveResult.error);
+      return;
+    }
+  }
+
+  const result = await sodax.migration.migratebnUSD(params, spokeProvider);
+
+  if (result.ok) {
+    console.log('[reverseMigrateBnUSD] txHash', result.value);
+    const [spokeTxHash, hubTxHash] = result.value;
+    console.log('[reverseMigrateBnUSD] hubTxHash', hubTxHash);
+    console.log('[reverseMigrateBnUSD] spokeTxHash', spokeTxHash);
+  } else {
+    console.error('[reverseMigrateBnUSD] error', result.error);
+  }
+}
+
 async function borrowTo(token: Hex, amount: bigint, to: Hex, spokeChainId: SpokeChainId) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
-  const borrowInfo = await SonicSpokeService.getBorrowInfo(token, amount, spokeChainId, sodax.moneyMarket);
+  const borrowInfo = await SonicSpokeService.getBorrowInfo(token, amount, spokeChainId, sodax.moneyMarket.data);
   const approveHash = await SonicSpokeService.approveBorrow(wallet, borrowInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
   await new Promise(f => setTimeout(f, 1000));
-  const data = sodax.moneyMarket.borrowData(wallet, to, token, amount, spokeChainId);
+  const data = sodax.moneyMarket.buildBorrowData(wallet, to, token, amount, spokeChainId);
 
   const txHash = await SonicSpokeService.callWallet(data, spokeProvider);
   console.log('[borrow] txHash', txHash);
@@ -445,10 +504,31 @@ async function main() {
   } else if (functionName === 'reverseMigrate') {
     const amount = BigInt(process.argv[3]);
     const to = process.argv[4] as IconEoaAddress;
-    await reverseMigrate(amount, to);
+    await reverseMigrateSodaToIcx(amount, to);
+  } else if (functionName === 'reverseMigrateBnUSD') {
+    const dstChainID = process.argv[3] as SpokeChainId;
+    const amount = BigInt(process.argv[4]);
+    const recipient = process.argv[5] as Hex;
+    const legacybnUSD = process.argv[6] as string;
+    const newbnUSD = process.argv[7] as string;
+    await reverseMigrateBnUSD(dstChainID, amount, recipient, legacybnUSD, newbnUSD);
   } else {
     console.log(
-      'Function not recognized. Please use one of: "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", "repayHighLevel", or "reverseMigrate".',
+      'Function not recognized. Please use one of: "supply", "supplyHighLevel", "borrow", "borrowHighLevel", "borrowTo", "withdraw", "withdrawHighLevel", "repay", "repayHighLevel", "reverseMigrate", or "reverseMigrateBnUSD".',
+    );
+    console.log('Usage examples:');
+    console.log('  npm run sonic supply <token_address> <amount>');
+    console.log('  npm run sonic supplyHighLevel <token_address> <amount>');
+    console.log('  npm run sonic borrow <token_address> <amount>');
+    console.log('  npm run sonic borrowHighLevel <token_address> <amount>');
+    console.log('  npm run sonic borrowTo <token_address> <amount> <to_address> <spokeChainId>');
+    console.log('  npm run sonic withdraw <token_address> <amount>');
+    console.log('  npm run sonic withdrawHighLevel <token_address> <amount>');
+    console.log('  npm run sonic repay <token_address> <amount>');
+    console.log('  npm run sonic repayHighLevel <token_address> <amount>');
+    console.log('  npm run sonic reverseMigrate <amount> <to_address>');
+    console.log(
+      '  npm run sonic reverseMigrateBnUSD <newbnUSD_address> <dstChainID> <legacybnUSD_address> <amount> <recipient_address>',
     );
   }
 }

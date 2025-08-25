@@ -1,3 +1,4 @@
+import { useSodaxContext } from '@/index';
 import {
   EvmSpokeProvider,
   spokeChainConfig,
@@ -6,12 +7,17 @@ import {
   type EvmSpokeChainConfig,
   IconSpokeProvider,
   type IconSpokeChainConfig,
-  CWSpokeProvider,
-  type CosmosSpokeChainConfig,
+  InjectiveSpokeProvider,
+  type InjectiveSpokeChainConfig,
   StellarSpokeProvider,
   type StellarSpokeChainConfig,
   type SpokeProvider,
   type IWalletProvider,
+  SolanaSpokeProvider,
+  type SolanaChainConfig,
+  SONIC_MAINNET_CHAIN_ID,
+  SonicSpokeProvider,
+  type SonicSpokeChainConfig,
 } from '@sodax/sdk';
 import type {
   IEvmWalletProvider,
@@ -20,8 +26,8 @@ import type {
   SpokeChainId,
   IInjectiveWalletProvider,
   IStellarWalletProvider,
+  ISolanaWalletProvider,
 } from '@sodax/types';
-import { getXChainType, useWalletProvider } from '@sodax/wallet-sdk';
 import { useMemo } from 'react';
 
 /**
@@ -42,51 +48,71 @@ export function useSpokeProvider(
   spokeChainId: SpokeChainId | undefined,
   walletProvider?: IWalletProvider | undefined,
 ): SpokeProvider | undefined {
-  const xChainType = getXChainType(spokeChainId);
-  const walletProvider_ = useWalletProvider(spokeChainId);
-  const _walletProvider = walletProvider ?? walletProvider_;
+  const { rpcConfig } = useSodaxContext();
+  const xChainType = spokeChainId ? spokeChainConfig[spokeChainId]?.chain.type : undefined;
 
   const spokeProvider = useMemo(() => {
-    if (!_walletProvider) return undefined;
+    if (!walletProvider) return undefined;
     if (!spokeChainId) return undefined;
+    if (!xChainType) return undefined;
+    if (!rpcConfig) return undefined;
 
     if (xChainType === 'EVM') {
+      if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {
+        return new SonicSpokeProvider(
+          walletProvider as IEvmWalletProvider,
+          spokeChainConfig[spokeChainId] as SonicSpokeChainConfig,
+        );
+      }
       return new EvmSpokeProvider(
-        _walletProvider as IEvmWalletProvider,
+        walletProvider as IEvmWalletProvider,
         spokeChainConfig[spokeChainId] as EvmSpokeChainConfig,
       );
     }
+
     if (xChainType === 'SUI') {
       return new SuiSpokeProvider(
         spokeChainConfig[spokeChainId] as SuiSpokeChainConfig,
-        _walletProvider as ISuiWalletProvider,
+        walletProvider as ISuiWalletProvider,
       );
     }
+
     if (xChainType === 'ICON') {
       return new IconSpokeProvider(
-        _walletProvider as IIconWalletProvider,
+        walletProvider as IIconWalletProvider,
         spokeChainConfig[spokeChainId] as IconSpokeChainConfig,
       );
     }
+
     if (xChainType === 'INJECTIVE') {
-      return new CWSpokeProvider(
-        spokeChainConfig[spokeChainId] as CosmosSpokeChainConfig,
-        _walletProvider as IInjectiveWalletProvider,
+      return new InjectiveSpokeProvider(
+        spokeChainConfig[spokeChainId] as InjectiveSpokeChainConfig,
+        walletProvider as IInjectiveWalletProvider,
       );
     }
 
     if (xChainType === 'STELLAR') {
       const stellarConfig = spokeChainConfig[spokeChainId] as StellarSpokeChainConfig;
-      return new StellarSpokeProvider(
-        _walletProvider as IStellarWalletProvider,
-        stellarConfig.addresses.assetManager,
-        stellarConfig,
-        stellarConfig.rpc_url,
+      return new StellarSpokeProvider(walletProvider as IStellarWalletProvider, stellarConfig, {
+        horizonRpcUrl: stellarConfig.horizonRpcUrl,
+        sorobanRpcUrl: stellarConfig.sorobanRpcUrl,
+      });
+    }
+
+    if (xChainType === 'SOLANA') {
+      return new SolanaSpokeProvider(
+        walletProvider as ISolanaWalletProvider,
+        rpcConfig.solana
+          ? ({
+              ...spokeChainConfig[spokeChainId],
+              rpcUrl: rpcConfig.solana,
+            } as SolanaChainConfig)
+          : (spokeChainConfig[spokeChainId] as SolanaChainConfig),
       );
     }
 
     return undefined;
-  }, [spokeChainId, xChainType, _walletProvider]);
+  }, [spokeChainId, xChainType, walletProvider, rpcConfig]);
 
   return spokeProvider;
 }

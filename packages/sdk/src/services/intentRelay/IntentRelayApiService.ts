@@ -1,10 +1,11 @@
 import type { HttpUrl, Result } from '../../types.js';
-import type { Hex } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
-import type { IntentSubmitError } from '../solver/SolverService.js';
+import type { IntentError } from '../solver/SolverService.js';
 import { DEFAULT_RELAY_TX_TIMEOUT, getIntentRelayChainId } from '../../constants.js';
 import type { SpokeProvider } from '../../entities/Providers.js';
+import type { Hex } from 'viem';
+import type { SpokeChainId } from '@sodax/types';
 
 /**
  * The action type for the intent relay service.
@@ -23,7 +24,7 @@ export type RelayAction = 'submit' | 'get_transaction_packets' | 'get_packet';
  */
 export type RelayTxStatus = 'pending' | 'validating' | 'executing' | 'executed';
 
-export type RelayErrorCode = 'UNKNOWN' | 'SUBMIT_TX_FAILED' | 'POST_EXECUTION_FAILED' | 'TIMEOUT';
+export type RelayErrorCode = 'SUBMIT_TX_FAILED' | 'RELAY_TIMEOUT';
 
 export type RelayError = {
   code: RelayErrorCode;
@@ -33,6 +34,7 @@ export type RelayError = {
 export type SubmitTxParams = {
   chain_id: string; // The ID of the chain where the transaction was submitted
   tx_hash: string; // The transaction hash of the submitted transaction
+  data?: { address: Hex; payload: Hex };
 };
 
 export type GetTransactionPacketsParams = {
@@ -62,6 +64,15 @@ export type PacketData = {
   dst_tx_hash: string;
   signatures: string[];
   payload: string;
+};
+
+export type IntentDeliveryInfo = {
+  srcChainId: SpokeChainId; // The chain ID where the transaction was submitted
+  srcTxHash: string; // The transaction hash of the submitted transaction
+  srcAddress: string; // The wallet address which submitted the transaction
+  dstChainId: SpokeChainId; // The destination chain ID
+  dstTxHash: string; // The transaction hash of the submitted transaction on the destination chain
+  dstAddress: string; // The destination wallet address on the destination chain
 };
 
 export type GetTransactionPacketsResponse = {
@@ -181,7 +192,7 @@ export async function getPacket(
 
 export async function waitUntilIntentExecuted(
   payload: WaitUntilIntentExecutedPayload,
-): Promise<Result<PacketData, IntentSubmitError<'TIMEOUT'>>> {
+): Promise<Result<PacketData, IntentError<'RELAY_TIMEOUT'>>> {
   try {
     const startTime = Date.now();
 
@@ -213,14 +224,14 @@ export async function waitUntilIntentExecuted(
       } catch (e) {
         console.error('Error getting transaction packets', e);
       }
-      // wait one second before retrying
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // wait two seconds before retrying
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     return {
       ok: false,
       error: {
-        code: 'TIMEOUT',
+        code: 'RELAY_TIMEOUT',
         data: {
           payload: payload,
           error: {
@@ -234,7 +245,7 @@ export async function waitUntilIntentExecuted(
     return {
       ok: false,
       error: {
-        code: 'TIMEOUT',
+        code: 'RELAY_TIMEOUT',
         data: {
           payload: payload,
           error: e,
@@ -247,12 +258,16 @@ export async function waitUntilIntentExecuted(
 /**
  * Submit the transaction to the Solver API and wait for it to be executed
  * @param spokeTxHash - The transaction hash to submit.
+ * @param data - The additional data to submit when relaying the transaction on Solana. Due to Solana's 1232 byte transaction
+ *               size limit, Solana transactions are split: the on-chain tx contains only a verification hash, while the full
+ *               data is submitted off-chain via the relayer. Contains the to address on Hub chain and instruction data.
  * @param spokeProvider - The spoke provider.
  * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
  * @returns The transaction hash.
  */
 export async function relayTxAndWaitPacket<S extends SpokeProvider>(
-  spokeTxHash: Hex,
+  spokeTxHash: string,
+  data: { address: Hex; payload: Hex } | undefined,
   spokeProvider: S,
   relayerApiEndpoint: HttpUrl,
   timeout = DEFAULT_RELAY_TX_TIMEOUT,
@@ -262,10 +277,16 @@ export async function relayTxAndWaitPacket<S extends SpokeProvider>(
 
     const submitPayload: IntentRelayRequest<'submit'> = {
       action: 'submit',
-      params: {
-        chain_id: intentRelayChainId,
-        tx_hash: spokeTxHash,
-      },
+      params: data
+        ? {
+            chain_id: intentRelayChainId,
+            tx_hash: spokeTxHash,
+            data,
+          }
+        : {
+            chain_id: intentRelayChainId,
+            tx_hash: spokeTxHash,
+          },
     };
 
     const submitResult = await submitTransaction(submitPayload, relayerApiEndpoint);
@@ -291,7 +312,7 @@ export async function relayTxAndWaitPacket<S extends SpokeProvider>(
       return {
         ok: false,
         error: {
-          code: 'TIMEOUT',
+          code: 'RELAY_TIMEOUT',
           error: packet.error,
         },
       };
@@ -305,7 +326,7 @@ export async function relayTxAndWaitPacket<S extends SpokeProvider>(
     return {
       ok: false,
       error: {
-        code: 'UNKNOWN',
+        code: 'SUBMIT_TX_FAILED',
         error: error,
       },
     };

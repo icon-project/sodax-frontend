@@ -22,6 +22,7 @@ import {
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 import { SONIC_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
+import { solverConfig } from './config.js';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -56,12 +57,6 @@ const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
 const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
-
-const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
-  partnerFee: undefined,
-} satisfies SolverConfigParams;
 
 const sodax = new Sodax({
   solver: solverConfig,
@@ -126,7 +121,7 @@ async function supply(token: Address, amount: bigint) {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.supplyData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash = await SpokeService.deposit(
     {
@@ -149,7 +144,7 @@ async function borrow(token: Address, amount: bigint) {
     walletAddress,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.borrowData(
+  const data: Hex = sodax.moneyMarket.buildBorrowData(
     hubWallet,
     walletAddress,
     token,
@@ -170,7 +165,7 @@ async function withdraw(token: Address, amount: bigint) {
     hubProvider,
   );
 
-  const data: Hex = sodax.moneyMarket.withdrawData(
+  const data: Hex = sodax.moneyMarket.buildWithdrawData(
     hubWallet,
     walletAddress,
     token,
@@ -190,7 +185,7 @@ async function repay(token: Address, amount: bigint) {
     walletAddress,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.repayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
 
   const txHash: Hash = await SpokeService.deposit(
     {
@@ -224,7 +219,10 @@ async function createIntent(amount: bigint, nativeToken: Address, inputToken: Ad
     data: '0x',
   } satisfies CreateIntentParams;
 
-  const txHash = await sodax.solver.createIntent(intent, spokeProvider);
+  const txHash = await sodax.solver.createIntent({
+    intentParams: intent,
+    spokeProvider,
+  });
 
   console.log('[createIntent] txHash', txHash);
 }
@@ -355,9 +353,13 @@ async function fillIntent(
 async function cancelIntent(intentCreateTxHash: string) {
   const intent = await sodax.solver.getIntent(intentCreateTxHash as Hash);
 
-  const txHash: Hash = await sodax.solver.cancelIntent(intent, spokeProvider);
+  const txResult = await sodax.solver.cancelIntent(intent, spokeProvider);
 
-  console.log('[cancelIntent] txHash', txHash);
+  if (txResult.ok) {
+    console.log('[cancelIntent] txHash', txResult.value);
+  } else {
+    console.error('[cancelIntent] error', txResult.error);
+  }
 }
 
 async function getIntent(txHash: string) {

@@ -1,4 +1,3 @@
-import type { Address } from 'viem';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   type CreateIntentParams,
@@ -8,13 +7,13 @@ import {
   type IEvmWalletProvider,
   type FeeAmount,
   type Intent,
-  IntentErrorCode,
-  type IntentErrorResponse,
-  type IntentExecutionRequest,
-  type IntentExecutionResponse,
-  type IntentQuoteRequest,
-  type IntentStatusRequest,
-  type IntentSubmitError,
+  SolverIntentErrorCode,
+  type SolverErrorResponse,
+  type SolverExecutionRequest,
+  type SolverExecutionResponse,
+  type SolverIntentQuoteRequest,
+  type SolverIntentStatusRequest,
+  type IntentError,
   type PacketData,
   type PartnerFee,
   type RelayTxStatus,
@@ -24,13 +23,21 @@ import {
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
-  type TxReturnType,
   spokeChainConfig,
+  isIntentSubmitTxFailedError,
+  isIntentCreationFailedError,
+  isIntentPostExecutionFailedError,
+  isWaitUntilIntentExecutedFailed,
+  isIntentCreationUnknownError,
+  Erc20Service,
+  calculateFeeAmount,
+  type SpokeProvider,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
-import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { WalletAbstractionService } from '../hub/WalletAbstractionService.js';
+import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 
 // Define a type for Intent with fee amount
 type IntentWithFee = Intent & FeeAmount;
@@ -42,7 +49,7 @@ describe('SolverService', () => {
 
   const mockSolverConfig = {
     intentsContract: mockIntentsContract,
-    solverApiEndpoint: 'https://staging-new-world.iconblockchain.xyz',
+    solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   } satisfies SolverConfig;
 
   const mockHubConfig = {
@@ -59,15 +66,15 @@ describe('SolverService', () => {
     token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
     amount: 1000n,
     quote_type: 'exact_input',
-  } satisfies IntentQuoteRequest;
+  } satisfies SolverIntentQuoteRequest;
 
   const mockExecutionRequest = {
     intent_tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-  } satisfies IntentExecutionRequest;
+  } satisfies SolverExecutionRequest;
 
   const mockStatusRequest = {
     intent_tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-  } satisfies IntentStatusRequest;
+  } satisfies SolverIntentStatusRequest;
 
   const feeAmount = 1000n; // 1000 of input token
   const feePercentage = 100; // 1% fee
@@ -125,8 +132,8 @@ describe('SolverService', () => {
 
   // Helper function to create mock intent params with resolved addresses
   const createMockIntentParams = async (): Promise<CreateIntentParams> => {
-    const srcAddress = await mockEvmWalletProvider.getWalletAddressBytes();
-    const dstAddress = await mockEvmWalletProvider.getWalletAddressBytes();
+    const srcAddress = await mockEvmWalletProvider.getWalletAddress();
+    const dstAddress = await mockEvmWalletProvider.getWalletAddress();
     return {
       inputToken: bscEthToken,
       outputToken: arbWbtcToken,
@@ -151,7 +158,7 @@ describe('SolverService', () => {
 
     return {
       intentId: BigInt(1),
-      creator: creator as `0x${string}`,
+      creator: creator,
       inputToken: getHubAssetInfo(params.srcChain, params.inputToken)?.asset ?? '0x',
       outputToken: getHubAssetInfo(params.dstChain, params.outputToken)?.asset ?? '0x',
       inputAmount: params.inputAmount,
@@ -206,7 +213,7 @@ describe('SolverService', () => {
         ok: false,
         json: async () => ({
           detail: {
-            code: IntentErrorCode.NO_PATH_FOUND,
+            code: SolverIntentErrorCode.NO_PATH_FOUND,
             message: 'Invalid request parameters',
           },
         }),
@@ -229,67 +236,67 @@ describe('SolverService', () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error).toBeDefined();
-        expect(result.error.detail.code).toBe(IntentErrorCode.UNKNOWN);
+        expect(result.error.detail.code).toBe(SolverIntentErrorCode.UNKNOWN);
       }
     });
   });
 
   describe('getFee', () => {
-    it('should calculate fee correctly for given input amount', async () => {
+    it('should calculate fee correctly for given input amount', () => {
       const inputAmount = 1000n;
       const expectedFee = 10n; // Assuming 1% fee
 
-      const result = await solverServiceWithPercentageFee.getFee(inputAmount);
+      const result = solverServiceWithPercentageFee.getFee(inputAmount);
 
       expect(result).toBe(expectedFee);
     });
 
-    it('should handle zero input amount', async () => {
+    it('should handle zero input amount', () => {
       const inputAmount = 0n;
 
-      await expect(solverServiceWithPercentageFee.getFee(inputAmount)).rejects.toThrow();
+      expect(() => solverServiceWithPercentageFee.getFee(inputAmount)).toThrow();
     });
 
-    it('should handle very large input amount', async () => {
+    it('should handle very large input amount', () => {
       const inputAmount = 2n ** 128n - 1n;
-      const result = await solverServiceWithPercentageFee.getFee(inputAmount);
+      const result = solverServiceWithPercentageFee.getFee(inputAmount);
 
       expect(result).toBeDefined();
       expect(typeof result).toBe('bigint');
       expect(result).toBeGreaterThan(0n);
     });
 
-    it('should handle negative input amount', async () => {
+    it('should handle negative input amount', () => {
       const inputAmount = -1000n;
 
-      await expect(solverServiceWithPercentageFee.getFee(inputAmount)).rejects.toThrow();
+      expect(() => solverServiceWithPercentageFee.getFee(inputAmount)).toThrow();
     });
 
-    it('should handle undefined input amount', async () => {
+    it('should handle undefined input amount', () => {
       // @ts-expect-error Testing invalid input
-      await expect(solverServiceWithPercentageFee.getFee(undefined)).rejects.toThrow();
+      expect(() => solverServiceWithPercentageFee.getFee(undefined)).toThrow();
     });
 
-    it('should handle null input amount', async () => {
+    it('should handle null input amount', () => {
       // @ts-expect-error Testing invalid input
-      await expect(solverServiceWithPercentageFee.getFee(null)).rejects.toThrow();
+      expect(() => solverServiceWithPercentageFee.getFee(null)).toThrow();
     });
 
-    it('should handle fee amount', async () => {
+    it('should handle fee amount', () => {
       const inputAmount = 1000n;
-      const result = await solverServiceWithAmountFee.getFee(inputAmount);
+      const result = solverServiceWithAmountFee.getFee(inputAmount);
 
       expect(result).toBe(feeAmount);
     });
 
-    it('should handle undefined input amount', async () => {
+    it('should handle undefined input amount', () => {
       // @ts-expect-error Testing invalid input
-      await expect(solverServiceWithAmountFee.getFee(undefined)).rejects.toThrow();
+      expect(() => solverServiceWithAmountFee.getFee(undefined)).toThrow();
     });
 
-    it('should handle null input amount', async () => {
+    it('should handle null input amount', () => {
       // @ts-expect-error Testing invalid input
-      await expect(solverServiceWithAmountFee.getFee(null)).rejects.toThrow();
+      expect(() => solverServiceWithAmountFee.getFee(null)).toThrow();
     });
   });
 
@@ -302,10 +309,10 @@ describe('SolverService', () => {
           ({
             answer: 'OK',
             intent_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-          }) satisfies IntentExecutionResponse,
+          }) satisfies SolverExecutionResponse,
       });
 
-      const result: Result<IntentExecutionResponse, IntentErrorResponse> =
+      const result: Result<SolverExecutionResponse, SolverErrorResponse> =
         await solverService.postExecution(mockExecutionRequest);
 
       expect(result.ok).toBe(true);
@@ -330,7 +337,7 @@ describe('SolverService', () => {
         ok: false,
         json: async () => ({
           detail: {
-            code: IntentErrorCode.QUOTE_NOT_FOUND,
+            code: SolverIntentErrorCode.QUOTE_NOT_FOUND,
             message: 'Execution failed',
           },
         }),
@@ -379,7 +386,7 @@ describe('SolverService', () => {
         ok: false,
         json: async () => ({
           detail: {
-            code: IntentErrorCode.NO_PATH_FOUND,
+            code: SolverIntentErrorCode.NO_PATH_FOUND,
             message: 'Intent not found',
           },
         }),
@@ -394,7 +401,15 @@ describe('SolverService', () => {
     });
   });
 
-  describe('createAndSubmitIntent', () => {
+  describe('swap (a.k.a. createAndSubmitIntent)', () => {
+    const mockSubmitPayload = {
+      action: 'submit',
+      params: {
+        chain_id: '4',
+        tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+      },
+    } as const;
+
     it('should successfully create and submit an intent', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
@@ -403,9 +418,9 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, mockIntentWithFee],
+        value: [mockTxHash, mockIntentWithFee, '0x'],
       });
-      vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+      vi.spyOn(WalletAbstractionService, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
         success: true,
         message: 'Transaction submitted successfully',
@@ -422,7 +437,10 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.createAndSubmitIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -430,37 +448,40 @@ describe('SolverService', () => {
         expect(result.value[0]).toBeDefined();
         expect(result.value[1]).toEqual(mockIntentWithFee);
       }
-      expect(solverService['createIntent']).toHaveBeenCalledWith(
-        mockCreateIntentParams,
-        mockBscSpokeProvider,
-        mockFee,
-        false,
-      );
+      expect(solverService['createIntent']).toHaveBeenCalledWith({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+        fee: solverService.config.partnerFee,
+        raw: false,
+        skipSimulation: false,
+      });
       expect(solverService['postExecution']).toHaveBeenCalledWith({
         intent_tx_hash: mockTxHash,
       });
       expect(IntentRelayApiService.submitTransaction).toHaveBeenCalled();
     });
 
-    it('should handle postExecution error', async () => {
+    it('should handle createIntent error', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
 
-      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: false,
         error: {
-          detail: {
-            code: IntentErrorCode.UNKNOWN,
-            message: 'Post execution failed',
+          code: 'CREATION_FAILED',
+          data: {
+            payload: mockCreateIntentParams,
+            error: new Error('Create intent failed'),
           },
-        },
+        } satisfies IntentError<'CREATION_FAILED'>,
       });
 
-      const result = await solverService.createAndSubmitIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
 
       expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error).toBeDefined();
-      }
+      expect(!result.ok && isIntentCreationFailedError(result.error)).toBeTruthy();
     });
 
     it('should handle submitTransaction error', async () => {
@@ -470,7 +491,7 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, { ...mockIntent, feeAmount: feeAmount }],
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
         success: false,
@@ -484,24 +505,195 @@ describe('SolverService', () => {
         },
       });
 
-      const result = await solverService.createAndSubmitIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee);
+      const result = await solverService.swap({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.error).toEqual({
           code: 'SUBMIT_TX_FAILED',
           data: {
-            apiUrl: 'https://xcall-relay.nw.iconblockchain.xyz',
-            payload: {
-              action: 'submit',
-              params: {
-                chain_id: '4',
-                tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-              },
-            },
+            payload: mockSubmitPayload,
+            error: new Error('Transaction submission failed'),
           },
-        } satisfies IntentSubmitError<'SUBMIT_TX_FAILED'>);
+        } satisfies IntentError<'SUBMIT_TX_FAILED'>);
       }
+    });
+
+    it('should handle submitTransaction message error', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
+
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
+      });
+      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
+        success: false,
+        message: 'Transaction submission failed',
+      });
+      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          answer: 'OK',
+          intent_hash: mockTxHash,
+        },
+      });
+
+      const result = await solverService.swap({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      expect(!result.ok && isIntentSubmitTxFailedError(result.error)).toBeTruthy();
+    });
+
+    it('should handle submitTransaction api error with SUBMIT_TX_FAILED error code', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
+
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
+      });
+      vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          code: 'SUBMIT_TX_FAILED',
+          data: {
+            payload: mockSubmitPayload,
+            error: new Error('Transaction submission failed'),
+          },
+        },
+      });
+      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          answer: 'OK',
+          intent_hash: mockTxHash,
+        },
+      });
+
+      const result = await solverService.swap({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(isIntentSubmitTxFailedError(result.error)).toBeTruthy();
+      }
+    });
+
+    it('should handle waitUntilIntentExecuted error', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
+
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
+      });
+      vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          success: true,
+          message: 'Transaction submitted successfully',
+        },
+      });
+
+      vi.spyOn(IntentRelayApiService, 'waitUntilIntentExecuted').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          code: 'RELAY_TIMEOUT',
+          data: {
+            payload: {
+              intentRelayChainId: '4',
+              spokeTxHash: mockTxHash,
+              timeout: 10000,
+              apiUrl: 'https://xcall-relay.nw.iconblockchain.xyz',
+            },
+            error: new Error('Transaction submission failed'),
+          },
+        },
+      });
+
+      const result = await solverService.swap({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      expect(!result.ok && isWaitUntilIntentExecutedFailed(result.error)).toBeTruthy();
+    });
+
+    it('should handle postExecution error', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = await createMockIntent(mockCreateIntentParams);
+
+      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
+      });
+      vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          success: true,
+          message: 'Transaction submitted successfully',
+        },
+      });
+
+      vi.spyOn(IntentRelayApiService, 'waitUntilIntentExecuted').mockResolvedValueOnce({
+        ok: true,
+        value: mockPacketData,
+      });
+
+      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          detail: {
+            code: SolverIntentErrorCode.UNKNOWN,
+            message: 'Post execution failed',
+          },
+        },
+      });
+
+      const result = await solverService.swap({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      expect(!result.ok && isIntentPostExecutionFailedError(result.error)).toBeTruthy();
+    });
+
+    it('should handle swap unknown error', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+
+      vi.spyOn(solverService, 'swap').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          code: 'UNKNOWN',
+          data: {
+            payload: mockCreateIntentParams,
+            error: new Error('Unknown error'),
+          },
+        } satisfies IntentError<'UNKNOWN'>,
+      });
+
+      const result = await solverService.swap({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      expect(!result.ok && isIntentCreationUnknownError(result.error)).toBeTruthy();
     });
   });
 
@@ -514,11 +706,16 @@ describe('SolverService', () => {
 
       vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
         ok: true,
-        value: [mockTxHash as TxReturnType<EvmSpokeProvider, false>, mockIntentWithFee],
+        value: [mockTxHash, mockIntentWithFee, '0x'],
       });
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
 
-      const result = await solverService.createIntent(mockCreateIntentParams, mockBscSpokeProvider, mockFee, false);
+      const result = await solverService.createIntent({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+        fee: mockFee,
+        raw: false,
+      });
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -535,10 +732,14 @@ describe('SolverService', () => {
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
-      vi.spyOn(solverService, 'cancelIntent').mockResolvedValueOnce(mockTxHash);
+      vi.spyOn(solverService, 'cancelIntent').mockResolvedValueOnce({
+        ok: true,
+        value: mockTxHash,
+      });
       const result = await solverService.cancelIntent(mockIntent, mockBscSpokeProvider, false);
 
-      expect(result).toBe(mockTxHash);
+      expect(result.ok).toBe(true);
+      expect(result.ok && result.value).toBe(mockTxHash);
     });
   });
 
@@ -566,6 +767,214 @@ describe('SolverService', () => {
       const result = solverService.getIntentHash(mockIntent);
 
       expect(result).toBe('0x8196c6646c0d811b2ff19ffdf61533ad2d73d724fcd69c77ec243a908364a35e');
+    });
+  });
+
+  describe('isAllowanceValid', () => {
+    it('should return true when allowance is sufficient for EVM chain', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+
+      vi.spyOn(Erc20Service, 'isAllowanceValid').mockResolvedValueOnce({
+        ok: true,
+        value: true,
+      });
+
+      const result = await solverService.isAllowanceValid({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value).toBe(true);
+      }
+      expect(Erc20Service.isAllowanceValid).toHaveBeenCalledWith(
+        mockCreateIntentParams.inputToken,
+        mockCreateIntentParams.inputAmount +
+          calculateFeeAmount(mockCreateIntentParams.inputAmount, solverService.config.partnerFee),
+        await mockEvmWalletProvider.getWalletAddress(),
+        mockBscSpokeProvider.chainConfig.addresses.assetManager,
+        mockBscSpokeProvider,
+      );
+    });
+
+    it('should return false when allowance is insufficient for EVM chain', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+
+      vi.spyOn(Erc20Service, 'isAllowanceValid').mockResolvedValueOnce({
+        ok: true,
+        value: false,
+      });
+
+      const result = await solverService.isAllowanceValid({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value).toBe(false);
+      }
+    });
+
+    it('should return true for non-EVM chains', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockNonEvmSpokeProvider = {
+        chainConfig: {
+          chain: {
+            type: 'NON_EVM',
+          },
+        },
+        walletProvider: {
+          getWalletAddress: vi.fn().mockResolvedValue('0x1234567890123456789012345678901234567890'),
+        },
+      } as unknown as SpokeProvider;
+
+      const result = await solverService.isAllowanceValid({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockNonEvmSpokeProvider,
+      });
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value).toBe(true);
+      }
+    });
+
+    it('should handle errors from Erc20Service', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockError = new Error('ERC20 service error');
+
+      vi.spyOn(Erc20Service, 'isAllowanceValid').mockResolvedValueOnce({
+        ok: false,
+        error: mockError,
+      });
+
+      const result = await solverService.isAllowanceValid({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error).toBe(mockError);
+      }
+    });
+
+    it('should handle exceptions', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockError = new Error('Unexpected error');
+
+      vi.spyOn(Erc20Service, 'isAllowanceValid').mockRejectedValueOnce(mockError);
+
+      const result = await solverService.isAllowanceValid({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error).toBe(mockError);
+      }
+    });
+  });
+
+  describe('approve', () => {
+    it('should successfully approve tokens for EVM chain', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+
+      vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockTxHash);
+
+      const result = await solverService.approve({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value).toBe(mockTxHash);
+      }
+      expect(Erc20Service.approve).toHaveBeenCalledWith(
+        mockCreateIntentParams.inputToken,
+        mockCreateIntentParams.inputAmount +
+          calculateFeeAmount(mockCreateIntentParams.inputAmount, solverService.config.partnerFee),
+        mockBscSpokeProvider.chainConfig.addresses.assetManager,
+        mockBscSpokeProvider,
+        undefined,
+      );
+    });
+
+    it('should return raw transaction when raw parameter is true', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockRawTx = {
+        to: '0x...' as `0x${string}`,
+        data: '0x...' as `0x${string}`,
+        from: '0x...' as `0x${string}`,
+        value: 0n,
+      };
+
+      vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockRawTx);
+
+      const result = await solverService.approve({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+        raw: true,
+      });
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value).toBe(mockRawTx);
+      }
+      expect(Erc20Service.approve).toHaveBeenCalledWith(
+        mockCreateIntentParams.inputToken,
+        mockCreateIntentParams.inputAmount +
+          calculateFeeAmount(mockCreateIntentParams.inputAmount, solverService.config.partnerFee),
+        mockBscSpokeProvider.chainConfig.addresses.assetManager,
+        mockBscSpokeProvider,
+        true,
+      );
+    });
+
+    it('should return error for non-EVM chains', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockNonEvmSpokeProvider = {
+        chainConfig: {
+          chain: {
+            type: 'NON_EVM',
+          },
+        },
+        walletProvider: {
+          getWalletAddress: vi.fn().mockResolvedValue('0x1234567890123456789012345678901234567890'),
+        },
+      } as unknown as SpokeProvider;
+
+      const result = await solverService.approve({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockNonEvmSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect((result.error as Error).message).toBe('Approve only supported for EVM spoke chains');
+      }
+    });
+
+    it('should handle exceptions from Erc20Service', async () => {
+      const mockCreateIntentParams = await createMockIntentParams();
+      const mockError = new Error('ERC20 service error');
+
+      vi.spyOn(Erc20Service, 'approve').mockRejectedValueOnce(mockError);
+
+      const result = await solverService.approve({
+        intentParams: mockCreateIntentParams,
+        spokeProvider: mockBscSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error).toBe(mockError);
+      }
     });
   });
 });
