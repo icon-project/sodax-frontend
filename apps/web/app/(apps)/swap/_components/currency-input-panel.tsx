@@ -24,6 +24,7 @@ interface CurrencyInputPanelProps {
   onMaxClick?: () => void;
   onCurrencyChange?: (currency: XToken) => void;
   className?: string;
+  isChainConnected?: boolean;
 }
 
 const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
@@ -37,6 +38,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   onMaxClick,
   onCurrencyChange,
   className = '',
+  isChainConnected = true,
 }: CurrencyInputPanelProps) => {
   const formattedBalance = formatUnits(currencyBalance, currency.decimals);
   const formattedBalanceFixed = Number(formattedBalance).toFixed(2);
@@ -73,21 +75,23 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             </div>
             <ChevronDownIcon className="w-4 h-4" />
           </div>
-          <div className="inline-flex justify-start items-center gap-2">
-            <div className="mix-blend-multiply justify-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex">
-              <span className="inline">Balance:{'  '}</span>
-              <span className="inline">{formattedBalanceFixed}</span>
+          {isChainConnected && (
+            <div className="inline-flex justify-start items-center gap-2">
+              <div className="mix-blend-multiply justify-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex">
+                <span className="inline">Balance:{'  '}</span>
+                <span className="inline">{formattedBalanceFixed}</span>
+              </div>
+              {type === CurrencyInputPanelType.INPUT && (
+                <Button
+                  variant="default"
+                  className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
+                  onClick={onMaxClick}
+                >
+                  MAX
+                </Button>
+              )}
             </div>
-            {type === CurrencyInputPanelType.INPUT && (
-              <Button
-                variant="default"
-                className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
-                onClick={onMaxClick}
-              >
-                MAX
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 export { SwitchDirectionIcon } from './switch-direction-icon';
 export { MenuIcon } from './menu-icon';
 export { CloseIcon } from './close-icon';
+export { ChevronDownIcon } from './chevron-down-icon';
 export { ArrowRightIcon } from './arrow-right-icon';
 export { ArrowUpIcon } from './arrow-up-icon';
 export { SwapIcon } from './swap-icon';

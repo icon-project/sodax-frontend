@@ -9,10 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { PopoverClose } from '@radix-ui/react-popover';
 import { EvmMultiConnectIcon } from '@/components/icons';
 import { usePathname } from 'next/navigation';
-
-export function shortenAddress(address: string, chars = 7): string {
-  return `${address.substring(0, chars + 2)}...${address.substring(address.length - chars)}`;
-}
+import { shortenAddress } from '@/lib/utils';
 
 // EVM chain icons to display when name is "EVM"
 const EVM_CHAIN_ICONS = [

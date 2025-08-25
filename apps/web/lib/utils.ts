@@ -15,6 +15,29 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Shortens a blockchain address for display purposes
+ * Supports both Ethereum (0x...) and Cosmos (inj1..., osmo1..., etc.) style addresses
+ * @param address The full address to shorten
+ * @param chars Number of characters to show at the beginning and end (default: 4 for Cosmos, 7 for Ethereum)
+ * @returns Shortened address in format "0x1234...5678" or "inj1kq...5d3n"
+ */
+export function shortenAddress(address: string, chars?: number): string {
+  if (!address) return '';
+
+  // For Cosmos-style addresses (start with letters like inj1, osmo1, etc.)
+  if (/^[a-z]+\d/.test(address)) {
+    const defaultChars = 4;
+    const charCount = chars ?? defaultChars;
+    return `${address.substring(0, charCount + 3)}...${address.substring(address.length - charCount)}`;
+  }
+
+  // For Ethereum-style addresses (start with 0x)
+  const defaultChars = 7;
+  const charCount = chars ?? defaultChars;
+  return `${address.substring(0, charCount + 2)}...${address.substring(address.length - charCount)}`;
+}
+
+/**
  * Filter out legacy tokens to prevent duplicates
  * Uses SDK utilities to identify legacy tokens and only includes current versions
  * @param tokens Array of tokens to filter
