@@ -107,6 +107,7 @@ export const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = 
   [STELLAR_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
   [ICON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
   [NIBIRU_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.NIBIRU,
+  [NEAR_MAINNET_CHAIN_ID]:INTENT_RELAY_CHAIN_IDS.NEAR
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -781,7 +782,11 @@ export const spokeChainConfig = {
   } as const satisfies IconSpokeChainConfig,
   [NEAR_MAINNET_CHAIN_ID]:{
     nativeToken:"",
-    supportedTokens:[],
+    supportedTokens:{
+        bnUSD:{
+            address:"",
+        },
+    },
   },
 } as const;
 
@@ -1496,6 +1501,7 @@ export const hubAssets: Record<
       vault: '0x', // no vault yet
     },
   },
+  [NEAR_MAINNET_CHAIN_ID]:{}
 } as const;
 
 export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';
@@ -1600,6 +1606,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.USDC, // NOTE: Not Implemented
   ] as const satisfies Token[],
+  [NEAR_MAINNET_CHAIN_ID]:[]
 } as const;
 
 // get supported spoke chain tokens for solver
@@ -1698,6 +1705,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
   ] as const,
+  [NEAR_MAINNET_CHAIN_ID]:[] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>

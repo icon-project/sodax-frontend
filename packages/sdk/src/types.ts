@@ -492,10 +492,7 @@ export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRaw
 export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
-<<<<<<< HEAD
-export type CWReturnType<Raw extends boolean> = Raw extends true ? CWRawTransaction : Hex;
 export type NearReturnType<Raw extends boolean> = Raw extends true ? NearTransaction : Hex;
-=======
 export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : Hex;
 
 export type HashTxReturnType =
@@ -514,7 +511,6 @@ export type RawTxReturnType =
   | SuiRawTransaction
   | StellarRawTransaction;
 
->>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88
 export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chainConfig']['chain']['type'] extends 'EVM'
   ? EvmReturnType<Raw>
   : T['chainConfig']['chain']['type'] extends 'SOLANA'
@@ -526,38 +522,19 @@ export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chai
         : T['chainConfig']['chain']['type'] extends 'SUI'
           ? SuiReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-<<<<<<< HEAD
-            ? CWReturnType<Raw>
-            : T['chainConfig']['chain']['type'] extends 'NEAR'
-            ? NearReturnType<Raw>:never; // TODO extend for each chain implementation
-=======
             ? InjectiveReturnType<Raw>
+          : T['chainConfig']['chain']['type'] extends 'NEAR'? NearReturnType<Raw>
             : Raw extends true
               ? RawTxReturnType
               : HashTxReturnType;
 
->>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88
 export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
 export type PromiseSolanaTxReturnType<Raw extends boolean> = Promise<TxReturnType<SolanaSpokeProvider, Raw>>;
 export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnType<StellarSpokeProvider, Raw>>;
 export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
 export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
-<<<<<<< HEAD
-export type PromiseCWTxReturnType<Raw extends boolean> = Promise<TxReturnType<CWSpokeProvider, Raw>>;
-export type PromiseNearTxReturnType<Raw extends boolean> = Promise<TxReturnType<NearSpokeProvider, Raw>>;
-
-
-export type RawTxReturnType =
-  | EvmRawTransaction
-  | SolanaRawTransaction
-  | CWRawTransaction
-  | IconRawTransaction
-  | SuiRawTransaction; // TODO extend for other chains (Icon, Cosmos, Sui)
-export type GetRawTxReturnType<T extends ChainType> = T extends 'EVM' ? PromiseEvmTxReturnType<boolean> : never;
-=======
 export type PromiseInjectiveTxReturnType<Raw extends boolean> = Promise<TxReturnType<InjectiveSpokeProvider, Raw>>;
->>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88
-
+	export type PromiseNearTxReturnType<Raw extends boolean> = Promise<TxReturnType<NearSpokeProvider, Raw>>;
 export type PromiseTxReturnType<
   T extends ISpokeProvider,
   Raw extends boolean,
@@ -572,14 +549,9 @@ export type PromiseTxReturnType<
         : T['chainConfig']['chain']['type'] extends 'SUI'
           ? PromiseSuiTxReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-<<<<<<< HEAD
-            ? PromiseCWTxReturnType<Raw>
-            : T['chainConfig']['chain']['type'] extends 'NEAR'
-            ? PromiseNearTxReturnType<Raw>:never;
-=======
             ? PromiseInjectiveTxReturnType<Raw>
+          : T['chainConfig']['chain']['type'] extends 'NEAR'? PromiseNearTxReturnType<Raw>
             : never;
->>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88
 
 export type VaultType = {
   address: Address; // vault address
@@ -595,14 +567,12 @@ type ExtractKeys<T> = T extends unknown ? keyof T : never;
 
 export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChainId]['supportedTokens']>;
 
-<<<<<<< HEAD
 export type RateLimitConfig = {
     maxAvailable:number,
     ratePerSecond:number,
     available:number,
 
 }
-=======
 export type SpokeTxHash = string;
 export type HubTxHash = string;
 
@@ -647,4 +617,3 @@ export type GetEstimateGasReturnType<T extends SpokeProvider> = T['chainConfig']
 
 export type OptionalRaw<R extends boolean = false> = { raw?: R };
 export type OptionalTimeout = { timeout?: number };
->>>>>>> e57973d129787ef13f5996b38d0d1871ef2b3b88
