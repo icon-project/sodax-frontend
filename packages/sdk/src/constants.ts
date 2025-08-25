@@ -735,7 +735,7 @@ export const spokeChainConfig = {
     },
     chain: {
       id: ICON_MAINNET_CHAIN_ID,
-      name: 'ICON Mainnet',
+      name: 'ICON',
       type: 'ICON',
     },
     supportedTokens: {
