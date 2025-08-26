@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { XToken } from '@sodax/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ interface SwapConfirmDialogProps {
   sourceAddress?: string;
   destinationAddress?: string;
   isSwapAndSend?: boolean;
+  isSwapSuccessful?: boolean;
 }
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
@@ -49,10 +50,18 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   sourceAddress,
   destinationAddress,
   isSwapAndSend = false,
+  isSwapSuccessful = false,
 }: SwapConfirmDialogProps) => {
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [isAccordionExpanded, setIsAccordionExpanded] = useState<boolean>(false); // Add accordion state
+
+  // Update isCompleted when isSwapSuccessful changes
+  useEffect(() => {
+    if (isSwapSuccessful) {
+      setIsCompleted(true);
+    }
+  }, [isSwapSuccessful]);
 
   // Utility function to format numbers to exactly 6 decimal places
   const formatToSixDecimals = (value: string): string => {
@@ -65,7 +74,10 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     setIsConfirming(true);
     try {
       await onConfirm();
-      setIsCompleted(true);
+      // Don't set isCompleted here - it will be set by the parent via isSwapSuccessful prop
+    } catch (error) {
+      // Handle any unexpected errors during confirmation
+      console.error('Unexpected error during swap confirmation:', error);
     } finally {
       setIsConfirming(false);
     }
@@ -74,6 +86,10 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const handleClose = (): void => {
     if (isCompleted) {
       setIsCompleted(false);
+      onOpenChange(false);
+      onClose?.();
+    } else {
+      // Allow closing even if not completed (e.g., when there's an error)
       onOpenChange(false);
       onClose?.();
     }
@@ -189,6 +205,23 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
               <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center">
                 Enjoying SODAX? Follow updates on X
               </div>
+            </div>
+          ) : error ? (
+            <div className="flex w-full flex-col gap-4">
+              <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2 text-red-800 mb-2">
+                  <XIcon className="w-4 h-4" />
+                  <span className="font-semibold">Swap Failed</span>
+                </div>
+                <div className="text-red-700 text-sm">{error}</div>
+              </div>
+              <Button
+                variant="cherry"
+                className="w-full text-white font-semibold font-['InterRegular']"
+                onClick={handleClose}
+              >
+                Close
+              </Button>
             </div>
           ) : (
             <div className="flex w-full flex-col gap-4">

@@ -45,6 +45,7 @@ export default function SwapPage() {
   const [destinationAmount, setDestinationAmount] = useState<string>('');
   const [isSwapConfirmOpen, setIsSwapConfirmOpen] = useState<boolean>(false);
   const [swapError, setSwapError] = useState<string>('');
+  const [isSwapSuccessful, setIsSwapSuccessful] = useState<boolean>(false);
   const [isSwapAndSend, setIsSwapAndSend] = useState<boolean>(false);
   const [customDestinationAddress, setCustomDestinationAddress] = useState<string>('');
 
@@ -284,6 +285,7 @@ export default function SwapPage() {
   const handleSwapConfirm = async (): Promise<void> => {
     try {
       setSwapError('');
+      setIsSwapSuccessful(false);
 
       if (!sourceProvider) {
         throw new Error('Source provider not available');
@@ -344,6 +346,8 @@ export default function SwapPage() {
         throw new Error(`Swap execution failed: ${result.error?.code || 'Unknown error'}`);
       }
 
+      // Swap succeeded
+      setIsSwapSuccessful(true);
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     } catch (error) {
       console.error('Swap execution failed:', error);
@@ -355,6 +359,7 @@ export default function SwapPage() {
     setSourceAmount('');
     setDestinationAmount('');
     setSwapError('');
+    setIsSwapSuccessful(false);
   };
 
   const buttonState = getButtonState();
@@ -471,6 +476,7 @@ export default function SwapPage() {
         sourceAddress={sourceAddress}
         destinationAddress={isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress}
         isSwapAndSend={isSwapAndSend}
+        isSwapSuccessful={isSwapSuccessful}
       />
     </div>
   );
