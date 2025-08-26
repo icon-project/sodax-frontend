@@ -1,4 +1,3 @@
-// packages/dapp-kit/src/hooks/bridge/useBridgeAllowance.ts
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 import type { BridgeParams } from '@sodax/sdk';

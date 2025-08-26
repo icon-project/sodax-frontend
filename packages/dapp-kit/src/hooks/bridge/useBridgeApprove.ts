@@ -1,4 +1,3 @@
-// packages/dapp-kit/src/hooks/bridge/useBridgeApprove.ts
 import { useSodaxContext } from '../shared/useSodaxContext';
 import type { BridgeParams } from '@sodax/sdk';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
