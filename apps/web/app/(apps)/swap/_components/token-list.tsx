@@ -6,6 +6,7 @@ import type { SpokeChainId, XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { TokenAsset } from './token-asset';
 import { TokenGroupAsset } from './token-group-asset';
 
@@ -18,6 +19,8 @@ interface TokenListProps {
   onClose: () => void;
   selectedChainFilter: SpokeChainId | null;
   isChainSelectorOpen: boolean;
+  showAllAssets: boolean;
+  onViewAllAssets: () => void;
 }
 
 export function TokenList({
@@ -29,6 +32,8 @@ export function TokenList({
   onClose,
   selectedChainFilter,
   isChainSelectorOpen,
+  showAllAssets,
+  onViewAllAssets,
 }: TokenListProps): React.JSX.Element {
   const assetsRef = useRef<HTMLDivElement>(null);
   const [hoveredAsset, setHoveredAsset] = useState<string | null>(null);
@@ -53,7 +58,15 @@ export function TokenList({
   }, [clickedAsset, onClickOutside]);
 
   // Filter tokens by search query
-  const filteredTokens = uniqueTokenSymbols.filter(({ symbol }: { symbol: string; tokens: XToken[] }) => symbol.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredTokens = uniqueTokenSymbols.filter(({ symbol }: { symbol: string; tokens: XToken[] }) =>
+    symbol.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  // Sort tokens - by 24h volume when not showing all assets, alphabetically when showing all assets
+  const sortedTokens = showAllAssets ? filteredTokens.sort((a, b) => a.symbol.localeCompare(b.symbol)) : filteredTokens;
+
+  // Limit to 3 rows (15 tokens) when not showing all assets
+  const displayTokens = showAllAssets ? sortedTokens : sortedTokens.slice(0, 15);
 
   const shouldApplyHover = clickedAsset === null;
 
@@ -133,10 +146,19 @@ export function TokenList({
       data-name="Assets"
     >
       <AnimatePresence mode="popLayout">
-        <ScrollArea className="h-71 !overflow-visible">
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-[10px]">{filteredTokens.map(renderTokenSymbol)}</div>
+        <ScrollArea className={showAllAssets ? 'h-96' : 'h-71 !overflow-visible'}>
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-[10px]">{displayTokens.map(renderTokenSymbol)}</div>
         </ScrollArea>
       </AnimatePresence>
+
+      {!showAllAssets && filteredTokens.length > 15 && (
+        <div
+          className="text-(length:--body-super-comfortable) text-espresso hover:font-bold font-['InterRegular'] leading-tight mt-8 cursor-pointer"
+          onClick={onViewAllAssets}
+        >
+          View all assets
+        </div>
+      )}
     </motion.div>
   );
 }

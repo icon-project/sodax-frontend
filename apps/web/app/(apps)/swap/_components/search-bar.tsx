@@ -28,7 +28,7 @@ export function SearchBar({
 }: SearchBarProps): React.JSX.Element {
   return (
     <div
-      className={`box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 ${
+      className={`box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 mt-4 ${
         isUsdtClicked ? 'blur filter opacity-30' : ''
       }`}
       data-name="Row"

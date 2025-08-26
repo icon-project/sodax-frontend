@@ -19,6 +19,7 @@ export default function TokenSelectDialog({
   const [searchQuery, setSearchQuery] = useState('');
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
   const [selectedChainFilter, setSelectedChainFilter] = useState<SpokeChainId | null>(null);
+  const [showAllAssets, setShowAllAssets] = useState(false);
 
   const handleAssetClick = (e: React.MouseEvent, symbol: string) => {
     setClickedAsset(clickedAsset === symbol ? null : symbol);
@@ -44,6 +45,10 @@ export default function TokenSelectDialog({
   const handleChainSelect = (chainId: string) => {
     setSelectedChainFilter(chainId as SpokeChainId);
     setIsChainSelectorOpen(false);
+  };
+
+  const handleViewAllAssets = () => {
+    setShowAllAssets(!showAllAssets);
   };
 
   return (
@@ -82,17 +87,21 @@ export default function TokenSelectDialog({
           onClose={onClose}
           selectedChainFilter={selectedChainFilter}
           isChainSelectorOpen={isChainSelectorOpen}
+          showAllAssets={showAllAssets}
+          onViewAllAssets={handleViewAllAssets}
         />
 
-        <div className="box-border content-stretch flex flex-row gap-1.5 items-center justify-center p-0 relative shrink-0 transition-all duration-200 cursor-pointer">
-          <div className="flex flex-col font-['InterRegular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-espresso text-[16px] text-center text-nowrap">
-            <p className="block leading-[1.4] whitespace-pre">Sorted by</p>
+        {showAllAssets && (
+          <div className="box-border content-stretch flex flex-row gap-1.5 items-center justify-center p-0 relative shrink-0 transition-all duration-200 cursor-pointer">
+            <div className="flex flex-col font-['InterRegular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-espresso text-[16px] text-center text-nowrap">
+              <p className="block leading-[1.4] whitespace-pre">Sorted by</p>
+            </div>
+            <div className="flex flex-col font-['InterRegular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-yellow-dark text-[0px] text-center text-nowrap">
+              <p className="block font-['InterBold'] font-bold leading-[1.4] text-[16px] whitespace-pre">24h volume</p>
+            </div>
+            <ChevronUpIcon className="w-4 h-4 text-yellow-dark" />
           </div>
-          <div className="flex flex-col font-['InterRegular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-yellow-dark text-[0px] text-center text-nowrap">
-            <p className="block font-['InterBold'] font-bold leading-[1.4] text-[16px] whitespace-pre">24h volume</p>
-          </div>
-          <ChevronUpIcon className="w-4 h-4 text-yellow-dark" />
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

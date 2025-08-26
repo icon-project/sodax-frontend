@@ -360,91 +360,98 @@ export default function SwapPage() {
   const buttonState = getButtonState();
 
   return (
-    <div className="inline-flex flex-col justify-start items-start gap-(--layout-space-comfortable) w-full">
-      <div className="inline-flex flex-col justify-start items-start gap-4">
-        <div className="self-stretch mix-blend-multiply justify-end">
-          <span className="text-yellow-dark text-(length:--app-title) font-bold font-['InterRegular'] leading-9">
-            Swap{' '}
-          </span>
-          <span className="text-yellow-dark text-(length:--app-title) font-normal font-['Shrikhand'] leading-9">
-            in seconds
-          </span>
-        </div>
-        <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(size:--subtitle)">
-          Access 438 assets across ## networks.
-        </div>
-      </div>
-
-      <div className="inline-flex flex-col justify-start items-start gap-2 w-full">
-        <div className="relative w-full">
-          <CurrencyInputPanel
-            type={CurrencyInputPanelType.INPUT}
-            chainId={sourceToken.xChainId as SpokeChainId}
-            currency={sourceToken}
-            currencyBalance={isSourceChainConnected ? sourceBalance : 0n}
-            inputValue={sourceAmount}
-            onInputChange={handleInputChange}
-            onMaxClick={handleMaxClick}
-            onCurrencyChange={setSourceToken}
-            isChainConnected={isSourceChainConnected}
-            usdValue={sourceUsdValue}
-          />
-
-          <Button
-            variant="secondary"
-            size="icon"
-            className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] border-4 border-[#F5F2F2] flex justify-center items-center hover:bg-cherry-grey hover:outline-cherry-grey hover:scale-110 cursor-pointer transition-all duration-200 active:bg-cream-white z-50"
-            onClick={switchDirection}
-          >
-            <SwitchDirectionIcon className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <CurrencyInputPanel
-          type={CurrencyInputPanelType.OUTPUT}
-          chainId={destinationToken.xChainId as SpokeChainId}
-          currency={destinationToken}
-          currencyBalance={isDestinationChainConnected ? destinationBalance : 0n}
-          inputValue={destinationAmount}
-          onCurrencyChange={setDestinationToken}
-          isChainConnected={isDestinationChainConnected}
-          isSwapAndSend={isSwapAndSend}
-          onSwapAndSendToggle={setIsSwapAndSend}
-          customDestinationAddress={customDestinationAddress}
-          onCustomDestinationAddressChange={setCustomDestinationAddress}
-          usdValue={destinationUsdValue}
-        />
-      </div>
-
-      {/* Quote Error Display */}
-      {quoteQuery.data?.ok === false && (
-        <div className="self-stretch px-8 py-6 bg-white rounded-[20px] inline-flex justify-between items-center">
-          <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
-            <div className="self-stretch justify-center text-espresso text-base font-bold font-['InterRegular'] leading-tight">
-              Sorry, your transaction got stuck
-            </div>
-            <div className="self-stretch justify-center">
-              <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">
-                {quoteQuery.data.error.detail.message} <br />
-                For more help, reach out{' '}
-              </span>
-              <span className="text-clay text-base font-normal font-['InterRegular'] underline leading-tight">
-                on Discord
-              </span>
-              <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">.</span>
-            </div>
+    <div className="w-full">
+      <div className="gap-(--layout-space-comfortable) w-full flex flex-col">
+        <div className="inline-flex flex-col justify-start items-start gap-4">
+          <div className="self-stretch mix-blend-multiply justify-end">
+            <span className="text-yellow-dark text-(length:--app-title) font-bold font-['InterRegular'] leading-9">
+              Swap{' '}
+            </span>
+            <span className="text-yellow-dark text-(length:--app-title) font-normal font-['Shrikhand'] leading-9">
+              everywhere
+            </span>
+          </div>
+          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(size:--subtitle)">
+            Access 438 assets across ## networks.
           </div>
         </div>
-      )}
 
-      <Button
-        variant="cherry"
-        className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
-        onClick={handleOpenWalletModal}
-        disabled={buttonState.disabled}
-      >
-        {buttonState.text}
-      </Button>
+        <div className="inline-flex flex-col justify-start items-start gap-2 w-full">
+          <div className="relative w-full">
+            <CurrencyInputPanel
+              type={CurrencyInputPanelType.INPUT}
+              chainId={sourceToken.xChainId as SpokeChainId}
+              currency={sourceToken}
+              currencyBalance={isSourceChainConnected ? sourceBalance : 0n}
+              inputValue={sourceAmount}
+              onInputChange={handleInputChange}
+              onMaxClick={handleMaxClick}
+              onCurrencyChange={setSourceToken}
+              isChainConnected={isSourceChainConnected}
+              usdValue={sourceUsdValue}
+            />
+
+            <Button
+              variant="secondary"
+              size="icon"
+              className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] border-4 border-[#F5F2F2] flex justify-center items-center hover:bg-cherry-grey hover:outline-cherry-grey hover:scale-110 cursor-pointer transition-all duration-200 active:bg-cream-white z-50"
+              onClick={switchDirection}
+            >
+              <SwitchDirectionIcon className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <CurrencyInputPanel
+            type={CurrencyInputPanelType.OUTPUT}
+            chainId={destinationToken.xChainId as SpokeChainId}
+            currency={destinationToken}
+            currencyBalance={isDestinationChainConnected ? destinationBalance : 0n}
+            inputValue={destinationAmount}
+            onCurrencyChange={setDestinationToken}
+            isChainConnected={isDestinationChainConnected}
+            isSwapAndSend={isSwapAndSend}
+            onSwapAndSendToggle={setIsSwapAndSend}
+            customDestinationAddress={customDestinationAddress}
+            onCustomDestinationAddressChange={setCustomDestinationAddress}
+            usdValue={destinationUsdValue}
+          />
+        </div>
+
+        {quoteQuery.data?.ok === false && (
+          <div className="self-stretch px-8 py-6 bg-white rounded-[20px] inline-flex justify-between items-center">
+            <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
+              <div className="self-stretch justify-center text-espresso text-base font-bold font-['InterRegular'] leading-tight">
+                Sorry, your transaction got stuck
+              </div>
+              <div className="self-stretch justify-center">
+                <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">
+                  {quoteQuery.data.error.detail.message} <br />
+                  For more help, reach out{' '}
+                </span>
+                <span className="text-clay text-base font-normal font-['InterRegular'] underline leading-tight">
+                  on Discord
+                </span>
+                <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">.</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <Button
+          variant="cherry"
+          className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
+          onClick={handleOpenWalletModal}
+          disabled={buttonState.disabled}
+        >
+          {buttonState.text}
+        </Button>
+      </div>
+
+      {sourceAddress && (
+        <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
+          Takes ~1 min · Total fees: $0.001
+        </div>
+      )}
 
       <SwapConfirmDialog
         open={isSwapConfirmOpen}
