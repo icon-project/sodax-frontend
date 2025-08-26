@@ -80,12 +80,6 @@ const TokenChainSelector: React.FC<TokenChainSelectorProps> = ({
                       <span className="font-medium">{chainInfo?.name || token.xChainId}</span>
                     </div>
                   </div>
-                  <div className="ml-auto text-right">
-                    <div className="text-sm font-medium">{token.name}</div>
-                    <div className="text-xs text-clay-light">
-                      {token.address.slice(0, 8)}...{token.address.slice(-6)}
-                    </div>
-                  </div>
                 </div>
               );
             })}

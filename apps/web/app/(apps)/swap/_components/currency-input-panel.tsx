@@ -30,6 +30,7 @@ interface CurrencyInputPanelProps {
   onSwapAndSendToggle?: (enabled: boolean) => void;
   customDestinationAddress?: string;
   onCustomDestinationAddressChange?: (address: string) => void;
+  usdValue?: number;
 }
 
 const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
@@ -48,6 +49,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   onSwapAndSendToggle,
   customDestinationAddress = '',
   onCustomDestinationAddressChange,
+  usdValue = 0,
 }: CurrencyInputPanelProps) => {
   const formattedBalance = formatUnits(currencyBalance, currency.decimals);
   const formattedBalanceFixed = Number(formattedBalance).toFixed(2);
@@ -74,7 +76,9 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
     >
       <div className="flex inline-flex gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-4">
-          <CurrencyLogo className="group-hover:scale-106 transition-transform duration-200" currency={currency} />
+          <div className="cursor-pointer" onClick={() => setIsTokenSelectorOpen(true)}>
+            <CurrencyLogo className="group-hover:scale-106 transition-transform duration-200" currency={currency} />
+          </div>
           <div className="inline-flex flex-col justify-center items-start gap-1">
             <div
               className="inline-flex justify-start items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
@@ -132,7 +136,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             />
           </div>
           <div className="mix-blend-multiply text-right justify-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
-            Sell $0
+            {type === CurrencyInputPanelType.INPUT ? `Sell $${usdValue.toFixed(2)}` : `Buy $${usdValue.toFixed(2)}`}
           </div>
         </div>
       </div>

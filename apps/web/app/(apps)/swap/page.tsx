@@ -16,6 +16,7 @@ import { useWalletProvider } from '@sodax/wallet-sdk';
 import BigNumber from 'bignumber.js';
 import type { QuoteType } from '@sodax/sdk';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 
 const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
   if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
@@ -48,19 +49,19 @@ export default function SwapPage() {
   const [customDestinationAddress, setCustomDestinationAddress] = useState<string>('');
 
   const [sourceToken, setSourceToken] = useState<XToken>({
-    name: 'ETH',
-    symbol: 'ETH',
+    name: 'ICON',
+    symbol: 'ICX',
     decimals: 18,
-    xChainId: '0x2105.base',
-    address: '0x0000000000000000000000000000000000000000', // Native ETH on Base
+    xChainId: '0x1.icon',
+    address: 'cx0000000000000000000000000000000000000000',
   });
 
   const [destinationToken, setDestinationToken] = useState<XToken>({
-    name: 'USDC',
+    name: 'USD Coin',
     symbol: 'USDC',
     decimals: 6,
-    xChainId: 'solana',
-    address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC on Solana
+    xChainId: 'sonic',
+    address: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
   });
 
   const sourceChainType = getXChainType(sourceToken.xChainId);
@@ -93,6 +94,10 @@ export default function SwapPage() {
   const sourceBalance = sourceBalances?.[sourceToken.address] || 0n;
   const destinationBalance = destinationBalances?.[destinationToken.address] || 0n;
 
+  // Get token prices and USD values
+  const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
+  const { usdValue: destinationUsdValue } = useTokenPrice(destinationToken, destinationAmount);
+
   const quotePayload = useMemo(() => {
     if (
       !sourceToken ||
@@ -114,25 +119,10 @@ export default function SwapPage() {
       quote_type: 'exact_input' as QuoteType,
     };
 
-    // Debug logging
-    console.log('Quote payload:', payload);
-    console.log('Source token:', sourceToken);
-    console.log('Destination token:', destinationToken);
-    console.log('Source amount:', sourceAmount);
-
     return payload;
   }, [sourceToken, destinationToken, sourceAmount]);
 
   const quoteQuery = useQuote(quotePayload);
-
-  // Debug logging for quote query
-  useEffect(() => {
-    console.log('Quote query state:', {
-      isLoading: quoteQuery.isLoading,
-      error: quoteQuery.error,
-      data: quoteQuery.data,
-    });
-  }, [quoteQuery.isLoading, quoteQuery.error, quoteQuery.data]);
 
   const calculatedDestinationAmount = useMemo(() => {
     if (quoteQuery.data?.ok && quoteQuery.data.value) {
@@ -162,7 +152,6 @@ export default function SwapPage() {
     }
   }, [sourceAmount, calculatedDestinationAmount]);
 
-  // Calculate minimum output amount with slippage tolerance
   const minOutputAmount = useMemo(() => {
     if (quoteQuery.data?.ok && quoteQuery.data.value && calculatedDestinationAmount) {
       const slippageTolerance = 0.5;
@@ -178,7 +167,6 @@ export default function SwapPage() {
     setDestinationAmount(calculatedDestinationAmount);
   }, [calculatedDestinationAmount]);
 
-  // Use the swap hook for actual swap execution
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceProvider);
 
   const getTargetChainType = (): ChainType | undefined => {
@@ -214,7 +202,6 @@ export default function SwapPage() {
       };
     }
 
-    // Check if user has sufficient balance
     const sourceAmountBigInt = scaleTokenAmount(sourceAmount, sourceToken.decimals);
     if (sourceAmountBigInt > sourceBalance) {
       return {
@@ -224,9 +211,7 @@ export default function SwapPage() {
       };
     }
 
-    // Check destination address based on toggle state
     if (isSwapAndSend) {
-      // When toggle is ON, require custom destination address
       if (!customDestinationAddress || customDestinationAddress.trim() === '') {
         return {
           text: 'Enter destination address',
@@ -235,7 +220,6 @@ export default function SwapPage() {
         };
       }
     } else {
-      // When toggle is OFF, require connected destination wallet
       if (!destinationAddress) {
         return {
           text: 'Connect recipient',
@@ -245,7 +229,6 @@ export default function SwapPage() {
       }
     }
 
-    // Check if quote is loading or has error
     if (quoteQuery.isLoading) {
       return {
         text: 'Getting quote...',
@@ -291,11 +274,9 @@ export default function SwapPage() {
   };
 
   const switchDirection = (): void => {
-    // Swap source and destination tokens
     setSourceToken(destinationToken);
     setDestinationToken(sourceToken);
 
-    // Clear amounts when switching
     setSourceAmount('');
     setDestinationAmount('');
   };
@@ -304,7 +285,6 @@ export default function SwapPage() {
     try {
       setSwapError('');
 
-      // Validate all required data
       if (!sourceProvider) {
         throw new Error('Source provider not available');
       }
@@ -313,7 +293,6 @@ export default function SwapPage() {
         throw new Error('Source address not available');
       }
 
-      // Use custom destination address if toggle is enabled, otherwise use connected wallet address
       const finalDestinationAddress =
         isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress;
 
@@ -328,7 +307,6 @@ export default function SwapPage() {
       const quotedAmount = quoteQuery.data.value.quoted_amount;
       const sourceAmountBigInt = scaleTokenAmount(sourceAmount, sourceToken.decimals);
 
-      // Validate amounts
       if (sourceAmountBigInt <= 0n) {
         throw new Error('Invalid source amount');
       }
@@ -337,36 +315,22 @@ export default function SwapPage() {
         throw new Error('Invalid quoted amount');
       }
 
-      // Check balance again before executing
       if (sourceAmountBigInt > sourceBalance) {
         throw new Error('Insufficient balance for swap');
       }
 
-      // Calculate minimum output amount with slippage tolerance (0.5%)
       const slippageTolerance = 0.5;
       const minOutputAmount = new BigNumber(quotedAmount.toString())
         .multipliedBy(100 - slippageTolerance)
         .dividedBy(100)
         .toFixed(0, BigNumber.ROUND_DOWN);
 
-      console.log('Executing swap:', {
-        sourceToken,
-        destinationToken,
-        sourceAmount: sourceAmountBigInt.toString(),
-        destinationAmount: quotedAmount.toString(),
-        minOutputAmount,
-        exchangeRate: exchangeRate?.toString(),
-        sourceAddress,
-        destinationAddress: finalDestinationAddress,
-      });
-
-      // Execute the actual swap
       const result = await executeSwap({
         inputToken: sourceToken.address,
         outputToken: destinationToken.address,
         inputAmount: sourceAmountBigInt,
         minOutputAmount: BigInt(minOutputAmount),
-        deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // 5 minutes from now
+        deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5),
         allowPartialFill: false,
         srcChain: sourceToken.xChainId as SpokeChainId,
         dstChain: destinationToken.xChainId as SpokeChainId,
@@ -376,17 +340,11 @@ export default function SwapPage() {
         data: '0x',
       });
 
-      console.log('Swap result:', result);
-
       if (!result.ok) {
         throw new Error(`Swap execution failed: ${result.error?.code || 'Unknown error'}`);
       }
 
-      // Manually invalidate balance queries to ensure immediate refresh
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
-
-      // Dialog will handle its own completion state
-      // Form will be reset when dialog closes
     } catch (error) {
       console.error('Swap execution failed:', error);
       setSwapError(error instanceof Error ? error.message : 'Swap failed. Please try again.');
@@ -394,7 +352,6 @@ export default function SwapPage() {
   };
 
   const handleDialogClose = (): void => {
-    // Reset form when dialog is closed after completion
     setSourceAmount('');
     setDestinationAmount('');
     setSwapError('');
@@ -430,6 +387,7 @@ export default function SwapPage() {
             onMaxClick={handleMaxClick}
             onCurrencyChange={setSourceToken}
             isChainConnected={isSourceChainConnected}
+            usdValue={sourceUsdValue}
           />
 
           <Button
@@ -454,6 +412,7 @@ export default function SwapPage() {
           onSwapAndSendToggle={setIsSwapAndSend}
           customDestinationAddress={customDestinationAddress}
           onCustomDestinationAddressChange={setCustomDestinationAddress}
+          usdValue={destinationUsdValue}
         />
       </div>
 
@@ -478,22 +437,6 @@ export default function SwapPage() {
         </div>
       )}
 
-      {/* Quote Loading State */}
-      {/* {quoteQuery.isLoading && sourceAmount && (
-        <div className="self-stretch px-8 py-6 bg-white rounded-[20px] inline-flex justify-between items-center">
-          <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
-            <div className="self-stretch justify-center text-espresso text-base font-bold font-['InterRegular'] leading-tight">
-              Getting quote...
-            </div>
-            <div className="self-stretch justify-center">
-              <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">
-                Please wait while we calculate the best rate for your swap.
-              </span>
-            </div>
-          </div>
-        </div>
-      )} */}
-
       <Button
         variant="cherry"
         className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
@@ -503,7 +446,6 @@ export default function SwapPage() {
         {buttonState.text}
       </Button>
 
-      {/* Swap Confirm Dialog */}
       <SwapConfirmDialog
         open={isSwapConfirmOpen}
         onOpenChange={setIsSwapConfirmOpen}

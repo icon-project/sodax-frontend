@@ -116,7 +116,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     data-property-1="Default"
                     className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] flex flex-col justify-center items-center gap-2"
                   >
-                    <div className="text-center justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase leading-[1.2]">
+                    <div className="text-center justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase">
                       {shortenAddress(sourceToken.address)}
                     </div>
                   </div>
@@ -159,7 +159,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     data-property-1="Default"
                     className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] flex flex-col justify-center items-center gap-2"
                   >
-                    <div className="text-center justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase leading-[1.2]">
+                    <div className="text-center justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase">
                       {shortenAddress(destinationToken.address)}
                     </div>
                   </div>
@@ -214,7 +214,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 )}
               </Button>
 
-              {/* Receive at least Accordion */}
               {minOutputAmount && (
                 <div className="w-full">
                   <div
@@ -262,20 +261,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                           <span className="text-clay-light">Via:</span>
                           <span className="text-espresso font-medium">SODAX SDK</span>
                         </div>
-                        {sourceAddress && (
-                          <div className="flex justify-between">
-                            <span className="text-clay-light">From:</span>
-                            <span className="text-espresso font-medium">{shortenAddress(sourceAddress)}</span>
-                          </div>
-                        )}
-                        {destinationAddress && (
-                          <div className="flex justify-between">
-                            <span className="text-clay-light">
-                              {isSwapAndSend ? 'To (Custom):' : 'To:'}
-                            </span>
-                            <span className="text-espresso font-medium">{shortenAddress(destinationAddress)}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}

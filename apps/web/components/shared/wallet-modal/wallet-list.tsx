@@ -1,4 +1,3 @@
-// apps/web/components/shared/wallet-modal/wallet-list.tsx
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import type { ChainType } from '@sodax/types';
@@ -24,7 +23,6 @@ export const WalletList: React.FC<WalletListProps> = ({
   isPending = false,
   onWalletSelect,
 }) => {
-  // Sort connectors to show Hana Wallet first
   const sortedConnectors = React.useMemo(() => {
     const hanaWallet = xConnectors.find(
       connector =>

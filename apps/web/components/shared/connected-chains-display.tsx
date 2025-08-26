@@ -23,7 +23,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
   if (connectedChains.length === 0) return <></>;
 
   return (
-    <div className="flex justify-end gap-4 w-[183px]">
+    <div className="flex justify-end items-center gap-4 w-[183px]">
       <div className="flex items-center cursor-pointer" onClick={onClick}>
         {connectedChains.map(chain => (
           <div key={chain.chainType} className="relative">
@@ -37,10 +37,16 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
           </div>
         ))}
       </div>
+      {connectedChains.length === 1 && (
+        <div className="text-cherry-brighter text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
+          Welcome!
+        </div>
+      )}
       <Button
         variant="cherry"
         className="w-10 h-10 p-3 bg-cherry-bright rounded-[256px] inline-flex justify-center items-center gap-2 cursor-pointer"
         aria-label="Settings"
+        onClick={onClick}
       >
         <Settings className="w-4 h-4" />
       </Button>

@@ -28,11 +28,11 @@ export function shortenAddress(address: string, chars?: number): string {
   if (/^[a-z]+\d/.test(address)) {
     const defaultChars = 4;
     const charCount = chars ?? defaultChars;
-    return `${address.substring(0, charCount + 3)}...${address.substring(address.length - charCount)}`;
+    return `${address.substring(0, charCount + 2)}...${address.substring(address.length - charCount)}`;
   }
 
   // For Ethereum-style addresses (start with 0x)
-  const defaultChars = 7;
+  const defaultChars = 4;
   const charCount = chars ?? defaultChars;
   return `${address.substring(0, charCount + 2)}...${address.substring(address.length - charCount)}`;
 }

@@ -92,7 +92,7 @@ export function Header({
             </Link>
           </div>
           <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-            {connectedWalletsCount >= 2 ? (
+            {connectedWalletsCount >= 1 ? (
               <ConnectedChainsDisplay onClick={onOpenWalletModalWithTwoWallets} />
             ) : (
               <DecoratedButton onClick={onOpenWalletModal}>connect</DecoratedButton>

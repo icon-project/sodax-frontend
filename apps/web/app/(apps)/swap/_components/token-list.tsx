@@ -52,9 +52,8 @@ export function TokenList({
     };
   }, [clickedAsset, onClickOutside]);
 
-  const filteredTokenSymbols = uniqueTokenSymbols.filter(({ symbol }) =>
-    symbol.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // Filter tokens by search query
+  const filteredTokens = uniqueTokenSymbols.filter(({ symbol }: { symbol: string; tokens: XToken[] }) => symbol.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const shouldApplyHover = clickedAsset === null;
 
@@ -135,9 +134,7 @@ export function TokenList({
     >
       <AnimatePresence mode="popLayout">
         <ScrollArea className="h-71 !overflow-visible">
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-[10px]">
-            {filteredTokenSymbols.map(renderTokenSymbol)}
-          </div>
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-[10px]">{filteredTokens.map(renderTokenSymbol)}</div>
         </ScrollArea>
       </AnimatePresence>
     </motion.div>

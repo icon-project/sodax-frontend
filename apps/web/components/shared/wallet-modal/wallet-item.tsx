@@ -37,7 +37,7 @@ export const WalletItem: React.FC<WalletItemProps> = ({
   const isMigrateRoute = pathname.includes('migrate');
   return (
     <React.Fragment>
-      <div className="inline-flex justify-between items-center transition-opacity duration-200 hover:opacity-100 opacity-60 cursor-pointer py-4">
+      <div className="inline-flex justify-between items-center transition-opacity duration-200 hover:opacity-100 opacity-60 cursor-pointer py-4 pl-1">
         <div className="flex justify-start items-center gap-4">
           <div className="flex justify-start items-center flex-wrap content-center">
             <div className="flex justify-start items-center flex-wrap content-center">

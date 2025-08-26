@@ -47,12 +47,10 @@ export const WalletModal = ({
 
   const selectedChain = xChainTypes.find(w => w.xChainType === selectedChainType);
 
-  // When on migrate route, only show ICON and EVM chains
   const availableChains = isMigrateRoute
     ? xChainTypes.filter(w => w.xChainType === 'ICON' || w.xChainType === 'EVM')
     : xChainTypes;
 
-  // Intelligent mainChain selection based on targetChainType
   const getMainChain = (): (typeof availableChains)[0] | undefined => {
     if (isMigrateRoute) {
       return availableChains.find(w => w.xChainType === 'ICON');
@@ -85,7 +83,7 @@ export const WalletModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={() => handleDismiss(onDismiss)}>
       <DialogContent
-        className="max-w-full w-full md:max-w-[480px] p-12 w-[90%] shadow-none bg-white gap-4"
+        className="max-w-full w-full md:max-w-[480px] p-12 w-[90%] shadow-none bg-vibrant-white gap-4"
         hideCloseButton
       >
         <DialogTitle>

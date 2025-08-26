@@ -57,7 +57,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
   const isMigrateRoute = pathname.includes('migrate');
 
   return (
-    <div className="flex items-center w-full text-[#0d0229] py-4">
+    <div className="flex items-center w-full text-[#0d0229] py-4 pl-1">
       <div className="flex flex-col gap-2 w-full">
         {isEVMWithMultipleIcons && !isMigrateRoute && (
           <div className="inline-flex justify-start items-center gap-1">
@@ -88,7 +88,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
           {isEVMWithMultipleIcons ? (
             <div className="self-stretch inline-flex justify-start items-center flex-wrap content-center relative">
               {!isMigrateRoute &&
-                EVM_CHAIN_ICONS.slice(0, 6).map((evmIcon, index) => (
+                EVM_CHAIN_ICONS.map((evmIcon, index) => (
                   <div
                     key={index}
                     className="rounded-md shadow-[-4px_0px_4px_0px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
@@ -184,9 +184,9 @@ export const ChainItem: React.FC<ChainItemProps> = ({
                   )}
                 </div>
                 <div className="flex gap-1 items-center">
-                  <span className="text-(size:--body-small) text-clay-light leading-[1.4] font-['InterRegular']">
+                  {/* <span className="text-(size:--body-small) text-clay-light leading-[1.4] font-['InterRegular']">
                     {activeConnector && activeConnector.name.replace('Hana Wallet', 'Hana')}
-                  </span>
+                  </span> */}
                   <Button
                     variant="default"
                     size="sm"

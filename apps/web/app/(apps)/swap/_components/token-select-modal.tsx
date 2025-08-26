@@ -48,7 +48,7 @@ export default function TokenSelectDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full md:max-w-[480px] shadow-none bg-white gap-4 p-12" hideCloseButton>
+      <DialogContent className="w-full md:max-w-[480px] shadow-none bg-vibrant-white gap-4 p-12" hideCloseButton>
         <DialogHeader>
           <DialogTitle className="relative">
             <DialogClose className="absolute -top-4 right-0" asChild>
