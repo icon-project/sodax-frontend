@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
+import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
@@ -17,6 +17,8 @@ export function WithdrawButton({ token }: { token: XToken }) {
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, spokeProvider);
 
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'withdraw', spokeProvider);
+  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
   const handleWithdraw = async () => {
@@ -32,6 +34,10 @@ export function WithdrawButton({ token }: { token: XToken }) {
       setAmount('');
       resetError?.();
     }
+  };
+
+  const handleApprove = async () => {
+    await approve({ amount, action: 'withdraw' });
   };
 
   return (
@@ -61,13 +67,22 @@ export function WithdrawButton({ token }: { token: XToken }) {
           </div>
         </div>
         <DialogFooter className="sm:justify-start">
+          <Button
+            className="w-full"
+            type="button"
+            variant="default"
+            onClick={handleApprove}
+            disabled={isAllowanceLoading || hasAllowed || isApproving}
+          >
+            {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+          </Button>
           {isWrongChain && (
             <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
               Switch Chain
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={isPending}>
+            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={!hasAllowed}>
               {isPending ? 'Withdrawing...' : 'Withdraw'}
             </Button>
           )}

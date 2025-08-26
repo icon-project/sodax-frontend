@@ -1,19 +1,23 @@
+import { WalletAbstractionService } from './../services/hub/WalletAbstractionService.js';
 import invariant from 'tiny-invariant';
 import {
   DEFAULT_MAX_RETRY,
   DEFAULT_RETRY_DELAY_MS,
+  type EvmHubProvider,
   FEE_PERCENTAGE_SCALE,
   isPartnerFeeAmount,
   isPartnerFeePercentage,
+  type Address,
   type Hex,
   type PartnerFee,
   type QuoteType,
   type SpokeChainId,
+  type SpokeProvider,
 } from '../index.js';
 import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
-import { Address } from '@stellar/stellar-sdk';
+import { Address as StellarAddress } from '@stellar/stellar-sdk';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -108,11 +112,7 @@ export function calculateFeeAmount(inputAmount: bigint, fee: PartnerFee | undefi
  * @param {QuoteType} quoteType - The quote type
  * @returns {bigint} The adjusted amount
  */
-export function adjustAmountByFee(
-  amount: bigint,
-  fee: PartnerFee | undefined,
-  quoteType: QuoteType,
-): bigint {
+export function adjustAmountByFee(amount: bigint, fee: PartnerFee | undefined, quoteType: QuoteType): bigint {
   invariant(amount > 0n, 'Amount must be greater than 0');
   invariant(quoteType === 'exact_input' || quoteType === 'exact_output', 'Invalid quote type');
 
@@ -154,7 +154,7 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
       return toHex(Buffer.from(new PublicKey(address).toBytes()));
 
     case 'stellar':
-      return `0x${Address.fromString(address).toScVal().toXDR('hex')}`;
+      return `0x${StellarAddress.fromString(address).toScVal().toXDR('hex')}`;
 
     default:
       return address as Hex;
@@ -177,4 +177,22 @@ export function hexToBigInt(hex: string): bigint {
   // Normalize with 0x prefix to make BigInt parse it as hexadecimal
   const normalized = trimmed.startsWith('0x') ? trimmed : `0x${trimmed}`;
   return BigInt(normalized);
+}
+
+/**
+ * Derive user hub abstracted wallet address. Original address is used if spoke equals hub chain.
+ * @param spokeProvider - Spoke provider instance for origin chain
+ * @param hubProvider - Hub spoke provider
+ * @param walletAddress - user original address on spoke chain
+ * @returns Abstracted user wallet address for spoke chains with different chain id than hub or original
+ */
+export async function deriveUserWalletAddress(
+  spokeProvider: SpokeProvider,
+  hubProvider: EvmHubProvider,
+  walletAddress?: string,
+): Promise<Address> {
+  const address = (walletAddress ?? (await spokeProvider.walletProvider.getWalletAddress())) as Address;
+  return spokeProvider.chainConfig.chain.id === hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
+    ? address
+    : await WalletAbstractionService.getUserAbstractedWalletAddress(address, spokeProvider, hubProvider);
 }

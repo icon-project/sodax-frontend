@@ -5,9 +5,8 @@ import { encodeAddress, EvmWalletAbstraction, SonicSpokeService } from '../../in
 /**
  * Service to get valid hub wallet address which may differ based on the spoke chain.
  */
-export class WalletAbstractionService {
-  private constructor() {}
 
+export class WalletAbstractionService {
   /**
    * Gets the hub wallet address for a user based on their spoke chain address.
    * @param address - The user's address on the spoke chain
@@ -15,7 +14,7 @@ export class WalletAbstractionService {
    * @param hubProvider - The provider for interacting with the hub chain
    * @returns The user's hub wallet address
    */
-  public static async getUserHubWalletAddress(
+  public static async getUserAbstractedWalletAddress(
     address: string,
     spokeProvider: SpokeProvider,
     hubProvider: EvmHubProvider,
@@ -28,7 +27,7 @@ export class WalletAbstractionService {
       }
 
       throw new Error(
-        '[WalletAbstractionService.getUserHubWalletAddress] Invalid spoke provider. Sonic spoke provider is required.',
+        '[getUserHubWalletAddress] Invalid spoke provider for matching hub id. Sonic spoke provider is required.',
       );
     }
 

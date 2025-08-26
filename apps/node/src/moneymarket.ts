@@ -3,15 +3,15 @@ import {
   type AggregatedReserveData,
   type BaseCurrencyInfo,
   type EvmHubProviderConfig,
-  EvmSpokeProvider,
   getHubChainConfig,
   getMoneyMarketConfig,
   type MoneyMarketConfig,
   Sodax,
   type SodaxConfig,
+  SonicSpokeProvider,
   spokeChainConfig,
 } from '@sodax/sdk';
-import { ARBITRUM_MAINNET_CHAIN_ID, Hex, SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
+import { Hex, SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
 // load PK from .env
@@ -32,7 +32,7 @@ const hubConfig = {
 } satisfies EvmHubProviderConfig;
 
 const spokeEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
-const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID]);
+const spokeProvider = new SonicSpokeProvider(spokeEvmWallet, spokeChainConfig[SONIC_MAINNET_CHAIN_ID]);
 
 const sodax = new Sodax({
   moneyMarket: moneyMarketConfig,

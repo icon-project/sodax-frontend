@@ -393,10 +393,11 @@ export class SpokeService {
     skipSimulation = false,
   ): Promise<TxReturnType<T, R>> {
     if (isSonicSpokeProvider(spokeProvider)) {
-      return (await SonicSpokeService.callWallet(payload, spokeProvider, raw)) satisfies TxReturnType<
-        SonicSpokeProvider,
-        R
-      > as TxReturnType<T, R>;
+      return (await SonicSpokeService.callWallet(
+        payload,
+        spokeProvider as SonicSpokeProvider,
+        raw,
+      )) satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<T, R>;
     }
     if (isEvmSpokeProvider(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);

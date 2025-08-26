@@ -24,6 +24,7 @@ import {
 } from '../index.js';
 import type {
   EvmContractCall,
+  EvmReturnType,
   GetAddressType,
   GetEstimateGasReturnType,
   GetSpokeDepositParamsType,
@@ -31,12 +32,13 @@ import type {
   HubTxHash,
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,
+  PromiseTxReturnType,
   Result,
   SpokeTxHash,
   TxReturnType,
 } from '../types.js';
-import { calculateFeeAmount, encodeAddress, encodeContractCalls } from '../utils/index.js';
-import { EvmAssetManagerService, EvmVaultTokenService, WalletAbstractionService } from '../services/hub/index.js';
+import { calculateFeeAmount, deriveUserWalletAddress, encodeAddress, encodeContractCalls } from '../utils/index.js';
+import { EvmAssetManagerService, EvmVaultTokenService } from '../services/hub/index.js';
 import { Erc20Service } from '../services/shared/index.js';
 import invariant from 'tiny-invariant';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Token, type Address } from '@sodax/types';
@@ -617,37 +619,50 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
-        walletAddress,
-        spokeProvider,
-        this.hubProvider,
-      );
+      const abstractedWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
 
       const data: Hex = this.buildSupplyData(
         params.token,
-        hubWallet,
+        abstractedWalletAddress,
         params.amount,
         spokeProvider.chainConfig.chain.id,
       );
 
-      const txResult = await SpokeService.deposit(
-        {
-          from: walletAddress,
-          to: hubWallet,
-          token: params.token,
-          amount: params.amount,
-          data,
-        } as unknown as GetSpokeDepositParamsType<S>,
-        spokeProvider,
-        this.hubProvider,
-        raw,
-      );
+      let txResult: Awaited<PromiseTxReturnType<S, R>> | EvmReturnType<R>;
+      if (
+        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id &&
+        spokeProvider instanceof SonicSpokeProvider
+      ) {
+        txResult = await SonicSpokeService.deposit(
+          {
+            from: walletAddress as GetAddressType<SonicSpokeProvider>,
+            token: params.token as GetAddressType<SonicSpokeProvider>,
+            amount: params.amount,
+            data,
+          },
+          spokeProvider,
+          raw,
+        );
+      } else {
+        txResult = await SpokeService.deposit(
+          {
+            from: walletAddress,
+            to: abstractedWalletAddress,
+            token: params.token,
+            amount: params.amount,
+            data,
+          } as GetSpokeDepositParamsType<S>,
+          spokeProvider,
+          this.hubProvider,
+          raw,
+        );
+      }
 
       return {
         ok: true,
         value: txResult as TxReturnType<S, R>,
         data: {
-          address: hubWallet,
+          address: abstractedWalletAddress,
           payload: data,
         },
       };
@@ -799,11 +814,7 @@ export class MoneyMarketService {
 
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const encodedAddress = encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress);
-    const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
-      walletAddress,
-      spokeProvider,
-      this.hubProvider,
-    );
+    const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
 
     const data: Hex = this.buildBorrowData(
       hubWallet,
@@ -813,11 +824,16 @@ export class MoneyMarketService {
       spokeProvider.chainConfig.chain.id,
     );
 
-    const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
+    let txResult: TxReturnType<S, R>;
+    if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
+      txResult = await SonicSpokeService.callWallet(data, spokeProvider);
+    } else {
+      txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
+    }
 
     return {
       ok: true,
-      value: txResult as TxReturnType<S, R>,
+      value: txResult satisfies TxReturnType<S, R>,
       data: {
         address: hubWallet,
         payload: data,
@@ -960,11 +976,7 @@ export class MoneyMarketService {
 
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const encodedAddress = encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress);
-    const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
-      walletAddress,
-      spokeProvider,
-      this.hubProvider,
-    );
+    const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
 
     let data: Hex;
     if (spokeProvider instanceof SonicSpokeProvider) {
@@ -993,7 +1005,10 @@ export class MoneyMarketService {
       );
     }
 
-    const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
+    const txResult =
+      spokeProvider instanceof SonicSpokeProvider
+        ? await SonicSpokeService.callWallet(data, spokeProvider, raw)
+        : await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
     return {
       ok: true,
@@ -1141,30 +1156,38 @@ export class MoneyMarketService {
     );
 
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
-      walletAddress,
-      spokeProvider,
-      this.hubProvider,
-    );
-    const data: Hex = this.buildRepayData(
-      params.token,
-      hubWallet,
-      params.amount,
-      spokeProvider.chainConfig.chain.id,
-    );
+    const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+    const data: Hex = this.buildRepayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
 
-    const txResult = await SpokeService.deposit(
-      {
-        from: walletAddress,
-        to: hubWallet,
-        token: params.token,
-        amount: params.amount,
-        data,
-      } as GetSpokeDepositParamsType<S>,
-      spokeProvider,
-      this.hubProvider,
-      raw,
-    );
+    let txResult: Awaited<PromiseTxReturnType<S, R>> | EvmReturnType<R>;
+    if (
+      spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id &&
+      spokeProvider instanceof SonicSpokeProvider
+    ) {
+      txResult = await SonicSpokeService.deposit(
+        {
+          from: walletAddress as GetAddressType<SonicSpokeProvider>,
+          token: params.token as GetAddressType<SonicSpokeProvider>,
+          amount: params.amount,
+          data,
+        },
+        spokeProvider,
+        raw,
+      );
+    } else {
+      txResult = await SpokeService.deposit(
+        {
+          from: walletAddress,
+          to: hubWallet,
+          token: params.token,
+          amount: params.amount,
+          data,
+        } as GetSpokeDepositParamsType<S>,
+        spokeProvider,
+        this.hubProvider,
+        raw,
+      );
+    }
 
     return {
       ok: true,
