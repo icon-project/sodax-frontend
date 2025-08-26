@@ -27,7 +27,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency, i
         </div>
         <div
           data-property-1="Active"
-          className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.40)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
+          className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.40)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden relative"
         >
           <Image
             className="w-4 h-4"
@@ -36,11 +36,10 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency, i
             width={16}
             height={16}
           />
+          {isChainConnected && (
+            <div className="absolute -bottom-[2px] -right-[2px] w-[10px] h-[10px] bg-green-500 rounded-full border-2 border-white shadow-sm" />
+          )}
         </div>
-        {/* Green badge for connected chain */}
-        {/* {isChainConnected && (
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm" />
-        )} */}
       </div>
     </div>
   );

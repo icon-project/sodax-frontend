@@ -73,8 +73,8 @@ export default function SwapPage() {
   const sourceConnection = useXConnection(sourceChainType);
   const destinationConnection = useXConnection(destinationChainType);
 
-  const isSourceChainConnected = !!sourceConnection;
-  const isDestinationChainConnected = !!destinationConnection;
+  const isSourceChainConnected = !!sourceConnection?.xConnectorId;
+  const isDestinationChainConnected = !!destinationConnection?.xConnectorId;
 
   const sourceWalletProvider = useWalletProvider(sourceToken.xChainId);
   const sourceProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
