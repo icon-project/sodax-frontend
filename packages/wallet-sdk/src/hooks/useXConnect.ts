@@ -59,7 +59,7 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
           await select((xConnector as SolanaXConnector).wallet.adapter.name);
 
           await new Promise<void>((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Wallet connection timeout')), 5000);
+            const timeout = setTimeout(() => reject(new Error('Wallet connection timeout')), 15000);
 
             connect()
               .then(() => {
@@ -67,7 +67,6 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
                   clearTimeout(timeout);
                   resolve();
                 } else {
-                  // Wait for the `onConnect` event
                   const interval = setInterval(() => {
                     if (connected) {
                       clearTimeout(timeout);
