@@ -18,7 +18,6 @@ import {
 import {
   type BridgeParams,
   BridgeService,
-  encodeAddress,
   POLYGON_MAINNET_CHAIN_ID,
   spokeChainConfig,
   supportedSpokeChains,
@@ -83,7 +82,7 @@ export default function BridgePage() {
       amount: scaleTokenAmount(sourceAmount, sourceToken?.decimals ?? 0),
       dstChainId: destChain,
       dstAsset: destToken?.address,
-      recipient: encodeAddress(destChain, destAccount.address),
+      recipient: destAccount.address,
     });
     setOpen(true);
   };
@@ -108,6 +107,13 @@ export default function BridgePage() {
   const handleBridge = async (order: BridgeParams) => {
     setOpen(false);
     await bridge(order);
+  };
+
+  const onChangeDirection = () => {
+    setSourceChain(destChain);
+    setDestChain(sourceChain);
+    setSourceToken(destToken);
+    setDestToken(sourceToken);
   };
 
   return (
@@ -161,7 +167,9 @@ export default function BridgePage() {
             </div>
           </div>
           <div className="flex justify-center">
-            <ArrowDownUp className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={() => onChangeDirection()}>
+              <ArrowDownUp className="h-4 w-4" />
+            </Button>
           </div>
           <div className="space-y-2">
             <SelectChain

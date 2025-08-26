@@ -29,6 +29,7 @@ import {
   type PartnerFee,
   type HttpUrl,
   isValidVault,
+  encodeAddress,
 } from '../../index.js';
 import { spokeChainConfig } from '../../constants.js';
 import { type SpokeChainId, SONIC_MAINNET_CHAIN_ID, type XToken } from '@sodax/types';
@@ -40,7 +41,7 @@ export type BridgeParams = {
   amount: bigint;
   dstChainId: SpokeChainId;
   dstAsset: string;
-  recipient: Hex;
+  recipient: string; // non-encoded recipient address
   partnerFee?: PartnerFee;
 };
 
@@ -444,17 +445,23 @@ export class BridgeService {
       calls.push(EvmVaultTokenService.encodeWithdraw(dstAssetInfo.vault, dstAssetInfo.asset, withdrawAmount));
       translatedWithdrawAmount = EvmVaultTokenService.translateOutgoingDecimals(dstAssetInfo.decimal, withdrawAmount);
     }
+
+    const encodedRecipientAddress = encodeAddress(params.dstChainId, params.recipient);
     // If the destination chain is Sonic, we can directly transfer the tokens to the recipient
     if (params.dstChainId === SONIC_MAINNET_CHAIN_ID) {
       calls.push(
-        Erc20Service.encodeTransfer(params.dstAsset as `0x${string}`, params.recipient, translatedWithdrawAmount),
+        Erc20Service.encodeTransfer(
+          params.dstAsset as `0x${string}`,
+          encodedRecipientAddress,
+          translatedWithdrawAmount,
+        ),
       );
     } else {
       invariant(dstAssetInfo, `Unsupported hub chain (${params.dstChainId}) token: ${params.dstAsset}`);
       calls.push(
         EvmAssetManagerService.encodeTransfer(
           dstAssetInfo.asset,
-          params.recipient,
+          encodedRecipientAddress,
           translatedWithdrawAmount,
           this.hubProvider.chainConfig.addresses.assetManager,
         ),
