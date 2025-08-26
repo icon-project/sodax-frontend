@@ -6,7 +6,7 @@ export type SpokeChainId = (typeof SPOKE_CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export type ChainType = 'ICON' | 'EVM' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA';
+export type ChainType = 'ICON' | 'EVM' | 'HAVAH' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA'|'NEAR';
 
 export type Chain = {
   id: string | number;
@@ -41,3 +41,5 @@ export interface WalletAddressProvider {
   getWalletAddress(): Promise<string>; // The wallet address as a string
   getWalletAddressBytes(): Promise<Hex>; // The wallet address as a hex string
 }
+
+

@@ -38,6 +38,9 @@ import type {
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
 } from '@sodax/types';
+import { type Transaction as NearTransaction } from '@near-js/transactions';
+import type { NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
+import type { NearSpokeDepositParams } from './services/spoke/NearSpokeService.js';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
 export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
@@ -209,6 +212,18 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
   gasPrice: string;
 };
 
+export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+    intentFiller:string;
+  };
+  rpc_url: string;
+};
+
 export type HubChainConfig = EvmHubChainConfig;
 
 export type SpokeChainConfig =
@@ -218,7 +233,8 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
-  | SolanaChainConfig;
+  | SolanaChainConfig
+  | NearSpokeChainConfig;
 
 export type EvmContractCall = {
   address: Address; // Target address of the call
@@ -336,7 +352,8 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
             ? SolanaSpokeDepositParams
             : T extends SonicSpokeProvider
               ? SonicSpokeDepositParams
-              : never;
+            : T extends NearSpokeProvider
+              ? NearSpokeDepositParams:never;
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? Address
@@ -475,6 +492,7 @@ export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRaw
 export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
+export type NearReturnType<Raw extends boolean> = Raw extends true ? NearTransaction : Hex;
 export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : Hex;
 
 export type HashTxReturnType =
@@ -505,6 +523,7 @@ export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chai
           ? SuiReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
             ? InjectiveReturnType<Raw>
+          : T['chainConfig']['chain']['type'] extends 'NEAR'? NearReturnType<Raw>
             : Raw extends true
               ? RawTxReturnType
               : HashTxReturnType;
@@ -515,7 +534,7 @@ export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnTy
 export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
 export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
 export type PromiseInjectiveTxReturnType<Raw extends boolean> = Promise<TxReturnType<InjectiveSpokeProvider, Raw>>;
-
+	export type PromiseNearTxReturnType<Raw extends boolean> = Promise<TxReturnType<NearSpokeProvider, Raw>>;
 export type PromiseTxReturnType<
   T extends ISpokeProvider,
   Raw extends boolean,
@@ -531,6 +550,7 @@ export type PromiseTxReturnType<
           ? PromiseSuiTxReturnType<Raw>
           : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
             ? PromiseInjectiveTxReturnType<Raw>
+          : T['chainConfig']['chain']['type'] extends 'NEAR'? PromiseNearTxReturnType<Raw>
             : never;
 
 export type VaultType = {
@@ -547,6 +567,12 @@ type ExtractKeys<T> = T extends unknown ? keyof T : never;
 
 export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChainId]['supportedTokens']>;
 
+export type RateLimitConfig = {
+    maxAvailable:number,
+    ratePerSecond:number,
+    available:number,
+
+}
 export type SpokeTxHash = string;
 export type HubTxHash = string;
 

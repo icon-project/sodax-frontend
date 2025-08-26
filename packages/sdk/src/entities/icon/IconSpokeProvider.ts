@@ -4,6 +4,8 @@ const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkR
 import type { IconService } from 'icon-sdk-js';
 import type { IIconWalletProvider } from '@sodax/types';
 
+
+
 export class IconSpokeProvider {
   public readonly walletProvider: IIconWalletProvider;
   public readonly chainConfig: IconSpokeChainConfig;

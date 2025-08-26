@@ -29,11 +29,14 @@ import {
   isInjectiveSpokeProvider,
   isEvmSpokeProvider,
   isIconSpokeProvider,
+  isNearSpokeProvider,
   isSolanaSpokeProvider,
   isSonicSpokeProvider,
   isStellarSpokeProvider,
   isSuiSpokeProvider,
 } from '../../guards.js';
+import { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
+import { NearSpokeService } from './NearSpokeService.js';
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
 import { getIntentRelayChainId } from '../../constants.js';
@@ -273,6 +276,14 @@ export class SpokeService {
         raw,
       ) as PromiseTxReturnType<T, R>;
     }
+     if (spokeProvider instanceof NearSpokeProvider) {
+      return NearSpokeService.deposit(
+        params as GetSpokeDepositParamsType<NearSpokeProvider>,
+        spokeProvider,
+        hubProvider,
+        raw,
+      ) as PromiseTxReturnType<T, R>;
+    }
 
     throw new Error('Invalid spoke provider');
   }
@@ -372,6 +383,9 @@ export class SpokeService {
     if (spokeProvider instanceof SonicSpokeProvider) {
       return SonicSpokeService.getDeposit(token, spokeProvider);
     }
+     if (spokeProvider instanceof NearSpokeProvider) {
+      return NearSpokeService.getDeposit(token, spokeProvider);
+    }
 
     throw new Error('Invalid spoke provider');
   }
@@ -447,6 +461,43 @@ export class SpokeService {
       > as TxReturnType<T, R>;
     }
 
+     if (isNearSpokeProvider(spokeProvider)) {
+      return (await NearSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
+        NearSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
+    }
+
+    throw new Error('Invalid spoke provider');
+  }
+
+
+  /**
+   * Get max withdrawable balance for token.
+   * @param {string| Address} token - The address of the token to get the balance of.
+   * @param {SpokeProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The max limit allowed for token.
+   */
+  public static getLimit(token: string | Address, spokeProvider: SpokeProvider): Promise<bigint> {
+    if (spokeProvider instanceof NearSpokeProvider) {
+      return NearSpokeService.getLimit(token as string, spokeProvider);
+    }
+    
+    throw new Error('Invalid spoke provider');
+  }
+
+  /**
+   * Get available withdrawable amount.
+   * @param {string| Address} token - The address of the token to get the balance of.
+   * @param {SpokeProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The available withdrawable amount for token.
+   */
+  public static getAvailable(token: string | Address, spokeProvider: SpokeProvider): Promise<bigint> {
+    if (spokeProvider instanceof NearSpokeProvider) {
+      return NearSpokeService.getAvailable(token as string, spokeProvider);
+    }
+
+    
     throw new Error('Invalid spoke provider');
   }
 
