@@ -1,3 +1,4 @@
+import { WalletAbstractionService } from './../services/hub/WalletAbstractionService.js';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   type CreateIntentParams,
@@ -18,7 +19,6 @@ import {
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
-  Sodax,
   EvmSolverService,
   getMoneyMarketConfig,
   type SpokeProvider,
@@ -27,9 +27,9 @@ import {
   type SolverConfigParams,
   getSpokeChainIdFromIntentRelayChainId,
 } from '../index.js';
-import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { Sodax } from './Sodax.js';
 
 describe('Sodax', () => {
   const partnerFeePercentage = {
@@ -351,7 +351,7 @@ describe('Sodax', () => {
           ok: true,
           value: [mockTxHash, { ...mockIntent, feeAmount: partnerFeeAmount.amount }, '0x'],
         });
-        vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(walletAddress);
+        vi.spyOn(WalletAbstractionService, 'getUserAbstractedWalletAddress').mockResolvedValueOnce(walletAddress);
         vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
           success: true,
           message: 'Transaction submitted successfully',
@@ -449,7 +449,7 @@ describe('Sodax', () => {
           },
         } as unknown as SpokeProvider;
 
-        vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(
+        vi.spyOn(WalletAbstractionService, 'getUserAbstractedWalletAddress').mockResolvedValueOnce(
           '0x1234567890123456789012345678901234567890',
         );
 

@@ -2,7 +2,7 @@ import { type Address, decodeAbiParameters, encodeFunctionData, erc20Abi } from 
 import { sonicWalletFactoryAbi } from '../../abis/sonicWalletFactory.abi.js';
 import { variableDebtTokenAbi } from '../../abis/variableDebtToken.abi.js';
 import { wrappedSonicAbi } from '../../abis/wrappedSonic.abi.js';
-import type { EvmHubProvider, SonicSpokeProvider } from '../../entities/index.js';
+import { SonicSpokeProvider, type EvmHubProvider, type SpokeProvider } from '../../entities/index.js';
 import type {
   EvmContractCall,
   EvmReturnType,
@@ -99,11 +99,13 @@ export class SonicSpokeService {
    * @param {SonicSpokeProvider} spokeProvider - The provider for the spoke chain
    * @returns {PromiseEvmTxReturnType<R>} A promise that resolves to the transaction hash
    */
-  public static async deposit<R extends boolean = false>(
+  public static async deposit<S extends SpokeProvider, R extends boolean = false>(
     params: SonicSpokeDepositParams,
-    spokeProvider: SonicSpokeProvider,
+    spokeProvider: S,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
+    invariant(spokeProvider instanceof SonicSpokeProvider, '[SonicSpokeService] invalid spoke provider');
+
     const userHubAddress = params.to ?? (await SonicSpokeService.getUserRouter(params.from, spokeProvider));
 
     // Decode the data field which contains the encoded calls array
@@ -162,10 +164,10 @@ export class SonicSpokeService {
       to: spokeProvider.chainConfig.addresses.walletRouter,
       data: txData,
       value: params.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ? params.amount : 0n,
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<SonicSpokeProvider, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return Promise.resolve(rawTx) satisfies PromiseEvmTxReturnType<true> as PromiseEvmTxReturnType<R>;
     }
 
     return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
@@ -239,9 +241,7 @@ export class SonicSpokeService {
     }
 
     return [
-      (await spokeProvider.walletProvider.sendTransaction(
-        rawTx,
-      )) satisfies EvmReturnType<false> as EvmReturnType<R>,
+      (await spokeProvider.walletProvider.sendTransaction(rawTx)) satisfies EvmReturnType<false> as EvmReturnType<R>,
       intent,
       feeAmount,
       txData.data,
@@ -269,11 +269,13 @@ export class SonicSpokeService {
    * @param {SonicSpokeProvider} spokeProvider - The provider for the spoke chain
    * @returns {PromiseEvmTxReturnType<R>} A promise that resolves to the transaction hash
    */
-  public static async callWallet<R extends boolean = false>(
+  public static async callWallet<S extends SpokeProvider, R extends boolean>(
     payload: Hex,
-    spokeProvider: SonicSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
+    invariant(spokeProvider instanceof SonicSpokeProvider, '[SonicSpokeService] invalid spoke provider');
+
     // Decode the payload which contains the encoded calls array
     const calls = decodeAbiParameters(
       [
@@ -307,13 +309,13 @@ export class SonicSpokeService {
       to: spokeProvider.chainConfig.addresses.walletRouter,
       data: txData,
       value: 0n,
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<SonicSpokeProvider, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return rawTx as TxReturnType<S, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return (await spokeProvider.walletProvider.sendTransaction(rawTx)) as TxReturnType<S, R>;
   }
 
   /**

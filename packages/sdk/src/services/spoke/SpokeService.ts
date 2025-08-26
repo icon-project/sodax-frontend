@@ -112,13 +112,7 @@ export class SpokeService {
    * @param {Hex} data - The encoded data payload.
    * @returns {Promise<Hex>} A promise that resolves to the RLP encoded transfer data.
    */
-  public static encodeTransfer(
-    token: Hex,
-    from: Hex,
-    to: Hex,
-    amount: bigint,
-    data: Hex,
-  ): Hex {
+  public static encodeTransfer(token: Hex, from: Hex, to: Hex, amount: bigint, data: Hex): Hex {
     // Create RLP input array matching Solidity Transfer struct:
     // bytes token, bytes from, bytes to, uint256 amount, bytes data
     const rlpInput: rlp.Input = [
@@ -139,13 +133,7 @@ export class SpokeService {
   ): Promise<{ success: boolean; error?: string }> {
     const chainId = getIntentRelayChainId(params.spokeChainID);
     const hubAssetManager = hubProvider.chainConfig.addresses.assetManager;
-    const payload = SpokeService.encodeTransfer(
-      params.token,
-      params.from,
-      params.to,
-      params.amount,
-      params.data,
-    );
+    const payload = SpokeService.encodeTransfer(params.token, params.from, params.to, params.amount, params.data);
 
     return SpokeService.simulateRecvMessage(
       { target: hubAssetManager, srcChainId: chainId, srcAddress: params.srcAddress, payload },
@@ -248,8 +236,7 @@ export class SpokeService {
       return InjectiveSpokeService.deposit(params, spokeProvider, hubProvider, raw) as PromiseTxReturnType<T, R>;
     }
     if (spokeProvider instanceof IconSpokeProvider) {
-       // TODO FIX failing simulation for valid transaction
-      // await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
+      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return IconSpokeService.deposit(
         params as GetSpokeDepositParamsType<IconSpokeProvider>,
         spokeProvider,
@@ -278,8 +265,7 @@ export class SpokeService {
       ) as PromiseTxReturnType<T, R>;
     }
     if (spokeProvider instanceof StellarSpokeProvider) {
-      // TODO FIX failing simulation for valid transaction
-      // await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
+      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return StellarSpokeService.deposit(
         params as GetSpokeDepositParamsType<StellarSpokeProvider>,
         spokeProvider,
@@ -407,10 +393,11 @@ export class SpokeService {
     skipSimulation = false,
   ): Promise<TxReturnType<T, R>> {
     if (isSonicSpokeProvider(spokeProvider)) {
-      return (await SonicSpokeService.callWallet(payload, spokeProvider, raw)) satisfies TxReturnType<
-        SonicSpokeProvider,
-        R
-      > as TxReturnType<T, R>;
+      return (await SonicSpokeService.callWallet(
+        payload,
+        spokeProvider as SonicSpokeProvider,
+        raw,
+      )) satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<T, R>;
     }
     if (isEvmSpokeProvider(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
