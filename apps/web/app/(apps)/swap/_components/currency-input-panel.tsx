@@ -74,7 +74,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       className={`w-full relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white justify-between items-center hover:outline-6 group ${className}`}
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
     >
-      <div className="flex inline-flex gap-2 w-full">
+      <div className="flex inline-flex justify-between w-full">
         <div className="inline-flex justify-start items-center gap-4">
           <div className="cursor-pointer" onClick={() => setIsTokenSelectorOpen(true)}>
             <CurrencyLogo
