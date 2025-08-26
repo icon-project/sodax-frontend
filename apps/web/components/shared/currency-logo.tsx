@@ -5,9 +5,10 @@ import type { XToken } from '@sodax/types';
 interface CurrencyLogoProps {
   className?: string;
   currency: XToken;
+  isChainConnected?: boolean;
 }
 
-const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency }) => {
+const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency, isChainConnected = false }) => {
   return (
     <div className={`w-16 h-14 relative ${className}`}>
       <div data-property-1="Default" className="w-12 h-12 left-[8px] top-[4px] absolute">
@@ -36,6 +37,10 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency })
             height={16}
           />
         </div>
+        {/* Green badge for connected chain */}
+        {/* {isChainConnected && (
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm" />
+        )} */}
       </div>
     </div>
   );

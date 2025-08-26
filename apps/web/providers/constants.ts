@@ -34,8 +34,8 @@ const hubConfig = {
 const moneyMarketConfig = getMoneyMarketConfig(hubChainId);
 
 export const partnerFeePercentage = {
-  address: '0x0Ab764AB3816cD036Ea951bE973098510D8105A6', // NOTE: replace with actual partner address
-  percentage: 100, // 100 basis points = 1%
+  address: '0x93D5CE288b3BF6b33F913b98FD1fA844Acc462d4', // NOTE: replace with actual partner address
+  percentage: 10, // 100 basis points = 1%
 } satisfies PartnerFee;
 
 export const mainnetSolverConfig = {

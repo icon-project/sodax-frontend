@@ -77,7 +77,11 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       <div className="flex inline-flex gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-4">
           <div className="cursor-pointer" onClick={() => setIsTokenSelectorOpen(true)}>
-            <CurrencyLogo className="group-hover:scale-106 transition-transform duration-200" currency={currency} />
+            <CurrencyLogo
+              className="group-hover:scale-106 transition-transform duration-200"
+              currency={currency}
+              isChainConnected={isChainConnected}
+            />
           </div>
           <div className="inline-flex flex-col justify-center items-start gap-1">
             <div
