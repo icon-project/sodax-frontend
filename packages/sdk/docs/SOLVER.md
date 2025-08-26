@@ -114,6 +114,31 @@ console.log('Amount after fee deduction:', inputAmount - fee); // Actual amount 
 
 **Note**: If no partner fee is configured, the function returns `0n`. The fee is deducted from the input amount, so the actual amount used for the swap will be `inputAmount - fee`.
 
+### Get Swap Deadline
+
+The `getSwapDeadline` function allows you to calculate a deadline timestamp for your swap by querying the hub chain's current block timestamp and adding a deadline offset. This is useful for setting expiration times for intents to prevent them from being executed after a certain period.
+
+```typescript
+import { SolverService } from "@sodax/sdk";
+
+// Get deadline with default 5-minute offset
+const deadline = await sodax.solver.getSwapDeadline();
+console.log('Swap deadline (5 min from now):', deadline);
+
+// Get deadline with custom offset (e.g., 10 minutes)
+const customDeadline = await sodax.solver.getSwapDeadline(600n); // 600 seconds = 10 minutes
+console.log('Swap deadline (10 min from now):', customDeadline);
+
+// Use the deadline in your intent parameters
+const createIntentParams = {
+  // ... other parameters ...
+  deadline: deadline, // Set the calculated deadline
+  // ... other parameters ...
+};
+```
+
+**Note**: The deadline is calculated as `hub_chain_block_timestamp + deadline_offset`. The default offset is 5 minutes (300 seconds), but you can customize this value based on your requirements. Setting a deadline helps prevent intents from being executed if market conditions change significantly.
+
 ### Token Approval Flow
 
 Before creating an intent, you need to ensure that the Asset Manager contract has permission to spend your tokens. Here's how to handle the approval flow:

@@ -33,11 +33,13 @@ import {
   Erc20Service,
   calculateFeeAmount,
   type SpokeProvider,
+  DEFAULT_DEADLINE_OFFSET,
 } from '../../index.js';
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
+import type { GetBlockReturnType } from 'viem';
 
 // Define a type for Intent with fee amount
 type IntentWithFee = Intent & FeeAmount;
@@ -300,6 +302,108 @@ describe('SolverService', () => {
     });
   });
 
+  describe('getSwapDeadline', () => {
+    it('should return deadline with default 5-minute offset', async () => {
+      const mockBlock = {
+        timestamp: 1700000000n,
+      } as GetBlockReturnType;
+
+      vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
+
+      const result = await solverService.getSwapDeadline();
+
+      expect(result).toBe(1700000000n + 300n); // timestamp + 5 minutes (300 seconds)
+      expect(mockHubProvider.publicClient.getBlock).toHaveBeenCalledWith({
+        includeTransactions: false,
+        blockTag: 'latest',
+      });
+    });
+
+    it('should return deadline with custom offset', async () => {
+      const mockBlock = {
+        timestamp: 1700000000n,
+      } as GetBlockReturnType;
+
+      vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
+
+      const customDeadline = 600n; // 10 minutes
+      const result = await solverService.getSwapDeadline(customDeadline);
+
+      expect(result).toBe(1700000000n + 600n); // timestamp + 10 minutes
+      expect(mockHubProvider.publicClient.getBlock).toHaveBeenCalledWith({
+        includeTransactions: false,
+        blockTag: 'latest',
+      });
+    });
+
+    it('should handle zero deadline offset', async () => {
+      const mockBlock = {
+        timestamp: 1700000000n,
+      } as GetBlockReturnType;
+
+      vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
+
+      await expect(solverService.getSwapDeadline(0n)).rejects.toThrow('Deadline must be greater than 0');
+    });
+
+    it('should handle very large deadline offset', async () => {
+      const mockBlock = {
+        timestamp: 1700000000n,
+        } as GetBlockReturnType;
+
+      vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
+
+      const largeDeadline = 2n ** 64n - 1n; // Very large deadline
+      const result = await solverService.getSwapDeadline(largeDeadline);
+
+      expect(result).toBe(1700000000n + largeDeadline);
+    });
+
+    it('should handle negative deadline offset', async () => {
+      const mockBlock = {
+        timestamp: 1700000000n,
+      } as GetBlockReturnType;
+
+      vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
+
+      const negativeDeadline = -300n; // Negative deadline
+      await expect(solverService.getSwapDeadline(negativeDeadline)).rejects.toThrow('Deadline must be greater than 0');
+    });
+
+    it('should handle hub provider errors', async () => {
+      const mockError = new Error('Failed to get block');
+      vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockRejectedValueOnce(mockError);
+
+      await expect(solverService.getSwapDeadline()).rejects.toThrow('Failed to get block');
+      expect(mockHubProvider.publicClient.getBlock).toHaveBeenCalledWith({
+        includeTransactions: false,
+        blockTag: 'latest',
+      });
+    });
+
+    it('should handle undefined deadline parameter', async () => {
+      const mockBlock = {
+        timestamp: 1700000000n,
+      } as GetBlockReturnType;
+
+      vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
+
+      const result = await solverService.getSwapDeadline(DEFAULT_DEADLINE_OFFSET);
+      expect(result).toBe(mockBlock.timestamp + DEFAULT_DEADLINE_OFFSET);
+    });
+
+    it('should handle null deadline parameter', async () => {
+      const mockBlock = {
+        timestamp: 1700000000n,
+      } as GetBlockReturnType;
+
+      vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
+
+      // @ts-expect-error Testing null parameter
+      await expect(solverService.getSwapDeadline(null)).rejects.toThrow('Deadline must be greater than 0');
+    });
+  });
+
   describe('postExecution', () => {
     it('should return a successful post execution response', async () => {
       // Mock fetch response
@@ -420,7 +524,9 @@ describe('SolverService', () => {
         ok: true,
         value: [mockTxHash, mockIntentWithFee, '0x'],
       });
-      vi.spyOn(WalletAbstractionService, 'getUserAbstractedWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+      vi.spyOn(WalletAbstractionService, 'getUserAbstractedWalletAddress').mockResolvedValueOnce(
+        mockCreatorHubWalletAddress,
+      );
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
         success: true,
         message: 'Transaction submitted successfully',

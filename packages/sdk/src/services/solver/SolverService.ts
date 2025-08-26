@@ -1,5 +1,6 @@
 import invariant from 'tiny-invariant';
 import {
+  DEFAULT_DEADLINE_OFFSET,
   DEFAULT_RELAYER_API_ENDPOINT,
   DEFAULT_RELAY_TX_TIMEOUT,
   Erc20Service,
@@ -950,5 +951,20 @@ export class SolverService {
    */
   public getIntentHash(intent: Intent): Hex {
     return EvmSolverService.getIntentHash(intent);
+  }
+
+  /**
+   * Gets the deadline for a swap by querying hub chain block timestamp and adding the deadline offset
+   * @param {bigint} deadline (default: 5 minutes) - The deadline offset in seconds for the swap to be cancelled
+   * @returns {bigint} The deadline for the swap as a sum of hub chain block timestamp and deadline offset
+   */
+  public async getSwapDeadline(deadline = DEFAULT_DEADLINE_OFFSET): Promise<bigint> {
+    invariant(deadline > 0n, 'Deadline must be greater than 0');
+
+    const block = await this.hubProvider.publicClient.getBlock({
+      includeTransactions: false,
+      blockTag: 'latest',
+    });
+    return block.timestamp + deadline;
   }
 }
