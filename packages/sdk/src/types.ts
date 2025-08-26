@@ -37,6 +37,7 @@ import type {
   InjectiveNetworkEnv,
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
+  XToken,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
@@ -76,7 +77,7 @@ export type HubAssetInfo = { asset: Address; decimal: number; vault: Address };
 export type BaseSpokeChainConfig<T extends ChainType> = {
   chain: SpokeChainInfo<T>;
   addresses: { [key: string]: Address | string | Uint8Array };
-  supportedTokens: Record<string, Token>;
+  supportedTokens: Record<string, XToken>;
   nativeToken: Address | string;
   bnUSD: Address | string;
 };

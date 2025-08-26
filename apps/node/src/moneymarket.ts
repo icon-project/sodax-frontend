@@ -11,7 +11,7 @@ import {
   type SodaxConfig,
   spokeChainConfig,
 } from '@sodax/sdk';
-import { ARBITRUM_MAINNET_CHAIN_ID, Hex, SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
+import { ARBITRUM_MAINNET_CHAIN_ID, type Hex, SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
 // load PK from .env

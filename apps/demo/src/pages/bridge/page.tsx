@@ -17,81 +17,79 @@ import {
 } from '@/components/ui/dialog';
 import {
   type BridgeParams,
-  BridgeService,
   POLYGON_MAINNET_CHAIN_ID,
   spokeChainConfig,
   supportedSpokeChains,
   supportedTokensPerChain,
 } from '@sodax/sdk';
-import type { ChainId, ChainType, SpokeChainId, Token } from '@sodax/types';
+import type { ChainId, ChainType, SpokeChainId, XToken } from '@sodax/types';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/sdk';
-import { getXChainType, useEvmSwitchChain, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
+import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import { normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import { useSpokeProvider, useBridgeApprove, useBridgeAllowance, useBridge } from '@sodax/dapp-kit';
 
 export default function BridgePage() {
-  const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
-  const [sourceAmount, setSourceAmount] = useState<string>('');
-  const [sourceToken, setSourceToken] = useState<Token | undefined>(
+  const [fromToken, setFromToken] = useState<XToken>(
     Object.values(spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens)[0],
   );
-  const sourceAccount = useXAccount(sourceChain);
+  const [fromAmount, setFromAmount] = useState<string>('');
+  const fromAccount = useXAccount(fromToken.xChainId);
   const { openWalletModal } = useAppStore();
 
-  const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
-  const [destToken, setDestToken] = useState<Token | undefined>(
+  const [toToken, setToToken] = useState<XToken>(
     Object.values(spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens)[0],
   );
-  const destAccount = useXAccount(destChain);
+  const toAccount = useXAccount(toToken.xChainId);
 
-  const handleSrcChainChange = (chainId: SpokeChainId) => {
-    setSourceChain(chainId);
-    setSourceToken(Object.values(spokeChainConfig[chainId].supportedTokens)[0]);
+  const handleFromChainChange = (chainId: SpokeChainId) => {
+    const newToken = Object.values(spokeChainConfig[chainId].supportedTokens)[0];
+    setFromToken(newToken);
   };
 
-  const handleDestChainChange = (chainId: SpokeChainId) => {
-    setDestChain(chainId);
-    setDestToken(Object.values(spokeChainConfig[chainId].supportedTokens)[0]);
+  const handleToChainChange = (chainId: SpokeChainId) => {
+    const newToken = Object.values(spokeChainConfig[chainId].supportedTokens)[0];
+    setToToken(newToken);
   };
 
-  const handleSourceAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSourceAmount(e.target.value);
+  const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFromAmount(e.target.value);
   };
 
   const disconnect = useXDisconnect();
-  const handleSourceAccountDisconnect = () => {
-    disconnect(getXChainType(sourceChain) as ChainType);
+  const handleFromAccountDisconnect = () => {
+    disconnect(getXChainType(fromToken.xChainId) as ChainType);
   };
 
-  const handleDestAccountDisconnect = () => {
-    disconnect(getXChainType(destChain) as ChainType);
+  const handleToAccountDisconnect = () => {
+    disconnect(getXChainType(toToken.xChainId) as ChainType);
   };
 
   const [open, setOpen] = useState(false);
 
   const openBridgeModal = () => {
-    if (!sourceToken || !destToken || !sourceAccount.address || !destAccount.address) {
+    if (!fromToken || !toToken || !fromAccount.address || !toAccount.address) {
       return;
     }
 
     setOrder({
-      srcChainId: sourceChain,
-      srcAsset: sourceToken?.address,
-      amount: scaleTokenAmount(sourceAmount, sourceToken?.decimals ?? 0),
-      dstChainId: destChain,
-      dstAsset: destToken?.address,
-      recipient: destAccount.address,
+      srcChainId: fromToken.xChainId,
+      srcAsset: fromToken?.address,
+      amount: scaleTokenAmount(fromAmount, fromToken?.decimals ?? 0),
+      dstChainId: toToken.xChainId,
+      dstAsset: toToken?.address,
+      recipient: toAccount.address,
     });
     setOpen(true);
   };
 
   const [order, setOrder] = useState<BridgeParams | undefined>(undefined);
 
-  const sourceProvider = useSpokeProvider(sourceChain);
+  const fromWalletProvider = useWalletProvider(fromToken.xChainId);
+  const fromProvider = useSpokeProvider(fromToken.xChainId, fromWalletProvider);
 
-  const { approve, isLoading: isApproving } = useBridgeApprove(sourceProvider);
+  const { approve, isLoading: isApproving } = useBridgeApprove(fromProvider);
 
   const handleApprove = async () => {
     if (!order) {
@@ -100,9 +98,9 @@ export default function BridgePage() {
     await approve(order);
   };
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as ChainId);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useBridgeAllowance(order, sourceProvider);
-  const { mutateAsync: bridge, isPending: isBridging } = useBridge(sourceProvider);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(fromToken.xChainId as ChainId);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useBridgeAllowance(order, fromProvider);
+  const { mutateAsync: bridge, isPending: isBridging } = useBridge(fromProvider);
 
   const handleBridge = async (order: BridgeParams) => {
     setOpen(false);
@@ -110,10 +108,8 @@ export default function BridgePage() {
   };
 
   const onChangeDirection = () => {
-    setSourceChain(destChain);
-    setDestChain(sourceChain);
-    setSourceToken(destToken);
-    setDestToken(sourceToken);
+    setFromToken(toToken);
+    setToToken(fromToken);
   };
 
   return (
@@ -126,8 +122,8 @@ export default function BridgePage() {
           <div className="space-y-2">
             <SelectChain
               chainList={supportedSpokeChains}
-              value={sourceChain}
-              setChain={handleSrcChainChange}
+              value={fromToken.xChainId}
+              setChain={handleFromChainChange}
               placeholder={'Select source chain'}
               id={'source-chain'}
               label={'From'}
@@ -135,19 +131,24 @@ export default function BridgePage() {
           </div>
           <div className="flex space-x-2">
             <div className="flex-grow">
-              <Input type="number" placeholder="0.0" value={sourceAmount} onChange={handleSourceAmountChange} />
+              <Input type="number" placeholder="0.0" value={fromAmount} onChange={handleFromAmountChange} />
             </div>
             <Select
-              value={sourceToken?.symbol}
-              onValueChange={v =>
-                setSourceToken(supportedTokensPerChain.get(sourceChain)?.find(token => token.symbol === v))
-              }
+              value={fromToken?.symbol}
+              onValueChange={v => {
+                const selectedToken = supportedTokensPerChain
+                  .get(fromToken.xChainId)
+                  ?.find(token => token.symbol === v);
+                if (selectedToken) {
+                  setFromToken(selectedToken);
+                }
+              }}
             >
               <SelectTrigger className="w-[110px]">
                 <SelectValue placeholder="Token" />
               </SelectTrigger>
               <SelectContent>
-                {supportedTokensPerChain.get(sourceChain)?.map(token => (
+                {supportedTokensPerChain.get(fromToken.xChainId)?.map(token => (
                   <SelectItem key={token.address} value={token.symbol}>
                     {token.symbol}
                   </SelectItem>
@@ -158,9 +159,9 @@ export default function BridgePage() {
           <div className="flex-grow">
             <Label htmlFor="fromAddress">Source address</Label>
             <div className="flex items-center gap-2">
-              <Input id="fromAddress" type="text" placeholder="" value={sourceAccount.address || ''} disabled={true} />
-              {sourceAccount.address ? (
-                <Button onClick={handleSourceAccountDisconnect}>Disconnect</Button>
+              <Input id="fromAddress" type="text" placeholder="" value={fromAccount.address || ''} disabled={true} />
+              {fromAccount.address ? (
+                <Button onClick={handleFromAccountDisconnect}>Disconnect</Button>
               ) : (
                 <Button onClick={openWalletModal}>Connect</Button>
               )}
@@ -174,8 +175,8 @@ export default function BridgePage() {
           <div className="space-y-2">
             <SelectChain
               chainList={supportedSpokeChains}
-              value={destChain}
-              setChain={handleDestChainChange}
+              value={toToken.xChainId}
+              setChain={handleToChainChange}
               placeholder={'Select destination chain'}
               id={'dest-chain'}
               label={'To'}
@@ -183,25 +184,22 @@ export default function BridgePage() {
           </div>
           <div className="flex space-x-2">
             <div className="flex-grow">
-              <Input
-                type="number"
-                placeholder="0.0"
-                value={sourceAmount}
-                // value={quote ? normaliseTokenAmount(quote?.quoted_amount, destToken?.decimals ?? 0) : ''}
-                readOnly
-              />
+              <Input type="number" placeholder="0.0" value={fromAmount} readOnly />
             </div>
             <Select
-              value={destToken?.symbol}
-              onValueChange={v =>
-                setDestToken(supportedTokensPerChain.get(destChain)?.find(token => token.symbol === v))
-              }
+              value={toToken?.symbol}
+              onValueChange={v => {
+                const selectedToken = supportedTokensPerChain.get(toToken.xChainId)?.find(token => token.symbol === v);
+                if (selectedToken) {
+                  setToToken(selectedToken);
+                }
+              }}
             >
               <SelectTrigger className="w-[110px]">
                 <SelectValue placeholder="Token" />
               </SelectTrigger>
               <SelectContent>
-                {supportedTokensPerChain.get(destChain)?.map(token => (
+                {supportedTokensPerChain.get(toToken.xChainId)?.map(token => (
                   <SelectItem key={token.address} value={token.symbol}>
                     {token.symbol}
                   </SelectItem>
@@ -212,9 +210,9 @@ export default function BridgePage() {
           <div className="flex-grow">
             <Label htmlFor="toAddress">Destination address</Label>
             <div className="flex items-center gap-2">
-              <Input id="toAddress" type="text" value={destAccount.address || ''} placeholder="" disabled={true} />
-              {destAccount.address ? (
-                <Button onClick={handleDestAccountDisconnect}>Disconnect</Button>
+              <Input id="toAddress" type="text" value={toAccount.address || ''} placeholder="" disabled={true} />
+              {toAccount.address ? (
+                <Button onClick={handleToAccountDisconnect}>Disconnect</Button>
               ) : (
                 <Button onClick={openWalletModal}>Connect</Button>
               )}
@@ -222,11 +220,6 @@ export default function BridgePage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          {sourceToken &&
-          destToken &&
-          BridgeService.isBridgeable({ ...sourceToken, xChainId: sourceChain }, { ...destToken, xChainId: destChain })
-            ? 'Bridgeable'
-            : 'Not bridgeable'}
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" onClick={openBridgeModal}>
@@ -246,9 +239,9 @@ export default function BridgePage() {
                   <div>
                     outputToken: {order?.dstAsset} on {order?.dstChainId}
                   </div>
-                  <div>inputAmount: {normaliseTokenAmount(order?.amount ?? 0n, sourceToken?.decimals ?? 0)}</div>
-                  <div>amount: {normaliseTokenAmount(order?.amount ?? 0n, sourceToken?.decimals ?? 0)}</div>
-                  <div>outputAmount: {normaliseTokenAmount(order?.amount ?? 0n, destToken?.decimals ?? 0)}</div>
+                  <div>inputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+                  <div>amount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+                  <div>outputAmount: {normaliseTokenAmount(order?.amount ?? 0n, toToken?.decimals ?? 0)}</div>
                 </div>
               </div>
               <DialogFooter>
