@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   type BridgeParams,
+  BridgeService,
   POLYGON_MAINNET_CHAIN_ID,
   spokeChainConfig,
   supportedSpokeChains,
@@ -220,60 +221,61 @@ export default function BridgePage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" onClick={openBridgeModal}>
-                Bridge
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Bridge Order</DialogTitle>
-                <DialogDescription>See details of bridge order.</DialogDescription>
-              </DialogHeader>
-              <div className="">
-                <div className="flex flex-col">
-                  <div>
-                    inputToken: {order?.srcAsset} on {order?.srcChainId}
-                  </div>
-                  <div>
-                    outputToken: {order?.dstAsset} on {order?.dstChainId}
-                  </div>
-                  <div>inputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
-                  <div>amount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
-                  <div>outputAmount: {normaliseTokenAmount(order?.amount ?? 0n, toToken?.decimals ?? 0)}</div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  className="w-full"
-                  type="button"
-                  variant="default"
-                  onClick={handleApprove}
-                  disabled={isAllowanceLoading || hasAllowed || isApproving}
-                >
-                  {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
-                </Button>
+          {BridgeService.isBridgeable(fromToken, toToken) ? 'Bridgeable' : 'Not bridgeable'}
 
-                {isWrongChain && (
-                  <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
-                    Switch Chain
-                  </Button>
-                )}
-
-                {!isWrongChain &&
-                  (order ? (
-                    <Button className="w-full" onClick={() => handleBridge(order)} disabled={!hasAllowed}>
-                      <ArrowLeftRight className="mr-2 h-4 w-4" /> Bridge
-                    </Button>
-                  ) : (
-                    <span>Bridge Order undefined</span>
-                  ))}
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <Button variant="outline" onClick={openBridgeModal}>
+            Bridge
+          </Button>
         </CardFooter>
       </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Bridge Order</DialogTitle>
+            <DialogDescription>See details of bridge order.</DialogDescription>
+          </DialogHeader>
+          <div className="">
+            <div className="flex flex-col">
+              <div>
+                inputToken: {order?.srcAsset} on {order?.srcChainId}
+              </div>
+              <div>
+                outputToken: {order?.dstAsset} on {order?.dstChainId}
+              </div>
+              <div>inputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+              <div>amount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+              <div>outputAmount: {normaliseTokenAmount(order?.amount ?? 0n, toToken?.decimals ?? 0)}</div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              className="w-full"
+              type="button"
+              variant="default"
+              onClick={handleApprove}
+              disabled={isAllowanceLoading || hasAllowed || isApproving}
+            >
+              {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+            </Button>
+
+            {isWrongChain && (
+              <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
+                Switch Chain
+              </Button>
+            )}
+
+            {!isWrongChain &&
+              (order ? (
+                <Button className="w-full" onClick={() => handleBridge(order)} disabled={!hasAllowed}>
+                  <ArrowLeftRight className="mr-2 h-4 w-4" /> Bridge
+                </Button>
+              ) : (
+                <span>Bridge Order undefined</span>
+              ))}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
