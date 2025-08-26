@@ -25,13 +25,13 @@ export function useChainItem(
       setConnectingXConnector(xConnector);
       try {
         await xConnect(xConnector);
-        if (onWalletSelected) {
-          onWalletSelected(xConnector, xChainType);
-        }
       } catch (error) {
         setConnectingXConnector(null);
         return;
       } finally {
+        if (onWalletSelected) {
+          onWalletSelected(xConnector, xChainType);
+        }
         setConnectingXConnector(null);
       }
     },

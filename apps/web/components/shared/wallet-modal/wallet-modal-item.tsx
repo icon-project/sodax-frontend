@@ -40,9 +40,6 @@ export const WalletModalItem: React.FC<WalletModalItemProps> = ({
     handleShowWallets,
   } = useChainItem(xChainType, onConnectorsShown, onConnectorsHidden, onWalletSelected);
 
-  console.log('isPending', isPending);
-  console.log('connectingXConnector', connectingXConnector);
-
   return (
     <div className="flex flex-col w-full">
       {!showWalletList ? (

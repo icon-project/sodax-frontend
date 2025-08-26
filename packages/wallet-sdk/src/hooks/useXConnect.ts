@@ -40,7 +40,8 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
 
   const { connectAsync: evmConnectAsync } = useConnect();
   const { mutateAsync: suiConnectAsync } = useConnectWallet();
-  const solanaWallet = useWallet();
+  // const solanaWallet = useWallet();
+  const { select, connect, connected } = useWallet();
 
   return useMutation({
     mutationFn: async (xConnector: XConnector) => {
@@ -55,11 +56,33 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
           await suiConnectAsync({ wallet: (xConnector as SuiXConnector).wallet });
           break;
         case 'SOLANA':
-          {
-            const walletName = (xConnector as SolanaXConnector).wallet.adapter.name;
-            solanaWallet.select(walletName);
-            await solanaWallet.connect();
-          }
+          await select((xConnector as SolanaXConnector).wallet.adapter.name);
+
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Wallet connection timeout')), 5000);
+
+            connect()
+              .then(() => {
+                if (connected) {
+                  clearTimeout(timeout);
+                  resolve();
+                } else {
+                  // Wait for the `onConnect` event
+                  const interval = setInterval(() => {
+                    if (connected) {
+                      clearTimeout(timeout);
+                      clearInterval(interval);
+                      resolve();
+                    }
+                  }, 100);
+                }
+              })
+              .catch(err => {
+                clearTimeout(timeout);
+                reject(err);
+              });
+          });
+
           break;
         default:
           xAccount = await xConnector.connect();
