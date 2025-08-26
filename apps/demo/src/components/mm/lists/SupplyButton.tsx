@@ -5,12 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMMAllowance, useSupply, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
-import { useEvmSwitchChain } from '@sodax/wallet-sdk';
+import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
 
 export function SupplyButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const spokeProvider = useSpokeProvider(token.xChainId);
+  const walletProvider = useWalletProvider(token.xChainId);
+  const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply(token, spokeProvider);
 
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'supply', spokeProvider);

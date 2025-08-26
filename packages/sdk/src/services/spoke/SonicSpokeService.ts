@@ -2,13 +2,24 @@ import { type Address, decodeAbiParameters, encodeFunctionData, erc20Abi } from 
 import { sonicWalletFactoryAbi } from '../../abis/sonicWalletFactory.abi.js';
 import { variableDebtTokenAbi } from '../../abis/variableDebtToken.abi.js';
 import { wrappedSonicAbi } from '../../abis/wrappedSonic.abi.js';
-import type { SonicSpokeProvider } from '../../entities/index.js';
-import type { EvmContractCall, EvmReturnType, PromiseEvmTxReturnType, Result } from '../../types.js';
-import { Erc20Service } from '../index.js';
-import { MoneyMarketService } from '../moneyMarket/MoneyMarketService.js';
-import { getHubAssetInfo } from '../../constants.js';
+import type { EvmHubProvider, SonicSpokeProvider } from '../../entities/index.js';
+import type {
+  EvmContractCall,
+  EvmReturnType,
+  PartnerFee,
+  PromiseEvmTxReturnType,
+  Result,
+  SolverConfig,
+  TxReturnType,
+} from '../../types.js';
+import { Erc20Service, EvmSolverService, type CreateIntentParams, type Intent } from '../index.js';
+import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
+import { getHubAssetInfo, getIntentRelayChainId } from '../../constants.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import type { EvmRawTransaction, Hex, HubAddress, SpokeChainId } from '@sodax/types';
+import type { MoneyMarketDataService } from '../../moneyMarket/MoneyMarketDataService.js';
+import invariant from 'tiny-invariant';
+import { encodeAddress, randomUint256 } from '../../utils/shared-utils.js';
 
 export type SonicSpokeDepositParams = {
   from: Address; // The address of the user on the spoke chain
@@ -113,7 +124,7 @@ export class SonicSpokeService {
       )[0] satisfies readonly EvmContractCall[],
     );
 
-    if (params.token === spokeProvider.chainConfig.nativeToken) {
+    if (params.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
       // Add a call to wrap the native token
       const wrapCall = {
         address: spokeProvider.chainConfig.addresses.wrappedSonic,
@@ -150,7 +161,7 @@ export class SonicSpokeService {
       from: params.from,
       to: spokeProvider.chainConfig.addresses.walletRouter,
       data: txData,
-      value: params.token === spokeProvider.chainConfig.nativeToken ? params.amount : 0n,
+      value: params.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ? params.amount : 0n,
     } satisfies EvmReturnType<true>;
 
     if (raw) {
@@ -158,6 +169,83 @@ export class SonicSpokeService {
     }
 
     return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+  }
+
+  public static async createSwapIntent<R extends boolean = false>(
+    createIntentParams: CreateIntentParams,
+    creatorHubWalletAddress: Address,
+    solverConfig: SolverConfig,
+    fee: PartnerFee | undefined,
+    spokeProvider: SonicSpokeProvider,
+    hubProvider: EvmHubProvider,
+    raw?: R,
+  ): Promise<[TxReturnType<SonicSpokeProvider, R>, Intent, bigint, Hex]> {
+    let inputToken = getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset;
+
+    if (
+      createIntentParams.srcChain === hubProvider.chainConfig.chain.id &&
+      createIntentParams.inputToken.toLowerCase() === hubProvider.chainConfig.nativeToken.toLowerCase()
+    ) {
+      inputToken = hubProvider.chainConfig.nativeToken;
+    }
+
+    const outputToken = getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset;
+
+    invariant(
+      inputToken,
+      `hub asset not found for spoke chain token (intent.inputToken): ${createIntentParams.inputToken}`,
+    );
+    invariant(
+      outputToken,
+      `hub asset not found for spoke chain token (intent.outputToken): ${createIntentParams.outputToken}`,
+    );
+
+    const [feeData, feeAmount] = EvmSolverService.createIntentFeeData(fee, createIntentParams.inputAmount);
+
+    const intentsContract = solverConfig.intentsContract;
+    const intent = {
+      ...createIntentParams,
+      inputToken,
+      outputToken,
+      inputAmount: createIntentParams.inputAmount - feeAmount,
+      srcChain: getIntentRelayChainId(createIntentParams.srcChain),
+      dstChain: getIntentRelayChainId(createIntentParams.dstChain),
+      srcAddress: encodeAddress(createIntentParams.srcChain, createIntentParams.srcAddress),
+      dstAddress: encodeAddress(createIntentParams.dstChain, createIntentParams.dstAddress),
+      intentId: randomUint256(),
+      creator: creatorHubWalletAddress,
+      data: feeData, // fee amount will be deducted from the input amount
+    } satisfies Intent;
+
+    const txData = EvmSolverService.encodeCreateIntent(intent, intentsContract);
+
+    const rawTx = {
+      from: await spokeProvider.walletProvider.getWalletAddress(),
+      to: txData.address,
+      data: txData.data,
+      value:
+        createIntentParams.inputToken.toLowerCase() === hubProvider.chainConfig.nativeToken.toLowerCase()
+          ? createIntentParams.inputAmount
+          : 0n,
+    } satisfies EvmReturnType<true>;
+
+    if (raw) {
+      return [
+        rawTx satisfies TxReturnType<SonicSpokeProvider, true> as TxReturnType<SonicSpokeProvider, R>,
+        intent,
+        feeAmount,
+        txData.data,
+      ];
+    }
+
+    return [
+      (await spokeProvider.walletProvider.sendTransaction(
+        rawTx,
+      )) satisfies EvmReturnType<false> as EvmReturnType<R>,
+      intent,
+      feeAmount,
+      txData.data,
+    ];
   }
 
   /**
@@ -240,7 +328,7 @@ export class SonicSpokeService {
     token: Address,
     amount: bigint,
     spokeProvider: SonicSpokeProvider,
-    moneyMarketService: MoneyMarketService,
+    dataService: MoneyMarketDataService,
   ): Promise<WithdrawInfo> {
     const assetConfig = getHubAssetInfo(spokeProvider.chainConfig.chain.id, token);
 
@@ -251,8 +339,8 @@ export class SonicSpokeService {
     const vaultAddress = assetConfig.vault;
 
     const [normalizedIncome, reserveData] = await Promise.all([
-      moneyMarketService.getReserveNormalizedIncome(moneyMarketService.config.lendingPool, vaultAddress),
-      moneyMarketService.getReserveData(moneyMarketService.config.lendingPool, vaultAddress),
+      dataService.getReserveNormalizedIncome(vaultAddress),
+      dataService.getReserveData(vaultAddress),
     ]);
 
     const aTokenAddress = reserveData.aTokenAddress;
@@ -277,7 +365,7 @@ export class SonicSpokeService {
     token: Address,
     amount: bigint,
     chainId: SpokeChainId,
-    moneyMarketService: MoneyMarketService,
+    dataService: MoneyMarketDataService,
   ): Promise<BorrowInfo> {
     const assetConfig = getHubAssetInfo(chainId, token);
 
@@ -286,7 +374,7 @@ export class SonicSpokeService {
     }
 
     const vaultAddress = assetConfig.vault;
-    const reserveData = await moneyMarketService.getReserveData(moneyMarketService.config.lendingPool, vaultAddress);
+    const reserveData = await dataService.getReserveData(vaultAddress);
     const variableDebtTokenAddress = reserveData.variableDebtTokenAddress;
 
     return {
@@ -440,14 +528,20 @@ export class SonicSpokeService {
     amount: bigint,
     spokeProvider: SonicSpokeProvider,
     moneyMarketService: MoneyMarketService,
+    userRouterAddress?: HubAddress,
   ): Promise<Hex> {
-    const userRouter = await SonicSpokeService.getUserRouter(from, spokeProvider);
+    const userRouter = userRouterAddress ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
+
+    let token = withdrawInfo.token;
+    if (withdrawInfo.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
+      token = spokeProvider.chainConfig.addresses.wrappedSonic;
+    }
 
     // Add withdraw call
     const withdrawCall = moneyMarketService.buildWithdrawData(
       userRouter,
       from,
-      withdrawInfo.token,
+      token,
       amount,
       spokeProvider.chainConfig.chain.id,
     );
@@ -470,17 +564,18 @@ export class SonicSpokeService {
       data: `0x${string}`;
     }[];
 
-    const transferFromCall = Erc20Service.encodeTransferFrom(
-      withdrawInfo.aTokenAddress,
-      from,
-      userRouter,
-      withdrawInfo.aTokenAmount,
-    );
-    calls.unshift({
-      address: transferFromCall.address,
-      value: transferFromCall.value,
-      data: transferFromCall.data,
-    });
+    // move aTokens to user wallet address
+    // const transferFromCall = Erc20Service.encodeTransferFrom(
+    //   withdrawInfo.aTokenAddress,
+    //   from,
+    //   userRouter,
+    //   withdrawInfo.aTokenAmount,
+    // );
+    // calls.unshift({
+    //   address: transferFromCall.address,
+    //   value: transferFromCall.value,
+    //   data: transferFromCall.data,
+    // });
 
     return encodeContractCalls(calls);
   }

@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
-import { getSpokeTokenAddressByVault, useUserReservesData } from '@sodax/dapp-kit';
+import { getSpokeTokenAddressByVault, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useXAccount, useXBalances } from '@sodax/wallet-sdk';
+import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
@@ -24,13 +24,15 @@ export function SupplyAssetsList() {
   );
 
   const { address } = useXAccount(selectedChainId);
+  const walletProvider = useWalletProvider(selectedChainId);
+  const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
   const { data: balances } = useXBalances({
     xChainId: selectedChainId,
     xTokens: tokens,
     address,
   });
 
-  const userReserves = useUserReservesData(selectedChainId, address);
+  const { data: userReserves } = useUserReservesData(spokeProvider, address);
 
   return (
     <Card>
@@ -54,7 +56,7 @@ export function SupplyAssetsList() {
           <TableBody>
             {tokens.map(token => {
               try {
-                const userReserve = userReserves?.find(
+                const userReserve = userReserves?.[0]?.find(
                   r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset) === token.address,
                 );
                 return (

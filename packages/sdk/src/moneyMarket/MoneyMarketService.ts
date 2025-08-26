@@ -1,6 +1,6 @@
 import { type Hex, encodeFunctionData, isAddress } from 'viem';
-import { poolAbi } from '../../abis/pool.abi.js';
-import type { EvmHubProvider, SpokeProvider } from '../../entities/index.js';
+import { poolAbi } from '../abis/pool.abi.js';
+import type { EvmHubProvider, SpokeProvider } from '../entities/index.js';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
   getHubAssetInfo,
@@ -12,7 +12,6 @@ import {
   moneyMarketReserveAssets,
   SpokeService,
   relayTxAndWaitPacket,
-  uiPoolDataAbi,
   type RelayErrorCode,
   DEFAULT_RELAY_TX_TIMEOUT,
   EvmSpokeProvider,
@@ -22,7 +21,7 @@ import {
   SonicSpokeService,
   SolanaSpokeProvider,
   type RelayError,
-} from '../../index.js';
+} from '../index.js';
 import type {
   EvmContractCall,
   GetAddressType,
@@ -35,104 +34,14 @@ import type {
   Result,
   SpokeTxHash,
   TxReturnType,
-} from '../../types.js';
-import { calculateFeeAmount, encodeAddress, encodeContractCalls } from '../../utils/index.js';
-import { EvmAssetManagerService, EvmVaultTokenService, WalletAbstractionService } from '../hub/index.js';
-import { Erc20Service } from '../shared/index.js';
+} from '../types.js';
+import { calculateFeeAmount, encodeAddress, encodeContractCalls } from '../utils/index.js';
+import { EvmAssetManagerService, EvmVaultTokenService, WalletAbstractionService } from '../services/hub/index.js';
+import { Erc20Service } from '../services/shared/index.js';
 import invariant from 'tiny-invariant';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Token, type Address } from '@sodax/types';
-import { wrappedSonicAbi } from '../../abis/wrappedSonic.abi.js';
-
-export type AggregatedReserveData = {
-  underlyingAsset: Address;
-  name: string;
-  symbol: string;
-  decimals: bigint;
-  baseLTVasCollateral: bigint;
-  reserveLiquidationThreshold: bigint;
-  reserveLiquidationBonus: bigint;
-  reserveFactor: bigint;
-  usageAsCollateralEnabled: boolean;
-  borrowingEnabled: boolean;
-  isActive: boolean;
-  isFrozen: boolean;
-  liquidityIndex: bigint;
-  variableBorrowIndex: bigint;
-  liquidityRate: bigint;
-  variableBorrowRate: bigint;
-  lastUpdateTimestamp: number;
-  aTokenAddress: Address;
-  variableDebtTokenAddress: Address;
-  interestRateStrategyAddress: Address;
-  availableLiquidity: bigint;
-  totalScaledVariableDebt: bigint;
-  priceInMarketReferenceCurrency: bigint;
-  priceOracle: Address;
-  variableRateSlope1: bigint;
-  variableRateSlope2: bigint;
-  baseVariableBorrowRate: bigint;
-  optimalUsageRatio: bigint;
-  isPaused: boolean;
-  isSiloedBorrowing: boolean;
-  accruedToTreasury: bigint;
-  unbacked: bigint;
-  isolationModeTotalDebt: bigint;
-  flashLoanEnabled: boolean;
-  debtCeiling: bigint;
-  debtCeilingDecimals: bigint;
-  borrowCap: bigint;
-  supplyCap: bigint;
-  borrowableInIsolation: boolean;
-  virtualAccActive: boolean;
-  virtualUnderlyingBalance: bigint;
-};
-
-export type BaseCurrencyInfo = {
-  marketReferenceCurrencyUnit: bigint;
-  marketReferenceCurrencyPriceInUsd: bigint;
-  networkBaseTokenPriceInUsd: bigint;
-  networkBaseTokenPriceDecimals: number;
-};
-
-export type UserReserveData = {
-  underlyingAsset: string;
-  scaledATokenBalance: bigint;
-  usageAsCollateralEnabledOnUser: boolean;
-  scaledVariableDebt: bigint;
-};
-
-export type ReserveDataLegacy = {
-  //stores the reserve configuration
-  configuration: bigint;
-  //the liquidity index. Expressed in ray
-  liquidityIndex: bigint;
-  //the current supply rate. Expressed in ray
-  currentLiquidityRate: bigint;
-  //variable borrow index. Expressed in ray
-  variableBorrowIndex: bigint;
-  //the current variable borrow rate. Expressed in ray
-  currentVariableBorrowRate: bigint;
-  // DEPRECATED on v3.2.0
-  currentStableBorrowRate: bigint;
-  //timestamp of last update
-  lastUpdateTimestamp: number;
-  //the id of the reserve. Represents the position in the list of the active reserves
-  id: number;
-  //aToken address
-  aTokenAddress: Address;
-  // DEPRECATED on v3.2.0
-  stableDebtTokenAddress: Address;
-  //variableDebtToken address
-  variableDebtTokenAddress: Address;
-  //address of the interest rate strategy
-  interestRateStrategyAddress: Address;
-  //the current treasury balance, scaled
-  accruedToTreasury: bigint;
-  //the outstanding unbacked aTokens minted through the bridging feature
-  unbacked: bigint;
-  //the outstanding debt borrowed against this asset in isolation mode
-  isolationModeTotalDebt: bigint;
-};
+import { wrappedSonicAbi } from '../abis/wrappedSonic.abi.js';
+import { MoneyMarketDataService } from './MoneyMarketDataService.js';
 
 export type MoneyMarketEncodeSupplyParams = {
   asset: Address; // The address of the asset to supply.
@@ -281,6 +190,7 @@ export type MoneyMarketOptionalExtraData = { data?: MoneyMarketExtraData };
 export class MoneyMarketService {
   public readonly config: MoneyMarketServiceConfig;
   private readonly hubProvider: EvmHubProvider;
+  public readonly data: MoneyMarketDataService;
 
   constructor(config: MoneyMarketConfigParams | undefined, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
     if (!config) {
@@ -303,6 +213,7 @@ export class MoneyMarketService {
       };
     }
     this.hubProvider = hubProvider;
+    this.data = new MoneyMarketDataService(hubProvider);
   }
 
   /**
@@ -371,7 +282,7 @@ export class MoneyMarketService {
             params.token as GetAddressType<SonicSpokeProvider>,
             params.amount,
             spokeProvider,
-            this,
+            this.data,
           );
           return await SonicSpokeService.isWithdrawApproved(
             walletAddress as GetAddressType<SonicSpokeProvider>,
@@ -384,7 +295,7 @@ export class MoneyMarketService {
             params.token as GetAddressType<SonicSpokeProvider>,
             params.amount,
             spokeProvider.chainConfig.chain.id,
-            this,
+            this.data,
           );
           return await SonicSpokeService.isBorrowApproved(
             walletAddress as GetAddressType<SonicSpokeProvider>,
@@ -501,7 +412,7 @@ export class MoneyMarketService {
             params.token,
             params.amount,
             spokeProvider,
-            this,
+            this.data,
           );
 
           const result = (await SonicSpokeService.approveWithdraw(
@@ -521,7 +432,7 @@ export class MoneyMarketService {
             params.token,
             params.amount,
             spokeProvider.chainConfig.chain.id,
-            this,
+            this.data,
           );
 
           const result = (await SonicSpokeService.approveBorrow(
@@ -657,7 +568,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Create supply intent only (without submitting to Solver API)
+   * Create supply intent only (without relay submit to Solver API)
    * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
    * In order to successfully supply tokens, you need to:
    * 1. Check if the allowance is sufficient
@@ -705,6 +616,7 @@ export class MoneyMarketService {
       );
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
       const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
         walletAddress,
         spokeProvider,
@@ -841,7 +753,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Create borrow intent only (without submitting to Solver API)
+   * Create borrow intent only (without relay and submit to Solver API)
    * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
    * In order to successfully borrow tokens, you need to:
    * 1. Execute the borrow transaction on the spoke chain
@@ -1002,7 +914,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Create withdraw intent only (without submitting to Solver API)
+   * Create withdraw intent only (without relay and submit to Solver API)
    * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
    * In order to successfully withdraw tokens, you need to:
    * 1. Execute the withdraw transaction on the spoke chain
@@ -1054,13 +966,32 @@ export class MoneyMarketService {
       this.hubProvider,
     );
 
-    const data: Hex = this.buildWithdrawData(
-      hubWallet,
-      encodedAddress,
-      params.token,
-      params.amount,
-      spokeProvider.chainConfig.chain.id,
-    );
+    let data: Hex;
+    if (spokeProvider instanceof SonicSpokeProvider) {
+      const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
+        params.token as GetAddressType<SonicSpokeProvider>,
+        params.amount,
+        spokeProvider,
+        this.data,
+      );
+
+      data = await SonicSpokeService.buildWithdrawData(
+        walletAddress as GetAddressType<SonicSpokeProvider>,
+        withdrawInfo,
+        params.amount,
+        spokeProvider,
+        this,
+        hubWallet,
+      );
+    } else {
+      data = this.buildWithdrawData(
+        hubWallet,
+        encodedAddress,
+        params.token,
+        params.amount,
+        spokeProvider.chainConfig.chain.id,
+      );
+    }
 
     const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
@@ -1163,7 +1094,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Create repay intent only (without submitting to Solver API)
+   * Create repay intent only (without relay and submit to Solver API)
    * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
    * In order to successfully repay tokens, you need to:
    * 1. Check if the allowance is sufficient
@@ -1215,7 +1146,12 @@ export class MoneyMarketService {
       spokeProvider,
       this.hubProvider,
     );
-    const data: Hex = this.buildRepayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
+    const data: Hex = this.buildRepayData(
+      params.token,
+      hubWallet,
+      params.amount,
+      spokeProvider.chainConfig.chain.id,
+    );
 
     const txResult = await SpokeService.deposit(
       {
@@ -1254,9 +1190,15 @@ export class MoneyMarketService {
 
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
 
-    const assetAddress = assetConfig.asset;
+    let assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const lendingPool = this.config.lendingPool;
+
+    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
+      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
+        assetAddress = spokeChainConfig[this.hubProvider.chainConfig.chain.id].supportedTokens.wS.address;
+      }
+    }
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
@@ -1298,10 +1240,16 @@ export class MoneyMarketService {
 
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
 
-    const assetAddress = assetConfig.asset;
+    let assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
+
+    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
+      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
+        assetAddress = spokeChainConfig[this.hubProvider.chainConfig.chain.id].supportedTokens.wS.address;
+      }
+    }
 
     const feeAmount = calculateFeeAmount(amount, this.config.partnerFee);
     const calls: EvmContractCall[] = [];
@@ -1440,10 +1388,16 @@ export class MoneyMarketService {
       throw new Error('[buildRepayData] Hub asset not found');
     }
 
-    const assetAddress = assetConfig.asset;
+    let assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
+
+    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
+      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
+        assetAddress = spokeChainConfig[this.hubProvider.chainConfig.chain.id].supportedTokens.wS.address;
+      }
+    }
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
@@ -1466,54 +1420,6 @@ export class MoneyMarketService {
   }
 
   /**
-   * Get the list of all reserves in the pool
-   * @param uiPoolDataProvider - The address of the UI Pool Data Provider
-   * @param poolAddressesProvider - The address of the Pool Addresses Provider
-   * @returns {Promise<readonly Address[]>} - Array of reserve addresses
-   */
-  async getReservesList(uiPoolDataProvider: Address, poolAddressesProvider: Address): Promise<readonly Address[]> {
-    return this.hubProvider.publicClient.readContract({
-      address: uiPoolDataProvider,
-      abi: uiPoolDataAbi,
-      functionName: 'getReservesList',
-      args: [poolAddressesProvider],
-    });
-  }
-
-  /**
-   * Get detailed data for all reserves in the pool
-   * @param uiPoolDataProvider - The address of the UI Pool Data Provider
-   * @param poolAddressesProvider - The address of the Pool Addresses Provider
-   * @returns {Promise<readonly [readonly AggregatedReserveData[], BaseCurrencyInfo]>} - Tuple containing array of reserve data and base currency info
-   */
-  async getReservesData(
-    uiPoolDataProvider: Address,
-    poolAddressesProvider: Address,
-  ): Promise<readonly [readonly AggregatedReserveData[], BaseCurrencyInfo]> {
-    return this.hubProvider.publicClient.readContract({
-      address: uiPoolDataProvider,
-      abi: uiPoolDataAbi,
-      functionName: 'getReservesData',
-      args: [poolAddressesProvider],
-    });
-  }
-
-  /**
-   * Get detailed data for a reserve in the pool
-   * @param poolAddress - The address of the pool
-   * @param assetAddress - The address of the asset
-   * @returns Tuple containing array of reserve data and base currency info
-   */
-  async getReserveData(poolAddress: Address, assetAddress: Address): Promise<ReserveDataLegacy> {
-    return this.hubProvider.publicClient.readContract({
-      address: poolAddress,
-      abi: poolAbi,
-      functionName: 'getReserveData',
-      args: [assetAddress],
-    });
-  }
-
-  /**
    * Calculate aToken amount from actual amount using liquidityIndex
    * @param amount - The actual amount
    * @param normalizedIncome - The current normalized income from reserve data
@@ -1521,41 +1427,6 @@ export class MoneyMarketService {
    */
   static calculateATokenAmount(amount: bigint, normalizedIncome: bigint): bigint {
     return (amount * 10n ** 27n) / normalizedIncome + 1n;
-  }
-
-  /**
-   * Get the normalized income for a reserve
-   * @param poolAddress The address of the pool
-   * @param asset The address of the asset
-   * @returns The normalized income
-   */
-  async getReserveNormalizedIncome(poolAddress: Address, asset: Address): Promise<bigint> {
-    return this.hubProvider.publicClient.readContract({
-      address: poolAddress,
-      abi: poolAbi,
-      functionName: 'getReserveNormalizedIncome',
-      args: [asset],
-    });
-  }
-
-  /**
-   * Get user-specific reserve data
-   * @param userAddress Address of the user
-   * @param uiPoolDataProvider - The address of the UI Pool Data Provider
-   * @param poolAddressesProvider - The address of the Pool Addresses Provider
-   * @returns {Promise<readonly [readonly UserReserveData[], number]>} - Tuple containing array of user reserve data and eMode category ID
-   */
-  async getUserReservesData(
-    userAddress: Address,
-    uiPoolDataProvider: Address,
-    poolAddressesProvider: Address,
-  ): Promise<readonly [readonly UserReserveData[], number]> {
-    return this.hubProvider.publicClient.readContract({
-      address: uiPoolDataProvider,
-      abi: uiPoolDataAbi,
-      functionName: 'getUserReservesData',
-      args: [poolAddressesProvider, userAddress],
-    });
   }
 
   /**

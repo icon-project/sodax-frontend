@@ -9,6 +9,8 @@ type AppStore = {
   isWalletModalOpen: boolean;
   openWalletModal: () => void;
   closeWalletModal: () => void;
+  isSolverProduction: boolean;
+  setIsSolverProduction: (isSolverProduction: boolean) => void;
 };
 
 export const useAppStore = create<AppStore>()(
@@ -18,5 +20,7 @@ export const useAppStore = create<AppStore>()(
     isWalletModalOpen: false,
     openWalletModal: () => set({ isWalletModalOpen: true }),
     closeWalletModal: () => set({ isWalletModalOpen: false }),
+    isSolverProduction: true,
+    setIsSolverProduction: (isSolverProduction: boolean) => set({ isSolverProduction }),
   })) as StateCreator<AppStore, [], []>,
 );

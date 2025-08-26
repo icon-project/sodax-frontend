@@ -7,6 +7,7 @@ import {
   isPartnerFeePercentage,
   type Hex,
   type PartnerFee,
+  type QuoteType,
   type SpokeChainId,
 } from '../index.js';
 import { toHex } from 'viem';
@@ -98,6 +99,31 @@ export function calculateFeeAmount(inputAmount: bigint, fee: PartnerFee | undefi
   }
 
   return feeAmount;
+}
+
+/**
+ * Adjust the amount by the fee amount based on the quote type
+ * @param {bigint} amount - The amount to adjust
+ * @param {PartnerFee | undefined} fee - The fee to adjust
+ * @param {QuoteType} quoteType - The quote type
+ * @returns {bigint} The adjusted amount
+ */
+export function adjustAmountByFee(
+  amount: bigint,
+  fee: PartnerFee | undefined,
+  quoteType: QuoteType,
+): bigint {
+  invariant(amount > 0n, 'Amount must be greater than 0');
+  invariant(quoteType === 'exact_input' || quoteType === 'exact_output', 'Invalid quote type');
+
+  if (quoteType === 'exact_input') {
+    return amount - calculateFeeAmount(amount, fee);
+  }
+  if (quoteType === 'exact_output') {
+    return amount + calculateFeeAmount(amount, fee);
+  }
+
+  throw new Error('Invalid quote type');
 }
 
 export function BigIntToHex(value: bigint): Hex {
