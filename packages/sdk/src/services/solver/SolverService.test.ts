@@ -1,3 +1,4 @@
+import { WalletAbstractionService } from './../hub/WalletAbstractionService.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   type CreateIntentParams,
@@ -36,7 +37,6 @@ import {
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
-import { WalletAbstractionService } from '../hub/WalletAbstractionService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 
 // Define a type for Intent with fee amount
@@ -420,7 +420,7 @@ describe('SolverService', () => {
         ok: true,
         value: [mockTxHash, mockIntentWithFee, '0x'],
       });
-      vi.spyOn(WalletAbstractionService, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+      vi.spyOn(WalletAbstractionService, 'getUserAbstractedWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
       vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
         success: true,
         message: 'Transaction submitted successfully',

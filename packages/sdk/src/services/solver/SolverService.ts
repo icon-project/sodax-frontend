@@ -16,6 +16,7 @@ import {
   type WaitUntilIntentExecutedPayload,
   adjustAmountByFee,
   calculateFeeAmount,
+  deriveUserWalletAddress,
   encodeContractCalls,
   getIntentRelayChainId,
   getSolverConfig,
@@ -50,7 +51,6 @@ import type {
   OptionalTimeout,
   OptionalFee,
 } from '../../types.js';
-import { WalletAbstractionService } from '../hub/WalletAbstractionService.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
 import {
@@ -820,10 +820,7 @@ export class SolverService {
       );
 
       // derive users hub wallet address
-      const creatorHubWalletAddress =
-        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
-          ? (walletAddress as Address)
-          : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
+      const creatorHubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
 
       if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
         // on hub chain create intent directly
@@ -911,10 +908,7 @@ export class SolverService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       // derive users hub wallet address
-      const creatorHubWalletAddress =
-        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
-          ? (walletAddress as Address)
-          : await WalletAbstractionService.getUserHubWalletAddress(walletAddress, spokeProvider, this.hubProvider);
+      const creatorHubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
 
       const calls: EvmContractCall[] = [];
       const intentsContract = this.config.intentsContract;

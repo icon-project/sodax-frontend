@@ -1,4 +1,4 @@
-import type {  EvmHubProvider, SpokeProvider } from '../entities/Providers.js';
+import type { EvmHubProvider, SpokeProvider } from '../entities/Providers.js';
 import type {
   AggregatedReserveData,
   BaseCurrencyInfo,
@@ -24,7 +24,7 @@ import {
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
 import type { Address } from '@sodax/types';
-import { WalletAbstractionService } from '../index.js';
+import { deriveUserWalletAddress } from '../utils/shared-utils.js';
 
 export class MoneyMarketDataService {
   public readonly uiPoolDataProviderService: UiPoolDataProviderService;
@@ -89,11 +89,7 @@ export class MoneyMarketDataService {
   ): Promise<readonly [readonly UserReserveData[], number]> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     // derive users hub wallet address
-    const hubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
-      walletAddress,
-      spokeProvider,
-      this.hubProvider,
-    );
+    const hubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
     return this.uiPoolDataProviderService.getUserReservesData(hubWalletAddress);
   }
 
@@ -132,11 +128,7 @@ export class MoneyMarketDataService {
   }> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     // derive users hub wallet address
-    const hubWalletAddress = await WalletAbstractionService.getUserHubWalletAddress(
-      walletAddress,
-      spokeProvider,
-      this.hubProvider,
-    );
+    const hubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
     return this.uiPoolDataProviderService.getUserReservesHumanized(hubWalletAddress);
   }
 
