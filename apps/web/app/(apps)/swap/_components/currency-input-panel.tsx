@@ -119,7 +119,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 <Switch
                   checked={isSwapAndSend}
                   onCheckedChange={onSwapAndSendToggle}
-                  className="data-[state=checked]:bg-cherry-brighter cursor-pointer"
+                  className="data-[state=checked]:bg-clay-light cursor-pointer w-8 h-4"
                 />
               </div>
             )}
@@ -152,7 +152,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             placeholder="Enter destination address"
             value={customDestinationAddress}
             onChange={e => onCustomDestinationAddressChange(e.target.value)}
-            className="flex-1 text-(length:--body-small) border-cream-white focus:border-cherry-brighter rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0"
+            className="h-10 flex-1 text-(length:--body-small) border-cream-white focus:border-cherry-brighter rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0"
           />
         </div>
       )}
