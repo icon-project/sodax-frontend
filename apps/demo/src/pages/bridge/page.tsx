@@ -1,5 +1,5 @@
 // biome-ignore lint/style/useImportType:
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { SelectChain } from '@/components/solver/SelectChain';
 import { Input } from '@/components/ui/input';
@@ -32,17 +32,16 @@ import { normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import { useSpokeProvider, useBridgeApprove, useBridgeAllowance, useBridge } from '@sodax/dapp-kit';
 
 export default function BridgePage() {
+  const { openWalletModal } = useAppStore();
+
   const [fromToken, setFromToken] = useState<XToken>(
     Object.values(spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens)[0],
   );
   const [fromAmount, setFromAmount] = useState<string>('');
   const fromAccount = useXAccount(fromToken.xChainId);
-  const { openWalletModal } = useAppStore();
 
-  const [toToken, setToToken] = useState<XToken>(
-    Object.values(spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens)[0],
-  );
-  const toAccount = useXAccount(toToken.xChainId);
+  const [toTokenChainId, setToTokenChainId] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
+  const toAccount = useXAccount(toTokenChainId);
 
   const handleFromChainChange = (chainId: SpokeChainId) => {
     const newToken = Object.values(spokeChainConfig[chainId].supportedTokens)[0];
@@ -50,9 +49,16 @@ export default function BridgePage() {
   };
 
   const handleToChainChange = (chainId: SpokeChainId) => {
-    const newToken = Object.values(spokeChainConfig[chainId].supportedTokens)[0];
-    setToToken(newToken);
+    setToTokenChainId(chainId);
   };
+
+  const bridgeableTokens = useMemo(() => {
+    return BridgeService.getBridgeableTokens(fromToken, toTokenChainId);
+  }, [fromToken, toTokenChainId]);
+
+  const toToken = useMemo(() => {
+    return bridgeableTokens[0];
+  }, [bridgeableTokens]);
 
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFromAmount(e.target.value);
@@ -108,9 +114,14 @@ export default function BridgePage() {
     await bridge(order);
   };
 
-  const onChangeDirection = () => {
-    setFromToken(toToken);
-    setToToken(fromToken);
+  const handleSwitch = () => {
+    if (toToken) {
+      setFromToken(toToken);
+      setToTokenChainId(fromToken.xChainId);
+    } else {
+      setFromToken(Object.values(spokeChainConfig[toTokenChainId].supportedTokens)[0]);
+      setToTokenChainId(fromToken.xChainId);
+    }
   };
 
   return (
@@ -169,14 +180,14 @@ export default function BridgePage() {
             </div>
           </div>
           <div className="flex justify-center">
-            <Button variant="outline" size="icon" onClick={() => onChangeDirection()}>
+            <Button variant="outline" size="icon" onClick={() => handleSwitch()}>
               <ArrowDownUp className="h-4 w-4" />
             </Button>
           </div>
           <div className="space-y-2">
             <SelectChain
               chainList={supportedSpokeChains}
-              value={toToken.xChainId}
+              value={toTokenChainId}
               setChain={handleToChainChange}
               placeholder={'Select destination chain'}
               id={'dest-chain'}
@@ -187,20 +198,12 @@ export default function BridgePage() {
             <div className="flex-grow">
               <Input type="number" placeholder="0.0" value={fromAmount} readOnly />
             </div>
-            <Select
-              value={toToken?.symbol}
-              onValueChange={v => {
-                const selectedToken = supportedTokensPerChain.get(toToken.xChainId)?.find(token => token.symbol === v);
-                if (selectedToken) {
-                  setToToken(selectedToken);
-                }
-              }}
-            >
+            <Select value={toToken?.symbol} disabled={true}>
               <SelectTrigger className="w-[110px]">
                 <SelectValue placeholder="Token" />
               </SelectTrigger>
               <SelectContent>
-                {supportedTokensPerChain.get(toToken.xChainId)?.map(token => (
+                {bridgeableTokens.map(token => (
                   <SelectItem key={token.address} value={token.symbol}>
                     {token.symbol}
                   </SelectItem>
@@ -221,8 +224,6 @@ export default function BridgePage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          {BridgeService.isBridgeable(fromToken, toToken) ? 'Bridgeable' : 'Not bridgeable'}
-
           <Button variant="outline" onClick={openBridgeModal}>
             Bridge
           </Button>

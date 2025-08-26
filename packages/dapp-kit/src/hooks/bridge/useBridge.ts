@@ -1,12 +1,7 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BridgeParams } from '@sodax/sdk';
+import type { BridgeParams, BridgeError, BridgeErrorCode, SpokeTxHash, HubTxHash, Result } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { SpokeProvider } from '@sodax/sdk';
-
-type BridgeResult = {
-  spokeTxHash: string;
-  hubTxHash: string;
-};
 
 /**
  * Hook for executing bridge transactions to transfer tokens between chains.
@@ -38,10 +33,10 @@ type BridgeResult = {
  */
 export function useBridge(
   spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<BridgeResult, Error, BridgeParams> {
+): UseMutationResult<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>, Error, BridgeParams> {
   const { sodax } = useSodaxContext();
 
-  return useMutation<BridgeResult, Error, BridgeParams>({
+  return useMutation<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>, Error, BridgeParams>({
     mutationFn: async (params: BridgeParams) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
@@ -53,8 +48,7 @@ export function useBridge(
         throw new Error(`Bridge failed: ${result.error.code}`);
       }
 
-      const [spokeTxHash, hubTxHash] = result.value;
-      return { spokeTxHash, hubTxHash };
+      return result;
     },
   });
 }
