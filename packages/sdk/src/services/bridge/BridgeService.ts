@@ -484,6 +484,25 @@ export class BridgeService {
   }
 
   /**
+   * Get the balance of tokens held by the asset manager on a spoke chain. It's used to check if target chain has enough balance to bridge when bridging.
+   * @param spokeProvider - The spoke provider
+   * @param token - The token to get the balance of
+   * @returns Promise<bigint> - The balance of the token
+   */
+  public async getSpokeAssetManagerTokenBalance(spokeProvider: SpokeProvider, token: string): Promise<bigint> {
+    try {
+      // Use the getDeposit function from the appropriate spoke service
+      // This function returns the balance of tokens held by the asset manager on the spoke chain
+      return await SpokeService.getDeposit(token as `0x${string}`, spokeProvider);
+    } catch (error) {
+      // If there's an error getting the balance, return 0
+      // This could happen if the token is not supported or there's a network issue
+      console.warn(`Failed to get spoke asset manager token balance for token ${token}:`, error);
+      return 0n;
+    }
+  }
+
+  /**
    * Check if two assets on different chains are bridgeable
    * Two assets are bridgeable if they share the same vault on the hub chain
    * @param from - The source X token

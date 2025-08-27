@@ -1,5 +1,5 @@
 // biome-ignore lint/style/useImportType:
-import React, { useMemo, useState } from 'react';
+import React, { use, useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { SelectChain } from '@/components/solver/SelectChain';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   BridgeService,
+  BASE_MAINNET_CHAIN_ID,
   CreateBridgeIntentParams,
   POLYGON_MAINNET_CHAIN_ID,
   spokeChainConfig,
@@ -23,18 +24,24 @@ import {
   supportedTokensPerChain,
 } from '@sodax/sdk';
 import type { ChainId, ChainType, SpokeChainId, XToken } from '@sodax/types';
-import { ICON_MAINNET_CHAIN_ID } from '@sodax/sdk';
 import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import { normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
-import { useSpokeProvider, useBridgeApprove, useBridgeAllowance, useBridge } from '@sodax/dapp-kit';
+import {
+  useSpokeProvider,
+  useBridgeApprove,
+  useBridgeAllowance,
+  useBridge,
+  useSpokeAssetManagerTokenBalance,
+} from '@sodax/dapp-kit';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function BridgePage() {
   const { openWalletModal } = useAppStore();
 
   const [fromToken, setFromToken] = useState<XToken>(
-    Object.values(spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens)[0],
+    Object.values(spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens)[3],
   );
   const [fromAmount, setFromAmount] = useState<string>('');
   const fromAccount = useXAccount(fromToken.xChainId);
@@ -58,6 +65,12 @@ export default function BridgePage() {
   const toToken = useMemo(() => {
     return bridgeableTokens[0];
   }, [bridgeableTokens]);
+
+  const toWalletProvider = useWalletProvider(toToken?.xChainId);
+  const toProvider = useSpokeProvider(toToken?.xChainId, toWalletProvider);
+
+  const { data: spokeAssetManagerTokenBalance, isLoading: isLoadingSpokeAssetManagerTokenBalance } =
+    useSpokeAssetManagerTokenBalance(toToken?.address, toProvider);
 
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFromAmount(e.target.value);
@@ -223,6 +236,15 @@ export default function BridgePage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
+          <div className="flex items-center gap-2">
+            Maximum Bridgeable Amount:{' '}
+            {isLoadingSpokeAssetManagerTokenBalance ? (
+              <Skeleton className="w-16 h-6 inline-block" />
+            ) : (
+              normaliseTokenAmount(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)
+            )}{' '}
+            {toToken?.symbol}
+          </div>
           <Button variant="outline" onClick={openBridgeModal}>
             Bridge
           </Button>
