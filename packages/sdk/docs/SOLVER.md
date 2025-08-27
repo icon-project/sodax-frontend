@@ -408,7 +408,7 @@ if (!swapResult.ok) {
   const error = swapResult.error;
   
   if (isIntentCreationFailedError(error)) {
-    // Intent creation failed on the spoke chain
+    // Intent creation failed on the spoke chain, error is of type IntentError<'CREATION_FAILED'>
     // This could be due to:
     // - Insufficient token balance (including fee)
     // - Invalid token addresses
@@ -419,7 +419,7 @@ if (!swapResult.ok) {
     
     // You may want to retry with different parameters or check user's balance
   } else if (isIntentSubmitTxFailedError(error)) {
-    // Failed to submit the spoke chain transaction to the relay API
+    // Failed to submit the spoke chain transaction to the relay API, error is of type IntentError<'SUBMIT_TX_FAILED'>
     // IMPORTANT: This is a critical event and you should retry submit
     //  and store relevant payload   information in localstorage or
     // similar local permanent memory. If client leaves the session
@@ -435,7 +435,7 @@ if (!swapResult.ok) {
     
     // You may want to retry the submission or check relay API status
   } else if (isWaitUntilIntentExecutedFailed(error)) {
-    // The intent was submitted but failed to execute on the hub chain
+    // The intent was submitted but failed to execute on the hub chain, error is of type IntentError<'RELAY_TIMEOUT'>
     // This could be due to:
     // - Timeout waiting for execution
     // - Hub chain congestion
@@ -445,7 +445,7 @@ if (!swapResult.ok) {
     
     // You may want to check the intent status or retry with longer timeout
   } else if (isIntentPostExecutionFailedError(error)) {
-    // Failed to post execution data to the Solver API
+    // Failed to post execution data to the Solver API, error is of type IntentError<'POST_EXECUTION_FAILED'>
     // This could be due to:
     // - Solver API being down
     // - Invalid execution data
@@ -453,9 +453,9 @@ if (!swapResult.ok) {
     console.error('Post execution failed:', error.data);
     
     // The intent may have executed successfully, but the API call failed
-    // You may want to check the intent status manually
+    // You may want to check the intent or packet status manually
   } else {
-    // Unknown error type
+    // Unknown error type IntentError<'UNKNOWN'>
     console.error('Unknown error:', error);
   }
 }
