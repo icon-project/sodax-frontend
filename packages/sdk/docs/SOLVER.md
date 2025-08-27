@@ -114,6 +114,31 @@ console.log('Amount after fee deduction:', inputAmount - fee); // Actual amount 
 
 **Note**: If no partner fee is configured, the function returns `0n`. The fee is deducted from the input amount, so the actual amount used for the swap will be `inputAmount - fee`.
 
+### Get Swap Deadline
+
+The `getSwapDeadline` function allows you to calculate a deadline timestamp for your swap by querying the hub chain's current block timestamp and adding a deadline offset. This is useful for setting expiration times for intents to prevent them from being executed after a certain period.
+
+```typescript
+import { SolverService } from "@sodax/sdk";
+
+// Get deadline with default 5-minute offset
+const deadline = await sodax.solver.getSwapDeadline();
+console.log('Swap deadline (5 min from now):', deadline);
+
+// Get deadline with custom offset (e.g., 10 minutes)
+const customDeadline = await sodax.solver.getSwapDeadline(600n); // 600 seconds = 10 minutes
+console.log('Swap deadline (10 min from now):', customDeadline);
+
+// Use the deadline in your intent parameters
+const createIntentParams = {
+  // ... other parameters ...
+  deadline: deadline, // Set the calculated deadline
+  // ... other parameters ...
+};
+```
+
+**Note**: The deadline is calculated as `hub_chain_block_timestamp + deadline_offset`. The default offset is 5 minutes (300 seconds), but you can customize this value based on your requirements. Setting a deadline helps prevent intents from being executed if market conditions change significantly.
+
 ### Token Approval Flow
 
 Before creating an intent, you need to ensure that the Asset Manager contract has permission to spend your tokens. Here's how to handle the approval flow:
@@ -383,7 +408,7 @@ if (!swapResult.ok) {
   const error = swapResult.error;
   
   if (isIntentCreationFailedError(error)) {
-    // Intent creation failed on the spoke chain
+    // Intent creation failed on the spoke chain, error is of type IntentError<'CREATION_FAILED'>
     // This could be due to:
     // - Insufficient token balance (including fee)
     // - Invalid token addresses
@@ -394,7 +419,7 @@ if (!swapResult.ok) {
     
     // You may want to retry with different parameters or check user's balance
   } else if (isIntentSubmitTxFailedError(error)) {
-    // Failed to submit the spoke chain transaction to the relay API
+    // Failed to submit the spoke chain transaction to the relay API, error is of type IntentError<'SUBMIT_TX_FAILED'>
     // IMPORTANT: This is a critical event and you should retry submit
     //  and store relevant payload   information in localstorage or
     // similar local permanent memory. If client leaves the session
@@ -410,7 +435,7 @@ if (!swapResult.ok) {
     
     // You may want to retry the submission or check relay API status
   } else if (isWaitUntilIntentExecutedFailed(error)) {
-    // The intent was submitted but failed to execute on the hub chain
+    // The intent was submitted but failed to execute on the hub chain, error is of type IntentError<'RELAY_TIMEOUT'>
     // This could be due to:
     // - Timeout waiting for execution
     // - Hub chain congestion
@@ -420,7 +445,7 @@ if (!swapResult.ok) {
     
     // You may want to check the intent status or retry with longer timeout
   } else if (isIntentPostExecutionFailedError(error)) {
-    // Failed to post execution data to the Solver API
+    // Failed to post execution data to the Solver API, error is of type IntentError<'POST_EXECUTION_FAILED'>
     // This could be due to:
     // - Solver API being down
     // - Invalid execution data
@@ -428,9 +453,9 @@ if (!swapResult.ok) {
     console.error('Post execution failed:', error.data);
     
     // The intent may have executed successfully, but the API call failed
-    // You may want to check the intent status manually
+    // You may want to check the intent or packet status manually
   } else {
-    // Unknown error type
+    // Unknown error type IntentError<'UNKNOWN'>
     console.error('Unknown error:', error);
   }
 }

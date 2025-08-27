@@ -1,3 +1,4 @@
+import { WalletAbstractionService } from './../services/hub/WalletAbstractionService.js';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   type CreateIntentParams,
@@ -18,17 +19,17 @@ import {
   getHubAssetInfo,
   getHubChainConfig,
   getIntentRelayChainId,
-  Sodax,
   EvmSolverService,
   getMoneyMarketConfig,
+  type SpokeProvider,
   type IEvmWalletProvider,
   spokeChainConfig,
   type SolverConfigParams,
   getSpokeChainIdFromIntentRelayChainId,
 } from '../index.js';
-import { EvmWalletAbstraction } from '../services/hub/EvmWalletAbstraction.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { Sodax } from './Sodax.js';
 
 describe('Sodax', () => {
   const partnerFeePercentage = {
@@ -350,7 +351,7 @@ describe('Sodax', () => {
           ok: true,
           value: [mockTxHash, { ...mockIntent, feeAmount: partnerFeeAmount.amount }, '0x'],
         });
-        vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(walletAddress);
+        vi.spyOn(WalletAbstractionService, 'getUserAbstractedWalletAddress').mockResolvedValueOnce(walletAddress);
         vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
           success: true,
           message: 'Transaction submitted successfully',
@@ -436,23 +437,27 @@ describe('Sodax', () => {
         expect(result.ok && result.value).toBe(mockTxHash);
       });
 
-      // it('should throw error for invalid spoke provider', async () => {
-      //   const invalidSpokeProvider = {
-      //     chainConfig: {
-      //       chain: {
-      //         type: 'EVM',
-      //       },
-      //     },
-      //     walletProvider: {
-      //       getWalletAddress: () => '0x1234567890123456789012345678901234567890',
-      //     },
-      //   } as unknown as SpokeProvider;
+      it('should throw error for invalid spoke provider', async () => {
+        const invalidSpokeProvider = {
+          chainConfig: {
+            chain: {
+              type: 'EVM',
+            },
+          },
+          walletProvider: {
+            getWalletAddress: () => '0x1234567890123456789012345678901234567890',
+          },
+        } as unknown as SpokeProvider;
 
-      //   await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual({
-      //     ok: false,
-      //     error: new Error('Invalid spoke provider'),
-      //   });
-      // });
+        vi.spyOn(WalletAbstractionService, 'getUserAbstractedWalletAddress').mockResolvedValueOnce(
+          '0x1234567890123456789012345678901234567890',
+        );
+
+        await expect(sodax.solver.cancelIntent(intent, invalidSpokeProvider, false)).resolves.toStrictEqual({
+          ok: false,
+          error: new Error('Invalid spoke provider'),
+        });
+      });
     });
 
     describe('getIntent', () => {
