@@ -100,13 +100,51 @@ export function SearchBar({
             {isChainSelectorOpen && (
               <div className="fixed inset-0 flex items-center justify-center z-50">
                 <div className="absolute inset-0 bg-transparent" onClick={handleChainSelectorClick} />
-                <div className="relative bg-transparent border-none w-80 overflow-hidden">
-                  <div className="p-4 mt-10">
-                    <div className="grid grid-cols-2 gap-2 overflow-y-auto">
+                <div className="relative bg-transparent border-none w-64">
+                  <div className="mt-26">
+                    <div className="grid grid-cols-2 gap-2 overflow-hidden">
+                      {/* All Networks Option */}
+                      <div
+                        className="w-34 inline-flex justify-start items-center gap-4 cursor-pointer"
+                        onClick={handleShowAllChains}
+                      >
+                        <div className="w-8 h-8 border border-4 border-white rounded-sm shadow-[-4px_0px_10px_0px_rgba(175,145,145,0.2)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden">
+                          <>
+                            <Image
+                              src="/chain/0x2105.base.png"
+                              alt="Base"
+                              width={8}
+                              height={8}
+                              className="rounded-[2px]"
+                            />
+                            <Image
+                              src="/chain/solana.png"
+                              alt="Solana"
+                              width={8}
+                              height={8}
+                              className="rounded-[2px]"
+                            />
+                            <Image
+                              src="/chain/0xa4b1.arbitrum.png"
+                              alt="Arbitrum"
+                              width={8}
+                              height={8}
+                              className="rounded-[2px]"
+                            />
+                            <Image src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" />
+                          </>
+                        </div>
+                        <div className="flex justify-start items-center gap-1">
+                          <div className="justify-center text-espresso text-base font-normal font-['InterRegular'] leading-tight">
+                            All chains
+                          </div>
+                        </div>
+                      </div>
+
                       {availableChains.map(chain => (
                         <div
                           key={chain.id}
-                          className="w-34 inline-flex justify-start items-center gap-4 cursor-pointer"
+                          className="w-34 inline-flex justify-start items-center gap-3 cursor-pointer"
                           onClick={() => handleChainSelect(chain.id)}
                         >
                           <div className="border border-4 border-white rounded-[6px]">
