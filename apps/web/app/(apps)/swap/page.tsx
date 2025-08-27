@@ -17,6 +17,7 @@ import BigNumber from 'bignumber.js';
 import type { QuoteType } from '@sodax/sdk';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { useSodaxContext } from '@sodax/dapp-kit';
 
 const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
   if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
@@ -98,6 +99,38 @@ export default function SwapPage() {
   // Get token prices and USD values
   const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
   const { usdValue: destinationUsdValue } = useTokenPrice(destinationToken, destinationAmount);
+
+  // Get Sodax context for fee calculation
+  const { sodax } = useSodaxContext();
+
+  // Calculate swap fee
+  const swapFee = useMemo(() => {
+    if (!sourceAmount || sourceAmount === '' || Number.isNaN(Number(sourceAmount)) || Number(sourceAmount) <= 0) {
+      return undefined;
+    }
+
+    try {
+      const sourceAmountBigInt = scaleTokenAmount(sourceAmount, sourceToken.decimals);
+      const feeAmount = sodax.solver.getFee(sourceAmountBigInt);
+
+      if (feeAmount === 0n) {
+        return 'Free';
+      }
+
+      // Convert fee to human readable format
+      const feeInTokens = normaliseTokenAmount(feeAmount, sourceToken.decimals);
+      const feeUsdValue = sourceUsdValue ? (Number(feeInTokens) * sourceUsdValue) / Number(sourceAmount) : undefined;
+
+      if (feeUsdValue && feeUsdValue > 0) {
+        return `$${feeUsdValue.toFixed(4)}`;
+      }
+
+      return `${feeInTokens} ${sourceToken.symbol}`;
+    } catch (error) {
+      console.error('Error calculating swap fee:', error);
+      return '&lt; $0.01';
+    }
+  }, [sourceAmount, sourceToken, sodax.solver, sourceUsdValue]);
 
   const quotePayload = useMemo(() => {
     if (
@@ -454,7 +487,7 @@ export default function SwapPage() {
 
       {sourceAddress && (
         <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-          Takes ~1 min · Total fees: $0.001
+          Takes ~1 min · Total fees: {swapFee || '$0.001'}
         </div>
       )}
 
@@ -477,6 +510,7 @@ export default function SwapPage() {
         destinationAddress={isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress}
         isSwapAndSend={isSwapAndSend}
         isSwapSuccessful={isSwapSuccessful}
+        swapFee={swapFee}
       />
     </div>
   );

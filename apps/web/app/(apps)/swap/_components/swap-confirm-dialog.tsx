@@ -10,6 +10,7 @@ import type BigNumber from 'bignumber.js';
 import { Timer, XIcon, Check, ChevronRight, ChevronsRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
+import { getXChainType } from '@sodax/wallet-sdk';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ interface SwapConfirmDialogProps {
   destinationAddress?: string;
   isSwapAndSend?: boolean;
   isSwapSuccessful?: boolean;
+  swapFee?: string; // Add swapFee prop
 }
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
@@ -51,6 +53,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   destinationAddress,
   isSwapAndSend = false,
   isSwapSuccessful = false,
+  swapFee, // Add swapFee to destructuring
 }: SwapConfirmDialogProps) => {
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -137,7 +140,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                    on {sourceToken.xChainId.toUpperCase()}
+                    on {getXChainType(sourceToken.xChainId)}
                   </div>
                 </div>
               </div>
@@ -180,7 +183,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                    on {destinationToken.xChainId.toUpperCase()}
+                    on {getXChainType(destinationToken.xChainId)}
                   </div>
                 </div>
               </div>
@@ -243,7 +246,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     />
                   </div>
                 ) : (
-                  `Swap ${destinationToken.symbol} on ${destinationToken.xChainId.toUpperCase()}`
+                  `Swap ${destinationToken.symbol} on ${getXChainType(destinationToken.xChainId)}`
                 )}
               </Button>
 
@@ -277,7 +280,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                       <div className="space-y-2 text-(length:--body-comfortable)">
                         <div className="flex justify-between">
                           <span className="text-clay-light">Swap Fee:</span>
-                          <span className="text-espresso font-medium">&lt; $0.01</span>
+                          <span className="text-espresso font-medium">{swapFee || '&lt; $0.01'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-clay-light">Network Cost:</span>
