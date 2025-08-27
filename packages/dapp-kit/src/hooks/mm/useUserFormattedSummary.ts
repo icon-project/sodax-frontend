@@ -1,8 +1,6 @@
-import { type FormatUserSummaryResponse, type FormatReserveUSDResponse, WalletAbstractionService } from '@sodax/sdk';
-import type { ChainId } from '@sodax/types';
+import { type FormatUserSummaryResponse, type FormatReserveUSDResponse, SpokeProvider } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import { useSpokeProvider } from '../provider/useSpokeProvider';
 
 /**
  * Hook for fetching formatted summary of Sodax user portfolio (holdings, total liquidity,
@@ -13,7 +11,7 @@ import { useSpokeProvider } from '../provider/useSpokeProvider';
  *
  * @example
  * ```typescript
- * const { data: userFormattedSummary, isLoading, error } = useUserFormattedSummary();
+ * const { data: userFormattedSummary, isLoading, error } = useUserFormattedSummary(spokeProvider, address);
  * ```
  *
  * @returns A React Query result object containing:
@@ -22,17 +20,16 @@ import { useSpokeProvider } from '../provider/useSpokeProvider';
  *   - error: Any error that occurred during data fetching
  */
 export function useUserFormattedSummary(
-  spokeChainId: ChainId | undefined,
+  spokeProvider: SpokeProvider | undefined,
   address: string | undefined,
-): UseQueryResult<FormatUserSummaryResponse<FormatReserveUSDResponse> | undefined, Error> {
+): UseQueryResult<FormatUserSummaryResponse<FormatReserveUSDResponse>, Error> {
   const { sodax } = useSodaxContext();
-  const spokeProvider = useSpokeProvider(spokeChainId);
 
   return useQuery({
-    queryKey: ['userFormattedSummary', spokeChainId, address],
+    queryKey: ['userFormattedSummary', spokeProvider?.chainConfig.chain.id, address],
     queryFn: async () => {
       if (!spokeProvider || !address) {
-        return undefined;
+        throw new Error('Spoke provider or address is not defined');
       }
 
       // fetch reserves and hub wallet address
@@ -51,7 +48,7 @@ export function useUserFormattedSummary(
         sodax.moneyMarket.data.buildUserSummaryRequest(reserves, formattedReserves, userReserves),
       );
     },
-    enabled: !!spokeChainId && !!address,
+    enabled: !!spokeProvider && !!address,
     refetchInterval: 5000,
   });
 }

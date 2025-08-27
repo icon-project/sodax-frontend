@@ -32,7 +32,7 @@ const hubConfig = {
 } satisfies EvmHubProviderConfig;
 
 const spokeEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
-const spokeProvider = new SonicSpokeProvider(spokeEvmWallet, spokeChainConfig[HUB_CHAIN_ID]);
+const spokeProvider = new SonicSpokeProvider(spokeEvmWallet, spokeChainConfig[SONIC_MAINNET_CHAIN_ID]);
 
 const sodax = new Sodax({
   moneyMarket: moneyMarketConfig,
@@ -121,7 +121,8 @@ async function displayFormattedData() {
   );
 
   // display formatted data
-  console.log('formattedReserves:', formattedReserves);
+  // console.log('user address:', await spokeProvider.walletProvider.getWalletAddress());
+  // console.log('formattedReserves:', formattedReserves);
   console.log('userSummary:', userSummary);
 }
 

@@ -49,6 +49,7 @@ export const MAX_UINT256 = (1n << 256n) - 1n;
 export const FEE_PERCENTAGE_SCALE = 10000n; // 100% = 10000
 export const STELLAR_PRIORITY_FEE = '10000';
 export const STELLAR_DEFAULT_TX_TIMEOUT_SECONDS = 100;
+export const DEFAULT_DEADLINE_OFFSET = 300n; // 5 minutes in seconds
 
 export const VAULT_TOKEN_DECIMALS = 18;
 
@@ -148,6 +149,7 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       sodaToken: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
+    wrappedNativeToken: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
     supportedTokens: [],
   } satisfies EvmHubChainConfig,
 } as const;
@@ -647,6 +649,8 @@ export const spokeChainConfig = {
     addresses: {
       connection:
         '0xf3b1e696a66d02cb776dc15aae73c68bc8f03adcb6ba0ec7f6332d9d90a6a3d2::connectionv3::0x3ee76d13909ac58ae13baab4c9be5a5142818d9a387aed641825e5d4356969bf',
+      assetManagerId:
+        '0xa17a409164d1676db71b411ab50813ba2c7dd547d2df538c699049566f1ff922::asset_manager::0xcb7346339340b7f8dea40fcafb70721dc2fcfa7e8626a89fd954d46c1f928b61',
       assetManager:
         '0x897f911a4b7691870a1a2513af7e85fdee8de275615c77068fd8b90b8e78c678::asset_manager::0xcb7346339340b7f8dea40fcafb70721dc2fcfa7e8626a89fd954d46c1f928b61',
       xTokenManager: '',
@@ -1015,7 +1019,7 @@ export const hubAssets: Record<
 > = {
   [SONIC_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S.address,
       decimal: 18,
       symbol: 'S',
       name: 'Sonic',

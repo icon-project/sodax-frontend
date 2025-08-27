@@ -2,10 +2,12 @@ import { type Address, type Hex, toHex } from 'viem';
 import { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeProvider.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 import {
+  type DepositSimulationParams,
   type HubAddress,
   type InjectiveGasEstimate,
   type InjectiveRawTransaction,
   type PromiseInjectiveTxReturnType,
+  encodeAddress,
   getIntentRelayChainId,
 } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
@@ -94,6 +96,40 @@ export class InjectiveSpokeService {
       spokeProvider,
       raw,
     );
+  }
+
+  /**
+   * Generate simulation parameters for deposit from InjectiveSpokeDepositParams.
+   * @param {InjectiveSpokeDepositParams} params - The deposit parameters.
+   * @param {InjectiveSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
+   */
+  public static async getSimulateDepositParams(
+    params: InjectiveSpokeDepositParams,
+    spokeProvider: InjectiveSpokeProvider,
+    hubProvider: EvmHubProvider,
+  ): Promise<DepositSimulationParams> {
+    const to =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        toHex(Buffer.from(params.from, 'utf-8')),
+        hubProvider,
+      ));
+
+    return {
+      spokeChainID: spokeProvider.chainConfig.chain.id,
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+      to,
+      amount: params.amount,
+      data: params.data,
+      srcAddress: encodeAddress(
+        spokeProvider.chainConfig.chain.id,
+        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
+      ),
+    };
   }
 
   /**
