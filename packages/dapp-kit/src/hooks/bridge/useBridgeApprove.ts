@@ -1,10 +1,9 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BridgeParams } from '@sodax/sdk';
+import type { BridgeParams, CreateBridgeIntentParams, SpokeProvider } from '@sodax/sdk';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { SpokeProvider } from '@sodax/sdk';
 
 interface UseBridgeApproveReturn {
-  approve: (params: BridgeParams) => Promise<boolean>;
+  approve: (params: CreateBridgeIntentParams) => Promise<boolean>;
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
@@ -39,12 +38,15 @@ export function useBridgeApprove(spokeProvider: SpokeProvider | undefined): UseB
     error,
     reset: resetError,
   } = useMutation({
-    mutationFn: async (params: BridgeParams) => {
+    mutationFn: async (params: CreateBridgeIntentParams) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
 
-      const allowance = await sodax.bridge.approve(params, spokeProvider);
+      const allowance = await sodax.bridge.approve({
+        params,
+        spokeProvider,
+      });
 
       if (!allowance.ok) {
         throw new Error('Failed to approve tokens for bridge');

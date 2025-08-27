@@ -26,6 +26,7 @@ import {
   DEFAULT_RELAYER_API_ENDPOINT,
   encodeAddress,
   type UnifiedBnUSDMigrateParams,
+  CreateBridgeIntentParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
@@ -488,7 +489,7 @@ async function bridge(
   recipient: Hex,
   partnerFee?: PartnerFee,
 ): Promise<void> {
-  const bridgeParams: BridgeParams = {
+  const bridgeParams: CreateBridgeIntentParams = {
     srcChainId,
     srcAsset,
     amount,
@@ -500,15 +501,24 @@ async function bridge(
 
   // For Sonic as source chain, use SonicSpokeProvider
   if (srcChainId === SONIC_MAINNET_CHAIN_ID) {
-    const isAllowed = await bridgeService.isAllowanceValid(bridgeParams, spokeProvider);
+    const isAllowed = await bridgeService.isAllowanceValid({
+      params: bridgeParams,
+      spokeProvider,
+    });
     console.log('[bridge] isAllowed', isAllowed);
     if (!isAllowed.ok || !isAllowed.value) {
-      await bridgeService.approve(bridgeParams, spokeProvider);
+      await bridgeService.approve({
+        params: bridgeParams,
+        spokeProvider,
+      });
       console.log('[bridge] approved');
       return;
     }
 
-    const result = await bridgeService.bridge(bridgeParams, spokeProvider);
+    const result = await bridgeService.bridge({
+      params: bridgeParams,
+      spokeProvider,
+    });
 
     if (result.ok) {
       const [spokeTxHash, hubTxHash] = result.value;

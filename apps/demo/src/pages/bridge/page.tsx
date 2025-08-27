@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -16,8 +15,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  type BridgeParams,
   BridgeService,
+  CreateBridgeIntentParams,
   POLYGON_MAINNET_CHAIN_ID,
   spokeChainConfig,
   supportedSpokeChains,
@@ -91,7 +90,7 @@ export default function BridgePage() {
     setOpen(true);
   };
 
-  const [order, setOrder] = useState<BridgeParams | undefined>(undefined);
+  const [order, setOrder] = useState<CreateBridgeIntentParams | undefined>(undefined);
 
   const fromWalletProvider = useWalletProvider(fromToken.xChainId);
   const fromProvider = useSpokeProvider(fromToken.xChainId, fromWalletProvider);
@@ -109,7 +108,7 @@ export default function BridgePage() {
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useBridgeAllowance(order, fromProvider);
   const { mutateAsync: bridge, isPending: isBridging } = useBridge(fromProvider);
 
-  const handleBridge = async (order: BridgeParams) => {
+  const handleBridge = async (order: CreateBridgeIntentParams) => {
     setOpen(false);
     await bridge(order);
   };

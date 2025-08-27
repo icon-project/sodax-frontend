@@ -1,4 +1,3 @@
-// packages/sdk/src/services/bridge/BridgeService.ts
 import invariant from 'tiny-invariant';
 import {
   type SpokeProvider,
@@ -30,12 +29,17 @@ import {
   type HttpUrl,
   isValidVault,
   encodeAddress,
+  type Prettify,
+  type OptionalFee,
+  type OptionalRaw,
+  type OptionalTimeout,
+  type GetAddressType,
 } from '../../index.js';
-import { spokeChainConfig } from '../../constants.js';
+import { isValidSpokeChainId, spokeChainConfig } from '../../constants.js';
 import { type SpokeChainId, SONIC_MAINNET_CHAIN_ID, type XToken } from '@sodax/types';
 import { isAddress, type Address } from 'viem';
 
-export type BridgeParams = {
+export type CreateBridgeIntentParams = {
   srcChainId: SpokeChainId;
   srcAsset: string;
   amount: bigint;
@@ -44,6 +48,14 @@ export type BridgeParams = {
   recipient: string; // non-encoded recipient address
   partnerFee?: PartnerFee;
 };
+
+export type BridgeParams<S extends SpokeProvider> = Prettify<
+  {
+    params: CreateBridgeIntentParams;
+    spokeProvider: S;
+    skipSimulation?: boolean;
+  } & OptionalFee
+>;
 
 export type BridgeErrorCode =
   | 'ALLOWANCE_CHECK_FAILED'
@@ -82,10 +94,10 @@ export class BridgeService {
    * @param spokeProvider - The spoke provider
    * @returns Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>>
    */
-  public async isAllowanceValid<S extends SpokeProvider>(
-    params: BridgeParams,
-    spokeProvider: S,
-  ): Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>> {
+  public async isAllowanceValid<S extends SpokeProvider>({
+    params,
+    spokeProvider,
+  }: BridgeParams<S>): Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>> {
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(params.srcAsset.length > 0, 'Source asset is required');
@@ -97,9 +109,9 @@ export class BridgeService {
         invariant(isAddress(params.srcAsset), 'Invalid source asset address for EVM chain');
 
         const allowanceResult = await Erc20Service.isAllowanceValid(
-          params.srcAsset as `0x${string}`,
+          params.srcAsset,
           params.amount,
-          walletAddress as `0x${string}`,
+          walletAddress as GetAddressType<EvmSpokeProvider>,
           spokeProvider.chainConfig.addresses.assetManager,
           spokeProvider,
         );
@@ -127,9 +139,9 @@ export class BridgeService {
         const userRouter = await SonicSpokeService.getUserRouter(walletAddress as `0x${string}`, spokeProvider);
 
         const allowanceResult = await Erc20Service.isAllowanceValid(
-          params.srcAsset as `0x${string}`,
+          params.srcAsset,
           params.amount,
-          walletAddress as `0x${string}`,
+          walletAddress as GetAddressType<SonicSpokeProvider>,
           userRouter,
           spokeProvider,
         );
@@ -173,11 +185,11 @@ export class BridgeService {
    * @param raw - Whether to return raw transaction data
    * @returns Promise<Result<TxReturnType<S, R>, BridgeError<'APPROVAL_FAILED'>>>
    */
-  public async approve<S extends SpokeProvider, R extends boolean = false>(
-    params: BridgeParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, BridgeError<'APPROVAL_FAILED'>>> {
+  public async approve<S extends SpokeProvider, R extends boolean = false>({
+    params,
+    spokeProvider,
+    raw,
+  }: Prettify<BridgeParams<S> & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>, BridgeError<'APPROVAL_FAILED'>>> {
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(params.srcAsset.length > 0, 'Source asset is required');
@@ -189,7 +201,7 @@ export class BridgeService {
         invariant(isAddress(params.srcAsset), 'Invalid source asset address for EVM chain');
 
         const result = await Erc20Service.approve(
-          params.srcAsset as `0x${string}`,
+          params.srcAsset,
           params.amount,
           spokeProvider.chainConfig.addresses.assetManager,
           spokeProvider,
@@ -206,15 +218,12 @@ export class BridgeService {
       if (spokeProvider instanceof SonicSpokeProvider) {
         invariant(isAddress(params.srcAsset), 'Invalid source asset address for Sonic chain');
 
-        const userRouter = await SonicSpokeService.getUserRouter(walletAddress as `0x${string}`, spokeProvider);
-
-        const result = await Erc20Service.approve(
-          params.srcAsset as `0x${string}`,
-          params.amount,
-          userRouter,
+        const userRouter = await SonicSpokeService.getUserRouter(
+          walletAddress as GetAddressType<SonicSpokeProvider>,
           spokeProvider,
-          raw,
         );
+
+        const result = await Erc20Service.approve(params.srcAsset, params.amount, userRouter, spokeProvider, raw);
 
         return {
           ok: true,
@@ -273,13 +282,15 @@ export class BridgeService {
    * ] = result.value;
    * console.log('Bridge transaction hashes:', { spokeTxHash, hubTxHash });
    */
-  public async bridge<S extends SpokeProvider>(
-    params: BridgeParams,
-    spokeProvider: S,
+  public async bridge<S extends SpokeProvider>({
+    params,
+    spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>> {
+  }: Prettify<BridgeParams<S> & OptionalTimeout>): Promise<
+    Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>
+  > {
     try {
-      const txResult = await this.createBridgeIntent(params, spokeProvider);
+      const txResult = await this.createBridgeIntent({ params, spokeProvider, raw: false });
 
       if (!txResult.ok) {
         return txResult;
@@ -298,7 +309,7 @@ export class BridgeService {
           ok: false,
           error: {
             code: packetResult.error.code,
-            error: 'BRIDGE_FAILED', // TODO
+            error: packetResult.error,
           },
         };
       }
@@ -351,11 +362,13 @@ export class BridgeService {
    *   console.error('Bridge intent creation failed:', result.error);
    * }
    */
-  async createBridgeIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
-    params: BridgeParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, BridgeError<BridgeErrorCode>> & BridgeOptionalExtraData> {
+  async createBridgeIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
+    params,
+    spokeProvider,
+    raw,
+  }: Prettify<BridgeParams<S> & OptionalRaw<R>>): Promise<
+    Result<TxReturnType<S, R>, BridgeError<'CREATE_BRIDGE_INTENT_FAILED'>> & BridgeOptionalExtraData
+  > {
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       const srcAssetInfo = getHubAssetInfo(params.srcChainId, params.srcAsset);
@@ -373,7 +386,7 @@ export class BridgeService {
       );
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await WalletAbstractionService.getUserHubWalletAddress(
+      const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
         walletAddress,
         spokeProvider,
         this.hubProvider,
@@ -415,12 +428,12 @@ export class BridgeService {
 
   /**
    * Build the bridge transaction data for executing the bridge operation on the hub
-   * @param params - The bridge parameters
+   * @param params - The create bridge intent parameters
    * @param srcAssetInfo - The source asset information
    * @param dstAssetInfo - The destination asset information
    * @returns Hex - The encoded contract calls for the bridge operation
    */
-  buildBridgeData(params: BridgeParams, srcAssetInfo?: HubAssetInfo, dstAssetInfo?: HubAssetInfo): Hex {
+  buildBridgeData(params: CreateBridgeIntentParams, srcAssetInfo?: HubAssetInfo, dstAssetInfo?: HubAssetInfo): Hex {
     const calls: EvmContractCall[] = [];
     let translatedAmount = params.amount;
     let srcVault = params.srcAsset as `0x${string}`;
@@ -473,24 +486,38 @@ export class BridgeService {
   /**
    * Check if two assets on different chains are bridgeable
    * Two assets are bridgeable if they share the same vault on the hub chain
-   * @param from - The source token with chain information
-   * @param to - The destination token with chain information
+   * @param from - The source X token
+   * @param to - The destination X token
+   * @param unchecked - Whether to skip the chain ID validation
    * @returns boolean - true if assets are bridgeable, false otherwise
    */
-  public static isBridgeable(from: XToken, to: XToken): boolean {
+  public static isBridgeable({
+    from,
+    to,
+    unchecked = false,
+  }: {
+    from: XToken;
+    to: XToken;
+    unchecked?: boolean;
+  }): boolean {
     try {
+      if (!unchecked) {
+        invariant(isValidSpokeChainId(from.xChainId), `Invalid spoke chain (${from.xChainId})`);
+        invariant(isValidSpokeChainId(to.xChainId), `Invalid spoke chain (${to.xChainId})`);
+      }
+
       // Get hub asset info for both source and destination assets
-      const srcAssetInfo = getHubAssetInfo(from.xChainId as SpokeChainId, from.address);
-      const dstAssetInfo = getHubAssetInfo(to.xChainId as SpokeChainId, to.address);
+      const srcAssetInfo = getHubAssetInfo(from.xChainId, from.address);
+      const dstAssetInfo = getHubAssetInfo(to.xChainId, to.address);
 
       // Check if both assets are supported and have vault information
-      if (!srcAssetInfo || !dstAssetInfo) {
-        return false;
-      }
+      invariant(srcAssetInfo && dstAssetInfo, 'Source or destination asset is not supported');
 
       // Check if the vault addresses are the same (case-insensitive comparison)
       return srcAssetInfo.vault.toLowerCase() === dstAssetInfo.vault.toLowerCase();
     } catch (error) {
+      console.error(error);
+
       // Return false on any error
       return false;
     }
@@ -505,7 +532,7 @@ export class BridgeService {
   public static getBridgeableTokens(from: XToken, toChainId: SpokeChainId): XToken[] {
     try {
       // Get hub asset info for the source asset
-      const srcAssetInfo = getHubAssetInfo(from.xChainId as SpokeChainId, from.address);
+      const srcAssetInfo = getHubAssetInfo(from.xChainId, from.address);
 
       if (!srcAssetInfo) {
         return [];

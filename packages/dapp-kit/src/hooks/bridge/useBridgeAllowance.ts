@@ -1,7 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BridgeParams } from '@sodax/sdk';
-import type { SpokeProvider } from '@sodax/sdk';
+import type { SpokeProvider, CreateBridgeIntentParams } from '@sodax/sdk';
 
 /**
  * Hook for checking token allowance for bridge operations.
@@ -23,7 +22,7 @@ import type { SpokeProvider } from '@sodax/sdk';
  * ```
  */
 export function useBridgeAllowance(
-  params: BridgeParams | undefined,
+  params: CreateBridgeIntentParams | undefined,
   spokeProvider: SpokeProvider | undefined,
 ): UseQueryResult<boolean, Error> {
   const { sodax } = useSodaxContext();
@@ -35,7 +34,10 @@ export function useBridgeAllowance(
         return false;
       }
 
-      const allowance = await sodax.bridge.isAllowanceValid(params, spokeProvider);
+      const allowance = await sodax.bridge.isAllowanceValid({
+        params,
+        spokeProvider,
+      });
 
       if (allowance.ok) {
         return allowance.value;

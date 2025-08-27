@@ -1,5 +1,5 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BridgeParams, BridgeError, BridgeErrorCode, SpokeTxHash, HubTxHash, Result } from '@sodax/sdk';
+import type { BridgeError, BridgeErrorCode, SpokeTxHash, HubTxHash, Result, CreateBridgeIntentParams } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { SpokeProvider } from '@sodax/sdk';
 
@@ -33,16 +33,19 @@ import type { SpokeProvider } from '@sodax/sdk';
  */
 export function useBridge(
   spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>, Error, BridgeParams> {
+): UseMutationResult<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>, Error, CreateBridgeIntentParams> {
   const { sodax } = useSodaxContext();
 
-  return useMutation<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>, Error, BridgeParams>({
-    mutationFn: async (params: BridgeParams) => {
+  return useMutation<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>, Error, CreateBridgeIntentParams>({
+    mutationFn: async (params: CreateBridgeIntentParams) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
 
-      const result = await sodax.bridge.bridge(params, spokeProvider);
+      const result = await sodax.bridge.bridge({
+        params,
+        spokeProvider,
+      });
 
       if (!result.ok) {
         throw new Error(`Bridge failed: ${result.error.code}`);

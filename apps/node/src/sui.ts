@@ -18,6 +18,7 @@ import {
   type PartnerFee,
   DEFAULT_RELAYER_API_ENDPOINT,
   BridgeService,
+  CreateBridgeIntentParams,
 } from '@sodax/sdk';
 import { HubChainId, SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { SuiWalletProvider } from './sui-wallet-provider.js';
@@ -281,7 +282,7 @@ async function bridge(
   recipient: Hex,
   partnerFee?: PartnerFee,
 ): Promise<void> {
-  const bridgeParams: BridgeParams = {
+  const bridgeParams: CreateBridgeIntentParams = {
     srcChainId,
     srcAsset,
     amount,
@@ -293,7 +294,10 @@ async function bridge(
 
   // For Sui as source chain, use SuiSpokeProvider
   if (srcChainId === SUI_CHAIN_ID) {
-    const result = await bridgeService.bridge(bridgeParams, suiSpokeProvider);
+    const result = await bridgeService.bridge({
+      params: bridgeParams,
+      spokeProvider: suiSpokeProvider,
+    });
 
     if (result.ok) {
       const [spokeTxHash, hubTxHash] = result.value;

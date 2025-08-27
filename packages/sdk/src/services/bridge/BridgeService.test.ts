@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BridgeService } from './BridgeService.js';
-import { ARBITRUM_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, type XToken } from '@sodax/types';
-import type { SpokeChainId } from '@sodax/types';
+import { ARBITRUM_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
 
 describe('BridgeService', () => {
   describe('isBridgeable', () => {
@@ -22,7 +21,10 @@ describe('BridgeService', () => {
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
-      const result = BridgeService.isBridgeable(fromToken, toToken);
+      const result = BridgeService.isBridgeable({
+        from: fromToken,
+        to: toToken,
+      });
 
       expect(result).toBe(true);
     });
@@ -44,7 +46,10 @@ describe('BridgeService', () => {
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
-      const result = BridgeService.isBridgeable(fromToken, toToken);
+      const result = BridgeService.isBridgeable({
+        from: fromToken,
+        to: toToken,
+      });
 
       expect(result).toBe(false);
     });
@@ -66,7 +71,10 @@ describe('BridgeService', () => {
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
-      const result = BridgeService.isBridgeable(fromToken, toToken);
+      const result = BridgeService.isBridgeable({
+        from: fromToken,
+        to: toToken,
+      });
 
       expect(result).toBe(false);
     });
