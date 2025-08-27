@@ -71,6 +71,7 @@ export const WalletModal = ({
   };
 
   const mainChain = getMainChain();
+  console.log('mainChain', mainChain);
 
   const otherChains = isMigrateRoute
     ? availableChains.filter(w => w.xChainType !== 'ICON')

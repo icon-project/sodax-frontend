@@ -14,6 +14,29 @@ export enum CurrencyInputPanelType {
   OUTPUT = 'OUTPUT',
 }
 
+// Utility function to format numbers according to specified rules
+const formatNumberForDisplay = (value: string | number, currencySymbol?: string): string => {
+  if (!value || value === '') return '';
+
+  const numValue = typeof value === 'string' ? Number.parseFloat(value) : value;
+
+  if (Number.isNaN(numValue)) return '';
+
+  // If number is less than 1, show 4 or 6 decimals (6 for assets like BTC)
+  if (numValue < 1) {
+    const decimals = currencySymbol === 'BTC' ? 6 : 4;
+    return numValue.toFixed(decimals);
+  }
+
+  // If number is greater than 1000, cut off decimals
+  if (numValue >= 1000) {
+    return Math.floor(numValue).toString();
+  }
+
+  // For numbers between 1 and 1000, show up to 2 decimals
+  return numValue.toFixed(2);
+};
+
 interface CurrencyInputPanelProps {
   type: CurrencyInputPanelType;
   chainId: SpokeChainId;
@@ -131,7 +154,13 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             <Input
               type="number"
               ref={inputRef}
-              value={inputValue === '' ? '' : Number(inputValue)}
+              value={
+                inputValue === ''
+                  ? ''
+                  : type === CurrencyInputPanelType.OUTPUT
+                    ? formatNumberForDisplay(inputValue, currency.symbol)
+                    : inputValue
+              }
               onChange={onInputChange}
               onFocus={onInputFocus}
               placeholder="0"
