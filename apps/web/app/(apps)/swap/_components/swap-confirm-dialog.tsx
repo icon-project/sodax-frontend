@@ -11,6 +11,7 @@ import { Timer, XIcon, Check, ChevronRight, ChevronsRight, ChevronDown, ChevronU
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
 import { getXChainType } from '@sodax/wallet-sdk';
+import { availableChains } from '@/constants/chains';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -103,6 +104,12 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     return `1 ${sourceToken.symbol} = ${exchangeRate.toFixed(6)} ${destinationToken.symbol}`;
   };
 
+  // Helper function to get chain name by ID
+  const getChainNameById = (chainId: string | number): string => {
+    const chain = availableChains.find(chain => chain.id === chainId);
+    return chain?.name || 'Unknown Chain';
+  };
+
   return (
     <Dialog open={open} onOpenChange={isCompleted ? undefined : onOpenChange}>
       <DialogContent className="md:max-w-[480px] p-12 w-[90%] shadow-none bg-vibrant-white gap-4" hideCloseButton>
@@ -140,7 +147,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                    on {getXChainType(sourceToken.xChainId)}
+                    on {getChainNameById(sourceToken.xChainId)}
                   </div>
                 </div>
               </div>
@@ -183,7 +190,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                    on {getXChainType(destinationToken.xChainId)}
+                    on {getChainNameById(destinationToken.xChainId)}
                   </div>
                 </div>
               </div>
@@ -246,7 +253,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     />
                   </div>
                 ) : (
-                  `Swap ${destinationToken.symbol} on ${getXChainType(destinationToken.xChainId)}`
+                  `Swap ${destinationToken.symbol} on ${getChainNameById(destinationToken.xChainId)}`
                 )}
               </Button>
 
