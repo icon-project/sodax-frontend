@@ -132,6 +132,11 @@ export type IntentWaitUntilIntentExecutedFailedErrorData = {
   error: unknown;
 };
 
+export type IntentPostExecutionFailedErrorData = SolverErrorResponse & {
+  intent: Intent;
+  intentDeliveryInfo: IntentDeliveryInfo;
+};
+
 export type IntentErrorCode = RelayErrorCode | 'UNKNOWN' | 'CREATION_FAILED' | 'POST_EXECUTION_FAILED';
 export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOUT'
   ? IntentWaitUntilIntentExecutedFailedErrorData
@@ -140,7 +145,7 @@ export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOU
     : T extends 'SUBMIT_TX_FAILED'
       ? IntentSubmitTxFailedErrorData
       : T extends 'POST_EXECUTION_FAILED'
-        ? SolverErrorResponse
+        ? IntentPostExecutionFailedErrorData
         : T extends 'UNKNOWN'
           ? IntentCreationFailedErrorData
           : never;
@@ -556,7 +561,18 @@ export class SolverService {
           ok: false,
           error: {
             code: 'POST_EXECUTION_FAILED',
-            data: result.error,
+            data: {
+              ...result.error,
+              intent,
+                intentDeliveryInfo: {
+                  srcChainId: params.srcChain,
+                  srcTxHash: spokeTxHash,
+                  srcAddress: params.srcAddress,
+                  dstChainId: params.dstChain,
+                  dstTxHash: dstIntentTxHash,
+                  dstAddress: params.dstAddress,
+                } satisfies IntentDeliveryInfo,
+            },
           },
         };
       }
