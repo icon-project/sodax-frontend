@@ -286,22 +286,22 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                       <Separator className="bg-clay-light h-[1px] mt-4 mb-4 opacity-30" />
                       <div className="space-y-2 text-(length:--body-comfortable)">
                         <div className="flex justify-between">
-                          <span className="text-clay-light">Swap Fee:</span>
+                          <span className="text-clay-light">Swap Fee (0.10%)</span>
                           <span className="text-espresso font-medium">{swapFee || '&lt; $0.01'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-clay-light">Network Cost:</span>
+                          <span className="text-clay-light">Network cost</span>
                           <span className="text-espresso font-medium">
                             {/* {estimatedGasFee ? `${estimatedGasFee} ETH` : 'N/A'} */}
                             &lt; $0.01
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-clay-light">Max Slippage:</span>
+                          <span className="text-clay-light">Max slippage</span>
                           <span className="text-espresso font-medium">{slippageTolerance}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-clay-light">Via:</span>
+                          <span className="text-clay-light">Via</span>
                           <span className="text-espresso font-medium">SODAX SDK</span>
                         </div>
                       </div>
