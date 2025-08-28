@@ -220,6 +220,20 @@ export const spokeChainConfig = {
         address: '0x7c7d53EEcda37a87ce0D5bf8E0b24512A48dC963',
         xChainId: SONIC_MAINNET_CHAIN_ID,
       },
+      sodaUSDC: {
+        symbol: 'sodaUSDC',
+        name: 'SODA USDC',
+        decimals: 18,
+        address: '0xabbb91c0617090f0028bdc27597cd0d038f3a833',
+        xChainId: SONIC_MAINNET_CHAIN_ID,
+      },
+      sodaPOL: {
+        symbol: 'sodaPOL',
+        name: 'SODA POL',
+        decimals: 18,
+        address: '0x208ed38f4783328aa9ebfec360d32e7520a9b779',
+        xChainId: SONIC_MAINNET_CHAIN_ID,
+      },
     },
   } as const satisfies SonicSpokeChainConfig,
   [SOLANA_MAINNET_CHAIN_ID]: {
@@ -1126,6 +1140,20 @@ export const hubAssets: Record<
       symbol: 'SODA',
       name: 'SODA',
       vault: hubVaults.sodaSODA.address,
+    },
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.sodaUSDC.address]: {
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.sodaUSDC.address,
+      decimal: 6,
+      symbol: 'sodaUSDC',
+      name: 'SODA USDC',
+      vault: hubVaults.sodaUSDC.address,
+    },
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.sodaPOL.address]: {
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.sodaPOL.address,
+      decimal: 18,
+      symbol: 'sodaPOL',
+      name: 'SODA POL',
+      vault: hubVaults.sodaPOL.address,
     },
   },
   [AVALANCHE_MAINNET_CHAIN_ID]: {
