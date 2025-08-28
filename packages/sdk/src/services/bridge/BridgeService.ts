@@ -493,6 +493,9 @@ export class BridgeService {
    */
   public async getSpokeAssetManagerTokenBalance(chainId: SpokeChainId, token: string): Promise<bigint> {
     try {
+      if (chainId === SONIC_MAINNET_CHAIN_ID && isValidVault(token as Address)) {
+        return -1n; // -1n means no bridgable limit
+      }
       const hubAsset = hubAssets[chainId][token];
       invariant(hubAsset, `Hub asset not found for token ${token} on chain ${chainId}`);
       const reserves = await EvmVaultTokenService.getVaultReserves(hubAsset.vault, this.hubProvider.publicClient);

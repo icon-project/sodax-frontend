@@ -56,15 +56,10 @@ export default function BridgePage() {
 
   const handleToChainChange = (chainId: SpokeChainId) => {
     setToTokenChainId(chainId);
+    setToToken(Object.values(spokeChainConfig[chainId].supportedTokens)[0]);
   };
 
-  const bridgeableTokens = useMemo(() => {
-    return BridgeService.getBridgeableTokens(fromToken, toTokenChainId);
-  }, [fromToken, toTokenChainId]);
-
-  const toToken = useMemo(() => {
-    return bridgeableTokens[0];
-  }, [bridgeableTokens]);
+  const [toToken, setToToken] = useState<XToken>(Object.values(spokeChainConfig[toTokenChainId].supportedTokens)[0]);
 
   const { data: spokeAssetManagerTokenBalance, isLoading: isLoadingSpokeAssetManagerTokenBalance } =
     useSpokeAssetManagerTokenBalance(toToken?.xChainId, toToken?.address);
@@ -132,6 +127,13 @@ export default function BridgePage() {
       setToTokenChainId(fromToken.xChainId);
     }
   };
+
+  const isBridgeable = useMemo(() => {
+    return BridgeService.isBridgeable({
+      from: fromToken,
+      to: toToken,
+    });
+  }, [fromToken, toToken]);
 
   return (
     <div className="flex flex-col items-center content-center justify-center h-screen">
@@ -207,12 +209,20 @@ export default function BridgePage() {
             <div className="flex-grow">
               <Input type="number" placeholder="0.0" value={fromAmount} readOnly />
             </div>
-            <Select value={toToken?.symbol} disabled={true}>
+            <Select
+              value={toToken?.symbol}
+              onValueChange={v => {
+                const selectedToken = supportedTokensPerChain.get(toTokenChainId)?.find(token => token.symbol === v);
+                if (selectedToken) {
+                  setToToken(selectedToken);
+                }
+              }}
+            >
               <SelectTrigger className="w-[110px]">
                 <SelectValue placeholder="Token" />
               </SelectTrigger>
               <SelectContent>
-                {bridgeableTokens.map(token => (
+                {supportedTokensPerChain.get(toTokenChainId)?.map(token => (
                   <SelectItem key={token.address} value={token.symbol}>
                     {token.symbol}
                   </SelectItem>
@@ -233,15 +243,23 @@ export default function BridgePage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="flex items-center gap-2">
-            Maximum Bridgeable Amount:{' '}
-            {isLoadingSpokeAssetManagerTokenBalance ? (
-              <Skeleton className="w-16 h-6 inline-block" />
-            ) : (
-              normaliseTokenAmount(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)
-            )}{' '}
-            {toToken?.symbol}
-          </div>
+          {isBridgeable ? (
+            <div className="flex items-center gap-2">
+              Maximum Bridgeable Amount:{' '}
+              {isLoadingSpokeAssetManagerTokenBalance ? (
+                <Skeleton className="w-16 h-6 inline-block" />
+              ) : spokeAssetManagerTokenBalance === -1n ? (
+                'No bridgable limit'
+              ) : (
+                normaliseTokenAmount(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)
+              )}{' '}
+              {toToken?.symbol}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span>Not bridgeable</span>
+            </div>
+          )}
           <Button variant="outline" onClick={openBridgeModal}>
             Bridge
           </Button>
