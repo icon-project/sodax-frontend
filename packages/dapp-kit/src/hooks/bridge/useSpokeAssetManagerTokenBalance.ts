@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { SpokeProvider } from '@sodax/sdk';
+import type { SpokeChainId, SpokeProvider } from '@sodax/sdk';
 
 /**
  * Hook for getting the balance of tokens held by the asset manager on a spoke chain.
@@ -25,20 +25,20 @@ import type { SpokeProvider } from '@sodax/sdk';
  * ```
  */
 export function useSpokeAssetManagerTokenBalance(
+  chainId: SpokeChainId,
   token: string | undefined,
-  spokeProvider: SpokeProvider | undefined,
 ): UseQueryResult<bigint, Error> {
   const { sodax } = useSodaxContext();
 
   return useQuery({
-    queryKey: ['spoke-asset-manager-token-balance', token, spokeProvider?.chainConfig.chain.id],
+    queryKey: ['spoke-asset-manager-token-balance', chainId, token],
     queryFn: async () => {
-      if (!spokeProvider || !token) {
+      if (!token) {
         return 0n;
       }
 
-      return await sodax.bridge.getSpokeAssetManagerTokenBalance(spokeProvider, token);
+      return await sodax.bridge.getSpokeAssetManagerTokenBalance(chainId, token);
     },
-    enabled: !!spokeProvider && !!token,
+    enabled: !!token,
   });
 }

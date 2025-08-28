@@ -35,7 +35,7 @@ import {
   type OptionalTimeout,
   type GetAddressType,
 } from '../../index.js';
-import { isValidSpokeChainId, spokeChainConfig } from '../../constants.js';
+import { hubAssets, isValidSpokeChainId, spokeChainConfig } from '../../constants.js';
 import { type SpokeChainId, SONIC_MAINNET_CHAIN_ID, type XToken } from '@sodax/types';
 import { isAddress, type Address } from 'viem';
 
@@ -484,19 +484,23 @@ export class BridgeService {
   }
 
   /**
-   * Get the balance of tokens held by the asset manager on a spoke chain. It's used to check if target chain has enough balance to bridge when bridging.
-   * @param spokeProvider - The spoke provider
-   * @param token - The token to get the balance of
-   * @returns Promise<bigint> - The balance of the token
+   * Retrieves the deposited token balance held by the asset manager on a spoke chain.
+   * This balance represents the available liquidity for bridging operations and is used to verify
+   * that the target chain has sufficient funds to complete a bridge transaction.
+   * @param spokeProvider - The spoke provider instance
+   * @param token - The token address to query the balance for
+   * @returns Promise<bigint> - The token balance as a bigint value
    */
-  public async getSpokeAssetManagerTokenBalance(spokeProvider: SpokeProvider, token: string): Promise<bigint> {
+  public async getSpokeAssetManagerTokenBalance(chainId: SpokeChainId, token: string): Promise<bigint> {
     try {
-      // Use the getDeposit function from the appropriate spoke service
-      // This function returns the balance of tokens held by the asset manager on the spoke chain
-      return await SpokeService.getDeposit(token as `0x${string}`, spokeProvider);
+      const hubAsset = hubAssets[chainId][token];
+      invariant(hubAsset, `Hub asset not found for token ${token} on chain ${chainId}`);
+      const reserves = await EvmVaultTokenService.getVaultReserves(hubAsset.vault, this.hubProvider.publicClient);
+      // reserves has balances and tokens array, we need to find the token in the tokens array and return the balance
+      const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === hubAsset.asset.toLowerCase());
+      invariant(tokenIndex !== -1, `Token ${token} not found in the vault reserves for chain ${chainId}`);
+      return reserves.balances[tokenIndex] ?? 0n;
     } catch (error) {
-      // If there's an error getting the balance, return 0
-      // This could happen if the token is not supported or there's a network issue
       console.warn(`Failed to get spoke asset manager token balance for token ${token}:`, error);
       return 0n;
     }

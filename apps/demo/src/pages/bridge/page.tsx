@@ -17,7 +17,7 @@ import {
 import {
   BridgeService,
   BASE_MAINNET_CHAIN_ID,
-  CreateBridgeIntentParams,
+  type CreateBridgeIntentParams,
   POLYGON_MAINNET_CHAIN_ID,
   spokeChainConfig,
   supportedSpokeChains,
@@ -66,11 +66,8 @@ export default function BridgePage() {
     return bridgeableTokens[0];
   }, [bridgeableTokens]);
 
-  const toWalletProvider = useWalletProvider(toToken?.xChainId);
-  const toProvider = useSpokeProvider(toToken?.xChainId, toWalletProvider);
-
   const { data: spokeAssetManagerTokenBalance, isLoading: isLoadingSpokeAssetManagerTokenBalance } =
-    useSpokeAssetManagerTokenBalance(toToken?.address, toProvider);
+    useSpokeAssetManagerTokenBalance(toToken?.xChainId, toToken?.address);
 
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFromAmount(e.target.value);
