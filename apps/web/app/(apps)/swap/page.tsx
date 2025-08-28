@@ -11,10 +11,11 @@ import { useWalletUI } from '../_context/wallet-ui';
 import { useXAccount, useXBalances, useXConnection } from '@sodax/wallet-sdk';
 import { getXChainType } from '@sodax/wallet-sdk';
 import { chainIdToChainName } from '@/providers/constants';
-import { useQuote, useSpokeProvider, useSwap } from '@sodax/dapp-kit';
+import { useQuote, useSpokeProvider, useSwap, useStatus } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk';
 import BigNumber from 'bignumber.js';
 import type { QuoteType } from '@sodax/sdk';
+import { SolverIntentStatusCode } from '@sodax/sdk';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useSodaxContext } from '@sodax/dapp-kit';
@@ -49,6 +50,7 @@ export default function SwapPage() {
   const [isSwapSuccessful, setIsSwapSuccessful] = useState<boolean>(false);
   const [isSwapAndSend, setIsSwapAndSend] = useState<boolean>(false);
   const [customDestinationAddress, setCustomDestinationAddress] = useState<string>('');
+  const [dstTxHash, setDstTxHash] = useState<string>('');
 
   const [sourceToken, setSourceToken] = useState<XToken>({
     name: 'ICON',
@@ -81,6 +83,11 @@ export default function SwapPage() {
   const sourceWalletProvider = useWalletProvider(sourceToken.xChainId);
   const sourceProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
 
+  // Monitor swap status when dstTxHash is available
+  const { data: status } = useStatus(
+    dstTxHash ? (dstTxHash as `0x${string}`) : '0x0000000000000000000000000000000000000000000000000000000000000000',
+  );
+
   const { data: sourceBalances } = useXBalances({
     xChainId: sourceToken.xChainId,
     xTokens: [sourceToken],
@@ -95,6 +102,20 @@ export default function SwapPage() {
 
   const sourceBalance = sourceBalances?.[sourceToken.address] || 0n;
   const destinationBalance = destinationBalances?.[destinationToken.address] || 0n;
+
+  // Check if swap is successful based on status
+  useEffect(() => {
+    console.log('Status update:', status, 'dstTxHash:', dstTxHash);
+    if (dstTxHash && status?.ok && status.value.status === SolverIntentStatusCode.SOLVED) {
+      console.log('Swap status is SOLVED, setting isSwapSuccessful to true');
+      setIsSwapSuccessful(true);
+    }
+  }, [status, dstTxHash]);
+
+  // Determine if we should show loading state
+  const isWaitingForSolvedStatus = useMemo(() => {
+    return dstTxHash && status?.ok && status.value.status !== SolverIntentStatusCode.SOLVED;
+  }, [dstTxHash, status]);
 
   // Get token prices and USD values
   const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
@@ -379,12 +400,16 @@ export default function SwapPage() {
         throw new Error(`Swap execution failed: ${result.error?.code || 'Unknown error'}`);
       }
 
-      // Swap succeeded
-      setIsSwapSuccessful(true);
+      // Store the destination transaction hash for status monitoring
+      const [, , intentDeliveryInfo] = result.value;
+      setDstTxHash(intentDeliveryInfo.dstTxHash);
+
+      // Invalidate balance queries
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     } catch (error) {
       console.error('Swap execution failed:', error);
       setSwapError(error instanceof Error ? error.message : 'Swap failed. Please try again.');
+      setDstTxHash('');
     }
   };
 
@@ -393,6 +418,7 @@ export default function SwapPage() {
     setDestinationAmount('');
     setSwapError('');
     setIsSwapSuccessful(false);
+    setDstTxHash('');
   };
 
   const buttonState = getButtonState();
@@ -501,13 +527,15 @@ export default function SwapPage() {
         exchangeRate={exchangeRate}
         onConfirm={handleSwapConfirm}
         onClose={handleDialogClose}
-        isLoading={isSwapPending}
+        isLoading={isSwapPending || isWaitingForSolvedStatus || false}
         slippageTolerance={0.5}
         estimatedGasFee="~$2.50"
         error={swapError}
         minOutputAmount={minOutputAmount}
         sourceAddress={sourceAddress}
-        destinationAddress={isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress}
+        destinationAddress={
+          isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || undefined
+        }
         isSwapAndSend={isSwapAndSend}
         isSwapSuccessful={isSwapSuccessful}
         swapFee={swapFee}
