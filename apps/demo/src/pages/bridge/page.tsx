@@ -1,5 +1,5 @@
 // biome-ignore lint/style/useImportType:
-import React, { use, useMemo, useState } from 'react';
+import React, { use, useEffect, useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { SelectChain } from '@/components/solver/SelectChain';
 import { Input } from '@/components/ui/input';
@@ -62,8 +62,10 @@ export default function BridgePage() {
     return BridgeService.getBridgeableTokens(fromToken, toTokenChainId);
   }, [fromToken, toTokenChainId]);
 
-  const toToken = useMemo(() => {
-    return bridgeableTokens[0];
+  const [toToken, setToToken] = useState<XToken>(bridgeableTokens[0]);
+
+  useEffect(() => {
+    setToToken(bridgeableTokens[0]);
   }, [bridgeableTokens]);
 
   const { data: spokeAssetManagerTokenBalance, isLoading: isLoadingSpokeAssetManagerTokenBalance } =
@@ -207,7 +209,15 @@ export default function BridgePage() {
             <div className="flex-grow">
               <Input type="number" placeholder="0.0" value={fromAmount} readOnly />
             </div>
-            <Select value={toToken?.symbol} disabled={true}>
+            <Select
+              value={toToken?.symbol}
+              onValueChange={v => {
+                const selectedToken = bridgeableTokens.find(token => token.symbol === v);
+                if (selectedToken) {
+                  setToToken(selectedToken);
+                }
+              }}
+            >
               <SelectTrigger className="w-[110px]">
                 <SelectValue placeholder="Token" />
               </SelectTrigger>
