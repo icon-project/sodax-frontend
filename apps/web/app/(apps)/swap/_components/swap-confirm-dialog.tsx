@@ -10,7 +10,7 @@ import type BigNumber from 'bignumber.js';
 import { Timer, XIcon, Check, ChevronRight, ChevronsRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
-import { getXChainType } from '@sodax/wallet-sdk';
+import { getXChainType, useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
 import { availableChains } from '@/constants/chains';
 
 interface SwapConfirmDialogProps {
@@ -59,6 +59,9 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [isAccordionExpanded, setIsAccordionExpanded] = useState<boolean>(false); // Add accordion state
+
+  // Add chain switching functionality
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
 
   // Update isCompleted when isSwapSuccessful changes
   useEffect(() => {
@@ -235,27 +238,41 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             </div>
           ) : (
             <div className="flex w-full flex-col gap-4">
-              <Button
-                variant="cherry"
-                className="w-full text-white font-semibold font-['InterRegular']"
-                onClick={handleConfirm}
-                disabled={isLoading || isConfirming}
-              >
-                {isLoading || isConfirming ? (
-                  <div className="flex items-center gap-2 text-white">
-                    <span>Swap in progress</span>
-                    <CircularProgressIcon
-                      width={16}
-                      height={16}
-                      stroke="white"
-                      progress={100}
-                      className="animate-spin"
-                    />
-                  </div>
-                ) : (
-                  `Swap ${destinationToken.symbol} on ${getChainNameById(destinationToken.xChainId)}`
-                )}
-              </Button>
+              {/* Show Switch Chain button if user is on wrong chain */}
+              {isWrongChain && (
+                <Button
+                  variant="cherry"
+                  className="w-full text-white font-semibold font-['InterRegular']"
+                  onClick={handleSwitchChain}
+                >
+                  Switch to {getChainNameById(sourceToken.xChainId)}
+                </Button>
+              )}
+
+              {/* Show Swap button only if not on wrong chain */}
+              {!isWrongChain && (
+                <Button
+                  variant="cherry"
+                  className="w-full text-white font-semibold font-['InterRegular']"
+                  onClick={handleConfirm}
+                  disabled={isLoading || isConfirming}
+                >
+                  {isLoading || isConfirming ? (
+                    <div className="flex items-center gap-2 text-white">
+                      <span>Swap in progress</span>
+                      <CircularProgressIcon
+                        width={16}
+                        height={16}
+                        stroke="white"
+                        progress={100}
+                        className="animate-spin"
+                      />
+                    </div>
+                  ) : (
+                    `Swap ${destinationToken.symbol} on ${getChainNameById(destinationToken.xChainId)}`
+                  )}
+                </Button>
+              )}
 
               {minOutputAmount && (
                 <div className="w-full">
