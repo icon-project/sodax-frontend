@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/currency-input-panel';
 import SwapConfirmDialog from './_components/swap-confirm-dialog';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,43 @@ const normaliseTokenAmount = (amount: number | string | bigint, decimals: number
     .toFixed(decimals, BigNumber.ROUND_DOWN);
 };
 
+// Component to monitor swap status only when dstTxHash is available
+interface SwapStatusMonitorProps {
+  dstTxHash: string;
+  onSwapSuccessful: () => void;
+  resetTrigger: number; // Add this to trigger reset of internal state
+}
+
+function SwapStatusMonitor({
+  dstTxHash,
+  onSwapSuccessful,
+  resetTrigger,
+}: SwapStatusMonitorProps): React.JSX.Element | null {
+  const { data: status } = useStatus(dstTxHash as `0x${string}`);
+  const hasCalledSuccess = useRef<boolean>(false);
+  const lastResetTrigger = useRef<number>(resetTrigger);
+
+  // Reset the success flag when resetTrigger changes (new swap started)
+  useEffect(() => {
+    if (resetTrigger !== lastResetTrigger.current) {
+      hasCalledSuccess.current = false;
+      lastResetTrigger.current = resetTrigger;
+    }
+  });
+
+  useEffect(() => {
+    console.log('Status update:', status, 'dstTxHash:', dstTxHash);
+    if (status?.ok && status.value.status === SolverIntentStatusCode.SOLVED && !hasCalledSuccess.current) {
+      console.log('Swap status is SOLVED, calling onSwapSuccessful');
+      hasCalledSuccess.current = true;
+      onSwapSuccessful();
+    }
+  }, [status, dstTxHash, onSwapSuccessful]);
+
+  // This component doesn't render anything, it just monitors status
+  return null;
+}
+
 export default function SwapPage() {
   const { openWalletModal } = useWalletUI();
   const queryClient = useQueryClient();
@@ -51,6 +88,12 @@ export default function SwapPage() {
   const [isSwapAndSend, setIsSwapAndSend] = useState<boolean>(false);
   const [customDestinationAddress, setCustomDestinationAddress] = useState<string>('');
   const [dstTxHash, setDstTxHash] = useState<string>('');
+  const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
+
+  // Memoize the callback to prevent unnecessary re-renders of SwapStatusMonitor
+  const handleSwapSuccessful = useCallback(() => {
+    setIsSwapSuccessful(true);
+  }, []);
 
   const [sourceToken, setSourceToken] = useState<XToken>({
     name: 'ICON',
@@ -84,9 +127,7 @@ export default function SwapPage() {
   const sourceProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
 
   // Monitor swap status when dstTxHash is available
-  const { data: status } = useStatus(
-    dstTxHash ? (dstTxHash as `0x${string}`) : '0x0000000000000000000000000000000000000000000000000000000000000000',
-  );
+  // Status monitoring is now handled by SwapStatusMonitor component
 
   const { data: sourceBalances } = useXBalances({
     xChainId: sourceToken.xChainId,
@@ -104,18 +145,12 @@ export default function SwapPage() {
   const destinationBalance = destinationBalances?.[destinationToken.address] || 0n;
 
   // Check if swap is successful based on status
-  useEffect(() => {
-    console.log('Status update:', status, 'dstTxHash:', dstTxHash);
-    if (dstTxHash && status?.ok && status.value.status === SolverIntentStatusCode.SOLVED) {
-      console.log('Swap status is SOLVED, setting isSwapSuccessful to true');
-      setIsSwapSuccessful(true);
-    }
-  }, [status, dstTxHash]);
+  // Status monitoring is now handled by SwapStatusMonitor component
 
   // Determine if we should show loading state
   const isWaitingForSolvedStatus = useMemo(() => {
-    return dstTxHash && status?.ok && status.value.status !== SolverIntentStatusCode.SOLVED;
-  }, [dstTxHash, status]);
+    return !!dstTxHash; // Convert to boolean - we'll handle the detailed status in the monitor component
+  }, [dstTxHash]);
 
   // Get token prices and USD values
   const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
@@ -340,6 +375,7 @@ export default function SwapPage() {
     try {
       setSwapError('');
       setIsSwapSuccessful(false);
+      setSwapResetCounter(prev => prev + 1);
 
       if (!sourceProvider) {
         throw new Error('Source provider not available');
@@ -419,12 +455,22 @@ export default function SwapPage() {
     setSwapError('');
     setIsSwapSuccessful(false);
     setDstTxHash('');
+    setSwapResetCounter(prev => prev + 1);
   };
 
   const buttonState = getButtonState();
 
   return (
     <div className="w-full">
+      {/* SwapStatusMonitor component - only renders when dstTxHash is available */}
+      {dstTxHash && (
+        <SwapStatusMonitor
+          dstTxHash={dstTxHash}
+          onSwapSuccessful={handleSwapSuccessful}
+          resetTrigger={swapResetCounter}
+        />
+      )}
+
       <div className="gap-(--layout-space-comfortable) w-full flex flex-col">
         <div className="inline-flex flex-col justify-start items-start gap-4">
           <div className="self-stretch mix-blend-multiply justify-end">
@@ -527,7 +573,7 @@ export default function SwapPage() {
         exchangeRate={exchangeRate}
         onConfirm={handleSwapConfirm}
         onClose={handleDialogClose}
-        isLoading={isSwapPending || isWaitingForSolvedStatus || false}
+        isLoading={Boolean(isSwapPending || isWaitingForSolvedStatus)}
         slippageTolerance={0.5}
         estimatedGasFee="~$2.50"
         error={swapError}
