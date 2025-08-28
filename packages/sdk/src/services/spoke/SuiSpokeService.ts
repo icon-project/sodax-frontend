@@ -118,7 +118,7 @@ export class SuiSpokeService {
       to,
       amount: params.amount,
       data: params.data,
-      srcAddress: toHex(encoder.encode(await spokeProvider.getAssetManagerAddress())),
+      srcAddress: toHex(encoder.encode(spokeProvider.chainConfig.addresses.originalAssetManager)),
     };
   }
 
