@@ -76,15 +76,21 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const walletProvider = useWalletProvider(sourceToken.xChainId);
   const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
 
-  const paramsForApprove = {
-    ...intentOrderPayload,
-    inputAmount: intentOrderPayload?.inputAmount.toString() || '0',
-    minOutputAmount: intentOrderPayload?.minOutputAmount.toString() || '0',
-    deadline: intentOrderPayload?.deadline.toString() || '0',
-  };
+  // Only create paramsForApprove when intentOrderPayload exists
+  const paramsForApprove = intentOrderPayload
+    ? {
+        ...intentOrderPayload,
+        inputAmount: intentOrderPayload.inputAmount.toString(),
+        minOutputAmount: intentOrderPayload.minOutputAmount.toString(),
+        deadline: intentOrderPayload.deadline.toString(),
+      }
+    : undefined;
+
   // Check approval status
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(paramsForApprove, spokeProvider);
+  console.log(paramsForApprove);
   console.log(hasAllowed);
+
   // Approve function
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, spokeProvider);
 
