@@ -664,7 +664,7 @@ export default function SwapPage() {
         slippageTolerance={slippageTolerance}
         estimatedGasFee="~$2.50"
         error={swapError}
-        minOutputAmount={minOutputAmount}
+        minOutputAmount={new BigNumber(minOutputAmount)}
         intentOrderPayload={intentOrderPayload}
         sourceAddress={sourceAddress}
         destinationAddress={

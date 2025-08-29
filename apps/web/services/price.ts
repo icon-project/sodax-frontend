@@ -139,7 +139,7 @@ export async function getTokenPrice(token: XToken): Promise<number> {
 
     // Add timeout to prevent hanging requests
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 10 second timeout
 
     const response = await fetch(`${COINGECKO_API_BASE}/simple/price?ids=${coinGeckoId}&vs_currencies=usd`, {
       signal: controller.signal,

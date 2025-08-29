@@ -67,6 +67,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [isAccordionExpanded, setIsAccordionExpanded] = useState<boolean>(false);
   const [approvalError, setApprovalError] = useState<string | null>(null);
+  const [allowanceConfirmed, setAllowanceConfirmed] = useState<boolean>(false);
 
   // Add chain switching functionality
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
@@ -95,8 +96,27 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       )
     : undefined;
 
-  // Check approval status
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(paramsForApprove, spokeProvider);
+  // Check approval status - only check if not already confirmed
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(
+    allowanceConfirmed ? undefined : paramsForApprove,
+    spokeProvider,
+  );
+
+  // Update allowance confirmed state when hasAllowed becomes true
+  useEffect(() => {
+    console.log(hasAllowed);
+    if (hasAllowed && !allowanceConfirmed) {
+      setAllowanceConfirmed(true);
+    }
+  }, [hasAllowed, allowanceConfirmed]);
+
+  // Reset allowance confirmed when dialog opens
+  useEffect(() => {
+    if (open) {
+      setAllowanceConfirmed(false);
+      setApprovalError(null);
+    }
+  }, [open]);
 
   // Approve function
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, spokeProvider);
@@ -319,13 +339,13 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
               )}
 
               {/* Show Approval button if not approved */}
-              {!isWrongChain && !hasAllowed && intentOrderPayload && (
+              {!isWrongChain && !allowanceConfirmed && intentOrderPayload && (
                 <div className="w-full">
                   <Button
                     variant="cherry"
                     className="w-full text-white font-semibold font-['InterRegular']"
                     onClick={handleApprove}
-                    disabled={isAllowanceLoading || isApproving}
+                    disabled={isAllowanceLoading || isApproving || allowanceConfirmed}
                   >
                     {isApproving ? (
                       <div className="flex items-center gap-2 text-white">
@@ -357,7 +377,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
               )}
 
               {/* Show Swap button only if not on wrong chain and approved */}
-              {!isWrongChain && hasAllowed && (
+              {!isWrongChain && allowanceConfirmed && (
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
@@ -382,7 +402,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
               )}
 
               {/* Show loading state when waiting for approval status */}
-              {!isWrongChain && !hasAllowed && !intentOrderPayload && (
+              {!isWrongChain && !allowanceConfirmed && !intentOrderPayload && (
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
