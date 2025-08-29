@@ -19,6 +19,7 @@ import { SolverIntentStatusCode } from '@sodax/sdk';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 
 const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
   if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
@@ -80,13 +81,32 @@ function SwapStatusMonitor({
 export default function SwapPage() {
   const { openWalletModal } = useWalletUI();
   const queryClient = useQueryClient();
-  const [sourceAmount, setSourceAmount] = useState<string>('');
-  const [destinationAmount, setDestinationAmount] = useState<string>('');
+
+  // Get swap state from Zustand store
+  const {
+    sourceToken,
+    destinationToken,
+    sourceAmount,
+    destinationAmount,
+    isSwapAndSend,
+    customDestinationAddress,
+    slippageTolerance,
+  } = useSwapState();
+
+  // Get swap actions from Zustand store
+  const {
+    setSourceToken,
+    setDestinationToken,
+    setSourceAmount,
+    setDestinationAmount,
+    setIsSwapAndSend,
+    setCustomDestinationAddress,
+    switchTokens,
+  } = useSwapActions();
+
   const [isSwapConfirmOpen, setIsSwapConfirmOpen] = useState<boolean>(false);
   const [swapError, setSwapError] = useState<string>('');
   const [isSwapSuccessful, setIsSwapSuccessful] = useState<boolean>(false);
-  const [isSwapAndSend, setIsSwapAndSend] = useState<boolean>(false);
-  const [customDestinationAddress, setCustomDestinationAddress] = useState<string>('');
   const [dstTxHash, setDstTxHash] = useState<string>('');
   const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
 
@@ -94,22 +114,6 @@ export default function SwapPage() {
   const handleSwapSuccessful = useCallback(() => {
     setIsSwapSuccessful(true);
   }, []);
-
-  const [sourceToken, setSourceToken] = useState<XToken>({
-    name: 'ICON',
-    symbol: 'ICX',
-    decimals: 18,
-    xChainId: '0x1.icon',
-    address: 'cx0000000000000000000000000000000000000000',
-  });
-
-  const [destinationToken, setDestinationToken] = useState<XToken>({
-    name: 'USD Coin',
-    symbol: 'USDC',
-    decimals: 6,
-    xChainId: 'sonic',
-    address: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
-  });
 
   const sourceChainType = getXChainType(sourceToken.xChainId);
   const destinationChainType = getXChainType(destinationToken.xChainId);
@@ -244,18 +248,17 @@ export default function SwapPage() {
 
   const minOutputAmount = useMemo(() => {
     if (quoteQuery.data?.ok && quoteQuery.data.value && calculatedDestinationAmount) {
-      const slippageTolerance = 0.5;
       return new BigNumber(calculatedDestinationAmount)
         .multipliedBy(100 - slippageTolerance)
         .dividedBy(100)
         .toFixed(destinationToken.decimals, BigNumber.ROUND_DOWN);
     }
     return '';
-  }, [quoteQuery.data, calculatedDestinationAmount, destinationToken.decimals]);
+  }, [quoteQuery.data, calculatedDestinationAmount, destinationToken.decimals, slippageTolerance]);
 
   useEffect(() => {
     setDestinationAmount(calculatedDestinationAmount);
-  }, [calculatedDestinationAmount]);
+  }, [calculatedDestinationAmount, setDestinationAmount]);
 
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceProvider);
 
@@ -364,11 +367,7 @@ export default function SwapPage() {
   };
 
   const switchDirection = (): void => {
-    setSourceToken(destinationToken);
-    setDestinationToken(sourceToken);
-
-    setSourceAmount('');
-    setDestinationAmount('');
+    switchTokens();
   };
 
   const handleSwapConfirm = async (): Promise<void> => {
@@ -411,7 +410,6 @@ export default function SwapPage() {
         throw new Error('Insufficient balance for swap');
       }
 
-      const slippageTolerance = 0.5;
       const minOutputAmount = new BigNumber(quotedAmount.toString())
         .multipliedBy(100 - slippageTolerance)
         .dividedBy(100)
@@ -574,7 +572,7 @@ export default function SwapPage() {
         onConfirm={handleSwapConfirm}
         onClose={handleDialogClose}
         isLoading={Boolean(isSwapPending || isWaitingForSolvedStatus)}
-        slippageTolerance={0.5}
+        slippageTolerance={slippageTolerance}
         estimatedGasFee="~$2.50"
         error={swapError}
         minOutputAmount={minOutputAmount}

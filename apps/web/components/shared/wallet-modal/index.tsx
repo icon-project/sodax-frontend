@@ -7,11 +7,13 @@ import { WalletModalItem } from './wallet-modal-item';
 import Image from 'next/image';
 import { ArrowLeftIcon, XIcon } from 'lucide-react';
 import type { XConnector } from '@sodax/wallet-sdk';
+import { getXChainType } from '@sodax/wallet-sdk';
 import type { ChainType } from '@sodax/types';
 import { xChainTypes } from '@/constants/wallet';
 import { useWalletModal } from '@/hooks/useWalletModal';
 import { AllSupportItem } from './all-support-item';
 import { usePathname } from 'next/navigation';
+import { useSwapState } from '@/app/(apps)/swap/_stores/swap-store-provider';
 
 type WalletModalProps = {
   isOpen: boolean;
@@ -32,6 +34,8 @@ export const WalletModal = ({
   const pathname = usePathname();
   const isMigrateRoute = pathname.includes('migrate');
 
+  // Move useSwapState to top level
+  const { sourceToken } = useSwapState();
   const {
     hoveredWallet,
     setHoveredWallet,
@@ -52,6 +56,8 @@ export const WalletModal = ({
     : xChainTypes;
 
   const getMainChain = (): (typeof availableChains)[0] | undefined => {
+    // Check if we're on swap page and use sourceToken chain as main chain
+
     if (isMigrateRoute) {
       return availableChains.find(w => w.xChainType === 'ICON');
     }
@@ -67,11 +73,20 @@ export const WalletModal = ({
       }
     }
 
+    if (pathname.includes('swap')) {
+      const sourceChainType = getXChainType(sourceToken.xChainId);
+      if (sourceChainType) {
+        const swapChain = availableChains.find(w => w.xChainType === sourceChainType);
+        if (swapChain) {
+          return swapChain;
+        }
+      }
+    }
+
     return availableChains.find(w => w.xChainType === 'SOLANA');
   };
 
   const mainChain = getMainChain();
-  console.log('mainChain', mainChain);
 
   const otherChains = isMigrateRoute
     ? availableChains.filter(w => w.xChainType !== 'ICON')
