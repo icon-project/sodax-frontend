@@ -1,3 +1,5 @@
+'use client';
+
 import type React from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import type { XToken, ChainId } from '@sodax/types';
@@ -77,19 +79,24 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
 
   // Only create paramsForApprove when intentOrderPayload exists
+  // const paramsForApprove = intentOrderPayload
+  //   ? {
+  //       ...intentOrderPayload,
+  //       inputAmount: intentOrderPayload.inputAmount.toString(),
+  //       minOutputAmount: intentOrderPayload.minOutputAmount.toString(),
+  //       deadline: intentOrderPayload.deadline.toString(),
+  //     }
+  //   : undefined;
+
+  // Before passing props
   const paramsForApprove = intentOrderPayload
-    ? {
-        ...intentOrderPayload,
-        inputAmount: intentOrderPayload.inputAmount.toString(),
-        minOutputAmount: intentOrderPayload.minOutputAmount.toString(),
-        deadline: intentOrderPayload.deadline.toString(),
-      }
+    ? JSON.parse(
+        JSON.stringify(intentOrderPayload, (_, value) => (typeof value === 'bigint' ? value.toString() : value)),
+      )
     : undefined;
 
   // Check approval status
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(paramsForApprove, spokeProvider);
-  console.log(paramsForApprove);
-  console.log(hasAllowed);
 
   // Approve function
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, spokeProvider);
