@@ -1,5 +1,5 @@
 // biome-ignore lint/style/useImportType:
-import React, { use, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { SelectChain } from '@/components/solver/SelectChain';
 import { Input } from '@/components/ui/input';
@@ -34,11 +34,14 @@ import {
   useBridgeAllowance,
   useBridge,
   useSpokeAssetManagerTokenBalance,
+  useGetBridgeableTokens,
+  useSodaxContext,
 } from '@sodax/dapp-kit';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function BridgePage() {
   const { openWalletModal } = useAppStore();
+  const { sodax } = useSodaxContext();
 
   const [fromToken, setFromToken] = useState<XToken>(
     Object.values(spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens)[3],
@@ -49,6 +52,35 @@ export default function BridgePage() {
   const [toTokenChainId, setToTokenChainId] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const toAccount = useXAccount(toTokenChainId);
 
+  // Fetch bridgeable tokens and set toToken when bridgeableTokens is defined
+  const { data: bridgeableTokens, isLoading: isLoadingBridgeableTokens } = useGetBridgeableTokens(
+    fromToken.xChainId,
+    toTokenChainId,
+    fromToken.address,
+  );
+
+  useEffect((): void => {
+    if (bridgeableTokens && bridgeableTokens.length > 0) {
+      setToToken(prev =>
+        prev && bridgeableTokens.some(token => token.address === prev.address)
+          ? prev
+          : bridgeableTokens[0]
+      );
+    } else {
+      setToToken(undefined);
+    }
+    // Only run when bridgeableTokens changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bridgeableTokens]);
+
+  if (bridgeableTokens && bridgeableTokens.length > 0) {
+    console.log('Bridgable tokens params: ');
+    console.log('fromToken', fromToken);
+    console.log('toTokenChainId', toTokenChainId);
+    console.log('fromToken.address', fromToken.address);
+    console.log('bridgeableTokens', bridgeableTokens);
+  }
+
   const handleFromChainChange = (chainId: SpokeChainId) => {
     const newToken = Object.values(spokeChainConfig[chainId].supportedTokens)[0];
     setFromToken(newToken);
@@ -56,10 +88,9 @@ export default function BridgePage() {
 
   const handleToChainChange = (chainId: SpokeChainId) => {
     setToTokenChainId(chainId);
-    setToToken(Object.values(spokeChainConfig[chainId].supportedTokens)[0]);
   };
 
-  const [toToken, setToToken] = useState<XToken>(Object.values(spokeChainConfig[toTokenChainId].supportedTokens)[0]);
+  const [toToken, setToToken] = useState<XToken | undefined>(bridgeableTokens?.[0] ?? undefined);
 
   const { data: spokeAssetManagerTokenBalance, isLoading: isLoadingSpokeAssetManagerTokenBalance } =
     useSpokeAssetManagerTokenBalance(toToken?.xChainId, toToken?.address);
@@ -74,7 +105,7 @@ export default function BridgePage() {
   };
 
   const handleToAccountDisconnect = () => {
-    disconnect(getXChainType(toToken.xChainId) as ChainType);
+    disconnect(getXChainType(toToken?.xChainId) as ChainType);
   };
 
   const [open, setOpen] = useState(false);
@@ -109,7 +140,7 @@ export default function BridgePage() {
     await approve(order);
   };
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(fromToken.xChainId as ChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(fromToken.xChainId);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useBridgeAllowance(order, fromProvider);
   const { mutateAsync: bridge, isPending: isBridging } = useBridge(fromProvider);
 
@@ -129,7 +160,15 @@ export default function BridgePage() {
   };
 
   const isBridgeable = useMemo(() => {
-    return BridgeService.isBridgeable({
+    console.log('isBridgeable params: ');
+    console.log('fromToken', fromToken);
+    console.log('toToken', toToken);
+
+    if (!fromToken || !toToken) {
+      return false;
+    }
+
+    return sodax.bridge.isBridgeable({
       from: fromToken,
       to: toToken,
     });
@@ -209,26 +248,30 @@ export default function BridgePage() {
             <div className="flex-grow">
               <Input type="number" placeholder="0.0" value={fromAmount} readOnly />
             </div>
-            <Select
-              value={toToken?.symbol}
-              onValueChange={v => {
-                const selectedToken = supportedTokensPerChain.get(toTokenChainId)?.find(token => token.symbol === v);
-                if (selectedToken) {
-                  setToToken(selectedToken);
-                }
-              }}
-            >
-              <SelectTrigger className="w-[110px]">
-                <SelectValue placeholder="Token" />
-              </SelectTrigger>
-              <SelectContent>
-                {supportedTokensPerChain.get(toTokenChainId)?.map(token => (
-                  <SelectItem key={token.address} value={token.symbol}>
-                    {token.symbol}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isLoadingBridgeableTokens ? (
+              <Skeleton className="w-[110px] h-10" />
+            ) : (
+              <Select
+                value={bridgeableTokens?.[0]?.symbol}
+                onValueChange={v => {
+                  const selectedToken = bridgeableTokens?.find(token => token.symbol === v);
+                  if (selectedToken) {
+                    setToToken(selectedToken);
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[110px]">
+                  <SelectValue placeholder="Token" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bridgeableTokens?.map(token => (
+                    <SelectItem key={token.address} value={token.symbol}>
+                      {token.symbol}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="flex-grow">
             <Label htmlFor="toAddress">Destination address</Label>
