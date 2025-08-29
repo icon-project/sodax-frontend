@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { BridgeService } from './BridgeService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
+import { Sodax } from '../../index.js';
 
 describe('BridgeService', () => {
+  const sodax = new Sodax();
+
   describe('isBridgeable', () => {
     it('should return true for ETH on Arbitrum and ETH on Base (same vault)', () => {
       const fromToken: XToken = {
@@ -21,7 +23,7 @@ describe('BridgeService', () => {
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
-      const result = BridgeService.isBridgeable({
+      const result = sodax.bridge.isBridgeable({
         from: fromToken,
         to: toToken,
       });
@@ -46,7 +48,7 @@ describe('BridgeService', () => {
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
-      const result = BridgeService.isBridgeable({
+      const result = sodax.bridge.isBridgeable({
         from: fromToken,
         to: toToken,
       });
@@ -71,7 +73,7 @@ describe('BridgeService', () => {
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
-      const result = BridgeService.isBridgeable({
+      const result = sodax.bridge.isBridgeable({
         from: fromToken,
         to: toToken,
       });
@@ -90,7 +92,7 @@ describe('BridgeService', () => {
         xChainId: ARBITRUM_MAINNET_CHAIN_ID,
       };
 
-      const result = BridgeService.getBridgeableTokens(fromToken, BASE_MAINNET_CHAIN_ID);
+      const result = sodax.bridge.getBridgeableTokens(fromToken.xChainId, BASE_MAINNET_CHAIN_ID, fromToken.address);
 
       expect(result).toBeInstanceOf(Array);
       // Should include ETH on Base since they share the same vault
@@ -108,7 +110,7 @@ describe('BridgeService', () => {
         xChainId: ARBITRUM_MAINNET_CHAIN_ID,
       };
 
-      const result = BridgeService.getBridgeableTokens(fromToken, BASE_MAINNET_CHAIN_ID);
+      const result = sodax.bridge.getBridgeableTokens(fromToken.xChainId, BASE_MAINNET_CHAIN_ID, fromToken.address);
 
       expect(result).toEqual([]);
     });
@@ -122,7 +124,7 @@ describe('BridgeService', () => {
         xChainId: ARBITRUM_MAINNET_CHAIN_ID,
       };
 
-      const result = BridgeService.getBridgeableTokens(fromToken, BASE_MAINNET_CHAIN_ID);
+      const result = sodax.bridge.getBridgeableTokens(fromToken.xChainId, BASE_MAINNET_CHAIN_ID, fromToken.address);
 
       expect(result).toBeInstanceOf(Array);
       // Should include USDC on Base since they share the same vault
@@ -133,7 +135,7 @@ describe('BridgeService', () => {
       expect(usdcToken?.decimals).toBe(6);
     });
 
-    it('should return empty array for unsupported destination chain', () => {
+    it('should throw error for unsupported destination chain', () => {
       const fromToken: XToken = {
         symbol: 'ETH',
         name: 'Ethereum',
@@ -144,9 +146,10 @@ describe('BridgeService', () => {
 
       // Use an unsupported chain ID
       const unsupportedChainId = '0x999999.unsupported' as SpokeChainId;
-      const result = BridgeService.getBridgeableTokens(fromToken, unsupportedChainId);
 
-      expect(result).toEqual([]);
+      expect(() =>
+        sodax.bridge.getBridgeableTokens(fromToken.xChainId, unsupportedChainId, fromToken.address),
+      ).toThrow();
     });
   });
 });
