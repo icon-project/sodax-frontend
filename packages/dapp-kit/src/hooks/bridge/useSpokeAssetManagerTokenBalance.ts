@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { SpokeChainId, SpokeProvider } from '@sodax/sdk';
+import type { SpokeChainId } from '@sodax/sdk';
 
 /**
  * Hook for getting the balance of tokens held by the asset manager on a spoke chain.
@@ -8,8 +8,8 @@ import type { SpokeChainId, SpokeProvider } from '@sodax/sdk';
  * This hook is used to check if a target chain has enough balance to bridge when bridging.
  * It automatically queries and tracks the asset manager's token balance.
  *
- * @param {string} token - The token address to get the balance for
- * @param {SpokeProvider} spokeProvider - The spoke provider to use for balance checks
+ * @param {SpokeChainId | undefined} chainId - The chain ID to get the balance for
+ * @param {string | undefined} token - The token address to get the balance for
  *
  * @returns {UseQueryResult<bigint, Error>} A React Query result containing:
  *   - data: The token balance held by the asset manager (bigint)
@@ -17,7 +17,7 @@ import type { SpokeChainId, SpokeProvider } from '@sodax/sdk';
  *
  * @example
  * ```typescript
- * const { data: balance, isLoading } = useSpokeAssetManagerTokenBalance(tokenAddress, spokeProvider);
+ * const { data: balance, isLoading } = useSpokeAssetManagerTokenBalance(chainId, tokenAddress);
  *
  * if (balance) {
  *   console.log('Asset manager token balance:', balance.toString());
@@ -25,7 +25,7 @@ import type { SpokeChainId, SpokeProvider } from '@sodax/sdk';
  * ```
  */
 export function useSpokeAssetManagerTokenBalance(
-  chainId: SpokeChainId,
+  chainId: SpokeChainId | undefined,
   token: string | undefined,
 ): UseQueryResult<bigint, Error> {
   const { sodax } = useSodaxContext();
@@ -33,12 +33,12 @@ export function useSpokeAssetManagerTokenBalance(
   return useQuery({
     queryKey: ['spoke-asset-manager-token-balance', chainId, token],
     queryFn: async () => {
-      if (!token) {
+      if (!chainId || !token) {
         return 0n;
       }
 
       return await sodax.bridge.getSpokeAssetManagerTokenBalance(chainId, token);
     },
-    enabled: !!token,
+    enabled: !!chainId && !!token,
   });
 }

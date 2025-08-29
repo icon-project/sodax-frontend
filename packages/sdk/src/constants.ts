@@ -43,7 +43,7 @@ import {
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
-export const DEFAULT_RELAY_TX_TIMEOUT = 60000; // 60 seconds
+export const DEFAULT_RELAY_TX_TIMEOUT = 120000; // 120 seconds
 export const DEFAULT_RETRY_DELAY_MS = 2000;
 export const ICON_TX_RESULT_WAIT_MAX_RETRY = 10;
 export const MAX_UINT256 = (1n << 256n) - 1n;
@@ -1031,6 +1031,17 @@ export const hubVaults = {
     ] as const,
   },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
+
+export const hubVaultTokensMap: Map<string, Token> = new Map(Object.entries(hubVaults).map(([symbol, vault]) => [vault.address.toLowerCase(), {
+  address: vault.address.toLowerCase(),
+  symbol,
+  name: symbol,
+  decimals: 18,
+  }]));
+
+export const getHubVaultTokenByAddress = (address: string): Token | undefined => {
+  return hubVaultTokensMap.get(address.toLowerCase());
+};
 
 // bnUSD Migration configs
 export const bnUSDLegacySpokeChainIds = [

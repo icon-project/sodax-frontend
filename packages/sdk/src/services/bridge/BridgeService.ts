@@ -35,7 +35,7 @@ import {
   type OptionalTimeout,
   type GetAddressType,
 } from '../../index.js';
-import { hubAssets, isValidSpokeChainId, spokeChainConfig } from '../../constants.js';
+import { getHubVaultTokenByAddress, hubAssets, isValidSpokeChainId, spokeChainConfig } from '../../constants.js';
 import { type SpokeChainId, SONIC_MAINNET_CHAIN_ID, type XToken } from '@sodax/types';
 import { isAddress, type Address } from 'viem';
 
@@ -376,12 +376,14 @@ export class BridgeService {
 
       // Vault can only be used on Sonic
       invariant(
-        srcAssetInfo || (isValidVault(params.srcAsset as Address) && params.srcChainId === SONIC_MAINNET_CHAIN_ID),
+        srcAssetInfo ||
+          (isValidVault(params.srcAsset as Address) && params.srcChainId === this.hubProvider.chainConfig.chain.id),
         `Unsupported spoke chain (${params.srcChainId}) token: ${params.srcAsset}`,
       );
-      // dstination
+      // destination
       invariant(
-        dstAssetInfo || (isValidVault(params.dstAsset as Address) && params.dstChainId === SONIC_MAINNET_CHAIN_ID),
+        dstAssetInfo ||
+          (isValidVault(params.dstAsset as Address) && params.dstChainId === this.hubProvider.chainConfig.chain.id),
         `Unsupported spoke chain (${params.dstChainId}) token: ${params.dstAsset}`,
       );
 
@@ -461,7 +463,7 @@ export class BridgeService {
 
     const encodedRecipientAddress = encodeAddress(params.dstChainId, params.recipient);
     // If the destination chain is Sonic, we can directly transfer the tokens to the recipient
-    if (params.dstChainId === SONIC_MAINNET_CHAIN_ID) {
+    if (params.dstChainId === this.hubProvider.chainConfig.chain.id) {
       calls.push(
         Erc20Service.encodeTransfer(
           params.dstAsset as `0x${string}`,
@@ -517,7 +519,7 @@ export class BridgeService {
    * @param unchecked - Whether to skip the chain ID validation
    * @returns boolean - true if assets are bridgeable, false otherwise
    */
-  public static isBridgeable({
+  public isBridgeable({
     from,
     to,
     unchecked = false,
@@ -534,6 +536,14 @@ export class BridgeService {
 
       // Get hub asset info for both source and destination assets
       const srcAssetInfo = getHubAssetInfo(from.xChainId, from.address);
+
+      // if to is sonic (hub), we need to check that target token is a hub vault token (soda token)
+      if (to.xChainId === this.hubProvider.chainConfig.chain.id && srcAssetInfo?.vault) {
+        const hubVaultToken = getHubVaultTokenByAddress(srcAssetInfo.vault);
+
+        return hubVaultToken?.address.toLowerCase() === to.address.toLowerCase();
+      }
+
       const dstAssetInfo = getHubAssetInfo(to.xChainId, to.address);
 
       // Check if both assets are supported and have vault information
@@ -551,40 +561,53 @@ export class BridgeService {
 
   /**
    * Get all bridgeable tokens from a source token to a destination chain
-   * @param from - The source token with chain information
-   * @param toChainId - The destination chain ID
+   * @param from - The source chain ID
+   * @param to - The destination chain ID
+   * @param token - The source token address
    * @returns XToken[] - Array of bridgeable tokens on the destination chain
    */
-  public static getBridgeableTokens(from: XToken, toChainId: SpokeChainId): XToken[] {
-    try {
-      // Get hub asset info for the source asset
-      const srcAssetInfo = getHubAssetInfo(from.xChainId, from.address);
+  public getBridgeableTokens(from: SpokeChainId, to: SpokeChainId, token: string): XToken[] {
+    // Get hub asset info for the source asset
+    const srcAssetInfo = getHubAssetInfo(from, token);
 
-      if (!srcAssetInfo) {
-        return [];
-      }
-
-      // Get all supported tokens for the destination chain
-      const supportedTokens = spokeChainConfig[toChainId].supportedTokens;
-
-      // Filter tokens that share the same vault as the source asset
-      const bridgeableTokens: XToken[] = [];
-
-      for (const token of Object.values(supportedTokens)) {
-        const dstAssetInfo = getHubAssetInfo(toChainId, token.address);
-
-        if (dstAssetInfo && dstAssetInfo.vault.toLowerCase() === srcAssetInfo.vault.toLowerCase()) {
-          bridgeableTokens.push({
-            ...token,
-            xChainId: toChainId,
-          });
-        }
-      }
-
-      return bridgeableTokens;
-    } catch (error) {
-      // Return empty array on any error
+    if (!srcAssetInfo) {
       return [];
     }
+
+    // if to is sonic (hub), we need to check if vault exists on the hub
+    if (to === this.hubProvider.chainConfig.chain.id) {
+      const hubVaultToken = getHubVaultTokenByAddress(srcAssetInfo.vault);
+
+      return hubVaultToken
+        ? [
+            {
+              address: hubVaultToken.address,
+              xChainId: to,
+              symbol: hubVaultToken.symbol,
+              name: hubVaultToken.name,
+              decimals: hubVaultToken.decimals,
+            },
+          ]
+        : [];
+    }
+
+    // Get all supported tokens for the destination chain
+    const supportedTokens = spokeChainConfig[to].supportedTokens;
+
+    // Filter tokens that share the same vault as the source asset
+    const bridgeableTokens: XToken[] = [];
+
+    for (const token of Object.values(supportedTokens)) {
+      const dstAssetInfo = getHubAssetInfo(to, token.address);
+
+      if (dstAssetInfo && dstAssetInfo.vault.toLowerCase() === srcAssetInfo.vault.toLowerCase()) {
+        bridgeableTokens.push({
+          ...token,
+          xChainId: to,
+        });
+      }
+    }
+
+    return bridgeableTokens;
   }
 }
