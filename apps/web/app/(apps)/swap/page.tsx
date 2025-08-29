@@ -14,7 +14,7 @@ import { chainIdToChainName } from '@/providers/constants';
 import { useQuote, useSpokeProvider, useSwap, useStatus } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk';
 import BigNumber from 'bignumber.js';
-import type { QuoteType } from '@sodax/sdk';
+import type { CreateIntentParams, QuoteType } from '@sodax/sdk';
 import { SolverIntentStatusCode } from '@sodax/sdk';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
@@ -139,7 +139,7 @@ export default function SwapPage() {
 
   const sourceChainType = getXChainType(sourceToken.xChainId);
   const destinationChainType = getXChainType(destinationToken.xChainId);
-
+  const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { address: sourceAddress } = useXAccount(sourceChainType);
   const { address: destinationAddress } = useXAccount(destinationChainType);
 
@@ -368,6 +368,55 @@ export default function SwapPage() {
     };
   };
 
+  const createIntentOrderPayload = async (): Promise<void> => {
+    if (!quoteQuery.data?.ok || !quoteQuery.data.value) {
+      console.error('Quote undefined');
+      return;
+    }
+
+    if (!sourceToken || !destinationToken) {
+      console.error('sourceToken or destToken undefined');
+      return;
+    }
+
+    if (!minOutputAmount || minOutputAmount === '') {
+      console.error('minOutputAmount undefined');
+      return;
+    }
+
+    if (!sourceAddress) {
+      console.error('sourceAccount.address undefined');
+      return;
+    }
+
+    if (!destinationAddress) {
+      console.error('destAccount.address undefined');
+      return;
+    }
+
+    if (!sourceProvider) {
+      console.error('sourceProvider or destProvider undefined');
+      return;
+    }
+
+    const createIntentParams = {
+      inputToken: sourceToken.address, // The address of the input token on hub chain
+      outputToken: destinationToken.address, // The address of the output token on hub chain
+      inputAmount: scaleTokenAmount(sourceAmount, sourceToken.decimals), // The amount of input tokens
+      minOutputAmount: BigInt(Number(minOutputAmount).toFixed(0)), // The minimum amount of output tokens to accept
+      deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires (0 = no deadline)
+      allowPartialFill: false, // Whether the intent can be partially filled
+      srcChain: sourceToken.xChainId as SpokeChainId, // Chain ID where input tokens originate
+      dstChain: destinationToken.xChainId as SpokeChainId, // Chain ID where output tokens should be delivered
+      srcAddress: sourceAddress, // Source address (original address on spoke chain)
+      dstAddress: destinationAddress, // Destination address (original address on spoke chain)
+      solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
+      data: '0x', // Additional arbitrary data
+    } satisfies CreateIntentParams;
+
+    setIntentOrderPayload(createIntentParams);
+  };
+
   const handleOpenWalletModal = (): void => {
     const buttonState = getButtonState();
 
@@ -375,6 +424,7 @@ export default function SwapPage() {
       const targetChainType = getTargetChainType();
       openWalletModal(targetChainType);
     } else if (buttonState.action === 'review') {
+      createIntentOrderPayload();
       setIsSwapConfirmOpen(true);
     }
   };
@@ -615,6 +665,7 @@ export default function SwapPage() {
         estimatedGasFee="~$2.50"
         error={swapError}
         minOutputAmount={minOutputAmount}
+        intentOrderPayload={intentOrderPayload}
         sourceAddress={sourceAddress}
         destinationAddress={
           isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || undefined

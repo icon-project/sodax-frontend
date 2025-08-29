@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { XToken, ChainId } from '@sodax/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,9 @@ import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
 import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccounts } from '@sodax/wallet-sdk';
 import { availableChains } from '@/constants/chains';
+import { useSwapAllowance, useSwapApprove, useSpokeProvider, useQuote } from '@sodax/dapp-kit';
+import type { CreateIntentParams, SolverIntentQuoteRequest } from '@sodax/sdk';
+// import superjson from 'superjson';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -27,12 +30,13 @@ interface SwapConfirmDialogProps {
   slippageTolerance?: number;
   estimatedGasFee?: string;
   error?: string;
-  minOutputAmount?: string; // Add minOutputAmount prop
   sourceAddress?: string;
   destinationAddress?: string;
   isSwapAndSend?: boolean;
   isSwapSuccessful?: boolean;
-  swapFee?: string; // Add swapFee prop
+  swapFee?: string;
+  minOutputAmount?: BigNumber;
+  intentOrderPayload?: CreateIntentParams;
 }
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
@@ -47,24 +51,42 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   onClose,
   isLoading = false,
   slippageTolerance = 0.5,
+  minOutputAmount,
   estimatedGasFee,
   error,
-  minOutputAmount, // Add minOutputAmount to destructuring
   sourceAddress,
   destinationAddress,
   isSwapAndSend = false,
   isSwapSuccessful = false,
-  swapFee, // Add swapFee to destructuring
+  swapFee,
+  intentOrderPayload,
 }: SwapConfirmDialogProps) => {
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
-  const [isAccordionExpanded, setIsAccordionExpanded] = useState<boolean>(false); // Add accordion state
+  const [isAccordionExpanded, setIsAccordionExpanded] = useState<boolean>(false);
+  const [approvalError, setApprovalError] = useState<string | null>(null);
 
   // Add chain switching functionality
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
 
   // Get connected wallet accounts
   const xAccounts = useXAccounts();
+
+  // Get wallet provider and spoke provider for approval
+  const walletProvider = useWalletProvider(sourceToken.xChainId);
+  const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
+
+  const paramsForApprove = {
+    ...intentOrderPayload,
+    inputAmount: intentOrderPayload?.inputAmount.toString() || '0',
+    minOutputAmount: intentOrderPayload?.minOutputAmount.toString() || '0',
+    deadline: intentOrderPayload?.deadline.toString() || '0',
+  };
+  // Check approval status
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(paramsForApprove, spokeProvider);
+  console.log(hasAllowed);
+  // Approve function
+  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, spokeProvider);
 
   // Helper function to get wallet address for a specific chain
   const getWalletAddressForChain = (chainId: ChainId): string => {
@@ -81,11 +103,34 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     }
   }, [isSwapSuccessful]);
 
+  // Clear approval error when dialog opens
+  useEffect(() => {
+    if (open) {
+      setApprovalError(null);
+    }
+  }, [open]);
+
   // Utility function to format numbers to exactly 6 decimal places
   const formatToSixDecimals = (value: string): string => {
     const num = Number.parseFloat(value);
     if (Number.isNaN(num)) return value;
     return num.toFixed(4);
+  };
+
+  const handleApprove = async (): Promise<void> => {
+    if (!intentOrderPayload) {
+      console.error('Intent params not available for approval');
+      setApprovalError('Intent params not available for approval');
+      return;
+    }
+
+    try {
+      setApprovalError(null);
+      await approve({ params: intentOrderPayload });
+    } catch (error) {
+      console.error('Approval failed:', error);
+      setApprovalError(error instanceof Error ? error.message : 'Approval failed. Please try again.');
+    }
   };
 
   const handleConfirm = async (): Promise<void> => {
@@ -260,8 +305,46 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </Button>
               )}
 
-              {/* Show Swap button only if not on wrong chain */}
-              {!isWrongChain && (
+              {/* Show Approval button if not approved */}
+              {!isWrongChain && !hasAllowed && intentOrderPayload && (
+                <div className="w-full">
+                  <Button
+                    variant="cherry"
+                    className="w-full text-white font-semibold font-['InterRegular']"
+                    onClick={handleApprove}
+                    disabled={isAllowanceLoading || isApproving}
+                  >
+                    {isApproving ? (
+                      <div className="flex items-center gap-2 text-white">
+                        <span>Approving...</span>
+                        <CircularProgressIcon
+                          width={16}
+                          height={16}
+                          stroke="white"
+                          progress={100}
+                          className="animate-spin"
+                        />
+                      </div>
+                    ) : (
+                      `Approve ${sourceToken.symbol}`
+                    )}
+                  </Button>
+
+                  {/* Show approval error if any */}
+                  {approvalError && (
+                    <div className="w-full mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-center gap-2 text-red-800">
+                        <XIcon className="w-4 h-4" />
+                        <span className="text-sm font-medium">Approval Failed</span>
+                      </div>
+                      <div className="text-red-700 text-xs mt-1">{approvalError}</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Show Swap button only if not on wrong chain and approved */}
+              {!isWrongChain && hasAllowed && (
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
@@ -285,6 +368,17 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </Button>
               )}
 
+              {/* Show loading state when waiting for approval status */}
+              {!isWrongChain && !hasAllowed && !intentOrderPayload && (
+                <Button
+                  variant="cherry"
+                  className="w-full text-white font-semibold font-['InterRegular']"
+                  disabled={true}
+                >
+                  {isAllowanceLoading ? 'Checking approval...' : 'Preparing...'}
+                </Button>
+              )}
+
               {minOutputAmount && (
                 <div className="w-full">
                   <div
@@ -296,7 +390,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                         Receive at least
                       </div>
                       <div className="justify-start text-clay text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
-                        {formatToSixDecimals(minOutputAmount)} {destinationToken.symbol}
+                        {formatToSixDecimals(minOutputAmount.toString())} {destinationToken.symbol}
                       </div>
                     </div>
                     <div className="w-4 h-4 relative overflow-hidden">
@@ -319,10 +413,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-clay-light">Network cost</span>
-                          <span className="text-espresso font-medium">
-                            {/* {estimatedGasFee ? `${estimatedGasFee} ETH` : 'N/A'} */}
-                            &lt; $0.01
-                          </span>
+                          <span className="text-espresso font-medium">&lt; $0.01</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-clay-light">Max slippage</span>
