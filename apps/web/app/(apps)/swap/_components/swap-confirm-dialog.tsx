@@ -103,8 +103,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     refetch: refetchAllowance,
   } = useSwapAllowance(allowanceConfirmed ? undefined : paramsForApprove, spokeProvider);
 
-  console.log(hasAllowed);
-
   // Update allowance confirmed state when hasAllowed becomes true
   useEffect(() => {
     if (hasAllowed && !allowanceConfirmed) {
@@ -161,7 +159,10 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
     try {
       setApprovalError(null);
-      await approve({ params: intentOrderPayload });
+      const value = await approve({ params: intentOrderPayload });
+      if (value) {
+        setAllowanceConfirmed(true);
+      }
       // Note: The approval hook will automatically invalidate and refetch the allowance
       // But you can also manually refetch if needed: await refetchAllowance();
     } catch (error) {
