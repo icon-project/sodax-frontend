@@ -18,7 +18,7 @@ import {
   type CreateIntentParams,
   type Hex,
   type Intent,
-  IntentDeliveryInfo,
+  type IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
   spokeChainConfig,
   supportedSpokeChains,

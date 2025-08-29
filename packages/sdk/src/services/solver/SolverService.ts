@@ -564,14 +564,14 @@ export class SolverService {
             data: {
               ...result.error,
               intent,
-                intentDeliveryInfo: {
-                  srcChainId: params.srcChain,
-                  srcTxHash: spokeTxHash,
-                  srcAddress: params.srcAddress,
-                  dstChainId: params.dstChain,
-                  dstTxHash: dstIntentTxHash,
-                  dstAddress: params.dstAddress,
-                } satisfies IntentDeliveryInfo,
+              intentDeliveryInfo: {
+                srcChainId: params.srcChain,
+                srcTxHash: spokeTxHash,
+                srcAddress: params.srcAddress,
+                dstChainId: params.dstChain,
+                dstTxHash: dstIntentTxHash,
+                dstAddress: params.dstAddress,
+              } satisfies IntentDeliveryInfo,
             },
           },
         };

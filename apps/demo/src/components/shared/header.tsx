@@ -18,16 +18,6 @@ export function NavigationMenu() {
       >
         Money Market
       </NavLink>
-      {/* <NavLink 
-        to="/markets"
-        className={({ isActive }) => 
-          `text-sm font-medium transition-colors hover:text-primary ${
-            isActive ? 'text-primary' : 'text-muted-foreground'
-          }`
-        }
-      >
-          Markets
-      </NavLink> */}
       <NavLink
         to="/solver"
         className={({ isActive }) =>
@@ -37,6 +27,16 @@ export function NavigationMenu() {
         }
       >
         Solver
+      </NavLink>
+      <NavLink
+        to="/bridge"
+        className={({ isActive }) =>
+          `text-sm font-medium transition-colors hover:text-primary ${
+            isActive ? 'text-primary' : 'text-muted-foreground'
+          }`
+        }
+      >
+        Bridge
       </NavLink>
     </nav>
   );

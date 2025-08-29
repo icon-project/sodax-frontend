@@ -1,10 +1,11 @@
 import React from 'react';
 
-import { ChainSelector } from '@/components/shared/ChainSelector';
 import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
 import { Button } from '@/components/ui/button';
 import { useXAccount } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
+import { supportedSpokeChains } from '@sodax/sdk';
+import { SelectChain } from '@/components/solver/SelectChain';
 
 export default function MoneyMarketPage() {
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
@@ -13,7 +14,7 @@ export default function MoneyMarketPage() {
   return (
     <main className="">
       <div className="container mx-auto p-4 mt-10 space-y-4">
-        <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
+        <SelectChain chainList={supportedSpokeChains} value={selectedChainId} setChain={selectChainId} />
         {xAccount?.address ? (
           <SupplyAssetsList />
         ) : (

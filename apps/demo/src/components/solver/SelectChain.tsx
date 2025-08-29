@@ -17,13 +17,13 @@ export function SelectChain({
   chainList: SpokeChainId[];
   value: SpokeChainId;
   setChain: (value: SpokeChainId) => void;
-  placeholder: string;
-  id: string;
-  label: string;
+  placeholder?: string;
+  id?: string;
+  label?: string;
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      {label && <Label htmlFor={id}>{label}</Label>}
       <Select value={value.toString()} onValueChange={v => setChain(v as SpokeChainId)}>
         <SelectTrigger id={id}>
           <SelectValue placeholder={placeholder} />

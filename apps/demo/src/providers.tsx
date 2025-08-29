@@ -21,6 +21,11 @@ const queryClient = new QueryClient();
 const rpcConfig: RpcConfig = {
   //solana
   solana: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
+  //stellar
+  stellar: {
+    horizonRpcUrl: 'https://horizon.stellar.org',
+    sorobanRpcUrl: 'https://magical-bitter-frost.stellar-mainnet.quiknode.pro/78709b736890cf5a9bcb36e118b9d18e8ecdb7ee',
+  },
 };
 
 export default function Providers({ children }: { children: ReactNode }) {

@@ -83,6 +83,12 @@ export class StellarSpokeService {
     );
   }
 
+  /**
+   * Get the balance of the token in the spoke chain asset manager.
+   * @param token - The address of the token to get the balance of.
+   * @param spokeProvider - The spoke provider.
+   * @returns The balance of the token.
+   */
   public static async getDeposit(token: string, spokeProvider: StellarSpokeProvider): Promise<bigint> {
     return BigInt(await spokeProvider.getBalance(token));
   }

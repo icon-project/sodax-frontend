@@ -6,7 +6,7 @@ import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk'
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { getMoneyMarketConfig, moneyMarketSupportedTokens, SONIC_MAINNET_CHAIN_ID, UserReserveData } from '@sodax/sdk';
+import { getMoneyMarketConfig, moneyMarketSupportedTokens, SONIC_MAINNET_CHAIN_ID, type UserReserveData } from '@sodax/sdk';
 import type { Token, XToken } from '@sodax/types';
 
 export function SupplyAssetsList() {

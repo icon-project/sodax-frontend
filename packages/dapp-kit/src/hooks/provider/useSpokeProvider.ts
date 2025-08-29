@@ -93,10 +93,16 @@ export function useSpokeProvider(
 
     if (xChainType === 'STELLAR') {
       const stellarConfig = spokeChainConfig[spokeChainId] as StellarSpokeChainConfig;
-      return new StellarSpokeProvider(walletProvider as IStellarWalletProvider, stellarConfig, {
-        horizonRpcUrl: stellarConfig.horizonRpcUrl,
-        sorobanRpcUrl: stellarConfig.sorobanRpcUrl,
-      });
+      return new StellarSpokeProvider(
+        walletProvider as IStellarWalletProvider,
+        stellarConfig,
+        rpcConfig.stellar
+          ? rpcConfig.stellar
+          : {
+              horizonRpcUrl: stellarConfig.horizonRpcUrl,
+              sorobanRpcUrl: stellarConfig.sorobanRpcUrl,
+            },
+      );
     }
 
     if (xChainType === 'SOLANA') {

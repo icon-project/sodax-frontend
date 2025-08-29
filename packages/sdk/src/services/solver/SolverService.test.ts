@@ -349,7 +349,7 @@ describe('SolverService', () => {
     it('should handle very large deadline offset', async () => {
       const mockBlock = {
         timestamp: 1700000000n,
-        } as GetBlockReturnType;
+      } as GetBlockReturnType;
 
       vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
 
