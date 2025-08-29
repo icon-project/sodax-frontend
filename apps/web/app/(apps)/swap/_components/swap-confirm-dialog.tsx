@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useState, useEffect } from 'react';
-import type { XToken } from '@sodax/types';
+import type { XToken, ChainId } from '@sodax/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
@@ -10,7 +10,7 @@ import type BigNumber from 'bignumber.js';
 import { Timer, XIcon, Check, ChevronRight, ChevronsRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
-import { getXChainType, useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
+import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccounts } from '@sodax/wallet-sdk';
 import { availableChains } from '@/constants/chains';
 
 interface SwapConfirmDialogProps {
@@ -62,6 +62,17 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
   // Add chain switching functionality
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
+
+  // Get connected wallet accounts
+  const xAccounts = useXAccounts();
+
+  // Helper function to get wallet address for a specific chain
+  const getWalletAddressForChain = (chainId: ChainId): string => {
+    const chainType = getXChainType(chainId);
+    if (!chainType) return 'Not connected';
+    const account = xAccounts[chainType];
+    return account?.address || 'Not connected';
+  };
 
   // Update isCompleted when isSwapSuccessful changes
   useEffect(() => {
@@ -146,7 +157,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] flex flex-col justify-center items-center gap-2"
                   >
                     <div className="text-center justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase">
-                      {shortenAddress(sourceToken.address)}
+                      {shortenAddress(getWalletAddressForChain(sourceToken.xChainId))}
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
@@ -189,7 +200,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] flex flex-col justify-center items-center gap-2"
                   >
                     <div className="text-center justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase">
-                      {shortenAddress(destinationToken.address)}
+                      {shortenAddress(getWalletAddressForChain(destinationToken.xChainId))}
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
