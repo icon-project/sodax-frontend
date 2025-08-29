@@ -55,7 +55,7 @@ export function useSwapApprove(
     },
     onSuccess: () => {
       // Invalidate allowance query to refetch the new allowance
-      queryClient.invalidateQueries({ queryKey: ['allowance', params?.inputToken] });
+      queryClient.invalidateQueries({ queryKey: ['allowance', params] });
     },
   });
 
