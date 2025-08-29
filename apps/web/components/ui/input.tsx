@@ -1,31 +1,31 @@
-import * as React from "react"
+import type * as React from 'react';
 
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
-interface InputProps extends React.ComponentProps<"input"> {
-  variant?: "default" | "espressor"
+interface InputProps extends React.ComponentProps<'input'> {
+  variant?: 'default' | 'espressor';
 }
 
-function Input({ className, type, variant = "default", ...props }: InputProps) {
+function Input({ className, type, variant = 'default', ...props }: InputProps) {
   return (
     <input
       type={type}
       data-slot="input"
       className={cn(
-        "file:text-foreground placeholder:text-muted-foreground selection:bg-transparent selection:text-inherit dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+        'file:text-foreground placeholder:text-muted-foreground [&::selection]:bg-cherry-brighter [&::selection]:text-espresso [&::-moz-selection]:bg-cherry-brighter [&::-moz-selection]:text-espresso dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
         // Default text color: clay-light
-        "text-clay-light",
+        'text-clay-light',
         // Focus state: clay color
-        "focus:text-clay focus-visible:text-clay",
+        'focus:text-clay focus-visible:text-clay',
         // Variant specific styling
-        variant === "espressor" && "text-espresso focus:text-espresso focus-visible:text-espresso",
-        className
+        variant === 'espressor' && 'text-espresso focus:text-espresso focus-visible:text-espresso',
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
-export { Input }
+export { Input };
