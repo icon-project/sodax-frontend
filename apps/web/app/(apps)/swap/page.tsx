@@ -45,34 +45,47 @@ const normaliseTokenAmount = (amount: number | string | bigint, decimals: number
 interface SwapStatusMonitorProps {
   dstTxHash: string;
   onSwapSuccessful: () => void;
+  onSwapFailed: () => void; // Add callback for failed swaps
   resetTrigger: number; // Add this to trigger reset of internal state
 }
 
 function SwapStatusMonitor({
   dstTxHash,
   onSwapSuccessful,
+  onSwapFailed,
   resetTrigger,
 }: SwapStatusMonitorProps): React.JSX.Element | null {
   const { data: status } = useStatus(dstTxHash as `0x${string}`);
   const hasCalledSuccess = useRef<boolean>(false);
+  const hasCalledFailed = useRef<boolean>(false); // Track if we've already called failed callback
   const lastResetTrigger = useRef<number>(resetTrigger);
 
-  // Reset the success flag when resetTrigger changes (new swap started)
+  // Reset the success and failed flags when resetTrigger changes (new swap started)
   useEffect(() => {
     if (resetTrigger !== lastResetTrigger.current) {
       hasCalledSuccess.current = false;
+      hasCalledFailed.current = false;
       lastResetTrigger.current = resetTrigger;
     }
   });
 
   useEffect(() => {
     console.log('Status update:', status, 'dstTxHash:', dstTxHash);
-    if (status?.ok && status.value.status === SolverIntentStatusCode.SOLVED && !hasCalledSuccess.current) {
-      console.log('Swap status is SOLVED, calling onSwapSuccessful');
-      hasCalledSuccess.current = true;
-      onSwapSuccessful();
+
+    if (status?.ok && !hasCalledSuccess.current && !hasCalledFailed.current) {
+      const statusCode = status.value.status;
+
+      if (statusCode === SolverIntentStatusCode.SOLVED) {
+        console.log('Swap status is SOLVED, calling onSwapSuccessful');
+        hasCalledSuccess.current = true;
+        onSwapSuccessful();
+      } else if (statusCode === SolverIntentStatusCode.FAILED) {
+        console.log('Swap status is FAILED, calling onSwapFailed');
+        hasCalledFailed.current = true;
+        onSwapFailed();
+      }
     }
-  }, [status, dstTxHash, onSwapSuccessful]);
+  }, [status, dstTxHash, onSwapSuccessful, onSwapFailed]);
 
   // This component doesn't render anything, it just monitors status
   return null;
@@ -107,12 +120,21 @@ export default function SwapPage() {
   const [isSwapConfirmOpen, setIsSwapConfirmOpen] = useState<boolean>(false);
   const [swapError, setSwapError] = useState<string>('');
   const [isSwapSuccessful, setIsSwapSuccessful] = useState<boolean>(false);
+  const [isSwapFailed, setIsSwapFailed] = useState<boolean>(false); // Add failed state
   const [dstTxHash, setDstTxHash] = useState<string>('');
   const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
 
   // Memoize the callback to prevent unnecessary re-renders of SwapStatusMonitor
   const handleSwapSuccessful = useCallback(() => {
     setIsSwapSuccessful(true);
+    setIsSwapFailed(false); // Reset failed state when successful
+  }, []);
+
+  // Add callback for failed swaps
+  const handleSwapFailed = useCallback(() => {
+    setIsSwapFailed(true);
+    setIsSwapSuccessful(false); // Reset success state when failed
+    setSwapError('Swap failed. Please try again.'); // Set error message
   }, []);
 
   const sourceChainType = getXChainType(sourceToken.xChainId);
@@ -153,8 +175,9 @@ export default function SwapPage() {
 
   // Determine if we should show loading state
   const isWaitingForSolvedStatus = useMemo(() => {
-    return !!dstTxHash; // Convert to boolean - we'll handle the detailed status in the monitor component
-  }, [dstTxHash]);
+    // Stop loading if swap failed, continue loading if we have dstTxHash and haven't failed
+    return !!dstTxHash && !isSwapFailed;
+  }, [dstTxHash, isSwapFailed]);
 
   // Get token prices and USD values
   const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
@@ -452,6 +475,7 @@ export default function SwapPage() {
     setDestinationAmount('');
     setSwapError('');
     setIsSwapSuccessful(false);
+    setIsSwapFailed(false); // Reset failed state
     setDstTxHash('');
     setSwapResetCounter(prev => prev + 1);
   };
@@ -465,6 +489,7 @@ export default function SwapPage() {
         <SwapStatusMonitor
           dstTxHash={dstTxHash}
           onSwapSuccessful={handleSwapSuccessful}
+          onSwapFailed={handleSwapFailed}
           resetTrigger={swapResetCounter}
         />
       )}
@@ -540,6 +565,20 @@ export default function SwapPage() {
                   on Discord
                 </span>
                 <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">.</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Failed swap error display */}
+        {isSwapFailed && (
+          <div className="self-stretch px-8 py-6 bg-red-50 border border-red-200 rounded-[20px] inline-flex justify-between items-center">
+            <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
+              <div className="self-stretch justify-center text-red-600 text-base font-bold font-['InterRegular'] leading-tight">
+                Swap Failed
+              </div>
+              <div className="self-stretch justify-center text-red-500 text-base font-normal font-['InterRegular'] leading-tight">
+                {swapError || 'Your swap transaction failed. Please try again.'}
               </div>
             </div>
           </div>
