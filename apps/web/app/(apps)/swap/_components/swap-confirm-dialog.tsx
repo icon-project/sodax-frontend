@@ -14,7 +14,8 @@ import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
 import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccounts } from '@sodax/wallet-sdk';
 import { availableChains } from '@/constants/chains';
-import { useSwapAllowance, useSwapApprove, useSpokeProvider, useQuote } from '@sodax/dapp-kit';
+import { useSwapApprove, useSpokeProvider, useQuote } from '@sodax/dapp-kit';
+import { useSwapAllowance } from '../_hooks';
 import type { CreateIntentParams, SolverIntentQuoteRequest } from '@sodax/sdk';
 // import superjson from 'superjson';
 
@@ -96,15 +97,16 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       )
     : undefined;
 
-  // Check approval status - only check if not already confirmed
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(
-    allowanceConfirmed ? undefined : paramsForApprove,
-    spokeProvider,
-  );
+  const {
+    data: hasAllowed,
+    isLoading: isAllowanceLoading,
+    refetch: refetchAllowance,
+  } = useSwapAllowance(allowanceConfirmed ? undefined : paramsForApprove, spokeProvider);
+
+  console.log(hasAllowed);
 
   // Update allowance confirmed state when hasAllowed becomes true
   useEffect(() => {
-    console.log(hasAllowed);
     if (hasAllowed && !allowanceConfirmed) {
       setAllowanceConfirmed(true);
     }
@@ -160,6 +162,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     try {
       setApprovalError(null);
       await approve({ params: intentOrderPayload });
+      // Note: The approval hook will automatically invalidate and refetch the allowance
+      // But you can also manually refetch if needed: await refetchAllowance();
     } catch (error) {
       console.error('Approval failed:', error);
       setApprovalError(error instanceof Error ? error.message : 'Approval failed. Please try again.');
