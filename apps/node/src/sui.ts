@@ -18,7 +18,7 @@ import {
   type PartnerFee,
   DEFAULT_RELAYER_API_ENDPOINT,
   BridgeService,
-  CreateBridgeIntentParams,
+  type CreateBridgeIntentParams,
 } from '@sodax/sdk';
 import { HubChainId, SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import { SuiWalletProvider } from './sui-wallet-provider.js';

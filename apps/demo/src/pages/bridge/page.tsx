@@ -172,7 +172,7 @@ export default function BridgePage() {
       from: fromToken,
       to: toToken,
     });
-  }, [fromToken, toToken]);
+  }, [fromToken, toToken, sodax]);
 
   return (
     <div className="flex flex-col items-center content-center justify-center h-screen">

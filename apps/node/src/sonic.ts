@@ -26,7 +26,7 @@ import {
   DEFAULT_RELAYER_API_ENDPOINT,
   encodeAddress,
   type UnifiedBnUSDMigrateParams,
-  CreateBridgeIntentParams,
+  type CreateBridgeIntentParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 
