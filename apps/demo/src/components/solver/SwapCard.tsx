@@ -16,13 +16,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
 import {
   type CreateIntentParams,
+  getSupportedSolverTokens,
   type Hex,
   type Intent,
   type IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
-  spokeChainConfig,
   supportedSpokeChains,
-  supportedTokensPerChain,
 } from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
@@ -53,10 +52,10 @@ export default function SwapCard({
   const { openWalletModal } = useAppStore();
   const { mutateAsync: swap } = useSwap(sourceProvider);
   const [sourceToken, setSourceToken] = useState<Token | undefined>(
-    Object.values(spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens)[0],
+    getSupportedSolverTokens(ICON_MAINNET_CHAIN_ID)[0],
   );
   const [destToken, setDestToken] = useState<Token | undefined>(
-    Object.values(spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens)[0],
+    getSupportedSolverTokens(POLYGON_MAINNET_CHAIN_ID)[0],
   );
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
@@ -73,12 +72,12 @@ export default function SwapCard({
 
   const onSrcChainChange = (chainId: SpokeChainId) => {
     setSourceChain(chainId);
-    setSourceToken(Object.values(spokeChainConfig[chainId].supportedTokens)[0]);
+    setSourceToken(getSupportedSolverTokens(chainId)[0]);
   };
 
   const onDestChainChange = (chainId: SpokeChainId) => {
     setDestChain(chainId);
-    setDestToken(Object.values(spokeChainConfig[chainId].supportedTokens)[0]);
+    setDestToken(getSupportedSolverTokens(chainId)[0]);
   };
 
   const payload = useMemo(() => {
@@ -237,14 +236,14 @@ export default function SwapCard({
           <Select
             value={sourceToken?.symbol}
             onValueChange={v =>
-              setSourceToken(supportedTokensPerChain.get(sourceChain)?.find(token => token.symbol === v))
+              setSourceToken(getSupportedSolverTokens(sourceChain).find(token => token.symbol === v))
             }
           >
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Token" />
             </SelectTrigger>
             <SelectContent>
-              {supportedTokensPerChain.get(sourceChain)?.map(token => (
+              {getSupportedSolverTokens(sourceChain).map(token => (
                 <SelectItem key={token.address} value={token.symbol}>
                   {token.symbol}
                 </SelectItem>
@@ -289,13 +288,13 @@ export default function SwapCard({
           </div>
           <Select
             value={destToken?.symbol}
-            onValueChange={v => setDestToken(supportedTokensPerChain.get(destChain)?.find(token => token.symbol === v))}
+            onValueChange={v => setDestToken(getSupportedSolverTokens(destChain).find(token => token.symbol === v))}
           >
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Token" />
             </SelectTrigger>
             <SelectContent>
-              {supportedTokensPerChain.get(destChain)?.map(token => (
+              {getSupportedSolverTokens(destChain).map(token => (
                 <SelectItem key={token.address} value={token.symbol}>
                   {token.symbol}
                 </SelectItem>
