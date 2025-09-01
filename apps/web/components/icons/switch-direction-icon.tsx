@@ -4,13 +4,13 @@ interface SwitchDirectionIconProps {
   className?: string;
 }
 
-export function SwitchDirectionIcon({ width = 12, height = 12, className = "" }: SwitchDirectionIconProps) {
+export function SwitchDirectionIcon({ width = 12, height = 12, className = '' }: SwitchDirectionIconProps) {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={width} 
-      height={height} 
-      viewBox="0 0 12 12" 
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={width}
+      height={height}
+      viewBox="0 0 12 12"
       fill="none"
       className={className}
     >
@@ -23,13 +23,7 @@ export function SwitchDirectionIcon({ width = 12, height = 12, className = "" }:
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path
-          d="M3.5 10.5V4.5"
-          stroke="#483534"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M3.5 10.5V4.5" stroke="#483534" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         <path
           d="M10.5 3.5L8.5 1.5L6.5 3.5"
           stroke="black"
@@ -37,19 +31,8 @@ export function SwitchDirectionIcon({ width = 12, height = 12, className = "" }:
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path
-          d="M8.5 7.5V1.5"
-          stroke="black"
-          strokeWidth="1.33333"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M8.5 7.5V1.5" stroke="black" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round" />
       </g>
-      <defs>
-        <clipPath id="clip0_9664_9869">
-          <rect width="12" height="12" fill="white" />
-        </clipPath>
-      </defs>
     </svg>
   );
 }

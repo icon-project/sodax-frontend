@@ -56,7 +56,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
     <>
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
-          className="gap-0 max-w-full h-[calc(100vh-205px)] sm:h-fit md:max-w-[480px] shadow-none bg-white py-22 md:py-10 px-12 fixed bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0 sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-t-[32px] rounded-b-[0px] sm:rounded-[32px] flex flex-col"
+          className="gap-0 max-w-full h-[calc(100vh-205px)] sm:h-fit md:max-w-[480px] shadow-none bg-vibrant-white py-22 md:py-10 px-12 fixed bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0 sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-t-[32px] rounded-b-[0px] sm:rounded-[32px] flex flex-col"
           hideCloseButton
           onInteractOutside={e => {
             e.preventDefault();
@@ -65,8 +65,14 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
           <DialogTitle>
             <div className="flex flex-row justify-between items-center">
               <div className="inline-flex justify-start items-center gap-2">
-                <Image src="/symbol.png" alt="SODAX Symbol" width={24} height={24} />
-                <div className="mix-blend-multiply justify-end text-espresso font-['InterRegular'] font-bold leading-snug text-(length:--subtitle)">
+                <Image
+                  src="/symbol_dark.png"
+                  alt="SODAX Symbol"
+                  width={16}
+                  height={16}
+                  className="mix-blend-multiply"
+                />
+                <div className="mix-blend-multiply justify-end text-espresso font-['InterBold'] leading-snug text-(length:--subtitle)">
                   Confirm terms
                 </div>
               </div>
@@ -125,7 +131,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
               </p>
               <ScrollBar className="w-1" />
             </ScrollArea>
-            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-vibrant-white to-transparent pointer-events-none"></div>
           </div>
 
           <div className="flex gap-2 z-60">
@@ -141,7 +147,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
             <Button
               variant="outline"
               onClick={disconnectWallet}
-              className="h-10 font-['InterRegular'] cursor-pointer w-30"
+              className="h-10 font-['InterRegular'] cursor-pointer w-30 outline-cherry-grey text-espresso"
             >
               Disconnect
             </Button>

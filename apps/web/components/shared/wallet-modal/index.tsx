@@ -99,7 +99,7 @@ export const WalletModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={() => handleDismiss(onDismiss)}>
       <DialogContent
-        className="max-w-full w-full md:max-w-[480px] p-12 w-[90%] shadow-none bg-vibrant-white gap-4"
+        className="max-w-full w-full md:max-w-[480px] pt-12 px-12 pb-8 w-[90%] shadow-none bg-vibrant-white gap-4"
         hideCloseButton
       >
         <DialogTitle>
@@ -107,8 +107,14 @@ export const WalletModal = ({
             <div className="flex flex-row justify-between items-center">
               {!isExpanded && (
                 <div className="inline-flex justify-center items-center gap-2">
-                  <Image src="/symbol.png" alt="SODAX Symbol" width={16} height={16} />
-                  <div className="flex-1 justify-center text-espresso text-base font-['InterRegular'] font-bold leading-snug">
+                  <Image
+                    src="/symbol_dark.png"
+                    alt="SODAX Symbol"
+                    width={16}
+                    height={16}
+                    className="mix-blend-multiply"
+                  />
+                  <div className="flex-1 justify-center text-espresso text-base font-['InterBold'] leading-snug text-(length:--body-super-comfortable)">
                     Connect wallets
                   </div>
                 </div>
@@ -151,7 +157,7 @@ export const WalletModal = ({
           )}
         </DialogTitle>
         {!showWalletList && !isExpanded && (
-          <div className=" justify-start text-clay-light text-sm font-medium font-['InterRegular'] leading-tight">
+          <div className=" justify-start text-clay-light text-sm font-medium font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
             {isMigrateRoute
               ? 'You will need to connect on both networks.'
               : 'You will need to connect your wallet to proceed.'}
@@ -223,6 +229,8 @@ export const WalletModal = ({
                         </React.Fragment>
                       );
                     })}
+
+                  {isMigrateRoute && <Separator className="h-1 bg-clay opacity-30" />}
                 </>
               ) : (
                 <div className="w-full">

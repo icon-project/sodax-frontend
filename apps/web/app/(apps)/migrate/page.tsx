@@ -113,7 +113,7 @@ export default function MigratePage() {
             className="w-10 h-10 left-1/2 bottom-[-22px] absolute transform -translate-x-1/2 bg-cream-white rounded-[256px] border-4 border-[#F5F2F2] flex justify-center items-center hover:bg-cherry-grey hover:outline-cherry-grey hover:scale-110 cursor-pointer transition-all duration-200 active:bg-cream-white z-50"
             onClick={switchDirection}
           >
-            <SwitchDirectionIcon className="w-4 h-4" />
+            <SwitchDirectionIcon className="w-3 h-3" />
           </Button>
         </div>
 
@@ -200,9 +200,9 @@ export default function MigratePage() {
         <div className="self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 p-(--layout-space-comfortable) lg:mt-4 mt-2">
           <div className="self-stretch inline-flex justify-center items-center gap-2">
             <div className="w-4 h-4 relative mix-blend-multiply">
-              <Image src="/symbol.png" alt="" width={16} height={16} />
+              <Image src="/symbol_dark.png" alt="" width={16} height={16} />
             </div>
-            <div className="flex-1 justify-center text-espresso text-base font-bold font-['InterRegular'] text-(size:--body-super-comfortable) leading-tight">
+            <div className="flex-1 justify-center text-espresso text-base font-['InterBold'] text-(size:--body-super-comfortable) leading-tight">
               {direction.from === ICON_MAINNET_CHAIN_ID ? "You're migrating to Sonic" : "You're migrating back to ICON"}
             </div>
           </div>

@@ -91,7 +91,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
                 EVM_CHAIN_ICONS.map((evmIcon, index) => (
                   <div
                     key={index}
-                    className="rounded-md shadow-[-4px_0px_4px_0px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
+                    className="rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
                   >
                     <Image
                       key={index}
@@ -104,7 +104,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
                   </div>
                 ))}
               {isMigrateRoute && (
-                <div className="rounded-md shadow-[4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden">
+                <div className="rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden">
                   <Image
                     src={'/chain/sonic.png'}
                     alt={'Sonic'}
@@ -124,14 +124,14 @@ export const ChainItem: React.FC<ChainItemProps> = ({
               )}
             </div>
           ) : (
-            <div className="relative">
-              <div className="rounded-md shadow-[4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden">
+            <div className="self-stretch inline-flex justify-start items-center flex-wrap content-center relative">
+              <div className="rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden">
                 <Image
                   src={icon}
                   alt={name}
                   width={24}
                   height={24}
-                  className="rounded-md shadow-[0px_6px_12px_0px_rgba(185,172,171,1)]"
+                  className="rounded-[6px] shadow-[0px_6px_12px_0px_rgba(185,172,171,1)]"
                 />
               </div>
               {address && (
@@ -144,17 +144,19 @@ export const ChainItem: React.FC<ChainItemProps> = ({
               )}
             </div>
           )}
-          <div className="flex justify-start items-center gap-1">
-            <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
-              {isConnecting
-                ? 'Waiting for wallet'
-                : address
-                  ? ''
-                  : isMigrateRoute && xChainType === 'EVM'
-                    ? 'Sonic'
-                    : name}
+          {!address && (
+            <div className="flex justify-start items-center gap-1">
+              <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
+                {isConnecting
+                  ? 'Waiting for wallet'
+                  : address
+                    ? ''
+                    : isMigrateRoute && xChainType === 'EVM'
+                      ? 'Sonic'
+                      : name}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex flex-wrap justify-end gap-2 grow">
             {address ? (
@@ -190,7 +192,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
                   <Button
                     variant="default"
                     size="sm"
-                    className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
+                    className="w-6 h-6 p-0 rounded-full bg-cream text-espresso bg-cherry-brighter hover:bg-cherry-bright hover:text-white cursor-pointer"
                     onClick={onDisconnect}
                   >
                     <MinusIcon className="w-4 h-4" />

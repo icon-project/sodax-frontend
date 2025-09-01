@@ -43,7 +43,7 @@ export const useMigrationInfo = () => {
   const typedValue = useMigrationStore(state => state.typedValue);
   const error = useMemo(() => {
     if (typedValue === '' || Number(typedValue) <= 0) {
-      return 'Enter Amount';
+      return 'Enter amount';
     }
     return null;
   }, [typedValue]);
