@@ -99,7 +99,7 @@ export class BridgeService {
    * Check if allowance is valid for the bridge transaction
    * @param params - The bridge parameters
    * @param spokeProvider - The spoke provider
-   * @returns Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>>
+   * @returns {Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>>}
    */
   public async isAllowanceValid<S extends SpokeProvider>({
     params,
@@ -480,16 +480,6 @@ export class BridgeService {
         ),
       );
     }
-    // else if (params.srcChainId === this.hubProvider.chainConfig.chain.id) {
-    //   calls.push(
-    //     EvmAssetManagerService.encodeTransfer(
-    //       params.dstAsset as Address,
-    //       encodedRecipientAddress,
-    //       translatedWithdrawAmount,
-    //       this.hubProvider.chainConfig.addresses.assetManager,
-    //     ),
-    //   );
-    // }
     else {
       invariant(dstAssetInfo, `Unsupported hub chain (${params.dstChainId}) token: ${params.dstAsset}`);
       calls.push(
@@ -508,9 +498,11 @@ export class BridgeService {
    * Retrieves the deposited token balance held by the asset manager on a spoke chain.
    * This balance represents the available liquidity for bridging operations and is used to verify
    * that the target chain has sufficient funds to complete a bridge transaction.
+   * NOTE: -1n means no bridgable limit
+   *
    * @param spokeProvider - The spoke provider instance
    * @param token - The token address to query the balance for
-   * @returns Promise<bigint> - The token balance as a bigint value
+   * @returns {Promise<bigint>} - The token balance as a bigint value
    */
   public async getSpokeAssetManagerTokenBalance(chainId: SpokeChainId, token: string): Promise<bigint> {
     try {
@@ -525,7 +517,7 @@ export class BridgeService {
       invariant(tokenIndex !== -1, `Token ${token} not found in the vault reserves for chain ${chainId}`);
       return reserves.balances[tokenIndex] ?? 0n;
     } catch (error) {
-      console.warn(`Failed to get spoke asset manager token balance for token ${token}:`, error);
+      console.error(`Failed to get spoke asset manager token balance for token ${token}:`, error);
       return 0n;
     }
   }

@@ -334,6 +334,7 @@ if (approveResult.ok) {
 Sodax feature set currently contain:
 - Solver: used for intent based swaps. Please find documentation for Solver part of the SDK in [SOLVER.md](./docs/SOLVER.md)
 - Money Market: used for lending and borowing. Please find documentation for Solver part of the SDK in [MONEY_MARKET.md](./docs/MONEY_MARKET.md)
+- Bridge: provides functionality to bridge tokens between different blockchain chains [BRIDGE.md](./docs/BRIDGE.md)
 
 ## Intent Relay API
 
