@@ -94,7 +94,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
 
   return (
     <div
-      className={`w-full relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-cream-white justify-between items-center hover:outline-6 group ${className}`}
+      className={`w-full relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-[#e4dada] justify-between items-center hover:outline-6 hover:outline-offset-[-6px] group ${className}`}
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
     >
       <div className="flex inline-flex justify-between w-full">
@@ -164,7 +164,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
               onChange={onInputChange}
               onFocus={onInputFocus}
               placeholder="0"
-              className="!text-2xl text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso [&::selection]:bg-cherry-brighter [&::selection]:text-espresso [&::-moz-selection]:bg-cherry-brighter [&::-moz-selection]:text-espresso"
+              className="!text-2xl text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso [&::selection]:bg-cherry-brighter [&::selection]:text-espresso [&::-moz-selection]:bg-cherry-brighter [&::-moz-selection]:text-espresso placeholder:text-espresso"
               readOnly={type === CurrencyInputPanelType.OUTPUT}
             />
           </div>

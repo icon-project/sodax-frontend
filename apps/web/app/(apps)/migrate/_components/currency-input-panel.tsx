@@ -52,7 +52,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
       onClick={() => inputRef.current?.focus()}
     >
-      <div className="flex justify-start items-center gap-2">
+      <div className="flex justify-start items-center gap-4">
         {currency.symbol === 'SODA' ? (
           <Image src="/can.png" alt="SODA Token" width={56} height={56} className="mx-1" />
         ) : (
