@@ -102,7 +102,7 @@ export function SearchBar({
                 <div className="absolute inset-0 bg-transparent" onClick={handleChainSelectorClick} />
                 <div className="relative bg-transparent border-none w-64">
                   <div className="mt-26">
-                    <div className="grid grid-cols-2 gap-2 overflow-hidden pl-4">
+                    <div className="grid grid-cols-2 gap-2 overflow-hidden pl-2">
                       {/* All Networks Option */}
                       <div
                         className="w-34 inline-flex justify-start items-center gap-3 cursor-pointer"
