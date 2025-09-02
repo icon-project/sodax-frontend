@@ -102,10 +102,10 @@ export function SearchBar({
                 <div className="absolute inset-0 bg-transparent" onClick={handleChainSelectorClick} />
                 <div className="relative bg-transparent border-none w-64">
                   <div className="mt-26">
-                    <div className="grid grid-cols-2 gap-2 overflow-hidden">
+                    <div className="grid grid-cols-2 gap-2 overflow-hidden pl-1">
                       {/* All Networks Option */}
                       <div
-                        className="w-34 inline-flex justify-start items-center gap-4 cursor-pointer"
+                        className="w-34 inline-flex justify-start items-center gap-3 cursor-pointer"
                         onClick={handleShowAllChains}
                       >
                         <div className="w-8 h-8 border border-4 border-white rounded-sm shadow-[-4px_0px_10px_0px_rgba(175,145,145,0.2)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden">
@@ -135,7 +135,7 @@ export function SearchBar({
                           </>
                         </div>
                         <div className="flex justify-start items-center gap-1">
-                          <div className="justify-center text-espresso text-base font-normal font-['InterRegular'] leading-tight">
+                          <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
                             All chains
                           </div>
                         </div>
@@ -147,11 +147,11 @@ export function SearchBar({
                           className="w-34 inline-flex justify-start items-center gap-3 cursor-pointer"
                           onClick={() => handleChainSelect(chain.id)}
                         >
-                          <div className="border border-4 border-white rounded-[6px]">
+                          <div className="border border-4 border-white rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145,0.1)]">
                             <Image src={chain.icon} alt={chain.name} width={24} height={24} className="rounded-[6px]" />
                           </div>
                           <div className="flex justify-start items-center gap-1">
-                            <div className="justify-center text-espresso text-base font-normal font-['InterRegular'] leading-tight">
+                            <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
                               {chain.name}
                             </div>
                           </div>
