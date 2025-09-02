@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
 import type { XToken, SpokeChainId, ChainType } from '@sodax/types';
 import { useWalletUI } from '../_context/wallet-ui';
-import { useXAccount, useXBalances, useXConnection } from '@sodax/wallet-sdk';
+import { useXAccount, useXAccounts, useXBalances, useXConnection } from '@sodax/wallet-sdk';
 import { getXChainType } from '@sodax/wallet-sdk';
 import { chainIdToChainName } from '@/providers/constants';
 import { useQuote, useSpokeProvider, useSwap, useStatus } from '@sodax/dapp-kit';
@@ -140,20 +140,17 @@ export default function SwapPage() {
   const sourceChainType = getXChainType(sourceToken.xChainId);
   const destinationChainType = getXChainType(destinationToken.xChainId);
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
+  console.log(useXAccounts());
+  console.log(sourceChainType);
   const { address: sourceAddress } = useXAccount(sourceChainType);
+  console.log(sourceAddress);
   const { address: destinationAddress } = useXAccount(destinationChainType);
 
-  const sourceConnection = useXConnection(sourceChainType);
-  const destinationConnection = useXConnection(destinationChainType);
-
-  const isSourceChainConnected = !!sourceConnection?.xConnectorId;
-  const isDestinationChainConnected = !!destinationConnection?.xConnectorId;
+  const isSourceChainConnected = sourceAddress !== undefined;
+  const isDestinationChainConnected = destinationAddress !== undefined;
 
   const sourceWalletProvider = useWalletProvider(sourceToken.xChainId);
   const sourceProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
-
-  // Monitor swap status when dstTxHash is available
-  // Status monitoring is now handled by SwapStatusMonitor component
 
   const { data: sourceBalances } = useXBalances({
     xChainId: sourceToken.xChainId,

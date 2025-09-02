@@ -67,7 +67,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   onMaxClick,
   onCurrencyChange,
   className = '',
-  isChainConnected = true,
+  isChainConnected = false,
   isSwapAndSend = false,
   onSwapAndSendToggle,
   customDestinationAddress = '',

@@ -23,7 +23,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const {
     isSidebarOpen,
     toggleSidebar,
-    connectedWalletsCount,
     showWalletModal,
     setShowWalletModal,
     showTermsModal,
@@ -50,7 +49,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Header
             isSidebarOpen={isSidebarOpen}
             toggleSidebar={toggleSidebar}
-            connectedWalletsCount={connectedWalletsCount}
             onOpenWalletModal={() => openWalletModal()}
             onOpenWalletModalWithTwoWallets={() => {
               openWalletModal();

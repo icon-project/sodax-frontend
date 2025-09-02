@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { MenuIcon } from '@/components/icons';
 import { DecoratedButton } from '@/components/landing/decorated-button';
 import { ConnectedChainsDisplay } from '@/components/shared/connected-chains-display';
+import { useXAccounts } from '@sodax/wallet-sdk';
 
 interface HeaderProps {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
-  connectedWalletsCount: number;
   onOpenWalletModal: () => void;
   onOpenWalletModalWithTwoWallets: () => void;
 }
@@ -17,10 +17,12 @@ interface HeaderProps {
 export function Header({
   isSidebarOpen,
   toggleSidebar,
-  connectedWalletsCount,
   onOpenWalletModal,
   onOpenWalletModalWithTwoWallets,
 }: HeaderProps): React.JSX.Element {
+  const xAccounts = useXAccounts();
+  const connectedChains = Object.entries(xAccounts).filter(([, account]) => account?.address);
+  const connectedWalletsCount = connectedChains.length;
   return (
     <div className="h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
       <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />

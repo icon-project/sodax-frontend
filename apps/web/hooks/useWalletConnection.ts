@@ -87,7 +87,6 @@ export function useWalletConnection() {
     showWalletModal,
     showTermsModal,
     connectedWalletName,
-    connectedWalletsCount,
     targetChainType,
     setShowWalletModal,
     setShowTermsModal,

@@ -34,8 +34,6 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
 
   // Check if there are EVM chains
   const hasEVMChains = connectedChains.some(chain => chain.chainType === 'EVM');
-  console.log(connectedChains);
-  console.log('EVM Chains', hasEVMChains);
 
   return (
     <div className="flex justify-end items-center gap-4 w-[183px]">
