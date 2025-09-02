@@ -208,7 +208,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={isCompleted ? undefined : onOpenChange}>
+    <Dialog open={open} onOpenChange={isCompleted || isConfirming ? undefined : onOpenChange}>
       <DialogContent className="md:max-w-[480px] p-12 w-[90%] shadow-none bg-vibrant-white gap-4" hideCloseButton>
         <DialogHeader>
           <DialogTitle className="flex w-full justify-end">
