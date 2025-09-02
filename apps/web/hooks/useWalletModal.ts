@@ -56,7 +56,6 @@ export const useWalletModal = (
     setHoveredWallet,
     showWalletList,
     selectedChainType,
-    xAccounts,
     connectedWalletsCount,
     handleConnectorsShown,
     handleConnectorsHidden,

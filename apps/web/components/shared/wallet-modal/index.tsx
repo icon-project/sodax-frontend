@@ -7,7 +7,7 @@ import { WalletModalItem } from './wallet-modal-item';
 import Image from 'next/image';
 import { ArrowLeftIcon, XIcon } from 'lucide-react';
 import type { XConnector } from '@sodax/wallet-sdk';
-import { getXChainType } from '@sodax/wallet-sdk';
+import { getXChainType, useXAccounts } from '@sodax/wallet-sdk';
 import type { ChainType } from '@sodax/types';
 import { xChainTypes } from '@/constants/wallet';
 import { useWalletModal } from '@/hooks/useWalletModal';
@@ -33,7 +33,7 @@ export const WalletModal = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const pathname = usePathname();
   const isMigrateRoute = pathname.includes('migrate');
-
+  const xAccounts = useXAccounts();
   // Move useSwapState to top level
   const { sourceToken } = useSwapState();
   const {
@@ -41,7 +41,6 @@ export const WalletModal = ({
     setHoveredWallet,
     showWalletList,
     selectedChainType,
-    xAccounts,
     handleConnectorsShown,
     handleConnectorsHidden,
     handleDismiss,
