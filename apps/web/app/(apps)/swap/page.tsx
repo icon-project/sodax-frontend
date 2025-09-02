@@ -46,6 +46,7 @@ interface SwapStatusMonitorProps {
   dstTxHash: string;
   onSwapSuccessful: () => void;
   onSwapFailed: () => void; // Add callback for failed swaps
+  onUpdateSwapStatus: (statusCode: number) => void;
   resetTrigger: number; // Add this to trigger reset of internal state
 }
 
@@ -53,6 +54,7 @@ function SwapStatusMonitor({
   dstTxHash,
   onSwapSuccessful,
   onSwapFailed,
+  onUpdateSwapStatus,
   resetTrigger,
 }: SwapStatusMonitorProps): React.JSX.Element | null {
   const { data: status } = useStatus(dstTxHash as `0x${string}`);
@@ -74,7 +76,7 @@ function SwapStatusMonitor({
 
     if (status?.ok && !hasCalledSuccess.current && !hasCalledFailed.current) {
       const statusCode = status.value.status;
-
+      onUpdateSwapStatus(statusCode);
       if (statusCode === SolverIntentStatusCode.SOLVED) {
         console.log('Swap status is SOLVED, calling onSwapSuccessful');
         hasCalledSuccess.current = true;
@@ -85,7 +87,7 @@ function SwapStatusMonitor({
         onSwapFailed();
       }
     }
-  }, [status, dstTxHash, onSwapSuccessful, onSwapFailed]);
+  }, [status, dstTxHash, onSwapSuccessful, onSwapFailed, onUpdateSwapStatus]);
 
   // This component doesn't render anything, it just monitors status
   return null;
@@ -140,10 +142,7 @@ export default function SwapPage() {
   const sourceChainType = getXChainType(sourceToken.xChainId);
   const destinationChainType = getXChainType(destinationToken.xChainId);
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
-  console.log(useXAccounts());
-  console.log(sourceChainType);
   const { address: sourceAddress } = useXAccount(sourceChainType);
-  console.log(sourceAddress);
   const { address: destinationAddress } = useXAccount(destinationChainType);
 
   const isSourceChainConnected = sourceAddress !== undefined;
@@ -507,7 +506,8 @@ export default function SwapPage() {
       // Store the destination transaction hash for status monitoring
       const [, , intentDeliveryInfo] = result.value;
       setDstTxHash(intentDeliveryInfo.dstTxHash);
-
+      setSwapStatus(0);
+      console.log('Swap Status', swapStatus);
       // Invalidate balance queries
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     } catch (error) {
@@ -528,7 +528,10 @@ export default function SwapPage() {
   };
 
   const buttonState = getButtonState();
-
+  const [swapStatus, setSwapStatus] = useState<number>(-1);
+  const handleUpdateSwapStatus = (statusCode: number) => {
+    setSwapStatus(statusCode);
+  };
   return (
     <div className="w-full">
       {/* SwapStatusMonitor component - only renders when dstTxHash is available */}
@@ -538,6 +541,7 @@ export default function SwapPage() {
           onSwapSuccessful={handleSwapSuccessful}
           onSwapFailed={handleSwapFailed}
           resetTrigger={swapResetCounter}
+          onUpdateSwapStatus={handleUpdateSwapStatus}
         />
       )}
 
@@ -600,9 +604,9 @@ export default function SwapPage() {
         {quoteQuery.data?.ok === false && (
           <div className="self-stretch px-8 py-6 bg-white rounded-[20px] inline-flex justify-between items-center">
             <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
-              <div className="self-stretch justify-center text-espresso text-base font-bold font-['InterRegular'] leading-tight">
+              {/* <div className="self-stretch justify-center text-espresso text-base font-bold font-['InterRegular'] leading-tight">
                 Sorry, your transaction got stuck
-              </div>
+              </div> */}
               <div className="self-stretch justify-center">
                 <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">
                   {quoteQuery.data.error.detail.message} <br />
@@ -670,6 +674,7 @@ export default function SwapPage() {
         isSwapAndSend={isSwapAndSend}
         isSwapSuccessful={isSwapSuccessful}
         swapFee={swapFee}
+        swapStatus={swapStatus}
       />
     </div>
   );

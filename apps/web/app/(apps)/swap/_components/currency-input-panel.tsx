@@ -80,7 +80,6 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    console.log('inputRef', inputRef.current);
     if (type === CurrencyInputPanelType.INPUT && inputRef.current) {
       inputRef.current.focus();
     }

@@ -86,7 +86,6 @@ function StackedNetworks({
   const networkInfos = chainIds.map(chainId => getNetworkInfo(chainId));
 
   const handleNetworkClick = (chainId: string): void => {
-    console.log('handleNetworkClick', chainId);
     if (onChainClick) {
       const token = allSupportedTokens.find(token => token.symbol === tokenSymbol && token.xChainId === chainId);
       if (token) {

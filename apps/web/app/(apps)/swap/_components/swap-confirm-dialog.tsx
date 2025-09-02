@@ -16,7 +16,7 @@ import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccounts } fro
 import { availableChains } from '@/constants/chains';
 import { useSwapApprove, useSpokeProvider, useQuote } from '@sodax/dapp-kit';
 import { useSwapAllowance } from '../_hooks';
-import type { CreateIntentParams, SolverIntentQuoteRequest } from '@sodax/sdk';
+import type { CreateIntentParams, SolverIntentQuoteRequest, SolverIntentStatusCode } from '@sodax/sdk';
 // import superjson from 'superjson';
 
 interface SwapConfirmDialogProps {
@@ -40,6 +40,7 @@ interface SwapConfirmDialogProps {
   swapFee?: string;
   minOutputAmount?: BigNumber;
   intentOrderPayload?: CreateIntentParams;
+  swapStatus?: number;
 }
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
@@ -63,6 +64,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   isSwapSuccessful = false,
   swapFee,
   intentOrderPayload,
+  swapStatus,
 }: SwapConfirmDialogProps) => {
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -386,12 +388,22 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
-                  onClick={handleConfirm}
-                  disabled={isLoading || isConfirming}
+                  onClick={isLoading || isConfirming ? undefined : handleConfirm}
+                  // disabled={isLoading || isConfirming}
                 >
                   {isLoading || isConfirming ? (
                     <div className="flex items-center gap-2 text-white">
-                      <span>Swap in progress</span>
+                      <span>
+                        {swapStatus === -1
+                          ? 'Confirming Swap'
+                          : swapStatus === 0
+                            ? 'Swap Created'
+                            : swapStatus === 1
+                              ? 'Swap in Progress'
+                              : swapStatus === 2
+                                ? 'Transferring Assets'
+                                : 'Confirming Swap'}
+                      </span>
                       <CircularProgressIcon
                         width={16}
                         height={16}

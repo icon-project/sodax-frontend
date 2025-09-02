@@ -33,7 +33,6 @@ const LandingPage = () => {
   }, [isOpen]);
 
   const toggle = () => {
-    console.log('toggle');
     setIsOpen(!isOpen);
   };
 
