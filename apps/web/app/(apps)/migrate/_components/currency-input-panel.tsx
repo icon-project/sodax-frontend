@@ -37,7 +37,10 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   className = '',
 }: CurrencyInputPanelProps) => {
   const formattedBalance = formatUnits(currencyBalance, currency.decimals);
-  const formattedBalanceFixed = Number(formattedBalance).toFixed(2);
+  const formattedBalanceFixed = Number(formattedBalance).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

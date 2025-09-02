@@ -168,7 +168,9 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             />
           </div>
           <div className="mix-blend-multiply text-right justify-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
-            {type === CurrencyInputPanelType.INPUT ? `Sell $${usdValue.toFixed(2)}` : `Buy $${usdValue.toFixed(2)}`}
+            {type === CurrencyInputPanelType.INPUT
+              ? `Sell $${usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : `Buy $${usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           </div>
         </div>
       </div>
