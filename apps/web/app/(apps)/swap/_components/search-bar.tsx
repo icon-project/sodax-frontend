@@ -65,7 +65,7 @@ export function SearchBar({
                 {selectedChainId ? (
                   <div
                     data-property-1="Default"
-                    className="rounded-md shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.5)] border border-3 border-white inline-flex flex-col justify-center items-center overflow-hidden"
+                    className="rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145,0.1)] border border-4 border-white inline-flex flex-col justify-center items-center overflow-hidden"
                   >
                     <Image
                       src={getChainIcon(selectedChainId) || '/chain/0x2105.base.png'}
@@ -102,7 +102,7 @@ export function SearchBar({
                 <div className="absolute inset-0 bg-transparent" onClick={handleChainSelectorClick} />
                 <div className="relative bg-transparent border-none w-64">
                   <div className="mt-26">
-                    <div className="grid grid-cols-2 gap-2 overflow-hidden pl-1">
+                    <div className="grid grid-cols-2 gap-2 overflow-hidden pl-4">
                       {/* All Networks Option */}
                       <div
                         className="w-34 inline-flex justify-start items-center gap-3 cursor-pointer"
