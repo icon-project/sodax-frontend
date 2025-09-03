@@ -1,5 +1,5 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BridgeParams, CreateBridgeIntentParams, SpokeProvider } from '@sodax/sdk';
+import type { CreateBridgeIntentParams, SpokeProvider } from '@sodax/sdk';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface UseBridgeApproveReturn {

@@ -281,7 +281,6 @@ async function bridge(
     dstChainId,
     dstAsset,
     recipient,
-    partnerFee,
   };
 
   // For Sui as source chain, use SuiSpokeProvider
@@ -289,6 +288,7 @@ async function bridge(
     const result = await bridgeService.bridge({
       params: bridgeParams,
       spokeProvider: suiSpokeProvider,
+      fee: partnerFee,
     });
 
     if (result.ok) {

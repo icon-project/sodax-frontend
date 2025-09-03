@@ -34,6 +34,7 @@ import {
   type OptionalRaw,
   type OptionalTimeout,
   type GetAddressType,
+  type BridgeServiceConfig,
 } from '../../index.js';
 import { isValidSpokeChainId, spokeChainConfig } from '../../constants.js';
 import type { SpokeChainId, XToken } from '@sodax/types';
@@ -46,7 +47,6 @@ export type CreateBridgeIntentParams = {
   dstChainId: SpokeChainId;
   dstAsset: string;
   recipient: string; // non-encoded recipient address
-  partnerFee?: PartnerFee;
 };
 
 export type BridgeParams<S extends SpokeProvider> = Prettify<
@@ -80,12 +80,35 @@ export type BridgeOptionalExtraData = { data?: BridgeExtraData };
  * @param relayerApiEndpoint - The relayer API endpoint
  */
 export class BridgeService {
-  private readonly hubProvider: EvmHubProvider;
-  private readonly relayerApiEndpoint: HttpUrl;
+  public readonly hubProvider: EvmHubProvider;
+  public readonly relayerApiEndpoint: HttpUrl;
+  public readonly config: BridgeServiceConfig;
 
-  constructor(hubProvider: EvmHubProvider, relayerApiEndpoint: HttpUrl) {
+  constructor(
+    hubProvider: EvmHubProvider,
+    relayerApiEndpoint: HttpUrl,
+    config: BridgeServiceConfig | undefined = undefined,
+  ) {
+    this.config = config ? config : { partnerFee: undefined };
     this.hubProvider = hubProvider;
     this.relayerApiEndpoint = relayerApiEndpoint;
+  }
+
+  /**
+   * Get the fee for a given input amount
+   * @param {bigint} inputAmount - The amount of input tokens
+   * @returns {Promise<bigint>} The fee amount (denominated in input tokens)
+   *
+   * @example
+   * const fee: bigint = await sodax.bridge.getFee(1000000000000000n);
+   * console.log('Fee:', fee);
+   */
+  public getFee(inputAmount: bigint): bigint {
+    if (!this.config.partnerFee) {
+      return 0n;
+    }
+
+    return calculateFeeAmount(inputAmount, this.config.partnerFee);
   }
 
   /**
@@ -259,7 +282,7 @@ export class BridgeService {
    * @returns {Promise<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>>} - Returns the transaction hashes for both spoke and hub chains or error
    *
    * @example
-   * const result = await bridgeService.bridge(
+   * const result = await sodax.bridge.bridge(
    *   {
    *     srcChainId: '0x2105.base',
    *     srcAsset: '0x...', // Address of the source token
@@ -286,12 +309,13 @@ export class BridgeService {
   public async bridge<S extends SpokeProvider>({
     params,
     spokeProvider,
+    fee = this.config.partnerFee,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   }: Prettify<BridgeParams<S> & OptionalTimeout>): Promise<
     Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>
   > {
     try {
-      const txResult = await this.createBridgeIntent({ params, spokeProvider, raw: false });
+      const txResult = await this.createBridgeIntent({ params, spokeProvider, fee, raw: false });
 
       if (!txResult.ok) {
         return txResult;
@@ -343,7 +367,7 @@ export class BridgeService {
    *
    * @example
    * const bridgeService = new BridgeService(hubProvider, relayerApiEndpoint);
-   * const result = await bridgeService.createBridgeIntent(
+   * const result = await sodax.bridge.createBridgeIntent(
    *   {
    *     srcChainId: 'ethereum',
    *     srcAsset: "0x123...", // source token address
@@ -366,6 +390,7 @@ export class BridgeService {
   async createBridgeIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
     params,
     spokeProvider,
+    fee = this.config.partnerFee,
     raw,
   }: Prettify<BridgeParams<S> & OptionalRaw<R>>): Promise<
     Result<TxReturnType<S, R>, BridgeError<'CREATE_BRIDGE_INTENT_FAILED'>> & BridgeOptionalExtraData
@@ -387,7 +412,7 @@ export class BridgeService {
         this.hubProvider,
       );
 
-      const data: Hex = this.buildBridgeData(params, srcAssetInfo, dstAssetInfo);
+      const data: Hex = this.buildBridgeData(params, srcAssetInfo, dstAssetInfo, fee);
 
       const txResult = await SpokeService.deposit(
         {
@@ -429,7 +454,12 @@ export class BridgeService {
    * @param dstAssetInfo - The destination asset information
    * @returns Hex - The encoded contract calls for the bridge operation
    */
-  buildBridgeData(params: CreateBridgeIntentParams, srcAssetInfo: HubAssetInfo, dstAssetInfo: HubAssetInfo): Hex {
+  buildBridgeData(
+    params: CreateBridgeIntentParams,
+    srcAssetInfo: HubAssetInfo,
+    dstAssetInfo: HubAssetInfo,
+    partnerFee: PartnerFee | undefined,
+  ): Hex {
     const calls: EvmContractCall[] = [];
     let translatedAmount = params.amount;
     let srcVault = params.srcAsset as `0x${string}`;
@@ -440,10 +470,10 @@ export class BridgeService {
       translatedAmount = EvmVaultTokenService.translateIncomingDecimals(srcAssetInfo.decimal, params.amount);
       srcVault = srcAssetInfo.vault;
     }
-    const feeAmount = calculateFeeAmount(translatedAmount, params.partnerFee);
+    const feeAmount = calculateFeeAmount(translatedAmount, partnerFee);
 
-    if (params.partnerFee && feeAmount) {
-      calls.push(Erc20Service.encodeTransfer(srcVault, params.partnerFee.address, feeAmount));
+    if (partnerFee && feeAmount > 0n) {
+      calls.push(Erc20Service.encodeTransfer(srcVault, partnerFee.address, feeAmount));
     }
 
     const withdrawAmount = translatedAmount - feeAmount;
@@ -458,13 +488,7 @@ export class BridgeService {
     const encodedRecipientAddress = encodeAddress(params.dstChainId, params.recipient);
     // If the destination chain is Sonic, we can directly transfer the tokens to the recipient
     if (params.dstChainId === this.hubProvider.chainConfig.chain.id) {
-      calls.push(
-        Erc20Service.encodeTransfer(
-          dstAssetInfo.asset,
-          encodedRecipientAddress,
-          translatedWithdrawAmount,
-        ),
-      );
+      calls.push(Erc20Service.encodeTransfer(dstAssetInfo.asset, encodedRecipientAddress, translatedWithdrawAmount));
     } else {
       invariant(dstAssetInfo, `Unsupported hub chain (${params.dstChainId}) token: ${params.dstAsset}`);
       calls.push(
@@ -483,7 +507,6 @@ export class BridgeService {
    * Retrieves the deposited token balance held by the asset manager on a spoke chain.
    * This balance represents the available liquidity for bridging operations and is used to verify
    * that the target chain has sufficient funds to complete a bridge transaction.
-   * NOTE: -1n means no bridgable limit
    *
    * @param spokeProvider - The spoke provider instance
    * @param token - The token address to query the balance for
@@ -501,8 +524,6 @@ export class BridgeService {
         EvmVaultTokenService.getTokenInfo(fromHubAsset.vault, fromHubAsset.asset, this.hubProvider.publicClient),
         EvmVaultTokenService.getVaultReserves(toHubAsset.vault, this.hubProvider.publicClient),
       ]);
-
-
 
       // spoke -> hub, we need to check the max deposit of the token on the from chain
       if (!isValidVault(fromHubAsset.asset) && isValidVault(toHubAsset.asset)) {

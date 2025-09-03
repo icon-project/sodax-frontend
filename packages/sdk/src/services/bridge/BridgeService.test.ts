@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { ARBITRUM_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, type XToken } from '@sodax/types';
-import { Sodax } from '../../index.js';
+import { getHubAssetInfo, Sodax, spokeChainConfig } from '../../index.js';
 
 describe('BridgeService', () => {
   const sodax = new Sodax();
@@ -8,18 +8,12 @@ describe('BridgeService', () => {
   describe('isBridgeable', () => {
     it('should return true for ETH on Arbitrum and ETH on Base (same vault)', () => {
       const fromToken: XToken = {
-        symbol: 'ETH',
-        name: 'Ethereum',
-        decimals: 18,
-        address: '0x0000000000000000000000000000000000000000',
+        ...spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
         xChainId: ARBITRUM_MAINNET_CHAIN_ID,
       };
 
       const toToken: XToken = {
-        symbol: 'ETH',
-        name: 'Ethereum',
-        decimals: 18,
-        address: '0x0000000000000000000000000000000000000000',
+        ...spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
@@ -33,18 +27,12 @@ describe('BridgeService', () => {
 
     it('should return false for ETH on Arbitrum and USDC on Base (different vaults)', () => {
       const fromToken: XToken = {
-        symbol: 'ETH',
-        name: 'Ethereum',
-        decimals: 18,
-        address: '0x0000000000000000000000000000000000000000',
+        ...spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
         xChainId: ARBITRUM_MAINNET_CHAIN_ID,
       };
 
       const toToken: XToken = {
-        symbol: 'USDC',
-        name: 'USD Coin',
-        decimals: 6,
-        address: '0x72E852545B024ddCbc5b70C1bCBDAA025164259C',
+        ...spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC,
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
@@ -66,10 +54,7 @@ describe('BridgeService', () => {
       };
 
       const toToken: XToken = {
-        symbol: 'ETH',
-        name: 'Ethereum',
-        decimals: 18,
-        address: '0x0000000000000000000000000000000000000000',
+        ...spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
@@ -82,8 +67,63 @@ describe('BridgeService', () => {
     });
   });
 
-  // describe('getBridgeableTokens', () => {
+  describe('getBridgeableTokens', () => {
+  // Tests for BridgeService.getBridgeableTokens
+  // Purpose: Ensure getBridgeableTokens returns correct bridgeable tokens based on vault matching logic
 
+    it('should return bridgeable tokens that share the same vault', () => {
+      // Mock a source token with a known vault
+      const fromToken: XToken = {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC.address,
+        xChainId: BASE_MAINNET_CHAIN_ID,
+      };
 
-  // });
+      // Destination chain and tokens
+      const toChainId = ARBITRUM_MAINNET_CHAIN_ID;
+
+      // Find a token on the destination chain that shares the same vault as the source token
+      // (Assume testnet config or mock config is set up so that USDC on Arbitrum shares the same vault)
+      const bridgeableTokensResult = sodax.bridge.getBridgeableTokens(
+        fromToken.xChainId,
+        toChainId,
+        fromToken.address
+      );
+
+      expect(Array.isArray(bridgeableTokensResult.ok && bridgeableTokensResult.value)).toBe(true);
+
+      // All returned tokens should have the same vault as the source token
+      if (bridgeableTokensResult.ok) {
+        const srcAssetInfo = getHubAssetInfo(fromToken.xChainId, fromToken.address);
+        for (const token of bridgeableTokensResult.value) {
+          const dstAssetInfo = getHubAssetInfo(toChainId, token.address);
+          expect(dstAssetInfo?.vault.toLowerCase()).toBe(srcAssetInfo?.vault.toLowerCase());
+        }
+      }
+    });
+
+    it('should return an error if the source asset is not supported', () => {
+      // Use a token address that is not in the hub asset info mapping
+      const fromToken: XToken = {
+        symbol: 'UNKNOWN',
+        name: 'Unknown Token',
+        decimals: 18,
+        address: '0x9999999999999999999999999999999999999999',
+        xChainId: BASE_MAINNET_CHAIN_ID,
+      };
+
+      const toChainId = ARBITRUM_MAINNET_CHAIN_ID;
+
+      const bridgeableTokensResult = sodax.bridge.getBridgeableTokens(
+        fromToken.xChainId,
+        toChainId,
+        fromToken.address
+      );
+
+      expect(!bridgeableTokensResult.ok && bridgeableTokensResult.error).toBeDefined();
+    });
+
+  });
 });

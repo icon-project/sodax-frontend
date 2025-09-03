@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { BridgeService, type XToken, type SpokeChainId } from '@sodax/sdk';
+import { type XToken, type SpokeChainId } from '@sodax/sdk';
 import { useSodaxContext } from '../shared';
 
 /**

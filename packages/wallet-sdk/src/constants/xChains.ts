@@ -120,3 +120,26 @@ export const xChainMap: { [key in ChainId]: XChain } = {
   '0x89.polygon': polygon,
   nibiru: nibiru,
 };
+
+/**
+ * List of all supported chains in Sodax ecosystem
+ *
+ * Currently supported chains:
+ * - EVM chains:
+ *   - Arbitrum (0xa4b1.arbitrum)
+ *   - Avalanche (0xa86a.avax)
+ *   - Base (0x2105.base)
+ *   - BSC (0x38.bsc)
+ *   - Optimism (0xa.optimism)
+ *   - Polygon (0x89.polygon)
+ *   - Sonic (sonic)
+ *   - Nibiru (nibiru)
+ * - ICON chain: 0x1.icon
+ * - Sui chain: sui
+ * - Solana chain: solana
+ * - Stellar chain: stellar
+ * - Injective chain: injective-1
+ * - Nibiru chain: nibiru
+ */
+
+export const xChains = Object.values(xChainMap);

@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { ChainSelector } from '@/components/shared/ChainSelector';
 import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
 import { Button } from '@/components/ui/button';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk';
