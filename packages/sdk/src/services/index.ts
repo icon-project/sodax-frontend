@@ -4,3 +4,4 @@ export * from './spoke/index.js';
 export * from './intentRelay/index.js';
 export * from './solver/index.js';
 export * from './migration/index.js';
+export * from './BackendApiService.js';
