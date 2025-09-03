@@ -12,7 +12,6 @@ import {
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
-  type SolverConfigParams,
   type UnifiedBnUSDMigrateParams,
   type BridgeParams,
   type PartnerFee,
@@ -24,23 +23,16 @@ import { HubChainId, SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeCha
 import { SuiWalletProvider } from './sui-wallet-provider.js';
 
 import dotenv from 'dotenv';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 import { solverConfig } from './config.js';
 
 dotenv.config();
 // load PK from .env
-const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 const SUI_CHAIN_ID = SUI_MAINNET_CHAIN_ID;
 const SUI_RPC_URL = IS_TESTNET ? 'https://fullnode.testnet.sui.io' : 'https://fullnode.mainnet.sui.io';
 
-if (!privateKey) {
-  throw new Error('PRIVATE_KEY environment variable is required');
-}
-
-const hubEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
 
 const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const hubProvider = new EvmHubProvider({
@@ -65,7 +57,7 @@ const relayerApiEndpoint = DEFAULT_RELAYER_API_ENDPOINT;
 const bridgeService = new BridgeService(hubProvider, relayerApiEndpoint);
 
 const suiConfig = spokeChainConfig[SUI_CHAIN_ID] as SuiSpokeChainConfig;
-const suiWalletMnemonics = process.env.MNEMONICS;
+const suiWalletMnemonics = process.env.SUI_MNEMONICS;
 
 if (!suiWalletMnemonics) {
   throw new Error('SUI_MNEMONICS environment variable is required');

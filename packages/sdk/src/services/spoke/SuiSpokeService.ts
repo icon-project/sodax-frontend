@@ -118,7 +118,7 @@ export class SuiSpokeService {
       to,
       amount: params.amount,
       data: params.data,
-      srcAddress: toHex(encoder.encode(spokeProvider.chainConfig.addresses.assetManagerId)),
+      srcAddress: toHex(encoder.encode(spokeProvider.chainConfig.addresses.originalAssetManager)),
     };
   }
 
@@ -140,6 +140,59 @@ export class SuiSpokeService {
   ): PromiseSuiTxReturnType<R> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return SuiSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
+  }
+
+  /**
+   * Fetch the asset manager config from the spoke chain.
+   * @param {SuiSpokeProvider} suiSpokeProvider - The spoke provider.
+   * @returns {Promise<string>} The asset manager config.
+   */
+  public static async fetchAssetManagerAddress(suiSpokeProvider: SuiSpokeProvider): Promise<string> {
+    const latestPackageId = await SuiSpokeService.fetchLatestAssetManagerPackageId(suiSpokeProvider);
+
+    return `${latestPackageId}::asset_manager::${suiSpokeProvider.chainConfig.addresses.assetManagerConfigId}`;
+  }
+
+  /**
+   * Fetch the latest asset manager package id from the spoke chain.
+   * @param {SuiSpokeProvider} suiSpokeProvider - The spoke provider.
+   * @returns {Promise<string>} The latest asset manager package id.
+   */
+  public static async fetchLatestAssetManagerPackageId(suiSpokeProvider: SuiSpokeProvider): Promise<string> {
+    const configData = await suiSpokeProvider.publicClient.getObject({
+      id: suiSpokeProvider.chainConfig.addresses.assetManagerConfigId,
+      options: {
+        showContent: true,
+      },
+    });
+
+    if (configData.error) {
+      throw new Error(`Failed to fetch asset manager id. Details: ${JSON.stringify(configData.error)}`);
+    }
+
+    if (!configData.data) {
+      throw new Error('Asset manager id not found (no data)');
+    }
+
+    if (configData.data.content?.dataType !== 'moveObject') {
+      throw new Error('Asset manager id not found (not a move object)');
+    }
+
+    if (!('latest_package_id' in configData.data.content.fields)) {
+      throw new Error('Asset manager id not found (no latest package id)');
+    }
+
+    const latestPackageId = configData.data.content.fields['latest_package_id'];
+
+    if (typeof latestPackageId !== 'string') {
+      throw new Error('Asset manager id invalid (latest package id is not a string)');
+    }
+
+    if (!latestPackageId) {
+      throw new Error('Asset manager id not found (no latest package id)');
+    }
+
+    return latestPackageId.toString();
   }
 
   /**
