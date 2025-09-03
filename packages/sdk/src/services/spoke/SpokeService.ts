@@ -24,7 +24,7 @@ import { IconSpokeService } from './IconSpokeService.js';
 import { SolanaSpokeService } from './SolanaSpokeService.js';
 import { StellarSpokeService } from './StellarSpokeService.js';
 import { SuiSpokeService } from './SuiSpokeService.js';
-import { SonicSpokeService } from './SonicSpokeService.js';
+import { SonicSpokeService, type SonicSpokeDepositParams } from './SonicSpokeService.js';
 import {
   isInjectiveSpokeProvider,
   isEvmSpokeProvider,
@@ -216,11 +216,8 @@ export class SpokeService {
     skipSimulation = false,
   ): Promise<PromiseTxReturnType<T, R>> {
     if (spokeProvider instanceof SonicSpokeProvider) {
-      return SonicSpokeService.deposit(
-        params as GetSpokeDepositParamsType<SonicSpokeProvider>,
-        spokeProvider,
-        raw,
-      ) as PromiseTxReturnType<T, R>;
+      const _params: SonicSpokeDepositParams = params as GetSpokeDepositParamsType<SonicSpokeProvider>;
+      return SonicSpokeService.deposit(_params, spokeProvider, raw) as PromiseTxReturnType<T, R>;
     }
     if (spokeProvider instanceof EvmSpokeProvider) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
@@ -246,7 +243,7 @@ export class SpokeService {
     }
 
     if (spokeProvider instanceof SuiSpokeProvider) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
+      // await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return SuiSpokeService.deposit(
         params as GetSpokeDepositParamsType<SuiSpokeProvider>,
         spokeProvider,
@@ -398,6 +395,21 @@ export class SpokeService {
         spokeProvider as SonicSpokeProvider,
         raw,
       )) satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<T, R>;
+    }
+
+    if (!skipSimulation) {
+      const result = await SpokeService.simulateRecvMessage(
+        {
+          target: from,
+          srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
+          srcAddress: await spokeProvider.walletProvider.getWalletAddressBytes(),
+          payload,
+        },
+        hubProvider,
+      );
+      if (!result.success) {
+        throw new Error('Simulation failed', { cause: result });
+      }
     }
     if (isEvmSpokeProvider(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);

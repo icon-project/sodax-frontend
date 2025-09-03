@@ -7,12 +7,7 @@
   "version": "0.0.1-rc.31",
   "license": "MIT",
   "description": "Sodax SDK",
-  "keywords": [
-    "sodax",
-    "sdk",
-    "frontend",
-    "interface"
-  ],
+  "keywords": ["sodax", "sdk", "frontend", "interface"],
   "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/sdk",
   "bugs": {
     "url": "https://github.com/icon-project/sodax-frontend/issues"
@@ -35,9 +30,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsup",
     "test": "vitest run --exclude ./src/tests/e2e",
