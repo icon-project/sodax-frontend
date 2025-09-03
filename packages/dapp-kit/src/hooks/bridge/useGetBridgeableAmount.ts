@@ -1,18 +1,18 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { SpokeChainId } from '@sodax/sdk';
+import type { Result, SpokeChainId, XToken } from '@sodax/sdk';
 
 /**
- * Hook for getting the balance of tokens held by the asset manager on a spoke chain.
+ * Hook for getting the amount available to be bridged.
  *
  * This hook is used to check if a target chain has enough balance to bridge when bridging.
- * It automatically queries and tracks the asset manager's token balance.
+ * It automatically queries and tracks the available amount to be bridged.
  *
  * @param {SpokeChainId | undefined} chainId - The chain ID to get the balance for
  * @param {string | undefined} token - The token address to get the balance for
  *
  * @returns {UseQueryResult<bigint, Error>} A React Query result containing:
- *   - data: The token balance held by the asset manager (bigint)
+ *   - data: The available amount to be bridged (bigint)
  *   - error: Any error that occurred during the check
  *
  * @example
@@ -24,21 +24,27 @@ import type { SpokeChainId } from '@sodax/sdk';
  * }
  * ```
  */
-export function useSpokeAssetManagerTokenBalance(
-  chainId: SpokeChainId | undefined,
-  token: string | undefined,
+export function useGetBridgeableAmount(
+  from: XToken | undefined,
+  to: XToken | undefined,
 ): UseQueryResult<bigint, Error> {
   const { sodax } = useSodaxContext();
 
   return useQuery({
-    queryKey: ['spoke-asset-manager-token-balance', chainId, token],
+    queryKey: ['spoke-asset-manager-token-balance', from, to],
     queryFn: async () => {
-      if (!chainId || !token) {
+      if (!from || !to) {
         return 0n;
       }
 
-      return await sodax.bridge.getSpokeAssetManagerTokenBalance(chainId, token);
+      const result = await sodax.bridge.getBridgeableAmount(from, to);
+      if (result.ok) {
+        return result.value;
+      }
+
+      console.error('Error getting bridgeable amount:', result.error);
+      return 0n;
     },
-    enabled: !!chainId && !!token,
+    enabled: !!from && !!to,
   });
 }

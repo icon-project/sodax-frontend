@@ -41,7 +41,7 @@ export function useGetBridgeableTokens(
   token: string | undefined,
 ): UseQueryResult<XToken[], Error> {
   const { sodax } = useSodaxContext();
-  
+
   return useQuery({
     queryKey: ['bridgeable-tokens', from, to, token],
     queryFn: async () => {
@@ -49,7 +49,13 @@ export function useGetBridgeableTokens(
         return [];
       }
 
-      return sodax.bridge.getBridgeableTokens(from, to, token);
+      const result = sodax.bridge.getBridgeableTokens(from, to, token);
+      if (result.ok) {
+        return result.value;
+      }
+
+      console.error('Error getting bridgeable tokens:', result.error);
+      return [];
     },
     enabled: !!from && !!to && !!token,
   });

@@ -288,7 +288,7 @@ export default function SwapCard({
           </div>
           <Select
             value={destToken?.symbol}
-            onValueChange={v => setDestToken(getSupportedSolverTokens(destChain).find(token => token.symbol === v))}
+            onValueChange={(v) => setDestToken(getSupportedSolverTokens(destChain).find(token => token.symbol === v))}
           >
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Token" />

@@ -15,7 +15,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  BridgeService,
   BASE_MAINNET_CHAIN_ID,
   type CreateBridgeIntentParams,
   POLYGON_MAINNET_CHAIN_ID,
@@ -23,7 +22,7 @@ import {
   supportedSpokeChains,
   supportedTokensPerChain,
 } from '@sodax/sdk';
-import type { ChainId, ChainType, SpokeChainId, XToken } from '@sodax/types';
+import type { ChainType, SpokeChainId, XToken } from '@sodax/types';
 import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
@@ -33,7 +32,7 @@ import {
   useBridgeApprove,
   useBridgeAllowance,
   useBridge,
-  useSpokeAssetManagerTokenBalance,
+  useGetBridgeableAmount,
   useGetBridgeableTokens,
   useSodaxContext,
 } from '@sodax/dapp-kit';
@@ -62,9 +61,7 @@ export default function BridgePage() {
   useEffect((): void => {
     if (bridgeableTokens && bridgeableTokens.length > 0) {
       setToToken(prev =>
-        prev && bridgeableTokens.some(token => token.address === prev.address)
-          ? prev
-          : bridgeableTokens[0]
+        prev && bridgeableTokens.some(token => token.address === prev.address) ? prev : bridgeableTokens[0],
       );
     } else {
       setToToken(undefined);
@@ -93,7 +90,7 @@ export default function BridgePage() {
   const [toToken, setToToken] = useState<XToken | undefined>(bridgeableTokens?.[0] ?? undefined);
 
   const { data: spokeAssetManagerTokenBalance, isLoading: isLoadingSpokeAssetManagerTokenBalance } =
-    useSpokeAssetManagerTokenBalance(toToken?.xChainId, toToken?.address);
+    useGetBridgeableAmount(fromToken, toToken);
 
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFromAmount(e.target.value);
@@ -265,7 +262,7 @@ export default function BridgePage() {
                 </SelectTrigger>
                 <SelectContent>
                   {bridgeableTokens?.map(token => (
-                    <SelectItem key={token.address} value={token.symbol}>
+                    <SelectItem key={`${token.address}-${token.symbol}`} value={token.symbol}>
                       {token.symbol}
                     </SelectItem>
                   ))}
@@ -291,11 +288,7 @@ export default function BridgePage() {
               Maximum Bridgeable Amount:{' '}
               {isLoadingSpokeAssetManagerTokenBalance ? (
                 <Skeleton className="w-16 h-6 inline-block" />
-              ) : spokeAssetManagerTokenBalance === -1n ? (
-                'No bridgable limit'
-              ) : (
-                normaliseTokenAmount(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)
-              )}{' '}
+              ) : normaliseTokenAmount(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)}{' '}
               {toToken?.symbol}
             </div>
           ) : (

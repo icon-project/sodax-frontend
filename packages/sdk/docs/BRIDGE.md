@@ -140,28 +140,24 @@ if (result.ok) {
 }
 ```
 
-### getSpokeAssetManagerTokenBalance
+### getBridgeableAmount
 
-Retrieves the deposited token balance held by the asset manager on a spoke chain. This balance represents available liquidity for bridging operations.
+Retrieves amount available to be bridged.
 
 **Parameters:**
 - `chainId`: The spoke chain ID
 - `token`: The token address to query
 
-**Returns:** `Promise<bigint>` - Token balance (returns -1n for no bridgable limit on Sonic)
+**Returns:** `Promise<bigint>` - Token amount available to be bridged to given spoke chain ID
 
 **Example:**
 ```typescript
-const balance = await sodax.bridge.getSpokeAssetManagerTokenBalance(
+const balance = await sodax.bridge.getBridgeableAmount(
   '0x89.polygon',
   '0xabcdef1234567890...'
 );
 
-if (balance === -1n) {
-  console.log('No bridgable limit on this chain');
-} else {
-  console.log('Available balance:', balance.toString());
-}
+console.log('Available balance:', balance.toString());
 ```
 
 ### isBridgeable

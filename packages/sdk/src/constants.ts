@@ -146,7 +146,7 @@ export const HubVaultSymbols = [
   'sodaSODA',
   'sodaUSDT',
   'sodaUSDC',
-  'sodabnUSD',
+  'bnUSD',
   'sodaPOL',
   'sodaNIBI',
   'sodaS',
@@ -219,8 +219,8 @@ export const SodaTokens = {
     address: '0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
-  sodabnUSD: {
-    symbol: 'sodabnUSD',
+  bnUSD: {
+    symbol: 'bnUSD',
     name: 'Balanced Dollar',
     decimals: 18,
     address: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
@@ -270,6 +270,17 @@ export const SodaTokens = {
   },
 }  as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
 
+export const SodaTokensAsHubAssets: Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }> =
+  Object.values(SodaTokens).reduce((acc, token) => {
+    acc[token.address] = {
+      asset: token.address,
+      decimal: token.decimals,
+      symbol: token.symbol,
+      name: token.name,
+      vault: token.address,
+    };
+    return acc;
+  }, {} as Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>);
 export const SodaVaultTokensSet = new Set(Object.values(SodaTokens).map(token => token.address.toLowerCase()));
 export const isSodaVaultToken = (address: string): boolean => {
   return SodaVaultTokensSet.has(address.toLowerCase());
@@ -317,13 +328,6 @@ export const spokeChainConfig = {
         name: 'Sonic',
         decimals: 18,
         address: '0x0000000000000000000000000000000000000000',
-        xChainId: SONIC_MAINNET_CHAIN_ID,
-      },
-      bnUSD: {
-        symbol: 'bnUSD',
-        name: 'bnUSD',
-        decimals: 18,
-        address: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
         xChainId: SONIC_MAINNET_CHAIN_ID,
       },
       WETH: {
@@ -1022,7 +1026,7 @@ export const hubVaults = {
       '0x9ee17486571917837210824b0d4cadfe3b324d12',
     ] as const,
   },
-  [SodaTokens.sodabnUSD.symbol]: {
+  [SodaTokens.bnUSD.symbol]: {
     // new bnUSD vault on Sonic (also contains IbnUSD vault token as part of it)
     address: '0xe801ca34e19abcbfea12025378d19c4fbe250131',
     reserves: [
@@ -1230,7 +1234,7 @@ export const getAllLegacybnUSDTokens = (): { token: LegacybnUSDToken; chainId: L
 
 export const hubAssets: Record<
   SpokeChainId,
-  Record<Address | string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>
+  Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>
 > = {
   [SONIC_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
@@ -1239,6 +1243,13 @@ export const hubAssets: Record<
       symbol: 'S',
       name: 'Sonic',
       vault: hubVaults.sodaS.address,
+    },
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0x289cDa1043b4Ce26BDCa3c12E534f56b24308A5B',
+      decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
@@ -1275,6 +1286,7 @@ export const hubAssets: Record<
       name: 'SODA',
       vault: hubVaults.sodaSODA.address,
     },
+    ...SodaTokensAsHubAssets,
   },
   [AVALANCHE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].nativeToken]: {
@@ -1303,7 +1315,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
   },
   [ARBITRUM_MAINNET_CHAIN_ID]: {
@@ -1361,7 +1373,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
   },
   [BASE_MAINNET_CHAIN_ID]: {
@@ -1391,7 +1403,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
       asset: '0x55e0ad45eb97493b3045eee417fb6726cb85dfd4',
@@ -1421,7 +1433,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0xb7C213CbD24967dE9838fa014668FDDB338f724B',
@@ -1465,7 +1477,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
   },
   [BSC_MAINNET_CHAIN_ID]: {
@@ -1495,7 +1507,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x9d58508ad10d34048a11640735ca5075bba07b35',
@@ -1518,7 +1530,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0xa36893ba308b332FDEbfa95916D1dF3a2e3CF8B3',
@@ -1541,7 +1553,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x4bc1211faa06fb50ff61a70331f56167ae511057',
@@ -1564,7 +1576,7 @@ export const hubAssets: Record<
       decimal: 7,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x348007B53F25A9A857aB8eA81ec9E3CCBCf440f2',
@@ -1594,7 +1606,7 @@ export const hubAssets: Record<
       decimal: 9,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x5635369c8a29A081d26C2e9e28012FCa548BA0Cb',
@@ -1666,7 +1678,7 @@ export const hubAssets: Record<
       decimal: 9,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.sodabnUSD.address,
+      vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0xC3f020057510ffE10Ceb882e1B48238b43d78a5e',
@@ -1727,16 +1739,17 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const satisfies Token[],
   [AVALANCHE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.AVAX,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDC,
-    // spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
+    spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const satisfies Token[],
   [ARBITRUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
-    // spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.WBTC,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
@@ -1746,7 +1759,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   ] as const satisfies Token[],
   [BASE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
-    // spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH,
@@ -1754,7 +1767,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   ] as const satisfies Token[],
   [OPTIMISM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.ETH,
-    // spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     // spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH, // NOTE: Not Implemented
@@ -1762,19 +1775,19 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   ] as const satisfies Token[],
   [POLYGON_MAINNET_CHAIN_ID]: [
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.POL,
-    // spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
+    spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
   [BSC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BNB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.ETHB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BTCB,
-    // spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
+    spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
-    // spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
+    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
   [ICON_MAINNET_CHAIN_ID]: [
@@ -1786,12 +1799,12 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   ] as const satisfies Token[],
   [STELLAR_MAINNET_CHAIN_ID]: [
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.XLM,
-    // spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
+    spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
   [SUI_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI,
-    // spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.afSUI,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.mSUI,
@@ -1801,9 +1814,9 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.trevinSUI,
   ] as const satisfies Token[],
   [INJECTIVE_MAINNET_CHAIN_ID]: [
-    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
+    // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
-    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
   [NIBIRU_MAINNET_CHAIN_ID]: [
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.NIBI, // NOTE: Not Implemented
