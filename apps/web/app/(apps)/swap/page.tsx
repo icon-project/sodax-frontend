@@ -36,9 +36,63 @@ const normaliseTokenAmount = (amount: number | string | bigint, decimals: number
     return '0';
   }
 
-  return new BigNumber(amount.toString())
-    .dividedBy(new BigNumber(10).pow(decimals))
-    .toFixed(decimals, BigNumber.ROUND_DOWN);
+  return new BigNumber(amount.toString()).dividedBy(new BigNumber(10).pow(decimals)).toFixed(4, BigNumber.ROUND_DOWN);
+};
+
+// Calculate the maximum available amount for swapping after deducting the swap fee
+const calculateMaxAvailableAmount = (
+  balance: bigint,
+  tokenDecimals: number,
+  solver: { getFee: (amount: bigint) => bigint },
+): string => {
+  if (balance === 0n) {
+    return '0';
+  }
+
+  try {
+    const fullBalance = normaliseTokenAmount(balance, tokenDecimals);
+    const fullBalanceBigInt = scaleTokenAmount(fullBalance, tokenDecimals);
+    const feeAmount = solver.getFee(fullBalanceBigInt);
+
+    // Calculate available balance after deducting fee
+    const availableBalanceBigInt = fullBalanceBigInt - feeAmount;
+
+    if (availableBalanceBigInt > 0n) {
+      return normaliseTokenAmount(availableBalanceBigInt, tokenDecimals);
+    }
+
+    // If fee is greater than or equal to balance, return 0
+    return '0';
+  } catch (error) {
+    console.error('Error calculating max available amount:', error);
+    // Fallback to full balance if fee calculation fails
+    return normaliseTokenAmount(balance, tokenDecimals);
+  }
+};
+
+// Check if user has sufficient balance including swap fee
+const hasSufficientBalanceWithFee = (
+  amount: string,
+  balance: bigint,
+  tokenDecimals: number,
+  solver: { getFee: (amount: bigint) => bigint },
+): boolean => {
+  if (!amount || amount === '0' || amount === '' || Number.isNaN(Number(amount))) {
+    return false;
+  }
+
+  try {
+    const amountBigInt = scaleTokenAmount(amount, tokenDecimals);
+    const feeAmount = solver.getFee(amountBigInt);
+    const totalRequired = amountBigInt + feeAmount;
+
+    return totalRequired <= balance;
+  } catch (error) {
+    console.error('Error checking sufficient balance with fee:', error);
+    // Fallback to simple balance check if fee calculation fails
+    const amountBigInt = scaleTokenAmount(amount, tokenDecimals);
+    return amountBigInt <= balance;
+  }
 };
 
 // Component to monitor swap status only when dstTxHash is available
@@ -314,8 +368,7 @@ export default function SwapPage() {
       };
     }
 
-    const sourceAmountBigInt = scaleTokenAmount(sourceAmount, sourceToken.decimals);
-    if (sourceAmountBigInt > sourceBalance) {
+    if (!hasSufficientBalanceWithFee(sourceAmount, sourceBalance, sourceToken.decimals, sodax.solver)) {
       return {
         text: 'Insufficient balance',
         disabled: true,
@@ -431,7 +484,8 @@ export default function SwapPage() {
 
   const handleMaxClick = (): void => {
     if (isSourceChainConnected) {
-      setSourceAmount(normaliseTokenAmount(sourceBalance, sourceToken.decimals));
+      const maxAvailableAmount = calculateMaxAvailableAmount(sourceBalance, sourceToken.decimals, sodax.solver);
+      setSourceAmount(maxAvailableAmount);
     }
   };
 
@@ -475,8 +529,8 @@ export default function SwapPage() {
         throw new Error('Invalid quoted amount');
       }
 
-      if (sourceAmountBigInt > sourceBalance) {
-        throw new Error('Insufficient balance for swap');
+      if (!hasSufficientBalanceWithFee(sourceAmount, sourceBalance, sourceToken.decimals, sodax.solver)) {
+        throw new Error('Insufficient balance for swap (including fees)');
       }
 
       const minOutputAmount = new BigNumber(quotedAmount.toString())
