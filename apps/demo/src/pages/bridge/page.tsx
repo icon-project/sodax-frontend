@@ -88,6 +88,7 @@ export default function BridgePage() {
   };
 
   const [toToken, setToToken] = useState<XToken | undefined>(bridgeableTokens?.[0] ?? undefined);
+  console.log('toToken', toToken);
 
   const { data: spokeAssetManagerTokenBalance, isLoading: isLoadingSpokeAssetManagerTokenBalance } =
     useGetBridgeableAmount(fromToken, toToken);
@@ -288,7 +289,9 @@ export default function BridgePage() {
               Maximum Bridgeable Amount:{' '}
               {isLoadingSpokeAssetManagerTokenBalance ? (
                 <Skeleton className="w-16 h-6 inline-block" />
-              ) : normaliseTokenAmount(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)}{' '}
+              ) : (
+                normaliseTokenAmount(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)
+              )}{' '}
               {toToken?.symbol}
             </div>
           ) : (
@@ -318,7 +321,7 @@ export default function BridgePage() {
               </div>
               <div>inputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
               <div>amount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
-              <div>outputAmount: {normaliseTokenAmount(order?.amount ?? 0n, toToken?.decimals ?? 0)}</div>
+              <div>outputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
             </div>
           </div>
           <DialogFooter>
