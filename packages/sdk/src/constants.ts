@@ -826,7 +826,7 @@ export const spokeChainConfig = {
         xChainId: STELLAR_MAINNET_CHAIN_ID,
       },
       legacybnUSD: {
-        symbol: 'bnUSD',
+        symbol: 'bnUSD (legacy)',
         name: 'legacybnUSD',
         decimals: 18,
         address: 'CCT4ZYIYZ3TUO2AWQFEOFGBZ6HQP3GW5TA37CK7CRZVFRDXYTHTYX7KP',
@@ -878,7 +878,7 @@ export const spokeChainConfig = {
         xChainId: SUI_MAINNET_CHAIN_ID,
       },
       legacybnUSD: {
-        symbol: 'bnUSD',
+        symbol: 'bnUSD (legacy)',
         name: 'legacybnUSD',
         decimals: 9,
         address: '0x03917a812fe4a6d6bc779c5ab53f8a80ba741f8af04121193fc44e0f662e2ceb::balanced_dollar::BALANCED_DOLLAR',
@@ -965,7 +965,7 @@ export const spokeChainConfig = {
       },
       bnUSD: {
         // same as legacy
-        symbol: 'bnUSD',
+        symbol: 'bnUSD (legacy)',
         name: 'bnUSD',
         decimals: 18,
         address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
@@ -973,7 +973,7 @@ export const spokeChainConfig = {
       },
       legacybnUSD: {
         // duplicate of bnUSD  purely for consistency with other legacy tokens chains (sui, stellar)
-        symbol: 'bnUSD',
+        symbol: 'bnUSD (legacy)',
         name: 'bnUSD',
         decimals: 18,
         address: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',

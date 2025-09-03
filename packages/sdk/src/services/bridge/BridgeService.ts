@@ -456,10 +456,10 @@ export class BridgeService {
 
     const encodedRecipientAddress = encodeAddress(params.dstChainId, params.recipient);
     // If the destination chain is Sonic, we can directly transfer the tokens to the recipient
-    if (params.dstChainId === this.hubProvider.chainConfig.chain.id) {
+    if (params.dstChainId === this.hubProvider.chainConfig.chain.id && isValidVault(dstAssetInfo.asset)) {
       calls.push(
         Erc20Service.encodeTransfer(
-          params.dstAsset as `0x${string}`,
+          dstAssetInfo.asset,
           encodedRecipientAddress,
           translatedWithdrawAmount,
         ),
@@ -501,32 +501,58 @@ export class BridgeService {
         EvmVaultTokenService.getVaultReserves(toHubAsset.vault, this.hubProvider.publicClient),
       ]);
 
-      // if toHubAsset is a vault token, we need to check the max deposit of the token on the from chain
-      if (isValidVault(toHubAsset.asset)) {
+
+
+      // spoke -> hub, we need to check the max deposit of the token on the from chain
+      if (!isValidVault(fromHubAsset.asset) && isValidVault(toHubAsset.asset)) {
+        const fromTokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === fromHubAsset.asset.toLowerCase());
+        invariant(
+          fromTokenIndex !== -1,
+          `Token ${fromHubAsset.asset} not found in the vault reserves for chain ${from.xChainId}`,
+        );
+        const fromTokenDepositedAmount = reserves.balances[fromTokenIndex] ?? 0n;
+        const availableDeposit = depositTokenInfo.maxDeposit - fromTokenDepositedAmount;
+
         return {
           ok: true,
-          value: depositTokenInfo.maxDeposit,
-        }
+          value: availableDeposit,
+        };
       }
 
-      const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === toHubAsset.asset.toLowerCase());
-      invariant(
-        tokenIndex !== -1,
-        `Token ${toHubAsset.asset} not found in the vault reserves for chain ${from.xChainId}`,
-      );
-      const assetManagerBalance = reserves.balances[tokenIndex] ?? 0n;
-
+      // hub -> spoke, we need to check the asset manager balance on the to chain
       if (isValidVault(fromHubAsset.asset)) {
+        const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === toHubAsset.asset.toLowerCase());
+        invariant(
+          tokenIndex !== -1,
+          `Token ${toHubAsset.asset} not found in the vault reserves for chain ${to.xChainId}`,
+        );
+        const assetManagerBalance = reserves.balances[tokenIndex] ?? 0n;
+
         return {
           ok: true,
           value: assetManagerBalance,
-        }
+        };
       }
 
-      // return the minimum of the max deposit and the asset manager balance
+      // spoke -> spoke, we need to check the deposit available on the from chain and the withdrawable asset manager balance on the to chain
+      const fromTokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === fromHubAsset.asset.toLowerCase());
+      invariant(
+        fromTokenIndex !== -1,
+        `Token ${fromHubAsset.asset} not found in the vault reserves for chain ${from.xChainId}`,
+      );
+      const fromTokenDepositedAmount = reserves.balances[fromTokenIndex] ?? 0n;
+      const availableDeposit = depositTokenInfo.maxDeposit - fromTokenDepositedAmount;
+      const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === toHubAsset.asset.toLowerCase());
+      invariant(
+        tokenIndex !== -1,
+        `Token ${toHubAsset.asset} not found in the vault reserves for chain ${to.xChainId}`,
+      );
+      const assetManagerBalance = reserves.balances[tokenIndex] ?? 0n;
+
+      // return the minimum of the deposit available and the withdrawable asset manager balance
       return {
         ok: true,
-        value: depositTokenInfo.maxDeposit < assetManagerBalance ? depositTokenInfo.maxDeposit : assetManagerBalance,
+        value: availableDeposit < assetManagerBalance ? availableDeposit : assetManagerBalance,
       };
     } catch (error) {
       console.error(error);
