@@ -34,7 +34,6 @@ export const WalletModal = ({
   const pathname = usePathname();
   const isMigrateRoute = pathname.includes('migrate');
   const xAccounts = useXAccounts();
-  console.log('xAccounts', xAccounts);
   // Move useSwapState to top level
   const { sourceToken } = useSwapState();
   const {

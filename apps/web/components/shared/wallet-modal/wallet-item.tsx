@@ -73,7 +73,13 @@ export const WalletItem: React.FC<WalletItemProps> = ({
               data-property-1="Active"
               className="rounded-[6px] shadow-[4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden z-51"
             >
-              <Image src={xConnector.icon || ''} alt={xConnector.name} width={24} height={24} className="rounded-lg" />
+              <Image
+                src={xConnector.icon?.trim() || ''}
+                alt={xConnector.name}
+                width={24}
+                height={24}
+                className="rounded-lg"
+              />
             </div>
           </div>
           <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
