@@ -32,6 +32,9 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Get spoke chain provider (`useSpokeProvider`)
   - Get wallet provider (`useWalletProvider`)
 
+- Shared
+  - Derive user wallet address for hub abstraction (`useDeriveUserWalletAddress`)
+
 ## Installation
 
 ```bash
@@ -148,6 +151,24 @@ function TokenManagementComponent() {
   };
 }
 
+// Wallet Address Derivation
+import { useDeriveUserWalletAddress, useSpokeProvider } from '@sodax/dapp-kit';
+
+function WalletAddressComponent() {
+  const spokeProvider = useSpokeProvider(chainId, walletProvider);
+  
+  // Derive user wallet address for hub abstraction
+  const { data: derivedAddress, isLoading, error } = useDeriveUserWalletAddress(spokeProvider, userAddress);
+  
+  return (
+    <div>
+      {isLoading && <div>Deriving wallet address...</div>}
+      {error && <div>Error: {error.message}</div>}
+      {derivedAddress && <div>Derived Address: {derivedAddress}</div>}
+    </div>
+  );
+}
+
 // Swap Operations
 import { useQuote, useSwap, useStatus } from '@sodax/dapp-kit';
 
@@ -215,6 +236,7 @@ function SwapComponent() {
 #### Shared Hooks
 - [`useSodaxContext()`](./src/hooks/shared/useSodaxContext.ts) - Access Sodax context and configuration
 - [`useEstimateGas()`](./src/hooks/shared/useEstimateGas.ts) - Estimate gas costs for transactions
+- [`useDeriveUserWalletAddress()`](./src/hooks/shared/useDeriveUserWalletAddress.ts) - Derive user wallet address for hub abstraction
 
 
 ## Contributing
