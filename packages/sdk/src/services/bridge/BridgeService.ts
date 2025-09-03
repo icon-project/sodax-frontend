@@ -240,6 +240,7 @@ export class BridgeService {
         },
       };
     } catch (error) {
+      console.error(error);
       return {
         ok: false,
         error: {
@@ -456,7 +457,7 @@ export class BridgeService {
 
     const encodedRecipientAddress = encodeAddress(params.dstChainId, params.recipient);
     // If the destination chain is Sonic, we can directly transfer the tokens to the recipient
-    if (params.dstChainId === this.hubProvider.chainConfig.chain.id && isValidVault(dstAssetInfo.asset)) {
+    if (params.dstChainId === this.hubProvider.chainConfig.chain.id) {
       calls.push(
         Erc20Service.encodeTransfer(
           dstAssetInfo.asset,
