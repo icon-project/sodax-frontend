@@ -14,7 +14,7 @@ export interface MigrationResult {
 export function useMigrate() {
   const { address: iconAddress } = useXAccount('ICON');
   const { address: sonicAddress } = useXAccount('EVM');
-  const { typedValue, direction, currencies } = useMigrationStore(state => state);
+  const { typedValue, direction, currencies, migrationMode } = useMigrationStore(state => state);
 
   const { sodax } = useSodaxContext();
 
@@ -29,39 +29,86 @@ export function useMigrate() {
   return useMutation({
     mutationFn: async () => {
       const amountToMigrate = parseUnits(typedValue, currencies.from.decimals);
+      console.log('migrationMode', migrationMode);
+      console.log('direction', direction);
+      console.log('currencies', currencies);
+      if (migrationMode === 'icxsoda') {
+        // ICX/SODA migration logic
+        if (direction.from === ICON_MAINNET_CHAIN_ID) {
+          if (!iconSpokeProvider) {
+            throw new Error('ICON provider unavailable. Reconnect your ICON wallet.');
+          }
+          const params = {
+            address: spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken,
+            amount: amountToMigrate,
+            to: sonicAddress as `0x${string}`,
+          };
+          const result = await sodax.migration.migrateIcxToSoda(params, iconSpokeProvider, 30000);
+          console.log('result', result);
+          if (result.ok) {
+            const [spokeTxHash, hubTxHash] = result.value;
+            return { spokeTxHash, hubTxHash };
+          }
+          throw new Error('ICX to SODA migration failed. Please try again.');
+        }
 
+        // SODA to ICX migration
+        if (!sonicSpokeProvider) {
+          throw new Error('Sonic provider unavailable. Reconnect your Sonic wallet.');
+        }
+        const revertParams = {
+          amount: amountToMigrate,
+          to: iconAddress as `hx${string}`,
+        };
+        const result = await sodax.migration.revertMigrateSodaToIcx(revertParams, sonicSpokeProvider, 30000);
+        if (result.ok) {
+          const [hubTxHash, spokeTxHash] = result.value;
+          return { spokeTxHash, hubTxHash };
+        }
+        throw new Error('SODA to ICX migration failed. Please try again.');
+      }
+
+      // bnUSD migration logic
       if (direction.from === ICON_MAINNET_CHAIN_ID) {
         if (!iconSpokeProvider) {
           throw new Error('ICON provider unavailable. Reconnect your ICON wallet.');
         }
         const params = {
-          address: spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken,
+          srcChainId: ICON_MAINNET_CHAIN_ID,
+          dstChainId: SONIC_MAINNET_CHAIN_ID,
+          srcbnUSD: currencies.from.address,
+          dstbnUSD: currencies.to.address,
           amount: amountToMigrate,
           to: sonicAddress as `0x${string}`,
         };
-        const result = await sodax.migration.migrateIcxToSoda(params, iconSpokeProvider, 30000);
-        console.log('result', result);
+        const result = await sodax.migration.migratebnUSD(params, iconSpokeProvider, 30000);
+        console.log('bnUSD migration result', result);
         if (result.ok) {
           const [spokeTxHash, hubTxHash] = result.value;
           return { spokeTxHash, hubTxHash };
         }
-        throw new Error('ICX to SODA migration failed. Please try again.');
+        throw new Error('bnUSD migration failed. Please try again.');
       }
 
-      // else
+      // Sonic to ICON bnUSD migration
       if (!sonicSpokeProvider) {
         throw new Error('Sonic provider unavailable. Reconnect your Sonic wallet.');
       }
-      const revertParams = {
+      const params = {
+        srcChainId: SONIC_MAINNET_CHAIN_ID,
+        dstChainId: ICON_MAINNET_CHAIN_ID,
+        srcbnUSD: currencies.from.address,
+        dstbnUSD: currencies.to.address,
         amount: amountToMigrate,
         to: iconAddress as `hx${string}`,
       };
-      const result = await sodax.migration.revertMigrateSodaToIcx(revertParams, sonicSpokeProvider, 30000);
+      const result = await sodax.migration.migratebnUSD(params, sonicSpokeProvider, 30000);
+      console.log('bnUSD reverse migration result', result);
       if (result.ok) {
-        const [hubTxHash, spokeTxHash] = result.value;
+        const [spokeTxHash, hubTxHash] = result.value;
         return { spokeTxHash, hubTxHash };
       }
-      throw new Error('SODA to ICX migration failed. Please try again.');
+      throw new Error('bnUSD reverse migration failed. Please try again.');
     },
   });
 }

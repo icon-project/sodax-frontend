@@ -192,7 +192,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       onOpenChange(false);
       onClose?.();
     } else {
-      // Allow closing even if not completed (e.g., when there's an error)
       onOpenChange(false);
       onClose?.();
     }
@@ -209,8 +208,16 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     return chain?.name || 'Unknown Chain';
   };
 
+  const handleDialogOpenChange = (open: boolean): void => {
+    if (!open) {
+      handleClose();
+    } else {
+      onOpenChange(open);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={isCompleted || isConfirming ? undefined : onOpenChange}>
+    <Dialog open={open} onOpenChange={isCompleted || isConfirming ? undefined : handleDialogOpenChange}>
       <DialogContent className="md:max-w-[480px] p-12 w-[90%] shadow-none bg-vibrant-white gap-4" hideCloseButton>
         <DialogHeader>
           <DialogTitle className="flex w-full justify-end">

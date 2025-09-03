@@ -1,25 +1,27 @@
-import { createStore } from 'zustand/vanilla'
-import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, XToken, type SpokeChainId } from '@sodax/types'
-import { spokeChainConfig } from '@sodax/sdk'
+import { createStore } from 'zustand/vanilla';
+import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
+import { spokeChainConfig } from '@sodax/sdk';
 
 export type MigrationState = {
   direction: {
-    from: SpokeChainId
-    to: SpokeChainId
-  }
-  typedValue: string
+    from: SpokeChainId;
+    to: SpokeChainId;
+  };
+  typedValue: string;
   currencies: {
-    from: XToken
-    to: XToken
-  }
-}
+    from: XToken;
+    to: XToken;
+  };
+  migrationMode: 'icxsoda' | 'bnusd';
+};
 
 export type MigrationActions = {
-  switchDirection: () => void
-  setTypedValue: (value: string) => void
-}
+  switchDirection: () => void;
+  setTypedValue: (value: string) => void;
+  setMigrationMode: (mode: 'icxsoda' | 'bnusd') => void;
+};
 
-export type MigrationStore = MigrationState & MigrationActions
+export type MigrationStore = MigrationState & MigrationActions;
 
 // export const initMigrationStore = (): MigrationState => {
 //   return { direction: { from: ICON_MAINNET_CHAIN_ID, to: SONIC_MAINNET_CHAIN_ID } }
@@ -37,6 +39,16 @@ export const sodaToken = {
   xChainId: SONIC_MAINNET_CHAIN_ID,
 } as XToken;
 
+export const iconBnusdToken = {
+  ...spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  xChainId: ICON_MAINNET_CHAIN_ID,
+} as XToken;
+
+export const sonicBnusdToken = {
+  ...spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  xChainId: SONIC_MAINNET_CHAIN_ID,
+} as XToken;
+
 export const defaultInitState: MigrationState = {
   direction: { from: ICON_MAINNET_CHAIN_ID, to: SONIC_MAINNET_CHAIN_ID },
   typedValue: '',
@@ -44,14 +56,42 @@ export const defaultInitState: MigrationState = {
     from: icxToken,
     to: sodaToken,
   },
-}
+  migrationMode: 'icxsoda',
+};
 
-export const createMigrationStore = (
-  initState: MigrationState = defaultInitState,
-) => {
-  return createStore<MigrationStore>()((set) => ({
+export const createMigrationStore = (initState: MigrationState = defaultInitState) => {
+  return createStore<MigrationStore>()(set => ({
     ...initState,
-    switchDirection: () => set((state) => ({ direction: { from: state.direction.to, to: state.direction.from }, currencies: { from: state.currencies.to, to: state.currencies.from } })),
+    switchDirection: () =>
+      set(state => {
+        const newDirection = { from: state.direction.to, to: state.direction.from };
+        // Maintain correct token pairs based on migration mode
+        const newCurrencies =
+          state.migrationMode === 'icxsoda'
+            ? newDirection.from === ICON_MAINNET_CHAIN_ID
+              ? { from: icxToken, to: sodaToken }
+              : { from: sodaToken, to: icxToken }
+            : newDirection.from === ICON_MAINNET_CHAIN_ID
+              ? { from: iconBnusdToken, to: sonicBnusdToken }
+              : { from: sonicBnusdToken, to: iconBnusdToken };
+
+        return {
+          direction: newDirection,
+          currencies: newCurrencies,
+        };
+      }),
     setTypedValue: (value: string) => set({ typedValue: value }),
-  }))
-}
+    setMigrationMode: (mode: 'icxsoda' | 'bnusd') =>
+      set(state => {
+        // Keep the same direction (from/to chains) but change the tokens
+        const newCurrencies =
+          mode === 'icxsoda' ? { from: icxToken, to: sodaToken } : { from: iconBnusdToken, to: sonicBnusdToken };
+
+        return {
+          migrationMode: mode,
+          currencies: newCurrencies,
+          typedValue: '', // Reset typed value when switching modes
+        };
+      }),
+  }));
+};

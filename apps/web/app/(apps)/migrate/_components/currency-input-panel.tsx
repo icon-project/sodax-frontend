@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import Image from 'next/image';
+import CanLogo from './can-logo';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -56,8 +56,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       onClick={() => inputRef.current?.focus()}
     >
       <div className="flex justify-start items-center gap-4">
-        {currency.symbol === 'SODA' ? (
-          <Image src="/can.png" alt="SODA Token" width={56} height={56} className="mx-1" />
+        {currency.xChainId === 'sonic' && (currency.symbol === 'SODA' || currency.symbol === 'bnUSD') ? (
+          <CanLogo currency={currency} />
         ) : (
           <CurrencyLogo currency={currency} />
         )}

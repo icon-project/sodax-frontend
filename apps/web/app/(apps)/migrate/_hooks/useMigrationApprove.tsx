@@ -2,7 +2,7 @@ import type { Token, XToken } from '@sodax/types';
 import { type Address, parseUnits } from 'viem';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState, useRef, useEffect } from 'react';
-import type { IcxCreateRevertMigrationParams, SpokeProvider } from '@sodax/sdk';
+import type { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider, Result } from '@sodax/sdk';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { useMigrationAllowance } from './useMigrationAllowance';
 
@@ -16,16 +16,20 @@ interface UseApproveReturn {
 }
 
 /**
- * Hook for approving token spending for money market actions
+ * Hook for approving token spending for migration actions
  * @param token The token to approve spending for
+ * @param amount The amount to approve
+ * @param iconAddress The ICON address for the migration
  * @param spokeProvider The spoke provider instance for the chain
+ * @param migrationMode The migration mode ('icxsoda' or 'bnusd')
+ * @param toToken The destination token for bnUSD migrations
  * @returns Object containing approve function, loading state, error state and reset function
  * @example
  * ```tsx
- * const { approve, isLoading, error } = useApprove(token, spokeProvider);
+ * const { approve, isLoading, error } = useMigrationApprove(token, "100", iconAddress, provider, 'icxsoda', toToken);
  *
- * // Approve tokens for supply action
- * await approve({ amount: "100", action: "supply" });
+ * // Approve tokens for migration
+ * await approve();
  * ```
  */
 
@@ -34,13 +38,22 @@ export function useMigrationApprove(
   amount: string | undefined,
   iconAddress: string | undefined,
   spokeProvider: SpokeProvider | undefined,
+  migrationMode: 'icxsoda' | 'bnusd' = 'icxsoda',
+  toToken?: XToken,
 ): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [isApproved, setIsApproved] = useState(false);
 
-  const { refetch: refetchAllowance } = useMigrationAllowance(token, amount, iconAddress, spokeProvider);
+  const { refetch: refetchAllowance } = useMigrationAllowance(
+    token,
+    amount,
+    iconAddress,
+    spokeProvider,
+    migrationMode,
+    toToken,
+  );
 
   // Track previous values to reset approval state when needed
   const prevTokenAddress = useRef<string | undefined>(undefined);
@@ -70,12 +83,33 @@ export function useMigrationApprove(
       }
 
       const amountToMigrate = parseUnits(amount, token.decimals);
-      const revertParams = {
-        amount: amountToMigrate,
-        to: iconAddress as `hx${string}`,
-      } satisfies IcxCreateRevertMigrationParams;
 
-      const result = await sodax.migration.approve(revertParams, 'revert', spokeProvider, false);
+      let result: Result<string, Error>;
+      if (migrationMode === 'icxsoda') {
+        // ICX/SODA migration approval
+        const revertParams = {
+          amount: amountToMigrate,
+          to: iconAddress as `hx${string}`,
+        } satisfies IcxCreateRevertMigrationParams;
+
+        result = await sodax.migration.approve(revertParams, 'revert', spokeProvider, false);
+      } else if (migrationMode === 'bnusd') {
+        // bnUSD migration approval
+        if (!toToken) throw new Error('Destination token is required for bnUSD migration');
+
+        const params = {
+          srcChainId: token.xChainId,
+          dstChainId: toToken.xChainId,
+          srcbnUSD: token.address,
+          dstbnUSD: toToken.address,
+          amount: amountToMigrate,
+          to: iconAddress as `hx${string}`,
+        } satisfies UnifiedBnUSDMigrateParams;
+
+        result = await sodax.migration.approve(params, 'revert', spokeProvider, false);
+      } else {
+        throw new Error('Invalid migration mode');
+      }
       if (!result.ok) {
         throw new Error('Failed to approve tokens');
       }
@@ -90,7 +124,7 @@ export function useMigrationApprove(
     } finally {
       setIsLoading(false);
     }
-  }, [spokeProvider, token, amount, iconAddress, sodax, refetchAllowance]);
+  }, [spokeProvider, token, amount, iconAddress, sodax, refetchAllowance, migrationMode, toToken]);
 
   const resetError = useCallback(() => {
     setError(null);

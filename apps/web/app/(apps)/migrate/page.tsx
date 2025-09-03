@@ -12,13 +12,14 @@ import { SuccessDialog, ErrorDialog } from './_components';
 import { SwitchDirectionIcon } from '@/components/icons';
 import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/currency-input-panel';
 import { useMigrationInfo, useMigrationStore } from './_stores/migration-store-provider';
-import { icxToken, sodaToken } from './_stores/migration-store';
+import { icxToken, sodaToken, iconBnusdToken, sonicBnusdToken } from './_stores/migration-store';
 import { formatUnits } from 'viem';
 import { useMigrate, useMigrationAllowance, useMigrationApprove } from './_hooks';
 import { Check, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useSpokeProvider } from '@sodax/dapp-kit';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 export default function MigratePage() {
   const { openWalletModal } = useWalletUI();
@@ -29,8 +30,10 @@ export default function MigratePage() {
   const direction = useMigrationStore(state => state.direction);
   const typedValue = useMigrationStore(state => state.typedValue);
   const currencies = useMigrationStore(state => state.currencies);
+  const migrationMode = useMigrationStore(state => state.migrationMode);
   const switchDirection = useMigrationStore(state => state.switchDirection);
   const setTypedValue = useMigrationStore(state => state.setTypedValue);
+  const setMigrationMode = useMigrationStore(state => state.setMigrationMode);
 
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -50,8 +53,27 @@ export default function MigratePage() {
   });
   const sodaBalance = BigInt(sodaBalances?.[sodaToken.address] || 0);
 
+  const { data: iconBnusdBalances } = useXBalances({
+    xChainId: ICON_MAINNET_CHAIN_ID,
+    xTokens: [iconBnusdToken],
+    address: iconAddress,
+  });
+  const iconBnusdBalance = iconBnusdBalances?.[iconBnusdToken.address] || 0n;
+
+  const { data: sonicBnusdBalances } = useXBalances({
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+    xTokens: [sonicBnusdToken],
+    address: sonicAddress,
+  });
+  const sonicBnusdBalance = BigInt(sonicBnusdBalances?.[sonicBnusdToken.address] || 0);
+
   const handleMaxClick = () => {
-    const value = direction.from === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance;
+    let value: bigint;
+    if (migrationMode === 'icxsoda') {
+      value = direction.from === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance;
+    } else {
+      value = direction.from === ICON_MAINNET_CHAIN_ID ? iconBnusdBalance : sonicBnusdBalance;
+    }
     setTypedValue(Number(formatUnits(value, currencies.from.decimals)).toFixed(2));
   };
 
@@ -63,12 +85,14 @@ export default function MigratePage() {
     typedValue,
     iconAddress,
     spokeProvider,
+    migrationMode,
+    currencies.to,
   );
   const {
     approve,
     isLoading: isApproving,
     isApproved,
-  } = useMigrationApprove(currencies.from, typedValue, iconAddress, spokeProvider);
+  } = useMigrationApprove(currencies.from, typedValue, iconAddress, spokeProvider, migrationMode, currencies.to);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
   const { mutateAsync: migrate, isPending } = useMigrate();
@@ -80,8 +104,8 @@ export default function MigratePage() {
   const hasSufficientAllowance = hasAllowed || isApproved;
 
   return (
-    <div className="flex flex-col w-full" style={{ gap: 'var(--layout-space-comfortable)' }}>
-      <div className="inline-flex flex-col justify-start items-start gap-4">
+    <div className="flex flex-col w-full gap-(--layout-space-comfortable)">
+      <div className="inline-flex flex-col justify-start items-start gap-(--layout-space-comfortable)">
         <div className="mix-blend-multiply justify-end">
           <span className="text-yellow-dark font-bold leading-9 font-['InterRegular'] !text-(size:--app-title)">
             SODAX{' '}
@@ -90,9 +114,23 @@ export default function MigratePage() {
             migration
           </span>
         </div>
-        <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(size:--subtitle)">
-          Swap 1:1 between ICX and SODA.
-        </div>
+        <ToggleGroup
+          type="single"
+          value={migrationMode}
+          onValueChange={value => {
+            if (value && (value === 'icxsoda' || value === 'bnusd')) {
+              setMigrationMode(value);
+            }
+          }}
+          className="h-12 w-64 px-1 border border-4 border-cream-white rounded-full mix-blend-multiply"
+        >
+          <ToggleGroupItem value="icxsoda" className="cursor-pointer">
+            ICX & SODA
+          </ToggleGroupItem>
+          <ToggleGroupItem value="bnusd" className="cursor-pointer">
+            bnUSD
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       <div className="inline-flex flex-col justify-start items-start gap-2">
@@ -101,7 +139,15 @@ export default function MigratePage() {
             type={CurrencyInputPanelType.INPUT}
             chainId={direction.from}
             currency={currencies.from}
-            currencyBalance={direction.from === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance}
+            currencyBalance={
+              migrationMode === 'icxsoda'
+                ? direction.from === ICON_MAINNET_CHAIN_ID
+                  ? icxBalance
+                  : sodaBalance
+                : direction.from === ICON_MAINNET_CHAIN_ID
+                  ? iconBnusdBalance
+                  : sonicBnusdBalance
+            }
             inputValue={typedValue}
             onInputChange={e => setTypedValue(e.target.value)}
             onMaxClick={handleMaxClick}
@@ -121,7 +167,15 @@ export default function MigratePage() {
           type={CurrencyInputPanelType.OUTPUT}
           chainId={direction.to}
           currency={currencies.to}
-          currencyBalance={direction.to === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance}
+          currencyBalance={
+            migrationMode === 'icxsoda'
+              ? direction.to === ICON_MAINNET_CHAIN_ID
+                ? icxBalance
+                : sodaBalance
+              : direction.to === ICON_MAINNET_CHAIN_ID
+                ? iconBnusdBalance
+                : sonicBnusdBalance
+          }
           inputValue={typedValue}
           // onInputChange={e => setTypedValue(e.target.value)}
         />
@@ -163,6 +217,10 @@ export default function MigratePage() {
                       setShowSuccessDialog(true);
                     } catch (error) {
                       console.error(error);
+                      const errorMessage =
+                        error instanceof Error ? error.message : 'Migration failed. Please try again.';
+                      setMigrationError(errorMessage);
+                      setShowErrorDialog(true);
                     }
                   }}
                   disabled={
@@ -194,7 +252,14 @@ export default function MigratePage() {
         )}
 
         <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-          Takes ~1 min · Network fee: {direction.from === ICON_MAINNET_CHAIN_ID ? '~0.02 ICX' : '~0.1 SODA'}
+          Takes ~1 min · Network fee:{' '}
+          {migrationMode === 'icxsoda'
+            ? direction.from === ICON_MAINNET_CHAIN_ID
+              ? '~0.02 ICX'
+              : '~0.1 SODA'
+            : direction.from === ICON_MAINNET_CHAIN_ID
+              ? '~0.02 ICX'
+              : '~0.1 bnUSD'}
         </div>
 
         <div className="self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 p-(--layout-space-comfortable) lg:mt-4 mt-2">
@@ -203,13 +268,19 @@ export default function MigratePage() {
               <Image src="/symbol_dark.png" alt="" width={16} height={16} />
             </div>
             <div className="flex-1 justify-center text-espresso text-base font-['InterBold'] text-(size:--body-super-comfortable) leading-tight">
-              {direction.from === ICON_MAINNET_CHAIN_ID ? "You're migrating to Sonic" : "You're migrating back to ICON"}
+              {direction.from === ICON_MAINNET_CHAIN_ID
+                ? `You're migrating ${migrationMode === 'icxsoda' ? 'to Sonic' : 'bnUSD to Sonic'}`
+                : `You're migrating ${migrationMode === 'icxsoda' ? 'back to ICON' : 'bnUSD back to ICON'}`}
             </div>
           </div>
           <div className="self-stretch justify-center text-clay text-xs font-medium font-['InterRegular'] text-(size:--body-comfortable) leading-tight">
             {direction.from === ICON_MAINNET_CHAIN_ID
-              ? "You won't need S token to receive your SODA. But you will for any future transactions on Sonic."
-              : 'ICX will be sent to your connected ICON wallet.'}
+              ? migrationMode === 'icxsoda'
+                ? "You won't need S token to receive your SODA. But you will for any future transactions on Sonic."
+                : "You won't need S token to receive your bnUSD. But you will for any future transactions on Sonic."
+              : migrationMode === 'icxsoda'
+                ? 'ICX will be sent to your connected ICON wallet.'
+                : 'bnUSD will be sent to your connected ICON wallet.'}
           </div>
         </div>
       </div>

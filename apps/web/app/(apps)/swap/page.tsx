@@ -518,8 +518,8 @@ export default function SwapPage() {
   };
 
   const handleDialogClose = (): void => {
-    setSourceAmount('');
-    setDestinationAmount('');
+    // setSourceAmount('');
+    // setDestinationAmount('');
     setSwapError('');
     setIsSwapSuccessful(false);
     setIsSwapFailed(false); // Reset failed state
