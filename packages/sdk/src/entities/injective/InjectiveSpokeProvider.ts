@@ -2,7 +2,7 @@ import { type Address, type Hex, fromHex } from 'viem';
 import type { InjectiveSpokeChainConfig, InjectiveReturnType, PromiseInjectiveTxReturnType } from '../../types.js';
 import type { ISpokeProvider } from '../Providers.js';
 import type { IInjectiveWalletProvider, InjectiveExecuteResponse } from '@sodax/types';
-import { toBase64, ChainGrpcWasmApi, TxGrpcApi } from '@injectivelabs/sdk-ts';
+import { toBase64, ChainGrpcWasmApi, TxGrpcApi, fromBase64 } from '@injectivelabs/sdk-ts';
 import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 
 export interface InstantiateMsg {
@@ -82,12 +82,14 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
   }
 
   async getBalance(token: String): Promise<number> {
-    return this.chainGrpcWasmApi.fetchSmartContractState(
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
       this.chainConfig.addresses.assetManager,
       toBase64({
         get_balance: { denom: token },
       }),
-    ) as unknown as Promise<number>;
+    );
+
+    return fromBase64(response.data as unknown as string) as unknown as number;
   }
 
   // Execute Methods (requires SigningCosmWasmClient)

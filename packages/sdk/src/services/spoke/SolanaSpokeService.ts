@@ -95,20 +95,16 @@ export class SolanaSpokeService {
   }
 
   public static async getDeposit(token: string, spokeProvider: SolanaSpokeProvider): Promise<bigint> {
-    const assetManagerProgram = await getAssetManagerProgram(
-      spokeProvider.walletProvider.getWalletBase58PublicKey(),
-      spokeProvider.chainConfig.rpcUrl,
-      spokeProvider.chainConfig.addresses.assetManager,
-    );
-    const solToken = new PublicKey(Buffer.from(token, 'hex'));
+    const assetManagerProgramId = new PublicKey(spokeProvider.chainConfig.addresses.assetManager);
+    const solToken = new PublicKey(token);
 
     if (isNative(new PublicKey(solToken))) {
-      const vaultNative = AssetManagerPDA.vault_native(assetManagerProgram.programId);
+      const vaultNative = AssetManagerPDA.vault_native(assetManagerProgramId);
       const balance = await spokeProvider.walletProvider.getBalance(vaultNative.pda.toBase58());
       return BigInt(balance);
     }
 
-    const vaultToken = AssetManagerPDA.vault_token(assetManagerProgram.programId, new PublicKey(solToken));
+    const vaultToken = AssetManagerPDA.vault_token(assetManagerProgramId, new PublicKey(solToken));
     const tokenAccount = await spokeProvider.walletProvider.getTokenAccountBalance(vaultToken.pda.toBase58());
 
     return BigInt(tokenAccount.value.amount);
