@@ -479,8 +479,7 @@ export class BridgeService {
           translatedWithdrawAmount,
         ),
       );
-    }
-    else {
+    } else {
       invariant(dstAssetInfo, `Unsupported hub chain (${params.dstChainId}) token: ${params.dstAsset}`);
       calls.push(
         EvmAssetManagerService.encodeTransfer(
@@ -582,6 +581,8 @@ export class BridgeService {
    */
   public getBridgeableTokens(from: SpokeChainId, to: SpokeChainId, token: string): XToken[] {
     let srcAssetInfo: HubAssetInfo | undefined;
+    const bridgeableTokens: XToken[] = [];
+
     // Get hub asset info for the source asset
     if (from !== this.hubProvider.chainConfig.chain.id) {
       srcAssetInfo = getHubAssetInfo(from, token);
@@ -595,18 +596,15 @@ export class BridgeService {
     if (to === this.hubProvider.chainConfig.chain.id) {
       invariant(srcAssetInfo, `Invalid source asset (${token}) on hub chain (${from})`);
       const hubVaultToken = getHubVaultTokenByAddress(srcAssetInfo.vault);
-
-      return hubVaultToken
-        ? [
-            {
-              address: hubVaultToken.address,
-              xChainId: to,
-              symbol: hubVaultToken.symbol,
-              name: hubVaultToken.name,
-              decimals: hubVaultToken.decimals,
-            },
-          ]
-        : [];
+      if (hubVaultToken) {
+        bridgeableTokens.push({
+          address: hubVaultToken.address,
+          xChainId: to,
+          symbol: hubVaultToken.symbol,
+          name: hubVaultToken.name,
+          decimals: hubVaultToken.decimals,
+        });
+      }
     }
 
     // handle from hub case
@@ -620,17 +618,19 @@ export class BridgeService {
         return supportedTokens
           .map(v => getOriginalTokenFromOriginalAssetAddress(to, v))
           .filter(v => v !== undefined) as XToken[];
-      }
+      } else {
+        srcAssetInfo = getHubAssetInfo(from, token);
 
-      throw new Error(`Invalid source asset (${token}) on hub chain (${from})`);
+        if (!srcAssetInfo) {
+          return [];
+        }
+      }
     }
 
     // Get all supported tokens for the destination chain
     const supportedTokens = spokeChainConfig[to].supportedTokens;
 
     // Filter tokens that share the same vault as the source asset
-    const bridgeableTokens: XToken[] = [];
-
     for (const token of Object.values(supportedTokens)) {
       const dstAssetInfo = getHubAssetInfo(to, token.address);
 
