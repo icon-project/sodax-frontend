@@ -1,13 +1,20 @@
 import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
-import { MoneyMarketService } from '../index.js';
-import { SolverService, MigrationService, BackendApiService } from '../services/index.js';
-import type { HttpUrl, SolverConfigParams, MoneyMarketConfigParams, MigrationServiceConfig } from '../types.js';
+import { SolverService, MigrationService, BackendApiService, BridgeService } from '../services/index.js';
+import { MoneyMarketService } from '../moneyMarket/MoneyMarketService.js';
+import type {
+  HttpUrl,
+  SolverConfigParams,
+  MoneyMarketConfigParams,
+  MigrationServiceConfig,
+  BridgeServiceConfig,
+} from '../types.js';
 import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 
 export type SodaxConfig = {
   solver?: SolverConfigParams; // optional Solver service enabling intent based swaps
   moneyMarket?: MoneyMarketConfigParams; // optional Money Market service enabling cross-chain lending and borrowing
   migration?: MigrationServiceConfig; // optional Migration service enabling ICX migration to SODA
+  bridge?: BridgeServiceConfig; // optional Bridge service enabling cross-chain transfers
   hubProviderConfig?: EvmHubProviderConfig; // hub provider for the hub chain (e.g. Sonic mainnet)
   relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
   backendApiEndpoint?: HttpUrl; // backend API endpoint used to interact with the backend API
@@ -25,6 +32,7 @@ export class Sodax {
   public readonly moneyMarket: MoneyMarketService; // Money Market service enabling cross-chain lending and borrowing
   public readonly migration: MigrationService; // ICX migration service enabling ICX migration to SODA
   public readonly backendApiService: BackendApiService; // backend API service enabling backend API endpoints
+  public readonly bridge: BridgeService; // Bridge service enabling cross-chain transfers
 
   public readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
   public readonly relayerApiEndpoint: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
@@ -48,6 +56,11 @@ export class Sodax {
       config && config.migration
         ? new MigrationService(this.hubProvider, config.migration)
         : new MigrationService(this.hubProvider);
+
+    this.bridge =
+      config && config.bridge
+        ? new BridgeService(this.hubProvider, this.relayerApiEndpoint, config.bridge)
+        : new BridgeService(this.hubProvider, this.relayerApiEndpoint);
 
     this.backendApiService = new BackendApiService(config?.backendApiEndpoint);
   }

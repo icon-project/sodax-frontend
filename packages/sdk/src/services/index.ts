@@ -5,3 +5,5 @@ export * from './intentRelay/index.js';
 export * from './solver/index.js';
 export * from './migration/index.js';
 export * from './BackendApiService.js';
+export * from './bridge/index.js';
+export * from '../moneyMarket/index.js';
