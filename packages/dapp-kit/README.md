@@ -32,6 +32,16 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Get spoke chain provider (`useSpokeProvider`)
   - Get wallet provider (`useWalletProvider`)
 
+- Bridge
+  - Bridge tokens between chains (`useBridge`)
+  - Check token allowance for bridging (`useBridgeAllowance`)
+  - Approve source token for bridging (`useBridgeApprove`)
+  - Get max amount available to be bridged (`useGetBridgeableAmount`)
+  - Get available destination tokens based on provided source token (`useGetBridgeableTokens`)
+
+- Shared
+  - Derive user wallet address for hub abstraction (`useDeriveUserWalletAddress`)
+
 ## Installation
 
 ```bash
@@ -148,6 +158,24 @@ function TokenManagementComponent() {
   };
 }
 
+// Wallet Address Derivation
+import { useDeriveUserWalletAddress, useSpokeProvider } from '@sodax/dapp-kit';
+
+function WalletAddressComponent() {
+  const spokeProvider = useSpokeProvider(chainId, walletProvider);
+  
+  // Derive user wallet address for hub abstraction
+  const { data: derivedAddress, isLoading, error } = useDeriveUserWalletAddress(spokeProvider, userAddress);
+  
+  return (
+    <div>
+      {isLoading && <div>Deriving wallet address...</div>}
+      {error && <div>Error: {error.message}</div>}
+      {derivedAddress && <div>Derived Address: {derivedAddress}</div>}
+    </div>
+  );
+}
+
 // Swap Operations
 import { useQuote, useSwap, useStatus } from '@sodax/dapp-kit';
 
@@ -177,6 +205,53 @@ function SwapComponent() {
 
   // Get status of an intent order
   const { data: orderStatus } = useStatus('0x...');
+}
+
+// Bridge Operations
+import { useBridge, useBridgeAllowance, useBridgeApprove, useGetBridgeableAmount, useGetBridgeableTokens } from '@sodax/dapp-kit';
+
+function BridgeComponent() {
+  const spokeProvider = useSpokeProvider(chainId, walletProvider);
+  
+  // Get available destination tokens for bridging
+  const { data: bridgeableTokens, isLoading: isTokensLoading } = useGetBridgeableTokens(
+    '0x2105.base', // from chain
+    '0x89.polygon', // to chain
+    '0x...' // source token address
+  );
+
+  // Get maximum amount available to bridge
+  const { data: bridgeableAmount } = useGetBridgeableAmount(
+    { address: '0x...', xChainId: '0x2105.base' }, // from token
+    { address: '0x...', xChainId: '0x89.polygon' } // to token
+  );
+
+  // Check token allowance for bridge
+  const { data: hasAllowed } = useBridgeAllowance(bridgeParams, spokeProvider);
+  
+  // Approve tokens for bridge
+  const { approve: approveBridge, isLoading: isApproving } = useBridgeApprove(spokeProvider);
+  const handleApprove = async () => {
+    await approveBridge(bridgeParams);
+  };
+
+  // Execute bridge transaction
+  const { mutateAsync: bridge, isPending: isBridging } = useBridge(spokeProvider);
+  const handleBridge = async () => {
+    const result = await bridge({
+      srcChainId: '0x2105.base',
+      srcAsset: '0x...',
+      amount: 1000n,
+      dstChainId: '0x89.polygon',
+      dstAsset: '0x...',
+      recipient: '0x...'
+    });
+
+    console.log('Bridge transaction hashes:', {
+      spokeTxHash: result.value[0],
+      hubTxHash: result.value[1]
+    });
+  };
 }
 ```
 
@@ -215,7 +290,14 @@ function SwapComponent() {
 #### Shared Hooks
 - [`useSodaxContext()`](./src/hooks/shared/useSodaxContext.ts) - Access Sodax context and configuration
 - [`useEstimateGas()`](./src/hooks/shared/useEstimateGas.ts) - Estimate gas costs for transactions
+- [`useDeriveUserWalletAddress()`](./src/hooks/shared/useDeriveUserWalletAddress.ts) - Derive user wallet address for hub abstraction
 
+#### Bridge Hooks
+- [`useBridge()`](./src/hooks/bridge/useBridge.ts) - Execute bridge transactions to transfer tokens between chains
+- [`useBridgeAllowance()`](./src/hooks/bridge/useBridgeAllowance.ts) - Check token allowance for bridge operations
+- [`useBridgeApprove()`](./src/hooks/bridge/useBridgeApprove.ts) - Approve token spending for bridge actions
+- [`useGetBridgeableAmount()`](./src/hooks/bridge/useGetBridgeableAmount.ts) - Get maximum amount available to be bridged
+- [`useGetBridgeableTokens()`](./src/hooks/bridge/useGetBridgeableTokens.ts) - Get available destination tokens for bridging
 
 ## Contributing
 

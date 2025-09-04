@@ -101,7 +101,7 @@ export class EvmSpokeService {
       address: token,
       abi: erc20Abi,
       functionName: 'balanceOf',
-      args: [token],
+      args: [spokeProvider.chainConfig.addresses.assetManager],
     });
   }
 
