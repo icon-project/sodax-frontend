@@ -119,11 +119,6 @@ const { data: borrowers, isLoading, error } = useAllMoneyMarketBorrowers({
 
 Different hooks have different stale times optimized for their data types:
 
-- **Intent hooks**: 5 minutes (intent data changes infrequently)
-- **Orderbook**: 30 seconds (real-time trading data)
-- **Money Market positions**: 1 minute (user-specific data)
-- **Money Market assets**: 2 minutes (market data)
-- **Borrowers/Suppliers**: 1 minute (user list data)
 
 ## Error Handling
 
@@ -133,15 +128,6 @@ All hooks return standard React Query result objects with:
 - `isLoading`: Boolean indicating if the request is in progress
 - `error`: Error object if the request failed
 - `refetch`: Function to manually trigger a data refresh
-
-## Best Practices
-
-1. **Conditional Rendering**: Always check for loading and error states
-2. **Parameter Validation**: Hooks automatically disable when required parameters are missing
-3. **Caching**: Leverage React Query's caching - data is automatically shared across components
-4. **Refetching**: Use the `refetch` function for manual data updates when needed
-5. **TypeScript**: Take advantage of full TypeScript support for better development experience
-6. **Context Provider**: Ensure your app is wrapped with `SodaxProvider` to access the SDK context
 
 ## Requirements
 
