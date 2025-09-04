@@ -4,6 +4,13 @@
  * Acts as a wrapper around all backend API endpoints for Solver and Money Market functionality
  */
 
+import {
+  DEFAULT_BACKEND_API_ENDPOINT,
+  DEFAULT_BACKEND_API_HEADERS,
+  DEFAULT_BACKEND_API_TIMEOUT,
+} from '../../constants.js';
+import type { BackendApiConfig } from '../../types.js';
+
 // Base types for API responses
 export interface ApiResponse<T = unknown> {
   data: T;
@@ -43,7 +50,7 @@ export interface IntentResponse {
     solver: string;
     data: string;
   };
-  events: any[];
+  events: unknown[];
 }
 
 // Solver endpoints types
@@ -138,13 +145,10 @@ export class BackendApiService {
   private readonly defaultHeaders: Record<string, string>;
   private readonly timeout: number;
 
-  constructor(baseURL = 'https://apiv1.coolify.iconblockchain.xyz') {
-    this.baseURL = baseURL;
-    this.timeout = 30000; // 30 seconds timeout
-    this.defaultHeaders = {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    };
+  constructor(config?: BackendApiConfig) {
+    this.baseURL = config?.baseURL ?? DEFAULT_BACKEND_API_ENDPOINT;
+    this.timeout = config?.timeout ?? DEFAULT_BACKEND_API_TIMEOUT;
+    this.defaultHeaders = config?.headers ?? DEFAULT_BACKEND_API_HEADERS;
   }
 
   /**
@@ -156,8 +160,6 @@ export class BackendApiService {
   private async makeRequest<T>(endpoint: string, config: RequestConfig): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const headers = { ...this.defaultHeaders, ...config.headers };
-
-    console.log(`[BackendApiService] ${config.method} ${url}`);
 
     // Create AbortController for timeout
     const controller = new AbortController();
@@ -333,9 +335,3 @@ export class BackendApiService {
     return this.baseURL;
   }
 }
-
-// Export default instance
-export const backendApiService = new BackendApiService();
-
-// Export the class as default
-export default BackendApiService;

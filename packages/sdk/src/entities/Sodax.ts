@@ -7,6 +7,7 @@ import type {
   MoneyMarketConfigParams,
   MigrationServiceConfig,
   BridgeServiceConfig,
+  BackendApiConfig,
 } from '../types.js';
 import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 
@@ -17,7 +18,7 @@ export type SodaxConfig = {
   bridge?: BridgeServiceConfig; // optional Bridge service enabling cross-chain transfers
   hubProviderConfig?: EvmHubProviderConfig; // hub provider for the hub chain (e.g. Sonic mainnet)
   relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
-  backendApiEndpoint?: HttpUrl; // backend API endpoint used to interact with the backend API
+  backendApiConfig?: BackendApiConfig; // backend API config used to interact with the backend API
 };
 
 /**
@@ -62,6 +63,6 @@ export class Sodax {
         ? new BridgeService(this.hubProvider, this.relayerApiEndpoint, config.bridge)
         : new BridgeService(this.hubProvider, this.relayerApiEndpoint);
 
-    this.backendApiService = new BackendApiService(config?.backendApiEndpoint);
+    this.backendApiService = new BackendApiService(config?.backendApiConfig);
   }
 }

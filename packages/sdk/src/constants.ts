@@ -51,6 +51,12 @@ export const FEE_PERCENTAGE_SCALE = 10000n; // 100% = 10000
 export const STELLAR_PRIORITY_FEE = '10000';
 export const STELLAR_DEFAULT_TX_TIMEOUT_SECONDS = 100;
 export const DEFAULT_DEADLINE_OFFSET = 300n; // 5 minutes in seconds
+export const DEFAULT_BACKEND_API_ENDPOINT = 'https://apiv1.coolify.iconblockchain.xyz';
+export const DEFAULT_BACKEND_API_TIMEOUT = 30000; // 30 seconds
+export const DEFAULT_BACKEND_API_HEADERS = {
+  'Content-Type': 'application/json',
+  Accept: 'application/json',
+};
 
 export const VAULT_TOKEN_DECIMALS = 18;
 
