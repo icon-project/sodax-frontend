@@ -19,7 +19,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency, i
         >
           <Image
             className="w-6 h-6 rounded-[256px]"
-            src={`/coin/${currency.symbol.toLowerCase()}.png`}
+            src={`/coin/${currency.symbol === 'bnUSD (legacy)' ? 'bnusd' : currency.symbol.toLowerCase()}.png`}
             alt={currency.symbol}
             width={24}
             height={24}

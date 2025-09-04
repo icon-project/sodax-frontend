@@ -98,7 +98,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             </div>
           </div>
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(length:--body-super-comfortable) leading-[1.4]">
-            {currency.symbol}
+            {currency.symbol === 'bnUSD (legacy)' ? 'bnUSD' : currency.symbol}
           </div>
           {type === CurrencyInputPanelType.INPUT && (
             <Button

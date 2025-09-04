@@ -2,7 +2,7 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { XToken } from '@sodax/types';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { parseUnits } from 'viem';
-import type { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider } from '@sodax/sdk';
+import { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider, isLegacybnUSDToken, isNewbnUSDToken } from '@sodax/sdk';
 import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 /**
@@ -77,7 +77,6 @@ export function useMigrationAllowance(
           amount: amountToMigrate,
           to: iconAddress as `hx${string}`,
         } satisfies UnifiedBnUSDMigrateParams;
-
         const allowance = await sodax.migration.isAllowanceValid(params, 'revert', spokeProvider);
         if (allowance.ok) {
           return allowance.value;

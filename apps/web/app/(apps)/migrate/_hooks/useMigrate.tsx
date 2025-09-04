@@ -1,5 +1,5 @@
 import { parseUnits } from 'viem';
-import { spokeChainConfig, type IconSpokeProvider, type SonicSpokeProvider } from '@sodax/sdk';
+import { isLegacybnUSDToken, isNewbnUSDToken, spokeChainConfig, UnifiedBnUSDMigrateParams, type IconSpokeProvider, type SonicSpokeProvider } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
 import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
@@ -101,7 +101,35 @@ export function useMigrate() {
         dstbnUSD: currencies.to.address,
         amount: amountToMigrate,
         to: iconAddress as `hx${string}`,
-      };
+      } satisfies UnifiedBnUSDMigrateParams;
+      const isAllowed = await sodax.migration.isAllowanceValid(
+        params,
+        'revert',
+        sonicSpokeProvider
+      );
+      console.log("Is allowed", isAllowed);
+      
+      if (!isAllowed.ok) {
+        console.error('Failed to check allowance:', isAllowed.error);
+      } else if (!isAllowed.value) {
+        // Approve if needed
+        const approveResult = await sodax.migration.approve(
+          params,
+          'revert',
+          sonicSpokeProvider
+        );
+        
+        if (approveResult.ok) {
+          console.log('Approval transaction hash:', approveResult.value);
+          // Wait for approval transaction to be mined
+          await sonicSpokeProvider.walletProvider.waitForTransactionReceipt(approveResult.value);
+        } else {
+          console.error('Failed to approve tokens:', approveResult.error);
+          return;
+        }
+      }
+      console.log(params);
+      console.log(isLegacybnUSDToken(currencies.to), isNewbnUSDToken(currencies.from));
       const result = await sodax.migration.migratebnUSD(params, sonicSpokeProvider, 30000);
       console.log('bnUSD reverse migration result', result);
       if (result.ok) {
