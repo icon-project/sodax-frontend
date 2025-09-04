@@ -496,6 +496,7 @@ async function bridge(
     dstChainId,
     dstAsset,
     recipient: encodeAddress(dstChainId, recipient),
+    partnerFee,
   };
 
   // For Sonic as source chain, use SonicSpokeProvider
@@ -517,7 +518,6 @@ async function bridge(
     const result = await bridgeService.bridge({
       params: bridgeParams,
       spokeProvider,
-      fee: partnerFee,
     });
 
     if (result.ok) {

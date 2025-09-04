@@ -97,6 +97,8 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     icxMigration: Address;
     balnSwap: Address;
     sodaToken: Address;
+    stakedSoda: Address;
+    xSoda: Address;
   };
 
   nativeToken: Address;
@@ -118,7 +120,6 @@ export type MoneyMarketConfig = {
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
-export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
 
 export type MoneyMarketConfigParams =
   | Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
@@ -146,8 +147,8 @@ export type SonicSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
 
 export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   addresses: {
-    originalAssetManager: string;
-    assetManagerConfigId: string;
+    assetManager: string;
+    assetManagerId: string;
     connection: string;
     xTokenManager: string;
     rateLimit: string;
@@ -255,6 +256,12 @@ export type TokenInfo = {
 export type VaultReserves = {
   tokens: readonly Address[];
   balances: readonly bigint[];
+};
+
+export type UnstakeSodaRequest = {
+  amount: bigint;
+  startTime: bigint;
+  to: Address;
 };
 
 export type DepositSimulationParams = {

@@ -19,6 +19,11 @@ import {
   type EvmRawTransaction,
   type SolverConfigParams,
   type EvmChainId,
+  type BridgeParams,
+  type PartnerFee,
+  DEFAULT_RELAYER_API_ENDPOINT,
+  BridgeService,
+  type CreateBridgeIntentParams,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
 import { SONIC_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
@@ -63,6 +68,9 @@ const sodax = new Sodax({
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
+
+const relayerApiEndpoint = DEFAULT_RELAYER_API_ENDPOINT;
+const bridgeService = new BridgeService(hubProvider, relayerApiEndpoint);
 
 async function depositTo(token: Address, amount: bigint, recipient: Address) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
@@ -367,6 +375,55 @@ async function getIntent(txHash: string) {
   console.log(intent);
 }
 
+/**
+ * Bridge tokens from one chain to another
+ * @param srcChainId - The source chain ID
+ * @param srcAsset - The source asset address
+ * @param amount - The amount to bridge
+ * @param dstChainId - The destination chain ID
+ * @param dstAsset - The destination asset address
+ * @param recipient - The recipient address on the destination chain
+ * @param partnerFee - Optional partner fee configuration
+ */
+async function bridge(
+  srcChainId: SpokeChainId,
+  srcAsset: string,
+  amount: bigint,
+  dstChainId: SpokeChainId,
+  dstAsset: string,
+  recipient: Hex,
+  partnerFee?: PartnerFee,
+): Promise<void> {
+  const bridgeParams: CreateBridgeIntentParams = {
+    srcChainId,
+    srcAsset,
+    amount,
+    dstChainId,
+    dstAsset,
+    recipient,
+    partnerFee,
+  };
+
+  // For EVM as source chain, use EvmSpokeProvider
+  if (srcChainId === EVM_SPOKE_CHAIN_ID) {
+    const result = await bridgeService.bridge({
+      params: bridgeParams,
+      spokeProvider,
+    });
+
+    if (result.ok) {
+      const [spokeTxHash, hubTxHash] = result.value;
+      console.log('[bridge] spokeTxHash:', spokeTxHash);
+      console.log('[bridge] hubTxHash:', hubTxHash);
+      console.log('[bridge] Bridge transaction completed successfully');
+    } else {
+      console.error('[bridge] Bridge failed:', result.error);
+    }
+  } else {
+    console.error('[bridge] Source chain not supported for bridging from this script');
+  }
+}
+
 // Main function to decide which function to call
 async function main() {
   const functionName = process.argv[2]; // Get function name from command line argument
@@ -416,9 +473,37 @@ async function main() {
   } else if (functionName === 'getIntent') {
     const txHash = process.argv[3]; // Get txHash from command line argument
     await getIntent(txHash);
+  } else if (functionName === 'bridge') {
+    const srcChainId = process.argv[3] as SpokeChainId;
+    const srcAsset = process.argv[4] as string;
+    const amount = BigInt(process.argv[5]);
+    const dstChainId = process.argv[6] as SpokeChainId;
+    const dstAsset = process.argv[7] as string;
+    const recipient = process.argv[8] as Hex;
+    const partnerFeeAddress = process.argv[9] as Hex | undefined;
+    const partnerFeeAmount = process.argv[10] ? BigInt(process.argv[10]) : undefined;
+
+    const partnerFee =
+      partnerFeeAddress && partnerFeeAmount ? { address: partnerFeeAddress, amount: partnerFeeAmount } : undefined;
+
+    await bridge(srcChainId, srcAsset, amount, dstChainId, dstAsset, recipient, partnerFee);
   } else {
     console.log(
-      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "createIntent", "fillIntent", or "cancelIntent".',
+      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "createIntent", "fillIntent", "cancelIntent", or "bridge".',
+    );
+    console.log('Usage examples:');
+    console.log('  npm run evm deposit <token_address> <amount> <recipient_address>');
+    console.log('  npm run evm withdrawAsset <token_address> <amount> <recipient_address>');
+    console.log('  npm run evm supply <token_address> <amount>');
+    console.log('  npm run evm borrow <token_address> <amount>');
+    console.log('  npm run evm withdraw <token_address> <amount>');
+    console.log('  npm run evm repay <token_address> <amount>');
+    console.log('  npm run evm createIntent <amount> <native_token> <input_token> <output_token>');
+    console.log('  npm run evm fillIntent <intent_id> <input_token> <output_token> <input_amount> <output_amount>');
+    console.log('  npm run evm cancelIntent <tx_hash>');
+    console.log('  npm run evm getIntent <tx_hash>');
+    console.log(
+      '  npm run evm bridge <srcChainId> <srcAsset> <amount> <dstChainId> <dstAsset> <recipient> [partnerFeeAddress] [partnerFeeAmount]',
     );
   }
 }

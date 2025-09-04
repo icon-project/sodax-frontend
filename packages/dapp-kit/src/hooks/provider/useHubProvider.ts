@@ -1,8 +1,8 @@
 import type { EvmHubProvider } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-export function useHubProvider(): EvmHubProvider {
-  const { sodax } = useSodaxContext();
+export function useHubProvider(): EvmHubProvider | undefined {
+  const { hubProvider } = useSodaxContext();
 
-  return sodax.hubProvider;
+  return hubProvider;
 }

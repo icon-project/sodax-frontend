@@ -5,7 +5,6 @@ import { type Hex, toHex } from 'viem';
 import type { PromiseSuiTxReturnType, SuiReturnType, SuiSpokeChainConfig } from '../../types.js';
 import type { ISpokeProvider } from '../index.js';
 import type { ISuiWalletProvider } from '@sodax/types';
-import { SuiSpokeService } from '../../services/spoke/SuiSpokeService.js';
 
 type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
 type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | undefined };
@@ -13,7 +12,6 @@ export class SuiSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: ISuiWalletProvider;
   public chainConfig: SuiSpokeChainConfig;
   public readonly publicClient: SuiClient;
-  private assetManagerAddress: string | undefined;
 
   constructor(config: SuiSpokeChainConfig, wallet_provider: ISuiWalletProvider) {
     this.chainConfig = config;
@@ -22,7 +20,7 @@ export class SuiSpokeProvider implements ISpokeProvider {
   }
 
   async getBalance(token: string): Promise<bigint> {
-    const assetmanager = this.splitAddress(await this.getAssetManagerAddress());
+    const assetmanager = this.splitAddress(this.chainConfig.addresses.assetManager);
     const tx = new Transaction();
     const result = await this.walletProvider.viewContract(
       tx,
@@ -58,7 +56,7 @@ export class SuiSpokeProvider implements ISpokeProvider {
       ? await this.getNativeCoin(tx, amount)
       : await this.getCoin(tx, token, amount, walletAddress);
     const connection = this.splitAddress(this.chainConfig.addresses.connection);
-    const assetManager = this.splitAddress(await this.getAssetManagerAddress());
+    const assetManager = this.splitAddress(this.chainConfig.addresses.assetManager);
 
     // Call transfer function
     tx.moveCall({
@@ -191,7 +189,7 @@ export class SuiSpokeProvider implements ISpokeProvider {
 
   async configureAssetManagerHub(hubNetworkId: number, hubAssetManager: Uint8Array): Promise<string> {
     const tx = new Transaction();
-    const assetmanager = this.splitAddress(await this.getAssetManagerAddress());
+    const assetmanager = this.splitAddress(this.chainConfig.addresses.assetManager);
 
     tx.moveCall({
       target: `${assetmanager.packageId}::${assetmanager.moduleId}::set_hub_details`,
@@ -213,12 +211,5 @@ export class SuiSpokeProvider implements ISpokeProvider {
 
   static getAddressBCSBytes(suiaddress: string): Hex {
     return toHex(bcs.Address.serialize(suiaddress).toBytes());
-  }
-
-  async getAssetManagerAddress(): Promise<string> {
-    if (!this.assetManagerAddress) {
-      this.assetManagerAddress = await SuiSpokeService.fetchAssetManagerAddress(this);
-    }
-    return this.assetManagerAddress.toString();
   }
 }

@@ -1,6 +1,6 @@
 # Bridge Documentation
 
-The `BridgeService` class reachable through `sodax.bridge` instance provides functionality to bridge tokens between different blockchain chains. It supports both cross-chain transfers between spoke chains and operations involving the hub chain (Sonic) using Soda tokens.
+The `BridgeService` class reachable through `sodax.bridge`instance provides functionality to bridge tokens between different blockchain chains. It supports both cross-chain transfers between spoke chains and operations involving the hub chain (Sonic) using Soda tokens.
 
 ## Methods
 
@@ -41,8 +41,8 @@ Approves token spending for the bridge transaction. This method is only supporte
 
 **Parameters:**
 - `params`: Bridge parameters
-- `spokeProvider`: The spoke provider instance
-- `raw`: Whether to return raw transaction data (optional, default: false)
+- `spokeProvider`: The spoke chain provider instance
+- `raw`: Whether to return raw transaction data (optional)
 
 **Returns:** `Promise<Result<TxReturnType<S, R>, BridgeError<'APPROVAL_FAILED'>>>`
 
@@ -113,7 +113,7 @@ Creates a bridge intent on the spoke chain without relaying it to the hub. This 
 **Parameters:**
 - `params`: Bridge parameters
 - `spokeProvider`: The spoke chain provider instance
-- `raw`: Whether to return raw transaction data (optional, default: false)
+- `raw`: Whether to return raw transaction data (optional)
 
 **Returns:** `Promise<Result<TxReturnType<S, R>, BridgeError<'CREATE_BRIDGE_INTENT_FAILED'>> & BridgeOptionalExtraData>`
 
@@ -140,52 +140,29 @@ if (result.ok) {
 }
 ```
 
-**Note:** This method only executes the transaction on the spoke chain and creates the bridge intent. To successfully bridge tokens, you need to:
-1. Check if the allowance is sufficient using `isAllowanceValid`
-2. Approve the appropriate contract to spend the tokens using `approve`
-3. Create the bridge intent using this method
-4. Relay the transaction to the hub and await completion using the `bridge` method
+### getSpokeAssetManagerTokenBalance
 
-### getBridgeableAmount
-
-Retrieves amount available to be bridged between two tokens.
+Retrieves the deposited token balance held by the asset manager on a spoke chain. This balance represents available liquidity for bridging operations.
 
 **Parameters:**
-- `from`: Source X token (XToken object with address and xChainId)
-- `to`: Destination X token (XToken object with address and xChainId)
+- `chainId`: The spoke chain ID
+- `token`: The token address to query
 
-**Returns:** `Promise<Result<bigint, unknown>>` - Token amount available to be bridged
+**Returns:** `Promise<bigint>` - Token balance (returns -1n for no bridgable limit on Sonic)
 
 **Example:**
 ```typescript
-const result = await sodax.bridge.getBridgeableAmount(
-  { 
-    address: '0x1234567890abcdef...', 
-    xChainId: '0x2105.base',
-    symbol: 'USDC',
-    name: 'USD Coin',
-    decimals: 6
-  },
-  { 
-    address: '0xabcdef1234567890...', 
-    xChainId: '0x89.polygon',
-    symbol: 'USDC',
-    name: 'USD Coin',
-    decimals: 6
-  }
+const balance = await sodax.bridge.getSpokeAssetManagerTokenBalance(
+  '0x89.polygon',
+  '0xabcdef1234567890...'
 );
 
-if (result.ok) {
-  console.log('Available balance:', result.value.toString());
+if (balance === -1n) {
+  console.log('No bridgable limit on this chain');
 } else {
-  console.error('Error getting bridgeable amount:', result.error);
+  console.log('Available balance:', balance.toString());
 }
 ```
-
-**Note:** This method handles different bridging scenarios:
-- **spoke → hub**: checks max deposit available on source chain
-- **hub → spoke**: checks asset manager balance on destination chain  
-- **spoke → spoke**: returns minimum of available deposit and withdrawable balance
 
 ### isBridgeable
 
@@ -229,57 +206,18 @@ Retrieves all bridgeable tokens from a source token to a destination chain.
 - `to`: Destination chain ID
 - `token`: Source token address
 
-**Returns:** `Result<XToken[], unknown>` - Array of bridgeable tokens on the destination chain
+**Returns:** `XToken[]` - Array of bridgeable tokens on the destination chain
 
 **Example:**
 ```typescript
-const result = sodax.bridge.getBridgeableTokens(
+const bridgeableTokens = sodax.bridge.getBridgeableTokens(
   '0x2105.base',
   '0x89.polygon',
   '0x1234567890abcdef...'
 );
 
-if (result.ok) {
-  console.log('Bridgeable tokens on Polygon:', result.value);
-  // Output: Array of XToken objects that can be bridged to
-} else {
-  console.error('Error getting bridgeable tokens:', result.error);
-}
-```
-
-## Types
-
-### CreateBridgeIntentParams
-
-```typescript
-export type CreateBridgeIntentParams = {
-  srcChainId: SpokeChainId;
-  srcAsset: string;
-  amount: bigint;
-  dstChainId: SpokeChainId;
-  dstAsset: string;
-  recipient: string; // non-encoded recipient address
-  partnerFee?: PartnerFee;
-};
-```
-
-### BridgeParams
-
-```typescript
-export type BridgeParams<S extends SpokeProvider> = {
-  params: CreateBridgeIntentParams;
-  spokeProvider: S;
-  skipSimulation?: boolean;
-};
-```
-
-### PartnerFee
-
-```typescript
-type PartnerFee = {
-  address: string;
-  percentage: number; // Fee percentage (e.g., 0.1 for 10%)
-};
+console.log('Bridgeable tokens on Polygon:', bridgeableTokens);
+// Output: Array of XToken objects that can be bridged to
 ```
 
 ## Error Handling
