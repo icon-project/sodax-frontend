@@ -7,6 +7,7 @@
     "injective": "pnpm run build && node dist/injective.js",
     "sonic": "pnpm run build && node dist/sonic.js",
     "sui": "pnpm run build && node dist/sui.js",
+    "near": "pnpm run build && node dist/near.js",
     "moneyMarket": "pnpm run build && node dist/moneymarket.js",
     "stellar": "pnpm run build && node dist/stellar.js",
     "icon": "pnpm run build && node dist/icon.js",
@@ -36,7 +37,7 @@
     "bn": "^1.0.5",
     "bn.js": "^5.2.1",
     "dotenv": "^16.4.7",
-    "ethers": "^6.13.5",
+    "ethers": "^6.14.1",
     "icon-sdk-js": "catalog:",
     "viem": "catalog:"
   },
