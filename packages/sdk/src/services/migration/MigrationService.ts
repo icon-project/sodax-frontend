@@ -169,6 +169,24 @@ export class MigrationService {
         invariant(params.to.length > 0, 'To address is required');
         invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          let spender: Address;
+          const wallet = await spokeProvider.walletProvider.getWalletAddress();
+          if (spokeProvider instanceof SonicSpokeProvider) {
+            spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
+          } else {
+            spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
+          }
+          return await Erc20Service.isAllowanceValid(
+            params.srcbnUSD as Address,
+            params.amount,
+            wallet as `0x${string}`,
+            spender,
+            evmSpokeProvider,
+          );
+        }
+
         if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
           const wallet = await spokeProvider.walletProvider.getWalletAddress();
           const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
@@ -179,19 +197,6 @@ export class MigrationService {
             wallet,
             userRouter,
             spokeProvider,
-          );
-        }
-
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
-          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
-          return await Erc20Service.isAllowanceValid(
-            params.srcbnUSD as Address,
-            params.amount,
-            await evmSpokeProvider.walletProvider.getWalletAddress(),
-            evmSpokeProvider instanceof EvmSpokeProvider
-              ? evmSpokeProvider.chainConfig.addresses.assetManager
-              : (evmSpokeProvider.chainConfig.bnUSD as Address),
-            evmSpokeProvider,
           );
         }
       }
@@ -267,6 +272,29 @@ export class MigrationService {
         invariant(params.to.length > 0, 'To address is required');
         invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          let spender: Address;
+          const wallet = await spokeProvider.walletProvider.getWalletAddress();
+          if (spokeProvider instanceof SonicSpokeProvider) {
+            spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
+          } else {
+            spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
+          }
+          const result = await Erc20Service.approve(
+            params.srcbnUSD as Address,
+            params.amount,
+            spender,
+            evmSpokeProvider,
+            raw,
+          );
+
+          return {
+            ok: true,
+            value: result satisfies TxReturnType<EvmSpokeProvider | SonicSpokeProvider, R> as TxReturnType<S, R>,
+          };
+        }
+
         if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
           const wallet = await spokeProvider.walletProvider.getWalletAddress();
           const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
@@ -282,24 +310,6 @@ export class MigrationService {
           return {
             ok: true,
             value: result satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<S, R>,
-          };
-        }
-
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
-          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
-          const result = await Erc20Service.approve(
-            params.srcbnUSD as Address,
-            params.amount,
-            evmSpokeProvider instanceof EvmSpokeProvider
-              ? evmSpokeProvider.chainConfig.addresses.assetManager
-              : (evmSpokeProvider.chainConfig.bnUSD as Address),
-            evmSpokeProvider,
-            raw,
-          );
-
-          return {
-            ok: true,
-            value: result satisfies TxReturnType<EvmSpokeProvider | SonicSpokeProvider, R> as TxReturnType<S, R>,
           };
         }
 
