@@ -39,8 +39,10 @@ export const useMigrationStore = <T,>(selector: (store: MigrationStore) => T): T
 };
 
 export const useMigrationInfo = () => {
-  const { direction, currencies } = useMigrationStore(state => state);
-  const typedValue = useMigrationStore(state => state.typedValue);
+  const migrationMode = useMigrationStore(state => state.migrationMode);
+  const direction = useMigrationStore(state => state[migrationMode].direction);
+  const currencies = useMigrationStore(state => state[migrationMode].currencies);
+  const typedValue = useMigrationStore(state => state[migrationMode].typedValue);
   const error = useMemo(() => {
     if (typedValue === '' || Number(typedValue) <= 0) {
       return 'Enter amount';

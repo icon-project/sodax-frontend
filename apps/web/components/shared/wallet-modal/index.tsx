@@ -50,17 +50,11 @@ export const WalletModal = ({
 
   const selectedChain = xChainTypes.find(w => w.xChainType === selectedChainType);
 
-  const availableChains = isMigrateRoute
-    ? xChainTypes.filter(w => w.xChainType === 'ICON' || w.xChainType === 'EVM')
-    : xChainTypes;
+  const availableChains = xChainTypes;
+  console.log('availableChains', availableChains);
 
   const getMainChain = (): (typeof availableChains)[0] | undefined => {
     // Check if we're on swap page and use sourceToken chain as main chain
-
-    if (isMigrateRoute) {
-      return availableChains.find(w => w.xChainType === 'ICON');
-    }
-
     if (isExpanded) {
       return availableChains.find(w => w.xChainType === 'EVM');
     }
@@ -87,9 +81,7 @@ export const WalletModal = ({
 
   const mainChain = getMainChain();
 
-  const otherChains = isMigrateRoute
-    ? availableChains.filter(w => w.xChainType !== 'ICON')
-    : availableChains.filter(w => w.xChainType !== mainChain?.xChainType);
+  const otherChains = availableChains.filter(w => w.xChainType !== mainChain?.xChainType);
 
   const handleToggleExpanded = (expanded: boolean): void => {
     setIsExpanded(expanded);
@@ -146,7 +138,8 @@ export const WalletModal = ({
               </div>
               <div className="flex flex-row justify-between items-center gap-4">
                 <div className="text-right justify-end text-clay-light text-(size:--body-small) font-medium font-['InterRegular'] leading-none">
-                  Connect your {isMigrateRoute ? 'Sonic' : selectedChain?.name || 'wallet'} wallet
+                  {/* Connect your {isMigrateRoute ? 'Sonic' : selectedChain?.name || 'wallet'} wallet */}
+                  Connect your {selectedChain?.name || 'wallet'} wallet
                 </div>
                 <DialogClose asChild>
                   <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
@@ -157,9 +150,7 @@ export const WalletModal = ({
         </DialogTitle>
         {!showWalletList && !isExpanded && (
           <div className=" justify-start text-clay-light text-sm font-medium font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
-            {isMigrateRoute
-              ? 'You will need to connect on both networks.'
-              : 'You will need to connect your wallet to proceed.'}
+            You will need to connect your wallet to proceed.
           </div>
         )}
         <div className={cn('flex flex-col justify-between')}>
@@ -169,7 +160,6 @@ export const WalletModal = ({
                 <>
                   {!isExpanded && <Separator className="h-1 bg-clay opacity-30" />}
 
-                  {/* Show main chain first */}
                   {mainChain && (
                     <React.Fragment>
                       <div
@@ -194,15 +184,14 @@ export const WalletModal = ({
                     </React.Fragment>
                   )}
 
-                  {!isExpanded && !isMigrateRoute && (
+                  {!isExpanded && (
                     <>
                       <Separator className="h-1 bg-clay opacity-30" />
                       <AllSupportItem onToggleExpanded={handleToggleExpanded} isExpanded={isExpanded} />
                     </>
                   )}
 
-                  {/* Show other chains when expanded or on migration route */}
-                  {(isExpanded || isMigrateRoute) &&
+                  {isExpanded &&
                     otherChains.map(wallet => {
                       const isConnected = xAccounts[wallet.xChainType]?.address;
                       return (
@@ -228,8 +217,6 @@ export const WalletModal = ({
                         </React.Fragment>
                       );
                     })}
-
-                  {isMigrateRoute && <Separator className="h-1 bg-clay opacity-30" />}
                 </>
               ) : (
                 <div className="w-full">

@@ -1,4 +1,5 @@
 import type { Token, XToken } from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { type Address, parseUnits } from 'viem';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState, useRef, useEffect } from 'react';
@@ -40,6 +41,7 @@ export function useMigrationApprove(
   spokeProvider: SpokeProvider | undefined,
   migrationMode: 'icxsoda' | 'bnusd' = 'icxsoda',
   toToken?: XToken,
+  sonicAddress?: string,
 ): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +105,10 @@ export function useMigrationApprove(
           srcbnUSD: token.address,
           dstbnUSD: toToken.address,
           amount: amountToMigrate,
-          to: iconAddress as `hx${string}`,
+          to:
+            toToken.xChainId === ICON_MAINNET_CHAIN_ID
+              ? (iconAddress as `hx${string}`)
+              : (sonicAddress as `0x${string}`),
         } satisfies UnifiedBnUSDMigrateParams;
 
         result = await sodax.migration.approve(params, 'revert', spokeProvider, false);
@@ -124,7 +129,7 @@ export function useMigrationApprove(
     } finally {
       setIsLoading(false);
     }
-  }, [spokeProvider, token, amount, iconAddress, sodax, refetchAllowance, migrationMode, toToken]);
+  }, [spokeProvider, token, amount, iconAddress, sodax, refetchAllowance, migrationMode, toToken, sonicAddress]);
 
   const resetError = useCallback(() => {
     setError(null);

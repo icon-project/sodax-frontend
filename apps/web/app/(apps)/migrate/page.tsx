@@ -6,7 +6,9 @@ import { useWalletUI } from '../_context/wallet-ui';
 
 import { useXAccount, useXBalances } from '@sodax/wallet-sdk';
 import { SONIC_MAINNET_CHAIN_ID } from '@sodax/sdk';
-import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID, INJECTIVE_MAINNET_CHAIN_ID, type SpokeChainId, type XToken } from '@sodax/types';
+import { getChainName } from '@/constants/chains';
+import { chainIdToChainName } from '@/providers/constants';
 
 import { SuccessDialog, ErrorDialog } from './_components';
 import { SwitchDirectionIcon } from '@/components/icons';
@@ -27,10 +29,10 @@ export default function MigratePage() {
   const { address: sonicAddress } = useXAccount('EVM');
 
   const { error } = useMigrationInfo();
-  const direction = useMigrationStore(state => state.direction);
-  const typedValue = useMigrationStore(state => state.typedValue);
-  const currencies = useMigrationStore(state => state.currencies);
   const migrationMode = useMigrationStore(state => state.migrationMode);
+  const direction = useMigrationStore(state => state[migrationMode].direction);
+  const typedValue = useMigrationStore(state => state[migrationMode].typedValue);
+  const currencies = useMigrationStore(state => state[migrationMode].currencies);
   const switchDirection = useMigrationStore(state => state.switchDirection);
   const setTypedValue = useMigrationStore(state => state.setTypedValue);
   const setMigrationMode = useMigrationStore(state => state.setMigrationMode);
@@ -54,27 +56,74 @@ export default function MigratePage() {
   });
   const sodaBalance = BigInt(sodaBalances?.[sodaToken.address] || 0);
 
-  const { data: iconBnusdBalances } = useXBalances({
-    xChainId: ICON_MAINNET_CHAIN_ID,
-    xTokens: [iconBnusdToken],
-    address: iconAddress,
-  });
-  const iconBnusdBalance = iconBnusdBalances?.[iconBnusdToken.address] || 0n;
+  // Get addresses for all chain types
+  const { address: stellarAddress } = useXAccount('STELLAR');
+  const { address: suiAddress } = useXAccount('SUI');
+  const { address: solanaAddress } = useXAccount('SOLANA');
+  const { address: injectiveAddress } = useXAccount('INJECTIVE');
 
-  const { data: sonicBnusdBalances } = useXBalances({
-    xChainId: SONIC_MAINNET_CHAIN_ID,
-    xTokens: [sonicBnusdToken],
-    address: sonicAddress,
+  // Helper function to get the correct address for a chain
+  const getAddressForChain = (chainId: SpokeChainId): string | undefined => {
+    if (chainId === ICON_MAINNET_CHAIN_ID) return iconAddress;
+    if (chainId === SONIC_MAINNET_CHAIN_ID) return sonicAddress;
+    if (chainId === 'stellar') return stellarAddress;
+    if (chainId === 'sui') return suiAddress;
+    if (chainId === 'solana') return solanaAddress;
+    if (chainId === INJECTIVE_MAINNET_CHAIN_ID) return injectiveAddress;
+
+    // All EVM chains use the same address
+    return sonicAddress;
+  };
+
+  // Dynamic balance fetching for the currently selected chains
+  const { data: fromChainBalances } = useXBalances({
+    xChainId: direction.from,
+    xTokens: [currencies.from],
+    address: getAddressForChain(direction.from),
   });
-  const sonicBnusdBalance = BigInt(sonicBnusdBalances?.[sonicBnusdToken.address] || 0);
+
+  const { data: toChainBalances } = useXBalances({
+    xChainId: direction.to,
+    xTokens: [currencies.to],
+    address: getAddressForChain(direction.to),
+  });
+
+  // Helper function to get balance for any chain
+  const getBalanceForChain = (chainId: SpokeChainId, token: XToken): bigint => {
+    if (migrationMode === 'icxsoda') {
+      return chainId === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance;
+    }
+
+    // For bnUSD, use the dynamic balance fetching
+    if (chainId === direction.from) {
+      console.log('fromChainBalances', fromChainBalances);
+      return fromChainBalances?.[token.address] || 0n;
+    }
+    if (chainId === direction.to) {
+      return toChainBalances?.[token.address] || 0n;
+    }
+
+    // For other chains not currently selected, return 0
+    return 0n;
+  };
+
+  // Helper function to get chain display name
+  const getChainDisplayName = (chainId: SpokeChainId): string => {
+    // Try to get the name from the UI constants first
+    const uiName = getChainName(chainId);
+    if (uiName) return uiName;
+
+    // Fallback to the provider's chain name
+    try {
+      return chainIdToChainName(chainId);
+    } catch {
+      // Final fallback to the chain ID itself
+      return chainId;
+    }
+  };
 
   const handleMaxClick = () => {
-    let value: bigint;
-    if (migrationMode === 'icxsoda') {
-      value = direction.from === ICON_MAINNET_CHAIN_ID ? icxBalance : sodaBalance;
-    } else {
-      value = direction.from === ICON_MAINNET_CHAIN_ID ? iconBnusdBalance : sonicBnusdBalance;
-    }
+    const value = getBalanceForChain(direction.from, currencies.from);
     setTypedValue(Number(formatUnits(value, currencies.from.decimals)).toFixed(2));
   };
 
@@ -93,7 +142,15 @@ export default function MigratePage() {
     approve,
     isLoading: isApproving,
     isApproved,
-  } = useMigrationApprove(currencies.from, typedValue, iconAddress, spokeProvider, migrationMode, currencies.to);
+  } = useMigrationApprove(
+    currencies.from,
+    typedValue,
+    iconAddress,
+    spokeProvider,
+    migrationMode,
+    currencies.to,
+    sonicAddress,
+  );
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
   const { mutateAsync: migrate, isPending } = useMigrate();
@@ -140,15 +197,7 @@ export default function MigratePage() {
             type={CurrencyInputPanelType.INPUT}
             chainId={direction.from}
             currency={currencies.from}
-            currencyBalance={
-              migrationMode === 'icxsoda'
-                ? direction.from === ICON_MAINNET_CHAIN_ID
-                  ? icxBalance
-                  : sodaBalance
-                : direction.from === ICON_MAINNET_CHAIN_ID
-                  ? iconBnusdBalance
-                  : sonicBnusdBalance
-            }
+            currencyBalance={getBalanceForChain(direction.from, currencies.from)}
             inputValue={typedValue}
             onInputChange={e => setTypedValue(e.target.value)}
             onMaxClick={handleMaxClick}
@@ -169,15 +218,7 @@ export default function MigratePage() {
           type={CurrencyInputPanelType.OUTPUT}
           chainId={direction.to}
           currency={currencies.to}
-          currencyBalance={
-            migrationMode === 'icxsoda'
-              ? direction.to === ICON_MAINNET_CHAIN_ID
-                ? icxBalance
-                : sodaBalance
-              : direction.to === ICON_MAINNET_CHAIN_ID
-                ? iconBnusdBalance
-                : sonicBnusdBalance
-          }
+          currencyBalance={getBalanceForChain(direction.to, currencies.to)}
           inputValue={typedValue}
           onChainSelect={(chainId, token) => setChainForCurrency('to', chainId, token)}
           // onInputChange={e => setTypedValue(e.target.value)}
@@ -193,7 +234,7 @@ export default function MigratePage() {
                 className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
                 onClick={handleSwitchChain}
               >
-                Switch to {direction.from === ICON_MAINNET_CHAIN_ID ? 'ICON' : 'Sonic'}
+                Switch to {getChainDisplayName(direction.from)}
               </Button>
             ) : (
               <>
@@ -262,7 +303,7 @@ export default function MigratePage() {
               : '~0.1 SODA'
             : direction.from === ICON_MAINNET_CHAIN_ID
               ? '~0.02 ICX'
-              : '~0.1 bnUSD'}
+              : `~0.1 ${currencies.from.symbol}`}
         </div>
 
         <div className="self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 p-(--layout-space-comfortable) lg:mt-4 mt-2">
@@ -271,19 +312,21 @@ export default function MigratePage() {
               <Image src="/symbol_dark.png" alt="" width={16} height={16} />
             </div>
             <div className="flex-1 justify-center text-espresso text-base font-['InterBold'] text-(size:--body-super-comfortable) leading-tight">
-              {direction.from === ICON_MAINNET_CHAIN_ID
-                ? `You're migrating ${migrationMode === 'icxsoda' ? 'to Sonic' : 'bnUSD to Sonic'}`
-                : `You're migrating ${migrationMode === 'icxsoda' ? 'back to ICON' : 'bnUSD back to ICON'}`}
+              {migrationMode === 'icxsoda'
+                ? direction.from === ICON_MAINNET_CHAIN_ID
+                  ? "You're migrating to Sonic"
+                  : "You're migrating back to ICON"
+                : `You're migrating bnUSD from ${getChainDisplayName(direction.from)} to ${getChainDisplayName(direction.to)}`}
             </div>
           </div>
           <div className="self-stretch justify-center text-clay text-xs font-medium font-['InterRegular'] text-(size:--body-comfortable) leading-tight">
-            {direction.from === ICON_MAINNET_CHAIN_ID
-              ? migrationMode === 'icxsoda'
+            {migrationMode === 'icxsoda'
+              ? direction.from === ICON_MAINNET_CHAIN_ID
                 ? "You won't need S token to receive your SODA. But you will for any future transactions on Sonic."
-                : "You won't need S token to receive your bnUSD. But you will for any future transactions on Sonic."
-              : migrationMode === 'icxsoda'
-                ? 'ICX will be sent to your connected ICON wallet.'
-                : 'bnUSD will be sent to your connected ICON wallet.'}
+                : 'ICX will be sent to your connected ICON wallet.'
+              : direction.to === ICON_MAINNET_CHAIN_ID
+                ? 'bnUSD will be sent to your connected ICON wallet.'
+                : `bnUSD will be sent to your connected ${getChainDisplayName(direction.to)} wallet.`}
           </div>
         </div>
       </div>

@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import CanLogo from './can-logo';
 import BnUSDChainSelector from './bnusd-chain-selector';
-import { isLegacybnUSDToken, isNewbnUSDToken } from '@sodax/sdk';
+import { isLegacybnUSDToken, isNewbnUSDToken, spokeChainConfig } from '@sodax/sdk';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
+import { getChainName } from '@/constants/chains';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -86,7 +87,11 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             {type === CurrencyInputPanelType.INPUT ? 'From' : 'To'}
           </div>
           <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) inline-flex gap-1 items-center">
-            {chainId === ICON_MAINNET_CHAIN_ID ? 'ICON' : 'Sonic'}
+            {isLegacybnUSDToken(currency) || isNewbnUSDToken(currency)
+              ? getChainName(chainId) || spokeChainConfig[chainId]?.chain?.name || 'Unknown'
+              : chainId === ICON_MAINNET_CHAIN_ID
+                ? 'ICON'
+                : 'Sonic'}
             <span className="hidden md:inline">Network</span>
             {(isLegacybnUSDToken(currency) || isNewbnUSDToken(currency)) && <ChevronDownIcon className="w-4 h-4" />}
           </div>

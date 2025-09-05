@@ -54,12 +54,37 @@ export const ChainItem: React.FC<ChainItemProps> = ({
   // Check if this is an EVM chain that should display multiple icons
   const isEVMWithMultipleIcons = name === 'EVM' && xChainType === 'EVM';
   const pathname = usePathname();
-  const isMigrateRoute = pathname.includes('migrate');
+  // const isMigrateRoute = pathname.includes('migrate');
 
   return (
     <div className="flex items-center w-full text-[#0d0229] py-4 pl-1">
       <div className="flex flex-col gap-2 w-full">
-        {isEVMWithMultipleIcons && !isMigrateRoute && (
+        {/* {isEVMWithMultipleIcons && !isMigrateRoute && (
+          <div className="inline-flex justify-start items-center gap-1">
+            <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
+              EVM multi-connect
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Info className="w-4 h-4 cursor-pointer" />
+              </PopoverTrigger>
+              <PopoverContent className="w-auto -mt-22 rounded-full border-none relative">
+                <div className="inline-flex justify-center items-center gap-2">
+                  <p className="text-(length:--body-comfortable) font-medium text-espresso">
+                    One address, many networks.
+                  </p>
+                  <PopoverClose asChild>
+                    <XIcon className="w-3 h-3 cursor-pointer text-espresso" />
+                  </PopoverClose>
+                </div>
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
+                  <EvmMultiConnectIcon />
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )} */}
+        {isEVMWithMultipleIcons && (
           <div className="inline-flex justify-start items-center gap-1">
             <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
               EVM multi-connect
@@ -87,7 +112,22 @@ export const ChainItem: React.FC<ChainItemProps> = ({
         <div className="inline-flex justify-start items-center gap-4">
           {isEVMWithMultipleIcons ? (
             <div className="self-stretch inline-flex justify-start items-center flex-wrap content-center relative">
-              {!isMigrateRoute &&
+              {EVM_CHAIN_ICONS.map((evmIcon, index) => (
+                <div
+                  key={index}
+                  className="rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
+                >
+                  <Image
+                    key={index}
+                    src={evmIcon}
+                    alt={`EVM Chain ${index + 1}`}
+                    width={24}
+                    height={24}
+                    className="rounded-sm shadow-[0px_6px_12px_0px_rgba(185,172,171,0.10)]"
+                  />
+                </div>
+              ))}
+              {/* {!isMigrateRoute &&
                 EVM_CHAIN_ICONS.map((evmIcon, index) => (
                   <div
                     key={index}
@@ -103,7 +143,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
                     />
                   </div>
                 ))}
-              {isMigrateRoute && (
+              {/* {isMigrateRoute && (
                 <div className="rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden">
                   <Image
                     src={'/chain/sonic.png'}
@@ -113,7 +153,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
                     className="rounded-sm shadow-[0px_6px_12px_0px_rgba(185,172,171,0.10)]"
                   />
                 </div>
-              )}
+              )} */}
               {address && (
                 <div className="absolute -bottom-1 -right-1">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -147,13 +187,14 @@ export const ChainItem: React.FC<ChainItemProps> = ({
           {!address && (
             <div className="flex justify-start items-center gap-1">
               <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
-                {isConnecting
+                {/* {isConnecting
                   ? 'Waiting for wallet'
                   : address
                     ? ''
                     : isMigrateRoute && xChainType === 'EVM'
                       ? 'Sonic'
-                      : name}
+                      : name} */}
+                {isConnecting ? 'Waiting for wallet' : address ? '' : name}
               </div>
             </div>
           )}

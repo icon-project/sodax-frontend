@@ -1,5 +1,12 @@
 import { parseUnits } from 'viem';
-import { isLegacybnUSDToken, isNewbnUSDToken, spokeChainConfig, UnifiedBnUSDMigrateParams, type IconSpokeProvider, type SonicSpokeProvider } from '@sodax/sdk';
+import {
+  isLegacybnUSDToken,
+  isNewbnUSDToken,
+  spokeChainConfig,
+  type UnifiedBnUSDMigrateParams,
+  type IconSpokeProvider,
+  type SonicSpokeProvider,
+} from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
 import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
@@ -14,7 +21,10 @@ export interface MigrationResult {
 export function useMigrate() {
   const { address: iconAddress } = useXAccount('ICON');
   const { address: sonicAddress } = useXAccount('EVM');
-  const { typedValue, direction, currencies, migrationMode } = useMigrationStore(state => state);
+  const migrationMode = useMigrationStore(state => state.migrationMode);
+  const typedValue = useMigrationStore(state => state[migrationMode].typedValue);
+  const direction = useMigrationStore(state => state[migrationMode].direction);
+  const currencies = useMigrationStore(state => state[migrationMode].currencies);
 
   const { sodax } = useSodaxContext();
 
@@ -68,18 +78,22 @@ export function useMigrate() {
         throw new Error('SODA to ICX migration failed. Please try again.');
       }
 
-      // bnUSD migration logic
-      if (direction.from === ICON_MAINNET_CHAIN_ID) {
+      // bnUSD migration logic - handle dynamic source/destination chains
+      const isFromIcon = direction.from === ICON_MAINNET_CHAIN_ID;
+      const isToIcon = direction.to === ICON_MAINNET_CHAIN_ID;
+
+      if (isFromIcon) {
+        // ICON to any other chain bnUSD migration
         if (!iconSpokeProvider) {
           throw new Error('ICON provider unavailable. Reconnect your ICON wallet.');
         }
         const params = {
-          srcChainId: ICON_MAINNET_CHAIN_ID,
-          dstChainId: SONIC_MAINNET_CHAIN_ID,
+          srcChainId: direction.from,
+          dstChainId: direction.to,
           srcbnUSD: currencies.from.address,
           dstbnUSD: currencies.to.address,
           amount: amountToMigrate,
-          to: sonicAddress as `0x${string}`,
+          to: isToIcon ? (iconAddress as `hx${string}`) : (sonicAddress as `0x${string}`),
         };
         const result = await sodax.migration.migratebnUSD(params, iconSpokeProvider, 30000);
         console.log('bnUSD migration result', result);
@@ -90,35 +104,27 @@ export function useMigrate() {
         throw new Error('bnUSD migration failed. Please try again.');
       }
 
-      // Sonic to ICON bnUSD migration
+      // Non-ICON to ICON or other chain bnUSD migration
       if (!sonicSpokeProvider) {
-        throw new Error('Sonic provider unavailable. Reconnect your Sonic wallet.');
+        throw new Error('Spoke provider unavailable. Reconnect your wallet.');
       }
       const params = {
-        srcChainId: SONIC_MAINNET_CHAIN_ID,
-        dstChainId: ICON_MAINNET_CHAIN_ID,
+        srcChainId: direction.from,
+        dstChainId: direction.to,
         srcbnUSD: currencies.from.address,
         dstbnUSD: currencies.to.address,
         amount: amountToMigrate,
-        to: iconAddress as `hx${string}`,
+        to: isToIcon ? (iconAddress as `hx${string}`) : (sonicAddress as `0x${string}`),
       } satisfies UnifiedBnUSDMigrateParams;
-      const isAllowed = await sodax.migration.isAllowanceValid(
-        params,
-        'revert',
-        sonicSpokeProvider
-      );
-      console.log("Is allowed", isAllowed);
-      
+      const isAllowed = await sodax.migration.isAllowanceValid(params, 'revert', sonicSpokeProvider);
+      console.log('Is allowed', isAllowed);
+
       if (!isAllowed.ok) {
         console.error('Failed to check allowance:', isAllowed.error);
       } else if (!isAllowed.value) {
         // Approve if needed
-        const approveResult = await sodax.migration.approve(
-          params,
-          'revert',
-          sonicSpokeProvider
-        );
-        
+        const approveResult = await sodax.migration.approve(params, 'revert', sonicSpokeProvider);
+
         if (approveResult.ok) {
           console.log('Approval transaction hash:', approveResult.value);
           // Wait for approval transaction to be mined

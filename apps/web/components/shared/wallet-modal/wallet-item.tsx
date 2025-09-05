@@ -33,8 +33,6 @@ export const WalletItem: React.FC<WalletItemProps> = ({
   onWalletSelect,
 }) => {
   const isEVMWithMultipleIcons = chainName === 'EVM';
-  const pathname = usePathname();
-  const isMigrateRoute = pathname.includes('migrate');
   return (
     <React.Fragment>
       <div className="inline-flex justify-between items-center transition-opacity duration-200 hover:opacity-100 opacity-60 cursor-pointer py-4 pl-1">
@@ -47,7 +45,7 @@ export const WalletItem: React.FC<WalletItemProps> = ({
                   <div className="w-6 h-6 left-0 top-0 absolute bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_rgba(237,_230,_230,_0.40)_0%,_rgba(237.22,_230.40,_230.40,_0.60)_100%)]" />
                 </div>
               )}
-              {isEVMWithMultipleIcons && !isMigrateRoute && (
+              {isEVMWithMultipleIcons && (
                 <div className="flex justify-start items-center flex-wrap content-center">
                   {EVM_CHAIN_ICONS.map((icon, index) => (
                     <div
@@ -58,14 +56,6 @@ export const WalletItem: React.FC<WalletItemProps> = ({
                       <div className="w-6 h-6 left-0 top-0 absolute bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_rgba(237,_230,_230,_0.40)_0%,_rgba(237.22,_230.40,_230.40,_0.60)_100%)]" />
                     </div>
                   ))}
-                </div>
-              )}
-              {isEVMWithMultipleIcons && isMigrateRoute && (
-                <div className="flex justify-start items-center flex-wrap content-center">
-                  <div className="rounded-[6px] shadow-[4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden relative">
-                    <Image src={'/chain/sonic.png'} alt={'Sonic'} width={24} height={24} className="rounded-[6px]" />
-                    <div className="w-6 h-6 left-0 top-0 absolute bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_rgba(237,_230,_230,_0.40)_0%,_rgba(237.22,_230.40,_230.40,_0.60)_100%)]" />
-                  </div>
                 </div>
               )}
             </div>
