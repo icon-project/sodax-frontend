@@ -2,23 +2,35 @@
 import invariant from 'tiny-invariant';
 import { erc20Abi, type Address } from 'viem';
 import { StakingLogic } from './StakingLogic.js';
+import { stakedSodaAbi } from '../../abis/stakedSoda.abi.js';
 import type {
-  UnstakeSodaRequest,
+  UserUnstakeInfo,
   EvmContractCall,
   TxReturnType,
   GetSpokeDepositParamsType,
   HttpUrl,
   Prettify,
+  GetAddressType,
+  HubAssetInfo,
 } from '../../types.js';
 import {
+  getHubAssetInfo,
   encodeContractCalls,
   Erc20Service,
+  EvmVaultTokenService,
   relayTxAndWaitPacket,
   SolanaSpokeProvider,
   SpokeService,
   WalletAbstractionService,
+  SonicSpokeService,
+  SonicSpokeProvider,
+  EvmSpokeProvider,
   type EvmHubProvider,
   type SpokeProvider,
+  type XToken,
+  encodeAddress,
+  type SpokeChainId,
+  EvmAssetManagerService,
 } from '../../index.js';
 import type { Hex } from 'viem';
 import { DEFAULT_RELAY_TX_TIMEOUT, getHubChainConfig } from '../../constants.js';
@@ -27,7 +39,6 @@ import type { Result } from '../../types.js';
 export type StakeParams = {
   amount: bigint;
   account: Address;
-  srcAsset: Address; // SODA token address
 };
 
 export type UnstakeParams = {
@@ -37,30 +48,41 @@ export type UnstakeParams = {
 
 export type ClaimParams = {
   requestId: bigint;
-};
-
-export type WithdrawParams = {
-  amount: bigint;
-  account: Address;
+  amount: bigint; // claimable amount after penalty calculation
 };
 
 export type StakingInfo = {
-  totalStaked: bigint;
-  userStaked: bigint;
-  userXSodaBalance: bigint;
+  totalStaked: bigint; // Total SODA staked (totalAssets from xSODA vault)
+  totalUnderlying: bigint; // Total underlying SODA assets in the vault
+  userXSodaBalance: bigint; // User's xSODA shares (raw balance)
+  userXSodaValue: bigint; // User's xSODA value in SODA (converted)
+  userUnderlying: bigint; // User's underlying SODA amount
 };
 
 export type UnstakingInfo = {
-  userUnstakeSodaRequests: readonly UnstakeSodaRequest[];
+  userUnstakeSodaRequests: readonly UserUnstakeInfo[];
   totalUnstaking: bigint;
+};
+
+export type UnstakeRequestWithPenalty = UserUnstakeInfo & {
+  penalty: bigint;
+  penaltyPercentage: number;
+  claimableAmount: bigint;
+};
+
+export type StakingConfig = {
+  unstakingPeriod: bigint; // in seconds
+  minUnstakingPeriod: bigint; // in seconds
+  maxPenalty: bigint; // percentage (1-100)
 };
 
 export type StakingErrorCode =
   | 'STAKE_FAILED'
   | 'UNSTAKE_FAILED'
   | 'CLAIM_FAILED'
-  | 'WITHDRAW_FAILED'
-  | 'INFO_FETCH_FAILED';
+  | 'INFO_FETCH_FAILED'
+  | 'ALLOWANCE_CHECK_FAILED'
+  | 'APPROVAL_FAILED';
 
 export type StakingError<T extends StakingErrorCode> = {
   code: T;
@@ -81,7 +103,175 @@ export class StakingService {
   }
 
   /**
+   * Check if allowance is valid for the stake transaction
+   * @param params - The staking parameters
+   * @param spokeProvider - The spoke provider
+   * @returns {Promise<Result<boolean, StakingError<'ALLOWANCE_CHECK_FAILED'>>>}
+   */
+  public async isAllowanceValid<S extends SpokeProvider>({
+    params,
+    spokeProvider,
+  }: Prettify<{ params: StakeParams; spokeProvider: S }>): Promise<
+    Result<boolean, StakingError<'ALLOWANCE_CHECK_FAILED'>>
+  > {
+    try {
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const sodaToken = spokeProvider.chainConfig.supportedTokens.SODA as XToken;
+      invariant(sodaToken, 'SODA token not found');
+
+      // For regular EVM chains (non-Sonic), check ERC20 allowance against assetManager
+      if (spokeProvider instanceof EvmSpokeProvider) {
+        const allowanceResult = await Erc20Service.isAllowanceValid(
+          sodaToken.address as `0x${string}`,
+          params.amount,
+          walletAddress as GetAddressType<EvmSpokeProvider>,
+          spokeProvider.chainConfig.addresses.assetManager,
+          spokeProvider,
+        );
+
+        if (!allowanceResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: 'ALLOWANCE_CHECK_FAILED',
+              error: allowanceResult.error,
+            },
+          };
+        }
+
+        return {
+          ok: true,
+          value: allowanceResult.value,
+        };
+      }
+
+      // For Sonic chain, check ERC20 allowance against userRouter
+      if (spokeProvider instanceof SonicSpokeProvider) {
+        const userRouter = await SonicSpokeService.getUserRouter(walletAddress as `0x${string}`, spokeProvider);
+
+        const allowanceResult = await Erc20Service.isAllowanceValid(
+          sodaToken.address as `0x${string}`,
+          params.amount,
+          walletAddress as GetAddressType<SonicSpokeProvider>,
+          userRouter,
+          spokeProvider,
+        );
+
+        if (!allowanceResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: 'ALLOWANCE_CHECK_FAILED',
+              error: allowanceResult.error,
+            },
+          };
+        }
+
+        return {
+          ok: true,
+          value: allowanceResult.value,
+        };
+      }
+
+      // For non-EVM chains (Icon, Sui, Stellar, etc.), no allowance check needed
+      return {
+        ok: true,
+        value: true,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'ALLOWANCE_CHECK_FAILED',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Approve token spending for the stake transaction
+   * @param params - The staking parameters
+   * @param spokeProvider - The spoke provider
+   * @param raw - Whether to return raw transaction data
+   * @returns Promise<Result<TxReturnType<S, R>, StakingError<'APPROVAL_FAILED'>>>
+   */
+  public async approve<S extends SpokeProvider, R extends boolean = false>({
+    params,
+    spokeProvider,
+    raw,
+  }: Prettify<{ params: StakeParams; spokeProvider: S; raw?: R }>): Promise<
+    Result<TxReturnType<S, R>, StakingError<'APPROVAL_FAILED'>>
+  > {
+    try {
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const sodaToken = spokeProvider.chainConfig.supportedTokens.SODA as XToken;
+      invariant(sodaToken, 'SODA token not found');
+
+      // For regular EVM chains (non-Sonic), approve against assetManager
+      if (spokeProvider instanceof EvmSpokeProvider) {
+        const result = await Erc20Service.approve(
+          sodaToken.address as `0x${string}`,
+          params.amount,
+          spokeProvider.chainConfig.addresses.assetManager,
+          spokeProvider,
+          raw,
+        );
+
+        return {
+          ok: true,
+          value: result as TxReturnType<S, R>,
+        };
+      }
+
+      // For Sonic chain, approve against userRouter
+      if (spokeProvider instanceof SonicSpokeProvider) {
+        const userRouter = await SonicSpokeService.getUserRouter(
+          walletAddress as GetAddressType<SonicSpokeProvider>,
+          spokeProvider,
+        );
+
+        const result = await Erc20Service.approve(
+          sodaToken.address as `0x${string}`,
+          params.amount,
+          userRouter,
+          spokeProvider,
+          raw,
+        );
+
+        return {
+          ok: true,
+          value: result as TxReturnType<S, R>,
+        };
+      }
+
+      // For non-EVM chains, approval is not needed
+      return {
+        ok: false,
+        error: {
+          code: 'APPROVAL_FAILED',
+          error: new Error('Approval only supported for EVM spoke chains'),
+        },
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        ok: false,
+        error: {
+          code: 'APPROVAL_FAILED',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
    * Execute stake transaction for staking SODA tokens to receive xSoda shares
+   * NOTE: For EVM chains, you may need to approve token spending first using the approve method
    * @param params - The staking parameters
    * @param spokeProvider - The spoke provider
    * @param timeout - The timeout in milliseconds for the transaction
@@ -145,7 +335,7 @@ export class StakingService {
    * 3. Create the stake intent using this method
    * 4. Relay the transaction to the hub and await completion using the stake method
    *
-   * @param params - The stake parameters including amount, account, and source asset
+   * @param params - The stake parameters including amount and account
    * @param spokeProvider - The spoke provider for the source chain
    * @param raw - Whether to return the raw transaction data
    * @returns {Promise<Result<TxReturnType<S, R>, StakingError<'STAKE_FAILED'>>>} - Returns the transaction result
@@ -159,19 +349,24 @@ export class StakingService {
   > {
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const sodaToken = spokeProvider.chainConfig.supportedTokens.SODA as XToken;
+      invariant(sodaToken, 'SODA token not found');
+      const sodaAsset = getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
+      invariant(sodaAsset, 'SODA asset not found');
+
       const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
         walletAddress,
         spokeProvider,
         this.hubProvider,
       );
 
-      const data: Hex = this.buildStakeData(params);
+      const data: Hex = this.buildStakeData(sodaAsset, hubWallet, params);
 
       const txResult = await SpokeService.deposit(
         {
           from: walletAddress,
           to: hubWallet,
-          token: params.srcAsset,
+          token: sodaToken.address,
           amount: params.amount,
           data,
         } as unknown as GetSpokeDepositParamsType<S>,
@@ -200,16 +395,20 @@ export class StakingService {
     }
   }
 
-  public buildStakeData(params: StakeParams): Hex {
+  public buildStakeData(sodaAsset: HubAssetInfo, hubWallet: Address, params: StakeParams): Hex {
     const hubConfig = getHubChainConfig(this.hubProvider.chainConfig.chain.id);
-    const sodaToken = hubConfig.addresses.sodaToken;
+    const sodaVault = sodaAsset.vault;
     const stakedSoda = hubConfig.addresses.stakedSoda;
     const xSoda = hubConfig.addresses.xSoda;
+
     const calls: EvmContractCall[] = [];
-    calls.push(Erc20Service.encodeApprove(sodaToken, stakedSoda, params.amount));
-    calls.push(StakingLogic.encodeDepositFor(stakedSoda, params.account, params.amount));
-    calls.push(Erc20Service.encodeApprove(stakedSoda, xSoda, params.amount));
-    calls.push(StakingLogic.encodeXSodaDeposit(xSoda, params.amount, params.account));
+    calls.push(Erc20Service.encodeApprove(sodaAsset.asset, sodaVault, params.amount));
+    calls.push(EvmVaultTokenService.encodeDeposit(sodaVault, sodaAsset.asset, params.amount));
+    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(sodaAsset.decimal, params.amount);
+    calls.push(Erc20Service.encodeApprove(sodaVault, stakedSoda, translatedAmount));
+    calls.push(StakingLogic.encodeDepositFor(stakedSoda, hubWallet, translatedAmount));
+    calls.push(Erc20Service.encodeApprove(stakedSoda, xSoda, translatedAmount));
+    calls.push(StakingLogic.encodeXSodaDeposit(xSoda, translatedAmount, hubWallet));
     return encodeContractCalls(calls);
   }
 
@@ -299,7 +498,7 @@ export class StakingService {
         this.hubProvider,
       );
 
-      const data: Hex = this.buildUnstakeData(params);
+      const data: Hex = this.buildUnstakeData(hubWallet, params);
 
       const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
@@ -323,13 +522,13 @@ export class StakingService {
     }
   }
 
-  public buildUnstakeData(params: UnstakeParams): Hex {
+  public buildUnstakeData(hubWallet: Address, params: UnstakeParams): Hex {
     const hubConfig = getHubChainConfig(this.hubProvider.chainConfig.chain.id);
     const stakedSoda = hubConfig.addresses.stakedSoda;
     const xSoda = hubConfig.addresses.xSoda;
     const calls: EvmContractCall[] = [];
-    calls.push(Erc20Service.encodeApprove(xSoda, stakedSoda, params.amount));
-    calls.push(StakingLogic.encodeUnstake(stakedSoda, params.account, params.amount));
+    calls.push(StakingLogic.encodeXSodaRedeem(xSoda, params.amount, hubWallet, hubWallet));
+    calls.push(StakingLogic.encodeUnstake(stakedSoda, hubWallet, params.amount));
     return encodeContractCalls(calls);
   }
 
@@ -417,7 +616,17 @@ export class StakingService {
         this.hubProvider,
       );
 
-      const data: Hex = this.buildClaimData(params);
+      const sodaToken = spokeProvider.chainConfig.supportedTokens.SODA as XToken;
+      invariant(sodaToken, 'SODA token not found');
+      const sodaAsset = getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
+      invariant(sodaAsset, 'SODA asset not found');
+
+      const data: Hex = this.buildClaimData(
+        sodaAsset,
+        spokeProvider.chainConfig.chain.id,
+        encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress),
+        params,
+      );
 
       const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
@@ -441,132 +650,61 @@ export class StakingService {
     }
   }
 
-  public buildClaimData(params: ClaimParams): Hex {
+  public buildClaimData(sodaAsset: HubAssetInfo, dstChainId: SpokeChainId, dstWallet: Hex, params: ClaimParams): Hex {
     const hubConfig = getHubChainConfig(this.hubProvider.chainConfig.chain.id);
     const stakedSoda = hubConfig.addresses.stakedSoda;
+    const sodaVault = sodaAsset.vault;
     const calls: EvmContractCall[] = [];
     calls.push(StakingLogic.encodeClaim(stakedSoda, params.requestId));
+    // Transfer the claimable amount to the destination wallet
+    calls.push(EvmVaultTokenService.encodeWithdraw(sodaVault, sodaAsset.asset, params.amount));
+    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(sodaAsset.decimal, params.amount);
+
+    if (dstChainId === this.hubProvider.chainConfig.chain.id) {
+      calls.push(Erc20Service.encodeTransfer(sodaAsset.asset, dstWallet, translatedAmountOut));
+    } else {
+      calls.push(
+        EvmAssetManagerService.encodeTransfer(
+          sodaAsset.asset,
+          dstWallet,
+          translatedAmountOut,
+          this.hubProvider.chainConfig.addresses.assetManager,
+        ),
+      );
+    }
+
     return encodeContractCalls(calls);
   }
 
   /**
-   * Execute withdraw transaction for withdrawing xSoda shares to SODA tokens
-   * @param params - The withdraw parameters
+   * Get comprehensive staking information for a user using spoke provider
    * @param spokeProvider - The spoke provider
-   * @param timeout - The timeout in milliseconds for the transaction
-   * @returns Promise<Result<[SpokeTxHash, HubTxHash], StakingError<'WITHDRAW_FAILED'>>>
+   * @returns Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>>
    */
-  public async withdraw(
-    params: WithdrawParams,
+  public async getStakingInfoFromSpoke(
     spokeProvider: SpokeProvider,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[string, string], StakingError<'WITHDRAW_FAILED'>>> {
-    try {
-      const txResult = await this.createWithdrawIntent({ params, spokeProvider, raw: false });
-
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'WITHDRAW_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
-
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider
-          ? (txResult.data as { address: `0x${string}`; payload: `0x${string}` })
-          : undefined,
-        spokeProvider,
-        this.relayerApiEndpoint,
-        timeout,
-      );
-
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'WITHDRAW_FAILED',
-            error: packetResult.error,
-          },
-        };
-      }
-
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'WITHDRAW_FAILED',
-          error: error,
-        },
-      };
-    }
-  }
-
-  /**
-   * Create withdraw intent only (without relaying to hub)
-   * NOTE: This method only executes the transaction on the spoke chain and creates the withdraw intent
-   * In order to successfully withdraw tokens, you need to:
-   * 1. Check if the allowance is sufficient using isAllowanceValid
-   * 2. Approve the appropriate contract to spend the tokens using approve
-   * 3. Create the withdraw intent using this method
-   * 4. Relay the transaction to the hub and await completion using the withdraw method
-   *
-   * @param params - The withdraw parameters including amount and account
-   * @param spokeProvider - The spoke provider for the source chain
-   * @param raw - Whether to return the raw transaction data
-   * @returns {Promise<Result<TxReturnType<S, R>, StakingError<'WITHDRAW_FAILED'>>>} - Returns the transaction result
-   */
-  async createWithdrawIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
-    params,
-    spokeProvider,
-    raw,
-  }: Prettify<{ params: WithdrawParams; spokeProvider: S; raw?: R }>): Promise<
-    Result<TxReturnType<S, R>, StakingError<'WITHDRAW_FAILED'>> & { data?: { address: string; payload: Hex } }
-  > {
+  ): Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      if (spokeProvider instanceof SonicSpokeProvider) {
+        return this.getStakingInfo(walletAddress as `0x${string}`);
+      }
       const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
-        walletAddress,
+        walletAddress as `0x${string}`,
         spokeProvider,
         this.hubProvider,
       );
 
-      const data: Hex = this.buildWithdrawData(params);
-
-      const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
-
-      return {
-        ok: true,
-        value: txResult as TxReturnType<S, R>,
-        data: {
-          address: hubWallet as `0x${string}`,
-          payload: data,
-        },
-      };
+      return this.getStakingInfo(hubWallet);
     } catch (error) {
-      console.error(error);
       return {
         ok: false,
         error: {
-          code: 'WITHDRAW_FAILED',
+          code: 'INFO_FETCH_FAILED',
           error: error,
         },
       };
     }
-  }
-
-  public buildWithdrawData(params: WithdrawParams): Hex {
-    const hubConfig = getHubChainConfig(this.hubProvider.chainConfig.chain.id);
-    const stakedSoda = hubConfig.addresses.stakedSoda;
-    const xSoda = hubConfig.addresses.xSoda;
-    const calls: EvmContractCall[] = [];
-    calls.push(Erc20Service.encodeApprove(xSoda, stakedSoda, params.amount));
-    calls.push(StakingLogic.encodeWithdrawTo(stakedSoda, params.account, params.amount));
-    return encodeContractCalls(calls);
   }
 
   /**
@@ -581,27 +719,60 @@ export class StakingService {
       const hubConfig = getHubChainConfig(this.hubProvider.chainConfig.chain.id);
       const xSoda = hubConfig.addresses.xSoda;
 
-      // Get total assets in xSoda vault
-      const totalStaked = await StakingLogic.getXSodaTotalAssets(xSoda, this.hubProvider.publicClient);
+      // Get total assets in xSoda vault (total underlying SODA)
+      const totalUnderlying = await StakingLogic.getXSodaTotalAssets(xSoda, this.hubProvider.publicClient);
 
-      // Get user's xSoda balance
-      const userXSodaBalance = await StakingLogic.convertXSodaSharesToSoda(
+      // Get user's raw xSODA shares
+      const userXSodaShares = await this.getXSodaBalance(xSoda, userAddress);
+
+      // Convert user's xSODA shares to SODA value
+      const userXSodaValue = await StakingLogic.convertXSodaSharesToSoda(
         xSoda,
-        await this.getXSodaBalance(xSoda, userAddress),
+        userXSodaShares,
         this.hubProvider.publicClient,
       );
-
-      // Get user's staked amount (this would need to be calculated based on xSoda balance)
-      const userStaked = userXSodaBalance;
 
       return {
         ok: true,
         value: {
-          totalStaked,
-          userStaked,
-          userXSodaBalance,
+          totalStaked: totalUnderlying, // Total SODA staked (same as total underlying)
+          totalUnderlying, // Total underlying SODA assets
+          userXSodaBalance: userXSodaShares, // User's raw xSODA shares
+          userXSodaValue, // User's xSODA value in SODA
+          userUnderlying: userXSodaValue, // User's underlying SODA amount
         },
       };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'INFO_FETCH_FAILED',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Get unstaking information for a user using spoke provider
+   * @param spokeProvider - The spoke provider
+   * @returns Promise<Result<UnstakingInfo, StakingError<'INFO_FETCH_FAILED'>>>
+   */
+  public async getUnstakingInfoFromSpoke(
+    spokeProvider: SpokeProvider,
+  ): Promise<Result<UnstakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
+    try {
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      if (spokeProvider instanceof SonicSpokeProvider) {
+        return this.getUnstakingInfo(walletAddress as `0x${string}`);
+      }
+      const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
+        walletAddress as `0x${string}`,
+        spokeProvider,
+        this.hubProvider,
+      );
+
+      return this.getUnstakingInfo(hubWallet);
     } catch (error) {
       return {
         ok: false,
@@ -635,13 +806,151 @@ export class StakingService {
       );
 
       // Calculate total unstaking amount
-      const totalUnstaking = userUnstakeSodaRequests.reduce((total, request) => total + request.amount, 0n);
+      const totalUnstaking = userUnstakeSodaRequests.reduce((total, userInfo) => total + userInfo.request.amount, 0n);
 
       return {
         ok: true,
         value: {
           userUnstakeSodaRequests,
           totalUnstaking,
+        },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'INFO_FETCH_FAILED',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Get staking configuration from the stakedSoda contract
+   * @returns Promise<Result<StakingConfig, StakingError<'INFO_FETCH_FAILED'>>>
+   */
+  public async getStakingConfig(): Promise<Result<StakingConfig, StakingError<'INFO_FETCH_FAILED'>>> {
+    try {
+      const hubConfig = getHubChainConfig(this.hubProvider.chainConfig.chain.id);
+      const stakedSoda = hubConfig.addresses.stakedSoda;
+
+      // Read all configuration values in a single contract call
+      const [unstakingPeriod, minUnstakingPeriod, maxPenalty] = await this.hubProvider.publicClient.readContract({
+        address: stakedSoda,
+        abi: stakedSodaAbi,
+        functionName: 'getParameters',
+      });
+
+      return {
+        ok: true,
+        value: {
+          unstakingPeriod: unstakingPeriod as bigint,
+          minUnstakingPeriod: minUnstakingPeriod as bigint,
+          maxPenalty: maxPenalty as bigint,
+        },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'INFO_FETCH_FAILED',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Calculate penalty for an unstake request based on the contract logic
+   * @param startTime - The start time of the unstake request
+   * @param config - The staking configuration
+   * @returns The penalty amount and percentage
+   */
+  private calculatePenalty(startTime: bigint, config: StakingConfig): { penalty: bigint; penaltyPercentage: number } {
+    const currentTime = BigInt(Math.floor(Date.now() / 1000));
+    const timeElapsed = currentTime - startTime;
+
+    // Check if unstaking period is less than minimum
+    if (timeElapsed < config.minUnstakingPeriod) {
+      // Return max penalty if still in minimum period
+      return {
+        penalty: (config.maxPenalty * 100n) / 100n, // Convert percentage to basis points
+        penaltyPercentage: Number(config.maxPenalty),
+      };
+    }
+
+    // If time elapsed is greater than or equal to unstaking period, no penalty
+    if (timeElapsed >= config.unstakingPeriod) {
+      return {
+        penalty: 0n,
+        penaltyPercentage: 0,
+      };
+    }
+
+    // Calculate penalty based on time in reduction period
+    const timeInReductionPeriod = timeElapsed - config.minUnstakingPeriod;
+    const totalReductionPeriod = config.unstakingPeriod - config.minUnstakingPeriod;
+
+    // Calculate penalty: (maxPenalty * (totalReductionPeriod - timeInReductionPeriod)) / totalReductionPeriod
+    const penalty = (config.maxPenalty * (totalReductionPeriod - timeInReductionPeriod)) / totalReductionPeriod;
+
+    return {
+      penalty: (penalty * 100n) / 100n, // Convert percentage to basis points
+      penaltyPercentage: Number(penalty),
+    };
+  }
+
+  /**
+   * Get unstaking information with penalty calculations
+   * @param userAddress - The user's address
+   * @returns Promise<Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }, StakingError<'INFO_FETCH_FAILED'>>>
+   */
+  public async getUnstakingInfoWithPenalty(
+    userAddress: Address,
+  ): Promise<
+    Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }, StakingError<'INFO_FETCH_FAILED'>>
+  > {
+    try {
+      // Get basic unstaking info
+      const unstakingResult = await this.getUnstakingInfo(userAddress);
+      if (!unstakingResult.ok) {
+        return unstakingResult;
+      }
+
+      // Get staking config for penalty calculations
+      const configResult = await this.getStakingConfig();
+      if (!configResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'INFO_FETCH_FAILED',
+            error: configResult.error,
+          },
+        };
+      }
+
+      const config = configResult.value;
+      const requestsWithPenalty: UnstakeRequestWithPenalty[] = unstakingResult.value.userUnstakeSodaRequests.map(
+        userInfo => {
+          const penaltyInfo = this.calculatePenalty(userInfo.request.startTime, config);
+          const penaltyAmount = (userInfo.request.amount * penaltyInfo.penalty) / 100n; // Convert from basis points
+          const claimableAmount = userInfo.request.amount - penaltyAmount;
+
+          return {
+            ...userInfo,
+            penalty: penaltyAmount,
+            penaltyPercentage: penaltyInfo.penaltyPercentage,
+            claimableAmount,
+          };
+        },
+      );
+
+      return {
+        ok: true,
+        value: {
+          ...unstakingResult.value,
+          requestsWithPenalty,
         },
       };
     } catch (error) {

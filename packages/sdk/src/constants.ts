@@ -305,6 +305,7 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
       balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',
       sodaToken: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963',
+      sodaVault: '0x21685E341DE7844135329914Be6Bd8D16982d834',
       stakedSoda: '0x4333B324102d00392038ca92537DfbB8CB0DAc68',
       xSoda: '0xADC6561Cc8FC31767B4917CCc97F510D411378d9',
     },

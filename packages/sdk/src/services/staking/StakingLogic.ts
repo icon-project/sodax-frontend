@@ -1,7 +1,7 @@
 // packages/sdk/src/services/staking/StakingLogic.ts
 import { type Address, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { stakedSodaAbi } from '../../abis/stakedSoda.abi.js';
-import type { EvmContractCall, UnstakeSodaRequest } from '../../types.js';
+import type { EvmContractCall, UserUnstakeInfo } from '../../types.js';
 
 export class StakingLogic {
   private constructor() {}
@@ -11,13 +11,13 @@ export class StakingLogic {
    * @param stakedSoda - The address of the StakedSoda contract.
    * @param user - The address of the user.
    * @param publicClient - PublicClient<HttpTransport>
-   * @returns Array of unstake requests for the user.
+   * @returns Array of user unstake info for the user.
    */
   public static async getUnstakeSodaRequests(
     stakedSoda: Address,
     user: Address,
     publicClient: PublicClient<HttpTransport>,
-  ): Promise<readonly UnstakeSodaRequest[]> {
+  ): Promise<readonly UserUnstakeInfo[]> {
     const requests = await publicClient.readContract({
       address: stakedSoda,
       abi: stakedSodaAbi,

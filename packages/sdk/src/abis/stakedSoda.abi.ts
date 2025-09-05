@@ -14,21 +14,33 @@ export const stakedSodaAbi = [
         components: [
           {
             internalType: 'uint256',
-            name: 'amount',
+            name: 'id',
             type: 'uint256',
           },
           {
-            internalType: 'uint256',
-            name: 'startTime',
-            type: 'uint256',
-          },
-          {
-            internalType: 'address',
-            name: 'to',
-            type: 'address',
+            components: [
+              {
+                internalType: 'uint256',
+                name: 'amount',
+                type: 'uint256',
+              },
+              {
+                internalType: 'uint256',
+                name: 'startTime',
+                type: 'uint256',
+              },
+              {
+                internalType: 'address',
+                name: 'to',
+                type: 'address',
+              },
+            ],
+            internalType: 'struct IStakedSoda.UnstakeRequest',
+            name: 'request',
+            type: 'tuple',
           },
         ],
-        internalType: 'struct IStakedSoda.UnstakeRequest[]',
+        internalType: 'struct IStakedSoda.UserUnstakeInfo[]',
         name: '',
         type: 'tuple[]',
       },
@@ -455,6 +467,69 @@ export const stakedSodaAbi = [
       },
     ],
     stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  // Configuration functions
+  {
+    inputs: [],
+    name: 'unstakingPeriod',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'minUnstakingPeriod',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'maxPenalty',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getParameters',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
     type: 'function',
   },
 ] as const;
