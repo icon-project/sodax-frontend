@@ -1,4 +1,4 @@
-import type { Address, Chain } from 'viem';
+import { defineChain, type Address, type Chain } from 'viem';
 import { arbitrum, avalanche, base, bsc, nibiru, optimism, polygon, sonic } from 'viem/chains';
 import type {
   InjectiveSpokeChainConfig,
@@ -40,6 +40,7 @@ import {
   ICON_MAINNET_CHAIN_ID,
   type HubChainId,
   SPOKE_CHAIN_IDS,
+  HYPEREVM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -75,6 +76,7 @@ export const INTENT_RELAY_CHAIN_IDS = {
   POLYGON: 5n,
   ARBITRUM: 23n,
   NIBIRU: 7235938n,
+  HYPER: 26745n,
 } as const;
 
 export const EVM_CHAIN_IDS = [
@@ -86,6 +88,7 @@ export const EVM_CHAIN_IDS = [
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
 ] as const;
 
 export const EVM_SPOKE_CHAIN_IDS = [
@@ -97,6 +100,7 @@ export const EVM_SPOKE_CHAIN_IDS = [
   POLYGON_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
 ] as const;
 
 export const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
@@ -113,9 +117,35 @@ export const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = 
   [STELLAR_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
   [ICON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
   [NIBIRU_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.NIBIRU,
+  [HYPEREVM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.HYPER,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
+
+export const hyper = /*#__PURE__*/ defineChain({
+  id: 999,
+  name: 'HyperEVM',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'HYPE',
+    symbol: 'HYPE',
+  },
+  rpcUrls: {
+    default: { http: ['https://rpc.hyperliquid.xyz/evm'] },
+  },
+  blockExplorers: {
+    default: {
+      name: 'HyperEVMScan',
+      url: 'https://hyperevmscan.io/',
+    },
+  },
+  contracts: {
+    multicall3: {
+      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
+      blockCreated: 13051,
+    },
+  },
+});
 
 export function getEvmViemChain(id: EvmChainId): Chain {
   switch (id) {
@@ -135,6 +165,8 @@ export function getEvmViemChain(id: EvmChainId): Chain {
       return polygon;
     case NIBIRU_MAINNET_CHAIN_ID:
       return nibiru;
+    case HYPEREVM_MAINNET_CHAIN_ID:
+      return hyper;
     default:
       throw new Error(`Unsupported EVM chain ID: ${id}`);
   }
@@ -157,6 +189,7 @@ export const HubVaultSymbols = [
   'sodaNIBI',
   'sodaS',
   'IbnUSD',
+  'sodaHYPE',
 ] as const;
 
 export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
@@ -274,10 +307,20 @@ export const SodaTokens = {
     address: '0x21685E341DE7844135329914Be6Bd8D16982d834',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
-}  as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
+  sodaHYPE: {
+    symbol: 'sodaHYPE',
+    name: 'Soda HYPE',
+    decimals: 18,
+    address: '0x6E81124fC5d2Bf666B16a0A5d90066eBf35c7411',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+} as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
 
-export const SodaTokensAsHubAssets: Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }> =
-  Object.values(SodaTokens).reduce((acc, token) => {
+export const SodaTokensAsHubAssets: Record<
+  string,
+  { asset: Address; decimal: number; vault: Address; symbol: string; name: string }
+> = Object.values(SodaTokens).reduce(
+  (acc, token) => {
     acc[token.address] = {
       asset: token.address,
       decimal: token.decimals,
@@ -286,7 +329,9 @@ export const SodaTokensAsHubAssets: Record<string, { asset: Address; decimal: nu
       vault: token.address,
     };
     return acc;
-  }, {} as Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>);
+  },
+  {} as Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>,
+);
 export const SodaVaultTokensSet = new Set(Object.values(SodaTokens).map(token => token.address.toLowerCase()));
 export const isSodaVaultToken = (address: string): boolean => {
   return SodaVaultTokensSet.has(address.toLowerCase());
@@ -811,6 +856,42 @@ export const spokeChainConfig = {
       },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
+  [HYPEREVM_MAINNET_CHAIN_ID]: {
+    chain: {
+      name: 'HyperEVM',
+      id: HYPEREVM_MAINNET_CHAIN_ID,
+      type: 'EVM',
+    },
+    addresses: {
+      assetManager: '0xAfd6A6e4287A511D3BAAd013093815268846FBb7',
+      connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
+    bnUSD: '0x19feAf3043DFA69b365D05495630E840A2b9a9dC',
+    supportedTokens: {
+      HYPE: {
+        symbol: 'HYPE',
+        name: 'HYPE',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+        xChainId: HYPEREVM_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '0xeCef079897b633b04c5E9A290e1C567d399A8a4b',
+        xChainId: HYPEREVM_MAINNET_CHAIN_ID,
+      },
+      SODA: {
+        symbol: 'SODA',
+        name: 'SODAX',
+        decimals: 18,
+        address: '0xA28C70F92a1B2513edCdDD29c2E5195a4B785aB2',
+        xChainId: HYPEREVM_MAINNET_CHAIN_ID,
+      },
+    },
+  },
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'inj1dg6tm62uup53wn2kn97caeqfwt0sukx3qjk8rw',
@@ -1129,6 +1210,7 @@ export const hubVaults = {
       '0x69425ffb14704124a58d6f69d510f74a59d9a5bc',
       '0x9d4b663eb075d2a1c7b8eaefb9eccc0510388b51',
       '0xD1d14BF3324C901855A1f7d0d5CA4c8458D2a780',
+      '0x19feaf3043dfa69b365d05495630e840a2b9a9dc',
     ] as const,
   },
   [SodaTokens.sodaSODA.symbol]: {
@@ -1150,6 +1232,7 @@ export const hubVaults = {
       '0x20Ce75CdcEe44B1308365447b91B9c26e2b71Ffd',
       '0x5Db9CEc919f40C50809D9490DC3BbA4F05b0a1D7',
       '0x655730024B673B3378CD6031B1Cd01eaE9afb138',
+      '0x4cf5ce9594aeddc5d3efe9d4cdf0b944b4e73a53',
     ] as const,
   },
   [SodaTokens.sodaAVAX.symbol]: {
@@ -1253,14 +1336,23 @@ export const hubVaults = {
       '0xC1df02fb7b1b06bE886592C89F6955387998B2f7',
     ] as const,
   },
+  [SodaTokens.sodaHYPE.symbol]: {
+    address: '0x6e81124fc5d2bf666b16a0a5d90066ebf35c7411',
+    reserves: ['0x7288622bc2d39553f34d5b81c88c3f979d91dbc7'],
+  },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
-export const hubVaultTokensMap: Map<string, Token> = new Map(Object.entries(hubVaults).map(([symbol, vault]) => [vault.address.toLowerCase(), {
-  address: vault.address.toLowerCase(),
-  symbol,
-  name: symbol,
-  decimals: 18,
-  }]));
+export const hubVaultTokensMap: Map<string, Token> = new Map(
+  Object.entries(hubVaults).map(([symbol, vault]) => [
+    vault.address.toLowerCase(),
+    {
+      address: vault.address.toLowerCase(),
+      symbol,
+      name: symbol,
+      decimals: 18,
+    },
+  ]),
+);
 
 export const getHubVaultTokenByAddress = (address: string): Token | undefined => {
   return hubVaultTokensMap.get(address.toLowerCase());
@@ -1671,6 +1763,29 @@ export const hubAssets: Record<
       vault: hubVaults.sodaSODA.address,
     },
   },
+  [HYPEREVM_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0x7288622bc2D39553f34D5b81c88c3F979d91dbc7',
+      decimal: 18,
+      symbol: 'HYPE',
+      name: 'HYPE',
+      vault: hubVaults.sodaHYPE.address,
+    },
+    [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0x19feaf3043dfa69b365d05495630e840a2b9a9dc',
+      decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: hubVaults.bnUSD.address,
+    },
+    [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
+      asset: '0x4cf5ce9594aeddc5d3efe9d4cdf0b944b4e73a53',
+      decimal: 18,
+      symbol: 'SODA',
+      name: 'SODAX',
+      vault: hubVaults.sodaSODA.address,
+    },
+  },
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ.address]: {
       asset: '0xd375590b4955f6ea5623f799153f9b787a3bd319',
@@ -1944,6 +2059,11 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
+  [HYPEREVM_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+  ] as const satisfies Token[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
@@ -2048,6 +2168,11 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BTCB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const,
+  [HYPEREVM_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+  ] as const,
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
@@ -2136,10 +2261,7 @@ export const supportedSodaAssets: Set<Address> = new Set(
 export const spokeChainIdsSet = new Set(SPOKE_CHAIN_IDS);
 
 // Returns the first hub asset info for a given chainId whose vault address matches the provided vault address (case-insensitive)
-export const getOriginalAssetInfoFromVault = (
-  chainId: SpokeChainId,
-  vault: Address
-): OriginalAssetAddress[] => {
+export const getOriginalAssetInfoFromVault = (chainId: SpokeChainId, vault: Address): OriginalAssetAddress[] => {
   const assets = hubAssets[chainId];
   if (!assets) {
     return [];
@@ -2159,8 +2281,12 @@ export const isValidOriginalAssetAddress = (chainId: SpokeChainId, asset: Origin
   originalAssetTohubAssetMap.get(chainId)?.has(asset.toLowerCase()) ?? false;
 export const getOriginalAssetAddress = (chainId: SpokeChainId, hubAsset: Address): OriginalAssetAddress | undefined =>
   hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
-export const getOriginalTokenFromOriginalAssetAddress = (chainId: SpokeChainId, asset: OriginalAssetAddress): XToken | undefined =>
-  Object.values(spokeChainConfig[chainId].supportedTokens).find(t => t.address.toLowerCase() === asset.toLowerCase()) ?? undefined;
+export const getOriginalTokenFromOriginalAssetAddress = (
+  chainId: SpokeChainId,
+  asset: OriginalAssetAddress,
+): XToken | undefined =>
+  Object.values(spokeChainConfig[chainId].supportedTokens).find(t => t.address.toLowerCase() === asset.toLowerCase()) ??
+  undefined;
 export const isValidHubAsset = (hubAsset: Address): boolean =>
   supportedHubAssets.has(hubAsset.toLowerCase() as Address);
 export const isValidVault = (vault: Address): boolean => supportedSodaAssets.has(vault.toLowerCase() as Address);

@@ -9,6 +9,7 @@ export const isNativeToken = (xToken: XToken) => {
     'hx0000000000000000000000000000000000000000',
     '11111111111111111111111111111111', // solana
     'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', // stellar,
+    // '0x5555555555555555555555555555555555555555', // hyper,
   ];
 
   return nativeAddresses.includes(xToken.address);
@@ -26,6 +27,7 @@ export const getWagmiChainId = (xChainId: ChainId): number => {
     '0x2105.base': 8453,
     '0xa.optimism': 10,
     '0x89.polygon': 137,
+    hyper: 999,
   };
   return xChainMap[xChainId] ?? 0;
 };
