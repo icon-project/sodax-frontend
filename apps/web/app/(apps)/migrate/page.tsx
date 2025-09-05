@@ -238,19 +238,21 @@ export default function MigratePage() {
               </Button>
             ) : (
               <>
-                {direction.from === SONIC_MAINNET_CHAIN_ID && (
-                  <Button
-                    className="w-34"
-                    type="button"
-                    variant="cherry"
-                    onClick={handleApprove}
-                    disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!error}
-                  >
-                    {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
-                    {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
-                  </Button>
-                )}
+                {direction.from !== ICON_MAINNET_CHAIN_ID &&
+                  direction.from !== 'sui' &&
+                  direction.from !== 'stellar' && (
+                    <Button
+                      className="w-34"
+                      type="button"
+                      variant="cherry"
+                      onClick={handleApprove}
+                      disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!error}
+                    >
+                      {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
+                      {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
+                    </Button>
+                  )}
 
                 <Button
                   variant="cherry"
@@ -270,7 +272,10 @@ export default function MigratePage() {
                   disabled={
                     isPending ||
                     !!error ||
-                    (direction.from === SONIC_MAINNET_CHAIN_ID && (!hasSufficientAllowance || isApproving))
+                    (direction.from !== ICON_MAINNET_CHAIN_ID &&
+                      direction.from !== 'sui' &&
+                      direction.from !== 'stellar' &&
+                      (!hasSufficientAllowance || isApproving))
                   }
                 >
                   {error ? (
