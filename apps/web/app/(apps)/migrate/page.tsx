@@ -161,6 +161,129 @@ export default function MigratePage() {
   // Combine allowance check with approval state for immediate UI feedback
   const hasSufficientAllowance = hasAllowed || isApproved;
 
+  // Helper function to get the chain type for a given chain ID
+  const getXChainType = (chainId: SpokeChainId): string => {
+    if (chainId === ICON_MAINNET_CHAIN_ID) return 'ICON';
+    if (chainId === SONIC_MAINNET_CHAIN_ID) return 'EVM';
+    if (chainId === 'stellar') return 'STELLAR';
+    if (chainId === 'sui') return 'SUI';
+    if (chainId === 'solana') return 'SOLANA';
+    if (chainId === INJECTIVE_MAINNET_CHAIN_ID) return 'INJECTIVE';
+    return 'EVM'; // Default to EVM for other chains
+  };
+
+  // Get chain types for source and destination
+  const sourceChainType = getXChainType(direction.from);
+  const destinationChainType = getXChainType(direction.to);
+
+  // Get addresses for source and destination chains
+  const sourceAddress = getAddressForChain(direction.from);
+  const destinationAddress = getAddressForChain(direction.to);
+
+  const isSourceChainConnected = sourceAddress !== undefined;
+  const isDestinationChainConnected = destinationAddress !== undefined;
+
+  // Function to determine which chain type to connect to
+  const getTargetChainType = (): string | undefined => {
+    if (!isSourceChainConnected) {
+      return sourceChainType;
+    }
+    if (!isDestinationChainConnected) {
+      return destinationChainType;
+    }
+    return undefined;
+  };
+
+  // Function to get button state based on current migration state
+  const getButtonState = (): {
+    text: string;
+    disabled: boolean;
+    action: 'connect' | 'enter-amount' | 'migrate' | 'insufficient-balance' | 'approve-required';
+  } => {
+    if (!isSourceChainConnected) {
+      return {
+        text: `Connect to ${getChainDisplayName(direction.from)}`,
+        disabled: false,
+        action: 'connect',
+      };
+    }
+
+    if (!isDestinationChainConnected) {
+      return {
+        text: `Connect to ${getChainDisplayName(direction.to)}`,
+        disabled: false,
+        action: 'connect',
+      };
+    }
+
+    if (!typedValue || typedValue === '0' || typedValue === '' || Number.isNaN(Number(typedValue))) {
+      return {
+        text: 'Enter amount',
+        disabled: true,
+        action: 'enter-amount',
+      };
+    }
+
+    const sourceBalance = getBalanceForChain(direction.from, currencies.from);
+    const inputAmount = BigInt(Math.floor(Number(typedValue) * 10 ** currencies.from.decimals));
+
+    if (sourceBalance < inputAmount) {
+      return {
+        text: 'Insufficient balance',
+        disabled: true,
+        action: 'insufficient-balance',
+      };
+    }
+
+    // Check if approval is required and not yet given
+    if (
+      direction.from !== ICON_MAINNET_CHAIN_ID &&
+      direction.from !== 'sui' &&
+      direction.from !== 'stellar' &&
+      !hasSufficientAllowance
+    ) {
+      return {
+        text: 'Approve required',
+        disabled: false,
+        action: 'approve-required',
+      };
+    }
+
+    if (isPending) {
+      return {
+        text: 'Migrating...',
+        disabled: true,
+        action: 'migrate',
+      };
+    }
+
+    if (error) {
+      return {
+        text: error,
+        disabled: true,
+        action: 'migrate',
+      };
+    }
+
+    return {
+      text: 'Migrate',
+      disabled: false,
+      action: 'migrate',
+    };
+  };
+
+  // Handle wallet modal opening with proper chain targeting
+  const handleOpenWalletModal = (): void => {
+    const buttonState = getButtonState();
+
+    if (buttonState.action === 'connect') {
+      const targetChainType = getTargetChainType();
+      if (targetChainType) {
+        openWalletModal(targetChainType as 'ICON' | 'EVM' | 'STELLAR' | 'SUI' | 'SOLANA' | 'INJECTIVE');
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col w-full gap-(--layout-space-comfortable)">
       <div className="inline-flex flex-col justify-start items-start gap-(--layout-space-comfortable)">
@@ -226,7 +349,7 @@ export default function MigratePage() {
       </div>
 
       <div className="inline-flex flex-col justify-start items-start gap-4">
-        {iconAddress && sonicAddress ? (
+        {isSourceChainConnected && isDestinationChainConnected ? (
           <div className="flex gap-2">
             {isWrongChain ? (
               <Button
@@ -294,9 +417,10 @@ export default function MigratePage() {
           <Button
             variant="cherry"
             className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
-            onClick={() => openWalletModal()}
+            onClick={handleOpenWalletModal}
+            disabled={getButtonState().disabled}
           >
-            Connect wallets
+            {getButtonState().text}
           </Button>
         )}
 
