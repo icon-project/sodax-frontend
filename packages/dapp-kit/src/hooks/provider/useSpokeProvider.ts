@@ -56,7 +56,7 @@ export function useSpokeProvider(
     if (!spokeChainId) return undefined;
     if (!xChainType) return undefined;
     if (!rpcConfig) return undefined;
-
+    
     if (xChainType === 'EVM') {
       if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {
         return new SonicSpokeProvider(
