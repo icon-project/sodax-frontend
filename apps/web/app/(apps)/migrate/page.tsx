@@ -34,6 +34,7 @@ export default function MigratePage() {
   const switchDirection = useMigrationStore(state => state.switchDirection);
   const setTypedValue = useMigrationStore(state => state.setTypedValue);
   const setMigrationMode = useMigrationStore(state => state.setMigrationMode);
+  const setChainForCurrency = useMigrationStore(state => state.setChainForCurrency);
 
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -151,6 +152,7 @@ export default function MigratePage() {
             inputValue={typedValue}
             onInputChange={e => setTypedValue(e.target.value)}
             onMaxClick={handleMaxClick}
+            onChainSelect={(chainId, token) => setChainForCurrency('from', chainId, token)}
           />
 
           <Button
@@ -177,6 +179,7 @@ export default function MigratePage() {
                 : sonicBnusdBalance
           }
           inputValue={typedValue}
+          onChainSelect={(chainId, token) => setChainForCurrency('to', chainId, token)}
           // onInputChange={e => setTypedValue(e.target.value)}
         />
       </div>

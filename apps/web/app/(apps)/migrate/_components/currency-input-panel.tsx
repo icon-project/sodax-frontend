@@ -1,12 +1,15 @@
 // apps/web/components/ui/network-input-display.tsx
 import type React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ICON_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
 import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import CanLogo from './can-logo';
+import BnUSDChainSelector from './bnusd-chain-selector';
+import { isLegacybnUSDToken, isNewbnUSDToken } from '@sodax/sdk';
+import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -22,6 +25,7 @@ interface CurrencyInputPanelProps {
   onInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onInputFocus?: () => void;
   onMaxClick?: () => void;
+  onChainSelect?: (chainId: SpokeChainId, token: XToken) => void;
   className?: string;
 }
 
@@ -34,8 +38,10 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   onInputChange,
   onInputFocus,
   onMaxClick,
+  onChainSelect,
   className = '',
 }: CurrencyInputPanelProps) => {
+  const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
   const formattedBalance = formatUnits(currencyBalance, currency.decimals);
   const formattedBalanceFixed = Number(formattedBalance).toLocaleString('en-US', {
     minimumFractionDigits: 2,
@@ -49,13 +55,26 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
     }
   }, [type]);
 
+  const handleCurrencyAreaClick = (): void => {
+    // Only show chain selector for bnUSD tokens
+    if (isLegacybnUSDToken(currency) || isNewbnUSDToken(currency)) {
+      setIsChainSelectorOpen(true);
+    }
+  };
+
+  const handleChainSelect = (selectedChainId: SpokeChainId, selectedToken: XToken): void => {
+    if (onChainSelect) {
+      onChainSelect(selectedChainId, selectedToken);
+    }
+  };
+
   return (
     <div
       className={`w-full relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-[#e4dada] inline-flex justify-between items-center hover:outline-6 hover:outline-offset-[-6px] group ${className}`}
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
       onClick={() => inputRef.current?.focus()}
     >
-      <div className="flex justify-start items-center gap-4">
+      <div className="flex justify-start items-center gap-4 cursor-pointer" onClick={handleCurrencyAreaClick}>
         {currency.xChainId === 'sonic' && (currency.symbol === 'SODA' || currency.symbol === 'bnUSD') ? (
           <CanLogo currency={currency} />
         ) : (
@@ -66,9 +85,10 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           <div className="justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable) group-hover:text-clay">
             {type === CurrencyInputPanelType.INPUT ? 'From' : 'To'}
           </div>
-          <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) inline-flex gap-1">
+          <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) inline-flex gap-1 items-center">
             {chainId === ICON_MAINNET_CHAIN_ID ? 'ICON' : 'Sonic'}
             <span className="hidden md:inline">Network</span>
+            {(isLegacybnUSDToken(currency) || isNewbnUSDToken(currency)) && <ChevronDownIcon className="w-4 h-4" />}
           </div>
         </div>
       </div>
@@ -92,13 +112,17 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 onChange={onInputChange}
                 onFocus={onInputFocus}
                 placeholder="0"
-                className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle) font-['InterBold'] leading-[1.2] placeholder:text-espresso"
+                className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle) font-['InterBold'] placeholder:text-espresso pt-[5px]"
                 readOnly={type === CurrencyInputPanelType.OUTPUT}
               />
             </div>
           </div>
-          <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(length:--body-super-comfortable) leading-[1.4]">
-            {currency.symbol === 'bnUSD (legacy)' ? 'bnUSD' : currency.symbol}
+          <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(length:--body-super-comfortable) flex-none">
+            {currency.symbol === 'bnUSD (legacy)'
+              ? 'bnUSD'
+              : currency.symbol === 'bnUSD'
+                ? 'New bnUSD'
+                : currency.symbol}
           </div>
           {type === CurrencyInputPanelType.INPUT && (
             <Button
@@ -111,6 +135,14 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           )}
         </div>
       </div>
+
+      <BnUSDChainSelector
+        isOpen={isChainSelectorOpen}
+        onClose={() => setIsChainSelectorOpen(false)}
+        onChainSelect={handleChainSelect}
+        currency={currency}
+        type={type}
+      />
     </div>
   );
 };

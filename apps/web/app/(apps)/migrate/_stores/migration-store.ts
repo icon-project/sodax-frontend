@@ -19,6 +19,7 @@ export type MigrationActions = {
   switchDirection: () => void;
   setTypedValue: (value: string) => void;
   setMigrationMode: (mode: 'icxsoda' | 'bnusd') => void;
+  setChainForCurrency: (type: 'from' | 'to', chainId: SpokeChainId, token: XToken) => void;
 };
 
 export type MigrationStore = MigrationState & MigrationActions;
@@ -91,6 +92,24 @@ export const createMigrationStore = (initState: MigrationState = defaultInitStat
           migrationMode: mode,
           currencies: newCurrencies,
           typedValue: '', // Reset typed value when switching modes
+        };
+      }),
+    setChainForCurrency: (type: 'from' | 'to', chainId: SpokeChainId, token: XToken) =>
+      set(state => {
+        const newDirection = { ...state.direction };
+        const newCurrencies = { ...state.currencies };
+
+        if (type === 'from') {
+          newDirection.from = chainId;
+          newCurrencies.from = token;
+        } else {
+          newDirection.to = chainId;
+          newCurrencies.to = token;
+        }
+
+        return {
+          direction: newDirection,
+          currencies: newCurrencies,
         };
       }),
   }));
