@@ -1,9 +1,45 @@
-import { describe, expect, it } from 'vitest';
-import { calculateFeeAmount, calculatePercentageFeeAmount, encodeAddress, hexToBigInt } from './shared-utils.js';
-import type { SpokeChainId } from '@sodax/types';
+import { WalletAbstractionService } from './../services/hub/WalletAbstractionService.js';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  adjustAmountByFee,
+  calculateFeeAmount,
+  calculatePercentageFeeAmount,
+  deriveUserWalletAddress,
+  encodeAddress,
+  hexToBigInt,
+} from './shared-utils.js';
+import type { IEvmWalletProvider, SpokeChainId } from '@sodax/types';
+import {
+  BSC_MAINNET_CHAIN_ID,
+  EvmHubProvider,
+  EvmSpokeProvider,
+  getHubChainConfig,
+  SONIC_MAINNET_CHAIN_ID,
+  SonicSpokeProvider,
+  spokeChainConfig,
+  type EvmHubProviderConfig,
+} from '../index.js';
 
 describe('calculatePercentageAmount', () => {
   const address = '0x0000000000000000000000000000000000000001' as `0x${string}`;
+  const mockHubWalletAddress = '0x1234567890123456789012345678901234567890';
+
+  const mockEvmWalletProvider = {
+    sendTransaction: vi.fn(),
+    getWalletAddress: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999' as `0x${string}`),
+    getWalletAddressBytes: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999' as `0x${string}`),
+    waitForTransactionReceipt: vi.fn(),
+  } as unknown as IEvmWalletProvider;
+
+  const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
+  const mockSonicSpokeProvider = new SonicSpokeProvider(mockEvmWalletProvider, spokeChainConfig[SONIC_MAINNET_CHAIN_ID]);
+
+  const mockHubConfig = {
+    hubRpcUrl: 'https://rpc.soniclabs.com',
+    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  } satisfies EvmHubProviderConfig;
+
+  const mockHubProvider = new EvmHubProvider(mockHubConfig);
 
   it('should calculate percentage amount correctly', () => {
     const testCases = [
@@ -154,5 +190,31 @@ describe('calculatePercentageAmount', () => {
     expect(BigInt('0x1234567890abcdef')).toBe(hexToBigInt('0x1234567890abcdef'));
     expect(BigInt('0x1234567890abcdef')).toBe(hexToBigInt('1234567890abcdef'));
     expect(BigInt('0x1234567890abcdef1234567890abcdef')).toBe(hexToBigInt('0x1234567890abcdef1234567890abcdef'));
+  });
+
+  it('should adjust amount by fee correctly', () => {
+    const testCases = [
+      { amount: 1000n, fee: { amount: 100n, address }, quoteType: 'exact_input', expected: 900n },
+      { amount: 1000n, fee: { amount: 100n, address }, quoteType: 'exact_output', expected: 1100n },
+    ] as const;
+
+    for (const { amount, fee, quoteType, expected } of testCases) {
+      const result = adjustAmountByFee(amount, fee, quoteType);
+      expect(result).toBe(expected);
+    }
+  });
+
+  it('should get hub wallet address for non hub spoke provider', async () => {
+    vi.spyOn(WalletAbstractionService, 'getUserAbstractedWalletAddress').mockResolvedValueOnce(mockHubWalletAddress);
+
+    const walletAddress = await deriveUserWalletAddress(mockBscSpokeProvider, mockHubProvider, mockHubWalletAddress);
+
+    expect(walletAddress).toBe(mockHubWalletAddress);
+  });
+
+  it('should get same wallet address for hub spoke provider', async () => {
+    const walletAddress = await deriveUserWalletAddress(mockSonicSpokeProvider, mockHubProvider, mockHubWalletAddress);
+
+    expect(walletAddress).toBe(mockHubWalletAddress);
   });
 });

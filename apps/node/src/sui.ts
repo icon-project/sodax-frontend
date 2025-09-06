@@ -12,34 +12,27 @@ import {
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
-  type SolverConfigParams,
   type UnifiedBnUSDMigrateParams,
-  encodeAddress,
+  type BridgeParams,
+  type PartnerFee,
+  DEFAULT_RELAYER_API_ENDPOINT,
+  BridgeService,
+  type CreateBridgeIntentParams,
 } from '@sodax/sdk';
-import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
-import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
+import { HubChainId, SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import { SuiWalletProvider } from './sui-wallet-provider.js';
 
 import dotenv from 'dotenv';
-import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 import { solverConfig } from './config.js';
+
 dotenv.config();
 // load PK from .env
-const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.blaze.soniclabs.com' : 'https://rpc.soniclabs.com';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 const SUI_CHAIN_ID = SUI_MAINNET_CHAIN_ID;
 const SUI_RPC_URL = IS_TESTNET ? 'https://fullnode.testnet.sui.io' : 'https://fullnode.mainnet.sui.io';
 
-if (!privateKey) {
-  throw new Error('PRIVATE_KEY environment variable is required');
-}
-
-const hubEvmWallet = new EvmWalletProvider({
-  privateKey: privateKey as Hex,
-  chainId: SONIC_MAINNET_CHAIN_ID,
-  rpcUrl: HUB_RPC_URL as `http${string}`,
-});
 
 const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
 const hubProvider = new EvmHubProvider({
@@ -60,13 +53,16 @@ const sodax = new Sodax({
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
+const relayerApiEndpoint = DEFAULT_RELAYER_API_ENDPOINT;
+const bridgeService = new BridgeService(hubProvider, relayerApiEndpoint);
+
 const suiConfig = spokeChainConfig[SUI_CHAIN_ID] as SuiSpokeChainConfig;
-const suiWalletMnemonics = process.env.MNEMONICS;
+const suiWalletMnemonics = process.env.SUI_MNEMONICS;
 
 if (!suiWalletMnemonics) {
   throw new Error('SUI_MNEMONICS environment variable is required');
 }
-const suiWalletProvider = new SuiWalletProvider({ rpcUrl: SUI_RPC_URL, mnemonics: suiWalletMnemonics });
+const suiWalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
 const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
 const walletAddress = await suiWalletProvider.getWalletAddress();
 console.log('[walletAddress]:', walletAddress);
@@ -76,8 +72,7 @@ async function getBalance(token: string) {
 }
 
 async function depositTo(token: string, amount: bigint, recipient: Address): Promise<void> {
-  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
-  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
+  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -112,8 +107,7 @@ async function withdrawAsset(
   amount: bigint,
   recipient: string, // sui address
 ): Promise<void> {
-  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
-  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
+  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -122,7 +116,7 @@ async function withdrawAsset(
   const data = EvmAssetManagerService.withdrawAssetData(
     {
       token,
-      to: encodeAddress(SUI_MAINNET_CHAIN_ID, recipient),
+      to: SuiSpokeProvider.getAddressBCSBytes(recipient),
       amount,
     },
     hubProvider,
@@ -134,8 +128,7 @@ async function withdrawAsset(
 }
 
 async function supply(token: string, amount: bigint): Promise<void> {
-  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
-  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
+  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -159,8 +152,7 @@ async function supply(token: string, amount: bigint): Promise<void> {
 }
 
 async function borrow(token: string, amount: bigint): Promise<void> {
-  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
-  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
+  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -181,8 +173,7 @@ async function borrow(token: string, amount: bigint): Promise<void> {
 }
 
 async function withdraw(token: string, amount: bigint): Promise<void> {
-  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
-  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
+  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -203,8 +194,7 @@ async function withdraw(token: string, amount: bigint): Promise<void> {
 }
 
 async function repay(token: string, amount: bigint): Promise<void> {
-  const walletAddress = await suiSpokeProvider.walletProvider.getWalletAddress();
-  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
+  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -265,6 +255,55 @@ async function migrateBnUSD(
   }
 }
 
+/**
+ * Bridge tokens from one chain to another
+ * @param srcChainId - The source chain ID
+ * @param srcAsset - The source asset address
+ * @param amount - The amount to bridge
+ * @param dstChainId - The destination chain ID
+ * @param dstAsset - The destination asset address
+ * @param recipient - The recipient address on the destination chain
+ * @param partnerFee - Optional partner fee configuration
+ */
+async function bridge(
+  srcChainId: SpokeChainId,
+  srcAsset: string,
+  amount: bigint,
+  dstChainId: SpokeChainId,
+  dstAsset: string,
+  recipient: Hex,
+  partnerFee?: PartnerFee,
+): Promise<void> {
+  const bridgeParams: CreateBridgeIntentParams = {
+    srcChainId,
+    srcAsset,
+    amount,
+    dstChainId,
+    dstAsset,
+    recipient,
+  };
+
+  // For Sui as source chain, use SuiSpokeProvider
+  if (srcChainId === SUI_CHAIN_ID) {
+    const result = await bridgeService.bridge({
+      params: bridgeParams,
+      spokeProvider: suiSpokeProvider,
+      fee: partnerFee,
+    });
+
+    if (result.ok) {
+      const [spokeTxHash, hubTxHash] = result.value;
+      console.log('[bridge] spokeTxHash:', spokeTxHash);
+      console.log('[bridge] hubTxHash:', hubTxHash);
+      console.log('[bridge] Bridge transaction completed successfully');
+    } else {
+      console.error('[bridge] Bridge failed:', result.error);
+    }
+  } else {
+    console.error('[bridge] Source chain not supported for bridging from this script');
+  }
+}
+
 // Main function to decide which function to call
 async function main() {
   console.log(process.argv);
@@ -306,9 +345,23 @@ async function main() {
   } else if (functionName === 'balance') {
     const token = process.argv[3] as string;
     await getBalance(token);
+  } else if (functionName === 'bridge') {
+    const srcChainId = process.argv[3] as SpokeChainId;
+    const srcAsset = process.argv[4] as string;
+    const amount = BigInt(process.argv[5]);
+    const dstChainId = process.argv[6] as SpokeChainId;
+    const dstAsset = process.argv[7] as string;
+    const recipient = process.argv[8] as Hex;
+    const partnerFeeAddress = process.argv[9] as Hex | undefined;
+    const partnerFeeAmount = process.argv[10] ? BigInt(process.argv[10]) : undefined;
+
+    const partnerFee =
+      partnerFeeAddress && partnerFeeAmount ? { address: partnerFeeAddress, amount: partnerFeeAmount } : undefined;
+
+    await bridge(srcChainId, srcAsset, amount, dstChainId, dstAsset, recipient, partnerFee);
   } else {
     console.log(
-      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrateBnUSD", or "balance".',
+      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "migrateBnUSD", "balance", or "bridge".',
     );
     console.log('Usage examples:');
     console.log('  npm run sui deposit <token_address> <amount> <recipient_address>');
@@ -321,7 +374,10 @@ async function main() {
       '  npm run sui migrateBnUSD <legacybnUSD_address> <dstChainID> <newbnUSD_address> <amount> <recipient_address>',
     );
     console.log('  npm run sui balance <token_address>');
+    console.log(
+      '  npm run sui bridge <srcChainId> <srcAsset> <amount> <dstChainId> <dstAsset> <recipient> [partnerFeeAddress] [partnerFeePercentage]',
+    );
   }
 }
-
 main();
+//npm run sui bridge sui "0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD" 1 "0x89.polygon" "0x39E77f86C1B1f3fbAb362A82b49D2E86C09659B4" "0x6d7b6956589c17b2755193a67bf2d4b68827e58a"

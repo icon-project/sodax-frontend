@@ -2,11 +2,11 @@ import React, { useMemo } from 'react';
 import { getSpokeTokenAddressByVault, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useXAccount, useXBalances, useWalletProvider } from '@sodax/wallet-sdk-react';
+import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { moneyMarketSupportedTokens } from '@sodax/sdk';
+import { getMoneyMarketConfig, moneyMarketSupportedTokens, SONIC_MAINNET_CHAIN_ID, type UserReserveData } from '@sodax/sdk';
 import type { Token, XToken } from '@sodax/types';
 
 export function SupplyAssetsList() {
@@ -32,7 +32,7 @@ export function SupplyAssetsList() {
     address,
   });
 
-  const { data: userReserves } = useUserReservesData(address, spokeProvider);
+  const { data: userReserves } = useUserReservesData(spokeProvider, address);
 
   return (
     <Card>
@@ -56,9 +56,34 @@ export function SupplyAssetsList() {
           <TableBody>
             {tokens.map(token => {
               try {
-                const userReserve = userReserves?.[0]?.find(
-                  r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset) === token.address,
-                );
+                let userReserve: UserReserveData | undefined;
+                if (token.symbol === 'bnUSD') {
+                  // bnUSD is special case, because both bnUSD and bnUSDVault are bnUSD reserves
+                  const bnUSDReserve = userReserves?.[0]?.find(
+                    r => getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSD.toLowerCase() ===
+                    r.underlyingAsset.toLowerCase(),
+                  );
+                  const bnUSDVaultReserve = userReserves?.[0]?.find(
+                    r => getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault.toLowerCase() ===
+                    r.underlyingAsset.toLowerCase()
+                  );
+
+                  if (!bnUSDReserve || !bnUSDVaultReserve) {
+                    return null;
+                  }
+
+                  // we just merge the two bnUSD reserves into one bnUSD vault reserve, but you should be aware of the differences
+                  const mergedbnUSDReserve = {
+                    ...bnUSDVaultReserve,
+                    scaledATokenBalance: bnUSDReserve?.scaledATokenBalance + bnUSDVaultReserve?.scaledATokenBalance,
+                    scaledVariableDebt: bnUSDReserve?.scaledVariableDebt + bnUSDVaultReserve?.scaledVariableDebt,
+                  };
+                  userReserve = mergedbnUSDReserve;
+                } else {
+                  userReserve = userReserves?.[0]?.find(
+                    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase()
+                  );
+                }
                 return (
                   <SupplyAssetsListItem
                     key={token.address}

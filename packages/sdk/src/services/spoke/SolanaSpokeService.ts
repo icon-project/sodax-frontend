@@ -15,6 +15,7 @@ import type { SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvi
 import { AssetManagerPDA, ConnectionConfigPDA } from '../../entities/solana/pda/pda.js';
 import { convertTransactionInstructionToRaw, isNative } from '../../entities/solana/utils/utils.js';
 import type {
+  DepositSimulationParams,
   PromiseSolanaTxReturnType,
   SolanaGasEstimate,
   SolanaRawTransaction,
@@ -94,20 +95,16 @@ export class SolanaSpokeService {
   }
 
   public static async getDeposit(token: string, spokeProvider: SolanaSpokeProvider): Promise<bigint> {
-    const assetManagerProgram = await getAssetManagerProgram(
-      spokeProvider.walletProvider.getWalletBase58PublicKey(),
-      spokeProvider.chainConfig.rpcUrl,
-      spokeProvider.chainConfig.addresses.assetManager,
-    );
-    const solToken = new PublicKey(Buffer.from(token, 'hex'));
+    const assetManagerProgramId = new PublicKey(spokeProvider.chainConfig.addresses.assetManager);
+    const solToken = new PublicKey(token);
 
     if (isNative(new PublicKey(solToken))) {
-      const vaultNative = AssetManagerPDA.vault_native(assetManagerProgram.programId);
+      const vaultNative = AssetManagerPDA.vault_native(assetManagerProgramId);
       const balance = await spokeProvider.walletProvider.getBalance(vaultNative.pda.toBase58());
       return BigInt(balance);
     }
 
-    const vaultToken = AssetManagerPDA.vault_token(assetManagerProgram.programId, new PublicKey(solToken));
+    const vaultToken = AssetManagerPDA.vault_token(assetManagerProgramId, new PublicKey(solToken));
     const tokenAccount = await spokeProvider.walletProvider.getTokenAccountBalance(vaultToken.pda.toBase58());
 
     return BigInt(tokenAccount.value.amount);
@@ -131,6 +128,40 @@ export class SolanaSpokeService {
   ): PromiseSolanaTxReturnType<R> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return SolanaSpokeService.call(BigInt(relayId), from, keccak256(payload), spokeProvider, raw);
+  }
+
+  /**
+   * Generate simulation parameters for deposit from SolanaSpokeDepositParams.
+   * @param {SolanaSpokeDepositParams} params - The deposit parameters.
+   * @param {SolanaSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
+   */
+  public static async getSimulateDepositParams(
+    params: SolanaSpokeDepositParams,
+    spokeProvider: SolanaSpokeProvider,
+    hubProvider: EvmHubProvider,
+  ): Promise<DepositSimulationParams> {
+    const to =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+        hubProvider,
+      ));
+
+    return {
+      spokeChainID: spokeProvider.chainConfig.chain.id,
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+      to,
+      amount: params.amount,
+      data: params.data,
+      srcAddress: encodeAddress(
+        spokeProvider.chainConfig.chain.id,
+        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
+      ),
+    };
   }
 
   private static async transfer<R extends boolean = false>(

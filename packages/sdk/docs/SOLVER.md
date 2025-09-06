@@ -73,7 +73,7 @@ const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of
 const createIntentParams = {
   inputToken: '0x..',  // The address of the input token on spoke chain
   outputToken: '0x..',  // The address of the output token on spoke chain
-  inputAmount: BigInt(1000000), // The amount of input tokens
+  inputAmount: BigInt(1000000), // The amount of input tokens (fee will be deducted from this amount)
   minOutputAmount: BigInt(900000), // min amount you are expecting to receive
   deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
   allowPartialFill: false, // Whether the intent can be partially filled
@@ -92,7 +92,7 @@ All solver functions use object parameters for better readability and extensibil
 
 - **`intentParams`**: The `CreateIntentParams` object containing swap details
 - **`spokeProvider`**: The spoke provider instance for the source chain
-- **`fee`**: (Optional) Partner fee configuration. If not provided, uses the default partner fee from config
+- **`fee`**: (Optional) Partner fee configuration. If not provided, uses the default partner fee from config. **Note**: Fees are now deducted from the input amount rather than added to it.
 - **`raw`**: (Optional) Whether to return raw transaction data instead of executing the transaction
 - **`timeout`**: (Optional) Timeout in milliseconds for relay operations (default: 60 seconds)
 
@@ -109,9 +109,35 @@ const fee = sodax.solver.getFee(inputAmount);
 
 console.log('Fee amount:', fee); // Fee in input token units
 console.log('Fee percentage:', Number(fee) / Number(inputAmount) * 100); // Fee as percentage
+console.log('Amount after fee deduction:', inputAmount - fee); // Actual amount used for swap
 ```
 
-**Note**: If no partner fee is configured, the function returns `0n`.
+**Note**: If no partner fee is configured, the function returns `0n`. The fee is deducted from the input amount, so the actual amount used for the swap will be `inputAmount - fee`.
+
+### Get Swap Deadline
+
+The `getSwapDeadline` function allows you to calculate a deadline timestamp for your swap by querying the hub chain's current block timestamp and adding a deadline offset. This is useful for setting expiration times for intents to prevent them from being executed after a certain period.
+
+```typescript
+import { SolverService } from "@sodax/sdk";
+
+// Get deadline with default 5-minute offset
+const deadline = await sodax.solver.getSwapDeadline();
+console.log('Swap deadline (5 min from now):', deadline);
+
+// Get deadline with custom offset (e.g., 10 minutes)
+const customDeadline = await sodax.solver.getSwapDeadline(600n); // 600 seconds = 10 minutes
+console.log('Swap deadline (10 min from now):', customDeadline);
+
+// Use the deadline in your intent parameters
+const createIntentParams = {
+  // ... other parameters ...
+  deadline: deadline, // Set the calculated deadline
+  // ... other parameters ...
+};
+```
+
+**Note**: The deadline is calculated as `hub_chain_block_timestamp + deadline_offset`. The default offset is 5 minutes (300 seconds), but you can customize this value based on your requirements. Setting a deadline helps prevent intents from being executed if market conditions change significantly.
 
 ### Token Approval Flow
 
@@ -130,7 +156,6 @@ const evmWalletAddress = evmWalletProvider.getWalletAddress();
 const isApproved = await sodax.solver.isAllowanceValid({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
-  fee, // optional - uses configured partner fee if not provided
 });
 
 if (!isApproved.ok) {
@@ -141,7 +166,6 @@ if (!isApproved.ok) {
   const approveResult = await sodax.solver.approve({
     intentParams: createIntentParams,
     spokeProvider: bscSpokeProvider,
-    fee, // optional - uses configured partner fee if not provided
   });
 
   if (!approveResult.ok) {
@@ -155,6 +179,8 @@ if (!isApproved.ok) {
 // Now you can proceed with creating the intent
 // ... continue with createIntent or createAndSubmitIntent ...
 ```
+
+**Important**: The approval amount is now the same as the `inputAmount` specified in your intent parameters. The fee is automatically deducted from this amount during intent creation, so you only need to approve the exact amount you want to swap.
 
 ### Estimate Gas for Raw Transactions
 
@@ -192,7 +218,6 @@ if (createIntentResult.ok) {
 const approveResult = await sodax.solver.approve({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
-  fee, // optional - uses configured partner fee if not provided
   raw: true // true = get raw transaction
 });
 
@@ -246,8 +271,8 @@ Example for BSC -> ARB Intent Order:
     // handle error as described in Error Handling section
   }
 
-  // txHash, created Intent data as Intent & FeeAmount type, and packet data from relay
-  const [txHash, intent, packetData] = swapResult.value;
+  // solverExecutionResponse, created Intent data, and intent delivery info
+  const [solverExecutionResponse, intent, intentDeliveryInfo] = swapResult.value;
 
   /**
    *
@@ -269,9 +294,11 @@ Example for BSC -> ARB Intent Order:
     // handle error
   }
 
-  // txHash/rawTx, Intent & FeeAmount, and packet data (Hex)
-  const [rawTx, intent, packetData] = createIntentResult.value;
+  // txHash/rawTx, Intent & FeeAmount, and create intent data (Hex) - for createIntent
+  const [rawTx, intent, intentDataHex] = createIntentResult.value;
 ```
+
+**Important**: When creating an intent, the fee is automatically deducted from the `inputAmount` specified in your `createIntentParams`. The actual amount used for the swap will be `inputAmount - feeAmount`. Make sure your `inputAmount` is sufficient to cover both the swap amount and the fee.
 
 ### Submit Intent to Relay API
 
@@ -337,6 +364,7 @@ const result = await sodax.solver.getStatus({
   } satisfies SolverIntentStatusRequest);
 ```
 
+
 ### Get Intent Hash
 
 Get Intent Hash (keccak256) used as an ID of intent in smart contract.
@@ -380,9 +408,9 @@ if (!swapResult.ok) {
   const error = swapResult.error;
   
   if (isIntentCreationFailedError(error)) {
-    // Intent creation failed on the spoke chain
+    // Intent creation failed on the spoke chain, error is of type IntentError<'CREATION_FAILED'>
     // This could be due to:
-    // - Insufficient token balance
+    // - Insufficient token balance (including fee)
     // - Invalid token addresses
     // - Network issues on the spoke chain
     // - Invalid parameters (chain IDs, addresses, etc.)
@@ -391,7 +419,7 @@ if (!swapResult.ok) {
     
     // You may want to retry with different parameters or check user's balance
   } else if (isIntentSubmitTxFailedError(error)) {
-    // Failed to submit the spoke chain transaction to the relay API
+    // Failed to submit the spoke chain transaction to the relay API, error is of type IntentError<'SUBMIT_TX_FAILED'>
     // IMPORTANT: This is a critical event and you should retry submit
     //  and store relevant payload   information in localstorage or
     // similar local permanent memory. If client leaves the session
@@ -407,7 +435,7 @@ if (!swapResult.ok) {
     
     // You may want to retry the submission or check relay API status
   } else if (isWaitUntilIntentExecutedFailed(error)) {
-    // The intent was submitted but failed to execute on the hub chain
+    // The intent was submitted but failed to execute on the hub chain, error is of type IntentError<'RELAY_TIMEOUT'>
     // This could be due to:
     // - Timeout waiting for execution
     // - Hub chain congestion
@@ -417,7 +445,7 @@ if (!swapResult.ok) {
     
     // You may want to check the intent status or retry with longer timeout
   } else if (isIntentPostExecutionFailedError(error)) {
-    // Failed to post execution data to the Solver API
+    // Failed to post execution data to the Solver API, error is of type IntentError<'POST_EXECUTION_FAILED'>
     // This could be due to:
     // - Solver API being down
     // - Invalid execution data
@@ -425,9 +453,9 @@ if (!swapResult.ok) {
     console.error('Post execution failed:', error.data);
     
     // The intent may have executed successfully, but the API call failed
-    // You may want to check the intent status manually
+    // You may want to check the intent or packet status manually
   } else {
-    // Unknown error type
+    // Unknown error type IntentError<'UNKNOWN'>
     console.error('Unknown error:', error);
   }
 }
@@ -454,14 +482,14 @@ if (!createIntentResult.ok) {
     console.error('Original error:', error.data.error);
 
     // Common causes:
-    // - Insufficient token balance (including fee)
+    // - Insufficient token balance (the inputAmount should cover both the swap amount and fee)
     // - Invalid token addresses or chain IDs
     // - Network issues on the spoke chain
     // - Invalid wallet address or permissions
     // - Contract interaction failures
 
     // You may want to:
-    // - Check user's token balance
+    // - Check user's token balance (ensure it's >= inputAmount)
     // - Verify token addresses and chain configurations
     // - Retry with different parameters
   }
