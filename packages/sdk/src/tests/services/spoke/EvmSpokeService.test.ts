@@ -81,9 +81,6 @@ describe('EvmSpokeService', () => {
     publicClient: {
       readContract: vi.fn(),
     },
-    getWalletAddressBytes: {
-      writeContract: vi.fn(),
-    },
     getWalletAddress: vi.fn().mockReturnValue('0x9999999999999999999999999999999999999999'),
     sendTransaction: vi.fn(),
     waitForTransactionReceipt: vi.fn(),

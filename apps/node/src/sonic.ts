@@ -28,7 +28,7 @@ import {
   type UnifiedBnUSDMigrateParams,
   type CreateBridgeIntentParams,
 } from '@sodax/sdk';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
+import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -39,8 +39,16 @@ if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const hubEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
-const spokeEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
+const hubEvmWallet = new EvmWalletProvider({
+  privateKey: privateKey as Hex,
+  chainId: SONIC_MAINNET_CHAIN_ID,
+  rpcUrl: HUB_RPC_URL as `http${string}`,
+});
+const spokeEvmWallet = new EvmWalletProvider({
+  privateKey: privateKey as Hex,
+  chainId: SONIC_MAINNET_CHAIN_ID,
+  rpcUrl: HUB_RPC_URL as `http${string}`,
+});
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,

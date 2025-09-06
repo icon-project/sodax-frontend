@@ -42,14 +42,12 @@ describe('MoneyMarketService', () => {
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
     getWalletAddress: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999'),
-    getWalletAddressBytes: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999'),
     waitForTransactionReceipt: vi.fn(),
   } as unknown as IEvmWalletProvider;
 
   const mockSonicWalletProvider = {
     sendTransaction: vi.fn(),
     getWalletAddress: vi.fn().mockResolvedValue('0x8888888888888888888888888888888888888888'),
-    getWalletAddressBytes: vi.fn().mockResolvedValue('0x8888888888888888888888888888888888888888'),
     waitForTransactionReceipt: vi.fn(),
   } as unknown as IEvmWalletProvider;
 

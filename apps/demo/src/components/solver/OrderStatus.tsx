@@ -14,7 +14,7 @@ export default function OrderStatus({
     if (status.ok) {
       return (
         <div className="flex flex-col text-center pb-4">
-          <div>Order ID: {order.intent.intentId}</div>
+          <div>Order ID: {order.intent.intentId.toString()}</div>
           <div>Intent Hash: {order.intentHash}</div>
           <div>Intent Tx Hash: {order.intentDeliveryInfo.dstTxHash}</div>
           <div>Status: {statusCodeToMessage(status.value.status)}</div>

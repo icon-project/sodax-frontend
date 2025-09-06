@@ -108,7 +108,8 @@
 //     evmHubProvider,
 //     spokeProvider.chainConfig.chain.id,
 //   );
-//   const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+//   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+//   const walletAddressBytes = encodeAddress(INJECTIVE_MAINNET_CHAIN_ID, walletAddress);
 //   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
 //     spokeProvider.chainConfig.chain.id,
 //     walletAddressBytes,
@@ -121,7 +122,8 @@
 // }
 
 // async function supply(token: string, amount: bigint): Promise<void> {
-//   const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+//   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+//   const walletAddressBytes = encodeAddress(INJECTIVE_MAINNET_CHAIN_ID, walletAddress);
 //   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
 //     spokeProvider.chainConfig.chain.id,
 //     walletAddressBytes,
@@ -146,7 +148,8 @@
 // }
 
 // async function borrow(token: string, amount: bigint): Promise<void> {
-//   const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+//   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+//   const walletAddressBytes = encodeAddress(INJECTIVE_MAINNET_CHAIN_ID, walletAddress);
 //   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
 //     spokeProvider.chainConfig.chain.id,
 //     walletAddressBytes,
@@ -168,7 +171,8 @@
 // }
 
 // async function withdraw(token: string, amount: bigint): Promise<void> {
-//   const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+//   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+//   const walletAddressBytes = encodeAddress(INJECTIVE_MAINNET_CHAIN_ID, walletAddress);
 //   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
 //     spokeProvider.chainConfig.chain.id,
 //     walletAddressBytes,
@@ -189,7 +193,8 @@
 // }
 
 // async function repay(token: string, amount: bigint): Promise<void> {
-//   const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+//   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+//   const walletAddressBytes = encodeAddress(INJECTIVE_MAINNET_CHAIN_ID, walletAddress);
 //   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
 //     spokeProvider.chainConfig.chain.id,
 //     walletAddressBytes,

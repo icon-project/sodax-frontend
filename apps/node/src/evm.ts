@@ -17,10 +17,9 @@ import {
   type SodaxConfig,
   Sodax,
   type EvmRawTransaction,
-  type SolverConfigParams,
   type EvmChainId,
 } from '@sodax/sdk';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
+import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 import { SONIC_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
 import { solverConfig } from './config.js';
 
@@ -39,9 +38,17 @@ if (!privateKey) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
 
-const hubEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
+const hubEvmWallet = new EvmWalletProvider({
+  privateKey: privateKey as Hex,
+  chainId: SONIC_MAINNET_CHAIN_ID,
+  rpcUrl: HUB_RPC_URL as `http${string}`,
+});
 
-const spokeEvmWallet = new EvmWalletProvider(privateKey as Hex, EVM_SPOKE_CHAIN_ID, SPOKE_RPC_URL);
+const spokeEvmWallet = new EvmWalletProvider({
+  privateKey: privateKey as Hex,
+  chainId: EVM_SPOKE_CHAIN_ID,
+  rpcUrl: SPOKE_RPC_URL as `http${string}`,
+});
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
