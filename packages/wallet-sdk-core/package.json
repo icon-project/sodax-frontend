@@ -48,16 +48,16 @@
   },
   "dependencies": {
     "@sodax/types": "workspace:*",
-    "icon-sdk-js": "1.5.3",
+    "icon-sdk-js": "catalog:",
     "viem": "catalog:",
-    "@injectivelabs/sdk-ts": "1.15.43",
-    "@injectivelabs/wallet-core": "1.15.43",
-    "@solana/spl-token": "0.4.9",
-    "@solana/wallet-adapter-base": "0.9.26",
-    "@solana/web3.js": "1.98.0",
-    "@stellar/stellar-sdk": "12.3.0",
-    "@mysten/sui": "^1.21.2",
-    "@mysten/wallet-standard": "^0.15.6"
+    "@injectivelabs/sdk-ts": "catalog:",
+    "@injectivelabs/wallet-core": "catalog:",
+    "@solana/spl-token": "catalog:",
+    "@solana/wallet-adapter-base": "catalog:",
+    "@solana/web3.js": "catalog:",
+    "@stellar/stellar-sdk": "catalog:",
+    "@mysten/sui": "catalog:",
+    "@mysten/wallet-standard": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

@@ -4,8 +4,9 @@ import { Transaction, type TransactionResult } from '@mysten/sui/transactions';
 import { type Hex, toHex } from 'viem';
 import type { PromiseSuiTxReturnType, SuiReturnType, SuiSpokeChainConfig } from '../../types.js';
 import type { ISpokeProvider } from '../index.js';
-import type { ISuiWalletProvider } from '@sodax/types';
+import { type ISuiWalletProvider, SUI_MAINNET_CHAIN_ID } from '@sodax/types';
 import { SuiSpokeService } from '../../services/spoke/SuiSpokeService.js';
+import { encodeAddress } from '../../utils/shared-utils.js';
 
 type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
 type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | undefined };
@@ -53,10 +54,11 @@ export class SuiSpokeProvider implements ISpokeProvider {
   ): PromiseSuiTxReturnType<R> {
     const isNative = token.toLowerCase() === this.chainConfig.nativeToken.toLowerCase();
     const tx = new Transaction();
-    const walletAddress = await this.walletProvider.getWalletAddressBytes();
+    const walletAddress = await this.walletProvider.getWalletAddress();
+    const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, walletAddress);
     const coin: TransactionResult | SuiNativeCoinResult | SuiTxObject = isNative
       ? await this.getNativeCoin(tx, amount)
-      : await this.getCoin(tx, token, amount, walletAddress);
+      : await this.getCoin(tx, token, amount, walletAddressBytes);
     const connection = this.splitAddress(this.chainConfig.addresses.connection);
     const assetManager = this.splitAddress(await this.getAssetManagerAddress());
 
@@ -204,11 +206,6 @@ export class SuiSpokeProvider implements ISpokeProvider {
 
   async getWalletAddress(): Promise<string> {
     return this.walletProvider.getWalletAddress();
-  }
-
-  async getWalletAddressBytes(): Promise<Hex> {
-    const address = await this.getWalletAddress();
-    return SuiSpokeProvider.getAddressBCSBytes(address);
   }
 
   static getAddressBCSBytes(suiaddress: string): Hex {

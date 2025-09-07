@@ -37,6 +37,7 @@ import {
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
 import { getIntentRelayChainId } from '../../constants.js';
+import { encodeAddress } from '../../utils/shared-utils.js';
 
 /**
  * SpokeService is a main class that provides functionalities for dealing with spoke chains.
@@ -402,7 +403,7 @@ export class SpokeService {
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: await spokeProvider.walletProvider.getWalletAddressBytes(),
+          srcAddress: encodeAddress(spokeProvider.chainConfig.chain.id, await spokeProvider.walletProvider.getWalletAddress()),
           payload,
         },
         hubProvider,
@@ -475,7 +476,7 @@ export class SpokeService {
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: await spokeProvider.walletProvider.getWalletAddressBytes(),
+          srcAddress: encodeAddress(spokeProvider.chainConfig.chain.id, await spokeProvider.walletProvider.getWalletAddress()),
           payload,
         },
         hubProvider,

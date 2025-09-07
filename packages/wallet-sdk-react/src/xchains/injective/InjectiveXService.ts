@@ -1,7 +1,7 @@
 import { XService } from '@/core/XService';
 import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi, IndexerGrpcAccountPortfolioApi } from '@injectivelabs/sdk-ts';
-import { ChainId as InjectiveChainId, EthereumChainId } from '@injectivelabs/ts-types';
+import { ChainId as InjectiveChainId, EvmChainId } from '@injectivelabs/ts-types';
 import { EvmWalletStrategy } from '@injectivelabs/wallet-evm';
 import { MsgBroadcaster, BaseWalletStrategy } from '@injectivelabs/wallet-core';
 import { Wallet } from '@injectivelabs/wallet-base';
@@ -27,8 +27,8 @@ export class InjectiveXService extends XService {
         [Wallet.Metamask]: new EvmWalletStrategy({
           chainId: InjectiveChainId.Mainnet,
           wallet: Wallet.Metamask,
-          ethereumOptions: {
-            ethereumChainId: EthereumChainId.Mainnet,
+          evmOptions: {
+            evmChainId: EvmChainId.Mainnet,
             rpcUrl: mainnet.rpcUrls.default.http[0],
           },
         }),
