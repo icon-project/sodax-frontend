@@ -67,7 +67,7 @@ export class StellarSpokeService {
       params.to ??
       (await EvmWalletAbstraction.getUserHubWalletAddress(
         spokeProvider.chainConfig.chain.id,
-        params.from,
+        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
         hubProvider,
       ));
 
@@ -109,7 +109,7 @@ export class StellarSpokeService {
       params.to ??
       (await EvmWalletAbstraction.getUserHubWalletAddress(
         spokeProvider.chainConfig.chain.id,
-        params.from,
+        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
         hubProvider,
       ));
 

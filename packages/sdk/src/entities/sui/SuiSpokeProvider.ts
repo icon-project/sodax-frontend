@@ -53,7 +53,7 @@ export class SuiSpokeProvider implements ISpokeProvider {
   ): PromiseSuiTxReturnType<R> {
     const isNative = token.toLowerCase() === this.chainConfig.nativeToken.toLowerCase();
     const tx = new Transaction();
-    const walletAddress = await this.walletProvider.getWalletAddressBytes();
+    const walletAddress = await this.walletProvider.getWalletAddress();
     const coin: TransactionResult | SuiNativeCoinResult | SuiTxObject = isNative
       ? await this.getNativeCoin(tx, amount)
       : await this.getCoin(tx, token, amount, walletAddress);
