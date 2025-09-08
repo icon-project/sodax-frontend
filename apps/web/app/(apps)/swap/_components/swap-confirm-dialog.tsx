@@ -1,23 +1,20 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect, useMemo } from 'react';
-import type { XToken, ChainId } from '@sodax/types';
+import { useState, useEffect } from 'react';
+import type { XToken, ChainId, SpokeChainId, ChainType } from '@sodax/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import { SwitchDirectionIcon, CircularProgressIcon } from '@/components/icons';
-import { formatUnits } from 'viem';
+import { CircularProgressIcon } from '@/components/icons';
 import type BigNumber from 'bignumber.js';
 import { Timer, XIcon, Check, ChevronRight, ChevronsRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
 import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccounts } from '@sodax/wallet-sdk';
 import { availableChains } from '@/constants/chains';
-import { useSwapApprove, useSpokeProvider, useQuote } from '@sodax/dapp-kit';
-import { useSwapAllowance } from '../_hooks';
-import type { CreateIntentParams, SolverIntentQuoteRequest, SolverIntentStatusCode } from '@sodax/sdk';
-// import superjson from 'superjson';
+import { useSwapApprove, useSpokeProvider, useSwapAllowance } from '@sodax/dapp-kit';
+import type { CreateIntentParams, SolverIntentQuoteRequest, SolverIntentStatusCode, QuoteType } from '@sodax/sdk';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -31,11 +28,7 @@ interface SwapConfirmDialogProps {
   onClose?: () => void;
   isLoading?: boolean;
   slippageTolerance?: number;
-  estimatedGasFee?: string;
   error?: string;
-  sourceAddress?: string;
-  destinationAddress?: string;
-  isSwapAndSend?: boolean;
   isSwapSuccessful?: boolean;
   swapFee?: string;
   minOutputAmount?: BigNumber;
@@ -56,11 +49,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   isLoading = false,
   slippageTolerance = 0.5,
   minOutputAmount,
-  estimatedGasFee,
   error,
-  sourceAddress,
-  destinationAddress,
-  isSwapAndSend = false,
   isSwapSuccessful = false,
   swapFee,
   intentOrderPayload,
@@ -72,47 +61,30 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [approvalError, setApprovalError] = useState<string | null>(null);
   const [allowanceConfirmed, setAllowanceConfirmed] = useState<boolean>(false);
 
-  // Add chain switching functionality
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
 
-  // Get connected wallet accounts
   const xAccounts = useXAccounts();
 
-  // Get wallet provider and spoke provider for approval
   const walletProvider = useWalletProvider(sourceToken.xChainId);
   const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
 
-  // Only create paramsForApprove when intentOrderPayload exists
-  // const paramsForApprove = intentOrderPayload
-  //   ? {
-  //       ...intentOrderPayload,
-  //       inputAmount: intentOrderPayload.inputAmount.toString(),
-  //       minOutputAmount: intentOrderPayload.minOutputAmount.toString(),
-  //       deadline: intentOrderPayload.deadline.toString(),
-  //     }
-  //   : undefined;
-
-  // Before passing props
   const paramsForApprove = intentOrderPayload
     ? JSON.parse(
         JSON.stringify(intentOrderPayload, (_, value) => (typeof value === 'bigint' ? value.toString() : value)),
       )
     : undefined;
 
-  const {
-    data: hasAllowed,
-    isLoading: isAllowanceLoading,
-    refetch: refetchAllowance,
-  } = useSwapAllowance(allowanceConfirmed ? undefined : paramsForApprove, spokeProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(
+    allowanceConfirmed ? undefined : paramsForApprove,
+    spokeProvider,
+  );
 
-  // Update allowance confirmed state when hasAllowed becomes true
   useEffect(() => {
     if (hasAllowed && !allowanceConfirmed) {
       setAllowanceConfirmed(true);
     }
   }, [hasAllowed, allowanceConfirmed]);
 
-  // Reset allowance confirmed when dialog opens
   useEffect(() => {
     if (open) {
       setAllowanceConfirmed(false);
@@ -120,10 +92,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     }
   }, [open]);
 
-  // Approve function
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, spokeProvider);
 
-  // Helper function to get wallet address for a specific chain
   const getWalletAddressForChain = (chainId: ChainId): string => {
     const chainType = getXChainType(chainId);
     if (!chainType) return 'Not connected';
@@ -131,21 +101,18 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     return account?.address || 'Not connected';
   };
 
-  // Update isCompleted when isSwapSuccessful changes
   useEffect(() => {
     if (isSwapSuccessful) {
       setIsCompleted(true);
     }
   }, [isSwapSuccessful]);
 
-  // Clear approval error when dialog opens
   useEffect(() => {
     if (open) {
       setApprovalError(null);
     }
   }, [open]);
 
-  // Utility function to format numbers to exactly 6 decimal places
   const formatToSixDecimals = (value: string): string => {
     const num = Number.parseFloat(value);
     if (Number.isNaN(num)) return value;
@@ -165,8 +132,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       if (value) {
         setAllowanceConfirmed(true);
       }
-      // Note: The approval hook will automatically invalidate and refetch the allowance
-      // But you can also manually refetch if needed: await refetchAllowance();
     } catch (error) {
       console.error('Approval failed:', error);
       setApprovalError(error instanceof Error ? error.message : 'Approval failed. Please try again.');
@@ -177,9 +142,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     setIsConfirming(true);
     try {
       await onConfirm();
-      // Don't set isCompleted here - it will be set by the parent via isSwapSuccessful prop
     } catch (error) {
-      // Handle any unexpected errors during confirmation
       console.error('Unexpected error during swap confirmation:', error);
     } finally {
       setIsConfirming(false);
@@ -202,7 +165,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     return `1 ${sourceToken.symbol} = ${exchangeRate.toFixed(6)} ${destinationToken.symbol}`;
   };
 
-  // Helper function to get chain name by ID
   const getChainNameById = (chainId: string | number): string => {
     const chain = availableChains.find(chain => chain.id === chainId);
     return chain?.name || 'Unknown Chain';
@@ -341,7 +303,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             </div>
           ) : (
             <div className="flex w-full flex-col gap-4">
-              {/* Show Switch Chain button if user is on wrong chain */}
               {isWrongChain && (
                 <Button
                   variant="cherry"
@@ -352,7 +313,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </Button>
               )}
 
-              {/* Show Approval button if not approved */}
               {!isWrongChain && !allowanceConfirmed && intentOrderPayload && (
                 <div className="w-full">
                   <Button
@@ -377,7 +337,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     )}
                   </Button>
 
-                  {/* Show approval error if any */}
                   {approvalError && (
                     <div className="w-full mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center gap-2 text-red-800">
@@ -390,7 +349,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </div>
               )}
 
-              {/* Show Swap button only if not on wrong chain and approved */}
               {!isWrongChain && allowanceConfirmed && (
                 <Button
                   variant="cherry"
@@ -425,7 +383,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </Button>
               )}
 
-              {/* Show loading state when waiting for approval status */}
               {!isWrongChain && !allowanceConfirmed && !intentOrderPayload && (
                 <Button
                   variant="cherry"
@@ -459,7 +416,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     </div>
                   </div>
 
-                  {/* Accordion Content */}
                   {isAccordionExpanded && (
                     <div className="bg-transparent border-none">
                       <Separator className="bg-clay-light h-[1px] mt-4 mb-4 opacity-30" />

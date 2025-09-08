@@ -717,15 +717,9 @@ export default function SwapPage() {
         onClose={handleDialogClose}
         isLoading={Boolean(isSwapPending || isWaitingForSolvedStatus)}
         slippageTolerance={slippageTolerance}
-        estimatedGasFee="~$2.50"
         error={swapError}
         minOutputAmount={new BigNumber(minOutputAmount)}
         intentOrderPayload={intentOrderPayload}
-        sourceAddress={sourceAddress}
-        destinationAddress={
-          isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || undefined
-        }
-        isSwapAndSend={isSwapAndSend}
         isSwapSuccessful={isSwapSuccessful}
         swapFee={swapFee}
         swapStatus={swapStatus}

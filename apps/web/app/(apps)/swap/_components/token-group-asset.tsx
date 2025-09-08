@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/swap/_components/group-asset.tsx
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -168,7 +167,6 @@ function StackedNetworksPortal({
     }
 
     return () => {
-      // Clean up portal container when component unmounts or isClicked becomes false
       if (!isClicked) {
         const container = document.getElementById('stacked-networks-portal');
         if (container) {
@@ -192,7 +190,6 @@ function StackedNetworksPortal({
         left: targetRect.left - 40,
         pointerEvents: 'auto',
       }}
-      // NEW: stop events so the document listener never sees them
       onMouseDown={e => e.stopPropagation()}
       onClick={e => e.stopPropagation()}
     >
@@ -313,7 +310,6 @@ export function TokenGroupAsset({
   onMouseLeave,
   onChainClick,
 }: TokenGroupAssetProps): React.JSX.Element {
-  // Extract unique chain IDs from the tokens in this group
   const chainIds = [...new Set(tokens.map(token => token.xChainId))];
   const assetRef = useRef<HTMLDivElement>(null);
 

@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/swap/_components/token-list.tsx
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,7 +5,6 @@ import type { SpokeChainId, XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
 import { TokenAsset } from './token-asset';
 import { TokenGroupAsset } from './token-group-asset';
 
@@ -57,15 +55,12 @@ export function TokenList({
     };
   }, [clickedAsset, onClickOutside]);
 
-  // Filter tokens by search query
   const filteredTokens = uniqueTokenSymbols.filter(({ symbol }: { symbol: string; tokens: XToken[] }) =>
     symbol.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  // Sort tokens - by 24h volume when not showing all assets, alphabetically when showing all assets
   const sortedTokens = showAllAssets ? filteredTokens.sort((a, b) => a.symbol.localeCompare(b.symbol)) : filteredTokens;
 
-  // Limit to 3 rows (15 tokens) when not showing all assets
   const displayTokens = showAllAssets ? sortedTokens : sortedTokens.slice(0, 15);
 
   const shouldApplyHover = clickedAsset === null;
@@ -82,7 +77,6 @@ export function TokenList({
       onTokenSelect(token);
       onClose();
     }
-    // Reset clickedAsset state when a network is clicked to hide the stacked networks
     if (onClickOutside) {
       onClickOutside();
     }
@@ -93,7 +87,6 @@ export function TokenList({
     const isHovered = shouldApplyHover && hoveredAsset === symbol;
     const isThisAssetClicked = clickedAsset === symbol;
 
-    // Blur all other assets when one is clicked
     const shouldBlurOtherAssets = clickedAsset !== null && clickedAsset !== symbol;
 
     const commonProps = {

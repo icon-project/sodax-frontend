@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/swap/_components/simple-asset.tsx
 import type React from 'react';
 import { motion } from 'framer-motion';
 import type { XToken } from '@sodax/types';
