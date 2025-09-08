@@ -28,6 +28,7 @@ interface CurrencyInputPanelProps {
   onMaxClick?: () => void;
   onChainSelect?: (chainId: SpokeChainId, token: XToken) => void;
   className?: string;
+  isChainConnected?: boolean;
 }
 
 const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
@@ -41,6 +42,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   onMaxClick,
   onChainSelect,
   className = '',
+  isChainConnected = false,
 }: CurrencyInputPanelProps) => {
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
   const formattedBalance = formatUnits(currencyBalance, currency.decimals);
@@ -77,9 +79,9 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
     >
       <div className="flex justify-start items-center gap-4 cursor-pointer" onClick={handleCurrencyAreaClick}>
         {currency.xChainId === 'sonic' && (currency.symbol === 'SODA' || currency.symbol === 'bnUSD') ? (
-          <CanLogo currency={currency} />
+          <CanLogo currency={currency} isChainConnected={isChainConnected} />
         ) : (
-          <CurrencyLogo currency={currency} />
+          <CurrencyLogo currency={currency} isChainConnected={isChainConnected} />
         )}
 
         <div className="inline-flex flex-col justify-center items-start gap-1">

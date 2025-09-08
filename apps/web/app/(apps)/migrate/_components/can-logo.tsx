@@ -36,7 +36,9 @@ const CanLogo: React.FC<CanLogoProps> = ({ className = '', currency, isChainConn
             height={16}
           />
         </div>
-        {/* <div className="w-2.5 h-2.5 left-[8px] top-[8px] absolute bg-positive rounded-full border-[1.50px] border-white" /> */}
+        {isChainConnected && (
+          <div className="w-2.5 h-2.5 left-[8px] top-[8px] absolute bg-green-500 rounded-full border-2 border-white" />
+        )}
       </div>
     </div>
   );

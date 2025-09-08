@@ -395,6 +395,7 @@ export default function MigratePage() {
             onInputChange={e => setTypedValue(e.target.value)}
             onMaxClick={handleMaxClick}
             onChainSelect={(chainId, token) => setChainForCurrency('from', chainId, token)}
+            isChainConnected={isSourceChainConnected}
           />
 
           <Button
@@ -414,6 +415,7 @@ export default function MigratePage() {
           currencyBalance={getBalanceForChain(direction.to, currencies.to)}
           inputValue={typedValue}
           onChainSelect={(chainId, token) => setChainForCurrency('to', chainId, token)}
+          isChainConnected={isDestinationChainConnected}
           // onInputChange={e => setTypedValue(e.target.value)}
         />
       </div>
