@@ -174,13 +174,14 @@ export default function MigratePage() {
       try {
         // Estimate gas fee based on the chain
         let gasFeeEstimate: bigint;
-
+        const fullBalance = normaliseTokenAmount(balance, currencies.from.decimals);
+        const fullBalanceBigInt = scaleTokenAmount(fullBalance, currencies.from.decimals);
+        const feeAmount = sodax.solver.getFee(fullBalanceBigInt);
+        console.log('feeAmount', feeAmount);
         if (direction.from === ICON_MAINNET_CHAIN_ID) {
-          // For ICX migration, use a fixed gas fee estimate (~0.02 ICX)
-          gasFeeEstimate = parseUnits('0.02', currencies.from.decimals);
+          gasFeeEstimate = parseUnits((0.02 * Number(fullBalance)).toString(), currencies.from.decimals);
         } else {
-          // For SODA migration, use a fixed gas fee estimate (~0.1 SODA)
-          gasFeeEstimate = parseUnits('0.1', currencies.from.decimals);
+          gasFeeEstimate = feeAmount;
         }
 
         const maxAvailableAmount = calculateMaxAvailableAmount(balance, currencies.from.decimals, gasFeeEstimate);
