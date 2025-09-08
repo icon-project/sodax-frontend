@@ -1216,6 +1216,11 @@ export class MoneyMarketService {
     let assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const lendingPool = this.config.lendingPool;
+    console.log(assetAddress);
+    console.log(vaultAddress);
+    console.log(lendingPool);
+    console.log(to);
+
 
     if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
       if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
@@ -1226,6 +1231,7 @@ export class MoneyMarketService {
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
     const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, amount);
+     console.log(translatedAmount);
     calls.push(Erc20Service.encodeApprove(vaultAddress, lendingPool, translatedAmount));
     calls.push(
       MoneyMarketService.encodeSupply(
