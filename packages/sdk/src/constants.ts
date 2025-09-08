@@ -864,7 +864,7 @@ export const spokeChainConfig = {
     },
     addresses: {
       assetManager: '0xAfd6A6e4287A511D3BAAd013093815268846FBb7',
-      connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
+      connection: '0xA143488cDc5B74B366231E6A4d5a55A2D9Dc8484',
     },
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x19feAf3043DFA69b365D05495630E840A2b9a9dC',
