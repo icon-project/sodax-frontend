@@ -15,18 +15,62 @@ import { SwitchDirectionIcon } from '@/components/icons';
 import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/currency-input-panel';
 import { useMigrationInfo, useMigrationStore } from './_stores/migration-store-provider';
 import { icxToken, sodaToken, iconBnusdToken, sonicBnusdToken } from './_stores/migration-store';
-import { formatUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import { useMigrate, useMigrationAllowance, useMigrationApprove } from './_hooks';
 import { Check, Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useSpokeProvider } from '@sodax/dapp-kit';
+import { useSpokeProvider, useSodaxContext } from '@sodax/dapp-kit';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import BigNumber from 'bignumber.js';
+
+// Helper functions for gas fee calculation
+const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
+  if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
+    return 0n;
+  }
+
+  return BigInt(
+    new BigNumber(amount.toString()).multipliedBy(new BigNumber(10).pow(decimals)).toFixed(0, BigNumber.ROUND_DOWN),
+  );
+};
+
+const normaliseTokenAmount = (amount: number | string | bigint, decimals: number): string => {
+  if (!amount || amount === 0n || amount === '0' || Number.isNaN(Number(amount))) {
+    return '0';
+  }
+
+  return new BigNumber(amount.toString()).dividedBy(new BigNumber(10).pow(decimals)).toFixed(4, BigNumber.ROUND_DOWN);
+};
+
+const calculateMaxAvailableAmount = (balance: bigint, tokenDecimals: number, gasFeeEstimate: bigint): string => {
+  if (balance === 0n) {
+    return '0';
+  }
+
+  try {
+    const fullBalance = normaliseTokenAmount(balance, tokenDecimals);
+    const fullBalanceBigInt = scaleTokenAmount(fullBalance, tokenDecimals);
+
+    // Subtract gas fee from balance
+    const availableBalanceBigInt = fullBalanceBigInt - gasFeeEstimate;
+
+    if (availableBalanceBigInt > 0n) {
+      return normaliseTokenAmount(availableBalanceBigInt, tokenDecimals);
+    }
+
+    return '0';
+  } catch (error) {
+    console.error('Error calculating max available amount:', error);
+    return normaliseTokenAmount(balance, tokenDecimals);
+  }
+};
 
 export default function MigratePage() {
   const { openWalletModal } = useWalletUI();
   const { address: iconAddress } = useXAccount('ICON');
   const { address: sonicAddress } = useXAccount('EVM');
+  const { sodax } = useSodaxContext();
 
   const { error } = useMigrationInfo();
   const migrationMode = useMigrationStore(state => state.migrationMode);
@@ -122,9 +166,34 @@ export default function MigratePage() {
     }
   };
 
-  const handleMaxClick = () => {
-    const value = getBalanceForChain(direction.from, currencies.from);
-    setTypedValue(Number(formatUnits(value, currencies.from.decimals)).toFixed(2));
+  const handleMaxClick = async () => {
+    const balance = getBalanceForChain(direction.from, currencies.from);
+
+    // For ICX and SODA toggle case, estimate gas fees
+    if (migrationMode === 'icxsoda') {
+      try {
+        // Estimate gas fee based on the chain
+        let gasFeeEstimate: bigint;
+
+        if (direction.from === ICON_MAINNET_CHAIN_ID) {
+          // For ICX migration, use a fixed gas fee estimate (~0.02 ICX)
+          gasFeeEstimate = parseUnits('0.02', currencies.from.decimals);
+        } else {
+          // For SODA migration, use a fixed gas fee estimate (~0.1 SODA)
+          gasFeeEstimate = parseUnits('0.1', currencies.from.decimals);
+        }
+
+        const maxAvailableAmount = calculateMaxAvailableAmount(balance, currencies.from.decimals, gasFeeEstimate);
+        setTypedValue(Number(maxAvailableAmount).toFixed(2));
+      } catch (error) {
+        console.error('Error calculating max amount with gas fees:', error);
+        // Fallback to original behavior if gas estimation fails
+        setTypedValue(Number(formatUnits(balance, currencies.from.decimals)).toFixed(2));
+      }
+    } else {
+      // For bnUSD migration, use original behavior (no gas fee estimation needed)
+      setTypedValue(Number(formatUnits(balance, currencies.from.decimals)).toFixed(2));
+    }
   };
 
   // Get wallet provider for the source chain

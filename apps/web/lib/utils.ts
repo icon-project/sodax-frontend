@@ -72,8 +72,8 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
 
   for (const chainId of filteredSupportedChains) {
     try {
-      const supportedTokens = spokeChainConfig[chainId].supportedTokens;
-
+      // const supportedTokens = spokeChainConfig[chainId].supportedTokens;
+      const supportedTokens = getSupportedSolverTokens(chainId);
       // Filter out legacy tokens to prevent duplicates
       const filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
 

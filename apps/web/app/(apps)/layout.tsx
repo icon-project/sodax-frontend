@@ -11,7 +11,6 @@ import type { ChainType } from '@sodax/types';
 import '../globals.css';
 import { SwapStoreProvider } from './swap/_stores/swap-store-provider';
 import { WalletModal } from '@/components/shared/wallet-modal';
-// const WalletModal = dynamic(() => import('@/components/shared/wallet-modal').then(m => m.WalletModal), { ssr: false });
 const TermsConfirmationModal = dynamic(
   () => import('@/components/shared/terms-confirmation-modal').then(m => m.default),
   {

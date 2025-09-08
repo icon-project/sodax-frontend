@@ -39,7 +39,6 @@ const normaliseTokenAmount = (amount: number | string | bigint, decimals: number
   return new BigNumber(amount.toString()).dividedBy(new BigNumber(10).pow(decimals)).toFixed(4, BigNumber.ROUND_DOWN);
 };
 
-// Calculate the maximum available amount for swapping after deducting the swap fee
 const calculateMaxAvailableAmount = (
   balance: bigint,
   tokenDecimals: number,
@@ -54,23 +53,19 @@ const calculateMaxAvailableAmount = (
     const fullBalanceBigInt = scaleTokenAmount(fullBalance, tokenDecimals);
     const feeAmount = solver.getFee(fullBalanceBigInt);
 
-    // Calculate available balance after deducting fee
     const availableBalanceBigInt = fullBalanceBigInt - feeAmount;
 
     if (availableBalanceBigInt > 0n) {
       return normaliseTokenAmount(availableBalanceBigInt, tokenDecimals);
     }
 
-    // If fee is greater than or equal to balance, return 0
     return '0';
   } catch (error) {
     console.error('Error calculating max available amount:', error);
-    // Fallback to full balance if fee calculation fails
     return normaliseTokenAmount(balance, tokenDecimals);
   }
 };
 
-// Check if user has sufficient balance including swap fee
 const hasSufficientBalanceWithFee = (
   amount: string,
   balance: bigint,
@@ -89,19 +84,17 @@ const hasSufficientBalanceWithFee = (
     return totalRequired <= balance;
   } catch (error) {
     console.error('Error checking sufficient balance with fee:', error);
-    // Fallback to simple balance check if fee calculation fails
     const amountBigInt = scaleTokenAmount(amount, tokenDecimals);
     return amountBigInt <= balance;
   }
 };
 
-// Component to monitor swap status only when dstTxHash is available
 interface SwapStatusMonitorProps {
   dstTxHash: string;
   onSwapSuccessful: () => void;
-  onSwapFailed: () => void; // Add callback for failed swaps
+  onSwapFailed: () => void;
   onUpdateSwapStatus: (statusCode: number) => void;
-  resetTrigger: number; // Add this to trigger reset of internal state
+  resetTrigger: number;
 }
 
 function SwapStatusMonitor({
@@ -113,10 +106,9 @@ function SwapStatusMonitor({
 }: SwapStatusMonitorProps): React.JSX.Element | null {
   const { data: status } = useStatus(dstTxHash as `0x${string}`);
   const hasCalledSuccess = useRef<boolean>(false);
-  const hasCalledFailed = useRef<boolean>(false); // Track if we've already called failed callback
+  const hasCalledFailed = useRef<boolean>(false);
   const lastResetTrigger = useRef<number>(resetTrigger);
 
-  // Reset the success and failed flags when resetTrigger changes (new swap started)
   useEffect(() => {
     if (resetTrigger !== lastResetTrigger.current) {
       hasCalledSuccess.current = false;
@@ -143,7 +135,6 @@ function SwapStatusMonitor({
     }
   }, [status, dstTxHash, onSwapSuccessful, onSwapFailed, onUpdateSwapStatus]);
 
-  // This component doesn't render anything, it just monitors status
   return null;
 }
 
@@ -151,7 +142,6 @@ export default function SwapPage() {
   const { openWalletModal } = useWalletUI();
   const queryClient = useQueryClient();
 
-  // Get swap state from Zustand store
   const {
     sourceToken,
     destinationToken,
@@ -162,7 +152,6 @@ export default function SwapPage() {
     slippageTolerance,
   } = useSwapState();
 
-  // Get swap actions from Zustand store
   const {
     setSourceToken,
     setDestinationToken,
@@ -176,21 +165,19 @@ export default function SwapPage() {
   const [isSwapConfirmOpen, setIsSwapConfirmOpen] = useState<boolean>(false);
   const [swapError, setSwapError] = useState<string>('');
   const [isSwapSuccessful, setIsSwapSuccessful] = useState<boolean>(false);
-  const [isSwapFailed, setIsSwapFailed] = useState<boolean>(false); // Add failed state
+  const [isSwapFailed, setIsSwapFailed] = useState<boolean>(false);
   const [dstTxHash, setDstTxHash] = useState<string>('');
   const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
 
-  // Memoize the callback to prevent unnecessary re-renders of SwapStatusMonitor
   const handleSwapSuccessful = useCallback(() => {
     setIsSwapSuccessful(true);
-    setIsSwapFailed(false); // Reset failed state when successful
+    setIsSwapFailed(false);
   }, []);
 
-  // Add callback for failed swaps
   const handleSwapFailed = useCallback(() => {
     setIsSwapFailed(true);
-    setIsSwapSuccessful(false); // Reset success state when failed
-    setSwapError('Swap failed. Please try again.'); // Set error message
+    setIsSwapSuccessful(false);
+    setSwapError('Swap failed. Please try again.');
   }, []);
 
   const sourceChainType = getXChainType(sourceToken.xChainId);
@@ -220,23 +207,15 @@ export default function SwapPage() {
   const sourceBalance = sourceBalances?.[sourceToken.address] || 0n;
   const destinationBalance = destinationBalances?.[destinationToken.address] || 0n;
 
-  // Check if swap is successful based on status
-  // Status monitoring is now handled by SwapStatusMonitor component
-
-  // Determine if we should show loading state
   const isWaitingForSolvedStatus = useMemo(() => {
-    // Stop loading if swap failed, continue loading if we have dstTxHash and haven't failed
     return !!dstTxHash && !isSwapFailed;
   }, [dstTxHash, isSwapFailed]);
 
-  // Get token prices and USD values
   const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
   const { usdValue: destinationUsdValue } = useTokenPrice(destinationToken, destinationAmount);
 
-  // Get Sodax context for fee calculation
   const { sodax } = useSodaxContext();
 
-  // Calculate swap fee
   const swapFee = useMemo(() => {
     if (!sourceAmount || sourceAmount === '' || Number.isNaN(Number(sourceAmount)) || Number(sourceAmount) <= 0) {
       return undefined;
@@ -250,7 +229,6 @@ export default function SwapPage() {
         return 'Free';
       }
 
-      // Convert fee to human readable format
       const feeInTokens = normaliseTokenAmount(feeAmount, sourceToken.decimals);
       const feeUsdValue = sourceUsdValue ? (Number(feeInTokens) * sourceUsdValue) / Number(sourceAmount) : undefined;
 
@@ -557,12 +535,10 @@ export default function SwapPage() {
         throw new Error(`Swap execution failed: ${result.error?.code || 'Unknown error'}`);
       }
 
-      // Store the destination transaction hash for status monitoring
       const [, , intentDeliveryInfo] = result.value;
       setDstTxHash(intentDeliveryInfo.dstTxHash);
       setSwapStatus(0);
       console.log('Swap Status', swapStatus);
-      // Invalidate balance queries
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     } catch (error) {
       console.error('Swap execution failed:', error);
@@ -572,11 +548,9 @@ export default function SwapPage() {
   };
 
   const handleDialogClose = (): void => {
-    // setSourceAmount('');
-    // setDestinationAmount('');
     setSwapError('');
     setIsSwapSuccessful(false);
-    setIsSwapFailed(false); // Reset failed state
+    setIsSwapFailed(false);
     setDstTxHash('');
     setSwapResetCounter(prev => prev + 1);
   };
@@ -588,7 +562,6 @@ export default function SwapPage() {
   };
   return (
     <div className="w-full">
-      {/* SwapStatusMonitor component - only renders when dstTxHash is available */}
       {dstTxHash && (
         <SwapStatusMonitor
           dstTxHash={dstTxHash}
@@ -658,9 +631,6 @@ export default function SwapPage() {
         {quoteQuery.data?.ok === false && (
           <div className="self-stretch px-8 py-6 bg-white rounded-[20px] inline-flex justify-between items-center">
             <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
-              {/* <div className="self-stretch justify-center text-espresso text-base font-bold font-['InterRegular'] leading-tight">
-                Sorry, your transaction got stuck
-              </div> */}
               <div className="self-stretch justify-center">
                 <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">
                   {quoteQuery.data.error.detail.message} <br />
@@ -675,7 +645,6 @@ export default function SwapPage() {
           </div>
         )}
 
-        {/* Failed swap error display */}
         {isSwapFailed && (
           <div className="self-stretch px-8 py-6 bg-red-50 border border-red-200 rounded-[20px] inline-flex justify-between items-center">
             <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
