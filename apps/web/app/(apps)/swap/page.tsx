@@ -169,6 +169,10 @@ export default function SwapPage() {
   const [dstTxHash, setDstTxHash] = useState<string>('');
   const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
 
+  // Fixed amounts for dialog - these don't change once dialog is open
+  const [fixedDestinationAmount, setFixedDestinationAmount] = useState<string>('');
+  const [fixedMinOutputAmount, setFixedMinOutputAmount] = useState<string>('');
+
   const handleSwapSuccessful = useCallback(() => {
     setIsSwapSuccessful(true);
     setIsSwapFailed(false);
@@ -451,6 +455,9 @@ export default function SwapPage() {
       const targetChainType = getTargetChainType();
       openWalletModal(targetChainType);
     } else if (buttonState.action === 'review') {
+      // Set fixed amounts before opening dialog to prevent changes during swap
+      setFixedDestinationAmount(destinationAmount);
+      setFixedMinOutputAmount(minOutputAmount);
       createIntentOrderPayload();
       setIsSwapConfirmOpen(true);
     }
@@ -553,6 +560,9 @@ export default function SwapPage() {
     setIsSwapFailed(false);
     setDstTxHash('');
     setSwapResetCounter(prev => prev + 1);
+    // Reset fixed amounts when dialog is closed
+    setFixedDestinationAmount('');
+    setFixedMinOutputAmount('');
   };
 
   const buttonState = getButtonState();
@@ -680,14 +690,16 @@ export default function SwapPage() {
         sourceToken={sourceToken}
         destinationToken={destinationToken}
         sourceAmount={sourceAmount}
-        destinationAmount={destinationAmount}
+        destinationAmount={isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : destinationAmount}
         exchangeRate={exchangeRate}
         onConfirm={handleSwapConfirm}
         onClose={handleDialogClose}
         isLoading={Boolean(isSwapPending || isWaitingForSolvedStatus)}
         slippageTolerance={slippageTolerance}
         error={swapError}
-        minOutputAmount={new BigNumber(minOutputAmount)}
+        minOutputAmount={
+          new BigNumber(isSwapConfirmOpen && fixedMinOutputAmount ? fixedMinOutputAmount : minOutputAmount)
+        }
         intentOrderPayload={intentOrderPayload}
         isSwapSuccessful={isSwapSuccessful}
         swapFee={swapFee}
