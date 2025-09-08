@@ -179,7 +179,10 @@ export default function MigratePage() {
         const feeAmount = sodax.solver.getFee(fullBalanceBigInt);
         console.log('feeAmount', feeAmount);
         if (direction.from === ICON_MAINNET_CHAIN_ID) {
-          gasFeeEstimate = parseUnits((0.02 * Number(fullBalance)).toString(), currencies.from.decimals);
+          gasFeeEstimate = parseUnits(
+            (0.02 * Number(fullBalance) < 0.02 ? 0.02 : 0.02 * Number(fullBalance)).toString(),
+            currencies.from.decimals,
+          );
         } else {
           gasFeeEstimate = feeAmount;
         }
