@@ -17,12 +17,12 @@ export class SuiWalletProvider implements ISuiWalletProvider {
 
     this.keyPair = Ed25519Keypair.deriveKeypair(mnemonics);
   }
-  async signAndExecuteTxn(txn: SuiTransaction): Promise<Hex> {
+  async signAndExecuteTxn(txn: SuiTransaction): Promise<string> {
     const res = await this.client.signAndExecuteTransaction({
       transaction: txn as unknown as Transaction,
       signer: this.keyPair,
     });
-    return `0x${res.digest}`;
+    return res.digest;
   }
 
   async viewContract(

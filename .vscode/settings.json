@@ -18,5 +18,6 @@
   },
   "[css]": {
     "editor.defaultFormatter": "biomejs.biome"
-  }
+  },
+  "git.enableCommitSigning": true
 }

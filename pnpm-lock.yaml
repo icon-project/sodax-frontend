@@ -220,6 +220,9 @@ importers:
       '@sodax/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@sodax/wallet-sdk':
+        specifier: workspace:*
+        version: link:../../packages/wallet-sdk
       '@solana/spl-token':
         specifier: 0.4.9
         version: 0.4.9(@solana/web3.js@1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)(utf-8-validate@5.0.10)

@@ -191,6 +191,24 @@ export class MigrationService {
           );
         }
 
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          let spender: Address;
+          const wallet = await spokeProvider.walletProvider.getWalletAddress();
+          if (spokeProvider instanceof SonicSpokeProvider) {
+            spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
+          } else {
+            spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
+          }
+          return await Erc20Service.isAllowanceValid(
+            params.srcbnUSD as Address,
+            params.amount,
+            wallet as `0x${string}`,
+            spender,
+            evmSpokeProvider,
+          );
+        }
+
         if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
           console.log('revert migration1234');
 

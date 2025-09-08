@@ -119,6 +119,11 @@ export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeCo
 export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
+export type BackendApiConfig ={
+  baseURL?: HttpUrl;
+  timeout?: number;
+  headers?: Record<string, string>;
+}
 
 export type MoneyMarketConfigParams =
   | Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
