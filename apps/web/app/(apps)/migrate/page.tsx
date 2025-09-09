@@ -200,13 +200,17 @@ export default function MigratePage() {
     }
   };
 
+  // Get addresses for source and destination chains
+  const sourceAddress = getAddressForChain(direction.from);
+  const destinationAddress = getAddressForChain(direction.to);
+
   // Get wallet provider for the source chain
   const walletProvider = useWalletProvider(direction.from);
   const spokeProvider = useSpokeProvider(direction.from, walletProvider);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(
     currencies.from,
     typedValue,
-    iconAddress,
+    sourceAddress,
     spokeProvider,
     migrationMode,
     currencies.to,
@@ -218,11 +222,11 @@ export default function MigratePage() {
   } = useMigrationApprove(
     currencies.from,
     typedValue,
-    iconAddress,
+    sourceAddress,
     spokeProvider,
     migrationMode,
     currencies.to,
-    sonicAddress,
+    destinationAddress,
   );
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
@@ -248,10 +252,6 @@ export default function MigratePage() {
   // Get chain types for source and destination
   const sourceChainType = getXChainType(direction.from);
   const destinationChainType = getXChainType(direction.to);
-
-  // Get addresses for source and destination chains
-  const sourceAddress = getAddressForChain(direction.from);
-  const destinationAddress = getAddressForChain(direction.to);
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;

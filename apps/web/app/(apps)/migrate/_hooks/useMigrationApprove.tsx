@@ -37,11 +37,11 @@ interface UseApproveReturn {
 export function useMigrationApprove(
   token: XToken | undefined,
   amount: string | undefined,
-  iconAddress: string | undefined,
+  sourceAddress: string | undefined,
   spokeProvider: SpokeProvider | undefined,
   migrationMode: 'icxsoda' | 'bnusd' = 'icxsoda',
   toToken?: XToken,
-  sonicAddress?: string,
+  destinationAddress?: string,
 ): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +51,7 @@ export function useMigrationApprove(
   const { refetch: refetchAllowance } = useMigrationAllowance(
     token,
     amount,
-    iconAddress,
+    sourceAddress,
     spokeProvider,
     migrationMode,
     toToken,
@@ -91,7 +91,7 @@ export function useMigrationApprove(
         // ICX/SODA migration approval
         const revertParams = {
           amount: amountToMigrate,
-          to: iconAddress as `hx${string}`,
+          to: sourceAddress as `hx${string}`,
         } satisfies IcxCreateRevertMigrationParams;
 
         result = await sodax.migration.approve(revertParams, 'revert', spokeProvider, false);
@@ -105,10 +105,7 @@ export function useMigrationApprove(
           srcbnUSD: token.address,
           dstbnUSD: toToken.address,
           amount: amountToMigrate,
-          to:
-            toToken.xChainId === ICON_MAINNET_CHAIN_ID
-              ? (iconAddress as `hx${string}`)
-              : (sonicAddress as `0x${string}`),
+          to: destinationAddress as `hx${string}` | `0x${string}`,
         } satisfies UnifiedBnUSDMigrateParams;
 
         result = await sodax.migration.approve(params, 'revert', spokeProvider, false);
@@ -129,7 +126,17 @@ export function useMigrationApprove(
     } finally {
       setIsLoading(false);
     }
-  }, [spokeProvider, token, amount, iconAddress, sodax, refetchAllowance, migrationMode, toToken, sonicAddress]);
+  }, [
+    spokeProvider,
+    token,
+    amount,
+    sourceAddress,
+    sodax,
+    refetchAllowance,
+    migrationMode,
+    toToken,
+    destinationAddress,
+  ]);
 
   const resetError = useCallback(() => {
     setError(null);

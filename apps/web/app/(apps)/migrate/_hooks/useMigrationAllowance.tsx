@@ -2,7 +2,13 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { XToken } from '@sodax/types';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { parseUnits } from 'viem';
-import { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider, isLegacybnUSDToken, isNewbnUSDToken } from '@sodax/sdk';
+import {
+  type IcxCreateRevertMigrationParams,
+  type UnifiedBnUSDMigrateParams,
+  type SpokeProvider,
+  isLegacybnUSDToken,
+  isNewbnUSDToken,
+} from '@sodax/sdk';
 import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 /**
@@ -31,7 +37,7 @@ import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 export function useMigrationAllowance(
   token: XToken | undefined,
   amount: string | undefined,
-  iconAddress: string | undefined,
+  sourceAddress: string | undefined,
   spokeProvider: SpokeProvider | undefined,
   migrationMode: 'icxsoda' | 'bnusd' = 'icxsoda',
   toToken?: XToken,
@@ -39,7 +45,7 @@ export function useMigrationAllowance(
   const { sodax } = useSodaxContext();
 
   return useQuery({
-    queryKey: ['allowance', token?.xChainId, token?.address, amount, iconAddress, migrationMode],
+    queryKey: ['allowance', token?.xChainId, token?.address, amount, sourceAddress, migrationMode],
     queryFn: async () => {
       if (!token) throw new Error('Token is required');
       if (!amount) throw new Error('Amount is required');
@@ -56,7 +62,7 @@ export function useMigrationAllowance(
         // ICX/SODA migration allowance check
         const params = {
           amount: amountToMigrate,
-          to: iconAddress as `hx${string}`,
+          to: sourceAddress as `hx${string}`,
         } satisfies IcxCreateRevertMigrationParams;
 
         const allowance = await sodax.migration.isAllowanceValid(params, 'revert', spokeProvider);
@@ -75,7 +81,7 @@ export function useMigrationAllowance(
           srcbnUSD: token.address,
           dstbnUSD: toToken.address,
           amount: amountToMigrate,
-          to: iconAddress as `hx${string}`,
+          to: sourceAddress as `hx${string}` | `0x${string}`,
         } satisfies UnifiedBnUSDMigrateParams;
         const allowance = await sodax.migration.isAllowanceValid(params, 'revert', spokeProvider);
         if (allowance.ok) {
