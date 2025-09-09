@@ -19,7 +19,7 @@ import type { SpokeChainId, XToken } from '@sodax/types';
 import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight, Coins, TrendingUp } from 'lucide-react';
-import { normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
+import { normaliseTokenAmount, scaleTokenAmount, formatTokenAmount } from '@/lib/utils';
 import {
   useSpokeProvider,
   useSodaxContext,
@@ -28,6 +28,7 @@ import {
   useStakeAllowance,
   useUnstake,
   useClaim,
+  useCancelUnstake,
   useStakingInfo,
   useUnstakingInfo,
   useUnstakingInfoWithPenalty,
@@ -78,6 +79,7 @@ export default function StakingPage() {
   const { mutateAsync: approve, isPending: isApproving } = useStakeApprove(spokeProvider);
   const { mutateAsync: unstake, isPending: isUnstakingPending } = useUnstake(spokeProvider);
   const { mutateAsync: claim, isPending: isClaiming } = useClaim(spokeProvider);
+  const { mutateAsync: cancelUnstake, isPending: isCancellingUnstake } = useCancelUnstake(spokeProvider);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useStakeAllowance(
     stakeAmount && sodaToken && account.address
       ? {
@@ -149,6 +151,21 @@ export default function StakingPage() {
       setClaimRequestId('');
     } catch (error) {
       console.error('Claim error:', error);
+    }
+  };
+
+  const handleCancelUnstake = async (requestId: string) => {
+    if (!spokeProvider) return;
+
+    try {
+      await cancelUnstake({
+        requestId: BigInt(requestId),
+      });
+      console.log('Cancel unstake successful');
+      // Refresh staking info
+      window.location.reload();
+    } catch (error) {
+      console.error('Cancel unstake error:', error);
     }
   };
 
@@ -244,7 +261,7 @@ export default function StakingPage() {
                 ) : (
                   <div className="flex items-center justify-between">
                     <div className="text-lg font-semibold">
-                      {normaliseTokenAmount(sodaBalance || 0n, sodaToken.decimals)} {sodaToken.symbol}
+                      {formatTokenAmount(sodaBalance || 0n, sodaToken.decimals)} {sodaToken.symbol}
                     </div>
                     <div className="text-sm text-muted-foreground">Available for staking</div>
                   </div>
@@ -296,22 +313,20 @@ export default function StakingPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 border rounded-lg">
                     <div className="text-sm text-muted-foreground">Total Staked</div>
-                    <div className="text-lg font-semibold">
-                      {normaliseTokenAmount(stakingInfo.totalStaked, 18)} SODA
-                    </div>
+                    <div className="text-lg font-semibold">{formatTokenAmount(stakingInfo.totalStaked, 18)} SODA</div>
                     <div className="text-xs text-muted-foreground mt-1">Total SODA staked across all users</div>
                   </div>
                   <div className="p-4 border rounded-lg">
                     <div className="text-sm text-muted-foreground">Your xSODA Shares</div>
                     <div className="text-lg font-semibold">
-                      {normaliseTokenAmount(stakingInfo.userXSodaBalance, 18)} xSODA
+                      {formatTokenAmount(stakingInfo.userXSodaBalance, 18)} xSODA
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">Your raw xSODA token balance</div>
                   </div>
                   <div className="p-4 border rounded-lg">
                     <div className="text-sm text-muted-foreground">Your xSODA Value</div>
                     <div className="text-lg font-semibold">
-                      {normaliseTokenAmount(stakingInfo.userXSodaValue, 18)} SODA
+                      {formatTokenAmount(stakingInfo.userXSodaValue, 18)} SODA
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">Your xSODA tokens worth in SODA</div>
                   </div>
@@ -336,7 +351,7 @@ export default function StakingPage() {
                   <div className="p-4 border rounded-lg">
                     <div className="text-sm text-muted-foreground">Total Unstaking</div>
                     <div className="text-lg font-semibold">
-                      {normaliseTokenAmount(unstakingInfoWithPenalty.totalUnstaking, 18)} SODA
+                      {formatTokenAmount(unstakingInfoWithPenalty.totalUnstaking, 18)} SODA
                     </div>
                   </div>
 
@@ -350,7 +365,7 @@ export default function StakingPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <div className="text-sm font-medium">
-                                    {normaliseTokenAmount(request.request.amount, 18)} SODA
+                                    {formatTokenAmount(request.request.amount, 18)} SODA
                                   </div>
                                   <div className="text-xs text-muted-foreground">Request #{index + 1}</div>
                                 </div>
@@ -372,13 +387,13 @@ export default function StakingPage() {
                                       <div className="text-muted-foreground">Penalty:</div>
                                       <div className="font-medium text-red-600">
                                         {request.penaltyPercentage.toFixed(1)}% (
-                                        {normaliseTokenAmount(request.penalty, 18)} SODA)
+                                        {formatTokenAmount(request.penalty, 18)} SODA)
                                       </div>
                                     </div>
                                     <div>
                                       <div className="text-muted-foreground">Claimable:</div>
                                       <div className="font-medium text-green-600">
-                                        {normaliseTokenAmount(request.claimableAmount, 18)} SODA
+                                        {formatTokenAmount(request.claimableAmount, 18)} SODA
                                       </div>
                                     </div>
                                   </div>
@@ -390,8 +405,8 @@ export default function StakingPage() {
                                   </div>
                                 )}
 
-                                {/* Claim button - always available */}
-                                <div className="mt-2">
+                                {/* Action buttons */}
+                                <div className="mt-2 flex gap-2">
                                   <Button
                                     size="sm"
                                     onClick={() => {
@@ -399,11 +414,20 @@ export default function StakingPage() {
                                       handleClaim(request.id.toString(), request.claimableAmount);
                                     }}
                                     disabled={isClaiming}
-                                    className="w-full"
+                                    className="flex-1"
                                   >
                                     {isClaiming
                                       ? 'Claiming...'
-                                      : `Claim ${normaliseTokenAmount(request.claimableAmount, 18)} SODA`}
+                                      : `Claim ${formatTokenAmount(request.claimableAmount, 18)} SODA`}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleCancelUnstake(request.id.toString())}
+                                    disabled={isCancellingUnstake}
+                                    className="flex-1"
+                                  >
+                                    {isCancellingUnstake ? 'Cancelling...' : 'Cancel'}
                                   </Button>
                                 </div>
                               </div>
@@ -447,7 +471,7 @@ export default function StakingPage() {
                       size="sm"
                       onClick={() => {
                         if (sodaBalance && sodaToken) {
-                          setStakeAmount(normaliseTokenAmount(sodaBalance, sodaToken.decimals));
+                          setStakeAmount(formatTokenAmount(sodaBalance, sodaToken.decimals));
                         }
                       }}
                       disabled={!sodaBalance || sodaBalance === 0n || !sodaToken}
@@ -506,7 +530,7 @@ export default function StakingPage() {
                 {isLoadingSodaBalance ? (
                   <Skeleton className="h-6 w-20" />
                 ) : (
-                  `${normaliseTokenAmount(sodaBalance || 0n, sodaToken?.decimals || 18)} ${sodaToken?.symbol || 'SODA'}`
+                  `${formatTokenAmount(sodaBalance || 0n, sodaToken?.decimals || 18)} ${sodaToken?.symbol || 'SODA'}`
                 )}
               </div>
             </div>
@@ -577,9 +601,9 @@ export default function StakingPage() {
                     return request ? (
                       <div>
                         <div>Request ID: {claimRequestId}</div>
-                        <div>Claimable Amount: {normaliseTokenAmount(request.claimableAmount, 18)} SODA</div>
+                        <div>Claimable Amount: {formatTokenAmount(request.claimableAmount, 18)} SODA</div>
                         <div>
-                          Penalty: {request.penaltyPercentage.toFixed(1)}% ({normaliseTokenAmount(request.penalty, 18)}{' '}
+                          Penalty: {request.penaltyPercentage.toFixed(1)}% ({formatTokenAmount(request.penalty, 18)}{' '}
                           SODA)
                         </div>
                       </div>

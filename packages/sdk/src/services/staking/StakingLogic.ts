@@ -104,6 +104,16 @@ export class StakingLogic {
   }
 
   /**
+   * Encodes the cancelUnstakeRequest transaction data (alias for encodeCancelUnstakeSodaRequest).
+   * @param stakedSoda - The address of the StakedSoda contract.
+   * @param requestId - The ID of the unstake request to cancel.
+   * @returns The encoded contract call data.
+   */
+  static encodeCancelUnstakeRequest(stakedSoda: Address, requestId: bigint): EvmContractCall {
+    return StakingLogic.encodeCancelUnstakeSodaRequest(stakedSoda, requestId);
+  }
+
+  /**
    * Encodes the claim transaction data.
    * @param stakedSoda - The address of the StakedSoda contract.
    * @param requestId - The ID of the unstake request to claim.

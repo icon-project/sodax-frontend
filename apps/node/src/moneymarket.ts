@@ -129,36 +129,36 @@ async function displayFormattedData() {
 // Main function to fetch and display pool data
 async function main() {
   try {
-    // // // Get list of reserves
-    // console.log('Fetching reserves list...');
-    // const reserves = await sodax.moneyMarket.dataService.getReservesList();
-    // console.log('Available Reserves:', reserves);
+    // // Get list of reserves
+    console.log('Fetching reserves list...');
+    const reserves = await sodax.moneyMarket.data.getReservesList();
+    console.log('Available Reserves:', reserves);
 
-    // // Get detailed reserve data
-    // console.log('\nFetching detailed reserve data...');
-    // const [reservesData, baseCurrencyInfo] = await sodax.moneyMarket.data.getReservesData();
+    // Get detailed reserve data
+    console.log('\nFetching detailed reserve data...');
+    const [reservesData, baseCurrencyInfo] = await sodax.moneyMarket.data.getReservesData();
 
-    // // Display data for each reserve
-    // for (const reserve of reservesData) {
-    //   await displayReserveData(reserve);
-    // }
+    // Display data for each reserve
+    for (const reserve of reservesData) {
+      await displayReserveData(reserve);
+    }
 
-    // // Display base currency info
-    // displayBaseCurrencyInfo(baseCurrencyInfo);
-
-    // const userAddress = argv[2] as Address;
-    // const [userReserves, eModeCategory] = await sodax.moneyMarket.data.getUserReservesData(userAddress);
-
-    // console.log('\nUser Position:');
-    // console.log('E-Mode Category:', eModeCategory);
-    // userReserves.forEach((reserve: UserReserveData) => {
-    //   if (Number(reserve.scaledATokenBalance) > 0 || Number(reserve.scaledVariableDebt) > 0) {
-    //     console.log(`\nAsset ${reserve.underlyingAsset}:`);
-    //     console.log('- Supplied:', reserve.scaledATokenBalance);
-    //     console.log('- Borrowed:', reserve.scaledVariableDebt);
-    //     console.log('- Used as Collateral:', reserve.usageAsCollateralEnabledOnUser ? 'Yes' : 'No');
-    //   }
-    // });
+    // Display base currency info
+    displayBaseCurrencyInfo(baseCurrencyInfo);
+    //
+    //const userAddress = argv[2] as Address;
+    //const [userReserves, eModeCategory] = await sodax.moneyMarket.data.getUserReservesData(userAddress);
+    //
+    //console.log('\nUser Position:');
+    //console.log('E-Mode Category:', eModeCategory);
+    //userReserves.forEach((reserve: UserReserveData) => {
+    //  if (Number(reserve.scaledATokenBalance) > 0 || Number(reserve.scaledVariableDebt) > 0) {
+    //    console.log(`\nAsset ${reserve.underlyingAsset}:`);
+    //    console.log('- Supplied:', reserve.scaledATokenBalance);
+    //    console.log('- Borrowed:', reserve.scaledVariableDebt);
+    //    console.log('- Used as Collateral:', reserve.usageAsCollateralEnabledOnUser ? 'Yes' : 'No');
+    //  }
+    //});
 
     await displayFormattedData();
   } catch (error) {

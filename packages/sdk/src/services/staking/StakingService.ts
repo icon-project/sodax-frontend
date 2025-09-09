@@ -51,6 +51,10 @@ export type ClaimParams = {
   amount: bigint; // claimable amount after penalty calculation
 };
 
+export type CancelUnstakeParams = {
+  requestId: bigint;
+};
+
 export type StakingInfo = {
   totalStaked: bigint; // Total SODA staked (totalAssets from xSODA vault)
   totalUnderlying: bigint; // Total underlying SODA assets in the vault
@@ -80,6 +84,7 @@ export type StakingErrorCode =
   | 'STAKE_FAILED'
   | 'UNSTAKE_FAILED'
   | 'CLAIM_FAILED'
+  | 'CANCEL_UNSTAKE_FAILED'
   | 'INFO_FETCH_FAILED'
   | 'ALLOWANCE_CHECK_FAILED'
   | 'APPROVAL_FAILED';
@@ -360,7 +365,9 @@ export class StakingService {
         this.hubProvider,
       );
 
-      const data: Hex = this.buildStakeData(sodaAsset, hubWallet, params);
+      const to = spokeProvider instanceof SonicSpokeProvider ? (walletAddress as `0x${string}`) : hubWallet;
+
+      const data: Hex = this.buildStakeData(sodaAsset, hubWallet, to, params);
 
       const txResult = await SpokeService.deposit(
         {
@@ -395,7 +402,7 @@ export class StakingService {
     }
   }
 
-  public buildStakeData(sodaAsset: HubAssetInfo, hubWallet: Address, params: StakeParams): Hex {
+  public buildStakeData(sodaAsset: HubAssetInfo, hubWallet: Address, to: Address, params: StakeParams): Hex {
     const hubConfig = getHubChainConfig(this.hubProvider.chainConfig.chain.id);
     const sodaVault = sodaAsset.vault;
     const stakedSoda = hubConfig.addresses.stakedSoda;
@@ -408,7 +415,7 @@ export class StakingService {
     calls.push(Erc20Service.encodeApprove(sodaVault, stakedSoda, translatedAmount));
     calls.push(StakingLogic.encodeDepositFor(stakedSoda, hubWallet, translatedAmount));
     calls.push(Erc20Service.encodeApprove(stakedSoda, xSoda, translatedAmount));
-    calls.push(StakingLogic.encodeXSodaDeposit(xSoda, translatedAmount, hubWallet));
+    calls.push(StakingLogic.encodeXSodaDeposit(xSoda, translatedAmount, to));
     return encodeContractCalls(calls);
   }
 
@@ -673,6 +680,145 @@ export class StakingService {
       );
     }
 
+    return encodeContractCalls(calls);
+  }
+
+  /**
+   * Execute cancel unstake transaction for cancelling an unstake request
+   * @param params - The cancel unstake parameters
+   * @param spokeProvider - The spoke provider
+   * @param timeout - The timeout in milliseconds for the transaction
+   * @returns Promise<Result<[SpokeTxHash, HubTxHash], StakingError<'CANCEL_UNSTAKE_FAILED'>>>
+   */
+  public async cancelUnstake(
+    params: CancelUnstakeParams,
+    spokeProvider: SpokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  ): Promise<Result<[string, string], StakingError<'CANCEL_UNSTAKE_FAILED'>>> {
+    try {
+      const txResult = await this.createCancelUnstakeIntent({ params, spokeProvider, raw: false });
+
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CANCEL_UNSTAKE_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        spokeProvider instanceof SolanaSpokeProvider
+          ? (txResult.data as { address: `0x${string}`; payload: `0x${string}` })
+          : undefined,
+        spokeProvider,
+        this.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CANCEL_UNSTAKE_FAILED',
+            error: packetResult.error,
+          },
+        };
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CANCEL_UNSTAKE_FAILED',
+          error: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Create cancel unstake intent only (without relaying to hub)
+   * NOTE: This method only executes the transaction on the spoke chain and creates the cancel unstake intent
+   * In order to successfully cancel an unstake request, you need to:
+   * 1. Create the cancel unstake intent using this method
+   * 2. Relay the transaction to the hub and await completion using the cancelUnstake method
+   *
+   * @param params - The cancel unstake parameters including requestId
+   * @param spokeProvider - The spoke provider for the source chain
+   * @param raw - Whether to return the raw transaction data
+   * @returns {Promise<Result<TxReturnType<S, R>, StakingError<'CANCEL_UNSTAKE_FAILED'>>>} - Returns the transaction result
+   */
+  async createCancelUnstakeIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
+    params,
+    spokeProvider,
+    raw,
+  }: Prettify<{ params: CancelUnstakeParams; spokeProvider: S; raw?: R }>): Promise<
+    Result<TxReturnType<S, R>, StakingError<'CANCEL_UNSTAKE_FAILED'>> & { data?: { address: string; payload: Hex } }
+  > {
+    try {
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      let hubWallet: Address;
+      if (spokeProvider instanceof SonicSpokeProvider) {
+        hubWallet = walletAddress as `0x${string}`;
+      } else {
+        hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
+          walletAddress,
+          spokeProvider,
+          this.hubProvider,
+        );
+      }
+
+      const data: Hex = await this.buildCancelUnstakeData(params, hubWallet);
+
+      const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
+
+      return {
+        ok: true,
+        value: txResult as TxReturnType<S, R>,
+        data: {
+          address: hubWallet as `0x${string}`,
+          payload: data,
+        },
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        ok: false,
+        error: {
+          code: 'CANCEL_UNSTAKE_FAILED',
+          error: error,
+        },
+      };
+    }
+  }
+
+  public async buildCancelUnstakeData(params: CancelUnstakeParams, hubWallet: Address): Promise<Hex> {
+    const hubConfig = getHubChainConfig(this.hubProvider.chainConfig.chain.id);
+    const stakedSoda = hubConfig.addresses.stakedSoda;
+    const xSoda = hubConfig.addresses.xSoda;
+
+    // Fetch the unstake request to get the amount
+    const unstakeRequests = await StakingLogic.getUnstakeSodaRequests(
+      stakedSoda,
+      hubWallet,
+      this.hubProvider.publicClient,
+    );
+
+    const request = unstakeRequests.find(req => req.id === params.requestId);
+    if (!request) {
+      throw new Error(`Unstake request with ID ${params.requestId} not found`);
+    }
+
+    const amount = request.request.amount;
+
+    const calls: EvmContractCall[] = [];
+    calls.push(StakingLogic.encodeCancelUnstakeRequest(stakedSoda, params.requestId));
+    calls.push(Erc20Service.encodeApprove(stakedSoda, xSoda, amount));
+    calls.push(StakingLogic.encodeXSodaDeposit(xSoda, amount, hubWallet));
     return encodeContractCalls(calls);
   }
 
