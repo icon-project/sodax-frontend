@@ -20,6 +20,7 @@ import {
   HYPEREVM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
+// HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
   id: 999,
   name: 'HyperEVM',

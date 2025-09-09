@@ -122,6 +122,7 @@ export const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = 
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
 
+// HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
   id: 999,
   name: 'HyperEVM',
