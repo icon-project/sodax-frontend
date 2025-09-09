@@ -21,6 +21,7 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
   SUI_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
   type SpokeChainId,
   type Token,
 } from '@sodax/types';
@@ -106,6 +107,7 @@ describe('e2e', () => {
     ],
     [SONIC_MAINNET_CHAIN_ID]: [],
     [NIBIRU_MAINNET_CHAIN_ID]: [],
+    [HYPEREVM_MAINNET_CHAIN_ID]: [],
   };
 
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {
