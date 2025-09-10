@@ -1,6 +1,6 @@
 # @sodax/wallet-sdk-react
 
-A comprehensive wallet SDK for the Sodax ecosystem that provides unified wallet connectivity across multiple blockchain networks.
+A comprehensive React Wallet SDK tailored for the Sodax ecosystem that provides unified wallet connectivity across multiple blockchain networks.
 
 ## Features
 - Seamless wallet connectivity for all supported wallets in the Sodax network

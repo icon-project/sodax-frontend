@@ -11,7 +11,7 @@ export default defineConfig(options => ({
   clean: true,
   target: 'node18', // ✅ Use Node 18 baseline (modern features)
   treeshake: true,
-  external: [], // Bundle everything (especially CJS like icon-sdk-js)
+  external: ['react', 'react-dom', '@tanstack/react-query'],
   esbuildOptions(options) {
     options.platform = 'neutral'; // Don't assume node/browser — supports both
     options.mainFields = ['module', 'main'];
