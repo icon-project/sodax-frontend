@@ -25,6 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     connectedWalletName,
     handleWalletSelected,
     handleTermsAccepted,
+    handleConnectWithoutTerms,
     handleDisconnect,
     setShowWalletModalOnTwoWallets,
     targetChainType,

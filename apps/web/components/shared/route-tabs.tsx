@@ -47,14 +47,12 @@ export function RouteTabs(): React.JSX.Element {
 
   useEffect(() => {
     updateArrows();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
 
   useEffect(() => {
     const onResize = () => updateArrows();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
 
   const toHref = (value: string) => `/${value}`;

@@ -38,7 +38,7 @@ export const WalletModal = ({
   // Move useSwapState to top level
   const { sourceToken } = useSwapState();
   const { migrationMode, direction, currencies } = useMigrationInfo();
-  console.log(migrationMode, direction, currencies);
+
   const {
     hoveredWallet,
     setHoveredWallet,
@@ -165,87 +165,87 @@ export const WalletModal = ({
           </div>
         )}
         <div className={cn('flex flex-col justify-between')}>
-          <ScrollArea className="h-full">
-            <div className="w-full flex flex-col">
-              {!showWalletList ? (
-                <>
-                  {!isExpanded && <Separator className="h-1 bg-clay opacity-30" />}
+          {/* <ScrollArea className="h-full"> */}
+          <div className="w-full flex flex-col">
+            {!showWalletList ? (
+              <>
+                {!isExpanded && <Separator className="h-1 bg-clay opacity-30" />}
 
-                  {mainChain && (
-                    <React.Fragment>
-                      <div
-                        className={`flex flex-row items-center transition-opacity duration-200 cursor-pointer ${
-                          hoveredWallet === mainChain.xChainType || xAccounts[mainChain.xChainType]?.address
-                            ? 'opacity-100 '
-                            : 'opacity-40'
-                        }`}
-                        onMouseEnter={() => setHoveredWallet(mainChain.xChainType)}
-                        onMouseLeave={() => setHoveredWallet(null)}
-                      >
-                        <WalletModalItem
-                          icon={mainChain.icon}
-                          name={mainChain.name}
-                          xChainType={mainChain.xChainType}
-                          onConnectorsShown={() => handleConnectorsShown(mainChain.xChainType)}
-                          onConnectorsHidden={handleConnectorsHidden}
-                          onWalletSelected={handleWalletSelected}
-                          showWalletList={showWalletList}
-                        />
-                      </div>
-                    </React.Fragment>
-                  )}
+                {mainChain && (
+                  <React.Fragment>
+                    <div
+                      className={`flex flex-row items-center transition-opacity duration-200 cursor-pointer ${
+                        hoveredWallet === mainChain.xChainType || xAccounts[mainChain.xChainType]?.address
+                          ? 'opacity-100 '
+                          : 'opacity-40'
+                      }`}
+                      onMouseEnter={() => setHoveredWallet(mainChain.xChainType)}
+                      onMouseLeave={() => setHoveredWallet(null)}
+                    >
+                      <WalletModalItem
+                        icon={mainChain.icon}
+                        name={mainChain.name}
+                        xChainType={mainChain.xChainType}
+                        onConnectorsShown={() => handleConnectorsShown(mainChain.xChainType)}
+                        onConnectorsHidden={handleConnectorsHidden}
+                        onWalletSelected={handleWalletSelected}
+                        showWalletList={showWalletList}
+                      />
+                    </div>
+                  </React.Fragment>
+                )}
 
-                  {!isExpanded && (
-                    <>
-                      <Separator className="h-1 bg-clay opacity-30" />
-                      <AllSupportItem onToggleExpanded={handleToggleExpanded} isExpanded={isExpanded} />
-                    </>
-                  )}
+                {!isExpanded && (
+                  <>
+                    <Separator className="h-1 bg-clay opacity-30" />
+                    <AllSupportItem onToggleExpanded={handleToggleExpanded} isExpanded={isExpanded} />
+                  </>
+                )}
 
-                  {isExpanded &&
-                    otherChains.map(wallet => {
-                      const isConnected = xAccounts[wallet.xChainType]?.address;
-                      return (
-                        <React.Fragment key={`wallet_${wallet.xChainType}`}>
-                          <Separator className="h-1 bg-clay opacity-30" />
-                          <div
-                            className={`flex flex-row items-center transition-opacity duration-200 cursor-pointer ${
-                              hoveredWallet === wallet.xChainType || isConnected ? 'opacity-100 ' : 'opacity-40'
-                            }`}
-                            onMouseEnter={() => setHoveredWallet(wallet.xChainType)}
-                            onMouseLeave={() => setHoveredWallet(null)}
-                          >
-                            <WalletModalItem
-                              icon={wallet.icon}
-                              name={wallet.name}
-                              xChainType={wallet.xChainType}
-                              onConnectorsShown={() => handleConnectorsShown(wallet.xChainType)}
-                              onConnectorsHidden={handleConnectorsHidden}
-                              onWalletSelected={handleWalletSelected}
-                              showWalletList={showWalletList}
-                            />
-                          </div>
-                        </React.Fragment>
-                      );
-                    })}
-                </>
-              ) : (
-                <div className="w-full">
-                  {selectedChain && (
-                    <WalletModalItem
-                      icon={selectedChain.icon}
-                      name={selectedChain.name}
-                      xChainType={selectedChain.xChainType}
-                      onConnectorsShown={() => selectedChainType && handleConnectorsShown(selectedChainType)}
-                      onConnectorsHidden={handleConnectorsHidden}
-                      onWalletSelected={handleWalletSelected}
-                      showWalletList={showWalletList}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+                {isExpanded &&
+                  otherChains.map(wallet => {
+                    const isConnected = xAccounts[wallet.xChainType]?.address;
+                    return (
+                      <React.Fragment key={`wallet_${wallet.xChainType}`}>
+                        <Separator className="h-1 bg-clay opacity-30" />
+                        <div
+                          className={`flex flex-row items-center transition-opacity duration-200 cursor-pointer ${
+                            hoveredWallet === wallet.xChainType || isConnected ? 'opacity-100 ' : 'opacity-40'
+                          }`}
+                          onMouseEnter={() => setHoveredWallet(wallet.xChainType)}
+                          onMouseLeave={() => setHoveredWallet(null)}
+                        >
+                          <WalletModalItem
+                            icon={wallet.icon}
+                            name={wallet.name}
+                            xChainType={wallet.xChainType}
+                            onConnectorsShown={() => handleConnectorsShown(wallet.xChainType)}
+                            onConnectorsHidden={handleConnectorsHidden}
+                            onWalletSelected={handleWalletSelected}
+                            showWalletList={showWalletList}
+                          />
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
+              </>
+            ) : (
+              <div className="w-full">
+                {selectedChain && (
+                  <WalletModalItem
+                    icon={selectedChain.icon}
+                    name={selectedChain.name}
+                    xChainType={selectedChain.xChainType}
+                    onConnectorsShown={() => selectedChainType && handleConnectorsShown(selectedChainType)}
+                    onConnectorsHidden={handleConnectorsHidden}
+                    onWalletSelected={handleWalletSelected}
+                    showWalletList={showWalletList}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+          {/* </ScrollArea> */}
         </div>
         {!showWalletList && !isExpanded && (
           <div className=" justify-start flex gap-1">

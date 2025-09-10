@@ -99,7 +99,7 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
         {/* </div> */}
         {/* </DialogHeader> */}
         <Separator className="h-1 bg-clay opacity-30 mb-4" />
-        <div className="grid grid-cols-3 gap-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4">
           {availableChainsAndTokens.map(({ chainId, token, chainName }) => {
             const chainInfo = getChainInfo(chainId);
 
