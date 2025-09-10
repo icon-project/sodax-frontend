@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { IconWalletProvider, type IconWalletConfig } from '../IconWalletProvider.js';
+import { IconWalletProvider, type IconWalletConfig } from './IconWalletProvider.js';
 
 describe('IconWalletProvider', () => {
   const mockRpcUrl = 'https://ctz.solidwallet.io/api/v3';

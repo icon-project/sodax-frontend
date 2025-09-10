@@ -2,7 +2,12 @@ import { SuiClient } from '@mysten/sui/client';
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import type { Transaction, TransactionArgument } from '@mysten/sui/transactions';
 import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@sodax/types';
-import { signTransaction } from '@mysten/wallet-standard';
+import {
+  signTransaction,
+  type SuiWalletFeatures,
+  type WalletAccount,
+  type WalletWithFeatures,
+} from '@mysten/wallet-standard';
 
 // Private key wallet config
 export type PrivateKeySuiWalletConfig = {
@@ -13,8 +18,8 @@ export type PrivateKeySuiWalletConfig = {
 // Browser extension wallet config
 export type BrowserExtensionSuiWalletConfig = {
   client: SuiClient;
-  wallet: any;
-  account: any;
+  wallet: WalletWithFeatures<Partial<SuiWalletFeatures>>;
+  account: WalletAccount;
 };
 
 // Unified config type
@@ -31,61 +36,88 @@ function isBrowserExtensionSuiWalletConfig(
   return 'wallet' in walletConfig && 'account' in walletConfig;
 }
 
+export type PkSuiWallet = {
+  keyPair: Ed25519Keypair;
+};
+
+export type BrowserExtensionSuiWallet = {
+  wallet: WalletWithFeatures<Partial<SuiWalletFeatures>>;
+  account: WalletAccount;
+};
+
+export type SuiWallet = PkSuiWallet | BrowserExtensionSuiWallet;
+
+export function isPkSuiWallet(wallet: SuiWallet): wallet is PkSuiWallet {
+  return 'keyPair' in wallet;
+}
+
+export function isBrowserExtensionSuiWallet(wallet: SuiWallet): wallet is BrowserExtensionSuiWallet {
+  return 'wallet' in wallet && 'account' in wallet;
+}
+
+export function isSuiWallet(wallet: SuiWallet): wallet is SuiWallet {
+  return isPkSuiWallet(wallet) || isBrowserExtensionSuiWallet(wallet);
+}
+
 export class SuiWalletProvider implements ISuiWalletProvider {
-  private client: SuiClient;
-  private wallet: any;
-  private account: any;
-  private keyPair: Ed25519Keypair | undefined;
-  private isPkMode: boolean;
+  private readonly client: SuiClient;
+  private readonly wallet: SuiWallet;
 
   constructor(walletConfig: SuiWalletConfig) {
     if (isPrivateKeySuiWalletConfig(walletConfig)) {
       this.client = new SuiClient({ url: walletConfig.rpcUrl });
-      this.keyPair = Ed25519Keypair.deriveKeypair(walletConfig.mnemonics);
-      this.isPkMode = true;
+      this.wallet = {
+        keyPair: Ed25519Keypair.deriveKeypair(walletConfig.mnemonics),
+      };
     } else if (isBrowserExtensionSuiWalletConfig(walletConfig)) {
       this.client = walletConfig.client;
-      this.wallet = walletConfig.wallet;
-      this.account = walletConfig.account;
-      this.isPkMode = false;
+      this.wallet = {
+        wallet: walletConfig.wallet,
+        account: walletConfig.account,
+      };
     } else {
       throw new Error('Invalid wallet configuration');
     }
   }
 
   async signAndExecuteTxn(txn: SuiTransaction): Promise<string> {
-    if (this.isPkMode && this.keyPair) {
+    if (isPkSuiWallet(this.wallet)) {
       const res = await this.client.signAndExecuteTransaction({
         transaction: txn as unknown as Transaction,
-        signer: this.keyPair,
+        signer: this.wallet.keyPair,
       });
+
+      return res.digest;
+    }
+    if (isBrowserExtensionSuiWallet(this.wallet)) {
+      const browserWallet = this.wallet.wallet;
+      const browserAccount = this.wallet.account;
+
+      if (!browserAccount || browserAccount.chains.length === 0) {
+        throw new Error('No chains available for wallet account');
+      }
+      const chain = browserAccount.chains[0];
+      if (!chain) {
+        throw new Error('No chain available for wallet account');
+      }
+      const { bytes, signature } = await signTransaction(browserWallet, {
+        transaction: txn,
+        account: browserAccount,
+        chain,
+      });
+
+      const res = await this.client.executeTransactionBlock({
+        transactionBlock: bytes,
+        signature,
+        options: {
+          showRawEffects: true,
+        },
+      });
+
       return res.digest;
     }
 
-    const browserWallet = this.wallet;
-    const browserAccount = this.account;
-    if (browserAccount.chains.length === 0) {
-      throw new Error('No chains available for wallet account');
-    }
-    const chain = browserAccount.chains[0];
-    if (!chain) {
-      throw new Error('No chain available for wallet account');
-    }
-    const { bytes, signature } = await signTransaction(browserWallet, {
-      transaction: txn,
-      account: browserAccount,
-      chain,
-    });
-
-    const res = await this.client.executeTransactionBlock({
-      transactionBlock: bytes,
-      signature,
-      options: {
-        showRawEffects: true,
-      },
-    });
-
-    return res.digest;
+    throw new Error('Invalid wallet configuration');
   }
 
   async viewContract(
@@ -102,8 +134,7 @@ export class SuiWalletProvider implements ISuiWalletProvider {
       typeArguments: typeArgs,
     });
 
-    const sender =
-      this.isPkMode && this.keyPair ? this.keyPair.getPublicKey().toSuiAddress() : (this.account as any).address;
+    const sender = this.getSuiAddress();
 
     const txResults = await this.client.devInspectTransactionBlock({
       transactionBlock: tx,
@@ -120,12 +151,17 @@ export class SuiWalletProvider implements ISuiWalletProvider {
     return this.client.getCoins({ owner: address, coinType: token, limit: 10 });
   }
 
-  async getWalletAddress(): Promise<string> {
-    if (this.isPkMode && this.keyPair) {
-      return this.keyPair.toSuiAddress();
+  private getSuiAddress(): string {
+    if (isPkSuiWallet(this.wallet)) {
+      return this.wallet.keyPair.toSuiAddress();
     }
+    if (isBrowserExtensionSuiWallet(this.wallet)) {
+      return this.wallet.account.address;
+    }
+    throw new Error('Invalid wallet configuration');
+  }
 
-    const browserAccount = this.account as any;
-    return browserAccount.address;
+  async getWalletAddress(): Promise<string> {
+    return this.getSuiAddress();
   }
 }
