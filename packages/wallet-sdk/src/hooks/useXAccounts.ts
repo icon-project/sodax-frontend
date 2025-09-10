@@ -13,8 +13,8 @@ export function useXAccounts() {
   const xConnections = useXWagmiStore(state => state.xConnections);
   const { address: evmAddress } = useAccount();
   const evmConnections = useConnections();
-  console.log('evmAddress', evmAddress);
-  console.log('evmConnections', evmConnections);
+  // console.log('evmAddress', evmAddress);
+  // console.log('evmConnections', evmConnections);
   const suiAccount = useCurrentAccount();
   const solanaWallet = useWallet();
 
