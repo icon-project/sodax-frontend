@@ -118,22 +118,18 @@ function SwapStatusMonitor({
   });
 
   useEffect(() => {
-    console.log('Status update:', status, 'dstTxHash:', dstTxHash);
-
     if (status?.ok && !hasCalledSuccess.current && !hasCalledFailed.current) {
       const statusCode = status.value.status;
       onUpdateSwapStatus(statusCode);
       if (statusCode === SolverIntentStatusCode.SOLVED) {
-        console.log('Swap status is SOLVED, calling onSwapSuccessful');
         hasCalledSuccess.current = true;
         onSwapSuccessful();
       } else if (statusCode === SolverIntentStatusCode.FAILED) {
-        console.log('Swap status is FAILED, calling onSwapFailed');
         hasCalledFailed.current = true;
         onSwapFailed();
       }
     }
-  }, [status, dstTxHash, onSwapSuccessful, onSwapFailed, onUpdateSwapStatus]);
+  }, [status, onSwapSuccessful, onSwapFailed, onUpdateSwapStatus]);
 
   return null;
 }
@@ -545,7 +541,6 @@ export default function SwapPage() {
       const [, , intentDeliveryInfo] = result.value;
       setDstTxHash(intentDeliveryInfo.dstTxHash);
       setSwapStatus(0);
-      console.log('Swap Status', swapStatus);
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     } catch (error) {
       console.error('Swap execution failed:', error);

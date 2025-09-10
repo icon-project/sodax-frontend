@@ -140,7 +140,6 @@ export default function MigratePage() {
 
     // For bnUSD, use the dynamic balance fetching
     if (chainId === direction.from) {
-      console.log('fromChainBalances', fromChainBalances);
       return fromChainBalances?.[token.address] || 0n;
     }
     if (chainId === direction.to) {
@@ -177,7 +176,6 @@ export default function MigratePage() {
         const fullBalance = normaliseTokenAmount(balance, currencies.from.decimals);
         const fullBalanceBigInt = scaleTokenAmount(fullBalance, currencies.from.decimals);
         const feeAmount = sodax.solver.getFee(fullBalanceBigInt);
-        console.log('feeAmount', feeAmount);
         if (direction.from === ICON_MAINNET_CHAIN_ID) {
           gasFeeEstimate = parseUnits(
             (0.02 * Number(fullBalance) < 0.02 ? 0.02 : 0.02 * Number(fullBalance)).toString(),

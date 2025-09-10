@@ -51,8 +51,6 @@ export const WalletModal = ({
   const selectedChain = xChainTypes.find(w => w.xChainType === selectedChainType);
 
   const availableChains = xChainTypes;
-  console.log('availableChains', availableChains);
-
   const getMainChain = (): (typeof availableChains)[0] | undefined => {
     // Check if we're on swap page and use sourceToken chain as main chain
     if (isExpanded) {

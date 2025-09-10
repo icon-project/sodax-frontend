@@ -63,8 +63,6 @@ const ConnectWalletButton = ({
   return (
     <ConnectButton.Custom>
       {({ account, chain, openConnectModal, mounted, connectModalOpen }) => {
-        console.log('connectModalOpen', connectModalOpen);
-
         useEffect(() => {
           if (onConnectModalChange) {
             onConnectModalChange(connectModalOpen);

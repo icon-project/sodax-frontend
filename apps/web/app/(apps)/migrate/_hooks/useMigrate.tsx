@@ -91,9 +91,6 @@ export function useMigrate() {
   return useMutation({
     mutationFn: async () => {
       const amountToMigrate = parseUnits(typedValue, currencies.from.decimals);
-      console.log('migrationMode', migrationMode);
-      console.log('direction', direction);
-      console.log('currencies', currencies);
 
       // Get the correct addresses for source and destination chains
       const sourceAddress = getAddressForChain(direction.from);
@@ -115,7 +112,6 @@ export function useMigrate() {
             sourceSpokeProvider as IconSpokeProvider,
             30000,
           );
-          console.log('result', result);
           if (result.ok) {
             const [spokeTxHash, hubTxHash] = result.value;
             return { spokeTxHash, hubTxHash };
@@ -161,7 +157,6 @@ export function useMigrate() {
           to: destinationAddress as `hx${string}` | `0x${string}`,
         };
         const result = await sodax.migration.migratebnUSD(params, sourceSpokeProvider, 30000);
-        console.log('bnUSD migration result', result);
         if (result.ok) {
           const [spokeTxHash, hubTxHash] = result.value;
           return { spokeTxHash, hubTxHash };
@@ -182,7 +177,6 @@ export function useMigrate() {
         to: destinationAddress as `hx${string}` | `0x${string}`,
       } satisfies UnifiedBnUSDMigrateParams;
       const isAllowed = await sodax.migration.isAllowanceValid(params, 'revert', sourceSpokeProvider);
-      console.log('Is allowed', isAllowed);
 
       if (!isAllowed.ok) {
         console.error('Failed to check allowance:', isAllowed.error);
@@ -191,7 +185,6 @@ export function useMigrate() {
         const approveResult = await sodax.migration.approve(params, 'revert', sourceSpokeProvider);
 
         if (approveResult.ok) {
-          console.log('Approval transaction hash:', approveResult.value);
           // Wait for approval transaction to be mined (only for EVM chains)
           if ('waitForTransactionReceipt' in sourceSpokeProvider.walletProvider) {
             await (
@@ -203,10 +196,7 @@ export function useMigrate() {
           return;
         }
       }
-      console.log(params);
-      console.log(isLegacybnUSDToken(currencies.to), isNewbnUSDToken(currencies.from));
       const result = await sodax.migration.migratebnUSD(params, sourceSpokeProvider, 30000);
-      console.log('bnUSD reverse migration result', result);
       if (result.ok) {
         const [spokeTxHash, hubTxHash] = result.value;
         return { spokeTxHash, hubTxHash };
