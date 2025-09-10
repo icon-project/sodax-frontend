@@ -163,25 +163,20 @@ export class MigrationService {
           value: true,
         };
       }
-      console.log('revert migration123456');
       if (action === 'revert') {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
         invariant(params.to.length > 0, 'To address is required');
         invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
-        console.log('revert migration123');
 
         if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
           const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
-          console.log('revert migration12345');
           let spender: Address;
           const wallet = await spokeProvider.walletProvider.getWalletAddress();
           if (spokeProvider instanceof SonicSpokeProvider) {
             spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
-            console.log('hello world');
           } else {
             spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
           }
-          console.log('[isAllowanceValid] spender', spender);
           return await Erc20Service.isAllowanceValid(
             params.srcbnUSD as Address,
             params.amount,
@@ -210,8 +205,6 @@ export class MigrationService {
         }
 
         if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
-          console.log('revert migration1234');
-
           const wallet = await spokeProvider.walletProvider.getWalletAddress();
           const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
 
