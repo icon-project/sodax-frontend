@@ -868,7 +868,7 @@ export const spokeChainConfig = {
       connection: '0xA143488cDc5B74B366231E6A4d5a55A2D9Dc8484',
     },
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
-    bnUSD: '0x19feAf3043DFA69b365D05495630E840A2b9a9dC',
+    bnUSD: '0xeCef079897b633b04c5E9A290e1C567d399A8a4b',
     supportedTokens: {
       HYPE: {
         symbol: 'HYPE',
@@ -891,8 +891,8 @@ export const spokeChainConfig = {
         address: '0xA28C70F92a1B2513edCdDD29c2E5195a4B785aB2',
         xChainId: HYPEREVM_MAINNET_CHAIN_ID,
       },
-    },
-  },
+    } as const,
+  } as const satisfies EvmSpokeChainConfig,
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'inj1dg6tm62uup53wn2kn97caeqfwt0sukx3qjk8rw',
@@ -2060,11 +2060,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
-  [HYPEREVM_MAINNET_CHAIN_ID]: [
-    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
-    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
-  ] as const satisfies Token[],
+  [HYPEREVM_MAINNET_CHAIN_ID]: [] as const satisfies Token[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
