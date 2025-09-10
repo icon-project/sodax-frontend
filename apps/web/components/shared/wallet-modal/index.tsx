@@ -38,7 +38,7 @@ export const WalletModal = ({
   // Move useSwapState to top level
   const { sourceToken } = useSwapState();
   const { migrationMode, direction, currencies } = useMigrationInfo();
-  console.log(migrationMode, direction);
+  console.log(migrationMode, direction, currencies);
   const {
     hoveredWallet,
     setHoveredWallet,

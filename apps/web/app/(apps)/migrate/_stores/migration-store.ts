@@ -80,10 +80,14 @@ export const createMigrationStore = (initState: MigrationState = defaultInitStat
     ...initState,
     switchDirection: () =>
       set(state => {
+        console.log('switching direcitons.....');
+        console.log(state);
         const currentMode = state.migrationMode;
+        console.log(currentMode);
         const currentState = state[currentMode];
+        console.log(currentState);
         const newDirection = { from: currentState.direction.to, to: currentState.direction.from };
-
+        console.log(newDirection);
         // Maintain correct token pairs based on migration mode
         const newCurrencies =
           currentMode === 'icxsoda'
