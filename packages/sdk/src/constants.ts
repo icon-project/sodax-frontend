@@ -274,10 +274,13 @@ export const SodaTokens = {
     address: '0x21685E341DE7844135329914Be6Bd8D16982d834',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
-}  as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
+} as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
 
-export const SodaTokensAsHubAssets: Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }> =
-  Object.values(SodaTokens).reduce((acc, token) => {
+export const SodaTokensAsHubAssets: Record<
+  string,
+  { asset: Address; decimal: number; vault: Address; symbol: string; name: string }
+> = Object.values(SodaTokens).reduce(
+  (acc, token) => {
     acc[token.address] = {
       asset: token.address,
       decimal: token.decimals,
@@ -286,7 +289,9 @@ export const SodaTokensAsHubAssets: Record<string, { asset: Address; decimal: nu
       vault: token.address,
     };
     return acc;
-  }, {} as Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>);
+  },
+  {} as Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>,
+);
 export const SodaVaultTokensSet = new Set(Object.values(SodaTokens).map(token => token.address.toLowerCase()));
 export const isSodaVaultToken = (address: string): boolean => {
   return SodaVaultTokensSet.has(address.toLowerCase());
@@ -1255,12 +1260,17 @@ export const hubVaults = {
   },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
-export const hubVaultTokensMap: Map<string, Token> = new Map(Object.entries(hubVaults).map(([symbol, vault]) => [vault.address.toLowerCase(), {
-  address: vault.address.toLowerCase(),
-  symbol,
-  name: symbol,
-  decimals: 18,
-  }]));
+export const hubVaultTokensMap: Map<string, Token> = new Map(
+  Object.entries(hubVaults).map(([symbol, vault]) => [
+    vault.address.toLowerCase(),
+    {
+      address: vault.address.toLowerCase(),
+      symbol,
+      name: symbol,
+      decimals: 18,
+    },
+  ]),
+);
 
 export const getHubVaultTokenByAddress = (address: string): Token | undefined => {
   return hubVaultTokensMap.get(address.toLowerCase());
@@ -2010,6 +2020,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [ARBITRUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2020,6 +2031,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.tBTC,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [BASE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2028,6 +2040,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     // spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.cbBTC,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [OPTIMISM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2036,22 +2049,26 @@ export const moneyMarketSupportedTokens = {
     // spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     // spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [POLYGON_MAINNET_CHAIN_ID]: [
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.POL,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [BSC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BNB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.ETHB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BTCB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [ICON_MAINNET_CHAIN_ID]: [
     // spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
@@ -2061,16 +2078,19 @@ export const moneyMarketSupportedTokens = {
   [STELLAR_MAINNET_CHAIN_ID]: [
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.XLM,
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [SUI_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [INJECTIVE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
   [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
   [SONIC_MAINNET_CHAIN_ID]: [
@@ -2079,6 +2099,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
@@ -2136,10 +2157,7 @@ export const supportedSodaAssets: Set<Address> = new Set(
 export const spokeChainIdsSet = new Set(SPOKE_CHAIN_IDS);
 
 // Returns the first hub asset info for a given chainId whose vault address matches the provided vault address (case-insensitive)
-export const getOriginalAssetInfoFromVault = (
-  chainId: SpokeChainId,
-  vault: Address
-): OriginalAssetAddress[] => {
+export const getOriginalAssetInfoFromVault = (chainId: SpokeChainId, vault: Address): OriginalAssetAddress[] => {
   const assets = hubAssets[chainId];
   if (!assets) {
     return [];
@@ -2159,8 +2177,12 @@ export const isValidOriginalAssetAddress = (chainId: SpokeChainId, asset: Origin
   originalAssetTohubAssetMap.get(chainId)?.has(asset.toLowerCase()) ?? false;
 export const getOriginalAssetAddress = (chainId: SpokeChainId, hubAsset: Address): OriginalAssetAddress | undefined =>
   hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
-export const getOriginalTokenFromOriginalAssetAddress = (chainId: SpokeChainId, asset: OriginalAssetAddress): XToken | undefined =>
-  Object.values(spokeChainConfig[chainId].supportedTokens).find(t => t.address.toLowerCase() === asset.toLowerCase()) ?? undefined;
+export const getOriginalTokenFromOriginalAssetAddress = (
+  chainId: SpokeChainId,
+  asset: OriginalAssetAddress,
+): XToken | undefined =>
+  Object.values(spokeChainConfig[chainId].supportedTokens).find(t => t.address.toLowerCase() === asset.toLowerCase()) ??
+  undefined;
 export const isValidHubAsset = (hubAsset: Address): boolean =>
   supportedHubAssets.has(hubAsset.toLowerCase() as Address);
 export const isValidVault = (vault: Address): boolean => supportedSodaAssets.has(vault.toLowerCase() as Address);
