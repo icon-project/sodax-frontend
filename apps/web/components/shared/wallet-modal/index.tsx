@@ -14,6 +14,7 @@ import { useWalletModal } from '@/hooks/useWalletModal';
 import { AllSupportItem } from './all-support-item';
 import { usePathname } from 'next/navigation';
 import { useSwapState } from '@/app/(apps)/swap/_stores/swap-store-provider';
+import { useMigrationInfo } from '@/app/(apps)/migrate/_stores/migration-store-provider';
 
 type WalletModalProps = {
   isOpen: boolean;
@@ -36,6 +37,8 @@ export const WalletModal = ({
   const xAccounts = useXAccounts();
   // Move useSwapState to top level
   const { sourceToken } = useSwapState();
+  const { migrationMode, direction, currencies } = useMigrationInfo();
+  console.log(migrationMode, direction);
   const {
     hoveredWallet,
     setHoveredWallet,
@@ -70,6 +73,16 @@ export const WalletModal = ({
         const swapChain = availableChains.find(w => w.xChainType === sourceChainType);
         if (swapChain) {
           return swapChain;
+        }
+      }
+    }
+
+    if (pathname.includes('migrate')) {
+      const sourceChainType = getXChainType(currencies.from.xChainId);
+      if (sourceChainType) {
+        const migrateChain = availableChains.find(w => w.xChainType === sourceChainType);
+        if (migrateChain) {
+          return migrateChain;
         }
       }
     }

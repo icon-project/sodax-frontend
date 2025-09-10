@@ -51,6 +51,7 @@ export const useMigrationInfo = () => {
   }, [typedValue]);
 
   return {
+    migrationMode,
     direction,
     currencies,
     error,
