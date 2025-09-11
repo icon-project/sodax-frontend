@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/swap/_components/search-bar.tsx
 import type React from 'react';
 import Image from 'next/image';
 import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid } from 'lucide-react';

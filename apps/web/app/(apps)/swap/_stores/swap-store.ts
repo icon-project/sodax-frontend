@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/swap/_stores/swap-store.ts
 import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
 import type { XToken, SpokeChainId } from '@sodax/types';

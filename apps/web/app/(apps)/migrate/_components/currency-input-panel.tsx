@@ -1,4 +1,3 @@
-// apps/web/components/ui/network-input-display.tsx
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { ICON_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';

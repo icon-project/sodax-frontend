@@ -1,4 +1,3 @@
-// apps/web/components/shared/bnusd-chain-selector.tsx
 import type React from 'react';
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
