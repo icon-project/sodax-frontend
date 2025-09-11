@@ -1,0 +1,71 @@
+{
+  "name": "@sodax/wallet-sdk-core",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "0.0.1-rc.5",
+  "license": "MIT",
+  "description": "Sodax Wallet SDK Core",
+  "keywords": ["sodax", "wallet", "sdk", "frontend", "interface"],
+  "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-core",
+  "bugs": {
+    "url": "https://github.com/icon-project/sodax-frontend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icon-project/sodax-frontend"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --exclude ./src/tests/e2e",
+    "test-e2e": "vitest run ./src/tests/e2e",
+    "coverage": "vitest run --coverage",
+    "dev": "tsup --watch",
+    "ci": "pnpm run pretty && pnpm run build && pnpm run test",
+    "checkTs": "tsc --noEmit",
+    "pretty": "biome format . --write",
+    "lint": "biome lint . --write",
+    "check-exports": "attw $(pnpm pack) --ignore-rules=cjs-resolves-to-esm",
+    "prepublishOnly": "pnpm run ci",
+    "local-release": "changeset version && changeset publish",
+    "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
+  },
+  "dependencies": {
+    "@sodax/types": "workspace:*",
+    "icon-sdk-js": "catalog:",
+    "viem": "catalog:",
+    "@injectivelabs/sdk-ts": "catalog:",
+    "@injectivelabs/wallet-core": "catalog:",
+    "@solana/spl-token": "catalog:",
+    "@solana/wallet-adapter-base": "catalog:",
+    "@solana/web3.js": "catalog:",
+    "@stellar/stellar-sdk": "catalog:",
+    "@mysten/sui": "catalog:",
+    "@mysten/wallet-standard": "catalog:"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "catalog:",
+    "@changesets/cli": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

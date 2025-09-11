@@ -23,7 +23,7 @@ import {
   supportedTokensPerChain,
 } from '@sodax/sdk';
 import type { ChainType, SpokeChainId, XToken } from '@sodax/types';
-import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
+import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import { normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';

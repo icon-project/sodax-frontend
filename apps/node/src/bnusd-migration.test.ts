@@ -12,16 +12,21 @@ import {
   SonicSpokeProvider,
   type StellarSpokeChainConfig,
   StellarSpokeProvider,
-  SuiSpokeChainConfig,
+  SolanaSpokeProvider,
   SuiSpokeProvider,
   type UnifiedBnUSDMigrateParams,
   spokeChainConfig,
 } from '@sodax/sdk';
-import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
-import { SuiWalletProvider } from './sui-wallet-provider.js';
-import type { StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
-import { StellarWalletProvider } from '@sodax/wallet-sdk';
+import {
+  StellarWalletProvider,
+  IconWalletProvider,
+  EvmWalletProvider,
+  SuiWalletProvider,
+  type StellarWalletConfig,
+  SolanaWalletProvider,
+} from '@sodax/wallet-sdk-core';
+import { SOLANA_MAINNET_CHAIN_ID } from '@sodax/types';
+import { Keypair } from '@solana/web3.js';
 
 // Override JSON.stringify to handle BigInt serialization as strings
 // This ensures that any BigInt values in objects are stringified using .toString()
@@ -29,7 +34,78 @@ import { StellarWalletProvider } from '@sodax/wallet-sdk';
   return this.toString();
 };
 
+async function iconToSolTwoWayMigration() {
+  const sodax = new Sodax();
 
+  const iconSpokeProvider = new IconSpokeProvider(
+    new IconWalletProvider({
+      privateKey: process.env.ICON_PRIVATE_KEY as Hex,
+      rpcUrl: 'https://ctz.solidwallet.io/api/v3',
+    }),
+    spokeChainConfig[ICON_MAINNET_CHAIN_ID],
+  );
+
+  const solanaPrivateKey = process.env.SOLANA_PRIVATE_KEY;
+
+  if (!solanaPrivateKey) {
+    throw new Error('PRIVATE_KEY environment variable is required');
+  }
+  const solPrivateKeyUint8 = new Uint8Array(Buffer.from(solanaPrivateKey, 'hex'));
+  console.log('solPrivateKeyUint8', solPrivateKeyUint8);
+  const keypair = Keypair.fromSecretKey(solPrivateKeyUint8);
+
+  const solanaWallet = new SolanaWalletProvider({
+    privateKey: keypair.secretKey,
+    endpoint: spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].rpcUrl,
+  });
+
+  const solSpokeProvider = new SolanaSpokeProvider(
+    solanaWallet,
+    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID],
+  );
+  const iconToSolanaResult = await sodax.migration.migratebnUSD(
+    {
+      srcChainId: iconSpokeProvider.chainConfig.chain.id,
+      dstChainId: solSpokeProvider.chainConfig.chain.id,
+      srcbnUSD: iconSpokeProvider.chainConfig.bnUSD,
+      dstbnUSD: solSpokeProvider.chainConfig.bnUSD,
+      amount: BigInt(1e17), // test with 0.1 bnUSD
+      to: await solSpokeProvider.walletProvider.getWalletAddress(),
+    } satisfies UnifiedBnUSDMigrateParams,
+    iconSpokeProvider,
+  );
+
+  if (iconToSolanaResult.ok) {
+    const [spokeTxHash, hubTxHash] = iconToSolanaResult.value;
+    console.log(`legacy bnUSD (Icon) -> new bnUSD (Solana) spokeTxHash=${spokeTxHash}, hubTxHash=${hubTxHash}`);
+  } else {
+    console.error('[migrateBnUSD] error', JSON.stringify(iconToSolanaResult.error, null, 2));
+    throw new Error('failed to migrate bnUSD from Icon to Solana');
+  }
+
+  // wait 30 seconds
+  console.log('waiting 30 seconds...');
+  await new Promise(resolve => setTimeout(resolve, 30000));
+
+  const solToIconParams = {
+    srcChainId: solSpokeProvider.chainConfig.chain.id,
+    dstChainId: iconSpokeProvider.chainConfig.chain.id,
+    srcbnUSD: solSpokeProvider.chainConfig.bnUSD,
+    dstbnUSD: iconSpokeProvider.chainConfig.bnUSD,
+    amount: BigInt(1e17), // test with 0.1 bnUSD
+    to: await iconSpokeProvider.walletProvider.getWalletAddress(),
+  } satisfies UnifiedBnUSDMigrateParams;
+
+  // migrate from new bnUSD from ARB to the legacy bnUSD on Icon
+  const solToIconResult = await sodax.migration.migratebnUSD(solToIconParams, solSpokeProvider);
+
+  if (solToIconResult.ok) {
+    const [spokeTxHash, hubTxHash] = solToIconResult.value;
+    console.log(`new bnUSD (Solana) -> legacy bnUSD (Icon) spokeTxHash=${spokeTxHash}, hubTxHash=${hubTxHash}`);
+  } else {
+    console.error('[migrateBnUSD] error', solToIconResult.error);
+  }
+}
 
 async function iconToArbTwoWayMigration() {
   const sodax = new Sodax();
@@ -43,7 +119,10 @@ async function iconToArbTwoWayMigration() {
   );
 
   const evmSpokeProvider = new EvmSpokeProvider(
-    new EvmWalletProvider(process.env.EVM_PRIVATE_KEY as Hex, ARBITRUM_MAINNET_CHAIN_ID),
+    new EvmWalletProvider({
+      privateKey: process.env.EVM_PRIVATE_KEY as Hex,
+      chainId: ARBITRUM_MAINNET_CHAIN_ID,
+    }),
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID],
   );
   // // migrate from legacy bnUSD from Icon to the new bnUSD on ARB
@@ -118,15 +197,21 @@ async function suiToSonicTwoWayMigration() {
 
   const suiConfig = spokeChainConfig[SUI_MAINNET_CHAIN_ID];
   const suiWalletMnemonics = process.env.SUI_MNEMONICS;
-  
+
   if (!suiWalletMnemonics) {
     throw new Error('SUI_MNEMONICS environment variable is required');
   }
-  const suiWalletProvider = new SuiWalletProvider('https://fullnode.mainnet.sui.io', suiWalletMnemonics);
+  const suiWalletProvider = new SuiWalletProvider({
+    rpcUrl: 'https://fullnode.mainnet.sui.io',
+    mnemonics: suiWalletMnemonics,
+  });
   const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
 
   const sonicSpokeProvider = new SonicSpokeProvider(
-    new EvmWalletProvider(process.env.EVM_PRIVATE_KEY as Hex, SONIC_MAINNET_CHAIN_ID),
+    new EvmWalletProvider({
+      privateKey: process.env.EVM_PRIVATE_KEY as Hex,
+      chainId: SONIC_MAINNET_CHAIN_ID,
+    }),
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
   );
 
@@ -201,26 +286,29 @@ async function stellarToSonicTwoWayMigration() {
   const sodax = new Sodax();
 
   const stellarConfig = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID] as StellarSpokeChainConfig;
-const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY ?? '';
-const STELLAR_SOROBAN_RPC_URL =  stellarConfig.sorobanRpcUrl
-const STELLAR_HORIZON_RPC_URL = stellarConfig.horizonRpcUrl
+  const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY ?? '';
+  const STELLAR_SOROBAN_RPC_URL = stellarConfig.sorobanRpcUrl;
+  const STELLAR_HORIZON_RPC_URL = stellarConfig.horizonRpcUrl;
 
-// Create Stellar wallet config
-const stellarWalletConfig: StellarWalletConfig = {
-  type: 'PRIVATE_KEY',
-  privateKey: STELLAR_PRIVATE_KEY as Hex,
-  network: 'PUBLIC',
-  rpcUrl: STELLAR_SOROBAN_RPC_URL,
-};
+  // Create Stellar wallet config
+  const stellarWalletConfig: StellarWalletConfig = {
+    type: 'PRIVATE_KEY',
+    privateKey: STELLAR_PRIVATE_KEY as Hex,
+    network: 'PUBLIC',
+    rpcUrl: STELLAR_SOROBAN_RPC_URL,
+  };
 
-const stellarWalletProvider = new StellarWalletProvider(stellarWalletConfig);
-const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, stellarConfig, {
-  horizonRpcUrl: STELLAR_HORIZON_RPC_URL,
-  sorobanRpcUrl: STELLAR_SOROBAN_RPC_URL,
-});
+  const stellarWalletProvider = new StellarWalletProvider(stellarWalletConfig);
+  const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, stellarConfig, {
+    horizonRpcUrl: STELLAR_HORIZON_RPC_URL,
+    sorobanRpcUrl: STELLAR_SOROBAN_RPC_URL,
+  });
 
   const sonicSpokeProvider = new SonicSpokeProvider(
-    new EvmWalletProvider(process.env.EVM_PRIVATE_KEY as Hex, SONIC_MAINNET_CHAIN_ID),
+    new EvmWalletProvider({
+      privateKey: process.env.EVM_PRIVATE_KEY as Hex,
+      chainId: SONIC_MAINNET_CHAIN_ID,
+    }),
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
   );
 
@@ -292,7 +380,7 @@ const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, ste
   }
 }
 
-
-stellarToSonicTwoWayMigration()
+iconToSolTwoWayMigration();
+// stellarToSonicTwoWayMigration();
 // suiToSonicTwoWayMigration()
 // iconToArbTwoWayMigration();
