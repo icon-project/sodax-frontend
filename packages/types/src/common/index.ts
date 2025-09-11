@@ -39,5 +39,4 @@ export type OriginalAssetAddress = string;
 
 export interface WalletAddressProvider {
   getWalletAddress(): Promise<string>; // The wallet address as a string
-  getWalletAddressBytes(): Promise<Hex>; // The wallet address as a hex string
 }

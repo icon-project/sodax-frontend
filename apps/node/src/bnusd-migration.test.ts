@@ -17,19 +17,19 @@ import {
   type UnifiedBnUSDMigrateParams,
   spokeChainConfig,
 } from '@sodax/sdk';
-import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
-import { SuiWalletProvider } from './sui-wallet-provider.js';
-import type { StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
-import { StellarWalletProvider } from '@sodax/wallet-sdk';
+import {
+  StellarWalletProvider,
+  IconWalletProvider,
+  EvmWalletProvider,
+  SuiWalletProvider,
+  type StellarWalletConfig,
+} from '@sodax/wallet-sdk-core';
 
 // Override JSON.stringify to handle BigInt serialization as strings
 // This ensures that any BigInt values in objects are stringified using .toString()
 (BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function (): string {
   return this.toString();
 };
-
-
 
 async function iconToArbTwoWayMigration() {
   const sodax = new Sodax();
@@ -43,7 +43,10 @@ async function iconToArbTwoWayMigration() {
   );
 
   const evmSpokeProvider = new EvmSpokeProvider(
-    new EvmWalletProvider(process.env.EVM_PRIVATE_KEY as Hex, ARBITRUM_MAINNET_CHAIN_ID),
+    new EvmWalletProvider({
+      privateKey: process.env.EVM_PRIVATE_KEY as Hex,
+      chainId: ARBITRUM_MAINNET_CHAIN_ID,
+    }),
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID],
   );
   // // migrate from legacy bnUSD from Icon to the new bnUSD on ARB
@@ -118,15 +121,21 @@ async function suiToSonicTwoWayMigration() {
 
   const suiConfig = spokeChainConfig[SUI_MAINNET_CHAIN_ID];
   const suiWalletMnemonics = process.env.SUI_MNEMONICS;
-  
+
   if (!suiWalletMnemonics) {
     throw new Error('SUI_MNEMONICS environment variable is required');
   }
-  const suiWalletProvider = new SuiWalletProvider('https://fullnode.mainnet.sui.io', suiWalletMnemonics);
+  const suiWalletProvider = new SuiWalletProvider({
+    rpcUrl: 'https://fullnode.mainnet.sui.io',
+    mnemonics: suiWalletMnemonics,
+  });
   const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
 
   const sonicSpokeProvider = new SonicSpokeProvider(
-    new EvmWalletProvider(process.env.EVM_PRIVATE_KEY as Hex, SONIC_MAINNET_CHAIN_ID),
+    new EvmWalletProvider({
+      privateKey: process.env.EVM_PRIVATE_KEY as Hex,
+      chainId: SONIC_MAINNET_CHAIN_ID,
+    }),
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
   );
 
@@ -201,26 +210,29 @@ async function stellarToSonicTwoWayMigration() {
   const sodax = new Sodax();
 
   const stellarConfig = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID] as StellarSpokeChainConfig;
-const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY ?? '';
-const STELLAR_SOROBAN_RPC_URL =  stellarConfig.sorobanRpcUrl
-const STELLAR_HORIZON_RPC_URL = stellarConfig.horizonRpcUrl
+  const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY ?? '';
+  const STELLAR_SOROBAN_RPC_URL = stellarConfig.sorobanRpcUrl;
+  const STELLAR_HORIZON_RPC_URL = stellarConfig.horizonRpcUrl;
 
-// Create Stellar wallet config
-const stellarWalletConfig: StellarWalletConfig = {
-  type: 'PRIVATE_KEY',
-  privateKey: STELLAR_PRIVATE_KEY as Hex,
-  network: 'PUBLIC',
-  rpcUrl: STELLAR_SOROBAN_RPC_URL,
-};
+  // Create Stellar wallet config
+  const stellarWalletConfig: StellarWalletConfig = {
+    type: 'PRIVATE_KEY',
+    privateKey: STELLAR_PRIVATE_KEY as Hex,
+    network: 'PUBLIC',
+    rpcUrl: STELLAR_SOROBAN_RPC_URL,
+  };
 
-const stellarWalletProvider = new StellarWalletProvider(stellarWalletConfig);
-const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, stellarConfig, {
-  horizonRpcUrl: STELLAR_HORIZON_RPC_URL,
-  sorobanRpcUrl: STELLAR_SOROBAN_RPC_URL,
-});
+  const stellarWalletProvider = new StellarWalletProvider(stellarWalletConfig);
+  const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, stellarConfig, {
+    horizonRpcUrl: STELLAR_HORIZON_RPC_URL,
+    sorobanRpcUrl: STELLAR_SOROBAN_RPC_URL,
+  });
 
   const sonicSpokeProvider = new SonicSpokeProvider(
-    new EvmWalletProvider(process.env.EVM_PRIVATE_KEY as Hex, SONIC_MAINNET_CHAIN_ID),
+    new EvmWalletProvider({
+      privateKey: process.env.EVM_PRIVATE_KEY as Hex,
+      chainId: SONIC_MAINNET_CHAIN_ID,
+    }),
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
   );
 
@@ -292,7 +304,6 @@ const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, ste
   }
 }
 
-
-stellarToSonicTwoWayMigration()
+stellarToSonicTwoWayMigration();
 // suiToSonicTwoWayMigration()
 // iconToArbTwoWayMigration();
