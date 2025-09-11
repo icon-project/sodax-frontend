@@ -502,7 +502,7 @@ export default function MigratePage() {
           {migrationMode === 'icxsoda'
             ? direction.from === ICON_MAINNET_CHAIN_ID
               ? '~0.02 ICX'
-              : '~0.1 SODA'
+              : '~0.1 Sonic'
             : direction.from === ICON_MAINNET_CHAIN_ID
               ? '~0.02 ICX'
               : `~0.1 ${currencies.from.symbol}`}
