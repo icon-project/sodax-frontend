@@ -14,7 +14,6 @@ import type {
   bnUSDLegacySpokeChainIds,
   bnUSDLegacyTokens,
   EVM_CHAIN_IDS,
-  EVM_SPOKE_CHAIN_IDS,
   newbnUSDSpokeChainIds,
   spokeChainConfig,
   ChainIdToIntentRelayChainId,
@@ -49,7 +48,7 @@ export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
 
 export type EvmChainId = (typeof EVM_CHAIN_IDS)[number];
-export type EvmSpokeChainId = (typeof EVM_SPOKE_CHAIN_IDS)[number];
+export type EvmSpokeChainId = (typeof EVM_CHAIN_IDS)[number];
 
 export type BaseSpokeChainInfo<T extends ChainType> = {
   name: string;

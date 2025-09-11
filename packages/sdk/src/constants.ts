@@ -73,18 +73,6 @@ export const EVM_CHAIN_IDS = [
   HYPEREVM_MAINNET_CHAIN_ID,
 ] as const;
 
-export const EVM_SPOKE_CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  HYPEREVM_MAINNET_CHAIN_ID,
-] as const;
-
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
 export const ChainIdToIntentRelayChainId = {
   [AVALANCHE_MAINNET_CHAIN_ID]: 6n,
