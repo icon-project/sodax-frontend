@@ -50,6 +50,7 @@ async function iconToSolTwoWayMigration() {
   if (!solanaPrivateKey) {
     throw new Error('PRIVATE_KEY environment variable is required');
   }
+
   const solPrivateKeyUint8 = new Uint8Array(Buffer.from(solanaPrivateKey, 'hex'));
   console.log('solPrivateKeyUint8', solPrivateKeyUint8);
   const keypair = Keypair.fromSecretKey(solPrivateKeyUint8);
@@ -380,7 +381,7 @@ async function stellarToSonicTwoWayMigration() {
   }
 }
 
-iconToSolTwoWayMigration();
+// iconToSolTwoWayMigration();
 // stellarToSonicTwoWayMigration();
 // suiToSonicTwoWayMigration()
-// iconToArbTwoWayMigration();
+iconToArbTwoWayMigration();
