@@ -30,7 +30,7 @@ export class IconWalletProvider implements IIconWalletProvider {
     const builtTx = new CallTransactionBuilder()
       .from(tx.from)
       .to(tx.to)
-      .stepLimit(Converter.toHex(2000000))
+      .stepLimit(Converter.toHex(3000000))
       .nid(tx.nid)
       .version(tx.version ?? '0x3')
       .timestamp(Converter.toHex(tx.timestamp ?? new Date().getTime() * 1000))

@@ -841,7 +841,6 @@ export class MigrationService {
       const txResult = await SpokeService.deposit(
         {
           from: walletAddress,
-          to: creatorHubWalletAddress,
           token: params.srcbnUSD,
           amount: params.amount,
           data: migrationData,
