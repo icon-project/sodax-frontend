@@ -61,24 +61,6 @@ export const DEFAULT_BACKEND_API_HEADERS = {
 
 export const VAULT_TOKEN_DECIMALS = 18;
 
-// NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
-export const INTENT_RELAY_CHAIN_IDS = {
-  AVAX: 6n,
-  SUI: 21n,
-  SONIC: 146n,
-  STELLAR: 27n,
-  INJ: 19n,
-  SOL: 1n,
-  ICON: 1768124270n,
-  BASE: 30n,
-  BINANCE: 4n,
-  OPTIMISM: 24n,
-  POLYGON: 5n,
-  ARBITRUM: 23n,
-  NIBIRU: 7235938n,
-  HYPER: 26745n,
-} as const;
-
 export const EVM_CHAIN_IDS = [
   AVALANCHE_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -103,21 +85,22 @@ export const EVM_SPOKE_CHAIN_IDS = [
   HYPEREVM_MAINNET_CHAIN_ID,
 ] as const;
 
-export const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
-  [AVALANCHE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.AVAX,
-  [ARBITRUM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ARBITRUM,
-  [BASE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.BASE,
-  [BSC_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.BINANCE,
-  [INJECTIVE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.INJ,
-  [SONIC_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SONIC,
-  [OPTIMISM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.OPTIMISM,
-  [POLYGON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.POLYGON,
-  [SOLANA_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SOL,
-  [SUI_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SUI,
-  [STELLAR_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
-  [ICON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
-  [NIBIRU_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.NIBIRU,
-  [HYPEREVM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.HYPER,
+// NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
+export const ChainIdToIntentRelayChainId = {
+  [AVALANCHE_MAINNET_CHAIN_ID]: 6n,
+  [ARBITRUM_MAINNET_CHAIN_ID]: 23n,
+  [BASE_MAINNET_CHAIN_ID]: 30n,
+  [BSC_MAINNET_CHAIN_ID]: 4n,
+  [INJECTIVE_MAINNET_CHAIN_ID]: 19n,
+  [SONIC_MAINNET_CHAIN_ID]: 146n,
+  [OPTIMISM_MAINNET_CHAIN_ID]: 24n,
+  [POLYGON_MAINNET_CHAIN_ID]: 5n,
+  [SOLANA_MAINNET_CHAIN_ID]: 1n,
+  [SUI_MAINNET_CHAIN_ID]: 21n,
+  [STELLAR_MAINNET_CHAIN_ID]: 27n,
+  [ICON_MAINNET_CHAIN_ID]: 1768124270n,
+  [NIBIRU_MAINNET_CHAIN_ID]: 7235938n,
+  [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -2291,7 +2274,7 @@ export const isValidChainHubAsset = (chainId: SpokeChainId, hubAsset: Address): 
   chainIdToHubAssetsMap.get(chainId)?.has(hubAsset.toLowerCase() as Address) ?? false;
 export const isValidSpokeChainId = (chainId: SpokeChainId): boolean => spokeChainIdsSet.has(chainId);
 export const isValidIntentRelayChainId = (chainId: bigint): boolean =>
-  Object.values(INTENT_RELAY_CHAIN_IDS).some(id => id === chainId);
+  Object.values(ChainIdToIntentRelayChainId).some(id => id === chainId);
 export const supportedHubChains: HubChainId[] = Object.keys(hubChainConfig) as HubChainId[];
 export const supportedSpokeChains: SpokeChainId[] = Object.keys(spokeChainConfig) as SpokeChainId[];
 export const intentRelayChainIdToSpokeChainIdMap: Map<IntentRelayChainId, SpokeChainId> = new Map(
