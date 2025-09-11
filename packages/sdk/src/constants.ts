@@ -868,7 +868,7 @@ export const spokeChainConfig = {
       connection: '0xA143488cDc5B74B366231E6A4d5a55A2D9Dc8484',
     },
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
-    bnUSD: '0xeCef079897b633b04c5E9A290e1C567d399A8a4b',
+    bnUSD: '0x506Ba7C8d91dAdf7a91eE677a205D9687b751579',
     supportedTokens: {
       HYPE: {
         symbol: 'HYPE',
@@ -881,7 +881,7 @@ export const spokeChainConfig = {
         symbol: 'bnUSD',
         name: 'bnUSD',
         decimals: 18,
-        address: '0xeCef079897b633b04c5E9A290e1C567d399A8a4b',
+        address: '0x506Ba7C8d91dAdf7a91eE677a205D9687b751579',
         xChainId: HYPEREVM_MAINNET_CHAIN_ID,
       },
       SODA: {
