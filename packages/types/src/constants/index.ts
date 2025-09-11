@@ -13,6 +13,7 @@ export const SOLANA_MAINNET_CHAIN_ID = 'solana';
 export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
 export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
 export const HYPEREVM_MAINNET_CHAIN_ID = 'hyper';
+export const LIGHTLINK_MAINNET_CHAIN_ID = 'lightlink';
 
 export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
 
@@ -32,4 +33,5 @@ export const CHAIN_IDS = [
   STELLAR_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
 ] as const;

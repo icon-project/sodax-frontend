@@ -13,6 +13,7 @@ import {
   POLYGON_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import type { SodaxConfig } from '@sodax/sdk';
 import { useAppStore } from './zustand/useAppStore';
@@ -53,6 +54,7 @@ export default function Providers({ children }: { children: ReactNode }) {
                 POLYGON_MAINNET_CHAIN_ID,
                 SONIC_MAINNET_CHAIN_ID,
                 HYPEREVM_MAINNET_CHAIN_ID,
+                LIGHTLINK_MAINNET_CHAIN_ID,
               ],
             },
             SUI: {
