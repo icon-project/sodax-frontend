@@ -39,7 +39,7 @@ import {
   STELLAR_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
   type HubChainId,
-  SPOKE_CHAIN_IDS,
+  CHAIN_IDS,
   HYPEREVM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
@@ -868,7 +868,7 @@ export const spokeChainConfig = {
       connection: '0xA143488cDc5B74B366231E6A4d5a55A2D9Dc8484',
     },
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
-    bnUSD: '0xeCef079897b633b04c5E9A290e1C567d399A8a4b',
+    bnUSD: '0x506Ba7C8d91dAdf7a91eE677a205D9687b751579',
     supportedTokens: {
       HYPE: {
         symbol: 'HYPE',
@@ -881,7 +881,7 @@ export const spokeChainConfig = {
         symbol: 'bnUSD',
         name: 'bnUSD',
         decimals: 18,
-        address: '0xeCef079897b633b04c5E9A290e1C567d399A8a4b',
+        address: '0x506Ba7C8d91dAdf7a91eE677a205D9687b751579',
         xChainId: HYPEREVM_MAINNET_CHAIN_ID,
       },
       SODA: {
@@ -1365,7 +1365,7 @@ export const bnUSDLegacySpokeChainIds = [
   SUI_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
 ] as const;
-export const newbnUSDSpokeChainIds = SPOKE_CHAIN_IDS.filter(chainId => chainId !== ICON_MAINNET_CHAIN_ID);
+export const newbnUSDSpokeChainIds = CHAIN_IDS.filter(chainId => chainId !== ICON_MAINNET_CHAIN_ID);
 export const bnUSDLegacyTokens = [
   spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
@@ -2255,7 +2255,7 @@ export const supportedHubAssets: Set<Address> = new Set(
 export const supportedSodaAssets: Set<Address> = new Set(
   Object.values(hubAssets).flatMap(assets => Object.values(assets).map(info => info.vault.toLowerCase() as Address)),
 );
-export const spokeChainIdsSet = new Set(SPOKE_CHAIN_IDS);
+export const spokeChainIdsSet = new Set(CHAIN_IDS);
 
 // Returns the first hub asset info for a given chainId whose vault address matches the provided vault address (case-insensitive)
 export const getOriginalAssetInfoFromVault = (chainId: SpokeChainId, vault: Address): OriginalAssetAddress[] => {
