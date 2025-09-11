@@ -1,7 +1,6 @@
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
 import Image from 'next/image';
 import type { XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens } from '@/lib/utils';
@@ -315,16 +314,8 @@ export function TokenGroupAsset({
 
   return (
     <>
-      <motion.div
+      <div
         ref={assetRef}
-        layout
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{
-          opacity: 1,
-          scale: isHovered ? 1.1 : 1,
-        }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
         className={`box-border content-stretch flex flex-col gap-2 items-center justify-start px-4 relative shrink-0 cursor-pointer transition-all duration-200 ${
           isBlurred ? 'blur filter opacity-30' : ''
         }`}
@@ -332,9 +323,12 @@ export function TokenGroupAsset({
         onClick={onClick}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
+        style={{
+          transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+        }}
       >
         <CurrencyGroupLogo symbol={symbol} tokenCount={tokenCount} isClicked={isClicked} isHovered={isHovered} />
-      </motion.div>
+      </div>
       <StackedNetworksPortal
         isClicked={isClicked}
         chainIds={chainIds}

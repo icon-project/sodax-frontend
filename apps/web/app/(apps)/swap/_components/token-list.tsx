@@ -1,10 +1,9 @@
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollAreaPrimitive, ScrollBar } from '@/components/ui/scroll-area';
 import { TokenAsset } from './token-asset';
 import { TokenGroupAsset } from './token-group-asset';
 
@@ -130,19 +129,23 @@ export function TokenList({
   };
 
   return (
-    <motion.div
+    <div
       ref={assetsRef}
-      layout
+      // layout
       className={`[flex-flow:wrap] box-border content-start flex gap-0 items-start justify-center px-0 py-4 relative shrink-0 w-full flex-1 ${
         isChainSelectorOpen ? 'blur filter opacity-30' : ''
       }`}
       data-name="Assets"
     >
-      <AnimatePresence mode="popLayout">
-        <ScrollArea className={showAllAssets ? 'h-96' : 'h-71 !overflow-visible'}>
+      <ScrollAreaPrimitive.Root data-slot="scroll-area" className={showAllAssets ? 'h-96' : 'h-71'}>
+        <ScrollAreaPrimitive.Viewport
+          data-slot="scroll-area-viewport"
+          className={`h-full w-full ${clickedAsset ? '!overflow-hidden' : ''}`}
+        >
           <div className="grid grid-cols-3 md:grid-cols-5 gap-y-[10px]">{displayTokens.map(renderTokenSymbol)}</div>
-        </ScrollArea>
-      </AnimatePresence>
+        </ScrollAreaPrimitive.Viewport>
+        <ScrollBar />
+      </ScrollAreaPrimitive.Root>
 
       {!showAllAssets && filteredTokens.length > 15 && (
         <div
@@ -152,6 +155,6 @@ export function TokenList({
           View all assets
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
