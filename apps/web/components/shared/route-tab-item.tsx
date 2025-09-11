@@ -26,7 +26,7 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
   setRef,
   className = '',
 }) => {
-  const isSoon = value !== 'migrate';
+  const isSoon = value !== 'migrate' && value !== 'swap';
 
   const getTextClassName = (): string => {
     if (isMobile) {
