@@ -26,8 +26,14 @@ import {
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
-import { useQuote, useSwap, useSpokeProvider, useSwapAllowance, useSwapApprove } from '@sodax/dapp-kit';
-import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk';
+import { useQuote, useSpokeProvider, useSwapAllowance, useSwapApprove, useSwap } from '@sodax/dapp-kit';
+import {
+  getXChainType,
+  useEvmSwitchChain,
+  useXAccount,
+  useXDisconnect,
+  useWalletProvider,
+} from '@sodax/wallet-sdk-react';
 import {
   type ChainId,
   POLYGON_MAINNET_CHAIN_ID,

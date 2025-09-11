@@ -26,9 +26,5 @@
   },
   "commitlint": {
     "extends": ["@commitlint/config-conventional"]
-  },
-  "dependencies": {
-    "react-dom": "catalog:",
-    "react": "catalog:"
   }
 }

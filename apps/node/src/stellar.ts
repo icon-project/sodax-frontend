@@ -14,11 +14,11 @@ import {
   EvmHubProvider,
   type HttpUrl,
   type UnifiedBnUSDMigrateParams,
+  encodeAddress,
 } from '@sodax/sdk';
 
-import { StellarWalletProvider, type StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
+import { StellarWalletProvider, type StellarWalletConfig } from '@sodax/wallet-sdk-core';
 import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
-import { Address as stellarAddress } from '@stellar/stellar-sdk';
 import * as dotenv from 'dotenv';
 import { solverConfig } from './config.js';
 dotenv.config();
@@ -76,7 +76,8 @@ async function getBalance(token: string) {
 }
 
 async function depositTo(token: string, amount: bigint, recipient: Address) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const data = EvmAssetManagerService.depositToData(
     {
       token,
@@ -105,7 +106,8 @@ async function withdrawAsset(
   amount: bigint,
   recipient: string, // stellar address
 ) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -115,7 +117,7 @@ async function withdrawAsset(
   const data = EvmAssetManagerService.withdrawAssetData(
     {
       token,
-      to: `0x${stellarAddress.fromString(recipient).toScVal().toXDR('hex')}`,
+      to: encodeAddress(stellarSpokeProvider.chainConfig.chain.id, recipient),
       amount,
     },
     hubProvider,
@@ -127,7 +129,8 @@ async function withdrawAsset(
 }
 
 async function supply(token: string, amount: bigint) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -151,7 +154,8 @@ async function supply(token: string, amount: bigint) {
 }
 
 async function borrow(token: string, amount: bigint) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -172,7 +176,8 @@ async function borrow(token: string, amount: bigint) {
 }
 
 async function withdraw(token: string, amount: bigint) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -195,7 +200,8 @@ async function withdraw(token: string, amount: bigint) {
 }
 
 async function repay(token: string, amount: bigint) {
-  const walletAddressBytes = await stellarSpokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddress = await stellarSpokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = encodeAddress(STELLAR_MAINNET_CHAIN_ID, walletAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     stellarSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,

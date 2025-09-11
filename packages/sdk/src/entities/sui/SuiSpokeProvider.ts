@@ -206,11 +206,6 @@ export class SuiSpokeProvider implements ISpokeProvider {
     return this.walletProvider.getWalletAddress();
   }
 
-  async getWalletAddressBytes(): Promise<Hex> {
-    const address = await this.getWalletAddress();
-    return SuiSpokeProvider.getAddressBCSBytes(address);
-  }
-
   static getAddressBCSBytes(suiaddress: string): Hex {
     return toHex(bcs.Address.serialize(suiaddress).toBytes());
   }
