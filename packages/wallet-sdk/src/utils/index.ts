@@ -26,6 +26,7 @@ export const getWagmiChainId = (xChainId: ChainId): number => {
     '0x2105.base': 8453,
     '0xa.optimism': 10,
     '0x89.polygon': 137,
+    hyper: 999,
   };
   return xChainMap[xChainId] ?? 0;
 };

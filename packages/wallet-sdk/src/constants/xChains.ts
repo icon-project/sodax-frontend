@@ -104,6 +104,14 @@ export const nibiru: XChain = {
   testnet: false,
 };
 
+export const hyper: XChain = {
+  id: 999,
+  name: 'HyperEVM',
+  xChainId: 'hyper',
+  xChainType: 'EVM',
+  testnet: false,
+};
+
 // the order is important, using manual order to display in the UI
 export const xChainMap: { [key in ChainId]: XChain } = {
   '0x1.icon': icon,
@@ -119,6 +127,7 @@ export const xChainMap: { [key in ChainId]: XChain } = {
   sonic: sonic,
   '0x89.polygon': polygon,
   nibiru: nibiru,
+  hyper: hyper,
 };
 
 /**
@@ -140,6 +149,7 @@ export const xChainMap: { [key in ChainId]: XChain } = {
  * - Stellar chain: stellar
  * - Injective chain: injective-1
  * - Nibiru chain: nibiru
+ * - HyperEVM chain: hyper
  */
 
 export const xChains = Object.values(xChainMap);
