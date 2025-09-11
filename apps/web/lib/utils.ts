@@ -75,7 +75,14 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
       // const supportedTokens = spokeChainConfig[chainId].supportedTokens;
       const supportedTokens = getSupportedSolverTokens(chainId);
       // Filter out legacy tokens to prevent duplicates
-      const filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
+      let filteredTokens = supportedTokens;
+      filteredTokens.map(token => {
+        if (token.symbol === 'bnUSD (legacy)') {
+          token.symbol = 'bnUSD';
+        }
+      });
+
+      if (chainId !== '0x1.icon') filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
 
       const xTokens: XToken[] = filteredTokens.map((token: Token) => ({
         ...token,
@@ -101,8 +108,15 @@ export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[
   try {
     const supportedTokens = getSupportedSolverTokens(chainId);
 
-    // Filter out legacy tokens to prevent duplicates
-    const filteredTokens = filterLegacyTokens(supportedTokens);
+    let filteredTokens = supportedTokens;
+
+    filteredTokens.map(token => {
+      if (token.symbol === 'bnUSD (legacy)') {
+        token.symbol = 'bnUSD';
+      }
+    });
+
+    if (chainId !== '0x1.icon') filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
 
     return filteredTokens.map((token: Token) => ({
       ...token,
