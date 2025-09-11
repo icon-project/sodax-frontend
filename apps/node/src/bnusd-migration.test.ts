@@ -12,7 +12,7 @@ import {
   SonicSpokeProvider,
   type StellarSpokeChainConfig,
   StellarSpokeProvider,
-  SuiSpokeChainConfig,
+  SolanaSpokeProvider,
   SuiSpokeProvider,
   type UnifiedBnUSDMigrateParams,
   spokeChainConfig,
@@ -23,13 +23,89 @@ import {
   EvmWalletProvider,
   SuiWalletProvider,
   type StellarWalletConfig,
+  SolanaWalletProvider,
 } from '@sodax/wallet-sdk-core';
+import { SOLANA_MAINNET_CHAIN_ID } from '@sodax/types';
+import { Keypair } from '@solana/web3.js';
 
 // Override JSON.stringify to handle BigInt serialization as strings
 // This ensures that any BigInt values in objects are stringified using .toString()
 (BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function (): string {
   return this.toString();
 };
+
+async function iconToSolTwoWayMigration() {
+  const sodax = new Sodax();
+
+  const iconSpokeProvider = new IconSpokeProvider(
+    new IconWalletProvider({
+      privateKey: process.env.ICON_PRIVATE_KEY as Hex,
+      rpcUrl: 'https://ctz.solidwallet.io/api/v3',
+    }),
+    spokeChainConfig[ICON_MAINNET_CHAIN_ID],
+  );
+
+  const solanaPrivateKey = process.env.SOLANA_PRIVATE_KEY;
+
+  if (!solanaPrivateKey) {
+    throw new Error('PRIVATE_KEY environment variable is required');
+  }
+  const solPrivateKeyUint8 = new Uint8Array(Buffer.from(solanaPrivateKey, 'hex'));
+  console.log('solPrivateKeyUint8', solPrivateKeyUint8);
+  const keypair = Keypair.fromSecretKey(solPrivateKeyUint8);
+
+  const solanaWallet = new SolanaWalletProvider({
+    privateKey: keypair.secretKey,
+    endpoint: spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].rpcUrl,
+  });
+
+  const solSpokeProvider = new SolanaSpokeProvider(
+    solanaWallet,
+    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID],
+  );
+  const iconToSolanaResult = await sodax.migration.migratebnUSD(
+    {
+      srcChainId: iconSpokeProvider.chainConfig.chain.id,
+      dstChainId: solSpokeProvider.chainConfig.chain.id,
+      srcbnUSD: iconSpokeProvider.chainConfig.bnUSD,
+      dstbnUSD: solSpokeProvider.chainConfig.bnUSD,
+      amount: BigInt(1e17), // test with 0.1 bnUSD
+      to: await solSpokeProvider.walletProvider.getWalletAddress(),
+    } satisfies UnifiedBnUSDMigrateParams,
+    iconSpokeProvider,
+  );
+
+  if (iconToSolanaResult.ok) {
+    const [spokeTxHash, hubTxHash] = iconToSolanaResult.value;
+    console.log(`legacy bnUSD (Icon) -> new bnUSD (Solana) spokeTxHash=${spokeTxHash}, hubTxHash=${hubTxHash}`);
+  } else {
+    console.error('[migrateBnUSD] error', JSON.stringify(iconToSolanaResult.error, null, 2));
+    throw new Error('failed to migrate bnUSD from Icon to Solana');
+  }
+
+  // wait 30 seconds
+  console.log('waiting 30 seconds...');
+  await new Promise(resolve => setTimeout(resolve, 30000));
+
+  const solToIconParams = {
+    srcChainId: solSpokeProvider.chainConfig.chain.id,
+    dstChainId: iconSpokeProvider.chainConfig.chain.id,
+    srcbnUSD: solSpokeProvider.chainConfig.bnUSD,
+    dstbnUSD: iconSpokeProvider.chainConfig.bnUSD,
+    amount: BigInt(1e17), // test with 0.1 bnUSD
+    to: await iconSpokeProvider.walletProvider.getWalletAddress(),
+  } satisfies UnifiedBnUSDMigrateParams;
+
+  // migrate from new bnUSD from ARB to the legacy bnUSD on Icon
+  const solToIconResult = await sodax.migration.migratebnUSD(solToIconParams, solSpokeProvider);
+
+  if (solToIconResult.ok) {
+    const [spokeTxHash, hubTxHash] = solToIconResult.value;
+    console.log(`new bnUSD (Solana) -> legacy bnUSD (Icon) spokeTxHash=${spokeTxHash}, hubTxHash=${hubTxHash}`);
+  } else {
+    console.error('[migrateBnUSD] error', solToIconResult.error);
+  }
+}
 
 async function iconToArbTwoWayMigration() {
   const sodax = new Sodax();
@@ -304,6 +380,7 @@ async function stellarToSonicTwoWayMigration() {
   }
 }
 
-stellarToSonicTwoWayMigration();
+iconToSolTwoWayMigration();
+// stellarToSonicTwoWayMigration();
 // suiToSonicTwoWayMigration()
 // iconToArbTwoWayMigration();
