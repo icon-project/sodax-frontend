@@ -4,9 +4,8 @@ import { Transaction, type TransactionResult } from '@mysten/sui/transactions';
 import { type Hex, toHex } from 'viem';
 import type { PromiseSuiTxReturnType, SuiReturnType, SuiSpokeChainConfig } from '../../types.js';
 import type { ISpokeProvider } from '../index.js';
-import { type ISuiWalletProvider, SUI_MAINNET_CHAIN_ID } from '@sodax/types';
+import type { ISuiWalletProvider } from '@sodax/types';
 import { SuiSpokeService } from '../../services/spoke/SuiSpokeService.js';
-import { encodeAddress } from '../../utils/shared-utils.js';
 
 type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
 type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | undefined };
