@@ -3,7 +3,7 @@ import type { ChainId, XToken } from '@sodax/types';
 import type { EVMConfig } from '@/types';
 import { getWagmiChainId, isNativeToken } from '@/utils';
 
-import { type Address, type PublicClient, type WalletClient, erc20Abi } from 'viem';
+import { type Address, type PublicClient, type WalletClient, defineChain, erc20Abi } from 'viem';
 import { getPublicClient, getWalletClient } from 'wagmi/actions';
 import { createConfig, http, type Transport } from 'wagmi';
 import { mainnet, avalanche, base, optimism, polygon, arbitrum, bsc, sonic, nibiru } from 'wagmi/chains';
@@ -17,7 +17,34 @@ import {
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
+
+// HyperEVM chain is not supported by viem, so we need to define it manually
+export const hyper = /*#__PURE__*/ defineChain({
+  id: 999,
+  name: 'HyperEVM',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'HYPE',
+    symbol: 'HYPE',
+  },
+  rpcUrls: {
+    default: { http: ['https://rpc.hyperliquid.xyz/evm'] },
+  },
+  blockExplorers: {
+    default: {
+      name: 'HyperEVMScan',
+      url: 'https://hyperevmscan.io/',
+    },
+  },
+  contracts: {
+    multicall3: {
+      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
+      blockCreated: 13051,
+    },
+  },
+});
 
 const evmChainMap = {
   [AVALANCHE_MAINNET_CHAIN_ID]: avalanche,
@@ -28,6 +55,7 @@ const evmChainMap = {
   [OPTIMISM_MAINNET_CHAIN_ID]: optimism,
   [POLYGON_MAINNET_CHAIN_ID]: polygon,
   [NIBIRU_MAINNET_CHAIN_ID]: nibiru,
+  [HYPEREVM_MAINNET_CHAIN_ID]: hyper,
 } as const;
 
 export type EvmChainId = keyof typeof evmChainMap;

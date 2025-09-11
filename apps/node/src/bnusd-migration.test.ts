@@ -5,11 +5,31 @@ import {
   type Hex,
   ICON_MAINNET_CHAIN_ID,
   IconSpokeProvider,
+  SONIC_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
+  SUI_MAINNET_CHAIN_ID,
   Sodax,
-  spokeChainConfig,
+  SonicSpokeProvider,
+  type StellarSpokeChainConfig,
+  StellarSpokeProvider,
+  SuiSpokeChainConfig,
+  SuiSpokeProvider,
   type UnifiedBnUSDMigrateParams,
+  spokeChainConfig,
 } from '@sodax/sdk';
-import { IconWalletProvider, EvmWalletProvider } from '@sodax/wallet-sdk-core';
+import { IconWalletProvider } from './wallet-providers/IconWalletProvider.js';
+import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
+import { SuiWalletProvider } from './sui-wallet-provider.js';
+import type { StellarWalletConfig } from './wallet-providers/StellarWalletProvider.js';
+import { StellarWalletProvider } from '@sodax/wallet-sdk';
+
+// Override JSON.stringify to handle BigInt serialization as strings
+// This ensures that any BigInt values in objects are stringified using .toString()
+(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function (): string {
+  return this.toString();
+};
+
+
 
 async function iconToArbTwoWayMigration() {
   const sodax = new Sodax();
@@ -96,4 +116,186 @@ async function iconToArbTwoWayMigration() {
   }
 }
 
-iconToArbTwoWayMigration();
+async function suiToSonicTwoWayMigration() {
+  const sodax = new Sodax();
+
+  const suiConfig = spokeChainConfig[SUI_MAINNET_CHAIN_ID];
+  const suiWalletMnemonics = process.env.SUI_MNEMONICS;
+
+  if (!suiWalletMnemonics) {
+    throw new Error('SUI_MNEMONICS environment variable is required');
+  }
+  const suiWalletProvider = new SuiWalletProvider('https://fullnode.mainnet.sui.io', suiWalletMnemonics);
+  const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
+
+  const sonicSpokeProvider = new SonicSpokeProvider(
+    new EvmWalletProvider(process.env.EVM_PRIVATE_KEY as Hex, SONIC_MAINNET_CHAIN_ID),
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
+  );
+
+  // // migrate from legacy bnUSD from Icon to the new bnUSD on ARB
+  // const suiToSonicResult = await sodax.migration.migratebnUSD(
+  //   {
+  //     srcChainId: suiSpokeProvider.chainConfig.chain.id,
+  //     dstChainId: sonicSpokeProvider.chainConfig.chain.id,
+  //     srcbnUSD: suiSpokeProvider.chainConfig.supportedTokens.legacybnUSD.address,
+  //     dstbnUSD: sonicSpokeProvider.chainConfig.bnUSD,
+  //     amount: BigInt(1e4), // test with 0.001 bnUSD
+  //     to: await sonicSpokeProvider.walletProvider.getWalletAddress(),
+  //   } satisfies UnifiedBnUSDMigrateParams,
+  //   suiSpokeProvider,
+  // );
+
+  // if (suiToSonicResult.ok) {
+  //   const [spokeTxHash, hubTxHash] = suiToSonicResult.value;
+  //   console.log(`legacy bnUSD (SUI) -> new bnUSD (SONIC) spokeTxHash=${spokeTxHash}, hubTxHash=${hubTxHash}`);
+  // } else {
+  //   console.error('[migrateBnUSD] error', JSON.stringify(suiToSonicResult.error, null, 2));
+  //   throw new Error('failed to migrate bnUSD from SUI to SONIC');
+  // }
+
+  // // wait 30 seconds
+  // console.log('waiting 30 seconds...');
+  // await new Promise(resolve => setTimeout(resolve, 30000));
+
+  const sonicToSuiParams = {
+    srcChainId: sonicSpokeProvider.chainConfig.chain.id,
+    dstChainId: suiSpokeProvider.chainConfig.chain.id,
+    srcbnUSD: sonicSpokeProvider.chainConfig.bnUSD,
+    dstbnUSD: suiSpokeProvider.chainConfig.supportedTokens.legacybnUSD.address,
+    amount: BigInt(10000000000000), // test with 0.1 bnUSD
+    to: await suiSpokeProvider.walletProvider.getWalletAddress(),
+  } satisfies UnifiedBnUSDMigrateParams;
+
+  const isAllowed = await sodax.migration.isAllowanceValid(sonicToSuiParams, 'revert', sonicSpokeProvider);
+
+  if (!isAllowed.ok) {
+    console.error('[reverseMigrateBnUSD] isAllowed error:', isAllowed.error);
+    return;
+  }
+
+  if (isAllowed.value) {
+    console.log('[reverseMigrateBnUSD] isAllowed', isAllowed.value);
+  } else {
+    const approveResult = await sodax.migration.approve(sonicToSuiParams, 'revert', sonicSpokeProvider);
+
+    if (approveResult.ok) {
+      console.log('[reverseMigrateBnUSD] approveHash', approveResult.value);
+      const approveTxResult = await sonicSpokeProvider.walletProvider.waitForTransactionReceipt(approveResult.value);
+      console.log('[reverseMigrateBnUSD] approveTxResult', approveTxResult);
+    } else {
+      console.error('[reverseMigrateBnUSD] approve error:', approveResult.error);
+      return;
+    }
+  }
+
+  // migrate from new bnUSD from SONIC to the legacy bnUSD on SUI
+  const sonicToSuiResult = await sodax.migration.migratebnUSD(sonicToSuiParams, sonicSpokeProvider);
+
+  if (sonicToSuiResult.ok) {
+    const [spokeTxHash, hubTxHash] = sonicToSuiResult.value;
+    console.log(`new bnUSD (SONIC) -> legacy bnUSD (SUI) spokeTxHash=${spokeTxHash}, hubTxHash=${hubTxHash}`);
+  } else {
+    console.error('[migrateBnUSD] error', sonicToSuiResult.error);
+  }
+}
+
+async function stellarToSonicTwoWayMigration() {
+  const sodax = new Sodax();
+
+  const stellarConfig = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID] as StellarSpokeChainConfig;
+const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY ?? '';
+const STELLAR_SOROBAN_RPC_URL =  stellarConfig.sorobanRpcUrl
+const STELLAR_HORIZON_RPC_URL = stellarConfig.horizonRpcUrl
+
+// Create Stellar wallet config
+const stellarWalletConfig: StellarWalletConfig = {
+  type: 'PRIVATE_KEY',
+  privateKey: STELLAR_PRIVATE_KEY as Hex,
+  network: 'PUBLIC',
+  rpcUrl: STELLAR_SOROBAN_RPC_URL,
+};
+
+const stellarWalletProvider = new StellarWalletProvider(stellarWalletConfig);
+const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, stellarConfig, {
+  horizonRpcUrl: STELLAR_HORIZON_RPC_URL,
+  sorobanRpcUrl: STELLAR_SOROBAN_RPC_URL,
+});
+
+  const sonicSpokeProvider = new SonicSpokeProvider(
+    new EvmWalletProvider(process.env.EVM_PRIVATE_KEY as Hex, SONIC_MAINNET_CHAIN_ID),
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
+  );
+
+  const amount = BigInt(1e15); // test with 0.001 bnUSD
+  // // migrate from legacy bnUSD from Icon to the new bnUSD on ARB
+  const stellarToSonicResult = await sodax.migration.migratebnUSD(
+    {
+      srcChainId: stellarSpokeProvider.chainConfig.chain.id,
+      dstChainId: sonicSpokeProvider.chainConfig.chain.id,
+      srcbnUSD: stellarSpokeProvider.chainConfig.supportedTokens.legacybnUSD.address,
+      dstbnUSD: sonicSpokeProvider.chainConfig.bnUSD,
+      amount: amount, // test with 0.001 bnUSD
+      to: await sonicSpokeProvider.walletProvider.getWalletAddress(),
+    } satisfies UnifiedBnUSDMigrateParams,
+    stellarSpokeProvider,
+  );
+
+  if (stellarToSonicResult.ok) {
+    const [spokeTxHash, hubTxHash] = stellarToSonicResult.value;
+    console.log(`legacy bnUSD (Stellar) -> new bnUSD (SONIC) spokeTxHash=${spokeTxHash}, hubTxHash=${hubTxHash}`);
+  } else {
+    console.error('[migrateBnUSD] error', JSON.stringify(stellarToSonicResult.error, null, 2));
+    throw new Error('failed to migrate bnUSD from Stellar to SONIC');
+  }
+
+  // wait 30 seconds
+  console.log('waiting 30 seconds...');
+  await new Promise(resolve => setTimeout(resolve, 30000));
+
+  const sonicToStellarParams = {
+    srcChainId: sonicSpokeProvider.chainConfig.chain.id,
+    dstChainId: stellarSpokeProvider.chainConfig.chain.id,
+    srcbnUSD: sonicSpokeProvider.chainConfig.bnUSD,
+    dstbnUSD: stellarSpokeProvider.chainConfig.supportedTokens.legacybnUSD.address,
+    amount: amount, // test with 0.1 bnUSD
+    to: await stellarSpokeProvider.walletProvider.getWalletAddress(),
+  } satisfies UnifiedBnUSDMigrateParams;
+
+  const isAllowed = await sodax.migration.isAllowanceValid(sonicToStellarParams, 'revert', sonicSpokeProvider);
+
+  if (!isAllowed.ok) {
+    console.error('[reverseMigrateBnUSD] isAllowed error:', isAllowed.error);
+    return;
+  }
+
+  if (isAllowed.value) {
+    console.log('[reverseMigrateBnUSD] isAllowed', isAllowed.value);
+  } else {
+    const approveResult = await sodax.migration.approve(sonicToStellarParams, 'revert', sonicSpokeProvider);
+
+    if (approveResult.ok) {
+      console.log('[reverseMigrateBnUSD] approveHash', approveResult.value);
+      const approveTxResult = await sonicSpokeProvider.walletProvider.waitForTransactionReceipt(approveResult.value);
+      console.log('[reverseMigrateBnUSD] approveTxResult', approveTxResult);
+    } else {
+      console.error('[reverseMigrateBnUSD] approve error:', approveResult.error);
+      return;
+    }
+  }
+
+  // migrate from new bnUSD from SONIC to the legacy bnUSD on SUI
+  const sonicToStellarResult = await sodax.migration.migratebnUSD(sonicToStellarParams, sonicSpokeProvider);
+
+  if (sonicToStellarResult.ok) {
+    const [spokeTxHash, hubTxHash] = sonicToStellarResult.value;
+    console.log(`new bnUSD (SONIC) -> legacy bnUSD (Stellar) spokeTxHash=${spokeTxHash}, hubTxHash=${hubTxHash}`);
+  } else {
+    console.error('[migrateBnUSD] error', sonicToStellarResult.error);
+  }
+}
+
+
+stellarToSonicTwoWayMigration()
+// suiToSonicTwoWayMigration()
+// iconToArbTwoWayMigration();

@@ -244,7 +244,7 @@ export class SpokeService {
     }
 
     if (spokeProvider instanceof SuiSpokeProvider) {
-      // await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
+      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return SuiSpokeService.deposit(
         params as GetSpokeDepositParamsType<SuiSpokeProvider>,
         spokeProvider,
