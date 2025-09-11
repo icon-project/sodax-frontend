@@ -38,6 +38,9 @@ import {
   isUnifiedBnUSDMigrateParams,
   EvmSpokeProvider,
   isIcxCreateRevertMigrationParams,
+  type RelayExtraData,
+  SolanaSpokeProvider,
+  deriveUserWalletAddress,
 } from '../../index.js';
 import { ICON_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 import { isAddress } from 'viem';
@@ -385,18 +388,20 @@ export class MigrationService {
     >
   > {
     try {
-      const txResult = await this.createMigratebnUSDIntent(params, spokeProvider, unchecked);
+      const intentResult = await this.createMigratebnUSDIntent(params, spokeProvider, unchecked);
 
-      if (!txResult.ok) {
+      if (!intentResult.ok) {
         return {
           ok: false,
-          error: txResult.error,
+          error: intentResult.error,
         };
       }
 
+      const [spokeTxHash, extraData] = intentResult.value;
+
       const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        undefined,
+        spokeTxHash,
+        spokeProvider instanceof SolanaSpokeProvider ? extraData : undefined,
         spokeProvider,
         this.config.relayerApiEndpoint,
         timeout,
@@ -406,7 +411,7 @@ export class MigrationService {
         return packetResult;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash as Hex] };
+      return { ok: true, value: [spokeTxHash, packetResult.value.dst_tx_hash as Hex] };
     } catch (error) {
       return {
         ok: false,
@@ -764,7 +769,7 @@ export class MigrationService {
     spokeProvider: S,
     unchecked = false,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+  ): Promise<Result<[TxReturnType<S, R>, RelayExtraData], MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
       if (!unchecked) {
         invariant(isValidSpokeChainId(params.srcChainId), 'Invalid spoke source chain ID');
@@ -830,9 +835,13 @@ export class MigrationService {
         throw new Error('srcbnUSD or dstbnUSD must be a legacy bnUSD token');
       }
 
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const creatorHubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+
       const txResult = await SpokeService.deposit(
         {
-          from: await spokeProvider.walletProvider.getWalletAddress(),
+          from: walletAddress,
+          to: creatorHubWalletAddress,
           token: params.srcbnUSD,
           amount: params.amount,
           data: migrationData,
@@ -844,7 +853,13 @@ export class MigrationService {
 
       return {
         ok: true,
-        value: txResult as TxReturnType<S, R>,
+        value: [
+          txResult as TxReturnType<S, R>,
+          {
+            address: creatorHubWalletAddress,
+            payload: migrationData,
+          } satisfies RelayExtraData,
+        ],
       };
     } catch (error) {
       return {
