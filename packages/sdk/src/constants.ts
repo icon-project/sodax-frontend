@@ -1504,7 +1504,7 @@ export const hubAssets: Record<
 > = {
   [SONIC_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S.address,
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
       decimal: 18,
       symbol: 'S',
       name: 'Sonic',
