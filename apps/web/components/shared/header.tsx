@@ -6,20 +6,17 @@ import { MenuIcon } from '@/components/icons';
 import { DecoratedButton } from '@/components/landing/decorated-button';
 import { ConnectedChainsDisplay } from '@/components/shared/connected-chains-display';
 import { useXAccounts } from '@sodax/wallet-sdk';
+import { useModalStore } from '@/stores/modal-store-provider';
+import { MODAL_ID } from '@/stores/modal-store';
 
 interface HeaderProps {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
-  onOpenWalletModal: () => void;
-  onOpenWalletModalWithTwoWallets: () => void;
 }
 
-export function Header({
-  isSidebarOpen,
-  toggleSidebar,
-  onOpenWalletModal,
-  onOpenWalletModalWithTwoWallets,
-}: HeaderProps): React.JSX.Element {
+export function Header({ isSidebarOpen, toggleSidebar }: HeaderProps): React.JSX.Element {
+  const openModal = useModalStore(state => state.openModal);
+
   const xAccounts = useXAccounts();
   const connectedChains = Object.entries(xAccounts).filter(([, account]) => account?.address);
   const connectedWalletsCount = connectedChains.length;
@@ -95,9 +92,9 @@ export function Header({
           </div>
           <div className="inline-flex justify-center items-start relative mr-2 ml-5">
             {connectedWalletsCount >= 1 ? (
-              <ConnectedChainsDisplay onClick={onOpenWalletModalWithTwoWallets} />
+              <ConnectedChainsDisplay onClick={() => openModal(MODAL_ID.WALLET_MODAL, {})} />
             ) : (
-              <DecoratedButton onClick={onOpenWalletModal}>connect</DecoratedButton>
+              <DecoratedButton onClick={() => openModal(MODAL_ID.WALLET_MODAL, {})}>connect</DecoratedButton>
             )}
           </div>
         </div>

@@ -11,6 +11,7 @@ export type WalletItemProps = {
   onWalletSelected?: (xConnector: XConnector, xChainType: string) => void;
 };
 
+// TODO: remove this
 export const xChainTypes: WalletItemProps[] = [
   {
     name: 'EVM',
