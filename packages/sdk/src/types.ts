@@ -179,6 +179,12 @@ export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
   network: InjectiveNetworkEnv;
 };
 
+export type StellarAssetTrustline = {
+  assetCode: string;
+  contractId: string;
+  assetIssuer: string;
+};
+
 export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
   addresses: {
     assetManager: string;
@@ -189,6 +195,7 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
   };
   horizonRpcUrl: HttpUrl;
   sorobanRpcUrl: HttpUrl;
+  trustlineConfigs: StellarAssetTrustline[];
 };
 
 export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
