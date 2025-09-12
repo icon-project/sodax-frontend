@@ -40,7 +40,6 @@ export type EvmRawTransactionReceipt = {
 
 export interface IEvmWalletProvider extends WalletAddressProvider {
   getWalletAddress: () => Promise<Address>;
-  getWalletAddressBytes: () => Promise<Hex>;
   sendTransaction: (evmRawTx: EvmRawTransaction) => Promise<Hash>;
   waitForTransactionReceipt: (txHash: Hash) => Promise<EvmRawTransactionReceipt>;
 }

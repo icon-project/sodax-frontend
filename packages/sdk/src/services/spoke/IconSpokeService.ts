@@ -216,10 +216,10 @@ export class IconSpokeService {
       payload: payload,
     };
 
-    const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
     const transaction = new CallTransactionBuilder()
-      .from(walletAddressBytes)
+      .from(walletAddress)
       .to(spokeProvider.chainConfig.addresses.connection)
       .stepLimit(Converter.toBigNumber('2000000'))
       .nid(spokeProvider.chainConfig.nid)
@@ -234,7 +234,7 @@ export class IconSpokeService {
     }
 
     return spokeProvider.walletProvider.sendTransaction({
-      from: walletAddressBytes,
+      from: walletAddress,
       to: spokeProvider.chainConfig.addresses.connection,
       nid: spokeProvider.chainConfig.nid,
       value: '0x0',

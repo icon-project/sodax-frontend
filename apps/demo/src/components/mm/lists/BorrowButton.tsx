@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
+import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 
 export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');

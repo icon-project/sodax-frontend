@@ -1,4 +1,4 @@
-import type { WalletAddressProvider, Address, Hex } from '../common/index.js';
+import type { WalletAddressProvider } from '../common/index.js';
 
 export type SuiTransaction = {
   toJSON: () => Promise<string>;
@@ -33,8 +33,7 @@ export interface SuiPaginatedCoins {
 }
 
 export interface ISuiWalletProvider extends WalletAddressProvider {
-  getWalletAddress: () => Promise<Address>;
-  getWalletAddressBytes: () => Promise<Hex>;
+  getWalletAddress: () => Promise<string>;
   signAndExecuteTxn: (txn: SuiTransaction) => Promise<string>;
   viewContract(
     tx: SuiTransaction,

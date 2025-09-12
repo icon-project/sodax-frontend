@@ -13,17 +13,17 @@ import {
   Sodax,
   type SodaxConfig,
   type UnifiedBnUSDMigrateParams,
-  type BridgeParams,
   type PartnerFee,
   DEFAULT_RELAYER_API_ENDPOINT,
   BridgeService,
   type CreateBridgeIntentParams,
+  encodeAddress,
 } from '@sodax/sdk';
-import { HubChainId, SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
-import { SuiWalletProvider } from './sui-wallet-provider.js';
+import { SONIC_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 
 import dotenv from 'dotenv';
 import { solverConfig } from './config.js';
+import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 
 dotenv.config();
 // load PK from .env
@@ -62,7 +62,10 @@ const suiWalletMnemonics = process.env.SUI_MNEMONICS;
 if (!suiWalletMnemonics) {
   throw new Error('SUI_MNEMONICS environment variable is required');
 }
-const suiWalletProvider = new SuiWalletProvider(SUI_RPC_URL, suiWalletMnemonics);
+const suiWalletProvider = new SuiWalletProvider({
+  rpcUrl: SUI_RPC_URL,
+  mnemonics: suiWalletMnemonics,
+});
 const suiSpokeProvider = new SuiSpokeProvider(suiConfig, suiWalletProvider);
 const walletAddress = await suiWalletProvider.getWalletAddress();
 console.log('[walletAddress]:', walletAddress);
@@ -72,7 +75,7 @@ async function getBalance(token: string) {
 }
 
 async function depositTo(token: string, amount: bigint, recipient: Address): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, await suiSpokeProvider.getWalletAddress());
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -107,7 +110,7 @@ async function withdrawAsset(
   amount: bigint,
   recipient: string, // sui address
 ): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, await suiSpokeProvider.getWalletAddress());
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -128,7 +131,7 @@ async function withdrawAsset(
 }
 
 async function supply(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, await suiSpokeProvider.getWalletAddress());
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -152,7 +155,7 @@ async function supply(token: string, amount: bigint): Promise<void> {
 }
 
 async function borrow(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, await suiSpokeProvider.getWalletAddress());
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -173,7 +176,7 @@ async function borrow(token: string, amount: bigint): Promise<void> {
 }
 
 async function withdraw(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, await suiSpokeProvider.getWalletAddress());
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -194,7 +197,7 @@ async function withdraw(token: string, amount: bigint): Promise<void> {
 }
 
 async function repay(token: string, amount: bigint): Promise<void> {
-  const walletAddressBytes = await suiSpokeProvider.getWalletAddressBytes();
+  const walletAddressBytes = encodeAddress(SUI_MAINNET_CHAIN_ID, await suiSpokeProvider.getWalletAddress());
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     suiSpokeProvider.chainConfig.chain.id,
     walletAddressBytes,

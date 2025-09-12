@@ -12,7 +12,7 @@ import {
   spokeChainConfig,
 } from '@sodax/sdk';
 import { type Hex, SONIC_MAINNET_CHAIN_ID, type HubChainId } from '@sodax/types';
-import { EvmWalletProvider } from './wallet-providers/EvmWalletProvider.js';
+import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 
 // load PK from .env
 const privateKey = process.env.EVM_PRIVATE_KEY;
@@ -31,7 +31,11 @@ const hubConfig = {
   chainConfig: getHubChainConfig(HUB_CHAIN_ID),
 } satisfies EvmHubProviderConfig;
 
-const spokeEvmWallet = new EvmWalletProvider(privateKey as Hex, HUB_CHAIN_ID, HUB_RPC_URL);
+const spokeEvmWallet = new EvmWalletProvider({
+  privateKey: privateKey as Hex,
+  chainId: HUB_CHAIN_ID,
+  rpcUrl: HUB_RPC_URL,
+});
 const spokeProvider = new SonicSpokeProvider(spokeEvmWallet, spokeChainConfig[SONIC_MAINNET_CHAIN_ID]);
 
 const sodax = new Sodax({
