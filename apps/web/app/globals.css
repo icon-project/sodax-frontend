@@ -79,7 +79,7 @@
   --app-title-desktop: 32px;
   --app-title: var(--app-title-mobile);
   --body-small-mobile: 11px;
-  --body-small-tablet: 11px;
+  --body-small-tablet: 12px;
   --body-small-desktop: 12px;
   --body-small: var(--body-small-mobile);
   --layout-space-comfortable-mobile: 16px;

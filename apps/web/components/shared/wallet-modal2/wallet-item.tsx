@@ -24,7 +24,17 @@ export const WalletItem: React.FC<WalletItemProps> = ({ xConnector, onSuccess })
   const isEVM = chainType === 'EVM';
   return (
     <React.Fragment>
-      <div className="inline-flex justify-between items-center transition-opacity duration-200 hover:opacity-100 opacity-60 cursor-pointer py-4 pl-1">
+      <div
+        className={`
+          inline-flex justify-between items-center
+          transition-opacity duration-200
+          hover:opacity-100
+          hover:font-bold
+          opacity-60
+          cursor-pointer py-4 pl-1
+          ${isPending === true ? 'opacity-100' : ''}
+        `}
+      >
         <div className="flex justify-start items-center gap-4">
           <div className="flex justify-start items-center flex-wrap content-center">
             <div className="flex justify-start items-center flex-wrap content-center">
@@ -61,7 +71,7 @@ export const WalletItem: React.FC<WalletItemProps> = ({ xConnector, onSuccess })
               />
             </div>
           </div>
-          <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
+          <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
             {isPending ? 'Waiting for wallet' : xConnector.name}
           </div>
         </div>
