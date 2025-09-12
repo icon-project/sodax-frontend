@@ -20,6 +20,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
+import { MODAL_ID } from '@/stores/modal-store';
+import { useModalStore } from '@/stores/modal-store-provider';
 
 const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
   if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
@@ -135,7 +137,7 @@ function SwapStatusMonitor({
 }
 
 export default function SwapPage() {
-  const { openWalletModal } = useWalletUI();
+  const openModal = useModalStore(state => state.openModal);
   const queryClient = useQueryClient();
 
   const {
@@ -448,8 +450,7 @@ export default function SwapPage() {
     const buttonState = getButtonState();
 
     if (buttonState.action === 'connect') {
-      const targetChainType = getTargetChainType();
-      openWalletModal(targetChainType);
+      openModal(MODAL_ID.WALLET_MODAL);
     } else if (buttonState.action === 'review') {
       // Set fixed amounts before opening dialog to prevent changes during swap
       setFixedDestinationAmount(destinationAmount);

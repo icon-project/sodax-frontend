@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -84,7 +84,16 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     setActiveXChainType(undefined);
   };
 
-  const primaryChainGroups = chainGroups.filter(chainGroup => chainGroup.chainType === 'EVM');
+  const modalData = useModalStore(state => state.modals[modalId]?.modalData) as
+    | { primaryChainType: ChainType }
+    | undefined;
+
+  console.log('modalData', modalData);
+
+  const primaryChainGroups = useMemo(
+    () => chainGroups.filter(chainGroup => chainGroup.chainType === (modalData?.primaryChainType || 'EVM')),
+    [modalData?.primaryChainType],
+  );
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

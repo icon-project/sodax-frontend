@@ -23,6 +23,8 @@ import { useSpokeProvider, useSodaxContext } from '@sodax/dapp-kit';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import BigNumber from 'bignumber.js';
+import { MODAL_ID } from '@/stores/modal-store';
+import { useModalStore } from '@/stores/modal-store-provider';
 
 // Helper functions for gas fee calculation
 const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
@@ -67,7 +69,8 @@ const calculateMaxAvailableAmount = (balance: bigint, tokenDecimals: number, gas
 };
 
 export default function MigratePage() {
-  const { openWalletModal } = useWalletUI();
+  const openModal = useModalStore(state => state.openModal);
+
   const { address: iconAddress } = useXAccount('ICON');
   const { address: sonicAddress } = useXAccount('EVM');
   const { sodax } = useSodaxContext();
@@ -348,10 +351,7 @@ export default function MigratePage() {
     const buttonState = getButtonState();
 
     if (buttonState.action === 'connect') {
-      const targetChainType = getTargetChainType();
-      if (targetChainType) {
-        openWalletModal(targetChainType as 'ICON' | 'EVM' | 'STELLAR' | 'SUI' | 'SOLANA' | 'INJECTIVE');
-      }
+      openModal(MODAL_ID.WALLET_MODAL);
     }
   };
 

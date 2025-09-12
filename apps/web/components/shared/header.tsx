@@ -1,4 +1,3 @@
-// apps/web/components/shared/header.tsx
 import type React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -92,9 +91,9 @@ export function Header({ isSidebarOpen, toggleSidebar }: HeaderProps): React.JSX
           </div>
           <div className="inline-flex justify-center items-start relative mr-2 ml-5">
             {connectedWalletsCount >= 1 ? (
-              <ConnectedChainsDisplay onClick={() => openModal(MODAL_ID.WALLET_MODAL, {})} />
+              <ConnectedChainsDisplay onClick={() => openModal(MODAL_ID.WALLET_MODAL)} />
             ) : (
-              <DecoratedButton onClick={() => openModal(MODAL_ID.WALLET_MODAL, {})}>connect</DecoratedButton>
+              <DecoratedButton onClick={() => openModal(MODAL_ID.WALLET_MODAL)}>connect</DecoratedButton>
             )}
           </div>
         </div>
