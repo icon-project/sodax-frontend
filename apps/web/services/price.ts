@@ -106,7 +106,8 @@ const SUI_STAKING_DERIVATIVES = [
   'trevinSUI', // Trevin Staked SUI
 ] as const;
 
-const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
+// const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
+const COINGECKO_WRAPPER_API_BASE = 'https://coingecko-wrapper-cyan.vercel.app';
 const priceCache = new Map<string, { price: number; timestamp: number }>();
 
 /**
@@ -141,7 +142,7 @@ export async function getTokenPrice(token: XToken): Promise<number> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 10 second timeout
 
-    const response = await fetch(`${COINGECKO_API_BASE}/simple/price?ids=${coinGeckoId}&vs_currencies=usd`, {
+    const response = await fetch(`${COINGECKO_WRAPPER_API_BASE}/api/price?id=${coinGeckoId}&vs_currencies=usd`, {
       signal: controller.signal,
     });
 
