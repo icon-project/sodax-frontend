@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -15,22 +14,25 @@ import { AllSupportItem } from './all-support-item';
 import { usePathname } from 'next/navigation';
 import { useSwapState } from '@/app/(apps)/swap/_stores/swap-store-provider';
 import { useMigrationInfo } from '@/app/(apps)/migrate/_stores/migration-store-provider';
+import { MODAL_ID } from '@/stores/modal-store';
+import { useModalOpen, useModalStore } from '@/stores/modal-store-provider';
 
 type WalletModalProps = {
-  isOpen: boolean;
-  onDismiss: () => void;
+  modalId?: MODAL_ID;
   onWalletSelected?: (xConnector: XConnector, xChainType: string) => void;
   onSetShowWalletModalOnTwoWallets?: (value: boolean) => void;
   targetChainType?: ChainType;
 };
 
 export const WalletModal = ({
-  isOpen,
-  onDismiss,
+  modalId = MODAL_ID.WALLET_MODAL2,
   onWalletSelected,
   onSetShowWalletModalOnTwoWallets,
   targetChainType,
 }: WalletModalProps) => {
+  const open = useModalOpen(modalId);
+  const closeModal = useModalStore(state => state.closeModal);
+
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const pathname = usePathname();
   const isMigrateRoute = pathname.includes('migrate');
@@ -49,7 +51,7 @@ export const WalletModal = ({
     handleDismiss,
     handleManualClose,
     handleWalletSelected,
-  } = useWalletModal(isOpen, onWalletSelected || (() => {}));
+  } = useWalletModal(open, onWalletSelected || (() => {}));
 
   const selectedChain = xChainTypes.find(w => w.xChainType === selectedChainType);
 
@@ -99,7 +101,7 @@ export const WalletModal = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => handleDismiss(onDismiss)}>
+    <Dialog open={open} onOpenChange={() => closeModal(modalId)}>
       <DialogContent
         className="max-w-full w-full md:max-w-[480px] pt-12 px-12 pb-8 w-[90%] shadow-none bg-vibrant-white gap-4"
         hideCloseButton
@@ -125,7 +127,7 @@ export const WalletModal = ({
                 <DialogClose asChild>
                   <XIcon
                     className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay"
-                    onClick={() => handleManualClose(onDismiss, onSetShowWalletModalOnTwoWallets)}
+                    // onClick={() => handleManualClose(closeModal(modalId), onSetShowWalletModalOnTwoWallets)}
                   />
                 </DialogClose>
               )}
