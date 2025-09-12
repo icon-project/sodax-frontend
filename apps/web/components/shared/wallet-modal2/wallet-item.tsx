@@ -31,7 +31,7 @@ export const WalletItem: React.FC<WalletItemProps> = ({ xConnector, onSuccess })
           hover:opacity-100
           group
           opacity-60
-          cursor-pointer py-4 pl-1
+          cursor-pointer py-4
           ${isPending === true ? 'opacity-100' : ''}
         `}
       >
