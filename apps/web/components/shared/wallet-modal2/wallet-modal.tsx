@@ -88,15 +88,12 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     | { primaryChainType: ChainType }
     | undefined;
 
-  console.log('modalData', modalData);
-
   const primaryChainGroups = useMemo(
     () => chainGroups.filter(chainGroup => chainGroup.chainType === (modalData?.primaryChainType || 'EVM')),
     [modalData?.primaryChainType],
   );
 
   const acceptedTerms = useMemo(() => localStorage.getItem('acceptedTerms') === 'accepted', []);
-  console.log('acceptedTerms', acceptedTerms);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

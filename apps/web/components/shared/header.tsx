@@ -7,6 +7,7 @@ import { ConnectedChainsDisplay } from '@/components/shared/connected-chains-dis
 import { useXAccounts } from '@sodax/wallet-sdk';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
+import { useAppStore } from '@/stores/app-store-provider';
 
 interface HeaderProps {
   isSidebarOpen: boolean;
@@ -15,6 +16,7 @@ interface HeaderProps {
 
 export function Header({ isSidebarOpen, toggleSidebar }: HeaderProps): React.JSX.Element {
   const openModal = useModalStore(state => state.openModal);
+  const primaryChainType = useAppStore(state => state.primaryChainType);
 
   const xAccounts = useXAccounts();
   const connectedChains = Object.entries(xAccounts).filter(([, account]) => account?.address);
@@ -91,9 +93,11 @@ export function Header({ isSidebarOpen, toggleSidebar }: HeaderProps): React.JSX
           </div>
           <div className="inline-flex justify-center items-start relative mr-2 ml-5">
             {connectedWalletsCount >= 1 ? (
-              <ConnectedChainsDisplay onClick={() => openModal(MODAL_ID.WALLET_MODAL)} />
+              <ConnectedChainsDisplay onClick={() => openModal(MODAL_ID.WALLET_MODAL, { primaryChainType })} />
             ) : (
-              <DecoratedButton onClick={() => openModal(MODAL_ID.WALLET_MODAL)}>connect</DecoratedButton>
+              <DecoratedButton onClick={() => openModal(MODAL_ID.WALLET_MODAL, { primaryChainType })}>
+                connect
+              </DecoratedButton>
             )}
           </div>
         </div>

@@ -21,7 +21,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
 }) => {
   const open = useModalOpen(modalId);
   const closeModal = useModalStore(state => state.closeModal);
-  const openModal = useModalStore(state => state.openModal);
+  // const openModal = useModalStore(state => state.openModal);
   const modalData = useModalStore(state => state.modals[modalId]?.modalData) as { chainType: ChainType } | undefined;
   const xDisconnect = useXDisconnect();
 
@@ -31,7 +31,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
   const handleAccept = async (): Promise<void> => {
     if (acceptedTerms) {
       closeModal(modalId);
-      openModal(MODAL_ID.WALLET_MODAL);
+      // openModal(MODAL_ID.WALLET_MODAL);
       setAcceptedTerms(false);
       localStorage.setItem('acceptedTerms', 'accepted');
     }
