@@ -58,33 +58,44 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
           break;
         case 'SOLANA': {
           const walletName = (xConnector as SolanaXConnector).wallet.adapter.name;
-
+        
           await select(walletName);
-
+        
+          const adapter = (xConnector as SolanaXConnector).wallet.adapter;
+        
+          if (!adapter) throw new Error('No adapter found for Solana wallet');
+        
           await new Promise<void>((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Wallet connection timeout')), 10000);
-
-            connect()
-              .then(() => {
-                if (connected) {
-                  clearTimeout(timeout);
-                  resolve();
-                } else {
-                  const interval = setInterval(() => {
-                    if (connected) {
-                      clearTimeout(timeout);
-                      clearInterval(interval);
-                      resolve();
-                    }
-                  }, 100);
-                }
-              })
-              .catch(err => {
-                clearTimeout(timeout);
-                reject(err);
-              });
+            const timeout = setTimeout(() => {
+              cleanup();
+              reject(new Error('Wallet connection timeout'));
+            }, 30000);
+        
+            const handleConnect = () => {
+              cleanup();
+              resolve();
+            };
+        
+            const handleError = (error: Error) => {
+              cleanup();
+              reject(error);
+            };
+        
+            const cleanup = () => {
+              clearTimeout(timeout);
+              adapter.off('connect', handleConnect);
+              adapter.off('error', handleError);
+            };
+        
+            adapter.on('connect', handleConnect);
+            adapter.on('error', handleError);
+        
+            connect().catch(err => {
+              cleanup();
+              reject(err);
+            });
           });
-
+        
           break;
         }
 
