@@ -27,7 +27,7 @@ export type EVMChainItemProps = {
 export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handleDisconnect, isPending }) => {
   const { address } = useXAccount('EVM');
   return (
-    <div className="flex items-center w-full text-[#0d0229] py-4 pl-1">
+    <div className="flex items-center w-full py-4 pl-1 cursor-pointer">
       <div className="flex flex-col gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-1">
           <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
@@ -71,7 +71,7 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handl
             ))}
           </div>
 
-          <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
+          <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
             {address ? shortenAddress(address, 4) : 'EVM'}
           </div>
 
@@ -81,7 +81,7 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handl
                 <Button
                   variant="default"
                   size="sm"
-                  className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
+                  className="w-6 h-6 p-0 rounded-full bg-cream text-espresso bg-cherry-brighter hover:bg-cherry-bright hover:text-white cursor-pointer"
                   onClick={handleDisconnect}
                 >
                   <MinusIcon className="w-4 h-4" />

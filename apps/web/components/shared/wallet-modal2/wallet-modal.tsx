@@ -104,8 +104,8 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                   <ArrowLeftIcon className="w-3 h-3" />
                 </div>
                 <div className="flex flex-row justify-between items-center gap-4">
-                  <div className="text-right justify-end text-clay-light text-(size:--body-small) font-medium font-['InterRegular'] leading-none">
-                    Connect your wallet
+                  <div className="text-right justify-end text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
+                    Connect your {activeXChainType} wallet
                   </div>
                   <DialogClose asChild>
                     <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
@@ -113,11 +113,10 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                 </div>
               </div>
             </DialogTitle>
-
             <div className="w-full flex flex-col">
+              <Separator className="h-1 bg-clay opacity-30" />
               {xConnectors.map(xConnector => (
                 <React.Fragment key={xConnector.id}>
-                  <Separator className="h-1 bg-clay opacity-30" />
                   <WalletItem
                     xConnector={xConnector}
                     onSuccess={() => {
@@ -131,7 +130,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
           </>
         ) : !isExpanded ? (
           <>
-            <DialogTitle>
+            <DialogTitle className="flex w-full justify-between items-center">
               <div className="inline-flex justify-center items-center gap-2">
                 <Image
                   src="/symbol_dark.png"
@@ -144,54 +143,61 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                   Connect wallets
                 </div>
               </div>
+              <DialogClose asChild>
+                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
+              </DialogClose>
             </DialogTitle>
-            <div className=" justify-start text-clay-light text-sm font-medium font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
+            <div className=" justify-start text-clay-light font-medium font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
               You will need to connect your wallet to proceed.
             </div>
-            <div className="w-full flex flex-col">
-              {primaryChainGroups.map(chainGroup => (
-                <React.Fragment key={chainGroup.chainType}>
-                  <Separator className="h-1 bg-clay opacity-30" />
-                  <ChainItem
-                    key={chainGroup.chainType}
-                    chainType={chainGroup.chainType}
-                    setActiveXChainType={setActiveXChainType}
-                    onSuccess={() => {
-                      openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
-                    }}
-                  />
-                </React.Fragment>
-              ))}
-            </div>
-            <>
+            <div>
+              <Separator className="h-1 bg-clay opacity-30" />
+              <div className="w-full flex flex-col">
+                {primaryChainGroups.map(chainGroup => (
+                  <React.Fragment key={chainGroup.chainType}>
+                    <ChainItem
+                      key={chainGroup.chainType}
+                      chainType={chainGroup.chainType}
+                      setActiveXChainType={setActiveXChainType}
+                      onSuccess={() => {
+                        openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
+                      }}
+                    />
+                  </React.Fragment>
+                ))}
+              </div>
               <Separator className="h-1 bg-clay opacity-30" />
               <AllSupportItem onToggleExpanded={handleToggleExpanded} isExpanded={isExpanded} />
-            </>
+              <Separator className="h-1 bg-clay opacity-30" />
+            </div>
 
-            <div className=" justify-start flex gap-1">
-              <span className="text-clay-light text-sm font-medium font-['InterRegular'] leading-tight">
+            <div className=" justify-start flex gap-1 text-(length:--body-comfortable)">
+              <span className="text-clay-light font-medium font-['InterRegular'] leading-tight">
                 Need help? Check our guide{' '}
               </span>
-              <span className="text-clay-light text-sm font-medium font-['InterRegular'] underline leading-tight">
+              <span className="text-clay-light font-medium font-['InterRegular'] underline leading-tight cursor-pointer hover:font-bold">
                 here
               </span>
             </div>
           </>
         ) : (
           <>
-            <DialogTitle></DialogTitle>
-            <div className="w-full flex flex-col">
-              {chainGroups.map(chainGroup => (
+            <DialogTitle className="flex w-full justify-end">
+              <DialogClose asChild>
+                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
+              </DialogClose>
+            </DialogTitle>
+            <div className="w-full flex flex-col -mt-4">
+              {chainGroups.map((chainGroup, index) => (
                 <React.Fragment key={chainGroup.chainType}>
-                  <Separator className="h-1 bg-clay opacity-30" />
                   <ChainItem
-                    key={chainGroup.chainType}
                     chainType={chainGroup.chainType}
                     setActiveXChainType={setActiveXChainType}
                     onSuccess={() => {
                       openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
                     }}
                   />
+                  {index < chainGroups.length - 1 && <Separator className="h-1 bg-clay opacity-30" />}
                 </React.Fragment>
               ))}
             </div>

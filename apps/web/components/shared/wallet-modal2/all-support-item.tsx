@@ -14,7 +14,7 @@ export const AllSupportItem: React.FC<AllSupportItemProps> = ({ onToggleExpanded
   };
 
   return (
-    <div className="flex items-center w-full text-[#0d0229] py-4">
+    <div className="flex items-center w-full py-4 cursor-pointer">
       <div className="flex flex-col gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-4">
           <div className="w-6 h-6 rounded-sm shadow-[-4px_0px_10px_0px_rgba(175,145,145,0.2)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden">
