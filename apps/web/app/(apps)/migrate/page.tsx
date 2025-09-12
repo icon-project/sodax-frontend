@@ -30,7 +30,6 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import BigNumber from 'bignumber.js';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
-import { useAppStore } from '@/stores/app-store-provider';
 
 // Helper functions for gas fee calculation
 const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
@@ -246,7 +245,7 @@ export default function MigratePage() {
   const hasSufficientAllowance = hasAllowed || isApproved;
 
   // Helper function to get the chain type for a given chain ID
-  const getXChainType = (chainId: SpokeChainId): string => {
+  const getXChainType = (chainId: SpokeChainId): ChainType => {
     if (chainId === ICON_MAINNET_CHAIN_ID) return 'ICON';
     if (chainId === SONIC_MAINNET_CHAIN_ID) return 'EVM';
     if (chainId === 'stellar') return 'STELLAR';
@@ -264,7 +263,7 @@ export default function MigratePage() {
   const isDestinationChainConnected = destinationAddress !== undefined;
 
   // Function to determine which chain type to connect to
-  const getTargetChainType = (): string | undefined => {
+  const getTargetChainType = (): ChainType | undefined => {
     if (!isSourceChainConnected) {
       return sourceChainType;
     }
@@ -273,17 +272,6 @@ export default function MigratePage() {
     }
     return undefined;
   };
-
-  const primaryChainType = useAppStore(state => state.primaryChainType);
-  const setPrimaryChainType = useAppStore(state => state.setPrimaryChainType);
-  useEffect(() => {
-    const targetChainType = !isSourceChainConnected
-      ? sourceChainType
-      : !isDestinationChainConnected
-        ? destinationChainType
-        : undefined;
-    targetChainType && setPrimaryChainType(targetChainType as ChainType);
-  }, [setPrimaryChainType, isSourceChainConnected, isDestinationChainConnected, sourceChainType, destinationChainType]);
 
   // Function to get button state based on current migration state
   const getButtonState = (): {
@@ -368,7 +356,7 @@ export default function MigratePage() {
     const buttonState = getButtonState();
 
     if (buttonState.action === 'connect') {
-      openModal(MODAL_ID.WALLET_MODAL, { primaryChainType });
+      openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
     }
   };
 

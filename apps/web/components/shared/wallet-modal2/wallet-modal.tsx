@@ -85,7 +85,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   };
 
   const modalData = useModalStore(state => state.modals[modalId]?.modalData) as
-    | { primaryChainType: ChainType }
+    | { primaryChainType: ChainType; isExpanded: boolean }
     | undefined;
 
   const primaryChainGroups = useMemo(
@@ -95,7 +95,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
 
   const acceptedTerms = useMemo(() => {
     if (typeof window === 'undefined') return false; // or some default value
-  
+
     return localStorage.getItem('acceptedTerms') === 'accepted';
   }, []);
 
@@ -143,7 +143,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
               ))}
             </div>
           </>
-        ) : !isExpanded ? (
+        ) : !(isExpanded || modalData?.isExpanded) ? (
           <>
             <DialogTitle className="flex w-full justify-between items-center">
               <div className="inline-flex justify-center items-center gap-2">

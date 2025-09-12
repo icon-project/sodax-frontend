@@ -22,7 +22,6 @@ import { useSodaxContext } from '@sodax/dapp-kit';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
-import { useAppStore } from '@/stores/app-store-provider';
 
 const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
   if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
@@ -328,13 +327,6 @@ export default function SwapPage() {
     return undefined;
   };
 
-  const primaryChainType = useAppStore(state => state.primaryChainType);
-  const setPrimaryChainType = useAppStore(state => state.setPrimaryChainType);
-  useEffect(() => {
-    const targetChainType = !sourceAddress ? sourceChainType : !destinationAddress ? destinationChainType : undefined;
-    targetChainType && setPrimaryChainType(targetChainType);
-  }, [setPrimaryChainType, sourceAddress, destinationAddress, sourceChainType, destinationChainType]);
-
   const getButtonState = (): {
     text: string;
     disabled: boolean;
@@ -458,7 +450,7 @@ export default function SwapPage() {
     const buttonState = getButtonState();
 
     if (buttonState.action === 'connect') {
-      openModal(MODAL_ID.WALLET_MODAL, { primaryChainType });
+      openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
     } else if (buttonState.action === 'review') {
       // Set fixed amounts before opening dialog to prevent changes during swap
       setFixedDestinationAmount(destinationAmount);
