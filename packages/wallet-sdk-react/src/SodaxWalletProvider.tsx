@@ -34,11 +34,9 @@ export const SodaxWalletProvider = ({ children, config }: { children: React.Reac
 
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
 
-  // const wagmiConfig = useMemo(() => {
-  //   return getWagmiConfig(chains);
-  // }, [chains]);
-
-  const wagmiConfig = getWagmiConfig(chains);
+  const wagmiConfig = useMemo(() => {
+    return getWagmiConfig(chains);
+  }, [chains]);
 
   return (
     <WagmiProvider config={wagmiConfig}>
