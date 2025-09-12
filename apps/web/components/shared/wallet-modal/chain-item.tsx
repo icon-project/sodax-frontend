@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, MinusIcon, CopyIcon, Loader2, Info, XIcon } from 'lucide-react';
 import type { ChainType } from '@sodax/types';
-import type { XConnector } from '@sodax/wallet-sdk';
+import type { XConnector } from '@sodax/wallet-sdk-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PopoverClose } from '@radix-ui/react-popover';
 import { EvmMultiConnectIcon } from '@/components/icons';

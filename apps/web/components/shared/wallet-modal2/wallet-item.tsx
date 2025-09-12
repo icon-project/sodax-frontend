@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { useXConnect, type XConnector } from '@sodax/wallet-sdk';
+import { useXConnect, type XConnector } from '@sodax/wallet-sdk-react';
 import { chainGroupMap } from './wallet-modal';
 import { EVM_CHAIN_ICONS } from './evm-chain-item';
 

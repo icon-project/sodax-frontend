@@ -5,7 +5,7 @@ import { PlusIcon, MinusIcon, CopyIcon, Loader2, Info, XIcon } from 'lucide-reac
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PopoverClose } from '@radix-ui/react-popover';
 import { EvmMultiConnectIcon } from '@/components/icons';
-import { useXAccount } from '@sodax/wallet-sdk';
+import { useXAccount } from '@sodax/wallet-sdk-react';
 import { shortenAddress } from '@/lib/utils';
 import { useState } from 'react';
 

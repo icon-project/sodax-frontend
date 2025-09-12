@@ -1,5 +1,5 @@
 import type { ChainType } from '@sodax/types';
-import type { XConnector } from '@sodax/wallet-sdk';
+import type { XConnector } from '@sodax/wallet-sdk-react';
 
 export type WalletItemProps = {
   name: string;

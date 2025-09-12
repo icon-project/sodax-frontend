@@ -9,7 +9,7 @@ import type { ChainType } from '@sodax/types';
 import { Separator } from '@/components/ui/separator';
 import { XIcon } from 'lucide-react';
 import { ArrowLeftIcon } from 'lucide-react';
-import { useXConnectors } from '@sodax/wallet-sdk';
+import { useXConnectors } from '@sodax/wallet-sdk-react';
 import { WalletItem } from './wallet-item';
 import { AllSupportItem } from './all-support-item';
 
@@ -93,7 +93,11 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     [modalData?.primaryChainType],
   );
 
-  const acceptedTerms = useMemo(() => localStorage.getItem('acceptedTerms') === 'accepted', []);
+  const acceptedTerms = useMemo(() => {
+    if (typeof window === 'undefined') return false; // or some default value
+  
+    return localStorage.getItem('acceptedTerms') === 'accepted';
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

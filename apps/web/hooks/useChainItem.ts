@@ -1,7 +1,7 @@
 // apps/web/hooks/useChainItem.ts
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useXConnection, useXAccount, useXConnectors, useXConnect, useXDisconnect } from '@sodax/wallet-sdk';
-import type { XConnector } from '@sodax/wallet-sdk';
+import { useXConnection, useXAccount, useXConnectors, useXConnect, useXDisconnect } from '@sodax/wallet-sdk-react';
+import type { XConnector } from '@sodax/wallet-sdk-react';
 import type { ChainType } from '@sodax/types';
 
 export function useChainItem(

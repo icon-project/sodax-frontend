@@ -14,7 +14,7 @@ export interface ModalStoreProviderProps {
 }
 
 export const ModalStoreProvider = ({ children }: ModalStoreProviderProps) => {
-  const storeRef = useRef<ModalStoreApi>();
+  const storeRef = useRef<ModalStoreApi | undefined>(undefined);
   if (!storeRef.current) {
     storeRef.current = createModalStore(initModalStore());
   }

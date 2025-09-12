@@ -155,7 +155,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
         </DialogContent>
       </Dialog>
 
-      <WalletModal isOpen={showWalletModal} onDismiss={handleWalletModalDismiss} />
+      {/* <WalletModal isOpen={showWalletModal} onDismiss={handleWalletModalDismiss} /> */}
     </>
   );
 };

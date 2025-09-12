@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-import { useXAccount, useXBalances } from '@sodax/wallet-sdk';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { SONIC_MAINNET_CHAIN_ID } from '@sodax/sdk';
 import {
   ICON_MAINNET_CHAIN_ID,
@@ -25,7 +25,7 @@ import { useMigrate, useMigrationAllowance, useMigrationApprove } from './_hooks
 import { Check, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useSpokeProvider, useSodaxContext } from '@sodax/dapp-kit';
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk';
+import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import BigNumber from 'bignumber.js';
 import { MODAL_ID } from '@/stores/modal-store';

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { PlusIcon, MinusIcon, CopyIcon, Loader2, Info, XIcon } from 'lucide-react';
 import type { ChainType } from '@sodax/types';
 import { EVMChainItem } from './evm-chain-item';
-import { useXAccount, useXConnect, useXConnectors, useXDisconnect, type XConnector } from '@sodax/wallet-sdk';
+import { useXAccount, useXConnect, useXConnectors, useXDisconnect, type XConnector } from '@sodax/wallet-sdk-react';
 import { useCallback, useState } from 'react';
 import { shortenAddress } from '@/lib/utils';
 import { chainGroupMap } from './wallet-modal';

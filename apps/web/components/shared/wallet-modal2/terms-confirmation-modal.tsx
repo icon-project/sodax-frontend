@@ -9,7 +9,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalOpen } from '@/stores/modal-store-provider';
 import { useModalStore } from '@/stores/modal-store-provider';
-import { useXDisconnect } from '@sodax/wallet-sdk';
+import { useXDisconnect } from '@sodax/wallet-sdk-react';
 import type { ChainType } from '@sodax/types';
 
 interface TermsConfirmationModalProps {
@@ -33,7 +33,8 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
       closeModal(modalId);
       // openModal(MODAL_ID.WALLET_MODAL);
       setAcceptedTerms(false);
-      localStorage.setItem('acceptedTerms', 'accepted');
+      if (typeof window !== 'undefined')
+        localStorage.setItem('acceptedTerms', 'accepted');
     }
   };
 

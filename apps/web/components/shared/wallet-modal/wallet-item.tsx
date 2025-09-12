@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import type { XConnector } from '@sodax/wallet-sdk';
+import type { XConnector } from '@sodax/wallet-sdk-react';
 import { usePathname } from 'next/navigation';
 
 const EVM_CHAIN_ICONS = [

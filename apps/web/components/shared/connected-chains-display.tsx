@@ -3,7 +3,7 @@ import type React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
-import { useXAccounts } from '@sodax/wallet-sdk';
+import { useXAccounts } from '@sodax/wallet-sdk-react';
 import { getChainIconByName } from '@/constants/chains';
 
 const EVM_CHAIN_ICONS = [

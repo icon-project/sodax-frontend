@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { MenuIcon } from '@/components/icons';
 import { DecoratedButton } from '@/components/landing/decorated-button';
 import { ConnectedChainsDisplay } from '@/components/shared/connected-chains-display';
-import { useXAccounts } from '@sodax/wallet-sdk';
+import { useXAccounts } from '@sodax/wallet-sdk-react';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useAppStore } from '@/stores/app-store-provider';

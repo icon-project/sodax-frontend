@@ -1,7 +1,7 @@
 import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import type { ChainType } from '@sodax/types';
-import type { XConnector } from '@sodax/wallet-sdk';
+import type { XConnector } from '@sodax/wallet-sdk-react';
 import { WalletItem } from './wallet-item';
 
 export type WalletListProps = {

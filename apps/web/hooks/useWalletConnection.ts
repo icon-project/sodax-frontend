@@ -8,8 +8,8 @@ import {
   useXConnection,
   useXConnectors,
   useXAccount,
-} from '@sodax/wallet-sdk';
-import type { XConnector } from '@sodax/wallet-sdk';
+} from '@sodax/wallet-sdk-react';
+import type { XConnector } from '@sodax/wallet-sdk-react'
 import type { ChainType } from '@sodax/types';
 import { TIMEOUT_CLOSE_MS } from '@/constants/ui';
 
@@ -34,7 +34,8 @@ const addAcceptedWallet = (address: string): void => {
   try {
     const acceptedWallets = getAcceptedWallets();
     acceptedWallets.add(address);
-    localStorage.setItem(TERMS_ACCEPTANCE_KEY, JSON.stringify([...acceptedWallets]));
+    if (typeof window !== 'undefined')
+      localStorage.setItem(TERMS_ACCEPTANCE_KEY, JSON.stringify([...acceptedWallets]));
   } catch {
     // Silently fail if localStorage is not available
   }

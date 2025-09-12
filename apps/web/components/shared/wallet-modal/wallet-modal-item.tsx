@@ -3,7 +3,7 @@ import { ChainItem } from './chain-item';
 import { WalletList } from './wallet-list';
 import { useChainItem } from '@/hooks/useChainItem';
 import type { ChainType } from '@sodax/types';
-import type { XConnector } from '@sodax/wallet-sdk';
+import type { XConnector } from '@sodax/wallet-sdk-react';
 
 export type WalletModalItemProps = {
   icon: string;

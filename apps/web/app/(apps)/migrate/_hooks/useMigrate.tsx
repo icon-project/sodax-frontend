@@ -13,7 +13,7 @@ import {
   INJECTIVE_MAINNET_CHAIN_ID,
   type SpokeChainId,
 } from '@sodax/types';
-import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk';
+import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useMigrationStore } from '../_stores/migration-store-provider';
 import { useMutation } from '@tanstack/react-query';

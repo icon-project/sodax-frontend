@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useXAccounts } from '@sodax/wallet-sdk';
-import type { XConnector } from '@sodax/wallet-sdk';
+import { useXAccounts } from '@sodax/wallet-sdk-react';
+import type { XConnector } from '@sodax/wallet-sdk-react';
 
 export const useWalletModal = (
   isOpen: boolean,
