@@ -33,6 +33,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
       closeModal(modalId);
       openModal(MODAL_ID.WALLET_MODAL);
       setAcceptedTerms(false);
+      localStorage.setItem('acceptedTerms', 'accepted');
     }
   };
 

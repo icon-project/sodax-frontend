@@ -95,6 +95,9 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     [modalData?.primaryChainType],
   );
 
+  const acceptedTerms = useMemo(() => localStorage.getItem('acceptedTerms') === 'accepted', []);
+  console.log('acceptedTerms', acceptedTerms);
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
@@ -130,7 +133,9 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                     xConnector={xConnector}
                     onSuccess={() => {
                       setActiveXChainType(undefined);
-                      openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: xConnector.xChainType });
+                      if (xConnector.xChainType !== 'ICON' && !acceptedTerms) {
+                        openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: xConnector.xChainType });
+                      }
                     }}
                   />
                 </React.Fragment>
@@ -169,7 +174,9 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       chainType={chainGroup.chainType}
                       setActiveXChainType={setActiveXChainType}
                       onSuccess={() => {
-                        openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
+                        if (chainGroup.chainType !== 'ICON' && !acceptedTerms) {
+                          openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
+                        }
                       }}
                     />
                   </React.Fragment>
@@ -203,7 +210,9 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                     chainType={chainGroup.chainType}
                     setActiveXChainType={setActiveXChainType}
                     onSuccess={() => {
-                      openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
+                      if (chainGroup.chainType !== 'ICON' && !acceptedTerms) {
+                        openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
+                      }
                     }}
                   />
                   {index < chainGroups.length - 1 && <Separator className="h-1 bg-clay opacity-30" />}
