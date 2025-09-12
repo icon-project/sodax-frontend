@@ -29,7 +29,7 @@ export const WalletItem: React.FC<WalletItemProps> = ({ xConnector, onSuccess })
           inline-flex justify-between items-center
           transition-opacity duration-200
           hover:opacity-100
-          hover:font-bold
+          group
           opacity-60
           cursor-pointer py-4 pl-1
           ${isPending === true ? 'opacity-100' : ''}
@@ -71,12 +71,12 @@ export const WalletItem: React.FC<WalletItemProps> = ({ xConnector, onSuccess })
               />
             </div>
           </div>
-          <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
+          <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
             {isPending ? 'Waiting for wallet' : xConnector.name}
           </div>
         </div>
         <Button
-          className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
+          className={`w-6 h-6 p-0 rounded-full  text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer ${isPending === true ? 'bg-cherry-brighter' : 'bg-cream'}`}
           onClick={handleConnect}
           disabled={isPending}
         >

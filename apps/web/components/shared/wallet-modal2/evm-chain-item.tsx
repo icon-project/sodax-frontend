@@ -27,7 +27,17 @@ export type EVMChainItemProps = {
 export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handleDisconnect, isPending }) => {
   const { address } = useXAccount('EVM');
   return (
-    <div className="flex items-center w-full py-4 pl-1 cursor-pointer">
+    <div
+      className={`
+          inline-flex justify-between items-center
+          transition-opacity duration-200
+          hover:opacity-100
+          group
+          opacity-60
+          cursor-pointer py-4 pl-1
+          ${address ? 'opacity-100' : ''}
+        `}
+    >
       <div className="flex flex-col gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-1">
           <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
@@ -69,9 +79,17 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handl
                 />
               </div>
             ))}
+            {address && (
+              <div className="absolute -bottom-1 -right-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <title>Connected</title>
+                  <circle cx="7" cy="7" r="5.5" fill="#00A778" stroke="white" strokeWidth="3" />
+                </svg>
+              </div>
+            )}
           </div>
 
-          <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
+          <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
             {address ? shortenAddress(address, 4) : 'EVM'}
           </div>
 

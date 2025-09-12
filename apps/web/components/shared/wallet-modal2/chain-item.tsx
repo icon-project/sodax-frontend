@@ -44,7 +44,17 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
     return <EVMChainItem handleConnect={handleConnect} handleDisconnect={handleDisconnect} isPending={isPending} />;
   }
   return (
-    <div className="flex items-center w-full py-4 pl-1 cursor-pointer">
+    <div
+      className={`
+          inline-flex justify-between items-center
+          transition-opacity duration-200
+          hover:opacity-100
+          group
+          opacity-60
+          cursor-pointer py-4 pl-1
+          ${isPending === true || address ? 'opacity-100' : ''}
+        `}
+    >
       <div className="flex flex-col gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-4">
           <div className="self-stretch inline-flex justify-start items-center flex-wrap content-center relative">
@@ -56,12 +66,20 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
                 height={24}
                 className="rounded-[6px] shadow-[0px_6px_12px_0px_rgba(185,172,171,1)]"
               />
+              {address && (
+                <div className="absolute -bottom-1 -right-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <title>Connected</title>
+                    <circle cx="7" cy="7" r="5.5" fill="#00A778" stroke="white" strokeWidth="3" />
+                  </svg>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="flex justify-start items-center gap-1">
-            <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
-              {address ? shortenAddress(address, 4) : chainGroupMap[chainType].name}
+            <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
+              {address ? shortenAddress(address, 4) : isPending ? 'Waiting for wallet' : chainGroupMap[chainType].name}
             </div>
           </div>
 
@@ -81,7 +99,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
                 <Button
                   variant="default"
                   size="sm"
-                  className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
+                  className={`w-6 h-6 p-0 rounded-full  text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer ${isPending === true ? 'bg-cherry-brighter' : 'bg-cream'}`}
                   onClick={handleConnect}
                   disabled={isPending}
                 >
