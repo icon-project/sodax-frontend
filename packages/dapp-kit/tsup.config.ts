@@ -6,6 +6,7 @@ export default defineConfig(options => ({
   format: ['esm', 'cjs'],
   dts: false,
   clean: !options.watch,
+  external: ['react', 'react-dom', '@tanstack/react-query'], // <— important
   treeshake: true,
   splitting: true,
   sourcemap: true,

@@ -49,13 +49,13 @@
   "dependencies": {
     "@coral-xyz/anchor": "0.30.1",
     "@injectivelabs/core-proto-ts": "1.15.0",
-    "@injectivelabs/networks": "1.15.41",
-    "@injectivelabs/sdk-ts": "1.15.43",
-    "@mysten/sui": "^1.14.1",
+    "@injectivelabs/networks": "catalog:",
+    "@injectivelabs/sdk-ts": "catalog:",
+    "@mysten/sui": "catalog:",
     "@sodax/types": "workspace:*",
-    "@solana/spl-token": "0.4.9",
-    "@solana/web3.js": "1.98.0",
-    "@stellar/stellar-sdk": "12.3.0",
+    "@solana/spl-token": "catalog:",
+    "@solana/web3.js": "catalog:",
+    "@stellar/stellar-sdk": "catalog:",
     "bn.js": "^5.2.1",
     "icon-sdk-js": "catalog:",
     "rlp": "3.0.0",
@@ -64,13 +64,14 @@
     "bignumber.js": "catalog:"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.17.4",
-    "@changesets/cli": "^2.27.9",
+    "@arethetypeswrong/cli": "catalog:",
+    "@changesets/cli": "catalog:",
     "@types/bn.js": "^5.1.6",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vitest": "^2.1.3"
-  }
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {}
 }
