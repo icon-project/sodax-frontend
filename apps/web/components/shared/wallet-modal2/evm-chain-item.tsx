@@ -7,6 +7,7 @@ import { PopoverClose } from '@radix-ui/react-popover';
 import { EvmMultiConnectIcon } from '@/components/icons';
 import { useXAccount } from '@sodax/wallet-sdk';
 import { shortenAddress } from '@/lib/utils';
+import { useState } from 'react';
 
 export const EVM_CHAIN_ICONS = [
   '/chain/0x2105.base.png',
@@ -26,6 +27,22 @@ export type EVMChainItemProps = {
 
 export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handleDisconnect, isPending }) => {
   const { address } = useXAccount('EVM');
+  const [showCopied, setShowCopied] = useState(false);
+  const [copiedFadingOut, setCopiedFadingOut] = useState(false);
+
+  const onCopyAddress = () => {
+    if (!address) return;
+    setShowCopied(true);
+    navigator.clipboard.writeText(address);
+    setTimeout(() => {
+      setCopiedFadingOut(true);
+    }, 1000);
+
+    setTimeout(() => {
+      setShowCopied(false);
+      setCopiedFadingOut(false);
+    }, 3000);
+  };
   return (
     <div
       className={`
@@ -89,8 +106,20 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handl
             )}
           </div>
 
-          <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
+          <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex gap-1 items-center">
             {address ? shortenAddress(address, 4) : 'EVM'}
+            {address && (
+              <CopyIcon className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay" onClick={onCopyAddress} />
+            )}
+            {showCopied && (
+              <div
+                className={`flex font-['InterRegular'] font-medium justify-center leading-[0] not-italic relative shrink-0 text-espresso text-(length:--body-comfortable) text-left text-nowrap transition-opacity ${
+                  copiedFadingOut ? 'duration-[2000ms] opacity-0' : 'duration-100 opacity-100'
+                }`}
+              >
+                <p className="block leading-[1.4] whitespace-pre">Copied</p>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap justify-end gap-2 grow">

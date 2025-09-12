@@ -5,7 +5,7 @@ import { PlusIcon, MinusIcon, CopyIcon, Loader2, Info, XIcon } from 'lucide-reac
 import type { ChainType } from '@sodax/types';
 import { EVMChainItem } from './evm-chain-item';
 import { useXAccount, useXConnect, useXConnectors, useXDisconnect, type XConnector } from '@sodax/wallet-sdk';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { shortenAddress } from '@/lib/utils';
 import { chainGroupMap } from './wallet-modal';
 
@@ -19,6 +19,8 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
   const { address } = useXAccount(chainType);
   const xConnectors = useXConnectors(chainType);
   const { mutateAsync: xConnect, isPending } = useXConnect();
+  const [showCopied, setShowCopied] = useState(false);
+  const [copiedFadingOut, setCopiedFadingOut] = useState(false);
   const xDisconnect = useXDisconnect();
 
   const handleConnect = useCallback(async () => {
@@ -35,6 +37,20 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
       setActiveXChainType(chainType);
     }
   }, [xConnect, xConnectors, setActiveXChainType, chainType, onSuccess]);
+
+  const onCopyAddress = () => {
+    if (!address) return;
+    setShowCopied(true);
+    navigator.clipboard.writeText(address);
+    setTimeout(() => {
+      setCopiedFadingOut(true);
+    }, 1000);
+
+    setTimeout(() => {
+      setShowCopied(false);
+      setCopiedFadingOut(false);
+    }, 3000);
+  };
 
   const handleDisconnect = useCallback(() => {
     xDisconnect(chainType);
@@ -78,8 +94,20 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
           </div>
 
           <div className="flex justify-start items-center gap-1">
-            <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
+            <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex gap-1 items-center">
               {address ? shortenAddress(address, 4) : isPending ? 'Waiting for wallet' : chainGroupMap[chainType].name}
+              {address && (
+                <CopyIcon className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay" onClick={onCopyAddress} />
+              )}
+              {showCopied && (
+                <div
+                  className={`flex font-['InterRegular'] font-medium justify-center leading-[0] not-italic relative shrink-0 text-espresso text-(length:--body-comfortable) text-left text-nowrap transition-opacity ${
+                    copiedFadingOut ? 'duration-[2000ms] opacity-0' : 'duration-100 opacity-100'
+                  }`}
+                >
+                  <p className="block leading-[1.4] whitespace-pre">Copied</p>
+                </div>
+              )}
             </div>
           </div>
 
