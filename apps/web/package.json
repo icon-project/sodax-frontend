@@ -33,7 +33,7 @@
     "@sodax/dapp-kit": "workspace:*",
     "@sodax/sdk": "workspace:*",
     "@sodax/types": "workspace:*",
-    "@sodax/wallet-sdk": "workspace:*",
+    "@sodax/wallet-sdk-react": "workspace:*",
     "@tailwindcss/postcss": "^4.0.8",
     "@tanstack/react-query": "catalog:",
     "bignumber.js": "^9.1.2",
@@ -45,14 +45,8 @@
     "lucide-react": "^0.476.0",
     "next": "^15.1.6",
     "postcss": "^8.5.3",
-<<<<<<< HEAD
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "react-number-format": "^5.4.4",
-=======
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
->>>>>>> main
     "react-scroll": "^1.9.3",
     "react-slick": "^0.30.3",
     "slick-carousel": "^1.8.1",
