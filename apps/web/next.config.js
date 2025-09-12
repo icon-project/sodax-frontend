@@ -4,6 +4,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    domains: ['storage.herewallet.app'],
     remotePatterns: [
       {
         protocol: 'https',
