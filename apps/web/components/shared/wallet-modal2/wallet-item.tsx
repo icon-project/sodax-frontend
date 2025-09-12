@@ -76,7 +76,7 @@ export const WalletItem: React.FC<WalletItemProps> = ({ xConnector, onSuccess })
           </div>
         </div>
         <Button
-          className={`w-6 h-6 p-0 rounded-full  text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer ${isPending === true ? 'bg-cherry-brighter' : 'bg-cream'}`}
+          className={`w-6 h-6 p-0 rounded-full  text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer ${isPending === true ? 'bg-cherry-brighter' : 'bg-cream'}  disabled:opacity-100 disabled:pointer-events-auto`}
           onClick={handleConnect}
           disabled={isPending}
         >
