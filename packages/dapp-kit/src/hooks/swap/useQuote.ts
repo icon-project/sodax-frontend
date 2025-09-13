@@ -1,6 +1,7 @@
 import type { SolverErrorResponse, SolverIntentQuoteRequest, SolverIntentQuoteResponse, Result } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 /**
  * Hook for fetching a quote for an intent-based swap.
@@ -41,8 +42,21 @@ export const useQuote = (
   payload: SolverIntentQuoteRequest | undefined,
 ): UseQueryResult<Result<SolverIntentQuoteResponse, SolverErrorResponse> | undefined> => {
   const { sodax } = useSodaxContext();
+  
+  // Create a serializable query key by converting BigInt to string
+  const queryKey = useMemo(() => {
+    if (!payload) return ['quote', undefined];
+    return [
+      'quote',
+      {
+        ...payload,
+        amount: payload.amount.toString(),
+      },
+    ];
+  }, [payload]);
+
   return useQuery({
-    queryKey: [payload],
+    queryKey,
     queryFn: async () => {
       if (!payload) {
         return undefined;

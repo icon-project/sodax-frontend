@@ -166,11 +166,28 @@ export class MigrationService {
           value: true,
         };
       }
-
       if (action === 'revert') {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
         invariant(params.to.length > 0, 'To address is required');
         invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
+
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          let spender: Address;
+          const wallet = await spokeProvider.walletProvider.getWalletAddress();
+          if (spokeProvider instanceof SonicSpokeProvider) {
+            spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
+          } else {
+            spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
+          }
+          return await Erc20Service.isAllowanceValid(
+            params.srcbnUSD as Address,
+            params.amount,
+            wallet as `0x${string}`,
+            spender,
+            evmSpokeProvider,
+          );
+        }
 
         if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
           const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;

@@ -4,6 +4,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-family-app-title: "InterRegular", "Inter", system-ui, sans-serif;
+  --font-family-shrikhand: "Shrikhand", cursive;
+  --font-family-inter-regular: "InterRegular", "Inter", system-ui, sans-serif;
+  --font-family-inter-medium: "InterMedium", "Inter", system-ui, sans-serif;
+  --font-family-inter-bold: "InterBold", "Inter", system-ui, sans-serif;
+  --font-family-inter-black: "InterBlack", "Inter", system-ui, sans-serif;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -42,13 +51,57 @@
   --cherry-soda: #a55c55;
   --cherry-bright: #cc9e9a;
   --cherry-brighter: #e3bebb;
+  --cherry-grey: #d7cdcb;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
   --almost-white: #f8f3f3;
   --espresso: #483534;
   --cream: #eaded4;
+  --cream-white: #ede6e6;
+  --vibrant-white: #f9f7f5;
+  --clay-light: #b9acab;
   --clay: #8e7e7d;
+  --body-comfortable-mobile: 12px;
+  --body-comfortable-tablet: 13px;
+  --body-comfortable-desktop: 14px;
+  --body-comfortable: var(--body-comfortable-mobile);
+  --body-super-comfortable-mobile: 13px;
+  --body-super-comfortable-tablet: 15px;
+  --body-super-comfortable-desktop: 16px;
+  --body-super-comfortable: var(--body-super-comfortable-mobile);
+  --subtitle-mobile: 16px;
+  --subtitle-tablet: 17px;
+  --subtitle-desktop: 18px;
+  --subtitle: var(--subtitle-mobile);
+  --app-title-mobile: 24px;
+  --app-title-tablet: 28px;
+  --app-title-desktop: 32px;
+  --app-title: var(--app-title-mobile);
+  --body-small-mobile: 11px;
+  --body-small-tablet: 12px;
+  --body-small-desktop: 12px;
+  --body-small: var(--body-small-mobile);
+  --layout-space-comfortable-mobile: 16px;
+  --layout-space-comfortable-tablet: 24px;
+  --layout-space-comfortable-desktop: 32px;
+  --layout-space-comfortable: var(--layout-space-comfortable-mobile);
+  --layout-space-big-mobile: 24px;
+  --layout-space-big-tablet: 32px;
+  --layout-space-big-desktop: 40px;
+  --layout-space-big: var(--layout-space-big-mobile);
+  --layout-space-normal-mobile: 8px;
+  --layout-space-normal-tablet: 16px;
+  --layout-space-normal-desktop: 24px;
+  --layout-space-normal: var(--layout-space-normal-mobile);
+  --layout-container-radius: var(--layout-container-radius-mobile);
+  --layout-container-radius-desktop: 24px;
+  --layout-container-radius-tablet: 16px;
+  --layout-container-radius-mobile: 8px;
+  --layout-linear-boder: var(--layout-linear-boder-mobile);
+  --layout-linear-boder-desktop: 4px;
+  --layout-linear-boder-tablet: 3px;
+  --layout-linear-boder-mobile: 2px;
 }
 
 .dark {
@@ -88,13 +141,41 @@
   --cherry-soda: #a55c55;
   --cherry-bright: #cc9e9a;
   --cherry-brighter: #e3bebb;
+  --cherry-grey: #d7cdcb;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
   --almost-white: #f8f3f3;
   --espresso: #483534;
   --cream: #eaded4;
+  --cream-white: #ede6e6;
+  --clay-light: #b9acab;
+  --vibrant-white: #f9f7f5;
   --clay: #8e7e7d;
+  --body-comfortable-mobile: 12px;
+  --body-comfortable-tablet: 13px;
+  --body-comfortable-desktop: 14px;
+  --body-super-comfortable-mobile: 13px;
+  --body-super-comfortable-tablet: 15px;
+  --body-super-comfortable-desktop: 16px;
+  --subtitle-mobile: 16px;
+  --subtitle-tablet: 17px;
+  --subtitle-desktop: 18px;
+  --app-title-mobile: 24px;
+  --app-title-tablet: 28px;
+  --app-title-desktop: 32px;
+  --body-small-mobile: 11px;
+  --body-small-tablet: 11px;
+  --body-small-desktop: 12px;
+  --layout-space-comfortable-mobile: 16px;
+  --layout-space-comfortable-tablet: 24px;
+  --layout-space-comfortable-desktop: 32px;
+  --layout-space-big-mobile: 24px;
+  --layout-space-big-tablet: 32px;
+  --layout-space-big-desktop: 40px;
+  --layout-space-normal-mobile: 8px;
+  --layout-space-normal-tablet: 16px;
+  --layout-space-normal-desktop: 24px;
 }
 
 @theme inline {
@@ -137,14 +218,58 @@
   --color-cherry-dark: var(--cherry-dark);
   --color-cherry-soda: var(--cherry-soda);
   --color-cherry-bright: var(--cherry-bright);
+  --color-cherry-grey: var(--cherry-grey);
   --color-yellow-soda: var(--yellow-soda);
   --color-yellow-dark: var(--yellow-dark);
   --color-orange-sonic: var(--orange-sonic);
   --color-almost-white: var(--almost-white);
   --color-espresso: var(--espresso);
   --color-cream: var(--cream);
+  --color-cream-white: var(--cream-white);
+  --color-vibrant-white: var(--vibrant-white);
   --color-clay: var(--clay);
+  --color-clay-light: var(--clay-light);
   --color-cherry-brighter: var(--cherry-brighter);
+  --text-app-title: var(--app-title-mobile);
+  --text-body-comfortable: var(--body-comfortable-mobile);
+  --text-body-super-comfortable: var(--body-super-comfortable-mobile);
+  --text-subtitle: var(--subtitle-mobile);
+  --text-body-small: var(--body-small-mobile);
+  --layout-space-comfortable: var(--layout-space-comfortable-mobile);
+  --layout-space-big: var(--layout-space-big-mobile);
+  --layout-space-normal: var(--layout-space-normal-mobile);
+  --layout-container-radius: var(--layout-container-radius-mobile);
+  --layout-linear-boder: var(--layout-linear-boder-mobile);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --app-title: var(--app-title-tablet);
+    --body-comfortable: var(--body-comfortable-tablet);
+    --body-super-comfortable: var(--body-super-comfortable-tablet);
+    --subtitle: var(--subtitle-tablet);
+    --body-small: var(--body-small-tablet);
+    --layout-container-radius: var(--layout-container-radius-tablet);
+    --layout-space-comfortable: var(--layout-space-comfortable-tablet);
+    --layout-space-big: var(--layout-space-big-tablet);
+    --layout-space-normal: var(--layout-space-normal-tablet);
+    --layout-linear-boder: var(--layout-linear-boder-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-title: var(--app-title-desktop);
+    --body-comfortable: var(--body-comfortable-desktop);
+    --body-super-comfortable: var(--body-super-comfortable-desktop);
+    --subtitle: var(--subtitle-desktop);
+    --body-small: var(--body-small-desktop);
+    --layout-container-radius: var(--layout-container-radius-desktop);
+    --layout-space-comfortable: var(--layout-space-comfortable-desktop);
+    --layout-space-big: var(--layout-space-big-desktop);
+    --layout-space-normal: var(--layout-space-normal-desktop);
+    --layout-linear-boder: var(--layout-linear-boder-desktop);
+  }
 }
 
 @layer base {
