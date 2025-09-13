@@ -34,8 +34,9 @@ import {
   isNewbnUSDToken,
 } from '../../index.js';
 import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import type { IIconWalletProvider, IEvmWalletProvider, SpokeChainId } from '@sodax/types';
+import type { IIconWalletProvider, IEvmWalletProvider, SpokeChainId, Address } from '@sodax/types';
 import * as IntentRelayApiService from '../../services/intentRelay/IntentRelayApiService.js';
+import * as SharedUtils from '../../utils/shared-utils.js';
 
 const mockEvmAddress = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' satisfies `0x${string}`;
 
@@ -776,7 +777,7 @@ describe('MigrationService', () => {
       it('should successfully migrate legacy bnUSD to new bnUSD', async () => {
         vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
           ok: true,
-          value: mockTxHash,
+          value: [mockTxHash, { address: mockBnUSDLegacyToNewParams.to as Address, payload: '0xbnusdmigrationdata' }],
         });
         vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
           ok: true,
@@ -829,7 +830,7 @@ describe('MigrationService', () => {
 
         vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
           ok: true,
-          value: mockTxHash,
+          value: [mockTxHash, { address: mockBnUSDLegacyToNewParams.to as Address, payload: '0xbnusdmigrationdata' }],
         });
         vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
           ok: false,
@@ -871,7 +872,7 @@ describe('MigrationService', () => {
       it('should successfully migrate new bnUSD to legacy bnUSD', async () => {
         vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
           ok: true,
-          value: mockTxHash,
+          value: [mockTxHash, { address: mockBnUSDLegacyToNewParams.to as Address, payload: '0xbnusdmigrationdata' }],
         });
         vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
           ok: true,
@@ -924,7 +925,7 @@ describe('MigrationService', () => {
 
         vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
           ok: true,
-          value: mockTxHash,
+          value: [mockTxHash, { address: mockBnUSDLegacyToNewParams.to as Address, payload: '0xbnusdmigrationdata' }],
         });
         vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
           ok: false,
@@ -967,6 +968,7 @@ describe('MigrationService', () => {
     describe('createMigratebnUSDIntent', () => {
       it('should successfully create legacy to new bnUSD migration intent', async () => {
         vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
+        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce("0x2170Ed0880ac9A755fd29B2688956BD959F933F8");
 
         const result = await migrationService.createMigratebnUSDIntent(
           mockBnUSDLegacyToNewParams,
@@ -975,12 +977,13 @@ describe('MigrationService', () => {
 
         expect(result.ok).toBe(true);
         if (result.ok) {
-          expect(result.value).toBe(mockTxHash);
+          expect(result.value[0]).toEqual(mockTxHash);
         }
       });
 
       it('should successfully create new to legacy bnUSD migration intent', async () => {
         vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
+        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce("0x2170Ed0880ac9A755fd29B2688956BD959F933F8");
 
         const result = await migrationService.createMigratebnUSDIntent(
           mockBnUSDNewToLegacyParams,
@@ -989,7 +992,7 @@ describe('MigrationService', () => {
 
         expect(result.ok).toBe(true);
         if (result.ok) {
-          expect(result.value).toBe(mockTxHash);
+          expect(result.value[0]).toEqual(mockTxHash);
         }
       });
 
@@ -1002,6 +1005,7 @@ describe('MigrationService', () => {
         };
 
         vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockRawTx);
+        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce("0x2170Ed0880ac9A755fd29B2688956BD959F933F8");
 
         const result = await migrationService.createMigratebnUSDIntent(
           mockBnUSDLegacyToNewParams,
@@ -1012,7 +1016,7 @@ describe('MigrationService', () => {
 
         expect(result.ok).toBe(true);
         if (result.ok) {
-          expect(result.value).toEqual(mockRawTx);
+          expect(result.value[0]).toEqual(mockRawTx);
         }
       });
 

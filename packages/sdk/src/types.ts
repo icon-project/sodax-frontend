@@ -605,3 +605,5 @@ export type GetEstimateGasReturnType<T extends SpokeProvider> = T['chainConfig']
 
 export type OptionalRaw<R extends boolean = false> = { raw?: R };
 export type OptionalTimeout = { timeout?: number };
+export type RelayExtraData = { address: Hex; payload: Hex };
+export type RelayOptionalExtraData = { data?: RelayExtraData };
