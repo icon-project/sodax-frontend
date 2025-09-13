@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
@@ -100,6 +100,11 @@ export default function BnusdMigration() {
     currencies.to,
     destinationAddress,
   );
+
+  const needsApproval = useMemo(() => {
+    return !['icon', 'sui', 'stellar', 'solana'].includes(direction.from);
+  }, [direction.from]);
+
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
   const { mutateAsync: migrate, isPending } = useMigrate();
@@ -170,12 +175,7 @@ export default function BnusdMigration() {
     }
 
     // Check if approval is required and not yet given
-    if (
-      direction.from !== ICON_MAINNET_CHAIN_ID &&
-      direction.from !== 'sui' &&
-      direction.from !== 'stellar' &&
-      !hasSufficientAllowance
-    ) {
+    if (needsApproval && !hasSufficientAllowance) {
       return {
         text: 'Approve required',
         disabled: false,
@@ -265,21 +265,19 @@ export default function BnusdMigration() {
               </Button>
             ) : (
               <>
-                {direction.from !== ICON_MAINNET_CHAIN_ID &&
-                  direction.from !== 'sui' &&
-                  direction.from !== 'stellar' && (
-                    <Button
-                      className="w-34"
-                      type="button"
-                      variant="cherry"
-                      onClick={handleApprove}
-                      disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!error}
-                    >
-                      {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
-                      {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
-                      {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
-                    </Button>
-                  )}
+                {needsApproval && (
+                  <Button
+                    className="w-34"
+                    type="button"
+                    variant="cherry"
+                    onClick={handleApprove}
+                    disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!error}
+                  >
+                    {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
+                    {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
+                  </Button>
+                )}
 
                 <Button
                   variant="cherry"
@@ -296,14 +294,7 @@ export default function BnusdMigration() {
                       setShowErrorDialog(true);
                     }
                   }}
-                  disabled={
-                    isPending ||
-                    !!error ||
-                    (direction.from !== ICON_MAINNET_CHAIN_ID &&
-                      direction.from !== 'sui' &&
-                      direction.from !== 'stellar' &&
-                      (!hasSufficientAllowance || isApproving))
-                  }
+                  disabled={isPending || !!error || (needsApproval && (!hasSufficientAllowance || isApproving))}
                 >
                   {error ? (
                     error

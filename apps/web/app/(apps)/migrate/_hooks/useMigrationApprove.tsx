@@ -13,7 +13,6 @@ interface UseApproveReturn {
   error: Error | null;
   resetError: () => void;
   isApproved: boolean;
-  resetApproval: () => void;
 }
 
 /**
@@ -142,16 +141,11 @@ export function useMigrationApprove(
     setError(null);
   }, []);
 
-  const resetApproval = useCallback(() => {
-    setIsApproved(false);
-  }, []);
-
   return {
     approve,
     isLoading,
     error,
     resetError,
     isApproved,
-    resetApproval,
   };
 }
