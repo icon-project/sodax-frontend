@@ -1,17 +1,11 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { SONIC_MAINNET_CHAIN_ID } from '@sodax/sdk';
-import {
-  ICON_MAINNET_CHAIN_ID,
-  INJECTIVE_MAINNET_CHAIN_ID,
-  type ChainType,
-  type SpokeChainId,
-  type XToken,
-} from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID, type ChainType, type SpokeChainId, type XToken } from '@sodax/types';
 import { getChainName } from '@/constants/chains';
 import { chainIdToChainName } from '@/providers/constants';
 
@@ -19,7 +13,7 @@ import { SuccessDialog, ErrorDialog } from './_components';
 import { SwitchDirectionIcon } from '@/components/icons';
 import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/currency-input-panel';
 import { useMigrationInfo, useMigrationStore } from './_stores/migration-store-provider';
-import { icxToken, sodaToken, iconBnusdToken, sonicBnusdToken } from './_stores/migration-store';
+import { icxToken, sodaToken } from './_stores/migration-store';
 import { formatUnits, parseUnits } from 'viem';
 import { useMigrate, useMigrationAllowance, useMigrationApprove } from './_hooks';
 import { Check, Loader2 } from 'lucide-react';
@@ -108,36 +102,21 @@ export default function MigratePage() {
   });
   const sodaBalance = BigInt(sodaBalances?.[sodaToken.address] || 0);
 
-  // Get addresses for all chain types
-  const { address: stellarAddress } = useXAccount('STELLAR');
-  const { address: suiAddress } = useXAccount('SUI');
-  const { address: solanaAddress } = useXAccount('SOLANA');
-  const { address: injectiveAddress } = useXAccount('INJECTIVE');
-
-  // Helper function to get the correct address for a chain
-  const getAddressForChain = (chainId: SpokeChainId): string | undefined => {
-    if (chainId === ICON_MAINNET_CHAIN_ID) return iconAddress;
-    if (chainId === SONIC_MAINNET_CHAIN_ID) return sonicAddress;
-    if (chainId === 'stellar') return stellarAddress;
-    if (chainId === 'sui') return suiAddress;
-    if (chainId === 'solana') return solanaAddress;
-    if (chainId === INJECTIVE_MAINNET_CHAIN_ID) return injectiveAddress;
-
-    // All EVM chains use the same address
-    return sonicAddress;
-  };
+  // Get addresses for source and destination chains
+  const sourceAddress = useXAccount(direction.from).address;
+  const destinationAddress = useXAccount(direction.to).address;
 
   // Dynamic balance fetching for the currently selected chains
   const { data: fromChainBalances } = useXBalances({
     xChainId: direction.from,
     xTokens: [currencies.from],
-    address: getAddressForChain(direction.from),
+    address: sourceAddress,
   });
 
   const { data: toChainBalances } = useXBalances({
     xChainId: direction.to,
     xTokens: [currencies.to],
-    address: getAddressForChain(direction.to),
+    address: destinationAddress,
   });
 
   // Helper function to get balance for any chain
@@ -206,10 +185,6 @@ export default function MigratePage() {
     }
   };
 
-  // Get addresses for source and destination chains
-  const sourceAddress = getAddressForChain(direction.from);
-  const destinationAddress = getAddressForChain(direction.to);
-
   // Get wallet provider for the source chain
   const walletProvider = useWalletProvider(direction.from);
   const spokeProvider = useSpokeProvider(direction.from, walletProvider);
@@ -243,17 +218,6 @@ export default function MigratePage() {
 
   // Combine allowance check with approval state for immediate UI feedback
   const hasSufficientAllowance = hasAllowed || isApproved;
-
-  // Helper function to get the chain type for a given chain ID
-  const getXChainType = (chainId: SpokeChainId): ChainType => {
-    if (chainId === ICON_MAINNET_CHAIN_ID) return 'ICON';
-    if (chainId === SONIC_MAINNET_CHAIN_ID) return 'EVM';
-    if (chainId === 'stellar') return 'STELLAR';
-    if (chainId === 'sui') return 'SUI';
-    if (chainId === 'solana') return 'SOLANA';
-    if (chainId === INJECTIVE_MAINNET_CHAIN_ID) return 'INJECTIVE';
-    return 'EVM'; // Default to EVM for other chains
-  };
 
   // Get chain types for source and destination
   const sourceChainType = getXChainType(direction.from);
