@@ -93,11 +93,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     [modalData?.primaryChainType],
   );
 
-  const acceptedTerms = useMemo(() => {
-    if (typeof window === 'undefined') return false; // or some default value
-
-    return localStorage.getItem('acceptedTerms') === 'accepted';
-  }, []);
+  const acceptedTerms = typeof window !== 'undefined' && localStorage.getItem('acceptedTerms') === 'accepted';
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
