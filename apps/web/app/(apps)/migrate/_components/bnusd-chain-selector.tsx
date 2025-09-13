@@ -13,6 +13,8 @@ import {
   getAllLegacybnUSDTokens,
   type LegacybnUSDChainId,
   type NewbnUSDChainId,
+  HYPEREVM_MAINNET_CHAIN_ID,
+  NIBIRU_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
 import { availableChains } from '@/constants/chains';
 import { Separator } from '@/components/ui/separator';
@@ -62,7 +64,7 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
     if (isNew) {
       // For new bnUSD, show all new bnUSD chains except Nibiru
       return newbnUSDSpokeChainIds
-        .filter(chainId => chainId !== 'nibiru')
+        .filter(chainId => chainId !== NIBIRU_MAINNET_CHAIN_ID && chainId !== HYPEREVM_MAINNET_CHAIN_ID)
         .map(chainId => {
           const config = spokeChainConfig[chainId as NewbnUSDChainId];
           const token = config.supportedTokens.bnUSD;
