@@ -11,7 +11,7 @@ import type BigNumber from 'bignumber.js';
 import { Timer, XIcon, Check, ChevronRight, ChevronsRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
-import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccounts } from '@sodax/wallet-sdk-react';
+import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { availableChains } from '@/constants/chains';
 import { useSwapApprove, useSpokeProvider, useSwapAllowance } from '@sodax/dapp-kit';
 import type { CreateIntentParams, SolverIntentQuoteRequest, SolverIntentStatusCode, QuoteType } from '@sodax/sdk';
@@ -63,10 +63,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
 
-  const xAccounts = useXAccounts();
-
   const walletProvider = useWalletProvider(sourceToken.xChainId);
   const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
+
+  const sourceXAccount = useXAccount(sourceToken.xChainId);
+  const destinationXAccount = useXAccount(destinationToken.xChainId);
 
   const paramsForApprove = intentOrderPayload
     ? JSON.parse(
@@ -93,13 +94,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   }, [open]);
 
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, spokeProvider);
-
-  const getWalletAddressForChain = (chainId: ChainId): string => {
-    const chainType = getXChainType(chainId);
-    if (!chainType) return 'Not connected';
-    const account = xAccounts[chainType];
-    return account?.address || 'Not connected';
-  };
 
   useEffect(() => {
     if (isSwapSuccessful) {
@@ -211,7 +205,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] flex flex-col justify-center items-center gap-2"
                   >
                     <div className="text-center justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase">
-                      {shortenAddress(getWalletAddressForChain(sourceToken.xChainId))}
+                      {sourceXAccount?.address ? shortenAddress(sourceXAccount?.address) : 'Not connected'}
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
@@ -254,7 +248,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] flex flex-col justify-center items-center gap-2"
                   >
                     <div className="text-center justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase">
-                      {shortenAddress(getWalletAddressForChain(destinationToken.xChainId))}
+                      {destinationXAccount?.address ? shortenAddress(destinationXAccount?.address) : 'Not connected'}
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">

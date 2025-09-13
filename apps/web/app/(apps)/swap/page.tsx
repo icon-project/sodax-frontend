@@ -6,9 +6,8 @@ import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/curren
 import SwapConfirmDialog from './_components/swap-confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
-import type { XToken, SpokeChainId, ChainType } from '@sodax/types';
-import { useWalletUI } from '../_context/wallet-ui';
-import { useXAccount, useXAccounts, useXBalances, useXConnection } from '@sodax/wallet-sdk-react';
+import type { SpokeChainId, ChainType } from '@sodax/types';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { getXChainType } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useQuote, useSpokeProvider, useSwap, useStatus } from '@sodax/dapp-kit';
