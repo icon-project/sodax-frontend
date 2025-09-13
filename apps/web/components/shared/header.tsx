@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { MenuIcon } from '@/components/icons';
 import { DecoratedButton } from '@/components/landing/decorated-button';
 import { ConnectedChainsDisplay } from '@/components/shared/connected-chains-display';
-import { useXAccounts } from '@sodax/wallet-sdk-react';
+import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 
@@ -16,9 +16,8 @@ interface HeaderProps {
 export function Header({ isSidebarOpen, toggleSidebar }: HeaderProps): React.JSX.Element {
   const openModal = useModalStore(state => state.openModal);
 
-  const xAccounts = useXAccounts();
-  const connectedChains = Object.entries(xAccounts).filter(([, account]) => account?.address);
-  const connectedWalletsCount = connectedChains.length;
+  const evmXAccount = useXAccount('EVM');
+
   return (
     <div className="h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
       <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
@@ -89,15 +88,13 @@ export function Header({ isSidebarOpen, toggleSidebar }: HeaderProps): React.JSX
               </span>
             </Link>
           </div>
-          <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-            {connectedWalletsCount >= 1 ? (
-              <ConnectedChainsDisplay onClick={() => openModal(MODAL_ID.WALLET_MODAL, { isExpanded: true })} />
-            ) : (
-              <DecoratedButton onClick={() => openModal(MODAL_ID.WALLET_MODAL, { isExpanded: true })}>
-                connect
-              </DecoratedButton>
-            )}
-          </div>
+          {evmXAccount?.address ? (
+            <div className="inline-flex justify-center items-start relative mr-2 ml-5">{evmXAccount?.address}</div>
+          ) : (
+            <DecoratedButton onClick={() => openModal(MODAL_ID.WALLET_MODAL, { isExpanded: true })}>
+              connect
+            </DecoratedButton>
+          )}
         </div>
       </div>
     </div>
