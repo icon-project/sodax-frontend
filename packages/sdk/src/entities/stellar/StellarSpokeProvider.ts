@@ -26,7 +26,7 @@ import {
 import type { Api } from '@stellar/stellar-sdk/rpc';
 import { STELLAR_DEFAULT_TX_TIMEOUT_SECONDS, STELLAR_PRIORITY_FEE } from '../../constants.js';
 
-class CustomStellarAccount {
+export class CustomStellarAccount {
   private readonly accountId: string;
   private sequenceNumber: bigint;
   private readonly startingSequenceNumber: bigint;
@@ -236,7 +236,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
     throw new Error('result undefined');
   }
 
-  private async buildPriorityStellarTransaction(
+  public async buildPriorityStellarTransaction(
     account: CustomStellarAccount,
     network: Api.GetNetworkResponse,
     operation: xdr.Operation<Operation.InvokeHostFunction>,
@@ -288,7 +288,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
     return response;
   }
 
-  private async signAndSendTransaction(
+  public async signAndSendTransaction(
     tx: Transaction | FeeBumpTransaction,
     waitForTransaction = true,
   ): Promise<string> {
@@ -326,7 +326,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
     return this.waitForTransaction(hash, attempts - 1);
   }
 
-  private async submitOrRestoreAndRetry(
+  public async submitOrRestoreAndRetry(
     account: CustomStellarAccount,
     network: Api.GetNetworkResponse,
     tx: Transaction,
