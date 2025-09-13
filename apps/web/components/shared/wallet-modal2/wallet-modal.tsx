@@ -95,6 +95,14 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
 
   const acceptedTerms = typeof window !== 'undefined' && localStorage.getItem('acceptedTerms') === 'accepted';
 
+  const sortedXConnectors = useMemo(() => {
+    const hanaXConnector = xConnectors.find(xConnector => xConnector.name.toLowerCase().includes('hana'));
+    if (hanaXConnector) {
+      return [hanaXConnector, ...xConnectors.filter(xConnector => !xConnector.name.toLowerCase().includes('hana'))];
+    }
+    return xConnectors;
+  }, [xConnectors]);
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
@@ -124,7 +132,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
             </DialogTitle>
             <div className="w-full flex flex-col">
               <Separator className="h-1 bg-clay opacity-30" />
-              {xConnectors.map(xConnector => (
+              {sortedXConnectors.map(xConnector => (
                 <React.Fragment key={xConnector.id}>
                   <WalletItem
                     xConnector={xConnector}
