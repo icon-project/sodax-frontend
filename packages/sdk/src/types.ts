@@ -14,10 +14,9 @@ import type {
   bnUSDLegacySpokeChainIds,
   bnUSDLegacyTokens,
   EVM_CHAIN_IDS,
-  EVM_SPOKE_CHAIN_IDS,
-  INTENT_RELAY_CHAIN_IDS,
   newbnUSDSpokeChainIds,
   spokeChainConfig,
+  ChainIdToIntentRelayChainId,
 } from './index.js';
 import type { EvmSpokeDepositParams, SonicSpokeDepositParams } from './services/index.js';
 import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.js';
@@ -46,10 +45,10 @@ export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['addres
 export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
-export type IntentRelayChainId = (typeof INTENT_RELAY_CHAIN_IDS)[keyof typeof INTENT_RELAY_CHAIN_IDS];
+export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
 
 export type EvmChainId = (typeof EVM_CHAIN_IDS)[number];
-export type EvmSpokeChainId = (typeof EVM_SPOKE_CHAIN_IDS)[number];
+export type EvmSpokeChainId = (typeof EVM_CHAIN_IDS)[number];
 
 export type BaseSpokeChainInfo<T extends ChainType> = {
   name: string;
@@ -119,11 +118,11 @@ export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeCo
 export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
-export type BackendApiConfig ={
+export type BackendApiConfig = {
   baseURL?: HttpUrl;
   timeout?: number;
   headers?: Record<string, string>;
-}
+};
 
 export type MoneyMarketConfigParams =
   | Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>>

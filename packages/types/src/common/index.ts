@@ -1,8 +1,8 @@
-import type { HUB_CHAIN_IDS, SPOKE_CHAIN_IDS, CHAIN_IDS } from '../constants/index.js';
+import type { HUB_CHAIN_IDS, CHAIN_IDS } from '../constants/index.js';
 
 export type HubChainId = (typeof HUB_CHAIN_IDS)[number];
 
-export type SpokeChainId = (typeof SPOKE_CHAIN_IDS)[number];
+export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
