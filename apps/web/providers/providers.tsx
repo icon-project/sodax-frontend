@@ -2,7 +2,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { SodaxWalletProvider } from '@sodax/wallet-sdk-react';
 import { SodaxProvider } from '@sodax/dapp-kit';
 import { sodaxConfig, rpcConfig } from './constants';
@@ -15,9 +15,11 @@ import {
   POLYGON_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
 } from '@sodax/types';
-const queryClient = new QueryClient();
+import { getQueryClient } from '@/app/get-query-client';
 
 export default function Providers({ children }: { children: ReactNode }) {
+  const queryClient = getQueryClient();
+
   return (
     <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
