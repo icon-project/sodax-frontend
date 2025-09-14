@@ -1038,7 +1038,7 @@ export const spokeChainConfig = {
         symbol: 'bnUSD (legacy)',
         name: 'legacybnUSD',
         decimals: 9,
-        address: '0x03917a812fe4a6d6bc779c5ab53f8a80ba741f8af04121193fc44e0f662e2ceb::balanced_dollar::BALANCED_DOLLAR',
+        address: '0x3917a812fe4a6d6bc779c5ab53f8a80ba741f8af04121193fc44e0f662e2ceb::balanced_dollar::BALANCED_DOLLAR',
         xChainId: SUI_MAINNET_CHAIN_ID,
       },
       afSUI: {
