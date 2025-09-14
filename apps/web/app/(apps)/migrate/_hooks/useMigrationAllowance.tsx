@@ -58,24 +58,16 @@ export function useMigrationAllowance(
       if (!spokeProvider) throw new Error('Spoke provider is required');
       const amountToMigrate = parseUnits(amount, token.decimals);
 
+      let params: IcxCreateRevertMigrationParams | UnifiedBnUSDMigrateParams;
       if (migrationMode === 'icxsoda') {
-        // ICX/SODA migration allowance check
-        const params = {
+        params = {
           amount: amountToMigrate,
           to: sourceAddress as `hx${string}`,
         } satisfies IcxCreateRevertMigrationParams;
-
-        const allowance = await sodax.migration.isAllowanceValid(params, 'revert', spokeProvider);
-        if (allowance.ok) {
-          return allowance.value;
-        }
-        return false;
-      }
-
-      if (migrationMode === 'bnusd') {
+      } else {
         if (!toToken) throw new Error('Destination token is required for bnUSD migration');
 
-        const params = {
+        params = {
           srcChainId: token.xChainId,
           dstChainId: toToken.xChainId,
           srcbnUSD: token.address,
@@ -83,13 +75,12 @@ export function useMigrationAllowance(
           amount: amountToMigrate,
           to: sourceAddress as `hx${string}` | `0x${string}`,
         } satisfies UnifiedBnUSDMigrateParams;
-        const allowance = await sodax.migration.isAllowanceValid(params, 'revert', spokeProvider);
-        if (allowance.ok) {
-          return allowance.value;
-        }
-        return false;
       }
 
+      const allowance = await sodax.migration.isAllowanceValid(params, 'revert', spokeProvider);
+      if (allowance.ok) {
+        return allowance.value;
+      }
       return false;
     },
     enabled: !!spokeProvider && !!token && !!amount,
