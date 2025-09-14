@@ -1,4 +1,5 @@
 import {
+  getIntentRelayChainId,
   isLegacybnUSDChainId,
   isLegacybnUSDToken,
   isNewbnUSDChainId,
@@ -41,8 +42,9 @@ import {
   type RelayExtraData,
   SolanaSpokeProvider,
   deriveUserWalletAddress,
+  waitUntilIntentExecuted,
 } from '../../index.js';
-import { ICON_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 import { isAddress } from 'viem';
 
 export type GetMigrationFailedPayload<T extends MigrationErrorCode> = T extends 'CREATE_MIGRATION_INTENT_FAILED'
@@ -426,6 +428,15 @@ export class MigrationService {
 
       if (!packetResult.ok) {
         return packetResult;
+      }
+
+      if (!(params.srcChainId === SONIC_MAINNET_CHAIN_ID || params.dstChainId === SONIC_MAINNET_CHAIN_ID)) {
+        await waitUntilIntentExecuted({
+          intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
+          spokeTxHash: packetResult.value.dst_tx_hash,
+          timeout: timeout,
+          apiUrl: this.config.relayerApiEndpoint,
+        });
       }
 
       return { ok: true, value: [spokeTxHash, packetResult.value.dst_tx_hash as Hex] };
