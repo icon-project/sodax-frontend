@@ -3,6 +3,7 @@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useMigrationStore } from './_stores/migration-store-provider';
 import { IcxsodaMigration, BnusdMigration } from './_components';
+import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA } from './_stores/migration-store';
 
 export default function MigratePage() {
   const migrationMode = useMigrationStore(state => state.migrationMode);
@@ -23,22 +24,22 @@ export default function MigratePage() {
           type="single"
           value={migrationMode}
           onValueChange={value => {
-            if (value && (value === 'icxsoda' || value === 'bnusd')) {
+            if (value && (value === MIGRATION_MODE_ICX_SODA || value === MIGRATION_MODE_BNUSD)) {
               setMigrationMode(value);
             }
           }}
           className="h-12 w-64 px-1 border border-4 border-cream-white rounded-full mix-blend-multiply"
         >
-          <ToggleGroupItem value="icxsoda" className="cursor-pointer">
+          <ToggleGroupItem value={MIGRATION_MODE_ICX_SODA} className="cursor-pointer">
             ICX & SODA
           </ToggleGroupItem>
-          <ToggleGroupItem value="bnusd" className="cursor-pointer">
+          <ToggleGroupItem value={MIGRATION_MODE_BNUSD} className="cursor-pointer">
             bnUSD
           </ToggleGroupItem>
         </ToggleGroup>
       </div>
 
-      {migrationMode === 'icxsoda' ? <IcxsodaMigration /> : <BnusdMigration />}
+      {migrationMode === MIGRATION_MODE_ICX_SODA ? <IcxsodaMigration /> : <BnusdMigration />}
     </div>
   );
 }

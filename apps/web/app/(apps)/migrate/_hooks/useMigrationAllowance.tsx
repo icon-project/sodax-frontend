@@ -2,14 +2,9 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { XToken } from '@sodax/types';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { parseUnits } from 'viem';
-import {
-  type IcxCreateRevertMigrationParams,
-  type UnifiedBnUSDMigrateParams,
-  type SpokeProvider,
-  isLegacybnUSDToken,
-  isNewbnUSDToken,
-} from '@sodax/sdk';
-import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import type { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider } from '@sodax/sdk';
+import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
+import { MIGRATION_MODE_ICX_SODA, type MigrationMode } from '../_stores/migration-store';
 
 /**
  * Hook for checking token allowance for migration operations.
@@ -21,7 +16,7 @@ import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
  * @param {string} amount - The amount to check allowance for, as a decimal string
  * @param {string} iconAddress - The ICON address for the migration
  * @param {SpokeProvider} spokeProvider - The spoke provider to use for allowance checks
- * @param {'icxsoda' | 'bnusd'} migrationMode - The migration mode to determine which allowance check to perform
+ * @param {MigrationMode} migrationMode - The migration mode to determine which allowance check to perform
  * @param {XToken} toToken - The destination token for bnUSD migrations
  *
  * @returns {UseQueryResult<boolean, Error>} A React Query result containing:
@@ -31,7 +26,7 @@ import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
  *
  * @example
  * ```typescript
- * const { data: hasAllowed, isLoading } = useMigrationAllowance(token, "100", iconAddress, provider, 'icxsoda', toToken);
+ * const { data: hasAllowed, isLoading } = useMigrationAllowance(token, "100", iconAddress, provider, MIGRATION_MODE_ICX_SODA, toToken);
  * ```
  */
 export function useMigrationAllowance(
@@ -39,7 +34,7 @@ export function useMigrationAllowance(
   amount: string | undefined,
   sourceAddress: string | undefined,
   spokeProvider: SpokeProvider | undefined,
-  migrationMode: 'icxsoda' | 'bnusd' = 'icxsoda',
+  migrationMode: MigrationMode = MIGRATION_MODE_ICX_SODA,
   toToken?: XToken,
 ): UseQueryResult<boolean, Error> {
   const { sodax } = useSodaxContext();
@@ -59,7 +54,7 @@ export function useMigrationAllowance(
       const amountToMigrate = parseUnits(amount, token.decimals);
 
       let params: IcxCreateRevertMigrationParams | UnifiedBnUSDMigrateParams;
-      if (migrationMode === 'icxsoda') {
+      if (migrationMode === MIGRATION_MODE_ICX_SODA) {
         params = {
           amount: amountToMigrate,
           to: sourceAddress as `hx${string}`,

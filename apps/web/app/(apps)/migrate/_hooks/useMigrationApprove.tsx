@@ -1,11 +1,10 @@
-import type { Token, XToken } from '@sodax/types';
-import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
-import { type Address, parseUnits } from 'viem';
-import { useQueryClient } from '@tanstack/react-query';
+import type { XToken } from '@sodax/types';
+import { parseUnits } from 'viem';
 import { useCallback, useState, useRef, useEffect } from 'react';
 import type { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider, Result } from '@sodax/sdk';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { useMigrationAllowance } from './useMigrationAllowance';
+import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationMode } from '../_stores/migration-store';
 
 interface UseApproveReturn {
   approve: () => Promise<boolean>;
@@ -21,12 +20,12 @@ interface UseApproveReturn {
  * @param amount The amount to approve
  * @param iconAddress The ICON address for the migration
  * @param spokeProvider The spoke provider instance for the chain
- * @param migrationMode The migration mode ('icxsoda' or 'bnusd')
+ * @param migrationMode The migration mode (MIGRATION_MODE_ICX_SODA or MIGRATION_MODE_BNUSD)
  * @param toToken The destination token for bnUSD migrations
  * @returns Object containing approve function, loading state, error state and reset function
  * @example
  * ```tsx
- * const { approve, isLoading, error } = useMigrationApprove(token, "100", iconAddress, provider, 'icxsoda', toToken);
+ * const { approve, isLoading, error } = useMigrationApprove(token, "100", iconAddress, provider, MIGRATION_MODE_ICX_SODA, toToken);
  *
  * // Approve tokens for migration
  * await approve();
@@ -38,7 +37,7 @@ export function useMigrationApprove(
   amount: string | undefined,
   sourceAddress: string | undefined,
   spokeProvider: SpokeProvider | undefined,
-  migrationMode: 'icxsoda' | 'bnusd' = 'icxsoda',
+  migrationMode: MigrationMode = MIGRATION_MODE_ICX_SODA,
   toToken?: XToken,
   destinationAddress?: string,
 ): UseApproveReturn {
@@ -86,7 +85,7 @@ export function useMigrationApprove(
       const amountToMigrate = parseUnits(amount, token.decimals);
 
       let result: Result<string, Error>;
-      if (migrationMode === 'icxsoda') {
+      if (migrationMode === MIGRATION_MODE_ICX_SODA) {
         // ICX/SODA migration approval
         const revertParams = {
           amount: amountToMigrate,
@@ -94,7 +93,7 @@ export function useMigrationApprove(
         } satisfies IcxCreateRevertMigrationParams;
 
         result = await sodax.migration.approve(revertParams, 'revert', spokeProvider, false);
-      } else if (migrationMode === 'bnusd') {
+      } else if (migrationMode === MIGRATION_MODE_BNUSD) {
         // bnUSD migration approval
         if (!toToken) throw new Error('Destination token is required for bnUSD migration');
 
