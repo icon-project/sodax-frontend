@@ -1,6 +1,7 @@
 import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
-import type { XToken, SpokeChainId } from '@sodax/types';
+import { type XToken, ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { spokeChainConfig } from '@sodax/sdk';
 
 export type SwapState = {
   sourceToken: XToken;
@@ -26,27 +27,9 @@ export type SwapActions = {
 
 export type SwapStore = SwapState & SwapActions;
 
-// Default ICON token
-export const defaultIconToken: XToken = {
-  name: 'ICON',
-  symbol: 'ICX',
-  decimals: 18,
-  xChainId: '0x1.icon',
-  address: 'cx0000000000000000000000000000000000000000',
-};
-
-// Default USDC token on Sonic
-export const defaultUsdcToken: XToken = {
-  name: 'USD Coin',
-  symbol: 'USDC',
-  decimals: 6,
-  xChainId: 'sonic',
-  address: '0x29219dd400f2Bf60E5a23d13Be72B486D4038894',
-};
-
 export const defaultSwapState: SwapState = {
-  sourceToken: defaultIconToken,
-  destinationToken: defaultUsdcToken,
+  sourceToken: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
+  destinationToken: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
   sourceAmount: '',
   destinationAmount: '',
   isSwapAndSend: false,

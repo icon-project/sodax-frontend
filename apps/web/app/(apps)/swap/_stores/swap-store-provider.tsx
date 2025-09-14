@@ -1,9 +1,9 @@
 'use client';
 
-import { type ReactNode, createContext, useRef, useContext, useMemo } from 'react';
+import { type ReactNode, createContext, useRef, useContext } from 'react';
 import { useStore } from 'zustand';
 
-import { type SwapStore, createSwapStore, defaultSwapState } from './swap-store';
+import { type SwapStore, createSwapStore } from './swap-store';
 
 export type SwapStoreApi = ReturnType<typeof createSwapStore>;
 
