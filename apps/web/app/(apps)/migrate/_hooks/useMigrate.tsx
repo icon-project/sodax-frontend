@@ -11,6 +11,7 @@ import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useMigrationStore } from '../_stores/migration-store-provider';
 import { useMutation } from '@tanstack/react-query';
 import { getChainDisplayName } from '../_utils/migration-utils';
+import { MIGRATION_MODE_ICX_SODA } from '../_stores/migration-store';
 
 export interface MigrationResult {
   spokeTxHash: string;
@@ -34,7 +35,7 @@ export function useMigrate() {
     mutationFn: async () => {
       const amountToMigrate = parseUnits(typedValue, currencies.from.decimals);
 
-      if (migrationMode === 'icxsoda') {
+      if (migrationMode === MIGRATION_MODE_ICX_SODA) {
         // ICX->SODA migration logic
         if (direction.from === ICON_MAINNET_CHAIN_ID) {
           if (!sourceSpokeProvider) {

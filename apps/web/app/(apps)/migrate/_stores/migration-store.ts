@@ -2,6 +2,9 @@ import { createStore } from 'zustand/vanilla';
 import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
 import { spokeChainConfig } from '@sodax/sdk';
 
+export const MIGRATION_MODE_ICX_SODA = 'icxsoda';
+export const MIGRATION_MODE_BNUSD = 'bnusd';
+
 export type MigrationModeState = {
   direction: {
     from: SpokeChainId;
@@ -14,8 +17,10 @@ export type MigrationModeState = {
   };
 };
 
+export type MigrationMode = typeof MIGRATION_MODE_ICX_SODA | typeof MIGRATION_MODE_BNUSD;
+
 export type MigrationState = {
-  migrationMode: 'icxsoda' | 'bnusd';
+  migrationMode: MigrationMode;
   icxsoda: MigrationModeState;
   bnusd: MigrationModeState;
 };
@@ -23,7 +28,7 @@ export type MigrationState = {
 export type MigrationActions = {
   switchDirection: () => void;
   setTypedValue: (value: string) => void;
-  setMigrationMode: (mode: 'icxsoda' | 'bnusd') => void;
+  setMigrationMode: (mode: MigrationMode) => void;
   setChainForCurrency: (type: 'from' | 'to', chainId: SpokeChainId, token: XToken) => void;
 };
 
@@ -34,7 +39,7 @@ export const icxToken = spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.
 export const sodaToken = spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA;
 
 export const defaultInitState: MigrationState = {
-  migrationMode: 'icxsoda',
+  migrationMode: MIGRATION_MODE_ICX_SODA,
   icxsoda: {
     direction: { from: ICON_MAINNET_CHAIN_ID, to: SONIC_MAINNET_CHAIN_ID },
     typedValue: '',
@@ -63,7 +68,7 @@ export const createMigrationStore = (initState: MigrationState = defaultInitStat
         const newDirection = { from: currentState.direction.to, to: currentState.direction.from };
         // Maintain correct token pairs based on migration mode
         const newCurrencies =
-          currentMode === 'icxsoda'
+          currentMode === MIGRATION_MODE_ICX_SODA
             ? newDirection.from === ICON_MAINNET_CHAIN_ID
               ? { from: icxToken, to: sodaToken }
               : { from: sodaToken, to: icxToken }
@@ -85,7 +90,7 @@ export const createMigrationStore = (initState: MigrationState = defaultInitStat
           typedValue: value,
         },
       })),
-    setMigrationMode: (mode: 'icxsoda' | 'bnusd') =>
+    setMigrationMode: (mode: MigrationMode) =>
       set(state => ({
         migrationMode: mode,
       })),
