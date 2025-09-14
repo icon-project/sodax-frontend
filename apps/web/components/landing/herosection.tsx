@@ -15,7 +15,6 @@ import {
   DialogTitle,
   DialogPortal,
 } from '@/components/ui/dialog';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -24,15 +23,11 @@ import { Link as ScrollLink } from 'react-scroll';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
 import Sidebar from './sidebar';
 import { ArrowLeft } from 'lucide-react';
-import { DecoratedButton } from '@/components/landing/decorated-button';
-// import { useWallet } from '../../hooks/useWallet';
-import ConnectWalletButton from '@/components/shared/connect-wallet-button';
-import { TermsContent } from './terms-content';
+import { TermsContent } from '@/components/shared/wallet-modal2/terms-content';
 import { LaunchButton } from './launch-button';
 
 const carouselItems = [
@@ -76,7 +71,7 @@ const HeroSection = ({
       return;
     }
 
-    api.on('select', () => {});
+    api.on('select', () => { });
   }, [api]);
 
   const handleMouseEnter = () => {
@@ -91,8 +86,6 @@ const HeroSection = ({
     e.preventDefault();
     setIsTermsModalOpen(true);
   };
-
-  const isFormValid = acceptedTerms;
 
   return (
     <div className="hero-section">

@@ -11,6 +11,7 @@ import { useModalOpen } from '@/stores/modal-store-provider';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { useXDisconnect } from '@sodax/wallet-sdk-react';
 import type { ChainType } from '@sodax/types';
+import { TermsContent } from './terms-content';
 
 interface TermsConfirmationModalProps {
   modalId?: MODAL_ID;
@@ -33,8 +34,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
       closeModal(modalId);
       // openModal(MODAL_ID.WALLET_MODAL);
       setAcceptedTerms(false);
-      if (typeof window !== 'undefined')
-        localStorage.setItem('acceptedTerms', 'accepted');
+      if (typeof window !== 'undefined') localStorage.setItem('acceptedTerms', 'accepted');
     }
   };
 
@@ -99,22 +99,8 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
           }`}
         >
           <ScrollArea className="text-(length:--body-comfortable) text-clay font-['InterRegular'] leading-relaxed h-[100px] md:h-[380px] pr-2">
-            <p className="mb-3">Use the same terms present in the landing page please.</p>
-            <p className="mb-3">
-              This is randomly generated text. By accessing or using this Web3 DeFi platform ("the Service"), you
-              acknowledge and agree that all interactions are decentralized and performed at your own risk. The Service
-              operates through smart contracts on public blockchains, with no central authority or user fund custody.
-              Users are fully responsible for managing their own wallets, private keys, and transaction decisions. Any
-              irreversible loss of access or funds due to user error or technical failure is solely the user's
-              responsibility.
-            </p>
-            <p className="mb-3">
-              This Service is provided "as is" without warranties, express or implied. We disclaim liability for any
-              issues arising from code exploits, network outages, or integration failures. You accept that participation
-              involves significant financial risk, including potential total loss of digital assets. No guarantees are
-              made regarding functionality, uptime, or financial returns. Continued use constitutes acceptance of these
-              conditions and acknowledgment that you understand and assume all associated risks.
-            </p>
+            <TermsContent />
+
             <ScrollBar className="w-1" />
           </ScrollArea>
           <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-vibrant-white to-transparent pointer-events-none"></div>
