@@ -5,7 +5,15 @@ import { Button } from '@/components/ui/button';
 
 import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { SONIC_MAINNET_CHAIN_ID } from '@sodax/sdk';
-import { ICON_MAINNET_CHAIN_ID, type ChainType, type SpokeChainId, type XToken } from '@sodax/types';
+import {
+  ICON_MAINNET_CHAIN_ID,
+  SOLANA_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
+  SUI_MAINNET_CHAIN_ID,
+  type ChainType,
+  type SpokeChainId,
+  type XToken,
+} from '@sodax/types';
 import { getChainDisplayName, scaleTokenAmount, normaliseTokenAmount, calculateMaxAvailableAmount } from '../_utils';
 
 import { SuccessDialog } from './success-dialog';
@@ -119,7 +127,9 @@ export default function IcxsodaMigration() {
   );
 
   const needsApproval = useMemo(() => {
-    return !['icon', 'sui', 'stellar', 'solana'].includes(direction.from);
+    return ![ICON_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, SOLANA_MAINNET_CHAIN_ID].includes(
+      direction.from,
+    );
   }, [direction.from]);
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
