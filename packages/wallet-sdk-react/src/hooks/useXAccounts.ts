@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import type { ChainType } from '@sodax/types';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useAccount, useConnections } from 'wagmi';
+import { useAccount } from 'wagmi';
 
 import type { XAccount } from '../types';
 import { useXWagmiStore } from '../useXWagmiStore';
@@ -12,7 +12,6 @@ export function useXAccounts() {
   const xChainTypes = useXWagmiStore(state => Object.keys(state.xServices));
   const xConnections = useXWagmiStore(state => state.xConnections);
   const { address: evmAddress } = useAccount();
-  const evmConnections = useConnections();
   const suiAccount = useCurrentAccount();
   const solanaWallet = useWallet();
 

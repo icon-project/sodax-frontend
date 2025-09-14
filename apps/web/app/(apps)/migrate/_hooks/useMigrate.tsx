@@ -1,23 +1,16 @@
 import { parseUnits } from 'viem';
 import {
-  isLegacybnUSDToken,
-  isNewbnUSDToken,
   spokeChainConfig,
   type UnifiedBnUSDMigrateParams,
   type IconSpokeProvider,
   type SonicSpokeProvider,
 } from '@sodax/sdk';
-import {
-  SONIC_MAINNET_CHAIN_ID,
-  ICON_MAINNET_CHAIN_ID,
-  INJECTIVE_MAINNET_CHAIN_ID,
-  type SpokeChainId,
-} from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useMigrationStore } from '../_stores/migration-store-provider';
 import { useMutation } from '@tanstack/react-query';
-import { getChainName } from '@/constants/chains';
+import { getChainDisplayName } from '../_utils/migration-utils';
 
 export interface MigrationResult {
   spokeTxHash: string;
@@ -25,12 +18,6 @@ export interface MigrationResult {
 }
 
 export function useMigrate() {
-  const { address: iconAddress } = useXAccount('ICON');
-  const { address: sonicAddress } = useXAccount('EVM');
-  const { address: stellarAddress } = useXAccount('STELLAR');
-  const { address: suiAddress } = useXAccount('SUI');
-  const { address: solanaAddress } = useXAccount('SOLANA');
-  const { address: injectiveAddress } = useXAccount('INJECTIVE');
   const migrationMode = useMigrationStore(state => state.migrationMode);
   const typedValue = useMigrationStore(state => state[migrationMode].typedValue);
   const direction = useMigrationStore(state => state[migrationMode].direction);
@@ -38,66 +25,17 @@ export function useMigrate() {
 
   const { sodax } = useSodaxContext();
 
-  // Helper function to get the correct address for a chain
-  const getAddressForChain = (chainId: SpokeChainId): string | undefined => {
-    if (chainId === ICON_MAINNET_CHAIN_ID) return iconAddress;
-    if (chainId === SONIC_MAINNET_CHAIN_ID) return sonicAddress;
-    if (chainId === 'stellar') return stellarAddress;
-    if (chainId === 'sui') return suiAddress;
-    if (chainId === 'solana') return solanaAddress;
-    if (chainId === INJECTIVE_MAINNET_CHAIN_ID) return injectiveAddress;
-
-    // All EVM chains use the same address
-    return sonicAddress;
-  };
-
-  // Helper function to get the chain type for a given chain ID
-  const getXChainType = (chainId: SpokeChainId): string => {
-    if (chainId === ICON_MAINNET_CHAIN_ID) return 'ICON';
-    if (chainId === SONIC_MAINNET_CHAIN_ID) return 'EVM';
-    if (chainId === 'stellar') return 'STELLAR';
-    if (chainId === 'sui') return 'SUI';
-    if (chainId === 'solana') return 'SOLANA';
-    if (chainId === INJECTIVE_MAINNET_CHAIN_ID) return 'INJECTIVE';
-    return 'EVM'; // Default to EVM for other chains
-  };
-
-  // Helper function to get chain display name
-  const getChainDisplayName = (chainId: SpokeChainId): string => {
-    // Try to get the name from the UI constants first
-    const uiName = getChainName(chainId);
-    if (uiName) return uiName;
-
-    // Fallback to the spoke chain config
-    try {
-      return spokeChainConfig[chainId]?.chain?.name || chainId;
-    } catch {
-      // Final fallback to the chain ID itself
-      return chainId;
-    }
-  };
-
-  // Get wallet providers dynamically based on selected chains
-  const sourceChainType = getXChainType(direction.from);
-  const destinationChainType = getXChainType(direction.to);
+  const destinationAddress = useXAccount(direction.to).address;
 
   const sourceWalletProvider = useWalletProvider(direction.from);
-  const destinationWalletProvider = useWalletProvider(direction.to);
-
-  // Get spoke providers with wallet providers
   const sourceSpokeProvider = useSpokeProvider(direction.from, sourceWalletProvider);
-  const destinationSpokeProvider = useSpokeProvider(direction.to, destinationWalletProvider);
 
   return useMutation({
     mutationFn: async () => {
       const amountToMigrate = parseUnits(typedValue, currencies.from.decimals);
 
-      // Get the correct addresses for source and destination chains
-      const sourceAddress = getAddressForChain(direction.from);
-      const destinationAddress = getAddressForChain(direction.to);
-
       if (migrationMode === 'icxsoda') {
-        // ICX/SODA migration logic
+        // ICX->SODA migration logic
         if (direction.from === ICON_MAINNET_CHAIN_ID) {
           if (!sourceSpokeProvider) {
             throw new Error('ICON provider unavailable. Reconnect your ICON wallet.');
@@ -119,7 +57,7 @@ export function useMigrate() {
           throw new Error('ICX to SODA migration failed. Please try again.');
         }
 
-        // SODA to ICX migration
+        // SODA->ICX migration
         if (!sourceSpokeProvider) {
           throw new Error('Sonic provider unavailable. Reconnect your Sonic wallet.');
         }
@@ -140,10 +78,7 @@ export function useMigrate() {
       }
 
       // bnUSD migration logic - handle dynamic source/destination chains
-      const isFromIcon = direction.from === ICON_MAINNET_CHAIN_ID;
-      const isToIcon = direction.to === ICON_MAINNET_CHAIN_ID;
-
-      if (isFromIcon) {
+      if (direction.from === ICON_MAINNET_CHAIN_ID) {
         // ICON to any other chain bnUSD migration
         if (!sourceSpokeProvider) {
           throw new Error(`${getChainDisplayName(direction.from)} provider unavailable. Reconnect your wallet.`);

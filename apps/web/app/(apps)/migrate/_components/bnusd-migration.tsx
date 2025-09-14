@@ -24,8 +24,6 @@ import { useModalStore } from '@/stores/modal-store-provider';
 export default function BnusdMigration() {
   const openModal = useModalStore(state => state.openModal);
 
-  const { sodax } = useSodaxContext();
-
   const { error } = useMigrationInfo();
   const migrationMode = useMigrationStore(state => state.migrationMode);
   const direction = useMigrationStore(state => state[migrationMode].direction);
