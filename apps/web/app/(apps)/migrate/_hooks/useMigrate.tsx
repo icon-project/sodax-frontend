@@ -4,6 +4,7 @@ import {
   type UnifiedBnUSDMigrateParams,
   type IconSpokeProvider,
   type SonicSpokeProvider,
+  isLegacybnUSDToken,
 } from '@sodax/sdk';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk-react';
@@ -79,7 +80,7 @@ export function useMigrate() {
       }
 
       // bnUSD migration logic - handle dynamic source/destination chains
-      if (direction.from === ICON_MAINNET_CHAIN_ID) {
+      if (isLegacybnUSDToken(currencies.from)) {
         // ICON to any other chain bnUSD migration
         if (!sourceSpokeProvider) {
           throw new Error(`${getChainDisplayName(direction.from)} provider unavailable. Reconnect your wallet.`);
@@ -104,6 +105,7 @@ export function useMigrate() {
       if (!sourceSpokeProvider) {
         throw new Error(`${getChainDisplayName(direction.from)} provider unavailable. Reconnect your wallet.`);
       }
+
       const params = {
         srcChainId: direction.from,
         dstChainId: direction.to,
@@ -112,26 +114,7 @@ export function useMigrate() {
         amount: amountToMigrate,
         to: destinationAddress as `hx${string}` | `0x${string}`,
       } satisfies UnifiedBnUSDMigrateParams;
-      const isAllowed = await sodax.migration.isAllowanceValid(params, 'revert', sourceSpokeProvider);
 
-      if (!isAllowed.ok) {
-        console.error('Failed to check allowance:', isAllowed.error);
-      } else if (!isAllowed.value) {
-        // Approve if needed
-        const approveResult = await sodax.migration.approve(params, 'revert', sourceSpokeProvider);
-
-        if (approveResult.ok) {
-          // Wait for approval transaction to be mined (only for EVM chains)
-          if ('waitForTransactionReceipt' in sourceSpokeProvider.walletProvider) {
-            await (
-              sourceSpokeProvider.walletProvider as { waitForTransactionReceipt: (hash: string) => Promise<unknown> }
-            ).waitForTransactionReceipt(approveResult.value);
-          }
-        } else {
-          console.error('Failed to approve tokens:', approveResult.error);
-          return;
-        }
-      }
       const result = await sodax.migration.migratebnUSD(params, sourceSpokeProvider, 30000);
       if (result.ok) {
         const [spokeTxHash, hubTxHash] = result.value;
