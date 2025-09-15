@@ -77,16 +77,6 @@ const Sidebar = ({
               <p>About</p>
             </Link>
           </li>
-          {/* <li>
-            <Link href="https://x.com/gosodax" onClick={toggle}>
-              <p>Partners</p>
-            </Link>
-          </li>
-          <li>
-            <Link href="https://discord.gg/xM2Nh4S6vN" onClick={toggle}>
-              <p>Community</p>
-            </Link>
-          </li> */}
         </ul>
       </div>
     </>

@@ -78,16 +78,6 @@ export function Header({ isSidebarOpen, toggleSidebar }: HeaderProps): React.JSX
                 About
               </span>
             </Link>
-            <Link href="/">
-              <span className="text-cream font-[InterMedium] hover:text-vibrant-white cursor-pointer text-(size:--body-comfortable)">
-                Partners
-              </span>
-            </Link>
-            <Link href="/">
-              <span className="text-cream font-[InterMedium] hover:text-vibrant-white cursor-pointer text-(size:--body-comfortable)">
-                Community
-              </span>
-            </Link>
           </div>
           <div className="inline-flex justify-center items-start relative mr-2 ml-5">
             {connectedWalletsCount >= 1 ? (
