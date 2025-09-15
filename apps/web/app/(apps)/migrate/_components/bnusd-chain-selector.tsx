@@ -90,19 +90,15 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
         className="w-full md:max-w-[480px] shadow-none bg-vibrant-white gap-4 p-12 min-h-60 block"
         hideCloseButton
       >
-        {/* <DialogHeader> */}
-        {/* <div className="flex flex-row justify-between items-center w-full"> */}
-        <div className="inline-flex justify-start items-center w-full h-6 gap-2 mb-4">
-          <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
-          <DialogTitle className="mix-blend-multiply text-espresso font-['InterBold'] leading-snug text-(size:--body-super-comfortable) flex justify-between items-center w-full">
-            {type === 'INPUT' ? 'Migrate from' : 'Migrate to'}
+        <DialogTitle className="!pt-0 w-full mix-blend-multiply text-espresso font-['InterBold'] leading-snug text-(size:--body-super-comfortable) flex justify-between items-center w-full">
+          <div className="flex justify-start items-center gap-2 w-full">
+            <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
+            <span className="flex-1">{type === 'INPUT' ? 'Migrate from' : 'Migrate to'}</span>
             <DialogClose asChild>
               <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
             </DialogClose>
-          </DialogTitle>
-        </div>
-        {/* </div> */}
-        {/* </DialogHeader> */}
+          </div>
+        </DialogTitle>
         <Separator className="h-1 bg-clay opacity-30 mb-4" />
         <div className="grid grid-cols-2 md:grid-cols-3 gap-y-4">
           {availableChainsAndTokens.map(({ chainId, token, chainName }) => {
