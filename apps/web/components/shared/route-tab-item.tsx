@@ -14,6 +14,7 @@ interface RouteTabItemProps {
   isMobile?: boolean;
   setRef?: (el: HTMLAnchorElement | null) => void;
   className?: string;
+  enabled: boolean;
 }
 
 const RouteTabItem: React.FC<RouteTabItemProps> = ({
@@ -25,24 +26,20 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
   isMobile = false,
   setRef,
   className = '',
+  enabled,
 }) => {
-  // const isSoon = value !== 'migrate' && value !== 'swap';
-  const isSoon = false;
-
   const getTextClassName = (): string => {
     if (isMobile) {
       return `mix-blend-multiply font-normal leading-[1.4] ${
         isActive
           ? "text-espresso text-[13px] leading-[1.4] font-['Shrikhand']"
-          : // : isSoon
-            //   ? "text-clay-light font-medium font-['InterRegular'] text-[11px] leading-[1.4] opacity-60"
-            "text-clay font-medium font-['InterRegular'] text-[11px] leading-[1.4]"
+          : "text-clay font-medium font-['InterRegular'] text-[11px] leading-[1.4]"
       }`;
     }
     return `mix-blend-multiply justify-end leading-snug ${
       isActive
         ? "text-espresso font-['Shrikhand']"
-        : isSoon
+        : !enabled
           ? "text-clay-light font-['InterRegular'] opacity-60"
           : "text-clay font-['InterRegular']"
     }`;
@@ -63,18 +60,17 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
         >
           {label}
         </div>
-        {isMobile && isSoon && (
+        {isMobile && !enabled && (
           <span className="text-clay-light text-[11px] mix-blend-multiply leading-[1.4] font-['InterRegular']">
             (SOON)
           </span>
         )}
       </div>
-      {!isMobile && isSoon && <Badge variant="desktop">SOON</Badge>}
+      {!isMobile && !enabled && <Badge variant="desktop">SOON</Badge>}
     </div>
   );
 
-  // Render as non-clickable div for "soon" apps
-  if (isSoon) {
+  if (!enabled) {
     return (
       <div
         ref={setRef ? (el: HTMLDivElement | null) => setRef(el as HTMLAnchorElement | null) : undefined}
@@ -85,7 +81,6 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
     );
   }
 
-  // Render as clickable Link for available apps
   return (
     <Link
       href={href}

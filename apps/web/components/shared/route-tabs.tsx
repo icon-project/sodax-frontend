@@ -3,7 +3,47 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import RouteTabItem from '@/components/shared/route-tab-item';
 import { ArrowRightIcon, ArrowUpIcon } from '@/components/icons';
-import { tabConfigs } from '@/components/shared/tab-config';
+
+import type { TabIconType } from './tab-icon';
+
+export interface TabConfig {
+  value: string;
+  type: TabIconType;
+  label: string;
+  content: string;
+  enabled: boolean;
+}
+
+export const tabConfigs: TabConfig[] = [
+  {
+    value: 'swap',
+    type: 'swap',
+    label: 'Swap',
+    content: 'a quick swap',
+    enabled: false,
+  },
+  {
+    value: 'savings',
+    type: 'savings',
+    label: 'Savings',
+    content: 'a quick savings',
+    enabled: false,
+  },
+  {
+    value: 'loans',
+    type: 'loans',
+    label: 'Loans',
+    content: 'a quick loans',
+    enabled: false,
+  },
+  {
+    value: 'migrate',
+    type: 'migrate',
+    label: 'Migrate',
+    content: 'a quick migrate',
+    enabled: true,
+  },
+];
 
 export function RouteTabs(): React.JSX.Element {
   const pathname = usePathname();
@@ -80,6 +120,7 @@ export function RouteTabs(): React.JSX.Element {
                   isActive={active}
                   isMobile={false}
                   setRef={setDesktopTabRef(tab.value)}
+                  enabled={tab.enabled}
                 />
               );
             })}
@@ -108,6 +149,7 @@ export function RouteTabs(): React.JSX.Element {
                     isActive={active}
                     isMobile
                     setRef={setMobileTabRef(tab.value)}
+                    enabled={tab.enabled}
                   />
                 );
               })}
