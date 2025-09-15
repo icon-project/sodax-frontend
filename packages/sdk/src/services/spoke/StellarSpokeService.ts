@@ -125,9 +125,11 @@ export class StellarSpokeService {
         fee: BASE_FEE,
         networkPassphrase: network.passphrase,
       })
-        .addOperation(Operation.changeTrust({
-          asset: new Asset(asset?.assetCode, asset?.assetIssuer),
-        }))
+        .addOperation(
+          Operation.changeTrust({
+            asset: new Asset(asset?.assetCode, asset?.assetIssuer),
+          }),
+        )
         .setTimeout(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS)
         .build();
 
