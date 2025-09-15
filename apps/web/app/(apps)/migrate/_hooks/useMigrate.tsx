@@ -12,7 +12,7 @@ import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useMigrationStore } from '../_stores/migration-store-provider';
 import { useMutation } from '@tanstack/react-query';
 import { getChainDisplayName } from '../_utils/migration-utils';
-import { MIGRATION_MODE_ICX_SODA } from '../_stores/migration-store';
+import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA } from '../_stores/migration-store';
 
 export interface MigrationResult {
   spokeTxHash: string;
@@ -79,12 +79,12 @@ export function useMigrate() {
         throw new Error('SODA to ICX migration failed. Please try again.');
       }
 
-      // bnUSD migration logic - handle dynamic source/destination chains
-      if (isLegacybnUSDToken(currencies.from)) {
-        // ICON to any other chain bnUSD migration
+      if (migrationMode === MIGRATION_MODE_BNUSD) {
+        // bnUSD migration logic - handle dynamic source/destination chains
         if (!sourceSpokeProvider) {
           throw new Error(`${getChainDisplayName(direction.from)} provider unavailable. Reconnect your wallet.`);
         }
+
         const params = {
           srcChainId: direction.from,
           dstChainId: direction.to,
@@ -92,35 +92,19 @@ export function useMigrate() {
           dstbnUSD: currencies.to.address,
           amount: amountToMigrate,
           to: destinationAddress as `hx${string}` | `0x${string}`,
-        };
+        } satisfies UnifiedBnUSDMigrateParams;
+
         const result = await sodax.migration.migratebnUSD(params, sourceSpokeProvider, 30000);
         if (result.ok) {
           const [spokeTxHash, hubTxHash] = result.value;
           return { spokeTxHash, hubTxHash };
         }
-        throw new Error('bnUSD migration failed. Please try again.');
-      }
 
-      // Non-ICON to ICON or other chain bnUSD migration
-      if (!sourceSpokeProvider) {
-        throw new Error(`${getChainDisplayName(direction.from)} provider unavailable. Reconnect your wallet.`);
+        const errorMessage = isLegacybnUSDToken(currencies.from)
+          ? 'bnUSD migration failed. Please try again.'
+          : 'bnUSD reverse migration failed. Please try again.';
+        throw new Error(errorMessage);
       }
-
-      const params = {
-        srcChainId: direction.from,
-        dstChainId: direction.to,
-        srcbnUSD: currencies.from.address,
-        dstbnUSD: currencies.to.address,
-        amount: amountToMigrate,
-        to: destinationAddress as `hx${string}` | `0x${string}`,
-      } satisfies UnifiedBnUSDMigrateParams;
-
-      const result = await sodax.migration.migratebnUSD(params, sourceSpokeProvider, 30000);
-      if (result.ok) {
-        const [spokeTxHash, hubTxHash] = result.value;
-        return { spokeTxHash, hubTxHash };
-      }
-      throw new Error('bnUSD reverse migration failed. Please try again.');
     },
   });
 }
