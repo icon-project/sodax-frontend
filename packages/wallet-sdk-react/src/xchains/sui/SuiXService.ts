@@ -30,7 +30,17 @@ export class SuiXService extends XService {
         owner: address,
       });
       const tokenMap = xTokens.reduce((map, xToken) => {
-        const coinType = isNativeToken(xToken) ? '0x2::sui::SUI' : xToken.address;
+        let coinType = isNativeToken(xToken) ? '0x2::sui::SUI' : xToken.address;
+
+        //  TODO: hard coded for getting legacy bnUSD balance
+        if (
+          coinType ===
+          '0x03917a812fe4a6d6bc779c5ab53f8a80ba741f8af04121193fc44e0f662e2ceb::balanced_dollar::BALANCED_DOLLAR'
+        ) {
+          coinType =
+            '0x3917a812fe4a6d6bc779c5ab53f8a80ba741f8af04121193fc44e0f662e2ceb::balanced_dollar::BALANCED_DOLLAR';
+        }
+
         const balance = allBalances.find(b => b.coinType === coinType);
 
         if (balance) map[xToken.address] = balance.totalBalance;
