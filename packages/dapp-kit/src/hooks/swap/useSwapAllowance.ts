@@ -43,5 +43,6 @@ export function useSwapAllowance(
       return false;
     },
     enabled: !!spokeProvider && !!params,
+    refetchInterval: 2000,
   });
 }
