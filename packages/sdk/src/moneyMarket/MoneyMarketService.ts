@@ -21,6 +21,7 @@ import {
   SonicSpokeService,
   SolanaSpokeProvider,
   type RelayError,
+  StellarSpokeProvider,
 } from '../index.js';
 import type {
   EvmContractCall,
@@ -44,6 +45,7 @@ import invariant from 'tiny-invariant';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Token, type Address } from '@sodax/types';
 import { wrappedSonicAbi } from '../abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
+import { StellarSpokeService } from '../services/spoke/StellarSpokeService.js';
 
 export type MoneyMarketEncodeSupplyParams = {
   asset: Address; // The address of the asset to supply.
@@ -266,6 +268,12 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
+      if (spokeProvider instanceof StellarSpokeProvider && (params.action === 'supply' || params.action === 'repay')) {
+        return {
+          ok: true,
+          value: await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider),
+        };
+      }
       if (spokeProvider instanceof EvmSpokeProvider && (params.action === 'supply' || params.action === 'repay')) {
         return await Erc20Service.isAllowanceValid(
           params.token as GetAddressType<EvmSpokeProvider>,
@@ -374,6 +382,20 @@ export class MoneyMarketService {
       );
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
+
+      if (spokeProvider instanceof StellarSpokeProvider) {
+        invariant(
+          params.action === 'supply' || params.action === 'repay',
+          'Invalid action (only supply and repay are supported on stellar)',
+        );
+
+        const result = await StellarSpokeService.requestTrustline(params.token, params.amount, spokeProvider, raw);
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+        };
+      }
 
       if (spokeProvider instanceof EvmSpokeProvider) {
         invariant(

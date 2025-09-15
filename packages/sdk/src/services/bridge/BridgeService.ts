@@ -35,10 +35,12 @@ import {
   type OptionalTimeout,
   type GetAddressType,
   type BridgeServiceConfig,
+  StellarSpokeProvider,
 } from '../../index.js';
 import { isValidSpokeChainId, spokeChainConfig } from '../../constants.js';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { isAddress } from 'viem';
+import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
 
 export type CreateBridgeIntentParams = {
   srcChainId: SpokeChainId;
@@ -155,6 +157,23 @@ export class BridgeService {
         };
       }
 
+      if (spokeProvider instanceof StellarSpokeProvider) {
+        const allowanceResult = await StellarSpokeService.hasSufficientTrustline(params.srcAsset, params.amount, spokeProvider);
+        if (!allowanceResult) {
+          return {
+            ok: false,
+            error: {
+              code: 'ALLOWANCE_CHECK_FAILED',
+              error: allowanceResult,
+            },
+          };
+        }
+        return {
+          ok: true,
+          value: allowanceResult,
+        };
+      }
+
       // For Sonic chain, check ERC20 allowance against userRouter
       if (spokeProvider instanceof SonicSpokeProvider) {
         invariant(isAddress(params.srcAsset), 'Invalid source asset address for Sonic chain');
@@ -234,6 +253,14 @@ export class BridgeService {
         return {
           ok: true,
           value: result as TxReturnType<S, R>,
+        };
+      }
+
+      if (spokeProvider instanceof StellarSpokeProvider) {
+        const result = await StellarSpokeService.requestTrustline(params.srcAsset, params.amount, spokeProvider, raw);
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
         };
       }
 
