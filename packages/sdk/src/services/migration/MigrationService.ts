@@ -1,4 +1,5 @@
 import {
+  getIntentRelayChainId,
   isLegacybnUSDChainId,
   isLegacybnUSDToken,
   isNewbnUSDChainId,
@@ -41,9 +42,10 @@ import {
   type RelayExtraData,
   SolanaSpokeProvider,
   deriveUserWalletAddress,
+  waitUntilIntentExecuted,
   StellarSpokeProvider,
 } from '../../index.js';
-import { ICON_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 import { isAddress } from 'viem';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
 
@@ -175,7 +177,6 @@ export class MigrationService {
           value: true,
         };
       }
-
       if (action === 'revert') {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
         invariant(params.to.length > 0, 'To address is required');
@@ -199,6 +200,23 @@ export class MigrationService {
           );
         }
 
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          let spender: Address;
+          const wallet = await spokeProvider.walletProvider.getWalletAddress();
+          if (spokeProvider instanceof SonicSpokeProvider) {
+            spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
+          } else {
+            spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
+          }
+          return await Erc20Service.isAllowanceValid(
+            params.srcbnUSD as Address,
+            params.amount,
+            wallet as `0x${string}`,
+            spender,
+            evmSpokeProvider,
+          );
+        }
         if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
           return {
             ok: true,
@@ -441,6 +459,15 @@ export class MigrationService {
 
       if (!packetResult.ok) {
         return packetResult;
+      }
+
+      if (!(params.srcChainId === SONIC_MAINNET_CHAIN_ID || params.dstChainId === SONIC_MAINNET_CHAIN_ID)) {
+        await waitUntilIntentExecuted({
+          intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
+          spokeTxHash: packetResult.value.dst_tx_hash,
+          timeout: timeout,
+          apiUrl: this.config.relayerApiEndpoint,
+        });
       }
 
       return { ok: true, value: [spokeTxHash, packetResult.value.dst_tx_hash as Hex] };
