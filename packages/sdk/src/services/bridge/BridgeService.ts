@@ -158,7 +158,11 @@ export class BridgeService {
       }
 
       if (spokeProvider instanceof StellarSpokeProvider) {
-        const allowanceResult = await StellarSpokeService.hasSufficientTrustline(params.srcAsset, params.amount, spokeProvider);
+        const allowanceResult = await StellarSpokeService.hasSufficientTrustline(
+          params.srcAsset,
+          params.amount,
+          spokeProvider,
+        );
         if (!allowanceResult) {
           return {
             ok: false,
