@@ -14,6 +14,10 @@ Checks if the current allowance is sufficient for the bridge transaction.
 
 **Returns:** `Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>>`
 
+**Note**: For Stellar-based operations, the allowance system works differently:
+- **Source Chain (Stellar)**: The standard `isAllowanceValid` method works as expected for EVM chains, but for Stellar as the source chain, this method checks and establishes trustlines automatically.
+- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually check trustlines using `StellarSpokeService.hasSufficientTrustline` before executing bridge operations.
+
 **Example:**
 ```typescript
 const result = await sodax.bridge.isAllowanceValid({
@@ -46,6 +50,10 @@ Approves token spending for the bridge transaction. This method is only supporte
 
 **Returns:** `Promise<Result<TxReturnType<S, R>, BridgeError<'APPROVAL_FAILED'>>>`
 
+**Note**: For Stellar-based operations, the approval system works differently:
+- **Source Chain (Stellar)**: The standard `approve` method works as expected for EVM chains, but for Stellar as the source chain, this method establishes trustlines automatically.
+- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually establish trustlines using `StellarSpokeService.requestTrustline` before executing bridge operations.
+
 **Example:**
 ```typescript
 const result = await sodax.bridge.approve({
@@ -65,6 +73,37 @@ if (result.ok) {
   console.log('Approval transaction hash:', result.value);
 } else {
   console.error('Approval failed:', result.error);
+}
+```
+
+### Stellar Trustline Requirements
+
+For Stellar-based bridge operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain:
+
+```typescript
+import { StellarSpokeService } from "@sodax/sdk";
+
+// When Stellar is the destination chain, check and establish trustlines
+if (isStellarDestination) {
+  // Check if sufficient trustline exists for the destination token
+  const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
+    destinationTokenAddress,
+    amount,
+    stellarSpokeProvider
+  );
+
+  if (!hasTrustline) {
+    // Request trustline for the destination token
+    const trustlineResult = await StellarSpokeService.requestTrustline(
+      destinationTokenAddress,
+      amount,
+      stellarSpokeProvider,
+      false // false = execute transaction, true = return raw transaction
+    );
+    
+    // Wait for trustline transaction to be confirmed before proceeding
+    console.log('Trustline established:', trustlineResult);
+  }
 }
 ```
 
@@ -304,8 +343,9 @@ The typical bridge operation follows this sequence:
 
 1. **Check allowance** using `isAllowanceValid()`
 2. **Approve tokens** using `approve()` if needed
-3. **Execute bridge** using `bridge()` or `createBridgeIntent()` + manual relaying
-4. **Monitor progress** using the returned transaction hashes
+3. **For Stellar destination chains**: Check and establish trustlines using `StellarSpokeService.hasSufficientTrustline()` and `StellarSpokeService.requestTrustline()` if needed
+4. **Execute bridge** using `bridge()` or `createBridgeIntent()` + manual relaying
+5. **Monitor progress** using the returned transaction hashes
 
 ## Supported Chains
 
