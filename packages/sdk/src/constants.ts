@@ -1528,7 +1528,7 @@ export const hubAssets: Record<
       vault: hubVaults.sodaS.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].bnUSD]: {
-      asset: '0x289cDa1043b4Ce26BDCa3c12E534f56b24308A5B',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].bnUSD,
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
