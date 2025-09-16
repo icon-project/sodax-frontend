@@ -26,6 +26,12 @@ export function normaliseTokenAmount(amount: number | string | bigint, decimals:
     .toFixed(decimals, BigNumber.ROUND_DOWN);
 }
 
+export function formatTokenAmount(amount: number | string | bigint, decimals: number, displayDecimals = 2): string {
+  return new BigNumber(amount.toString())
+    .dividedBy(new BigNumber(10).pow(decimals))
+    .toFixed(displayDecimals, BigNumber.ROUND_DOWN);
+}
+
 export function calculateExchangeRate(amount: BigNumber, toAmount: BigNumber): BigNumber {
   return new BigNumber(1).dividedBy(amount).multipliedBy(toAmount);
 }
