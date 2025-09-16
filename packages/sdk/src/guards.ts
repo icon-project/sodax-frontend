@@ -1,4 +1,5 @@
 import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { ChainIdToIntentRelayChainId } from './constants.js';
 import type {
   JsonRpcPayloadResponse,
   ResponseAddressType,
@@ -18,30 +19,29 @@ import {
   EvmSpokeProvider,
   SonicSpokeProvider,
 } from './entities/index.js';
-import {
-  INTENT_RELAY_CHAIN_IDS,
-  type EvmHubChainConfig,
-  type EvmSpokeChainConfig,
-  type HubChainConfig,
-  type IconAddress,
-  type IntentRelayChainId,
-  type IntentError,
-  type MoneyMarketConfig,
-  type MoneyMarketConfigParams,
-  type Optional,
-  type PartnerFeeAmount,
-  type PartnerFeeConfig,
-  type PartnerFeePercentage,
-  type Prettify,
-  type SolverConfig,
-  type SolverConfigParams,
-  type SpokeChainConfig,
-  type MoneyMarketError,
-  type MoneyMarketUnknownError,
-  type IcxMigrateParams,
-  type UnifiedBnUSDMigrateParams,
-  type BalnMigrateParams,
-  type IcxCreateRevertMigrationParams,
+import type {
+  EvmHubChainConfig,
+  EvmSpokeChainConfig,
+  HubChainConfig,
+  IconAddress,
+  IntentRelayChainId,
+  IntentError,
+  MoneyMarketConfig,
+  MoneyMarketConfigParams,
+  Optional,
+  PartnerFeeAmount,
+  PartnerFeeConfig,
+  PartnerFeePercentage,
+  Prettify,
+  SolverConfig,
+  SolverConfigParams,
+  SpokeChainConfig,
+  MoneyMarketError,
+  MoneyMarketUnknownError,
+  IcxMigrateParams,
+  UnifiedBnUSDMigrateParams,
+  BalnMigrateParams,
+  IcxCreateRevertMigrationParams,
 } from './index.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
@@ -113,7 +113,7 @@ export function isIntentRelayChainId(value: bigint): value is IntentRelayChainId
   return (
     typeof value === 'bigint' &&
     value >= 0n &&
-    Object.values(INTENT_RELAY_CHAIN_IDS).includes(value as IntentRelayChainId)
+    Object.values(ChainIdToIntentRelayChainId).includes(value as IntentRelayChainId)
   );
 }
 

@@ -1,5 +1,5 @@
 import { defineChain, type Address, type Chain } from 'viem';
-import { arbitrum, avalanche, base, bsc, nibiru, optimism, polygon, sonic } from 'viem/chains';
+import { arbitrum, avalanche, base, bsc, nibiru, optimism, polygon, sonic, lightlinkPhoenix } from 'viem/chains';
 import type {
   InjectiveSpokeChainConfig,
   EvmChainId,
@@ -39,8 +39,9 @@ import {
   STELLAR_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
   type HubChainId,
-  SPOKE_CHAIN_IDS,
+  CHAIN_IDS,
   HYPEREVM_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -61,24 +62,6 @@ export const DEFAULT_BACKEND_API_HEADERS = {
 
 export const VAULT_TOKEN_DECIMALS = 18;
 
-// NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
-export const INTENT_RELAY_CHAIN_IDS = {
-  AVAX: 6n,
-  SUI: 21n,
-  SONIC: 146n,
-  STELLAR: 27n,
-  INJ: 19n,
-  SOL: 1n,
-  ICON: 1768124270n,
-  BASE: 30n,
-  BINANCE: 4n,
-  OPTIMISM: 24n,
-  POLYGON: 5n,
-  ARBITRUM: 23n,
-  NIBIRU: 7235938n,
-  HYPER: 26745n,
-} as const;
-
 export const EVM_CHAIN_IDS = [
   AVALANCHE_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -89,35 +72,26 @@ export const EVM_CHAIN_IDS = [
   POLYGON_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
 ] as const;
 
-export const EVM_SPOKE_CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  HYPEREVM_MAINNET_CHAIN_ID,
-] as const;
-
-export const ChainIdToIntentRelayChainId: Record<ChainId, IntentRelayChainId> = {
-  [AVALANCHE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.AVAX,
-  [ARBITRUM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ARBITRUM,
-  [BASE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.BASE,
-  [BSC_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.BINANCE,
-  [INJECTIVE_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.INJ,
-  [SONIC_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SONIC,
-  [OPTIMISM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.OPTIMISM,
-  [POLYGON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.POLYGON,
-  [SOLANA_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SOL,
-  [SUI_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.SUI,
-  [STELLAR_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.STELLAR,
-  [ICON_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.ICON,
-  [NIBIRU_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.NIBIRU,
-  [HYPEREVM_MAINNET_CHAIN_ID]: INTENT_RELAY_CHAIN_IDS.HYPER,
+// NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
+export const ChainIdToIntentRelayChainId = {
+  [AVALANCHE_MAINNET_CHAIN_ID]: 6n,
+  [ARBITRUM_MAINNET_CHAIN_ID]: 23n,
+  [BASE_MAINNET_CHAIN_ID]: 30n,
+  [BSC_MAINNET_CHAIN_ID]: 4n,
+  [INJECTIVE_MAINNET_CHAIN_ID]: 19n,
+  [SONIC_MAINNET_CHAIN_ID]: 146n,
+  [OPTIMISM_MAINNET_CHAIN_ID]: 24n,
+  [POLYGON_MAINNET_CHAIN_ID]: 5n,
+  [SOLANA_MAINNET_CHAIN_ID]: 1n,
+  [SUI_MAINNET_CHAIN_ID]: 21n,
+  [STELLAR_MAINNET_CHAIN_ID]: 27n,
+  [ICON_MAINNET_CHAIN_ID]: 1768124270n,
+  [NIBIRU_MAINNET_CHAIN_ID]: 7235938n,
+  [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
+  [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -168,6 +142,8 @@ export function getEvmViemChain(id: EvmChainId): Chain {
       return nibiru;
     case HYPEREVM_MAINNET_CHAIN_ID:
       return hyper;
+    case LIGHTLINK_MAINNET_CHAIN_ID:
+      return lightlinkPhoenix;
     default:
       throw new Error(`Unsupported EVM chain ID: ${id}`);
   }
@@ -893,6 +869,119 @@ export const spokeChainConfig = {
       },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
+  [LIGHTLINK_MAINNET_CHAIN_ID]: {
+    chain: {
+      name: 'lightlink phoenix',
+      id: LIGHTLINK_MAINNET_CHAIN_ID,
+      type: 'EVM',
+    },
+    addresses: {
+      assetManager: '0x4A1C82744cDDeE675A255fB289Cb0917A482e7C7',
+      connection: '0x6D2126DB97dd88AfA85127253807D04A066b6746',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
+    bnUSD: '0x36134A03dcD03Bbe858B8F7ED28a71AAC608F9E7',
+    supportedTokens: {
+      ETH: {
+        symbol: 'ETH',
+        name: 'ETH',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '0x36134A03dcD03Bbe858B8F7ED28a71AAC608F9E7',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      SODA: {
+        symbol: 'SODA',
+        name: 'SODAX',
+        decimals: 18,
+        address: '0x6BC8C37cba91F76E68C9e6d689A9C21E4d32079B',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      USDC: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0xbCF8C1B03bBDDA88D579330BDF236B58F8bb2cFd',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'BTC.LL': {
+        symbol: 'BTC.LL',
+        name: 'Bitcoin LightLINK',
+        decimals: 18,
+        address: '0x5E921D8B7709b409132628258A53449D1fD82341',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'AVAX.LL': {
+        symbol: 'AVAX.LL',
+        name: 'Avalanche LightLINK',
+        decimals: 18,
+        address: '0x373d9c5390535e9e30185E52826d45b76df09aBb',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'BNB.LL': {
+        symbol: 'BNB.LL',
+        name: 'BNB LightLINK',
+        decimals: 18,
+        address: '0xe80c2B7674dCdF47b199697E2c61730231b8da89',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'SOL.LL': {
+        symbol: 'SOL.LL',
+        name: 'Solana LightLINK',
+        decimals: 18,
+        address: '0xba9af7029Ae5c1054Fc367d5D6a47Dc3D5c0D6bA',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'XLM.LL': {
+        symbol: 'XLM.LL',
+        name: 'Stellar LightLINK',
+        decimals: 18,
+        address: '0x03beDD719b6d8de11f5B2671b2f30085a626F8Da',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'INJ.LL': {
+        symbol: 'INJ.LL',
+        name: 'Injective LightLINK',
+        decimals: 18,
+        address: '0x8a4C8B1A899Fa9D9246a112E8D43EC0C97b77B8C',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'SUI.LL': {
+        symbol: 'SUI.LL',
+        name: 'Sui LightLINK',
+        decimals: 18,
+        address: '0x59e68e2F5147F74F27FD173397a7419C1e5d9999',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'S.LL': {
+        symbol: 'S.LL',
+        name: 'Sonic LightLINK',
+        decimals: 18,
+        address: '0xb3A47798CB6585Ea0d31a7986f2a04b25C60247f',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'POL.LL': {
+        symbol: 'POL.LL',
+        name: 'Polygon LightLINK',
+        decimals: 18,
+        address: '0xE963bfb4757fC8Ae66BC68E11e636f8fbafAfCb4',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+      'HYPE.LL': {
+        symbol: 'HYPE.LL',
+        name: 'HyperEVM LightLINK',
+        decimals: 18,
+        address: '0x127b64fb645279F8aca786c507b94dde81F02d16',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
+    } as const,
+  } as const satisfies EvmSpokeChainConfig,
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'inj1dg6tm62uup53wn2kn97caeqfwt0sukx3qjk8rw',
@@ -1191,6 +1280,7 @@ export const hubVaults = {
     reserves: [
       // hub asset addresses contained in the vault
       '0x039e2fb66102314ce7b64ce5ce3e5183bc94ad38',
+      '0xb592d2631ccf245119532e025d11188cfadb6777',
     ] as const,
   },
   [SodaTokens.sodaNIBI.symbol]: {
@@ -1279,6 +1369,7 @@ export const hubVaults = {
       '0xdcd9578b51ef55239b6e68629d822a8d97c95b86', // Arbitrum ETH hub asset
       '0x57fc2ac5701e463ae261adbd6c99fbeb48ce5293', // BSC ETH hub asset
       '0x50c42deacd8fc9773493ed674b675be577f2634b', // Sonic WETH hub asset
+      '0x19920ef8fe1a9d51fdb0914abbb2f970c74dca68', // Lightlink ETH hub asset
     ] as const,
   },
   [SodaTokens.sodaBTC.symbol]: {
@@ -1382,7 +1473,7 @@ export const bnUSDLegacySpokeChainIds = [
   SUI_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
 ] as const;
-export const newbnUSDSpokeChainIds = SPOKE_CHAIN_IDS.filter(chainId => chainId !== ICON_MAINNET_CHAIN_ID);
+export const newbnUSDSpokeChainIds = CHAIN_IDS.filter(chainId => chainId !== ICON_MAINNET_CHAIN_ID);
 export const bnUSDLegacyTokens = [
   spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
@@ -1430,14 +1521,14 @@ export const hubAssets: Record<
 > = {
   [SONIC_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S.address,
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
       decimal: 18,
       symbol: 'S',
       name: 'Sonic',
       vault: hubVaults.sodaS.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].bnUSD]: {
-      asset: '0x289cDa1043b4Ce26BDCa3c12E534f56b24308A5B',
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].bnUSD,
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
@@ -1804,6 +1895,106 @@ export const hubAssets: Record<
       vault: hubVaults.sodaSODA.address,
     },
   },
+  [LIGHTLINK_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0x19920ef8fe1a9d51fdb0914abbb2f970c74dca68',
+      decimal: 18,
+      symbol: 'ETH',
+      name: 'ETH',
+      vault: hubVaults.sodaETH.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0x14ab2ab7a76838b9205488efc3f700d0632ce8c7',
+      decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: hubVaults.bnUSD.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
+      asset: '0xe4faab621fb6716e32057b7ea7356219936519ac',
+      decimal: 18,
+      symbol: 'SODA',
+      name: 'SODAX',
+      vault: hubVaults.sodaSODA.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
+      asset: '0xe5159e2a89aeec2fc63d6c25adda3541670af101',
+      decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      vault: hubVaults.sodaUSDC.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['BTC.LL'].address]: {
+      asset: '0x54582cdb0c145398b532e34f0851ffc1bbc88b4e',
+      decimal: 18,
+      symbol: 'BTC.LL',
+      name: 'Bitcoin LightLINK',
+      vault: hubVaults.sodaBTC.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['AVAX.LL'].address]: {
+      asset: '0x415ff3ea8c905ef65cd82665c5534d0e4ff9221a',
+      decimal: 18,
+      symbol: 'AVAX.LL',
+      name: 'Avalanche LightLINK',
+      vault: hubVaults.sodaAVAX.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['BNB.LL'].address]: {
+      asset: '0xd32e524da9d64db4c37a50f1ee197b591e97dc05',
+      decimal: 18,
+      symbol: 'BNB.LL',
+      name: 'BNB LightLINK',
+      vault: hubVaults.sodaBNB.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SOL.LL'].address]: {
+      asset: '0xd70c16f1e2c4207dc4c44bc69c8a1b82b50cf9e2',
+      decimal: 18,
+      symbol: 'SOL.LL',
+      name: 'Solana LightLINK',
+      vault: hubVaults.sodaSOL.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['XLM.LL'].address]: {
+      asset: '0x18008b18964bc2c90521a7596ff9988743c97fd4',
+      decimal: 18,
+      symbol: 'XLM.LL',
+      name: 'Stellar LightLINK',
+      vault: hubVaults.sodaXLM.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['INJ.LL'].address]: {
+      asset: '0xb036daab0c772b080babb84b8695c3ca858925b6',
+      decimal: 18,
+      symbol: 'INJ.LL',
+      name: 'Injective LightLINK',
+      vault: hubVaults.sodaINJ.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SUI.LL'].address]: {
+      asset: '0x425852cca84e5f44d7b8ebb964b21bde585b4571',
+      decimal: 18,
+      symbol: 'SUI.LL',
+      name: 'Sui LightLINK',
+      vault: hubVaults.sodaSUI.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['S.LL'].address]: {
+      asset: '0xb592d2631ccf245119532e025d11188cfadb6777',
+      decimal: 18,
+      symbol: 'S.LL',
+      name: 'Sonic LightLINK',
+      vault: hubVaults.sodaS.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['POL.LL'].address]: {
+      asset: '0x15ba35f87f259b9b50d53a2fec271bb10020b090',
+      decimal: 18,
+      symbol: 'POL.LL',
+      name: 'Polygon LightLINK',
+      vault: hubVaults.sodaPOL.address,
+    },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'].address]: {
+      asset: '0xea7e97b4597f724844426c32248ba80bd29c75f8',
+      decimal: 18,
+      symbol: 'HYPE.LL',
+      name: 'HyperEVM LightLINK',
+      vault: hubVaults.sodaHYPE.address,
+    },
+  },
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ.address]: {
       asset: '0xd375590b4955f6ea5623f799153f9b787a3bd319',
@@ -1993,7 +2184,7 @@ export const hubAssets: Record<
       decimal: 18,
       symbol: 'wICX',
       name: 'ICON',
-      vault: '0x0000000000000000000000000000000000000000',
+      vault: '0x',
     },
     [spokeChainConfig[ICON_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x654dddf32a9a2ac53f5fb54bf1e93f66791f8047',
@@ -2078,6 +2269,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
   [HYPEREVM_MAINNET_CHAIN_ID]: [] as const satisfies Token[],
+  [LIGHTLINK_MAINNET_CHAIN_ID]: [] as const satisfies Token[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
@@ -2193,6 +2385,21 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
+  [LIGHTLINK_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.ETH,
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['AVAX.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['BNB.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SOL.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['XLM.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['INJ.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SUI.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['S.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['POL.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.SODA,
+  ] as const,
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
@@ -2283,7 +2490,7 @@ export const supportedHubAssets: Set<Address> = new Set(
 export const supportedSodaAssets: Set<Address> = new Set(
   Object.values(hubAssets).flatMap(assets => Object.values(assets).map(info => info.vault.toLowerCase() as Address)),
 );
-export const spokeChainIdsSet = new Set(SPOKE_CHAIN_IDS);
+export const spokeChainIdsSet = new Set(CHAIN_IDS);
 
 // Returns the first hub asset info for a given chainId whose vault address matches the provided vault address (case-insensitive)
 export const getOriginalAssetInfoFromVault = (chainId: SpokeChainId, vault: Address): OriginalAssetAddress[] => {
@@ -2319,7 +2526,7 @@ export const isValidChainHubAsset = (chainId: SpokeChainId, hubAsset: Address): 
   chainIdToHubAssetsMap.get(chainId)?.has(hubAsset.toLowerCase() as Address) ?? false;
 export const isValidSpokeChainId = (chainId: SpokeChainId): boolean => spokeChainIdsSet.has(chainId);
 export const isValidIntentRelayChainId = (chainId: bigint): boolean =>
-  Object.values(INTENT_RELAY_CHAIN_IDS).some(id => id === chainId);
+  Object.values(ChainIdToIntentRelayChainId).some(id => id === chainId);
 export const supportedHubChains: HubChainId[] = Object.keys(hubChainConfig) as HubChainId[];
 export const supportedSpokeChains: SpokeChainId[] = Object.keys(spokeChainConfig) as SpokeChainId[];
 export const intentRelayChainIdToSpokeChainIdMap: Map<IntentRelayChainId, SpokeChainId> = new Map(

@@ -16,7 +16,13 @@ import { Erc20Service, EvmSolverService, type CreateIntentParams, type Intent } 
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
 import { getHubAssetInfo, getIntentRelayChainId } from '../../constants.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
-import type { EvmRawTransaction, Hex, HubAddress, SpokeChainId } from '@sodax/types';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  type EvmRawTransaction,
+  type Hex,
+  type HubAddress,
+  type SpokeChainId,
+} from '@sodax/types';
 import type { MoneyMarketDataService } from '../../moneyMarket/MoneyMarketDataService.js';
 import invariant from 'tiny-invariant';
 import { encodeAddress, randomUint256 } from '../../utils/shared-utils.js';
@@ -182,16 +188,12 @@ export class SonicSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): Promise<[TxReturnType<SonicSpokeProvider, R>, Intent, bigint, Hex]> {
-    let inputToken = getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset;
+    const inputToken = createIntentParams.inputToken as `0x${string}`;
 
-    if (
-      createIntentParams.srcChain === hubProvider.chainConfig.chain.id &&
-      createIntentParams.inputToken.toLowerCase() === hubProvider.chainConfig.nativeToken.toLowerCase()
-    ) {
-      inputToken = hubProvider.chainConfig.nativeToken;
-    }
-
-    const outputToken = getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset;
+    const outputToken =
+      createIntentParams.dstChain !== SONIC_MAINNET_CHAIN_ID
+        ? getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset
+        : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(
       inputToken,
