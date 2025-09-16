@@ -19,11 +19,19 @@ import {
   type CreateBridgeIntentParams,
   POLYGON_MAINNET_CHAIN_ID,
   spokeChainConfig,
+  STELLAR_MAINNET_CHAIN_ID,
+  StellarSpokeProvider,
   supportedSpokeChains,
   supportedTokensPerChain,
 } from '@sodax/sdk';
 import type { ChainType, SpokeChainId, XToken } from '@sodax/types';
-import { getXChainType, useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk-react';
+import {
+  getXChainType,
+  useEvmSwitchChain,
+  useWalletProvider,
+  useXAccount,
+  useXDisconnect,
+} from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import { normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
@@ -35,6 +43,8 @@ import {
   useGetBridgeableAmount,
   useGetBridgeableTokens,
   useSodaxContext,
+  useStellarTrustlineCheck,
+  useRequestTrustline,
 } from '@sodax/dapp-kit';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -69,14 +79,6 @@ export default function BridgePage() {
     // Only run when bridgeableTokens changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bridgeableTokens]);
-
-  if (bridgeableTokens && bridgeableTokens.length > 0) {
-    console.log('Bridgable tokens params: ');
-    console.log('fromToken', fromToken);
-    console.log('toTokenChainId', toTokenChainId);
-    console.log('fromToken.address', fromToken.address);
-    console.log('bridgeableTokens', bridgeableTokens);
-  }
 
   const handleFromChainChange = (chainId: SpokeChainId) => {
     const newToken = Object.values(spokeChainConfig[chainId].supportedTokens)[0];
@@ -141,6 +143,21 @@ export default function BridgePage() {
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(fromToken.xChainId);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useBridgeAllowance(order, fromProvider);
   const { mutateAsync: bridge, isPending: isBridging } = useBridge(fromProvider);
+  const destProvider = useSpokeProvider(order?.dstChainId, useWalletProvider(order?.dstChainId));
+  const {
+    data: hasSufficientTrustline,
+    isPending: isTrustlineLoading,
+    error: trustlineError,
+  } = useStellarTrustlineCheck(
+    order?.dstAsset,
+    scaleTokenAmount(fromAmount, toToken?.decimals ?? 0),
+    destProvider,
+    order?.dstChainId,
+  );
+  if (trustlineError) {
+    console.error('trustlineError', trustlineError);
+  }
+  const { mutateAsync: requestTrustline } = useRequestTrustline(order?.dstAsset);
 
   const handleBridge = async (order: CreateBridgeIntentParams) => {
     setOpen(false);
@@ -171,6 +188,34 @@ export default function BridgePage() {
       to: toToken,
     });
   }, [fromToken, toToken, sodax]);
+
+  const handleRequestTrustline = async (order: CreateBridgeIntentParams | undefined) => {
+    // if destination token is a Stellar asset, request trustline
+    if (!order) {
+      console.error('intentOrderPayload undefined');
+      return;
+    }
+
+    if (!destProvider || !(destProvider instanceof StellarSpokeProvider)) {
+      console.error('destProvider undefined or not a StellarSpokeProvider');
+      return;
+    }
+
+    if (!toToken) {
+      console.error('toToken undefined');
+      return;
+    }
+    if (!fromAmount) {
+      console.error('fromAmount undefined');
+      return;
+    }
+
+    await requestTrustline({
+      token: order.dstAsset,
+      amount: scaleTokenAmount(fromAmount, toToken?.decimals ?? 0),
+      spokeProvider: destProvider,
+    });
+  };
 
   return (
     <div className="flex flex-col items-center content-center justify-center h-screen">
@@ -322,6 +367,9 @@ export default function BridgePage() {
               <div>inputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
               <div>amount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
               <div>outputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+              {order?.dstChainId === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+                <div className="text-red-500">Insufficient Stellar trustline (request trustline to proceed)</div>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -334,6 +382,12 @@ export default function BridgePage() {
             >
               {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
             </Button>
+            {isTrustlineLoading && order?.dstChainId === STELLAR_MAINNET_CHAIN_ID && <span>Checking trustline...</span>}
+            {order?.dstChainId === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+              <Button className="w-full" onClick={() => handleRequestTrustline(order)} disabled={isTrustlineLoading}>
+                Request Trustline
+              </Button>
+            )}
 
             {isWrongChain && (
               <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
