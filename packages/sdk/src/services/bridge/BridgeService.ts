@@ -36,10 +36,11 @@ import {
   type GetAddressType,
   type BridgeServiceConfig,
   StellarSpokeProvider,
+  wrappedSonicAbi,
 } from '../../index.js';
 import { isValidSpokeChainId, spokeChainConfig } from '../../constants.js';
 import type { SpokeChainId, XToken } from '@sodax/types';
-import { isAddress } from 'viem';
+import { encodeFunctionData, isAddress } from 'viem';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
 
 export type CreateBridgeIntentParams = {
@@ -519,7 +520,20 @@ export class BridgeService {
     const encodedRecipientAddress = encodeAddress(params.dstChainId, params.recipient);
     // If the destination chain is Sonic, we can directly transfer the tokens to the recipient
     if (params.dstChainId === this.hubProvider.chainConfig.chain.id) {
-      calls.push(Erc20Service.encodeTransfer(dstAssetInfo.asset, encodedRecipientAddress, translatedWithdrawAmount));
+      // If destination token is S, then unwrap and send S to the recipient
+      if (params.dstAsset.toLowerCase() === this.hubProvider.chainConfig.nativeToken.toLowerCase()) {
+        calls.push({
+          address: dstAssetInfo.asset,
+          value: 0n,
+          data: encodeFunctionData({
+            abi: wrappedSonicAbi,
+            functionName: 'withdrawTo',
+            args: [encodedRecipientAddress, translatedWithdrawAmount],
+          }),
+        });
+      } else {
+        calls.push(Erc20Service.encodeTransfer(dstAssetInfo.asset, encodedRecipientAddress, translatedWithdrawAmount));
+      }
     } else {
       invariant(dstAssetInfo, `Unsupported hub chain (${params.dstChainId}) token: ${params.dstAsset}`);
       calls.push(
