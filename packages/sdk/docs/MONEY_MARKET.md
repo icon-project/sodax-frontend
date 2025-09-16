@@ -30,7 +30,11 @@ Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider)
 
 ## Allowance and Approval
 
-Before making a money market action (supply, repay, withdraw, borrow), you need to ensure the money market contract has sufficient allowance to spend your tokens. The SDK provides methods to check and set allowances for different types of spoke providers:
+Before making a money market action (supply, repay, withdraw, borrow), you need to ensure the money market contract has sufficient allowance to spend your tokens. The SDK provides methods to check and set allowances for different types of spoke providers.
+
+**Note**: For Stellar-based operations, the allowance and approval system works differently:
+- **Source Chain (Stellar)**: The standard `isAllowanceValid` and `approve` methods work as expected for EVM chains, but for Stellar as the source chain, these methods check and establish trustlines automatically.
+- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually establish trustlines before executing money market actions using `StellarSpokeService.hasSufficientTrustline` and `StellarSpokeService.requestTrustline` functions.
 
 ### Checking Allowance
 
@@ -114,6 +118,37 @@ The allowance and approval system supports different actions depending on the sp
 - `repay` - Approves the user router contract to spend tokens  
 - `withdraw` - Approves the withdraw operation using SonicSpokeService
 - `borrow` - Approves the borrow operation using SonicSpokeService
+
+### Stellar Trustline Requirements
+
+For Stellar-based money market operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain:
+
+```typescript
+import { StellarSpokeService } from "@sodax/sdk";
+
+// When Stellar is the destination chain, check and establish trustlines
+if (isStellarDestination) {
+  // Check if sufficient trustline exists for the destination token
+  const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
+    destinationTokenAddress,
+    amount,
+    stellarSpokeProvider
+  );
+
+  if (!hasTrustline) {
+    // Request trustline for the destination token
+    const trustlineResult = await StellarSpokeService.requestTrustline(
+      destinationTokenAddress,
+      amount,
+      stellarSpokeProvider,
+      false // false = execute transaction, true = return raw transaction
+    );
+    
+    // Wait for trustline transaction to be confirmed before proceeding
+    console.log('Trustline established:', trustlineResult);
+  }
+}
+```
 
 ### Complete Example
 

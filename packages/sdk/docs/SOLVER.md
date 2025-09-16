@@ -182,6 +182,38 @@ if (!isApproved.ok) {
 
 **Important**: The approval amount is now the same as the `inputAmount` specified in your intent parameters. The fee is automatically deducted from this amount during intent creation, so you only need to approve the exact amount you want to swap.
 
+### Stellar Trustline Requirements
+
+For Stellar-based operations, the allowance and approval system works differently:
+
+- **Source Chain (Stellar)**: The standard `isAllowanceValid` and `approve` methods work as expected for EVM chains, but for Stellar as the source chain, these methods check and establish trustlines instead.
+
+- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually establish trustlines before executing actions like swaps, money market operations, or bridging. Use the Stellar-specific methods:
+
+```typescript
+import { StellarSpokeService } from "@sodax/sdk";
+
+// Check if sufficient trustline exists for the destination token
+const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
+  destinationTokenAddress,
+  amount,
+  stellarSpokeProvider
+);
+
+if (!hasTrustline) {
+  // Request trustline for the destination token
+  const trustlineResult = await StellarSpokeService.requestTrustline(
+    destinationTokenAddress,
+    amount,
+    stellarSpokeProvider,
+    false // false = execute transaction, true = return raw transaction
+  );
+  
+  // Wait for trustline transaction to be confirmed before proceeding
+  console.log('Trustline established:', trustlineResult);
+}
+```
+
 ### Estimate Gas for Raw Transactions
 
 The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for intent creation and approval transactions to provide users with accurate gas estimates.

@@ -93,11 +93,21 @@ export class StellarSpokeService {
       return false;
     }
 
-    const availableTrustAmount: bigint = parseToStroops(tokenBalance.limit) - parseToStroops(tokenBalance.balance);
+    const limit = parseToStroops(tokenBalance.limit);
+    const balance = parseToStroops(tokenBalance.balance);
+    const availableTrustAmount: bigint = limit - balance;
 
     return availableTrustAmount >= amount;
   }
 
+  /**
+   * Request a trustline for a given token and amount.
+   * @param token - The token address to request the trustline for.
+   * @param amount - The amount of tokens to request the trustline for.
+   * @param spokeProvider - The spoke provider.
+   * @param raw - Whether to return the raw transaction data.
+   * @returns The transaction result.
+   */
   public static async requestTrustline<R extends boolean = false>(
     token: string,
     amount: bigint,
