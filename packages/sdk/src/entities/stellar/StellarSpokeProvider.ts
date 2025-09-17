@@ -9,24 +9,20 @@ import {
   scValToBigInt,
   Horizon,
   Account,
-} from '@stellar/stellar-sdk';
-import type { HttpUrl, PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
-import { toHex, type Hex } from 'viem';
-import type { ISpokeProvider } from '../Providers.js';
-import type { IStellarWalletProvider } from '@sodax/types';
-import {
   type FeeBumpTransaction,
-  type Memo,
-  type MemoType,
   Operation,
   SorobanRpc,
   type xdr,
   type Transaction,
 } from '@stellar/stellar-sdk';
-import type { Api } from '@stellar/stellar-sdk/rpc';
+import type { HttpUrl, PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
+import { toHex, type Hex } from 'viem';
+import type { ISpokeProvider } from '../Providers.js';
+import type { IStellarWalletProvider } from '@sodax/types';
 import { STELLAR_DEFAULT_TX_TIMEOUT_SECONDS, STELLAR_PRIORITY_FEE } from '../../constants.js';
+import { CustomSorobanServer } from './CustomSorobanServer.js';
 
-class CustomStellarAccount {
+export class CustomStellarAccount {
   private readonly accountId: string;
   private sequenceNumber: bigint;
   private readonly startingSequenceNumber: bigint;
@@ -69,114 +65,6 @@ class CustomStellarAccount {
 
   resetSequenceNumber(): void {
     this.sequenceNumber = this.startingSequenceNumber;
-  }
-}
-
-class CustomSorobanServer extends SorobanRpc.Server {
-  private customHeaders: Record<string, string>;
-
-  constructor(serverUrl: string, customHeaders: Record<string, string>) {
-    super(serverUrl, {
-      allowHttp: true,
-    });
-    this.customHeaders = customHeaders;
-  }
-
-  override async getNetwork(): Promise<Api.GetNetworkResponse> {
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.customHeaders,
-      },
-      body: JSON.stringify({
-        id: 1,
-        jsonrpc: '2.0',
-        method: 'getNetwork',
-      }),
-    };
-
-    const response = await fetch(`${this.serverURL}`, requestOptions);
-    if (!response.ok) {
-      throw new Error(`HTTP error getting network! status: ${response.status}`);
-    }
-
-    return response.json().then(json => json.result);
-  }
-
-  override async simulateTransaction(
-    tx: Transaction<Memo<MemoType>, Operation[]>,
-  ): Promise<SorobanRpc.Api.SimulateTransactionResponse> {
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.customHeaders,
-      },
-      body: JSON.stringify({
-        id: 1,
-        jsonrpc: '2.0',
-        method: 'simulateTransaction',
-        params: {
-          transaction: tx.toXDR(),
-        },
-      }),
-    };
-
-    const response = await fetch(`${this.serverURL}`, requestOptions);
-    if (!response.ok) {
-      throw new Error(`HTTP error simulating TX! status: ${response.status}`);
-    }
-
-    return response.json().then(json => json.result);
-  }
-
-  override async sendTransaction(
-    tx: Transaction | FeeBumpTransaction,
-  ): Promise<SorobanRpc.Api.SendTransactionResponse> {
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.customHeaders,
-      },
-      body: JSON.stringify({
-        id: 1,
-        jsonrpc: '2.0',
-        method: 'sendTransaction',
-        params: {
-          transaction: tx.toXDR(),
-        },
-      }),
-    };
-
-    const response = await fetch(`${this.serverURL}`, requestOptions);
-    if (!response.ok) {
-      throw new Error(`HTTP error submitting TX! status: ${response.status}`);
-    }
-    return response.json().then(json => json.result);
-  }
-
-  override async getTransaction(hash: string): Promise<SorobanRpc.Api.GetTransactionResponse> {
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...this.customHeaders,
-      },
-      body: JSON.stringify({
-        id: 1,
-        jsonrpc: '2.0',
-        method: 'getTransaction',
-        params: { hash },
-      }),
-    };
-
-    const response = await fetch(`${this.serverURL}`, requestOptions);
-    if (!response.ok) {
-      throw new Error(`HTTP error getting TX! status: ${response.status}`);
-    }
-    return response.json().then(json => json.result);
   }
 }
 
@@ -236,11 +124,11 @@ export class StellarSpokeProvider implements ISpokeProvider {
     throw new Error('result undefined');
   }
 
-  private async buildPriorityStellarTransaction(
+  public async buildPriorityStellarTransaction(
     account: CustomStellarAccount,
-    network: Api.GetNetworkResponse,
+    network: StellarRpc.Api.GetNetworkResponse,
     operation: xdr.Operation<Operation.InvokeHostFunction>,
-  ): Promise<[Transaction, Api.SimulateTransactionResponse]> {
+  ): Promise<[Transaction, StellarRpc.Api.SimulateTransactionResponse]> {
     const simulationForFee = await this.sorobanServer.simulateTransaction(
       new TransactionBuilder(account.getAccountClone(), {
         fee: BASE_FEE,
@@ -288,7 +176,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
     return response;
   }
 
-  private async signAndSendTransaction(
+  public async signAndSendTransaction(
     tx: Transaction | FeeBumpTransaction,
     waitForTransaction = true,
   ): Promise<string> {
@@ -326,12 +214,12 @@ export class StellarSpokeProvider implements ISpokeProvider {
     return this.waitForTransaction(hash, attempts - 1);
   }
 
-  private async submitOrRestoreAndRetry(
+  public async submitOrRestoreAndRetry(
     account: CustomStellarAccount,
-    network: Api.GetNetworkResponse,
+    network: StellarRpc.Api.GetNetworkResponse,
     tx: Transaction,
     operation: xdr.Operation<Operation.InvokeHostFunction>,
-    simulation?: Api.SimulateTransactionResponse,
+    simulation?: StellarRpc.Api.SimulateTransactionResponse,
   ): Promise<string> {
     const initialSimulation = simulation ?? (await this.sorobanServer.simulateTransaction(tx));
 
@@ -383,7 +271,7 @@ export class StellarSpokeProvider implements ISpokeProvider {
     minResourceFee: string,
     transactionData: xdr.SorobanTransactionData,
     account: CustomStellarAccount,
-    network: Api.GetNetworkResponse,
+    network: StellarRpc.Api.GetNetworkResponse,
   ): Promise<string> {
     // Build the restoration operation using the RPC server's hints.
     const totalFee = (BigInt(BASE_FEE) + BigInt(STELLAR_PRIORITY_FEE) + BigInt(minResourceFee)).toString();

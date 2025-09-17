@@ -21,12 +21,21 @@ import {
   type Intent,
   type IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
+  StellarSpokeProvider,
   supportedSpokeChains,
 } from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
-import { useQuote, useSpokeProvider, useSwapAllowance, useSwapApprove, useSwap } from '@sodax/dapp-kit';
+import {
+  useQuote,
+  useSpokeProvider,
+  useSwapAllowance,
+  useSwapApprove,
+  useSwap,
+  useStellarTrustlineCheck,
+  useRequestTrustline,
+} from '@sodax/dapp-kit';
 import {
   getXChainType,
   useEvmSwitchChain,
@@ -41,13 +50,16 @@ import {
   type SpokeChainId,
   type ChainType,
   ICON_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({
   setOrders,
 }: {
-  setOrders: (value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>) => void;
+  setOrders: (
+    value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>,
+  ) => void;
 }) {
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
@@ -57,16 +69,27 @@ export default function SwapCard({
   const destAccount = useXAccount(destChain);
   const { openWalletModal } = useAppStore();
   const { mutateAsync: swap } = useSwap(sourceProvider);
-  const [sourceToken, setSourceToken] = useState<Token | undefined>(
-    getSupportedSolverTokens(ICON_MAINNET_CHAIN_ID)[0],
-  );
-  const [destToken, setDestToken] = useState<Token | undefined>(
-    getSupportedSolverTokens(POLYGON_MAINNET_CHAIN_ID)[0],
-  );
+  const [sourceToken, setSourceToken] = useState<Token | undefined>(getSupportedSolverTokens(ICON_MAINNET_CHAIN_ID)[0]);
+  const [destToken, setDestToken] = useState<Token | undefined>(getSupportedSolverTokens(POLYGON_MAINNET_CHAIN_ID)[0]);
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceProvider);
+  const destProvider = useSpokeProvider(destChain, useWalletProvider(destChain));
+  const {
+    data: hasSufficientTrustline,
+    isPending: isTrustlineLoading,
+    error: trustlineError,
+  } = useStellarTrustlineCheck(
+    intentOrderPayload?.outputToken,
+    BigInt(intentOrderPayload?.minOutputAmount ?? 0n),
+    destProvider,
+    intentOrderPayload?.dstChain,
+  );
+  if (trustlineError) {
+    console.error('trustlineError', trustlineError);
+  }
+  const { mutateAsync: requestTrustline } = useRequestTrustline(destToken?.address);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
   const onChangeDirection = () => {
@@ -214,6 +237,25 @@ export default function SwapCard({
     await approve({ params: intentOrderPayload });
   };
 
+  const handleRequestTrustline = async (intentOrderPayload: CreateIntentParams | undefined) => {
+    // if destination token is a Stellar asset, request trustline
+    if (!intentOrderPayload) {
+      console.error('intentOrderPayload undefined');
+      return;
+    }
+
+    if (!destProvider || !(destProvider instanceof StellarSpokeProvider)) {
+      console.error('destProvider undefined or not a StellarSpokeProvider');
+      return;
+    }
+
+    await requestTrustline({
+      token: intentOrderPayload.outputToken,
+      amount: intentOrderPayload.minOutputAmount,
+      spokeProvider: destProvider,
+    });
+  };
+
   return (
     <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
@@ -241,9 +283,7 @@ export default function SwapCard({
           </div>
           <Select
             value={sourceToken?.symbol}
-            onValueChange={v =>
-              setSourceToken(getSupportedSolverTokens(sourceChain).find(token => token.symbol === v))
-            }
+            onValueChange={v => setSourceToken(getSupportedSolverTokens(sourceChain).find(token => token.symbol === v))}
           >
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Token" />
@@ -294,7 +334,7 @@ export default function SwapCard({
           </div>
           <Select
             value={destToken?.symbol}
-            onValueChange={(v) => setDestToken(getSupportedSolverTokens(destChain).find(token => token.symbol === v))}
+            onValueChange={v => setDestToken(getSupportedSolverTokens(destChain).find(token => token.symbol === v))}
           >
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Token" />
@@ -384,6 +424,9 @@ export default function SwapCard({
                   outputAmount:{' '}
                   {normaliseTokenAmount(intentOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)}
                 </div>
+                {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+                  <div className="text-red-500">Insufficient Stellar trustline (request trustline to proceed)</div>
+                )}
               </div>
             </div>
             <DialogFooter>
@@ -411,6 +454,16 @@ export default function SwapCard({
                 ) : (
                   <span>Intent Order undefined</span>
                 ))}
+              {isTrustlineLoading && destChain === STELLAR_MAINNET_CHAIN_ID && <span>Checking trustline...</span>}
+              {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+                <Button
+                  className="w-full"
+                  onClick={() => handleRequestTrustline(intentOrderPayload)}
+                  disabled={isTrustlineLoading}
+                >
+                  Request Trustline
+                </Button>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

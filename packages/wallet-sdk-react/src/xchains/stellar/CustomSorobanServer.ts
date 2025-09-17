@@ -8,7 +8,7 @@ import {
 } from '@stellar/stellar-sdk';
 
 class CustomSorobanServer extends SorobanRpc.Server {
-  private customHeaders: Record<string, string>;
+  private readonly customHeaders: Record<string, string>;
 
   constructor(serverUrl: string, customHeaders: Record<string, string>) {
     super(serverUrl, {

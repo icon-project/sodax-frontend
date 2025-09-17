@@ -1,4 +1,5 @@
 import {
+  getIntentRelayChainId,
   isLegacybnUSDChainId,
   isLegacybnUSDToken,
   isNewbnUSDChainId,
@@ -41,9 +42,12 @@ import {
   type RelayExtraData,
   SolanaSpokeProvider,
   deriveUserWalletAddress,
+  waitUntilIntentExecuted,
+  StellarSpokeProvider,
 } from '../../index.js';
-import { ICON_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 import { isAddress } from 'viem';
+import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
 
 export type GetMigrationFailedPayload<T extends MigrationErrorCode> = T extends 'CREATE_MIGRATION_INTENT_FAILED'
   ? IcxMigrateParams | UnifiedBnUSDMigrateParams | BalnMigrateParams
@@ -161,12 +165,18 @@ export class MigrationService {
           );
         }
 
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+          return {
+            ok: true,
+            value: await StellarSpokeService.hasSufficientTrustline(params.srcbnUSD, params.amount, spokeProvider),
+          };
+        }
+
         return {
           ok: true,
           value: true,
         };
       }
-
       if (action === 'revert') {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
         invariant(params.to.length > 0, 'To address is required');
@@ -188,6 +198,30 @@ export class MigrationService {
             spender,
             evmSpokeProvider,
           );
+        }
+
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
+          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          let spender: Address;
+          const wallet = await spokeProvider.walletProvider.getWalletAddress();
+          if (spokeProvider instanceof SonicSpokeProvider) {
+            spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
+          } else {
+            spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
+          }
+          return await Erc20Service.isAllowanceValid(
+            params.srcbnUSD as Address,
+            params.amount,
+            wallet as `0x${string}`,
+            spender,
+            evmSpokeProvider,
+          );
+        }
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+          return {
+            ok: true,
+            value: await StellarSpokeService.hasSufficientTrustline(params.srcbnUSD, params.amount, spokeProvider),
+          };
         }
 
         if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
@@ -265,6 +299,14 @@ export class MigrationService {
           };
         }
 
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+          const result = await StellarSpokeService.requestTrustline(params.srcbnUSD, params.amount, spokeProvider, raw);
+          return {
+            ok: true,
+            value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+          };
+        }
+
         return {
           ok: false,
           error: new Error('Invalid params for migrate action'),
@@ -295,6 +337,14 @@ export class MigrationService {
           return {
             ok: true,
             value: result satisfies TxReturnType<EvmSpokeProvider | SonicSpokeProvider, R> as TxReturnType<S, R>,
+          };
+        }
+
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+          const result = await StellarSpokeService.requestTrustline(params.srcbnUSD, params.amount, spokeProvider, raw);
+          return {
+            ok: true,
+            value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
           };
         }
 
@@ -409,6 +459,15 @@ export class MigrationService {
 
       if (!packetResult.ok) {
         return packetResult;
+      }
+
+      if (!(params.srcChainId === SONIC_MAINNET_CHAIN_ID || params.dstChainId === SONIC_MAINNET_CHAIN_ID)) {
+        await waitUntilIntentExecuted({
+          intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
+          spokeTxHash: packetResult.value.dst_tx_hash,
+          timeout: timeout,
+          apiUrl: this.config.relayerApiEndpoint,
+        });
       }
 
       return { ok: true, value: [spokeTxHash, packetResult.value.dst_tx_hash as Hex] };

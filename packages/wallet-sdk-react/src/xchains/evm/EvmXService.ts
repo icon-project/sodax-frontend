@@ -6,7 +6,18 @@ import { getWagmiChainId, isNativeToken } from '@/utils';
 import { type Address, type PublicClient, type WalletClient, defineChain, erc20Abi } from 'viem';
 import { getPublicClient, getWalletClient } from 'wagmi/actions';
 import { createConfig, http, type Transport } from 'wagmi';
-import { mainnet, avalanche, base, optimism, polygon, arbitrum, bsc, sonic, nibiru } from 'wagmi/chains';
+import {
+  mainnet,
+  avalanche,
+  base,
+  optimism,
+  polygon,
+  arbitrum,
+  bsc,
+  sonic,
+  nibiru,
+  lightlinkPhoenix,
+} from 'wagmi/chains';
 
 import {
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -18,6 +29,7 @@ import {
   POLYGON_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
@@ -56,6 +68,7 @@ const evmChainMap = {
   [POLYGON_MAINNET_CHAIN_ID]: polygon,
   [NIBIRU_MAINNET_CHAIN_ID]: nibiru,
   [HYPEREVM_MAINNET_CHAIN_ID]: hyper,
+  [LIGHTLINK_MAINNET_CHAIN_ID]: lightlinkPhoenix,
 } as const;
 
 export type EvmChainId = keyof typeof evmChainMap;
@@ -75,6 +88,7 @@ export const getWagmiConfig = (chains: EvmChainId[]) => {
   return createConfig({
     chains: finalChains as [typeof mainnet, ...(typeof mainnet)[]],
     transports,
+    // ssr: true,
   });
 };
 

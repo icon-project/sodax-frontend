@@ -41,6 +41,8 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
 
 - Shared
   - Derive user wallet address for hub abstraction (`useDeriveUserWalletAddress`)
+  - Check if Stellar trustline is established for an asset (`useStellarTrustlineCheck`)
+  - Request creation of Stellar trustline line for an asset (`useRequestTrustline`)
 
 ## Installation
 

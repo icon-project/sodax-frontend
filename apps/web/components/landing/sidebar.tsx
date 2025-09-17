@@ -1,6 +1,7 @@
 import type React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { CloseIcon } from '@/components/icons';
 
 const Sidebar = ({
   isOpen,
@@ -22,7 +23,7 @@ const Sidebar = ({
       {/* Modal overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-10 transition-opacity duration-300 ease-in-out"
+          className="fixed inset-0 bg-black/50 z-99 transition-opacity duration-300 ease-in-out"
           onClick={handleOverlayInteraction}
           onMouseDown={handleOverlayInteraction}
           onTouchStart={handleOverlayInteraction}
@@ -31,7 +32,7 @@ const Sidebar = ({
 
       {/* Sidebar */}
       <div
-        className={`sidebar-container fixed w-[295px] h-full overflow-hidden justify-center bg-cherry-soda grid pt-[180px] left-0 z-20 transition-transform duration-300 ease-in-out ${
+        className={`sidebar-container fixed w-[295px] h-full overflow-hidden justify-center bg-cherry-soda grid pt-[180px] left-0 transition-transform duration-300 ease-in-out z-100 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         onDragStart={e => e.preventDefault()}
@@ -55,13 +56,7 @@ const Sidebar = ({
         />
         <button type="button" className="absolute left-[32px] top-[48px]" onClick={toggle}>
           {/* Close icon */}
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-label="Close menu">
-            <title>Close menu</title>
-            <path
-              fill="white"
-              d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z"
-            />
-          </svg>
+          <CloseIcon width={24} height={24} fill="white" />
         </button>
 
         <ul className="sidebar-nav text-center leading-relaxed text-sm text-cream font-[InterRegular] space-y-6 z-20">
@@ -82,16 +77,6 @@ const Sidebar = ({
               <p>About</p>
             </Link>
           </li>
-          {/* <li>
-            <Link href="https://x.com/gosodax" onClick={toggle}>
-              <p>Partners</p>
-            </Link>
-          </li>
-          <li>
-            <Link href="https://discord.gg/xM2Nh4S6vN" onClick={toggle}>
-              <p>Community</p>
-            </Link>
-          </li> */}
         </ul>
       </div>
     </>

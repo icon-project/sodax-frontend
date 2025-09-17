@@ -20,7 +20,7 @@ import {
   AVALANCHE_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   HUB_CHAIN_IDS,
-  SPOKE_CHAIN_IDS,
+  CHAIN_IDS,
   type HubChainId,
 } from '@sodax/types';
 
@@ -34,7 +34,7 @@ describe('Constants', () => {
     it('should have valid chain ID arrays', () => {
       expect(HUB_CHAIN_IDS).toContain(SONIC_MAINNET_CHAIN_ID);
 
-      expect(SPOKE_CHAIN_IDS).toContain(AVALANCHE_MAINNET_CHAIN_ID);
+      expect(CHAIN_IDS).toContain(AVALANCHE_MAINNET_CHAIN_ID);
     });
   });
 

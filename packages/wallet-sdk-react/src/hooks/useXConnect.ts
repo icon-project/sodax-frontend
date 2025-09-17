@@ -40,7 +40,9 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
 
   const { connectAsync: evmConnectAsync } = useConnect();
   const { mutateAsync: suiConnectAsync } = useConnectWallet();
-  const solanaWallet = useWallet();
+
+  // const solanaWallet = useWallet();
+  const { select, connect, connected } = useWallet();
 
   return useMutation({
     mutationFn: async (xConnector: XConnector) => {
@@ -54,13 +56,51 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
         case 'SUI':
           await suiConnectAsync({ wallet: (xConnector as SuiXConnector).wallet });
           break;
-        case 'SOLANA':
-          {
-            const walletName = (xConnector as SolanaXConnector).wallet.adapter.name;
-            solanaWallet.select(walletName);
-            await solanaWallet.connect();
+        case 'SOLANA': {
+          const walletName = (xConnector as SolanaXConnector).wallet.adapter.name;
+
+          await select(walletName);
+
+          const adapter = (xConnector as SolanaXConnector).wallet.adapter;
+
+          if (!adapter) throw new Error('No adapter found for Solana wallet');
+
+          if (walletName === 'MetaMask') {
+            await new Promise<void>((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                cleanup();
+                reject(new Error('Wallet connection timeout'));
+              }, 30000);
+
+              const handleConnect = () => {
+                cleanup();
+                resolve();
+              };
+
+              const handleError = (error: Error) => {
+                cleanup();
+                reject(error);
+              };
+
+              const cleanup = () => {
+                clearTimeout(timeout);
+                adapter.off('connect', handleConnect);
+                adapter.off('error', handleError);
+              };
+
+              adapter.on('connect', handleConnect);
+              adapter.on('error', handleError);
+
+              connect().catch(err => {
+                cleanup();
+                reject(err);
+              });
+            });
           }
+
           break;
+        }
+
         default:
           xAccount = await xConnector.connect();
           break;

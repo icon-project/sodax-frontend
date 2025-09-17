@@ -1,11 +1,9 @@
 import { XService } from '@/core/XService';
 import type { IconService } from 'icon-sdk-js';
-import * as IconSdkRaw from 'icon-sdk-js';
+import { IconService as IconServiceConstructor, Builder as IconBuilder, Converter as IconConverter } from 'icon-sdk-js';
 import type { ChainId, XToken } from '@sodax/types';
 import { isNativeToken } from '@/utils';
 
-const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
-const { IconService: IconServiceConstructor, Builder: IconBuilder, Converter: IconConverter } = IconSdk;
 export interface CallData {
   target: string;
   method: string;

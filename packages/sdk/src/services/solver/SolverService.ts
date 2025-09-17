@@ -14,6 +14,7 @@ import {
   SonicSpokeService,
   type SpokeProvider,
   SpokeService,
+  StellarSpokeProvider,
   type WaitUntilIntentExecutedPayload,
   adjustAmountByFee,
   calculateFeeAmount,
@@ -62,6 +63,7 @@ import {
   type Hash,
   SOLANA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
+import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
 
 export type CreateIntentParams = {
   inputToken: string; // The address of the input token on spoke chain
@@ -670,6 +672,13 @@ export class SolverService {
         );
       }
 
+      if (spokeProvider instanceof StellarSpokeProvider) {
+        return {
+          ok: true,
+          value: await StellarSpokeService.hasSufficientTrustline(params.inputToken, params.inputAmount, spokeProvider),
+        };
+      }
+
       return {
         ok: true,
         value: true,
@@ -756,9 +765,17 @@ export class SolverService {
         };
       }
 
+      if (spokeProvider instanceof StellarSpokeProvider) {
+        const result = await StellarSpokeService.requestTrustline(params.inputToken, params.inputAmount, spokeProvider, raw);
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+        };
+      }
+
       return {
         ok: false,
-        error: new Error('Approve only supported for EVM spoke chains'),
+        error: new Error('Approve only supported for EVM (approve) and Stellar (trustline) spoke chains'),
       };
     } catch (error) {
       return {

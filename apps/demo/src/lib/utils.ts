@@ -8,6 +8,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function scaleTokenAmount(amount: number | string, decimals: number): bigint {
+  // Return 0n if amount is NaN (for both string and number types)
+  if (
+    (typeof amount === 'number' && Number.isNaN(amount)) ||
+    (typeof amount === 'string' && (amount.trim() === '' || Number.isNaN(Number(amount))))
+  ) {
+    return 0n;
+  }
   return BigInt(
     new BigNumber(amount.toString()).multipliedBy(new BigNumber(10).pow(decimals)).toFixed(0, BigNumber.ROUND_DOWN),
   );

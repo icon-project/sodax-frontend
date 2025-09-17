@@ -112,6 +112,14 @@ export const hyper: XChain = {
   testnet: false,
 };
 
+export const lightlink: XChain = {
+  id: 1890,
+  name: 'Lightlink',
+  xChainId: 'lightlink',
+  xChainType: 'EVM',
+  testnet: false,
+};
+
 // the order is important, using manual order to display in the UI
 export const xChainMap: { [key in ChainId]: XChain } = {
   '0x1.icon': icon,
@@ -128,6 +136,7 @@ export const xChainMap: { [key in ChainId]: XChain } = {
   '0x89.polygon': polygon,
   nibiru: nibiru,
   hyper: hyper,
+  lightlink: lightlink,
 };
 
 /**
