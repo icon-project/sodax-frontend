@@ -1,6 +1,5 @@
 import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
-import { MsgExecuteContract, MsgExecuteContractCompat } from '@injectivelabs/sdk-ts';
-import { createTransaction } from '@injectivelabs/sdk-ts';
+import { MsgExecuteContract, MsgExecuteContractCompat, createTransaction } from '@injectivelabs/sdk-ts';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
 import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
 
@@ -58,8 +57,8 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     });
     const { txRaw } = createTransaction({
       message: msgExec,
-      memo: '',
-      pubKey: Buffer.from(this.walletAddress).toString(),
+      memo: memo || '',
+      pubKey: this.walletAddress,
       sequence: 0,
       accountNumber: 0,
       chainId: chainId,

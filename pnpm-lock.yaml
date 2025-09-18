@@ -119,6 +119,9 @@ importers:
 
   apps/demo:
     dependencies:
+      '@bangjelkoski/node-stdlib-browser':
+        specifier: ^0.0.1
+        version: 0.0.1
       '@radix-ui/react-dialog':
         specifier: ^1.1.14
         version: 1.1.15(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -167,6 +170,9 @@ importers:
       bignumber.js:
         specifier: 'catalog:'
         version: 9.3.1
+      buffer:
+        specifier: ^6.0.3
+        version: 6.0.3
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -201,6 +207,9 @@ importers:
         specifier: 4.5.2
         version: 4.5.2(@types/react@19.1.12)(immer@10.1.1)(react@19.1.1)
     devDependencies:
+      '@bangjelkoski/vite-plugin-node-polyfills':
+        specifier: ^0.0.2
+        version: 0.0.2(rollup@4.50.1)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
       '@types/react':
         specifier: ^19.0.8
         version: 19.1.12
@@ -225,9 +234,6 @@ importers:
       vite:
         specifier: ^5.4.11
         version: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
-      vite-plugin-node-polyfills:
-        specifier: 0.21.0
-        version: 0.21.0(rollup@4.50.1)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
       vite-plugin-svgr:
         specifier: 4.2.0
         version: 4.2.0(rollup@4.50.1)(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
@@ -487,8 +493,8 @@ importers:
         specifier: 0.30.1
         version: 0.30.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       '@injectivelabs/core-proto-ts':
-        specifier: 1.15.0
-        version: 1.15.0
+        specifier: 1.16.5
+        version: 1.16.5
       '@injectivelabs/networks':
         specifier: 'catalog:'
         version: 1.16.10
@@ -1026,6 +1032,10 @@ packages:
   '@bangjelkoski/ledgerhq-hw-transport@6.31.4-beta.0':
     resolution: {integrity: sha512-AIRuxu8s83mv0cBooO5v+pirZyIEUobl8L9QmXvBlTJybmMmyBgigLuoIcZDlSp4Tc7jnoOlHSpFQkASc+5sNA==}
 
+  '@bangjelkoski/node-stdlib-browser@0.0.1':
+    resolution: {integrity: sha512-qgSqNArESdegSecdcugbdcLG6Q92x5fNhhCgHQASTZxvdE1jga8fZOpbCkXDw7MrKChF0Zf8xMHv6YEVjDMT/g==}
+    engines: {node: '>=10'}
+
   '@bangjelkoski/store2@2.14.3':
     resolution: {integrity: sha512-ZG6ZDOHU5MZ4yxA3yY3gcZYnkcPtPaOwGOJrWD4Drar/u1TTBy1tWnP70atBa6LGm1+Ll1nb2GwS+HyWuFOWkw==}
 
@@ -1033,6 +1043,11 @@ packages:
     resolution: {integrity: sha512-p6DmkVhPpvwTJQNKdMGq2IBQ81Xz8x8NjheN5HICHuTsmty74ACQtyVjwDQ2LP+pctSluF2e7oLbj1uoBuUkUA==}
     peerDependencies:
       tslib: ^2.6.2
+
+  '@bangjelkoski/vite-plugin-node-polyfills@0.0.2':
+    resolution: {integrity: sha512-zVrklv7kJ4zDNZHDuJiQS7UOHmaAKoYme7d0T/b3qvdTgMYDgbjjAgHuMOqzdHfuycolOaT9a+hGrJd2PKABPQ==}
+    peerDependencies:
+      vite: ^2.0.0 || ^3.0.0 || ^4.0.0
 
   '@bangjelkoski/wallet-connect-ethereum-provider@2.17.2':
     resolution: {integrity: sha512-mot/LCgPMcWVeUH3pGCBMjubqSO9B3QEoo4RVP8Q5WLP7cspd+vK2lphpuytyV47Et3bCF15s9usZGM3l84ZnQ==}
@@ -1978,11 +1993,11 @@ packages:
   '@injectivelabs/abacus-proto-ts@1.14.0':
     resolution: {integrity: sha512-YAKBYGVwqm/OHtHAMGfJaUfANJ1d6Rec19KKUBeJmGB7xqkhybBjSq50OudMNl0oTqUH6NeupqSNQwrU7JvceA==}
 
-  '@injectivelabs/core-proto-ts@1.15.0':
-    resolution: {integrity: sha512-J1Iq42RSfW8M5XDVDF8ACz49RkrP/963Lgyi1Yn9e4P2CZ2kRhJm8KSfH++1+yyLbDCEVdGj4b63TK8DopGsTA==}
-
   '@injectivelabs/core-proto-ts@1.16.1':
     resolution: {integrity: sha512-/6LWwZ/ZcC6/sI21s92cf3/8mgma6xRnBXtsF+708g2SX87WatJuXL8DjZsY1agCCnyw6bLVLtjKAfLQopNkxw==}
+
+  '@injectivelabs/core-proto-ts@1.16.5':
+    resolution: {integrity: sha512-eqXL3C/8JbP8u/4CHRyH7L/JJHNikZZFByxcFMqOxzNIxdzYnbueEDDk71lfYXGRFWqw+oU71kzu14hz9asxcQ==}
 
   '@injectivelabs/exceptions@1.16.10':
     resolution: {integrity: sha512-Tv0yM1JGSRzqtHp5fQlJ+B16Xej78WJrOqPrHC1H1MB9wr0NL3krAo86sm04IZI1RCq0Mv3hqCPPWqpZ6z+pRQ==}
@@ -8055,10 +8070,6 @@ packages:
   node-releases@2.0.20:
     resolution: {integrity: sha512-7gK6zSXEH6neM212JgfYFXe+GmZQM+fia5SsusuBIUgnPheLFBmIPhtFoAQRj8/7wASYQnbDlHPVwY0BefoFgA==}
 
-  node-stdlib-browser@1.3.1:
-    resolution: {integrity: sha512-X75ZN8DCLftGM5iKwoYLA3rjnrAEs97MkzvSd4q2746Tgpg8b8XWiBGiBG4ZpgcAqBgtgPHTiAc8ZMCvZuikDw==}
-    engines: {node: '>=10'}
-
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
@@ -9832,11 +9843,6 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
-  vite-plugin-node-polyfills@0.21.0:
-    resolution: {integrity: sha512-Sk4DiKnmxN8E0vhgEhzLudfJQfaT8k4/gJ25xvUPG54KjLJ6HAmDKbr4rzDD/QWEY+Lwg80KE85fGYBQihEPQA==}
-    peerDependencies:
-      vite: ^2.0.0 || ^3.0.0 || ^4.0.0 || ^5.0.0
-
   vite-plugin-svgr@4.2.0:
     resolution: {integrity: sha512-SC7+FfVtNQk7So0XMjrrtLAbEC8qjFPifyD7+fs/E6aaNdVde6umlVVh0QuwDLdOMu7vp5RiGFsB70nj5yo0XA==}
     peerDependencies:
@@ -10703,6 +10709,36 @@ snapshots:
       '@ledgerhq/logs': 6.13.0
       events: 3.3.0
 
+  '@bangjelkoski/node-stdlib-browser@0.0.1':
+    dependencies:
+      assert: 2.1.0
+      browser-resolve: 2.0.0
+      browserify-zlib: 0.2.0
+      buffer: 6.0.3
+      console-browserify: 1.2.0
+      constants-browserify: 1.0.0
+      create-require: 1.1.1
+      crypto-browserify: 3.12.1
+      domain-browser: 4.22.0
+      events: 3.3.0
+      https-browserify: 1.0.0
+      isomorphic-timers-promises: 1.0.1
+      os-browserify: 0.3.0
+      path-browserify: 1.0.1
+      pkg-dir: 5.0.0
+      process: 0.11.10
+      punycode: 1.4.1
+      querystring-es3: 0.2.1
+      readable-stream: 3.6.2
+      stream-browserify: 3.0.0
+      stream-http: 3.2.0
+      string_decoder: 1.3.0
+      timers-browserify: 2.0.12
+      tty-browserify: 0.0.1
+      url: 0.11.4
+      util: 0.12.5
+      vm-browserify: 1.1.2
+
   '@bangjelkoski/store2@2.14.3': {}
 
   '@bangjelkoski/trezor-connect-web@9.4.7-beta.1(@babel/core@7.28.4)(bufferutil@4.0.9)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.81.1(@babel/core@7.28.4)(@types/react@19.1.12)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10))(tslib@2.8.1)(typescript@5.5.4)(utf-8-validate@5.0.10)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.25.76)':
@@ -10724,6 +10760,14 @@ snapshots:
       - utf-8-validate
       - ws
       - zod
+
+  '@bangjelkoski/vite-plugin-node-polyfills@0.0.2(rollup@4.50.1)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))':
+    dependencies:
+      '@bangjelkoski/node-stdlib-browser': 0.0.1
+      '@rollup/plugin-inject': 5.0.5(rollup@4.50.1)
+      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+    transitivePeerDependencies:
+      - rollup
 
   '@bangjelkoski/wallet-connect-ethereum-provider@2.17.2(@react-native-async-storage/async-storage@1.24.0(react-native@0.81.1(@babel/core@7.28.4)(@types/react@19.1.12)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10)))(@types/react@19.1.12)(bufferutil@4.0.9)(react@19.1.1)(utf-8-validate@5.0.10)':
     dependencies:
@@ -11446,7 +11490,7 @@ snapshots:
 
   '@creit.tech/xbull-wallet-connect@0.4.0':
     dependencies:
-      rxjs: 7.8.1
+      rxjs: 7.8.2
       tweetnacl: 1.0.3
       tweetnacl-util: 0.15.1
 
@@ -12152,14 +12196,14 @@ snapshots:
       protobufjs: 7.5.4
       rxjs: 7.8.2
 
-  '@injectivelabs/core-proto-ts@1.15.0':
+  '@injectivelabs/core-proto-ts@1.16.1':
     dependencies:
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
       google-protobuf: 3.21.4
       protobufjs: 7.5.4
       rxjs: 7.8.2
 
-  '@injectivelabs/core-proto-ts@1.16.1':
+  '@injectivelabs/core-proto-ts@1.16.5':
     dependencies:
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
       google-protobuf: 3.21.4
@@ -12864,7 +12908,7 @@ snapshots:
     dependencies:
       '@ledgerhq/errors': 6.25.0
       '@ledgerhq/logs': 6.13.0
-      rxjs: 7.8.1
+      rxjs: 7.8.2
       semver: 7.7.2
 
   '@ledgerhq/domain-service@1.2.42':
@@ -17374,7 +17418,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.18.1
+      '@types/node': 24.3.1
 
   '@types/conventional-commits-parser@5.0.1':
     dependencies:
@@ -17424,7 +17468,7 @@ snapshots:
 
   '@types/pbkdf2@3.1.2':
     dependencies:
-      '@types/node': 22.18.1
+      '@types/node': 24.3.1
 
   '@types/prop-types@15.7.15': {}
 
@@ -17447,7 +17491,7 @@ snapshots:
 
   '@types/secp256k1@4.0.6':
     dependencies:
-      '@types/node': 22.18.1
+      '@types/node': 24.3.1
 
   '@types/stack-utils@2.0.3': {}
 
@@ -17461,11 +17505,11 @@ snapshots:
 
   '@types/ws@7.4.7':
     dependencies:
-      '@types/node': 22.18.1
+      '@types/node': 24.3.1
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 22.18.1
+      '@types/node': 24.3.1
 
   '@types/ws@8.5.3':
     dependencies:
@@ -20185,7 +20229,7 @@ snapshots:
     dependencies:
       cipher-base: 1.0.6
       inherits: 2.0.4
-      ripemd160: 2.0.1
+      ripemd160: 2.0.2
       sha.js: 2.4.12
 
   create-hash@1.2.0:
@@ -22439,36 +22483,6 @@ snapshots:
 
   node-releases@2.0.20: {}
 
-  node-stdlib-browser@1.3.1:
-    dependencies:
-      assert: 2.1.0
-      browser-resolve: 2.0.0
-      browserify-zlib: 0.2.0
-      buffer: 5.7.1
-      console-browserify: 1.2.0
-      constants-browserify: 1.0.0
-      create-require: 1.1.1
-      crypto-browserify: 3.12.1
-      domain-browser: 4.22.0
-      events: 3.3.0
-      https-browserify: 1.0.0
-      isomorphic-timers-promises: 1.0.1
-      os-browserify: 0.3.0
-      path-browserify: 1.0.1
-      pkg-dir: 5.0.0
-      process: 0.11.10
-      punycode: 1.4.1
-      querystring-es3: 0.2.1
-      readable-stream: 3.6.2
-      stream-browserify: 3.0.0
-      stream-http: 3.2.0
-      string_decoder: 1.3.0
-      timers-browserify: 2.0.12
-      tty-browserify: 0.0.1
-      url: 0.11.4
-      util: 0.12.5
-      vm-browserify: 1.1.2
-
   normalize-path@3.0.0: {}
 
   normalize-range@0.1.2: {}
@@ -22888,7 +22902,7 @@ snapshots:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/node': 24.3.1
-      long: 5.2.5
+      long: 5.3.2
 
   protobufjs@7.5.4:
     dependencies:
@@ -22902,7 +22916,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.18.1
+      '@types/node': 24.3.1
       long: 5.3.2
 
   proxy-compare@2.5.1: {}
@@ -24419,14 +24433,6 @@ snapshots:
       - sugarss
       - supports-color
       - terser
-
-  vite-plugin-node-polyfills@0.21.0(rollup@4.50.1)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)):
-    dependencies:
-      '@rollup/plugin-inject': 5.0.5(rollup@4.50.1)
-      node-stdlib-browser: 1.3.1
-      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
-    transitivePeerDependencies:
-      - rollup
 
   vite-plugin-svgr@4.2.0(rollup@4.50.1)(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)):
     dependencies:
