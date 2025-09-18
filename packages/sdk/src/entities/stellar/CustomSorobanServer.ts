@@ -1,4 +1,5 @@
 import {
+  type rpc as StellarRpc,
   type FeeBumpTransaction,
   type Memo,
   type MemoType,
@@ -7,8 +8,8 @@ import {
   type Transaction,
 } from '@stellar/stellar-sdk';
 
-class CustomSorobanServer extends SorobanRpc.Server {
-  private readonly customHeaders: Record<string, string>;
+export class CustomSorobanServer extends SorobanRpc.Server {
+  private customHeaders: Record<string, string>;
 
   constructor(serverUrl: string, customHeaders: Record<string, string>) {
     super(serverUrl, {
@@ -17,7 +18,29 @@ class CustomSorobanServer extends SorobanRpc.Server {
     this.customHeaders = customHeaders;
   }
 
-  async simulateTransaction(
+  override async getNetwork(): Promise<StellarRpc.Api.GetNetworkResponse> {
+    const requestOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.customHeaders,
+      },
+      body: JSON.stringify({
+        id: 1,
+        jsonrpc: '2.0',
+        method: 'getNetwork',
+      }),
+    };
+
+    const response = await fetch(`${this.serverURL}`, requestOptions);
+    if (!response.ok) {
+      throw new Error(`HTTP error getting network! status: ${response.status}`);
+    }
+
+    return response.json().then(json => json.result);
+  }
+
+  override async simulateTransaction(
     tx: Transaction<Memo<MemoType>, Operation[]>,
   ): Promise<SorobanRpc.Api.SimulateTransactionResponse> {
     const requestOptions = {
@@ -40,10 +63,13 @@ class CustomSorobanServer extends SorobanRpc.Server {
     if (!response.ok) {
       throw new Error(`HTTP error simulating TX! status: ${response.status}`);
     }
+
     return response.json().then(json => json.result);
   }
 
-  async sendTransaction(tx: Transaction | FeeBumpTransaction): Promise<SorobanRpc.Api.SendTransactionResponse> {
+  override async sendTransaction(
+    tx: Transaction | FeeBumpTransaction,
+  ): Promise<SorobanRpc.Api.SendTransactionResponse> {
     const requestOptions = {
       method: 'POST',
       headers: {
@@ -67,7 +93,7 @@ class CustomSorobanServer extends SorobanRpc.Server {
     return response.json().then(json => json.result);
   }
 
-  async getTransaction(hash: string): Promise<SorobanRpc.Api.GetTransactionResponse> {
+  override async getTransaction(hash: string): Promise<SorobanRpc.Api.GetTransactionResponse> {
     const requestOptions = {
       method: 'POST',
       headers: {
@@ -89,5 +115,3 @@ class CustomSorobanServer extends SorobanRpc.Server {
     return response.json().then(json => json.result);
   }
 }
-
-export default CustomSorobanServer;

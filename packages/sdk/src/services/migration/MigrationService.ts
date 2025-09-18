@@ -43,9 +43,11 @@ import {
   SolanaSpokeProvider,
   deriveUserWalletAddress,
   waitUntilIntentExecuted,
+  StellarSpokeProvider,
 } from '../../index.js';
 import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 import { isAddress } from 'viem';
+import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
 
 export type GetMigrationFailedPayload<T extends MigrationErrorCode> = T extends 'CREATE_MIGRATION_INTENT_FAILED'
   ? IcxMigrateParams | UnifiedBnUSDMigrateParams | BalnMigrateParams
@@ -163,6 +165,13 @@ export class MigrationService {
           );
         }
 
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+          return {
+            ok: true,
+            value: await StellarSpokeService.hasSufficientTrustline(params.srcbnUSD, params.amount, spokeProvider),
+          };
+        }
+
         return {
           ok: true,
           value: true,
@@ -207,6 +216,12 @@ export class MigrationService {
             spender,
             evmSpokeProvider,
           );
+        }
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+          return {
+            ok: true,
+            value: await StellarSpokeService.hasSufficientTrustline(params.srcbnUSD, params.amount, spokeProvider),
+          };
         }
 
         if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
@@ -284,6 +299,14 @@ export class MigrationService {
           };
         }
 
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+          const result = await StellarSpokeService.requestTrustline(params.srcbnUSD, params.amount, spokeProvider, raw);
+          return {
+            ok: true,
+            value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+          };
+        }
+
         return {
           ok: false,
           error: new Error('Invalid params for migrate action'),
@@ -314,6 +337,14 @@ export class MigrationService {
           return {
             ok: true,
             value: result satisfies TxReturnType<EvmSpokeProvider | SonicSpokeProvider, R> as TxReturnType<S, R>,
+          };
+        }
+
+        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+          const result = await StellarSpokeService.requestTrustline(params.srcbnUSD, params.amount, spokeProvider, raw);
+          return {
+            ok: true,
+            value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
           };
         }
 

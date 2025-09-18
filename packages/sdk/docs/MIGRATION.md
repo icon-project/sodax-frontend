@@ -43,6 +43,10 @@ The MigrationService supports multiple types of migrations:
 
 Before creating migration intents, you should check if the allowance is valid. For forward migrations (ICX/wICX, bnUSD, BALN), no allowance is required as these tokens do not require approval.
 
+**Note**: For Stellar-based operations, the allowance system works differently:
+- **Source Chain (Stellar)**: The standard `isAllowanceValid` method works as expected for EVM chains, but for Stellar as the source chain, this method checks and establishes trustlines instead.
+- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually check trustlines using `StellarSpokeService.hasSufficientTrustline` before executing migration operations.
+
 ```typescript
 const sodax = new Sodax();
 
@@ -92,6 +96,10 @@ if (!isAllowedRevert.ok) {
 
 For reverse migrations, if the allowance check returns false, you need to approve the tokens before creating the revert migration intent.
 
+**Note**: For Stellar-based operations, the approval system works differently:
+- **Source Chain (Stellar)**: The standard `approve` method works as expected for EVM chains, but for Stellar as the source chain, this method establishes trustlines instead.
+- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually establish trustlines using `StellarSpokeService.requestTrustline` before executing migration operations.
+
 ```typescript
 const sodax = new Sodax();
 
@@ -115,6 +123,37 @@ if (approveResult.ok) {
   console.log('Approval transaction confirmed:', approveTxResult);
 } else {
   console.error('Failed to approve tokens:', approveResult.error);
+}
+```
+
+### Stellar Trustline Requirements
+
+For Stellar-based migration operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain:
+
+```typescript
+import { StellarSpokeService } from "@sodax/sdk";
+
+// When Stellar is the destination chain, check and establish trustlines
+if (isStellarDestination) {
+  // Check if sufficient trustline exists for the destination token
+  const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
+    destinationTokenAddress,
+    amount,
+    stellarSpokeProvider
+  );
+
+  if (!hasTrustline) {
+    // Request trustline for the destination token
+    const trustlineResult = await StellarSpokeService.requestTrustline(
+      destinationTokenAddress,
+      amount,
+      stellarSpokeProvider,
+      false // false = execute transaction, true = return raw transaction
+    );
+    
+    // Wait for trustline transaction to be confirmed before proceeding
+    console.log('Trustline established:', trustlineResult);
+  }
 }
 ```
 
@@ -239,6 +278,8 @@ const allLegacyTokens = getAllLegacybnUSDTokens();
 
 Migrate legacy bnUSD tokens to new bnUSD tokens on any spoke chain (besides Icon - which has only legacy bnUSD).
 
+**Note**: When migrating to Stellar as the destination chain, ensure you have established the necessary trustlines using `StellarSpokeService.hasSufficientTrustline` and `StellarSpokeService.requestTrustline` before executing the migration.
+
 ```typescript
 const sodax = new Sodax();
 
@@ -271,6 +312,8 @@ if (result.ok) {
 ### Reverse Migrate New bnUSD to Legacy bnUSD
 
 Revert new bnUSD tokens back to legacy bnUSD tokens. Legacy bnUSD exists on Icon, Sui or Stellar chains.
+
+**Note**: When migrating to Stellar as the destination chain, ensure you have established the necessary trustlines using `StellarSpokeService.hasSufficientTrustline` and `StellarSpokeService.requestTrustline` before executing the migration.
 
 ```typescript
 const sodax = new Sodax();
@@ -547,4 +590,4 @@ const migrationService = new MigrationService(hubProvider, {
 
 Default configuration:
 - `relayerApiEndpoint`: `https://relay.soniclabs.com`
-- `timeout`: 60000ms (60 seconds) 
+- `timeout`: 60000ms (60 seconds)

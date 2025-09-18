@@ -196,3 +196,8 @@ export async function deriveUserWalletAddress(
     ? address
     : await WalletAbstractionService.getUserAbstractedWalletAddress(address, spokeProvider, hubProvider);
 }
+
+export function parseToStroops(amount: string): bigint {
+  // Scale decimal string to integer stroops (1e7 multiplier)
+  return BigInt(Math.round(Number.parseFloat(amount) * 1e7));
+}

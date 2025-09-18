@@ -71,7 +71,7 @@ const HeroSection = ({
       return;
     }
 
-    api.on('select', () => { });
+    api.on('select', () => {});
   }, [api]);
 
   const handleMouseEnter = () => {
@@ -157,30 +157,8 @@ const HeroSection = ({
                   </span>
                 </ScrollLink>
               </li>
-              <li>
-                <Link href="/docs" passHref>
-                  <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
-                    Partners
-                  </span>
-                </Link>
-              </li>
-              <li>
-                <Link href="/docs" passHref>
-                  <span className="text-white font-[InterMedium] text-[14px] transition-all hover:font-bold cursor-pointer">
-                    Community
-                  </span>
-                </Link>
-              </li>
             </ul>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-              {/* <DecoratedButton
-                onClick={() => onRewardDialogChange(true)}
-                isConnected={isConnected}
-                address={address}
-                showAddressInfo={true}
-              >
-                join waitlist
-              </DecoratedButton> */}
               <LaunchButton>launch apps</LaunchButton>
             </div>
           </div>

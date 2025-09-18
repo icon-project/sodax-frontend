@@ -1061,7 +1061,7 @@ describe('SolverService', () => {
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect((result.error as Error).message).toBe('Approve only supported for EVM spoke chains');
+        expect((result.error as Error).message).toBe('Approve only supported for EVM (approve) and Stellar (trustline) spoke chains');
       }
     });
 

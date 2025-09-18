@@ -21,6 +21,7 @@ import {
   SonicSpokeService,
   SolanaSpokeProvider,
   type RelayError,
+  StellarSpokeProvider,
 } from '../index.js';
 import type {
   EvmContractCall,
@@ -44,6 +45,7 @@ import invariant from 'tiny-invariant';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Token, type Address } from '@sodax/types';
 import { wrappedSonicAbi } from '../abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
+import { StellarSpokeService } from '../services/spoke/StellarSpokeService.js';
 
 export type MoneyMarketEncodeSupplyParams = {
   asset: Address; // The address of the asset to supply.
@@ -266,6 +268,12 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
+      if (spokeProvider instanceof StellarSpokeProvider && (params.action === 'supply' || params.action === 'repay')) {
+        return {
+          ok: true,
+          value: await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider),
+        };
+      }
       if (spokeProvider instanceof EvmSpokeProvider && (params.action === 'supply' || params.action === 'repay')) {
         return await Erc20Service.isAllowanceValid(
           params.token as GetAddressType<EvmSpokeProvider>,
@@ -374,6 +382,19 @@ export class MoneyMarketService {
       );
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
+      if (spokeProvider instanceof StellarSpokeProvider) {
+        invariant(
+          params.action === 'supply' || params.action === 'repay',
+          'Invalid action (only supply and repay are supported on stellar)',
+        );
+
+        const result = await StellarSpokeService.requestTrustline(params.token, params.amount, spokeProvider, raw);
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+        };
+      }
 
       if (spokeProvider instanceof EvmSpokeProvider) {
         invariant(
@@ -1213,15 +1234,9 @@ export class MoneyMarketService {
 
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
 
-    let assetAddress = assetConfig.asset;
+    const assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const lendingPool = this.config.lendingPool;
-
-    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
-      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
-        assetAddress = spokeChainConfig[this.hubProvider.chainConfig.chain.id].supportedTokens.wS.address;
-      }
-    }
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
@@ -1263,16 +1278,10 @@ export class MoneyMarketService {
 
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
 
-    let assetAddress = assetConfig.asset;
+    const assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
-
-    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
-      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
-        assetAddress = spokeChainConfig[this.hubProvider.chainConfig.chain.id].supportedTokens.wS.address;
-      }
-    }
 
     const feeAmount = calculateFeeAmount(amount, this.config.partnerFee);
     const calls: EvmContractCall[] = [];
@@ -1411,16 +1420,10 @@ export class MoneyMarketService {
       throw new Error('[buildRepayData] Hub asset not found');
     }
 
-    let assetAddress = assetConfig.asset;
+    const assetAddress = assetConfig.asset;
     const vaultAddress = assetConfig.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
-
-    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
-      if (token.toLowerCase() === spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
-        assetAddress = spokeChainConfig[this.hubProvider.chainConfig.chain.id].supportedTokens.wS.address;
-      }
-    }
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
