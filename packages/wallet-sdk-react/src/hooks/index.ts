@@ -9,3 +9,4 @@ export { useXBalances } from './useXBalances';
 export { useWalletProviderOptions } from './useWalletProviderOptions';
 export { useEvmSwitchChain } from './useEvmSwitchChain';
 export { useWalletProvider } from './useWalletProvider';
+export { useXSignMessage } from './useXSignMessage';

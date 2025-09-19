@@ -159,14 +159,6 @@ const HeroSection = ({
               </li>
             </ul>
             <div className="inline-flex justify-center items-start relative mr-2 ml-5">
-              {/* <DecoratedButton
-                onClick={() => onRewardDialogChange(true)}
-                isConnected={isConnected}
-                address={address}
-                showAddressInfo={true}
-              >
-                join waitlist
-              </DecoratedButton> */}
               <LaunchButton>launch apps</LaunchButton>
             </div>
           </div>
