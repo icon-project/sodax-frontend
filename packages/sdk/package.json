@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.30.1",
-    "@injectivelabs/core-proto-ts": "1.15.0",
+    "@injectivelabs/core-proto-ts": "1.16.5",
     "@injectivelabs/networks": "catalog:",
     "@injectivelabs/sdk-ts": "catalog:",
     "@mysten/sui": "catalog:",
