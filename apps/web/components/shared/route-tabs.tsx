@@ -20,7 +20,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'swap',
     label: 'Swap',
     content: 'a quick swap',
-    enabled: false,
+    enabled: true,
   },
   {
     value: 'savings',
