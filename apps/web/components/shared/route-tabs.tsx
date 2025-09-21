@@ -34,7 +34,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'loans',
     label: 'Loans',
     content: 'a quick loans',
-    enabled: true,
+    enabled: false,
   },
   {
     value: 'migrate',
