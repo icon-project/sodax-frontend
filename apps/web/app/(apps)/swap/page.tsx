@@ -21,24 +21,7 @@ import { useSodaxContext } from '@sodax/dapp-kit';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
-
-const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
-  if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
-    return 0n;
-  }
-
-  return BigInt(
-    new BigNumber(amount.toString()).multipliedBy(new BigNumber(10).pow(decimals)).toFixed(0, BigNumber.ROUND_DOWN),
-  );
-};
-
-const normaliseTokenAmount = (amount: number | string | bigint, decimals: number): string => {
-  if (!amount || amount === 0n || amount === '0' || Number.isNaN(Number(amount))) {
-    return '0';
-  }
-
-  return new BigNumber(amount.toString()).dividedBy(new BigNumber(10).pow(decimals)).toFixed(4, BigNumber.ROUND_DOWN);
-};
+import { normaliseTokenAmount, scaleTokenAmount } from '../migrate/_utils/migration-utils';
 
 const calculateMaxAvailableAmount = (
   balance: bigint,
@@ -208,9 +191,7 @@ export default function SwapPage() {
   const sourceBalance = sourceBalances?.[sourceToken.address] || 0n;
   const destinationBalance = destinationBalances?.[destinationToken.address] || 0n;
 
-  const isWaitingForSolvedStatus = useMemo(() => {
-    return !!dstTxHash && !isSwapFailed;
-  }, [dstTxHash, isSwapFailed]);
+  const isWaitingForSolvedStatus = !!dstTxHash && !isSwapFailed;
 
   const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
   const { usdValue: destinationUsdValue } = useTokenPrice(destinationToken, destinationAmount);
