@@ -20,14 +20,14 @@ export const tabConfigs: TabConfig[] = [
     type: 'swap',
     label: 'Swap',
     content: 'a quick swap',
-    enabled: false,
+    enabled: true,
   },
   {
     value: 'savings',
     type: 'savings',
     label: 'Savings',
     content: 'a quick savings',
-    enabled: false,
+    enabled: true,
   },
   {
     value: 'loans',
@@ -95,8 +95,6 @@ export function RouteTabs(): React.JSX.Element {
     return () => window.removeEventListener('resize', onResize);
   }, [current]);
 
-  const toHref = (value: string) => `/${value}`;
-
   return (
     <>
       <div
@@ -158,7 +156,7 @@ export function RouteTabs(): React.JSX.Element {
 
           <ArrowUpIcon
             className="absolute transition-all duration-300 ease-in-out md:hidden"
-            style={{ top: '-16px', left: `${mobileArrowPosition}px` }}
+            style={{ top: '-16px', left: `$mobileArrowPositionpx` }}
           />
         </div>
       </div>

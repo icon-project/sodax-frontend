@@ -88,7 +88,6 @@ export const getWagmiConfig = (chains: EvmChainId[]) => {
   return createConfig({
     chains: finalChains as [typeof mainnet, ...(typeof mainnet)[]],
     transports,
-    // ssr: true,
   });
 };
 
