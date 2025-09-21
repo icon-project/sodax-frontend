@@ -1,18 +1,16 @@
 import { XService } from '@/core/XService';
 import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi, IndexerGrpcAccountPortfolioApi } from '@injectivelabs/sdk-ts';
-import { ChainId as InjectiveChainId, EvmChainId } from '@injectivelabs/ts-types';
-import { EvmWalletStrategy } from '@injectivelabs/wallet-evm';
-import { MsgBroadcaster, BaseWalletStrategy } from '@injectivelabs/wallet-core';
-import { Wallet } from '@injectivelabs/wallet-base';
-// import { CosmosWalletStrategy } from '@injectivelabs/wallet-cosmos';
+import { ChainId as InjectiveChainId } from '@injectivelabs/ts-types';
+import { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import type { XToken } from '@sodax/types';
 import { mainnet } from 'wagmi/chains';
+import { WalletStrategy } from '@injectivelabs/wallet-strategy';
 
 export class InjectiveXService extends XService {
   private static instance: InjectiveXService;
 
-  public walletStrategy: BaseWalletStrategy;
+  public walletStrategy: WalletStrategy;
   public indexerGrpcAccountPortfolioApi: IndexerGrpcAccountPortfolioApi;
   public chainGrpcWasmApi: ChainGrpcWasmApi;
   public msgBroadcaster: MsgBroadcaster;
@@ -21,23 +19,16 @@ export class InjectiveXService extends XService {
     super('INJECTIVE');
 
     const endpoints = getNetworkEndpoints(Network.Mainnet);
-    this.walletStrategy = new BaseWalletStrategy({
+
+    this.walletStrategy = new WalletStrategy({
       chainId: InjectiveChainId.Mainnet,
-      strategies: {
-        [Wallet.Metamask]: new EvmWalletStrategy({
-          chainId: InjectiveChainId.Mainnet,
-          wallet: Wallet.Metamask,
-          evmOptions: {
-            evmChainId: EvmChainId.Mainnet,
-            rpcUrl: mainnet.rpcUrls.default.http[0],
-          },
-        }),
-        // [Wallet.Keplr]: new CosmosWalletStrategy({
-        //   chainId: InjectiveChainId.Mainnet,
-        //   wallet: Wallet.Keplr,
-        // }),
+      strategies: {},
+      evmOptions: {
+        evmChainId: mainnet.id,
+        rpcUrl: mainnet.rpcUrls.default.http[0],
       },
     });
+
     this.indexerGrpcAccountPortfolioApi = new IndexerGrpcAccountPortfolioApi(endpoints.indexer);
     this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
     this.msgBroadcaster = new MsgBroadcaster({
