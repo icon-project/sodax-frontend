@@ -4,15 +4,23 @@ import { Button } from '@/components/ui/button';
 import { PlusIcon, MinusIcon, CopyIcon, Loader2, Info, XIcon } from 'lucide-react';
 import type { ChainType } from '@sodax/types';
 import { EVMChainItem } from './evm-chain-item';
-import { useXAccount, useXConnect, useXConnectors, useXDisconnect, type XConnector } from '@sodax/wallet-sdk-react';
-import { useCallback, useState } from 'react';
+import {
+  useXAccount,
+  useXConnect,
+  useXConnectors,
+  useXDisconnect,
+  type XConnector,
+  type XAccount,
+} from '@sodax/wallet-sdk-react';
+import { useCallback, useEffect, useState } from 'react';
 import { shortenAddress } from '@/lib/utils';
 import { chainGroupMap } from './wallet-modal';
+import { delay } from '@/lib/utils';
 
 export type ChainItemProps = {
   chainType: ChainType;
   setActiveXChainType: (chainType: ChainType) => void;
-  onSuccess?: () => void;
+  onSuccess?: (xConnector: XConnector, xAccount: XAccount) => Promise<void>;
 };
 
 export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChainType, onSuccess }) => {
@@ -23,6 +31,9 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
   const [copiedFadingOut, setCopiedFadingOut] = useState(false);
   const xDisconnect = useXDisconnect();
 
+  const [connected, setConnected] = useState(false);
+  const xAccount = useXAccount(chainType);
+
   const handleConnect = useCallback(async () => {
     if (xConnectors.length === 0) {
       return;
@@ -30,13 +41,21 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
 
     if (xConnectors.length === 1) {
       try {
-        await xConnect(xConnectors[0] as XConnector);
-        onSuccess?.();
+        const xAccount = await xConnect(xConnectors[0] as XConnector);
+        setConnected(true);
+        await delay(500);
       } catch (e) {}
     } else {
       setActiveXChainType(chainType);
     }
-  }, [xConnect, xConnectors, setActiveXChainType, chainType, onSuccess]);
+  }, [xConnect, xConnectors, setActiveXChainType, chainType]);
+
+  useEffect(() => {
+    if (connected && xAccount.address) {
+      onSuccess?.(xConnectors[0] as XConnector, xAccount);
+      setConnected(false);
+    }
+  }, [onSuccess, xConnectors[0], xAccount, connected]);
 
   const onCopyAddress = () => {
     if (!address) return;

@@ -14,6 +14,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 /**
  * Shortens a blockchain address for display purposes
  * Supports both Ethereum (0x...) and Cosmos (inj1..., osmo1..., etc.) style addresses

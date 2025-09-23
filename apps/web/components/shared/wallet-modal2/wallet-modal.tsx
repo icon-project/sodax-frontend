@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -9,9 +9,10 @@ import type { ChainType } from '@sodax/types';
 import { Separator } from '@/components/ui/separator';
 import { XIcon } from 'lucide-react';
 import { ArrowLeftIcon } from 'lucide-react';
-import { useXConnectors } from '@sodax/wallet-sdk-react';
+import { useXAccounts, useXConnectors } from '@sodax/wallet-sdk-react';
 import { WalletItem } from './wallet-item';
 import { AllSupportItem } from './all-support-item';
+import { isRegisteredUser } from '@/apis/users';
 
 type WalletModalProps = {
   modalId?: MODAL_ID;
@@ -93,8 +94,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     [modalData?.primaryChainType],
   );
 
-  const acceptedTerms = typeof window !== 'undefined' && localStorage.getItem('acceptedTerms') === 'accepted';
-
   const sortedXConnectors = useMemo(() => {
     const hanaXConnector = xConnectors.find(xConnector => xConnector.name.toLowerCase().includes('hana'));
     if (hanaXConnector) {
@@ -136,9 +135,12 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                 <React.Fragment key={xConnector.id}>
                   <WalletItem
                     xConnector={xConnector}
-                    onSuccess={() => {
+                    onSuccess={async (_xConnector, xAccount) => {
                       setActiveXChainType(undefined);
-                      if (xConnector.xChainType !== 'ICON' && !acceptedTerms) {
+                      const isRegistered = await isRegisteredUser({
+                        address: xAccount.address,
+                      });
+                      if (xConnector.xChainType !== 'ICON' && !isRegistered) {
                         openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: xConnector.xChainType });
                       }
                     }}
@@ -178,8 +180,9 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       key={chainGroup.chainType}
                       chainType={chainGroup.chainType}
                       setActiveXChainType={setActiveXChainType}
-                      onSuccess={() => {
-                        if (chainGroup.chainType !== 'ICON' && !acceptedTerms) {
+                      onSuccess={async (_xConnector, xAccount) => {
+                        const isRegistered = await isRegisteredUser({ address: xAccount.address });
+                        if (chainGroup.chainType !== 'ICON' && !isRegistered) {
                           openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
                         }
                       }}
@@ -214,8 +217,9 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                   <ChainItem
                     chainType={chainGroup.chainType}
                     setActiveXChainType={setActiveXChainType}
-                    onSuccess={() => {
-                      if (chainGroup.chainType !== 'ICON' && !acceptedTerms) {
+                    onSuccess={async (_xConnector, xAccount) => {
+                      const isRegistered = await isRegisteredUser({ address: xAccount.address });
+                      if (chainGroup.chainType !== 'ICON' && !isRegistered) {
                         openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
                       }
                     }}
