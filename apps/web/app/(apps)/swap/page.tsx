@@ -21,24 +21,7 @@ import { useSodaxContext } from '@sodax/dapp-kit';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
-
-const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
-  if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
-    return 0n;
-  }
-
-  return BigInt(
-    new BigNumber(amount.toString()).multipliedBy(new BigNumber(10).pow(decimals)).toFixed(0, BigNumber.ROUND_DOWN),
-  );
-};
-
-const normaliseTokenAmount = (amount: number | string | bigint, decimals: number): string => {
-  if (!amount || amount === 0n || amount === '0' || Number.isNaN(Number(amount))) {
-    return '0';
-  }
-
-  return new BigNumber(amount.toString()).dividedBy(new BigNumber(10).pow(decimals)).toFixed(4, BigNumber.ROUND_DOWN);
-};
+import { scaleTokenAmount, normaliseTokenAmount } from '../migrate/_utils/migration-utils';
 
 const calculateMaxAvailableAmount = (
   balance: bigint,
@@ -139,21 +122,13 @@ export default function SwapPage() {
   const openModal = useModalStore(state => state.openModal);
   const queryClient = useQueryClient();
 
-  const {
-    sourceToken,
-    destinationToken,
-    sourceAmount,
-    destinationAmount,
-    isSwapAndSend,
-    customDestinationAddress,
-    slippageTolerance,
-  } = useSwapState();
+  const { sourceToken, destinationToken, sourceAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
+    useSwapState();
 
   const {
     setSourceToken,
     setDestinationToken,
     setSourceAmount,
-    setDestinationAmount,
     setIsSwapAndSend,
     setCustomDestinationAddress,
     switchTokens,
@@ -184,8 +159,8 @@ export default function SwapPage() {
   const sourceChainType = getXChainType(sourceToken.xChainId);
   const destinationChainType = getXChainType(destinationToken.xChainId);
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
-  const { address: sourceAddress } = useXAccount(sourceChainType);
-  const { address: destinationAddress } = useXAccount(destinationChainType);
+  const { address: sourceAddress } = useXAccount(sourceToken.xChainId);
+  const { address: destinationAddress } = useXAccount(destinationToken.xChainId);
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
@@ -213,7 +188,6 @@ export default function SwapPage() {
   }, [dstTxHash, isSwapFailed]);
 
   const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
-  const { usdValue: destinationUsdValue } = useTokenPrice(destinationToken, destinationAmount);
 
   const { sodax } = useSodaxContext();
 
@@ -278,6 +252,8 @@ export default function SwapPage() {
     return '';
   }, [quoteQuery.data, destinationToken.decimals]);
 
+  const { usdValue: destinationUsdValue } = useTokenPrice(destinationToken, calculatedDestinationAmount);
+
   const exchangeRate = useMemo(() => {
     if (
       !sourceAmount ||
@@ -307,10 +283,6 @@ export default function SwapPage() {
     }
     return '';
   }, [quoteQuery.data, calculatedDestinationAmount, destinationToken.decimals, slippageTolerance]);
-
-  useEffect(() => {
-    setDestinationAmount(calculatedDestinationAmount);
-  }, [calculatedDestinationAmount, setDestinationAmount]);
 
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceProvider);
 
@@ -452,7 +424,7 @@ export default function SwapPage() {
       openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
     } else if (buttonState.action === 'review') {
       // Set fixed amounts before opening dialog to prevent changes during swap
-      setFixedDestinationAmount(destinationAmount);
+      setFixedDestinationAmount(calculatedDestinationAmount);
       setFixedMinOutputAmount(minOutputAmount);
       createIntentOrderPayload();
       setIsSwapConfirmOpen(true);
@@ -622,7 +594,7 @@ export default function SwapPage() {
             chainId={destinationToken.xChainId as SpokeChainId}
             currency={destinationToken}
             currencyBalance={isDestinationChainConnected ? destinationBalance : 0n}
-            inputValue={destinationAmount}
+            inputValue={calculatedDestinationAmount}
             onCurrencyChange={setDestinationToken}
             isChainConnected={isDestinationChainConnected}
             isSwapAndSend={isSwapAndSend}
@@ -685,7 +657,9 @@ export default function SwapPage() {
         sourceToken={sourceToken}
         destinationToken={destinationToken}
         sourceAmount={sourceAmount}
-        destinationAmount={isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : destinationAmount}
+        destinationAmount={
+          isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : calculatedDestinationAmount
+        }
         exchangeRate={exchangeRate}
         onConfirm={handleSwapConfirm}
         onClose={handleDialogClose}

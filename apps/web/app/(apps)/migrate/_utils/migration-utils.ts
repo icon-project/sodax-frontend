@@ -3,7 +3,6 @@ import { getChainName } from '@/constants/chains';
 import { chainIdToChainName } from '@/providers/constants';
 import type { SpokeChainId } from '@sodax/types';
 
-// Helper functions for gas fee calculation
 export const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
   if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
     return 0n;
