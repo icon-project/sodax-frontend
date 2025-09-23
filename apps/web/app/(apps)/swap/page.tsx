@@ -21,7 +21,8 @@ import { useSodaxContext } from '@sodax/dapp-kit';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
-import { scaleTokenAmount, normaliseTokenAmount } from '../migrate/_utils/migration-utils';
+import { parseUnits } from 'viem';
+import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
 
 const calculateMaxAvailableAmount = (
   balance: bigint,
@@ -34,7 +35,7 @@ const calculateMaxAvailableAmount = (
 
   try {
     const fullBalance = normaliseTokenAmount(balance, tokenDecimals);
-    const fullBalanceBigInt = scaleTokenAmount(fullBalance, tokenDecimals);
+    const fullBalanceBigInt = parseUnits(fullBalance, tokenDecimals);
     const feeAmount = solver.getFee(fullBalanceBigInt);
 
     const availableBalanceBigInt = fullBalanceBigInt - feeAmount;
@@ -61,14 +62,14 @@ const hasSufficientBalanceWithFee = (
   }
 
   try {
-    const amountBigInt = scaleTokenAmount(amount, tokenDecimals);
+    const amountBigInt = parseUnits(amount, tokenDecimals);
     const feeAmount = solver.getFee(amountBigInt);
     const totalRequired = amountBigInt + feeAmount;
 
     return totalRequired <= balance;
   } catch (error) {
     console.error('Error checking sufficient balance with fee:', error);
-    const amountBigInt = scaleTokenAmount(amount, tokenDecimals);
+    const amountBigInt = parseUnits(amount, tokenDecimals);
     return amountBigInt <= balance;
   }
 };
@@ -197,7 +198,7 @@ export default function SwapPage() {
     }
 
     try {
-      const sourceAmountBigInt = scaleTokenAmount(sourceAmount, sourceToken.decimals);
+      const sourceAmountBigInt = parseUnits(sourceAmount, sourceToken.decimals);
       const feeAmount = sodax.solver.getFee(sourceAmountBigInt);
 
       if (feeAmount === 0n) {
@@ -235,7 +236,7 @@ export default function SwapPage() {
       token_src_blockchain_id: sourceToken.xChainId,
       token_dst: destinationToken.address,
       token_dst_blockchain_id: destinationToken.xChainId,
-      amount: scaleTokenAmount(sourceAmount, sourceToken.decimals),
+      amount: parseUnits(sourceAmount, sourceToken.decimals),
       quote_type: 'exact_input' as QuoteType,
     };
 
@@ -402,7 +403,7 @@ export default function SwapPage() {
     const createIntentParams = {
       inputToken: sourceToken.address, // The address of the input token on hub chain
       outputToken: destinationToken.address, // The address of the output token on hub chain
-      inputAmount: scaleTokenAmount(sourceAmount, sourceToken.decimals), // The amount of input tokens
+      inputAmount: parseUnits(sourceAmount, sourceToken.decimals), // The amount of input tokens
       minOutputAmount: BigInt(Number(minOutputAmount).toFixed(0)), // The minimum amount of output tokens to accept
       deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires (0 = no deadline)
       allowPartialFill: false, // Whether the intent can be partially filled
@@ -472,7 +473,7 @@ export default function SwapPage() {
       }
 
       const quotedAmount = quoteQuery.data.value.quoted_amount;
-      const sourceAmountBigInt = scaleTokenAmount(sourceAmount, sourceToken.decimals);
+      const sourceAmountBigInt = parseUnits(sourceAmount, sourceToken.decimals);
 
       if (sourceAmountBigInt <= 0n) {
         throw new Error('Invalid source amount');

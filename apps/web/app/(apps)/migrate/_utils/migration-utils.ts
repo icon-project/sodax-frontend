@@ -1,17 +1,8 @@
 import BigNumber from 'bignumber.js';
+import { parseUnits } from 'viem';
 import { getChainName } from '@/constants/chains';
 import { chainIdToChainName } from '@/providers/constants';
 import type { SpokeChainId } from '@sodax/types';
-
-export const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
-  if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
-    return 0n;
-  }
-
-  return BigInt(
-    new BigNumber(amount.toString()).multipliedBy(new BigNumber(10).pow(decimals)).toFixed(0, BigNumber.ROUND_DOWN),
-  );
-};
 
 export const normaliseTokenAmount = (amount: number | string | bigint, decimals: number): string => {
   if (!amount || amount === 0n || amount === '0' || Number.isNaN(Number(amount))) {
@@ -28,7 +19,7 @@ export const calculateMaxAvailableAmount = (balance: bigint, tokenDecimals: numb
 
   try {
     const fullBalance = normaliseTokenAmount(balance, tokenDecimals);
-    const fullBalanceBigInt = scaleTokenAmount(fullBalance, tokenDecimals);
+    const fullBalanceBigInt = parseUnits(fullBalance, tokenDecimals);
 
     // Subtract gas fee from balance
     const availableBalanceBigInt = fullBalanceBigInt - gasFeeEstimate;
