@@ -136,7 +136,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                   <WalletItem
                     xConnector={xConnector}
                     onSuccess={async (_xConnector, xAccount) => {
-                      console.log('xAccount', xAccount);
                       setActiveXChainType(undefined);
                       const isRegistered = await isRegisteredUser({
                         address: xAccount.address,
@@ -182,7 +181,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       chainType={chainGroup.chainType}
                       setActiveXChainType={setActiveXChainType}
                       onSuccess={async (_xConnector, xAccount) => {
-                        console.log('xAccount', xAccount);
                         const isRegistered = await isRegisteredUser({ address: xAccount.address });
                         if (chainGroup.chainType !== 'ICON' && !isRegistered) {
                           openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
