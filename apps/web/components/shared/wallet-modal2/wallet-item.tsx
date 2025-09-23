@@ -1,24 +1,37 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { useXConnect, type XConnector } from '@sodax/wallet-sdk-react';
+import { useXConnect, type XConnector, type XAccount, useXAccount } from '@sodax/wallet-sdk-react';
 import { chainGroupMap } from './wallet-modal';
 import { EVM_CHAIN_ICONS } from './evm-chain-item';
+import { delay } from '@/lib/utils';
 
 export type WalletItemProps = {
   xConnector: XConnector;
-  onSuccess?: (xConnector: XConnector) => void;
+  onSuccess?: (xConnector: XConnector, xAccount: XAccount) => Promise<void>;
 };
 
 export const WalletItem: React.FC<WalletItemProps> = ({ xConnector, onSuccess }) => {
   const { mutateAsync: xConnect, isPending } = useXConnect();
 
+  const [connected, setConnected] = useState(false);
+
+  const xAccount = useXAccount(xConnector.xChainType);
+
   const handleConnect = useCallback(async () => {
     await xConnect(xConnector);
-    onSuccess?.(xConnector);
-  }, [xConnect, xConnector, onSuccess]);
+    setConnected(true);
+    await delay(500);
+  }, [xConnect, xConnector]);
+
+  useEffect(() => {
+    if (connected && xAccount.address) {
+      onSuccess?.(xConnector, xAccount);
+      setConnected(false);
+    }
+  }, [onSuccess, xConnector, xAccount, connected]);
 
   const { icon, name, chainType } = chainGroupMap[xConnector.xChainType];
   const isEVM = chainType === 'EVM';

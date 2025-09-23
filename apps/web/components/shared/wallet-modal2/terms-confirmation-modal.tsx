@@ -9,9 +9,11 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalOpen } from '@/stores/modal-store-provider';
 import { useModalStore } from '@/stores/modal-store-provider';
-import { useXDisconnect } from '@sodax/wallet-sdk-react';
+import { useXAccount, useXDisconnect, useXSignMessage } from '@sodax/wallet-sdk-react';
 import type { ChainType } from '@sodax/types';
 import { TermsContent } from './terms-content';
+import { Loader2 } from 'lucide-react';
+import { registerUser } from '@/apis/users';
 
 interface TermsConfirmationModalProps {
   modalId?: MODAL_ID;
@@ -20,21 +22,46 @@ interface TermsConfirmationModalProps {
 const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
   modalId = MODAL_ID.TERMS_CONFIRMATION_MODAL,
 }) => {
+  const [isPending, setIsPending] = useState<boolean>(false);
   const open = useModalOpen(modalId);
   const closeModal = useModalStore(state => state.closeModal);
   // const openModal = useModalStore(state => state.openModal);
   const modalData = useModalStore(state => state.modals[modalId]?.modalData) as { chainType: ChainType } | undefined;
   const xDisconnect = useXDisconnect();
 
+  const xAccount = useXAccount(modalData?.chainType);
+
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
   const [isTermsExpanded, setIsTermsExpanded] = useState<boolean>(false);
 
+  const { mutateAsync: signMessage } = useXSignMessage();
+
   const handleAccept = async (): Promise<void> => {
-    if (acceptedTerms) {
-      closeModal(modalId);
+    if (acceptedTerms && modalData?.chainType) {
       // openModal(MODAL_ID.WALLET_MODAL);
-      setAcceptedTerms(false);
-      if (typeof window !== 'undefined') localStorage.setItem('acceptedTerms', 'accepted');
+      // if (typeof window !== 'undefined') localStorage.setItem('acceptedTerms', 'accepted');
+
+      try {
+        const message = `By signing this I confirm that I have read and I agree to the terms of service and legal disclaimer provided by Sodax on ${new Date()}`;
+        setIsPending(true);
+        const signature = await signMessage({
+          xChainType: modalData?.chainType,
+          message,
+        });
+        console.log('signature', signature);
+        await registerUser({
+          address: xAccount?.address as string,
+          signature,
+          chainType: modalData?.chainType,
+          message,
+        });
+        setIsPending(false);
+        closeModal(modalId);
+        setAcceptedTerms(false);
+      } catch (e) {
+        console.log(e);
+        setIsPending(false);
+      }
     }
   };
 
@@ -111,10 +138,10 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
             variant="cherry"
             onClick={handleAccept}
             disabled={!acceptedTerms}
-            className="bg-cherry-bright hover:bg-cherry-brighter disabled:bg-cherry-grey disabled:cursor-not-allowed lg:max-w-[197px] md:max-w-[188px] h-10 font-['InterRegular'] cursor-pointer w-38"
+            className="bg-cherry-bright hover:bg-cherry-brighter disabled:bg-cherry-grey disabled:cursor-not-allowed lg:max-w-[240px] md:max-w-[240px] h-10 font-['InterRegular'] cursor-pointer w-[200px]"
           >
-            Accept terms
-            <ArrowRight className="w-4 h-4" />
+            {isPending ? 'Accepting terms...' : 'Accept terms'}
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
           </Button>
           <Button
             variant="outline"
