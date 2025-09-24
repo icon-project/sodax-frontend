@@ -48,10 +48,10 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
           xChainType: modalData?.chainType,
           message,
         });
-        console.log('signature', signature);
+
         await registerUser({
           address: xAccount?.address as string,
-          signature,
+          signature: signature as string,
           chainType: modalData?.chainType,
           message,
         });
