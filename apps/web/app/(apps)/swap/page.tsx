@@ -78,7 +78,7 @@ interface SwapStatusMonitorProps {
   dstTxHash: string;
   onSwapSuccessful: () => void;
   onSwapFailed: () => void;
-  onUpdateSwapStatus: (statusCode: number) => void;
+  onUpdateSwapStatus: (statusCode: SolverIntentStatusCode) => void;
   resetTrigger: number;
 }
 
@@ -513,7 +513,7 @@ export default function SwapPage() {
 
       const [, , intentDeliveryInfo] = result.value;
       setDstTxHash(intentDeliveryInfo.dstTxHash);
-      setSwapStatus(0);
+      setSwapStatus(SolverIntentStatusCode.NOT_STARTED_YET);
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     } catch (error) {
       console.error('Swap execution failed:', error);
@@ -534,8 +534,8 @@ export default function SwapPage() {
   };
 
   const buttonState = getButtonState();
-  const [swapStatus, setSwapStatus] = useState<number>(-1);
-  const handleUpdateSwapStatus = (statusCode: number) => {
+  const [swapStatus, setSwapStatus] = useState<SolverIntentStatusCode>(SolverIntentStatusCode.NOT_FOUND);
+  const handleUpdateSwapStatus = (statusCode: SolverIntentStatusCode) => {
     setSwapStatus(statusCode);
   };
   return (
