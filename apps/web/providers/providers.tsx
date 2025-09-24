@@ -16,7 +16,7 @@ import {
   SONIC_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { getQueryClient } from '@/app/get-query-client';
-import { XConfig } from '@sodax/wallet-sdk-react';
+import type { XConfig } from '@sodax/wallet-sdk-react';
 
 export default function Providers({ children }: { children: ReactNode }) {
   const queryClient = getQueryClient();
