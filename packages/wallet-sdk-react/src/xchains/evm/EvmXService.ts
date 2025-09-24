@@ -30,6 +30,7 @@ import {
   NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
@@ -69,6 +70,7 @@ const evmChainMap = {
   [NIBIRU_MAINNET_CHAIN_ID]: nibiru,
   [HYPEREVM_MAINNET_CHAIN_ID]: hyper,
   [LIGHTLINK_MAINNET_CHAIN_ID]: lightlinkPhoenix,
+  [ETHEREUM_MAINNET_CHAIN_ID]: mainnet,
 } as const;
 
 export type EvmChainId = keyof typeof evmChainMap;
