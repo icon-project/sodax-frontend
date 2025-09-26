@@ -37,7 +37,6 @@ export const useSwapState = () => {
   const sourceToken = useSwapStore(state => state.sourceToken);
   const destinationToken = useSwapStore(state => state.destinationToken);
   const sourceAmount = useSwapStore(state => state.sourceAmount);
-  const destinationAmount = useSwapStore(state => state.destinationAmount);
   const isSwapAndSend = useSwapStore(state => state.isSwapAndSend);
   const customDestinationAddress = useSwapStore(state => state.customDestinationAddress);
   const slippageTolerance = useSwapStore(state => state.slippageTolerance);
@@ -46,7 +45,6 @@ export const useSwapState = () => {
     sourceToken,
     destinationToken,
     sourceAmount,
-    destinationAmount,
     isSwapAndSend,
     customDestinationAddress,
     slippageTolerance,
@@ -58,7 +56,6 @@ export const useSwapActions = () => {
   const setSourceToken = useSwapStore(state => state.setSourceToken);
   const setDestinationToken = useSwapStore(state => state.setDestinationToken);
   const setSourceAmount = useSwapStore(state => state.setSourceAmount);
-  const setDestinationAmount = useSwapStore(state => state.setDestinationAmount);
   const setIsSwapAndSend = useSwapStore(state => state.setIsSwapAndSend);
   const setCustomDestinationAddress = useSwapStore(state => state.setCustomDestinationAddress);
   const setSlippageTolerance = useSwapStore(state => state.setSlippageTolerance);
@@ -69,7 +66,6 @@ export const useSwapActions = () => {
     setSourceToken,
     setDestinationToken,
     setSourceAmount,
-    setDestinationAmount,
     setIsSwapAndSend,
     setCustomDestinationAddress,
     setSlippageTolerance,

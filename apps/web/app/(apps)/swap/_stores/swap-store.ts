@@ -7,7 +7,6 @@ export type SwapState = {
   sourceToken: XToken;
   destinationToken: XToken;
   sourceAmount: string;
-  destinationAmount: string;
   isSwapAndSend: boolean;
   customDestinationAddress: string;
   slippageTolerance: number;
@@ -17,7 +16,6 @@ export type SwapActions = {
   setSourceToken: (token: XToken) => void;
   setDestinationToken: (token: XToken) => void;
   setSourceAmount: (amount: string) => void;
-  setDestinationAmount: (amount: string) => void;
   setIsSwapAndSend: (isSwapAndSend: boolean) => void;
   setCustomDestinationAddress: (address: string) => void;
   setSlippageTolerance: (tolerance: number) => void;
@@ -31,7 +29,6 @@ export const defaultSwapState: SwapState = {
   sourceToken: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
   destinationToken: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
   sourceAmount: '',
-  destinationAmount: '',
   isSwapAndSend: false,
   customDestinationAddress: '',
   slippageTolerance: 0.5,
@@ -45,17 +42,15 @@ export const createSwapStore = (initState: SwapState = defaultSwapState) => {
         setSourceToken: (token: XToken) => set({ sourceToken: token }),
         setDestinationToken: (token: XToken) => set({ destinationToken: token }),
         setSourceAmount: (amount: string) => set({ sourceAmount: amount }),
-        setDestinationAmount: (amount: string) => set({ destinationAmount: amount }),
         setIsSwapAndSend: (isSwapAndSend: boolean) => set({ isSwapAndSend }),
         setCustomDestinationAddress: (address: string) => set({ customDestinationAddress: address }),
         setSlippageTolerance: (tolerance: number) => set({ slippageTolerance: tolerance }),
         switchTokens: () => {
-          const { sourceToken, destinationToken, sourceAmount, destinationAmount } = get();
+          const { sourceToken, destinationToken, sourceAmount } = get();
           set({
             sourceToken: destinationToken,
             destinationToken: sourceToken,
-            sourceAmount: destinationAmount,
-            destinationAmount: sourceAmount,
+            sourceAmount: '',
           });
         },
         resetSwapState: () => set(defaultSwapState),

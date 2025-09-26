@@ -14,7 +14,7 @@ import {
   type SpokeChainId,
   type XToken,
 } from '@sodax/types';
-import { getChainDisplayName, scaleTokenAmount, normaliseTokenAmount, calculateMaxAvailableAmount } from '../_utils';
+import { getChainDisplayName, normaliseTokenAmount, calculateMaxAvailableAmount } from '../_utils';
 
 import { SuccessDialog } from './success-dialog';
 import { ErrorDialog } from './error-dialog';
@@ -81,7 +81,7 @@ export default function IcxsodaMigration() {
       // Estimate gas fee based on the chain
       let gasFeeEstimate: bigint;
       const fullBalance = normaliseTokenAmount(balance, currencies.from.decimals);
-      const fullBalanceBigInt = scaleTokenAmount(fullBalance, currencies.from.decimals);
+      const fullBalanceBigInt = parseUnits(fullBalance, currencies.from.decimals);
       const feeAmount = sodax.solver.getFee(fullBalanceBigInt);
       if (direction.from === ICON_MAINNET_CHAIN_ID) {
         gasFeeEstimate = parseUnits(

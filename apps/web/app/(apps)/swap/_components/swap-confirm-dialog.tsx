@@ -2,19 +2,19 @@
 
 import type React from 'react';
 import { useState, useEffect } from 'react';
-import type { XToken, ChainId, SpokeChainId, ChainType } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { CircularProgressIcon } from '@/components/icons';
 import type BigNumber from 'bignumber.js';
-import { Timer, XIcon, Check, ChevronRight, ChevronsRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { Timer, XIcon, Check, ChevronsRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
 import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { availableChains } from '@/constants/chains';
 import { useSwapApprove, useSpokeProvider, useSwapAllowance } from '@sodax/dapp-kit';
-import type { CreateIntentParams, SolverIntentQuoteRequest, SolverIntentStatusCode, QuoteType } from '@sodax/sdk';
+import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -33,7 +33,7 @@ interface SwapConfirmDialogProps {
   swapFee?: string;
   minOutputAmount?: BigNumber;
   intentOrderPayload?: CreateIntentParams;
-  swapStatus?: number;
+  swapStatus?: SolverIntentStatusCode;
 }
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
@@ -353,13 +353,13 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   {isLoading || isConfirming ? (
                     <div className="flex items-center gap-2 text-white">
                       <span>
-                        {swapStatus === -1
+                        {swapStatus === SolverIntentStatusCode.NOT_FOUND
                           ? 'Confirming Swap'
-                          : swapStatus === 0
+                          : swapStatus === SolverIntentStatusCode.NOT_STARTED_YET
                             ? 'Swap Created'
-                            : swapStatus === 1
+                            : swapStatus === SolverIntentStatusCode.STARTED_NOT_FINISHED
                               ? 'Swap in Progress'
-                              : swapStatus === 2
+                              : swapStatus === SolverIntentStatusCode.SOLVED
                                 ? 'Transferring Assets'
                                 : 'Confirming Swap'}
                       </span>

@@ -21,24 +21,8 @@ import { useSodaxContext } from '@sodax/dapp-kit';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
-
-const scaleTokenAmount = (amount: number | string, decimals: number): bigint => {
-  if (!amount || amount === '' || amount === '0' || Number.isNaN(Number(amount))) {
-    return 0n;
-  }
-
-  return BigInt(
-    new BigNumber(amount.toString()).multipliedBy(new BigNumber(10).pow(decimals)).toFixed(0, BigNumber.ROUND_DOWN),
-  );
-};
-
-const normaliseTokenAmount = (amount: number | string | bigint, decimals: number): string => {
-  if (!amount || amount === 0n || amount === '0' || Number.isNaN(Number(amount))) {
-    return '0';
-  }
-
-  return new BigNumber(amount.toString()).dividedBy(new BigNumber(10).pow(decimals)).toFixed(4, BigNumber.ROUND_DOWN);
-};
+import { parseUnits } from 'viem';
+import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
 
 const calculateMaxAvailableAmount = (
   balance: bigint,
@@ -51,7 +35,7 @@ const calculateMaxAvailableAmount = (
 
   try {
     const fullBalance = normaliseTokenAmount(balance, tokenDecimals);
-    const fullBalanceBigInt = scaleTokenAmount(fullBalance, tokenDecimals);
+    const fullBalanceBigInt = parseUnits(fullBalance, tokenDecimals);
     const feeAmount = solver.getFee(fullBalanceBigInt);
 
     const availableBalanceBigInt = fullBalanceBigInt - feeAmount;
@@ -78,14 +62,14 @@ const hasSufficientBalanceWithFee = (
   }
 
   try {
-    const amountBigInt = scaleTokenAmount(amount, tokenDecimals);
+    const amountBigInt = parseUnits(amount, tokenDecimals);
     const feeAmount = solver.getFee(amountBigInt);
     const totalRequired = amountBigInt + feeAmount;
 
     return totalRequired <= balance;
   } catch (error) {
     console.error('Error checking sufficient balance with fee:', error);
-    const amountBigInt = scaleTokenAmount(amount, tokenDecimals);
+    const amountBigInt = parseUnits(amount, tokenDecimals);
     return amountBigInt <= balance;
   }
 };
@@ -94,7 +78,7 @@ interface SwapStatusMonitorProps {
   dstTxHash: string;
   onSwapSuccessful: () => void;
   onSwapFailed: () => void;
-  onUpdateSwapStatus: (statusCode: number) => void;
+  onUpdateSwapStatus: (statusCode: SolverIntentStatusCode) => void;
   resetTrigger: number;
 }
 
@@ -139,21 +123,13 @@ export default function SwapPage() {
   const openModal = useModalStore(state => state.openModal);
   const queryClient = useQueryClient();
 
-  const {
-    sourceToken,
-    destinationToken,
-    sourceAmount,
-    destinationAmount,
-    isSwapAndSend,
-    customDestinationAddress,
-    slippageTolerance,
-  } = useSwapState();
+  const { sourceToken, destinationToken, sourceAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
+    useSwapState();
 
   const {
     setSourceToken,
     setDestinationToken,
     setSourceAmount,
-    setDestinationAmount,
     setIsSwapAndSend,
     setCustomDestinationAddress,
     switchTokens,
@@ -184,8 +160,8 @@ export default function SwapPage() {
   const sourceChainType = getXChainType(sourceToken.xChainId);
   const destinationChainType = getXChainType(destinationToken.xChainId);
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
-  const { address: sourceAddress } = useXAccount(sourceChainType);
-  const { address: destinationAddress } = useXAccount(destinationChainType);
+  const { address: sourceAddress } = useXAccount(sourceToken.xChainId);
+  const { address: destinationAddress } = useXAccount(destinationToken.xChainId);
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
@@ -213,7 +189,6 @@ export default function SwapPage() {
   }, [dstTxHash, isSwapFailed]);
 
   const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
-  const { usdValue: destinationUsdValue } = useTokenPrice(destinationToken, destinationAmount);
 
   const { sodax } = useSodaxContext();
 
@@ -223,7 +198,7 @@ export default function SwapPage() {
     }
 
     try {
-      const sourceAmountBigInt = scaleTokenAmount(sourceAmount, sourceToken.decimals);
+      const sourceAmountBigInt = parseUnits(sourceAmount, sourceToken.decimals);
       const feeAmount = sodax.solver.getFee(sourceAmountBigInt);
 
       if (feeAmount === 0n) {
@@ -261,7 +236,7 @@ export default function SwapPage() {
       token_src_blockchain_id: sourceToken.xChainId,
       token_dst: destinationToken.address,
       token_dst_blockchain_id: destinationToken.xChainId,
-      amount: scaleTokenAmount(sourceAmount, sourceToken.decimals),
+      amount: parseUnits(sourceAmount, sourceToken.decimals),
       quote_type: 'exact_input' as QuoteType,
     };
 
@@ -277,6 +252,8 @@ export default function SwapPage() {
     }
     return '';
   }, [quoteQuery.data, destinationToken.decimals]);
+
+  const { usdValue: destinationUsdValue } = useTokenPrice(destinationToken, calculatedDestinationAmount);
 
   const exchangeRate = useMemo(() => {
     if (
@@ -307,10 +284,6 @@ export default function SwapPage() {
     }
     return '';
   }, [quoteQuery.data, calculatedDestinationAmount, destinationToken.decimals, slippageTolerance]);
-
-  useEffect(() => {
-    setDestinationAmount(calculatedDestinationAmount);
-  }, [calculatedDestinationAmount, setDestinationAmount]);
 
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceProvider);
 
@@ -430,7 +403,7 @@ export default function SwapPage() {
     const createIntentParams = {
       inputToken: sourceToken.address, // The address of the input token on hub chain
       outputToken: destinationToken.address, // The address of the output token on hub chain
-      inputAmount: scaleTokenAmount(sourceAmount, sourceToken.decimals), // The amount of input tokens
+      inputAmount: parseUnits(sourceAmount, sourceToken.decimals), // The amount of input tokens
       minOutputAmount: BigInt(Number(minOutputAmount).toFixed(0)), // The minimum amount of output tokens to accept
       deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires (0 = no deadline)
       allowPartialFill: false, // Whether the intent can be partially filled
@@ -452,7 +425,7 @@ export default function SwapPage() {
       openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
     } else if (buttonState.action === 'review') {
       // Set fixed amounts before opening dialog to prevent changes during swap
-      setFixedDestinationAmount(destinationAmount);
+      setFixedDestinationAmount(calculatedDestinationAmount);
       setFixedMinOutputAmount(minOutputAmount);
       createIntentOrderPayload();
       setIsSwapConfirmOpen(true);
@@ -500,7 +473,7 @@ export default function SwapPage() {
       }
 
       const quotedAmount = quoteQuery.data.value.quoted_amount;
-      const sourceAmountBigInt = scaleTokenAmount(sourceAmount, sourceToken.decimals);
+      const sourceAmountBigInt = parseUnits(sourceAmount, sourceToken.decimals);
 
       if (sourceAmountBigInt <= 0n) {
         throw new Error('Invalid source amount');
@@ -540,7 +513,7 @@ export default function SwapPage() {
 
       const [, , intentDeliveryInfo] = result.value;
       setDstTxHash(intentDeliveryInfo.dstTxHash);
-      setSwapStatus(0);
+      setSwapStatus(SolverIntentStatusCode.NOT_STARTED_YET);
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     } catch (error) {
       console.error('Swap execution failed:', error);
@@ -561,8 +534,8 @@ export default function SwapPage() {
   };
 
   const buttonState = getButtonState();
-  const [swapStatus, setSwapStatus] = useState<number>(-1);
-  const handleUpdateSwapStatus = (statusCode: number) => {
+  const [swapStatus, setSwapStatus] = useState<SolverIntentStatusCode>(SolverIntentStatusCode.NOT_FOUND);
+  const handleUpdateSwapStatus = (statusCode: SolverIntentStatusCode) => {
     setSwapStatus(statusCode);
   };
   return (
@@ -622,7 +595,7 @@ export default function SwapPage() {
             chainId={destinationToken.xChainId as SpokeChainId}
             currency={destinationToken}
             currencyBalance={isDestinationChainConnected ? destinationBalance : 0n}
-            inputValue={destinationAmount}
+            inputValue={calculatedDestinationAmount}
             onCurrencyChange={setDestinationToken}
             isChainConnected={isDestinationChainConnected}
             isSwapAndSend={isSwapAndSend}
@@ -685,7 +658,9 @@ export default function SwapPage() {
         sourceToken={sourceToken}
         destinationToken={destinationToken}
         sourceAmount={sourceAmount}
-        destinationAmount={isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : destinationAmount}
+        destinationAmount={
+          isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : calculatedDestinationAmount
+        }
         exchangeRate={exchangeRate}
         onConfirm={handleSwapConfirm}
         onClose={handleDialogClose}
