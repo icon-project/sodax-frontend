@@ -164,12 +164,12 @@ describe('Sodax', () => {
       });
     });
 
-    describe('getFee', () => {
+    describe('getPartnerFee', () => {
       it('should calculate fee correctly for given input amount', async () => {
         const inputAmount = 1000n;
         const expectedFee = 10n; // Assuming 1% fee
 
-        const result = sodax.solver.getFee(inputAmount);
+        const result = sodax.solver.getPartnerFee(inputAmount);
 
         expect(result).toBe(expectedFee);
       });

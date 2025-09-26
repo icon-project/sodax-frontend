@@ -245,15 +245,15 @@ export class SolverService {
   }
 
   /**
-   * Get the fee for a given input amount
+   * Get the partner fee for a given input amount
    * @param {bigint} inputAmount - The amount of input tokens
-   * @returns {Promise<bigint>} The fee amount (denominated in input tokens)
+   * @returns {Promise<bigint>} The partner fee amount (denominated in input tokens)
    *
    * @example
-   * const fee: bigint = await solverService.getFee(1000000000000000n);
-   * console.log('Fee:', fee);
+   * const fee: bigint = await solverService.getPartnerFee(1000000000000000n);
+   * console.log('Partner fee:', fee);
    */
-  public getFee(inputAmount: bigint): bigint {
+  public getPartnerFee(inputAmount: bigint): bigint {
     if (!this.config.partnerFee) {
       return 0n;
     }
@@ -766,7 +766,12 @@ export class SolverService {
       }
 
       if (spokeProvider instanceof StellarSpokeProvider) {
-        const result = await StellarSpokeService.requestTrustline(params.inputToken, params.inputAmount, spokeProvider, raw);
+        const result = await StellarSpokeService.requestTrustline(
+          params.inputToken,
+          params.inputAmount,
+          spokeProvider,
+          raw,
+        );
         return {
           ok: true,
           value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,

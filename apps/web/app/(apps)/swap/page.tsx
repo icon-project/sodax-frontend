@@ -10,14 +10,13 @@ import type { SpokeChainId, ChainType } from '@sodax/types';
 import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { getXChainType } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
-import { useQuote, useSpokeProvider, useSwap, useStatus } from '@sodax/dapp-kit';
+import { useQuote, useSpokeProvider, useSwap, useStatus, useSodaxContext } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import BigNumber from 'bignumber.js';
 import type { CreateIntentParams, QuoteType } from '@sodax/sdk';
 import { SolverIntentStatusCode } from '@sodax/sdk';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
-import { useSodaxContext } from '@sodax/dapp-kit';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
@@ -27,7 +26,7 @@ import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
 const calculateMaxAvailableAmount = (
   balance: bigint,
   tokenDecimals: number,
-  solver: { getFee: (amount: bigint) => bigint },
+  solver: { getPartnerFee: (amount: bigint) => bigint },
 ): string => {
   if (balance === 0n) {
     return '0';
@@ -36,7 +35,7 @@ const calculateMaxAvailableAmount = (
   try {
     const fullBalance = normaliseTokenAmount(balance, tokenDecimals);
     const fullBalanceBigInt = parseUnits(fullBalance, tokenDecimals);
-    const feeAmount = solver.getFee(fullBalanceBigInt);
+    const feeAmount = solver.getPartnerFee(fullBalanceBigInt);
 
     const availableBalanceBigInt = fullBalanceBigInt - feeAmount;
 
@@ -55,7 +54,7 @@ const hasSufficientBalanceWithFee = (
   amount: string,
   balance: bigint,
   tokenDecimals: number,
-  solver: { getFee: (amount: bigint) => bigint },
+  solver: { getPartnerFee: (amount: bigint) => bigint },
 ): boolean => {
   if (!amount || amount === '0' || amount === '' || Number.isNaN(Number(amount))) {
     return false;
@@ -63,7 +62,7 @@ const hasSufficientBalanceWithFee = (
 
   try {
     const amountBigInt = parseUnits(amount, tokenDecimals);
-    const feeAmount = solver.getFee(amountBigInt);
+    const feeAmount = solver.getPartnerFee(amountBigInt);
     const totalRequired = amountBigInt + feeAmount;
 
     return totalRequired <= balance;
@@ -199,7 +198,7 @@ export default function SwapPage() {
 
     try {
       const sourceAmountBigInt = parseUnits(sourceAmount, sourceToken.decimals);
-      const feeAmount = sodax.solver.getFee(sourceAmountBigInt);
+      const feeAmount = sodax.solver.getPartnerFee(sourceAmountBigInt);
 
       if (feeAmount === 0n) {
         return 'Free';
