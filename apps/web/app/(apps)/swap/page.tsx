@@ -16,12 +16,13 @@ import BigNumber from 'bignumber.js';
 import type { CreateIntentParams, QuoteType } from '@sodax/sdk';
 import { SolverIntentStatusCode } from '@sodax/sdk';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { useTokenPrice, useTokenUsdValue } from '@/hooks/useTokenPrice';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
-import { parseUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
+import { convertSegmentPathToStaticExportFilename } from 'next/dist/shared/lib/segment-cache/segment-value-encoding';
 
 const calculateMaxAvailableAmount = (
   balance: bigint,
@@ -187,36 +188,9 @@ export default function SwapPage() {
     return !!dstTxHash && !isSwapFailed;
   }, [dstTxHash, isSwapFailed]);
 
-  const { usdValue: sourceUsdValue } = useTokenPrice(sourceToken, sourceAmount);
+  const sourceUsdValue = useTokenUsdValue(sourceToken, sourceAmount);
 
   const { sodax } = useSodaxContext();
-
-  const swapFee = useMemo(() => {
-    if (!sourceAmount || sourceAmount === '' || Number.isNaN(Number(sourceAmount)) || Number(sourceAmount) <= 0) {
-      return undefined;
-    }
-
-    try {
-      const sourceAmountBigInt = parseUnits(sourceAmount, sourceToken.decimals);
-      const feeAmount = sodax.solver.getPartnerFee(sourceAmountBigInt);
-
-      if (feeAmount === 0n) {
-        return 'Free';
-      }
-
-      const feeInTokens = normaliseTokenAmount(feeAmount, sourceToken.decimals);
-      const feeUsdValue = sourceUsdValue ? (Number(feeInTokens) * sourceUsdValue) / Number(sourceAmount) : undefined;
-
-      if (feeUsdValue && feeUsdValue > 0) {
-        return `$${feeUsdValue.toFixed(4)}`;
-      }
-
-      return `${feeInTokens} ${sourceToken.symbol}`;
-    } catch (error) {
-      console.error('Error calculating swap fee:', error);
-      return '&lt; $0.01';
-    }
-  }, [sourceAmount, sourceToken, sodax.solver, sourceUsdValue]);
 
   const quotePayload = useMemo(() => {
     if (
@@ -235,12 +209,14 @@ export default function SwapPage() {
       token_src_blockchain_id: sourceToken.xChainId,
       token_dst: destinationToken.address,
       token_dst_blockchain_id: destinationToken.xChainId,
-      amount: parseUnits(sourceAmount, sourceToken.decimals),
+      amount:
+        parseUnits(sourceAmount, sourceToken.decimals) -
+        sodax.solver.getPartnerFee(parseUnits(sourceAmount, sourceToken.decimals)),
       quote_type: 'exact_input' as QuoteType,
     };
 
     return payload;
-  }, [sourceToken, destinationToken, sourceAmount]);
+  }, [sourceToken, destinationToken, sourceAmount, sodax]);
 
   const quoteQuery = useQuote(quotePayload);
 
@@ -252,7 +228,7 @@ export default function SwapPage() {
     return '';
   }, [quoteQuery.data, destinationToken.decimals]);
 
-  const { usdValue: destinationUsdValue } = useTokenPrice(destinationToken, calculatedDestinationAmount);
+  const destinationUsdValue = useTokenUsdValue(destinationToken, calculatedDestinationAmount);
 
   const exchangeRate = useMemo(() => {
     if (
@@ -273,6 +249,47 @@ export default function SwapPage() {
       return null;
     }
   }, [sourceAmount, calculatedDestinationAmount]);
+
+  const swapFees = useMemo(() => {
+    if (!sourceAmount || sourceAmount === '' || Number.isNaN(Number(sourceAmount)) || Number(sourceAmount) <= 0) {
+      return undefined;
+    }
+
+    if (
+      !calculatedDestinationAmount ||
+      calculatedDestinationAmount === '' ||
+      Number.isNaN(Number(calculatedDestinationAmount)) ||
+      Number(calculatedDestinationAmount) <= 0
+    ) {
+      return undefined;
+    }
+
+    return {
+      partner: new BigNumber(
+        formatUnits(sodax.solver.getPartnerFee(parseUnits(sourceAmount, sourceToken.decimals)), sourceToken.decimals),
+      ),
+      solver: new BigNumber(
+        formatUnits(
+          sodax.solver.getSolverFee(parseUnits(calculatedDestinationAmount, destinationToken.decimals)),
+          destinationToken.decimals,
+        ),
+      ),
+    };
+  }, [sourceAmount, calculatedDestinationAmount, sourceToken.decimals, destinationToken.decimals, sodax.solver]);
+
+  const { data: sourceTokenPrice } = useTokenPrice(sourceToken);
+  const { data: destinationTokenPrice } = useTokenPrice(destinationToken);
+  const swapFeesUsdValue = useMemo(() => {
+    if (!swapFees || !sourceTokenPrice || !destinationTokenPrice) {
+      return undefined;
+    }
+
+    return {
+      partner: swapFees.partner.multipliedBy(sourceTokenPrice),
+      solver: swapFees.solver.multipliedBy(destinationTokenPrice),
+      total: swapFees.partner.multipliedBy(sourceTokenPrice).plus(swapFees.solver.multipliedBy(destinationTokenPrice)),
+    };
+  }, [swapFees, sourceTokenPrice, destinationTokenPrice]);
 
   const minOutputAmount = useMemo(() => {
     if (quoteQuery.data?.ok && quoteQuery.data.value && calculatedDestinationAmount) {
@@ -647,7 +664,7 @@ export default function SwapPage() {
 
       {sourceAddress && (
         <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-          Takes ~1 min · Total fees: {swapFee || '$0.001'}
+          Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
         </div>
       )}
 
@@ -671,7 +688,7 @@ export default function SwapPage() {
         }
         intentOrderPayload={intentOrderPayload}
         isSwapSuccessful={isSwapSuccessful}
-        swapFee={swapFee}
+        swapFeesUsdValue={swapFeesUsdValue}
         swapStatus={swapStatus}
       />
     </div>
