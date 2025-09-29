@@ -137,10 +137,14 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                     xConnector={xConnector}
                     onSuccess={async (_xConnector, xAccount) => {
                       setActiveXChainType(undefined);
-                      const isRegistered = await isRegisteredUser({
-                        address: xAccount.address as string,
-                      });
-                      if (xConnector.xChainType !== 'ICON' && !isRegistered) {
+                      if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
+                        return;
+                      }
+                      if (!xAccount.address) {
+                        return;
+                      }
+                      const isRegistered = await isRegisteredUser({ address: xAccount.address });
+                      if (!isRegistered) {
                         openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: xConnector.xChainType });
                       }
                     }}
@@ -181,8 +185,14 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       chainType={chainGroup.chainType}
                       setActiveXChainType={setActiveXChainType}
                       onSuccess={async (_xConnector, xAccount) => {
-                        const isRegistered = await isRegisteredUser({ address: xAccount.address as string });
-                        if (chainGroup.chainType !== 'ICON' && !isRegistered) {
+                        if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
+                          return;
+                        }
+                        if (!xAccount.address) {
+                          return;
+                        }
+                        const isRegistered = await isRegisteredUser({ address: xAccount.address });
+                        if (!isRegistered) {
                           openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
                         }
                       }}
@@ -218,8 +228,14 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                     chainType={chainGroup.chainType}
                     setActiveXChainType={setActiveXChainType}
                     onSuccess={async (_xConnector, xAccount) => {
-                      const isRegistered = await isRegisteredUser({ address: xAccount.address as string });
-                      if (chainGroup.chainType !== 'ICON' && !isRegistered) {
+                      if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
+                        return;
+                      }
+                      if (!xAccount.address) {
+                        return;
+                      }
+                      const isRegistered = await isRegisteredUser({ address: xAccount.address });
+                      if (!isRegistered) {
                         openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
                       }
                     }}

@@ -30,7 +30,11 @@ interface SwapConfirmDialogProps {
   slippageTolerance?: number;
   error?: string;
   isSwapSuccessful?: boolean;
-  swapFee?: string;
+  swapFeesUsdValue?: {
+    partner: BigNumber;
+    solver: BigNumber;
+    total: BigNumber;
+  };
   minOutputAmount?: BigNumber;
   intentOrderPayload?: CreateIntentParams;
   swapStatus?: SolverIntentStatusCode;
@@ -51,7 +55,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   minOutputAmount,
   error,
   isSwapSuccessful = false,
-  swapFee,
+  swapFeesUsdValue,
   intentOrderPayload,
   swapStatus,
 }: SwapConfirmDialogProps) => {
@@ -395,10 +399,10 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   >
                     <div className="inline-flex justify-center items-center gap-1 w-60">
                       <div className="justify-start text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
-                        Receive at least
+                        Total fees:
                       </div>
                       <div className="justify-start text-clay text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
-                        {formatToSixDecimals(minOutputAmount.toString())} {destinationToken.symbol}
+                        {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
                       </div>
                     </div>
                     <div className="w-4 h-4 relative overflow-hidden">
@@ -415,9 +419,12 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                       <Separator className="bg-clay-light h-[1px] mt-4 mb-4 opacity-30" />
                       <div className="space-y-2 text-(length:--body-comfortable)">
                         <div className="flex justify-between">
-                          <span className="text-clay-light">Swap Fee (0.10%)</span>
-                          <span className="text-espresso font-medium">{swapFee || '&lt; $0.01'}</span>
+                          <span className="text-clay-light">Swap Fee (0.20%)</span>
+                          <span className="text-espresso font-medium">
+                            {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+                          </span>
                         </div>
+
                         <div className="flex justify-between">
                           <span className="text-clay-light">Network cost</span>
                           <span className="text-espresso font-medium">&lt; $0.01</span>
