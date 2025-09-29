@@ -419,6 +419,12 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                       <Separator className="bg-clay-light h-[1px] mt-4 mb-4 opacity-30" />
                       <div className="space-y-2 text-(length:--body-comfortable)">
                         <div className="flex justify-between">
+                          <span className="text-clay-light">Receive at least</span>
+                          <span className="text-espresso font-medium">
+                            {formatToSixDecimals(minOutputAmount.toString())} {destinationToken.symbol}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
                           <span className="text-clay-light">Swap Fee (0.20%)</span>
                           <span className="text-espresso font-medium">
                             {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
