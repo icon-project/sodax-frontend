@@ -104,14 +104,8 @@ export function useWalletProvider(
           // throw new Error('InjectiveXService is not initialized');
         }
 
-        const { walletAddress, msgBroadcaster } = {
-          walletAddress: xAccount.address,
-          msgBroadcaster: injectiveXService.msgBroadcaster,
-        };
-
         return new InjectiveWalletProvider({
-          walletAddress: walletAddress as InjectiveEoaAddress | undefined,
-          msgBroadcaster: msgBroadcaster,
+          msgBroadcaster: injectiveXService.msgBroadcaster,
         });
       }
 
