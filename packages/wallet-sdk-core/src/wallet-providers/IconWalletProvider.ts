@@ -1,6 +1,8 @@
 import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/types';
 import type { IconService, Wallet as IconSdkWallet } from 'icon-sdk-js';
-import { Converter, CallTransactionBuilder, Wallet, IconService as IconServiceConstructor } from 'icon-sdk-js';
+import * as IconSdkRaw from 'icon-sdk-js';
+const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
+const { Converter, CallTransactionBuilder, Wallet } = IconSdk;
 
 export class IconWalletProvider implements IIconWalletProvider {
   private readonly wallet: IconWallet;
@@ -12,13 +14,13 @@ export class IconWalletProvider implements IIconWalletProvider {
         type: 'PRIVATE_KEY',
         wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
       };
-      this.iconService = new IconServiceConstructor(new IconServiceConstructor.HttpProvider(wallet.rpcUrl));
+      this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(wallet.rpcUrl));
     } else if (isBrowserExtensionIconWalletConfig(wallet)) {
       this.wallet = {
         type: 'BROWSER_EXTENSION',
         wallet: wallet.walletAddress,
       };
-      this.iconService = new IconServiceConstructor(new IconServiceConstructor.HttpProvider(wallet.rpcUrl));
+      this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(wallet.rpcUrl));
     } else {
       throw new Error('Invalid Icon wallet config');
     }
@@ -43,7 +45,7 @@ export class IconWalletProvider implements IIconWalletProvider {
 
       return result.result satisfies string as Hash;
     }
-    const signedTx = new IconServiceConstructor.SignedTransaction(builtTx, this.wallet.wallet);
+    const signedTx = new IconSdk.IconService.SignedTransaction(builtTx, this.wallet.wallet);
     const result = await this.iconService.sendTransaction(signedTx).execute();
 
     return result satisfies string as Hash;
