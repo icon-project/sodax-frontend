@@ -64,6 +64,8 @@ export function TokenList({
 
   const shouldApplyHover = clickedAsset === null;
 
+  const [backdropShow, setBackdropShow] = useState(false);
+
   const handleTokenAssetClick = (token: XToken) => {
     if (onTokenSelect) {
       onTokenSelect(token);
@@ -79,6 +81,7 @@ export function TokenList({
     if (onClickOutside) {
       onClickOutside();
     }
+    setBackdropShow(false);
   };
 
   const renderTokenSymbol = ({ symbol, tokens }: { symbol: string; tokens: XToken[] }) => {
@@ -105,7 +108,10 @@ export function TokenList({
           tokens={tokens}
           isClicked={isThisAssetClicked}
           isBlurred={shouldBlurOtherAssets}
-          onClick={(e: React.MouseEvent) => onAssetClick(e, symbol)}
+          onClick={(e: React.MouseEvent) => {
+            onAssetClick(e, symbol);
+            setBackdropShow(true);
+          }}
           isHovered={isHovered}
           onMouseEnter={() => shouldApplyHover && setHoveredAsset(symbol)}
           onMouseLeave={() => shouldApplyHover && setHoveredAsset(null)}
@@ -137,6 +143,7 @@ export function TokenList({
       }`}
       data-name="Assets"
     >
+      {backdropShow && <div className="rounded-[32px] fixed inset-0 z-50" />}
       <ScrollAreaPrimitive.Root data-slot="scroll-area" className={showAllAssets ? 'h-96' : 'h-71'}>
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
