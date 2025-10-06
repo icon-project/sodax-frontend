@@ -29,7 +29,8 @@ export function useXConnection(xChainType: ChainType | undefined): XConnection |
   const xConnection = useXWagmiStore(state => (xChainType ? state.xConnections?.[xChainType] : undefined));
 
   const evmConnections = useConnections();
-  const { address: evmAddress } = useAccount();
+  const { address: evmAddress, status: evmStatus } = useAccount();
+  console.log('evmAddress', evmAddress, evmConnections, evmStatus);
   const suiAccount = useCurrentAccount();
   const suiCurrentWallet = useCurrentWallet();
   const solanaWallet = useWallet();
