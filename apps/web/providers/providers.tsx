@@ -45,6 +45,8 @@ export default function Providers({ children }: { children: ReactNode }) {
             ICON: undefined as unknown,
             INJECTIVE: undefined as unknown,
             STELLAR: undefined as unknown,
+            NEAR: undefined as unknown,
+
           }}
         >
           {children}

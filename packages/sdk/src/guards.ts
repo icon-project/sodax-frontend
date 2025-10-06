@@ -43,6 +43,7 @@ import type {
   BalnMigrateParams,
   IcxCreateRevertMigrationParams,
 } from './index.js';
+import { NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';
@@ -366,4 +367,13 @@ export function isBalnMigrateParams(value: unknown): value is BalnMigrateParams 
 
 export function isIcxCreateRevertMigrationParams(value: unknown): value is IcxCreateRevertMigrationParams {
   return typeof value === 'object' && value !== null && 'amount' in value && 'to' in value;
+}
+
+export function isNearSpokeProvider(value: SpokeProvider): value is StellarSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof NearSpokeProvider &&
+    value.chainConfig.chain.type === 'NEAR'
+  );
 }
