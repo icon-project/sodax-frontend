@@ -11,3 +11,5 @@ export * from './intents.abi.js';
 export * from './sonicWalletFactory.abi.js';
 export * from './wrappedSonic.abi.js';
 export * from './variableDebtToken.abi.js';
+export * from './stakedSoda.abi.js';
+export * from './stakingRouter.abi.js';
