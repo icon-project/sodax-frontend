@@ -17,6 +17,7 @@
     "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
   },
   "dependencies": {
+    "@bangjelkoski/node-stdlib-browser": "^0.0.1",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-scroll-area": "^1.2.3",
@@ -33,6 +34,7 @@
     "@types/node": "catalog:",
     "@vitejs/plugin-react": "4.2.1",
     "bignumber.js": "catalog:",
+    "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.456.0",
@@ -46,6 +48,7 @@
     "zustand": "4.5.2"
   },
   "devDependencies": {
+    "@bangjelkoski/vite-plugin-node-polyfills": "^0.0.2",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "autoprefixer": "^10.4.20",
@@ -54,7 +57,6 @@
     "tailwindcss": "^3.4.14",
     "typescript": "catalog:",
     "vite": "^5.4.11",
-    "vite-plugin-node-polyfills": "0.21.0",
     "vite-plugin-svgr": "4.2.0",
     "vite-tsconfig-paths": "4.3.1"
   },
