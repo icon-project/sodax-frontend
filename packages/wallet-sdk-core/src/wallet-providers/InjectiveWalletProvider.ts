@@ -5,14 +5,13 @@ import {
   createTransaction,
   PrivateKey,
   getInjectiveSignerAddress,
+  type TxResponse,
 } from '@injectivelabs/sdk-ts';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
 import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
-import { Wallet, type WalletStrategyArguments } from '@injectivelabs/wallet-base';
-import { BaseWalletStrategy, MsgBroadcaster } from '@injectivelabs/wallet-core';
-import { PrivateKeyWalletStrategy } from '@injectivelabs/wallet-private-key';
+import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts';
 import type { ChainId, EvmChainId } from '@injectivelabs/ts-types';
-import { mainnet } from 'viem/chains';
 
 /**
  * Injective Wallet Configuration Types
@@ -62,7 +61,7 @@ export function isSecretInjectiveWalletConfig(config: InjectiveWalletConfig): co
 }
 
 export type InjectiveWallet = {
-  msgBroadcaster: MsgBroadcaster;
+  msgBroadcaster: MsgBroadcaster | MsgBroadcasterWithPk;
 };
 
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
@@ -83,28 +82,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
         throw new Error('Invalid Secret Injective wallet config');
       }
       this.wallet = {
-        msgBroadcaster: new MsgBroadcaster({
-          walletStrategy: new BaseWalletStrategy({
-            chainId: config.chainId,
-            wallet: Wallet.PrivateKey,
-            strategies: {
-              [Wallet.PrivateKey]: new PrivateKeyWalletStrategy({
-                chainId: config.chainId,
-                evmOptions: {
-                  evmChainId: config.evmOptions?.evmChainId ?? mainnet.id,
-                  rpcUrl: config.evmOptions?.rpcUrl ?? mainnet.rpcUrls.default.http[0],
-                },
-                metadata: {
-                  privateKey: {
-                    privateKey: privateKey.toPrivateKeyHex(),
-                  },
-                },
-              }),
-            },
-          } satisfies WalletStrategyArguments),
-          simulateTx: true,
-          network: config.network,
-        }),
+        msgBroadcaster: new MsgBroadcasterWithPk({ privateKey, network: config.network }),
       };
     } else {
       throw new Error('Invalid Injective wallet config');
@@ -149,6 +127,9 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
 
   // return wallet address as bech32
   async getWalletAddress(): Promise<InjectiveEoaAddress> {
+    if (this.wallet.msgBroadcaster instanceof MsgBroadcasterWithPk) {
+      return getInjectiveSignerAddress(this.wallet.msgBroadcaster.privateKey.toAddress().toBech32());
+    }
     const addresses = await this.wallet.msgBroadcaster.walletStrategy.getAddresses();
     const injectiveAddresses = addresses.map(getInjectiveSignerAddress);
     if (injectiveAddresses.length <= 0 || injectiveAddresses[0] === undefined) {
@@ -159,6 +140,9 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
   }
 
   async getWalletPubKey(): Promise<string> {
+    if (this.wallet.msgBroadcaster instanceof MsgBroadcasterWithPk) {
+      return this.wallet.msgBroadcaster.privateKey.toPublicKey().toString();
+    }
     const pubKey = await this.wallet.msgBroadcaster.walletStrategy.getPubKey();
     if (pubKey === undefined) {
       return Promise.reject(new Error('Wallet public key not found'));
@@ -179,10 +163,18 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       funds: funds || [],
     });
 
-    const txResult = await this.wallet.msgBroadcaster.broadcastWithFeeDelegation({
-      msgs: msgExec,
-      injectiveAddress: await this.getWalletAddress(),
-    });
+    let txResult: TxResponse;
+
+    if (this.wallet.msgBroadcaster instanceof MsgBroadcasterWithPk) {
+      txResult = await this.wallet.msgBroadcaster.broadcast({
+        msgs: msgExec,
+      });
+    } else {
+      txResult = await this.wallet.msgBroadcaster.broadcastWithFeeDelegation({
+        msgs: msgExec,
+        injectiveAddress: await this.getWalletAddress(),
+      });
+    }
 
     return InjectiveExecuteResponse.fromTxResponse(txResult);
   }

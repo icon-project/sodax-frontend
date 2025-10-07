@@ -26,7 +26,7 @@ dotenv.config();
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY as Hex;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
-const HUB_RPC_URL = 'https://rpc.soniclabs.com';
+const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.testnet.soniclabs.com/' : 'https://rpc.soniclabs.com/';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 
 const DEFAULT_SPOKE_CHAIN_ID = INJECTIVE_MAINNET_CHAIN_ID;
