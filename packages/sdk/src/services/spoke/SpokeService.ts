@@ -414,7 +414,7 @@ export class SpokeService {
     }
     if (isEvmSpokeProvider(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await EvmSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
+      return (await EvmSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
         EvmSpokeProvider,
         R
       > as TxReturnType<T, R>;
@@ -455,7 +455,7 @@ export class SpokeService {
     }
     if (isStellarSpokeProvider(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await StellarSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
+      return (await StellarSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
         StellarSpokeProvider,
         R
       > as TxReturnType<T, R>;
