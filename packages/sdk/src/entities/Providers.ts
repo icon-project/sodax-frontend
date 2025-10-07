@@ -32,6 +32,7 @@ import {
   type IInjectiveWalletProvider,
   type ISolanaWalletProvider,
 } from '@sodax/types';
+import type { INearWalletProvider, NearSpokeProvider } from './near/NearSpokeProvider.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -141,7 +142,8 @@ export type IWalletProvider =
   | ISuiWalletProvider
   | IIconWalletProvider
   | IInjectiveWalletProvider
-  | ISolanaWalletProvider;
+  | ISolanaWalletProvider
+  | INearWalletProvider;
 
 export type SpokeProvider = (
   | EvmSpokeProvider
@@ -151,5 +153,6 @@ export type SpokeProvider = (
   | StellarSpokeProvider
   | SolanaSpokeProvider
   | SonicSpokeProvider
+  | NearSpokeProvider
 ) &
   ISpokeProvider;

@@ -119,6 +119,13 @@ export const lightlink: XChain = {
   xChainType: 'EVM',
   testnet: false,
 };
+export const near: XChain = {
+  id: 'near',
+  name: 'Near',
+  xChainId: 'near',
+  xChainType: 'NEAR',
+  testnet: false,
+};
 
 // the order is important, using manual order to display in the UI
 export const xChainMap: { [key in ChainId]: XChain } = {
@@ -137,6 +144,7 @@ export const xChainMap: { [key in ChainId]: XChain } = {
   nibiru: nibiru,
   hyper: hyper,
   lightlink: lightlink,
+  near:near,
 };
 
 /**

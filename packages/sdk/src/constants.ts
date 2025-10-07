@@ -20,6 +20,7 @@ import type {
   LegacybnUSDToken,
   NewbnUSDChainId,
   XToken,
+  NearSpokeChainConfig,
 } from './index.js';
 import {
   type ChainId,
@@ -42,6 +43,7 @@ import {
   CHAIN_IDS,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -92,6 +94,7 @@ export const ChainIdToIntentRelayChainId = {
   [NIBIRU_MAINNET_CHAIN_ID]: 7235938n,
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
+  [NEAR_MAINNET_CHAIN_ID]:15n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -1261,6 +1264,32 @@ export const spokeChainConfig = {
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
+  [NEAR_MAINNET_CHAIN_ID]:{
+    nativeToken:"",
+    addresses: {
+      assetManager:"",
+      connection: "",
+      rateLimit: "",
+      xTokenManager:"",
+      intentFiller:""
+    },
+     chain: {
+      id: NEAR_MAINNET_CHAIN_ID,
+      name: 'NEAR',
+      type: 'NEAR',
+    },
+    supportedTokens:{
+        bnUSD:{
+            address:"",
+            symbol:"bnUSD",
+            decimals:24,
+            name:"BNUSD",
+            xChainId:NEAR_MAINNET_CHAIN_ID,
+        },
+    },
+     bnUSD: "",
+     rpc_url:"",
+  } as const satisfies NearSpokeChainConfig,
 } as const;
 
 // All addresses are now lowercase for consistency and correctness
@@ -2201,6 +2230,7 @@ export const hubAssets: Record<
       vault: '0x', // no vault yet
     },
   },
+  [NEAR_MAINNET_CHAIN_ID]:{}as const
 } as const;
 
 export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';
@@ -2323,6 +2353,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.USDC, // NOTE: Not Implemented
   ] as const satisfies Token[],
+  [NEAR_MAINNET_CHAIN_ID]:[]
 } as const;
 
 // get supported spoke chain tokens for solver
@@ -2452,6 +2483,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
+  [NEAR_MAINNET_CHAIN_ID]:[] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
