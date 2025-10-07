@@ -1,5 +1,11 @@
 import type { Network } from '@injectivelabs/networks';
-import { MsgExecuteContract, MsgExecuteContractCompat, createTransaction, PrivateKey } from '@injectivelabs/sdk-ts';
+import {
+  MsgExecuteContract,
+  MsgExecuteContractCompat,
+  createTransaction,
+  PrivateKey,
+  getInjectiveSignerAddress,
+} from '@injectivelabs/sdk-ts';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
 import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
 import { Wallet, type WalletStrategyArguments } from '@injectivelabs/wallet-base';
@@ -41,7 +47,7 @@ export type InjectiveWalletConfig = BrowserExtensionInjectiveWalletConfig | Secr
 export function isBrowserExtensionInjectiveWalletConfig(
   config: InjectiveWalletConfig,
 ): config is BrowserExtensionInjectiveWalletConfig {
-  return 'msgBroadcaster' in config && 'walletAddress' in config;
+  return 'msgBroadcaster' in config;
 }
 
 export function isSecretInjectiveWalletConfig(config: InjectiveWalletConfig): config is SecretInjectiveWalletConfig {
@@ -144,11 +150,12 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
   // return wallet address as bech32
   async getWalletAddress(): Promise<InjectiveEoaAddress> {
     const addresses = await this.wallet.msgBroadcaster.walletStrategy.getAddresses();
-    if (addresses.length <= 0 || addresses[0] === undefined) {
+    const injectiveAddresses = addresses.map(getInjectiveSignerAddress);
+    if (injectiveAddresses.length <= 0 || injectiveAddresses[0] === undefined) {
       return Promise.reject(new Error('Wallet address not found'));
     }
 
-    return addresses[0];
+    return injectiveAddresses[0];
   }
 
   async getWalletPubKey(): Promise<string> {
