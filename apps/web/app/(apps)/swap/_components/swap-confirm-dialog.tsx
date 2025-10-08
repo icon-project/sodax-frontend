@@ -12,7 +12,7 @@ import { Timer, XIcon, Check, ChevronsRight, ChevronDown, ChevronUp } from 'luci
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
 import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
-import { availableChains } from '@/constants/chains';
+import { chainIdToChainName } from '@/providers/constants';
 import { useSwapApprove, useSpokeProvider, useSwapAllowance } from '@sodax/dapp-kit';
 import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
 
@@ -84,11 +84,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     spokeProvider,
   );
 
-  useEffect(() => {
-    if (hasAllowed && !allowanceConfirmed) {
-      setAllowanceConfirmed(true);
-    }
-  }, [hasAllowed, allowanceConfirmed]);
+  console.log('hasAllowed', hasAllowed);
+  console.log('allowanceConfirmed', allowanceConfirmed);
 
   useEffect(() => {
     if (open) {
@@ -104,12 +101,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       setIsCompleted(true);
     }
   }, [isSwapSuccessful]);
-
-  useEffect(() => {
-    if (open) {
-      setApprovalError(null);
-    }
-  }, [open]);
 
   const formatToSixDecimals = (value: string): string => {
     const num = Number.parseFloat(value);
@@ -158,16 +149,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     }
   };
 
-  const formatExchangeRate = (): string => {
-    if (!exchangeRate) return 'N/A';
-    return `1 ${sourceToken.symbol} = ${exchangeRate.toFixed(6)} ${destinationToken.symbol}`;
-  };
-
-  const getChainNameById = (chainId: string | number): string => {
-    const chain = availableChains.find(chain => chain.id === chainId);
-    return chain?.name || 'Unknown Chain';
-  };
-
   const handleDialogOpenChange = (open: boolean): void => {
     if (!open) {
       handleClose();
@@ -213,7 +194,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                    on {getChainNameById(sourceToken.xChainId)}
+                    on {chainIdToChainName(sourceToken.xChainId)}
                   </div>
                 </div>
               </div>
@@ -256,7 +237,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                    on {getChainNameById(destinationToken.xChainId)}
+                    on {chainIdToChainName(destinationToken.xChainId)}
                   </div>
                 </div>
               </div>
@@ -307,17 +288,17 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   className="w-full text-white font-semibold font-['InterRegular']"
                   onClick={handleSwitchChain}
                 >
-                  Switch to {getChainNameById(sourceToken.xChainId)}
+                  Switch to {chainIdToChainName(sourceToken.xChainId)}
                 </Button>
               )}
 
-              {!isWrongChain && !allowanceConfirmed && intentOrderPayload && (
+              {!isWrongChain && !allowanceConfirmed && !hasAllowed && (
                 <div className="w-full">
                   <Button
                     variant="cherry"
                     className="w-full text-white font-semibold font-['InterRegular']"
                     onClick={handleApprove}
-                    disabled={isAllowanceLoading || isApproving || allowanceConfirmed}
+                    disabled={isAllowanceLoading || isApproving}
                   >
                     {isApproving ? (
                       <div className="flex items-center gap-2 text-white">
@@ -347,7 +328,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </div>
               )}
 
-              {!isWrongChain && allowanceConfirmed && (
+              {!isWrongChain && (allowanceConfirmed || hasAllowed) && (
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
@@ -376,12 +357,12 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                       />
                     </div>
                   ) : (
-                    `Swap ${destinationToken.symbol} on ${getChainNameById(destinationToken.xChainId)}`
+                    `Swap ${destinationToken.symbol} on ${chainIdToChainName(destinationToken.xChainId)}`
                   )}
                 </Button>
               )}
 
-              {!isWrongChain && !allowanceConfirmed && !intentOrderPayload && (
+              {!isWrongChain && !allowanceConfirmed && !intentOrderPayload && !hasAllowed && (
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"

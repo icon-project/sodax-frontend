@@ -168,7 +168,9 @@ export default function SwapPage() {
 
   const sourceWalletProvider = useWalletProvider(sourceToken.xChainId);
   const sourceProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
-
+  console.log('sourceToken.xChainId', sourceToken.xChainId);
+  console.log('sourceWalletProvider', sourceWalletProvider);
+  console.log('sourceProvider', sourceProvider);
   const { data: sourceBalances } = useXBalances({
     xChainId: sourceToken.xChainId,
     xTokens: [sourceToken],
@@ -578,14 +580,18 @@ export default function SwapPage() {
           </div>
         )}
 
-        {isSourceChainConnected && isDestinationChainConnected ? (
+        {isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend) ? (
           <Button
             variant="cherry"
             className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
             onClick={handleClickReview}
-            disabled={sourceAmount === '0' || sourceAmount === ''}
+            disabled={sourceAmount === '0' || sourceAmount === '' || (isSwapAndSend && customDestinationAddress === '')}
           >
-            {sourceAmount === '0' || sourceAmount === '' ? 'Enter amount' : 'Review'}
+            {sourceAmount === '0' || sourceAmount === ''
+              ? 'Enter amount'
+              : isSwapAndSend && customDestinationAddress === ''
+                ? 'Enter destination address'
+                : 'Review'}
           </Button>
         ) : (
           <Button
@@ -596,7 +602,7 @@ export default function SwapPage() {
             Connect{' '}
             {!isSourceChainConnected
               ? chainIdToChainName(sourceToken.xChainId)
-              : !isDestinationChainConnected
+              : !isSwapAndSend
                 ? chainIdToChainName(destinationToken.xChainId)
                 : ''}
           </Button>
