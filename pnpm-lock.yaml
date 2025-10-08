@@ -36,6 +36,9 @@ catalogs:
     '@injectivelabs/wallet-evm':
       specifier: 1.16.10
       version: 1.16.10
+    '@injectivelabs/wallet-private-key':
+      specifier: 1.16.10
+      version: 1.16.10
     '@injectivelabs/wallet-strategy':
       specifier: 1.16.10
       version: 1.16.10
@@ -573,12 +576,24 @@ importers:
 
   packages/wallet-sdk-core:
     dependencies:
+      '@injectivelabs/networks':
+        specifier: 'catalog:'
+        version: 1.16.10
       '@injectivelabs/sdk-ts':
+        specifier: 'catalog:'
+        version: 1.16.10(@types/react@19.1.12)(bufferutil@4.0.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(utf-8-validate@5.0.10)
+      '@injectivelabs/ts-types':
+        specifier: 'catalog:'
+        version: 1.16.10
+      '@injectivelabs/wallet-base':
         specifier: 'catalog:'
         version: 1.16.10(@types/react@19.1.12)(bufferutil@4.0.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(utf-8-validate@5.0.10)
       '@injectivelabs/wallet-core':
         specifier: 'catalog:'
         version: 1.16.10(@types/react@19.1.12)(bufferutil@4.0.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(starknet@7.6.4)(utf-8-validate@5.0.10)
+      '@injectivelabs/wallet-private-key':
+        specifier: 'catalog:'
+        version: 1.16.10(@types/react@19.1.12)(bufferutil@4.0.9)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(utf-8-validate@5.0.10)
       '@mysten/sui':
         specifier: 'catalog:'
         version: 1.21.2(typescript@5.5.4)
