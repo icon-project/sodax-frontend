@@ -315,11 +315,6 @@ export default function SwapPage() {
   };
 
   const createIntentOrderPayload = async (): Promise<void> => {
-    if (!quoteQuery.data?.ok || !quoteQuery.data.value) {
-      console.error('Quote undefined');
-      return;
-    }
-
     if (!sourceToken || !destinationToken) {
       console.error('sourceToken or destToken undefined');
       return;
