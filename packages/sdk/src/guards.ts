@@ -11,6 +11,7 @@ import {
   SolanaSpokeProvider,
   StellarSpokeProvider,
   SuiSpokeProvider,
+  StacksSpokeProvider,
   type EvmUninitializedConfig,
   type EvmInitializedConfig,
   type EvmUninitializedPrivateKeyConfig,
@@ -186,6 +187,15 @@ export function isSuiSpokeProvider(value: SpokeProvider): value is SuiSpokeProvi
     value !== null &&
     value instanceof SuiSpokeProvider &&
     value.chainConfig.chain.type === 'SUI'
+  );
+}
+
+export function isStacksSpokeProvider(value: SpokeProvider): value is StacksSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof StacksSpokeProvider &&
+    value.chainConfig.chain.type === 'STACKS'
   );
 }
 

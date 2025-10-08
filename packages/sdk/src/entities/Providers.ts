@@ -31,7 +31,9 @@ import {
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
   type ISolanaWalletProvider,
+  type IStacksWalletProvider,
 } from '@sodax/types';
+import type { StacksSpokeProvider } from './stacks/StacksSpokeProvider.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -141,7 +143,8 @@ export type IWalletProvider =
   | ISuiWalletProvider
   | IIconWalletProvider
   | IInjectiveWalletProvider
-  | ISolanaWalletProvider;
+  | ISolanaWalletProvider
+  | IStacksWalletProvider;
 
 export type SpokeProvider = (
   | EvmSpokeProvider
@@ -151,5 +154,6 @@ export type SpokeProvider = (
   | StellarSpokeProvider
   | SolanaSpokeProvider
   | SonicSpokeProvider
+  | StacksSpokeProvider
 ) &
   ISpokeProvider;

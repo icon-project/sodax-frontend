@@ -35,3 +35,5 @@ catalog:
   "@solana/spl-token": "0.4.9"
   "@solana/wallet-adapter-base": "0.9.26"
   "@solana/web3.js": "1.98.0"
+  "@stacks/transactions": "7.2.0"
+  "@stacks/network": "7.2.0"
