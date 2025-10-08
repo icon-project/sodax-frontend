@@ -85,6 +85,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     spokeProvider,
   );
 
+  console.log(intentOrderPayload);
   console.log(paramsForApprove);
   console.log('spokeProvider', spokeProvider);
   console.log('hasAllowed', hasAllowed);
