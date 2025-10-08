@@ -20,6 +20,7 @@ import type {
   LegacybnUSDToken,
   NewbnUSDChainId,
   XToken,
+  StacksChainConfig,
 } from './index.js';
 import {
   type ChainId,
@@ -42,6 +43,7 @@ import {
   CHAIN_IDS,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  STACKS_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -92,6 +94,7 @@ export const ChainIdToIntentRelayChainId = {
   [NIBIRU_MAINNET_CHAIN_ID]: 7235938n,
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
+  [STACKS_MAINNET_CHAIN_ID]: 10002n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -167,6 +170,7 @@ export const HubVaultSymbols = [
   'sodaS',
   'IbnUSD',
   'sodaHYPE',
+  'sodaSTX',
 ] as const;
 
 export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
@@ -291,6 +295,13 @@ export const SodaTokens = {
     address: '0x6E81124fC5d2Bf666B16a0A5d90066eBf35c7411',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
+  sodaSTX: {
+    symbol: 'sodaSTX',
+    name: 'Soda STX',
+    decimals: 18,
+    address: '0x4d4dC6AeBcD1bBc1eBcD1bBc1eBcD1bBc1eBcD1b',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
 } as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
 
 export const SodaTokensAsHubAssets: Record<
@@ -322,8 +333,8 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       type: 'EVM',
     },
     addresses: {
-      assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
-      hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
+      assetManager: '0x1B06762a8B9286f6A1B290579834e555a5F60557',
+      hubWallet: '0x103328BFB6321AD198D5dc4075a171f01c0472E5',
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
       icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
       balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',
@@ -1261,6 +1272,39 @@ export const spokeChainConfig = {
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
+  [STACKS_MAINNET_CHAIN_ID]: {
+    addresses: {
+      assetManager: 'STYG050M17PTPDS7GTYEW4T9T3TSJET7A6J58F0.asset-manager-state',
+      connection: 'ST1W8XT40TD4915K82P17N3XCQVDAG8CGBTJQ4B7T.connection-v3',
+      rateLimit: 'STYG050M17PTPDS7GTYEW4T9T3TSJET7A6J58F0.rate-limit-state',
+      xTokenManager: '',
+      testToken: '',
+    },
+    chain: {
+      id: STACKS_MAINNET_CHAIN_ID,
+      name: 'Stacks',
+      type: 'STACKS',
+    },
+    nativeToken: 'STX' as const,
+    bnUSD: 'STYG050M17PTPDS7GTYEW4T9T3TSJET7A6J58F0.bnusd',
+    supportedTokens: {
+      STX: {
+        symbol: 'STX',
+        name: 'Stacks',
+        decimals: 6,
+        address: 'STX',
+        xChainId: STACKS_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 6,
+        address: 'STYG050M17PTPDS7GTYEW4T9T3TSJET7A6J58F0.bnusd',
+        xChainId: STACKS_MAINNET_CHAIN_ID,
+      }
+  },
+  rpcUrl: 'https://stacks-node-api.mainnet.stacks.co',
+} as const satisfies StacksChainConfig,
 } as const;
 
 // All addresses are now lowercase for consistency and correctness
@@ -1449,6 +1493,10 @@ export const hubVaults = {
     address: '0x6e81124fc5d2bf666b16a0a5d90066ebf35c7411',
     reserves: ['0x7288622bc2d39553f34d5b81c88c3f979d91dbc7'],
   },
+  [SodaTokens.sodaSTX.symbol]: {
+    address: '0xD68518115AD27d81b5E043b4B0c624594ff60E4B',
+    reserves: ['0xFBf41b0974Ef0D88a7C3Da7CB05Cc1041d6f7198'],
+  }
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
 export const hubVaultTokensMap: Map<string, Token> = new Map(
@@ -2201,6 +2249,22 @@ export const hubAssets: Record<
       vault: '0x', // no vault yet
     },
   },
+  [STACKS_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[STACKS_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0xFBf41b0974Ef0D88a7C3Da7CB05Cc1041d6f7198',
+      decimal: 6,
+      symbol: 'STX',
+      name: 'Stacks',
+      vault: hubVaults.sodaSTX.address,
+    },
+    [spokeChainConfig[STACKS_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0x4e9120bb4b42f5646e779027473474ad5ab543b6',
+      decimal: 6,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: hubVaults.bnUSD.address,
+    }
+  }
 } as const;
 
 export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';
@@ -2322,6 +2386,8 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.NIBI, // NOTE: Not Implemented
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.USDC, // NOTE: Not Implemented
+  ] as const satisfies Token[],
+  [STACKS_MAINNET_CHAIN_ID]: [
   ] as const satisfies Token[],
 } as const;
 
@@ -2451,6 +2517,10 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
+  ] as const,
+  [STACKS_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[STACKS_MAINNET_CHAIN_ID].supportedTokens.STX,
+    spokeChainConfig[STACKS_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 

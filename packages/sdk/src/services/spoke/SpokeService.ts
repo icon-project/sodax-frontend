@@ -6,6 +6,7 @@ import {
   SolanaSpokeProvider,
   SonicSpokeProvider,
   type SpokeProvider,
+  StacksSpokeProvider,
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
@@ -33,11 +34,13 @@ import {
   isSonicSpokeProvider,
   isStellarSpokeProvider,
   isSuiSpokeProvider,
+  isStacksSpokeProvider,
 } from '../../guards.js';
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
 import { getIntentRelayChainId } from '../../constants.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
+import { StacksSpokeService } from './StacksSpokeService.js';
 
 /**
  * SpokeService is a main class that provides functionalities for dealing with spoke chains.
@@ -271,7 +274,14 @@ export class SpokeService {
         raw,
       ) as PromiseTxReturnType<T, R>;
     }
-
+    if (spokeProvider instanceof StacksSpokeProvider) {
+      return StacksSpokeService.deposit(
+        params as GetSpokeDepositParamsType<StacksSpokeProvider>,
+        spokeProvider,
+        hubProvider,
+        raw,
+      ) as PromiseTxReturnType<T, R>;
+    }
     throw new Error('Invalid spoke provider');
   }
 
@@ -457,6 +467,12 @@ export class SpokeService {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
       return (await StellarSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
         StellarSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
+    }
+    if (isStacksSpokeProvider(spokeProvider)) {
+      return (await StacksSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
+        StacksSpokeProvider,
         R
       > as TxReturnType<T, R>;
     }

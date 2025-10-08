@@ -7,6 +7,7 @@ import type {
   SolanaSpokeProvider,
   SonicSpokeProvider,
   SpokeProvider,
+  StacksSpokeProvider,
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from './entities/index.js';
@@ -39,6 +40,7 @@ import type {
   XToken,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
+import type { StacksSpokeDepositParams } from './services/spoke/StacksSpokeService.js';
 
 export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
 export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
@@ -222,6 +224,17 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
   gasPrice: string;
 };
 
+export type StacksChainConfig = BaseSpokeChainConfig<'STACKS'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    rateLimit: string;
+  };
+  chain: SpokeChainInfo<'STACKS'>;
+  rpcUrl: string;
+  nativeToken: string;
+};
+
 export type HubChainConfig = EvmHubChainConfig;
 
 export type SpokeChainConfig =
@@ -231,7 +244,8 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
-  | SolanaChainConfig;
+  | SolanaChainConfig
+  | StacksChainConfig;
 
 export type EvmContractCall = {
   address: Address; // Target address of the call
@@ -349,6 +363,8 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
             ? SolanaSpokeDepositParams
             : T extends SonicSpokeProvider
               ? SonicSpokeDepositParams
+              : T extends StacksSpokeProvider
+                ? StacksSpokeDepositParams
               : never;
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
@@ -483,12 +499,17 @@ export type SuiRawTransaction = {
   data: Base64String;
 };
 
+export type StacksRawTransaction = {
+    [key: string]: string | object | number;
+}
+
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
 export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRawTransaction : Hex;
 export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : Hex;
 export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : Hex;
+export type StacksReturnType<Raw extends boolean> = Raw extends true ? StacksRawTransaction : Hex;
 
 export type HashTxReturnType =
   | EvmReturnType<false>
@@ -504,7 +525,8 @@ export type RawTxReturnType =
   | InjectiveRawTransaction
   | IconRawTransaction
   | SuiRawTransaction
-  | StellarRawTransaction;
+  | StellarRawTransaction
+  | StacksRawTransaction;
 
 export type TxReturnType<T extends SpokeProvider, Raw extends boolean> = T['chainConfig']['chain']['type'] extends 'EVM'
   ? EvmReturnType<Raw>
@@ -528,6 +550,7 @@ export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnTy
 export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
 export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
 export type PromiseInjectiveTxReturnType<Raw extends boolean> = Promise<TxReturnType<InjectiveSpokeProvider, Raw>>;
+export type PromiseStacksTxReturnType<Raw extends boolean> = Promise<TxReturnType<StacksSpokeProvider, Raw>>;
 
 export type PromiseTxReturnType<
   T extends ISpokeProvider,
