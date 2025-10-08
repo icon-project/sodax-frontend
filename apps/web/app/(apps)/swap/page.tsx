@@ -168,9 +168,6 @@ export default function SwapPage() {
 
   const sourceWalletProvider = useWalletProvider(sourceToken.xChainId);
   const sourceProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
-  console.log('sourceToken.xChainId', sourceToken.xChainId);
-  console.log('sourceWalletProvider', sourceWalletProvider);
-  console.log('sourceProvider', sourceProvider);
   const { data: sourceBalances } = useXBalances({
     xChainId: sourceToken.xChainId,
     xTokens: [sourceToken],
@@ -620,6 +617,9 @@ export default function SwapPage() {
         onOpenChange={setIsSwapConfirmOpen}
         sourceToken={sourceToken}
         destinationToken={destinationToken}
+        finalDestinationAddress={
+          isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || ''
+        }
         sourceAmount={sourceAmount}
         destinationAmount={
           isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : calculatedDestinationAmount
