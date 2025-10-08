@@ -1,7 +1,17 @@
-import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
-import { MsgExecuteContract, MsgExecuteContractCompat, createTransaction } from '@injectivelabs/sdk-ts';
+import type { Network } from '@injectivelabs/networks';
+import {
+  MsgExecuteContract,
+  MsgExecuteContractCompat,
+  createTransaction,
+  PrivateKey,
+  getInjectiveSignerAddress,
+  type TxResponse,
+} from '@injectivelabs/sdk-ts';
 import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
 import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
+import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
+import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts';
+import type { ChainId, EvmChainId } from '@injectivelabs/ts-types';
 
 /**
  * Injective Wallet Configuration Types
@@ -9,10 +19,25 @@ import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/t
 
 export type BrowserExtensionInjectiveWalletConfig = {
   msgBroadcaster: MsgBroadcaster;
-  walletAddress: InjectiveEoaAddress | undefined;
 };
 
-export type InjectiveWalletConfig = BrowserExtensionInjectiveWalletConfig;
+export type SecretInjectiveWalletConfig = {
+  secret:
+    | {
+        privateKey: string;
+      }
+    | {
+        mnemonics: string;
+      };
+  chainId: ChainId;
+  network: Network;
+  evmOptions?: {
+    evmChainId: EvmChainId;
+    rpcUrl: `http${string}`;
+  };
+};
+
+export type InjectiveWalletConfig = BrowserExtensionInjectiveWalletConfig | SecretInjectiveWalletConfig;
 
 /**
  * Injective Type Guards
@@ -21,23 +46,50 @@ export type InjectiveWalletConfig = BrowserExtensionInjectiveWalletConfig;
 export function isBrowserExtensionInjectiveWalletConfig(
   config: InjectiveWalletConfig,
 ): config is BrowserExtensionInjectiveWalletConfig {
-  return 'msgBroadcaster' in config && 'walletAddress' in config;
+  return 'msgBroadcaster' in config;
 }
 
+export function isSecretInjectiveWalletConfig(config: InjectiveWalletConfig): config is SecretInjectiveWalletConfig {
+  return (
+    'secret' in config &&
+    typeof config.secret === 'object' &&
+    (('privateKey' in config.secret && typeof config.secret.privateKey === 'string') ||
+      ('mnemonics' in config.secret && typeof config.secret.mnemonics === 'string')) &&
+    'network' in config &&
+    'chainId' in config
+  );
+}
+
+export type InjectiveWallet = {
+  msgBroadcaster: MsgBroadcaster | MsgBroadcasterWithPk;
+};
+
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
-  private msgBroadcaster: MsgBroadcaster;
-  public walletAddress: InjectiveEoaAddress | undefined;
+  public wallet: InjectiveWallet;
 
   constructor(config: InjectiveWalletConfig) {
     if (isBrowserExtensionInjectiveWalletConfig(config)) {
-      this.msgBroadcaster = config.msgBroadcaster;
-      this.walletAddress = config.walletAddress;
+      this.wallet = {
+        msgBroadcaster: config.msgBroadcaster,
+      };
+    } else if (isSecretInjectiveWalletConfig(config)) {
+      let privateKey: PrivateKey;
+      if ('privateKey' in config.secret) {
+        privateKey = PrivateKey.fromPrivateKey(config.secret.privateKey);
+      } else if ('mnemonics' in config.secret) {
+        privateKey = PrivateKey.fromMnemonic(config.secret.mnemonics);
+      } else {
+        throw new Error('Invalid Secret Injective wallet config');
+      }
+      this.wallet = {
+        msgBroadcaster: new MsgBroadcasterWithPk({ privateKey, network: config.network }),
+      };
     } else {
       throw new Error('Invalid Injective wallet config');
     }
   }
 
-  getRawTransaction(
+  async getRawTransaction(
     chainId: string,
     _: string,
     senderAddress: string,
@@ -45,10 +97,6 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     msg: JsonObject,
     memo?: string,
   ): Promise<InjectiveRawTransaction> {
-    if (!this.walletAddress) {
-      throw new Error('Wallet address not found');
-    }
-
     const msgExec = MsgExecuteContract.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
@@ -58,7 +106,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     const { txRaw } = createTransaction({
       message: msgExec,
       memo: memo || '',
-      pubKey: this.walletAddress,
+      pubKey: await this.getWalletPubKey(),
       sequence: 0,
       accountNumber: 0,
       chainId: chainId,
@@ -74,15 +122,32 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
         authInfoBytes: txRaw.authInfoBytes,
       },
     };
-    return Promise.resolve(rawTx);
+    return rawTx;
   }
 
+  // return wallet address as bech32
   async getWalletAddress(): Promise<InjectiveEoaAddress> {
-    if (!this.walletAddress) {
-      throw new Error('Wallet address not found');
+    if (this.wallet.msgBroadcaster instanceof MsgBroadcasterWithPk) {
+      return getInjectiveSignerAddress(this.wallet.msgBroadcaster.privateKey.toAddress().toBech32());
+    }
+    const addresses = await this.wallet.msgBroadcaster.walletStrategy.getAddresses();
+    const injectiveAddresses = addresses.map(getInjectiveSignerAddress);
+    if (injectiveAddresses.length <= 0 || injectiveAddresses[0] === undefined) {
+      return Promise.reject(new Error('Wallet address not found'));
     }
 
-    return Promise.resolve(this.walletAddress);
+    return injectiveAddresses[0];
+  }
+
+  async getWalletPubKey(): Promise<string> {
+    if (this.wallet.msgBroadcaster instanceof MsgBroadcasterWithPk) {
+      return this.wallet.msgBroadcaster.privateKey.toPublicKey().toString();
+    }
+    const pubKey = await this.wallet.msgBroadcaster.walletStrategy.getPubKey();
+    if (pubKey === undefined) {
+      return Promise.reject(new Error('Wallet public key not found'));
+    }
+    return pubKey;
   }
 
   async execute(
@@ -91,10 +156,6 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     msg: JsonObject,
     funds?: InjectiveCoin[],
   ): Promise<InjectiveExecuteResponse> {
-    if (!this.walletAddress) {
-      throw new Error('Wallet address not found');
-    }
-
     const msgExec = MsgExecuteContractCompat.fromJSON({
       contractAddress: contractAddress,
       sender: senderAddress,
@@ -102,10 +163,18 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       funds: funds || [],
     });
 
-    const txResult = await this.msgBroadcaster.broadcastWithFeeDelegation({
-      msgs: msgExec,
-      injectiveAddress: this.walletAddress,
-    });
+    let txResult: TxResponse;
+
+    if (this.wallet.msgBroadcaster instanceof MsgBroadcasterWithPk) {
+      txResult = await this.wallet.msgBroadcaster.broadcast({
+        msgs: msgExec,
+      });
+    } else {
+      txResult = await this.wallet.msgBroadcaster.broadcastWithFeeDelegation({
+        msgs: msgExec,
+        injectiveAddress: await this.getWalletAddress(),
+      });
+    }
 
     return InjectiveExecuteResponse.fromTxResponse(txResult);
   }
