@@ -335,3 +335,8 @@
 .iekbcc0 {
   pointer-events: auto !important;
 }
+
+.swap-accordion h3 {
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}

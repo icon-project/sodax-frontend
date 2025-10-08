@@ -59,7 +59,7 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
         case 'SOLANA': {
           const walletName = (xConnector as SolanaXConnector).wallet.adapter.name;
 
-          await select(walletName);
+          select(walletName);
 
           const adapter = (xConnector as SolanaXConnector).wallet.adapter;
 

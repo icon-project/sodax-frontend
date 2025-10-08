@@ -12,15 +12,17 @@ import { Timer, XIcon, Check, ChevronsRight, ChevronDown, ChevronUp } from 'luci
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
 import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
-import { availableChains } from '@/constants/chains';
+import { chainIdToChainName } from '@/providers/constants';
 import { useSwapApprove, useSpokeProvider, useSwapAllowance } from '@sodax/dapp-kit';
 import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface SwapConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sourceToken: XToken;
   destinationToken: XToken;
+  finalDestinationAddress: string;
   sourceAmount: string;
   destinationAmount: string;
   exchangeRate: BigNumber | null;
@@ -45,6 +47,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   onOpenChange,
   sourceToken,
   destinationToken,
+  finalDestinationAddress,
   sourceAmount,
   destinationAmount,
   exchangeRate,
@@ -61,7 +64,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 }: SwapConfirmDialogProps) => {
   const [isConfirming, setIsConfirming] = useState<boolean>(false);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
-  const [isAccordionExpanded, setIsAccordionExpanded] = useState<boolean>(false);
   const [approvalError, setApprovalError] = useState<string | null>(null);
   const [allowanceConfirmed, setAllowanceConfirmed] = useState<boolean>(false);
 
@@ -71,7 +73,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
 
   const sourceXAccount = useXAccount(sourceToken.xChainId);
-  const destinationXAccount = useXAccount(destinationToken.xChainId);
 
   const paramsForApprove = intentOrderPayload
     ? JSON.parse(
@@ -84,11 +85,17 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     spokeProvider,
   );
 
+  console.log(paramsForApprove);
+  console.log('spokeProvider', spokeProvider);
+  console.log('hasAllowed', hasAllowed);
+
+  /* If failed previous swap by JSON rpc error, allowance is still valid. 
+  but after started next swap progress, allowance will become false. 
+  To avoid confusion of swaping progress, have to set allowanceConfirmed to true.
+  */
   useEffect(() => {
-    if (hasAllowed && !allowanceConfirmed) {
-      setAllowanceConfirmed(true);
-    }
-  }, [hasAllowed, allowanceConfirmed]);
+    if (hasAllowed) setAllowanceConfirmed(true);
+  }, [hasAllowed]);
 
   useEffect(() => {
     if (open) {
@@ -104,12 +111,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       setIsCompleted(true);
     }
   }, [isSwapSuccessful]);
-
-  useEffect(() => {
-    if (open) {
-      setApprovalError(null);
-    }
-  }, [open]);
 
   const formatToSixDecimals = (value: string): string => {
     const num = Number.parseFloat(value);
@@ -158,16 +159,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     }
   };
 
-  const formatExchangeRate = (): string => {
-    if (!exchangeRate) return 'N/A';
-    return `1 ${sourceToken.symbol} = ${exchangeRate.toFixed(6)} ${destinationToken.symbol}`;
-  };
-
-  const getChainNameById = (chainId: string | number): string => {
-    const chain = availableChains.find(chain => chain.id === chainId);
-    return chain?.name || 'Unknown Chain';
-  };
-
   const handleDialogOpenChange = (open: boolean): void => {
     if (!open) {
       handleClose();
@@ -213,7 +204,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                    on {getChainNameById(sourceToken.xChainId)}
+                    on {chainIdToChainName(sourceToken.xChainId)}
                   </div>
                 </div>
               </div>
@@ -252,11 +243,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] flex flex-col justify-center items-center gap-2"
                   >
                     <div className="text-center justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase">
-                      {destinationXAccount?.address ? shortenAddress(destinationXAccount?.address) : 'Not connected'}
+                      {finalDestinationAddress ? shortenAddress(finalDestinationAddress) : 'Not connected'}
                     </div>
                   </div>
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                    on {getChainNameById(destinationToken.xChainId)}
+                    on {chainIdToChainName(destinationToken.xChainId)}
                   </div>
                 </div>
               </div>
@@ -307,17 +298,17 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   className="w-full text-white font-semibold font-['InterRegular']"
                   onClick={handleSwitchChain}
                 >
-                  Switch to {getChainNameById(sourceToken.xChainId)}
+                  Switch to {chainIdToChainName(sourceToken.xChainId)}
                 </Button>
               )}
 
-              {!isWrongChain && !allowanceConfirmed && intentOrderPayload && (
+              {!isWrongChain && !allowanceConfirmed && !hasAllowed && !isAllowanceLoading && (
                 <div className="w-full">
                   <Button
                     variant="cherry"
                     className="w-full text-white font-semibold font-['InterRegular']"
                     onClick={handleApprove}
-                    disabled={isAllowanceLoading || isApproving || allowanceConfirmed}
+                    disabled={isApproving}
                   >
                     {isApproving ? (
                       <div className="flex items-center gap-2 text-white">
@@ -347,12 +338,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </div>
               )}
 
-              {!isWrongChain && allowanceConfirmed && (
+              {!isWrongChain && (allowanceConfirmed || hasAllowed) && (
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
                   onClick={isLoading || isConfirming ? undefined : handleConfirm}
-                  // disabled={isLoading || isConfirming}
                 >
                   {isLoading || isConfirming ? (
                     <div className="flex items-center gap-2 text-white">
@@ -376,52 +366,36 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                       />
                     </div>
                   ) : (
-                    `Swap ${destinationToken.symbol} on ${getChainNameById(destinationToken.xChainId)}`
+                    `Swap ${destinationToken.symbol} on ${chainIdToChainName(destinationToken.xChainId)}`
                   )}
                 </Button>
               )}
 
-              {!isWrongChain && !allowanceConfirmed && !intentOrderPayload && (
+              {!isWrongChain && isAllowanceLoading && (
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
                   disabled={true}
                 >
-                  {isAllowanceLoading ? 'Checking approval...' : 'Preparing...'}
+                  Checking approval...
                 </Button>
               )}
 
-              {minOutputAmount && (
-                <div className="w-full">
-                  <div
-                    className="flex justify-center items-center bg-transparent rounded-xl cursor-pointer"
-                    onClick={() => setIsAccordionExpanded(!isAccordionExpanded)}
-                  >
-                    <div className="inline-flex justify-center items-center gap-1 w-60">
-                      <div className="justify-start text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
-                        Total fees:
-                      </div>
-                      <div className="justify-start text-clay text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
-                        {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
-                      </div>
+              <Accordion type="single" collapsible className="p-0 swap-accordion">
+                <AccordionItem value="item-1" className="!p-0">
+                  <AccordionTrigger className="hover:no-underline !p-0 justify-center">
+                    <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
+                      Total fees: {swapFeesUsdValue?.total && ` $${swapFeesUsdValue?.total.toFixed(4)}`}
                     </div>
-                    <div className="w-4 h-4 relative overflow-hidden">
-                      {isAccordionExpanded ? (
-                        <ChevronUp className="w-4 h-4 text-clay-light" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-clay-light" />
-                      )}
-                    </div>
-                  </div>
-
-                  {isAccordionExpanded && (
+                  </AccordionTrigger>
+                  <AccordionContent>
                     <div className="bg-transparent border-none">
                       <Separator className="bg-clay-light h-[1px] mt-4 mb-4 opacity-30" />
                       <div className="space-y-2 text-(length:--body-comfortable)">
                         <div className="flex justify-between">
                           <span className="text-clay-light">Receive at least</span>
                           <span className="text-espresso font-medium">
-                            {formatToSixDecimals(minOutputAmount.toString())} {destinationToken.symbol}
+                            {formatToSixDecimals(minOutputAmount?.toString() || '0')} {destinationToken.symbol}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -445,9 +419,9 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           )}
         </DialogFooter>

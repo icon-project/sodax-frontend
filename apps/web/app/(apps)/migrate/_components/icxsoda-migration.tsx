@@ -14,7 +14,7 @@ import {
   type SpokeChainId,
   type XToken,
 } from '@sodax/types';
-import { getChainDisplayName, normaliseTokenAmount, calculateMaxAvailableAmount } from '../_utils';
+import { normaliseTokenAmount, calculateMaxAvailableAmount } from '../_utils';
 
 import { SuccessDialog } from './success-dialog';
 import { ErrorDialog } from './error-dialog';
@@ -30,6 +30,7 @@ import { useSpokeProvider, useSodaxContext } from '@sodax/dapp-kit';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
+import { chainIdToChainName } from '@/providers/constants';
 
 export default function IcxsodaMigration() {
   const openModal = useModalStore(state => state.openModal);
@@ -160,86 +161,9 @@ export default function IcxsodaMigration() {
     return undefined;
   };
 
-  // Function to get button state based on current migration state
-  const getButtonState = (): {
-    text: string;
-    disabled: boolean;
-    action: 'connect' | 'enter-amount' | 'migrate' | 'insufficient-balance' | 'approve-required';
-  } => {
-    if (!isSourceChainConnected) {
-      return {
-        text: `Connect to ${getChainDisplayName(direction.from)}`,
-        disabled: false,
-        action: 'connect',
-      };
-    }
-
-    if (!isDestinationChainConnected) {
-      return {
-        text: `Connect to ${getChainDisplayName(direction.to)}`,
-        disabled: false,
-        action: 'connect',
-      };
-    }
-
-    if (!typedValue || typedValue === '0' || typedValue === '' || Number.isNaN(Number(typedValue))) {
-      return {
-        text: 'Enter amount',
-        disabled: true,
-        action: 'enter-amount',
-      };
-    }
-
-    const sourceBalance = getBalanceForChain(direction.from, currencies.from);
-    const inputAmount = BigInt(Math.floor(Number(typedValue) * 10 ** currencies.from.decimals));
-
-    if (sourceBalance < inputAmount) {
-      return {
-        text: 'Insufficient balance',
-        disabled: true,
-        action: 'insufficient-balance',
-      };
-    }
-
-    // Check if approval is required and not yet given
-    if (needsApproval && !hasSufficientAllowance) {
-      return {
-        text: 'Approve required',
-        disabled: false,
-        action: 'approve-required',
-      };
-    }
-
-    if (isPending) {
-      return {
-        text: 'Migrating...',
-        disabled: true,
-        action: 'migrate',
-      };
-    }
-
-    if (error) {
-      return {
-        text: error,
-        disabled: true,
-        action: 'migrate',
-      };
-    }
-
-    return {
-      text: 'Migrate',
-      disabled: false,
-      action: 'migrate',
-    };
-  };
-
   // Handle wallet modal opening with proper chain targeting
   const handleOpenWalletModal = (): void => {
-    const buttonState = getButtonState();
-
-    if (buttonState.action === 'connect') {
-      openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
-    }
+    openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
   };
 
   return (
@@ -288,7 +212,7 @@ export default function IcxsodaMigration() {
                 className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
                 onClick={handleSwitchChain}
               >
-                Switch to {getChainDisplayName(direction.from)}
+                Switch to {chainIdToChainName(direction.from)}
               </Button>
             ) : (
               <>
@@ -340,9 +264,13 @@ export default function IcxsodaMigration() {
             variant="cherry"
             className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
             onClick={handleOpenWalletModal}
-            disabled={getButtonState().disabled}
           >
-            {getButtonState().text}
+            Connect{' '}
+            {!isSourceChainConnected
+              ? chainIdToChainName(direction.from)
+              : !isDestinationChainConnected
+                ? chainIdToChainName(direction.to)
+                : ''}
           </Button>
         )}
 

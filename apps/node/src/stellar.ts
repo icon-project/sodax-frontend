@@ -15,6 +15,7 @@ import {
   type HttpUrl,
   type UnifiedBnUSDMigrateParams,
   encodeAddress,
+  MoneyMarketService,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from '@sodax/wallet-sdk-core';
@@ -23,24 +24,23 @@ import * as dotenv from 'dotenv';
 import { solverConfig } from './config.js';
 dotenv.config();
 
-const privateKey = process.env.PRIVATE_KEY;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
 const HUB_RPC_URL = 'https://rpc.soniclabs.com';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 const STELLAR_CHAIN_ID = STELLAR_MAINNET_CHAIN_ID;
-if (!privateKey) {
-  throw new Error('PRIVATE_KEY environment variable is required');
-}
 
 const stellarConfig = spokeChainConfig[STELLAR_CHAIN_ID] as StellarSpokeChainConfig;
-const STELLAR_SECRET_KEY = process.env.STELLAR_SECRET_KEY ?? '';
+const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY ?? '';
+if (!STELLAR_PRIVATE_KEY) {
+  throw new Error('PRIVATE_KEY environment variable is required');
+}
 const STELLAR_SOROBAN_RPC_URL = (process.env.STELLAR_SOROBAN_RPC_URL ?? stellarConfig.sorobanRpcUrl) as HttpUrl;
 const STELLAR_HORIZON_RPC_URL = (process.env.STELLAR_HORIZON_RPC_URL ?? stellarConfig.horizonRpcUrl) as HttpUrl;
 
 // Create Stellar wallet config
 const stellarWalletConfig: StellarWalletConfig = {
   type: 'PRIVATE_KEY',
-  privateKey: STELLAR_SECRET_KEY as Hex,
+  privateKey: STELLAR_PRIVATE_KEY as Hex,
   network: IS_TESTNET ? 'TESTNET' : 'PUBLIC',
   rpcUrl: STELLAR_SOROBAN_RPC_URL,
 };
@@ -69,6 +69,34 @@ const hubProvider = new EvmHubProvider({
   hubRpcUrl: HUB_RPC_URL,
   chainConfig: hubChainConfig,
 });
+
+async function estimateWithdrawGas() {
+  try {
+    const result = await sodax.moneyMarket.createWithdrawIntent(
+      {
+        action: "withdraw",
+        amount: BigInt(1000000),
+        token: "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+      },
+      stellarSpokeProvider,
+      true // true = get raw transaction
+    );
+
+    if (result.ok) {
+      const rawTx = result.value;
+
+      // Estimate gas for the withdraw transaction
+      const gasEstimate = await MoneyMarketService.estimateGas(
+        rawTx,
+        stellarSpokeProvider
+      );
+
+      console.log("gasEstimate", gasEstimate);
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
 
 async function getBalance(token: string) {
   const balance = await stellarSpokeProvider.getBalance(token);

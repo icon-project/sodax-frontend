@@ -168,7 +168,6 @@ export default function SwapPage() {
 
   const sourceWalletProvider = useWalletProvider(sourceToken.xChainId);
   const sourceProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
-
   const { data: sourceBalances } = useXBalances({
     xChainId: sourceToken.xChainId,
     xTokens: [sourceToken],
@@ -315,76 +314,6 @@ export default function SwapPage() {
     return undefined;
   };
 
-  const getButtonState = (): {
-    text: string;
-    disabled: boolean;
-    action: 'connect' | 'enter-amount' | 'review' | 'insufficient-balance';
-  } => {
-    if (!sourceAddress) {
-      return {
-        text: `Connect to ${chainIdToChainName(sourceToken.xChainId as SpokeChainId)}`,
-        disabled: false,
-        action: 'connect',
-      };
-    }
-
-    if (!sourceAmount || sourceAmount === '0' || sourceAmount === '' || Number.isNaN(Number(sourceAmount))) {
-      return {
-        text: 'Enter amount',
-        disabled: true,
-        action: 'enter-amount',
-      };
-    }
-
-    if (!hasSufficientBalanceWithFee(sourceAmount, sourceBalance, sourceToken.decimals, sodax.solver)) {
-      return {
-        text: 'Insufficient balance',
-        disabled: true,
-        action: 'insufficient-balance',
-      };
-    }
-
-    if (isSwapAndSend) {
-      if (!customDestinationAddress || customDestinationAddress.trim() === '') {
-        return {
-          text: 'Enter destination address',
-          disabled: true,
-          action: 'enter-amount',
-        };
-      }
-    } else {
-      if (!destinationAddress) {
-        return {
-          text: 'Connect recipient',
-          disabled: false,
-          action: 'connect',
-        };
-      }
-    }
-
-    if (quoteQuery.isLoading) {
-      return {
-        text: 'Getting quote...',
-        disabled: true,
-        action: 'enter-amount',
-      };
-    }
-
-    if (quoteQuery.error || (quoteQuery.data && !quoteQuery.data.ok)) {
-      return {
-        text: 'Quote unavailable',
-        disabled: true,
-        action: 'enter-amount',
-      };
-    }
-
-    return {
-      text: 'Review',
-      disabled: false,
-      action: 'review',
-    };
-  };
-
   const createIntentOrderPayload = async (): Promise<void> => {
     if (!quoteQuery.data?.ok || !quoteQuery.data.value) {
       console.error('Quote undefined');
@@ -435,17 +364,14 @@ export default function SwapPage() {
   };
 
   const handleOpenWalletModal = (): void => {
-    const buttonState = getButtonState();
+    openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
+  };
 
-    if (buttonState.action === 'connect') {
-      openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
-    } else if (buttonState.action === 'review') {
-      // Set fixed amounts before opening dialog to prevent changes during swap
-      setFixedDestinationAmount(calculatedDestinationAmount);
-      setFixedMinOutputAmount(minOutputAmount);
-      createIntentOrderPayload();
-      setIsSwapConfirmOpen(true);
-    }
+  const handleClickReview = (): void => {
+    setFixedDestinationAmount(calculatedDestinationAmount);
+    setFixedMinOutputAmount(minOutputAmount);
+    createIntentOrderPayload();
+    setIsSwapConfirmOpen(true);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -549,7 +475,6 @@ export default function SwapPage() {
     setFixedMinOutputAmount('');
   };
 
-  const buttonState = getButtonState();
   const [swapStatus, setSwapStatus] = useState<SolverIntentStatusCode>(SolverIntentStatusCode.NOT_FOUND);
   const handleUpdateSwapStatus = (statusCode: SolverIntentStatusCode) => {
     setSwapStatus(statusCode);
@@ -652,14 +577,33 @@ export default function SwapPage() {
           </div>
         )}
 
-        <Button
-          variant="cherry"
-          className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
-          onClick={handleOpenWalletModal}
-          disabled={buttonState.disabled}
-        >
-          {buttonState.text}
-        </Button>
+        {isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend) ? (
+          <Button
+            variant="cherry"
+            className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
+            onClick={handleClickReview}
+            disabled={sourceAmount === '0' || sourceAmount === '' || (isSwapAndSend && customDestinationAddress === '')}
+          >
+            {sourceAmount === '0' || sourceAmount === ''
+              ? 'Enter amount'
+              : isSwapAndSend && customDestinationAddress === ''
+                ? 'Enter destination address'
+                : 'Review'}
+          </Button>
+        ) : (
+          <Button
+            variant="cherry"
+            className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
+            onClick={handleOpenWalletModal}
+          >
+            Connect{' '}
+            {!isSourceChainConnected
+              ? chainIdToChainName(sourceToken.xChainId)
+              : !isSwapAndSend
+                ? chainIdToChainName(destinationToken.xChainId)
+                : ''}
+          </Button>
+        )}
       </div>
 
       {sourceAddress && (
@@ -673,6 +617,9 @@ export default function SwapPage() {
         onOpenChange={setIsSwapConfirmOpen}
         sourceToken={sourceToken}
         destinationToken={destinationToken}
+        finalDestinationAddress={
+          isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || ''
+        }
         sourceAmount={sourceAmount}
         destinationAmount={
           isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : calculatedDestinationAmount
