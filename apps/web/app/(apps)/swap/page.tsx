@@ -7,7 +7,7 @@ import SwapConfirmDialog from './_components/swap-confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
 import type { SpokeChainId, ChainType } from '@sodax/types';
-import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { useEvmSwitchChain, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { getXChainType } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useQuote, useSpokeProvider, useSwap, useStatus, useSodaxContext } from '@sodax/dapp-kit';
@@ -141,7 +141,7 @@ export default function SwapPage() {
   const [isSwapFailed, setIsSwapFailed] = useState<boolean>(false);
   const [dstTxHash, setDstTxHash] = useState<string>('');
   const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
-
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
   // Fixed amounts for dialog - these don't change once dialog is open
   const [fixedDestinationAmount, setFixedDestinationAmount] = useState<string>('');
   const [fixedMinOutputAmount, setFixedMinOutputAmount] = useState<string>('');
@@ -162,12 +162,14 @@ export default function SwapPage() {
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { address: sourceAddress } = useXAccount(sourceToken.xChainId);
   const { address: destinationAddress } = useXAccount(destinationToken.xChainId);
+  const [switchChainLoading, setSwitchChainLoading] = useState<boolean>(false);
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
 
   const sourceWalletProvider = useWalletProvider(sourceToken.xChainId);
   const sourceProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
+
   const { data: sourceBalances } = useXBalances({
     xChainId: sourceToken.xChainId,
     xTokens: [sourceToken],
@@ -315,6 +317,9 @@ export default function SwapPage() {
   };
 
   const createIntentOrderPayload = async (): Promise<void> => {
+    console.log('sourceToken.xChainId', sourceToken.xChainId);
+    console.log('sourceWalletProvider', sourceWalletProvider);
+    console.log('sourceProvider', sourceProvider);
     if (!sourceToken || !destinationToken) {
       console.error('sourceToken or destToken undefined');
       return;
@@ -362,10 +367,24 @@ export default function SwapPage() {
     openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
   };
 
-  const handleClickReview = (): void => {
+  //When switch cahin, sometimes it takes a while to get vlaue of sourceProvider
+
+  useEffect(() => {
+    if (sourceProvider !== undefined) {
+      setSwitchChainLoading(false);
+    }
+  }, [sourceProvider]);
+
+  const handleClickReview = async (): Promise<void> => {
+    if (isWrongChain) {
+      setSwitchChainLoading(true);
+      handleSwitchChain();
+      return;
+    }
+
     setFixedDestinationAmount(calculatedDestinationAmount);
     setFixedMinOutputAmount(minOutputAmount);
-    createIntentOrderPayload();
+    await createIntentOrderPayload();
     setIsSwapConfirmOpen(true);
   };
 
@@ -577,13 +596,22 @@ export default function SwapPage() {
             variant="cherry"
             className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
             onClick={handleClickReview}
-            disabled={sourceAmount === '0' || sourceAmount === '' || (isSwapAndSend && customDestinationAddress === '')}
+            disabled={
+              sourceAmount === '0' ||
+              sourceAmount === '' ||
+              (isSwapAndSend && customDestinationAddress === '') ||
+              switchChainLoading
+            }
           >
             {sourceAmount === '0' || sourceAmount === ''
               ? 'Enter amount'
               : isSwapAndSend && customDestinationAddress === ''
                 ? 'Enter destination address'
-                : 'Review'}
+                : isWrongChain
+                  ? `Switch to ${chainIdToChainName(sourceToken.xChainId)}`
+                  : switchChainLoading
+                    ? 'Switching...'
+                    : 'Review'}
           </Button>
         ) : (
           <Button
