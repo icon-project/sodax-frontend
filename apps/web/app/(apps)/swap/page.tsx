@@ -597,7 +597,8 @@ export default function SwapPage() {
               sourceAmount === '0' ||
               sourceAmount === '' ||
               (isSwapAndSend && customDestinationAddress === '') ||
-              switchChainLoading
+              switchChainLoading ||
+              quoteQuery.isLoading
             }
           >
             {sourceAmount === '0' || sourceAmount === ''
@@ -608,7 +609,9 @@ export default function SwapPage() {
                   ? `Switch to ${chainIdToChainName(sourceToken.xChainId)}`
                   : switchChainLoading
                     ? 'Switching...'
-                    : 'Review'}
+                    : quoteQuery.isLoading
+                      ? 'Getting quote...'
+                      : 'Review'}
           </Button>
         ) : (
           <Button
