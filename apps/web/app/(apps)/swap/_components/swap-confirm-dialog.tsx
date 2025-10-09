@@ -67,8 +67,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [approvalError, setApprovalError] = useState<string | null>(null);
   const [allowanceConfirmed, setAllowanceConfirmed] = useState<boolean>(false);
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
-
   const walletProvider = useWalletProvider(sourceToken.xChainId);
   const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
 
@@ -84,10 +82,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     allowanceConfirmed ? undefined : paramsForApprove,
     spokeProvider,
   );
-
-  console.log(paramsForApprove);
-  console.log('spokeProvider', spokeProvider);
-  console.log('hasAllowed', hasAllowed);
 
   /* If failed previous swap by JSON rpc error, allowance is still valid. 
   but after started next swap progress, allowance will become false. 
@@ -292,17 +286,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             </div>
           ) : (
             <div className="flex w-full flex-col gap-4">
-              {isWrongChain && (
-                <Button
-                  variant="cherry"
-                  className="w-full text-white font-semibold font-['InterRegular']"
-                  onClick={handleSwitchChain}
-                >
-                  Switch to {chainIdToChainName(sourceToken.xChainId)}
-                </Button>
-              )}
-
-              {!isWrongChain && !allowanceConfirmed && !hasAllowed && !isAllowanceLoading && (
+              {!allowanceConfirmed && !hasAllowed && !isAllowanceLoading && (
                 <div className="w-full">
                   <Button
                     variant="cherry"
@@ -338,7 +322,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </div>
               )}
 
-              {!isWrongChain && (allowanceConfirmed || hasAllowed) && (
+              {(allowanceConfirmed || hasAllowed) && (
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
@@ -371,7 +355,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </Button>
               )}
 
-              {!isWrongChain && isAllowanceLoading && (
+              {isAllowanceLoading && (
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
