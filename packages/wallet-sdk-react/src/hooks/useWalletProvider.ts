@@ -106,7 +106,6 @@ export function useWalletProvider(
 
         return new InjectiveWalletProvider({
           msgBroadcaster: injectiveXService.msgBroadcaster,
-          walletAddress: xAccount.address,
         });
       }
 
