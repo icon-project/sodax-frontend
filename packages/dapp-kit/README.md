@@ -68,6 +68,17 @@ pnpm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk-react
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SodaxWalletProvider } from '@sodax/wallet-sdk-react';
 import { SodaxProvider } from '@sodax/dapp-kit';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  AVALANCHE_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  OPTIMISM_MAINNET_CHAIN_ID,
+  POLYGON_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
+} from '@sodax/types';
 
 const queryClient = new QueryClient();
 
@@ -82,7 +93,18 @@ function App() {
         <SodaxWalletProvider
           config={{
             EVM: {
-              wagmiConfig: wagmiConfig,
+              // Add all the EVM chains you want to support
+              chains: [
+                ARBITRUM_MAINNET_CHAIN_ID,
+                AVALANCHE_MAINNET_CHAIN_ID,
+                BASE_MAINNET_CHAIN_ID,
+                BSC_MAINNET_CHAIN_ID,
+                OPTIMISM_MAINNET_CHAIN_ID,
+                POLYGON_MAINNET_CHAIN_ID,
+                SONIC_MAINNET_CHAIN_ID,
+                HYPEREVM_MAINNET_CHAIN_ID,
+                LIGHTLINK_MAINNET_CHAIN_ID,
+              ],
             },
             SUI: {
               isMainnet: true,
