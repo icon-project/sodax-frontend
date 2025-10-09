@@ -316,10 +316,7 @@ export default function SwapPage() {
     return undefined;
   };
 
-  const createIntentOrderPayload = async (): Promise<void> => {
-    console.log('sourceToken.xChainId', sourceToken.xChainId);
-    console.log('sourceWalletProvider', sourceWalletProvider);
-    console.log('sourceProvider', sourceProvider);
+  const createIntentOrderPayload = () => {
     if (!sourceToken || !destinationToken) {
       console.error('sourceToken or destToken undefined');
       return;
@@ -384,7 +381,7 @@ export default function SwapPage() {
 
     setFixedDestinationAmount(calculatedDestinationAmount);
     setFixedMinOutputAmount(minOutputAmount);
-    await createIntentOrderPayload();
+    createIntentOrderPayload();
     setIsSwapConfirmOpen(true);
   };
 
