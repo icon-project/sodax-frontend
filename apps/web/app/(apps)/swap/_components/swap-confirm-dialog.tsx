@@ -29,6 +29,7 @@ interface SwapConfirmDialogProps {
   onConfirm: () => void;
   onClose?: () => void;
   isLoading?: boolean;
+  isSwapPending?: boolean;
   slippageTolerance?: number;
   error?: string;
   isSwapSuccessful?: boolean;
@@ -54,6 +55,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   onConfirm,
   onClose,
   isLoading = false,
+  isSwapPending = false,
   slippageTolerance = 0.5,
   minOutputAmount,
   error,
@@ -62,8 +64,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   intentOrderPayload,
   swapStatus,
 }: SwapConfirmDialogProps) => {
-  const [isConfirming, setIsConfirming] = useState<boolean>(false);
-  const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [approvalError, setApprovalError] = useState<string | null>(null);
   const [allowanceConfirmed, setAllowanceConfirmed] = useState<boolean>(false);
 
@@ -100,12 +100,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, spokeProvider);
 
-  useEffect(() => {
-    if (isSwapSuccessful) {
-      setIsCompleted(true);
-    }
-  }, [isSwapSuccessful]);
-
   const formatToSixDecimals = (value: string): string => {
     const num = Number.parseFloat(value);
     if (Number.isNaN(num)) return value;
@@ -132,19 +126,16 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   };
 
   const handleConfirm = async (): Promise<void> => {
-    setIsConfirming(true);
     try {
       await onConfirm();
     } catch (error) {
       console.error('Unexpected error during swap confirmation:', error);
     } finally {
-      setIsConfirming(false);
     }
   };
 
   const handleClose = (): void => {
-    if (isCompleted) {
-      setIsCompleted(false);
+    if (isSwapSuccessful) {
       onOpenChange(false);
       onClose?.();
     } else {
@@ -162,11 +153,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={isCompleted || isConfirming ? undefined : handleDialogOpenChange}>
+    <Dialog open={open} onOpenChange={isSwapSuccessful || isSwapPending ? undefined : handleDialogOpenChange}>
       <DialogContent className="md:max-w-[480px] p-12 w-[90%] shadow-none bg-vibrant-white gap-4" hideCloseButton>
         <DialogHeader>
           <DialogTitle className="flex w-full justify-end">
-            {!isCompleted && (
+            {!isSwapSuccessful && (
               <DialogClose asChild>
                 <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
               </DialogClose>
@@ -176,7 +167,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
         <div className="flex w-full justify-center">
           <div className="w-60 pb-6 inline-flex justify-between items-center">
             <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
-              <div className={`${isCompleted ? 'grayscale opacity-50' : ''}`}>
+              <div className={`${isSwapSuccessful ? 'grayscale opacity-50' : ''}`}>
                 <CurrencyLogo currency={sourceToken} />
               </div>
               <div className="flex flex-col justify-start items-center gap-2">
@@ -204,7 +195,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
               </div>
             </div>
             <div className="w-16 h-9 inline-flex flex-col justify-between items-center">
-              {isCompleted ? (
+              {isSwapSuccessful ? (
                 <>
                   <ChevronsRight className="w-4 h-4 text-clay-light" />
                   <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
@@ -250,7 +241,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
         </div>
 
         <DialogFooter className="flex w-full">
-          {isCompleted ? (
+          {isSwapSuccessful ? (
             <div className="flex w-full flex-col gap-4">
               <Button
                 variant="cherry"
@@ -326,12 +317,12 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 <Button
                   variant="cherry"
                   className="w-full text-white font-semibold font-['InterRegular']"
-                  onClick={isLoading || isConfirming ? undefined : handleConfirm}
+                  onClick={isLoading || isSwapPending ? undefined : handleConfirm}
                 >
-                  {isLoading || isConfirming ? (
+                  {isLoading || isSwapPending ? (
                     <div className="flex items-center gap-2 text-white">
                       <span>
-                        {swapStatus === SolverIntentStatusCode.NOT_FOUND
+                        {isSwapPending
                           ? 'Confirming Swap'
                           : swapStatus === SolverIntentStatusCode.NOT_STARTED_YET
                             ? 'Swap Created'

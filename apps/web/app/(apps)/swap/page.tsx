@@ -650,7 +650,8 @@ export default function SwapPage() {
         exchangeRate={exchangeRate}
         onConfirm={handleSwapConfirm}
         onClose={handleDialogClose}
-        isLoading={Boolean(isSwapPending || isWaitingForSolvedStatus)}
+        isSwapPending={isSwapPending}
+        isLoading={isWaitingForSolvedStatus}
         slippageTolerance={slippageTolerance}
         error={swapError}
         minOutputAmount={
