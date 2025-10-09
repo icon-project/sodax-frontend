@@ -143,7 +143,15 @@ export function TokenList({
       }`}
       data-name="Assets"
     >
-      {backdropShow && <div className="rounded-[32px] fixed inset-0 z-50" />}
+      {backdropShow && (
+        <div
+          className="rounded-[32px] fixed inset-0 z-50"
+          onClick={() => {
+            setBackdropShow(false);
+            onClickOutside();
+          }}
+        />
+      )}
       <ScrollAreaPrimitive.Root data-slot="scroll-area" className={showAllAssets ? 'h-96' : 'h-71'}>
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
