@@ -108,7 +108,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
   const handleApprove = async (): Promise<void> => {
     if (!intentOrderPayload) {
-      console.error('Intent params not available for approval');
       setApprovalError('Intent params not available for approval');
       return;
     }
@@ -120,17 +119,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
         setAllowanceConfirmed(true);
       }
     } catch (error) {
-      console.error('Approval failed:', error);
       setApprovalError(error instanceof Error ? error.message : 'Approval failed. Please try again.');
-    }
-  };
-
-  const handleConfirm = async (): Promise<void> => {
-    try {
-      await onConfirm();
-    } catch (error) {
-      console.error('Unexpected error during swap confirmation:', error);
-    } finally {
     }
   };
 
@@ -316,8 +305,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
               {(allowanceConfirmed || hasAllowed) && (
                 <Button
                   variant="cherry"
-                  className="w-full text-white font-semibold font-['InterRegular']"
-                  onClick={isLoading || isSwapPending ? undefined : handleConfirm}
+                  className="w-full text-white font-semibold font-['InterRegular'] disabled:bg-cherry-bright"
+                  disabled={isLoading || isSwapPending}
+                  onClick={async () => {
+                    await onConfirm();
+                  }}
                 >
                   {isLoading || isSwapPending ? (
                     <div className="flex items-center gap-2 text-white">
