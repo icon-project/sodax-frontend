@@ -16,6 +16,7 @@ import type {
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
   VaultType,
+  ConcentratedLiquidityConfig,
   LegacybnUSDChainId,
   LegacybnUSDToken,
   NewbnUSDChainId,
@@ -43,6 +44,7 @@ import {
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
 } from '@sodax/types';
+import type { PoolKey } from '@pancakeswap/infinity-sdk';
 
 export const DEFAULT_MAX_RETRY = 3;
 export const DEFAULT_RELAY_TX_TIMEOUT = 120000; // 120 seconds
@@ -2344,6 +2346,22 @@ const moneyMarketConfig = {
 
 export const getMoneyMarketConfig = (chainId: HubChainId): MoneyMarketConfig => moneyMarketConfig[chainId];
 
+const concentratedLiquidityConfig = {
+  permit2: '0x000000000022D473030F116dDEE9F6B43aC78BA3',
+  clPoolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43',
+  router: '0x5bFB058c65E4c1DEC1cFF0Ff2cBd8522b4c3feBB',
+  clPositionManager: '0xcc08a04d9E5766c7A20FE6bb32cAa40EA0e7e9e1',
+  clPositionDescriptor: '0x83Ff9FC474DBe927BA5BB822571e0814122655bB',
+  clQuoter: '0x5f46CB668D39496b41CE8E19D6A7fE893826E363',
+  clTickLens: '0xb3e77dD9b1f206A2b797B3fE900b50cC92A38d26',
+  defaultHook: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229',
+  stataTokenFactory: '0x9120956787FcE7D7082C52CDCAafb7F4B88272d4',
+  defaultTickSpacing: 10,
+  defaultBitmap: 16383n,
+} as const satisfies ConcentratedLiquidityConfig;
+
+export const getConcentratedLiquidityConfig = (): ConcentratedLiquidityConfig => concentratedLiquidityConfig;
+
 // currently supported spoke chain tokens for money market
 export const moneyMarketSupportedTokens = {
   [AVALANCHE_MAINNET_CHAIN_ID]: [
@@ -2453,6 +2471,163 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
+
+export const migrationConfig = {
+  bnUSD: {
+    [ICON_MAINNET_CHAIN_ID]: {
+      legacybnUSD: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+      newbnUSD: hubVaults.bnUSD.address,
+    },
+    [SUI_MAINNET_CHAIN_ID]: {
+      legacybnUSD: spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
+      newbnUSD: hubVaults.bnUSD.address,
+    },
+    [STELLAR_MAINNET_CHAIN_ID]: {
+      legacybnUSD: spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD,
+      newbnUSD: hubVaults.bnUSD.address,
+    },
+  },
+  ICX: {
+    [ICON_MAINNET_CHAIN_ID]: {
+      icx: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['nativeToken'],
+      wICX: spokeChainConfig[ICON_MAINNET_CHAIN_ID]['addresses']['wICX'],
+    },
+  },
+} as const;
+
+export const dexPools = {
+  AETH_BNUSD: {
+    currency0: '0x3E102c7D9b46c92aBcd4c2e1C70f362B47a201A6', // AsodaETH
+    currency1: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // bnuSD
+    hooks: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229', // defaultHook
+    poolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43', // clPoolManager
+    fee: 8388608, // DYNAMIC_FEE
+    parameters: {
+      tickSpacing: 10,
+      hooksRegistration: {
+        beforeInitialize: true,
+        afterInitialize: true,
+        beforeAddLiquidity: true,
+        afterAddLiquidity: true,
+        beforeRemoveLiquidity: true,
+        afterRemoveLiquidity: true,
+        beforeSwap: true,
+        afterSwap: true,
+        beforeDonate: true,
+        afterDonate: true,
+        beforeSwapReturnsDelta: true,
+        afterSwapReturnsDelta: true,
+        afterMintReturnsDelta: true,
+        afterBurnReturnsDelta: true,
+      },
+    },
+  },
+
+  BTC_BNUSD: {
+    currency0: '0x8aDe79C255761971f4057253712b916AB2494275', // sodaBTC
+    currency1: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // bnUSD
+    hooks: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229', // defaultHook
+    poolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43', // clPoolManager
+    fee: 8388608, // DYNAMIC_FEE
+    parameters: {
+      tickSpacing: 10,
+      hooksRegistration: {
+        beforeInitialize: true,
+        afterInitialize: true,
+        beforeAddLiquidity: true,
+        afterAddLiquidity: true,
+        beforeRemoveLiquidity: true,
+        afterRemoveLiquidity: true,
+        beforeSwap: true,
+        afterSwap: true,
+        beforeDonate: true,
+        afterDonate: true,
+        beforeSwapReturnsDelta: true,
+        afterSwapReturnsDelta: true,
+        afterMintReturnsDelta: true,
+        afterBurnReturnsDelta: true,
+      },
+    },
+  },
+
+  // SODA/ETH pool
+  ASODA_BNUSD: {
+    currency0: '0xac8540fee419c7ceb985889EaBa1e84B42a53e8a', // sodaSODA
+    currency1: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // sodaETH
+    hooks: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229', // defaultHook
+    poolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43', // clPoolManager
+    fee: 8388608, // DYNAMIC_FEE
+    parameters: {
+      tickSpacing: 10,
+      hooksRegistration: {
+        beforeInitialize: true,
+        afterInitialize: true,
+        beforeAddLiquidity: true,
+        afterAddLiquidity: true,
+        beforeRemoveLiquidity: true,
+        afterRemoveLiquidity: true,
+        beforeSwap: true,
+        afterSwap: true,
+        beforeDonate: true,
+        afterDonate: true,
+        beforeSwapReturnsDelta: true,
+        afterSwapReturnsDelta: true,
+        afterMintReturnsDelta: true,
+        afterBurnReturnsDelta: true,
+      },
+    },
+  },
+
+  // SODA/USDC pool
+  ASODA_XSODA: {
+    currency0: '0xac8540fee419c7ceb985889EaBa1e84B42a53e8a', // sodaSODA
+    currency1: '0xADC6561Cc8FC31767B4917CCc97F510D411378d9', // xSODA
+    hooks: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229', // defaultHook
+    poolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43', // clPoolManager
+    fee: 8388608, // DYNAMIC_FEE
+    parameters: {
+      tickSpacing: 10,
+      hooksRegistration: {
+        beforeInitialize: true,
+        afterInitialize: true,
+        beforeAddLiquidity: true,
+        afterAddLiquidity: true,
+        beforeRemoveLiquidity: true,
+        afterRemoveLiquidity: true,
+        beforeSwap: true,
+        afterSwap: true,
+        beforeDonate: true,
+        afterDonate: true,
+        beforeSwapReturnsDelta: true,
+        afterSwapReturnsDelta: true,
+        afterMintReturnsDelta: true,
+        afterBurnReturnsDelta: true,
+      },
+    },
+  },
+} as const satisfies Record<string, PoolKey>;
+
+export const StatATokenAddresses = {
+  '0xac8540fee419c7ceb985889eaba1e84b42a53e8a': '0x21685E341DE7844135329914Be6Bd8D16982d834',
+  '0x8ade79c255761971f4057253712b916ab2494275': '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
+  '0x3e102c7d9b46c92abcd4c2e1c70f362b47a201a6': '0x4effB5813271699683C25c734F4daBc45B363709',
+} as const satisfies Record<Address, Address>;
+
+export const getOriginalAssetAddressFromStakedATokenAddress = (
+  chainId: SpokeChainId,
+  address: Address,
+): OriginalAssetAddress => {
+  const normalizedAddress = address.toLowerCase() as keyof typeof StatATokenAddresses;
+  const sodaToken = StatATokenAddresses[normalizedAddress] ?? address;
+  console.log('chainId', chainId);
+  console.log('sodaToken', sodaToken);
+  const originalAssetAddresses = getOriginalAssetInfoFromVault(chainId, sodaToken);
+  console.log('originalAssetAddresses', originalAssetAddresses);
+  if (!originalAssetAddresses.length) {
+    throw new Error('[getOriginalAssetAddressFromStakedATokenAddress] Original asset address not found');
+  }
+  return originalAssetAddresses[0] as OriginalAssetAddress;
+};
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
   moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());

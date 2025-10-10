@@ -114,7 +114,24 @@ export type MoneyMarketConfig = {
   bnUSDVault: Address;
 };
 
+export type ConcentratedLiquidityConfig = {
+  permit2: Address;
+  clPoolManager: Address;
+  router: Address;
+  clPositionManager: Address;
+  clPositionDescriptor: Address;
+  clQuoter: Address;
+  clTickLens: Address;
+  defaultHook: Address;
+  stataTokenFactory: Address;
+  defaultTickSpacing: number;
+  defaultBitmap: bigint;
+};
+
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
+export type ConcentratedLiquidityServiceConfig = Prettify<
+  ConcentratedLiquidityConfig & PartnerFeeConfig & RelayerApiConfig
+>;
 export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
@@ -126,6 +143,10 @@ export type BackendApiConfig = {
 
 export type MoneyMarketConfigParams =
   | Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
+  | Optional<PartnerFeeConfig, 'partnerFee'>;
+
+export type ConcentratedLiquidityConfigParams =
+  | Prettify<ConcentratedLiquidityConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
   | Optional<PartnerFeeConfig, 'partnerFee'>;
 
 export type Default = {

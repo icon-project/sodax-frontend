@@ -1,4 +1,5 @@
 export * from './hub/index.js';
+export * from './concentratedLiquidity/index.js';
 export * from './shared/index.js';
 export * from './spoke/index.js';
 export * from './intentRelay/index.js';
