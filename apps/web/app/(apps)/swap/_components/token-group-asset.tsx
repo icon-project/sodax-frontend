@@ -8,7 +8,6 @@ import { availableChains } from '@/constants/chains';
 
 interface NetworkIconProps {
   imageSrc: string;
-  index: number;
   isHovered: boolean;
   hoveredIcon: number | null;
   onMouseEnter: () => void;
@@ -18,7 +17,6 @@ interface NetworkIconProps {
 
 function NetworkIcon({
   imageSrc,
-  index,
   isHovered,
   hoveredIcon,
   onMouseEnter,
@@ -115,7 +113,6 @@ function StackedNetworks({
           <NetworkIcon
             key={index}
             imageSrc={networkInfo.image}
-            index={index}
             isHovered={hoveredIcon === index}
             hoveredIcon={hoveredIcon}
             onMouseEnter={() => setHoveredIcon(index)}
