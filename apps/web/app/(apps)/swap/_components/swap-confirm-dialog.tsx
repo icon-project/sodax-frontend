@@ -8,7 +8,17 @@ import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { CircularProgressIcon } from '@/components/icons';
 import type BigNumber from 'bignumber.js';
-import { Timer, XIcon, Check, ChevronsRight, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Timer,
+  XIcon,
+  Check,
+  ChevronsRight,
+  ChevronDown,
+  ChevronUp,
+  ShieldAlertIcon,
+  ExternalLinkIcon,
+} from 'lucide-react';
+import Link from 'next/link';
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
 import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
@@ -117,6 +127,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       const value = await approve({ params: intentOrderPayload });
       if (value) {
         setAllowanceConfirmed(true);
+      } else {
+        setApprovalError('Failed to approve tokens');
       }
     } catch (error) {
       setApprovalError(error instanceof Error ? error.message : 'Approval failed. Please try again.');
@@ -153,6 +165,19 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             )}
           </DialogTitle>
         </DialogHeader>
+        {(error || approvalError) && (
+          <div className="w-full flex-col flex gap-1">
+            <div className="flex justify-center gap-1 w-full items-center">
+              <ShieldAlertIcon className="w-4 h-4 text-negative" />
+              <span className="font-['InterBold'] text-(length:--body-comfortable) leading-[1.4] text-negative">
+                {error ? 'Swap Failed' : 'Approval Failed'}
+              </span>
+            </div>
+            <div className="text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] text-center">
+              {error || approvalError}
+            </div>
+          </div>
+        )}
         <div className="flex w-full justify-center">
           <div className="w-60 pb-6 inline-flex justify-between items-center">
             <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
@@ -243,19 +268,19 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </div>
               </Button>
 
-              <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center">
-                Enjoying SODAX? Follow updates on X
+              <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
+                Enjoying SODAX?
+                <Link
+                  href="https://x.com/sodaxlabs"
+                  target="_blank"
+                  className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
+                >
+                  Follow updates on X <ExternalLinkIcon className="w-4 h-4" />
+                </Link>
               </div>
             </div>
           ) : error ? (
             <div className="flex w-full flex-col gap-4">
-              <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-2 text-red-800 mb-2">
-                  <XIcon className="w-4 h-4" />
-                  <span className="font-semibold">Swap Failed</span>
-                </div>
-                <div className="text-red-700 text-sm">{error}</div>
-              </div>
               <Button
                 variant="cherry"
                 className="w-full text-white font-semibold font-['InterRegular']"
@@ -263,6 +288,17 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
               >
                 Close
               </Button>
+
+              <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
+                Need help?
+                <Link
+                  href="https://x.com/sodaxlabs"
+                  target="_blank"
+                  className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
+                >
+                  Get support on Discord <ExternalLinkIcon className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="flex w-full flex-col gap-4">
@@ -289,16 +325,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                       `Approve ${sourceToken.symbol}`
                     )}
                   </Button>
-
-                  {approvalError && (
-                    <div className="w-full mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                      <div className="flex items-center gap-2 text-red-800">
-                        <XIcon className="w-4 h-4" />
-                        <span className="text-sm font-medium">Approval Failed</span>
-                      </div>
-                      <div className="text-red-700 text-xs mt-1">{approvalError}</div>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -320,9 +346,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                             ? 'Swap Created'
                             : swapStatus === SolverIntentStatusCode.STARTED_NOT_FINISHED
                               ? 'Swap in Progress'
-                              : swapStatus === SolverIntentStatusCode.SOLVED
-                                ? 'Transferring Assets'
-                                : 'Confirming Swap'}
+                              : 'Confirming Swap'}
                       </span>
                       <CircularProgressIcon
                         width={16}

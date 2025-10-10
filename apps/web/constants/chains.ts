@@ -22,8 +22,8 @@ export const availableChains: ChainUI[] = [
   { id: CHAIN_IDS[8], name: 'Polygon', icon: '/chain/0x89.polygon.png' },
   { id: CHAIN_IDS[9], name: 'Solana', icon: '/chain/solana.png' },
   { id: CHAIN_IDS[11], name: 'Stellar', icon: '/chain/stellar.png' },
-  { id: CHAIN_IDS[10], name: 'Icon', icon: '/chain/0x1.icon.png' },
-  // { id: SPOKE_CHAIN_IDS[12], name: 'Nibiru', icon: '/chain/nibiru.png' },
+  { id: CHAIN_IDS[10], name: 'Icon', icon: '/chain/icon.png' },
+  { id: CHAIN_IDS[14], name: 'Lightlink', icon: '/chain/lightlink.png' },
 ];
 
 /**
