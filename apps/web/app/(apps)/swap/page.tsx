@@ -496,6 +496,43 @@ export default function SwapPage() {
   const handleUpdateSwapStatus = (statusCode: SolverIntentStatusCode) => {
     setSwapStatus(statusCode);
   };
+
+  const isReviewButtonDisabled = (): boolean => {
+    const hasNoAmount = sourceAmount === '0' || sourceAmount === '';
+    const hasMissingDestination = isSwapAndSend && customDestinationAddress === '';
+    const isLoadingOrUnavailable = switchChainLoading || quoteQuery.isLoading || quoteQuery.data?.ok === false;
+
+    return hasNoAmount || hasMissingDestination || isLoadingOrUnavailable;
+  };
+
+  const getReviewButtonText = (): string => {
+    if (isWrongChain) {
+      return `Switch to ${chainIdToChainName(sourceToken.xChainId)}`;
+    }
+
+    if (sourceAmount === '0' || sourceAmount === '') {
+      return 'Enter amount';
+    }
+
+    if (isSwapAndSend && customDestinationAddress === '') {
+      return 'Enter destination address';
+    }
+
+    if (switchChainLoading) {
+      return 'Switching';
+    }
+
+    if (quoteQuery.isLoading) {
+      return 'Getting quote';
+    }
+
+    if (quoteQuery.data?.ok === false) {
+      return 'Quote unavailable';
+    }
+
+    return 'Review';
+  };
+
   return (
     <div className="w-full">
       {dstTxHash && (
@@ -569,28 +606,9 @@ export default function SwapPage() {
             variant="cherry"
             className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
             onClick={handleClickReview}
-            disabled={
-              sourceAmount === '0' ||
-              sourceAmount === '' ||
-              (isSwapAndSend && customDestinationAddress === '') ||
-              switchChainLoading ||
-              quoteQuery.isLoading ||
-              quoteQuery.data?.ok === false
-            }
+            disabled={isReviewButtonDisabled()}
           >
-            {sourceAmount === '0' || sourceAmount === ''
-              ? 'Enter amount'
-              : isSwapAndSend && customDestinationAddress === ''
-                ? 'Enter destination address'
-                : isWrongChain
-                  ? `Switch to ${chainIdToChainName(sourceToken.xChainId)}`
-                  : switchChainLoading
-                    ? 'Switching'
-                    : quoteQuery.isLoading
-                      ? 'Getting quote'
-                      : quoteQuery.data?.ok === false
-                        ? 'Quote unavailable'
-                        : 'Review'}
+            {getReviewButtonText()}
           </Button>
         ) : (
           <Button
