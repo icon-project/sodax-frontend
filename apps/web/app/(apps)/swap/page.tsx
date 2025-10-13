@@ -199,7 +199,6 @@ export default function SwapPage() {
 
   const sourceUsdValue = useTokenUsdValue(sourceToken, sourceAmount);
   const { data: intent, isLoading: isIntentLoading } = useBackendIntentByTxHash(dstTxHash);
-  console.log('intent', intent);
   const { sodax } = useSodaxContext();
 
   const quotePayload = useMemo(() => {
