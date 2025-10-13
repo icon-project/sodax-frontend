@@ -14,6 +14,7 @@ import {
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { getQueryClient } from '@/app/get-query-client';
 import type { XConfig } from '@sodax/wallet-sdk-react';
@@ -32,6 +33,7 @@ export default function Providers({ children }: { children: ReactNode }) {
           OPTIMISM_MAINNET_CHAIN_ID,
           POLYGON_MAINNET_CHAIN_ID,
           SONIC_MAINNET_CHAIN_ID,
+          LIGHTLINK_MAINNET_CHAIN_ID,
         ],
       },
       SUI: {
