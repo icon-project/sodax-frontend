@@ -10,7 +10,14 @@ import type { SpokeChainId, ChainType } from '@sodax/types';
 import { useEvmSwitchChain, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { getXChainType } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
-import { useQuote, useSpokeProvider, useSwap, useStatus, useSodaxContext } from '@sodax/dapp-kit';
+import {
+  useQuote,
+  useSpokeProvider,
+  useSwap,
+  useStatus,
+  useSodaxContext,
+  useBackendIntentByTxHash,
+} from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import BigNumber from 'bignumber.js';
 import type { CreateIntentParams, QuoteType } from '@sodax/sdk';
@@ -23,6 +30,7 @@ import { useModalStore } from '@/stores/modal-store-provider';
 import { formatUnits, parseUnits } from 'viem';
 import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
 import { convertSegmentPathToStaticExportFilename } from 'next/dist/shared/lib/segment-cache/segment-value-encoding';
+import { getSwapErrorMessage } from '@/lib/utils';
 
 const calculateMaxAvailableAmount = (
   balance: bigint,
@@ -136,7 +144,7 @@ export default function SwapPage() {
   } = useSwapActions();
 
   const [isSwapConfirmOpen, setIsSwapConfirmOpen] = useState<boolean>(false);
-  const [swapError, setSwapError] = useState<string>('');
+  const [swapError, setSwapError] = useState<{ title: string; message: string } | null>(null);
   const [isSwapSuccessful, setIsSwapSuccessful] = useState<boolean>(false);
   const [isSwapFailed, setIsSwapFailed] = useState<boolean>(false);
   const [dstTxHash, setDstTxHash] = useState<string>('');
@@ -154,7 +162,7 @@ export default function SwapPage() {
   const handleSwapFailed = useCallback(() => {
     setIsSwapFailed(true);
     setIsSwapSuccessful(false);
-    setSwapError('Swap failed. Please try again.');
+    setSwapError({ title: 'Swap failed', message: 'Please try again.' });
   }, []);
 
   const sourceChainType = getXChainType(sourceToken.xChainId);
@@ -190,7 +198,8 @@ export default function SwapPage() {
   }, [dstTxHash, isSwapFailed]);
 
   const sourceUsdValue = useTokenUsdValue(sourceToken, sourceAmount);
-
+  const { data: intent, isLoading: isIntentLoading } = useBackendIntentByTxHash(dstTxHash);
+  console.log('intent', intent);
   const { sodax } = useSodaxContext();
 
   const quotePayload = useMemo(() => {
@@ -402,7 +411,7 @@ export default function SwapPage() {
 
   const handleSwapConfirm = async (): Promise<void> => {
     try {
-      setSwapError('');
+      setSwapError(null);
       setIsSwapSuccessful(false);
       setSwapResetCounter(prev => prev + 1);
 
@@ -461,7 +470,10 @@ export default function SwapPage() {
       });
 
       if (!result.ok) {
-        throw new Error(`Swap execution failed: ${result.error?.code || 'Unknown error'}`);
+        const errorMessage = getSwapErrorMessage(result.error?.code || 'UNKNOWN');
+        setSwapError(errorMessage);
+        setDstTxHash('');
+        return;
       }
 
       const [, , intentDeliveryInfo] = result.value;
@@ -469,14 +481,15 @@ export default function SwapPage() {
       setSwapStatus(SolverIntentStatusCode.NOT_STARTED_YET);
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     } catch (error) {
-      console.error('Swap execution failed:', error);
-      setSwapError(error instanceof Error ? error.message : 'Swap failed. Please try again.');
+      console.log('error', error);
+      const errorMessage = getSwapErrorMessage('UNKNOWN');
+      setSwapError(errorMessage);
       setDstTxHash('');
     }
   };
 
   const handleDialogClose = (): void => {
-    setSwapError('');
+    setSwapError(null);
     setIsSwapSuccessful(false);
     setIsSwapFailed(false);
     setDstTxHash('');
@@ -563,26 +576,8 @@ export default function SwapPage() {
             <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
               <div className="self-stretch justify-center">
                 <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">
-                  {quoteQuery.data.error.detail.message} <br />
-                  For more help, reach out{' '}
+                  No path was found.
                 </span>
-                <span className="text-clay text-base font-normal font-['InterRegular'] underline leading-tight">
-                  on Discord
-                </span>
-                <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">.</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {isSwapFailed && (
-          <div className="self-stretch px-8 py-6 bg-red-50 border border-red-200 rounded-[20px] inline-flex justify-between items-center">
-            <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
-              <div className="self-stretch justify-center text-red-600 text-base font-bold font-['InterRegular'] leading-tight">
-                Swap Failed
-              </div>
-              <div className="self-stretch justify-center text-red-500 text-base font-normal font-['InterRegular'] leading-tight">
-                {swapError || 'Your swap transaction failed. Please try again.'}
               </div>
             </div>
           </div>
@@ -598,7 +593,8 @@ export default function SwapPage() {
               sourceAmount === '' ||
               (isSwapAndSend && customDestinationAddress === '') ||
               switchChainLoading ||
-              quoteQuery.isLoading
+              quoteQuery.isLoading ||
+              quoteQuery.data?.ok === false
             }
           >
             {sourceAmount === '0' || sourceAmount === ''
@@ -653,7 +649,7 @@ export default function SwapPage() {
         isSwapPending={isSwapPending}
         isLoading={isWaitingForSolvedStatus}
         slippageTolerance={slippageTolerance}
-        error={swapError}
+        error={swapError || undefined}
         minOutputAmount={
           new BigNumber(isSwapConfirmOpen && fixedMinOutputAmount ? fixedMinOutputAmount : minOutputAmount)
         }
