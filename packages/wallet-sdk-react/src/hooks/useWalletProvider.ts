@@ -50,7 +50,7 @@ export function useWalletProvider(
     chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
   });
 
-  const { data: evmWalletClient } = useWalletClient();
+  const { data: evmWalletClient } = useWalletClient({ query: { refetchInterval: 3000 } });
 
   // Cross-chain hooks
   const xService = useXService(getXChainType(spokeChainId));
