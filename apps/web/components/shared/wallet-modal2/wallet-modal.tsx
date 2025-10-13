@@ -9,7 +9,7 @@ import type { ChainType } from '@sodax/types';
 import { Separator } from '@/components/ui/separator';
 import { XIcon } from 'lucide-react';
 import { ArrowLeftIcon } from 'lucide-react';
-import { useXAccounts, useXConnectors } from '@sodax/wallet-sdk-react';
+import { useXConnectors } from '@sodax/wallet-sdk-react';
 import { WalletItem } from './wallet-item';
 import { AllSupportItem } from './all-support-item';
 import { isRegisteredUser } from '@/apis/users';
@@ -143,7 +143,10 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       if (!xAccount.address) {
                         return;
                       }
-                      const isRegistered = await isRegisteredUser({ address: xAccount.address });
+                      const isRegistered = await isRegisteredUser({
+                        address: xAccount.address,
+                        chainType: xConnector.xChainType,
+                      });
                       if (!isRegistered) {
                         openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: xConnector.xChainType });
                       }
@@ -191,7 +194,10 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                         if (!xAccount.address) {
                           return;
                         }
-                        const isRegistered = await isRegisteredUser({ address: xAccount.address });
+                        const isRegistered = await isRegisteredUser({
+                          address: xAccount.address,
+                          chainType: chainGroup.chainType,
+                        });
                         if (!isRegistered) {
                           openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
                         }
@@ -234,7 +240,10 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       if (!xAccount.address) {
                         return;
                       }
-                      const isRegistered = await isRegisteredUser({ address: xAccount.address });
+                      const isRegistered = await isRegisteredUser({
+                        address: xAccount.address,
+                        chainType: chainGroup.chainType,
+                      });
                       if (!isRegistered) {
                         openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainType: chainGroup.chainType });
                       }
