@@ -26,10 +26,10 @@ import { chainIdToChainName } from '@/providers/constants';
 import { useSwapApprove, useSpokeProvider, useSwapAllowance } from '@sodax/dapp-kit';
 import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { motion } from 'framer-motion';
 
 interface SwapConfirmDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
   sourceToken: XToken;
   destinationToken: XToken;
   finalDestinationAddress: string;
@@ -55,7 +55,6 @@ interface SwapConfirmDialogProps {
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   open,
-  onOpenChange,
   sourceToken,
   destinationToken,
   finalDestinationAddress,
@@ -76,6 +75,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 }: SwapConfirmDialogProps) => {
   const [approvalError, setApprovalError] = useState<string | null>(null);
   const [allowanceConfirmed, setAllowanceConfirmed] = useState<boolean>(false);
+  const [isShaking, setIsShaking] = useState<boolean>(false);
 
   const walletProvider = useWalletProvider(sourceToken.xChainId);
   const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
@@ -136,33 +136,20 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   };
 
   const handleClose = (): void => {
-    if (isSwapSuccessful) {
-      onOpenChange(false);
-      onClose?.();
-    } else {
-      onOpenChange(false);
-      onClose?.();
+    if (isLoading || isSwapPending) {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+      return;
     }
-  };
-
-  const handleDialogOpenChange = (open: boolean): void => {
-    if (!open) {
-      handleClose();
-    } else {
-      onOpenChange(open);
-    }
+    onClose?.();
   };
 
   return (
-    <Dialog open={open} onOpenChange={isSwapSuccessful || isSwapPending ? undefined : handleDialogOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="md:max-w-[480px] p-12 w-[90%] shadow-none bg-vibrant-white gap-4" hideCloseButton>
         <DialogHeader>
           <DialogTitle className="flex w-full justify-end">
-            {!isSwapSuccessful && (
-              <DialogClose asChild>
-                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
-              </DialogClose>
-            )}
+            <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" onClick={handleClose} />
           </DialogTitle>
         </DialogHeader>
         {(error || approvalError) && (
@@ -178,7 +165,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             </div>
           </div>
         )}
-        <div className="flex w-full justify-center">
+        <div className={`flex w-full justify-center ${error ? 'opacity-40' : ''}`}>
           <div className="w-60 pb-6 inline-flex justify-between items-center">
             <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
               <div className={`${isSwapSuccessful ? 'grayscale opacity-50' : ''}`}>

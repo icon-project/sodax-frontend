@@ -24,6 +24,8 @@ import { formatUnits, parseUnits } from 'viem';
 import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
 import { convertSegmentPathToStaticExportFilename } from 'next/dist/shared/lib/segment-cache/segment-value-encoding';
 import { getSwapErrorMessage } from '@/lib/utils';
+import { ExternalLinkIcon } from 'lucide-react';
+import Link from 'next/link';
 
 const calculateMaxAvailableAmount = (
   balance: bigint,
@@ -485,6 +487,7 @@ export default function SwapPage() {
     setDstTxHash('');
     setSwapResetCounter(prev => prev + 1);
     // Reset fixed amounts when dialog is closed
+    setIsSwapConfirmOpen(false);
     setFixedDestinationAmount('');
     setFixedMinOutputAmount('');
   };
@@ -493,6 +496,43 @@ export default function SwapPage() {
   const handleUpdateSwapStatus = (statusCode: SolverIntentStatusCode) => {
     setSwapStatus(statusCode);
   };
+
+  const isReviewButtonDisabled = (): boolean => {
+    const hasNoAmount = sourceAmount === '0' || sourceAmount === '';
+    const hasMissingDestination = isSwapAndSend && customDestinationAddress === '';
+    const isLoadingOrUnavailable = switchChainLoading || quoteQuery.isLoading || quoteQuery.data?.ok === false;
+
+    return hasNoAmount || hasMissingDestination || isLoadingOrUnavailable;
+  };
+
+  const getReviewButtonText = (): string => {
+    if (isWrongChain) {
+      return `Switch to ${chainIdToChainName(sourceToken.xChainId)}`;
+    }
+
+    if (sourceAmount === '0' || sourceAmount === '') {
+      return 'Enter amount';
+    }
+
+    if (isSwapAndSend && customDestinationAddress === '') {
+      return 'Enter destination address';
+    }
+
+    if (switchChainLoading) {
+      return 'Switching';
+    }
+
+    if (quoteQuery.isLoading) {
+      return 'Getting quote';
+    }
+
+    if (quoteQuery.data?.ok === false) {
+      return 'Quote unavailable';
+    }
+
+    return 'Review';
+  };
+
   return (
     <div className="w-full">
       {dstTxHash && (
@@ -561,43 +601,14 @@ export default function SwapPage() {
           />
         </div>
 
-        {quoteQuery.data?.ok === false && (
-          <div className="self-stretch px-8 py-6 bg-white rounded-[20px] inline-flex justify-between items-center">
-            <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
-              <div className="self-stretch justify-center">
-                <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">
-                  No path was found.
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend) ? (
           <Button
             variant="cherry"
             className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
             onClick={handleClickReview}
-            disabled={
-              sourceAmount === '0' ||
-              sourceAmount === '' ||
-              (isSwapAndSend && customDestinationAddress === '') ||
-              switchChainLoading ||
-              quoteQuery.isLoading ||
-              quoteQuery.data?.ok === false
-            }
+            disabled={isReviewButtonDisabled()}
           >
-            {sourceAmount === '0' || sourceAmount === ''
-              ? 'Enter amount'
-              : isSwapAndSend && customDestinationAddress === ''
-                ? 'Enter destination address'
-                : isWrongChain
-                  ? `Switch to ${chainIdToChainName(sourceToken.xChainId)}`
-                  : switchChainLoading
-                    ? 'Switching...'
-                    : quoteQuery.isLoading
-                      ? 'Getting quote...'
-                      : 'Review'}
+            {getReviewButtonText()}
           </Button>
         ) : (
           <Button
@@ -615,15 +626,27 @@ export default function SwapPage() {
         )}
       </div>
 
-      {sourceAddress && (
-        <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-          Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+      {quoteQuery.data?.ok === false ? (
+        <div className="mt-(--layout-space-comfortable) text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight flex gap-1 items-center">
+          Need help?
+          <Link
+            href="https://x.com/sodaxlabs"
+            target="_blank"
+            className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
+          >
+            Get support on Discord <ExternalLinkIcon className="w-4 h-4" />
+          </Link>
         </div>
+      ) : (
+        sourceAddress && (
+          <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
+            Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+          </div>
+        )
       )}
 
       <SwapConfirmDialog
         open={isSwapConfirmOpen}
-        onOpenChange={setIsSwapConfirmOpen}
         sourceToken={sourceToken}
         destinationToken={destinationToken}
         finalDestinationAddress={

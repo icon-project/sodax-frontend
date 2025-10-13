@@ -46,11 +46,9 @@ export function useWalletProvider(
   | undefined {
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
-  const evmPublicClient = usePublicClient({
-    chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
-  });
+  const evmPublicClient = usePublicClient();
 
-  const { data: evmWalletClient } = useWalletClient({ query: { refetchInterval: 3000 } });
+  const { data: evmWalletClient } = useWalletClient();
 
   // Cross-chain hooks
   const xService = useXService(getXChainType(spokeChainId));
