@@ -45,14 +45,10 @@ export function useWalletProvider(
   | SolanaWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
-  console.log('spokeChainId', spokeChainId);
   // EVM-specific hooks
   const evmPublicClient = usePublicClient({
     chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
   });
-  // const { data: evmWalletClient } = useWalletClient({
-  //   chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
-  // });
 
   const { data: evmWalletClient } = useWalletClient();
 

@@ -10,14 +10,7 @@ import type { SpokeChainId, ChainType } from '@sodax/types';
 import { useEvmSwitchChain, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { getXChainType } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
-import {
-  useQuote,
-  useSpokeProvider,
-  useSwap,
-  useStatus,
-  useSodaxContext,
-  useBackendIntentByTxHash,
-} from '@sodax/dapp-kit';
+import { useQuote, useSpokeProvider, useSwap, useStatus, useSodaxContext } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import BigNumber from 'bignumber.js';
 import type { CreateIntentParams, QuoteType } from '@sodax/sdk';
@@ -198,7 +191,6 @@ export default function SwapPage() {
   }, [dstTxHash, isSwapFailed]);
 
   const sourceUsdValue = useTokenUsdValue(sourceToken, sourceAmount);
-  const { data: intent, isLoading: isIntentLoading } = useBackendIntentByTxHash(dstTxHash);
   const { sodax } = useSodaxContext();
 
   const quotePayload = useMemo(() => {
