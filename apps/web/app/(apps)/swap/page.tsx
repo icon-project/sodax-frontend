@@ -326,22 +326,22 @@ export default function SwapPage() {
 
   const createIntentOrderPayload = () => {
     if (!sourceToken || !destinationToken) {
-      console.error('sourceToken or destToken undefined');
+      console.error('SOURCE_TOKEN_OR_DEST_TOKEN_UNDEFINED');
       return;
     }
 
     if (!minOutputAmount || minOutputAmount === '') {
-      console.error('minOutputAmount undefined');
+      console.error('MIN_OUTPUT_AMOUNT_UNDEFINED');
       return;
     }
 
     if (!sourceAddress) {
-      console.error('sourceAccount.address undefined');
+      console.error('SOURCE_ACCOUNT_ADDRESS_UNDEFINED');
       return;
     }
 
     if (!destinationAddress) {
-      console.error('destAccount.address undefined');
+      console.error('DESTINATION_ACCOUNT_ADDRESS_UNDEFINED');
       return;
     }
 
@@ -415,37 +415,37 @@ export default function SwapPage() {
       setSwapResetCounter(prev => prev + 1);
 
       if (!sourceProvider) {
-        throw new Error('Source provider not available');
+        throw new Error('SOURCE_PROVIDER_NOT_AVAILABLE');
       }
 
       if (!sourceAddress) {
-        throw new Error('Source address not available');
+        throw new Error('SOURCE_ADDRESS_NOT_AVAILABLE');
       }
 
       const finalDestinationAddress =
         isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress;
 
       if (!finalDestinationAddress) {
-        throw new Error('Destination address not available');
+        throw new Error('DESTINATION_ADDRESS_NOT_AVAILABLE');
       }
 
       if (!quoteQuery.data?.ok || !quoteQuery.data.value) {
-        throw new Error('Quote not available. Please try again.');
+        throw new Error('QUOTE_NOT_AVAILABLE');
       }
 
       const quotedAmount = quoteQuery.data.value.quoted_amount;
       const sourceAmountBigInt = parseUnits(sourceAmount, sourceToken.decimals);
 
       if (sourceAmountBigInt <= 0n) {
-        throw new Error('Invalid source amount');
+        throw new Error('INVALID_SOURCE_AMOUNT');
       }
 
       if (quotedAmount <= 0n) {
-        throw new Error('Invalid quoted amount');
+        throw new Error('INVALID_QUOTED_AMOUNT');
       }
 
       if (!hasSufficientBalanceWithFee(sourceAmount, sourceBalance, sourceToken.decimals, sodax.solver)) {
-        throw new Error('Insufficient balance for swap (including fees)');
+        throw new Error('INSUFFICIENT_BALANCE');
       }
 
       const minOutputAmount = new BigNumber(quotedAmount.toString())
@@ -480,8 +480,7 @@ export default function SwapPage() {
       setSwapStatus(SolverIntentStatusCode.NOT_STARTED_YET);
       queryClient.invalidateQueries({ queryKey: ['xBalances'] });
     } catch (error) {
-      console.log('error', error);
-      const errorMessage = getSwapErrorMessage('UNKNOWN');
+      const errorMessage = getSwapErrorMessage(error instanceof Error ? error.message : 'UNKNOWN');
       setSwapError(errorMessage);
       setDstTxHash('');
     }

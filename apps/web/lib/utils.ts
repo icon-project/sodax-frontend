@@ -153,6 +153,41 @@ export const getSwapErrorMessage = (errorCode: string): { title: string; message
         message:
           'A transaction couldn’t be broadcast or was rejected, your balance will be retrieved within 5 minutes.',
       };
+    case 'INSUFFICIENT_BALANCE':
+      return {
+        title: 'Insufficient balance',
+        message: 'You do not have enough balance to swap.',
+      };
+    case 'INVALID_SOURCE_AMOUNT':
+      return {
+        title: 'Invalid source amount',
+        message: 'The source amount is invalid.',
+      };
+    case 'INVALID_QUOTED_AMOUNT':
+      return {
+        title: 'Invalid quoted amount',
+        message: 'The quoted amount is invalid.',
+      };
+    case 'SOURCE_PROVIDER_NOT_AVAILABLE':
+      return {
+        title: 'Source provider not available',
+        message: 'The source provider is not available.',
+      };
+    case 'SOURCE_ADDRESS_NOT_AVAILABLE':
+      return {
+        title: 'Source address not available',
+        message: 'The source address is not available.',
+      };
+    case 'DESTINATION_ADDRESS_NOT_AVAILABLE':
+      return {
+        title: 'Destination address not available',
+        message: 'The destination address is not available.',
+      };
+    case 'QUOTE_NOT_AVAILABLE':
+      return {
+        title: 'Quote not available',
+        message: 'The quote is not available.',
+      };
     default:
       return {
         title: 'Sorry, something went wrong',
