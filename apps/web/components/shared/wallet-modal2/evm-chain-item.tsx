@@ -17,6 +17,7 @@ export const EVM_CHAIN_ICONS = [
   '/chain/0xa.optimism.png',
   '/chain/0xa4b1.arbitrum.png',
   '/chain/sonic.png',
+  '/chain/lightlink.png',
 ];
 
 export type EVMChainItemProps = {
