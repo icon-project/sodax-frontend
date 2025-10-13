@@ -129,3 +129,34 @@ export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[
     return [];
   }
 };
+
+export const getSwapErrorMessage = (errorCode: string): { title: string; message: string } => {
+  switch (errorCode) {
+    case 'SUBMIT_TX_FAILED':
+      return {
+        title: 'Transaction failed at source',
+        message: 'Your transaction couldn’t be broadcast or was rejected, your balance is unchanged.',
+      };
+    case 'RELAY_TIMEOUT':
+      return {
+        title: 'Transaction timed out',
+        message: "Your transaction couldn't be broadcast within the allowed time.",
+      };
+    case 'CREATION_FAILED':
+      return {
+        title: "Order couldn't be created",
+        message: 'Your order seems to be misformated, please check balances and supported chains before trying again.',
+      };
+    case 'POST_EXECUTION_FAILED':
+      return {
+        title: 'Transaction failed at destination',
+        message:
+          'A transaction couldn’t be broadcast or was rejected, your balance will be retrieved within 5 minutes.',
+      };
+    default:
+      return {
+        title: 'Sorry, something went wrong',
+        message: "We can't identify the issue right now, for help please follow the link below.",
+      };
+  }
+};

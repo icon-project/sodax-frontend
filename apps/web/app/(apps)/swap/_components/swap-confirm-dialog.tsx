@@ -41,7 +41,7 @@ interface SwapConfirmDialogProps {
   isLoading?: boolean;
   isSwapPending?: boolean;
   slippageTolerance?: number;
-  error?: string;
+  error?: { title: string; message: string };
   isSwapSuccessful?: boolean;
   swapFeesUsdValue?: {
     partner: BigNumber;
@@ -170,11 +170,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             <div className="flex justify-center gap-1 w-full items-center">
               <ShieldAlertIcon className="w-4 h-4 text-negative" />
               <span className="font-['InterBold'] text-(length:--body-comfortable) leading-[1.4] text-negative">
-                {error ? 'Swap Failed' : 'Approval Failed'}
+                {error ? error.title : 'Approval Failed'}
               </span>
             </div>
             <div className="text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] text-center">
-              {error || approvalError}
+              {error ? error.message : approvalError}
             </div>
           </div>
         )}
