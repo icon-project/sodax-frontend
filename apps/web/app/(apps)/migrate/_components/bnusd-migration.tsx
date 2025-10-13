@@ -1,38 +1,19 @@
 'use client';
-import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
-import {
-  ICON_MAINNET_CHAIN_ID,
-  SOLANA_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
-  SUI_MAINNET_CHAIN_ID,
-  type ChainType,
-  type SpokeChainId,
-  type XToken,
-} from '@sodax/types';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { ICON_MAINNET_CHAIN_ID, type SpokeChainId, type XToken } from '@sodax/types';
 
-import { SuccessDialog } from './success-dialog';
-import { ErrorDialog } from './error-dialog';
 import { SwitchDirectionIcon } from '@/components/icons';
 import CurrencyInputPanel, { CurrencyInputPanelType } from './currency-input-panel';
-import { useMigrationInfo, useMigrationStore } from '../_stores/migration-store-provider';
+import { useMigrationStore } from '../_stores/migration-store-provider';
 import { formatUnits } from 'viem';
-import { useMigrate, useMigrationAllowance, useMigrationApprove } from '../_hooks';
-import { Check, Loader2 } from 'lucide-react';
 import Image from 'next/image';
-import { useSpokeProvider, useSodaxContext } from '@sodax/dapp-kit';
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
-import { MODAL_ID } from '@/stores/modal-store';
-import { useModalStore } from '@/stores/modal-store-provider';
 import { chainIdToChainName } from '@/providers/constants';
+import { MigrateButton } from './migrate-button';
 
 export default function BnusdMigration() {
-  const openModal = useModalStore(state => state.openModal);
-
-  const { error } = useMigrationInfo();
   const migrationMode = useMigrationStore(state => state.migrationMode);
   const direction = useMigrationStore(state => state[migrationMode].direction);
   const typedValue = useMigrationStore(state => state[migrationMode].typedValue);
@@ -41,15 +22,9 @@ export default function BnusdMigration() {
   const setTypedValue = useMigrationStore(state => state.setTypedValue);
   const setChainForCurrency = useMigrationStore(state => state.setChainForCurrency);
 
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [showErrorDialog, setShowErrorDialog] = useState(false);
-  const [migrationError, setMigrationError] = useState('');
-
-  // Get addresses for source and destination chains
   const sourceAddress = useXAccount(direction.from).address;
   const destinationAddress = useXAccount(direction.to).address;
 
-  // Dynamic balance fetching for the currently selected chains
   const { data: fromChainBalances } = useXBalances({
     xChainId: direction.from,
     xTokens: [currencies.from],
@@ -62,9 +37,7 @@ export default function BnusdMigration() {
     address: destinationAddress,
   });
 
-  // Helper function to get balance for any chain
   const getBalanceForChain = (chainId: SpokeChainId, token: XToken): bigint => {
-    // For bnUSD, use the dynamic balance fetching
     if (chainId === direction.from) {
       return fromChainBalances?.[token.address] || 0n;
     }
@@ -72,7 +45,6 @@ export default function BnusdMigration() {
       return toChainBalances?.[token.address] || 0n;
     }
 
-    // For other chains not currently selected, return 0
     return 0n;
   };
 
@@ -82,68 +54,8 @@ export default function BnusdMigration() {
     setTypedValue(Number(formatUnits(balance, currencies.from.decimals)).toFixed(2));
   };
 
-  // Get wallet provider for the source chain
-  const walletProvider = useWalletProvider(direction.from);
-  const spokeProvider = useSpokeProvider(direction.from, walletProvider);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(
-    currencies.from,
-    typedValue,
-    sourceAddress,
-    spokeProvider,
-    migrationMode,
-    currencies.to,
-  );
-  const {
-    approve,
-    isLoading: isApproving,
-    isApproved,
-  } = useMigrationApprove(
-    currencies.from,
-    typedValue,
-    sourceAddress,
-    spokeProvider,
-    migrationMode,
-    currencies.to,
-    destinationAddress,
-  );
-
-  const needsApproval = useMemo(() => {
-    return ![ICON_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, SOLANA_MAINNET_CHAIN_ID].includes(
-      direction.from,
-    );
-  }, [direction.from]);
-
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
-
-  const { mutateAsync: migrate, isPending } = useMigrate();
-  const handleApprove = async () => {
-    await approve();
-  };
-
-  // Combine allowance check with approval state for immediate UI feedback
-  const hasSufficientAllowance = hasAllowed || isApproved;
-
-  // Get chain types for source and destination
-  const sourceChainType = getXChainType(direction.from);
-  const destinationChainType = getXChainType(direction.to);
-
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
-
-  // Function to determine which chain type to connect to
-  const getTargetChainType = (): ChainType | undefined => {
-    if (!isSourceChainConnected) {
-      return sourceChainType;
-    }
-    if (!isDestinationChainConnected) {
-      return destinationChainType;
-    }
-    return undefined;
-  };
-
-  const handleOpenWalletModal = (): void => {
-    openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
-  };
 
   return (
     <div className="flex flex-col w-full gap-(--layout-space-comfortable)">
@@ -183,75 +95,7 @@ export default function BnusdMigration() {
       </div>
 
       <div className="inline-flex flex-col justify-start items-start gap-4">
-        {isSourceChainConnected && isDestinationChainConnected ? (
-          <div className="flex gap-2">
-            {isWrongChain ? (
-              <Button
-                variant="cherry"
-                className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
-                onClick={handleSwitchChain}
-              >
-                Switch to {chainIdToChainName(direction.from)}
-              </Button>
-            ) : (
-              <>
-                {needsApproval && (
-                  <Button
-                    className="w-34"
-                    type="button"
-                    variant="cherry"
-                    onClick={handleApprove}
-                    disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!error}
-                  >
-                    {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
-                    {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
-                  </Button>
-                )}
-
-                <Button
-                  variant="cherry"
-                  className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
-                  onClick={async () => {
-                    try {
-                      await migrate();
-                      setShowSuccessDialog(true);
-                    } catch (error) {
-                      console.error(error);
-                      const errorMessage =
-                        error instanceof Error ? error.message : 'Migration failed. Please try again.';
-                      setMigrationError(errorMessage);
-                      setShowErrorDialog(true);
-                    }
-                  }}
-                  disabled={isPending || !!error || (needsApproval && (!hasSufficientAllowance || isApproving))}
-                >
-                  {error ? (
-                    error
-                  ) : (
-                    <>
-                      {isPending ? 'Migrating' : 'Migrate'}
-                      {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                    </>
-                  )}
-                </Button>
-              </>
-            )}
-          </div>
-        ) : (
-          <Button
-            variant="cherry"
-            className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
-            onClick={handleOpenWalletModal}
-          >
-            Connect{' '}
-            {!isSourceChainConnected
-              ? chainIdToChainName(direction.from)
-              : !isDestinationChainConnected
-                ? chainIdToChainName(direction.to)
-                : ''}
-          </Button>
-        )}
+        <MigrateButton />
 
         <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
           Takes ~1 min · Network fee:{' '}
@@ -274,9 +118,6 @@ export default function BnusdMigration() {
           </div>
         </div>
       </div>
-
-      <SuccessDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
-      <ErrorDialog open={showErrorDialog} onOpenChange={setShowErrorDialog} errorMessage={migrationError} />
     </div>
   );
 }
