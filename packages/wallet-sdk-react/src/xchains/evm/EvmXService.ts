@@ -3,8 +3,8 @@ import type { ChainId, XToken } from '@sodax/types';
 import type { EVMConfig } from '@/types';
 import { getWagmiChainId, isNativeToken } from '@/utils';
 
-import { type Address, type PublicClient, type WalletClient, defineChain, erc20Abi } from 'viem';
-import { getPublicClient, getWalletClient } from 'wagmi/actions';
+import { type Address, type PublicClient, defineChain, erc20Abi } from 'viem';
+import { getPublicClient } from 'wagmi/actions';
 import { createConfig, http, type Transport } from 'wagmi';
 import {
   mainnet,
@@ -126,13 +126,6 @@ export class EvmXService extends XService {
 
     // @ts-ignore
     return getPublicClient(getWagmiConfig(this.config.chains), { chainId });
-  }
-
-  public async getWalletClient(chainId: number): Promise<WalletClient> {
-    if (!this.config) {
-      throw new Error('EvmXService: config is not initialized yet');
-    }
-    return await getWalletClient(getWagmiConfig(this.config.chains), { chainId });
   }
 
   async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
