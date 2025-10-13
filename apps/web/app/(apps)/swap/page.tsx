@@ -649,7 +649,7 @@ export default function SwapPage() {
         isSwapPending={isSwapPending}
         isLoading={isWaitingForSolvedStatus}
         slippageTolerance={slippageTolerance}
-        error={swapError}
+        error={swapError || undefined}
         minOutputAmount={
           new BigNumber(isSwapConfirmOpen && fixedMinOutputAmount ? fixedMinOutputAmount : minOutputAmount)
         }
