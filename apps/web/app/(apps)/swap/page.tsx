@@ -260,14 +260,6 @@ export default function SwapPage() {
     }
   }, [sourceAmount, calculatedDestinationAmount]);
 
-  useEffect(() => {
-    if (intent) {
-      setFixedDestinationAmount(
-        formatUnits(intent?.events?.[0]?.intentState.receivedOutput || '0', destinationToken.decimals),
-      );
-    }
-  }, [intent, dstTxHash]);
-
   const swapFees = useMemo(() => {
     if (!sourceAmount || sourceAmount === '' || Number.isNaN(Number(sourceAmount)) || Number(sourceAmount) <= 0) {
       return undefined;
