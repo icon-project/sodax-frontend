@@ -93,11 +93,11 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
 
   return (
     <div
-      className={`w-full relative rounded-3xl outline outline-4 outline-offset-[-4px] outline-[#e4dada] justify-between items-center hover:outline-6 hover:outline-offset-[-6px] group ${className}`}
+      className={`w-full relative rounded-(--layout-container-radius) outline-[#e4dada] justify-between items-center group ${className} outline-2 outline-offset-[-2px] hover:outline-4 hover:outline-offset-[-4px] sm:outline-3 sm:outline-offset-[-3px] sm:hover:outline-5 sm:hover:outline-offset-[-5px] md:outline-4 md:outline-offset-[-4px] md:hover:outline-6 md:hover:outline-offset-[-6px]`}
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
     >
       <div className="flex inline-flex justify-between w-full">
-        <div className="inline-flex justify-start items-center gap-4">
+        <div className="inline-flex justify-start items-center gap-(--layout-space-small)">
           <div className="cursor-pointer" onClick={() => setIsTokenSelectorOpen(true)}>
             <CurrencyLogo
               className="group-hover:scale-106 transition-transform duration-200"
@@ -117,8 +117,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             </div>
             {isChainConnected && (
               <div className="inline-flex justify-start items-center gap-2">
-                <div className="mix-blend-multiply justify-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex">
-                  <span className="inline">Balance:{'  '}</span>
+                <div className="mix-blend-multiply text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex gap-1">
+                  <span className="inline">Balance:</span>
                   <span className="inline">{formattedBalanceFixed}</span>
                 </div>
                 {type === CurrencyInputPanelType.INPUT && (
@@ -169,8 +169,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           </div>
           <div className="mix-blend-multiply text-right justify-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
             {type === CurrencyInputPanelType.INPUT
-              ? `Sell $${usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-              : `Buy $${usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              ? `Sell $${usdValue !== 0 ? usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0'}`
+              : `Buy $${usdValue !== 0 ? usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0'}`}
           </div>
         </div>
       </div>
@@ -182,7 +182,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             placeholder="Enter destination address"
             value={customDestinationAddress}
             onChange={e => onCustomDestinationAddressChange(e.target.value)}
-            className="h-10 flex-1 text-(length:--body-small) border-cream-white focus:border-cherry-brighter rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0"
+            className="h-10 flex-1 text-(length:--body-small) border-cream-white focus:!border-cream-white rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0"
           />
         </div>
       )}

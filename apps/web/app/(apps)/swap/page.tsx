@@ -24,6 +24,8 @@ import { formatUnits, parseUnits } from 'viem';
 import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
 import { convertSegmentPathToStaticExportFilename } from 'next/dist/shared/lib/segment-cache/segment-value-encoding';
 import { getSwapErrorMessage } from '@/lib/utils';
+import { ExternalLinkIcon } from 'lucide-react';
+import Link from 'next/link';
 
 const calculateMaxAvailableAmount = (
   balance: bigint,
@@ -485,6 +487,7 @@ export default function SwapPage() {
     setDstTxHash('');
     setSwapResetCounter(prev => prev + 1);
     // Reset fixed amounts when dialog is closed
+    setIsSwapConfirmOpen(false);
     setFixedDestinationAmount('');
     setFixedMinOutputAmount('');
   };
@@ -561,18 +564,6 @@ export default function SwapPage() {
           />
         </div>
 
-        {quoteQuery.data?.ok === false && (
-          <div className="self-stretch px-8 py-6 bg-white rounded-[20px] inline-flex justify-between items-center">
-            <div className="flex-1 inline-flex flex-col justify-center items-start gap-1">
-              <div className="self-stretch justify-center">
-                <span className="text-clay text-base font-normal font-['InterRegular'] leading-tight">
-                  No path was found.
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend) ? (
           <Button
             variant="cherry"
@@ -594,10 +585,12 @@ export default function SwapPage() {
                 : isWrongChain
                   ? `Switch to ${chainIdToChainName(sourceToken.xChainId)}`
                   : switchChainLoading
-                    ? 'Switching...'
+                    ? 'Switching'
                     : quoteQuery.isLoading
-                      ? 'Getting quote...'
-                      : 'Review'}
+                      ? 'Getting quote'
+                      : quoteQuery.data?.ok === false
+                        ? 'Quote unavailable'
+                        : 'Review'}
           </Button>
         ) : (
           <Button
@@ -615,15 +608,27 @@ export default function SwapPage() {
         )}
       </div>
 
-      {sourceAddress && (
-        <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-          Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+      {quoteQuery.data?.ok === false ? (
+        <div className="mt-(--layout-space-comfortable) text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight flex gap-1 items-center">
+          Need help?
+          <Link
+            href="https://x.com/sodaxlabs"
+            target="_blank"
+            className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
+          >
+            Get support on Discord <ExternalLinkIcon className="w-4 h-4" />
+          </Link>
         </div>
+      ) : (
+        sourceAddress && (
+          <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
+            Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+          </div>
+        )
       )}
 
       <SwapConfirmDialog
         open={isSwapConfirmOpen}
-        onOpenChange={setIsSwapConfirmOpen}
         sourceToken={sourceToken}
         destinationToken={destinationToken}
         finalDestinationAddress={
