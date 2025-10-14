@@ -40,3 +40,5 @@ export type OriginalAssetAddress = string;
 export interface WalletAddressProvider {
   getWalletAddress(): Promise<string>; // The wallet address as a string
 }
+
+export type HttpUrl = `http://${string}` | `https://${string}`;
