@@ -2,7 +2,7 @@
 
 import type { ChainType } from '@sodax/types';
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { createJSONStorage, persist, devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { XService } from './core';
 import type { XConnection } from './types';
@@ -65,26 +65,29 @@ const initXServices = () => {
 };
 
 export const useXWagmiStore = create<XWagmiStore>()(
-  persist(
-    immer((set, get) => ({
-      xServices: initXServices(),
-      xConnections: {},
-      setXConnection: (xChainType: ChainType, xConnection: XConnection) => {
-        set(state => {
-          state.xConnections[xChainType] = xConnection;
-        });
+  devtools(
+    persist(
+      immer((set, get) => ({
+        xServices: initXServices(),
+        xConnections: {},
+        setXConnection: (xChainType: ChainType, xConnection: XConnection) => {
+          set(state => {
+            state.xConnections[xChainType] = xConnection;
+          });
+        },
+        unsetXConnection: (xChainType: ChainType) => {
+          set(state => {
+            delete state.xConnections[xChainType];
+          });
+        },
+      })),
+      {
+        name: 'xwagmi-store',
+        storage: createJSONStorage(() => localStorage),
+        partialize: state => ({ xConnections: state.xConnections }),
       },
-      unsetXConnection: (xChainType: ChainType) => {
-        set(state => {
-          delete state.xConnections[xChainType];
-        });
-      },
-    })),
-    {
-      name: 'xwagmi-store',
-      storage: createJSONStorage(() => localStorage),
-      partialize: state => ({ xConnections: state.xConnections }),
-    },
+    ),
+    { name: 'xwagmi-store' },
   ),
 );
 
@@ -98,6 +101,7 @@ const reconnectStellar = async () => {
   const { address } = await stellarWalletKit.getAddress();
   useXWagmiStore.setState({
     xConnections: {
+      ...useXWagmiStore.getState().xConnections,
       STELLAR: {
         xAccount: {
           address,
@@ -119,6 +123,7 @@ const reconnectInjective = async () => {
   const addresses = await walletStrategy.getAddresses();
   useXWagmiStore.setState({
     xConnections: {
+      ...useXWagmiStore.getState().xConnections,
       INJECTIVE: {
         xAccount: {
           address: addresses?.[0],
