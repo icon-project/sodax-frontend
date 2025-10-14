@@ -110,6 +110,9 @@ export function useWalletProvider(
 
       case 'STELLAR': {
         const stellarXService = xService as StellarXService;
+        if (!stellarXService.walletsKit) {
+          return undefined;
+        }
 
         return new StellarWalletProvider({
           type: 'BROWSER_EXTENSION',
