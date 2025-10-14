@@ -8,7 +8,7 @@ import {
   spokeChainConfig,
 } from '@sodax/sdk';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, ARBITRUM_MAINNET_CHAIN_ID } from '@sodax/types';
-import type { RpcConfig } from '@sodax/dapp-kit';
+import type { RpcConfig } from '@sodax/types';
 
 declare global {
   interface Window {

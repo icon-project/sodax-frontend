@@ -17,32 +17,27 @@ import {
   WalletProvider as SolanaWalletProvider,
 } from '@solana/wallet-adapter-react';
 import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
-import type { XConfig } from './types';
+import type { RpcConfig } from '@sodax/types';
 import { initXWagmiStore, InitXWagmiStore } from './useXWagmiStore';
 
-import { getWagmiConfig } from './xchains/evm/EvmXService';
+import { createWagmiConfig } from './xchains/evm/EvmXService';
 
-export const SodaxWalletProvider = ({ children, config }: { children: React.ReactNode; config: XConfig }) => {
+export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
   useEffect(() => {
-    initXWagmiStore(config);
-  }, [config]);
-
-  const {
-    EVM: { chains },
-    SOLANA: { endpoint },
-  } = config;
+    initXWagmiStore();
+  }, []);
 
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
 
   const wagmiConfig = useMemo(() => {
-    return getWagmiConfig(chains);
-  }, [chains]);
+    return createWagmiConfig(rpcConfig);
+  }, [rpcConfig]);
 
   return (
     <WagmiProvider config={wagmiConfig}>
       <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
         <SuiWalletProvider autoConnect={true}>
-          <SolanaConnectionProvider endpoint={endpoint}>
+          <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? ''}>
             <SolanaWalletProvider wallets={wallets} autoConnect>
               <InitXWagmiStore />
               {children}

@@ -81,7 +81,7 @@ export class IconXService extends XService {
     }
   }
 
-  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: ChainId) {
+  async getBalances(address: string | undefined, xTokens: XToken[]) {
     if (!address) return {};
 
     const balances = {};

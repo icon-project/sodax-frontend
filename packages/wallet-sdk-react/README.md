@@ -12,7 +12,7 @@ A comprehensive React Wallet SDK tailored for the Sodax ecosystem that provides 
   - ICON Wallets: ✅ (Hana Wallet and other ICON-compatible extensions)
 
 - Address and connection state management
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
   - Sui ✅
   - Solana ✅
   - Stellar ✅
@@ -49,48 +49,34 @@ This package requires the following peer dependencies:
 ```typescript
 import { SodaxWalletProvider, useXConnectors, useXConnect, useXAccount } from '@sodax/wallet-sdk-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  AVALANCHE_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-} from '@sodax/types';
+import type { RpcConfig } from '@sodax/types';
 
 // Create a QueryClient instance
 const queryClient = new QueryClient();
 
+const rpcConfig: RpcConfig = {
+  // EVM chains
+  sonic: 'https://rpc.soniclabs.com',
+  '0xa86a.avax': 'https://api.avax.network/ext/bc/C/rpc',
+  '0xa4b1.arbitrum': 'https://arb1.arbitrum.io/rpc',
+  '0x2105.base': 'https://mainnet.base.org',
+  '0x38.bsc': 'https://bsc-dataseed1.binance.org',
+  '0xa.optimism': 'https://mainnet.optimism.io',
+  '0x89.polygon': 'https://polygon-rpc.com',
+  
+  // Other chains
+  '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
+  solana: 'https://solana-mainnet.g.alchemy.com/v2/your-api-key',
+  sui: 'https://fullnode.mainnet.sui.io',
+  'injective-1': 'https://sentry.tm.injective.network:26657',
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <SodaxWalletProvider
-        config={{
-          EVM: {
-            chains: [
-              ARBITRUM_MAINNET_CHAIN_ID,
-              AVALANCHE_MAINNET_CHAIN_ID,
-              BASE_MAINNET_CHAIN_ID,
-              BSC_MAINNET_CHAIN_ID,
-              OPTIMISM_MAINNET_CHAIN_ID,
-              POLYGON_MAINNET_CHAIN_ID,
-              SONIC_MAINNET_CHAIN_ID,
-            ],
-          },
-          SUI: {
-            isMainnet: true,
-          },
-          SOLANA: {
-            endpoint: 'https://your-rpc-endpoint',
-          },
-          ICON: {},
-          INJECTIVE: {},
-          STELLAR: {},
-        }}
-      >
+      <SodaxWalletProvider rpcConfig={rpcConfig}>
         <WalletConnect />
-              </SodaxWalletProvider>
+      </SodaxWalletProvider>
     </QueryClientProvider>
   );
 }

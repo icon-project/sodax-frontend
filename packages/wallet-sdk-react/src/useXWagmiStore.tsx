@@ -1,7 +1,6 @@
 'use client';
 
 import type { ChainType } from '@sodax/types';
-import type { XConfig } from './types';
 import { useCurrentAccount, useCurrentWallet, useSuiClient } from '@mysten/dapp-kit';
 import React, { useEffect } from 'react';
 import { create } from 'zustand';
@@ -19,6 +18,7 @@ import { IconXService } from './xchains/icon';
 import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
 import { useAnchorProvider } from './xchains/solana/hooks/useAnchorProvider';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useConfig } from 'wagmi';
 
 type XWagmiStore = {
   xServices: Partial<Record<ChainType, XService>>;
@@ -72,18 +72,15 @@ export const useXWagmiStore = create<XWagmiStore>()(
   ),
 );
 
-const initXServices = (config: XConfig) => {
+const initXServices = () => {
   const xServices = {};
-  Object.keys(config).forEach(key => {
+  ['EVM', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON'].forEach(key => {
     const xChainType = key as ChainType;
 
     switch (xChainType) {
       case 'EVM':
-        if (config[xChainType]) {
-          xServices[xChainType] = EvmXService.getInstance();
-          xServices[xChainType].setXConnectors([]);
-          xServices[xChainType].setConfig(config[xChainType]);
-        }
+        xServices[xChainType] = EvmXService.getInstance();
+        xServices[xChainType].setXConnectors([]);
         break;
       case 'INJECTIVE':
         xServices[xChainType] = InjectiveXService.getInstance();
@@ -113,9 +110,9 @@ const initXServices = (config: XConfig) => {
   return xServices;
 };
 
-export const initXWagmiStore = (config: XConfig) => {
+export const initXWagmiStore = () => {
   useXWagmiStore.setState({
-    xServices: initXServices(config),
+    xServices: initXServices(),
   });
 };
 
@@ -160,5 +157,12 @@ export const InitXWagmiStore = () => {
     }
   }, [solanaProvider]);
 
+  // evm
+  const wagmiConfig = useConfig();
+  useEffect(() => {
+    if (wagmiConfig) {
+      EvmXService.getInstance().wagmiConfig = wagmiConfig;
+    }
+  }, [wagmiConfig]);
   return <></>;
 };
