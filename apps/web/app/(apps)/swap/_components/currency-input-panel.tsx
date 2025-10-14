@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
-import TokenSelectDialog from './token-select-modal';
-
+import TokenSelectDialog from './token-select-dialog';
+import { useSwapState } from '../_stores/swap-store-provider';
+import { validateChainAddress } from '@/lib/utils';
+import { getXChainType } from '@sodax/wallet-sdk-react';
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
   OUTPUT = 'OUTPUT',
@@ -78,7 +80,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const formattedBalanceFixed = Number(formattedBalance).toFixed(2);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
-
+  const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
+  const { destinationToken } = useSwapState();
   useEffect(() => {
     if (type === CurrencyInputPanelType.INPUT && inputRef.current) {
       inputRef.current.focus();
@@ -88,6 +91,18 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const handleTokenSelect = (selectedToken: XToken): void => {
     if (onCurrencyChange) {
       onCurrencyChange(selectedToken);
+    }
+  };
+
+  const handleChange = (value: string): void => {
+    if (validateChainAddress(value, getXChainType(destinationToken.xChainId) || '')) {
+      setIsValidAddress(true);
+    } else {
+      setIsValidAddress(false);
+    }
+
+    if (onCustomDestinationAddressChange) {
+      onCustomDestinationAddressChange(value);
     }
   };
 
@@ -181,8 +196,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             type="text"
             placeholder="Enter destination address"
             value={customDestinationAddress}
-            onChange={e => onCustomDestinationAddressChange(e.target.value)}
-            className="h-10 flex-1 text-(length:--body-small) border-cream-white focus:!border-cream-white rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0"
+            onChange={e => handleChange(e.target.value)}
+            className={`h-10 flex-1 text-(length:--body-small) border-cream-white focus:!border-cream-white rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 ${!isValidAddress ? 'text-negative focus-visible:text-negative' : ''}`}
           />
         </div>
       )}

@@ -26,7 +26,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency, i
       </div>
       <div
         data-property-1="Active"
-        className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.40)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden relative"
+        className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden relative"
       >
         <Image
           className="w-4 h-4"

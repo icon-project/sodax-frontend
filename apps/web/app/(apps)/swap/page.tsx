@@ -23,7 +23,7 @@ import { useModalStore } from '@/stores/modal-store-provider';
 import { formatUnits, parseUnits } from 'viem';
 import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
 import { convertSegmentPathToStaticExportFilename } from 'next/dist/shared/lib/segment-cache/segment-value-encoding';
-import { getSwapErrorMessage } from '@/lib/utils';
+import { getSwapErrorMessage, validateChainAddress } from '@/lib/utils';
 import { ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -502,7 +502,12 @@ export default function SwapPage() {
     const hasMissingDestination = isSwapAndSend && customDestinationAddress === '';
     const isLoadingOrUnavailable = switchChainLoading || quoteQuery.isLoading || quoteQuery.data?.ok === false;
 
-    return hasNoAmount || hasMissingDestination || isLoadingOrUnavailable;
+    return (
+      hasNoAmount ||
+      hasMissingDestination ||
+      isLoadingOrUnavailable ||
+      (isSwapAndSend && !validateChainAddress(customDestinationAddress, getXChainType(destinationToken.xChainId) || ''))
+    );
   };
 
   const getReviewButtonText = (): string => {
@@ -528,6 +533,13 @@ export default function SwapPage() {
 
     if (quoteQuery.data?.ok === false) {
       return 'Quote unavailable';
+    }
+
+    if (
+      isSwapAndSend &&
+      !validateChainAddress(customDestinationAddress, getXChainType(destinationToken.xChainId) || '')
+    ) {
+      return 'Address is not valid';
     }
 
     return 'Review';
@@ -644,7 +656,6 @@ export default function SwapPage() {
           </div>
         )
       )}
-
       <SwapConfirmDialog
         open={isSwapConfirmOpen}
         sourceToken={sourceToken}

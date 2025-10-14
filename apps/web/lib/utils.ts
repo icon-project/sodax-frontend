@@ -1,5 +1,10 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { isAddress as isEvmAddress } from 'viem';
+import { PublicKey } from '@solana/web3.js';
+import { isValidSuiAddress } from '@mysten/sui/utils';
+import { StrKey } from '@stellar/stellar-sdk';
+import { bech32 } from 'bech32';
 
 import {
   getSupportedSolverTokens,
@@ -15,6 +20,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import { isAddress } from 'viem';
 
 /**
  * Shortens a blockchain address for display purposes
@@ -195,3 +201,42 @@ export const getSwapErrorMessage = (errorCode: string): { title: string; message
       };
   }
 };
+
+function isValidInjectiveAddress(addr: string) {
+  try {
+    const dec = bech32.decode(addr);
+    return dec.prefix === 'inj'; // or other valid prefix
+  } catch {
+    return false;
+  }
+}
+
+function isValidIconAddress(addr: string) {
+  if (!/^h[ cx]/.test(addr)) return false;
+  // Additional checks via ICON SDK can go here.
+  return true;
+}
+
+export function validateChainAddress(address: string, chain: string): boolean {
+  try {
+    switch (chain) {
+      case 'EVM':
+        return isEvmAddress(address);
+      case 'SOLANA':
+        new PublicKey(address);
+        return true;
+      case 'SUI':
+        return isValidSuiAddress(address);
+      case 'STELLAR':
+        return StrKey.isValidEd25519PublicKey(address);
+      case 'INJECTIVE':
+        return isValidInjectiveAddress(address);
+      case 'ICON':
+        return isValidIconAddress(address);
+      default:
+        return false;
+    }
+  } catch {
+    return false;
+  }
+}
