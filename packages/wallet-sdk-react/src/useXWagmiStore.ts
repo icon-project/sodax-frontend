@@ -13,7 +13,6 @@ import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
 import { IconXService } from './xchains/icon';
 import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
-import type { Wallet } from '@injectivelabs/wallet-base';
 
 type XWagmiStore = {
   xServices: Partial<Record<ChainType, XService>>;
@@ -90,50 +89,3 @@ export const useXWagmiStore = create<XWagmiStore>()(
     { name: 'xwagmi-store' },
   ),
 );
-
-const reconnectStellar = async () => {
-  const stellarConnection = useXWagmiStore.getState().xConnections.STELLAR;
-  if (!stellarConnection) return;
-
-  const recentXConnectorId = stellarConnection.xConnectorId;
-  const stellarWalletKit = StellarXService.getInstance().walletsKit;
-  stellarWalletKit.setWallet(recentXConnectorId);
-  const { address } = await stellarWalletKit.getAddress();
-  useXWagmiStore.setState({
-    xConnections: {
-      ...useXWagmiStore.getState().xConnections,
-      STELLAR: {
-        xAccount: {
-          address,
-          xChainType: 'STELLAR',
-        },
-        xConnectorId: recentXConnectorId,
-      },
-    },
-  });
-};
-
-const reconnectInjective = async () => {
-  const injectiveConnection = useXWagmiStore.getState().xConnections.INJECTIVE;
-  if (!injectiveConnection) return;
-
-  const recentXConnectorId = injectiveConnection.xConnectorId;
-  const walletStrategy = InjectiveXService.getInstance().walletStrategy;
-  walletStrategy.setWallet(recentXConnectorId as Wallet);
-  const addresses = await walletStrategy.getAddresses();
-  useXWagmiStore.setState({
-    xConnections: {
-      ...useXWagmiStore.getState().xConnections,
-      INJECTIVE: {
-        xAccount: {
-          address: addresses?.[0],
-          xChainType: 'INJECTIVE',
-        },
-        xConnectorId: recentXConnectorId,
-      },
-    },
-  });
-};
-
-reconnectStellar();
-reconnectInjective();

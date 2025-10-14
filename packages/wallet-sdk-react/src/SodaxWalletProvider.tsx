@@ -20,6 +20,9 @@ import type { RpcConfig } from '@sodax/types';
 import { Hydrate } from './Hydrate';
 
 import { createWagmiConfig } from './xchains/evm/EvmXService';
+import { reconnectIcon } from './xchains/icon/actions';
+import { reconnectInjective } from './xchains/injective/actions';
+import { reconnectStellar } from './xchains/stellar/actions';
 
 export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
@@ -43,3 +46,7 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
     </WagmiProvider>
   );
 };
+
+reconnectIcon();
+reconnectInjective();
+reconnectStellar();
