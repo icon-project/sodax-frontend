@@ -1,8 +1,7 @@
 'use client';
 
 // biome-ignore lint/style/useImportType: <explanation>
-import React from 'react';
-import { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 // sui
 import { SuiClientProvider, WalletProvider as SuiWalletProvider } from '@mysten/dapp-kit';
@@ -18,15 +17,11 @@ import {
 } from '@solana/wallet-adapter-react';
 import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
 import type { RpcConfig } from '@sodax/types';
-import { initXWagmiStore, InitXWagmiStore } from './useXWagmiStore';
+import { Hydrate } from './Hydrate';
 
 import { createWagmiConfig } from './xchains/evm/EvmXService';
 
 export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
-  useEffect(() => {
-    initXWagmiStore();
-  }, []);
-
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
 
   const wagmiConfig = useMemo(() => {
@@ -39,7 +34,7 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
         <SuiWalletProvider autoConnect={true}>
           <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? ''}>
             <SolanaWalletProvider wallets={wallets} autoConnect>
-              <InitXWagmiStore />
+              <Hydrate />
               {children}
             </SolanaWalletProvider>
           </SolanaConnectionProvider>

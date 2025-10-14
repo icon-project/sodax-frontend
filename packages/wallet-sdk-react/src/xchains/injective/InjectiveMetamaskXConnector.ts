@@ -7,7 +7,7 @@ import { InjectiveXService } from './InjectiveXService';
 
 export class InjectiveMetamaskXConnector extends XConnector {
   constructor() {
-    super('INJECTIVE', 'MetaMask', 'metamask');
+    super('INJECTIVE', 'MetaMask', Wallet.Metamask);
   }
 
   getXService(): InjectiveXService {
