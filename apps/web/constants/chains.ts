@@ -26,7 +26,7 @@ export interface ChainUI {
  * Maps SPOKE_CHAIN_IDS to human-readable names and icon paths
  */
 export const availableChains: ChainUI[] = [
-  { id: SONIC_MAINNET_CHAIN_ID, name: 'Sonic', icon: '/chain/sonic.png', icon16: '/chain/sonic.png' },
+  { id: SONIC_MAINNET_CHAIN_ID, name: 'Sonic', icon: '/chain/sonic.png', icon16: '/chain/sonic_16.png' },
   {
     id: AVALANCHE_MAINNET_CHAIN_ID,
     name: 'Avalanche',
