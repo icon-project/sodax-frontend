@@ -2,18 +2,18 @@
 import invariant from 'tiny-invariant';
 import { erc20Abi, type Address, type Hex } from 'viem';
 import { StakingLogic } from './StakingLogic.js';
-import { stakedSodaAbi } from '../../abis/stakedSoda.abi.js';
+import { stakedSodaAbi } from '../../abis/index.js';
 import type {
   UserUnstakeInfo,
   EvmContractCall,
   TxReturnType,
   GetSpokeDepositParamsType,
-  HttpUrl,
   Prettify,
   GetAddressType,
   HubAssetInfo,
   Result,
   PromiseTxReturnType,
+  HttpUrl,
 } from '../../types.js';
 import {
   getHubAssetInfo,
