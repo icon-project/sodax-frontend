@@ -42,7 +42,6 @@ export const getUser = async ({ address, chainType }: { address: string; chainTy
 
     return JSON.parse(localStorage.getItem(`user-${address}`) || 'null');
   } catch (e) {
-    console.log('AAA');
     return null;
   }
 };
