@@ -1,6 +1,5 @@
-// apps/demo/src/pages/staking/page.tsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { SelectChain } from '@/components/solver/SelectChain';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { spokeChainConfig, supportedSpokeChains } from '@sodax/sdk';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import {
   getXChainType,
   useEvmSwitchChain,
@@ -27,52 +26,48 @@ import { ArrowDownUp, ArrowLeftRight, Coins, TrendingUp } from 'lucide-react';
 import { scaleTokenAmount, formatTokenAmount } from '@/lib/utils';
 import {
   useSpokeProvider,
-  useSodaxContext,
   useStake,
   useStakeApprove,
   useStakeAllowance,
   useUnstake,
-  useClaim,
-  useCancelUnstake,
-  useStakingInfo,
-  useUnstakingInfoWithPenalty,
-  useStakingConfig,
   useStakeRatio,
   useInstantUnstakeRatio,
   useConvertedAssets,
   useInstantUnstake,
+  useUnstakeAllowance,
+  useUnstakeApprove,
+  useInstantUnstakeApprove,
+  useInstantUnstakeAllowance,
 } from '@sodax/dapp-kit';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSodaBalance } from '@/hooks/useSodaBalance';
+import { StakingConfiguration } from '@/components/staking/StakingConfiguration';
+import { StakingInfo } from '@/components/staking/StakingInfo';
+import { UnstakingInfo } from '@/components/staking/UnstakingInfo';
+import { SodaBalance } from '@/components/staking/SodaBalance';
 
 export default function StakingPage() {
-  const { openWalletModal } = useAppStore();
-  const { sodax } = useSodaxContext();
+  const { openWalletModal, selectChainId, selectedChainId } = useAppStore();
 
-  const [selectedChainId, setSelectedChainId] = useState<SpokeChainId>('0x2105.base');
   const [stakeAmount, setStakeAmount] = useState<string>('');
   const [unstakeAmount, setUnstakeAmount] = useState<string>('');
-  const [claimRequestId, setClaimRequestId] = useState<string>('');
   const [minUnstakeAmount, setMinUnstakeAmount] = useState<string>('');
   const [minStakeReceive, setMinStakeReceive] = useState<string>('');
 
   const account = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
+  console.log('selected chain id:', selectedChainId);
+  console.log('wallet provider:', walletProvider);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
 
   // Staking info hooks
-  const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
-  const { data: unstakingInfoWithPenalty, isLoading: isLoadingUnstakingInfoWithPenalty } =
-    useUnstakingInfoWithPenalty(spokeProvider);
-  const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
-
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
   // Dialog states
   const [stakeDialogOpen, setStakeDialogOpen] = useState(false);
   const [unstakeDialogOpen, setUnstakeDialogOpen] = useState(false);
-  const [claimDialogOpen, setClaimDialogOpen] = useState(false);
+  const [instantUnstakeDialogOpen, setInstantUnstakeDialogOpen] = useState(false);
 
   // SODA token for the selected chain
   const sodaToken = useMemo(() => {
@@ -81,20 +76,44 @@ export default function StakingPage() {
   }, [selectedChainId]);
 
   // SODA balance for the connected wallet
-  const { data: sodaBalance, isLoading: isLoadingSodaBalance } = useSodaBalance(selectedChainId, account.address);
+  const { data: sodaBalance, isLoading: isLoadingSodaBalance } = useSodaBalance(
+    selectedChainId,
+    account.address,
+    spokeProvider,
+  );
 
   // Staking hooks
   const { mutateAsync: stake, isPending: isStakingPending } = useStake(spokeProvider);
-  const { mutateAsync: approve, isPending: isApproving } = useStakeApprove(spokeProvider);
+  const { mutateAsync: approveStake, isPending: isApprovingStake } = useStakeApprove(spokeProvider);
+  const { mutateAsync: approveUnstake, isPending: isApprovingUnstake } = useUnstakeApprove(spokeProvider);
+  const { mutateAsync: approveInstantUnstake, isPending: isApprovingInstantUnstake } = useInstantUnstakeApprove(spokeProvider);
   const { mutateAsync: unstake, isPending: isUnstakingPending } = useUnstake(spokeProvider);
-  const { mutateAsync: claim, isPending: isClaiming } = useClaim(spokeProvider);
-  const { mutateAsync: cancelUnstake, isPending: isCancellingUnstake } = useCancelUnstake(spokeProvider);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useStakeAllowance(
+  const { data: isStakeAllowed, isLoading: isStakeAllowanceLoading } = useStakeAllowance(
     stakeAmount && sodaToken && account.address
       ? {
           amount: scaleTokenAmount(stakeAmount, sodaToken.decimals),
           account: account.address as `0x${string}`,
+          minReceive: scaleTokenAmount(stakeAmount, sodaToken.decimals), // expect same amount, change to enable slippage
         }
+      : undefined,
+    spokeProvider,
+  );
+  const { data: isUnstakeAllowed, isLoading: isUnstakeAllowanceLoading } = useUnstakeAllowance(
+    unstakeAmount && sodaToken && account.address
+      ? {
+          amount: scaleTokenAmount(unstakeAmount, 18),
+          account: account.address as `0x${string}`,
+        }
+      : undefined,
+    spokeProvider,
+  );
+  const { data: isInstantUnstakeAllowed, isLoading: isInstantUnstakeAllowanceLoading } = useInstantUnstakeAllowance(
+    unstakeAmount && sodaToken && account.address
+    ? {
+      amount: scaleTokenAmount(unstakeAmount, 18), // xSoda has 18 decimals
+      minAmount: scaleTokenAmount(minUnstakeAmount, 18),
+      account: account.address as `0x${string}`,
+    }
       : undefined,
     spokeProvider,
   );
@@ -119,7 +138,7 @@ export default function StakingPage() {
   } = useConvertedAssets(scaledUnstakeAmount);
 
   // Instant unstake mutation
-  const instantUnstake = useInstantUnstake(spokeProvider);
+  const { mutateAsync: instantUnstake, isPending: isInstantUnstakingPending } = useInstantUnstake(spokeProvider);
 
   // Auto-calculate minUnstakeAmount as 95% of instantUnstakeRatio
   useEffect(() => {
@@ -155,16 +174,44 @@ export default function StakingPage() {
     convertedAssetsError,
   });
 
-  const handleApprove = async () => {
+  const handleApproveStake = async () => {
     if (!account.address || !sodaToken || !stakeAmount) return;
 
     try {
-      await approve({
+      await approveStake({
         amount: scaleTokenAmount(stakeAmount, sodaToken.decimals),
         account: account.address as `0x${string}`,
+        minReceive: scaleTokenAmount(minStakeReceive, 18), // expect same amount, change to enable slippage
       });
     } catch (error) {
       console.error('Approve error:', error);
+    }
+  };
+
+  const handleApproveUnstake = async () => {
+    if (!account.address || !sodaToken || !unstakeAmount) return;
+
+    try {
+      await approveUnstake({
+        amount: scaleTokenAmount(unstakeAmount, 18),
+        account: account.address as `0x${string}`,
+      });
+    } catch (error) {
+      console.error('Approve unstake error:', error);
+    }
+  };
+
+  const handleApproveInstantUnstake = async () => {
+    if (!account.address || !sodaToken || !unstakeAmount) return;
+
+    try {
+      await approveInstantUnstake({
+        amount: scaleTokenAmount(unstakeAmount, 18), // xSoda has 18 decimals
+        minAmount: scaleTokenAmount(minUnstakeAmount, 18),
+        account: account.address as `0x${string}`,
+      });
+    } catch (error) {
+      console.error('Approve unstake error:', error);
     }
   };
 
@@ -176,6 +223,7 @@ export default function StakingPage() {
         amount: scaleTokenAmount(stakeAmount, sodaToken.decimals),
         minReceive: scaleTokenAmount(minStakeReceive, 18),
         account: account.address as `0x${string}`,
+        action: 'stake',
       });
 
       console.log('Stake successful');
@@ -199,58 +247,30 @@ export default function StakingPage() {
       console.log('Unstake successful');
       setUnstakeDialogOpen(false);
       setUnstakeAmount('');
-      // Refresh staking info
-      window.location.reload();
     } catch (error) {
       console.error('Unstake error:', error);
     }
   };
 
-  const handleClaim = async (requestId: string, claimableAmount: bigint) => {
-    if (!spokeProvider) return;
-
-    try {
-      await claim({
-        requestId: BigInt(requestId),
-        amount: claimableAmount,
-      });
-      setClaimDialogOpen(false);
-      setClaimRequestId('');
-    } catch (error) {
-      console.error('Claim error:', error);
-    }
-  };
-
-  const handleCancelUnstake = async (requestId: string) => {
-    if (!spokeProvider) return;
-
-    try {
-      await cancelUnstake({
-        requestId: BigInt(requestId),
-      });
-      console.log('Cancel unstake successful');
-      // Refresh staking info
-      window.location.reload();
-    } catch (error) {
-      console.error('Cancel unstake error:', error);
-    }
-  };
-
   const handleInstantUnstake = async () => {
-    if (!account.address || !unstakeAmount || !minUnstakeAmount) return;
+    if (!account.address || !unstakeAmount || !minUnstakeAmount) {
+      console.log(
+        `Instant unstake failed: missing required fields: account.address=${account.address}, unstakeAmount=${unstakeAmount}, minUnstakeAmount=${minUnstakeAmount}`,
+      );
+      return;
+    }
 
     try {
-      const [hubTxHash, spokeTxHash] = await instantUnstake.mutateAsync({
+      const [hubTxHash, spokeTxHash] = await instantUnstake({
         amount: scaleTokenAmount(unstakeAmount, 18), // xSoda has 18 decimals
         minAmount: scaleTokenAmount(minUnstakeAmount, 18),
         account: account.address as `0x${string}`,
       });
 
       console.log('Instant unstake successful:', { hubTxHash, spokeTxHash });
+      setInstantUnstakeDialogOpen(false);
       setUnstakeAmount('');
       setMinUnstakeAmount('');
-      // Refresh staking info
-      window.location.reload();
     } catch (error) {
       console.error('Instant unstake error:', error);
     }
@@ -262,36 +282,6 @@ export default function StakingPage() {
     if (chainType) {
       disconnect(chainType);
     }
-  };
-
-  // Helper function to format seconds for display
-  const formatSeconds = (seconds: bigint): string => {
-    return Number(seconds).toLocaleString();
-  };
-
-  // Helper function to calculate time remaining for unstaking
-  const getTimeRemaining = (startTime: bigint, unstakingPeriod: bigint): string => {
-    const now = Math.floor(Date.now() / 1000);
-    const start = Number(startTime);
-    const period = Number(unstakingPeriod);
-    const elapsed = now - start;
-    const remaining = period - elapsed;
-
-    if (remaining <= 0) {
-      return 'Ready to claim';
-    }
-
-    const days = Math.floor(remaining / 86400);
-    const hours = Math.floor((remaining % 86400) / 3600);
-    const minutes = Math.floor((remaining % 3600) / 60);
-
-    if (days > 0) {
-      return `${days}d ${hours}h ${minutes}m remaining`;
-    }
-    if (hours > 0) {
-      return `${hours}h ${minutes}m remaining`;
-    }
-    return `${minutes}m remaining`;
   };
 
   return (
@@ -308,9 +298,9 @@ export default function StakingPage() {
           <div className="space-y-2">
             <Label>Select Chain</Label>
             <SelectChain
-              chainList={supportedSpokeChains as SpokeChainId[]}
+              chainList={supportedSpokeChains}
               value={selectedChainId}
-              setChain={setSelectedChainId}
+              setChain={selectChainId}
               placeholder="Select chain"
               id="staking-chain"
               label="Chain"
@@ -332,206 +322,32 @@ export default function StakingPage() {
               ) : (
                 <Button onClick={openWalletModal}>Connect</Button>
               )}
+              {isWrongChain && (
+                <Button className="w-full max-w-40" type="button" variant="default" onClick={handleSwitchChain}>
+                  Switch Chain
+                </Button>
+              )}
             </div>
           </div>
 
           {/* SODA Balance */}
-          {account.address && sodaToken && (
-            <div className="space-y-2">
-              <Label>SODA Balance</Label>
-              <div className="p-4 border rounded-lg bg-muted/50">
-                {isLoadingSodaBalance ? (
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-4 w-20" />
-                    <span className="text-sm text-muted-foreground">Loading...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <div className="text-lg font-semibold">
-                      {formatTokenAmount(sodaBalance || 0n, sodaToken.decimals)} {sodaToken.symbol}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Available for staking</div>
-                  </div>
-                )}
-              </div>
-            </div>
+          {account.address && sodaToken && spokeProvider && (
+            <SodaBalance
+              selectedChainId={selectedChainId}
+              account={account}
+              spokeProvider={spokeProvider}
+              sodaToken={sodaToken}
+            />
           )}
 
           {/* Staking Configuration */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Staking Configuration</h3>
-            {isLoadingStakingConfig ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-              </div>
-            ) : stakingConfig ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Unstaking Period</div>
-                  <div className="text-lg font-semibold">{formatSeconds(stakingConfig.unstakingPeriod)} seconds</div>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Min Unstaking Period</div>
-                  <div className="text-lg font-semibold">{formatSeconds(stakingConfig.minUnstakingPeriod)} seconds</div>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <div className="text-sm text-muted-foreground">Max Penalty</div>
-                  <div className="text-lg font-semibold">{Number(stakingConfig.maxPenalty)}%</div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-muted-foreground">No staking configuration available</div>
-            )}
-          </div>
+          <StakingConfiguration />
 
           {/* Staking Info */}
-          {account.address && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Staking Information</h3>
-              {isLoadingStakingInfo ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              ) : stakingInfo ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="text-sm text-muted-foreground">Total Staked</div>
-                    <div className="text-lg font-semibold">{formatTokenAmount(stakingInfo.totalStaked, 18)} SODA</div>
-                    <div className="text-xs text-muted-foreground mt-1">Total SODA staked across all users</div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="text-sm text-muted-foreground">Your xSODA Shares</div>
-                    <div className="text-lg font-semibold">
-                      {formatTokenAmount(stakingInfo.userXSodaBalance, 18)} xSODA
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">Your raw xSODA token balance</div>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="text-sm text-muted-foreground">Your xSODA Value</div>
-                    <div className="text-lg font-semibold">
-                      {formatTokenAmount(stakingInfo.userXSodaValue, 18)} SODA
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">Your xSODA tokens worth in SODA</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-muted-foreground">No staking information available</div>
-              )}
-            </div>
-          )}
+          {account.address && spokeProvider && <StakingInfo spokeProvider={spokeProvider} />}
 
           {/* Unstaking Info */}
-          {account.address && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Unstaking Information</h3>
-              {isLoadingUnstakingInfoWithPenalty ? (
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              ) : unstakingInfoWithPenalty ? (
-                <div className="space-y-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="text-sm text-muted-foreground">Total Unstaking</div>
-                    <div className="text-lg font-semibold">
-                      {formatTokenAmount(unstakingInfoWithPenalty.totalUnstaking, 18)} SODA
-                    </div>
-                  </div>
-
-                  {unstakingInfoWithPenalty.requestsWithPenalty.length > 0 ? (
-                    <div className="space-y-2">
-                      <div className="text-sm text-muted-foreground">Pending Unstake Requests</div>
-                      <div className="space-y-2">
-                        {unstakingInfoWithPenalty.requestsWithPenalty.map((request, index) => (
-                          <div key={index} className="p-3 border rounded-lg bg-muted/50">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="text-sm font-medium">
-                                    {formatTokenAmount(request.request.amount, 18)} SODA
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">Request #{index + 1}</div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                  <div>
-                                    <div className="text-muted-foreground">Started:</div>
-                                    <div>{new Date(Number(request.request.startTime) * 1000).toLocaleString()}</div>
-                                  </div>
-                                  <div>
-                                    <div className="text-muted-foreground">To:</div>
-                                    <div className="truncate">{request.request.to}</div>
-                                  </div>
-                                </div>
-
-                                <div className="mt-2 p-2 bg-background rounded border">
-                                  <div className="grid grid-cols-2 gap-2 text-xs">
-                                    <div>
-                                      <div className="text-muted-foreground">Penalty:</div>
-                                      <div className="font-medium text-red-600">
-                                        {request.penaltyPercentage.toFixed(1)}% (
-                                        {formatTokenAmount(request.penalty, 18)} SODA)
-                                      </div>
-                                    </div>
-                                    <div>
-                                      <div className="text-muted-foreground">Claimable:</div>
-                                      <div className="font-medium text-green-600">
-                                        {formatTokenAmount(request.claimableAmount, 18)} SODA
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {stakingConfig && (
-                                  <div className="text-xs font-medium text-blue-600 mt-1">
-                                    {getTimeRemaining(request.request.startTime, stakingConfig.unstakingPeriod)}
-                                  </div>
-                                )}
-
-                                {/* Action buttons */}
-                                <div className="mt-2 flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => {
-                                      setClaimRequestId(request.id.toString());
-                                      handleClaim(request.id.toString(), request.claimableAmount);
-                                    }}
-                                    disabled={isClaiming}
-                                    className="flex-1"
-                                  >
-                                    {isClaiming
-                                      ? 'Claiming...'
-                                      : `Claim ${formatTokenAmount(request.claimableAmount, 18)} SODA`}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleCancelUnstake(request.id.toString())}
-                                    disabled={isCancellingUnstake}
-                                    className="flex-1"
-                                  >
-                                    {isCancellingUnstake ? 'Cancelling...' : 'Cancel'}
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-muted-foreground text-sm">No pending unstake requests</div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-muted-foreground">No unstaking information available</div>
-              )}
-            </div>
-          )}
+          {account.address && spokeProvider && <UnstakingInfo spokeProvider={spokeProvider} userAddress={account.address} />}
 
           {/* Action Tabs */}
           {account.address && (
@@ -682,12 +498,12 @@ export default function StakingPage() {
                   ) : (
                     <Button
                       variant="outline"
-                      disabled={!unstakeAmount || !instantUnstakeRatio || !minUnstakeAmount || instantUnstake.isPending}
+                      disabled={!unstakeAmount || !instantUnstakeRatio || !minUnstakeAmount || isInstantUnstakingPending}
                       className="w-full"
-                      onClick={handleInstantUnstake}
+                      onClick={() => setInstantUnstakeDialogOpen(true)}
                     >
                       <ArrowLeftRight className="mr-2 h-4 w-4" />
-                      {instantUnstake.isPending ? 'Processing...' : 'Instant Unstake'}
+                      {isInstantUnstakingPending ? 'Processing...' : 'Instant Unstake'}
                     </Button>
                   )}
                 </div>
@@ -738,10 +554,10 @@ export default function StakingPage() {
               className="w-full"
               type="button"
               variant="default"
-              onClick={handleApprove}
-              disabled={isAllowanceLoading || hasAllowed || isApproving}
+              onClick={handleApproveStake}
+              disabled={isStakeAllowanceLoading || isStakeAllowed || isApprovingStake}
             >
-              {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+              {isApprovingStake ? 'Approving...' : isStakeAllowed ? 'Approved' : 'Approve'}
             </Button>
 
             {isWrongChain && (
@@ -754,7 +570,7 @@ export default function StakingPage() {
               <Button
                 className="w-full"
                 onClick={handleStake}
-                disabled={!hasAllowed || !minStakeReceive || isStakingPending}
+                disabled={!isStakeAllowed || !minStakeReceive || isStakingPending}
               >
                 {isStakingPending ? 'Staking...' : 'Confirm Stake'}
               </Button>
@@ -778,58 +594,43 @@ export default function StakingPage() {
             <Button variant="outline" onClick={() => setUnstakeDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUnstake} disabled={isUnstakingPending}>
+            <Button
+              className="w-full"
+              type="button"
+              variant="default"
+              onClick={handleApproveUnstake}
+              disabled={isUnstakeAllowanceLoading || isUnstakeAllowed || isApprovingUnstake}
+            >
+              {isApprovingUnstake ? 'Approving...' : isUnstakeAllowed ? 'Approved' : 'Approve'}
+            </Button>
+            <Button onClick={handleUnstake} disabled={isUnstakingPending || !isUnstakeAllowed}>
               {isUnstakingPending ? 'Unstaking...' : 'Confirm Unstake'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Claim Dialog */}
-      <Dialog open={claimDialogOpen} onOpenChange={setClaimDialogOpen}>
+      {/* Instant Unstake Dialog */}
+      <Dialog open={instantUnstakeDialogOpen} onOpenChange={setInstantUnstakeDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Claim SODA</DialogTitle>
-            <DialogDescription>
-              {unstakingInfoWithPenalty && claimRequestId
-                ? (() => {
-                    const request = unstakingInfoWithPenalty.requestsWithPenalty.find(
-                      req => req.id.toString() === claimRequestId,
-                    );
-                    return request ? (
-                      <div>
-                        <div>Request ID: {claimRequestId}</div>
-                        <div>Claimable Amount: {formatTokenAmount(request.claimableAmount, 18)} SODA</div>
-                        <div>
-                          Penalty: {request.penaltyPercentage.toFixed(1)}% ({formatTokenAmount(request.penalty, 18)}{' '}
-                          SODA)
-                        </div>
-                      </div>
-                    ) : (
-                      'Invalid request ID'
-                    );
-                  })()
-                : 'No request selected'}
-            </DialogDescription>
+            <DialogTitle>Instant Unstake xSODA</DialogTitle>
+            <DialogDescription> InstantUnstake {unstakeAmount} xSODA shares to initiate unstaking process</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setClaimDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setInstantUnstakeDialogOpen(false)}>
               Cancel
             </Button>
             <Button
-              onClick={() => {
-                if (unstakingInfoWithPenalty && claimRequestId) {
-                  const request = unstakingInfoWithPenalty.requestsWithPenalty.find(
-                    req => req.id.toString() === claimRequestId,
-                  );
-                  if (request) {
-                    handleClaim(claimRequestId, request.claimableAmount);
-                  }
-                }
-              }}
-              disabled={isClaiming || !unstakingInfoWithPenalty || !claimRequestId}
+              className="w-full"
+              type="button"
+              variant="default"
+              onClick={handleApproveInstantUnstake}
+              disabled={isInstantUnstakeAllowanceLoading || isInstantUnstakeAllowed || isApprovingInstantUnstake}
             >
-              {isClaiming ? 'Claiming...' : 'Confirm Claim'}
+              {isApprovingUnstake ? 'Approving...' : isInstantUnstakeAllowed ? 'Approved' : 'Approve'}
+            </Button>
+            <Button onClick={handleInstantUnstake} disabled={isInstantUnstakingPending || !isInstantUnstakeAllowed}>
+              {isUnstakingPending ? 'Unstaking...' : 'Confirm Unstake'}
             </Button>
           </DialogFooter>
         </DialogContent>

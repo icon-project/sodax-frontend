@@ -2575,3 +2575,7 @@ export const isNativeToken = (chainId: SpokeChainId, token: Token | string): boo
 
   return token.address.toLowerCase() === spokeChainConfig[chainId].nativeToken.toLowerCase();
 };
+export const findSupportedTokenBySymbol = (chainId: SpokeChainId, symbol: string): XToken | undefined => {
+  const supportedTokens = Object.values(spokeChainConfig[chainId].supportedTokens);
+  return supportedTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
+}

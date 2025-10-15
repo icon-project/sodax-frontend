@@ -12,3 +12,8 @@ export { useStakeRatio } from './useStakeRatio';
 export { useInstantUnstakeRatio } from './useInstantUnstakeRatio';
 export { useConvertedAssets } from './useConvertedAssets';
 export { useInstantUnstake } from './useInstantUnstake';
+export { useUnstakeAllowance } from './useUnstakeAllowance';
+export { useUnstakeApprove } from './useUnstakeApprove';
+export { useUnstakingInfo } from './useUnstakingInfo';
+export { useInstantUnstakeApprove } from './useInstantUnstakeApprove';
+export { useInstantUnstakeAllowance } from './useInstantUnstakeAllowance';

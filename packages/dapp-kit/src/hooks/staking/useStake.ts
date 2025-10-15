@@ -1,15 +1,14 @@
 // packages/dapp-kit/src/hooks/staking/useStake.ts
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { StakeParams, StakingError, StakingErrorCode, SpokeTxHash, HubTxHash } from '@sodax/sdk';
+import type { StakeParams, SpokeTxHash, HubTxHash, SpokeProvider } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import type { SpokeProvider } from '@sodax/sdk';
 
 /**
  * Hook for executing stake transactions to stake SODA tokens and receive xSODA shares.
  * Uses React Query's useMutation for better state management and caching.
  *
- * @param {SpokeProvider} spokeProvider - The spoke provider to use for the stake
- * @returns {UseMutationResult} Mutation result object containing mutation function and state
+ * @param {SpokeProvider | undefined} spokeProvider - The spoke provider to use for the stake
+ * @returns {UseMutationResult<[SpokeTxHash, HubTxHash], Error, StakeParams>} Mutation result object containing mutation function and state
  *
  * @example
  * ```typescript
@@ -21,9 +20,7 @@ import type { SpokeProvider } from '@sodax/sdk';
  *     account: '0x...'
  *   });
  *
- *   if (result.ok) {
- *     console.log('Stake successful:', result.value);
- *   }
+ *   console.log('Stake successful:', result);
  * };
  * ```
  */
@@ -48,5 +45,3 @@ export function useStake(
     },
   });
 }
-
-

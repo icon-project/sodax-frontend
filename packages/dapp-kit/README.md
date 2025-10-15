@@ -44,6 +44,26 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Check if Stellar trustline is established for an asset (`useStellarTrustlineCheck`)
   - Request creation of Stellar trustline line for an asset (`useRequestTrustline`)
 
+- Staking
+  - Stake SODA tokens to receive xSODA shares (`useStake`)
+  - Unstake xSODA shares (`useUnstake`)
+  - Instant unstake xSODA shares with penalty (`useInstantUnstake`)
+  - Claim unstaked SODA tokens after unstaking period (`useClaim`)
+  - Cancel unstake request (`useCancelUnstake`)
+  - Check SODA token allowance for staking (`useStakeAllowance`)
+  - Approve SODA token spending for staking (`useStakeApprove`)
+  - Check xSODA token allowance for unstaking (`useUnstakeAllowance`)
+  - Approve xSODA token spending for unstaking (`useUnstakeApprove`)
+  - Check xSODA token allowance for instant unstaking (`useInstantUnstakeAllowance`)
+  - Approve xSODA token spending for instant unstaking (`useInstantUnstakeApprove`)
+  - Get comprehensive staking information (`useStakingInfo`)
+  - Get unstaking information with penalty details (`useUnstakingInfoWithPenalty`)
+  - Get unstaking information (`useUnstakingInfo`)
+  - Get staking configuration (`useStakingConfig`)
+  - Get stake ratio (SODA to xSODA conversion rate) (`useStakeRatio`)
+  - Get instant unstake ratio (xSODA to SODA conversion rate with penalty) (`useInstantUnstakeRatio`)
+  - Get converted assets amount for xSODA shares (`useConvertedAssets`)
+
 ## Installation
 
 ```bash

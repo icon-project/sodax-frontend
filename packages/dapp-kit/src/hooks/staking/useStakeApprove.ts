@@ -1,15 +1,14 @@
 // packages/dapp-kit/src/hooks/staking/useStakeApprove.ts
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { StakeParams, StakingError, StakingErrorCode, TxReturnType } from '@sodax/sdk';
+import type { StakeParams, TxReturnType, SpokeProvider } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import type { SpokeProvider } from '@sodax/sdk';
 
 /**
  * Hook for approving SODA token spending for staking operations.
  * Uses React Query's useMutation for better state management and caching.
  *
- * @param {SpokeProvider} spokeProvider - The spoke provider to use for the approval
- * @returns {UseMutationResult} Mutation result object containing mutation function and state
+ * @param {SpokeProvider | undefined} spokeProvider - The spoke provider to use for the approval
+ * @returns {UseMutationResult<TxReturnType<SpokeProvider, false>, Error, Omit<StakeParams, 'action'>>} Mutation result object containing mutation function and state
  *
  * @example
  * ```typescript
@@ -21,25 +20,23 @@ import type { SpokeProvider } from '@sodax/sdk';
  *     account: '0x...'
  *   });
  *
- *   if (result.ok) {
- *     console.log('Approval successful:', result.value);
- *   }
+ *   console.log('Approval successful:', result);
  * };
  * ```
  */
 export function useStakeApprove(
   spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<TxReturnType<SpokeProvider, false>, Error, StakeParams> {
+): UseMutationResult<TxReturnType<SpokeProvider, false>, Error, Omit<StakeParams, 'action'>> {
   const { sodax } = useSodaxContext();
 
-  return useMutation<TxReturnType<SpokeProvider, false>, Error, StakeParams>({
-    mutationFn: async (params: StakeParams) => {
+  return useMutation<TxReturnType<SpokeProvider, false>, Error, Omit<StakeParams, 'action'>>({
+    mutationFn: async (params: Omit<StakeParams, 'action'>) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
 
       const result = await sodax.staking.approve({
-        params,
+        params: { ...params, action: 'stake' },
         spokeProvider,
       });
 
@@ -51,5 +48,3 @@ export function useStakeApprove(
     },
   });
 }
-
-

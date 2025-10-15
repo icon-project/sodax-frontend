@@ -1,16 +1,15 @@
 // packages/dapp-kit/src/hooks/staking/useStakingInfo.ts
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { StakingInfo, StakingError, StakingErrorCode } from '@sodax/sdk';
+import type { StakingInfo, SpokeProvider } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { SpokeProvider } from '@sodax/sdk';
 
 /**
  * Hook for fetching comprehensive staking information for a user.
  * Uses React Query for efficient caching and state management.
  *
- * @param {SpokeProvider} spokeProvider - The spoke provider to use for the query
+ * @param {SpokeProvider | undefined} spokeProvider - The spoke provider to use for the query
  * @param {number} refetchInterval - The interval in milliseconds to refetch data (default: 5000)
- * @returns {UseQueryResult} Query result object containing staking info and state
+ * @returns {UseQueryResult<StakingInfo, Error>} Query result object containing staking info and state
  *
  * @example
  * ```typescript
@@ -31,7 +30,7 @@ export function useStakingInfo(
   const { sodax } = useSodaxContext();
 
   return useQuery({
-    queryKey: ['stakingInfo', spokeProvider?.chainConfig.chain.id],
+    queryKey: ['soda', 'stakingInfo', spokeProvider?.chainConfig.chain.id],
     queryFn: async () => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
@@ -49,5 +48,3 @@ export function useStakingInfo(
     refetchInterval,
   });
 }
-
-

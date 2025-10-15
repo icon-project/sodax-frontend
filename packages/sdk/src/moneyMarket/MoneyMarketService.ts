@@ -847,7 +847,7 @@ export class MoneyMarketService {
 
     let txResult: TxReturnType<S, R>;
     if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
-      txResult = await SonicSpokeService.callWallet(data, spokeProvider);
+      txResult = await SonicSpokeService.callWallet(data, spokeProvider, raw);
     } else {
       txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
     }

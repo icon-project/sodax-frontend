@@ -1,15 +1,14 @@
 // packages/dapp-kit/src/hooks/staking/useUnstake.ts
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { UnstakeParams, StakingError, StakingErrorCode, SpokeTxHash, HubTxHash } from '@sodax/sdk';
-import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import type { SpokeProvider } from '@sodax/sdk';
+import type { UnstakeParams, SpokeTxHash, HubTxHash, SpokeProvider } from '@sodax/sdk';
+import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 
 /**
  * Hook for executing unstake transactions to unstake xSODA shares.
  * Uses React Query's useMutation for better state management and caching.
  *
- * @param {SpokeProvider} spokeProvider - The spoke provider to use for the unstake
- * @returns {UseMutationResult} Mutation result object containing mutation function and state
+ * @param {SpokeProvider | undefined} spokeProvider - The spoke provider to use for the unstake
+ * @returns {UseMutationResult<[SpokeTxHash, HubTxHash], Error, Omit<UnstakeParams, 'action'>>} Mutation result object containing mutation function and state
  *
  * @example
  * ```typescript
@@ -21,24 +20,23 @@ import type { SpokeProvider } from '@sodax/sdk';
  *     account: '0x...'
  *   });
  *
- *   if (result.ok) {
- *     console.log('Unstake successful:', result.value);
- *   }
+ *   console.log('Unstake successful:', result);
  * };
  * ```
  */
 export function useUnstake(
   spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<[SpokeTxHash, HubTxHash], Error, UnstakeParams> {
+): UseMutationResult<[SpokeTxHash, HubTxHash], Error, Omit<UnstakeParams, 'action'>> {
   const { sodax } = useSodaxContext();
+  const queryClient = useQueryClient();
 
-  return useMutation<[SpokeTxHash, HubTxHash], Error, UnstakeParams>({
-    mutationFn: async (params: UnstakeParams) => {
+  return useMutation<[SpokeTxHash, HubTxHash], Error, Omit<UnstakeParams, 'action'>>({
+    mutationFn: async (params: Omit<UnstakeParams, 'action'>) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
 
-      const result = await sodax.staking.unstake(params, spokeProvider);
+      const result = await sodax.staking.unstake({ ...params, action: 'unstake' }, spokeProvider);
 
       if (!result.ok) {
         throw new Error(`Unstake failed: ${result.error.code}`);
@@ -46,7 +44,11 @@ export function useUnstake(
 
       return result.value;
     },
+    onSuccess: () => {
+      // Invalidate relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['stakingInfo'] });
+      queryClient.invalidateQueries({ queryKey: ['unstakingInfo'] });
+      queryClient.invalidateQueries({ queryKey: ['unstakingInfoWithPenalty'] });
+    },
   });
 }
-
-

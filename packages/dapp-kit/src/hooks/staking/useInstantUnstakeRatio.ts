@@ -6,9 +6,9 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
  * Hook for fetching instant unstake ratio estimates.
  * Uses React Query for efficient caching and state management.
  *
- * @param {bigint} amount - The amount of xSoda to estimate instant unstake for
+ * @param {bigint | undefined} amount - The amount of xSoda to estimate instant unstake for
  * @param {number} refetchInterval - The interval in milliseconds to refetch data (default: 10000)
- * @returns {UseQueryResult} Query result object containing instant unstake ratio and state
+ * @returns {UseQueryResult<bigint, Error>} Query result object containing instant unstake ratio and state
  *
  * @example
  * ```typescript
@@ -29,7 +29,7 @@ export function useInstantUnstakeRatio(
   console.log('useInstantUnstakeRatio hook called with:', { amount: amount?.toString(), sodax: !!sodax });
 
   return useQuery({
-    queryKey: ['instantUnstakeRatio', amount?.toString()],
+    queryKey: ['soda', 'instantUnstakeRatio', amount?.toString()],
     queryFn: async () => {
       console.log('useInstantUnstakeRatio queryFn called with amount:', amount?.toString());
       if (!amount || amount <= 0n) {

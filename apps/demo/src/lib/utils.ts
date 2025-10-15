@@ -52,3 +52,33 @@ export function statusCodeToMessage(status: SolverIntentStatusCode): string {
       return 'UNKNOWN';
   }
 }
+
+// Helper function to format seconds for display
+export function formatSeconds(seconds: bigint): string {
+  return Number(seconds).toLocaleString();
+}
+
+// Helper function to calculate time remaining for unstaking
+export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): string {
+  const now = Math.floor(Date.now() / 1000);
+  const start = Number(startTime);
+  const period = Number(unstakingPeriod);
+  const elapsed = now - start;
+  const remaining = period - elapsed;
+
+  if (remaining <= 0) {
+    return 'Ready to claim';
+  }
+
+  const days = Math.floor(remaining / 86400);
+  const hours = Math.floor((remaining % 86400) / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+
+  if (days > 0) {
+    return `${days}d ${hours}h ${minutes}m remaining`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m remaining`;
+  }
+  return `${minutes}m remaining`;
+}

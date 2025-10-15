@@ -6,9 +6,9 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
  * Hook for fetching converted assets amount for xSODA shares.
  * Uses React Query for efficient caching and state management.
  *
- * @param {bigint} amount - The amount of xSODA shares to convert
+ * @param {bigint | undefined} amount - The amount of xSODA shares to convert
  * @param {number} refetchInterval - The interval in milliseconds to refetch data (default: 10000)
- * @returns {UseQueryResult} Query result object containing converted assets amount and state
+ * @returns {UseQueryResult<bigint, Error>} Query result object containing converted assets amount and state
  *
  * @example
  * ```typescript
@@ -26,15 +26,11 @@ export function useConvertedAssets(amount: bigint | undefined, refetchInterval =
   console.log('useConvertedAssets hook called with:', { amount: amount?.toString(), sodax: !!sodax });
 
   return useQuery({
-    queryKey: ['convertedAssets', amount?.toString()],
+    queryKey: ['soda', 'convertedAssets', amount?.toString()],
     queryFn: async () => {
       console.log('useConvertedAssets queryFn called with amount:', amount?.toString());
       if (!amount || amount <= 0n) {
         throw new Error('Amount must be greater than 0');
-      }
-
-      if (!sodax?.staking) {
-        throw new Error('Staking service not available');
       }
 
       const result = await sodax.staking.getConvertedAssets(amount);

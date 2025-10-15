@@ -1,6 +1,6 @@
 // packages/dapp-kit/src/hooks/staking/useStakingConfig.ts
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { StakingConfig, StakingError, StakingErrorCode } from '@sodax/sdk';
+import type { StakingConfig } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
 /**
@@ -8,7 +8,7 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
  * Uses React Query for efficient caching and state management.
  *
  * @param {number} refetchInterval - The interval in milliseconds to refetch data (default: 30000)
- * @returns {UseQueryResult} Query result object containing staking config and state
+ * @returns {UseQueryResult<StakingConfig, Error>} Query result object containing staking config and state
  *
  * @example
  * ```typescript
@@ -25,7 +25,7 @@ export function useStakingConfig(refetchInterval = 30000): UseQueryResult<Stakin
   const { sodax } = useSodaxContext();
 
   return useQuery({
-    queryKey: ['stakingConfig'],
+    queryKey: ['soda', 'stakingConfig'],
     queryFn: async () => {
       const result = await sodax.staking.getStakingConfig();
 
@@ -38,5 +38,3 @@ export function useStakingConfig(refetchInterval = 30000): UseQueryResult<Stakin
     refetchInterval,
   });
 }
-
-

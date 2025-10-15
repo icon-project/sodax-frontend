@@ -6,9 +6,9 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
  * Hook for fetching stake ratio estimates (xSoda amount and preview deposit).
  * Uses React Query for efficient caching and state management.
  *
- * @param {bigint} amount - The amount of SODA to estimate stake for
+ * @param {bigint | undefined} amount - The amount of SODA to estimate stake for
  * @param {number} refetchInterval - The interval in milliseconds to refetch data (default: 10000)
- * @returns {UseQueryResult} Query result object containing stake ratio estimates and state
+ * @returns {UseQueryResult<[bigint, bigint], Error>} Query result object containing stake ratio estimates and state
  *
  * @example
  * ```typescript
@@ -28,12 +28,9 @@ export function useStakeRatio(
 ): UseQueryResult<[bigint, bigint], Error> {
   const { sodax } = useSodaxContext();
 
-  console.log('useStakeRatio hook called with:', { amount: amount?.toString(), sodax: !!sodax });
-
   return useQuery({
-    queryKey: ['stakeRatio', amount?.toString()],
+    queryKey: ['soda', 'stakeRatio', amount?.toString()],
     queryFn: async () => {
-      console.log('useStakeRatio queryFn called with amount:', amount?.toString());
       if (!amount || amount <= 0n) {
         throw new Error('Amount must be greater than 0');
       }

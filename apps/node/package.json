@@ -8,6 +8,7 @@
     "sonic": "pnpm run build && node dist/sonic.js",
     "sui": "pnpm run build && node dist/sui.js",
     "moneyMarket": "pnpm run build && node dist/moneymarket.js",
+    "staking": "pnpm run build && node dist/soda-staking.js",
     "stellar": "pnpm run build && node dist/stellar.js",
     "icon": "pnpm run build && node dist/icon.js",
     "bnusd-migration-test": "pnpm run build && node dist/bnusd-migration.test.js",
