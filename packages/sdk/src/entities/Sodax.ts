@@ -1,8 +1,8 @@
 import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
 import { SolverService, MigrationService, BackendApiService, BridgeService } from '../services/index.js';
 import { MoneyMarketService } from '../moneyMarket/MoneyMarketService.js';
+import type { HttpUrl } from '@sodax/types';
 import type {
-  HttpUrl,
   SolverConfigParams,
   MoneyMarketConfigParams,
   MigrationServiceConfig,

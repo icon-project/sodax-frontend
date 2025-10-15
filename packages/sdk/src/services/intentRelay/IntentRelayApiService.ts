@@ -1,4 +1,5 @@
-import type { HttpUrl, Result } from '../../types.js';
+import type { HttpUrl } from '@sodax/types';
+import type { Result } from '../../types.js';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentError } from '../solver/SolverService.js';

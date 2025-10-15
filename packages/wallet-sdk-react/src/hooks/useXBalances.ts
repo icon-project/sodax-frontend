@@ -55,7 +55,7 @@ export function useXBalances({
         return {};
       }
 
-      const balances = await xService.getBalances(address, xTokens, xChainId);
+      const balances = await xService.getBalances(address, xTokens);
 
       return balances;
     },

@@ -29,11 +29,11 @@ import {
   submitTransaction,
   waitUntilIntentExecuted,
 } from '../../index.js';
+import type { HttpUrl } from '@sodax/types';
 import type {
   EvmContractCall,
   FeeAmount,
   GetSpokeDepositParamsType,
-  HttpUrl,
   SolverErrorResponse,
   SolverExecutionRequest,
   SolverExecutionResponse,

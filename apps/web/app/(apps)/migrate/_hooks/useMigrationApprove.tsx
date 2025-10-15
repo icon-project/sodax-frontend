@@ -84,7 +84,7 @@ export function useMigrationApprove(
 
       const amountToMigrate = parseUnits(amount, token.decimals);
 
-      let result: Result<string, Error>;
+      let result: Result<string, unknown>;
       if (migrationMode === MIGRATION_MODE_ICX_SODA) {
         // ICX/SODA migration approval
         const revertParams = {

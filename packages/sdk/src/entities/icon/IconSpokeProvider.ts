@@ -1,4 +1,5 @@
-import type { HttpUrl, IconSpokeChainConfig } from '../../types.js';
+import type { HttpUrl } from '@sodax/types';
+import type { IconSpokeChainConfig } from '../../types.js';
 import * as IconSdkRaw from 'icon-sdk-js';
 const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
 import type { IconService } from 'icon-sdk-js';

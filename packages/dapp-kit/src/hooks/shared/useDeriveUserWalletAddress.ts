@@ -1,5 +1,5 @@
 // packages/dapp-kit/src/hooks/shared/useDeriveUserWalletAddress.ts
-import { deriveUserWalletAddress, type SpokeProvider, type EvmHubProvider } from '@sodax/sdk';
+import { deriveUserWalletAddress, type SpokeProvider } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from './useSodaxContext';
 import type { Address } from 'viem';

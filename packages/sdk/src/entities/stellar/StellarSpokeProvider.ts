@@ -15,7 +15,8 @@ import {
   type xdr,
   type Transaction,
 } from '@stellar/stellar-sdk';
-import type { HttpUrl, PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
+import type { HttpUrl } from '@sodax/types';
+import type { PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
 import { toHex, type Hex } from 'viem';
 import type { ISpokeProvider } from '../Providers.js';
 import type { IStellarWalletProvider } from '@sodax/types';
