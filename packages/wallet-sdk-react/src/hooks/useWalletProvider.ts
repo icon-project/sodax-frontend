@@ -1,4 +1,12 @@
-import type { ChainId } from '@sodax/types';
+import type {
+  ChainId,
+  IEvmWalletProvider,
+  IIconWalletProvider,
+  IInjectiveWalletProvider,
+  ISolanaWalletProvider,
+  IStellarWalletProvider,
+  ISuiWalletProvider,
+} from '@sodax/types';
 import { useMemo } from 'react';
 import {
   EvmWalletProvider,
@@ -36,12 +44,12 @@ import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 export function useWalletProvider(
   spokeChainId: ChainId | undefined,
 ):
-  | EvmWalletProvider
-  | SuiWalletProvider
-  | IconWalletProvider
-  | InjectiveWalletProvider
-  | StellarWalletProvider
-  | SolanaWalletProvider
+  | IEvmWalletProvider
+  | ISuiWalletProvider
+  | IIconWalletProvider
+  | IInjectiveWalletProvider
+  | IStellarWalletProvider
+  | ISolanaWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
 
