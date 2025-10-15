@@ -100,37 +100,32 @@ export function RouteTabs(): React.JSX.Element {
   return (
     <>
       <div
-        className="hidden md:flex md:w-[264px] lg:w-[304px] flex-col justify-center items-start lg:pt-4"
-        style={{ height: '-webkit-fill-available' }}
+        ref={tabsContainerRef}
+        className="hidden md:flex md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-tl-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] relative lg:mt-4 min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)]"
       >
-        <div
-          ref={tabsContainerRef}
-          className="md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-tl-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-256px)] h-full relative"
-        >
-          <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
-            {tabConfigs.map(tab => {
-              const active = current === tab.value;
-              return (
-                <RouteTabItem
-                  key={tab.value}
-                  href={`/${tab.value}`}
-                  value={tab.value}
-                  type={tab.type}
-                  label={tab.label}
-                  isActive={active}
-                  isMobile={false}
-                  setRef={setDesktopTabRef(tab.value)}
-                  enabled={tab.enabled}
-                />
-              );
-            })}
-          </div>
-
-          <ArrowRightIcon
-            className="absolute hidden md:block transition-all duration-300 ease-in-out z-20"
-            style={{ top: `${arrowPosition}px`, right: '63px' }}
-          />
+        <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
+          {tabConfigs.map(tab => {
+            const active = current === tab.value;
+            return (
+              <RouteTabItem
+                key={tab.value}
+                href={`/${tab.value}`}
+                value={tab.value}
+                type={tab.type}
+                label={tab.label}
+                isActive={active}
+                isMobile={false}
+                setRef={setDesktopTabRef(tab.value)}
+                enabled={tab.enabled}
+              />
+            );
+          })}
         </div>
+
+        <ArrowRightIcon
+          className="absolute hidden md:block transition-all duration-300 ease-in-out z-20"
+          style={{ top: `${arrowPosition}px`, right: '63px' }}
+        />
       </div>
 
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[96px]">
