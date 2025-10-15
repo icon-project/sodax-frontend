@@ -196,7 +196,11 @@ export class MoneyMarketService {
   private readonly hubProvider: EvmHubProvider;
   public readonly data: MoneyMarketDataService;
 
-  constructor(config: MoneyMarketConfigParams | undefined, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
+  constructor(
+    config: MoneyMarketConfigParams | undefined,
+    hubProvider: EvmHubProvider,
+    relayerApiEndpoint?: HttpUrl,
+  ) {
     if (!config) {
       this.config = {
         ...getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID), // default to mainnet config
@@ -847,7 +851,7 @@ export class MoneyMarketService {
 
     let txResult: TxReturnType<S, R>;
     if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
-      txResult = await SonicSpokeService.callWallet(data, spokeProvider);
+      txResult = await SonicSpokeService.callWallet(data, spokeProvider, raw);
     } else {
       txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
     }

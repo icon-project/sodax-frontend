@@ -97,6 +97,10 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     icxMigration: Address;
     balnSwap: Address;
     sodaToken: Address;
+    sodaVault: Address;
+    stakedSoda: Address;
+    xSoda: Address;
+    stakingRouter: Address;
   };
 
   nativeToken: Address;
@@ -262,6 +266,17 @@ export type TokenInfo = {
   withdrawalFee: bigint;
   maxDeposit: bigint;
   isSupported: boolean;
+};
+
+export type UnstakeSodaRequest = {
+  amount: bigint;
+  startTime: bigint;
+  to: Address;
+};
+
+export type UserUnstakeInfo = {
+  id: bigint;
+  request: UnstakeSodaRequest;
 };
 
 export type VaultReserves = {
