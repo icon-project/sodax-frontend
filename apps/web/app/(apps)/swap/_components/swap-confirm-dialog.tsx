@@ -136,6 +136,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   };
 
   const handleClose = (): void => {
+    if (isSwapSuccessful) {
+      onClose?.();
+      return;
+    }
+
     if (isLoading || isSwapPending) {
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
