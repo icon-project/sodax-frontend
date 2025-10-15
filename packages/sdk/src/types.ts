@@ -40,6 +40,7 @@ import type {
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
+export type HttpUrl = `http://${string}` | `https://${string}`;
 export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
 export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
 export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
@@ -381,8 +382,6 @@ export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
             : T extends SonicSpokeProvider
               ? Address
               : never;
-
-export type HttpUrl = `http://${string}` | `https://${string}`;
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
