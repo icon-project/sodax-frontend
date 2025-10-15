@@ -9,9 +9,7 @@ import {
   SolanaWalletProvider,
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
-import type { InjectiveEoaAddress } from '@sodax/types';
 import { usePublicClient, useWalletClient } from 'wagmi';
-import { getWagmiChainId } from '../utils';
 import { type SolanaXService, type StellarXService, useXAccount, useXService } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
@@ -107,6 +105,9 @@ export function useWalletProvider(
 
       case 'STELLAR': {
         const stellarXService = xService as StellarXService;
+        if (!stellarXService.walletsKit) {
+          return undefined;
+        }
 
         return new StellarWalletProvider({
           type: 'BROWSER_EXTENSION',

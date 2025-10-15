@@ -3,7 +3,7 @@ import React from 'react';
 
 import { Sodax, type SodaxConfig } from '@sodax/sdk';
 import { SodaxContext } from '@/contexts';
-import type { RpcConfig } from '@/types';
+import type { RpcConfig } from '@sodax/types';
 
 interface SodaxProviderProps {
   children: ReactNode;

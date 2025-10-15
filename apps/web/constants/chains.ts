@@ -69,7 +69,6 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/lightlink.png',
     icon16: '/chain/lightlink_16.png',
   },
-  // { id: NIBIRU_MAINNET_CHAIN_ID, name: 'Nibiru', icon: '/chain/nibiru.png' },
 ];
 
 /**
