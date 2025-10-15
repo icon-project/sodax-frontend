@@ -13,7 +13,7 @@ import type {
   HubAssetInfo,
   Result,
   PromiseTxReturnType,
-  HttpUrl,
+  HttpOrHttpsUrl,
 } from '../../types.js';
 import {
   getHubAssetInfo,
@@ -120,9 +120,9 @@ export type StakingError<T extends StakingErrorCode> = {
  */
 export class StakingService {
   private readonly hubProvider: EvmHubProvider;
-  private readonly relayerApiEndpoint: HttpUrl;
+  private readonly relayerApiEndpoint: HttpOrHttpsUrl;
 
-  constructor(hubProvider: EvmHubProvider, relayerApiEndpoint: HttpUrl) {
+  constructor(hubProvider: EvmHubProvider, relayerApiEndpoint: HttpOrHttpsUrl) {
     this.hubProvider = hubProvider;
     this.relayerApiEndpoint = relayerApiEndpoint;
   }

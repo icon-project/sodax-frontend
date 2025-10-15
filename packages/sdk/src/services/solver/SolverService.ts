@@ -33,7 +33,7 @@ import type {
   EvmContractCall,
   FeeAmount,
   GetSpokeDepositParamsType,
-  HttpUrl,
+  HttpOrHttpsUrl,
   SolverErrorResponse,
   SolverExecutionRequest,
   SolverExecutionResponse,
@@ -172,7 +172,7 @@ export class SolverService {
   public constructor(
     config: SolverConfigParams | undefined,
     hubProvider: EvmHubProvider,
-    relayerApiEndpoint?: HttpUrl,
+    relayerApiEndpoint?: HttpOrHttpsUrl,
   ) {
     if (!config) {
       // default to mainnet config
@@ -766,7 +766,12 @@ export class SolverService {
       }
 
       if (spokeProvider instanceof StellarSpokeProvider) {
-        const result = await StellarSpokeService.requestTrustline(params.inputToken, params.inputAmount, spokeProvider, raw);
+        const result = await StellarSpokeService.requestTrustline(
+          params.inputToken,
+          params.inputAmount,
+          spokeProvider,
+          raw,
+        );
         return {
           ok: true,
           value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,

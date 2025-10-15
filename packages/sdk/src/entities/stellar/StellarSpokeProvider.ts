@@ -15,7 +15,12 @@ import {
   type xdr,
   type Transaction,
 } from '@stellar/stellar-sdk';
-import type { HttpUrl, PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
+import type {
+  HttpOrHttpsUrl,
+  PromiseStellarTxReturnType,
+  StellarReturnType,
+  StellarSpokeChainConfig,
+} from '../../types.js';
 import { toHex, type Hex } from 'viem';
 import type { ISpokeProvider } from '../Providers.js';
 import type { IStellarWalletProvider } from '@sodax/types';
@@ -69,8 +74,8 @@ export class CustomStellarAccount {
 }
 
 export type StellarRpcConfig = {
-  horizonRpcUrl?: HttpUrl;
-  sorobanRpcUrl?: HttpUrl;
+  horizonRpcUrl?: HttpOrHttpsUrl;
+  sorobanRpcUrl?: HttpOrHttpsUrl;
 };
 
 export class StellarSpokeProvider implements ISpokeProvider {

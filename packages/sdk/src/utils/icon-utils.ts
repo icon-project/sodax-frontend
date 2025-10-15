@@ -1,7 +1,7 @@
-import type { HttpUrl, IconRawTransaction } from '../types.js';
+import type { HttpOrHttpsUrl, IconRawTransaction } from '../types.js';
 import { hexToBigInt } from './shared-utils.js';
 
-export async function estimateStepCost(rawTx: IconRawTransaction, debugRpcUrl: HttpUrl): Promise<bigint> {
+export async function estimateStepCost(rawTx: IconRawTransaction, debugRpcUrl: HttpOrHttpsUrl): Promise<bigint> {
   try {
     const tmpRawTx = { ...rawTx };
     delete tmpRawTx['stepLimit'];

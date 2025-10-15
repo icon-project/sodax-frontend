@@ -1,4 +1,4 @@
-import type { HttpUrl, Result } from '../../types.js';
+import type { HttpOrHttpsUrl, Result } from '../../types.js';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentError } from '../solver/SolverService.js';
@@ -112,7 +112,7 @@ export type WaitUntilIntentExecutedPayload = {
   intentRelayChainId: string;
   spokeTxHash: string;
   timeout: number;
-  apiUrl: HttpUrl;
+  apiUrl: HttpOrHttpsUrl;
 };
 
 /**
@@ -149,7 +149,7 @@ async function postRequest<T extends RelayAction>(
  */
 export async function submitTransaction(
   payload: IntentRelayRequest<'submit'>,
-  apiUrl: HttpUrl,
+  apiUrl: HttpOrHttpsUrl,
 ): Promise<GetRelayResponse<'submit'>> {
   invariant(payload.params.chain_id.length > 0, 'Invalid input parameters. source_chain_id empty');
   invariant(payload.params.tx_hash.length > 0, 'Invalid input parameters. tx_hash empty');
@@ -165,7 +165,7 @@ export async function submitTransaction(
  */
 export async function getTransactionPackets(
   payload: IntentRelayRequest<'get_transaction_packets'>,
-  apiUrl: HttpUrl,
+  apiUrl: HttpOrHttpsUrl,
 ): Promise<GetRelayResponse<'get_transaction_packets'>> {
   invariant(payload.params.chain_id.length > 0, 'Invalid input parameters. source_chain_id empty');
   invariant(payload.params.tx_hash.length > 0, 'Invalid input parameters. tx_hash empty');
@@ -181,7 +181,7 @@ export async function getTransactionPackets(
  */
 export async function getPacket(
   payload: IntentRelayRequest<'get_packet'>,
-  apiUrl: HttpUrl,
+  apiUrl: HttpOrHttpsUrl,
 ): Promise<GetRelayResponse<'get_packet'>> {
   invariant(payload.params.chain_id.length > 0, 'Invalid input parameters. source_chain_id empty');
   invariant(payload.params.tx_hash.length > 0, 'Invalid input parameters. tx_hash empty');
@@ -269,7 +269,7 @@ export async function relayTxAndWaitPacket<S extends SpokeProvider>(
   spokeTxHash: string,
   data: { address: Hex; payload: Hex } | undefined,
   spokeProvider: S,
-  relayerApiEndpoint: HttpUrl,
+  relayerApiEndpoint: HttpOrHttpsUrl,
   timeout = DEFAULT_RELAY_TX_TIMEOUT,
 ): Promise<Result<PacketData, RelayError>> {
   try {

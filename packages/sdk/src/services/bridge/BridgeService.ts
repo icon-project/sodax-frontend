@@ -26,7 +26,7 @@ import {
   encodeContractCalls,
   calculateFeeAmount,
   type PartnerFee,
-  type HttpUrl,
+  type HttpOrHttpsUrl,
   isValidVault,
   encodeAddress,
   type Prettify,
@@ -84,12 +84,12 @@ export type BridgeOptionalExtraData = { data?: BridgeExtraData };
  */
 export class BridgeService {
   public readonly hubProvider: EvmHubProvider;
-  public readonly relayerApiEndpoint: HttpUrl;
+  public readonly relayerApiEndpoint: HttpOrHttpsUrl;
   public readonly config: BridgeServiceConfig;
 
   constructor(
     hubProvider: EvmHubProvider,
-    relayerApiEndpoint: HttpUrl,
+    relayerApiEndpoint: HttpOrHttpsUrl,
     config: BridgeServiceConfig | undefined = undefined,
   ) {
     this.config = config ? config : { partnerFee: undefined };

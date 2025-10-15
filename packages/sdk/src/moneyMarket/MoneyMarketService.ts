@@ -29,7 +29,7 @@ import type {
   GetAddressType,
   GetEstimateGasReturnType,
   GetSpokeDepositParamsType,
-  HttpUrl,
+  HttpOrHttpsUrl,
   HubTxHash,
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,
@@ -196,7 +196,11 @@ export class MoneyMarketService {
   private readonly hubProvider: EvmHubProvider;
   public readonly data: MoneyMarketDataService;
 
-  constructor(config: MoneyMarketConfigParams | undefined, hubProvider: EvmHubProvider, relayerApiEndpoint?: HttpUrl) {
+  constructor(
+    config: MoneyMarketConfigParams | undefined,
+    hubProvider: EvmHubProvider,
+    relayerApiEndpoint?: HttpOrHttpsUrl,
+  ) {
     if (!config) {
       this.config = {
         ...getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID), // default to mainnet config

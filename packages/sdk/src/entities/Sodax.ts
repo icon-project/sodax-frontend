@@ -8,7 +8,7 @@ import {
 } from '../services/index.js';
 import { MoneyMarketService } from '../moneyMarket/MoneyMarketService.js';
 import type {
-  HttpUrl,
+  HttpOrHttpsUrl,
   SolverConfigParams,
   MoneyMarketConfigParams,
   MigrationServiceConfig,
@@ -23,7 +23,7 @@ export type SodaxConfig = {
   migration?: MigrationServiceConfig; // optional Migration service enabling ICX migration to SODA
   bridge?: BridgeServiceConfig; // optional Bridge service enabling cross-chain transfers
   hubProviderConfig?: EvmHubProviderConfig; // hub provider for the hub chain (e.g. Sonic mainnet)
-  relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
+  relayerApiEndpoint?: HttpOrHttpsUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
   backendApiConfig?: BackendApiConfig; // backend API config used to interact with the backend API
 };
 
@@ -43,7 +43,7 @@ export class Sodax {
   public readonly staking: StakingService; // Staking service enabling SODA staking operations
 
   public readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
-  public readonly relayerApiEndpoint: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
+  public readonly relayerApiEndpoint: HttpOrHttpsUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
 
   constructor(config?: SodaxConfig) {
     this.config = config;
