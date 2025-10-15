@@ -10,7 +10,6 @@ import {
   spokeChainConfig,
   isLegacybnUSDToken,
   isNewbnUSDToken,
-  getAllLegacybnUSDTokens,
   type LegacybnUSDChainId,
   type NewbnUSDChainId,
   HYPEREVM_MAINNET_CHAIN_ID,
@@ -19,6 +18,7 @@ import {
 } from '@sodax/sdk';
 import { availableChains } from '@/constants/chains';
 import { Separator } from '@/components/ui/separator';
+import { useMemo } from 'react';
 
 interface BnUSDChainSelectorProps {
   isOpen: boolean;
@@ -27,9 +27,6 @@ interface BnUSDChainSelectorProps {
   currency: XToken;
   type: string;
 }
-
-const bnUSDLegacySpokeChainIds2 = bnUSDLegacySpokeChainIds.filter(chainId => chainId !== STELLAR_MAINNET_CHAIN_ID);
-const newbnUSDSpokeChainIds2 = newbnUSDSpokeChainIds.filter(chainId => chainId !== STELLAR_MAINNET_CHAIN_ID);
 
 const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
   isOpen,
@@ -47,14 +44,11 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
     onClose();
   };
 
-  // Determine if this is legacy or new bnUSD
-  const isLegacy = isLegacybnUSDToken(currency);
-  const isNew = isNewbnUSDToken(currency);
-
-  // Get available chains and tokens based on currency type
-  const getAvailableChainsAndTokens = (): { chainId: SpokeChainId; token: XToken; chainName: string }[] => {
-    if (isLegacy) {
-      // For legacy bnUSD, show all legacy chains
+  const availableChainsAndTokens = useMemo(() => {
+    if (isLegacybnUSDToken(currency)) {
+      const bnUSDLegacySpokeChainIds2 = bnUSDLegacySpokeChainIds.filter(
+        chainId => chainId !== STELLAR_MAINNET_CHAIN_ID && availableChains.find(chain => chain.id === chainId),
+      );
       return bnUSDLegacySpokeChainIds2.map(chainId => {
         const config = spokeChainConfig[chainId as LegacybnUSDChainId];
         const token = config.supportedTokens.legacybnUSD || config.supportedTokens.bnUSD;
@@ -65,8 +59,10 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
         };
       });
     }
-    if (isNew) {
-      // For new bnUSD, show all new bnUSD chains except Nibiru
+    if (isNewbnUSDToken(currency)) {
+      const newbnUSDSpokeChainIds2 = newbnUSDSpokeChainIds.filter(
+        chainId => chainId !== STELLAR_MAINNET_CHAIN_ID && availableChains.find(chain => chain.id === chainId),
+      );
       return newbnUSDSpokeChainIds2
         .filter(chainId => chainId !== NIBIRU_MAINNET_CHAIN_ID && chainId !== HYPEREVM_MAINNET_CHAIN_ID)
         .map(chainId => {
@@ -80,9 +76,7 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
         });
     }
     return [];
-  };
-
-  const availableChainsAndTokens = getAvailableChainsAndTokens();
+  }, [currency]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -124,7 +118,7 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
                 </div>
                 <div className="flex justify-start items-center gap-1">
                   <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
-                    {chainName}
+                    {chainInfo?.name || chainName}
                   </div>
                 </div>
               </div>
