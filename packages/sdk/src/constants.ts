@@ -44,6 +44,7 @@ import {
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
 } from '@sodax/types';
+import type { PoolKey } from '@pancakeswap/infinity-sdk';
 
 export const DEFAULT_MAX_RETRY = 3;
 export const DEFAULT_RELAY_TX_TIMEOUT = 120000; // 120 seconds
@@ -2496,6 +2497,118 @@ export const migrationConfig = {
     },
   },
 } as const;
+
+export const dexPools = {
+  AETH_BNUSD: {
+    currency0: '0x3E102c7D9b46c92aBcd4c2e1C70f362B47a201A6', // AsodaETH
+    currency1: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // bnuSD
+    hooks: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229', // defaultHook
+    poolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43', // clPoolManager
+    fee: 8388608, // DYNAMIC_FEE
+    parameters: {
+      tickSpacing: 10,
+      hooksRegistration: {
+        beforeInitialize: true,
+        afterInitialize: true,
+        beforeAddLiquidity: true,
+        afterAddLiquidity: true,
+        beforeRemoveLiquidity: true,
+        afterRemoveLiquidity: true,
+        beforeSwap: true,
+        afterSwap: true,
+        beforeDonate: true,
+        afterDonate: true,
+        beforeSwapReturnsDelta: true,
+        afterSwapReturnsDelta: true,
+        afterMintReturnsDelta: true,
+        afterBurnReturnsDelta: true,
+      },
+    },
+  },
+
+  BTC_BNUSD: {
+    currency0: '0x8aDe79C255761971f4057253712b916AB2494275', // sodaBTC
+    currency1: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // bnUSD
+    hooks: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229', // defaultHook
+    poolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43', // clPoolManager
+    fee: 8388608, // DYNAMIC_FEE
+    parameters: {
+      tickSpacing: 10,
+      hooksRegistration: {
+        beforeInitialize: true,
+        afterInitialize: true,
+        beforeAddLiquidity: true,
+        afterAddLiquidity: true,
+        beforeRemoveLiquidity: true,
+        afterRemoveLiquidity: true,
+        beforeSwap: true,
+        afterSwap: true,
+        beforeDonate: true,
+        afterDonate: true,
+        beforeSwapReturnsDelta: true,
+        afterSwapReturnsDelta: true,
+        afterMintReturnsDelta: true,
+        afterBurnReturnsDelta: true,
+      },
+    },
+  },
+
+  // SODA/ETH pool
+  ASODA_BNUSD: {
+    currency0: '0xac8540fee419c7ceb985889EaBa1e84B42a53e8a', // sodaSODA
+    currency1: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // sodaETH
+    hooks: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229', // defaultHook
+    poolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43', // clPoolManager
+    fee: 8388608, // DYNAMIC_FEE
+    parameters: {
+      tickSpacing: 10,
+      hooksRegistration: {
+        beforeInitialize: true,
+        afterInitialize: true,
+        beforeAddLiquidity: true,
+        afterAddLiquidity: true,
+        beforeRemoveLiquidity: true,
+        afterRemoveLiquidity: true,
+        beforeSwap: true,
+        afterSwap: true,
+        beforeDonate: true,
+        afterDonate: true,
+        beforeSwapReturnsDelta: true,
+        afterSwapReturnsDelta: true,
+        afterMintReturnsDelta: true,
+        afterBurnReturnsDelta: true,
+      },
+    },
+  },
+
+  // SODA/USDC pool
+  ASODA_XSODA: {
+    currency0: '0xac8540fee419c7ceb985889EaBa1e84B42a53e8a', // sodaSODA
+    currency1: '0xADC6561Cc8FC31767B4917CCc97F510D411378d9', // xSODA
+    hooks: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229', // defaultHook
+    poolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43', // clPoolManager
+    fee: 8388608, // DYNAMIC_FEE
+    parameters: {
+      tickSpacing: 10,
+      hooksRegistration: {
+        beforeInitialize: true,
+        afterInitialize: true,
+        beforeAddLiquidity: true,
+        afterAddLiquidity: true,
+        beforeRemoveLiquidity: true,
+        afterRemoveLiquidity: true,
+        beforeSwap: true,
+        afterSwap: true,
+        beforeDonate: true,
+        afterDonate: true,
+        beforeSwapReturnsDelta: true,
+        afterSwapReturnsDelta: true,
+        afterMintReturnsDelta: true,
+        afterBurnReturnsDelta: true,
+      },
+    },
+  },
+} as const satisfies Record<string, PoolKey>;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
   moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());

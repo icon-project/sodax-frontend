@@ -22,7 +22,13 @@ import {
   getConcentratedLiquidityConfig,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
-import { SONIC_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  AVALANCHE_MAINNET_CHAIN_ID,
+  ARBITRUM_MAINNET_CHAIN_ID,
+  type HubChainId,
+  type SpokeChainId,
+} from '@sodax/types';
 import { solverConfig } from './config.js';
 
 // load PK from .env
