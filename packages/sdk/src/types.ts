@@ -41,7 +41,6 @@ import type {
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
-export type HttpOrHttpsUrl = `http://${string}` | `https://${string}`;
 export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
 export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
 export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
@@ -109,7 +108,7 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
 };
 
 export type RelayerApiConfig = {
-  relayerApiEndpoint: HttpOrHttpsUrl;
+  relayerApiEndpoint: HttpUrl;
 };
 
 export type MoneyMarketConfig = {
@@ -125,7 +124,7 @@ export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & Rel
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
 export type BackendApiConfig = {
-  baseURL?: HttpOrHttpsUrl;
+  baseURL?: HttpUrl;
   timeout?: number;
   headers?: Record<string, string>;
 };
@@ -198,8 +197,8 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
     rateLimit: string;
     testToken: string;
   };
-  horizonRpcUrl: HttpOrHttpsUrl;
-  sorobanRpcUrl: HttpOrHttpsUrl;
+  horizonRpcUrl: HttpUrl;
+  sorobanRpcUrl: HttpUrl;
   trustlineConfigs: StellarAssetTrustline[];
 };
 
@@ -386,7 +385,7 @@ export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
-  solverApiEndpoint: HttpOrHttpsUrl;
+  solverApiEndpoint: HttpUrl;
 };
 
 export type SolverConfigParams =

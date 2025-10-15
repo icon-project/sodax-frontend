@@ -12,7 +12,7 @@ import {
   Sodax,
   type SodaxConfig,
   EvmHubProvider,
-  type HttpOrHttpsUrl,
+  type HttpUrl,
   type UnifiedBnUSDMigrateParams,
   encodeAddress,
   MoneyMarketService,
@@ -34,8 +34,8 @@ const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY ?? '';
 if (!STELLAR_PRIVATE_KEY) {
   throw new Error('PRIVATE_KEY environment variable is required');
 }
-const STELLAR_SOROBAN_RPC_URL = (process.env.STELLAR_SOROBAN_RPC_URL ?? stellarConfig.sorobanRpcUrl) as HttpOrHttpsUrl;
-const STELLAR_HORIZON_RPC_URL = (process.env.STELLAR_HORIZON_RPC_URL ?? stellarConfig.horizonRpcUrl) as HttpOrHttpsUrl;
+const STELLAR_SOROBAN_RPC_URL = (process.env.STELLAR_SOROBAN_RPC_URL ?? stellarConfig.sorobanRpcUrl) as HttpUrl;
+const STELLAR_HORIZON_RPC_URL = (process.env.STELLAR_HORIZON_RPC_URL ?? stellarConfig.horizonRpcUrl) as HttpUrl;
 
 // Create Stellar wallet config
 const stellarWalletConfig: StellarWalletConfig = {

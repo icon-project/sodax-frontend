@@ -1,6 +1,6 @@
 // packages/dapp-kit/src/hooks/staking/useStakeApprove.ts
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { StakeParams, StakingError, StakingErrorCode, TxReturnType, UnstakeParams } from '@sodax/sdk';
+import type { TxReturnType, UnstakeParams } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { SpokeProvider } from '@sodax/sdk';
 

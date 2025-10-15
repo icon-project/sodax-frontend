@@ -199,7 +199,7 @@ export class MoneyMarketService {
   constructor(
     config: MoneyMarketConfigParams | undefined,
     hubProvider: EvmHubProvider,
-    relayerApiEndpoint?: HttpOrHttpsUrl,
+    relayerApiEndpoint?: HttpUrl,
   ) {
     if (!config) {
       this.config = {

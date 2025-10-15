@@ -13,7 +13,6 @@ import type {
   HubAssetInfo,
   Result,
   PromiseTxReturnType,
-  HttpOrHttpsUrl,
 } from '../../types.js';
 import {
   getHubAssetInfo,
@@ -38,6 +37,7 @@ import {
   type RelayError,
 } from '../../index.js';
 import { DEFAULT_RELAY_TX_TIMEOUT, getHubChainConfig, getIntentRelayChainId } from '../../constants.js';
+import type {HttpUrl} from "@sodax/types";
 
 export type StakeParams = {
   amount: bigint; // amount to stake
@@ -120,9 +120,9 @@ export type StakingError<T extends StakingErrorCode> = {
  */
 export class StakingService {
   private readonly hubProvider: EvmHubProvider;
-  private readonly relayerApiEndpoint: HttpOrHttpsUrl;
+  private readonly relayerApiEndpoint: HttpUrl;
 
-  constructor(hubProvider: EvmHubProvider, relayerApiEndpoint: HttpOrHttpsUrl) {
+  constructor(hubProvider: EvmHubProvider, relayerApiEndpoint: HttpUrl) {
     this.hubProvider = hubProvider;
     this.relayerApiEndpoint = relayerApiEndpoint;
   }

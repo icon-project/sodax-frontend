@@ -1,6 +1,6 @@
 // packages/dapp-kit/src/hooks/staking/useUnstakingInfoWithPenalty.ts
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { UnstakingInfo, UnstakeRequestWithPenalty, Address, SpokeProvider } from '@sodax/sdk';
+import type { UnstakingInfo, UnstakeRequestWithPenalty, SpokeProvider } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
 export type UnstakingInfoWithPenalty = UnstakingInfo & {
