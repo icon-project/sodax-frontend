@@ -1,4 +1,5 @@
 import { type Hex, encodeFunctionData, isAddress } from 'viem';
+import type { HttpUrl } from '@sodax/types';
 import { poolAbi } from '../abis/pool.abi.js';
 import type { EvmHubProvider, SpokeProvider } from '../entities/index.js';
 import {
@@ -29,7 +30,6 @@ import type {
   GetAddressType,
   GetEstimateGasReturnType,
   GetSpokeDepositParamsType,
-  HttpOrHttpsUrl,
   HubTxHash,
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,

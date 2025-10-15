@@ -1,8 +1,7 @@
 'use client';
 
 // biome-ignore lint/style/useImportType: <explanation>
-import React from 'react';
-import { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 // sui
 import { SuiClientProvider, WalletProvider as SuiWalletProvider } from '@mysten/dapp-kit';
@@ -16,35 +15,26 @@ import {
   ConnectionProvider as SolanaConnectionProvider,
   WalletProvider as SolanaWalletProvider,
 } from '@solana/wallet-adapter-react';
-import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
-import type { XConfig } from './types';
-import { initXWagmiStore, InitXWagmiStore } from './useXWagmiStore';
+import type { RpcConfig } from '@sodax/types';
+import { Hydrate } from './Hydrate';
 
-import { getWagmiConfig } from './xchains/evm/EvmXService';
+import { createWagmiConfig } from './xchains/evm/EvmXService';
+import { reconnectIcon } from './xchains/icon/actions';
+import { reconnectInjective } from './xchains/injective/actions';
+import { reconnectStellar } from './xchains/stellar/actions';
 
-export const SodaxWalletProvider = ({ children, config }: { children: React.ReactNode; config: XConfig }) => {
-  useEffect(() => {
-    initXWagmiStore(config);
-  }, [config]);
-
-  const {
-    EVM: { chains },
-    SOLANA: { endpoint },
-  } = config;
-
-  const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
-
+export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
   const wagmiConfig = useMemo(() => {
-    return getWagmiConfig(chains);
-  }, [chains]);
+    return createWagmiConfig(rpcConfig);
+  }, [rpcConfig]);
 
   return (
-    <WagmiProvider config={wagmiConfig}>
+    <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
       <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
         <SuiWalletProvider autoConnect={true}>
-          <SolanaConnectionProvider endpoint={endpoint}>
-            <SolanaWalletProvider wallets={wallets} autoConnect>
-              <InitXWagmiStore />
+          <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? ''}>
+            <SolanaWalletProvider wallets={[]} autoConnect>
+              <Hydrate />
               {children}
             </SolanaWalletProvider>
           </SolanaConnectionProvider>
@@ -53,3 +43,7 @@ export const SodaxWalletProvider = ({ children, config }: { children: React.Reac
     </WagmiProvider>
   );
 };
+
+reconnectIcon();
+reconnectInjective();
+reconnectStellar();

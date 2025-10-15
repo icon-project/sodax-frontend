@@ -29,11 +29,11 @@ import {
   submitTransaction,
   waitUntilIntentExecuted,
 } from '../../index.js';
+import type { HttpUrl } from '@sodax/types';
 import type {
   EvmContractCall,
   FeeAmount,
   GetSpokeDepositParamsType,
-  HttpOrHttpsUrl,
   SolverErrorResponse,
   SolverExecutionRequest,
   SolverExecutionResponse,
@@ -172,7 +172,7 @@ export class SolverService {
   public constructor(
     config: SolverConfigParams | undefined,
     hubProvider: EvmHubProvider,
-    relayerApiEndpoint?: HttpOrHttpsUrl,
+    relayerApiEndpoint?: HttpUrl,
   ) {
     if (!config) {
       // default to mainnet config

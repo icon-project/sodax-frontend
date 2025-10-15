@@ -37,6 +37,7 @@ import type {
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
   XToken,
+  HttpUrl,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
