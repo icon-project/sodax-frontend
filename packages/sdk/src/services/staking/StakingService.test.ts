@@ -2,15 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   BSC_MAINNET_CHAIN_ID,
   Erc20Service,
-  EvmHubProvider,
   EvmSpokeProvider,
-  getHubChainConfig,
   Sodax,
   SONIC_MAINNET_CHAIN_ID,
   SonicSpokeProvider,
   SonicSpokeService,
   spokeChainConfig,
-  type EvmHubProviderConfig,
   type Hash,
   type IEvmWalletProvider,
   type InstantUnstakeParams,
@@ -21,11 +18,6 @@ import {
 
 describe('StakingService', () => {
   const sodax = new Sodax();
-
-  const mockHubConfig = {
-    hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
-  } satisfies EvmHubProviderConfig;
 
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
