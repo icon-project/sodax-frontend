@@ -519,6 +519,10 @@ export default function SwapPage() {
       return 'Enter amount';
     }
 
+    if (quoteQuery.data?.ok === false) {
+      return 'Quote unavailable';
+    }
+
     if (isSwapAndSend && customDestinationAddress === '') {
       return 'Enter destination address';
     }
@@ -529,10 +533,6 @@ export default function SwapPage() {
 
     if (quoteQuery.isLoading) {
       return 'Getting quote';
-    }
-
-    if (quoteQuery.data?.ok === false) {
-      return 'Quote unavailable';
     }
 
     if (
@@ -627,13 +627,20 @@ export default function SwapPage() {
             variant="cherry"
             className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
             onClick={handleOpenWalletModal}
+            disabled={quoteQuery.data?.ok === false}
           >
-            Connect{' '}
-            {!isSourceChainConnected
-              ? chainIdToChainName(sourceToken.xChainId)
-              : !isSwapAndSend
-                ? chainIdToChainName(destinationToken.xChainId)
-                : ''}
+            {quoteQuery.data?.ok === false ? (
+              'Quote unavailable'
+            ) : (
+              <>
+                Connect{' '}
+                {!isSourceChainConnected
+                  ? chainIdToChainName(sourceToken.xChainId)
+                  : !isSwapAndSend
+                    ? chainIdToChainName(destinationToken.xChainId)
+                    : ''}
+              </>
+            )}
           </Button>
         )}
       </div>

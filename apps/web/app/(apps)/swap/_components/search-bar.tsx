@@ -1,9 +1,10 @@
 import type React from 'react';
 import Image from 'next/image';
-import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid, XIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface SearchBarProps {
   isUsdtClicked: boolean;
@@ -62,7 +63,19 @@ export function SearchBar({
               onClick={handleChainSelectorClick}
             >
               {selectedChainId ? (
-                <div className="w-8 h-8 flex justify-center items-center">
+                <div className="w-8 h-8 flex justify-center items-center relative">
+                  {!isChainSelectorOpen && (
+                    <Button
+                      className="w-4 h-4 bg-white rounded-[256px] absolute !p-0 -left-2 top-2 z-52"
+                      variant="cream"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleChainSelect('');
+                      }}
+                    >
+                      <XIcon className="w-2 h-2 text-negative" />
+                    </Button>
+                  )}
                   <Image
                     src={getChainIcon(selectedChainId) || '/chain/0x2105.base.png'}
                     alt="Selected Chain"
@@ -93,13 +106,13 @@ export function SearchBar({
             </div>
 
             {isChainSelectorOpen && (
-              <div className="fixed inset-0 flex items-center justify-center z-50 pt-28">
+              <div className="fixed inset-0 flex items-center justify-center z-50 mt-36">
                 <div className="absolute inset-0 bg-transparent" onClick={handleChainSelectorClick} />
                 <div className="relative bg-transparent border-none w-64">
-                  <div className="grid grid-cols-2 gap-4 overflow-hidden pl-2 py-1">
+                  <div className="grid grid-cols-2 overflow-hidden pl-2 py-1">
                     {/* All Networks Option */}
                     <div
-                      className={`w-34 group inline-flex justify-start items-center gap-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
+                      className={`w-34 group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
                       onClick={handleShowAllChains}
                       onMouseEnter={() => setHoveredChain('all')}
                       onMouseLeave={() => setHoveredChain(null)}
@@ -132,7 +145,7 @@ export function SearchBar({
                     {availableChains.map(chain => (
                       <div
                         key={chain.id}
-                        className={`w-34 group inline-flex justify-start items-center gap-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
+                        className={`w-34 group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
                         onClick={() => handleChainSelect(chain.id)}
                         onMouseEnter={() => setHoveredChain(chain.id)}
                         onMouseLeave={() => setHoveredChain(null)}

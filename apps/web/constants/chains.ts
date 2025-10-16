@@ -40,7 +40,7 @@ export const availableChains: ChainUI[] = [
     icon16: '/chain/0xa4b1.arbitrum_16.png',
   },
   { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png', icon16: '/chain/0x2105.base_16.png' },
-  { id: BSC_MAINNET_CHAIN_ID, name: 'BSC', icon: '/chain/0x38.bsc.png', icon16: '/chain/0x38.bsc_16.png' },
+  { id: BSC_MAINNET_CHAIN_ID, name: 'BNB', icon: '/chain/0x38.bsc.png', icon16: '/chain/0x38.bsc_16.png' },
   {
     id: INJECTIVE_MAINNET_CHAIN_ID,
     name: 'Injective',

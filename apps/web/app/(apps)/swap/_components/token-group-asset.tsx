@@ -285,7 +285,7 @@ export function TokenGroupAsset({
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
         ref={assetRef}
-        className={`px-2 flex flex-col gap-2 items-center justify-start relative shrink-0 cursor-pointer transition-all duration-200 ${
+        className={`px-2 flex flex-col gap-2 items-center justify-start relative shrink-0 cursor-pointer transition-all duration-200 pb-3 ${
           isBlurred ? 'blur filter opacity-30' : ''
         }`}
         data-name="Asset"
