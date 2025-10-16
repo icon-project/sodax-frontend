@@ -2347,23 +2347,20 @@ const moneyMarketConfig = {
 export const getMoneyMarketConfig = (chainId: HubChainId): MoneyMarketConfig => moneyMarketConfig[chainId];
 
 const concentratedLiquidityConfig = {
-  [SONIC_MAINNET_CHAIN_ID]: {
-    permit2: '0x000000000022D473030F116dDEE9F6B43aC78BA3',
-    clPoolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43',
-    router: '0x5bFB058c65E4c1DEC1cFF0Ff2cBd8522b4c3feBB',
-    clPositionManager: '0xcc08a04d9E5766c7A20FE6bb32cAa40EA0e7e9e1',
-    clPositionDescriptor: '0x83Ff9FC474DBe927BA5BB822571e0814122655bB',
-    clQuoter: '0x5f46CB668D39496b41CE8E19D6A7fE893826E363',
-    clTickLens: '0xb3e77dD9b1f206A2b797B3fE900b50cC92A38d26',
-    defaultHook: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229',
-    stataTokenFactory: '0x9120956787FcE7D7082C52CDCAafb7F4B88272d4',
-    defaultTickSpacing: 10,
-    defaultBitmap: 16383n,
-  } satisfies ConcentratedLiquidityConfig,
-} as const;
+  permit2: '0x000000000022D473030F116dDEE9F6B43aC78BA3',
+  clPoolManager: '0xA3256ab552A271A16AcDfdB521B32ef82d481F43',
+  router: '0x5bFB058c65E4c1DEC1cFF0Ff2cBd8522b4c3feBB',
+  clPositionManager: '0xcc08a04d9E5766c7A20FE6bb32cAa40EA0e7e9e1',
+  clPositionDescriptor: '0x83Ff9FC474DBe927BA5BB822571e0814122655bB',
+  clQuoter: '0x5f46CB668D39496b41CE8E19D6A7fE893826E363',
+  clTickLens: '0xb3e77dD9b1f206A2b797B3fE900b50cC92A38d26',
+  defaultHook: '0x598448d8f8553b9c6f27E52a92E2cCf27cDEF229',
+  stataTokenFactory: '0x9120956787FcE7D7082C52CDCAafb7F4B88272d4',
+  defaultTickSpacing: 10,
+  defaultBitmap: 16383n,
+} as const satisfies ConcentratedLiquidityConfig;
 
-export const getConcentratedLiquidityConfig = (chainId: HubChainId): ConcentratedLiquidityConfig =>
-  concentratedLiquidityConfig[chainId];
+export const getConcentratedLiquidityConfig = (): ConcentratedLiquidityConfig => concentratedLiquidityConfig;
 
 // currently supported spoke chain tokens for money market
 export const moneyMarketSupportedTokens = {
@@ -2609,6 +2606,28 @@ export const dexPools = {
     },
   },
 } as const satisfies Record<string, PoolKey>;
+
+export const StatATokenAddresses = {
+  '0xac8540fee419c7ceb985889eaba1e84b42a53e8a': '0x21685E341DE7844135329914Be6Bd8D16982d834',
+  '0x8ade79c255761971f4057253712b916ab2494275': '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
+  '0x3e102c7d9b46c92abcd4c2e1c70f362b47a201a6': '0x4effB5813271699683C25c734F4daBc45B363709',
+} as const satisfies Record<Address, Address>;
+
+export const getOriginalAssetAddressFromStakedATokenAddress = (
+  chainId: SpokeChainId,
+  address: Address,
+): OriginalAssetAddress => {
+  const normalizedAddress = address.toLowerCase() as keyof typeof StatATokenAddresses;
+  const sodaToken = StatATokenAddresses[normalizedAddress] ?? address;
+  console.log('chainId', chainId);
+  console.log('sodaToken', sodaToken);
+  const originalAssetAddresses = getOriginalAssetInfoFromVault(chainId, sodaToken);
+  console.log('originalAssetAddresses', originalAssetAddresses);
+  if (!originalAssetAddresses.length) {
+    throw new Error('[getOriginalAssetAddressFromStakedATokenAddress] Original asset address not found');
+  }
+  return originalAssetAddresses[0] as OriginalAssetAddress;
+};
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
   moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());

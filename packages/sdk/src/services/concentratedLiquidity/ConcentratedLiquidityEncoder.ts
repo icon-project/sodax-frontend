@@ -39,7 +39,7 @@ export class ConcentratedLiquidityEncoder {
    * });
    * ```
    */
-  public static encodeSupplyLiquidity(
+  public encodeSupplyLiquidity(
     poolKey: PoolKey,
     tickLower: bigint,
     tickUpper: bigint,
