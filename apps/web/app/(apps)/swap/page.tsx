@@ -374,6 +374,12 @@ export default function SwapPage() {
     }
   }, [sourceProvider]);
 
+  useEffect(() => {
+    if (intentOrderPayload != null) {
+      setIsSwapConfirmOpen(true);
+    }
+  }, [intentOrderPayload]);
+
   const handleClickReview = async (): Promise<void> => {
     if (isWrongChain) {
       setSwitchChainLoading(true);
@@ -384,7 +390,6 @@ export default function SwapPage() {
     setFixedDestinationAmount(calculatedDestinationAmount);
     setFixedMinOutputAmount(minOutputAmount);
     createIntentOrderPayload();
-    setIsSwapConfirmOpen(true);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
