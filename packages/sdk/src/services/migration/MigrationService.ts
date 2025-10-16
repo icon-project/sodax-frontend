@@ -449,6 +449,22 @@ export class MigrationService {
 
       const [spokeTxHash, extraData] = intentResult.value;
 
+      // verify the spoke tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(spokeTxHash, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_MIGRATION_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: verifyTxHashResult.error,
+            },
+          },
+        };
+      }
+
       const packetResult = await relayTxAndWaitPacket(
         spokeTxHash,
         spokeProvider instanceof SolanaSpokeProvider ? extraData : undefined,

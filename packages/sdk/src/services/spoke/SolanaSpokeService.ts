@@ -17,11 +17,12 @@ import { convertTransactionInstructionToRaw, isNative } from '../../entities/sol
 import type {
   DepositSimulationParams,
   PromiseSolanaTxReturnType,
+  Result,
   SolanaGasEstimate,
   SolanaRawTransaction,
   SolanaReturnType,
 } from '../../types.js';
-import type { HubAddress, SolanaBase58PublicKey } from '@sodax/types';
+import type { Commitment, HubAddress, SolanaBase58PublicKey } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import BN from 'bn.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
@@ -325,5 +326,34 @@ export class SolanaSpokeService {
       } satisfies SolanaReturnType<true> as SolanaReturnType<R>;
     }
     return spokeProvider.walletProvider.sendTransaction(serializedTransaction) as PromiseSolanaTxReturnType<R>;
+  }
+
+  public static async waitForConfirmation(
+    spokeProvider: SolanaSpokeProvider,
+    signature: string,
+    commitment: Commitment = 'finalized',
+  ): Promise<Result<boolean>> {
+    const connection = new Connection(spokeProvider.chainConfig.rpcUrl, 'confirmed');
+    const latestBlockhash = await connection.getLatestBlockhash();
+    const response = await connection.confirmTransaction(
+      {
+        signature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      },
+      commitment,
+    );
+
+    if (response.value.err) {
+      return {
+        ok: false,
+        error: new Error(JSON.stringify(response.value.err)),
+      };
+    }
+
+    return {
+      ok: true,
+      value: true,
+    };
   }
 }

@@ -37,7 +37,7 @@ import {
   type RelayError,
 } from '../../index.js';
 import { DEFAULT_RELAY_TX_TIMEOUT, getHubChainConfig, getIntentRelayChainId } from '../../constants.js';
-import type {HttpUrl} from "@sodax/types";
+import type { HttpUrl } from '@sodax/types';
 
 export type StakeParams = {
   amount: bigint; // amount to stake
@@ -346,6 +346,19 @@ export class StakingService {
           error: {
             code: 'STAKE_FAILED',
             error: txResult.error,
+          },
+        };
+      }
+
+      // verify the spoke tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'STAKE_FAILED',
+            error: verifyTxHashResult.error,
           },
         };
       }
