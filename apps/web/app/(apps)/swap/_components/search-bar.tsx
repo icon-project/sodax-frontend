@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { CloseIcon1 } from '@/components/icons/close-icon1';
 
 interface SearchBarProps {
   isUsdtClicked: boolean;
@@ -73,10 +74,10 @@ export function SearchBar({
                         handleChainSelect('');
                       }}
                     >
-                      <XIcon className="w-2 h-2 text-negative" />
+                      <CloseIcon1 className="text-negative" />
                     </Button>
                   )}
-                  <Image
+                  <img
                     src={getChainIcon(selectedChainId) || '/chain/0x2105.base.png'}
                     alt="Selected Chain"
                     width={24}
@@ -86,16 +87,10 @@ export function SearchBar({
                 </div>
               ) : (
                 <div className="w-6 h-6 grid grid-cols-2 gap-1 p-[2px]">
-                  <Image src="/chain/0x2105.base.png" alt="Base" width={8} height={8} className="rounded-[2px]" />
-                  <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" />
-                  <Image
-                    src="/chain/0xa4b1.arbitrum.png"
-                    alt="Arbitrum"
-                    width={8}
-                    height={8}
-                    className="rounded-[2px]"
-                  />
-                  <Image src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" />
+                  <img src="/chain/0x2105.base.png" alt="Base" width={8} height={8} className="rounded-[2px]" />
+                  <img src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" />
+                  <img src="/chain/0xa4b1.arbitrum.png" alt="Arbitrum" width={8} height={8} className="rounded-[2px]" />
+                  <img src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" />
                 </div>
               )}
               {isChainSelectorOpen ? (
@@ -119,22 +114,16 @@ export function SearchBar({
                     >
                       <div className="w-6 h-6  ring-4 ring-white rounded-[6px] shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden">
                         <>
-                          <Image
-                            src="/chain/0x2105.base.png"
-                            alt="Base"
-                            width={8}
-                            height={8}
-                            className="rounded-[2px]"
-                          />
-                          <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" />
-                          <Image
+                          <img src="/chain/0x2105.base.png" alt="Base" width={8} height={8} className="rounded-[2px]" />
+                          <img src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" />
+                          <img
                             src="/chain/0xa4b1.arbitrum.png"
                             alt="Arbitrum"
                             width={8}
                             height={8}
                             className="rounded-[2px]"
                           />
-                          <Image src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" />
+                          <img src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" />
                         </>
                       </div>
                       <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
@@ -150,7 +139,7 @@ export function SearchBar({
                         onMouseEnter={() => setHoveredChain(chain.id)}
                         onMouseLeave={() => setHoveredChain(null)}
                       >
-                        <Image
+                        <img
                           src={chain.icon}
                           alt={chain.name}
                           width={24}

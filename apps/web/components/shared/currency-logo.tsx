@@ -16,7 +16,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency, i
         data-property-1="Default"
         className="left-[12px] top-[12px] absolute bg-White rounded-[256px] inline-flex flex-col justify-start items-start overflow-hidden"
       >
-        <Image
+        <img
           className="w-6 h-6 rounded-[256px]"
           src={`/coin/${currency.symbol === 'bnUSD (legacy)' ? 'bnusd' : currency.symbol.toLowerCase()}.png`}
           alt={currency.symbol}
@@ -28,7 +28,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency, i
         data-property-1="Active"
         className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden relative"
       >
-        <Image
+        <img
           className="w-4 h-4"
           src={`/chain/${currency.xChainId}.png`}
           alt={currency.xChainId}

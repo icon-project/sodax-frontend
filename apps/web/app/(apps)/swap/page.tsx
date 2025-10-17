@@ -675,7 +675,6 @@ export default function SwapPage() {
         finalDestinationAddress={
           isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || ''
         }
-        sourceAmount={sourceAmount}
         destinationAmount={
           isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : calculatedDestinationAmount
         }

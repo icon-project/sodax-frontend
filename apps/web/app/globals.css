@@ -399,7 +399,7 @@ input[type="number"] {
 
 input[readonly],
 textarea[readonly] {
-  cursor: pointer;
+  cursor: default;
 }
 
 [role="dialog"] {

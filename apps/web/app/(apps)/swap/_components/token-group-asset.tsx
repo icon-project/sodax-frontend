@@ -28,14 +28,14 @@ function NetworkIcon({
 
   return (
     <div
-      className={`relative rounded shrink-0 transition-all duration-200 cursor-pointer ring ring-2 ring-white rounded-[4px] shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.2)] ${
+      className={`relative rounded shrink-0 transition-all duration-200 cursor-pointer ring ring-2 ring-white rounded-[4px] shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ${
         shouldDim ? 'opacity-60 grayscale-[0.5]' : 'opacity-100 grayscale-0'
       }`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      <Image src={imageSrc} alt="Network Icon" width={16} height={16} className="rounded-[4px]" />
+      <img src={imageSrc} alt="Network Icon" width={16} height={16} className="rounded-[4px]" />
     </div>
   );
 }
@@ -199,7 +199,7 @@ function CurrencyGroupLogo({
       <div className={`w-12 h-12 relative justify-center flex ${isHoverDimmed ? 'opacity-50' : ''}`}>
         <div className="w-12 h-12 bg-gradient-to-br from-white to-zinc-100 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.20)]" />
         <div className="left-[12px] top-[12px] absolute bg-white rounded-[256px] inline-flex flex-col justify-start items-start overflow-hidden">
-          <Image
+          <img
             className="w-6 h-6 rounded-[256px]"
             src={`/coin/${symbol.toLowerCase()}.png`}
             alt={symbol}
