@@ -5,6 +5,7 @@ import {
   PublicKey,
   SystemProgram,
   VersionedTransaction,
+  type Finality,
   type TransactionInstruction,
 } from '@solana/web3.js';
 import { keccak256, type Address, type Hex } from 'viem';
@@ -22,7 +23,7 @@ import type {
   SolanaRawTransaction,
   SolanaReturnType,
 } from '../../types.js';
-import type { Commitment, HubAddress, SolanaBase58PublicKey } from '@sodax/types';
+import type { HubAddress, SolanaBase58PublicKey } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import BN from 'bn.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
@@ -331,29 +332,30 @@ export class SolanaSpokeService {
   public static async waitForConfirmation(
     spokeProvider: SolanaSpokeProvider,
     signature: string,
-    commitment: Commitment = 'finalized',
+    commitment: Finality = 'finalized',
+    timeoutMs = 60_000, // total time to wait
   ): Promise<Result<boolean>> {
-    const connection = new Connection(spokeProvider.chainConfig.rpcUrl, 'confirmed');
-    const latestBlockhash = await connection.getLatestBlockhash();
-    const response = await connection.confirmTransaction(
-      {
-        signature,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      },
-      commitment,
-    );
+    const connection = new Connection(spokeProvider.chainConfig.rpcUrl, commitment);
+    const deadline = Date.now() + timeoutMs;
 
-    if (response.value.err) {
-      return {
-        ok: false,
-        error: new Error(JSON.stringify(response.value.err)),
-      };
+    while (Date.now() < deadline) {
+      try {
+        const tx = await connection.getTransaction(signature, { commitment, maxSupportedTransactionVersion: 0 });
+        if (tx) {
+          if (tx.meta?.err) {
+            return { ok: false, error: new Error(JSON.stringify(tx.meta.err)) };
+          }
+          return { ok: true, value: true };
+        }
+      } catch {
+        // ignore transient RPC errors and keep polling
+      }
+      await new Promise(r => setTimeout(r, 750)); // linear 750ms retry
     }
 
     return {
-      ok: true,
-      value: true,
+      ok: false,
+      error: new Error(`Timed out after ${timeoutMs}ms waiting for ${commitment} confirmation for ${signature}`),
     };
   }
 }

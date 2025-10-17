@@ -514,7 +514,7 @@ export class SolverService {
               payload: params,
               error: verifyTxHashResult.error,
             },
-          }
+          },
         };
       }
 
