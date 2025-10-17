@@ -141,23 +141,22 @@ export const getSwapErrorMessage = (errorCode: string): { title: string; message
     case 'SUBMIT_TX_FAILED':
       return {
         title: 'Transaction failed at source',
-        message: 'Your transaction couldn’t be broadcast or was rejected, your balance is unchanged.',
+        message: 'Your transaction couldn’t be broadcast. Your funds remain unchanged.',
       };
     case 'RELAY_TIMEOUT':
       return {
         title: 'Transaction timed out',
-        message: "Your transaction couldn't be broadcast within the allowed time.",
+        message: 'We couldn’t broadcast your transaction within the expected timeframe.',
       };
     case 'CREATION_FAILED':
       return {
-        title: "Order couldn't be created",
-        message: 'Your order seems to be misformated, please check balances and supported chains before trying again.',
+        title: "Order couldn't be created.",
+        message: 'There was a problem with your order. Please check your network and balance.',
       };
     case 'POST_EXECUTION_FAILED':
       return {
-        title: 'Transaction failed at destination',
-        message:
-          'A transaction couldn’t be broadcast or was rejected, your balance will be retrieved within 5 minutes.',
+        title: 'Transaction failed at destination.',
+        message: "The transaction couldn't be broadcast. Your funds will return in roughly 5 minutes.",
       };
     case 'INSUFFICIENT_BALANCE':
       return {
@@ -196,8 +195,8 @@ export const getSwapErrorMessage = (errorCode: string): { title: string; message
       };
     default:
       return {
-        title: 'Sorry, something went wrong',
-        message: "We can't identify the issue right now, for help please follow the link below.",
+        title: 'Something went wrong.',
+        message: 'We can’t identify the issue right now. For help, follow the link below.',
       };
   }
 };

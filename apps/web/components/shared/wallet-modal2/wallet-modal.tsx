@@ -72,7 +72,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
 
   const [activeXChainType, setActiveXChainType] = useState<ChainType | undefined>(undefined);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-
+  const [hoveredChainType, setHoveredChainType] = useState<ChainType | undefined>(undefined);
   const xConnectors = useXConnectors(activeXChainType);
 
   const handleToggleExpanded = (expanded: boolean): void => {
@@ -187,6 +187,8 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       key={chainGroup.chainType}
                       chainType={chainGroup.chainType}
                       setActiveXChainType={setActiveXChainType}
+                      setHoveredChainType={setHoveredChainType}
+                      hoveredChainType={hoveredChainType}
                       onSuccess={async (_xConnector, xAccount) => {
                         if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
                           return;
@@ -233,6 +235,8 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                   <ChainItem
                     chainType={chainGroup.chainType}
                     setActiveXChainType={setActiveXChainType}
+                    setHoveredChainType={setHoveredChainType}
+                    hoveredChainType={hoveredChainType}
                     onSuccess={async (_xConnector, xAccount) => {
                       if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
                         return;

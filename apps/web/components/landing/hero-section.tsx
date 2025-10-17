@@ -74,7 +74,7 @@ const HeroSection = (): React.ReactElement => {
               <div className="hidden md:block md:ml-[11px]">
                 <SodaxIcon width={84} height={18} fill="white" />
               </div>
-              <div className="justify-center text-cherry-bright text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
+              <div className="mix-blend-screen justify-center text-cherry-bright text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
                 BETA
               </div>
             </div>

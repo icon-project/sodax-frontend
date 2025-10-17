@@ -64,17 +64,17 @@ export function SearchBar({
               onClick={handleChainSelectorClick}
             >
               {selectedChainId ? (
-                <div className="w-8 h-8 flex justify-center items-center relative">
+                <div className="w-8 h-8 flex justify-center items-center relative group">
                   {!isChainSelectorOpen && (
                     <Button
-                      className="w-4 h-4 bg-white rounded-[256px] absolute !p-0 -left-2 top-2 z-52"
+                      className="w-4 h-4 bg-white rounded-[256px] absolute !p-0 -left-2 top-2 z-52 hover:!bg-white"
                       variant="cream"
                       onClick={e => {
                         e.stopPropagation();
                         handleChainSelect('');
                       }}
                     >
-                      <CloseIcon1 className="text-negative" />
+                      <CloseIcon1 className="text-clay group-hover:text-espresso transition-colors" />
                     </Button>
                   )}
                   <Image
