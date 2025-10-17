@@ -41,7 +41,7 @@ function NetworkIcon({
 
   return (
     <div
-      className={`relative rounded shrink-0 transition-all duration-200 cursor-pointer ring ring-2 ring-white rounded-[4px] shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ${
+      className={`relative rounded shrink-0 cursor-pointer ring ring-2 ring-white rounded-[4px] shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ${
         shouldDim ? 'opacity-60 grayscale-[0.5]' : 'opacity-100 grayscale-0'
       }`}
       onMouseEnter={onMouseEnter}
@@ -129,81 +129,6 @@ function StackedNetworks({
   );
 }
 
-interface StackedNetworksPortalProps {
-  isClicked: boolean;
-  chainIds: string[];
-  tokenSymbol: string;
-  onChainClick: (token: XToken) => void;
-  targetRef: React.RefObject<HTMLDivElement | null>;
-}
-
-function StackedNetworksPortal({
-  isClicked,
-  chainIds,
-  tokenSymbol,
-  onChainClick,
-  targetRef,
-}: StackedNetworksPortalProps): React.JSX.Element | null {
-  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (isClicked && targetRef.current) {
-      let container = document.getElementById('stacked-networks-portal');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'stacked-networks-portal';
-        container.style.position = 'fixed';
-        container.style.top = '0';
-        container.style.left = '0';
-        container.style.width = '100%';
-        container.style.height = '100%';
-        container.style.pointerEvents = 'none';
-        container.style.zIndex = '9999';
-        document.body.appendChild(container);
-      }
-      setPortalContainer(container);
-    } else {
-      setPortalContainer(null);
-    }
-
-    return () => {
-      if (!isClicked) {
-        const container = document.getElementById('stacked-networks-portal');
-        if (container) {
-          document.body.removeChild(container);
-        }
-      }
-    };
-  }, [isClicked, targetRef]);
-
-  if (!isClicked || !portalContainer || !targetRef.current) {
-    return null;
-  }
-
-  const targetRect = targetRef.current.getBoundingClientRect();
-
-  return createPortal(
-    <div
-      style={{
-        position: 'absolute',
-        top: targetRect.top + 60,
-        left: targetRect.left - 30,
-        pointerEvents: 'auto',
-      }}
-      onMouseDown={e => e.stopPropagation()}
-      onClick={e => e.stopPropagation()}
-    >
-      <StackedNetworks
-        isClicked={isClicked}
-        chainIds={chainIds}
-        tokenSymbol={tokenSymbol}
-        onChainClick={onChainClick}
-      />
-    </div>,
-    portalContainer,
-  );
-}
-
 interface CurrencyGroupLogoProps {
   symbol: string;
   tokenCount: number;
@@ -253,19 +178,6 @@ function CurrencyGroupLogo({
           </div>
         </div>
       </div>
-      <div className="relative h-6 w-full">
-        <div
-          className={`font-['InterRegular'] leading-[0] not-italic absolute inset-0 flex items-center justify-center text-(length:--body-small) transition-all duration-200 ${
-            isClicked
-              ? 'opacity-0'
-              : isHovered
-                ? 'opacity-100 text-espresso font-bold'
-                : 'opacity-100 text-clay font-medium'
-          }`}
-        >
-          {symbol}
-        </div>
-      </div>
     </>
   );
 }
@@ -302,18 +214,11 @@ export function TokenGroupAsset({
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{
-          opacity: 1,
-          scale: isHovered ? 1.1 : 1,
-        }}
-        exit={{ opacity: 0, scale: 0.8 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
+      <div
         ref={assetRef}
-        className={`px-2 flex flex-col gap-2 items-center justify-start relative shrink-0 cursor-pointer transition-all duration-200 pb-3 ${
-          isBlurred ? 'blur filter opacity-30' : ''
-        }`}
+        className={`px-2  flex flex-col gap-2 items-center justify-start relative shrink-0 cursor-pointer pb-3 ${
+          isBlurred ? 'blur filter opacity-30' : isHovered ? 'scale-110' : ''
+        } `}
         data-name="Asset"
         onClick={onClick}
         onMouseEnter={onMouseEnter}
@@ -326,14 +231,28 @@ export function TokenGroupAsset({
           isHovered={isHovered}
           isHoverDimmed={isHoverDimmed}
         />
-      </motion.div>
-      <StackedNetworksPortal
-        isClicked={isClicked}
-        chainIds={chainIds}
-        tokenSymbol={symbol}
-        onChainClick={onChainClick}
-        targetRef={assetRef}
-      />
+        <div className="relative h-6 w-full z-2000">
+          <div
+            className={`font-['InterRegular'] leading-[0] not-italic absolute inset-0 flex items-center justify-center text-(length:--body-small) transition-all duration-200 ${
+              isClicked
+                ? 'opacity-0'
+                : isHovered
+                  ? 'opacity-100 text-espresso font-bold'
+                  : 'opacity-100 text-clay font-medium'
+            }`}
+          >
+            {symbol}
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center top-0">
+            <StackedNetworks
+              isClicked={isClicked}
+              chainIds={chainIds}
+              tokenSymbol={symbol}
+              onChainClick={onChainClick}
+            />
+          </div>
+        </div>
+      </div>
     </>
   );
 }
