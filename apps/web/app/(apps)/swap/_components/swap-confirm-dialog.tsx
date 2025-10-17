@@ -27,13 +27,13 @@ import { useSwapApprove, useSpokeProvider, useSwapAllowance } from '@sodax/dapp-
 import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { motion } from 'framer-motion';
+import { useSwapActions, useSwapState, useSwapStore } from '../_stores/swap-store-provider';
 
 interface SwapConfirmDialogProps {
   open: boolean;
   sourceToken: XToken;
   destinationToken: XToken;
   finalDestinationAddress: string;
-  sourceAmount: string;
   destinationAmount: string;
   exchangeRate: BigNumber | null;
   onConfirm: () => void;
@@ -58,7 +58,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   sourceToken,
   destinationToken,
   finalDestinationAddress,
-  sourceAmount,
   destinationAmount,
   exchangeRate,
   onConfirm,
@@ -79,8 +78,10 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
   const walletProvider = useWalletProvider(sourceToken.xChainId);
   const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
-
   const sourceXAccount = useXAccount(sourceToken.xChainId);
+  const { sourceAmount } = useSwapState();
+
+  const { setSourceAmount } = useSwapActions();
 
   const paramsForApprove = intentOrderPayload
     ? JSON.parse(
@@ -160,10 +161,13 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   return (
     <Dialog.Root open={open} onOpenChange={handleClose}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-[rgba(237,230,230,0.40)] backdrop-blur-sm z-99" asChild={false} />
+        <Dialog.Overlay
+          className="fixed inset-0 bg-[rgba(237,230,230,0.40)] bg-cream-white opacity-90 backdrop-blur-[12px] z-99"
+          asChild={false}
+        />
         <Dialog.Content asChild>
           <motion.div
-            className="md:max-w-[480px] w-[90%] fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-12 shadow-lg z-100 bg-vibrant-white rounded-[32px]"
+            className="shadow-none md:max-w-[480px] w-[90%] fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-12 shadow-lg z-100 bg-vibrant-white rounded-[32px]"
             animate={isShaking ? 'shake' : ''}
             variants={shakeVariants}
           >
@@ -268,7 +272,10 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   <Button
                     variant="cherry"
                     className="w-full text-white font-semibold font-['InterRegular']"
-                    onClick={handleClose}
+                    onClick={() => {
+                      handleClose();
+                      setSourceAmount('0');
+                    }}
                   >
                     <div className="flex items-center gap-2 text-white">
                       <span>Swap complete</span>
@@ -279,7 +286,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
                     Enjoying SODAX?
                     <Link
-                      href="https://x.com/sodaxlabs"
+                      href="https://x.com/gosodax"
                       target="_blank"
                       className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
                     >
@@ -300,7 +307,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
                     Need help?
                     <Link
-                      href="https://x.com/sodaxlabs"
+                      href="https://discord.gg/xM2Nh4S6vN"
                       target="_blank"
                       className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
                     >
@@ -365,7 +372,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                           />
                         </div>
                       ) : (
-                        `Swap ${destinationToken.symbol} on ${chainIdToChainName(destinationToken.xChainId)}`
+                        `Swap to ${destinationToken.symbol} on ${chainIdToChainName(destinationToken.xChainId)}`
                       )}
                     </Button>
                   )}

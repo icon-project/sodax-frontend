@@ -33,7 +33,7 @@ export function TokenAsset({
       }}
       exit={{ opacity: 0, scale: 0.8 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={`px-2 flex flex-col gap-2 items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 ${
+      className={`px-2 flex flex-col gap-2 items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 pb-3 ${
         isClickBlurred ? 'blur filter opacity-30' : isHoverDimmed ? 'opacity-50' : ''
       }`}
       data-name="Asset"

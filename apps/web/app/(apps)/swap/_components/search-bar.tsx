@@ -1,9 +1,11 @@
 import type React from 'react';
 import Image from 'next/image';
-import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid, XIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { CloseIcon1 } from '@/components/icons/close-icon1';
 
 interface SearchBarProps {
   isUsdtClicked: boolean;
@@ -62,27 +64,48 @@ export function SearchBar({
               onClick={handleChainSelectorClick}
             >
               {selectedChainId ? (
-                <div className="w-8 h-8 flex justify-center items-center">
+                <div className="w-8 h-8 flex justify-center items-center relative">
+                  {!isChainSelectorOpen && (
+                    <Button
+                      className="w-4 h-4 bg-white rounded-[256px] absolute !p-0 -left-2 top-2 z-52"
+                      variant="cream"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleChainSelect('');
+                      }}
+                    >
+                      <CloseIcon1 className="text-negative" />
+                    </Button>
+                  )}
                   <Image
                     src={getChainIcon(selectedChainId) || '/chain/0x2105.base.png'}
                     alt="Selected Chain"
                     width={24}
                     height={24}
                     className="rounded-[6px] shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] ring-4 ring-white overflow-hidden"
+                    priority
                   />
                 </div>
               ) : (
                 <div className="w-6 h-6 grid grid-cols-2 gap-1 p-[2px]">
-                  <Image src="/chain/0x2105.base.png" alt="Base" width={8} height={8} className="rounded-[2px]" />
-                  <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" />
+                  <Image
+                    src="/chain/0x2105.base.png"
+                    alt="Base"
+                    width={8}
+                    height={8}
+                    className="rounded-[2px]"
+                    priority
+                  />
+                  <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" priority />
                   <Image
                     src="/chain/0xa4b1.arbitrum.png"
                     alt="Arbitrum"
                     width={8}
                     height={8}
                     className="rounded-[2px]"
+                    priority
                   />
-                  <Image src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" />
+                  <Image src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" priority />
                 </div>
               )}
               {isChainSelectorOpen ? (
@@ -93,13 +116,13 @@ export function SearchBar({
             </div>
 
             {isChainSelectorOpen && (
-              <div className="fixed inset-0 flex items-center justify-center z-50 pt-28">
+              <div className="fixed inset-0 flex items-center justify-center z-50 mt-36">
                 <div className="absolute inset-0 bg-transparent" onClick={handleChainSelectorClick} />
                 <div className="relative bg-transparent border-none w-64">
-                  <div className="grid grid-cols-2 gap-4 overflow-hidden pl-2 py-1">
+                  <div className="grid grid-cols-2 overflow-hidden pl-2 py-1">
                     {/* All Networks Option */}
                     <div
-                      className={`w-34 group inline-flex justify-start items-center gap-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
+                      className={`w-34 group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
                       onClick={handleShowAllChains}
                       onMouseEnter={() => setHoveredChain('all')}
                       onMouseLeave={() => setHoveredChain(null)}
@@ -112,16 +135,32 @@ export function SearchBar({
                             width={8}
                             height={8}
                             className="rounded-[2px]"
+                            priority
                           />
-                          <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" />
+                          <Image
+                            src="/chain/solana.png"
+                            alt="Solana"
+                            width={8}
+                            height={8}
+                            className="rounded-[2px]"
+                            priority
+                          />
                           <Image
                             src="/chain/0xa4b1.arbitrum.png"
                             alt="Arbitrum"
                             width={8}
                             height={8}
                             className="rounded-[2px]"
+                            priority
                           />
-                          <Image src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" />
+                          <Image
+                            src="/chain/sui.png"
+                            alt="Sui"
+                            width={8}
+                            height={8}
+                            className="rounded-[2px]"
+                            priority
+                          />
                         </>
                       </div>
                       <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
@@ -132,7 +171,7 @@ export function SearchBar({
                     {availableChains.map(chain => (
                       <div
                         key={chain.id}
-                        className={`w-34 group inline-flex justify-start items-center gap-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
+                        className={`w-34 group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
                         onClick={() => handleChainSelect(chain.id)}
                         onMouseEnter={() => setHoveredChain(chain.id)}
                         onMouseLeave={() => setHoveredChain(null)}
@@ -143,6 +182,7 @@ export function SearchBar({
                           width={24}
                           height={24}
                           className="rounded-[6px] ring-4 ring-white shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)]"
+                          priority
                         />
                         <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
                           {chain.name}

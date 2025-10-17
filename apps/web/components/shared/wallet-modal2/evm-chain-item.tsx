@@ -108,7 +108,7 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handl
           </div>
 
           <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex gap-1 items-center">
-            {address ? shortenAddress(address, 4) : 'EVM'}
+            {!showCopied && address ? shortenAddress(address, 4) : 'EVM'}
             {address && (
               <CopyIcon className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay" onClick={onCopyAddress} />
             )}

@@ -22,6 +22,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency, i
           alt={currency.symbol}
           width={24}
           height={24}
+          priority
         />
       </div>
       <div
@@ -34,6 +35,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({ className = '', currency, i
           alt={currency.xChainId}
           width={16}
           height={16}
+          priority
         />
         {isChainConnected && (
           <div className="absolute -bottom-[2px] -right-[2px] w-[10px] h-[10px] bg-green-500 rounded-full border-2 border-white shadow-sm" />

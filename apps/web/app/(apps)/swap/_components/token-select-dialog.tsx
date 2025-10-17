@@ -71,10 +71,13 @@ export default function TokenSelectDialog({
   return (
     <Dialog.Root open={isOpen} onOpenChange={onHandleOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-[rgba(237,230,230,0.40)] backdrop-blur-sm z-99" asChild={false} />
+        <Dialog.Overlay
+          className="fixed inset-0 bg-[rgba(237,230,230,0.40)] bg-cream-white opacity-90 backdrop-blur-[12px] z-99"
+          asChild={false}
+        />
         <Dialog.Content asChild>
           <motion.div
-            className={`md:max-w-[480px] w-[90%] fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-12 shadow-lg z-100 bg-vibrant-white rounded-[32px] ${showAllAssets ? 'h-[80%]' : 'h-132 '}`}
+            className={`shadow-none md:max-w-[480px] w-[90%] fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-12 shadow-lg z-100 bg-vibrant-white rounded-[32px] ${showAllAssets ? 'h-[80%]' : 'h-132 '}`}
             initial={false}
           >
             <Dialog.Title className="flex justify-end w-full h-4 relative p-0">

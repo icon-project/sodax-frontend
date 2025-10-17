@@ -6,6 +6,19 @@ import type { XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
 import { motion } from 'motion/react';
+import { ArbitrumIcon } from '@/components/icons/chains/arbitrum';
+import { IcxIcon } from '@/components/icons/chains/icon';
+import { BaseIcon } from '@/components/icons/chains/base';
+import { AvalancheIcon } from '@/components/icons/chains/avalanche';
+import { BnbIcon } from '@/components/icons/chains/bnb';
+import { PolygonIcon } from '@/components/icons/chains/polygon';
+import { SolIcon } from '@/components/icons/chains/sol';
+import { StellarIcon } from '@/components/icons/chains/stellar';
+import { SuiIcon } from '@/components/icons/chains/sui';
+import { InjectiveIcon } from '@/components/icons/chains/injective';
+import { SonicIcon } from '@/components/icons/chains/sonic';
+import { OptimismIcon } from '@/components/icons/chains/optimism';
+import { LightLinkIcon } from '@/components/icons/chains/lightlink';
 
 interface NetworkIconProps {
   imageSrc: string;
@@ -28,14 +41,26 @@ function NetworkIcon({
 
   return (
     <div
-      className={`relative rounded shrink-0 transition-all duration-200 cursor-pointer ring ring-2 ring-white rounded-[4px] shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.2)] ${
+      className={`relative rounded shrink-0 transition-all duration-200 cursor-pointer ring ring-2 ring-white rounded-[4px] shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ${
         shouldDim ? 'opacity-60 grayscale-[0.5]' : 'opacity-100 grayscale-0'
       }`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      <Image src={imageSrc} alt="Network Icon" width={16} height={16} className="rounded-[4px]" />
+      {imageSrc === 'Icon' && <IcxIcon />}
+      {imageSrc === 'Avalanche' && <AvalancheIcon />}
+      {imageSrc === 'Base' && <BaseIcon />}
+      {imageSrc === 'BNB' && <BnbIcon />}
+      {imageSrc === 'Polygon' && <PolygonIcon />}
+      {imageSrc === 'Solana' && <SolIcon />}
+      {imageSrc === 'Stellar' && <StellarIcon />}
+      {imageSrc === 'Sui' && <SuiIcon />}
+      {imageSrc === 'Injective' && <InjectiveIcon />}
+      {imageSrc === 'Sonic' && <SonicIcon />}
+      {imageSrc === 'Optimism' && <OptimismIcon />}
+      {imageSrc === 'Arbitrum' && <ArbitrumIcon />}
+      {imageSrc === 'Lightlink' && <LightLinkIcon />}
     </div>
   );
 }
@@ -58,7 +83,7 @@ function StackedNetworks({
 
   const getNetworkInfo = (chainId: string): { image: string; name: string } => {
     const chain = availableChains.find(chain => chain.id === chainId);
-    return chain ? { image: chain.icon16, name: chain.name } : { image: '/chain/sonic.png', name: 'Sonic' }; // fallback
+    return chain ? { image: chain.icon, name: chain.name } : { image: '/chain/sonic.png', name: 'Sonic' }; // fallback
   };
 
   const networkInfos = chainIds.map(chainId => getNetworkInfo(chainId));
@@ -91,7 +116,7 @@ function StackedNetworks({
         {networkInfos.map((networkInfo, index) => (
           <NetworkIcon
             key={index}
-            imageSrc={networkInfo.image}
+            imageSrc={networkInfo.name}
             isHovered={hoveredIcon === index}
             hoveredIcon={hoveredIcon}
             onMouseEnter={() => setHoveredIcon(index)}
@@ -205,6 +230,7 @@ function CurrencyGroupLogo({
             alt={symbol}
             width={24}
             height={24}
+            priority
           />
         </div>
         <div className="transition-opacity duration-200" style={{ opacity: isClicked ? 0 : 1 }}>
@@ -285,7 +311,7 @@ export function TokenGroupAsset({
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
         ref={assetRef}
-        className={`px-2 flex flex-col gap-2 items-center justify-start relative shrink-0 cursor-pointer transition-all duration-200 ${
+        className={`px-2 flex flex-col gap-2 items-center justify-start relative shrink-0 cursor-pointer transition-all duration-200 pb-3 ${
           isBlurred ? 'blur filter opacity-30' : ''
         }`}
         data-name="Asset"

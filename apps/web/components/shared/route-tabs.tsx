@@ -102,6 +102,7 @@ export function RouteTabs(): React.JSX.Element {
       <div
         ref={tabsContainerRef}
         className="hidden md:flex md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-tl-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] relative lg:mt-4 min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)]"
+        style={{ height: '-webkit-fill-available' }}
       >
         <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
           {tabConfigs.map(tab => {

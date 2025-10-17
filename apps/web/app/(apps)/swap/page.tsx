@@ -22,7 +22,6 @@ import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { formatUnits, parseUnits } from 'viem';
 import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
-import { convertSegmentPathToStaticExportFilename } from 'next/dist/shared/lib/segment-cache/segment-value-encoding';
 import { getSwapErrorMessage, validateChainAddress } from '@/lib/utils';
 import { ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -165,13 +164,12 @@ export default function SwapPage() {
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { address: sourceAddress } = useXAccount(sourceToken.xChainId);
   const { address: destinationAddress } = useXAccount(destinationToken.xChainId);
-  const [switchChainLoading, setSwitchChainLoading] = useState<boolean>(false);
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
 
   const sourceWalletProvider = useWalletProvider(sourceToken.xChainId);
-  const sourceProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
+  const sourceSpokeProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
 
   const { data: sourceBalances } = useXBalances({
     xChainId: sourceToken.xChainId,
@@ -304,7 +302,7 @@ export default function SwapPage() {
     return '';
   }, [quoteQuery.data, calculatedDestinationAmount, destinationToken.decimals, slippageTolerance]);
 
-  const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceProvider);
+  const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceSpokeProvider);
 
   const getTargetChainType = (): ChainType | undefined => {
     if (!sourceAddress) {
@@ -339,8 +337,8 @@ export default function SwapPage() {
       return;
     }
 
-    if (!sourceProvider) {
-      console.error('sourceProvider or destProvider undefined');
+    if (!sourceSpokeProvider) {
+      console.error('sourceSpokeProvider or destProvider undefined');
       return;
     }
 
@@ -366,25 +364,16 @@ export default function SwapPage() {
     openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
   };
 
-  //When switch cahin, sometimes it takes a while to get vlaue of sourceProvider
-
   useEffect(() => {
-    if (sourceProvider !== undefined) {
-      setSwitchChainLoading(false);
+    if (intentOrderPayload != null) {
+      setIsSwapConfirmOpen(true);
     }
-  }, [sourceProvider]);
+  }, [intentOrderPayload]);
 
-  const handleClickReview = async (): Promise<void> => {
-    if (isWrongChain) {
-      setSwitchChainLoading(true);
-      handleSwitchChain();
-      return;
-    }
-
+  const handleReview = async (): Promise<void> => {
     setFixedDestinationAmount(calculatedDestinationAmount);
     setFixedMinOutputAmount(minOutputAmount);
     createIntentOrderPayload();
-    setIsSwapConfirmOpen(true);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -408,7 +397,7 @@ export default function SwapPage() {
       setIsSwapSuccessful(false);
       setSwapResetCounter(prev => prev + 1);
 
-      if (!sourceProvider) {
+      if (!sourceSpokeProvider) {
         throw new Error('SOURCE_PROVIDER_NOT_AVAILABLE');
       }
 
@@ -497,53 +486,23 @@ export default function SwapPage() {
     setSwapStatus(statusCode);
   };
 
-  const isReviewButtonDisabled = (): boolean => {
-    const hasNoAmount = sourceAmount === '0' || sourceAmount === '';
-    const hasMissingDestination = isSwapAndSend && customDestinationAddress === '';
-    const isLoadingOrUnavailable = switchChainLoading || quoteQuery.isLoading || quoteQuery.data?.ok === false;
-
-    return (
-      hasNoAmount ||
-      hasMissingDestination ||
-      isLoadingOrUnavailable ||
-      (isSwapAndSend && !validateChainAddress(customDestinationAddress, getXChainType(destinationToken.xChainId) || ''))
-    );
-  };
-
-  const getReviewButtonText = (): string => {
-    if (isWrongChain) {
-      return `Switch to ${chainIdToChainName(sourceToken.xChainId)}`;
-    }
-
+  const isQuoteUnavailable = quoteQuery.data?.ok === false;
+  const isConnected = isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend);
+  const inputError = useMemo(() => {
     if (sourceAmount === '0' || sourceAmount === '') {
-      return 'Enter amount';
+      return 'Enter Amount';
     }
-
     if (isSwapAndSend && customDestinationAddress === '') {
       return 'Enter destination address';
     }
-
-    if (switchChainLoading) {
-      return 'Switching';
-    }
-
-    if (quoteQuery.isLoading) {
-      return 'Getting quote';
-    }
-
-    if (quoteQuery.data?.ok === false) {
-      return 'Quote unavailable';
-    }
-
     if (
       isSwapAndSend &&
       !validateChainAddress(customDestinationAddress, getXChainType(destinationToken.xChainId) || '')
     ) {
       return 'Address is not valid';
     }
-
-    return 'Review';
-  };
+    return null;
+  }, [sourceAmount, isSwapAndSend, customDestinationAddress, destinationToken.xChainId]);
 
   return (
     <div className="w-full">
@@ -567,7 +526,7 @@ export default function SwapPage() {
               everywhere
             </span>
           </div>
-          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(size:--subtitle)">
+          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle)">
             Access 53 assets across 11 networks.
           </div>
         </div>
@@ -613,27 +572,40 @@ export default function SwapPage() {
           />
         </div>
 
-        {isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend) ? (
-          <Button
-            variant="cherry"
-            className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
-            onClick={handleClickReview}
-            disabled={isReviewButtonDisabled()}
-          >
-            {getReviewButtonText()}
+        {isQuoteUnavailable ? (
+          <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
+            Quote unavailable
           </Button>
-        ) : (
+        ) : !isConnected ? (
           <Button
             variant="cherry"
-            className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
+            className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
             onClick={handleOpenWalletModal}
           >
             Connect{' '}
             {!isSourceChainConnected
               ? chainIdToChainName(sourceToken.xChainId)
-              : !isSwapAndSend
-                ? chainIdToChainName(destinationToken.xChainId)
-                : ''}
+              : chainIdToChainName(destinationToken.xChainId)}
+          </Button>
+        ) : isWrongChain ? (
+          <Button
+            variant="cherry"
+            className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+            onClick={handleSwitchChain}
+          >
+            Switch to {chainIdToChainName(sourceToken.xChainId)}
+          </Button>
+        ) : inputError ? (
+          <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
+            {inputError}
+          </Button>
+        ) : (
+          <Button
+            variant="cherry"
+            className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+            onClick={handleReview}
+          >
+            Review
           </Button>
         )}
       </div>
@@ -651,7 +623,7 @@ export default function SwapPage() {
         </div>
       ) : (
         sourceAddress && (
-          <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
+          <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
             Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
           </div>
         )
@@ -663,7 +635,6 @@ export default function SwapPage() {
         finalDestinationAddress={
           isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || ''
         }
-        sourceAmount={sourceAmount}
         destinationAmount={
           isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : calculatedDestinationAmount
         }
