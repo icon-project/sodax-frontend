@@ -6,10 +6,8 @@ import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/curren
 import SwapConfirmDialog from './_components/swap-confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
-import type { SpokeChainId, ChainType } from '@sodax/types';
-import { useEvmSwitchChain, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
-import { getXChainType } from '@sodax/wallet-sdk-react';
-import { chainIdToChainName } from '@/providers/constants';
+import type { SpokeChainId } from '@sodax/types';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { useQuote, useSpokeProvider, useSwap, useStatus, useSodaxContext } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import BigNumber from 'bignumber.js';
@@ -18,13 +16,12 @@ import { SolverIntentStatusCode } from '@sodax/sdk';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTokenPrice, useTokenUsdValue } from '@/hooks/useTokenPrice';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
-import { MODAL_ID } from '@/stores/modal-store';
-import { useModalStore } from '@/stores/modal-store-provider';
 import { formatUnits, parseUnits } from 'viem';
 import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
-import { getSwapErrorMessage, validateChainAddress } from '@/lib/utils';
+import { getSwapErrorMessage } from '@/lib/utils';
 import { ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
+import SwapCommitButton from './_components/swap-commit-button';
 
 const calculateMaxAvailableAmount = (
   balance: bigint,
@@ -122,7 +119,6 @@ function SwapStatusMonitor({
 }
 
 export default function SwapPage() {
-  const openModal = useModalStore(state => state.openModal);
   const queryClient = useQueryClient();
 
   const { sourceToken, destinationToken, sourceAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
@@ -143,7 +139,6 @@ export default function SwapPage() {
   const [isSwapFailed, setIsSwapFailed] = useState<boolean>(false);
   const [dstTxHash, setDstTxHash] = useState<string>('');
   const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
   // Fixed amounts for dialog - these don't change once dialog is open
   const [fixedDestinationAmount, setFixedDestinationAmount] = useState<string>('');
   const [fixedMinOutputAmount, setFixedMinOutputAmount] = useState<string>('');
@@ -159,8 +154,6 @@ export default function SwapPage() {
     setSwapError({ title: 'Swap failed', message: 'Please try again.' });
   }, []);
 
-  const sourceChainType = getXChainType(sourceToken.xChainId);
-  const destinationChainType = getXChainType(destinationToken.xChainId);
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { address: sourceAddress } = useXAccount(sourceToken.xChainId);
   const { address: destinationAddress } = useXAccount(destinationToken.xChainId);
@@ -304,18 +297,6 @@ export default function SwapPage() {
 
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceSpokeProvider);
 
-  const getTargetChainType = (): ChainType | undefined => {
-    if (!sourceAddress) {
-      return sourceChainType;
-    }
-
-    if (!destinationAddress) {
-      return destinationChainType;
-    }
-
-    return undefined;
-  };
-
   const createIntentOrderPayload = () => {
     if (!sourceToken || !destinationToken) {
       console.error('SOURCE_TOKEN_OR_DEST_TOKEN_UNDEFINED');
@@ -358,10 +339,6 @@ export default function SwapPage() {
     } satisfies CreateIntentParams;
 
     setIntentOrderPayload(createIntentParams);
-  };
-
-  const handleOpenWalletModal = (): void => {
-    openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
   };
 
   useEffect(() => {
@@ -486,24 +463,6 @@ export default function SwapPage() {
     setSwapStatus(statusCode);
   };
 
-  const isQuoteUnavailable = quoteQuery.data?.ok === false;
-  const isConnected = isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend);
-  const inputError = useMemo(() => {
-    if (sourceAmount === '0' || sourceAmount === '') {
-      return 'Enter Amount';
-    }
-    if (isSwapAndSend && customDestinationAddress === '') {
-      return 'Enter destination address';
-    }
-    if (
-      isSwapAndSend &&
-      !validateChainAddress(customDestinationAddress, getXChainType(destinationToken.xChainId) || '')
-    ) {
-      return 'Address is not valid';
-    }
-    return null;
-  }, [sourceAmount, isSwapAndSend, customDestinationAddress, destinationToken.xChainId]);
-
   return (
     <div className="w-full">
       {dstTxHash && (
@@ -572,42 +531,7 @@ export default function SwapPage() {
           />
         </div>
 
-        {isQuoteUnavailable ? (
-          <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
-            Quote unavailable
-          </Button>
-        ) : !isConnected ? (
-          <Button
-            variant="cherry"
-            className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
-            onClick={handleOpenWalletModal}
-          >
-            Connect{' '}
-            {!isSourceChainConnected
-              ? chainIdToChainName(sourceToken.xChainId)
-              : chainIdToChainName(destinationToken.xChainId)}
-          </Button>
-        ) : isWrongChain ? (
-          <Button
-            variant="cherry"
-            className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
-            onClick={handleSwitchChain}
-          >
-            Switch to {chainIdToChainName(sourceToken.xChainId)}
-          </Button>
-        ) : inputError ? (
-          <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
-            {inputError}
-          </Button>
-        ) : (
-          <Button
-            variant="cherry"
-            className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
-            onClick={handleReview}
-          >
-            Review
-          </Button>
-        )}
+        <SwapCommitButton quoteQuery={quoteQuery} handleReview={handleReview} />
       </div>
 
       {quoteQuery.data?.ok === false ? (
