@@ -4,16 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Loader2 } from 'lucide-react';
-import type { ConcentratedLiquidityService, PoolData, EvmHubProvider } from '@sodax/sdk';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import type { PoolData } from '@sodax/sdk';
 import { createSonicPublicClient } from '@/lib/token-utils';
 
 interface PoolInfoProps {
   poolData: PoolData | null;
-  clService?: ConcentratedLiquidityService;
 }
 
-export function PoolInfo({ poolData, clService }: PoolInfoProps) {
+export function PoolInfo({ poolData }: PoolInfoProps) {
   const [dynamicFees, setDynamicFees] = useState<{
     lpFee: number;
     protocolFee: number;
@@ -31,13 +29,13 @@ export function PoolInfo({ poolData, clService }: PoolInfoProps) {
   }, [poolData]);
 
   const fetchDynamicFees = async () => {
-    if (!poolData || !clService) return;
+    if (!poolData) return;
 
     setLoadingFees(true);
     try {
       const publicClient = createSonicPublicClient();
 
-      // Get current fee rates from the hook using ConcentratedLiquidityService
+      // Get current fee rates from the hook
       const feeRates = await publicClient.readContract({
         address: poolData.poolKey.hooks,
         abi: [
@@ -108,13 +106,13 @@ export function PoolInfo({ poolData, clService }: PoolInfoProps) {
 
   const {
     poolId,
-    sqrtPriceX96,
     currentTick,
     currentPriceBA,
     currentPriceAB,
     currentPriceBAFormatted,
     currentPriceABFormatted,
     totalLiquidity,
+    totalLiquidityFormatted,
     feeTier,
     tickSpacing,
     protocolFee,
@@ -129,23 +127,11 @@ export function PoolInfo({ poolData, clService }: PoolInfoProps) {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Calculate token amounts using ConcentratedLiquidityService
-  const tokenAmounts = clService
-    ? clService.calculatePoolTokenAmounts(sqrtPriceX96, totalLiquidity, token0.decimals, token1.decimals)
-    : { amount0: '0', amount1: '0' };
-
   return (
     <Card className="mt-4">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-lg font-bold">
-              {token0.symbol}/{token1.symbol}
-            </span>
-            <span className="text-sm text-muted-foreground font-normal">
-              {token0.name} / {token1.name}
-            </span>
-          </div>
+          <span>Pool Information</span>
           <div className="flex gap-2">
             <Badge variant={isActive ? 'default' : 'secondary'}>{isActive ? 'Active' : 'Inactive'}</Badge>
             {poolData.feeTier === 8388608 ? (
@@ -211,7 +197,7 @@ export function PoolInfo({ poolData, clService }: PoolInfoProps) {
             </div>
             <div>
               <span className="text-muted-foreground">Total Liquidity:</span>
-              <div className="font-mono">{totalLiquidity.toString()}</div>
+              <div className="font-mono">{totalLiquidityFormatted}</div>
             </div>
             {poolData.feeTier === 8388608 && dynamicFees ? (
               <>
@@ -251,39 +237,9 @@ export function PoolInfo({ poolData, clService }: PoolInfoProps) {
 
         <Separator />
 
-        {/* Pool Reserves */}
-        <div className="space-y-2">
-          <h4 className="font-semibold text-sm text-muted-foreground">Pool Reserves</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="p-3 bg-muted/30 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-muted-foreground">{token0.symbol} Amount:</span>
-                <div className="text-right">
-                  <div className="font-semibold text-lg">{tokenAmounts.amount0}</div>
-                  <div className="text-xs text-muted-foreground">{token0.name}</div>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 bg-muted/30 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-muted-foreground">{token1.symbol} Amount:</span>
-                <div className="text-right">
-                  <div className="font-semibold text-lg">{tokenAmounts.amount1}</div>
-                  <div className="text-xs text-muted-foreground">{token1.name}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="text-xs text-muted-foreground mt-2">
-            💡 Token amounts are calculated based on current price and total liquidity
-          </div>
-        </div>
-
-        <Separator />
-
         {/* Token Information */}
         <div className="space-y-2">
-          <h4 className="font-semibold text-sm text-muted-foreground">Token Details</h4>
+          <h4 className="font-semibold text-sm text-muted-foreground">Tokens</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-muted-foreground">Token 0:</span>

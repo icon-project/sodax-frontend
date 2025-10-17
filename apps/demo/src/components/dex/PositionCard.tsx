@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import type { ConcentratedLiquidityService, ConcentratedLiquidityPositionInfo } from '@sodax/sdk';
+import type { ConcentratedLiquidityPositionInfo } from '@sodax/sdk';
 import type { TokenInfo, PriceRange, PositionAmounts } from '@/lib/token-utils';
 
 interface PositionCardProps {
@@ -18,7 +18,6 @@ interface PositionCardProps {
     unclaimedFees0Formatted: string;
     unclaimedFees1Formatted: string;
   };
-  clService?: ConcentratedLiquidityService;
 }
 
 export function PositionCard({
@@ -28,7 +27,6 @@ export function PositionCard({
   priceRange,
   positionAmounts,
   unclaimedFees,
-  clService,
 }: PositionCardProps) {
   // Add null checks for the position data
   if (!positionData) {
@@ -108,6 +106,10 @@ export function PositionCard({
             <div>
               <span className="text-muted-foreground">Fee Tier:</span>
               <div>{poolKey?.fee?.toString() || 'N/A'}</div>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Tick Spacing:</span>
+              <div>{poolKey?.tickSpacing?.toString() || 'N/A'}</div>
             </div>
           </div>
         </div>

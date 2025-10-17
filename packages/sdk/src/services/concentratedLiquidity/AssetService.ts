@@ -20,6 +20,9 @@ import {
   getConcentratedLiquidityConfig,
   hubVaults,
   encodeContractCalls,
+  relayTxAndWaitPacket,
+  DEFAULT_RELAY_TX_TIMEOUT,
+  SolanaSpokeProvider,
 } from '../../index.js';
 import type {
   HttpUrl,
@@ -27,6 +30,8 @@ import type {
   GetAddressType,
   EvmContractCall,
   ConcentratedLiquidityConfig,
+  SpokeTxHash,
+  HubTxHash,
 } from '../../types.js';
 import { SONIC_MAINNET_CHAIN_ID, type OriginalAssetAddress, type SpokeChainId } from '@sodax/types';
 import { erc20Abi, isAddress } from 'viem';
@@ -302,7 +307,6 @@ export class AssetService {
         params.asset,
         spokeProvider.chainConfig.chain.id,
         params.amount,
-        hubwallet,
         params.poolToken,
         recipient,
       );
@@ -365,11 +369,150 @@ export class AssetService {
     return { ok: true, value: txResult as TxReturnType<S, R> };
   }
 
+  /**
+   * Deposit and wait for the transaction to be relayed to the hub
+   * This method wraps executeDeposit and relays the transaction to the hub
+   *
+   * @example
+   * const result = await assetService.deposit(
+   *   {
+   *     asset: '0x...', // asset address
+   *     amount: 1000n, // amount to deposit
+   *     poolToken: '0x...', // pool token address
+   *   },
+   *   spokeProvider, // EvmSpokeProvider or SonicSpokeProvider instance
+   *   30000 // Optional timeout in milliseconds (default: 60000)
+   * );
+   *
+   * if (!result.ok) {
+   *   // Handle error
+   * }
+   *
+   * const [spokeTxHash, hubTxHash] = result.value;
+   * console.log('Deposit transaction hashes:', { spokeTxHash, hubTxHash });
+   */
+  public async deposit<S extends SpokeProvider>(
+    params: DepositParams,
+    spokeProvider: S,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  ): Promise<Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>> {
+    try {
+      const txResult = await this.executeDeposit(params, spokeProvider, false);
+
+      if (!txResult.ok) {
+        return txResult as Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>;
+      }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+        spokeProvider,
+        this.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: packetResult.error.code,
+            data: {
+              error: packetResult.error,
+              payload: txResult.value,
+            } as GetAssetServiceError<'SUBMIT_TX_FAILED'>,
+          },
+        };
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'DEPOSIT_UNKNOWN_ERROR',
+          data: {
+            error: error,
+            payload: params,
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Withdraw and wait for the transaction to be relayed to the hub
+   * This method wraps executeWithdraw and relays the transaction to the hub
+   *
+   * @example
+   * const result = await assetService.withdraw(
+   *   {
+   *     asset: '0x...', // asset address
+   *     amount: 1000n, // amount to withdraw
+   *     poolToken: '0x...', // pool token address
+   *   },
+   *   spokeProvider, // EvmSpokeProvider or SonicSpokeProvider instance
+   *   30000 // Optional timeout in milliseconds (default: 60000)
+   * );
+   *
+   * if (!result.ok) {
+   *   // Handle error
+   * }
+   *
+   * const [spokeTxHash, hubTxHash] = result.value;
+   * console.log('Withdraw transaction hashes:', { spokeTxHash, hubTxHash });
+   */
+  public async withdraw<S extends SpokeProvider>(
+    params: AssetWithdrawParams,
+    spokeProvider: S,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  ): Promise<Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>> {
+    try {
+      const txResult = await this.executeWithdraw(params, spokeProvider, false);
+
+      if (!txResult.ok) {
+        return txResult as Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>;
+      }
+
+      const packetResult = await relayTxAndWaitPacket(
+        txResult.value,
+        spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+        spokeProvider,
+        this.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packetResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: packetResult.error.code,
+            data: {
+              error: packetResult.error,
+              payload: txResult.value,
+            } as GetAssetServiceError<'SUBMIT_TX_FAILED'>,
+          },
+        };
+      }
+
+      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'DEPOSIT_UNKNOWN_ERROR',
+          data: {
+            error: error,
+            payload: params,
+          },
+        },
+      };
+    }
+  }
+
   public async getTokenWrapAction(
     address: OriginalAssetAddress,
     spokeChainId: SpokeChainId,
     amount: bigint,
-    userAddress: Address,
     poolToken: Address,
     recipient: Address,
   ): Promise<EvmContractCall[]> {
@@ -446,7 +589,7 @@ export class AssetService {
     calls.push(EvmVaultTokenService.encodeWithdraw(assetConfig.vault, assetConfig.asset, vaultAmount));
     const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, vaultAmount);
 
-    if (this.hubProvider.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID) {
+    if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {
       calls.push(Erc20Service.encodeTransfer(assetConfig.asset, recipient, translatedAmount));
     } else {
       // TODO add sonic support
