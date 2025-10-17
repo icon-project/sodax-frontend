@@ -6,6 +6,7 @@ import {
   type DepositSimulationParams,
   type HubAddress,
   type PromiseStellarTxReturnType,
+  type Result,
   STELLAR_DEFAULT_TX_TIMEOUT_SECONDS,
   type StellarGasEstimate,
   type StellarRawTransaction,
@@ -13,6 +14,7 @@ import {
   encodeAddress,
   getIntentRelayChainId,
   parseToStroops,
+  sleep,
   spokeChainConfig,
 } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
@@ -306,5 +308,40 @@ export class StellarSpokeService {
       fromHex(payload, 'bytes'),
       raw,
     );
+  }
+
+  public static async waitForTransaction(
+    spokeProvider: StellarSpokeProvider,
+    txHash: string,
+    pollingTimeout = 750,
+    maxAttempts = 40,
+  ): Promise<Result<boolean, Error>> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const tx = await spokeProvider.sorobanServer.getTransaction(txHash);
+
+        if (tx && tx.status === 'SUCCESS') {
+          return { ok: true, value: true }; // confirmed
+        }
+
+        if (tx && tx.status === 'FAILED') {
+          return { ok: false, error: new Error(`Transaction failed: ${JSON.stringify(tx)}`) };
+        }
+
+        if (tx && tx.status === 'NOT_FOUND') {
+          // not in a closed ledger yet → poll again
+          await sleep(pollingTimeout);
+          continue;
+        }
+
+        // unknown status or tx undefined -> poll again
+        await sleep(pollingTimeout);
+      } catch (err) {
+        // Network/transient error → back off and retry
+        await sleep(pollingTimeout);
+      }
+    }
+
+    return { ok: false, error: new Error('Transaction was not confirmed within the max attempts') };
   }
 }

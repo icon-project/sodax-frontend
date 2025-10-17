@@ -16,6 +16,7 @@ import type {
   TxReturnType,
   DepositSimulationParams,
   WalletSimulationParams,
+  Result,
 } from '../../types.js';
 import type { Address, Hex, HubAddress } from '@sodax/types';
 import { InjectiveSpokeService } from './InjectiveSpokeService.js';
@@ -485,6 +486,28 @@ export class SpokeService {
       if (!result.success) {
         throw new Error('Simulation failed', { cause: result });
       }
+    }
+  }
+
+  /**
+   * Verifies the transaction hash for the spoke chain to exist on chain.
+   * Only stellar and solana need to be verified. For other chains, we assume the transaction exists on chain.
+   * @param txHash - The transaction hash to verify.
+   * @param spokeProvider - The spoke provider.
+   * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the verification.
+   */
+  public static async verifyTxHash(txHash: string, spokeProvider: SpokeProvider): Promise<Result<boolean>> {
+    if (isSolanaSpokeProvider(spokeProvider)) {
+      return SolanaSpokeService.waitForConfirmation(spokeProvider, txHash);
+    }
+    if (isStellarSpokeProvider(spokeProvider)) {
+      return StellarSpokeService.waitForTransaction(spokeProvider, txHash);
+    }
+
+    // only stellar and solana need to be verified
+    return {
+      ok: true,
+      value: true,
     }
   }
 }

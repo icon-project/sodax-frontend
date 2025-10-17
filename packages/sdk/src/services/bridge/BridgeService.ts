@@ -353,6 +353,19 @@ export class BridgeService {
         return txResult;
       }
 
+      // verify the spoke tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_BRIDGE_INTENT_FAILED',
+            error: verifyTxHashResult.error,
+          },
+        };
+      }
+
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
         spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
