@@ -61,7 +61,7 @@ export function SearchBar({
           <div className="relative">
             <div
               className="flex justify-start items-center gap-2 cursor-pointer z-51"
-              onClick={handleChainSelectorClick}
+              onClick={selectedChainId && !isChainSelectorOpen ? () => handleChainSelect('') : handleChainSelectorClick}
             >
               {selectedChainId ? (
                 <div className="w-8 h-8 flex justify-center items-center relative group">
