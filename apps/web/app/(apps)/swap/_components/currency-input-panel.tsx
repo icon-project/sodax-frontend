@@ -81,7 +81,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
-  const { destinationToken } = useSwapState();
+  const { outputToken } = useSwapState();
   useEffect(() => {
     if (type === CurrencyInputPanelType.INPUT && inputRef.current) {
       inputRef.current.focus();
@@ -95,7 +95,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   };
 
   const handleChange = (value: string): void => {
-    if (validateChainAddress(value, getXChainType(destinationToken.xChainId) || '')) {
+    if (validateChainAddress(value, getXChainType(outputToken.xChainId) || '')) {
       setIsValidAddress(true);
     } else {
       setIsValidAddress(false);

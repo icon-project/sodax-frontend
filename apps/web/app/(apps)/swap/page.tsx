@@ -121,17 +121,11 @@ function SwapStatusMonitor({
 export default function SwapPage() {
   const queryClient = useQueryClient();
 
-  const { sourceToken, destinationToken, sourceAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
+  const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
     useSwapState();
 
-  const {
-    setSourceToken,
-    setDestinationToken,
-    setSourceAmount,
-    setIsSwapAndSend,
-    setCustomDestinationAddress,
-    switchTokens,
-  } = useSwapActions();
+  const { setInputToken, setOutputToken, setInputAmount, setIsSwapAndSend, setCustomDestinationAddress, switchTokens } =
+    useSwapActions();
 
   const [isSwapConfirmOpen, setIsSwapConfirmOpen] = useState<boolean>(false);
   const [swapError, setSwapError] = useState<{ title: string; message: string } | null>(null);
@@ -140,7 +134,7 @@ export default function SwapPage() {
   const [dstTxHash, setDstTxHash] = useState<string>('');
   const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
   // Fixed amounts for dialog - these don't change once dialog is open
-  const [fixedDestinationAmount, setFixedDestinationAmount] = useState<string>('');
+  const [fixedOutputAmount, setFixedOutputAmount] = useState<string>('');
   const [fixedMinOutputAmount, setFixedMinOutputAmount] = useState<string>('');
 
   const handleSwapSuccessful = useCallback(() => {
@@ -155,150 +149,150 @@ export default function SwapPage() {
   }, []);
 
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
-  const { address: sourceAddress } = useXAccount(sourceToken.xChainId);
-  const { address: destinationAddress } = useXAccount(destinationToken.xChainId);
+  const { address: sourceAddress } = useXAccount(inputToken.xChainId);
+  const { address: destinationAddress } = useXAccount(outputToken.xChainId);
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
 
-  const sourceWalletProvider = useWalletProvider(sourceToken.xChainId);
-  const sourceSpokeProvider = useSpokeProvider(sourceToken.xChainId, sourceWalletProvider);
+  const sourceWalletProvider = useWalletProvider(inputToken.xChainId);
+  const sourceSpokeProvider = useSpokeProvider(inputToken.xChainId, sourceWalletProvider);
 
   const { data: sourceBalances } = useXBalances({
-    xChainId: sourceToken.xChainId,
-    xTokens: [sourceToken],
+    xChainId: inputToken.xChainId,
+    xTokens: [inputToken],
     address: sourceAddress,
   });
 
   const { data: destinationBalances } = useXBalances({
-    xChainId: destinationToken.xChainId,
-    xTokens: [destinationToken],
+    xChainId: outputToken.xChainId,
+    xTokens: [outputToken],
     address: destinationAddress,
   });
 
-  const sourceBalance = sourceBalances?.[sourceToken.address] || 0n;
-  const destinationBalance = destinationBalances?.[destinationToken.address] || 0n;
+  const sourceBalance = sourceBalances?.[inputToken.address] || 0n;
+  const destinationBalance = destinationBalances?.[outputToken.address] || 0n;
 
   const isWaitingForSolvedStatus = useMemo(() => {
     return !!dstTxHash && !isSwapFailed;
   }, [dstTxHash, isSwapFailed]);
 
-  const sourceUsdValue = useTokenUsdValue(sourceToken, sourceAmount);
+  const sourceUsdValue = useTokenUsdValue(inputToken, inputAmount);
   const { sodax } = useSodaxContext();
 
   const quotePayload = useMemo(() => {
     if (
-      !sourceToken ||
-      !destinationToken ||
-      !sourceAmount ||
-      sourceAmount === '' ||
-      Number.isNaN(Number(sourceAmount)) ||
-      Number(sourceAmount) <= 0
+      !inputToken ||
+      !outputToken ||
+      !inputAmount ||
+      inputAmount === '' ||
+      Number.isNaN(Number(inputAmount)) ||
+      Number(inputAmount) <= 0
     ) {
       return undefined;
     }
 
     const payload = {
-      token_src: sourceToken.address,
-      token_src_blockchain_id: sourceToken.xChainId,
-      token_dst: destinationToken.address,
-      token_dst_blockchain_id: destinationToken.xChainId,
+      token_src: inputToken.address,
+      token_src_blockchain_id: inputToken.xChainId,
+      token_dst: outputToken.address,
+      token_dst_blockchain_id: outputToken.xChainId,
       amount:
-        parseUnits(sourceAmount, sourceToken.decimals) -
-        sodax.solver.getPartnerFee(parseUnits(sourceAmount, sourceToken.decimals)),
+        parseUnits(inputAmount, inputToken.decimals) -
+        sodax.solver.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)),
       quote_type: 'exact_input' as QuoteType,
     };
 
     return payload;
-  }, [sourceToken, destinationToken, sourceAmount, sodax]);
+  }, [inputToken, outputToken, inputAmount, sodax]);
 
   const quoteQuery = useQuote(quotePayload);
 
-  const calculatedDestinationAmount = useMemo(() => {
+  const calculatedOutputAmount = useMemo(() => {
     if (quoteQuery.data?.ok && quoteQuery.data.value) {
       const quotedAmount = quoteQuery.data.value.quoted_amount;
-      return normaliseTokenAmount(quotedAmount, destinationToken.decimals);
+      return normaliseTokenAmount(quotedAmount, outputToken.decimals);
     }
     return '';
-  }, [quoteQuery.data, destinationToken.decimals]);
+  }, [quoteQuery.data, outputToken.decimals]);
 
-  const destinationUsdValue = useTokenUsdValue(destinationToken, calculatedDestinationAmount);
+  const destinationUsdValue = useTokenUsdValue(outputToken, calculatedOutputAmount);
 
   const exchangeRate = useMemo(() => {
     if (
-      !sourceAmount ||
-      !calculatedDestinationAmount ||
-      sourceAmount === '' ||
-      calculatedDestinationAmount === '' ||
-      Number.isNaN(Number(sourceAmount)) ||
-      Number.isNaN(Number(calculatedDestinationAmount)) ||
-      Number(sourceAmount) <= 0
+      !inputAmount ||
+      !calculatedOutputAmount ||
+      inputAmount === '' ||
+      calculatedOutputAmount === '' ||
+      Number.isNaN(Number(inputAmount)) ||
+      Number.isNaN(Number(calculatedOutputAmount)) ||
+      Number(inputAmount) <= 0
     ) {
       return null;
     }
 
     try {
-      return new BigNumber(calculatedDestinationAmount).dividedBy(new BigNumber(sourceAmount));
+      return new BigNumber(calculatedOutputAmount).dividedBy(new BigNumber(inputAmount));
     } catch {
       return null;
     }
-  }, [sourceAmount, calculatedDestinationAmount]);
+  }, [inputAmount, calculatedOutputAmount]);
 
   const swapFees = useMemo(() => {
-    if (!sourceAmount || sourceAmount === '' || Number.isNaN(Number(sourceAmount)) || Number(sourceAmount) <= 0) {
+    if (!inputAmount || inputAmount === '' || Number.isNaN(Number(inputAmount)) || Number(inputAmount) <= 0) {
       return undefined;
     }
 
     if (
-      !calculatedDestinationAmount ||
-      calculatedDestinationAmount === '' ||
-      Number.isNaN(Number(calculatedDestinationAmount)) ||
-      Number(calculatedDestinationAmount) <= 0
+      !calculatedOutputAmount ||
+      calculatedOutputAmount === '' ||
+      Number.isNaN(Number(calculatedOutputAmount)) ||
+      Number(calculatedOutputAmount) <= 0
     ) {
       return undefined;
     }
 
     return {
       partner: new BigNumber(
-        formatUnits(sodax.solver.getPartnerFee(parseUnits(sourceAmount, sourceToken.decimals)), sourceToken.decimals),
+        formatUnits(sodax.solver.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)), inputToken.decimals),
       ),
       solver: new BigNumber(
         formatUnits(
-          sodax.solver.getSolverFee(parseUnits(calculatedDestinationAmount, destinationToken.decimals)),
-          destinationToken.decimals,
+          sodax.solver.getSolverFee(parseUnits(calculatedOutputAmount, outputToken.decimals)),
+          outputToken.decimals,
         ),
       ),
     };
-  }, [sourceAmount, calculatedDestinationAmount, sourceToken.decimals, destinationToken.decimals, sodax.solver]);
+  }, [inputAmount, calculatedOutputAmount, inputToken.decimals, outputToken.decimals, sodax.solver]);
 
-  const { data: sourceTokenPrice } = useTokenPrice(sourceToken);
-  const { data: destinationTokenPrice } = useTokenPrice(destinationToken);
+  const { data: inputTokenPrice } = useTokenPrice(inputToken);
+  const { data: outputTokenPrice } = useTokenPrice(outputToken);
   const swapFeesUsdValue = useMemo(() => {
-    if (!swapFees || !sourceTokenPrice || !destinationTokenPrice) {
+    if (!swapFees || !inputTokenPrice || !outputTokenPrice) {
       return undefined;
     }
 
     return {
-      partner: swapFees.partner.multipliedBy(sourceTokenPrice),
-      solver: swapFees.solver.multipliedBy(destinationTokenPrice),
-      total: swapFees.partner.multipliedBy(sourceTokenPrice).plus(swapFees.solver.multipliedBy(destinationTokenPrice)),
+      partner: swapFees.partner.multipliedBy(inputTokenPrice),
+      solver: swapFees.solver.multipliedBy(outputTokenPrice),
+      total: swapFees.partner.multipliedBy(inputTokenPrice).plus(swapFees.solver.multipliedBy(outputTokenPrice)),
     };
-  }, [swapFees, sourceTokenPrice, destinationTokenPrice]);
+  }, [swapFees, inputTokenPrice, outputTokenPrice]);
 
   const minOutputAmount = useMemo(() => {
-    if (quoteQuery.data?.ok && quoteQuery.data.value && calculatedDestinationAmount) {
-      return new BigNumber(calculatedDestinationAmount)
+    if (quoteQuery.data?.ok && quoteQuery.data.value && calculatedOutputAmount) {
+      return new BigNumber(calculatedOutputAmount)
         .multipliedBy(100 - slippageTolerance)
         .dividedBy(100)
-        .toFixed(destinationToken.decimals, BigNumber.ROUND_DOWN);
+        .toFixed(outputToken.decimals, BigNumber.ROUND_DOWN);
     }
     return '';
-  }, [quoteQuery.data, calculatedDestinationAmount, destinationToken.decimals, slippageTolerance]);
+  }, [quoteQuery.data, calculatedOutputAmount, outputToken.decimals, slippageTolerance]);
 
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceSpokeProvider);
 
   const createIntentOrderPayload = () => {
-    if (!sourceToken || !destinationToken) {
+    if (!inputToken || !outputToken) {
       console.error('SOURCE_TOKEN_OR_DEST_TOKEN_UNDEFINED');
       return;
     }
@@ -324,14 +318,14 @@ export default function SwapPage() {
     }
 
     const createIntentParams = {
-      inputToken: sourceToken.address, // The address of the input token on hub chain
-      outputToken: destinationToken.address, // The address of the output token on hub chain
-      inputAmount: parseUnits(sourceAmount, sourceToken.decimals), // The amount of input tokens
+      inputToken: inputToken.address, // The address of the input token on hub chain
+      outputToken: outputToken.address, // The address of the output token on hub chain
+      inputAmount: parseUnits(inputAmount, inputToken.decimals), // The amount of input tokens
       minOutputAmount: BigInt(Number(minOutputAmount).toFixed(0)), // The minimum amount of output tokens to accept
       deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires (0 = no deadline)
       allowPartialFill: false, // Whether the intent can be partially filled
-      srcChain: sourceToken.xChainId as SpokeChainId, // Chain ID where input tokens originate
-      dstChain: destinationToken.xChainId as SpokeChainId, // Chain ID where output tokens should be delivered
+      srcChain: inputToken.xChainId as SpokeChainId, // Chain ID where input tokens originate
+      dstChain: outputToken.xChainId as SpokeChainId, // Chain ID where output tokens should be delivered
       srcAddress: sourceAddress, // Source address (original address on spoke chain)
       dstAddress: destinationAddress, // Destination address (original address on spoke chain)
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
@@ -348,19 +342,19 @@ export default function SwapPage() {
   }, [intentOrderPayload]);
 
   const handleReview = async (): Promise<void> => {
-    setFixedDestinationAmount(calculatedDestinationAmount);
+    setFixedOutputAmount(calculatedOutputAmount);
     setFixedMinOutputAmount(minOutputAmount);
     createIntentOrderPayload();
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setSourceAmount(e.target.value);
+    setInputAmount(e.target.value);
   };
 
   const handleMaxClick = (): void => {
     if (isSourceChainConnected) {
-      const maxAvailableAmount = calculateMaxAvailableAmount(sourceBalance, sourceToken.decimals, sodax.solver);
-      setSourceAmount(maxAvailableAmount);
+      const maxAvailableAmount = calculateMaxAvailableAmount(sourceBalance, inputToken.decimals, sodax.solver);
+      setInputAmount(maxAvailableAmount);
     }
   };
 
@@ -394,9 +388,9 @@ export default function SwapPage() {
       }
 
       const quotedAmount = quoteQuery.data.value.quoted_amount;
-      const sourceAmountBigInt = parseUnits(sourceAmount, sourceToken.decimals);
+      const inputAmountBigInt = parseUnits(inputAmount, inputToken.decimals);
 
-      if (sourceAmountBigInt <= 0n) {
+      if (inputAmountBigInt <= 0n) {
         throw new Error('INVALID_SOURCE_AMOUNT');
       }
 
@@ -404,7 +398,7 @@ export default function SwapPage() {
         throw new Error('INVALID_QUOTED_AMOUNT');
       }
 
-      if (!hasSufficientBalanceWithFee(sourceAmount, sourceBalance, sourceToken.decimals, sodax.solver)) {
+      if (!hasSufficientBalanceWithFee(inputAmount, sourceBalance, inputToken.decimals, sodax.solver)) {
         throw new Error('INSUFFICIENT_BALANCE');
       }
 
@@ -414,14 +408,14 @@ export default function SwapPage() {
         .toFixed(0, BigNumber.ROUND_DOWN);
 
       const result = await executeSwap({
-        inputToken: sourceToken.address,
-        outputToken: destinationToken.address,
-        inputAmount: sourceAmountBigInt,
+        inputToken: inputToken.address,
+        outputToken: outputToken.address,
+        inputAmount: inputAmountBigInt,
         minOutputAmount: BigInt(minOutputAmount),
         deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5),
         allowPartialFill: false,
-        srcChain: sourceToken.xChainId as SpokeChainId,
-        dstChain: destinationToken.xChainId as SpokeChainId,
+        srcChain: inputToken.xChainId as SpokeChainId,
+        dstChain: outputToken.xChainId as SpokeChainId,
         srcAddress: sourceAddress,
         dstAddress: finalDestinationAddress,
         solver: '0x0000000000000000000000000000000000000000',
@@ -454,7 +448,7 @@ export default function SwapPage() {
     setSwapResetCounter(prev => prev + 1);
     // Reset fixed amounts when dialog is closed
     setIsSwapConfirmOpen(false);
-    setFixedDestinationAmount('');
+    setFixedOutputAmount('');
     setFixedMinOutputAmount('');
   };
 
@@ -494,13 +488,13 @@ export default function SwapPage() {
           <div className="relative w-full">
             <CurrencyInputPanel
               type={CurrencyInputPanelType.INPUT}
-              chainId={sourceToken.xChainId as SpokeChainId}
-              currency={sourceToken}
+              chainId={inputToken.xChainId as SpokeChainId}
+              currency={inputToken}
               currencyBalance={isSourceChainConnected ? sourceBalance : 0n}
-              inputValue={sourceAmount}
+              inputValue={inputAmount}
               onInputChange={handleInputChange}
               onMaxClick={handleMaxClick}
-              onCurrencyChange={setSourceToken}
+              onCurrencyChange={setInputToken}
               isChainConnected={isSourceChainConnected}
               usdValue={sourceUsdValue}
             />
@@ -517,11 +511,11 @@ export default function SwapPage() {
 
           <CurrencyInputPanel
             type={CurrencyInputPanelType.OUTPUT}
-            chainId={destinationToken.xChainId as SpokeChainId}
-            currency={destinationToken}
+            chainId={outputToken.xChainId as SpokeChainId}
+            currency={outputToken}
             currencyBalance={isDestinationChainConnected ? destinationBalance : 0n}
-            inputValue={calculatedDestinationAmount}
-            onCurrencyChange={setDestinationToken}
+            inputValue={calculatedOutputAmount}
+            onCurrencyChange={setOutputToken}
             isChainConnected={isDestinationChainConnected}
             isSwapAndSend={isSwapAndSend}
             onSwapAndSendToggle={setIsSwapAndSend}
@@ -554,14 +548,12 @@ export default function SwapPage() {
       )}
       <SwapConfirmDialog
         open={isSwapConfirmOpen}
-        sourceToken={sourceToken}
-        destinationToken={destinationToken}
+        inputToken={inputToken}
+        outputToken={outputToken}
         finalDestinationAddress={
           isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || ''
         }
-        destinationAmount={
-          isSwapConfirmOpen && fixedDestinationAmount ? fixedDestinationAmount : calculatedDestinationAmount
-        }
+        outputAmount={isSwapConfirmOpen && fixedOutputAmount ? fixedOutputAmount : calculatedOutputAmount}
         exchangeRate={exchangeRate}
         onConfirm={handleSwapConfirm}
         onClose={handleDialogClose}

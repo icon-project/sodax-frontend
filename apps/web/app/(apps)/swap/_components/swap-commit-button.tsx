@@ -23,37 +23,34 @@ export default function SwapCommitButton({
 }) {
   const openModal = useModalStore(state => state.openModal);
 
-  const { sourceToken, destinationToken, sourceAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
+  const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
     useSwapState();
 
-  const { address: sourceAddress } = useXAccount(sourceToken.xChainId);
-  const { address: destinationAddress } = useXAccount(destinationToken.xChainId);
+  const { address: sourceAddress } = useXAccount(inputToken.xChainId);
+  const { address: destinationAddress } = useXAccount(outputToken.xChainId);
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceToken.xChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(inputToken.xChainId);
 
   const isQuoteUnavailable = quoteQuery.data?.ok === false;
   const isConnected = isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend);
   const inputError = useMemo(() => {
-    if (sourceAmount === '0' || sourceAmount === '') {
+    if (inputAmount === '0' || inputAmount === '') {
       return 'Enter Amount';
     }
     if (isSwapAndSend && customDestinationAddress === '') {
       return 'Enter destination address';
     }
-    if (
-      isSwapAndSend &&
-      !validateChainAddress(customDestinationAddress, getXChainType(destinationToken.xChainId) || '')
-    ) {
+    if (isSwapAndSend && !validateChainAddress(customDestinationAddress, getXChainType(outputToken.xChainId) || '')) {
       return 'Address is not valid';
     }
     return null;
-  }, [sourceAmount, isSwapAndSend, customDestinationAddress, destinationToken.xChainId]);
+  }, [inputAmount, isSwapAndSend, customDestinationAddress, outputToken.xChainId]);
 
-  const sourceChainType = getXChainType(sourceToken.xChainId);
-  const destinationChainType = getXChainType(destinationToken.xChainId);
+  const sourceChainType = getXChainType(inputToken.xChainId);
+  const destinationChainType = getXChainType(outputToken.xChainId);
 
   const getTargetChainType = (): ChainType | undefined => {
     if (!sourceAddress) {
@@ -84,9 +81,7 @@ export default function SwapCommitButton({
           onClick={handleOpenWalletModal}
         >
           Connect{' '}
-          {!isSourceChainConnected
-            ? chainIdToChainName(sourceToken.xChainId)
-            : chainIdToChainName(destinationToken.xChainId)}
+          {!isSourceChainConnected ? chainIdToChainName(inputToken.xChainId) : chainIdToChainName(outputToken.xChainId)}
         </Button>
       ) : isWrongChain ? (
         <Button
@@ -94,7 +89,7 @@ export default function SwapCommitButton({
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
           onClick={handleSwitchChain}
         >
-          Switch to {chainIdToChainName(sourceToken.xChainId)}
+          Switch to {chainIdToChainName(inputToken.xChainId)}
         </Button>
       ) : inputError ? (
         <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>

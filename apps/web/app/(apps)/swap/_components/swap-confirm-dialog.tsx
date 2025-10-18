@@ -8,16 +8,7 @@ import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { CircularProgressIcon } from '@/components/icons';
 import type BigNumber from 'bignumber.js';
-import {
-  Timer,
-  XIcon,
-  Check,
-  ChevronsRight,
-  ChevronDown,
-  ChevronUp,
-  ShieldAlertIcon,
-  ExternalLinkIcon,
-} from 'lucide-react';
+import { Timer, XIcon, Check, ChevronsRight, ShieldAlertIcon, ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
@@ -31,10 +22,10 @@ import { useSwapActions, useSwapState, useSwapStore } from '../_stores/swap-stor
 
 interface SwapConfirmDialogProps {
   open: boolean;
-  sourceToken: XToken;
-  destinationToken: XToken;
+  inputToken: XToken;
+  outputToken: XToken;
   finalDestinationAddress: string;
-  destinationAmount: string;
+  outputAmount: string;
   exchangeRate: BigNumber | null;
   onConfirm: () => void;
   onClose?: () => void;
@@ -55,10 +46,10 @@ interface SwapConfirmDialogProps {
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   open,
-  sourceToken,
-  destinationToken,
+  inputToken,
+  outputToken,
   finalDestinationAddress,
-  destinationAmount,
+  outputAmount,
   exchangeRate,
   onConfirm,
   onClose,
@@ -76,12 +67,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [allowanceConfirmed, setAllowanceConfirmed] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
-  const walletProvider = useWalletProvider(sourceToken.xChainId);
-  const spokeProvider = useSpokeProvider(sourceToken.xChainId, walletProvider);
-  const sourceXAccount = useXAccount(sourceToken.xChainId);
-  const { sourceAmount } = useSwapState();
-
-  const { setSourceAmount } = useSwapActions();
+  const walletProvider = useWalletProvider(inputToken.xChainId);
+  const spokeProvider = useSpokeProvider(inputToken.xChainId, walletProvider);
+  const sourceXAccount = useXAccount(inputToken.xChainId);
+  const { inputAmount } = useSwapState();
+  const { setInputAmount } = useSwapActions();
 
   const paramsForApprove = intentOrderPayload
     ? JSON.parse(
@@ -194,15 +184,15 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
               <div className="w-60 pb-6 inline-flex justify-between items-center">
                 <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
                   <div className={`${isSwapSuccessful ? 'grayscale opacity-50' : ''}`}>
-                    <CurrencyLogo currency={sourceToken} />
+                    <CurrencyLogo currency={inputToken} />
                   </div>
                   <div className="flex flex-col justify-start items-center gap-2">
                     <div className="inline-flex justify-start items-center gap-1">
                       <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                        {sourceAmount}
+                        {inputAmount}
                       </div>
                       <div className="justify-start text-clay-light text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                        {sourceToken.symbol}
+                        {inputToken.symbol}
                       </div>
                     </div>
                     <div className="flex flex-col justify-start items-center">
@@ -215,7 +205,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                         </div>
                       </div>
                       <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                        on {chainIdToChainName(sourceToken.xChainId)}
+                        on {chainIdToChainName(inputToken.xChainId)}
                       </div>
                     </div>
                   </div>
@@ -238,14 +228,14 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   )}
                 </div>
                 <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
-                  <CurrencyLogo currency={destinationToken} />
+                  <CurrencyLogo currency={outputToken} />
                   <div className="flex flex-col justify-start items-center gap-2">
                     <div className="inline-flex justify-start items-center gap-1">
                       <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                        {formatToSixDecimals(destinationAmount)}
+                        {formatToSixDecimals(outputAmount)}
                       </div>
                       <div className="justify-start text-clay-light text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                        {destinationToken.symbol}
+                        {outputToken.symbol}
                       </div>
                     </div>
                     <div className="flex flex-col justify-start items-center">
@@ -258,7 +248,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                         </div>
                       </div>
                       <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-                        on {chainIdToChainName(destinationToken.xChainId)}
+                        on {chainIdToChainName(outputToken.xChainId)}
                       </div>
                     </div>
                   </div>
@@ -274,7 +264,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                     className="w-full text-white font-semibold font-['InterRegular']"
                     onClick={() => {
                       handleClose();
-                      setSourceAmount('0');
+                      setInputAmount('0');
                     }}
                   >
                     <div className="flex items-center gap-2 text-white">
@@ -337,7 +327,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                             />
                           </div>
                         ) : (
-                          `Approve ${sourceToken.symbol}`
+                          `Approve ${inputToken.symbol}`
                         )}
                       </Button>
                     </div>
@@ -372,7 +362,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                           />
                         </div>
                       ) : (
-                        `Swap to ${destinationToken.symbol} on ${chainIdToChainName(destinationToken.xChainId)}`
+                        `Swap to ${outputToken.symbol} on ${chainIdToChainName(outputToken.xChainId)}`
                       )}
                     </Button>
                   )}
@@ -401,7 +391,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                             <div className="flex justify-between">
                               <span className="text-clay-light">Receive at least</span>
                               <span className="text-espresso font-medium">
-                                {formatToSixDecimals(minOutputAmount?.toString() || '0')} {destinationToken.symbol}
+                                {formatToSixDecimals(minOutputAmount?.toString() || '0')} {outputToken.symbol}
                               </span>
                             </div>
                             <div className="flex justify-between">

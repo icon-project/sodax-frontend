@@ -4,18 +4,18 @@ import { type XToken, ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sod
 import { spokeChainConfig } from '@sodax/sdk';
 
 export type SwapState = {
-  sourceToken: XToken;
-  destinationToken: XToken;
-  sourceAmount: string;
+  inputToken: XToken;
+  outputToken: XToken;
+  inputAmount: string;
   isSwapAndSend: boolean;
   customDestinationAddress: string;
   slippageTolerance: number;
 };
 
 export type SwapActions = {
-  setSourceToken: (token: XToken) => void;
-  setDestinationToken: (token: XToken) => void;
-  setSourceAmount: (amount: string) => void;
+  setInputToken: (token: XToken) => void;
+  setOutputToken: (token: XToken) => void;
+  setInputAmount: (amount: string) => void;
   setIsSwapAndSend: (isSwapAndSend: boolean) => void;
   setCustomDestinationAddress: (address: string) => void;
   setSlippageTolerance: (tolerance: number) => void;
@@ -26,9 +26,9 @@ export type SwapActions = {
 export type SwapStore = SwapState & SwapActions;
 
 export const defaultSwapState: SwapState = {
-  sourceToken: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
-  destinationToken: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
-  sourceAmount: '',
+  inputToken: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
+  outputToken: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
+  inputAmount: '',
   isSwapAndSend: false,
   customDestinationAddress: '',
   slippageTolerance: 0.5,
@@ -39,18 +39,18 @@ export const createSwapStore = (initState: SwapState = defaultSwapState) => {
     persist(
       (set, get) => ({
         ...initState,
-        setSourceToken: (token: XToken) => set({ sourceToken: token }),
-        setDestinationToken: (token: XToken) => set({ destinationToken: token }),
-        setSourceAmount: (amount: string) => set({ sourceAmount: amount }),
+        setInputToken: (token: XToken) => set({ inputToken: token }),
+        setOutputToken: (token: XToken) => set({ outputToken: token }),
+        setInputAmount: (amount: string) => set({ inputAmount: amount }),
         setIsSwapAndSend: (isSwapAndSend: boolean) => set({ isSwapAndSend }),
         setCustomDestinationAddress: (address: string) => set({ customDestinationAddress: address }),
         setSlippageTolerance: (tolerance: number) => set({ slippageTolerance: tolerance }),
         switchTokens: () => {
-          const { sourceToken, destinationToken, sourceAmount } = get();
+          const { inputToken, outputToken, inputAmount } = get();
           set({
-            sourceToken: destinationToken,
-            destinationToken: sourceToken,
-            sourceAmount: '',
+            inputToken: outputToken,
+            outputToken: inputToken,
+            inputAmount: '',
           });
         },
         resetSwapState: () => set(defaultSwapState),
@@ -58,8 +58,8 @@ export const createSwapStore = (initState: SwapState = defaultSwapState) => {
       {
         name: 'sodax-swap-store',
         partialize: state => ({
-          sourceToken: state.sourceToken,
-          destinationToken: state.destinationToken,
+          inputToken: state.inputToken,
+          outputToken: state.outputToken,
           isSwapAndSend: state.isSwapAndSend,
           customDestinationAddress: state.customDestinationAddress,
           slippageTolerance: state.slippageTolerance,
