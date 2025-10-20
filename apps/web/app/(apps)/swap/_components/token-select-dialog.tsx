@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
-import { XIcon, ChevronUpIcon } from 'lucide-react';
+import { XIcon } from 'lucide-react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { Button } from '@/components/ui/button';
 import { SearchBar } from './search-bar';

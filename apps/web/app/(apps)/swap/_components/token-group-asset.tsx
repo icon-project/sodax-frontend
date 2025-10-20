@@ -1,11 +1,9 @@
 import type React from 'react';
-import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 import type { XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
-import { motion } from 'motion/react';
 import { ArbitrumIcon } from '@/components/icons/chains/arbitrum';
 import { IcxIcon } from '@/components/icons/chains/icon';
 import { BaseIcon } from '@/components/icons/chains/base';

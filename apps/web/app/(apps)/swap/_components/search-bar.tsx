@@ -1,6 +1,6 @@
 import type React from 'react';
 import Image from 'next/image';
-import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid, XIcon } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';

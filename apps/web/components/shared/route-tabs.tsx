@@ -95,8 +95,6 @@ export function RouteTabs(): React.JSX.Element {
     return () => window.removeEventListener('resize', onResize);
   }, [current]);
 
-  const toHref = (value: string) => `/${value}`;
-
   return (
     <>
       <div
