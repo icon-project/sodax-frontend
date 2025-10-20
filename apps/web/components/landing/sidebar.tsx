@@ -38,16 +38,16 @@ const AppSidebar = (): React.ReactElement => {
             <CloseIcon width={24} height={24} fill="white" />
           </button>
 
-          <SidebarGroupContent className="flex flex-col items-center text-center gap-6 mt-45">
+          <SidebarGroupContent className="flex flex-col items-center text-center gap-6 mt-45 z-10">
             <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
             <SidebarMenu className="gap-6">
               <SidebarMenuItem>
-                <Link href="#" className="text-(length:--body-super-comfortable) text-white font-medium">
-                  <p>Join waitlist</p>
+                <Link href="/swap" className="text-(length:--body-super-comfortable) text-white font-medium">
+                  <p>lanuch apps</p>
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <Link href="#" className="text-(length:--body-super-comfortable) text-white font-medium">
+                <Link href="/" className="text-(length:--body-super-comfortable) text-white font-medium">
                   <p>About</p>
                 </Link>
               </SidebarMenuItem>

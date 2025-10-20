@@ -96,7 +96,7 @@ const HeroSection = (): React.ReactElement => {
               </li>
             </ul>
             <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton onClick={() => router.push('/migrate')}>launch apps</MainCtaButton>
+              <MainCtaButton onClick={() => router.push('/swap')}>launch apps</MainCtaButton>
             </div>
           </div>
         </div>
@@ -200,7 +200,7 @@ const HeroSection = (): React.ReactElement => {
               <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
             </div>
             <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton onClick={() => router.push('/migrate')}>launch apps</MainCtaButton>
+              <MainCtaButton onClick={() => router.push('/swap')}>launch apps</MainCtaButton>
             </div>
           </div>
         </div>
