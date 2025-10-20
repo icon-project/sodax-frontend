@@ -35,11 +35,6 @@ export const chainGroups: ChainGroup[] = [
     icon: '/chain/0x1.icon.png',
   },
   {
-    name: 'Injective',
-    chainType: 'INJECTIVE',
-    icon: '/chain/injective-1.png',
-  },
-  {
     name: 'Solana',
     chainType: 'SOLANA',
     icon: '/chain/solana.png',

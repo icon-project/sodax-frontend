@@ -38,11 +38,11 @@ export const availableChains: ChainUI[] = [
   },
   { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png' },
   { id: BSC_MAINNET_CHAIN_ID, name: 'BNB', icon: '/chain/0x38.bsc.png' },
-  {
-    id: INJECTIVE_MAINNET_CHAIN_ID,
-    name: 'Injective',
-    icon: '/chain/injective-1.png',
-  },
+  // {
+  //   id: INJECTIVE_MAINNET_CHAIN_ID,
+  //   name: 'Injective',
+  //   icon: '/chain/injective-1.png',
+  // },
   { id: SUI_MAINNET_CHAIN_ID, name: 'Sui', icon: '/chain/sui.png' },
   {
     id: OPTIMISM_MAINNET_CHAIN_ID,

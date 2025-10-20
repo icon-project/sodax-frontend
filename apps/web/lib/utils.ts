@@ -76,7 +76,9 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
   const allTokens: XToken[] = [];
 
   // Filter out Nibiru chain from supported chains
-  const filteredSupportedChains = supportedSpokeChains.filter(chainId => chainId !== 'nibiru');
+  const filteredSupportedChains = supportedSpokeChains.filter(
+    chainId => chainId !== 'nibiru' && chainId !== 'injective-1',
+  );
 
   for (const chainId of filteredSupportedChains) {
     try {
