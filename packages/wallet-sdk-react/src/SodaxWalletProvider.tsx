@@ -20,7 +20,7 @@ import { Hydrate } from './Hydrate';
 
 import { createWagmiConfig } from './xchains/evm/EvmXService';
 import { reconnectIcon } from './xchains/icon/actions';
-import { reconnectInjective } from './xchains/injective/actions';
+// import { reconnectInjective } from './xchains/injective/actions';
 import { reconnectStellar } from './xchains/stellar/actions';
 
 export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
@@ -45,5 +45,5 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
 };
 
 reconnectIcon();
-reconnectInjective();
+// reconnectInjective();
 reconnectStellar();
