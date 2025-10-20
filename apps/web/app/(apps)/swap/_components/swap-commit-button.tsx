@@ -112,6 +112,10 @@ export default function SwapCommitButton({
         <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
           Quote unavailable
         </Button>
+      ) : inputError ? (
+        <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
+          {inputError}
+        </Button>
       ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&
         stellarAccountValidation?.ok === false &&
         validateChainAddress(finalDestinationAddress || '', 'STELLAR') ? (
@@ -152,10 +156,6 @@ export default function SwapCommitButton({
           onClick={handleSwitchChain}
         >
           Switch to {chainIdToChainName(inputToken.xChainId)}
-        </Button>
-      ) : inputError ? (
-        <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
-          {inputError}
         </Button>
       ) : (
         <Button
