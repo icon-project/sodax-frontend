@@ -12,7 +12,9 @@ const LandingPage = () => {
   const swapRef = useRef(null);
 
   const scrollToSwap = () => {
-    swapRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (swapRef.current) {
+      (swapRef.current as HTMLElement).scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
