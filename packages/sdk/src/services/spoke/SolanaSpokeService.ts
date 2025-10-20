@@ -5,6 +5,7 @@ import {
   PublicKey,
   SystemProgram,
   VersionedTransaction,
+  type Finality,
   type TransactionInstruction,
 } from '@solana/web3.js';
 import { keccak256, type Address, type Hex } from 'viem';
@@ -17,6 +18,7 @@ import { convertTransactionInstructionToRaw, isNative } from '../../entities/sol
 import type {
   DepositSimulationParams,
   PromiseSolanaTxReturnType,
+  Result,
   SolanaGasEstimate,
   SolanaRawTransaction,
   SolanaReturnType,
@@ -325,5 +327,35 @@ export class SolanaSpokeService {
       } satisfies SolanaReturnType<true> as SolanaReturnType<R>;
     }
     return spokeProvider.walletProvider.sendTransaction(serializedTransaction) as PromiseSolanaTxReturnType<R>;
+  }
+
+  public static async waitForConfirmation(
+    spokeProvider: SolanaSpokeProvider,
+    signature: string,
+    commitment: Finality = 'finalized',
+    timeoutMs = 60_000, // total time to wait
+  ): Promise<Result<boolean>> {
+    const connection = new Connection(spokeProvider.chainConfig.rpcUrl, commitment);
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      try {
+        const tx = await connection.getTransaction(signature, { commitment, maxSupportedTransactionVersion: 0 });
+        if (tx) {
+          if (tx.meta?.err) {
+            return { ok: false, error: new Error(JSON.stringify(tx.meta.err)) };
+          }
+          return { ok: true, value: true };
+        }
+      } catch {
+        // ignore transient RPC errors and keep polling
+      }
+      await new Promise(r => setTimeout(r, 750)); // linear 750ms retry
+    }
+
+    return {
+      ok: false,
+      error: new Error(`Timed out after ${timeoutMs}ms waiting for ${commitment} confirmation for ${signature}`),
+    };
   }
 }

@@ -33,6 +33,14 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
  - ICX <> SODA
  - BALN <> SODA
 
+ ### Staking SODA [📖](./docs/STAKING.md)
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM❌, Lightlink) ✅
+  - Sui ✅
+  - Stellar ✅
+  - ICON ✅
+  - Solana ✅
+  - Injective ✅
+
 ## Installation
  
 ```bash
@@ -346,6 +354,7 @@ Sodax feature set currently contain:
 - Solver: used for intent based swaps. Please find documentation for Solver part of the SDK in [SOLVER.md](./docs/SOLVER.md)
 - Money Market: used for lending and borowing. Please find documentation for Solver part of the SDK in [MONEY_MARKET.md](./docs/MONEY_MARKET.md)
 - Bridge: provides functionality to bridge tokens between different blockchain chains [BRIDGE.md](./docs/BRIDGE.md)
+- Staking: provides functionality to stake SODA tokens from different blockchain chains [STAKING.md](./docs/STAKING.md)
 
 ## Intent Relay API
 

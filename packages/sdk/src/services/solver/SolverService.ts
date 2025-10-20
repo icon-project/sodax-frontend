@@ -30,7 +30,6 @@ import {
   submitTransaction,
   waitUntilIntentExecuted,
 } from '../../index.js';
-import type { HttpUrl } from '@sodax/types';
 import type {
   EvmContractCall,
   FeeAmount,
@@ -62,6 +61,7 @@ import {
   type Address,
   type Hex,
   type Hash,
+  type HttpUrl,
   SOLANA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
@@ -514,9 +514,25 @@ export class SolverService {
         return createIntentResult;
       }
 
-      // then submit the deposit tx hash of spoke chain to the intent relay
       const [spokeTxHash, intent, data] = createIntentResult.value;
 
+      // then verify the spoke tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(spokeTxHash, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATION_FAILED',
+            data: {
+              payload: params,
+              error: verifyTxHashResult.error,
+            },
+          },
+        };
+      }
+
+      // then submit the deposit tx hash of spoke chain to the intent relay
       let dstIntentTxHash: string;
 
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {

@@ -190,7 +190,7 @@ export class StellarWalletProvider implements IStellarWalletProvider {
             ...tx._links,
             transaction: tx._links.self,
           },
-        } as unknown as StellarRawTransactionReceipt;
+        };
       } catch (error) {
         // Wait for the next poll interval
         await new Promise(resolve => setTimeout(resolve, TX_POLL_INTERVAL));
