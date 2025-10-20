@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
-import { ScrollArea, ScrollAreaPrimitive, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollAreaPrimitive, ScrollBar } from '@/components/ui/scroll-area';
 import { TokenAsset } from './token-asset';
 import { TokenGroupAsset } from './token-group-asset';
 import { motion, AnimatePresence } from 'motion/react';

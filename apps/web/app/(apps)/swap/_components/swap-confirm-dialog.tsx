@@ -18,7 +18,7 @@ import { useSwapApprove, useSpokeProvider, useSwapAllowance } from '@sodax/dapp-
 import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { motion } from 'framer-motion';
-import { useSwapActions, useSwapState, useSwapStore } from '../_stores/swap-store-provider';
+import { useSwapActions, useSwapState } from '../_stores/swap-store-provider';
 
 interface SwapConfirmDialogProps {
   open: boolean;

@@ -6,13 +6,7 @@ import { isValidSuiAddress } from '@mysten/sui/utils';
 import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 
-import {
-  getSupportedSolverTokens,
-  supportedSpokeChains,
-  spokeChainConfig,
-  isLegacybnUSDToken,
-  isNewbnUSDToken,
-} from '@sodax/sdk';
+import { getSupportedSolverTokens, supportedSpokeChains, isLegacybnUSDToken, isNewbnUSDToken } from '@sodax/sdk';
 import type { XToken, SpokeChainId, Token } from '@sodax/types';
 
 export function cn(...inputs: ClassValue[]) {
@@ -20,7 +14,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-import { isAddress } from 'viem';
 
 /**
  * Shortens a blockchain address for display purposes

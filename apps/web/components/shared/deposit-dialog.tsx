@@ -1,9 +1,5 @@
-// apps/web/components/ui/deposit-dialog.tsx
 import type React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Image from 'next/image';
-import Link from 'next/link';
-import ConnectWalletButton from '@/components/shared/connect-wallet-button';
 import {
   SavingsIcon,
   LoansIcon,
@@ -11,7 +7,6 @@ import {
   DepositDialogArrowIcon,
   DepositDialogArrowMobileIcon,
 } from '@/components/icons';
-// import { useWallet } from '../../hooks/useWallet';
 import { useState, useEffect, useRef } from 'react';
 
 interface DepositDialogProps {
@@ -19,7 +14,6 @@ interface DepositDialogProps {
 }
 
 const DepositDialog: React.FC<DepositDialogProps> = ({ className = '' }) => {
-  const [connectModalOpen, setConnectModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('portfolio');
   const [arrowPosition, setArrowPosition] = useState(110);
   const [mobileArrowPosition, setMobileArrowPosition] = useState(0);

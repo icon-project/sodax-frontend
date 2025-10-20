@@ -5,7 +5,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ButtonHTMLAttributes } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 interface ConnectWalletButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   onWalletClick?: () => void;

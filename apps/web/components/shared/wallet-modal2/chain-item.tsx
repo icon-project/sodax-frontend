@@ -1,7 +1,7 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, MinusIcon, CopyIcon, Loader2, Info, XIcon } from 'lucide-react';
+import { PlusIcon, MinusIcon, CopyIcon, Loader2 } from 'lucide-react';
 import type { ChainType } from '@sodax/types';
 import { EVMChainItem } from './evm-chain-item';
 import {
@@ -49,7 +49,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
 
     if (xConnectors.length === 1) {
       try {
-        const xAccount = await xConnect(xConnectors[0] as XConnector);
+        await xConnect(xConnectors[0] as XConnector);
         setConnected(true);
         await delay(500);
       } catch (e) {}
