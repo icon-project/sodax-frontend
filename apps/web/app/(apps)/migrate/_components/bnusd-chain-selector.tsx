@@ -46,8 +46,8 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
 
   const availableChainsAndTokens = useMemo(() => {
     if (isLegacybnUSDToken(currency)) {
-      const bnUSDLegacySpokeChainIds2 = bnUSDLegacySpokeChainIds.filter(
-        chainId => chainId !== STELLAR_MAINNET_CHAIN_ID && availableChains.find(chain => chain.id === chainId),
+      const bnUSDLegacySpokeChainIds2 = bnUSDLegacySpokeChainIds.filter(chainId =>
+        availableChains.find(chain => chain.id === chainId),
       );
       return bnUSDLegacySpokeChainIds2.map(chainId => {
         const config = spokeChainConfig[chainId as LegacybnUSDChainId];
@@ -60,8 +60,8 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
       });
     }
     if (isNewbnUSDToken(currency)) {
-      const newbnUSDSpokeChainIds2 = newbnUSDSpokeChainIds.filter(
-        chainId => chainId !== STELLAR_MAINNET_CHAIN_ID && availableChains.find(chain => chain.id === chainId),
+      const newbnUSDSpokeChainIds2 = newbnUSDSpokeChainIds.filter(chainId =>
+        availableChains.find(chain => chain.id === chainId),
       );
       return newbnUSDSpokeChainIds2
         .filter(chainId => chainId !== NIBIRU_MAINNET_CHAIN_ID && chainId !== HYPEREVM_MAINNET_CHAIN_ID)

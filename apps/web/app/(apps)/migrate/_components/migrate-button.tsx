@@ -108,13 +108,15 @@ export const MigrateButton = () => {
   const destinationWalletProvider = useWalletProvider(direction.to);
   const destinationSpokeProvider = useSpokeProvider(direction.to, destinationWalletProvider);
 
-  const { data: hasSufficientTrustline } = useStellarTrustlineCheck(
+  const { data: hasSufficientTrustline, isPending: isCheckingTrustline } = useStellarTrustlineCheck(
     currencies.to.address,
     parseUnits(typedValue, currencies.to.decimals),
     destinationSpokeProvider,
     direction.to,
   );
-  const { mutateAsync: requestTrustline } = useRequestTrustline(currencies.to.address);
+  const { mutateAsync: requestTrustline, isPending: isRequestingTrustline } = useRequestTrustline(
+    currencies.to.address,
+  );
   const handleRequestTrustline = async () => {
     await requestTrustline({
       token: currencies.to.address,
@@ -160,6 +162,19 @@ export const MigrateButton = () => {
                   {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
                   {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
                   {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
+                </Button>
+              )}
+              {direction.to === STELLAR_MAINNET_CHAIN_ID && (
+                <Button
+                  className="w-34"
+                  type="button"
+                  variant="cherry"
+                  onClick={handleRequestTrustline}
+                  disabled={isCheckingTrustline || isRequestingTrustline || hasSufficientTrustline || !!inputError}
+                >
+                  {hasSufficientTrustline ? 'Trustline' : 'Add Trustline'}
+                  {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {hasSufficientTrustline && <Check className="w-4 h-4 text-clay-light" />}
                 </Button>
               )}
 
