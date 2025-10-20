@@ -19,7 +19,7 @@ import { useMigrate, useMigrationAllowance, useMigrationApprove } from '../_hook
 import { Check, Loader2 } from 'lucide-react';
 import { MODAL_ID } from '@/stores/modal-store';
 import { chainIdToChainName } from '@/providers/constants';
-import type { SpokeProvider } from '@sodax/sdk';
+import { isLegacybnUSDToken, type SpokeProvider } from '@sodax/sdk';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { SuccessDialog } from './success-dialog';
 import { ErrorDialog } from './error-dialog';
@@ -143,7 +143,7 @@ export const MigrateButton = () => {
           {isWrongChain ? (
             <Button
               variant="cherry"
-              className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
+              className="w-[136px] md:w-[232px] text-(length:--body-comfortable) text-white"
               onClick={handleSwitchChain}
             >
               Switch to {chainIdToChainName(direction.from)}
@@ -163,7 +163,7 @@ export const MigrateButton = () => {
                   {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
                 </Button>
               )}
-              {direction.to === STELLAR_MAINNET_CHAIN_ID && (
+              {direction.to === STELLAR_MAINNET_CHAIN_ID && isLegacybnUSDToken(currencies.from) && (
                 <Button
                   className="w-34"
                   type="button"
@@ -179,7 +179,7 @@ export const MigrateButton = () => {
 
               <Button
                 variant="cherry"
-                className="w-[136px] md:w-[232px] text-(size:--body-comfortable) text-white"
+                className="w-[136px] md:w-[232px] text-(length:--body-comfortable) text-white"
                 onClick={handleMigrate}
                 disabled={isPending || !!inputError || (needsApproval && (!hasSufficientAllowance || isApproving))}
               >
@@ -198,7 +198,7 @@ export const MigrateButton = () => {
       ) : (
         <Button
           variant="cherry"
-          className="w-full md:w-[232px] text-(size:--body-comfortable) text-white"
+          className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
           onClick={handleOpenWalletModal}
         >
           Connect {!isSourceChainConnected ? chainIdToChainName(direction.from) : chainIdToChainName(direction.to)}
