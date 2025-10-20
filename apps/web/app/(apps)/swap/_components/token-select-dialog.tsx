@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { SearchBar } from './search-bar';
 import { TokenList } from './token-list';
 import { DialogContent, Dialog, DialogTitle, DialogClose } from '@/components/ui/dialog';
-import { motion } from 'framer-motion';
 
 export default function TokenSelectDialog({
   isOpen,
