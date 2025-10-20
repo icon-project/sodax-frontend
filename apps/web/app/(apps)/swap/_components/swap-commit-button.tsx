@@ -3,15 +3,21 @@
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import type { ChainType } from '@sodax/types';
-import { useEvmSwitchChain, useXAccount, getXChainType } from '@sodax/wallet-sdk-react';
+import { useEvmSwitchChain, useXAccount, getXChainType, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useSwapState } from '../_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { validateChainAddress } from '@/lib/utils';
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { Result } from '@sodax/sdk';
+import type { Result, SpokeProvider } from '@sodax/sdk';
 import type { SolverIntentQuoteResponse, SolverErrorResponse } from '@sodax/sdk';
+import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
+import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
+import { Loader2 } from 'lucide-react';
+import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
+import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 
 export default function SwapCommitButton({
   quoteQuery,
@@ -66,11 +72,69 @@ export default function SwapCommitButton({
     openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
   };
 
+  const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress;
+
+  const { data: stellarAccountValidation, refetch } = useValidateStellarAccount(finalDestinationAddress);
+  const handleActivateStellarAccount = async () => {
+    if (!finalDestinationAddress) {
+      return;
+    }
+    await activateStellarAccount({ address: finalDestinationAddress });
+    refetch();
+  };
+  const { mutateAsync: activateStellarAccount, isPending: isActivatingStellarAccount } = useActivateStellarAccount();
+
+  // trustline check
+  const { data: stellarTrustlineValidation, refetch: refetchStellarTrustline } = useValidateStellarTrustline(
+    finalDestinationAddress,
+    outputToken,
+  );
+
+  const destinationWalletProvider = useWalletProvider(outputToken.xChainId);
+  const destinationSpokeProvider = useSpokeProvider(outputToken.xChainId, destinationWalletProvider);
+
+  const { mutateAsync: requestTrustline, isPending: isRequestingTrustline } = useRequestTrustline(outputToken.address);
+  const handleRequestTrustline = async () => {
+    if (!quoteQuery.data?.ok || !quoteQuery.data.value) {
+      return;
+    }
+    await requestTrustline({
+      token: outputToken.address,
+      amount: quoteQuery.data.value.quoted_amount,
+      spokeProvider: destinationSpokeProvider as SpokeProvider,
+    });
+    refetchStellarTrustline();
+  };
+
   return (
     <>
       {isQuoteUnavailable ? (
         <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
           Quote unavailable
+        </Button>
+      ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&
+        stellarAccountValidation?.ok === false &&
+        validateChainAddress(finalDestinationAddress || '', 'STELLAR') ? (
+        <Button
+          variant="cherry"
+          className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+          onClick={handleActivateStellarAccount}
+          disabled={isActivatingStellarAccount || isSwapAndSend}
+        >
+          {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+          {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin" />}
+        </Button>
+      ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&
+        stellarTrustlineValidation?.ok === false &&
+        validateChainAddress(finalDestinationAddress || '', 'STELLAR') ? (
+        <Button
+          variant="cherry"
+          className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+          onClick={handleRequestTrustline}
+          disabled={isRequestingTrustline || isSwapAndSend}
+        >
+          {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
+          {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
         </Button>
       ) : !isConnected ? (
         <Button

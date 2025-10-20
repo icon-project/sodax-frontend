@@ -12,6 +12,8 @@ import { useSwapState } from '../_stores/swap-store-provider';
 import { formatNumberForDisplay, validateChainAddress } from '@/lib/utils';
 import { getXChainType } from '@sodax/wallet-sdk-react';
 import BigNumber from 'bignumber.js';
+import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
+import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -86,6 +88,9 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const usdValue = useMemo(() => {
     return inputValue === '' ? 0 : new BigNumber(inputValue).multipliedBy(usdPrice).toFixed(2);
   }, [inputValue, usdPrice]);
+
+  const { data: stellarAccountValidation } = useValidateStellarAccount(customDestinationAddress);
+  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(customDestinationAddress, outputToken);
 
   return (
     <div
@@ -164,15 +169,27 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       </div>
 
       {type === CurrencyInputPanelType.OUTPUT && isSwapAndSend && onCustomDestinationAddressChange && (
-        <div className="inline-flex justify-start items-center gap-2 mt-2 w-full">
-          <Input
-            type="text"
-            placeholder="Enter destination address"
-            value={customDestinationAddress}
-            onChange={e => handleChange(e.target.value)}
-            className={`h-10 flex-1 text-(length:--body-small) border-cream-white focus:!border-cream-white rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 ${!isValidAddress ? 'text-negative focus-visible:text-negative' : ''}`}
-          />
-        </div>
+        <>
+          <div className="inline-flex justify-start items-center gap-2 mt-2 w-full">
+            <Input
+              type="text"
+              placeholder="Enter destination address"
+              value={customDestinationAddress}
+              onChange={e => handleChange(e.target.value)}
+              className={`h-10 flex-1 text-(length:--body-small) border-cream-white focus:!border-cream-white rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 ${!isValidAddress ? 'text-negative focus-visible:text-negative' : ''}`}
+            />
+          </div>
+          {stellarAccountValidation?.ok === false && validateChainAddress(customDestinationAddress, 'STELLAR') && (
+            <div className="p-2 text-negative text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
+              Stellar account does not exist for this address
+            </div>
+          )}
+          {stellarTrustlineValidation?.ok === false && validateChainAddress(customDestinationAddress, 'STELLAR') && (
+            <div className="p-2 text-negative text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
+              Trustline does not exist for this address
+            </div>
+          )}
+        </>
       )}
 
       <TokenSelectDialog
