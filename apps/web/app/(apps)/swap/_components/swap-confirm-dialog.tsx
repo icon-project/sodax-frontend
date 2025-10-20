@@ -211,7 +211,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
     try {
       setApprovalError(null);
-      const value = await approve();
+      const value = await approve(intentOrderPayload);
       if (value) {
         setAllowanceConfirmed(true);
       } else {
