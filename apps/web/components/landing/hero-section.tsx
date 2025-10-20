@@ -5,7 +5,6 @@ import type React from 'react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import type { CarouselApi } from '@/components/ui/carousel';
 import { useEffect, useRef, useState } from 'react';
-import { Link as ScrollLink } from 'react-scroll';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
@@ -88,14 +87,12 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
             {/* Navigation Menu and Button */}
             <ul className="hidden lg:flex gap-4 z-10">
               <li>
-                {/* <ScrollLink to="networks" smooth={true} duration={500} spy={true}> */}
                 <span
                   className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
                   onClick={onSwapClick}
                 >
                   About
                 </span>
-                {/* </ScrollLink> */}
               </li>
             </ul>
             <div className="inline-flex justify-center items-start relative">
