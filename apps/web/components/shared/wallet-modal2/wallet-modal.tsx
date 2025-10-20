@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useModalOpen, useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
