@@ -9,14 +9,11 @@ import { useMemo } from 'react';
  */
 export function useTokenPrice(token: XToken) {
   return useQuery({
-    queryKey: ['tokenPrice', token?.symbol, token?.xChainId],
+    queryKey: ['tokenPrice', token],
     queryFn: async (): Promise<number> => {
-      if (!token?.symbol) {
-        return 0;
-      }
       return await getTokenPrice(token);
     },
-    enabled: !!token?.symbol,
+    enabled: !!token,
     staleTime: 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
