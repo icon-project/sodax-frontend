@@ -667,8 +667,15 @@ export class ConcentratedLiquidityService {
     const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
     const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
 
-    // Calculate liquidity from amount0
-    const liquidity = maxLiquidityForAmount0Precise(sqrtRatioX96Lower, sqrtRatioX96Upper, amount0);
+    // Calculate liquidity using only amount0 (use a very large value for amount1 to not constrain)
+    const liquidity = maxLiquidityForAmounts(
+      sqrtRatioX96Current,
+      sqrtRatioX96Lower,
+      sqrtRatioX96Upper,
+      amount0,
+      BigInt('0xffffffffffffffffffffffffffffffff'), // max uint128
+      true,
+    );
 
     // Calculate amount1 from liquidity using PositionMath
     const amount1 = PositionMath.getToken1Amount(
@@ -702,8 +709,15 @@ export class ConcentratedLiquidityService {
     const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
     const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
 
-    // Calculate liquidity from amount1
-    const liquidity = maxLiquidityForAmount1(sqrtRatioX96Lower, sqrtRatioX96Upper, amount1);
+    // Calculate liquidity using only amount1 (use a very large value for amount0 to not constrain)
+    const liquidity = maxLiquidityForAmounts(
+      sqrtRatioX96Current,
+      sqrtRatioX96Lower,
+      sqrtRatioX96Upper,
+      BigInt('0xffffffffffffffffffffffffffffffff'), // max uint128
+      amount1,
+      true,
+    );
 
     // Calculate amount0 from liquidity using PositionMath
     const amount0 = PositionMath.getToken0Amount(

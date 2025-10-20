@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Loader2, AlertCircle, Wallet } from 'lucide-react';
 import { ConcentratedLiquidityService, AssetService, EvmHubProvider } from '@sodax/sdk';
 
@@ -17,7 +15,6 @@ import { useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sd
 import { useAppStore } from '@/zustand/useAppStore';
 import { useSpokeProvider } from '@sodax/dapp-kit';
 import { ChainSelector } from '@/components/shared/ChainSelector';
-import type { ChainId } from '@sodax/types';
 
 // Type for pool keys (from @pancakeswap/infinity-sdk)
 type PoolKey = ReturnType<InstanceType<typeof ConcentratedLiquidityService>['getPools']>[number];
@@ -830,7 +827,9 @@ export function SimplePoolManager(): JSX.Element {
               <div className="col-span-2">
                 <span className="text-muted-foreground">Token 0:</span>
                 <div className="mt-1">
-                  <Badge variant="secondary">{poolData.token0.symbol}</Badge>
+                  <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+                    {poolData.token0.symbol}
+                  </span>
                   {poolData.token0IsStatAToken && poolData.token0UnderlyingToken && (
                     <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
                       <div className="flex items-center gap-2">
@@ -839,9 +838,9 @@ export function SimplePoolManager(): JSX.Element {
                       <div className="mt-1 space-y-1">
                         <div>
                           <span className="text-muted-foreground">Underlying:</span>{' '}
-                          <Badge variant="outline" className="ml-1">
+                          <span className="ml-1 inline-flex items-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium">
                             {poolData.token0UnderlyingToken.symbol}
-                          </Badge>
+                          </span>
                         </div>
                         {poolData.token0ConversionRate && (
                           <div>
@@ -860,7 +859,9 @@ export function SimplePoolManager(): JSX.Element {
               <div className="col-span-2">
                 <span className="text-muted-foreground">Token 1:</span>
                 <div className="mt-1">
-                  <Badge variant="secondary">{poolData.token1.symbol}</Badge>
+                  <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+                    {poolData.token1.symbol}
+                  </span>
                   {poolData.token1IsStatAToken && poolData.token1UnderlyingToken && (
                     <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
                       <div className="flex items-center gap-2">
@@ -869,9 +870,9 @@ export function SimplePoolManager(): JSX.Element {
                       <div className="mt-1 space-y-1">
                         <div>
                           <span className="text-muted-foreground">Underlying:</span>{' '}
-                          <Badge variant="outline" className="ml-1">
+                          <span className="ml-1 inline-flex items-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium">
                             {poolData.token1UnderlyingToken.symbol}
-                          </Badge>
+                          </span>
                         </div>
                         {poolData.token1ConversionRate && (
                           <div>
@@ -932,9 +933,9 @@ export function SimplePoolManager(): JSX.Element {
                       onChange={e => setToken0Amount(e.target.value)}
                       className="flex-1"
                     />
-                    <Badge variant="outline" className="px-3 flex items-center">
+                    <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
                       {poolData.token0.symbol}
-                    </Badge>
+                    </span>
                   </div>
                   <div className="text-xs space-y-1">
                     <p className="text-muted-foreground">
@@ -973,9 +974,9 @@ export function SimplePoolManager(): JSX.Element {
                       onChange={e => setToken1Amount(e.target.value)}
                       className="flex-1"
                     />
-                    <Badge variant="outline" className="px-3 flex items-center">
+                    <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
                       {poolData.token1.symbol}
-                    </Badge>
+                    </span>
                   </div>
                   <div className="text-xs space-y-1">
                     <p className="text-muted-foreground">
@@ -1360,9 +1361,9 @@ export function SimplePoolManager(): JSX.Element {
                       onChange={e => setToken0Amount(e.target.value)}
                       className="flex-1"
                     />
-                    <Badge variant="outline" className="px-3 flex items-center">
+                    <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
                       {poolData.token0.symbol}
-                    </Badge>
+                    </span>
                   </div>
                   <div className="text-xs space-y-1">
                     <p className="text-muted-foreground">
@@ -1406,9 +1407,9 @@ export function SimplePoolManager(): JSX.Element {
                       onChange={e => setToken1Amount(e.target.value)}
                       className="flex-1"
                     />
-                    <Badge variant="outline" className="px-3 flex items-center">
+                    <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
                       {poolData.token1.symbol}
-                    </Badge>
+                    </span>
                   </div>
                   <div className="text-xs space-y-1">
                     <p className="text-muted-foreground">
@@ -1447,10 +1448,10 @@ export function SimplePoolManager(): JSX.Element {
 
       {/* Error Display */}
       {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="flex items-start gap-3 rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div className="flex-1">{error}</div>
+        </div>
       )}
     </div>
   );

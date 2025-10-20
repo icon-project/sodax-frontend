@@ -2619,10 +2619,7 @@ export const getOriginalAssetAddressFromStakedATokenAddress = (
 ): OriginalAssetAddress => {
   const normalizedAddress = address.toLowerCase() as keyof typeof StatATokenAddresses;
   const sodaToken = StatATokenAddresses[normalizedAddress] ?? address;
-  console.log('chainId', chainId);
-  console.log('sodaToken', sodaToken);
   const originalAssetAddresses = getOriginalAssetInfoFromVault(chainId, sodaToken);
-  console.log('originalAssetAddresses', originalAssetAddresses);
   if (!originalAssetAddresses.length) {
     throw new Error('[getOriginalAssetAddressFromStakedATokenAddress] Original asset address not found');
   }
