@@ -172,7 +172,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     if (intentOrderPayload) {
       queryClient.invalidateQueries({ queryKey: ['allowance', paramsForApprove] });
     }
-  }, [intentOrderPayload]);
+  }, [intentOrderPayload, queryClient, paramsForApprove]);
 
   /* If failed previous swap by JSON rpc error, allowance is still valid. 
   but after started next swap progress, allowance will become false. 
