@@ -6,7 +6,6 @@ import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/curren
 import SwapConfirmDialog from './_components/swap-confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
-import type { SpokeChainId } from '@sodax/types';
 import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { useQuote, useSodaxContext } from '@sodax/dapp-kit';
 import BigNumber from 'bignumber.js';
