@@ -39,26 +39,31 @@ function NetworkIcon({
 
   return (
     <div
-      className={`relative rounded shrink-0 cursor-pointer ring ring-2 ring-white rounded-[4px] shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ${
+      className={`relative  shrink-0 cursor-pointer  p-2  ${
         shouldDim ? 'opacity-60 grayscale-[0.5]' : 'opacity-100 grayscale-0'
       }`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
+      style={{
+        transform: isHovered ? 'scale(1.3)' : 'scale(1)',
+      }}
     >
-      {imageSrc === 'Icon' && <IcxIcon />}
-      {imageSrc === 'Avalanche' && <AvalancheIcon />}
-      {imageSrc === 'Base' && <BaseIcon />}
-      {imageSrc === 'BNB' && <BnbIcon />}
-      {imageSrc === 'Polygon' && <PolygonIcon />}
-      {imageSrc === 'Solana' && <SolIcon />}
-      {imageSrc === 'Stellar' && <StellarIcon />}
-      {imageSrc === 'Sui' && <SuiIcon />}
-      {imageSrc === 'Injective' && <InjectiveIcon />}
-      {imageSrc === 'Sonic' && <SonicIcon />}
-      {imageSrc === 'Optimism' && <OptimismIcon />}
-      {imageSrc === 'Arbitrum' && <ArbitrumIcon />}
-      {imageSrc === 'Lightlink' && <LightLinkIcon />}
+      <div className="ring ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded rounded-[4px]">
+        {imageSrc === 'Icon' && <IcxIcon />}
+        {imageSrc === 'Avalanche' && <AvalancheIcon />}
+        {imageSrc === 'Base' && <BaseIcon />}
+        {imageSrc === 'BNB' && <BnbIcon />}
+        {imageSrc === 'Polygon' && <PolygonIcon />}
+        {imageSrc === 'Solana' && <SolIcon />}
+        {imageSrc === 'Stellar' && <StellarIcon />}
+        {imageSrc === 'Sui' && <SuiIcon />}
+        {imageSrc === 'Injective' && <InjectiveIcon />}
+        {imageSrc === 'Sonic' && <SonicIcon />}
+        {imageSrc === 'Optimism' && <OptimismIcon />}
+        {imageSrc === 'Arbitrum' && <ArbitrumIcon />}
+        {imageSrc === 'Lightlink' && <LightLinkIcon />}
+      </div>
     </div>
   );
 }
@@ -110,7 +115,7 @@ function StackedNetworks({
           'Choose a network'
         )}
       </div>
-      <div className="[flex-flow:wrap] box-border content-start flex gap-1 items-start justify-center p-0 relative shrink-0 w-[130px] z-51 overflow-visible pointer-events-auto gap-4">
+      <div className="[flex-flow:wrap] box-border content-start flex items-start justify-center p-0 relative shrink-0 w-[130px] z-51 overflow-visible pointer-events-auto">
         {networkInfos.map((networkInfo, index) => (
           <NetworkIcon
             key={index}
