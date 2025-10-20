@@ -3,8 +3,7 @@
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import type { ChainType } from '@sodax/types';
-import { useEvmSwitchChain, useXAccount } from '@sodax/wallet-sdk-react';
-import { getXChainType } from '@sodax/wallet-sdk-react';
+import { useEvmSwitchChain, useXAccount, getXChainType } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useSwapState } from '../_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';

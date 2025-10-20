@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
-import { getXChainType, useXAccount } from '@sodax/wallet-sdk-react';
+import { getXChainType, useXAccount, useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import {
   ICON_MAINNET_CHAIN_ID,
   SOLANA_MAINNET_CHAIN_ID,
@@ -11,13 +11,12 @@ import {
   SUI_MAINNET_CHAIN_ID,
   type ChainType,
 } from '@sodax/types';
+import { useSpokeProvider, useRequestTrustline, useStellarTrustlineCheck } from '@sodax/dapp-kit';
 
 import { useMigrationInfo, useMigrationStore } from '../_stores/migration-store-provider';
 import { parseUnits } from 'viem';
 import { useMigrate, useMigrationAllowance, useMigrationApprove } from '../_hooks';
 import { Check, Loader2 } from 'lucide-react';
-import { useSpokeProvider, useRequestTrustline, useStellarTrustlineCheck } from '@sodax/dapp-kit';
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { MODAL_ID } from '@/stores/modal-store';
 import { chainIdToChainName } from '@/providers/constants';
 import type { SpokeProvider } from '@sodax/sdk';

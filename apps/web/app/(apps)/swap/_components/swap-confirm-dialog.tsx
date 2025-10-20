@@ -12,7 +12,7 @@ import { Timer, XIcon, Check, ChevronsRight, ShieldAlertIcon, ExternalLinkIcon }
 import Link from 'next/link';
 import { shortenAddress } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
-import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
+import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useSwapApprove, useSpokeProvider, useSwapAllowance } from '@sodax/dapp-kit';
 import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
