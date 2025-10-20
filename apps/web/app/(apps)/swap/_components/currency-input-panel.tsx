@@ -1,6 +1,6 @@
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import type { XToken, SpokeChainId } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,6 @@ const formatNumberForDisplay = (value: string | number, currencySymbol?: string)
 
 interface CurrencyInputPanelProps {
   type: CurrencyInputPanelType;
-  chainId: SpokeChainId;
   currency: XToken;
   currencyBalance: bigint;
   inputValue?: string;
@@ -60,7 +59,6 @@ interface CurrencyInputPanelProps {
 
 const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   type,
-  chainId,
   currency,
   currencyBalance,
   inputValue = '',
