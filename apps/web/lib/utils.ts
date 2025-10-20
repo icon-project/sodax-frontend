@@ -14,7 +14,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-import { isAddress } from 'viem';
 import { normaliseTokenAmount } from '@/app/(apps)/migrate/_utils/migration-utils';
 
 /**

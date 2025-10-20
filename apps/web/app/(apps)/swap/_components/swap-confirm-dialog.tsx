@@ -29,7 +29,6 @@ interface SwapStatusMonitorProps {
   onSwapSuccessful: () => void;
   onSwapFailed: () => void;
   onUpdateSwapStatus: (statusCode: SolverIntentStatusCode) => void;
-  resetTrigger: number;
 }
 
 function SwapStatusMonitor({
@@ -37,20 +36,10 @@ function SwapStatusMonitor({
   onSwapSuccessful,
   onSwapFailed,
   onUpdateSwapStatus,
-  resetTrigger,
 }: SwapStatusMonitorProps): React.JSX.Element | null {
   const { data: status } = useStatus(dstTxHash as `0x${string}`);
   const hasCalledSuccess = useRef<boolean>(false);
   const hasCalledFailed = useRef<boolean>(false);
-  const lastResetTrigger = useRef<number>(resetTrigger);
-
-  useEffect(() => {
-    if (resetTrigger !== lastResetTrigger.current) {
-      hasCalledSuccess.current = false;
-      hasCalledFailed.current = false;
-      lastResetTrigger.current = resetTrigger;
-    }
-  });
 
   useEffect(() => {
     if (status?.ok && !hasCalledSuccess.current && !hasCalledFailed.current) {
@@ -112,7 +101,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [dstTxHash, setDstTxHash] = useState<string>('');
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceSpokeProvider);
   const { setInputAmount } = useSwapActions();
-  const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
+  // const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
   const [isSwapSuccessful, setIsSwapSuccessful] = useState<boolean>(false);
   const [isSwapFailed, setIsSwapFailed] = useState<boolean>(false);
   const [swapError, setSwapError] = useState<{ title: string; message: string } | null>(null);
@@ -211,7 +200,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
     try {
       setApprovalError(null);
-      const value = await approve(intentOrderPayload);
+      const value = await approve({ params: intentOrderPayload });
       if (value) {
         setAllowanceConfirmed(true);
       } else {
@@ -278,7 +267,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
           dstTxHash={dstTxHash}
           onSwapSuccessful={handleSwapSuccessful}
           onSwapFailed={handleSwapFailed}
-          resetTrigger={swapResetCounter}
           onUpdateSwapStatus={setSwapStatus}
         />
       )}
