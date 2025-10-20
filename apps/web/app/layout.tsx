@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import Providers from '../providers/providers';
-
+import AppSidebar from '@/components/landing/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
   variable: '--font-geist-sans',
@@ -27,7 +28,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <div className="h-screen overflow-x-hidden">
-          <Providers>{children}</Providers>
+          <SidebarProvider>
+            <AppSidebar />
+            <Providers>{children}</Providers>
+          </SidebarProvider>
         </div>
       </body>
     </html>
