@@ -4,7 +4,7 @@ import type React from 'react';
 
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import type { CarouselApi } from '@/components/ui/carousel';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link as ScrollLink } from 'react-scroll';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';

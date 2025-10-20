@@ -1,6 +1,5 @@
 import type React from 'react';
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogClose, DialogContent,  DialogTitle } from '@/components/ui/dialog';
 import type { XToken, SpokeChainId } from '@sodax/types';
 import Image from 'next/image';
 import { XIcon } from 'lucide-react';
@@ -14,7 +13,6 @@ import {
   type NewbnUSDChainId,
   HYPEREVM_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
 import { availableChains } from '@/constants/chains';
 import { Separator } from '@/components/ui/separator';
