@@ -19,10 +19,13 @@ import { useMigrate, useMigrationAllowance, useMigrationApprove } from '../_hook
 import { Check, Loader2 } from 'lucide-react';
 import { MODAL_ID } from '@/stores/modal-store';
 import { chainIdToChainName } from '@/providers/constants';
-import { isLegacybnUSDToken, type SpokeProvider } from '@sodax/sdk';
+import type { SpokeProvider } from '@sodax/sdk';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { SuccessDialog } from './success-dialog';
 import { ErrorDialog } from './error-dialog';
+import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
+import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
+import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 
 export const MigrateButton = () => {
   const openModal = useModalStore(state => state.openModal);
@@ -104,15 +107,32 @@ export const MigrateButton = () => {
     openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
   };
 
+  const { data: stellarAccountValidation, refetch } = useValidateStellarAccount(destinationAddress);
+  const handleActivateStellarAccount = async () => {
+    if (!destinationAddress) {
+      return;
+    }
+    await activateStellarAccount({ address: destinationAddress });
+    refetch();
+  };
+  const { mutateAsync: activateStellarAccount, isPending: isActivatingStellarAccount } = useActivateStellarAccount();
+
+  // trustline
+
+  const { data: stellarTrustlineValidation, refetch: refetchStellarTrustline } = useValidateStellarTrustline(
+    destinationAddress,
+    currencies.to,
+  );
+
   const destinationWalletProvider = useWalletProvider(direction.to);
   const destinationSpokeProvider = useSpokeProvider(direction.to, destinationWalletProvider);
 
-  const { data: hasSufficientTrustline, isPending: isCheckingTrustline } = useStellarTrustlineCheck(
-    currencies.to.address,
-    parseUnits(typedValue, currencies.to.decimals),
-    destinationSpokeProvider,
-    direction.to,
-  );
+  // const { data: hasSufficientTrustline, isPending: isCheckingTrustline } = useStellarTrustlineCheck(
+  //   currencies.to.address,
+  //   parseUnits(typedValue, currencies.to.decimals),
+  //   destinationSpokeProvider,
+  //   direction.to,
+  // );
   const { mutateAsync: requestTrustline, isPending: isRequestingTrustline } = useRequestTrustline(
     currencies.to.address,
   );
@@ -122,6 +142,7 @@ export const MigrateButton = () => {
       amount: parseUnits(typedValue, currencies.to.decimals),
       spokeProvider: destinationSpokeProvider as SpokeProvider,
     });
+    refetchStellarTrustline();
   };
 
   const handleMigrate = async () => {
@@ -143,56 +164,56 @@ export const MigrateButton = () => {
           {isWrongChain ? (
             <Button
               variant="cherry"
-              className="w-[136px] md:w-[232px] text-(length:--body-comfortable) text-white"
+              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
               onClick={handleSwitchChain}
             >
               Switch to {chainIdToChainName(direction.from)}
             </Button>
+          ) : inputError ? (
+            <Button variant="cherry" className="w-full md:w-[232px]" disabled>
+              {inputError}
+            </Button>
+          ) : direction.to === STELLAR_MAINNET_CHAIN_ID && stellarAccountValidation?.ok === false ? (
+            <Button
+              variant="cherry"
+              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+              onClick={handleActivateStellarAccount}
+              disabled={isActivatingStellarAccount}
+            >
+              {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+              {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin" />}
+            </Button>
+          ) : direction.to === STELLAR_MAINNET_CHAIN_ID && stellarTrustlineValidation?.ok === false ? (
+            <Button
+              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+              variant="cherry"
+              onClick={handleRequestTrustline}
+              disabled={isRequestingTrustline}
+            >
+              {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
+              {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
+            </Button>
+          ) : needsApproval ? (
+            <Button
+              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+              variant="cherry"
+              onClick={handleApprove}
+              disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!inputError}
+            >
+              {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
+              {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
+            </Button>
           ) : (
-            <>
-              {needsApproval && (
-                <Button
-                  className="w-34"
-                  type="button"
-                  variant="cherry"
-                  onClick={handleApprove}
-                  disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!inputError}
-                >
-                  {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
-                  {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
-                </Button>
-              )}
-              {direction.to === STELLAR_MAINNET_CHAIN_ID && isLegacybnUSDToken(currencies.from) && (
-                <Button
-                  className="w-34"
-                  type="button"
-                  variant="cherry"
-                  onClick={handleRequestTrustline}
-                  disabled={isCheckingTrustline || isRequestingTrustline || hasSufficientTrustline || !!inputError}
-                >
-                  {hasSufficientTrustline ? 'Trustline' : 'Add Trustline'}
-                  {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {hasSufficientTrustline && <Check className="w-4 h-4 text-clay-light" />}
-                </Button>
-              )}
-
-              <Button
-                variant="cherry"
-                className="w-[136px] md:w-[232px] text-(length:--body-comfortable) text-white"
-                onClick={handleMigrate}
-                disabled={isPending || !!inputError || (needsApproval && (!hasSufficientAllowance || isApproving))}
-              >
-                {inputError ? (
-                  inputError
-                ) : (
-                  <>
-                    {isPending ? 'Migrating' : 'Migrate'}
-                    {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                  </>
-                )}
-              </Button>
-            </>
+            <Button
+              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+              variant="cherry"
+              onClick={handleMigrate}
+              disabled={isPending || !!inputError || (needsApproval && (!hasSufficientAllowance || isApproving))}
+            >
+              {isPending ? 'Migrating' : 'Migrate'}
+              {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+            </Button>
           )}
         </div>
       ) : (
