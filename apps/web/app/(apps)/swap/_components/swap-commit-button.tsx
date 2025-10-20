@@ -22,8 +22,7 @@ export default function SwapCommitButton({
 }) {
   const openModal = useModalStore(state => state.openModal);
 
-  const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
-    useSwapState();
+  const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress } = useSwapState();
 
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);

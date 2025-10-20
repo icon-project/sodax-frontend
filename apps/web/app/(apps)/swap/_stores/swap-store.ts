@@ -46,7 +46,7 @@ export const createSwapStore = (initState: SwapState = defaultSwapState) => {
         setCustomDestinationAddress: (address: string) => set({ customDestinationAddress: address }),
         setSlippageTolerance: (tolerance: number) => set({ slippageTolerance: tolerance }),
         switchTokens: () => {
-          const { inputToken, outputToken, inputAmount } = get();
+          const { inputToken, outputToken } = get();
           set({
             inputToken: outputToken,
             outputToken: inputToken,

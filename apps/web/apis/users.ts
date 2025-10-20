@@ -10,7 +10,7 @@ export const registerUser = async ({
 }: { address: string; signature: string; chainType: string; message: string }) => {
   try {
     if (chainType === 'EVM') {
-      const response = await fetch(`${BASE_URL}/api/users/register`, {
+      await fetch(`${BASE_URL}/api/users/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
