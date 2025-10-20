@@ -20,7 +20,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useSwapActions, useSwapState } from '../_stores/swap-store-provider';
 import { parseUnits } from 'viem';
 import type { SpokeChainId } from '@sodax/types';
-import { getSwapErrorMessage, formatToSixDecimals } from '@/lib/utils';
+import { getSwapErrorMessage, formatNumberForDisplay } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface SwapStatusMonitorProps {
@@ -65,13 +65,13 @@ interface SwapConfirmDialogProps {
   finalDestinationAddress: string;
   outputAmount: string;
   onClose?: () => void;
-  slippageTolerance?: number;
   swapFeesUsdValue?: {
     partner: BigNumber;
     solver: BigNumber;
     total: BigNumber;
   };
   minOutputAmount?: BigNumber;
+  usdPrice?: number;
 }
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
@@ -82,9 +82,9 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   finalDestinationAddress,
   outputAmount,
   onClose,
-  slippageTolerance = 0.5,
   minOutputAmount,
   swapFeesUsdValue,
+  usdPrice = 0,
 }: SwapConfirmDialogProps) => {
   const queryClient = useQueryClient();
   const [approvalError, setApprovalError] = useState<string | null>(null);
@@ -340,7 +340,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 <div className="flex flex-col justify-start items-center gap-2">
                   <div className="inline-flex justify-start items-center gap-1">
                     <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                      {formatToSixDecimals(outputAmount)}
+                      {formatNumberForDisplay(outputAmount, usdPrice)}
                     </div>
                     <div className="justify-start text-clay-light text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
                       {outputToken.symbol}
@@ -496,7 +496,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                           <div className="flex justify-between">
                             <span className="text-clay-light">Receive at least</span>
                             <span className="text-espresso font-medium">
-                              {formatToSixDecimals(minOutputAmount?.toString() || '0')} {outputToken.symbol}
+                              {formatNumberForDisplay(minOutputAmount?.toString() || '0', usdPrice)}{' '}
+                              {outputToken.symbol}
                             </span>
                           </div>
                           <div className="flex justify-between">

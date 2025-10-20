@@ -1,4 +1,4 @@
-import type React from 'react';
+import { useMemo } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { XToken } from '@sodax/types';
 import { Input } from '@/components/ui/input';
@@ -9,35 +9,14 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 import TokenSelectDialog from './token-select-dialog';
 import { useSwapState } from '../_stores/swap-store-provider';
-import { validateChainAddress } from '@/lib/utils';
+import { formatNumberForDisplay, validateChainAddress } from '@/lib/utils';
 import { getXChainType } from '@sodax/wallet-sdk-react';
+import BigNumber from 'bignumber.js';
+
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
   OUTPUT = 'OUTPUT',
 }
-
-// Utility function to format numbers according to specified rules
-const formatNumberForDisplay = (value: string | number, currencySymbol?: string): string => {
-  if (!value || value === '') return '';
-
-  const numValue = typeof value === 'string' ? Number.parseFloat(value) : value;
-
-  if (Number.isNaN(numValue)) return '';
-
-  // If number is less than 1, show 4 or 6 decimals (6 for assets like BTC)
-  if (numValue < 1) {
-    const decimals = currencySymbol === 'BTC' ? 6 : 4;
-    return numValue.toFixed(decimals);
-  }
-
-  // If number is greater than 1000, cut off decimals
-  if (numValue >= 1000) {
-    return Math.floor(numValue).toString();
-  }
-
-  // For numbers between 1 and 1000, show up to 2 decimals
-  return numValue.toFixed(2);
-};
 
 interface CurrencyInputPanelProps {
   type: CurrencyInputPanelType;
@@ -54,7 +33,7 @@ interface CurrencyInputPanelProps {
   onSwapAndSendToggle?: (enabled: boolean) => void;
   customDestinationAddress?: string;
   onCustomDestinationAddressChange?: (address: string) => void;
-  usdValue?: number;
+  usdPrice?: number;
 }
 
 const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
@@ -72,7 +51,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   onSwapAndSendToggle,
   customDestinationAddress = '',
   onCustomDestinationAddressChange,
-  usdValue = 0,
+  usdPrice = 0,
 }: CurrencyInputPanelProps) => {
   const formattedBalance = formatUnits(currencyBalance, currency.decimals);
   const formattedBalanceFixed = Number(formattedBalance).toFixed(2);
@@ -103,6 +82,10 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       onCustomDestinationAddressChange(value);
     }
   };
+
+  const usdValue = useMemo(() => {
+    return inputValue === '' ? 0 : new BigNumber(inputValue).multipliedBy(usdPrice).toFixed(2);
+  }, [inputValue, usdPrice]);
 
   return (
     <div
@@ -166,13 +149,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             <Input
               type="number"
               ref={inputRef}
-              value={
-                inputValue === ''
-                  ? ''
-                  : type === CurrencyInputPanelType.OUTPUT
-                    ? formatNumberForDisplay(inputValue, currency.symbol)
-                    : inputValue
-              }
+              value={type === CurrencyInputPanelType.OUTPUT ? formatNumberForDisplay(inputValue, usdPrice) : inputValue}
               onChange={onInputChange}
               onFocus={onInputFocus}
               placeholder="0"
@@ -181,9 +158,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             />
           </div>
           <div className="mix-blend-multiply text-right justify-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
-            {type === CurrencyInputPanelType.INPUT
-              ? `Sell $${usdValue !== 0 ? usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0'}`
-              : `Buy $${usdValue !== 0 ? usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0'}`}
+            {type === CurrencyInputPanelType.INPUT ? `Sell $${usdValue}` : `Buy $${usdValue}`}
           </div>
         </div>
       </div>

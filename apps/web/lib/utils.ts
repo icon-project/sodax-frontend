@@ -5,6 +5,7 @@ import { PublicKey } from '@solana/web3.js';
 import { isValidSuiAddress } from '@mysten/sui/utils';
 import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
+import BigNumber from 'bignumber.js';
 
 import { getSupportedSolverTokens, supportedSpokeChains, isLegacybnUSDToken, isNewbnUSDToken } from '@sodax/sdk';
 import type { XToken, SpokeChainId, Token } from '@sodax/types';
@@ -262,8 +263,10 @@ export const hasSufficientBalanceWithFee = (
   }
 };
 
-export const formatToSixDecimals = (value: string): string => {
-  const num = Number.parseFloat(value);
-  if (Number.isNaN(num)) return value;
-  return num.toFixed(4);
+// Utility function to format numbers according to specified rules
+export const formatNumberForDisplay = (value: string, price: number): string => {
+  if (!value || value === '') return '';
+
+  const decimals = price >= 10000 ? 6 : 4;
+  return new BigNumber(value).toFixed(decimals);
 };
