@@ -5,7 +5,7 @@ import type { SpokeChainId, XToken } from '@sodax/types';
 import { Button } from '@/components/ui/button';
 import { SearchBar } from './search-bar';
 import { TokenList } from './token-list';
-import * as Dialog from '@radix-ui/react-dialog';
+import { DialogContent, Dialog, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 
 export default function TokenSelectDialog({
@@ -69,54 +69,47 @@ export default function TokenSelectDialog({
   };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={onHandleOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay
-          className="fixed inset-0 bg-[rgba(237,230,230,0.40)] bg-cream-white opacity-90 backdrop-blur-[12px] z-99"
-          asChild={false}
+    <Dialog open={isOpen} onOpenChange={onHandleOpenChange}>
+      <DialogContent
+        enableMotion={true}
+        className="shadow-none md:max-w-[480px] w-[90%] p-12 bg-vibrant-white"
+        hideCloseButton={true}
+      >
+        <DialogTitle className="flex justify-end w-full h-4 relative p-0">
+          <DialogClose className="pt-0" asChild>
+            <Button
+              variant="ghost"
+              className={`absolute outline-none w-12 h-12 rounded-full text-clay-light hover:text-clay transition-colors cursor-pointer top-0 !-mr-4 ${clickedAsset !== null ? 'blur filter' : ''}`}
+            >
+              <XIcon className="w-4 h-4 pointer-events-none" />
+            </Button>
+          </DialogClose>
+        </DialogTitle>
+
+        <SearchBar
+          isUsdtClicked={clickedAsset !== null}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          handleChainSelectorClick={handleChainSelectorClick}
+          isChainSelectorOpen={isChainSelectorOpen}
+          handleShowAllChains={handleShowAllChains}
+          handleChainSelect={handleChainSelect}
+          selectedChainId={selectedChainFilter}
         />
-        <Dialog.Content asChild>
-          <motion.div
-            className={`shadow-none md:max-w-[480px] w-[90%] fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 p-12 shadow-lg z-100 bg-vibrant-white rounded-[32px] ${showAllAssets ? 'h-[80%]' : 'h-132 '}`}
-            initial={false}
-          >
-            <Dialog.Title className="flex justify-end w-full h-4 relative p-0">
-              <Dialog.Close className="pt-0" asChild>
-                <Button
-                  variant="ghost"
-                  className={`absolute outline-none w-12 h-12 rounded-full text-clay-light hover:text-clay transition-colors cursor-pointer top-0 !-mr-4 ${clickedAsset !== null ? 'blur filter' : ''}`}
-                >
-                  <XIcon className="w-4 h-4 pointer-events-none" />
-                </Button>
-              </Dialog.Close>
-            </Dialog.Title>
 
-            <SearchBar
-              isUsdtClicked={clickedAsset !== null}
-              searchQuery={searchQuery}
-              onSearchChange={handleSearchChange}
-              handleChainSelectorClick={handleChainSelectorClick}
-              isChainSelectorOpen={isChainSelectorOpen}
-              handleShowAllChains={handleShowAllChains}
-              handleChainSelect={handleChainSelect}
-              selectedChainId={selectedChainFilter}
-            />
-
-            <TokenList
-              clickedAsset={clickedAsset}
-              onAssetClick={handleAssetClick}
-              onClickOutside={handleClickOutside}
-              searchQuery={searchQuery}
-              onTokenSelect={onTokenSelect}
-              onClose={onClose}
-              selectedChainFilter={selectedChainFilter}
-              isChainSelectorOpen={isChainSelectorOpen}
-              showAllAssets={showAllAssets}
-              onViewAllAssets={handleViewAllAssets}
-            />
-          </motion.div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        <TokenList
+          clickedAsset={clickedAsset}
+          onAssetClick={handleAssetClick}
+          onClickOutside={handleClickOutside}
+          searchQuery={searchQuery}
+          onTokenSelect={onTokenSelect}
+          onClose={onClose}
+          selectedChainFilter={selectedChainFilter}
+          isChainSelectorOpen={isChainSelectorOpen}
+          showAllAssets={showAllAssets}
+          onViewAllAssets={handleViewAllAssets}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }
