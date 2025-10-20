@@ -44,7 +44,7 @@ const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   bnUSD: 'bnusd',
   weETH: 'wrapped-eether',
   wstETH: 'wrapped-staked-ether',
-  cbBTC: 'coinbase-wrapped-staked-ether',
+  cbBTC: 'coinbase-wrapped-btc',
   tBTC: 'tbtc',
   ETHB: 'ethereum',
   BTCB: 'bitcoin-bep2',
