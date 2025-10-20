@@ -30,7 +30,7 @@ const carouselItems = [
   { id: 11, src: '/coin/op.png', alt: 'OPTIMISM' },
 ];
 
-const HeroSection = (): React.ReactElement => {
+const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactElement => {
   const imgRef = useRef<HTMLImageElement>(null);
   const carouselRef = useRef(null);
   const [api, setApi] = useState<CarouselApi>();
@@ -88,11 +88,14 @@ const HeroSection = (): React.ReactElement => {
             {/* Navigation Menu and Button */}
             <ul className="hidden lg:flex gap-4 z-10">
               <li>
-                <ScrollLink to="networks" smooth={true} duration={500} spy={true}>
-                  <span className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer">
-                    About
-                  </span>
-                </ScrollLink>
+                {/* <ScrollLink to="networks" smooth={true} duration={500} spy={true}> */}
+                <span
+                  className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
+                  onClick={onSwapClick}
+                >
+                  About
+                </span>
+                {/* </ScrollLink> */}
               </li>
             </ul>
             <div className="inline-flex justify-center items-start relative">
