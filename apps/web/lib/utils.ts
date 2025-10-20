@@ -14,6 +14,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import { availableChains } from '@/constants/chains';
 
 /**
  * Shortens a blockchain address for display purposes
@@ -69,7 +70,9 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
   const allTokens: XToken[] = [];
 
   // Filter out Nibiru chain from supported chains
-  const filteredSupportedChains = supportedSpokeChains.filter(chainId => chainId !== 'nibiru');
+  const filteredSupportedChains = supportedSpokeChains.filter(chainId =>
+    availableChains.find(chain => chain.id === chainId),
+  );
 
   for (const chainId of filteredSupportedChains) {
     try {
