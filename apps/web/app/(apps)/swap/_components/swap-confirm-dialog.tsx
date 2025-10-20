@@ -402,14 +402,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                             </div>
 
                             <div className="flex justify-between">
-                              <span className="text-clay-light">Network cost</span>
-                              <span className="text-espresso font-medium">&lt; $0.01</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-clay-light">Max slippage</span>
-                              <span className="text-espresso font-medium">{slippageTolerance}%</span>
-                            </div>
-                            <div className="flex justify-between">
                               <span className="text-clay-light">Via</span>
                               <span className="text-espresso font-medium">SODAX SDK</span>
                             </div>
