@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { isAddress as isEvmAddress } from 'viem';
+import { isAddress as isEvmAddress, parseUnits } from 'viem';
 import { PublicKey } from '@solana/web3.js';
 import { isValidSuiAddress } from '@mysten/sui/utils';
 import { StrKey } from '@stellar/stellar-sdk';
@@ -14,6 +14,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import { normaliseTokenAmount } from '@/app/(apps)/migrate/_utils/migration-utils';
 import { availableChains } from '@/constants/chains';
 
 /**
@@ -164,31 +165,6 @@ export const getSwapErrorMessage = (errorCode: string): { title: string; message
         title: 'Invalid source amount',
         message: 'The source amount is invalid.',
       };
-    case 'INVALID_QUOTED_AMOUNT':
-      return {
-        title: 'Invalid quoted amount',
-        message: 'The quoted amount is invalid.',
-      };
-    case 'SOURCE_PROVIDER_NOT_AVAILABLE':
-      return {
-        title: 'Source provider not available',
-        message: 'The source provider is not available.',
-      };
-    case 'SOURCE_ADDRESS_NOT_AVAILABLE':
-      return {
-        title: 'Source address not available',
-        message: 'The source address is not available.',
-      };
-    case 'DESTINATION_ADDRESS_NOT_AVAILABLE':
-      return {
-        title: 'Destination address not available',
-        message: 'The destination address is not available.',
-      };
-    case 'QUOTE_NOT_AVAILABLE':
-      return {
-        title: 'Quote not available',
-        message: 'The quote is not available.',
-      };
     default:
       return {
         title: 'Something went wrong.',
@@ -235,3 +211,59 @@ export function validateChainAddress(address: string, chain: string): boolean {
     return false;
   }
 }
+
+export const calculateMaxAvailableAmount = (
+  balance: bigint,
+  tokenDecimals: number,
+  solver: { getPartnerFee: (amount: bigint) => bigint },
+): string => {
+  if (balance === 0n) {
+    return '0';
+  }
+
+  try {
+    const fullBalance = normaliseTokenAmount(balance, tokenDecimals);
+    const fullBalanceBigInt = parseUnits(fullBalance, tokenDecimals);
+    const feeAmount = solver.getPartnerFee(fullBalanceBigInt);
+
+    const availableBalanceBigInt = fullBalanceBigInt - feeAmount;
+
+    if (availableBalanceBigInt > 0n) {
+      return normaliseTokenAmount(availableBalanceBigInt, tokenDecimals);
+    }
+
+    return '0';
+  } catch (error) {
+    console.error('Error calculating max available amount:', error);
+    return normaliseTokenAmount(balance, tokenDecimals);
+  }
+};
+
+export const hasSufficientBalanceWithFee = (
+  amount: string,
+  balance: bigint,
+  tokenDecimals: number,
+  solver: { getPartnerFee: (amount: bigint) => bigint },
+): boolean => {
+  if (!amount || amount === '0' || amount === '' || Number.isNaN(Number(amount))) {
+    return false;
+  }
+
+  try {
+    const amountBigInt = parseUnits(amount, tokenDecimals);
+    const feeAmount = solver.getPartnerFee(amountBigInt);
+    const totalRequired = amountBigInt + feeAmount;
+
+    return totalRequired <= balance;
+  } catch (error) {
+    console.error('Error checking sufficient balance with fee:', error);
+    const amountBigInt = parseUnits(amount, tokenDecimals);
+    return amountBigInt <= balance;
+  }
+};
+
+export const formatToSixDecimals = (value: string): string => {
+  const num = Number.parseFloat(value);
+  if (Number.isNaN(num)) return value;
+  return num.toFixed(4);
+};
