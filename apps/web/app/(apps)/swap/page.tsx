@@ -10,10 +10,9 @@ import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { useQuote, useSodaxContext } from '@sodax/dapp-kit';
 import BigNumber from 'bignumber.js';
 import type { QuoteType } from '@sodax/sdk';
-import { useTokenPrice, useTokenUsdValue } from '@/hooks/useTokenPrice';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
-import { normaliseTokenAmount } from '../migrate/_utils/migration-utils';
 import { ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import SwapCommitButton from './_components/swap-commit-button';
@@ -52,7 +51,6 @@ export default function SwapPage() {
   const sourceBalance = sourceBalances?.[inputToken.address] || 0n;
   const destinationBalance = destinationBalances?.[outputToken.address] || 0n;
 
-  const sourceUsdValue = useTokenUsdValue(inputToken, inputAmount);
   const { sodax } = useSodaxContext();
 
   const quotePayload = useMemo(() => {
@@ -82,16 +80,14 @@ export default function SwapPage() {
   }, [inputToken, outputToken, inputAmount, sodax]);
 
   const quoteQuery = useQuote(quotePayload);
-
+  const { data: outputTokenPrice } = useTokenPrice(outputToken);
   const calculatedOutputAmount = useMemo(() => {
     if (quoteQuery.data?.ok && quoteQuery.data.value) {
       const quotedAmount = quoteQuery.data.value.quoted_amount;
-      return normaliseTokenAmount(quotedAmount, outputToken.decimals);
+      return formatUnits(quotedAmount, outputToken.decimals);
     }
     return '';
   }, [quoteQuery.data, outputToken.decimals]);
-
-  const destinationUsdValue = useTokenUsdValue(outputToken, calculatedOutputAmount);
 
   const swapFees = useMemo(() => {
     if (!inputAmount || inputAmount === '' || Number.isNaN(Number(inputAmount)) || Number(inputAmount) <= 0) {
@@ -121,7 +117,6 @@ export default function SwapPage() {
   }, [inputAmount, calculatedOutputAmount, inputToken.decimals, outputToken.decimals, sodax.solver]);
 
   const { data: inputTokenPrice } = useTokenPrice(inputToken);
-  const { data: outputTokenPrice } = useTokenPrice(outputToken);
   const swapFeesUsdValue = useMemo(() => {
     if (!swapFees || !inputTokenPrice || !outputTokenPrice) {
       return undefined;
@@ -200,7 +195,7 @@ export default function SwapPage() {
               onMaxClick={handleMaxClick}
               onCurrencyChange={setInputToken}
               isChainConnected={isSourceChainConnected}
-              usdValue={sourceUsdValue}
+              usdPrice={inputTokenPrice}
             />
 
             <Button
@@ -224,7 +219,7 @@ export default function SwapPage() {
             onSwapAndSendToggle={setIsSwapAndSend}
             customDestinationAddress={customDestinationAddress}
             onCustomDestinationAddressChange={setCustomDestinationAddress}
-            usdValue={destinationUsdValue}
+            usdPrice={outputTokenPrice}
           />
         </div>
 
@@ -259,9 +254,9 @@ export default function SwapPage() {
         }
         outputAmount={fixedOutputAmount}
         onClose={handleDialogClose}
-        slippageTolerance={slippageTolerance}
         minOutputAmount={fixedMinOutputAmount ? new BigNumber(fixedMinOutputAmount) : new BigNumber(0)}
         swapFeesUsdValue={swapFeesUsdValue}
+        usdPrice={outputTokenPrice}
       />
     </div>
   );

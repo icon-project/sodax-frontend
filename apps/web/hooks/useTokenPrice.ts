@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { XToken } from '@sodax/types';
 import { getTokenPrice } from '@/services/price';
-import { useMemo } from 'react';
 
 /**
  * Hook to fetch token price using React Query
@@ -18,12 +17,4 @@ export function useTokenPrice(token: XToken) {
     gcTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
   });
-}
-
-export function useTokenUsdValue(token: XToken, amount: string) {
-  const { data: price } = useTokenPrice(token);
-
-  return useMemo(() => {
-    return price ? price * Number(amount) : 0;
-  }, [price, amount]);
 }
