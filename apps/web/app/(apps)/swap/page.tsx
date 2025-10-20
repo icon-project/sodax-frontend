@@ -194,7 +194,6 @@ export default function SwapPage() {
           <div className="relative w-full">
             <CurrencyInputPanel
               type={CurrencyInputPanelType.INPUT}
-              chainId={inputToken.xChainId as SpokeChainId}
               currency={inputToken}
               currencyBalance={isSourceChainConnected ? sourceBalance : 0n}
               inputValue={inputAmount}
@@ -217,7 +216,6 @@ export default function SwapPage() {
 
           <CurrencyInputPanel
             type={CurrencyInputPanelType.OUTPUT}
-            chainId={outputToken.xChainId as SpokeChainId}
             currency={outputToken}
             currencyBalance={isDestinationChainConnected ? destinationBalance : 0n}
             inputValue={calculatedOutputAmount}
