@@ -182,7 +182,7 @@ export default function SwapPage() {
             </span>
           </div>
           <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle)">
-            Access 67 assets across 12 networks.
+            Access 66 assets across 12 networks.
           </div>
         </div>
 
