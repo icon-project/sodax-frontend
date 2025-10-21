@@ -1,9 +1,12 @@
 'use client';
 
-import { type ReactNode, createContext, useRef, useContext } from 'react';
+import { type ReactNode, createContext, useRef, useContext, useMemo } from 'react';
 import { useStore } from 'zustand';
 
 import { type SwapStore, createSwapStore } from './swap-store';
+import { parseUnits } from 'viem';
+import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { validateChainAddress } from '@/lib/utils';
 
 export type SwapStoreApi = ReturnType<typeof createSwapStore>;
 
@@ -69,5 +72,50 @@ export const useSwapActions = () => {
     setSlippageTolerance,
     switchTokens,
     resetSwapState,
+  };
+};
+
+export const useSwapInfo = () => {
+  const inputToken = useSwapStore(state => state.inputToken);
+  const outputToken = useSwapStore(state => state.outputToken);
+  const inputAmount = useSwapStore(state => state.inputAmount);
+  const isSwapAndSend = useSwapStore(state => state.isSwapAndSend);
+  const customDestinationAddress = useSwapStore(state => state.customDestinationAddress);
+  const slippageTolerance = useSwapStore(state => state.slippageTolerance);
+
+  const { address: sourceAddress } = useXAccount(inputToken.xChainId);
+  const { data: balances } = useXBalances({
+    xChainId: inputToken.xChainId,
+    xTokens: [inputToken],
+    address: sourceAddress,
+  });
+
+  const sourceBalance = balances?.[inputToken.address] || 0n;
+
+  const inputError = useMemo(() => {
+    if (inputAmount === '0' || inputAmount === '') {
+      return 'Enter Amount';
+    }
+    if (isSwapAndSend && customDestinationAddress === '') {
+      return 'Enter destination address';
+    }
+    if (isSwapAndSend && !validateChainAddress(customDestinationAddress, getXChainType(outputToken.xChainId) || '')) {
+      return 'Address is not valid';
+    }
+    if (sourceBalance < parseUnits(inputAmount, inputToken.decimals)) {
+      return 'Insufficient balance';
+    }
+    return null;
+  }, [inputAmount, isSwapAndSend, customDestinationAddress, outputToken.xChainId, sourceBalance, inputToken.decimals]);
+
+  return {
+    inputToken,
+    outputToken,
+    inputAmount,
+    isSwapAndSend,
+    customDestinationAddress,
+    slippageTolerance,
+    sourceBalance,
+    inputError,
   };
 };

@@ -1,11 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import type { ChainType } from '@sodax/types';
 import { useEvmSwitchChain, useXAccount, getXChainType, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
-import { useSwapState } from '../_stores/swap-store-provider';
+import { useSwapInfo } from '../_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { validateChainAddress } from '@/lib/utils';
@@ -18,20 +17,17 @@ import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { Loader2 } from 'lucide-react';
 import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
-import { parseUnits } from 'viem';
 
 export default function SwapCommitButton({
   quoteQuery,
   handleReview,
-  sourceBalance,
 }: {
   quoteQuery: UseQueryResult<Result<SolverIntentQuoteResponse, SolverErrorResponse> | undefined>;
   handleReview: () => void;
-  sourceBalance: bigint;
 }) {
   const openModal = useModalStore(state => state.openModal);
 
-  const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress } = useSwapState();
+  const { inputToken, outputToken, isSwapAndSend, customDestinationAddress, inputError } = useSwapInfo();
 
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
@@ -43,21 +39,6 @@ export default function SwapCommitButton({
 
   const isQuoteUnavailable = quoteQuery.data?.ok === false;
   const isConnected = isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend);
-  const inputError = useMemo(() => {
-    if (inputAmount === '0' || inputAmount === '') {
-      return 'Enter Amount';
-    }
-    if (isSwapAndSend && customDestinationAddress === '') {
-      return 'Enter destination address';
-    }
-    if (isSwapAndSend && !validateChainAddress(customDestinationAddress, getXChainType(outputToken.xChainId) || '')) {
-      return 'Address is not valid';
-    }
-    if (sourceBalance < parseUnits(inputAmount, inputToken.decimals)) {
-      return 'Insufficient balance';
-    }
-    return null;
-  }, [inputAmount, isSwapAndSend, customDestinationAddress, outputToken.xChainId, sourceBalance, inputToken.decimals]);
 
   const sourceChainType = getXChainType(inputToken.xChainId);
   const destinationChainType = getXChainType(outputToken.xChainId);

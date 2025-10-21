@@ -34,6 +34,8 @@ export default function IcxsodaMigration() {
     xTokens: [icxToken],
     address: iconAddress,
   });
+  console.log('icxToken', icxToken);
+  console.log('iconAddress', iconAddress);
   const icxBalance = balances?.[icxToken.address] || 0n;
 
   const { data: sodaBalances } = useXBalances({
@@ -118,7 +120,7 @@ export default function IcxsodaMigration() {
       </div>
 
       <div className="inline-flex flex-col justify-start items-start gap-4">
-        <MigrateButton sourceBalance={getBalanceForChain(direction.from, currencies.from)} />
+        <MigrateButton />
 
         <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
           Takes ~1 min · Network fee: {direction.from === ICON_MAINNET_CHAIN_ID ? '~0.02 ICX' : '~0.1 Sonic'}

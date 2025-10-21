@@ -27,7 +27,7 @@ import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 
-export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
+export const MigrateButton = () => {
   const openModal = useModalStore(state => state.openModal);
 
   const migrationMode = useMigrationStore(state => state.migrationMode);
@@ -68,15 +68,7 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
     destinationAddress,
   );
 
-  const inputError = useMemo(() => {
-    if (typedValue === '' || Number(typedValue) <= 0) {
-      return 'Enter amount';
-    }
-    if (sourceAddress && sourceBalance < parseUnits(typedValue, currencies.from.decimals)) {
-      return 'Insufficient balance';
-    }
-    return '';
-  }, [typedValue, sourceAddress, sourceBalance, currencies.from.decimals]);
+  const { inputError } = useMigrationInfo();
 
   const needsApproval = useMemo(() => {
     return ![ICON_MAINNET_CHAIN_ID, SUI_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID, SOLANA_MAINNET_CHAIN_ID].includes(
