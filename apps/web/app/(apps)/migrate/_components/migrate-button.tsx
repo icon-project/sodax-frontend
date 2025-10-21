@@ -166,39 +166,26 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
     }
   };
 
-  // Extracted migrate button to avoid duplication
-  const migrateButton = (
-    <Button
-      className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
-      variant="cherry"
-      onClick={handleMigrate}
-      disabled={isPending || !!inputError || (needsApproval && (!hasSufficientAllowance || isApproving))}
-    >
-      {isPending ? 'Migrating' : 'Migrate'}
-      {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-    </Button>
-  );
-
   return (
     <>
       {isSourceChainConnected && isDestinationChainConnected ? (
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full">
           {isWrongChain ? (
             <Button
               variant="cherry"
-              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+              className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
               onClick={handleSwitchChain}
             >
               Switch to {chainIdToChainName(direction.from)}
             </Button>
           ) : !isPending && inputError ? (
-            <Button variant="cherry" className="w-full md:w-[232px]" disabled>
+            <Button variant="cherry" className="w-full sm:w-[232px] md:w-[232px]" disabled>
               {inputError}
             </Button>
           ) : direction.to === STELLAR_MAINNET_CHAIN_ID && stellarAccountValidation?.ok === false ? (
             <Button
               variant="cherry"
-              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+              className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
               onClick={handleActivateStellarAccount}
               disabled={isActivatingStellarAccount}
             >
@@ -207,7 +194,7 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
             </Button>
           ) : direction.to === STELLAR_MAINNET_CHAIN_ID && stellarTrustlineValidation?.ok === false ? (
             <Button
-              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+              className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
               variant="cherry"
               onClick={handleRequestTrustline}
               disabled={isRequestingTrustline}
@@ -215,29 +202,39 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
               {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
               {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
             </Button>
-          ) : needsApproval ? (
-            <>
-              <Button
-                className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
-                variant="cherry"
-                onClick={handleApprove}
-                disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!inputError}
-                hidden={hasSufficientAllowance}
-              >
-                {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
-                {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
-              </Button>
-              {hasSufficientAllowance && migrateButton}
-            </>
           ) : (
-            migrateButton
+            <>
+              {needsApproval && (
+                <Button
+                  className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
+                  variant="cherry"
+                  onClick={handleApprove}
+                  disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!inputError}
+                  hidden={hasSufficientAllowance}
+                >
+                  {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
+                  {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
+                </Button>
+              )}
+              {hasSufficientAllowance && (
+                <Button
+                  className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
+                  variant="cherry"
+                  onClick={handleMigrate}
+                  disabled={isPending || !!inputError || (needsApproval && (!hasSufficientAllowance || isApproving))}
+                >
+                  {isPending ? 'Migrating' : 'Migrate'}
+                  {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                </Button>
+              )}
+            </>
           )}
         </div>
       ) : (
         <Button
           variant="cherry"
-          className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+          className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
           onClick={handleOpenWalletModal}
         >
           Connect {!isSourceChainConnected ? chainIdToChainName(direction.from) : chainIdToChainName(direction.to)}
