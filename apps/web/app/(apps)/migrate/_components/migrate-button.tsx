@@ -191,7 +191,7 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
             >
               Switch to {chainIdToChainName(direction.from)}
             </Button>
-          ) : inputError ? (
+          ) : !isPending && inputError ? (
             <Button variant="cherry" className="w-full md:w-[232px]" disabled>
               {inputError}
             </Button>
