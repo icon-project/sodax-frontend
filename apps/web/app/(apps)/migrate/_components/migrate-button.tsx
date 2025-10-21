@@ -228,7 +228,7 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
                 {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
               </Button>
-              {migrateButton}
+              {hasSufficientAllowance && migrateButton}
             </>
           ) : (
             migrateButton
