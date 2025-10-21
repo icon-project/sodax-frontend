@@ -42,8 +42,9 @@ export default function SwapCommitButton({
   const destinationChainType = getXChainType(outputToken.xChainId);
 
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress;
-
-  const { data: stellarAccountValidation, refetch } = useValidateStellarAccount(finalDestinationAddress);
+  const { data: stellarAccountValidation, refetch } = useValidateStellarAccount(
+    validateChainAddress(finalDestinationAddress, 'STELLAR') ? finalDestinationAddress : null,
+  );
   const handleActivateStellarAccount = async () => {
     if (!finalDestinationAddress) {
       return;
@@ -55,7 +56,7 @@ export default function SwapCommitButton({
 
   // trustline check
   const { data: stellarTrustlineValidation, refetch: refetchStellarTrustline } = useValidateStellarTrustline(
-    finalDestinationAddress,
+    validateChainAddress(finalDestinationAddress, 'STELLAR') ? finalDestinationAddress : null,
     outputToken,
   );
 
@@ -107,7 +108,7 @@ export default function SwapCommitButton({
         </Button>
       ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&
         stellarAccountValidation?.ok === false &&
-        validateChainAddress(finalDestinationAddress || '', 'STELLAR') ? (
+        validateChainAddress(finalDestinationAddress, 'STELLAR') ? (
         <Button
           variant="cherry"
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
@@ -119,7 +120,7 @@ export default function SwapCommitButton({
         </Button>
       ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&
         stellarTrustlineValidation?.ok === false &&
-        validateChainAddress(finalDestinationAddress || '', 'STELLAR') ? (
+        validateChainAddress(finalDestinationAddress, 'STELLAR') ? (
         <Button
           variant="cherry"
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
