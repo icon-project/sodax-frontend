@@ -34,8 +34,6 @@ export default function IcxsodaMigration() {
     xTokens: [icxToken],
     address: iconAddress,
   });
-  console.log('icxToken', icxToken);
-  console.log('iconAddress', iconAddress);
   const icxBalance = balances?.[icxToken.address] || 0n;
 
   const { data: sodaBalances } = useXBalances({
