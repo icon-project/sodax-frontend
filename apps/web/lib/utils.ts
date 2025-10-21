@@ -80,6 +80,7 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
     try {
       // const supportedTokens = spokeChainConfig[chainId].supportedTokens;
       const supportedTokens = getSupportedSolverTokens(chainId);
+      console.log('supportedTokens', supportedTokens);
       // Filter out legacy tokens to prevent duplicates
       let filteredTokens = supportedTokens;
       filteredTokens.map(token => {
@@ -88,7 +89,12 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
         }
       });
 
-      if (chainId !== '0x1.icon') filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
+      if (chainId !== '0x1.icon') {
+        filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
+      } else {
+        // For ICON chain, remove wICX
+        filteredTokens = filteredTokens.filter(token => token.symbol !== 'wICX');
+      }
 
       const xTokens: XToken[] = filteredTokens.map((token: Token) => ({
         ...token,
@@ -122,7 +128,12 @@ export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[
       }
     });
 
-    if (chainId !== '0x1.icon') filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
+    if (chainId !== '0x1.icon') {
+      filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
+    } else {
+      // For ICON chain, remove wICX
+      filteredTokens = filteredTokens.filter(token => token.symbol !== 'wICX');
+    }
 
     return filteredTokens.map((token: Token) => ({
       ...token,
