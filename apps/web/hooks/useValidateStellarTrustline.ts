@@ -35,7 +35,7 @@ export function useValidateStellarTrustline(
   };
 
   return useQuery<StellarTrustlineValidation>({
-    queryKey: ['stellarTrustlineValidation', stellarService, address, token],
+    queryKey: ['stellar-trustline-check', address, token],
     queryFn: async () => {
       if (!address || !token) {
         return { ok: true };
