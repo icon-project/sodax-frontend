@@ -80,7 +80,6 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
     try {
       // const supportedTokens = spokeChainConfig[chainId].supportedTokens;
       const supportedTokens = getSupportedSolverTokens(chainId);
-      console.log('supportedTokens', supportedTokens);
       // Filter out legacy tokens to prevent duplicates
       let filteredTokens = supportedTokens;
       filteredTokens.map(token => {
