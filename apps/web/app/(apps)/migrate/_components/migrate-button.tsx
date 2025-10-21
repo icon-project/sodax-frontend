@@ -166,6 +166,19 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
     }
   };
 
+  // Extracted migrate button to avoid duplication
+  const migrateButton = (
+    <Button
+      className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+      variant="cherry"
+      onClick={handleMigrate}
+      disabled={isPending || !!inputError || (needsApproval && (!hasSufficientAllowance || isApproving))}
+    >
+      {isPending ? 'Migrating' : 'Migrate'}
+      {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+    </Button>
+  );
+
   return (
     <>
       {isSourceChainConnected && isDestinationChainConnected ? (
@@ -203,26 +216,22 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
               {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
             </Button>
           ) : needsApproval ? (
-            <Button
-              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
-              variant="cherry"
-              onClick={handleApprove}
-              disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!inputError}
-            >
-              {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
-              {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
-            </Button>
+            <>
+              <Button
+                className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+                variant="cherry"
+                onClick={handleApprove}
+                disabled={isApproving || isAllowanceLoading || hasSufficientAllowance || !!inputError}
+                hidden={hasSufficientAllowance}
+              >
+                {isApproving ? 'Approving' : hasSufficientAllowance ? 'Approved' : 'Approve'}
+                {isApproving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {hasSufficientAllowance && <Check className="w-4 h-4 text-clay-light" />}
+              </Button>
+              {migrateButton}
+            </>
           ) : (
-            <Button
-              className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
-              variant="cherry"
-              onClick={handleMigrate}
-              disabled={isPending || !!inputError || (needsApproval && (!hasSufficientAllowance || isApproving))}
-            >
-              {isPending ? 'Migrating' : 'Migrate'}
-              {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-            </Button>
+            migrateButton
           )}
         </div>
       ) : (
