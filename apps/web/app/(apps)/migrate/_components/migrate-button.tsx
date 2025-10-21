@@ -170,15 +170,7 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
     <>
       {isSourceChainConnected && isDestinationChainConnected ? (
         <div className="flex gap-2 w-full">
-          {isWrongChain ? (
-            <Button
-              variant="cherry"
-              className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
-              onClick={handleSwitchChain}
-            >
-              Switch to {chainIdToChainName(direction.from)}
-            </Button>
-          ) : !isPending && inputError ? (
+          {!isPending && inputError ? (
             <Button variant="cherry" className="w-full sm:w-[232px] md:w-[232px]" disabled>
               {inputError}
             </Button>
@@ -201,6 +193,14 @@ export const MigrateButton = ({ sourceBalance }: { sourceBalance: bigint }) => {
             >
               {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
               {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
+            </Button>
+          ) : isWrongChain ? (
+            <Button
+              variant="cherry"
+              className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
+              onClick={handleSwitchChain}
+            >
+              Switch to {chainIdToChainName(direction.from)}
             </Button>
           ) : (
             <>
