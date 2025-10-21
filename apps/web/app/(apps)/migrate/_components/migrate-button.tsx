@@ -11,7 +11,7 @@ import {
   SUI_MAINNET_CHAIN_ID,
   type ChainType,
 } from '@sodax/types';
-import { useSpokeProvider, useRequestTrustline, useStellarTrustlineCheck } from '@sodax/dapp-kit';
+import { useSpokeProvider, useRequestTrustline } from '@sodax/dapp-kit';
 
 import { useMigrationInfo, useMigrationStore } from '../_stores/migration-store-provider';
 import { parseUnits } from 'viem';
