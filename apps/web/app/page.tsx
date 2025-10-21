@@ -20,10 +20,10 @@ const LandingPage = () => {
   return (
     <div className="landing-page w-[100vw] overflow-x-hidden">
       <HeroSection onSwapClick={scrollToSwap} />
-      <NetworksSection />
       <div ref={swapRef}>
         <SwapSection />
       </div>
+      <NetworksSection />
       <SmallBannerSection1 />
       <SmallBannerSection2 />
       <Footer />
