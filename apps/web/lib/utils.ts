@@ -9,13 +9,14 @@ import BigNumber from 'bignumber.js';
 
 import { getSupportedSolverTokens, supportedSpokeChains, isLegacybnUSDToken, isNewbnUSDToken } from '@sodax/sdk';
 import type { XToken, SpokeChainId, Token } from '@sodax/types';
+import { formatUnits } from 'viem';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-import { normaliseTokenAmount } from '@/app/(apps)/migrate/_utils/migration-utils';
+
 import { availableChains } from '@/constants/chains';
 
 /**
@@ -233,20 +234,20 @@ export const calculateMaxAvailableAmount = (
   }
 
   try {
-    const fullBalance = normaliseTokenAmount(balance, tokenDecimals);
+    const fullBalance = formatUnits(balance, tokenDecimals);
     const fullBalanceBigInt = parseUnits(fullBalance, tokenDecimals);
     const feeAmount = solver.getPartnerFee(fullBalanceBigInt);
 
     const availableBalanceBigInt = fullBalanceBigInt - feeAmount;
 
     if (availableBalanceBigInt > 0n) {
-      return normaliseTokenAmount(availableBalanceBigInt, tokenDecimals);
+      return formatUnits(availableBalanceBigInt, tokenDecimals);
     }
 
     return '0';
   } catch (error) {
     console.error('Error calculating max available amount:', error);
-    return normaliseTokenAmount(balance, tokenDecimals);
+    return formatUnits(balance, tokenDecimals);
   }
 };
 
@@ -278,5 +279,5 @@ export const formatNumberForDisplay = (value: string, price: number): string => 
   if (!value || value === '') return '';
 
   const decimals = price >= 10000 ? 6 : 4;
-  return new BigNumber(value).toFixed(decimals);
+  return new BigNumber(value).decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed(decimals);
 };

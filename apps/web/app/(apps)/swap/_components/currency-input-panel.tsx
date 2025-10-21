@@ -57,7 +57,6 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   usdPrice = 0,
 }: CurrencyInputPanelProps) => {
   const formattedBalance = formatUnits(currencyBalance, currency.decimals);
-  const formattedBalanceFixed = Number(formattedBalance).toFixed(2);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
@@ -125,8 +124,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             {isChainConnected && (
               <div className="inline-flex justify-start items-center gap-2">
                 <div className="mix-blend-multiply text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex gap-1">
-                  <span className="inline">Balance:</span>
-                  <span className="inline">{formattedBalanceFixed}</span>
+                  <span className="hidden sm:inline">Balance:</span>
+                  <span className="inline">{formatNumberForDisplay(formattedBalance, usdPrice)}</span>
                 </div>
                 {type === CurrencyInputPanelType.INPUT && (
                   <Button
@@ -155,7 +154,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           </div>
         </div>
 
-        <div className="h-12 pr-6 inline-flex flex-col justify-center items-end gap-1">
+        <div className="h-12 pr-0 sm:pr-6 inline-flex flex-col justify-center items-end gap-1">
           <div className="text-right justify-center text-espresso font-normal font-['InterRegular'] leading-relaxed">
             <Input
               type="number"
