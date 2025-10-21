@@ -14,6 +14,7 @@ import { getXChainType } from '@sodax/wallet-sdk-react';
 import BigNumber from 'bignumber.js';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
+import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -89,8 +90,13 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
     return inputValue === '' ? 0 : new BigNumber(inputValue).multipliedBy(usdPrice).toFixed(2);
   }, [inputValue, usdPrice]);
 
-  const { data: stellarAccountValidation } = useValidateStellarAccount(customDestinationAddress);
-  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(customDestinationAddress, outputToken);
+  const { data: stellarAccountValidation } = useValidateStellarAccount(
+    isSwapAndSend && outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID ? customDestinationAddress : null,
+  );
+  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(
+    isSwapAndSend && outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID ? customDestinationAddress : null,
+    outputToken,
+  );
 
   return (
     <div
