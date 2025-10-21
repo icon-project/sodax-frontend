@@ -223,7 +223,7 @@ export default function SwapPage() {
           />
         </div>
 
-        <SwapCommitButton quoteQuery={quoteQuery} handleReview={handleReview} />
+        <SwapCommitButton quoteQuery={quoteQuery} handleReview={handleReview} sourceBalance={sourceBalance} />
       </div>
 
       {quoteQuery.data?.ok === false ? (

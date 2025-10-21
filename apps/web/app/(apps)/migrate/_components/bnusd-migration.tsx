@@ -95,7 +95,7 @@ export default function BnusdMigration() {
       </div>
 
       <div className="inline-flex flex-col justify-start items-start gap-4">
-        <MigrateButton />
+        <MigrateButton sourceBalance={getBalanceForChain(direction.from, currencies.from)} />
 
         <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
           Takes ~1 min · Network fee:{' '}

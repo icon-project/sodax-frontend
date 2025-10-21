@@ -18,13 +18,16 @@ import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { Loader2 } from 'lucide-react';
 import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
+import { parseUnits } from 'viem';
 
 export default function SwapCommitButton({
   quoteQuery,
   handleReview,
+  sourceBalance,
 }: {
   quoteQuery: UseQueryResult<Result<SolverIntentQuoteResponse, SolverErrorResponse> | undefined>;
   handleReview: () => void;
+  sourceBalance: bigint;
 }) {
   const openModal = useModalStore(state => state.openModal);
 
@@ -50,8 +53,11 @@ export default function SwapCommitButton({
     if (isSwapAndSend && !validateChainAddress(customDestinationAddress, getXChainType(outputToken.xChainId) || '')) {
       return 'Address is not valid';
     }
+    if (sourceBalance < parseUnits(inputAmount, inputToken.decimals)) {
+      return 'Insufficient balance';
+    }
     return null;
-  }, [inputAmount, isSwapAndSend, customDestinationAddress, outputToken.xChainId]);
+  }, [inputAmount, isSwapAndSend, customDestinationAddress, outputToken.xChainId, sourceBalance, inputToken.decimals]);
 
   const sourceChainType = getXChainType(inputToken.xChainId);
   const destinationChainType = getXChainType(outputToken.xChainId);
