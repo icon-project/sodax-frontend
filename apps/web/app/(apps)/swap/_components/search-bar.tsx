@@ -6,6 +6,7 @@ import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CloseIcon1 } from '@/components/icons/close-icon1';
+import { BaseIcon } from '@/components/icons/chains/base';
 
 interface SearchBarProps {
   isUsdtClicked: boolean;
@@ -61,11 +62,11 @@ export function SearchBar({
           <div className="relative">
             <div
               className="flex justify-start items-center gap-2 cursor-pointer z-51"
-              onClick={selectedChainId && !isChainSelectorOpen ? () => handleChainSelect('') : handleChainSelectorClick}
+              onClick={handleChainSelectorClick}
             >
               {selectedChainId ? (
                 <div className="w-8 h-8 flex justify-center items-center relative group">
-                  {!isChainSelectorOpen && (
+                  {/* {!isChainSelectorOpen && (
                     <Button
                       className="w-4 h-4 bg-white rounded-[256px] absolute !p-0 -left-2 top-2 z-52 hover:!bg-white"
                       variant="cream"
@@ -76,7 +77,7 @@ export function SearchBar({
                     >
                       <CloseIcon1 className="text-clay group-hover:text-espresso transition-colors" />
                     </Button>
-                  )}
+                  )} */}
                   <Image
                     src={getChainIcon(selectedChainId) || '/chain/0x2105.base.png'}
                     alt="Selected Chain"
