@@ -4,9 +4,6 @@ import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid } from 'lucide-r
 import { Input } from '@/components/ui/input';
 import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { CloseIcon1 } from '@/components/icons/close-icon1';
-import { BaseIcon } from '@/components/icons/chains/base';
 
 interface SearchBarProps {
   isUsdtClicked: boolean;
