@@ -55,13 +55,12 @@ export default function TokenSelectDialog({
   const onHandleOpenChange = (open: boolean) => {
     if (clickedAsset !== null) {
       setClickedAsset(null);
-
       return;
     }
 
     onClose();
-    setShowAllAssets(false);
     setSearchQuery('');
+    setShowAllAssets(false);
     setIsChainSelectorOpen(false);
     setSelectedChainFilter(null);
     setClickedAsset(null);
@@ -101,7 +100,10 @@ export default function TokenSelectDialog({
           onAssetClick={handleAssetClick}
           onClickOutside={handleClickOutside}
           searchQuery={searchQuery}
-          onTokenSelect={onTokenSelect}
+          onTokenSelect={token => {
+            onTokenSelect?.(token as XToken);
+            setSearchQuery('');
+          }}
           onClose={onClose}
           selectedChainFilter={selectedChainFilter}
           isChainSelectorOpen={isChainSelectorOpen}
