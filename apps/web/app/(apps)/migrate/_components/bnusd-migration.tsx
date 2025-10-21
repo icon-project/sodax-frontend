@@ -50,8 +50,7 @@ export default function BnusdMigration() {
 
   const handleMaxClick = async () => {
     const balance = getBalanceForChain(direction.from, currencies.from);
-    // For bnUSD migration, use original behavior (no gas fee estimation needed)
-    setTypedValue(Number(formatUnits(balance, currencies.from.decimals)).toFixed(2));
+    setTypedValue(formatUnits(balance, currencies.from.decimals));
   };
 
   const isSourceChainConnected = sourceAddress !== undefined;
