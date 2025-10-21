@@ -16,7 +16,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import SwapCommitButton from './_components/swap-commit-button';
-import { calculateMaxAvailableAmount, formatNumberForDisplay } from '@/lib/utils';
+import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function SwapPage() {
@@ -154,8 +154,7 @@ export default function SwapPage() {
   const handleMaxClick = (): void => {
     if (isSourceChainConnected) {
       const maxAvailableAmount = calculateMaxAvailableAmount(sourceBalance, inputToken.decimals, sodax.solver);
-      setInputAmount(maxAvailableAmount);
-      setInputAmount(isMobile ? formatNumberForDisplay(maxAvailableAmount, inputTokenPrice || 0) : maxAvailableAmount);
+      setInputAmount(isMobile ? formatBalance(maxAvailableAmount, inputTokenPrice || 0) : maxAvailableAmount);
     }
   };
 

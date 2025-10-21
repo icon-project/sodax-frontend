@@ -20,7 +20,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useSwapActions, useSwapState } from '../_stores/swap-store-provider';
 import { parseUnits } from 'viem';
 import type { SpokeChainId } from '@sodax/types';
-import { getSwapErrorMessage, formatNumberForDisplay } from '@/lib/utils';
+import { getSwapErrorMessage, formatBalance } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface SwapStatusMonitorProps {
@@ -340,7 +340,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 <div className="flex flex-col justify-start items-center gap-2">
                   <div className="inline-flex justify-start items-center gap-1">
                     <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                      {formatNumberForDisplay(outputAmount, usdPrice)}
+                      {formatBalance(outputAmount, usdPrice)}
                     </div>
                     <div className="justify-start text-clay-light text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
                       {outputToken.symbol}
@@ -496,8 +496,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                           <div className="flex justify-between">
                             <span className="text-clay-light">Receive at least</span>
                             <span className="text-espresso font-medium">
-                              {formatNumberForDisplay(minOutputAmount?.toString() || '0', usdPrice)}{' '}
-                              {outputToken.symbol}
+                              {formatBalance(minOutputAmount?.toString() || '0', usdPrice)} {outputToken.symbol}
                             </span>
                           </div>
                           <div className="flex justify-between">

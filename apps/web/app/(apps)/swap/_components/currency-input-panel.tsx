@@ -9,7 +9,7 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 import TokenSelectDialog from './token-select-dialog';
 import { useSwapState } from '../_stores/swap-store-provider';
-import { formatNumberForDisplay, validateChainAddress } from '@/lib/utils';
+import { formatBalance, validateChainAddress } from '@/lib/utils';
 import { getXChainType } from '@sodax/wallet-sdk-react';
 import BigNumber from 'bignumber.js';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
@@ -56,7 +56,6 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   onCustomDestinationAddressChange,
   usdPrice = 0,
 }: CurrencyInputPanelProps) => {
-  const formattedBalance = formatUnits(currencyBalance, currency.decimals);
   const inputRef = useRef<HTMLInputElement>(null);
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
@@ -125,7 +124,9 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
               <div className="inline-flex justify-start items-center gap-2">
                 <div className="mix-blend-multiply text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex gap-1">
                   <span className="hidden sm:inline">Balance:</span>
-                  <span className="inline">{formatNumberForDisplay(formattedBalance, usdPrice)}</span>
+                  <span className="inline">
+                    {formatBalance(formatUnits(currencyBalance, currency.decimals), usdPrice)}
+                  </span>
                 </div>
                 {type === CurrencyInputPanelType.INPUT && (
                   <Button
@@ -159,7 +160,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             <Input
               type="number"
               ref={inputRef}
-              value={type === CurrencyInputPanelType.OUTPUT ? formatNumberForDisplay(inputValue, usdPrice) : inputValue}
+              value={type === CurrencyInputPanelType.OUTPUT ? formatBalance(inputValue, usdPrice) : inputValue}
               onChange={onInputChange}
               onFocus={onInputFocus}
               placeholder="0"

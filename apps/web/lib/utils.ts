@@ -275,9 +275,9 @@ export const hasSufficientBalanceWithFee = (
 };
 
 // Utility function to format numbers according to specified rules
-export const formatNumberForDisplay = (value: string, price: number): string => {
-  if (!value || value === '') return '';
+export const formatBalance = (amount: string, price: number): string => {
+  if (!amount || amount === '') return '';
 
   const decimals = price >= 10000 ? 6 : 4;
-  return new BigNumber(value).decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed(decimals);
+  return new BigNumber(amount).decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed(decimals);
 };
