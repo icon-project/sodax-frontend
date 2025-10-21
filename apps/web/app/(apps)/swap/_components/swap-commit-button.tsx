@@ -95,7 +95,16 @@ export default function SwapCommitButton({
 
   return (
     <>
-      {isQuoteUnavailable ? (
+      {!isConnected ? (
+        <Button
+          variant="cherry"
+          className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+          onClick={handleOpenWalletModal}
+        >
+          Connect{' '}
+          {!isSourceChainConnected ? chainIdToChainName(inputToken.xChainId) : chainIdToChainName(outputToken.xChainId)}
+        </Button>
+      ) :isQuoteUnavailable ? (
         <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
           Quote unavailable
         </Button>
@@ -127,16 +136,7 @@ export default function SwapCommitButton({
           {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
           {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
         </Button>
-      ) : !isConnected ? (
-        <Button
-          variant="cherry"
-          className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
-          onClick={handleOpenWalletModal}
-        >
-          Connect{' '}
-          {!isSourceChainConnected ? chainIdToChainName(inputToken.xChainId) : chainIdToChainName(outputToken.xChainId)}
-        </Button>
-      ) : isWrongChain ? (
+      ) :  isWrongChain ? (
         <Button
           variant="cherry"
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
