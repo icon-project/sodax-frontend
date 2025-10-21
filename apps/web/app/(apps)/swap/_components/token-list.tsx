@@ -3,9 +3,10 @@ import { useState, useRef, useEffect } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
-import { ScrollArea, ScrollAreaPrimitive, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollAreaPrimitive, ScrollBar } from '@/components/ui/scroll-area';
 import { TokenAsset } from './token-asset';
 import { TokenGroupAsset } from './token-group-asset';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface TokenListProps {
   clickedAsset: string | null;
@@ -64,6 +65,8 @@ export function TokenList({
 
   const shouldApplyHover = clickedAsset === null;
 
+  const [backdropShow, setBackdropShow] = useState(false);
+
   const handleTokenAssetClick = (token: XToken) => {
     if (onTokenSelect) {
       onTokenSelect(token);
@@ -79,6 +82,7 @@ export function TokenList({
     if (onClickOutside) {
       onClickOutside();
     }
+    setBackdropShow(false);
   };
 
   const renderTokenSymbol = ({ symbol, tokens }: { symbol: string; tokens: XToken[] }) => {
@@ -105,11 +109,12 @@ export function TokenList({
           tokens={tokens}
           isClicked={isThisAssetClicked}
           isBlurred={shouldBlurOtherAssets}
-          onClick={(e: React.MouseEvent) => onAssetClick(e, symbol)}
-          isHovered={isHovered}
-          onMouseEnter={() => shouldApplyHover && setHoveredAsset(symbol)}
-          onMouseLeave={() => shouldApplyHover && setHoveredAsset(null)}
+          onClick={(e: React.MouseEvent) => {
+            onAssetClick(e, symbol);
+            setBackdropShow(true);
+          }}
           onChainClick={handleChainClick}
+          {...commonProps}
         />
       );
     }
@@ -129,32 +134,46 @@ export function TokenList({
   };
 
   return (
-    <div
-      ref={assetsRef}
-      // layout
-      className={`[flex-flow:wrap] box-border content-start flex gap-0 items-start justify-center px-0 py-4 relative shrink-0 w-full flex-1 ${
-        isChainSelectorOpen ? 'blur filter opacity-30' : ''
-      }`}
-      data-name="Assets"
-    >
-      <ScrollAreaPrimitive.Root data-slot="scroll-area" className={showAllAssets ? 'h-96' : 'h-71'}>
+    <>
+      {backdropShow && (
+        <div
+          className="rounded-[32px] fixed inset-0 z-50"
+          onClick={() => {
+            setBackdropShow(false);
+            setHoveredAsset(null);
+            onClickOutside();
+          }}
+        />
+      )}
+      <ScrollAreaPrimitive.Root
+        data-slot="scroll-area"
+        className={showAllAssets ? 'h-[calc(80vh-192px)]' : 'h-[292px]'}
+      >
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
-          className={`h-full w-full ${clickedAsset ? '!overflow-hidden' : ''}`}
+          className={`h-full mt-4 pt-4 pb-4 pl-5 pr-5 w-full content-stretch ${clickedAsset ? '' : ''}`}
         >
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-y-[10px]">{displayTokens.map(renderTokenSymbol)}</div>
+          <motion.div
+            ref={assetsRef}
+            layout
+            className={`flex-wrap box-border content-start flex gap-0 items-start justify-center px-0 relative shrink-0 w-full flex-1 ${
+              isChainSelectorOpen ? 'blur filter opacity-30' : ''
+            }`}
+            data-name="Assets"
+          >
+            <AnimatePresence mode="popLayout">{displayTokens.map(renderTokenSymbol)}</AnimatePresence>
+          </motion.div>
         </ScrollAreaPrimitive.Viewport>
-        <ScrollBar />
+        {showAllAssets && <ScrollBar />}
       </ScrollAreaPrimitive.Root>
-
       {!showAllAssets && filteredTokens.length > 15 && (
         <div
-          className="text-(length:--body-super-comfortable) text-espresso hover:font-bold font-['InterRegular'] leading-tight mt-8 cursor-pointer"
+          className={`mt-4 w-full text-center text-(length:--body-super-comfortable) text-espresso hover:font-bold font-['InterRegular'] leading-tight cursor-pointer z-1 ${isChainSelectorOpen || clickedAsset !== null ? 'blur filter opacity-30' : ''}`}
           onClick={onViewAllAssets}
         >
           View all assets
         </div>
       )}
-    </div>
+    </>
   );
 }

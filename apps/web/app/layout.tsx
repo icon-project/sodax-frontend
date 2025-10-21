@@ -3,7 +3,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import Providers from '../providers/providers';
 import AppSidebar from '@/components/landing/sidebar';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
   variable: '--font-geist-sans',

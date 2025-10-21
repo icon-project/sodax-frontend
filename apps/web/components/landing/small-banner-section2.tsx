@@ -26,7 +26,7 @@ const SmallBannerSection2 = () => {
             className="rounded-full cursor-pointer"
             variant="subtle"
             size="lg"
-            onClick={() => window.open('https://news.sodax.com/', '_blank')}
+            onClick={() => window.open('https://x.com/intent/user?screen_name=gosodax', '_blank')}
           >
             Follow us for launch
           </Button>

@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { CircularProgressIcon } from '@/components/icons';
 
 interface AnimatedCircularProgressProps {
   progress: number;
@@ -7,8 +6,6 @@ interface AnimatedCircularProgressProps {
 
 export function AnimatedCircularProgress({ progress }: AnimatedCircularProgressProps) {
   const radius = 4.25; // Calculated from the original 12px viewBox minus strokeWidth
-  const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
     <div className="relative shrink-0 size-3" data-name="icon/loader-2">

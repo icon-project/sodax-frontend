@@ -4,8 +4,7 @@ import type React from 'react';
 
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import type { CarouselApi } from '@/components/ui/carousel';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { Link as ScrollLink } from 'react-scroll';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
@@ -30,7 +29,7 @@ const carouselItems = [
   { id: 11, src: '/coin/op.png', alt: 'OPTIMISM' },
 ];
 
-const HeroSection = (): React.ReactElement => {
+const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactElement => {
   const imgRef = useRef<HTMLImageElement>(null);
   const carouselRef = useRef(null);
   const [api, setApi] = useState<CarouselApi>();
@@ -74,7 +73,7 @@ const HeroSection = (): React.ReactElement => {
               <div className="hidden md:block md:ml-[11px]">
                 <SodaxIcon width={84} height={18} fill="white" />
               </div>
-              <div className="justify-center text-[#edc1bc] text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
+              <div className="mix-blend-screen justify-center text-[#edc1bc] text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
                 BETA
               </div>
             </div>
@@ -88,15 +87,16 @@ const HeroSection = (): React.ReactElement => {
             {/* Navigation Menu and Button */}
             <ul className="hidden lg:flex gap-4 z-10">
               <li>
-                <ScrollLink to="networks" smooth={true} duration={500} spy={true}>
-                  <span className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer">
-                    About
-                  </span>
-                </ScrollLink>
+                <span
+                  className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
+                  onClick={onSwapClick}
+                >
+                  About
+                </span>
               </li>
             </ul>
             <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton onClick={() => router.push('/migrate')}>launch apps</MainCtaButton>
+              <MainCtaButton onClick={() => router.push('/swap')}>launch apps</MainCtaButton>
             </div>
           </div>
         </div>
@@ -200,7 +200,7 @@ const HeroSection = (): React.ReactElement => {
               <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
             </div>
             <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton onClick={() => router.push('/migrate')}>launch apps</MainCtaButton>
+              <MainCtaButton onClick={() => router.push('/swap')}>launch apps</MainCtaButton>
             </div>
           </div>
         </div>

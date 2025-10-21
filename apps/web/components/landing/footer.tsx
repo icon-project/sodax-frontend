@@ -33,7 +33,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             using soda
           </div>
-          <FooterLink href="#">Flagship Platform (Soon)</FooterLink>
+          <FooterLink href="/swap">SODAX Swap</FooterLink>
           <FooterLink href="https://www.hanawallet.io/" showArrow>
             Hana Wallet
           </FooterLink>

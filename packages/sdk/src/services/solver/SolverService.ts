@@ -18,6 +18,7 @@ import {
   type WaitUntilIntentExecutedPayload,
   adjustAmountByFee,
   calculateFeeAmount,
+  calculatePercentageFeeAmount,
   deriveUserWalletAddress,
   encodeContractCalls,
   getIntentRelayChainId,
@@ -245,20 +246,33 @@ export class SolverService {
   }
 
   /**
-   * Get the fee for a given input amount
+   * Get the partner fee for a given input amount
    * @param {bigint} inputAmount - The amount of input tokens
-   * @returns {Promise<bigint>} The fee amount (denominated in input tokens)
+   * @returns {Promise<bigint>} The partner fee amount (denominated in input tokens)
    *
    * @example
-   * const fee: bigint = await solverService.getFee(1000000000000000n);
-   * console.log('Fee:', fee);
+   * const fee: bigint = await solverService.getPartnerFee(1000000000000000n);
+   * console.log('Partner fee:', fee);
    */
-  public getFee(inputAmount: bigint): bigint {
+  public getPartnerFee(inputAmount: bigint): bigint {
     if (!this.config.partnerFee) {
       return 0n;
     }
 
     return calculateFeeAmount(inputAmount, this.config.partnerFee);
+  }
+
+  /**
+   * Get the solver fee for a given input amount (0.1% fee)
+   * @param {bigint} inputAmount - The amount of input tokens
+   * @returns {Promise<bigint>} The solver fee amount (denominated in input tokens)
+   *
+   * @example
+   * const fee: bigint = await solverService.getSolverFee(1000000000000000n);
+   * console.log('Solver fee:', fee);
+   */
+  public getSolverFee(inputAmount: bigint): bigint {
+    return calculatePercentageFeeAmount(inputAmount, 10);
   }
 
   /**

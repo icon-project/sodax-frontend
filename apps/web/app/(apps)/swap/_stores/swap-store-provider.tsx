@@ -1,9 +1,12 @@
 'use client';
 
-import { type ReactNode, createContext, useRef, useContext } from 'react';
+import { type ReactNode, createContext, useRef, useContext, useMemo } from 'react';
 import { useStore } from 'zustand';
 
 import { type SwapStore, createSwapStore } from './swap-store';
+import { parseUnits } from 'viem';
+import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { validateChainAddress } from '@/lib/utils';
 
 export type SwapStoreApi = ReturnType<typeof createSwapStore>;
 
@@ -32,33 +35,28 @@ export const useSwapStore = <T,>(selector: (store: SwapStore) => T): T => {
   return useStore(swapStoreContext, selector);
 };
 
-// Convenience hook for getting all swap state
 export const useSwapState = () => {
-  const sourceToken = useSwapStore(state => state.sourceToken);
-  const destinationToken = useSwapStore(state => state.destinationToken);
-  const sourceAmount = useSwapStore(state => state.sourceAmount);
-  const destinationAmount = useSwapStore(state => state.destinationAmount);
+  const inputToken = useSwapStore(state => state.inputToken);
+  const outputToken = useSwapStore(state => state.outputToken);
+  const inputAmount = useSwapStore(state => state.inputAmount);
   const isSwapAndSend = useSwapStore(state => state.isSwapAndSend);
   const customDestinationAddress = useSwapStore(state => state.customDestinationAddress);
   const slippageTolerance = useSwapStore(state => state.slippageTolerance);
 
   return {
-    sourceToken,
-    destinationToken,
-    sourceAmount,
-    destinationAmount,
+    inputToken,
+    outputToken,
+    inputAmount,
     isSwapAndSend,
     customDestinationAddress,
     slippageTolerance,
   };
 };
 
-// Convenience hook for getting all swap actions
 export const useSwapActions = () => {
-  const setSourceToken = useSwapStore(state => state.setSourceToken);
-  const setDestinationToken = useSwapStore(state => state.setDestinationToken);
-  const setSourceAmount = useSwapStore(state => state.setSourceAmount);
-  const setDestinationAmount = useSwapStore(state => state.setDestinationAmount);
+  const setInputToken = useSwapStore(state => state.setInputToken);
+  const setOutputToken = useSwapStore(state => state.setOutputToken);
+  const setInputAmount = useSwapStore(state => state.setInputAmount);
   const setIsSwapAndSend = useSwapStore(state => state.setIsSwapAndSend);
   const setCustomDestinationAddress = useSwapStore(state => state.setCustomDestinationAddress);
   const setSlippageTolerance = useSwapStore(state => state.setSlippageTolerance);
@@ -66,14 +64,58 @@ export const useSwapActions = () => {
   const resetSwapState = useSwapStore(state => state.resetSwapState);
 
   return {
-    setSourceToken,
-    setDestinationToken,
-    setSourceAmount,
-    setDestinationAmount,
+    setInputToken,
+    setOutputToken,
+    setInputAmount,
     setIsSwapAndSend,
     setCustomDestinationAddress,
     setSlippageTolerance,
     switchTokens,
     resetSwapState,
+  };
+};
+
+export const useSwapInfo = () => {
+  const inputToken = useSwapStore(state => state.inputToken);
+  const outputToken = useSwapStore(state => state.outputToken);
+  const inputAmount = useSwapStore(state => state.inputAmount);
+  const isSwapAndSend = useSwapStore(state => state.isSwapAndSend);
+  const customDestinationAddress = useSwapStore(state => state.customDestinationAddress);
+  const slippageTolerance = useSwapStore(state => state.slippageTolerance);
+
+  const { address: sourceAddress } = useXAccount(inputToken.xChainId);
+  const { data: balances } = useXBalances({
+    xChainId: inputToken.xChainId,
+    xTokens: [inputToken],
+    address: sourceAddress,
+  });
+
+  const sourceBalance = balances?.[inputToken.address] || 0n;
+
+  const inputError = useMemo(() => {
+    if (inputAmount === '0' || inputAmount === '') {
+      return 'Enter Amount';
+    }
+    if (isSwapAndSend && customDestinationAddress === '') {
+      return 'Enter destination address';
+    }
+    if (isSwapAndSend && !validateChainAddress(customDestinationAddress, getXChainType(outputToken.xChainId) || '')) {
+      return 'Address is not valid';
+    }
+    if (sourceBalance < parseUnits(inputAmount, inputToken.decimals)) {
+      return 'Insufficient balance';
+    }
+    return null;
+  }, [inputAmount, isSwapAndSend, customDestinationAddress, outputToken.xChainId, sourceBalance, inputToken.decimals]);
+
+  return {
+    inputToken,
+    outputToken,
+    inputAmount,
+    isSwapAndSend,
+    customDestinationAddress,
+    slippageTolerance,
+    sourceBalance,
+    inputError,
   };
 };

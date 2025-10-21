@@ -1,10 +1,11 @@
 import type React from 'react';
 import { useState } from 'react';
-import { XIcon, ChevronUpIcon } from 'lucide-react';
+import { XIcon } from 'lucide-react';
 import type { SpokeChainId, XToken } from '@sodax/types';
-import { Dialog, DialogTitle, DialogContent, DialogHeader, DialogClose } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { SearchBar } from './search-bar';
 import { TokenList } from './token-list';
+import { DialogContent, Dialog, DialogTitle, DialogClose } from '@/components/ui/dialog';
 
 export default function TokenSelectDialog({
   isOpen,
@@ -51,21 +52,37 @@ export default function TokenSelectDialog({
     setShowAllAssets(!showAllAssets);
   };
 
+  const onHandleOpenChange = (open: boolean) => {
+    if (clickedAsset !== null) {
+      setClickedAsset(null);
+      return;
+    }
+
+    onClose();
+    setSearchQuery('');
+    setShowAllAssets(false);
+    setIsChainSelectorOpen(false);
+    setSelectedChainFilter(null);
+    setClickedAsset(null);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full md:max-w-[480px] shadow-none bg-vibrant-white gap-4 p-12" hideCloseButton>
-        <DialogHeader>
-          <DialogTitle className="relative">
-            <DialogClose className="absolute -top-4 right-0" asChild>
-              <button
-                type="button"
-                className="w-12 h-12 flex items-center justify-center cursor-pointer text-clay-light hover:text-clay rounded-full transition-colors"
-              >
-                <XIcon className="w-4 h-4" />
-              </button>
-            </DialogClose>
-          </DialogTitle>
-        </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={onHandleOpenChange}>
+      <DialogContent
+        enableMotion={true}
+        className="shadow-none md:max-w-[480px] w-[90%] p-12 bg-vibrant-white"
+        hideCloseButton={true}
+      >
+        <DialogTitle className="flex justify-end w-full h-4 relative p-0">
+          <DialogClose className="pt-0" asChild>
+            <Button
+              variant="ghost"
+              className={`absolute outline-none w-12 h-12 rounded-full text-clay-light hover:text-clay transition-colors cursor-pointer top-0 !-mr-4 ${clickedAsset !== null ? 'blur filter' : ''}`}
+            >
+              <XIcon className="w-4 h-4 pointer-events-none" />
+            </Button>
+          </DialogClose>
+        </DialogTitle>
 
         <SearchBar
           isUsdtClicked={clickedAsset !== null}
@@ -83,25 +100,16 @@ export default function TokenSelectDialog({
           onAssetClick={handleAssetClick}
           onClickOutside={handleClickOutside}
           searchQuery={searchQuery}
-          onTokenSelect={onTokenSelect}
+          onTokenSelect={token => {
+            onTokenSelect?.(token as XToken);
+            setSearchQuery('');
+          }}
           onClose={onClose}
           selectedChainFilter={selectedChainFilter}
           isChainSelectorOpen={isChainSelectorOpen}
           showAllAssets={showAllAssets}
           onViewAllAssets={handleViewAllAssets}
         />
-
-        {showAllAssets && (
-          <div className="box-border content-stretch flex flex-row gap-1.5 items-center justify-center p-0 relative shrink-0 transition-all duration-200 cursor-pointer">
-            <div className="flex flex-col font-['InterRegular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-espresso text-[16px] text-center text-nowrap">
-              <p className="block leading-[1.4] whitespace-pre">Sorted by</p>
-            </div>
-            <div className="flex flex-col font-['InterRegular'] font-normal justify-center leading-[0] not-italic relative shrink-0 text-yellow-dark text-[0px] text-center text-nowrap">
-              <p className="block font-['InterBold'] font-bold leading-[1.4] text-[16px] whitespace-pre">24h volume</p>
-            </div>
-            <ChevronUpIcon className="w-4 h-4 text-yellow-dark" />
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );
