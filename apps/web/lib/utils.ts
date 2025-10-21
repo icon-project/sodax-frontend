@@ -200,7 +200,8 @@ function isValidIconAddress(addr: string) {
   return true;
 }
 
-export function validateChainAddress(address: string, chain: string): boolean {
+export function validateChainAddress(address: string | null | undefined, chain: string): boolean {
+  if (!address) return false;
   try {
     switch (chain) {
       case 'EVM':
