@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import type { ChainType } from '@sodax/types';
 import { useEvmSwitchChain, useXAccount, getXChainType, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useSwapInfo } from '../_stores/swap-store-provider';
@@ -38,26 +37,9 @@ export default function SwapCommitButton({
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(inputToken.xChainId);
 
   const isQuoteUnavailable = quoteQuery.data?.ok === false;
-  const isConnected = isSourceChainConnected && (isDestinationChainConnected || isSwapAndSend);
 
   const sourceChainType = getXChainType(inputToken.xChainId);
   const destinationChainType = getXChainType(outputToken.xChainId);
-
-  const getTargetChainType = (): ChainType | undefined => {
-    if (!sourceAddress) {
-      return sourceChainType;
-    }
-
-    if (!destinationAddress) {
-      return destinationChainType;
-    }
-
-    return undefined;
-  };
-
-  const handleOpenWalletModal = (): void => {
-    openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
-  };
 
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress;
 
@@ -95,18 +77,29 @@ export default function SwapCommitButton({
 
   return (
     <>
-      {!isConnected ? (
+      {!isSourceChainConnected ? (
         <Button
           variant="cherry"
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
-          onClick={handleOpenWalletModal}
+          onClick={() => {
+            openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: sourceChainType });
+          }}
         >
-          Connect{' '}
-          {!isSourceChainConnected ? chainIdToChainName(inputToken.xChainId) : chainIdToChainName(outputToken.xChainId)}
+          {`Connect ${chainIdToChainName(inputToken.xChainId)}`}
         </Button>
-      ) :isQuoteUnavailable ? (
+      ) : isQuoteUnavailable ? (
         <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
           Quote unavailable
+        </Button>
+      ) : !isDestinationChainConnected && !isSwapAndSend ? (
+        <Button
+          variant="cherry"
+          className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
+          onClick={() => {
+            openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: destinationChainType });
+          }}
+        >
+          {`Connect ${chainIdToChainName(outputToken.xChainId)}`}
         </Button>
       ) : inputError ? (
         <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
@@ -136,7 +129,7 @@ export default function SwapCommitButton({
           {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
           {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
         </Button>
-      ) :  isWrongChain ? (
+      ) : isWrongChain ? (
         <Button
           variant="cherry"
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
