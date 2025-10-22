@@ -1,10 +1,8 @@
-import type { ChainId, ChainType } from '@sodax/types';
-
-import { xChainMap } from '@/constants/xChains';
+import { baseChainInfo, type ChainId, type ChainType } from '@sodax/types';
 
 export function getXChainType(xChainId: ChainId | undefined): ChainType | undefined {
   if (!xChainId) {
     return undefined;
   }
-  return xChainMap[xChainId].xChainType;
+  return baseChainInfo[xChainId].type;
 }

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { xChains } from '@sodax/wallet-sdk-react';
-import type { ChainId } from '@sodax/types';
+import { baseChainInfo, type ChainId } from '@sodax/types';
 
 export function ChainSelector({
   selectedChainId,
@@ -18,8 +17,8 @@ export function ChainSelector({
         </div>
       </SelectTrigger>
       <SelectContent>
-        {xChains.map(xChain => (
-          <SelectItem key={xChain.xChainId} value={xChain.xChainId}>
+        {Object.values(baseChainInfo).map(xChain => (
+          <SelectItem key={xChain.id} value={xChain.id}>
             {xChain.name}
           </SelectItem>
         ))}
