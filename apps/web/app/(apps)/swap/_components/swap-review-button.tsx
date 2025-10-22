@@ -18,7 +18,7 @@ import { Loader2 } from 'lucide-react';
 import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 
-export default function SwapCommitButton({
+export default function SwapReviewButton({
   quoteQuery,
   handleReview,
 }: {
@@ -104,7 +104,7 @@ export default function SwapCommitButton({
           Connect{' '}
           {!isSourceChainConnected ? chainIdToChainName(inputToken.xChainId) : chainIdToChainName(outputToken.xChainId)}
         </Button>
-      ) :isQuoteUnavailable ? (
+      ) : isQuoteUnavailable ? (
         <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
           Quote unavailable
         </Button>
@@ -136,7 +136,7 @@ export default function SwapCommitButton({
           {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
           {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin" />}
         </Button>
-      ) :  isWrongChain ? (
+      ) : isWrongChain ? (
         <Button
           variant="cherry"
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"

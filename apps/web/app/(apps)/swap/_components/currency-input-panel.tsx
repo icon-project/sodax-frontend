@@ -142,7 +142,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
 
             {type === CurrencyInputPanelType.OUTPUT && onSwapAndSendToggle && (
               <div className="inline-flex justify-start items-center gap-2 w-[40px] md:w-[150px]">
-                <span className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] hidden md:block">
+                <span className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular']">
                   Swap and send
                 </span>
                 <Switch

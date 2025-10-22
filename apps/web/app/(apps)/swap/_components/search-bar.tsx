@@ -35,7 +35,7 @@ export function SearchBar({
     >
       <div className="w-full flex justify-center">
         <div
-          className={`w-64 h-12 px-6 rounded-[32px] outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center transition-all duration-200
+          className={`w-full md:w-64 h-12 px-6 rounded-[32px] outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center transition-all duration-200
           }`}
         >
           <div className="flex items-center">

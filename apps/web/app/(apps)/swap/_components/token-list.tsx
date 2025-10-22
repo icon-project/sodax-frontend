@@ -5,7 +5,6 @@ import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
 import { ScrollAreaPrimitive, ScrollBar } from '@/components/ui/scroll-area';
 import { TokenAsset } from './token-asset';
-import { TokenGroupAsset } from './token-group-asset';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface TokenListProps {
@@ -88,7 +87,6 @@ export function TokenList({
   const renderTokenSymbol = ({ symbol, tokens }: { symbol: string; tokens: XToken[] }) => {
     const tokenCount = tokens.length;
     const isHovered = shouldApplyHover && hoveredAsset === symbol;
-    const isThisAssetClicked = clickedAsset === symbol;
 
     const shouldBlurOtherAssets = clickedAsset !== null && clickedAsset !== symbol;
 
@@ -102,18 +100,20 @@ export function TokenList({
 
     if (tokenCount > 1) {
       return (
-        <TokenGroupAsset
+        <TokenAsset
           key={symbol}
-          symbol={symbol}
+          name={symbol}
+          isGroup={true}
           tokenCount={tokenCount}
           tokens={tokens}
-          isClicked={isThisAssetClicked}
-          isBlurred={shouldBlurOtherAssets}
-          onClick={(e: React.MouseEvent) => {
-            onAssetClick(e, symbol);
-            setBackdropShow(true);
+          onClick={(e?: React.MouseEvent) => {
+            if (e) {
+              onAssetClick(e, symbol);
+              setBackdropShow(true);
+            }
           }}
           onChainClick={handleChainClick}
+          isClicked={clickedAsset === symbol}
           {...commonProps}
         />
       );
