@@ -43,8 +43,21 @@ export function TokenList({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (assetsRef.current && !assetsRef.current.contains(event.target as Node) && clickedAsset !== null) {
-        onClickOutside();
+      // Check if the click is on a network icon or its children
+      const target = event.target as Element;
+      const isNetworkIcon =
+        target.closest('[data-network-icon]') || target.closest('.fixed.pointer-events-auto.z-\\[53\\]');
+
+      if (
+        assetsRef.current &&
+        !assetsRef.current.contains(event.target as Node) &&
+        clickedAsset !== null &&
+        !isNetworkIcon
+      ) {
+        // Add a small delay to allow network icon clicks to process first
+        setTimeout(() => {
+          onClickOutside();
+        }, 10);
       }
     };
 
@@ -137,7 +150,7 @@ export function TokenList({
     <>
       {backdropShow && (
         <div
-          className="rounded-[32px] fixed inset-0 z-50"
+          className="rounded-[32px] fixed inset-0 z-[55]"
           onClick={() => {
             setBackdropShow(false);
             setHoveredAsset(null);

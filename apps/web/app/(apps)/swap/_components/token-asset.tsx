@@ -42,12 +42,17 @@ function NetworkIcon({
 
   return (
     <div
+      data-network-icon="true"
       className={`relative shrink-0 cursor-pointer p-2 ${
         shouldDim ? 'opacity-60 grayscale-[0.5]' : 'opacity-100 grayscale-0'
       }`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      onClick={onClick}
+      onMouseDown={e => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+      }}
       style={{
         transform: isHovered ? 'scale(1.3)' : 'scale(1)',
       }}
@@ -111,11 +116,11 @@ function StackedNetworks({
 
   const portalContent = (
     <div
-      className="fixed pointer-events-auto z-[9999]"
+      className="fixed pointer-events-auto z-[53]"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
-        transform: 'translate(-50%, -100%)',
+        transform: 'translate(-50%, 0)',
       }}
     >
       <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2 text-center">
@@ -186,7 +191,7 @@ export function TokenAsset({
     if (isClicked && isGroup && assetRef.current) {
       const rect = assetRef.current.getBoundingClientRect();
       setPortalPosition({
-        top: rect.bottom + 20,
+        top: rect.bottom - 30,
         left: rect.left + rect.width / 2,
       });
     } else {
