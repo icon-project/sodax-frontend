@@ -4,8 +4,6 @@ import type { EvmHubProvider, SpokeProvider } from '../entities/index.js';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
   getHubAssetInfo,
-  getMoneyMarketConfig,
-  getSupportedMoneyMarketTokens,
   isConfiguredMoneyMarketConfig,
   isValidOriginalAssetAddress,
   isValidSpokeChainId,
@@ -15,8 +13,6 @@ import {
   type RelayErrorCode,
   DEFAULT_RELAY_TX_TIMEOUT,
   EvmSpokeProvider,
-  isMoneyMarketSupportedToken,
-  spokeChainConfig,
   SonicSpokeProvider,
   SonicSpokeService,
   SolanaSpokeProvider,
@@ -41,7 +37,17 @@ import { calculateFeeAmount, deriveUserWalletAddress, encodeAddress, encodeContr
 import { EvmAssetManagerService, EvmVaultTokenService } from '../services/hub/index.js';
 import { Erc20Service } from '../services/shared/index.js';
 import invariant from 'tiny-invariant';
-import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Token, type Address, type HttpUrl } from '@sodax/types';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  type SpokeChainId,
+  type Token,
+  type Address,
+  type HttpUrl,
+  getMoneyMarketConfig,
+  getSupportedMoneyMarketTokens,
+  isMoneyMarketSupportedToken,
+  spokeChainConfig,
+} from '@sodax/types';
 import { wrappedSonicAbi } from '../abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
 import { StellarSpokeService } from '../services/spoke/StellarSpokeService.js';

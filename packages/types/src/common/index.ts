@@ -1,4 +1,11 @@
-import type { HUB_CHAIN_IDS, CHAIN_IDS } from '../constants/index.js';
+import type {
+  HUB_CHAIN_IDS,
+  CHAIN_IDS,
+  EVM_CHAIN_IDS,
+  ChainIdToIntentRelayChainId,
+  HubVaultSymbols,
+} from '../constants/index.js';
+import type { InjectiveNetworkEnv } from '../injective/index.js';
 
 export type HubChainId = (typeof HUB_CHAIN_IDS)[number];
 
@@ -65,4 +72,153 @@ export type RpcConfig = {
     horizonRpcUrl?: HttpUrl;
     sorobanRpcUrl?: HttpUrl;
   };
+};
+
+export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
+export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
+export type EvmChainId = (typeof EVM_CHAIN_IDS)[number];
+export type EvmSpokeChainId = (typeof EVM_CHAIN_IDS)[number];
+
+export type GetSpokeChainIdType<T extends ChainType> = T extends 'EVM' ? EvmSpokeChainId : SpokeChainId;
+
+export type BaseSpokeChainInfo<T extends ChainType> = {
+  name: string;
+  id: GetSpokeChainIdType<T>;
+  type: T;
+};
+
+export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
+
+export type BaseSpokeChainConfig<T extends ChainType> = {
+  chain: SpokeChainInfo<T>;
+  addresses: { [key: string]: string | Uint8Array };
+  supportedTokens: Record<string, XToken>;
+  nativeToken: string;
+  bnUSD: string;
+};
+
+export type SonicSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
+  addresses: {
+    walletRouter: Address;
+    wrappedSonic: Address;
+  };
+  nativeToken: Address;
+};
+
+export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  chain: SpokeChainInfo<'SOLANA'>;
+  rpcUrl: string;
+  walletAddress: string;
+  nativeToken: string;
+  gasPrice: string;
+};
+
+export type StellarAssetTrustline = {
+  assetCode: string;
+  contractId: string;
+  assetIssuer: string;
+};
+
+export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  horizonRpcUrl: HttpUrl;
+  sorobanRpcUrl: HttpUrl;
+  trustlineConfigs: StellarAssetTrustline[];
+};
+
+export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
+  rpcUrl: string;
+  walletAddress: string;
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  nativeToken: string;
+  prefix: string;
+  gasPrice: string;
+  isBrowser: boolean;
+  networkId: string;
+  network: InjectiveNetworkEnv;
+};
+
+export type EvmSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
+  addresses: {
+    assetManager: Address;
+    connection: Address;
+  };
+  nativeToken: string;
+};
+
+export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
+  addresses: {
+    originalAssetManager: string;
+    assetManagerConfigId: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  rpc_url: string;
+};
+
+export type IconAddress = `hx${string}` | `cx${string}`;
+export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
+  addresses: {
+    assetManager: IconAddress;
+    connection: IconAddress;
+    rateLimit: IconAddress;
+    wICX: `cx${string}`;
+  };
+  nid: Hex;
+};
+
+export type SpokeChainConfig =
+  | EvmSpokeChainConfig
+  | SonicSpokeChainConfig
+  | InjectiveSpokeChainConfig
+  | IconSpokeChainConfig
+  | SuiSpokeChainConfig
+  | StellarSpokeChainConfig
+  | SolanaChainConfig;
+
+export type SolverConfig = {
+  intentsContract: Address; // Intents Contract (Hub)
+  solverApiEndpoint: HttpUrl;
+};
+
+export type MoneyMarketConfig = {
+  uiPoolDataProvider: Address;
+  lendingPool: Address;
+  poolAddressesProvider: Address;
+  bnUSD: Address;
+  bnUSDVault: Address;
+};
+
+export type VaultType = {
+  address: Address; // vault address
+  reserves: Address[]; // hub asset addresses contained in the vault
+};
+
+export type HubAsset = {
+  asset: Address;
+  decimal: number;
+  vault: Address;
+  symbol: string;
+  name: string;
 };

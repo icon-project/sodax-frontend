@@ -20,8 +20,6 @@ import {
   calculateFeeAmount,
   deriveUserWalletAddress,
   encodeContractCalls,
-  getIntentRelayChainId,
-  getSolverConfig,
   isConfiguredSolverConfig,
   isValidIntentRelayChainId,
   isValidOriginalAssetAddress,
@@ -38,7 +36,6 @@ import type {
   SolverExecutionResponse,
   SolverIntentQuoteRequest,
   SolverIntentQuoteResponse,
-  IntentRelayChainId,
   SolverIntentStatusRequest,
   SolverIntentStatusResponse,
   Result,
@@ -62,6 +59,9 @@ import {
   type Hash,
   type HttpUrl,
   SOLANA_MAINNET_CHAIN_ID,
+  type IntentRelayChainId,
+  getIntentRelayChainId,
+  getSolverConfig,
 } from '@sodax/types';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
 

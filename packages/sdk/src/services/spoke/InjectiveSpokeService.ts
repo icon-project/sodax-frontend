@@ -3,15 +3,13 @@ import { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeP
 import type { EvmHubProvider } from '../../entities/index.js';
 import {
   type DepositSimulationParams,
-  type HubAddress,
   type InjectiveGasEstimate,
-  type InjectiveRawTransaction,
   type PromiseInjectiveTxReturnType,
   encodeAddress,
-  getIntentRelayChainId,
 } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { CosmosTxV1Beta1Tx } from '@injectivelabs/core-proto-ts';
+import { getIntentRelayChainId, type HubAddress, type InjectiveRawTransaction } from '@sodax/types';
 
 export type InjectiveSpokeDepositParams = {
   from: string; // The address of the user on the spoke chain

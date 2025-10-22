@@ -4,15 +4,13 @@ import { assetManagerAbi } from '../../../abis/index.js';
 import {
   EvmAssetManagerService,
   EvmSpokeProvider,
-  spokeChainConfig,
   type EvmDepositToDataParams,
   type EvmWithdrawAssetDataParams,
   getHubChainConfig,
   EvmHubProvider,
   type EvmHubProviderConfig,
-  type IEvmWalletProvider,
 } from '../../../index.js';
-import { BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, spokeChainConfig, type IEvmWalletProvider } from '@sodax/types';
 
 describe('EvmAssetManagerService', () => {
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';

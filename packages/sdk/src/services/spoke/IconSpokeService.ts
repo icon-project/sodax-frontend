@@ -6,16 +6,15 @@ import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { BigIntToHex, encodeAddress, getIntentRelayChainId, isNativeToken } from '../../index.js';
+import { BigIntToHex, encodeAddress, isNativeToken } from '../../index.js';
 import type {
   DepositSimulationParams,
-  IconAddress,
   IconGasEstimate,
   IconRawTransaction,
   IconReturnType,
   PromiseIconTxReturnType,
 } from '../../types.js';
-import type { HubAddress } from '@sodax/types';
+import { type HubAddress, type IconAddress, getIntentRelayChainId } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { estimateStepCost } from '../../utils/icon-utils.js';
 

@@ -13,16 +13,12 @@ import {
   type EvmContractCall,
   type EvmHubProvider,
   FEE_PERCENTAGE_SCALE,
-  type Hash,
-  type Hex,
   IntentsAbi,
   type PartnerFee,
-  type SolverConfig,
   calculatePercentageFeeAmount,
   encodeAddress,
   encodeContractCalls,
   getHubAssetInfo,
-  getIntentRelayChainId,
   isIntentRelayChainId,
   isPartnerFeeAmount,
   isPartnerFeePercentage,
@@ -36,7 +32,7 @@ import {
   type IntentData,
   IntentDataType,
 } from '../index.js';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, getIntentRelayChainId, type Hash, type Hex, type SolverConfig } from '@sodax/types';
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
 export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventAbi>[number];
 

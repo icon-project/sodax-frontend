@@ -18,17 +18,21 @@ import {
   type Result,
   getHubAssetInfo,
   getHubChainConfig,
-  getIntentRelayChainId,
   EvmSolverService,
-  getMoneyMarketConfig,
-  type IEvmWalletProvider,
-  spokeChainConfig,
   type SolverConfigParams,
   getSpokeChainIdFromIntentRelayChainId,
   encodeAddress,
 } from '../index.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
-import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  getMoneyMarketConfig,
+  type IEvmWalletProvider,
+  spokeChainConfig,
+  getIntentRelayChainId,
+} from '@sodax/types';
 import { Sodax } from './Sodax.js';
 
 describe('Sodax', () => {

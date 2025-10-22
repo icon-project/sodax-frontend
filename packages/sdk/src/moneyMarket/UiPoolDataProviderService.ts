@@ -1,7 +1,6 @@
-import type { Address } from '@sodax/types';
+import { type Address, getMoneyMarketConfig } from '@sodax/types';
 import type { EvmHubProvider } from '../entities/Providers.js';
 import { uiPoolDataAbi } from '../abis/uiPoolData.abi.js';
-import { getMoneyMarketConfig } from '../constants.js';
 import type {
   AggregatedReserveData,
   BaseCurrencyInfo,

@@ -1,5 +1,4 @@
 import {
-  getIntentRelayChainId,
   isLegacybnUSDChainId,
   isLegacybnUSDToken,
   isNewbnUSDChainId,
@@ -12,7 +11,6 @@ import {
   IconSpokeProvider,
   IcxMigrationService,
   SpokeService,
-  type Hex,
   type IcxMigrateParams,
   type Result,
   type TxReturnType,
@@ -22,7 +20,6 @@ import {
   DEFAULT_RELAY_TX_TIMEOUT,
   SonicSpokeProvider,
   SonicSpokeService,
-  spokeChainConfig,
   type IcxCreateRevertMigrationParams,
   type SpokeProvider,
   Erc20Service,
@@ -45,7 +42,14 @@ import {
   waitUntilIntentExecuted,
   StellarSpokeProvider,
 } from '../../index.js';
-import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
+import {
+  ICON_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  type Address,
+  getIntentRelayChainId,
+  spokeChainConfig,
+  type Hex,
+} from '@sodax/types';
 import { isAddress } from 'viem';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
 

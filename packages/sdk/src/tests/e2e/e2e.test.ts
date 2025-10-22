@@ -1,9 +1,6 @@
 import {
   getHubAssetInfo,
   getOriginalAssetAddress,
-  getSupportedMoneyMarketTokens,
-  hubVaults,
-  SodaTokens,
   supportedSpokeChains,
 } from '../../constants.js';
 import { describe, expect, it } from 'vitest';
@@ -25,6 +22,9 @@ import {
   type SpokeChainId,
   type Token,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  getSupportedMoneyMarketTokens,
+  SodaTokens,
+  hubVaults,
 } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
 import { sonic } from 'viem/chains';

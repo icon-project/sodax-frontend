@@ -2,8 +2,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StellarSpokeService } from './StellarSpokeService.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
-import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
-import { spokeChainConfig, STELLAR_DEFAULT_TX_TIMEOUT_SECONDS } from '../../constants.js';
+import { STELLAR_MAINNET_CHAIN_ID, spokeChainConfig } from '@sodax/types';
+import { STELLAR_DEFAULT_TX_TIMEOUT_SECONDS } from '../../constants.js';
 import { parseToStroops } from '../../utils/shared-utils.js';
 import type { Horizon, rpc as StellarRpc } from '@stellar/stellar-sdk';
 

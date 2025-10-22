@@ -9,7 +9,6 @@ import {
   type TransactionInstruction,
 } from '@solana/web3.js';
 import { keccak256, type Address, type Hex } from 'viem';
-import { getIntentRelayChainId } from '../../constants.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { getAssetManagerProgram, getConnectionProgram } from '../../entities/solana/Configs.js';
 import type { SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvider.js';
@@ -23,7 +22,7 @@ import type {
   SolanaRawTransaction,
   SolanaReturnType,
 } from '../../types.js';
-import type { HubAddress, SolanaBase58PublicKey } from '@sodax/types';
+import { getIntentRelayChainId, type HubAddress, type SolanaBase58PublicKey } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import BN from 'bn.js';
 import { encodeAddress } from '../../utils/shared-utils.js';

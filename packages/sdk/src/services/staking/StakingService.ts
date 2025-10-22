@@ -28,16 +28,14 @@ import {
   EvmSpokeProvider,
   type EvmHubProvider,
   type SpokeProvider,
-  type XToken,
   encodeAddress,
-  type SpokeChainId,
   EvmAssetManagerService,
   StellarSpokeProvider,
   StellarSpokeService,
   type RelayError,
 } from '../../index.js';
-import { DEFAULT_RELAY_TX_TIMEOUT, getHubChainConfig, getIntentRelayChainId } from '../../constants.js';
-import type { HttpUrl } from '@sodax/types';
+import { DEFAULT_RELAY_TX_TIMEOUT, getHubChainConfig } from '../../constants.js';
+import { type HttpUrl, type XToken, type SpokeChainId, getIntentRelayChainId } from '@sodax/types';
 
 export type StakeParams = {
   amount: bigint; // amount to stake

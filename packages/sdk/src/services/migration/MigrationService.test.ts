@@ -12,15 +12,12 @@ import {
   EvmHubProvider,
   type EvmHubProviderConfig,
   getHubChainConfig,
-  spokeChainConfig,
   SpokeService,
   SonicSpokeService,
   Erc20Service,
   DEFAULT_RELAY_TX_TIMEOUT,
   encodeAddress,
-  type EvmRawTransaction,
   type PacketData,
-  getIntentRelayChainId,
   type IcxTokenType,
   type MigrationAction,
   type UnifiedBnUSDMigrateParams,
@@ -33,8 +30,17 @@ import {
   isLegacybnUSDToken,
   isNewbnUSDToken,
 } from '../../index.js';
-import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import type { IIconWalletProvider, IEvmWalletProvider, SpokeChainId, Address } from '@sodax/types';
+import {
+  ICON_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+  getIntentRelayChainId,
+  type EvmRawTransaction,
+  type IIconWalletProvider,
+  type IEvmWalletProvider,
+  type SpokeChainId,
+  type Address,
+} from '@sodax/types';
 import * as IntentRelayApiService from '../../services/intentRelay/IntentRelayApiService.js';
 import * as SharedUtils from '../../utils/shared-utils.js';
 
@@ -968,7 +974,9 @@ describe('MigrationService', () => {
     describe('createMigratebnUSDIntent', () => {
       it('should successfully create legacy to new bnUSD migration intent', async () => {
         vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
-        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce("0x2170Ed0880ac9A755fd29B2688956BD959F933F8");
+        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce(
+          '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
+        );
 
         const result = await migrationService.createMigratebnUSDIntent(
           mockBnUSDLegacyToNewParams,
@@ -983,7 +991,9 @@ describe('MigrationService', () => {
 
       it('should successfully create new to legacy bnUSD migration intent', async () => {
         vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
-        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce("0x2170Ed0880ac9A755fd29B2688956BD959F933F8");
+        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce(
+          '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
+        );
 
         const result = await migrationService.createMigratebnUSDIntent(
           mockBnUSDNewToLegacyParams,
@@ -1005,7 +1015,9 @@ describe('MigrationService', () => {
         };
 
         vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockRawTx);
-        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce("0x2170Ed0880ac9A755fd29B2688956BD959F933F8");
+        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce(
+          '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
+        );
 
         const result = await migrationService.createMigratebnUSDIntent(
           mockBnUSDLegacyToNewParams,

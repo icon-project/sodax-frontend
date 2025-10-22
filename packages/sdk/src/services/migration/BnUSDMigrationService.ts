@@ -7,10 +7,9 @@ import {
   type EvmHubProvider,
   EvmVaultTokenService,
   getHubAssetInfo,
-  getMoneyMarketConfig,
 } from '../../index.js';
 import invariant from 'tiny-invariant';
-import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, getMoneyMarketConfig } from '@sodax/types';
 
 export type UnifiedBnUSDMigrateParams = {
   srcChainId: SpokeChainId; // The source chain ID where bnUSD (legacy or new) token exists

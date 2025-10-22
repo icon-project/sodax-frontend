@@ -7,13 +7,11 @@ import {
   FEE_PERCENTAGE_SCALE,
   isPartnerFeeAmount,
   isPartnerFeePercentage,
-  type Address,
-  type Hex,
   type PartnerFee,
   type QuoteType,
-  type SpokeChainId,
   type SpokeProvider,
 } from '../index.js';
+import type { SpokeChainId, Address, Hex } from '@sodax/types';
 import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';

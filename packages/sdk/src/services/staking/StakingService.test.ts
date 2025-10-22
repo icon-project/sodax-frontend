@@ -1,20 +1,22 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  BSC_MAINNET_CHAIN_ID,
   Erc20Service,
   EvmSpokeProvider,
   Sodax,
-  SONIC_MAINNET_CHAIN_ID,
   SonicSpokeProvider,
   SonicSpokeService,
-  spokeChainConfig,
-  type Hash,
-  type IEvmWalletProvider,
   type InstantUnstakeParams,
   type StakeParams,
   type StakingParams,
   type UnstakeParams,
 } from '../../index.js';
+import {
+  BSC_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+  type Hash,
+  type IEvmWalletProvider,
+} from '@sodax/types';
 
 describe('StakingService', () => {
   const sodax = new Sodax();
@@ -96,7 +98,10 @@ describe('StakingService', () => {
   });
 
   it('returns false if Erc20Service.isAllowanceValid fails', async () => {
-    vi.spyOn(Erc20Service, 'isAllowanceValid').mockResolvedValueOnce({ ok: false, error: new Error('Allowance error') });
+    vi.spyOn(Erc20Service, 'isAllowanceValid').mockResolvedValueOnce({
+      ok: false,
+      error: new Error('Allowance error'),
+    });
 
     const params = {
       action: 'stake',
@@ -193,7 +198,7 @@ describe('StakingService', () => {
       });
 
       expect(result.ok && result.value).toBe(mockTxHash);
-    })
+    });
 
     it('it approves for BSC provider (stake action)', async () => {
       vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockTxHash);
@@ -211,8 +216,8 @@ describe('StakingService', () => {
       });
 
       expect(result.ok && result.value).toBe(mockTxHash);
-    })
-  })
+    });
+  });
 
   it('it unstakes for Sonic provider (unstake action)', async () => {
     vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);

@@ -1,6 +1,6 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { erc20Abi } from '../../abis/index.js';
-import type { EvmContractCall, IconAddress, IcxTokenType } from '../../types.js';
+import type { EvmContractCall, IcxTokenType } from '../../types.js';
 import {
   encodeContractCalls,
   Erc20Service,
@@ -10,7 +10,7 @@ import {
 } from '../../index.js';
 import { icxSwapAbi } from '../../abis/icxSwap.abi.js';
 import invariant from 'tiny-invariant';
-import { ICON_MAINNET_CHAIN_ID, type IconEoaAddress } from '@sodax/types';
+import { ICON_MAINNET_CHAIN_ID, type IconEoaAddress, type IconAddress } from '@sodax/types';
 
 export type IcxMigrateParams = {
   address: IcxTokenType; // The ICON address of the ICX or wICX token to migrate

@@ -1,7 +1,7 @@
 import { type Address, type Hex, fromHex } from 'viem';
-import type { InjectiveSpokeChainConfig, InjectiveReturnType, PromiseInjectiveTxReturnType } from '../../types.js';
+import type { InjectiveReturnType, PromiseInjectiveTxReturnType } from '../../types.js';
 import type { ISpokeProvider } from '../Providers.js';
-import type { IInjectiveWalletProvider, InjectiveExecuteResponse } from '@sodax/types';
+import type { IInjectiveWalletProvider, InjectiveExecuteResponse , InjectiveSpokeChainConfig} from '@sodax/types';
 import { toBase64, ChainGrpcWasmApi, TxGrpcApi, fromBase64 } from '@injectivelabs/sdk-ts';
 import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 

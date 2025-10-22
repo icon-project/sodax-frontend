@@ -1,5 +1,4 @@
-import type { SolanaChainConfig } from '../../types.js';
-import type { ISolanaWalletProvider } from '@sodax/types';
+import type { ISolanaWalletProvider, SolanaChainConfig } from '@sodax/types';
 import type { ISpokeProvider } from '../index.js';
 
 export class SolanaSpokeProvider implements ISpokeProvider {

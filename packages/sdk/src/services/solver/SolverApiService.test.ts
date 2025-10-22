@@ -1,15 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getHubAssetInfo,
-  type Hex,
   SolverIntentErrorCode,
   type SolverIntentQuoteRequest,
   type SolverIntentStatusRequest,
   type QuoteType,
-  type SolverConfig,
 } from '../../index.js';
 import { SolverApiService } from './SolverApiService.js';
-import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, type Hex, type SolverConfig } from '@sodax/types';
 
 // Mock fetch
 const mockFetch = vi.fn();

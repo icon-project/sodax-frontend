@@ -9,12 +9,11 @@ import type {
   PartnerFee,
   PromiseEvmTxReturnType,
   Result,
-  SolverConfig,
   TxReturnType,
 } from '../../types.js';
 import { Erc20Service, EvmSolverService, type CreateIntentParams, type Intent } from '../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
-import { getHubAssetInfo, getIntentRelayChainId } from '../../constants.js';
+import { getHubAssetInfo } from '../../constants.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import {
   SONIC_MAINNET_CHAIN_ID,
@@ -22,6 +21,8 @@ import {
   type Hex,
   type HubAddress,
   type SpokeChainId,
+  type SolverConfig,
+  getIntentRelayChainId,
 } from '@sodax/types';
 import type { MoneyMarketDataService } from '../../moneyMarket/MoneyMarketDataService.js';
 import invariant from 'tiny-invariant';

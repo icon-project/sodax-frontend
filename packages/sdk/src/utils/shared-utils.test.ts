@@ -8,15 +8,18 @@ import {
   encodeAddress,
   hexToBigInt,
 } from './shared-utils.js';
-import type { IEvmWalletProvider, SpokeChainId } from '@sodax/types';
 import {
+  type IEvmWalletProvider,
+  type SpokeChainId,
   BSC_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+} from '@sodax/types';
+import {
   EvmHubProvider,
   EvmSpokeProvider,
   getHubChainConfig,
-  SONIC_MAINNET_CHAIN_ID,
   SonicSpokeProvider,
-  spokeChainConfig,
   type EvmHubProviderConfig,
 } from '../index.js';
 
@@ -32,7 +35,10 @@ describe('calculatePercentageAmount', () => {
   } as unknown as IEvmWalletProvider;
 
   const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
-  const mockSonicSpokeProvider = new SonicSpokeProvider(mockEvmWalletProvider, spokeChainConfig[SONIC_MAINNET_CHAIN_ID]);
+  const mockSonicSpokeProvider = new SonicSpokeProvider(
+    mockEvmWalletProvider,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
+  );
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',

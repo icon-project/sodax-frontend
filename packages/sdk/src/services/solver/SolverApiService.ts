@@ -13,8 +13,8 @@ import {
   type SolverIntentStatusRequest,
   type SolverIntentStatusResponse,
   type Result,
-  type SolverConfig,
 } from '../../index.js';
+import type { SolverConfig } from '@sodax/types';
 
 export class SolverApiService {
   private constructor() {}

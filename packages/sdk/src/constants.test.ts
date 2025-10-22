@@ -3,25 +3,26 @@ import { avalanche, sonic } from 'viem/chains';
 // packages/sdk/src/constants.test.ts
 import { describe, expect, it } from 'vitest';
 import {
-  ChainIdToIntentRelayChainId,
   getEvmViemChain,
   getHubAssetInfo,
   getHubChainConfig,
-  getIntentRelayChainId,
-  getMoneyMarketConfig,
   getOriginalAssetAddress,
   getSpokeChainIdFromIntentRelayChainId,
   hubAssetToOriginalAssetMap,
   intentRelayChainIdToSpokeChainIdMap,
   originalAssetTohubAssetMap,
 } from './index.js';
-import type { EvmChainId, IntentRelayChainId } from './index.js';
 import {
+  type EvmChainId,
+  type IntentRelayChainId,
   AVALANCHE_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   HUB_CHAIN_IDS,
   CHAIN_IDS,
   type HubChainId,
+  ChainIdToIntentRelayChainId,
+  getIntentRelayChainId,
+  getMoneyMarketConfig,
 } from '@sodax/types';
 
 describe('Constants', () => {

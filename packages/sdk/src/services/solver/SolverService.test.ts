@@ -5,7 +5,6 @@ import {
   EvmHubProvider,
   type EvmHubProviderConfig,
   EvmSpokeProvider,
-  type IEvmWalletProvider,
   type FeeAmount,
   type Intent,
   SolverIntentErrorCode,
@@ -19,12 +18,9 @@ import {
   type PartnerFee,
   type RelayTxStatus,
   type Result,
-  type SolverConfig,
   SolverService,
   getHubAssetInfo,
   getHubChainConfig,
-  getIntentRelayChainId,
-  spokeChainConfig,
   isIntentSubmitTxFailedError,
   isIntentCreationFailedError,
   isIntentPostExecutionFailedError,
@@ -38,7 +34,16 @@ import {
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
-import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  type Address,
+  type IEvmWalletProvider,
+  getIntentRelayChainId,
+  spokeChainConfig,
+  type SolverConfig,
+} from '@sodax/types';
 import type { GetBlockReturnType } from 'viem';
 
 // Define a type for Intent with fee amount
@@ -1061,7 +1066,9 @@ describe('SolverService', () => {
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
-        expect((result.error as Error).message).toBe('Approve only supported for EVM (approve) and Stellar (trustline) spoke chains');
+        expect((result.error as Error).message).toBe(
+          'Approve only supported for EVM (approve) and Stellar (trustline) spoke chains',
+        );
       }
     });
 

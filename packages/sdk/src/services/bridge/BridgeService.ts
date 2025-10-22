@@ -1,7 +1,6 @@
 import invariant from 'tiny-invariant';
 import {
   type SpokeProvider,
-  type Hex,
   type Result,
   type TxReturnType,
   SpokeService,
@@ -26,7 +25,6 @@ import {
   encodeContractCalls,
   calculateFeeAmount,
   type PartnerFee,
-  type HttpUrl,
   isValidVault,
   encodeAddress,
   type Prettify,
@@ -38,8 +36,8 @@ import {
   StellarSpokeProvider,
   wrappedSonicAbi,
 } from '../../index.js';
-import { isValidSpokeChainId, spokeChainConfig } from '../../constants.js';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import { isValidSpokeChainId } from '../../constants.js';
+import { type SpokeChainId, type XToken, spokeChainConfig, type Hex, type HttpUrl } from '@sodax/types';
 import { encodeFunctionData, isAddress } from 'viem';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
 

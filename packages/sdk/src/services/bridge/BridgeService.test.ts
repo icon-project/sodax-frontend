@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { ARBITRUM_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, type XToken } from '@sodax/types';
-import { getHubAssetInfo, Sodax, spokeChainConfig } from '../../index.js';
+import { ARBITRUM_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, type XToken, spokeChainConfig } from '@sodax/types';
+import { getHubAssetInfo, Sodax } from '../../index.js';
 
 describe('BridgeService', () => {
   const sodax = new Sodax();
@@ -68,8 +68,8 @@ describe('BridgeService', () => {
   });
 
   describe('getBridgeableTokens', () => {
-  // Tests for BridgeService.getBridgeableTokens
-  // Purpose: Ensure getBridgeableTokens returns correct bridgeable tokens based on vault matching logic
+    // Tests for BridgeService.getBridgeableTokens
+    // Purpose: Ensure getBridgeableTokens returns correct bridgeable tokens based on vault matching logic
 
     it('should return bridgeable tokens that share the same vault', () => {
       // Mock a source token with a known vault
@@ -86,11 +86,7 @@ describe('BridgeService', () => {
 
       // Find a token on the destination chain that shares the same vault as the source token
       // (Assume testnet config or mock config is set up so that USDC on Arbitrum shares the same vault)
-      const bridgeableTokensResult = sodax.bridge.getBridgeableTokens(
-        fromToken.xChainId,
-        toChainId,
-        fromToken.address
-      );
+      const bridgeableTokensResult = sodax.bridge.getBridgeableTokens(fromToken.xChainId, toChainId, fromToken.address);
 
       expect(Array.isArray(bridgeableTokensResult.ok && bridgeableTokensResult.value)).toBe(true);
 
@@ -116,14 +112,9 @@ describe('BridgeService', () => {
 
       const toChainId = ARBITRUM_MAINNET_CHAIN_ID;
 
-      const bridgeableTokensResult = sodax.bridge.getBridgeableTokens(
-        fromToken.xChainId,
-        toChainId,
-        fromToken.address
-      );
+      const bridgeableTokensResult = sodax.bridge.getBridgeableTokens(fromToken.xChainId, toChainId, fromToken.address);
 
       expect(!bridgeableTokensResult.ok && bridgeableTokensResult.error).toBeDefined();
     });
-
   });
 });

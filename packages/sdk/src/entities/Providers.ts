@@ -12,11 +12,7 @@ import {
 } from 'viem';
 import { getEvmViemChain, getHubChainConfig } from '../constants.js';
 import type {
-  EvmChainId,
-  EvmHubChainConfig,
-  EvmSpokeChainConfig,
-  SonicSpokeChainConfig,
-  SpokeChainConfig,
+  EvmHubChainConfig
 } from '../types.js';
 import type { InjectiveSpokeProvider } from './injective/InjectiveSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
@@ -31,6 +27,10 @@ import {
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
   type ISolanaWalletProvider,
+  type EvmSpokeChainConfig,
+  type SonicSpokeChainConfig,
+  type SpokeChainConfig,
+  type EvmChainId,
 } from '@sodax/types';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };

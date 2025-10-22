@@ -7,15 +7,10 @@ import {
   EvmHubProvider,
   type EvmHubProviderConfig,
   getHubChainConfig,
-  type IEvmWalletProvider,
   EvmSpokeProvider,
-  spokeChainConfig,
-  getSupportedMoneyMarketTokens,
   EvmWalletAbstraction,
   SpokeService,
-  type EvmRawTransaction,
   type PacketData,
-  type Address,
   SonicSpokeProvider,
   Erc20Service,
   SonicSpokeService,
@@ -35,7 +30,15 @@ import {
   isMoneyMarketBorrowUnknownError,
 } from '../index.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
-import { BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import {
+  BSC_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  type IEvmWalletProvider,
+  spokeChainConfig,
+  getSupportedMoneyMarketTokens,
+  type Address,
+  type EvmRawTransaction,
+} from '@sodax/types';
 
 describe('MoneyMarketService', () => {
   // Mock wallet providers

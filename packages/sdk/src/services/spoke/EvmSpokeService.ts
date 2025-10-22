@@ -1,7 +1,7 @@
 import { type Address, encodeFunctionData } from 'viem';
 import { erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
 import type { EvmHubProvider, EvmSpokeProvider } from '../../entities/index.js';
-import { connectionAbi, getIntentRelayChainId } from '../../index.js';
+import { connectionAbi } from '../../index.js';
 import type {
   DepositSimulationParams,
   EvmReturnType,
@@ -9,7 +9,7 @@ import type {
   PromiseEvmTxReturnType,
   TxReturnType,
 } from '../../types.js';
-import type { EvmRawTransaction, Hex, HubAddress } from '@sodax/types';
+import { type EvmRawTransaction, type Hex, type HubAddress, getIntentRelayChainId } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
 
