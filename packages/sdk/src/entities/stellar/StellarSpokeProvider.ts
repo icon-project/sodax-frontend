@@ -15,10 +15,10 @@ import {
   type xdr,
   type Transaction,
 } from '@stellar/stellar-sdk';
-import type { HttpUrl, PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
+import type { PromiseStellarTxReturnType, StellarReturnType, StellarSpokeChainConfig } from '../../types.js';
 import { toHex, type Hex } from 'viem';
 import type { ISpokeProvider } from '../Providers.js';
-import type { IStellarWalletProvider } from '@sodax/types';
+import type { IStellarWalletProvider, HttpUrl } from '@sodax/types';
 import { STELLAR_DEFAULT_TX_TIMEOUT_SECONDS, STELLAR_PRIORITY_FEE } from '../../constants.js';
 import { CustomSorobanServer } from './CustomSorobanServer.js';
 
@@ -165,12 +165,8 @@ export class StellarSpokeProvider implements ISpokeProvider {
     response: SorobanRpc.Api.SendTransactionResponse,
   ): SorobanRpc.Api.SendTransactionResponse {
     if (response.status === 'ERROR') {
-      throw new Error(
-        `Transaction failed: status: ${response.status}, hash: ${response.hash}, errorResult: ${JSON.stringify({
-          name: response?.errorResult?.result()?.switch()?.name ?? 'unknown',
-          value: response?.errorResult?.result()?.switch()?.value ?? 'unknown',
-        })}, diagnosticEvents: ${JSON.stringify(response?.diagnosticEvents ?? '{}')}`,
-      );
+      console.error(JSON.stringify(response, null, 2));
+      throw new Error(JSON.stringify(response, null, 2));
     }
 
     return response;
@@ -351,14 +347,16 @@ export class StellarSpokeProvider implements ISpokeProvider {
 
       const sendMessageCall = this.buildSendMessageCall(walletAddress, dst_chain_id, dst_address, payload);
 
-      const [priorityTx, simulation] = await this.buildPriorityStellarTransaction(
+      const [rawPriorityTx, simulation] = await this.buildPriorityStellarTransaction(
         stellarAccount,
         network,
         sendMessageCall,
       );
 
+      const assembledPriorityTx = SorobanRpc.assembleTransaction(rawPriorityTx, simulation).build();
+
       if (raw) {
-        const transactionXdr = priorityTx.toXDR();
+        const transactionXdr = rawPriorityTx.toXDR();
 
         return {
           from: walletAddress,
@@ -368,7 +366,13 @@ export class StellarSpokeProvider implements ISpokeProvider {
         } satisfies StellarReturnType<true> as StellarReturnType<R>;
       }
 
-      const hash = await this.submitOrRestoreAndRetry(stellarAccount, network, priorityTx, sendMessageCall, simulation);
+      const hash = await this.submitOrRestoreAndRetry(
+        stellarAccount,
+        network,
+        assembledPriorityTx,
+        sendMessageCall,
+        simulation,
+      );
 
       return `${hash}` as StellarReturnType<R>;
     } catch (error) {

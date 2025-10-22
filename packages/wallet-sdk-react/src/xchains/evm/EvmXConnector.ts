@@ -1,6 +1,6 @@
 import { XConnector } from '@/core/XConnector';
 import type { XAccount } from '@/types';
-import type { Config, Connector } from 'wagmi';
+import type { Connector } from 'wagmi';
 
 export class EvmXConnector extends XConnector {
   connector: Connector;

@@ -1,11 +1,10 @@
 import type React from 'react';
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogOverlay, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalOpen } from '@/stores/modal-store-provider';
 import { useModalStore } from '@/stores/modal-store-provider';
@@ -14,6 +13,7 @@ import type { ChainType } from '@sodax/types';
 import { TermsContent } from './terms-content';
 import { Loader2 } from 'lucide-react';
 import { registerUser } from '@/apis/users';
+import { ScrollAreaPrimitive, ScrollBar } from '@/components/ui/scroll-area';
 
 interface TermsConfirmationModalProps {
   modalId?: MODAL_ID;
@@ -125,11 +125,12 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
             isTermsExpanded ? 'max-h-96 opacity-100 mt-6 mb-6' : 'max-h-0 opacity-0 mt-6'
           }`}
         >
-          <ScrollArea className="text-(length:--body-comfortable) text-clay font-['InterRegular'] leading-relaxed h-[100px] md:h-[380px] pr-2">
-            <TermsContent />
-
-            <ScrollBar className="w-1" />
-          </ScrollArea>
+          <ScrollAreaPrimitive.Root>
+            <ScrollAreaPrimitive.Viewport className="text-(length:--body-comfortable) text-clay font-['InterRegular'] leading-relaxed h-[100px] md:h-[380px] pr-2 pb-5">
+              <TermsContent />
+              <ScrollBar className="w-2" />
+            </ScrollAreaPrimitive.Viewport>
+          </ScrollAreaPrimitive.Root>
           <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-vibrant-white to-transparent pointer-events-none"></div>
         </div>
 

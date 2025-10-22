@@ -343,7 +343,11 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
       icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
       balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',
-      sodaToken: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963', // SODA token on Sonic
+      sodaToken: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963',
+      sodaVault: '0x21685E341DE7844135329914Be6Bd8D16982d834',
+      stakedSoda: '0x4333B324102d00392038ca92537DfbB8CB0DAc68',
+      xSoda: '0xADC6561Cc8FC31767B4917CCc97F510D411378d9',
+      stakingRouter: '0xE287Cd568543d880e0F0DfaDCE18B44930759367',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     wrappedNativeToken: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
@@ -2368,7 +2372,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['BNB.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SOL.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['XLM.LL'],
-    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['INJ.LL'],
+    // spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['INJ.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SUI.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['S.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['POL.LL'],
@@ -2381,7 +2385,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   ] as const satisfies Token[],
   [ICON_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
-    spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.wICX,
+    // spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.wICX,
     spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     // spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.BALN, // NOTE: Not Implemented
     // spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.OMM, // NOTE: Not Implemented
@@ -2666,4 +2670,8 @@ export const isNativeToken = (chainId: SpokeChainId, token: Token | string): boo
   }
 
   return token.address.toLowerCase() === spokeChainConfig[chainId].nativeToken.toLowerCase();
+};
+export const findSupportedTokenBySymbol = (chainId: SpokeChainId, symbol: string): XToken | undefined => {
+  const supportedTokens = Object.values(spokeChainConfig[chainId].supportedTokens);
+  return supportedTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
 };

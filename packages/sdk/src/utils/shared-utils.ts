@@ -201,3 +201,7 @@ export function parseToStroops(amount: string): bigint {
   // Scale decimal string to integer stroops (1e7 multiplier)
   return BigInt(Math.round(Number.parseFloat(amount) * 1e7));
 }
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}

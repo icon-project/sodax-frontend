@@ -2,20 +2,9 @@ import React, { useMemo, type ReactNode } from 'react';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SodaxWalletProvider } from '@sodax/wallet-sdk-react';
-import { type RpcConfig, SodaxProvider } from '@sodax/dapp-kit';
+import type { RpcConfig } from '@sodax/types';
+import { SodaxProvider } from '@sodax/dapp-kit';
 import { productionSolverConfig, stagingSolverConfig } from './constants';
-import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  AVALANCHE_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  HYPEREVM_MAINNET_CHAIN_ID,
-  LIGHTLINK_MAINNET_CHAIN_ID,
-  ETHEREUM_MAINNET_CHAIN_ID,
-} from '@sodax/types';
 import type { SodaxConfig } from '@sodax/sdk';
 import { useAppStore } from './zustand/useAppStore';
 
@@ -23,7 +12,7 @@ const queryClient = new QueryClient();
 
 const rpcConfig: RpcConfig = {
   //solana
-  solana: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
+  solana: process.env.SOLANA_RPC_URL || 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   //stellar
   stellar: {
     horizonRpcUrl: 'https://horizon.stellar.org',
@@ -43,35 +32,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
-        <SodaxWalletProvider
-          config={{
-            EVM: {
-              chains: [
-                ARBITRUM_MAINNET_CHAIN_ID,
-                AVALANCHE_MAINNET_CHAIN_ID,
-                BASE_MAINNET_CHAIN_ID,
-                BSC_MAINNET_CHAIN_ID,
-                OPTIMISM_MAINNET_CHAIN_ID,
-                POLYGON_MAINNET_CHAIN_ID,
-                SONIC_MAINNET_CHAIN_ID,
-                HYPEREVM_MAINNET_CHAIN_ID,
-                LIGHTLINK_MAINNET_CHAIN_ID,
-                ETHEREUM_MAINNET_CHAIN_ID,
-              ],
-            },
-            SUI: {
-              isMainnet: true,
-            },
-            SOLANA: {
-              endpoint: 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
-            },
-            ICON: {},
-            INJECTIVE: {},
-            STELLAR: {},
-          }}
-        >
-          {children}
-        </SodaxWalletProvider>
+        <SodaxWalletProvider rpcConfig={rpcConfig}>{children}</SodaxWalletProvider>
       </QueryClientProvider>
     </SodaxProvider>
   );

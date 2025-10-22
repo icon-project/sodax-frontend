@@ -37,6 +37,7 @@ import type {
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
   XToken,
+  HttpUrl,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
@@ -96,6 +97,10 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     icxMigration: Address;
     balnSwap: Address;
     sodaToken: Address;
+    sodaVault: Address;
+    stakedSoda: Address;
+    xSoda: Address;
+    stakingRouter: Address;
   };
 
   nativeToken: Address;
@@ -263,6 +268,17 @@ export type TokenInfo = {
   isSupported: boolean;
 };
 
+export type UnstakeSodaRequest = {
+  amount: bigint;
+  startTime: bigint;
+  to: Address;
+};
+
+export type UserUnstakeInfo = {
+  id: bigint;
+  request: UnstakeSodaRequest;
+};
+
 export type VaultReserves = {
   tokens: readonly Address[];
   balances: readonly bigint[];
@@ -366,8 +382,6 @@ export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
             : T extends SonicSpokeProvider
               ? Address
               : never;
-
-export type HttpUrl = `http://${string}` | `https://${string}`;
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)

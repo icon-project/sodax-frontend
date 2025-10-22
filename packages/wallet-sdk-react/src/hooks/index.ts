@@ -6,7 +6,6 @@ export { useXConnectors } from './useXConnectors';
 export { useXDisconnect } from './useXDisconnect';
 export { useXService } from './useXService';
 export { useXBalances } from './useXBalances';
-export { useWalletProviderOptions } from './useWalletProviderOptions';
 export { useEvmSwitchChain } from './useEvmSwitchChain';
 export { useWalletProvider } from './useWalletProvider';
 export { useXSignMessage } from './useXSignMessage';

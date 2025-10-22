@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogClose,
 } from '@/components/ui/dialog';
 import { XIcon } from 'lucide-react';

@@ -1,5 +1,5 @@
 import { XService } from '@/core/XService';
-import { FREIGHTER_ID, StellarWalletsKit, WalletNetwork, allowAllModules } from '@creit.tech/stellar-wallets-kit';
+import { StellarWalletsKit, WalletNetwork, allowAllModules } from '@creit.tech/stellar-wallets-kit';
 import * as StellarSdk from '@stellar/stellar-sdk';
 import CustomSorobanServer from './CustomSorobanServer';
 import { getTokenBalance } from './utils';
@@ -17,7 +17,6 @@ export class StellarXService extends XService {
 
     this.walletsKit = new StellarWalletsKit({
       network: WalletNetwork.PUBLIC,
-      selectedWalletId: FREIGHTER_ID,
       modules: allowAllModules(),
     });
 

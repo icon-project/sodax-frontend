@@ -1,7 +1,7 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, MinusIcon, CopyIcon, Loader2, Info, XIcon } from 'lucide-react';
+import { PlusIcon, MinusIcon, CopyIcon, Loader2 } from 'lucide-react';
 import type { ChainType } from '@sodax/types';
 import { EVMChainItem } from './evm-chain-item';
 import {
@@ -20,10 +20,18 @@ import { delay } from '@/lib/utils';
 export type ChainItemProps = {
   chainType: ChainType;
   setActiveXChainType: (chainType: ChainType) => void;
+  hoveredChainType?: ChainType | undefined;
+  setHoveredChainType?: (chainType: ChainType | undefined) => void;
   onSuccess?: (xConnector: XConnector, xAccount: XAccount) => Promise<void>;
 };
 
-export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChainType, onSuccess }) => {
+export const ChainItem: React.FC<ChainItemProps> = ({
+  chainType,
+  setActiveXChainType,
+  hoveredChainType,
+  setHoveredChainType,
+  onSuccess,
+}) => {
   const { address } = useXAccount(chainType);
   const xConnectors = useXConnectors(chainType);
   const { mutateAsync: xConnect, isPending } = useXConnect();
@@ -41,7 +49,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
 
     if (xConnectors.length === 1) {
       try {
-        const xAccount = await xConnect(xConnectors[0] as XConnector);
+        await xConnect(xConnectors[0] as XConnector);
         setConnected(true);
         await delay(500);
       } catch (e) {}
@@ -76,19 +84,32 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
   }, [xDisconnect, chainType]);
 
   if (chainType === 'EVM') {
-    return <EVMChainItem handleConnect={handleConnect} handleDisconnect={handleDisconnect} isPending={isPending} />;
+    return (
+      <EVMChainItem
+        handleConnect={handleConnect}
+        handleDisconnect={handleDisconnect}
+        isPending={isPending}
+        setHoveredChainType={setHoveredChainType}
+        hoveredChainType={hoveredChainType}
+      />
+    );
   }
   return (
     <div
       className={`
           inline-flex justify-between items-center
           transition-opacity duration-200
-          hover:opacity-100
           group
-          opacity-60
           cursor-pointer py-4 pl-1
           ${isPending === true || address ? 'opacity-100' : ''}
+          ${hoveredChainType === undefined || hoveredChainType === chainType ? 'opacity-100' : 'opacity-60'}
         `}
+      onMouseEnter={() => {
+        setHoveredChainType?.(chainType);
+      }}
+      onMouseLeave={() => {
+        setHoveredChainType?.(undefined);
+      }}
     >
       <div className="flex flex-col gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-4">
