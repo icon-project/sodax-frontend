@@ -12,7 +12,7 @@ const queryClient = new QueryClient();
 
 const rpcConfig: RpcConfig = {
   //solana
-  solana: process.env.SOLANA_RPC_URL || 'https://solana-mainnet.g.alchemy.com/v2/i3q5fE3cYSFBE4Lcg1kS5',
+  solana: process.env.SOLANA_RPC_URL || 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   //stellar
   stellar: {
     horizonRpcUrl: 'https://horizon.stellar.org',

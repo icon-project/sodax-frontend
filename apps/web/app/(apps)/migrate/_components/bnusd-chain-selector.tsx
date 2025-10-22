@@ -1,6 +1,5 @@
 import type React from 'react';
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogClose, DialogContent,  DialogTitle } from '@/components/ui/dialog';
 import type { XToken, SpokeChainId } from '@sodax/types';
 import Image from 'next/image';
 import { XIcon } from 'lucide-react';
@@ -14,7 +13,6 @@ import {
   type NewbnUSDChainId,
   HYPEREVM_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
 import { availableChains } from '@/constants/chains';
 import { Separator } from '@/components/ui/separator';
@@ -46,8 +44,8 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
 
   const availableChainsAndTokens = useMemo(() => {
     if (isLegacybnUSDToken(currency)) {
-      const bnUSDLegacySpokeChainIds2 = bnUSDLegacySpokeChainIds.filter(
-        chainId => chainId !== STELLAR_MAINNET_CHAIN_ID && availableChains.find(chain => chain.id === chainId),
+      const bnUSDLegacySpokeChainIds2 = bnUSDLegacySpokeChainIds.filter(chainId =>
+        availableChains.find(chain => chain.id === chainId),
       );
       return bnUSDLegacySpokeChainIds2.map(chainId => {
         const config = spokeChainConfig[chainId as LegacybnUSDChainId];
@@ -60,8 +58,8 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
       });
     }
     if (isNewbnUSDToken(currency)) {
-      const newbnUSDSpokeChainIds2 = newbnUSDSpokeChainIds.filter(
-        chainId => chainId !== STELLAR_MAINNET_CHAIN_ID && availableChains.find(chain => chain.id === chainId),
+      const newbnUSDSpokeChainIds2 = newbnUSDSpokeChainIds.filter(chainId =>
+        availableChains.find(chain => chain.id === chainId),
       );
       return newbnUSDSpokeChainIds2
         .filter(chainId => chainId !== NIBIRU_MAINNET_CHAIN_ID && chainId !== HYPEREVM_MAINNET_CHAIN_ID)

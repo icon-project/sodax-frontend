@@ -3,7 +3,7 @@ import {
   AVALANCHE_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
-  INJECTIVE_MAINNET_CHAIN_ID,
+  // INJECTIVE_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
@@ -26,19 +26,42 @@ export interface ChainUI {
  */
 export const availableChains: ChainUI[] = [
   { id: SONIC_MAINNET_CHAIN_ID, name: 'Sonic', icon: '/chain/sonic.png' },
-  { id: AVALANCHE_MAINNET_CHAIN_ID, name: 'Avalanche', icon: '/chain/0xa86a.avax.png' },
-  { id: ARBITRUM_MAINNET_CHAIN_ID, name: 'Arbitrum', icon: '/chain/0xa4b1.arbitrum.png' },
+  {
+    id: AVALANCHE_MAINNET_CHAIN_ID,
+    name: 'Avalanche',
+    icon: '/chain/0xa86a.avax.png',
+  },
+  {
+    id: ARBITRUM_MAINNET_CHAIN_ID,
+    name: 'Arbitrum',
+    icon: '/chain/0xa4b1.arbitrum.png',
+  },
   { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png' },
-  { id: BSC_MAINNET_CHAIN_ID, name: 'BSC', icon: '/chain/0x38.bsc.png' },
-  { id: INJECTIVE_MAINNET_CHAIN_ID, name: 'Injective', icon: '/chain/injective-1.png' },
+  { id: BSC_MAINNET_CHAIN_ID, name: 'BNB', icon: '/chain/0x38.bsc.png' },
+  // {
+  //   id: INJECTIVE_MAINNET_CHAIN_ID,
+  //   name: 'Injective',
+  //   icon: '/chain/injective-1.png',
+  // },
   { id: SUI_MAINNET_CHAIN_ID, name: 'Sui', icon: '/chain/sui.png' },
-  { id: OPTIMISM_MAINNET_CHAIN_ID, name: 'Optimism', icon: '/chain/0xa.optimism.png' },
-  { id: POLYGON_MAINNET_CHAIN_ID, name: 'Polygon', icon: '/chain/0x89.polygon.png' },
+  {
+    id: OPTIMISM_MAINNET_CHAIN_ID,
+    name: 'Optimism',
+    icon: '/chain/0xa.optimism.png',
+  },
+  {
+    id: POLYGON_MAINNET_CHAIN_ID,
+    name: 'Polygon',
+    icon: '/chain/0x89.polygon.png',
+  },
   { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', icon: '/chain/solana.png' },
   { id: STELLAR_MAINNET_CHAIN_ID, name: 'Stellar', icon: '/chain/stellar.png' },
   { id: ICON_MAINNET_CHAIN_ID, name: 'Icon', icon: '/chain/0x1.icon.png' },
-  { id: LIGHTLINK_MAINNET_CHAIN_ID, name: 'Lightlink', icon: '/chain/lightlink.png' },
-  // { id: NIBIRU_MAINNET_CHAIN_ID, name: 'Nibiru', icon: '/chain/nibiru.png' },
+  {
+    id: LIGHTLINK_MAINNET_CHAIN_ID,
+    name: 'Lightlink',
+    icon: '/chain/lightlink.png',
+  },
 ];
 
 /**

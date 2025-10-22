@@ -97,6 +97,7 @@ describe('EvmSpokeService', () => {
         id: mockChainId,
         name: 'Avalanche',
         type: 'EVM',
+        chainId: 43_114,
       },
       addresses: {
         assetManager: '0x5555555555555555555555555555555555555555' as Address,

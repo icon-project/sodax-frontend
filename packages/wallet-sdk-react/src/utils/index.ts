@@ -1,5 +1,4 @@
-import { xChainMap } from '@/constants/xChains';
-import type { ChainId, XToken } from '@sodax/types';
+import { baseChainInfo, type ChainId, type XToken } from '@sodax/types';
 
 export const isNativeToken = (xToken: XToken) => {
   const nativeAddresses = [
@@ -16,5 +15,5 @@ export const isNativeToken = (xToken: XToken) => {
 };
 
 export const getWagmiChainId = (xChainId: ChainId): number => {
-  return xChainMap[xChainId].id as number;
+  return baseChainInfo[xChainId].chainId as number;
 };

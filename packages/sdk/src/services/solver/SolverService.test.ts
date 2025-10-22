@@ -247,12 +247,12 @@ describe('SolverService', () => {
     });
   });
 
-  describe('getFee', () => {
+  describe('getPartnerFee', () => {
     it('should calculate fee correctly for given input amount', () => {
       const inputAmount = 1000n;
       const expectedFee = 10n; // Assuming 1% fee
 
-      const result = solverServiceWithPercentageFee.getFee(inputAmount);
+      const result = solverServiceWithPercentageFee.getPartnerFee(inputAmount);
 
       expect(result).toBe(expectedFee);
     });
@@ -260,12 +260,12 @@ describe('SolverService', () => {
     it('should handle zero input amount', () => {
       const inputAmount = 0n;
 
-      expect(() => solverServiceWithPercentageFee.getFee(inputAmount)).toThrow();
+      expect(() => solverServiceWithPercentageFee.getPartnerFee(inputAmount)).toThrow();
     });
 
     it('should handle very large input amount', () => {
       const inputAmount = 2n ** 128n - 1n;
-      const result = solverServiceWithPercentageFee.getFee(inputAmount);
+      const result = solverServiceWithPercentageFee.getPartnerFee(inputAmount);
 
       expect(result).toBeDefined();
       expect(typeof result).toBe('bigint');
@@ -275,34 +275,34 @@ describe('SolverService', () => {
     it('should handle negative input amount', () => {
       const inputAmount = -1000n;
 
-      expect(() => solverServiceWithPercentageFee.getFee(inputAmount)).toThrow();
+      expect(() => solverServiceWithPercentageFee.getPartnerFee(inputAmount)).toThrow();
     });
 
     it('should handle undefined input amount', () => {
       // @ts-expect-error Testing invalid input
-      expect(() => solverServiceWithPercentageFee.getFee(undefined)).toThrow();
+      expect(() => solverServiceWithPercentageFee.getPartnerFee(undefined)).toThrow();
     });
 
     it('should handle null input amount', () => {
       // @ts-expect-error Testing invalid input
-      expect(() => solverServiceWithPercentageFee.getFee(null)).toThrow();
+      expect(() => solverServiceWithPercentageFee.getPartnerFee(null)).toThrow();
     });
 
     it('should handle fee amount', () => {
       const inputAmount = 1000n;
-      const result = solverServiceWithAmountFee.getFee(inputAmount);
+      const result = solverServiceWithAmountFee.getPartnerFee(inputAmount);
 
       expect(result).toBe(feeAmount);
     });
 
     it('should handle undefined input amount', () => {
       // @ts-expect-error Testing invalid input
-      expect(() => solverServiceWithAmountFee.getFee(undefined)).toThrow();
+      expect(() => solverServiceWithAmountFee.getPartnerFee(undefined)).toThrow();
     });
 
     it('should handle null input amount', () => {
       // @ts-expect-error Testing invalid input
-      expect(() => solverServiceWithAmountFee.getFee(null)).toThrow();
+      expect(() => solverServiceWithAmountFee.getPartnerFee(null)).toThrow();
     });
   });
 

@@ -6,8 +6,10 @@ import type {
   LegacybnUSDChainId,
   LegacybnUSDToken,
   NewbnUSDChainId,
+  BaseSpokeChainInfo,
 } from './index.js';
 import {
+  type ChainId,
   type Token,
   type SpokeChainId,
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -18,6 +20,8 @@ import {
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
+  INJECTIVE_MAINNET_CHAIN_ID,
+  SOLANA_MAINNET_CHAIN_ID,
   SUI_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
@@ -34,6 +38,7 @@ import {
   type OriginalAssetAddress,
   type EvmChainId,
   type XToken,
+  baseChainInfo,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -297,4 +302,4 @@ export const isNativeToken = (chainId: SpokeChainId, token: Token | string): boo
 export const findSupportedTokenBySymbol = (chainId: SpokeChainId, symbol: string): XToken | undefined => {
   const supportedTokens = Object.values(spokeChainConfig[chainId].supportedTokens);
   return supportedTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
-}
+};

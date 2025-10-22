@@ -18,7 +18,6 @@ import {
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
 import { usePublicClient, useWalletClient } from 'wagmi';
-import { getWagmiChainId } from '../utils';
 import { type SolanaXService, type StellarXService, useXAccount, useXService } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
@@ -52,14 +51,10 @@ export function useWalletProvider(
   | ISolanaWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
-
   // EVM-specific hooks
-  const evmPublicClient = usePublicClient({
-    chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
-  });
-  const { data: evmWalletClient } = useWalletClient({
-    chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
-  });
+  const evmPublicClient = usePublicClient();
+
+  const { data: evmWalletClient } = useWalletClient();
 
   // Cross-chain hooks
   const xService = useXService(getXChainType(spokeChainId));
@@ -133,11 +128,11 @@ export function useWalletProvider(
         const solanaXService = xService as SolanaXService;
 
         if (!solanaXService.wallet) {
-          throw new Error('Wallet is not initialized');
+          return undefined;
         }
 
         if (!solanaXService.connection) {
-          throw new Error('Connection is not initialized');
+          return undefined;
         }
 
         return new SolanaWalletProvider({

@@ -1,6 +1,7 @@
 import type React from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
+import { motion } from 'motion/react';
 
 interface TokenAssetProps {
   name: string;
@@ -24,8 +25,15 @@ export function TokenAsset({
   onClick,
 }: TokenAssetProps): React.JSX.Element {
   return (
-    <div
-      className={`box-border content-stretch flex flex-col gap-2 items-center justify-start px-4 relative cursor-pointer shrink-0 transition-all duration-200 ${
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{
+        opacity: isHoverDimmed ? 0.5 : 1,
+        scale: isHovered ? 1.1 : 1,
+      }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className={`px-2 flex flex-col gap-2 items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 pb-3 ${
         isClickBlurred ? 'blur filter opacity-30' : isHoverDimmed ? 'opacity-50' : ''
       }`}
       data-name="Asset"
@@ -41,13 +49,13 @@ export function TokenAsset({
       </div>
       <div className="relative h-6 w-full">
         <div
-          className={`font-['InterRegular'] leading-[0] not-italic absolute inset-0 flex items-center justify-center text-[12px] transition-all duration-200 ${
+          className={`font-['InterRegular'] leading-[0] absolute inset-0 flex items-center justify-center text-(length:--body-small) transition-all duration-200 ${
             isHovered ? 'opacity-100 text-espresso font-bold' : 'opacity-100 text-clay font-medium'
           }`}
         >
-          <p className="block leading-[1.4] whitespace-pre">{name}</p>
+          {name}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

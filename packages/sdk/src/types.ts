@@ -33,6 +33,7 @@ import type {
   MoneyMarketConfig,
   SolverConfig,
   spokeChainConfig,
+  BaseSpokeChainInfo,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
@@ -40,6 +41,10 @@ export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
 export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
 export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
+
+export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
+
+export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
 
 export type HubChainInfo<T extends ChainType> = {
   name: string;

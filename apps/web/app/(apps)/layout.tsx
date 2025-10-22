@@ -1,10 +1,8 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import Sidebar from '@/components/landing/sidebar';
 import { Header } from '@/components/shared/header';
 import { RouteTabs } from '@/components/shared/route-tabs';
-import { useWalletConnection } from '@/hooks/useWalletConnection';
 import { SwapStoreProvider } from './swap/_stores/swap-store-provider';
 import { MigrationStoreProvider } from './migrate/_stores/migration-store-provider';
 import { WalletModal } from '@/components/shared/wallet-modal2/wallet-modal';
@@ -14,16 +12,13 @@ import '../globals.css';
 import { AppStoreProvider } from '@/stores/app-store-provider';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const { isSidebarOpen, toggleSidebar } = useWalletConnection();
-
   return (
     <AppStoreProvider>
       <SwapStoreProvider>
         <MigrationStoreProvider>
           <ModalStoreProvider>
             <div className="bg-cream-white min-h-screen pb-24 md:pb-0 w-screen overflow-x-hidden">
-              <Sidebar isOpen={isSidebarOpen} toggle={toggleSidebar} setOpenRewardDialog={() => {}} />
-              <Header isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+              <Header />
 
               <div className="w-full lg:w-[1024px] lg:max-w-[1024px] mx-auto md:-mt-34 -mt-36">
                 <div className="flex justify-center items-start min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)]">

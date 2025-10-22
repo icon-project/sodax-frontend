@@ -62,6 +62,7 @@
   --vibrant-white: #f9f7f5;
   --clay-light: #b9acab;
   --clay: #8e7e7d;
+  --negative: #f37274;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
   --body-comfortable-desktop: 14px;
@@ -94,6 +95,10 @@
   --layout-space-normal-tablet: 16px;
   --layout-space-normal-desktop: 24px;
   --layout-space-normal: var(--layout-space-normal-mobile);
+  --layout-space-small-mobile: 8px;
+  --layout-space-small-tablet: 12px;
+  --layout-space-small-desktop: 16px;
+  --layout-space-small: var(--layout-space-small-mobile);
   --layout-container-radius: var(--layout-container-radius-mobile);
   --layout-container-radius-desktop: 24px;
   --layout-container-radius-tablet: 16px;
@@ -102,6 +107,10 @@
   --layout-linear-boder-desktop: 4px;
   --layout-linear-boder-tablet: 3px;
   --layout-linear-boder-mobile: 2px;
+  --main-title-mobile: 24px;
+  --main-title-tablet: 32px;
+  --main-title-desktop: 42px;
+  --main-title: var(--main-title-mobile);
 }
 
 .dark {
@@ -152,6 +161,7 @@
   --clay-light: #b9acab;
   --vibrant-white: #f9f7f5;
   --clay: #8e7e7d;
+  --negative: #f37274;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
   --body-comfortable-desktop: 14px;
@@ -176,6 +186,13 @@
   --layout-space-normal-mobile: 8px;
   --layout-space-normal-tablet: 16px;
   --layout-space-normal-desktop: 24px;
+  --main-title-mobile: 24px;
+  --main-title-tablet: 32px;
+  --main-title-desktop: 42px;
+  --main-title: var(--main-title-mobile);
+  --layout-space-small: var(--layout-space-small-mobile);
+  --layout-space-small-tablet: var(--layout-space-small-tablet);
+  --layout-space-small-desktop: var(--layout-space-small-desktop);
 }
 
 @theme inline {
@@ -230,6 +247,7 @@
   --color-clay: var(--clay);
   --color-clay-light: var(--clay-light);
   --color-cherry-brighter: var(--cherry-brighter);
+  --color-negative: var(--negative);
   --text-app-title: var(--app-title-mobile);
   --text-body-comfortable: var(--body-comfortable-mobile);
   --text-body-super-comfortable: var(--body-super-comfortable-mobile);
@@ -240,6 +258,8 @@
   --layout-space-normal: var(--layout-space-normal-mobile);
   --layout-container-radius: var(--layout-container-radius-mobile);
   --layout-linear-boder: var(--layout-linear-boder-mobile);
+  --layout-space-small: var(--layout-space-small-mobile);
+  --text-main-title: var(--main-title-mobile);
 }
 
 @media (min-width: 768px) {
@@ -253,7 +273,9 @@
     --layout-space-comfortable: var(--layout-space-comfortable-tablet);
     --layout-space-big: var(--layout-space-big-tablet);
     --layout-space-normal: var(--layout-space-normal-tablet);
+    --layout-space-small: var(--layout-space-small-tablet);
     --layout-linear-boder: var(--layout-linear-boder-tablet);
+    --main-title: var(--main-title-tablet);
   }
 }
 
@@ -268,7 +290,9 @@
     --layout-space-comfortable: var(--layout-space-comfortable-desktop);
     --layout-space-big: var(--layout-space-big-desktop);
     --layout-space-normal: var(--layout-space-normal-desktop);
+    --layout-space-small: var(--layout-space-small-desktop);
     --layout-linear-boder: var(--layout-linear-boder-desktop);
+    --main-title: var(--main-title-desktop);
   }
 }
 
@@ -323,4 +347,61 @@
 
 .iekbcc0 {
   pointer-events: auto !important;
+}
+
+.swap-accordion h3 {
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+.shake-dialog {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hide arrows in Firefox */
+input[type="number"] {
+  -moz-appearance: textfield; /* removes the arrows */
+}
+
+/* Optional: consistent styling */
+input[type="number"] {
+  appearance: textfield; /* modern unprefixed version */
+}
+
+input[readonly],
+textarea[readonly] {
+  cursor: default;
+}
+
+[role="dialog"] {
+  box-shadow: 0px 20px 160px 0px rgba(185, 172, 171, 0.4) !important;
 }
