@@ -1,6 +1,7 @@
 import { recoverMessageAddress } from 'viem';
 
 const BASE_URL = 'https://register-api.sodax.com';
+
 export const registerUser = async ({
   address,
   signature,
