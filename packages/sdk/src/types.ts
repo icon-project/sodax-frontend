@@ -13,7 +13,6 @@ import type {
 import type {
   bnUSDLegacySpokeChainIds,
   bnUSDLegacyTokens,
-  EVM_CHAIN_IDS,
   newbnUSDSpokeChainIds,
   spokeChainConfig,
   ChainIdToIntentRelayChainId,
@@ -38,6 +37,7 @@ import type {
   ICON_MAINNET_CHAIN_ID,
   XToken,
   HttpUrl,
+  BaseSpokeChainInfo,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
@@ -48,15 +48,6 @@ export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
 export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
 
-export type EvmChainId = (typeof EVM_CHAIN_IDS)[number];
-export type EvmSpokeChainId = (typeof EVM_CHAIN_IDS)[number];
-
-export type BaseSpokeChainInfo<T extends ChainType> = {
-  name: string;
-  id: GetSpokeChainIdType<T>;
-  type: T;
-};
-
 export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
 
 export type HubChainInfo<T extends ChainType> = {
@@ -64,8 +55,6 @@ export type HubChainInfo<T extends ChainType> = {
   id: HubChainId;
   type: T;
 };
-
-export type GetSpokeChainIdType<T extends ChainType> = T extends 'EVM' ? EvmSpokeChainId : SpokeChainId;
 
 export type AssetInfo = {
   chainId: bigint;
