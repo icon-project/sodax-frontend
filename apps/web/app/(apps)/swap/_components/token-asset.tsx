@@ -1,6 +1,6 @@
 // apps/web/app/(apps)/swap/_components/token-asset.tsx
 import type React from 'react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { motion } from 'motion/react';
@@ -19,6 +19,7 @@ import { InjectiveIcon } from '@/components/icons/chains/injective';
 import { SonicIcon } from '@/components/icons/chains/sonic';
 import { OptimismIcon } from '@/components/icons/chains/optimism';
 import { LightLinkIcon } from '@/components/icons/chains/lightlink';
+import { createPortal } from 'react-dom';
 
 interface NetworkIconProps {
   imageSrc: string;
@@ -75,6 +76,7 @@ interface StackedNetworksProps {
   chainIds: string[];
   tokenSymbol: string;
   onChainClick?: (token: XToken) => void;
+  position: { top: number; left: number } | null;
 }
 
 function StackedNetworks({
@@ -82,6 +84,7 @@ function StackedNetworks({
   chainIds,
   tokenSymbol,
   onChainClick,
+  position,
 }: StackedNetworksProps): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
   const allSupportedTokens = getAllSupportedSolverTokens();
@@ -102,13 +105,20 @@ function StackedNetworks({
     }
   };
 
-  if (!isClicked) {
+  if (!isClicked || !position) {
     return null;
   }
 
-  return (
-    <div className="absolute -top-6 pointer-events-auto">
-      <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mt-6 mb-2 text-center">
+  const portalContent = (
+    <div
+      className="fixed pointer-events-auto z-[9999]"
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        transform: 'translate(-50%, -100%)',
+      }}
+    >
+      <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2 text-center">
         {hoveredIcon !== null && networkInfos[hoveredIcon] ? (
           <>
             {tokenSymbol} <span className="font-bold">on {networkInfos[hoveredIcon].name}</span>
@@ -132,6 +142,8 @@ function StackedNetworks({
       </div>
     </div>
   );
+
+  return createPortal(portalContent, document.body);
 }
 
 interface TokenAssetProps {
@@ -168,54 +180,73 @@ export function TokenAsset({
 }: TokenAssetProps): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
   const chainIds = isGroup && tokens ? [...new Set(tokens.map(t => t.xChainId))] : [];
+  const [portalPosition, setPortalPosition] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    if (isClicked && isGroup && assetRef.current) {
+      const rect = assetRef.current.getBoundingClientRect();
+      setPortalPosition({
+        top: rect.bottom + 20,
+        left: rect.left + rect.width / 2,
+      });
+    } else {
+      setPortalPosition(null);
+    }
+  }, [isClicked, isGroup]);
 
   return (
-    <motion.div
-      ref={assetRef}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{
-        opacity: isHoverDimmed ? 0.5 : 1,
-        scale: isHovered ? 1.1 : 1,
-      }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={`px-2 flex flex-col gap-2 items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 pb-3 ${
-        isClickBlurred ? 'blur filter opacity-30' : isHoverDimmed ? 'opacity-50' : ''
-      } ${isClicked && isGroup ? 'z-[9999]' : ''}`}
-      data-name="Asset"
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      onClick={onClick}
-    >
-      <div className="relative">
-        {(token || (isGroup && tokens && tokens.length > 0)) && (
-          <CurrencyLogo
-            currency={token || (tokens && tokens[0]) || ({} as XToken)}
-            isGroup={isGroup}
-            tokenCount={tokenCount}
-            isClicked={isClickBlurred}
-            isHovered={isHovered}
-          />
-        )}
-      </div>
-      <div className="relative h-6 w-full">
-        <div
-          className={`font-['InterRegular'] leading-[0] absolute inset-0 flex items-center justify-center text-(length:--body-small) transition-all duration-200 ${
-            isClicked && isGroup
-              ? 'opacity-0'
-              : isHovered
-                ? 'opacity-100 text-espresso font-bold'
-                : 'opacity-100 text-clay font-medium'
-          }`}
-        >
-          {name}
+    <>
+      <motion.div
+        ref={assetRef}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{
+          opacity: isHoverDimmed ? 0.5 : 1,
+          scale: isHovered ? 1.1 : 1,
+        }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className={`px-2 flex flex-col gap-2 items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 pb-3 ${
+          isClickBlurred ? 'blur filter opacity-30' : isHoverDimmed ? 'opacity-50' : ''
+        } ${isClicked && isGroup ? 'z-[9999]' : ''}`}
+        data-name="Asset"
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        onClick={onClick}
+      >
+        <div className="relative">
+          {(token || (isGroup && tokens && tokens.length > 0)) && (
+            <CurrencyLogo
+              currency={token || (tokens && tokens[0]) || ({} as XToken)}
+              isGroup={isGroup}
+              tokenCount={tokenCount}
+              isClicked={isClickBlurred}
+              isHovered={isHovered}
+            />
+          )}
         </div>
-        {isGroup && (
-          <div className="absolute inset-0 flex items-center justify-center top-0">
-            <StackedNetworks isClicked={isClicked} chainIds={chainIds} tokenSymbol={name} onChainClick={onChainClick} />
+        <div className="relative h-6 w-full">
+          <div
+            className={`font-['InterRegular'] leading-[0] absolute inset-0 flex items-center justify-center text-(length:--body-small) transition-all duration-200 ${
+              isClicked && isGroup
+                ? 'opacity-0'
+                : isHovered
+                  ? 'opacity-100 text-espresso font-bold'
+                  : 'opacity-100 text-clay font-medium'
+            }`}
+          >
+            {name}
           </div>
-        )}
-      </div>
-    </motion.div>
+        </div>
+      </motion.div>
+      {isGroup && (
+        <StackedNetworks
+          isClicked={isClicked}
+          chainIds={chainIds}
+          tokenSymbol={name}
+          onChainClick={onChainClick}
+          position={portalPosition}
+        />
+      )}
+    </>
   );
 }
