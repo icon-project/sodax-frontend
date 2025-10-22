@@ -16,7 +16,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import SwapReviewButton from './_components/swap-review-button';
-import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
+import { calculateMaxAvailableAmount } from '@/lib/utils';
 
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
