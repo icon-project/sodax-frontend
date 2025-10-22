@@ -120,7 +120,7 @@ export function SearchBar({
                   <div className="grid grid-cols-2 overflow-hidden pl-2 py-1">
                     {/* All Networks Option */}
                     <div
-                      className={`w-34 group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
+                      className={`group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
                       onClick={handleShowAllChains}
                       onMouseEnter={() => setHoveredChain('all')}
                       onMouseLeave={() => setHoveredChain(null)}
@@ -169,7 +169,7 @@ export function SearchBar({
                     {availableChains.map(chain => (
                       <div
                         key={chain.id}
-                        className={`w-34 group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
+                        className={`group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
                         onClick={() => handleChainSelect(chain.id)}
                         onMouseEnter={() => setHoveredChain(chain.id)}
                         onMouseLeave={() => setHoveredChain(null)}

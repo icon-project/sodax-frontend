@@ -160,7 +160,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             <Input
               type="number"
               ref={inputRef}
-              value={type === CurrencyInputPanelType.OUTPUT ? formatBalance(inputValue, usdPrice) : inputValue}
+              value={formatBalance(inputValue, usdPrice)}
               onChange={onInputChange}
               onFocus={onInputFocus}
               placeholder="0"
