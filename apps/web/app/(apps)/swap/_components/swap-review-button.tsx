@@ -17,6 +17,7 @@ import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { Loader2 } from 'lucide-react';
 import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
+import { useState } from 'react';
 
 export default function SwapReviewButton({
   quoteQuery,
@@ -42,6 +43,8 @@ export default function SwapReviewButton({
 
   const sourceChainType = getXChainType(inputToken.xChainId);
   const destinationChainType = getXChainType(outputToken.xChainId);
+  const [isActivatedStellarAccount, setIsActivatedStellarAccount] = useState(false);
+  const [hasTrustline, setHasTrustline] = useState(false);
 
   const getTargetChainType = (): ChainType | undefined => {
     if (!sourceAddress) {
@@ -61,21 +64,18 @@ export default function SwapReviewButton({
 
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress;
 
-  const { data: stellarAccountValidation, refetch } = useValidateStellarAccount(finalDestinationAddress);
+  const { data: stellarAccountValidation } = useValidateStellarAccount(finalDestinationAddress);
   const handleActivateStellarAccount = async () => {
     if (!finalDestinationAddress) {
       return;
     }
-    await activateStellarAccount({ address: finalDestinationAddress });
-    refetch();
+    const result = await activateStellarAccount({ address: finalDestinationAddress });
+    if (result) setIsActivatedStellarAccount(true);
   };
   const { mutateAsync: activateStellarAccount, isPending: isActivatingStellarAccount } = useActivateStellarAccount();
 
   // trustline check
-  const { data: stellarTrustlineValidation, refetch: refetchStellarTrustline } = useValidateStellarTrustline(
-    finalDestinationAddress,
-    outputToken,
-  );
+  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(finalDestinationAddress, outputToken);
 
   const destinationWalletProvider = useWalletProvider(outputToken.xChainId);
   const destinationSpokeProvider = useSpokeProvider(outputToken.xChainId, destinationWalletProvider);
@@ -85,12 +85,13 @@ export default function SwapReviewButton({
     if (!quoteQuery.data?.ok || !quoteQuery.data.value) {
       return;
     }
-    await requestTrustline({
+    const result = await requestTrustline({
       token: outputToken.address,
       amount: quoteQuery.data.value.quoted_amount,
       spokeProvider: destinationSpokeProvider as SpokeProvider,
     });
-    refetchStellarTrustline();
+
+    if (result) setHasTrustline(true);
   };
 
   return (
@@ -113,6 +114,7 @@ export default function SwapReviewButton({
           {inputError}
         </Button>
       ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&
+        !isActivatedStellarAccount &&
         stellarAccountValidation?.ok === false &&
         validateChainAddress(finalDestinationAddress || '', 'STELLAR') ? (
         <Button
@@ -126,6 +128,7 @@ export default function SwapReviewButton({
         </Button>
       ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&
         stellarTrustlineValidation?.ok === false &&
+        !hasTrustline &&
         validateChainAddress(finalDestinationAddress || '', 'STELLAR') ? (
         <Button
           variant="cherry"

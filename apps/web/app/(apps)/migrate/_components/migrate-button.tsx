@@ -108,22 +108,22 @@ export const MigrateButton = () => {
     openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
   };
 
-  const { data: stellarAccountValidation, refetch } = useValidateStellarAccount(destinationAddress);
+  const { data: stellarAccountValidation } = useValidateStellarAccount(destinationAddress);
+  const [isActivatedStellarAccount, setIsActivatedStellarAccount] = useState(false);
+  const [hasTrustline, setHasTrustline] = useState(false);
+
   const handleActivateStellarAccount = async () => {
     if (!destinationAddress) {
       return;
     }
-    await activateStellarAccount({ address: destinationAddress });
-    refetch();
+    const result = await activateStellarAccount({ address: destinationAddress });
+    if (result) setIsActivatedStellarAccount(true);
   };
   const { mutateAsync: activateStellarAccount, isPending: isActivatingStellarAccount } = useActivateStellarAccount();
 
   // trustline
 
-  const { data: stellarTrustlineValidation, refetch: refetchStellarTrustline } = useValidateStellarTrustline(
-    destinationAddress,
-    currencies.to,
-  );
+  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(destinationAddress, currencies.to);
 
   const destinationWalletProvider = useWalletProvider(direction.to);
   const destinationSpokeProvider = useSpokeProvider(direction.to, destinationWalletProvider);
@@ -138,12 +138,12 @@ export const MigrateButton = () => {
     currencies.to.address,
   );
   const handleRequestTrustline = async () => {
-    await requestTrustline({
+    const result = await requestTrustline({
       token: currencies.to.address,
       amount: parseUnits(typedValue, currencies.to.decimals),
       spokeProvider: destinationSpokeProvider as SpokeProvider,
     });
-    refetchStellarTrustline();
+    if (result) setHasTrustline(true);
   };
 
   const handleMigrate = async () => {
@@ -166,7 +166,9 @@ export const MigrateButton = () => {
             <Button variant="cherry" className="w-full sm:w-[232px] md:w-[232px]" disabled>
               {inputError}
             </Button>
-          ) : direction.to === STELLAR_MAINNET_CHAIN_ID && stellarAccountValidation?.ok === false ? (
+          ) : direction.to === STELLAR_MAINNET_CHAIN_ID &&
+            !isActivatedStellarAccount &&
+            stellarAccountValidation?.ok === false ? (
             <Button
               variant="cherry"
               className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
@@ -176,7 +178,7 @@ export const MigrateButton = () => {
               {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
               {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin" />}
             </Button>
-          ) : direction.to === STELLAR_MAINNET_CHAIN_ID && stellarTrustlineValidation?.ok === false ? (
+          ) : direction.to === STELLAR_MAINNET_CHAIN_ID && stellarTrustlineValidation?.ok === false && !hasTrustline ? (
             <Button
               className="w-full sm:w-[232px] md:w-[232px] text-(length:--body-comfortable) text-white"
               variant="cherry"

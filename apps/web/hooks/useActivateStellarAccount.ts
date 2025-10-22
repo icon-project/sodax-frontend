@@ -11,11 +11,11 @@ interface ActivateStellarAccountParams {
 }
 
 export const useActivateStellarAccount = (): ReturnType<
-  typeof useMutation<void, Error, ActivateStellarAccountParams>
+  typeof useMutation<boolean, Error, ActivateStellarAccountParams>
 > => {
   const stellarXService = useXService('STELLAR') as StellarXService;
 
-  const requestSponsorship = async ({ address }: ActivateStellarAccountParams): Promise<void> => {
+  const requestSponsorship = async ({ address }: ActivateStellarAccountParams): Promise<boolean> => {
     if (!stellarXService) {
       throw new Error('Stellar service not available');
     }
@@ -62,8 +62,10 @@ export const useActivateStellarAccount = (): ReturnType<
       if (!response.ok) {
         throw new Error('Failed to activate Stellar account');
       }
+      return true;
     } catch (e) {
       console.log('Error activating Stellar account:', e);
+      return false;
     }
   };
 
