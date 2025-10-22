@@ -57,7 +57,6 @@ export function useValidateStellarTrustline(
           trustlineInfo.asset_issuer,
         )
       ) {
-        console.log(`Trustline already exists for ${token.symbol}`);
         return { ok: true };
       }
 
