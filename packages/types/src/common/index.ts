@@ -15,6 +15,7 @@ import {
   INJECTIVE_MAINNET_CHAIN_ID,
   SUI_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
 } from '../constants/index.js';
 
 export const EVM_CHAIN_IDS = [
@@ -28,6 +29,7 @@ export const EVM_CHAIN_IDS = [
   NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
 ] as const;
 
 export type HubChainId = (typeof HUB_CHAIN_IDS)[number];
@@ -200,5 +202,11 @@ export const baseChainInfo: Record<ChainId, BaseSpokeChainInfo<ChainType>> = {
     id: ICON_MAINNET_CHAIN_ID,
     type: 'ICON',
     chainId: '0x1.icon',
+  },
+  [ETHEREUM_MAINNET_CHAIN_ID]: {
+    name: 'Ethereum',
+    id: ETHEREUM_MAINNET_CHAIN_ID,
+    type: 'EVM',
+    chainId: 1,
   },
 };
