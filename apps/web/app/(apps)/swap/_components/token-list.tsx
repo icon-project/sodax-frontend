@@ -147,7 +147,7 @@ export function TokenList({
       )}
       <ScrollAreaPrimitive.Root
         data-slot="scroll-area"
-        className={showAllAssets ? 'h-[calc(80vh-192px)]' : 'h-[292px]'}
+        className={showAllAssets ? 'h-[calc(80vh-192px)] overflow-hidden' : 'h-[292px]'}
       >
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
