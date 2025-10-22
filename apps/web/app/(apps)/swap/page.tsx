@@ -15,7 +15,7 @@ import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
 import { ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
-import SwapCommitButton from './_components/swap-commit-button';
+import SwapReviewButton from './_components/swap-review-button';
 import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -225,7 +225,7 @@ export default function SwapPage() {
           />
         </div>
 
-        <SwapCommitButton quoteQuery={quoteQuery} handleReview={handleReview} />
+        <SwapReviewButton quoteQuery={quoteQuery} handleReview={handleReview} />
       </div>
 
       {quoteQuery.data?.ok === false ? (
