@@ -1,3 +1,4 @@
+// packages/dapp-kit/src/hooks/migrate/useMigrate.tsx
 import { parseUnits } from 'viem';
 import {
   spokeChainConfig,
@@ -7,33 +8,44 @@ import {
   isLegacybnUSDToken,
 } from '@sodax/sdk';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
-import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk-react';
-import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
-import { useMigrationStore } from '../_stores/migration-store-provider';
+import { useSodaxContext } from '../shared/useSodaxContext';
 import { useMutation } from '@tanstack/react-query';
-import { getChainDisplayName } from '../_utils/migration-utils';
-import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA } from '../_stores/migration-store';
+import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationParams } from './types';
 
 export interface MigrationResult {
   spokeTxHash: string;
   hubTxHash: string;
 }
 
-export function useMigrate() {
-  const migrationMode = useMigrationStore(state => state.migrationMode);
-  const typedValue = useMigrationStore(state => state[migrationMode].typedValue);
-  const direction = useMigrationStore(state => state[migrationMode].direction);
-  const currencies = useMigrationStore(state => state[migrationMode].currencies);
-
+/**
+ * Hook for executing migration operations between chains.
+ *
+ * This hook handles ICX/SODA and bnUSD migrations by accepting parameters
+ * instead of relying on external stores.
+ *
+ * @param {MigrationParams} params - Migration parameters including mode, amount, direction, etc.
+ * @returns {UseMutationResult} Mutation result object containing migration function and state
+ *
+ * @example
+ * ```typescript
+ * const { mutateAsync: migrate, isPending } = useMigrate({
+ *   migrationMode: MIGRATION_MODE_ICX_SODA,
+ *   typedValue: "100",
+ *   direction: { from: "0x1", to: "0x2" },
+ *   currencies: { from: { address: "0x...", decimals: 18 }, to: { address: "0x...", decimals: 18 } },
+ *   destinationAddress: "0x...",
+ *   sourceSpokeProvider: provider
+ * });
+ *
+ * const result = await migrate();
+ * ```
+ */
+export function useMigrate(params: MigrationParams) {
   const { sodax } = useSodaxContext();
-
-  const destinationAddress = useXAccount(direction.to).address;
-
-  const sourceWalletProvider = useWalletProvider(direction.from);
-  const sourceSpokeProvider = useSpokeProvider(direction.from, sourceWalletProvider);
 
   return useMutation({
     mutationFn: async () => {
+      const { migrationMode, typedValue, direction, currencies, destinationAddress, sourceSpokeProvider } = params;
       const amountToMigrate = parseUnits(typedValue, currencies.from.decimals);
 
       if (migrationMode === MIGRATION_MODE_ICX_SODA) {
@@ -82,7 +94,7 @@ export function useMigrate() {
       if (migrationMode === MIGRATION_MODE_BNUSD) {
         // bnUSD migration logic - handle dynamic source/destination chains
         if (!sourceSpokeProvider) {
-          throw new Error(`${getChainDisplayName(direction.from)} provider unavailable. Reconnect your wallet.`);
+          throw new Error(`${direction.from} provider unavailable. Reconnect your wallet.`);
         }
 
         const params = {
@@ -100,11 +112,13 @@ export function useMigrate() {
           return { spokeTxHash, hubTxHash };
         }
 
-        const errorMessage = isLegacybnUSDToken(currencies.from)
+        const errorMessage = isLegacybnUSDToken(currencies.from.address)
           ? 'bnUSD migration failed. Please try again.'
           : 'bnUSD reverse migration failed. Please try again.';
         throw new Error(errorMessage);
       }
+
+      throw new Error('Invalid migration mode');
     },
   });
 }

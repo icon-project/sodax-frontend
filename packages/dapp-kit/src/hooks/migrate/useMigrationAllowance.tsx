@@ -1,10 +1,10 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { XToken } from '@sodax/types';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSodaxContext } from '../shared/useSodaxContext';
 import { parseUnits } from 'viem';
 import type { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider } from '@sodax/sdk';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
-import { MIGRATION_MODE_ICX_SODA, type MigrationMode } from '../_stores/migration-store';
+import { MIGRATION_MODE_ICX_SODA, type MigrationMode } from './types';
 
 /**
  * Hook for checking token allowance for migration operations.

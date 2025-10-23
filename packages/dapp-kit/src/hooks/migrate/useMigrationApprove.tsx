@@ -2,9 +2,9 @@ import type { XToken } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { useCallback, useState, useRef, useEffect } from 'react';
 import type { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider, Result } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSodaxContext } from '../shared/useSodaxContext';
 import { useMigrationAllowance } from './useMigrationAllowance';
-import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationMode } from '../_stores/migration-store';
+import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationMode } from './types';
 
 interface UseApproveReturn {
   approve: () => Promise<boolean>;

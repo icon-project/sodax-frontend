@@ -11,11 +11,11 @@ import {
   SUI_MAINNET_CHAIN_ID,
   type ChainType,
 } from '@sodax/types';
-import { useSpokeProvider, useRequestTrustline } from '@sodax/dapp-kit';
+import { useSpokeProvider, useRequestTrustline, type MigrationParams } from '@sodax/dapp-kit';
 
 import { useMigrationInfo, useMigrationStore } from '../_stores/migration-store-provider';
 import { parseUnits } from 'viem';
-import { useMigrate, useMigrationAllowance, useMigrationApprove } from '../_hooks';
+import { useMigrate, useMigrationAllowance, useMigrationApprove } from '@sodax/dapp-kit';
 import { Check, Loader2 } from 'lucide-react';
 import { MODAL_ID } from '@/stores/modal-store';
 import { chainIdToChainName } from '@/providers/constants';
@@ -78,7 +78,18 @@ export const MigrateButton = () => {
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
-  const { mutateAsync: migrate, isPending } = useMigrate();
+  const migrateParams = spokeProvider
+    ? {
+        migrationMode,
+        typedValue,
+        direction,
+        currencies,
+        destinationAddress: destinationAddress || '',
+        sourceSpokeProvider: spokeProvider,
+      }
+    : null;
+
+  const { mutateAsync: migrate, isPending } = useMigrate(migrateParams as MigrationParams);
   const handleApprove = async () => {
     await approve();
   };
