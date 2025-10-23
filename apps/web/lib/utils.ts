@@ -91,9 +91,6 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
 
       if (chainId !== '0x1.icon') {
         filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
-      } else {
-        // For ICON chain, remove wICX
-        filteredTokens = filteredTokens.filter(token => token.symbol !== 'wICX');
       }
 
       const xTokens: XToken[] = filteredTokens.map((token: Token) => ({
@@ -130,9 +127,6 @@ export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[
 
     if (chainId !== '0x1.icon') {
       filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
-    } else {
-      // For ICON chain, remove wICX
-      filteredTokens = filteredTokens.filter(token => token.symbol !== 'wICX');
     }
 
     return filteredTokens.map((token: Token) => ({
@@ -200,7 +194,8 @@ function isValidIconAddress(addr: string) {
   return true;
 }
 
-export function validateChainAddress(address: string, chain: string): boolean {
+export function validateChainAddress(address: string | null | undefined, chain: string): boolean {
+  if (!address) return false;
   try {
     switch (chain) {
       case 'EVM':
