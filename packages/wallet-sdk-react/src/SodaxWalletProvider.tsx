@@ -15,9 +15,11 @@ import {
   ConnectionProvider as SolanaConnectionProvider,
   WalletProvider as SolanaWalletProvider,
 } from '@solana/wallet-adapter-react';
-import type { RpcConfig } from '@sodax/types';
-import { Hydrate } from './Hydrate';
+import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
 
+import type { RpcConfig } from '@sodax/types';
+
+import { Hydrate } from './Hydrate';
 import { createWagmiConfig } from './xchains/evm/EvmXService';
 import { reconnectIcon } from './xchains/icon/actions';
 // import { reconnectInjective } from './xchains/injective/actions';
@@ -28,12 +30,14 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
     return createWagmiConfig(rpcConfig);
   }, [rpcConfig]);
 
+  const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
+
   return (
     <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
       <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
         <SuiWalletProvider autoConnect={true}>
           <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? ''}>
-            <SolanaWalletProvider wallets={[]} autoConnect>
+            <SolanaWalletProvider wallets={wallets} autoConnect>
               <Hydrate />
               {children}
             </SolanaWalletProvider>
