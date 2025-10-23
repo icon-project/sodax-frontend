@@ -83,6 +83,10 @@
   --body-small-tablet: 12px;
   --body-small-desktop: 12px;
   --body-small: var(--body-small-mobile);
+  --body-tiny-mobile: 9px;
+  --body-tiny-tablet: 9px;
+  --body-tiny-desktop: 9px;
+  --body-tiny: var(--body-tiny-mobile);
   --layout-space-comfortable-mobile: 16px;
   --layout-space-comfortable-tablet: 24px;
   --layout-space-comfortable-desktop: 32px;
@@ -251,6 +255,7 @@
   --text-app-title: var(--app-title-mobile);
   --text-body-comfortable: var(--body-comfortable-mobile);
   --text-body-super-comfortable: var(--body-super-comfortable-mobile);
+  --text-body-tiny: var(--body-tiny-mobile);
   --text-subtitle: var(--subtitle-mobile);
   --text-body-small: var(--body-small-mobile);
   --layout-space-comfortable: var(--layout-space-comfortable-mobile);
