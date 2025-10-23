@@ -143,9 +143,15 @@ export type ConcentratedLiquidityPositionInfo = {
   tickLowerPrice: Price<Token, Token>;
   tickUpperPrice: Price<Token, Token>;
 
+  // Unclaimed fees
+  unclaimedFees0: bigint; // Unclaimed fees in token0
+  unclaimedFees1: bigint; // Unclaimed fees in token1
+
   // StatAToken unwrapped amounts (only present if token is a StatAToken)
   amount0Underlying?: bigint; // Underlying asset amount for token0 (if StatAToken)
   amount1Underlying?: bigint; // Underlying asset amount for token1 (if StatAToken)
+  unclaimedFees0Underlying?: bigint; // Unclaimed fees in underlying token0 (if StatAToken)
+  unclaimedFees1Underlying?: bigint; // Unclaimed fees in underlying token1 (if StatAToken)
 };
 
 /**
@@ -1187,6 +1193,7 @@ export class ConcentratedLiquidityService {
    *   poolKey: positionInfo.poolKey,
    *   tickRange: `${positionInfo.tickLower} to ${positionInfo.tickUpper}`,
    *   liquidity: positionInfo.liquidity.toString(),
+   *   unclaimedFees: `${positionInfo.unclaimedFees0.toString()} / ${positionInfo.unclaimedFees1.toString()}`,
    * });
    * ```
    */
@@ -1215,6 +1222,7 @@ export class ConcentratedLiquidityService {
       subscriber,
     ] = positionData as unknown as [EncodedPoolKey, number, number, bigint, bigint, bigint, Address];
     const poolKey = decodePoolKey(encodedPoolKey, 'CL');
+
     // Get pool data to get current tick and token decimals
     const poolData = await this.getPoolData(poolKey, publicClient);
 
@@ -1233,19 +1241,105 @@ export class ConcentratedLiquidityService {
       liquidity,
     );
 
+    // Calculate unclaimed fees using fee growth globals and tick data
+    // Get the pool ID for contract calls
+    const poolId = getPoolId(poolKey);
+
+    // Get global fee growth from pool manager
+    const feeGrowthGlobals = await publicClient.readContract({
+      address: poolKey.poolManager,
+      abi: CLPoolManagerAbi,
+      functionName: 'getFeeGrowthGlobals',
+      args: [poolId],
+    });
+
+    const [feeGrowthGlobal0X128, feeGrowthGlobal1X128] = feeGrowthGlobals as [bigint, bigint];
+
+    // Get tick info for lower and upper ticks
+    const [tickLowerInfo, tickUpperInfo] = await Promise.all([
+      publicClient.readContract({
+        address: poolKey.poolManager,
+        abi: CLPoolManagerAbi,
+        functionName: 'getPoolTickInfo',
+        args: [poolId, tickLower],
+      }),
+      publicClient.readContract({
+        address: poolKey.poolManager,
+        abi: CLPoolManagerAbi,
+        functionName: 'getPoolTickInfo',
+        args: [poolId, tickUpper],
+      }),
+    ]);
+
+    // Extract feeGrowthOutside values from tick info
+    // TickInfo structure: { liquidityGross, liquidityNet, feeGrowthOutside0X128, feeGrowthOutside1X128 }
+    const tickLowerData = tickLowerInfo as {
+      liquidityGross: bigint;
+      liquidityNet: bigint;
+      feeGrowthOutside0X128: bigint;
+      feeGrowthOutside1X128: bigint;
+    };
+    const tickUpperData = tickUpperInfo as {
+      liquidityGross: bigint;
+      liquidityNet: bigint;
+      feeGrowthOutside0X128: bigint;
+      feeGrowthOutside1X128: bigint;
+    };
+
+    const feeGrowthOutside0X128Lower = tickLowerData.feeGrowthOutside0X128;
+    const feeGrowthOutside1X128Lower = tickLowerData.feeGrowthOutside1X128;
+    const feeGrowthOutside0X128Upper = tickUpperData.feeGrowthOutside0X128;
+    const feeGrowthOutside1X128Upper = tickUpperData.feeGrowthOutside1X128;
+
+    // Calculate fee growth inside the position's tick range
+    // If current tick is below the position, all fee growth is "above"
+    // If current tick is inside the position, we use the standard formula
+    // If current tick is above the position, all fee growth is "below"
+    let feeGrowthInside0X128: bigint;
+    let feeGrowthInside1X128: bigint;
+
+    if (poolData.currentTick < tickLower) {
+      // Current tick is below the position
+      feeGrowthInside0X128 = feeGrowthOutside0X128Lower - feeGrowthOutside0X128Upper;
+      feeGrowthInside1X128 = feeGrowthOutside1X128Lower - feeGrowthOutside1X128Upper;
+    } else if (poolData.currentTick < tickUpper) {
+      // Current tick is inside the position
+      feeGrowthInside0X128 = feeGrowthGlobal0X128 - feeGrowthOutside0X128Lower - feeGrowthOutside0X128Upper;
+      feeGrowthInside1X128 = feeGrowthGlobal1X128 - feeGrowthOutside1X128Lower - feeGrowthOutside1X128Upper;
+    } else {
+      // Current tick is above the position
+      feeGrowthInside0X128 = feeGrowthOutside0X128Upper - feeGrowthOutside0X128Lower;
+      feeGrowthInside1X128 = feeGrowthOutside1X128Upper - feeGrowthOutside1X128Lower;
+    }
+
+    // Calculate unclaimed fees
+    // Formula: (currentFeeGrowthInside - feeGrowthInsideLastX128) * liquidity / 2^128
+    const Q128 = BigInt(2) ** BigInt(128);
+
+    // Handle potential underflow with modular arithmetic
+    const feeGrowthDelta0 = (feeGrowthInside0X128 - feeGrowthInside0LastX128 + (Q128 << 128n)) % (Q128 << 128n);
+    const feeGrowthDelta1 = (feeGrowthInside1X128 - feeGrowthInside1LastX128 + (Q128 << 128n)) % (Q128 << 128n);
+
+    const unclaimedFees0 = (feeGrowthDelta0 * liquidity) / Q128;
+    const unclaimedFees1 = (feeGrowthDelta1 * liquidity) / Q128;
+
     // Calculate underlying amounts if tokens are StatATokens
     let amount0Underlying: bigint | undefined;
     let amount1Underlying: bigint | undefined;
+    let unclaimedFees0Underlying: bigint | undefined;
+    let unclaimedFees1Underlying: bigint | undefined;
 
     if (poolData.token0IsStatAToken && poolData.token0ConversionRate) {
       // Convert wrapped amount to underlying amount
       // conversionRate is how much underlying per 1e18 shares
       amount0Underlying = (tokenAmount0 * poolData.token0ConversionRate) / BigInt(10 ** 18);
+      unclaimedFees0Underlying = (unclaimedFees0 * poolData.token0ConversionRate) / BigInt(10 ** 18);
     }
 
     if (poolData.token1IsStatAToken && poolData.token1ConversionRate) {
       // Convert wrapped amount to underlying amount
       amount1Underlying = (tokenAmount1 * poolData.token1ConversionRate) / BigInt(10 ** 18);
+      unclaimedFees1Underlying = (unclaimedFees1 * poolData.token1ConversionRate) / BigInt(10 ** 18);
     }
 
     return {
@@ -1258,10 +1352,14 @@ export class ConcentratedLiquidityService {
       subscriber,
       amount0: tokenAmount0,
       amount1: tokenAmount1,
+      unclaimedFees0,
+      unclaimedFees1,
       tickLowerPrice: tickToPrice(poolData.token0, poolData.token1, tickLower),
       tickUpperPrice: tickToPrice(poolData.token0, poolData.token1, tickUpper),
       ...(amount0Underlying !== undefined && { amount0Underlying }),
       ...(amount1Underlying !== undefined && { amount1Underlying }),
+      ...(unclaimedFees0Underlying !== undefined && { unclaimedFees0Underlying }),
+      ...(unclaimedFees1Underlying !== undefined && { unclaimedFees1Underlying }),
     };
   }
 }

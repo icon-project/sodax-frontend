@@ -1098,6 +1098,53 @@ export function SimplePoolManager(): JSX.Element {
                               <span className="text-muted-foreground">Liquidity:</span>
                               <span className="ml-1 font-mono">{positionInfo.liquidity.toString()}</span>
                             </div>
+                            <div className="col-span-2 pt-2 border-t border-green-200 dark:border-green-800">
+                              <p className="font-medium text-green-800 dark:text-green-200 mb-1">💰 Unclaimed Fees</p>
+                            </div>
+                            <div className="space-y-1">
+                              <div>
+                                <span className="text-muted-foreground">Fees {poolData.token0.symbol}:</span>
+                                <span className="ml-1 font-mono font-semibold text-green-700 dark:text-green-300">
+                                  {formatAmount(positionInfo.unclaimedFees0, poolData.token0.decimals)}
+                                </span>
+                              </div>
+                              {positionInfo.unclaimedFees0Underlying &&
+                                poolData.token0IsStatAToken &&
+                                poolData.token0UnderlyingToken && (
+                                  <div className="text-blue-600 dark:text-blue-400 pl-2">
+                                    <span className="text-muted-foreground">≈</span>
+                                    <span className="ml-1 font-mono">
+                                      {formatAmount(
+                                        positionInfo.unclaimedFees0Underlying,
+                                        poolData.token0UnderlyingToken.decimals,
+                                      )}
+                                    </span>
+                                    <span className="ml-1">{poolData.token0UnderlyingToken.symbol}</span>
+                                  </div>
+                                )}
+                            </div>
+                            <div className="space-y-1">
+                              <div>
+                                <span className="text-muted-foreground">Fees {poolData.token1.symbol}:</span>
+                                <span className="ml-1 font-mono font-semibold text-green-700 dark:text-green-300">
+                                  {formatAmount(positionInfo.unclaimedFees1, poolData.token1.decimals)}
+                                </span>
+                              </div>
+                              {positionInfo.unclaimedFees1Underlying &&
+                                poolData.token1IsStatAToken &&
+                                poolData.token1UnderlyingToken && (
+                                  <div className="text-blue-600 dark:text-blue-400 pl-2">
+                                    <span className="text-muted-foreground">≈</span>
+                                    <span className="ml-1 font-mono">
+                                      {formatAmount(
+                                        positionInfo.unclaimedFees1Underlying,
+                                        poolData.token1UnderlyingToken.decimals,
+                                      )}
+                                    </span>
+                                    <span className="ml-1">{poolData.token1UnderlyingToken.symbol}</span>
+                                  </div>
+                                )}
+                            </div>
                           </div>
                         </div>
                       )}
