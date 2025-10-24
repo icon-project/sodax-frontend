@@ -220,6 +220,22 @@ export class BalnSwapService {
   }
 
   /**
+   * Executes a cancel unstake operation directly through the wallet provider.
+   * @param params - The lock parameters including lock ID
+   * @param spokeProvider - The Sonic spoke provider
+   * @param raw - Whether to return raw transaction data
+   * @returns The transaction hash or raw transaction data
+   */
+  async cancelUnstake<R extends boolean = false>(
+    params: BalnLockParams,
+    spokeProvider: SonicSpokeProvider,
+    raw?: R,
+  ): PromiseEvmTxReturnType<R> {
+    const cancelUnstakeTx = this.encodeCancelUnstake(params.lockId);
+    return await this.call(spokeProvider, cancelUnstakeTx, raw);
+  }
+
+  /**
    * Gets detailed locks for a specific user including unstake requests and staked amounts.
    *
    * @param publicClient - The public client for reading contract state
@@ -328,6 +344,24 @@ export class BalnSwapService {
       data: encodeFunctionData({
         abi: balnSwapAbi,
         functionName: 'unstake',
+        args: [lockId],
+      }),
+    };
+  }
+
+  /**
+   * Encodes a cancel unstake transaction for the BALN swap contract.
+   *
+   * @param lockId - The lock ID to cancel unstake for
+   * @returns The encoded contract call for the cancel unstake operation
+   */
+  encodeCancelUnstake(lockId: bigint): EvmContractCall {
+    return {
+      address: this.hubProvider.chainConfig.addresses.balnSwap,
+      value: 0n,
+      data: encodeFunctionData({
+        abi: balnSwapAbi,
+        functionName: 'cancelUnstake',
         args: [lockId],
       }),
     };
