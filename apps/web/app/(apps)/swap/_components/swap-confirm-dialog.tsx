@@ -18,7 +18,7 @@ import { useSwapApprove, useSpokeProvider, useSwapAllowance, useSwap, useStatus 
 import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useSwapActions, useSwapState } from '../_stores/swap-store-provider';
-import { parseUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import type { SpokeChainId } from '@sodax/types';
 import { getSwapErrorMessage, formatBalance } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
@@ -63,14 +63,14 @@ interface SwapConfirmDialogProps {
   outputToken: XToken;
   sourceAddress: string;
   finalDestinationAddress: string;
-  outputAmount: string;
+  outputAmount: bigint | undefined;
   onClose?: () => void;
   swapFeesUsdValue?: {
     partner: BigNumber;
     solver: BigNumber;
     total: BigNumber;
   };
-  minOutputAmount?: BigNumber;
+  minOutputAmount: bigint | undefined;
   usdPrice?: number;
 }
 
@@ -105,42 +105,27 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [isSwapFailed, setIsSwapFailed] = useState<boolean>(false);
   const [swapError, setSwapError] = useState<{ title: string; message: string } | null>(null);
   const [swapStatus, setSwapStatus] = useState<SolverIntentStatusCode>(SolverIntentStatusCode.NOT_FOUND);
-  const [frozenPayload, setFrozenPayload] = useState<CreateIntentParams | undefined>(undefined);
 
-  useEffect(() => {
-    if (open && !frozenPayload) {
-      setFrozenPayload({
-        inputToken: inputToken.address,
-        outputToken: outputToken.address,
-        inputAmount: parseUnits(inputAmount, inputToken.decimals),
-        minOutputAmount: BigInt(Number(minOutputAmount?.toFixed(0))),
-        deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5),
-        allowPartialFill: false,
-        srcChain: inputToken.xChainId as SpokeChainId,
-        dstChain: outputToken.xChainId as SpokeChainId,
-        srcAddress: sourceAddress,
-        dstAddress: finalDestinationAddress,
-        solver: '0x0000000000000000000000000000000000000000',
-        data: '0x',
-      } satisfies CreateIntentParams);
-    } else if (!open) {
-      setFrozenPayload(undefined);
+  const intentOrderPayload = useMemo(() => {
+    if (!inputToken || !outputToken || !minOutputAmount || !inputAmount || !sourceAddress || !finalDestinationAddress) {
+      return undefined;
     }
-  }, [
-    open,
-    frozenPayload,
-    inputToken.address,
-    inputToken.decimals,
-    inputToken.xChainId,
-    outputToken.address,
-    outputToken.xChainId,
-    inputAmount,
-    minOutputAmount,
-    sourceAddress,
-    finalDestinationAddress,
-  ]);
 
-  const intentOrderPayload = frozenPayload;
+    return {
+      inputToken: inputToken.address,
+      outputToken: outputToken.address,
+      inputAmount: parseUnits(inputAmount, inputToken.decimals),
+      minOutputAmount: minOutputAmount,
+      deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5),
+      allowPartialFill: false,
+      srcChain: inputToken.xChainId as SpokeChainId,
+      dstChain: outputToken.xChainId as SpokeChainId,
+      srcAddress: sourceAddress,
+      dstAddress: finalDestinationAddress,
+      solver: '0x0000000000000000000000000000000000000000',
+      data: '0x',
+    } satisfies CreateIntentParams;
+  }, [inputToken, outputToken, minOutputAmount, inputAmount, sourceAddress, finalDestinationAddress]);
 
   const isWaitingForSolvedStatus = useMemo(() => {
     return !!dstTxHash && !isSwapFailed;
@@ -340,7 +325,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 <div className="flex flex-col justify-start items-center gap-2">
                   <div className="inline-flex justify-start items-center gap-1">
                     <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                      {formatBalance(outputAmount, usdPrice)}
+                      {formatBalance(outputAmount ? formatUnits(outputAmount, outputToken.decimals) : '0', usdPrice)}
                     </div>
                     <div className="justify-start text-clay-light text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
                       {outputToken.symbol}
@@ -496,7 +481,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                           <div className="flex justify-between">
                             <span className="text-clay-light">Receive at least</span>
                             <span className="text-espresso font-medium">
-                              {formatBalance(minOutputAmount?.toString() || '0', usdPrice)} {outputToken.symbol}
+                              {formatBalance(
+                                minOutputAmount ? formatUnits(minOutputAmount, outputToken.decimals) : '0',
+                                usdPrice,
+                              )}{' '}
+                              {outputToken.symbol}
                             </span>
                           </div>
                           <div className="flex justify-between">
