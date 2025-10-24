@@ -1,6 +1,5 @@
 // packages/dapp-kit/src/hooks/migrate/types.ts
 import type { SpokeChainId } from '@sodax/types';
-import type { SpokeProvider } from '@sodax/sdk';
 
 export const MIGRATION_MODE_ICX_SODA = 'icxsoda';
 export const MIGRATION_MODE_BNUSD = 'bnusd';
@@ -23,11 +22,10 @@ export interface MigrationCurrencies {
   };
 }
 
-export interface MigrationParams {
+export type MigrationParams = {
   migrationMode: MigrationMode;
   typedValue: string;
   direction: MigrationDirection;
   currencies: MigrationCurrencies;
   destinationAddress: string;
-  sourceSpokeProvider: SpokeProvider;
-}
+};

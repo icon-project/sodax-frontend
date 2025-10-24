@@ -1,4 +1,3 @@
-// packages/dapp-kit/src/hooks/migrate/useMigrate.tsx
 import { parseUnits } from 'viem';
 import {
   spokeChainConfig,
@@ -6,10 +5,11 @@ import {
   type IconSpokeProvider,
   type SonicSpokeProvider,
   isLegacybnUSDToken,
+  type SpokeProvider,
 } from '@sodax/sdk';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationParams } from './types';
 
 export interface MigrationResult {
@@ -20,50 +20,48 @@ export interface MigrationResult {
 /**
  * Hook for executing migration operations between chains.
  *
- * This hook handles ICX/SODA and bnUSD migrations by accepting parameters
- * instead of relying on external stores.
+ * This hook handles ICX/SODA and bnUSD migrations by accepting a spoke provider
+ * and returning a mutation function that accepts migration parameters.
  *
- * @param {MigrationParams} params - Migration parameters including mode, amount, direction, etc.
+ * @param {SpokeProvider} spokeProvider - The spoke provider to use for the migration
  * @returns {UseMutationResult} Mutation result object containing migration function and state
  *
  * @example
  * ```typescript
- * const { mutateAsync: migrate, isPending } = useMigrate({
+ * const { mutateAsync: migrate, isPending } = useMigrate(spokeProvider);
+ *
+ * const result = await migrate({
  *   migrationMode: MIGRATION_MODE_ICX_SODA,
  *   typedValue: "100",
  *   direction: { from: "0x1", to: "0x2" },
  *   currencies: { from: { address: "0x...", decimals: 18 }, to: { address: "0x...", decimals: 18 } },
- *   destinationAddress: "0x...",
- *   sourceSpokeProvider: provider
+ *   destinationAddress: "0x..."
  * });
- *
- * const result = await migrate();
  * ```
  */
-export function useMigrate(params: MigrationParams) {
+export function useMigrate(
+  spokeProvider: SpokeProvider | undefined,
+): UseMutationResult<MigrationResult, Error, MigrationParams> {
   const { sodax } = useSodaxContext();
 
   return useMutation({
-    mutationFn: async () => {
-      const { migrationMode, typedValue, direction, currencies, destinationAddress, sourceSpokeProvider } = params;
+    mutationFn: async (params: MigrationParams) => {
+      const { migrationMode, typedValue, direction, currencies, destinationAddress } = params;
       const amountToMigrate = parseUnits(typedValue, currencies.from.decimals);
+
+      if (!spokeProvider) {
+        throw new Error('Spoke provider not found');
+      }
 
       if (migrationMode === MIGRATION_MODE_ICX_SODA) {
         // ICX->SODA migration logic
         if (direction.from === ICON_MAINNET_CHAIN_ID) {
-          if (!sourceSpokeProvider) {
-            throw new Error('ICON provider unavailable. Reconnect your ICON wallet.');
-          }
           const params = {
             address: spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken,
             amount: amountToMigrate,
             to: destinationAddress as `0x${string}`,
           };
-          const result = await sodax.migration.migrateIcxToSoda(
-            params,
-            sourceSpokeProvider as IconSpokeProvider,
-            30000,
-          );
+          const result = await sodax.migration.migrateIcxToSoda(params, spokeProvider as IconSpokeProvider, 30000);
           if (result.ok) {
             const [spokeTxHash, hubTxHash] = result.value;
             return { spokeTxHash, hubTxHash };
@@ -72,16 +70,13 @@ export function useMigrate(params: MigrationParams) {
         }
 
         // SODA->ICX migration
-        if (!sourceSpokeProvider) {
-          throw new Error('Sonic provider unavailable. Reconnect your Sonic wallet.');
-        }
         const revertParams = {
           amount: amountToMigrate,
           to: destinationAddress as `hx${string}`,
         };
         const result = await sodax.migration.revertMigrateSodaToIcx(
           revertParams,
-          sourceSpokeProvider as SonicSpokeProvider,
+          spokeProvider as SonicSpokeProvider,
           30000,
         );
         if (result.ok) {
@@ -93,10 +88,6 @@ export function useMigrate(params: MigrationParams) {
 
       if (migrationMode === MIGRATION_MODE_BNUSD) {
         // bnUSD migration logic - handle dynamic source/destination chains
-        if (!sourceSpokeProvider) {
-          throw new Error(`${direction.from} provider unavailable. Reconnect your wallet.`);
-        }
-
         const params = {
           srcChainId: direction.from,
           dstChainId: direction.to,
@@ -106,7 +97,7 @@ export function useMigrate(params: MigrationParams) {
           to: destinationAddress as `hx${string}` | `0x${string}`,
         } satisfies UnifiedBnUSDMigrateParams;
 
-        const result = await sodax.migration.migratebnUSD(params, sourceSpokeProvider, 30000);
+        const result = await sodax.migration.migratebnUSD(params, spokeProvider, 30000);
         if (result.ok) {
           const [spokeTxHash, hubTxHash] = result.value;
           return { spokeTxHash, hubTxHash };
