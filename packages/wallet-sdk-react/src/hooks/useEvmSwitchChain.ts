@@ -1,7 +1,6 @@
-import { xChainMap } from '@/constants/xChains';
 import { useCallback, useMemo } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
-import type { ChainId } from '@sodax/types';
+import { baseChainInfo, type ChainId } from '@sodax/types';
 import { getXChainType } from '@/actions';
 import type { InjectiveXService } from '@/xchains/injective';
 import { useXService } from '@/hooks/useXService';
@@ -56,7 +55,7 @@ export const switchEthereumChain = async () => {
 
 export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
   const xChainType = getXChainType(expectedXChainId);
-  const expectedChainId = xChainMap[expectedXChainId].id as number;
+  const expectedChainId = baseChainInfo[expectedXChainId].chainId as number;
 
   const injectiveXService = useXService('INJECTIVE') as unknown as InjectiveXService;
   const ethereumChainId = useEthereumChainId();

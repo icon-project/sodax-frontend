@@ -1,4 +1,4 @@
-import type { ChainId, ChainType, XToken } from '@sodax/types';
+import type { ChainType, XToken } from '@sodax/types';
 import type { XConnector } from './XConnector';
 
 /**
@@ -33,10 +33,9 @@ export abstract class XService {
    * Gets the balance of a specific token for an address
    * @param address The wallet address to check
    * @param xToken The token to get the balance for
-   * @param xChainId The chain ID to query
    * @returns Promise resolving to the token balance as a bigint
    */
-  public async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
+  public async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
     return 0n;
   }
 
@@ -44,18 +43,13 @@ export abstract class XService {
    * Gets balances for multiple tokens for an address
    * @param address The wallet address to check
    * @param xTokens Array of tokens to get balances for
-   * @param xChainId The chain ID to query
    * @returns Promise resolving to object mapping token addresses to balances
    */
-  public async getBalances(
-    address: string | undefined,
-    xTokens: XToken[],
-    xChainId: ChainId,
-  ): Promise<Record<string, bigint>> {
+  public async getBalances(address: string | undefined, xTokens: XToken[]): Promise<Record<string, bigint>> {
     if (!address) return {};
 
     const balancePromises = xTokens.map(async xToken => {
-      const balance = await this.getBalance(address, xToken, xChainId);
+      const balance = await this.getBalance(address, xToken);
       return { address: xToken.address, balance };
     });
 

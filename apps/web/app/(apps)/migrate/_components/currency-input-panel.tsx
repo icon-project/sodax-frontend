@@ -10,6 +10,7 @@ import BnUSDChainSelector from './bnusd-chain-selector';
 import { isLegacybnUSDToken, isNewbnUSDToken, spokeChainConfig } from '@sodax/sdk';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 import { getChainName } from '@/constants/chains';
+import BigNumber from 'bignumber.js';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -44,11 +45,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   isChainConnected = false,
 }: CurrencyInputPanelProps) => {
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
-  const formattedBalance = formatUnits(currencyBalance, currency.decimals);
-  const formattedBalanceFixed = Number(formattedBalance).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -105,7 +102,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
       >
         <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)  group-hover:text-clay">
           {type === CurrencyInputPanelType.INPUT
-            ? `${formattedBalance === '0' ? '0' : formattedBalanceFixed} available`
+            ? `${new BigNumber(formatUnits(currencyBalance, currency.decimals)).decimalPlaces(2, BigNumber.ROUND_FLOOR).toFixed(2)} available`
             : 'Receive'}
         </div>
         <div className="inline-flex gap-1 items-center">

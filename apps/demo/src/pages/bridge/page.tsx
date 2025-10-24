@@ -34,7 +34,7 @@ import {
 } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
-import { normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
+import { parseUnits, formatUnits } from 'viem';
 import {
   useSpokeProvider,
   useBridgeApprove,
@@ -118,7 +118,7 @@ export default function BridgePage() {
     setOrder({
       srcChainId: fromToken.xChainId,
       srcAsset: fromToken?.address,
-      amount: scaleTokenAmount(fromAmount, fromToken?.decimals ?? 0),
+      amount: parseUnits(fromAmount, fromToken?.decimals ?? 0),
       dstChainId: toToken.xChainId,
       dstAsset: toToken?.address,
       recipient: toAccount.address,
@@ -150,7 +150,7 @@ export default function BridgePage() {
     error: trustlineError,
   } = useStellarTrustlineCheck(
     order?.dstAsset,
-    scaleTokenAmount(fromAmount, toToken?.decimals ?? 0),
+    parseUnits(fromAmount, toToken?.decimals ?? 0),
     destProvider,
     order?.dstChainId,
   );
@@ -212,7 +212,7 @@ export default function BridgePage() {
 
     await requestTrustline({
       token: order.dstAsset,
-      amount: scaleTokenAmount(fromAmount, toToken?.decimals ?? 0),
+      amount: parseUnits(fromAmount, toToken?.decimals ?? 0),
       spokeProvider: destProvider,
     });
   };
@@ -335,7 +335,7 @@ export default function BridgePage() {
               {isLoadingSpokeAssetManagerTokenBalance ? (
                 <Skeleton className="w-16 h-6 inline-block" />
               ) : (
-                normaliseTokenAmount(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)
+                formatUnits(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)
               )}{' '}
               {toToken?.symbol}
             </div>
@@ -364,9 +364,9 @@ export default function BridgePage() {
               <div>
                 outputToken: {order?.dstAsset} on {order?.dstChainId}
               </div>
-              <div>inputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
-              <div>amount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
-              <div>outputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+              <div>inputAmount: {formatUnits(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+              <div>amount: {formatUnits(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+              <div>outputAmount: {formatUnits(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
               {order?.dstChainId === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
                 <div className="text-red-500">Insufficient Stellar trustline (request trustline to proceed)</div>
               )}

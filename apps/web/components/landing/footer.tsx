@@ -33,7 +33,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             using soda
           </div>
-          <FooterLink href="#">Flagship Platform (Soon)</FooterLink>
+          <FooterLink href="/swap">SODAX Swap</FooterLink>
           <FooterLink href="https://www.hanawallet.io/" showArrow>
             Hana Wallet
           </FooterLink>
@@ -60,11 +60,11 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             resources
           </div>
-          <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
-            Github
-          </FooterLink>
           <FooterLink href="https://sodax-1.gitbook.io/sodax-docs/readme-1" showArrow>
             Documentation
+          </FooterLink>
+          <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
+            Github
           </FooterLink>
           <FooterLink href="https://sodaxscan.com/" showArrow>
             SODAX Scan

@@ -38,6 +38,16 @@ export function NavigationMenu() {
       >
         Bridge
       </NavLink>
+      <NavLink
+        to="/staking"
+        className={({ isActive }) =>
+          `text-sm font-medium transition-colors hover:text-primary ${
+            isActive ? 'text-primary' : 'text-muted-foreground'
+          }`
+        }
+      >
+        Staking
+      </NavLink>
     </nav>
   );
 }

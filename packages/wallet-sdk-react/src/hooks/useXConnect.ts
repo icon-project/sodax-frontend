@@ -41,8 +41,7 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
   const { connectAsync: evmConnectAsync } = useConnect();
   const { mutateAsync: suiConnectAsync } = useConnectWallet();
 
-  // const solanaWallet = useWallet();
-  const { select, connect, connected } = useWallet();
+  const { select, connect } = useWallet();
 
   return useMutation({
     mutationFn: async (xConnector: XConnector) => {
