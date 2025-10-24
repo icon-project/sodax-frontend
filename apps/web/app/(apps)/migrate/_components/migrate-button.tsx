@@ -15,7 +15,7 @@ import { useSpokeProvider, useRequestTrustline } from '@sodax/dapp-kit';
 
 import { useMigrationInfo, useMigrationStore } from '../_stores/migration-store-provider';
 import { parseUnits } from 'viem';
-import { useMigrate, useMigrationAllowance, useMigrationApprove } from '../_hooks';
+import { useMigrate, useMigrationAllowance, useMigrationApprove } from '@sodax/dapp-kit';
 import { Check, Loader2 } from 'lucide-react';
 import { MODAL_ID } from '@/stores/modal-store';
 import { chainIdToChainName } from '@/providers/constants';
@@ -46,27 +46,19 @@ export const MigrateButton = () => {
   // Get wallet provider for the source chain
   const walletProvider = useWalletProvider(direction.from);
   const spokeProvider = useSpokeProvider(direction.from, walletProvider);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(
-    currencies.from,
-    typedValue,
-    sourceAddress,
-    spokeProvider,
-    migrationMode,
-    currencies.to,
-  );
-  const {
-    approve,
-    isLoading: isApproving,
-    isApproved,
-  } = useMigrationApprove(
-    currencies.from,
-    typedValue,
-    sourceAddress,
-    spokeProvider,
-    migrationMode,
-    currencies.to,
-    destinationAddress,
-  );
+  const migrateIntentParams = useMemo(() => {
+    return {
+      token: currencies.from,
+      amount: typedValue,
+      sourceAddress,
+      migrationMode,
+      toToken: currencies.to,
+      destinationAddress,
+    };
+  }, [currencies.from, currencies.to, typedValue, sourceAddress, migrationMode, destinationAddress]);
+
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMigrationAllowance(migrateIntentParams, spokeProvider);
+  const { approve, isLoading: isApproving, isApproved } = useMigrationApprove(migrateIntentParams, spokeProvider);
 
   const { inputError } = useMigrationInfo();
 
@@ -78,9 +70,9 @@ export const MigrateButton = () => {
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currencies.from.xChainId);
 
-  const { mutateAsync: migrate, isPending } = useMigrate();
+  const { mutateAsync: migrate, isPending } = useMigrate(spokeProvider);
   const handleApprove = async () => {
-    await approve();
+    await approve({ params: migrateIntentParams });
   };
 
   // Combine allowance check with approval state for immediate UI feedback
@@ -148,7 +140,7 @@ export const MigrateButton = () => {
 
   const handleMigrate = async () => {
     try {
-      await migrate();
+      await migrate(migrateIntentParams);
       setShowSuccessDialog(true);
     } catch (error) {
       console.error(error);
