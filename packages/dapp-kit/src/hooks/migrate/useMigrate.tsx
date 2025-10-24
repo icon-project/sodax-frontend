@@ -7,15 +7,10 @@ import {
   isLegacybnUSDToken,
   type SpokeProvider,
 } from '@sodax/sdk';
-import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
+import { type ChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useSodaxContext } from '../shared/useSodaxContext';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationParams } from './types';
-
-export interface MigrationResult {
-  spokeTxHash: string;
-  hubTxHash: string;
-}
+import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationIntentParams } from './types';
 
 /**
  * Hook for executing migration operations between chains.
@@ -31,23 +26,23 @@ export interface MigrationResult {
  * const { mutateAsync: migrate, isPending } = useMigrate(spokeProvider);
  *
  * const result = await migrate({
+ *   token: { address: "0x...", decimals: 18 },
+ *   amount: "100",
  *   migrationMode: MIGRATION_MODE_ICX_SODA,
- *   typedValue: "100",
- *   direction: { from: "0x1", to: "0x2" },
- *   currencies: { from: { address: "0x...", decimals: 18 }, to: { address: "0x...", decimals: 18 } },
+ *   toToken: { address: "0x...", decimals: 18 },
  *   destinationAddress: "0x..."
  * });
  * ```
  */
 export function useMigrate(
   spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<MigrationResult, Error, MigrationParams> {
+): UseMutationResult<{ spokeTxHash: string; hubTxHash: `0x${string}` }, Error, MigrationIntentParams> {
   const { sodax } = useSodaxContext();
 
   return useMutation({
-    mutationFn: async (params: MigrationParams) => {
-      const { migrationMode, typedValue, direction, currencies, destinationAddress } = params;
-      const amountToMigrate = parseUnits(typedValue, currencies.from.decimals);
+    mutationFn: async (params: MigrationIntentParams) => {
+      const { token, amount, migrationMode = MIGRATION_MODE_ICX_SODA, toToken, destinationAddress } = params;
+      const amountToMigrate = parseUnits(amount ?? '0', token?.decimals ?? 0);
 
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
@@ -55,7 +50,7 @@ export function useMigrate(
 
       if (migrationMode === MIGRATION_MODE_ICX_SODA) {
         // ICX->SODA migration logic
-        if (direction.from === ICON_MAINNET_CHAIN_ID) {
+        if (token?.xChainId === ICON_MAINNET_CHAIN_ID) {
           const params = {
             address: spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken,
             amount: amountToMigrate,
@@ -89,10 +84,10 @@ export function useMigrate(
       if (migrationMode === MIGRATION_MODE_BNUSD) {
         // bnUSD migration logic - handle dynamic source/destination chains
         const params = {
-          srcChainId: direction.from,
-          dstChainId: direction.to,
-          srcbnUSD: currencies.from.address,
-          dstbnUSD: currencies.to.address,
+          srcChainId: token?.xChainId as ChainId,
+          dstChainId: toToken?.xChainId as ChainId,
+          srcbnUSD: token?.address as string,
+          dstbnUSD: toToken?.address as string,
           amount: amountToMigrate,
           to: destinationAddress as `hx${string}` | `0x${string}`,
         } satisfies UnifiedBnUSDMigrateParams;
@@ -103,7 +98,7 @@ export function useMigrate(
           return { spokeTxHash, hubTxHash };
         }
 
-        const errorMessage = isLegacybnUSDToken(currencies.from.address)
+        const errorMessage = isLegacybnUSDToken(token?.address as string)
           ? 'bnUSD migration failed. Please try again.'
           : 'bnUSD reverse migration failed. Please try again.';
         throw new Error(errorMessage);

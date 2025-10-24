@@ -1,18 +1,10 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { ChainId, XToken } from '@sodax/types';
+import type { ChainId } from '@sodax/types';
 import { useSodaxContext } from '../shared/useSodaxContext';
 import { parseUnits } from 'viem';
 import type { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider } from '@sodax/sdk';
 import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
-import { MIGRATION_MODE_ICX_SODA, type MigrationMode } from './types';
-
-export interface MigrationAllowanceParams {
-  token: XToken | undefined;
-  amount: string | undefined;
-  sourceAddress: string | undefined;
-  migrationMode?: MigrationMode;
-  toToken?: XToken;
-}
+import { MIGRATION_MODE_ICX_SODA, type MigrationIntentParams } from './types';
 
 /**
  * Hook for checking token allowance for migration operations.
@@ -20,7 +12,7 @@ export interface MigrationAllowanceParams {
  * This hook verifies if the user has approved enough tokens for migration operations.
  * It handles both ICX/SODA and bnUSD migration allowance checks.
  *
- * @param {MigrationAllowanceParams} params - The parameters for the migration allowance check
+ * @param {MigrationIntentParams} params - The parameters for the migration allowance check
  * @param {SpokeProvider} spokeProvider - The spoke provider to use for allowance checks
  *
  * @returns {UseQueryResult<boolean, Error>} A React Query result containing:
@@ -34,7 +26,7 @@ export interface MigrationAllowanceParams {
  * ```
  */
 export function useMigrationAllowance(
-  params: MigrationAllowanceParams | undefined,
+  params: MigrationIntentParams | undefined,
   spokeProvider: SpokeProvider | undefined,
 ): UseQueryResult<boolean, Error> {
   const { sodax } = useSodaxContext();
@@ -46,7 +38,7 @@ export function useMigrationAllowance(
         return false;
       }
 
-      const { token, amount, sourceAddress, migrationMode = MIGRATION_MODE_ICX_SODA, toToken } = params;
+      const { token, amount, migrationMode = MIGRATION_MODE_ICX_SODA, toToken, destinationAddress } = params;
 
       // For ICON chain, no allowance is required (forward migrations)
       if (token?.xChainId === ICON_MAINNET_CHAIN_ID) {
@@ -60,7 +52,7 @@ export function useMigrationAllowance(
       if (migrationMode === MIGRATION_MODE_ICX_SODA) {
         migrationParams = {
           amount: amountToMigrate,
-          to: sourceAddress as `hx${string}`,
+          to: destinationAddress as `hx${string}`,
         } satisfies IcxCreateRevertMigrationParams;
       } else {
         if (!toToken) throw new Error('Destination token is required for bnUSD migration');
@@ -71,7 +63,7 @@ export function useMigrationAllowance(
           srcbnUSD: token?.address as string,
           dstbnUSD: toToken?.address as string,
           amount: amountToMigrate,
-          to: sourceAddress as `hx${string}` | `0x${string}`,
+          to: destinationAddress as `hx${string}` | `0x${string}`,
         } satisfies UnifiedBnUSDMigrateParams;
       }
 

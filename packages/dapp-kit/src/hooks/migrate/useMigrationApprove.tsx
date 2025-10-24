@@ -1,22 +1,18 @@
-import type { XToken } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { useCallback, useState, useRef, useEffect } from 'react';
-import type { IcxCreateRevertMigrationParams, UnifiedBnUSDMigrateParams, SpokeProvider, Result } from '@sodax/sdk';
+import type {
+  IcxCreateRevertMigrationParams,
+  UnifiedBnUSDMigrateParams,
+  SpokeProvider,
+  Result,
+  ChainId,
+} from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import { useMigrationAllowance, type MigrationAllowanceParams } from './useMigrationAllowance';
-import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationMode } from './types';
-
-export interface MigrationApproveParams {
-  token: XToken | undefined;
-  amount: string | undefined;
-  sourceAddress: string | undefined;
-  migrationMode?: MigrationMode;
-  toToken?: XToken;
-  destinationAddress?: string;
-}
+import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationIntentParams } from './types';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface UseApproveReturn {
-  approve: ({ params }: { params: MigrationApproveParams }) => Promise<boolean>;
+  approve: ({ params }: { params: MigrationIntentParams }) => Promise<boolean>;
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
@@ -38,25 +34,14 @@ interface UseApproveReturn {
  */
 
 export function useMigrationApprove(
-  params: MigrationApproveParams | undefined,
+  params: MigrationIntentParams | undefined,
   spokeProvider: SpokeProvider | undefined,
 ): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [isApproved, setIsApproved] = useState(false);
-
-  const allowanceParams: MigrationAllowanceParams | undefined = params
-    ? {
-        token: params.token,
-        amount: params.amount,
-        sourceAddress: params.sourceAddress,
-        migrationMode: params.migrationMode,
-        toToken: params.toToken,
-      }
-    : undefined;
-
-  const { refetch: refetchAllowance } = useMigrationAllowance(allowanceParams, spokeProvider);
+  const queryClient = useQueryClient();
 
   // Track previous values to reset approval state when needed
   const prevTokenAddress = useRef<string | undefined>(undefined);
@@ -71,7 +56,7 @@ export function useMigrationApprove(
   }, [params?.token?.address, params?.amount]);
 
   const approve = useCallback(
-    async ({ params: approveParams }: { params: MigrationApproveParams }) => {
+    async ({ params: approveParams }: { params: MigrationIntentParams }) => {
       try {
         setIsLoading(true);
         setError(null);
@@ -80,31 +65,18 @@ export function useMigrationApprove(
           throw new Error('Spoke provider not found');
         }
         if (!approveParams) {
-          throw new Error('Params not found');
-        }
-        if (!approveParams.token) {
-          throw new Error('Token not found');
-        }
-        if (!approveParams.amount) {
-          throw new Error('Amount not found');
+          throw new Error('Migration intent not found');
         }
 
-        const {
-          token,
-          amount,
-          sourceAddress,
-          migrationMode = MIGRATION_MODE_ICX_SODA,
-          toToken,
-          destinationAddress,
-        } = approveParams;
-        const amountToMigrate = parseUnits(amount, token.decimals);
+        const { token, amount, migrationMode = MIGRATION_MODE_ICX_SODA, toToken, destinationAddress } = approveParams;
+        const amountToMigrate = parseUnits(amount ?? '0', token?.decimals ?? 0);
 
         let result: Result<string, unknown>;
         if (migrationMode === MIGRATION_MODE_ICX_SODA) {
           // ICX/SODA migration approval
           const revertParams = {
             amount: amountToMigrate,
-            to: sourceAddress as `hx${string}`,
+            to: destinationAddress as `hx${string}`,
           } satisfies IcxCreateRevertMigrationParams;
 
           result = await sodax.migration.approve(revertParams, 'revert', spokeProvider, false);
@@ -113,10 +85,10 @@ export function useMigrationApprove(
           if (!toToken) throw new Error('Destination token is required for bnUSD migration');
 
           const migrationParams = {
-            srcChainId: token.xChainId,
-            dstChainId: toToken.xChainId,
-            srcbnUSD: token.address,
-            dstbnUSD: toToken.address,
+            srcChainId: token?.xChainId as ChainId,
+            dstChainId: toToken?.xChainId as ChainId,
+            srcbnUSD: token?.address as string,
+            dstbnUSD: toToken?.address as string,
             amount: amountToMigrate,
             to: destinationAddress as `hx${string}` | `0x${string}`,
           } satisfies UnifiedBnUSDMigrateParams;
@@ -130,7 +102,7 @@ export function useMigrationApprove(
         }
 
         setIsApproved(true);
-        refetchAllowance();
+        queryClient.invalidateQueries({ queryKey: ['migration-allowance', params] });
         return result.ok;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('An unknown error occurred');
@@ -140,7 +112,7 @@ export function useMigrationApprove(
         setIsLoading(false);
       }
     },
-    [spokeProvider, sodax, refetchAllowance],
+    [spokeProvider, sodax, queryClient, params],
   );
 
   const resetError = useCallback(() => {
