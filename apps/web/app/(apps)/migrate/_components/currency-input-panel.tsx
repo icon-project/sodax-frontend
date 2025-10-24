@@ -122,7 +122,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 <Button
                   variant="default"
                   size="tiny"
-                  className="mix-blend-multiply bg-cream-white rounded-[256px] uppercase text-clay hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso ml-1 font-['InterBold']"
+                  className="mix-blend-multiply bg-cream-white rounded-[256px] uppercase text-clay hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso ml-2 font-['InterBold']"
                   onClick={onMaxClick}
                 >
                   MAX
@@ -133,7 +133,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             'Receive'
           )}
         </div>
-        <div className="inline-flex gap-1 items-center">
+        <div className="inline-flex items-baseline gap-1">
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold">
             <div className="relative">
               <Input
@@ -143,7 +143,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 onChange={onInputChange}
                 onFocus={onInputFocus}
                 placeholder="0"
-                className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle) font-['InterBold'] placeholder:text-espresso pt-[5px]"
+                className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle) font-['InterBold'] placeholder:text-espresso leading-none align-baseline
+  translate-y-[2px] sm:translate-y-[1px] md:translate-y-[2px]"
                 readOnly={type === CurrencyInputPanelType.OUTPUT}
               />
             </div>
@@ -163,7 +164,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             <Button
               variant="default"
               size="tiny"
-              className="mix-blend-multiply bg-cream-white rounded-[256px] uppercase text-clay hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso font-['InterBold']"
+              className="mix-blend-multiply bg-cream-white rounded-[256px] uppercase text-clay hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso font-['InterBold'] ml-1 text-[length:var(--body-tiny)]"
               onClick={onMaxClick}
             >
               MAX
