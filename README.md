@@ -26,10 +26,11 @@ The `packages` directory contains a sdk's and libraries:
 - **dapp-kit** (`/packages/dapp-kit`): A utility kit optimized for React and Next.js applications, leveraging both the wallet-sdk and Sodax SDKs. It offers a collection of hooks, components, and utilities designed to accelerate frontend dApp development with modular, production-ready building blocks. [dApp Kit Documentation](./packages/dapp-kit/README.md).
 
 ### Git Flow Frontend
-branches: `main`, `staging`, `production`
-`main` - https://sodax-web-dev.vercel.app/
-`staging` - https://sodax-web-staging.vercel.app/
-`production` - https://sodax.com/
+
+branches: `main`, `staging`, `production`:
+- `main` - https://sodax-web-dev.vercel.app/
+- `staging` - https://sodax-web-staging.vercel.app/
+- `production` - https://sodax.com/
 
 for normal task:
 1. create a branch from main
