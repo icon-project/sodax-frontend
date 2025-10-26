@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
@@ -13,6 +14,24 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+  },
+
+  async headers() {
+    return [
+      {
+        source: '/(.*)', // Apply to all routes
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY', // Prevent all framing
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'none';", // Modern protection
+          },
+        ],
+      },
+    ];
   },
 };
 
