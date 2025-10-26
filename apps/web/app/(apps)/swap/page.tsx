@@ -27,8 +27,8 @@ export default function SwapPage() {
 
   const [isSwapConfirmOpen, setIsSwapConfirmOpen] = useState<boolean>(false);
   // Fixed amounts for dialog - these don't change once dialog is open
-  const [fixedOutputAmount, setFixedOutputAmount] = useState<string>('');
-  const [fixedMinOutputAmount, setFixedMinOutputAmount] = useState<string>('');
+  const [fixedOutputAmount, setFixedOutputAmount] = useState<bigint | undefined>(undefined);
+  const [fixedMinOutputAmount, setFixedMinOutputAmount] = useState<bigint | undefined>(undefined);
 
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
@@ -83,23 +83,17 @@ export default function SwapPage() {
   const { data: outputTokenPrice } = useTokenPrice(outputToken);
   const calculatedOutputAmount = useMemo(() => {
     if (quoteQuery.data?.ok && quoteQuery.data.value) {
-      const quotedAmount = quoteQuery.data.value.quoted_amount;
-      return formatUnits(quotedAmount, outputToken.decimals);
+      return quoteQuery.data.value.quoted_amount;
     }
-    return '';
-  }, [quoteQuery.data, outputToken.decimals]);
+    return undefined;
+  }, [quoteQuery.data]);
 
   const swapFees = useMemo(() => {
     if (!inputAmount || inputAmount === '' || Number.isNaN(Number(inputAmount)) || Number(inputAmount) <= 0) {
       return undefined;
     }
 
-    if (
-      !calculatedOutputAmount ||
-      calculatedOutputAmount === '' ||
-      Number.isNaN(Number(calculatedOutputAmount)) ||
-      Number(calculatedOutputAmount) <= 0
-    ) {
+    if (!calculatedOutputAmount) {
       return undefined;
     }
 
@@ -107,12 +101,7 @@ export default function SwapPage() {
       partner: new BigNumber(
         formatUnits(sodax.solver.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)), inputToken.decimals),
       ),
-      solver: new BigNumber(
-        formatUnits(
-          sodax.solver.getSolverFee(parseUnits(calculatedOutputAmount, outputToken.decimals)),
-          outputToken.decimals,
-        ),
-      ),
+      solver: new BigNumber(formatUnits(sodax.solver.getSolverFee(calculatedOutputAmount), outputToken.decimals)),
     };
   }, [inputAmount, calculatedOutputAmount, inputToken.decimals, outputToken.decimals, sodax.solver]);
 
@@ -130,14 +119,16 @@ export default function SwapPage() {
   }, [swapFees, inputTokenPrice, outputTokenPrice]);
 
   const minOutputAmount = useMemo(() => {
-    if (quoteQuery.data?.ok && quoteQuery.data.value && calculatedOutputAmount) {
-      return new BigNumber(calculatedOutputAmount)
-        .multipliedBy(100 - slippageTolerance)
-        .dividedBy(100)
-        .toFixed(outputToken.decimals, BigNumber.ROUND_DOWN);
+    if (calculatedOutputAmount) {
+      return BigInt(
+        new BigNumber(calculatedOutputAmount)
+          .multipliedBy(100 - slippageTolerance)
+          .dividedBy(100)
+          .toFixed(0),
+      );
     }
-    return '';
-  }, [quoteQuery.data, calculatedOutputAmount, outputToken.decimals, slippageTolerance]);
+    return undefined;
+  }, [calculatedOutputAmount, slippageTolerance]);
 
   const handleReview = async (): Promise<void> => {
     setFixedOutputAmount(calculatedOutputAmount);
@@ -163,8 +154,8 @@ export default function SwapPage() {
   const handleDialogClose = (): void => {
     // Reset fixed amounts when dialog is closed
     setIsSwapConfirmOpen(false);
-    setFixedOutputAmount('');
-    setFixedMinOutputAmount('');
+    setFixedOutputAmount(undefined);
+    setFixedMinOutputAmount(undefined);
   };
 
   return (
@@ -212,7 +203,7 @@ export default function SwapPage() {
             type={CurrencyInputPanelType.OUTPUT}
             currency={outputToken}
             currencyBalance={isDestinationChainConnected ? destinationBalance : 0n}
-            inputValue={calculatedOutputAmount}
+            inputValue={calculatedOutputAmount ? formatUnits(calculatedOutputAmount, outputToken.decimals) : undefined}
             onCurrencyChange={setOutputToken}
             isChainConnected={isDestinationChainConnected}
             isSwapAndSend={isSwapAndSend}
@@ -254,7 +245,7 @@ export default function SwapPage() {
         }
         outputAmount={fixedOutputAmount}
         onClose={handleDialogClose}
-        minOutputAmount={fixedMinOutputAmount ? new BigNumber(fixedMinOutputAmount) : new BigNumber(0)}
+        minOutputAmount={fixedMinOutputAmount}
         swapFeesUsdValue={swapFeesUsdValue}
         usdPrice={outputTokenPrice}
       />
