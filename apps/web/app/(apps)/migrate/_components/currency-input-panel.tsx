@@ -11,6 +11,7 @@ import { isLegacybnUSDToken, isNewbnUSDToken, spokeChainConfig } from '@sodax/sd
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 import { getChainName } from '@/constants/chains';
 import BigNumber from 'bignumber.js';
+import { useBreakpoint } from '@/hooks/useBreakPoint';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -45,6 +46,12 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   isChainConnected = false,
 }: CurrencyInputPanelProps) => {
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
+  const breakpoint = useBreakpoint();
+  const is_mobile = breakpoint < 480;
+  const is_legacy_bnusd = currency.symbol === 'bnUSD (legacy)';
+  const is_new_bnusd = currency.symbol === 'bnUSD';
+  const token_label = is_legacy_bnusd ? 'OLD' : is_new_bnusd ? 'NEW' : null;
+  const is_bnusd = is_legacy_bnusd || is_new_bnusd;
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -86,10 +93,13 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           </div>
           <div className="justify-center text-espresso font-['InterRegular'] leading-snug text-(size:--body-super-comfortable) inline-flex gap-1 items-center">
             {isLegacybnUSDToken(currency) || isNewbnUSDToken(currency)
-              ? getChainName(chainId) || spokeChainConfig[chainId]?.chain?.name || 'Unknown'
+              ? getChainName(chainId)?.toUpperCase().includes('ICON')
+                ? getChainName(chainId)?.toUpperCase()
+                : getChainName(chainId) || spokeChainConfig[chainId]?.chain?.name || 'Unknown'
               : chainId === ICON_MAINNET_CHAIN_ID
                 ? 'ICON'
                 : 'Sonic'}
+
             <span className="hidden md:inline">Network</span>
             {(isLegacybnUSDToken(currency) || isNewbnUSDToken(currency)) && <ChevronDownIcon className="w-4 h-4" />}
           </div>
@@ -100,12 +110,30 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         className="inline-flex flex-col justify-center items-end"
         style={{ paddingRight: 'var(--layout-space-normal)' }}
       >
-        <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)  group-hover:text-clay">
-          {type === CurrencyInputPanelType.INPUT
-            ? `${new BigNumber(formatUnits(currencyBalance, currency.decimals)).decimalPlaces(2, BigNumber.ROUND_FLOOR).toFixed(2)} available`
-            : 'Receive'}
+        <div className="text-right justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable) group-hover:text-clay">
+          {type === CurrencyInputPanelType.INPUT ? (
+            <>
+              <span>
+                {`${new BigNumber(formatUnits(currencyBalance, currency.decimals))
+                  .decimalPlaces(2, BigNumber.ROUND_FLOOR)
+                  .toFixed(2)} available`}
+              </span>
+              {is_mobile && (
+                <Button
+                  variant="default"
+                  size="tiny"
+                  className="mix-blend-multiply bg-cream-white rounded-[256px] uppercase text-clay hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso ml-2 font-['InterBold'] text-[length:var(--body-tiny)]"
+                  onClick={onMaxClick}
+                >
+                  MAX
+                </Button>
+              )}
+            </>
+          ) : (
+            'Receive'
+          )}
         </div>
-        <div className="inline-flex gap-1 items-center">
+        <div className="inline-flex items-baseline gap-1">
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold">
             <div className="relative">
               <Input
@@ -115,22 +143,28 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 onChange={onInputChange}
                 onFocus={onInputFocus}
                 placeholder="0"
-                className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle) font-['InterBold'] placeholder:text-espresso pt-[5px]"
+                className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle) font-['InterBold'] placeholder:text-espresso leading-none align-baseline
+  translate-y-[2px] sm:translate-y-[1px] md:translate-y-[2px]"
                 readOnly={type === CurrencyInputPanelType.OUTPUT}
               />
             </div>
           </div>
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(length:--body-super-comfortable) flex-none">
-            {currency.symbol === 'bnUSD (legacy)'
-              ? 'bnUSD'
-              : currency.symbol === 'bnUSD'
-                ? 'New bnUSD'
-                : currency.symbol}
+            <span className="inline-flex items-baseline leading-none relative top-[0.125rem]">
+              <span className="font-['InterRegular']">{is_bnusd ? 'bnUSD' : currency.symbol}</span>
+              {token_label && (
+                <span className="text-negative ml-[0.25rem] font-['InterBold'] text-(size:--body-tiny) relative -top-[0.125rem] leading-none">
+                  {token_label}
+                </span>
+              )}
+            </span>
           </div>
-          {type === CurrencyInputPanelType.INPUT && (
+
+          {type === CurrencyInputPanelType.INPUT && !is_mobile && (
             <Button
               variant="default"
-              className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
+              size="tiny"
+              className="mix-blend-multiply bg-cream-white rounded-[256px] uppercase text-clay hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso font-['InterBold'] ml-1 text-[length:var(--body-tiny)]"
               onClick={onMaxClick}
             >
               MAX
