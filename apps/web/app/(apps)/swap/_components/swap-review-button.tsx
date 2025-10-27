@@ -41,7 +41,6 @@ export default function SwapReviewButton({
 
   const sourceChainType = getXChainType(inputToken.xChainId);
   const destinationChainType = getXChainType(outputToken.xChainId);
-  const [isActivatedStellarAccount, setIsActivatedStellarAccount] = useState(false);
   const [hasTrustline, setHasTrustline] = useState(false);
 
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress;
@@ -51,10 +50,13 @@ export default function SwapReviewButton({
     if (!finalDestinationAddress) {
       return;
     }
-    const result = await activateStellarAccount({ address: finalDestinationAddress });
-    if (result) setIsActivatedStellarAccount(true);
+    await activateStellarAccount({ address: finalDestinationAddress });
   };
-  const { mutateAsync: activateStellarAccount, isPending: isActivatingStellarAccount } = useActivateStellarAccount();
+  const {
+    activateStellarAccount,
+    isLoading: isActivatingStellarAccount,
+    isActivated: isActivatedStellarAccount,
+  } = useActivateStellarAccount();
 
   // trustline check
   const { data: stellarTrustlineValidation } = useValidateStellarTrustline(finalDestinationAddress, outputToken);

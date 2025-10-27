@@ -101,17 +101,19 @@ export const MigrateButton = () => {
   };
 
   const { data: stellarAccountValidation } = useValidateStellarAccount(destinationAddress);
-  const [isActivatedStellarAccount, setIsActivatedStellarAccount] = useState(false);
   const [hasTrustline, setHasTrustline] = useState(false);
 
   const handleActivateStellarAccount = async () => {
     if (!destinationAddress) {
       return;
     }
-    const result = await activateStellarAccount({ address: destinationAddress });
-    if (result) setIsActivatedStellarAccount(true);
+    await activateStellarAccount({ address: destinationAddress });
   };
-  const { mutateAsync: activateStellarAccount, isPending: isActivatingStellarAccount } = useActivateStellarAccount();
+  const {
+    activateStellarAccount,
+    isLoading: isActivatingStellarAccount,
+    isActivated: isActivatedStellarAccount,
+  } = useActivateStellarAccount();
 
   // trustline
 
