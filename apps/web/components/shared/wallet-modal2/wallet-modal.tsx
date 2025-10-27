@@ -72,6 +72,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   const [activeXChainType, setActiveXChainType] = useState<ChainType | undefined>(undefined);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [hoveredChainType, setHoveredChainType] = useState<ChainType | undefined>(undefined);
+  const [hoveredWalletId, setHoveredWalletId] = useState<string | undefined>(undefined);
   const xConnectors = useXConnectors(activeXChainType);
 
   const handleToggleExpanded = (expanded: boolean): void => {
@@ -134,6 +135,8 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                 <React.Fragment key={xConnector.id}>
                   <WalletItem
                     xConnector={xConnector}
+                    hoveredWalletId={hoveredWalletId}
+                    setHoveredWalletId={setHoveredWalletId}
                     onSuccess={async (_xConnector, xAccount) => {
                       setActiveXChainType(undefined);
                       if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {

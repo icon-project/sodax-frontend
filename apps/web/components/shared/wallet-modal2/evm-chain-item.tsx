@@ -70,6 +70,7 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
       onMouseLeave={() => {
         setHoveredChainType?.(undefined);
       }}
+      onClick={address ? handleDisconnect : handleConnect}
     >
       <div className="flex flex-col gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-1">
@@ -125,7 +126,14 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
           <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex gap-1 items-center">
             {!showCopied && address ? shortenAddress(address, 4) : 'EVM'}
             {address && (
-              <CopyIcon className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay" onClick={onCopyAddress} />
+              <CopyIcon
+                className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay"
+                onClick={e => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onCopyAddress();
+                }}
+              />
             )}
             {showCopied && (
               <div

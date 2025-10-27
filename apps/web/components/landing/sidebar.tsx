@@ -43,7 +43,7 @@ const AppSidebar = (): React.ReactElement => {
             <SidebarMenu className="gap-6">
               <SidebarMenuItem>
                 <Link href="/swap" className="text-(length:--body-super-comfortable) text-white font-medium">
-                  <p>Lanuch</p>
+                  <p>Launch apps</p>
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>

@@ -52,7 +52,7 @@ export function CurrencySearchPanel({
                 value={searchQuery}
                 onChange={e => onSearchChange(e.target.value)}
                 readOnly={isChainSelectorOpen}
-                className="text-(length:--body-super-comfortable) p-2 border-none focus:border-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none focus-visible:border-none focus-visible:ring-0 text-espresso focus-visible:text-espresso"
+                className="placeholder:!text-clay-light text-(length:--body-super-comfortable) p-2 border-none focus:border-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none focus-visible:border-none focus-visible:ring-0 text-espresso focus-visible:text-espresso"
               />
             </div>
           </div>
