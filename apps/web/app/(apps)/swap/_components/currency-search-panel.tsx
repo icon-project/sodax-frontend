@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';
 
-interface SearchBarProps {
+interface CurrencySearchPanelProps {
   isUsdtClicked: boolean;
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -16,7 +16,7 @@ interface SearchBarProps {
   selectedChainId?: string | null;
 }
 
-export function SearchBar({
+export function CurrencySearchPanel({
   isUsdtClicked,
   searchQuery,
   onSearchChange,
@@ -25,7 +25,7 @@ export function SearchBar({
   handleShowAllChains,
   handleChainSelect,
   selectedChainId,
-}: SearchBarProps): React.JSX.Element {
+}: CurrencySearchPanelProps): React.JSX.Element {
   const [hoveredChain, setHoveredChain] = useState<string | null>(null);
   return (
     <div
@@ -35,7 +35,7 @@ export function SearchBar({
     >
       <div className="w-full flex justify-center">
         <div
-          className={`w-64 h-12 px-6 rounded-[32px] outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center transition-all duration-200
+          className={`w-full md:w-64 h-12 px-6 rounded-[32px] outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center transition-all duration-200
           }`}
         >
           <div className="flex items-center">
@@ -120,7 +120,7 @@ export function SearchBar({
                   <div className="grid grid-cols-2 overflow-hidden pl-2 py-1">
                     {/* All Networks Option */}
                     <div
-                      className={`w-34 group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
+                      className={`group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
                       onClick={handleShowAllChains}
                       onMouseEnter={() => setHoveredChain('all')}
                       onMouseLeave={() => setHoveredChain(null)}
@@ -169,7 +169,7 @@ export function SearchBar({
                     {availableChains.map(chain => (
                       <div
                         key={chain.id}
-                        className={`w-34 group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
+                        className={`group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
                         onClick={() => handleChainSelect(chain.id)}
                         onMouseEnter={() => setHoveredChain(chain.id)}
                         onMouseLeave={() => setHoveredChain(null)}

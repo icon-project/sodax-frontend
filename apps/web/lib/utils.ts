@@ -274,5 +274,8 @@ export const formatBalance = (amount: string, price: number): string => {
   if (!amount || amount === '') return '';
 
   const decimals = price >= 10000 ? 6 : 4;
+  if (new BigNumber(amount).isZero()) {
+    return '0';
+  }
   return new BigNumber(amount).decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed(decimals);
 };

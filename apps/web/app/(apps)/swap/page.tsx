@@ -15,9 +15,8 @@ import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
 import { ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
-import SwapCommitButton from './_components/swap-commit-button';
+import SwapReviewButton from './_components/swap-review-button';
 import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
@@ -31,7 +30,6 @@ export default function SwapPage() {
   const [fixedOutputAmount, setFixedOutputAmount] = useState<bigint | undefined>(undefined);
   const [fixedMinOutputAmount, setFixedMinOutputAmount] = useState<bigint | undefined>(undefined);
 
-  const isMobile = useIsMobile();
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
 
@@ -145,7 +143,7 @@ export default function SwapPage() {
   const handleMaxClick = (): void => {
     if (isSourceChainConnected) {
       const maxAvailableAmount = calculateMaxAvailableAmount(sourceBalance, inputToken.decimals, sodax.solver);
-      setInputAmount(isMobile ? formatBalance(maxAvailableAmount, inputTokenPrice || 0) : maxAvailableAmount);
+      setInputAmount(formatBalance(maxAvailableAmount, inputTokenPrice || 0));
     }
   };
 
@@ -216,7 +214,7 @@ export default function SwapPage() {
           />
         </div>
 
-        <SwapCommitButton quoteQuery={quoteQuery} handleReview={handleReview} />
+        <SwapReviewButton quoteQuery={quoteQuery} handleReview={handleReview} />
       </div>
 
       {quoteQuery.data?.ok === false ? (

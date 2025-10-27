@@ -59,7 +59,7 @@ export const availableChains: ChainUI[] = [
   { id: ICON_MAINNET_CHAIN_ID, name: 'Icon', icon: '/chain/0x1.icon.png' },
   {
     id: LIGHTLINK_MAINNET_CHAIN_ID,
-    name: 'Lightlink',
+    name: 'LightLink',
     icon: '/chain/lightlink.png',
   },
 ];

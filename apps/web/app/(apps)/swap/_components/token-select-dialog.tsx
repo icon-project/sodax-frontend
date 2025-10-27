@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { XIcon } from 'lucide-react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { Button } from '@/components/ui/button';
-import { SearchBar } from './search-bar';
+import { CurrencySearchPanel } from './currency-search-panel';
 import { TokenList } from './token-list';
 import { DialogContent, Dialog, DialogTitle, DialogClose } from '@/components/ui/dialog';
 
@@ -84,7 +84,7 @@ export default function TokenSelectDialog({
           </DialogClose>
         </DialogTitle>
 
-        <SearchBar
+        <CurrencySearchPanel
           isUsdtClicked={clickedAsset !== null}
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
