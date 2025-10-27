@@ -824,6 +824,13 @@ export const spokeChainConfig = {
         address: '0xA28C70F92a1B2513edCdDD29c2E5195a4B785aB2',
         xChainId: HYPEREVM_MAINNET_CHAIN_ID,
       },
+      USDC: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0xb88339CB7199b77E23DB6E890353E22632Ba630f',
+        xChainId: HYPEREVM_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [LIGHTLINK_MAINNET_CHAIN_ID]: {
@@ -1831,6 +1838,13 @@ export const hubAssets: Record<
       name: 'SODAX',
       vault: hubVaults.sodaSODA.address,
     },
+    [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
+      asset: '0x0f78b995d113712deeb17d96638e9d7525d409c6',
+      decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      vault: hubVaults.sodaUSDC.address,
+    },
   },
   [LIGHTLINK_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].nativeToken]: {
@@ -2205,7 +2219,12 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
-  [HYPEREVM_MAINNET_CHAIN_ID]: [] as const satisfies Token[],
+  [HYPEREVM_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDC,
+  ] as const satisfies Token[],
   [LIGHTLINK_MAINNET_CHAIN_ID]: [
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
