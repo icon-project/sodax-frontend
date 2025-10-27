@@ -16,7 +16,6 @@ import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { Loader2 } from 'lucide-react';
 import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
-import { useState } from 'react';
 
 export default function SwapReviewButton({
   quoteQuery,
@@ -41,39 +40,47 @@ export default function SwapReviewButton({
 
   const sourceChainType = getXChainType(inputToken.xChainId);
   const destinationChainType = getXChainType(outputToken.xChainId);
-  const [isActivatedStellarAccount, setIsActivatedStellarAccount] = useState(false);
-  const [hasTrustline, setHasTrustline] = useState(false);
 
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress;
 
-  const { data: stellarAccountValidation } = useValidateStellarAccount(finalDestinationAddress);
+  const { data: stellarAccountValidation } = useValidateStellarAccount(
+    outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID ? finalDestinationAddress : undefined,
+  );
   const handleActivateStellarAccount = async () => {
     if (!finalDestinationAddress) {
       return;
     }
-    const result = await activateStellarAccount({ address: finalDestinationAddress });
-    if (result) setIsActivatedStellarAccount(true);
+    await activateStellarAccount({ address: finalDestinationAddress });
   };
-  const { mutateAsync: activateStellarAccount, isPending: isActivatingStellarAccount } = useActivateStellarAccount();
+  const {
+    activateStellarAccount,
+    isLoading: isActivatingStellarAccount,
+    isActivated: isActivatedStellarAccount,
+  } = useActivateStellarAccount();
 
   // trustline check
-  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(finalDestinationAddress, outputToken);
+  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(
+    outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID ? finalDestinationAddress : undefined,
+    outputToken,
+  );
 
   const destinationWalletProvider = useWalletProvider(outputToken.xChainId);
   const destinationSpokeProvider = useSpokeProvider(outputToken.xChainId, destinationWalletProvider);
 
-  const { mutateAsync: requestTrustline, isPending: isRequestingTrustline } = useRequestTrustline(outputToken.address);
+  const {
+    requestTrustline,
+    isLoading: isRequestingTrustline,
+    isRequested: hasTrustline,
+  } = useRequestTrustline(outputToken.address);
   const handleRequestTrustline = async () => {
     if (!quoteQuery.data?.ok || !quoteQuery.data.value) {
       return;
     }
-    const result = await requestTrustline({
+    await requestTrustline({
       token: outputToken.address,
       amount: quoteQuery.data.value.quoted_amount,
       spokeProvider: destinationSpokeProvider as SpokeProvider,
     });
-
-    if (result) setHasTrustline(true);
   };
 
   return (

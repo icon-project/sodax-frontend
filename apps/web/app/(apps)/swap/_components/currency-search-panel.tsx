@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';
 
-interface SearchBarProps {
+interface CurrencySearchPanelProps {
   isUsdtClicked: boolean;
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -16,7 +16,7 @@ interface SearchBarProps {
   selectedChainId?: string | null;
 }
 
-export function SearchBar({
+export function CurrencySearchPanel({
   isUsdtClicked,
   searchQuery,
   onSearchChange,
@@ -25,7 +25,7 @@ export function SearchBar({
   handleShowAllChains,
   handleChainSelect,
   selectedChainId,
-}: SearchBarProps): React.JSX.Element {
+}: CurrencySearchPanelProps): React.JSX.Element {
   const [hoveredChain, setHoveredChain] = useState<string | null>(null);
   return (
     <div

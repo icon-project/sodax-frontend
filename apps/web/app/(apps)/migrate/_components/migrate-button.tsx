@@ -100,18 +100,21 @@ export const MigrateButton = () => {
     openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
   };
 
-  const { data: stellarAccountValidation } = useValidateStellarAccount(destinationAddress);
-  const [isActivatedStellarAccount, setIsActivatedStellarAccount] = useState(false);
-  const [hasTrustline, setHasTrustline] = useState(false);
+  const { data: stellarAccountValidation } = useValidateStellarAccount(
+    direction.to === STELLAR_MAINNET_CHAIN_ID ? destinationAddress : undefined,
+  );
 
   const handleActivateStellarAccount = async () => {
     if (!destinationAddress) {
       return;
     }
-    const result = await activateStellarAccount({ address: destinationAddress });
-    if (result) setIsActivatedStellarAccount(true);
+    await activateStellarAccount({ address: destinationAddress });
   };
-  const { mutateAsync: activateStellarAccount, isPending: isActivatingStellarAccount } = useActivateStellarAccount();
+  const {
+    activateStellarAccount,
+    isLoading: isActivatingStellarAccount,
+    isActivated: isActivatedStellarAccount,
+  } = useActivateStellarAccount();
 
   // trustline
 
@@ -126,16 +129,17 @@ export const MigrateButton = () => {
   //   destinationSpokeProvider,
   //   direction.to,
   // );
-  const { mutateAsync: requestTrustline, isPending: isRequestingTrustline } = useRequestTrustline(
-    currencies.to.address,
-  );
+  const {
+    requestTrustline,
+    isLoading: isRequestingTrustline,
+    isRequested: hasTrustline,
+  } = useRequestTrustline(currencies.to.address);
   const handleRequestTrustline = async () => {
-    const result = await requestTrustline({
+    await requestTrustline({
       token: currencies.to.address,
       amount: parseUnits(typedValue, currencies.to.decimals),
       spokeProvider: destinationSpokeProvider as SpokeProvider,
     });
-    if (result) setHasTrustline(true);
   };
 
   const handleMigrate = async () => {
