@@ -45,7 +45,9 @@ export default function SwapReviewButton({
 
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress;
 
-  const { data: stellarAccountValidation } = useValidateStellarAccount(finalDestinationAddress);
+  const { data: stellarAccountValidation } = useValidateStellarAccount(
+    outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID ? finalDestinationAddress : undefined,
+  );
   const handleActivateStellarAccount = async () => {
     if (!finalDestinationAddress) {
       return;
@@ -59,7 +61,10 @@ export default function SwapReviewButton({
   } = useActivateStellarAccount();
 
   // trustline check
-  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(finalDestinationAddress, outputToken);
+  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(
+    outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID ? finalDestinationAddress : undefined,
+    outputToken,
+  );
 
   const destinationWalletProvider = useWalletProvider(outputToken.xChainId);
   const destinationSpokeProvider = useSpokeProvider(outputToken.xChainId, destinationWalletProvider);

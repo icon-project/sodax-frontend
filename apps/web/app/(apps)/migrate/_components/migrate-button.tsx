@@ -100,7 +100,9 @@ export const MigrateButton = () => {
     openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getTargetChainType() });
   };
 
-  const { data: stellarAccountValidation } = useValidateStellarAccount(destinationAddress);
+  const { data: stellarAccountValidation } = useValidateStellarAccount(
+    direction.to === STELLAR_MAINNET_CHAIN_ID ? destinationAddress : undefined,
+  );
   const [hasTrustline, setHasTrustline] = useState(false);
 
   const handleActivateStellarAccount = async () => {
