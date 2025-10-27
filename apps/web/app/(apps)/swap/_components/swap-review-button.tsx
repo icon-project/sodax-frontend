@@ -16,7 +16,6 @@ import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { Loader2 } from 'lucide-react';
 import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
-import { useState } from 'react';
 
 export default function SwapReviewButton({
   quoteQuery,
