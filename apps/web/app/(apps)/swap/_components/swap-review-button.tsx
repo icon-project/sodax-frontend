@@ -41,7 +41,6 @@ export default function SwapReviewButton({
 
   const sourceChainType = getXChainType(inputToken.xChainId);
   const destinationChainType = getXChainType(outputToken.xChainId);
-  const [hasTrustline, setHasTrustline] = useState(false);
 
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress;
 
@@ -69,18 +68,20 @@ export default function SwapReviewButton({
   const destinationWalletProvider = useWalletProvider(outputToken.xChainId);
   const destinationSpokeProvider = useSpokeProvider(outputToken.xChainId, destinationWalletProvider);
 
-  const { mutateAsync: requestTrustline, isPending: isRequestingTrustline } = useRequestTrustline(outputToken.address);
+  const {
+    requestTrustline,
+    isLoading: isRequestingTrustline,
+    isRequested: hasTrustline,
+  } = useRequestTrustline(outputToken.address);
   const handleRequestTrustline = async () => {
     if (!quoteQuery.data?.ok || !quoteQuery.data.value) {
       return;
     }
-    const result = await requestTrustline({
+    await requestTrustline({
       token: outputToken.address,
       amount: quoteQuery.data.value.quoted_amount,
       spokeProvider: destinationSpokeProvider as SpokeProvider,
     });
-
-    if (result) setHasTrustline(true);
   };
 
   return (

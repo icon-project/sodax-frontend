@@ -103,7 +103,6 @@ export const MigrateButton = () => {
   const { data: stellarAccountValidation } = useValidateStellarAccount(
     direction.to === STELLAR_MAINNET_CHAIN_ID ? destinationAddress : undefined,
   );
-  const [hasTrustline, setHasTrustline] = useState(false);
 
   const handleActivateStellarAccount = async () => {
     if (!destinationAddress) {
@@ -130,16 +129,17 @@ export const MigrateButton = () => {
   //   destinationSpokeProvider,
   //   direction.to,
   // );
-  const { mutateAsync: requestTrustline, isPending: isRequestingTrustline } = useRequestTrustline(
-    currencies.to.address,
-  );
+  const {
+    requestTrustline,
+    isLoading: isRequestingTrustline,
+    isRequested: hasTrustline,
+  } = useRequestTrustline(currencies.to.address);
   const handleRequestTrustline = async () => {
-    const result = await requestTrustline({
+    await requestTrustline({
       token: currencies.to.address,
       amount: parseUnits(typedValue, currencies.to.decimals),
       spokeProvider: destinationSpokeProvider as SpokeProvider,
     });
-    if (result) setHasTrustline(true);
   };
 
   const handleMigrate = async () => {
