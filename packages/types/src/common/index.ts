@@ -172,7 +172,7 @@ export const baseChainInfo: Record<ChainId, BaseSpokeChainInfo<ChainType>> = {
     chainId: 999,
   },
   [LIGHTLINK_MAINNET_CHAIN_ID]: {
-    name: 'Lightlink',
+    name: 'LightLink',
     id: LIGHTLINK_MAINNET_CHAIN_ID,
     type: 'EVM',
     chainId: 1890,

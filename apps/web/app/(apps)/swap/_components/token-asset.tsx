@@ -70,7 +70,7 @@ function NetworkIcon({
         {imageSrc === 'Sonic' && <SonicIcon />}
         {imageSrc === 'Optimism' && <OptimismIcon />}
         {imageSrc === 'Arbitrum' && <ArbitrumIcon />}
-        {imageSrc === 'Lightlink' && <LightLinkIcon />}
+        {imageSrc === 'LightLink' && <LightLinkIcon />}
       </div>
     </div>
   );

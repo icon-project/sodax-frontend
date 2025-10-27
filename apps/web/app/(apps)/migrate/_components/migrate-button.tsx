@@ -34,6 +34,7 @@ export const MigrateButton = () => {
   const direction = useMigrationStore(state => state[migrationMode].direction);
   const typedValue = useMigrationStore(state => state[migrationMode].typedValue);
   const currencies = useMigrationStore(state => state[migrationMode].currencies);
+  const setTypedValue = useMigrationStore(state => state.setTypedValue);
 
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -145,6 +146,7 @@ export const MigrateButton = () => {
   const handleMigrate = async () => {
     try {
       await migrate(migrateIntentParams);
+      setTypedValue('');
       setShowSuccessDialog(true);
     } catch (error) {
       console.error(error);

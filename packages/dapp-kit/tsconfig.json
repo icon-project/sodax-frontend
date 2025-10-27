@@ -1,6 +1,6 @@
 {
   "exclude": ["**/*.test.ts", "./dist/**"],
-  "include": ["src"],
+  "include": ["src", "../../apps/web/hooks/useBreakPoint.ts"],
   "compilerOptions": {
     "outDir": "./dist",
     "lib": ["ESNext", "DOM"],
