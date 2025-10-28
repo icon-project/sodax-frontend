@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ICON_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
 import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
@@ -12,6 +12,7 @@ import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 import { getChainName } from '@/constants/chains';
 import BigNumber from 'bignumber.js';
 import { useBreakpoint } from '@/hooks/useBreakPoint';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -25,7 +26,6 @@ interface CurrencyInputPanelProps {
   currencyBalance: bigint;
   inputValue?: string;
   onInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onInputFocus?: () => void;
   onMaxClick?: () => void;
   onChainSelect?: (chainId: SpokeChainId, token: XToken) => void;
   className?: string;
@@ -39,7 +39,6 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   currencyBalance,
   inputValue = '',
   onInputChange,
-  onInputFocus,
   onMaxClick,
   onChainSelect,
   className = '',
@@ -47,6 +46,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
 }: CurrencyInputPanelProps) => {
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
   const breakpoint = useBreakpoint();
+  const isMobile = useIsMobile();
   const is_mobile = breakpoint < 480;
   const is_legacy_bnusd = currency.symbol === 'bnUSD (legacy)';
   const is_new_bnusd = currency.symbol === 'bnUSD';
@@ -54,12 +54,6 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const is_bnusd = is_legacy_bnusd || is_new_bnusd;
 
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (type === CurrencyInputPanelType.INPUT && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [type]);
 
   const handleCurrencyAreaClick = (): void => {
     // Only show chain selector for bnUSD tokens
@@ -137,11 +131,11 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold">
             <div className="relative">
               <Input
+                autoFocus={type === CurrencyInputPanelType.INPUT && !isMobile}
                 type="number"
                 ref={inputRef}
                 value={inputValue === '' ? '' : Number(inputValue)}
                 onChange={onInputChange}
-                onFocus={onInputFocus}
                 placeholder="0"
                 className="text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso !text-(size:--subtitle) font-['InterBold'] placeholder:text-espresso leading-none align-baseline
   translate-y-[2px] sm:translate-y-[1px] md:translate-y-[2px]"

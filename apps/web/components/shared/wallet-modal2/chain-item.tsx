@@ -101,6 +101,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
           transition-opacity duration-200
           group
           cursor-pointer py-4 pl-1
+          z-[10]
           ${isPending === true || address ? 'opacity-100' : ''}
           ${hoveredChainType === undefined || hoveredChainType === chainType ? 'opacity-100' : 'opacity-60'}
         `}
@@ -110,6 +111,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
       onMouseLeave={() => {
         setHoveredChainType?.(undefined);
       }}
+      onClick={address ? handleDisconnect : handleConnect}
     >
       <div className="flex flex-col gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-4">
@@ -133,11 +135,18 @@ export const ChainItem: React.FC<ChainItemProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-start items-center gap-1">
+          <div className="flex justify-start items-center gap-1 z-[11]">
             <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex gap-1 items-center">
               {address ? shortenAddress(address, 4) : isPending ? 'Waiting for wallet' : chainGroupMap[chainType].name}
               {address && (
-                <CopyIcon className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay" onClick={onCopyAddress} />
+                <CopyIcon
+                  className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay"
+                  onClick={e => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onCopyAddress();
+                  }}
+                />
               )}
               {showCopied && (
                 <div
