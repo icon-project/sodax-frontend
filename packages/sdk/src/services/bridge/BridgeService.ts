@@ -692,7 +692,7 @@ export class BridgeService {
    * @param token - The source token address
    * @returns XToken[] - Array of bridgeable tokens on the destination chain
    */
-  public getBridgeableTokens(from: SpokeChainId, to: SpokeChainId, token: string): Result<XToken[], unknown>{
+  public getBridgeableTokens(from: SpokeChainId, to: SpokeChainId, token: string): Result<XToken[]>{
     try {
       const srcAssetInfo = this.configService.getHubAssetInfo(from, token);
       invariant(srcAssetInfo, `Hub asset not found for token ${token} on chain ${from}`);
