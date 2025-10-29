@@ -158,7 +158,7 @@ export default function BridgePage() {
   if (trustlineError) {
     console.error('trustlineError', trustlineError);
   }
-  const { mutateAsync: requestTrustline } = useRequestTrustline(order?.dstAsset);
+  const { requestTrustline } = useRequestTrustline(order?.dstAsset);
 
   const handleBridge = async (order: CreateBridgeIntentParams) => {
     setOpen(false);

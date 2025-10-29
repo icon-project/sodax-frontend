@@ -92,7 +92,7 @@ export default function SwapCard({
   if (trustlineError) {
     console.error('trustlineError', trustlineError);
   }
-  const { mutateAsync: requestTrustline } = useRequestTrustline(destToken?.address);
+  const { requestTrustline } = useRequestTrustline(destToken?.address);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
   const onChangeDirection = () => {
