@@ -1,8 +1,3 @@
-import {
-  getHubAssetInfo,
-  getOriginalAssetAddress,
-  supportedSpokeChains,
-} from '../../constants.js';
 import { describe, expect, it } from 'vitest';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -22,19 +17,21 @@ import {
   type SpokeChainId,
   type Token,
   LIGHTLINK_MAINNET_CHAIN_ID,
-  getSupportedMoneyMarketTokens,
   SodaTokens,
   hubVaults,
 } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
 import { sonic } from 'viem/chains';
 import { vaultTokenAbi } from '../../abis/vaultToken.abi.js';
+import { Sodax } from '../../index.js';
 
 describe('e2e', () => {
   /**
    * E2e integration tests to be used locally to verify the sdk is working as expected.
    * These tests are not run in CI.
    */
+
+  const sodax = new Sodax();
 
   const sonicPublicClient = createPublicClient({
     chain: sonic,
@@ -115,14 +112,14 @@ describe('e2e', () => {
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {
     const vaultGetAllTokenInfoMap = new Map<string, Address[]>();
 
-    for (const spokeChain of supportedSpokeChains) {
+    for (const spokeChain of sodax.configService.getSupportedSpokeChains()) {
       console.log('************************************************');
-      const supportedTokens: readonly Token[] = Object.values(getSupportedMoneyMarketTokens(spokeChain));
+      const supportedTokens: readonly Token[] = Object.values(sodax.configService.getSupportedMoneyMarketTokensByChainId(spokeChain));
 
       for (const token of supportedTokens) {
         console.log('--------------------------------');
         console.log(`${spokeChain} ${token.symbol} ${token.address}`);
-        const hubAsset = getHubAssetInfo(spokeChain, token.address);
+        const hubAsset = sodax.configService.getHubAssetInfo(spokeChain, token.address);
 
         if (!hubAsset) {
           throw new Error(`Hub asset not found for token ${token.address} on chain ${spokeChain}`);
@@ -175,7 +172,7 @@ describe('e2e', () => {
       console.log(`${spokeChain} ${assets.length} assets`);
       console.log('--------------------------------');
       for (const asset of assets) {
-        const originalToken = getOriginalAssetAddress(spokeChain as SpokeChainId, asset);
+        const originalToken = sodax.configService.getOriginalAssetAddress(spokeChain as SpokeChainId, asset);
         console.log(`${spokeChain} ${asset} ${originalToken}`);
         expect(originalToken).toBeDefined();
       }

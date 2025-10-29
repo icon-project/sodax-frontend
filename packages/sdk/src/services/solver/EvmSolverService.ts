@@ -18,7 +18,6 @@ import {
   calculatePercentageFeeAmount,
   encodeAddress,
   encodeContractCalls,
-  getHubAssetInfo,
   isIntentRelayChainId,
   isPartnerFeeAmount,
   isPartnerFeePercentage,
@@ -33,6 +32,7 @@ import {
   IntentDataType,
 } from '../index.js';
 import { SONIC_MAINNET_CHAIN_ID, getIntentRelayChainId, type Hash, type Hex, type SolverConfig } from '@sodax/types';
+import type { ConfigService } from '../../config/ConfigService.js';
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
 export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventAbi>[number];
 
@@ -51,17 +51,17 @@ export class EvmSolverService {
     createIntentParams: CreateIntentParams,
     creatorHubWalletAddress: Address,
     solverConfig: SolverConfig,
+    configService: ConfigService,
     fee: PartnerFee | undefined,
-    hubProvider: EvmHubProvider,
   ): [Hex, Intent, bigint] {
     const inputToken =
       createIntentParams.srcChain !== SONIC_MAINNET_CHAIN_ID
-        ? getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset
+        ? (configService.getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken))?.asset
         : (createIntentParams.inputToken as `0x${string}`);
 
     const outputToken =
       createIntentParams.dstChain !== SONIC_MAINNET_CHAIN_ID
-        ? getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset
+        ? (configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken))?.asset
         : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(

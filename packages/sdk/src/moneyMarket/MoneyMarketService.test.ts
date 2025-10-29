@@ -1,19 +1,13 @@
 import { WalletAbstractionService } from './../services/hub/WalletAbstractionService.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  isMoneyMarketReserveAsset,
   MoneyMarketService,
   moneyMarketReserveAssets,
-  EvmHubProvider,
   type EvmHubProviderConfig,
   getHubChainConfig,
-  EvmSpokeProvider,
   EvmWalletAbstraction,
   SpokeService,
   type PacketData,
-  SonicSpokeProvider,
-  Erc20Service,
-  SonicSpokeService,
   type MoneyMarketSupplyParams,
   type MoneyMarketWithdrawParams,
   type MoneyMarketAction,
@@ -28,19 +22,27 @@ import {
   isMoneyMarketSupplyUnknownError,
   type MoneyMarketError,
   isMoneyMarketBorrowUnknownError,
+  Erc20Service,
 } from '../index.js';
+import { Sodax } from '../entities/Sodax.js';
+import { SonicSpokeService } from '../services/spoke/SonicSpokeService.js';
+import { EvmSpokeProvider } from '../entities/Providers.js';
+import { EvmHubProvider } from '../entities/Providers.js';
+import { SonicSpokeProvider } from '../entities/Providers.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
 import {
   BSC_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   type IEvmWalletProvider,
   spokeChainConfig,
-  getSupportedMoneyMarketTokens,
   type Address,
   type EvmRawTransaction,
 } from '@sodax/types';
 
+const sodax = new Sodax();
+
 describe('MoneyMarketService', () => {
+
   // Mock wallet providers
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
@@ -63,25 +65,26 @@ describe('MoneyMarketService', () => {
   // Hub provider configuration
   const hubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const hubProvider = new EvmHubProvider(hubConfig);
+  const hubProvider = new EvmHubProvider({ config: hubConfig, configService: sodax.configService });
 
   // Money market service instance
-  const moneyMarket = new MoneyMarketService(
-    {
+  const moneyMarket = new MoneyMarketService({
+    config: {
       partnerFee: {
         address: '0x9999999999999999999999999999999999999999',
         percentage: 10,
       },
     },
     hubProvider,
-  );
+    configService: sodax.configService,
+  });
 
   // Test parameters - use real supported tokens
-  const bscSupportedTokens = getSupportedMoneyMarketTokens(BSC_MAINNET_CHAIN_ID);
-  const sonicSupportedTokens = getSupportedMoneyMarketTokens(SONIC_MAINNET_CHAIN_ID);
+  const bscSupportedTokens = moneyMarket.getSupportedTokensByChainId(BSC_MAINNET_CHAIN_ID);
+  const sonicSupportedTokens = moneyMarket.getSupportedTokensByChainId(SONIC_MAINNET_CHAIN_ID);
 
   const bscTestToken = bscSupportedTokens[0]?.address as Address; // ETHB
   const sonicTestToken = sonicSupportedTokens[0]?.address as Address; // WETH
@@ -220,6 +223,7 @@ describe('MoneyMarketService', () => {
         testAmount,
         sonicSpokeProvider,
         moneyMarket.data,
+        moneyMarket.configService,
       );
       expect(SonicSpokeService.isWithdrawApproved).toHaveBeenCalledWith(
         '0x8888888888888888888888888888888888888888',
@@ -254,6 +258,7 @@ describe('MoneyMarketService', () => {
         testAmount,
         sonicSpokeProvider.chainConfig.chain.id,
         moneyMarket.data,
+        moneyMarket.configService,
       );
       expect(SonicSpokeService.isBorrowApproved).toHaveBeenCalledWith(
         '0x8888888888888888888888888888888888888888',
@@ -351,7 +356,7 @@ describe('MoneyMarketService', () => {
 
     describe('Integration with real supported tokens', () => {
       it('should work with real supported BSC tokens', async () => {
-        const supportedTokens = getSupportedMoneyMarketTokens(BSC_MAINNET_CHAIN_ID);
+        const supportedTokens = moneyMarket.getSupportedTokensByChainId(BSC_MAINNET_CHAIN_ID);
         expect(supportedTokens.length).toBeGreaterThan(0);
 
         const tokenAddress = supportedTokens[0]?.address;
@@ -383,7 +388,7 @@ describe('MoneyMarketService', () => {
       });
 
       it('should work with real supported Sonic tokens', async () => {
-        const supportedTokens = getSupportedMoneyMarketTokens(SONIC_MAINNET_CHAIN_ID);
+        const supportedTokens = moneyMarket.getSupportedTokensByChainId(SONIC_MAINNET_CHAIN_ID);
         expect(supportedTokens.length).toBeGreaterThan(0);
 
         const tokenAddress = supportedTokens[0]?.address;
@@ -416,6 +421,7 @@ describe('MoneyMarketService', () => {
           testAmount,
           sonicSpokeProvider,
           moneyMarket.data,
+          moneyMarket.configService,
         );
         expect(result).toEqual(mockApprovalResult);
       });
@@ -1106,8 +1112,8 @@ describe('MoneyMarketService', () => {
       const testAsset = moneyMarketReserveAssets[0];
       const wrongAsset = '0x0000000000000000000000000000000000000000';
 
-      expect(isMoneyMarketReserveAsset(testAsset)).toBe(true);
-      expect(isMoneyMarketReserveAsset(wrongAsset)).toBe(false);
+      expect(sodax.configService.isMoneyMarketReserveAsset(testAsset)).toBe(true);
+      expect(sodax.configService.isMoneyMarketReserveAsset(wrongAsset)).toBe(false);
     });
 
     describe('Error Handling', () => {

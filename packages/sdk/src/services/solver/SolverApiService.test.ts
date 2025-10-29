@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  getHubAssetInfo,
   SolverIntentErrorCode,
   type SolverIntentQuoteRequest,
   type SolverIntentStatusRequest,
   type QuoteType,
+  Sodax,
 } from '../../index.js';
 import { SolverApiService } from './SolverApiService.js';
 import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, type Hex, type SolverConfig } from '@sodax/types';
@@ -13,19 +13,21 @@ import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, type Hex, type SolverC
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-describe('SolverApiService', () => {
+describe('SolverApiService', async () => {
   const mockConfig: SolverConfig = {
     solverApiEndpoint: 'https://api.example.com',
     intentsContract: '0x1234567890123456789012345678901234567890',
   };
 
+  const sodax = new Sodax();
+
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
-  const bscEthHubTokenAsset = getHubAssetInfo(BSC_MAINNET_CHAIN_ID, bscEthToken);
+  const bscEthHubTokenAsset = (await sodax.configService.getHubAssetInfo(BSC_MAINNET_CHAIN_ID, bscEthToken))?.asset;
   if (!bscEthHubTokenAsset) {
     throw new Error('BSC ETH token asset not found');
   }
   const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
-  const arbWbtcHubTokenAsset = getHubAssetInfo(ARBITRUM_MAINNET_CHAIN_ID, arbWbtcToken);
+  const arbWbtcHubTokenAsset = (await sodax.configService.getHubAssetInfo(ARBITRUM_MAINNET_CHAIN_ID, arbWbtcToken))?.asset;
   if (!arbWbtcHubTokenAsset) {
     throw new Error('BSC WBTC token asset not found');
   }
@@ -54,7 +56,7 @@ describe('SolverApiService', () => {
         json: () => Promise.resolve(mockResponse),
       });
 
-      const result = await SolverApiService.getQuote(payload, mockConfig);
+      const result = await SolverApiService.getQuote(payload, mockConfig, sodax.configService);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -69,8 +71,8 @@ describe('SolverApiService', () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            token_src: getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src)?.asset ?? '',
-            token_dst: getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst)?.asset ?? '',
+            token_src: (await sodax.configService.getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src))?.asset ?? '',
+            token_dst: (await sodax.configService.getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst))?.asset ?? '',
             amount: payload.amount.toString(),
             quote_type: payload.quote_type,
           }),
@@ -91,7 +93,7 @@ describe('SolverApiService', () => {
         json: () => Promise.resolve(mockError),
       });
 
-      const result = await SolverApiService.getQuote(payload, mockConfig);
+      const result = await SolverApiService.getQuote(payload, mockConfig, sodax.configService);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -102,7 +104,7 @@ describe('SolverApiService', () => {
     it('should handle network errors', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await SolverApiService.getQuote(payload, mockConfig);
+      const result = await SolverApiService.getQuote(payload, mockConfig, sodax.configService);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {

@@ -6,7 +6,7 @@ import type { Address, Hex } from 'viem';
 import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { BigIntToHex, encodeAddress, isNativeToken } from '../../index.js';
+import { BigIntToHex, type ConfigService, encodeAddress } from '../../index.js';
 import type {
   DepositSimulationParams,
   IconGasEstimate,
@@ -73,6 +73,7 @@ export class IconSpokeService {
         data: params.data,
       },
       spokeProvider,
+      hubProvider.configService,
       raw,
     );
   }
@@ -133,7 +134,7 @@ export class IconSpokeService {
         hubProvider,
       ));
 
-    const token = isNativeToken(spokeProvider.chainConfig.chain.id, params.token)
+    const token = hubProvider.configService.isNativeToken(spokeProvider.chainConfig.chain.id, params.token)
       ? spokeProvider.chainConfig.addresses.wICX
       : params.token;
     return {
@@ -156,6 +157,7 @@ export class IconSpokeService {
   private static async transfer<R extends boolean = false>(
     { token, recipient, amount, data }: TransferToHubParams,
     spokeProvider: IconSpokeProvider,
+    configService: ConfigService,
     raw?: R,
   ): PromiseIconTxReturnType<R> {
     const rlpInput: rlp.Input = [data, recipient];
@@ -167,9 +169,11 @@ export class IconSpokeService {
       _data: hexData,
     };
 
-    const value: Hex = isNativeToken(spokeProvider.chainConfig.chain.id, token) ? BigIntToHex(amount) : '0x0';
+    const value: Hex = configService.isNativeToken(spokeProvider.chainConfig.chain.id, token)
+      ? BigIntToHex(amount)
+      : '0x0';
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const to = isNativeToken(spokeProvider.chainConfig.chain.id, token)
+    const to = configService.isNativeToken(spokeProvider.chainConfig.chain.id, token)
       ? spokeProvider.chainConfig.addresses.wICX
       : token;
 

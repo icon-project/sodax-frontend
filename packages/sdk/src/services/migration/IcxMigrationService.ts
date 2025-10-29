@@ -6,11 +6,11 @@ import {
   Erc20Service,
   EvmAssetManagerService,
   type EvmHubProvider,
-  getHubAssetInfo,
 } from '../../index.js';
 import { icxSwapAbi } from '../../abis/icxSwap.abi.js';
 import invariant from 'tiny-invariant';
 import { ICON_MAINNET_CHAIN_ID, type IconEoaAddress, type IconAddress } from '@sodax/types';
+import type { ConfigService } from '../../config/ConfigService.js';
 
 export type IcxMigrateParams = {
   address: IcxTokenType; // The ICON address of the ICX or wICX token to migrate
@@ -30,15 +30,22 @@ export type IcxRevertMigrationParams = {
   to: Hex; // The Icon address that will receive the migrated SODA tokens as ICX
 };
 
+export type IcxMigrationServiceConstructorParams = {
+  hubProvider: EvmHubProvider;
+  configService: ConfigService;
+};
+
 /**
  * Service for handling ICX migration operations on the hub chain.
  * Provides functionality to migrate wICX tokens from ICON to the hub chain.
  */
 export class IcxMigrationService {
   private readonly hubProvider: EvmHubProvider;
+  private readonly configService: ConfigService;
 
-  constructor(hubProvider: EvmHubProvider) {
+  constructor({ hubProvider, configService }: IcxMigrationServiceConstructorParams) {
     this.hubProvider = hubProvider;
+    this.configService = configService;
   }
 
   /**
@@ -70,7 +77,7 @@ export class IcxMigrationService {
    */
   public migrateData(params: IcxMigrateParams): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.address);
+    const assetConfig = this.configService.getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.address);
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${params.address}`);
 
     calls.push(
@@ -88,7 +95,7 @@ export class IcxMigrationService {
    */
   public revertMigration(params: IcxRevertMigrationParams): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.wICX);
+    const assetConfig = this.configService.getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.wICX);
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${params.wICX}`);
 
     calls.push(

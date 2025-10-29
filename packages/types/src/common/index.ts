@@ -75,6 +75,8 @@ export type RpcConfig = {
 };
 
 export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
+export type IntentRelayChainIdMap = Record<ChainId, IntentRelayChainId>;
+export type SpokeChainConfigMap = Record<SpokeChainId, SpokeChainConfig>;
 export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
 export type EvmChainId = (typeof EVM_CHAIN_IDS)[number];
 export type EvmSpokeChainId = (typeof EVM_CHAIN_IDS)[number];
@@ -84,7 +86,49 @@ export type GetSpokeChainIdType<T extends ChainType> = T extends 'EVM' ? EvmSpok
 export type BaseSpokeChainInfo<T extends ChainType> = {
   name: string;
   id: GetSpokeChainIdType<T>;
+  chainId: string | number;
+
   type: T;
+};
+
+export type HubAssetInfo = { asset: Address; decimal: number; vault: Address };
+
+export type BaseHubChainConfig<T extends ChainType> = {
+  chain: HubChainInfo<T>;
+  addresses: { [key: string]: Address | string | Uint8Array };
+  supportedTokens: Token[];
+  nativeToken: Address | string;
+};
+
+export type HubChainInfo<T extends ChainType> = {
+  name: string;
+  id: HubChainId;
+  type: T;
+};
+
+export type HubChainConfig = EvmHubChainConfig;
+
+export type AssetInfo = {
+  chainId: bigint;
+  spokeAddress: `0x${string}`;
+};
+
+export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
+  addresses: {
+    assetManager: Address;
+    hubWallet: Address;
+    xTokenManager: Address;
+    icxMigration: Address;
+    balnSwap: Address;
+    sodaToken: Address;
+    sodaVault: Address;
+    stakedSoda: Address;
+    xSoda: Address;
+    stakingRouter: Address;
+  };
+
+  nativeToken: Address;
+  wrappedNativeToken: Address;
 };
 
 export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
@@ -221,4 +265,12 @@ export type HubAsset = {
   vault: Address;
   symbol: string;
   name: string;
+};
+
+export type TokenInfo = {
+  decimals: number;
+  depositFee: bigint;
+  withdrawalFee: bigint;
+  maxDeposit: bigint;
+  isSupported: boolean;
 };

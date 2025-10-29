@@ -1,18 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { decodeFunctionData, type Address } from 'viem';
-import { assetManagerAbi } from '../../../abis/index.js';
+import { assetManagerAbi } from '../../abis/index.js';
 import {
   EvmAssetManagerService,
   EvmSpokeProvider,
   type EvmDepositToDataParams,
   type EvmWithdrawAssetDataParams,
-  getHubChainConfig,
   EvmHubProvider,
   type EvmHubProviderConfig,
-} from '../../../index.js';
-import { BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, spokeChainConfig, type IEvmWalletProvider } from '@sodax/types';
+  Sodax,
+} from '../../index.js';
+import { BSC_MAINNET_CHAIN_ID, spokeChainConfig, type IEvmWalletProvider } from '@sodax/types';
 
-describe('EvmAssetManagerService', () => {
+describe('EvmAssetManagerService', async () => {
+  const sodax = new Sodax();
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
 
   const mockEvmWalletProvider = {
@@ -25,10 +26,10 @@ describe('EvmAssetManagerService', () => {
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: sodax.configService.getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const mockHubProvider = new EvmHubProvider(mockHubConfig);
+  const mockHubProvider = new EvmHubProvider({config: mockHubConfig, configService: sodax.configService});
 
   describe('getAssetInfo', () => {
     it('should correctly fetch asset information', async () => {
@@ -165,8 +166,8 @@ describe('EvmAssetManagerService', () => {
       };
     });
 
-    it('should correctly encode deposit transaction data', async () => {
-      const result = EvmAssetManagerService.depositToData(depositParams, mockBscSpokeProvider.chainConfig.chain.id);
+    it('should correctly encode deposit transaction data', () => {
+      const result = EvmAssetManagerService.depositToData(depositParams, mockBscSpokeProvider.chainConfig.chain.id, sodax.configService);
       expect(result).toBe(
         '0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000022000000000000000000000000057fc2ac5701e463ae261adbd6c99fbeb48ce5293000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044095ea7b30000000000000000000000004effb5813271699683c25c734f4dabc45b3637090000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000000000000000000004effb5813271699683c25c734f4dabc45b36370900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000004447e7ef2400000000000000000000000057fc2ac5701e463ae261adbd6c99fbeb48ce52930000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000000000000000000000000000004effb5813271699683c25c734f4dabc45b363709000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000044a9059cbb00000000000000000000000099999999999999999999999999999999999999990000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000',
       );
@@ -178,7 +179,7 @@ describe('EvmAssetManagerService', () => {
       const invalidParams = { ...depositParams, token: invalidToken, to: walletAddress };
 
       expect(() =>
-        EvmAssetManagerService.depositToData(invalidParams, mockBscSpokeProvider.chainConfig.chain.id),
+        EvmAssetManagerService.depositToData(invalidParams, mockBscSpokeProvider.chainConfig.chain.id, sodax.configService),
       ).toThrow('[depositToData] Hub asset not found');
     });
   });
@@ -195,7 +196,7 @@ describe('EvmAssetManagerService', () => {
       };
     });
 
-    it('should correctly encode withdraw transaction data', async () => {
+    it('should correctly encode withdraw transaction data', () => {
       const result = EvmAssetManagerService.withdrawAssetData(
         withdrawParams,
         mockHubProvider,

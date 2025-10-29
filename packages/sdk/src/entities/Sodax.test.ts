@@ -3,7 +3,6 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   type CreateIntentParams,
   type EvmHubProviderConfig,
-  EvmSpokeProvider,
   type FeeAmount,
   type Intent,
   SolverIntentErrorCode,
@@ -16,13 +15,13 @@ import {
   type PartnerFee,
   type RelayTxStatus,
   type Result,
-  getHubAssetInfo,
-  getHubChainConfig,
   EvmSolverService,
   type SolverConfigParams,
-  getSpokeChainIdFromIntentRelayChainId,
   encodeAddress,
+  getHubChainConfig,
 } from '../index.js';
+import { Sodax } from './Sodax.js';
+import { EvmSpokeProvider } from './Providers.js';
 import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -33,7 +32,6 @@ import {
   spokeChainConfig,
   getIntentRelayChainId,
 } from '@sodax/types';
-import { Sodax } from './Sodax.js';
 
 describe('Sodax', () => {
   const partnerFeePercentage = {
@@ -56,7 +54,7 @@ describe('Sodax', () => {
 
   const hubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
   // main instance to be used for all features
@@ -68,10 +66,6 @@ describe('Sodax', () => {
 
   describe('constructor', () => {
     it('should initialize with both services', () => {
-      const sodax = new Sodax({
-        solver: solverConfig,
-        moneyMarket: moneyMarketConfig,
-      });
       expect(sodax.solver).toBeDefined();
       expect(sodax.moneyMarket).toBeDefined();
     });
@@ -316,9 +310,11 @@ describe('Sodax', () => {
           intentId: BigInt(1),
           creator: creatorAddress,
           inputToken:
-            getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
+            sodax.configService.getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)
+              ?.asset ?? '0x',
           outputToken:
-            getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
+            sodax.configService.getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)
+              ?.asset ?? '0x',
           inputAmount: mockCreateIntentParams.inputAmount,
           minOutputAmount: mockCreateIntentParams.minOutputAmount,
           deadline: mockCreateIntentParams.deadline,
@@ -422,8 +418,8 @@ describe('Sodax', () => {
           mockCreateIntentParams,
           mockCreatorHubWalletAddress,
           solverConfig,
+          sodax.configService,
           partnerFeeAmount,
-          sodax.hubProvider,
         );
         intent = { ...constructedIntent, feeAmount: partnerFeeAmount.amount } satisfies Intent & FeeAmount;
       });
@@ -468,9 +464,11 @@ describe('Sodax', () => {
           intentId: BigInt(1),
           creator: creatorAddress,
           inputToken:
-            getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)?.asset ?? '0x',
+            sodax.configService.getHubAssetInfo(mockCreateIntentParams.srcChain, mockCreateIntentParams.inputToken)
+              ?.asset ?? '0x',
           outputToken:
-            getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)?.asset ?? '0x',
+            sodax.configService.getHubAssetInfo(mockCreateIntentParams.dstChain, mockCreateIntentParams.outputToken)
+              ?.asset ?? '0x',
           inputAmount: mockCreateIntentParams.inputAmount,
           minOutputAmount: mockCreateIntentParams.minOutputAmount,
           deadline: mockCreateIntentParams.deadline,
@@ -499,8 +497,12 @@ describe('Sodax', () => {
         const result = await sodax.solver.getIntent(mockTxHash);
 
         expect(result).toEqual(mockIntent);
-        expect(mockCreateIntentParams.srcChain).toEqual(getSpokeChainIdFromIntentRelayChainId(mockIntent.srcChain));
-        expect(mockCreateIntentParams.dstChain).toEqual(getSpokeChainIdFromIntentRelayChainId(mockIntent.dstChain));
+        expect(mockCreateIntentParams.srcChain).toEqual(
+          sodax.configService.getSpokeChainIdFromIntentRelayChainId(mockIntent.srcChain),
+        );
+        expect(mockCreateIntentParams.dstChain).toEqual(
+          sodax.configService.getSpokeChainIdFromIntentRelayChainId(mockIntent.dstChain),
+        );
       });
     });
 

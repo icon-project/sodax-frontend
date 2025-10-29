@@ -1,2 +1,2 @@
-export * from './ConfigApiService.js';
+export * from './ConfigService.js';
 export * from './ConfigMapper.js'

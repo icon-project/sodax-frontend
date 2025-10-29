@@ -17,9 +17,6 @@ import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeServi
 import type { StellarSpokeDepositParams } from './services/spoke/StellarSpokeService.js';
 import type { SuiSpokeDepositParams } from './services/spoke/SuiSpokeService.js';
 import type {
-  ChainType,
-  Token,
-  HubChainId,
   SpokeChainId,
   Hex,
   Address,
@@ -33,7 +30,6 @@ import type {
   MoneyMarketConfig,
   SolverConfig,
   spokeChainConfig,
-  BaseSpokeChainInfo,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
@@ -41,52 +37,6 @@ export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
 export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
 export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
-
-export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
-
-export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
-
-export type HubChainInfo<T extends ChainType> = {
-  name: string;
-  id: HubChainId;
-  type: T;
-};
-
-export type AssetInfo = {
-  chainId: bigint;
-  spokeAddress: `0x${string}`;
-};
-
-export type HubAssetInfo = { asset: Address; decimal: number; vault: Address };
-
-export type BaseHubChainConfig<T extends ChainType> = {
-  chain: HubChainInfo<T>;
-  addresses: { [key: string]: Address | string | Uint8Array };
-  supportedTokens: Token[];
-  nativeToken: Address | string;
-};
-
-export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
-  addresses: {
-    assetManager: Address;
-    hubWallet: Address;
-    xTokenManager: Address;
-    icxMigration: Address;
-    balnSwap: Address;
-    sodaToken: Address;
-    sodaVault: Address;
-    stakedSoda: Address;
-    xSoda: Address;
-    stakingRouter: Address;
-  };
-
-  nativeToken: Address;
-  wrappedNativeToken: Address;
-};
-
-export type RelayerApiConfig = {
-  relayerApiEndpoint: HttpUrl;
-};
 
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
@@ -106,7 +56,9 @@ export type Default = {
   default: boolean;
 };
 
-export type HubChainConfig = EvmHubChainConfig;
+export type RelayerApiConfig = {
+  relayerApiEndpoint: HttpUrl;
+};
 
 export type EvmContractCall = {
   address: Address; // Target address of the call
@@ -128,14 +80,6 @@ export type EvmTransferParams = {
   to: Hex;
   amount: bigint;
   data: Hex;
-};
-
-export type TokenInfo = {
-  decimals: number;
-  depositFee: bigint;
-  withdrawalFee: bigint;
-  maxDeposit: bigint;
-  isSupported: boolean;
 };
 
 export type UnstakeSodaRequest = {
@@ -427,7 +371,7 @@ export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
-export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+export type Optional<T, K extends keyof T = keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 type ExtractKeys<T> = T extends unknown ? keyof T : never;
 
 export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChainId]['supportedTokens']>;

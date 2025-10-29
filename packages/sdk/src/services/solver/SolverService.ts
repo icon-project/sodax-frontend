@@ -5,16 +5,13 @@ import {
   DEFAULT_RELAY_TX_TIMEOUT,
   Erc20Service,
   type EvmHubProvider,
-  EvmSpokeProvider,
   type GetRelayResponse,
   type IntentDeliveryInfo,
   type IntentRelayRequest,
   type RelayErrorCode,
-  SonicSpokeProvider,
   SonicSpokeService,
   type SpokeProvider,
   SpokeService,
-  StellarSpokeProvider,
   type WaitUntilIntentExecutedPayload,
   adjustAmountByFee,
   calculateFeeAmount,
@@ -22,9 +19,6 @@ import {
   deriveUserWalletAddress,
   encodeContractCalls,
   isConfiguredSolverConfig,
-  isValidIntentRelayChainId,
-  isValidOriginalAssetAddress,
-  isValidSpokeChainId,
   submitTransaction,
   waitUntilIntentExecuted,
 } from '../../index.js';
@@ -63,8 +57,14 @@ import {
   type IntentRelayChainId,
   getIntentRelayChainId,
   getSolverConfig,
+  type Token,
+  type GetSwapTokensApiResponse,
 } from '@sodax/types';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
+import { EvmSpokeProvider } from '../../entities/Providers.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import { SonicSpokeProvider } from '../../entities/Providers.js';
+import { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
 
 export type CreateIntentParams = {
   inputToken: string; // The address of the input token on spoke chain
@@ -166,17 +166,20 @@ export type SwapParams<S extends SpokeProvider> = Prettify<
   } & OptionalFee
 >;
 
+export type SolverServiceConstructorParams = {
+  config: SolverConfigParams | undefined;
+  configService: ConfigService;
+  hubProvider: EvmHubProvider;
+  relayerApiEndpoint?: HttpUrl;
+};
+
 export class SolverService {
   readonly config: SolverServiceConfig;
   readonly hubProvider: EvmHubProvider;
+  readonly configService: ConfigService;
 
-  public constructor(
-    config: SolverConfigParams | undefined,
-    hubProvider: EvmHubProvider,
-    relayerApiEndpoint?: HttpUrl,
-  ) {
+  public constructor({ config, configService, hubProvider, relayerApiEndpoint }: SolverServiceConstructorParams) {
     if (!config) {
-      // default to mainnet config
       this.config = {
         ...getSolverConfig(SONIC_MAINNET_CHAIN_ID), // default to mainnet config
         partnerFee: undefined,
@@ -195,6 +198,7 @@ export class SolverService {
         relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
       };
     }
+    this.configService = configService;
     this.hubProvider = hubProvider;
   }
 
@@ -242,7 +246,7 @@ export class SolverService {
       ...payload,
       amount: adjustAmountByFee(payload.amount, this.config.partnerFee, payload.quote_type),
     } satisfies SolverIntentQuoteRequest;
-    return SolverApiService.getQuote(payload, this.config);
+    return SolverApiService.getQuote(payload, this.config, this.configService);
   }
 
   /**
@@ -871,15 +875,15 @@ export class SolverService {
     Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>
   > {
     invariant(
-      isValidOriginalAssetAddress(params.srcChain, params.inputToken),
+      this.configService.isValidOriginalAssetAddress(params.srcChain, params.inputToken),
       `Unsupported spoke chain token (params.srcChain): ${params.srcChain}, params.inputToken): ${params.inputToken}`,
     );
     invariant(
-      isValidOriginalAssetAddress(params.dstChain, params.outputToken),
+      this.configService.isValidOriginalAssetAddress(params.dstChain, params.outputToken),
       `Unsupported spoke chain token (params.dstChain): ${params.dstChain}, params.outputToken): ${params.outputToken}`,
     );
-    invariant(isValidSpokeChainId(params.srcChain), `Invalid spoke chain (params.srcChain): ${params.srcChain}`);
-    invariant(isValidSpokeChainId(params.dstChain), `Invalid spoke chain (params.dstChain): ${params.dstChain}`);
+    invariant(this.configService.isValidSpokeChainId(params.srcChain), `Invalid spoke chain (params.srcChain): ${params.srcChain}`);
+    invariant(this.configService.isValidSpokeChainId(params.dstChain), `Invalid spoke chain (params.dstChain): ${params.dstChain}`);
 
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
@@ -923,8 +927,8 @@ export class SolverService {
           },
           creatorHubWalletAddress,
           this.config,
+          this.configService,
           fee,
-          this.hubProvider,
         );
 
         const txResult = await SpokeService.deposit(
@@ -972,8 +976,8 @@ export class SolverService {
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>>> {
     try {
-      invariant(isValidIntentRelayChainId(intent.srcChain), `Invalid intent.srcChain: ${intent.srcChain}`);
-      invariant(isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
+      invariant(this.configService.isValidIntentRelayChainId(intent.srcChain), `Invalid intent.srcChain: ${intent.srcChain}`);
+      invariant(this.configService.isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       // derive users hub wallet address
@@ -1035,4 +1039,21 @@ export class SolverService {
     });
     return block.timestamp + deadline;
   }
+
+    /**
+   * Get the list of all supported swap tokens for a given spoke chain ID
+   * @param chainId The chain ID
+   * @returns {readonly Token[]} - Array of supported tokens
+   */
+    public getSupportedSwapTokensByChainId(chainId: SpokeChainId): readonly Token[] {
+      return this.configService.getSupportedSwapTokensByChainId(chainId);
+    }
+
+    /**
+     * Get the list of all supported swap tokens
+     * @returns {GetSwapTokensApiResponse} - Object containing all supported swap tokens
+     */
+    public getSupportedSwapTokens(): GetSwapTokensApiResponse {
+      return this.configService.getSupportedSwapTokens();
+    }
 }

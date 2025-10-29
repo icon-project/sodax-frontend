@@ -3,7 +3,6 @@ import {
   isLegacybnUSDToken,
   isNewbnUSDChainId,
   isNewbnUSDToken,
-  isValidSpokeChainId,
 } from './../../constants.js';
 import invariant from 'tiny-invariant';
 import {
@@ -14,8 +13,6 @@ import {
   type IcxMigrateParams,
   type Result,
   type TxReturnType,
-  type MigrationServiceConfig,
-  DEFAULT_RELAYER_API_ENDPOINT,
   relayTxAndWaitPacket,
   DEFAULT_RELAY_TX_TIMEOUT,
   SonicSpokeProvider,
@@ -41,17 +38,20 @@ import {
   deriveUserWalletAddress,
   waitUntilIntentExecuted,
   StellarSpokeProvider,
+  type IconContractAddress,
 } from '../../index.js';
 import {
   ICON_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   type Address,
   getIntentRelayChainId,
-  spokeChainConfig,
   type Hex,
+  type HttpUrl,
+  type IconAddress,
 } from '@sodax/types';
 import { isAddress } from 'viem';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
+import type { ConfigService } from '../../config/ConfigService.js';
 
 export type GetMigrationFailedPayload<T extends MigrationErrorCode> = T extends 'CREATE_MIGRATION_INTENT_FAILED'
   ? IcxMigrateParams | UnifiedBnUSDMigrateParams | BalnMigrateParams
@@ -97,21 +97,27 @@ export type MigrationRevertParams = IcxCreateRevertMigrationParams | UnifiedBnUS
 export const SupportedMigrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;
 export type MigrationTokens = (typeof SupportedMigrationTokens)[number];
 
+export type MigrationServiceConstructorParams = {
+  hubProvider: EvmHubProvider,
+  configService: ConfigService,
+  relayerApiEndpoint: HttpUrl,
+};
+
 export class MigrationService {
   readonly icxMigration: IcxMigrationService;
   readonly bnUSDMigrationService: BnUSDMigrationService;
   readonly balnSwapService: BalnSwapService;
   readonly hubProvider: EvmHubProvider;
-  readonly config: MigrationServiceConfig;
+  readonly relayerApiEndpoint: HttpUrl;
+  readonly configService: ConfigService;
 
-  constructor(hubProvider: EvmHubProvider, config?: MigrationServiceConfig) {
+  constructor({ relayerApiEndpoint, hubProvider, configService }: MigrationServiceConstructorParams) {
     this.hubProvider = hubProvider;
-    this.icxMigration = new IcxMigrationService(hubProvider);
-    this.bnUSDMigrationService = new BnUSDMigrationService(hubProvider);
-    this.balnSwapService = new BalnSwapService(hubProvider);
-    this.config = config ?? {
-      relayerApiEndpoint: DEFAULT_RELAYER_API_ENDPOINT,
-    };
+    this.icxMigration = new IcxMigrationService({ hubProvider, configService });
+    this.bnUSDMigrationService = new BnUSDMigrationService({ hubProvider, configService });
+    this.balnSwapService = new BalnSwapService({ hubProvider });
+    this.relayerApiEndpoint = relayerApiEndpoint;
+    this.configService = configService;
   }
 
   /**
@@ -473,7 +479,7 @@ export class MigrationService {
         spokeTxHash,
         spokeProvider instanceof SolanaSpokeProvider ? extraData : undefined,
         spokeProvider,
-        this.config.relayerApiEndpoint,
+        this.relayerApiEndpoint,
         timeout,
       );
 
@@ -486,7 +492,7 @@ export class MigrationService {
           intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
           spokeTxHash: packetResult.value.dst_tx_hash,
           timeout: timeout,
-          apiUrl: this.config.relayerApiEndpoint,
+          apiUrl: this.relayerApiEndpoint,
         });
       }
 
@@ -561,7 +567,7 @@ export class MigrationService {
         txResult.value,
         undefined,
         spokeProvider,
-        this.config.relayerApiEndpoint,
+        this.relayerApiEndpoint,
         timeout,
       );
 
@@ -636,7 +642,7 @@ export class MigrationService {
         txResult.value,
         undefined,
         spokeProvider,
-        this.config.relayerApiEndpoint,
+        this.relayerApiEndpoint,
         timeout,
       );
 
@@ -716,7 +722,7 @@ export class MigrationService {
         txResult.value,
         undefined,
         spokeProvider,
-        this.config.relayerApiEndpoint,
+        this.relayerApiEndpoint,
         timeout,
       );
 
@@ -766,9 +772,10 @@ export class MigrationService {
     raw?: R,
   ): Promise<Result<TxReturnType<IconSpokeProvider, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
-      const balnToken = spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.BALN.address;
+      const balnToken = this.configService.spokeChainConfig[ICON_MAINNET_CHAIN_ID]?.supportedTokens.BALN?.address;
+      invariant(balnToken, 'BALN token not found');
 
-      const migrationData = await this.balnSwapService.swapData(balnToken, params);
+      const migrationData = this.balnSwapService.swapData(balnToken as IconContractAddress, params, this.configService);
 
       const txResult = await SpokeService.deposit(
         {
@@ -851,8 +858,8 @@ export class MigrationService {
   ): Promise<Result<[TxReturnType<S, R>, RelayExtraData], MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
       if (!unchecked) {
-        invariant(isValidSpokeChainId(params.srcChainId), 'Invalid spoke source chain ID');
-        invariant(isValidSpokeChainId(params.dstChainId), 'Invalid spoke destination chain ID');
+        invariant(this.configService.isValidSpokeChainId(params.srcChainId), 'Invalid spoke source chain ID');
+        invariant(this.configService.isValidSpokeChainId(params.dstChainId), 'Invalid spoke destination chain ID');
         invariant(params.srcbnUSD.length > 0, 'Legacy bnUSD token address is required');
         invariant(params.dstbnUSD.length > 0, 'New bnUSD token address is required');
         invariant(params.amount > 0, 'Amount must be greater than 0');
@@ -1068,9 +1075,10 @@ export class MigrationService {
     try {
       const wallet = await spokeProvider.walletProvider.getWalletAddress();
       const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
-
+      const wICX = this.configService.spokeChainConfig[ICON_MAINNET_CHAIN_ID]?.addresses.wICX;
+      invariant(wICX, 'wICX token not found');
       const data = this.icxMigration.revertMigration({
-        wICX: spokeChainConfig[ICON_MAINNET_CHAIN_ID].addresses.wICX,
+        wICX: wICX as IconAddress,
         amount: params.amount,
         to: encodeAddress(ICON_MAINNET_CHAIN_ID, params.to),
         userWallet: userRouter,

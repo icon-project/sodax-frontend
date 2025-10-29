@@ -6,7 +6,6 @@ import {
   type EvmSpokeChainConfig,
   EvmSpokeProvider,
   EvmWalletAbstraction,
-  getHubChainConfig,
   spokeChainConfig,
   SpokeService,
   waitForTransactionReceipt,
@@ -18,6 +17,7 @@ import {
   Sodax,
   type EvmRawTransaction,
   type EvmChainId,
+  getHubChainConfig,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 import { SONIC_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
@@ -52,16 +52,8 @@ const spokeEvmWallet = new EvmWalletProvider({
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
-
-const hubProvider = new EvmHubProvider({
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
-});
-
-const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
-const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
@@ -70,6 +62,15 @@ const sodax = new Sodax({
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
+
+const hubProvider = new EvmHubProvider({
+  config: hubConfig,
+  configService: sodax.configService,
+});
+
+const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
+const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
+
 
 async function depositTo(token: Address, amount: bigint, recipient: Address) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
@@ -82,6 +83,7 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
       amount,
     },
     spokeProvider.chainConfig.chain.id,
+    sodax.configService
   );
 
   const txHash: Hash = await SpokeService.deposit(

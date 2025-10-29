@@ -7,7 +7,7 @@ import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, supportedSpokeChains, isLegacybnUSDToken, isNewbnUSDToken } from '@sodax/sdk';
+import { getSupportedSolverTokens, isLegacybnUSDToken, isNewbnUSDToken, supportedSpokeChains } from '@sodax/sdk';
 import type { XToken, SpokeChainId, Token } from '@sodax/types';
 import { formatUnits } from 'viem';
 

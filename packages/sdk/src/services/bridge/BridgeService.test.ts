@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { ARBITRUM_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, type XToken, spokeChainConfig } from '@sodax/types';
-import { getHubAssetInfo, Sodax } from '../../index.js';
+import { Sodax } from '../../index.js';
 
 describe('BridgeService', () => {
   const sodax = new Sodax();
 
   describe('isBridgeable', () => {
-    it('should return true for ETH on Arbitrum and ETH on Base (same vault)', () => {
+    it('should return true for ETH on Arbitrum and ETH on Base (same vault)', async () => {
       const fromToken: XToken = {
         ...spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
         xChainId: ARBITRUM_MAINNET_CHAIN_ID,
@@ -17,7 +17,7 @@ describe('BridgeService', () => {
         xChainId: BASE_MAINNET_CHAIN_ID,
       };
 
-      const result = sodax.bridge.isBridgeable({
+      const result = await sodax.bridge.isBridgeable({
         from: fromToken,
         to: toToken,
       });
@@ -71,7 +71,7 @@ describe('BridgeService', () => {
     // Tests for BridgeService.getBridgeableTokens
     // Purpose: Ensure getBridgeableTokens returns correct bridgeable tokens based on vault matching logic
 
-    it('should return bridgeable tokens that share the same vault', () => {
+    it('should return bridgeable tokens that share the same vault', async () => {
       // Mock a source token with a known vault
       const fromToken: XToken = {
         symbol: 'USDC',
@@ -86,21 +86,21 @@ describe('BridgeService', () => {
 
       // Find a token on the destination chain that shares the same vault as the source token
       // (Assume testnet config or mock config is set up so that USDC on Arbitrum shares the same vault)
-      const bridgeableTokensResult = sodax.bridge.getBridgeableTokens(fromToken.xChainId, toChainId, fromToken.address);
+      const bridgeableTokensResult = await sodax.bridge.getBridgeableTokens(fromToken.xChainId, toChainId, fromToken.address);
 
       expect(Array.isArray(bridgeableTokensResult.ok && bridgeableTokensResult.value)).toBe(true);
 
       // All returned tokens should have the same vault as the source token
       if (bridgeableTokensResult.ok) {
-        const srcAssetInfo = getHubAssetInfo(fromToken.xChainId, fromToken.address);
+        const srcAssetInfo = await sodax.configService.getHubAssetInfo(fromToken.xChainId, fromToken.address);
         for (const token of bridgeableTokensResult.value) {
-          const dstAssetInfo = getHubAssetInfo(toChainId, token.address);
+          const dstAssetInfo = await sodax.configService.getHubAssetInfo(toChainId, token.address);
           expect(dstAssetInfo?.vault.toLowerCase()).toBe(srcAssetInfo?.vault.toLowerCase());
         }
       }
     });
 
-    it('should return an error if the source asset is not supported', () => {
+    it('should return an error if the source asset is not supported', async () => {
       // Use a token address that is not in the hub asset info mapping
       const fromToken: XToken = {
         symbol: 'UNKNOWN',
@@ -112,7 +112,7 @@ describe('BridgeService', () => {
 
       const toChainId = ARBITRUM_MAINNET_CHAIN_ID;
 
-      const bridgeableTokensResult = sodax.bridge.getBridgeableTokens(fromToken.xChainId, toChainId, fromToken.address);
+      const bridgeableTokensResult = await sodax.bridge.getBridgeableTokens(fromToken.xChainId, toChainId, fromToken.address);
 
       expect(!bridgeableTokensResult.ok && bridgeableTokensResult.error).toBeDefined();
     });

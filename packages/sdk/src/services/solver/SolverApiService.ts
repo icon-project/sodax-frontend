@@ -1,8 +1,6 @@
 import invariant from 'tiny-invariant';
 import {
-  getHubAssetInfo,
   SolverIntentErrorCode,
-  isValidOriginalAssetAddress,
   retry,
   type SolverErrorResponse,
   type SolverExecutionRequest,
@@ -13,6 +11,7 @@ import {
   type SolverIntentStatusRequest,
   type SolverIntentStatusResponse,
   type Result,
+  type ConfigService,
 } from '../../index.js';
 import type { SolverConfig } from '@sodax/types';
 
@@ -34,6 +33,7 @@ export class SolverApiService {
   public static async getQuote(
     payload: SolverIntentQuoteRequest,
     config: SolverConfig,
+    configService: ConfigService,
   ): Promise<Result<SolverIntentQuoteResponse, SolverErrorResponse>> {
     invariant(payload.token_src.length > 0, 'Empty token_src');
     invariant(payload.token_src_blockchain_id.length > 0, 'Empty token_src_blockchain_id');
@@ -41,16 +41,16 @@ export class SolverApiService {
     invariant(payload.token_dst_blockchain_id.length > 0, 'Empty token_dst_blockchain_id');
     invariant(payload.amount > 0n, 'amount must be greater than 0');
     invariant(
-      isValidOriginalAssetAddress(payload.token_src_blockchain_id, payload.token_src),
+      configService.isValidOriginalAssetAddress(payload.token_src_blockchain_id, payload.token_src),
       'unsupported token_src for src chain',
     );
     invariant(
-      isValidOriginalAssetAddress(payload.token_dst_blockchain_id, payload.token_dst),
+      configService.isValidOriginalAssetAddress(payload.token_dst_blockchain_id, payload.token_dst),
       'unsupported token_dst for dst chain',
     );
 
-    const tokenSrc = getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src)?.asset;
-    const tokenDst = getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst)?.asset;
+    const tokenSrc = (configService.getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src))?.asset;
+    const tokenDst = (configService.getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst))?.asset;
 
     invariant(tokenSrc, 'hub asset not found for token_src');
     invariant(tokenDst, 'hub asset not found for token_dst');

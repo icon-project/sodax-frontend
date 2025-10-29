@@ -5,13 +5,19 @@
  */
 
 import type {
+  GetAllConfigApiResponse,
   GetChainsApiResponse,
   GetHubAssetsApiResponse,
   GetHubAssetsByChainIdApiResponse,
+  GetHubVaultsApiResponse,
+  GetMoneyMarketReserveAssetsApiResponse,
   GetMoneyMarketTokensApiResponse,
   GetMoneyMarketTokensByChainIdApiResponse,
+  GetRelayChainIdMapApiResponse,
+  GetSpokeChainConfigApiResponse,
   GetSwapTokensApiResponse,
   GetSwapTokensByChainIdApiResponse,
+  IConfigApi,
   SpokeChainId,
 } from '@sodax/types';
 import {
@@ -150,7 +156,7 @@ export interface MoneyMarketBorrowers {
  * BackendApiService class that acts as a proxy to the Sodax Backend API
  * Provides methods for all Solver and Money Market endpoints
  */
-export class BackendApiService {
+export class BackendApiService implements IConfigApi {
   private readonly baseURL: string;
   private readonly defaultHeaders: Record<string, string>;
   private readonly timeout: number;
@@ -328,6 +334,14 @@ export class BackendApiService {
   }
 
   /**
+   * Get all supported config
+   * @returns Promise<GetAllConfigApiResponse>
+   */
+  public async getAllConfig(): Promise<GetAllConfigApiResponse> {
+    return this.makeRequest<GetAllConfigApiResponse>('/config/all', { method: 'GET' });
+  }
+
+  /**
    * Get all supported spoke chains
    * @returns Promise<GetChainsApiResponse>
    */
@@ -361,6 +375,14 @@ export class BackendApiService {
   }
 
   /**
+   * Get all supported money market tokens
+   * @returns Promise<GetMoneyMarketTokensApiResponse>
+   */
+  public async getMoneyMarketReserveAssets(): Promise<GetMoneyMarketReserveAssetsApiResponse> {
+    return this.makeRequest<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', { method: 'GET' });
+  }
+
+  /**
    * Get supported money market tokens for a specific spoke chain
    * @param chainId - Spoke chain id
    * @returns Promise<GetMoneyMarketTokensByChainIdApiResponse>
@@ -380,6 +402,14 @@ export class BackendApiService {
   }
 
   /**
+   * Get all supported Soda hub vaults
+   * @returns Promise<GetHubVaultsApiResponse>
+   */
+  public async getHubVaults(): Promise<GetHubVaultsApiResponse> {
+    return this.makeRequest<GetHubVaultsApiResponse>('/config/hub/vaults', { method: 'GET' });
+  }
+
+  /**
    * Get supported hub assets (assets representing spoke token deposit) for a specific spoke chain
    * @param chainId - Spoke chain id
    * @returns Promise<GetHubAssetsByChainIdApiResponse>
@@ -387,6 +417,23 @@ export class BackendApiService {
   public async getHubAssetsByChainId(chainId: SpokeChainId): Promise<GetHubAssetsByChainIdApiResponse> {
     return this.makeRequest<GetHubAssetsByChainIdApiResponse>(`/config/hub/${chainId}/assets`, { method: 'GET' });
   }
+
+  /**
+   * Get the intent relay chain id map
+   * @returns Promise<GetRelayChainIdMapApiResponse>
+   */
+  public async getRelayChainIdMap(): Promise<GetRelayChainIdMapApiResponse> {
+    return this.makeRequest<GetRelayChainIdMapApiResponse>('/config/relay/chain-id-map', { method: 'GET' });
+  }
+
+  /**
+   * Get the spoke chain config
+   * @returns Promise<GetSpokeChainConfigApiResponse>
+   */
+  public async getSpokeChainConfig(): Promise<GetSpokeChainConfigApiResponse> {
+    return this.makeRequest<GetSpokeChainConfigApiResponse>('/config/spoke/all-chains-configs', { method: 'GET' });
+  }
+
   /**
    * Set custom headers for API requests
    * @param headers - Object containing header key-value pairs

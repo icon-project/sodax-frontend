@@ -15,15 +15,14 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   spokeChainConfig,
 } from '@sodax/types';
-import {
-  EvmHubProvider,
-  EvmSpokeProvider,
-  getHubChainConfig,
-  SonicSpokeProvider,
-  type EvmHubProviderConfig,
-} from '../index.js';
+import { getHubChainConfig, type EvmHubProviderConfig } from '../index.js';
+import { Sodax } from '../entities/Sodax.js';
+import { EvmHubProvider } from '../entities/Providers.js';
 
+import { EvmSpokeProvider } from '../entities/Providers.js';
+import { SonicSpokeProvider } from '../entities/Providers.js';
 describe('calculatePercentageAmount', () => {
+  const sodax = new Sodax();
   const address = '0x0000000000000000000000000000000000000001' as `0x${string}`;
   const mockHubWalletAddress = '0x1234567890123456789012345678901234567890';
 
@@ -42,10 +41,10 @@ describe('calculatePercentageAmount', () => {
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const mockHubProvider = new EvmHubProvider(mockHubConfig);
+  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.configService });
 
   it('should calculate percentage amount correctly', () => {
     const testCases = [

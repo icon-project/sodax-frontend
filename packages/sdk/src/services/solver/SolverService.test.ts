@@ -2,9 +2,7 @@ import { WalletAbstractionService } from './../hub/WalletAbstractionService.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   type CreateIntentParams,
-  EvmHubProvider,
   type EvmHubProviderConfig,
-  EvmSpokeProvider,
   type FeeAmount,
   type Intent,
   SolverIntentErrorCode,
@@ -19,14 +17,11 @@ import {
   type RelayTxStatus,
   type Result,
   SolverService,
-  getHubAssetInfo,
-  getHubChainConfig,
   isIntentSubmitTxFailedError,
   isIntentCreationFailedError,
   isIntentPostExecutionFailedError,
   isWaitUntilIntentExecutedFailed,
   isIntentCreationUnknownError,
-  Erc20Service,
   calculateFeeAmount,
   type SpokeProvider,
   DEFAULT_DEADLINE_OFFSET,
@@ -34,10 +29,13 @@ import {
 import * as IntentRelayApiService from '../intentRelay/IntentRelayApiService.js';
 import { EvmWalletAbstraction } from '../hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
+import { Erc20Service } from '../../services/shared/Erc20Service.js';
+import { Sodax } from '../../entities/Sodax.js';
+import { EvmSpokeProvider } from '../../entities/Providers.js';
+import { EvmHubProvider } from '../../entities/Providers.js';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
   type Address,
   type IEvmWalletProvider,
   getIntentRelayChainId,
@@ -49,10 +47,11 @@ import type { GetBlockReturnType } from 'viem';
 // Define a type for Intent with fee amount
 type IntentWithFee = Intent & FeeAmount;
 
-describe('SolverService', () => {
+describe('SolverService', async () => {
   const mockIntentsContract = '0x0987654321098765432109876543210987654321' satisfies Address;
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
   const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
+  const sodax = new Sodax();
 
   const mockSolverConfig = {
     intentsContract: mockIntentsContract,
@@ -61,10 +60,10 @@ describe('SolverService', () => {
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: sodax.configService.getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const mockHubProvider = new EvmHubProvider(mockHubConfig);
+  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.configService });
 
   const mockQuoteRequest = {
     token_src: bscEthToken,
@@ -86,27 +85,34 @@ describe('SolverService', () => {
   const feeAmount = 1000n; // 1000 of input token
   const feePercentage = 100; // 1% fee
 
-  const solverService = new SolverService(mockSolverConfig, mockHubProvider);
-  const solverServiceWithPercentageFee = new SolverService(
-    {
+  const solverService = new SolverService({
+    config: mockSolverConfig,
+    configService: sodax.configService,
+    hubProvider: mockHubProvider,
+  });
+  const solverServiceWithPercentageFee = new SolverService({
+    config: {
       ...mockSolverConfig,
       partnerFee: {
         address: '0x0000000000000000000000000000000000000000',
         percentage: feePercentage,
       },
     },
-    mockHubProvider,
-  );
+    configService: sodax.configService,
+    hubProvider: mockHubProvider,
+  });
   const solverServiceWithAmountFee = new SolverService(
     {
+    config: {
       ...mockSolverConfig,
       partnerFee: {
         address: '0x0000000000000000000000000000000000000000',
-        amount: feeAmount,
+          amount: feeAmount,
+        },
       },
-    },
-    mockHubProvider,
-  );
+      configService: sodax.configService,
+      hubProvider: mockHubProvider,
+    });
 
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
@@ -165,8 +171,8 @@ describe('SolverService', () => {
     return {
       intentId: BigInt(1),
       creator: creator,
-      inputToken: getHubAssetInfo(params.srcChain, params.inputToken)?.asset ?? '0x',
-      outputToken: getHubAssetInfo(params.dstChain, params.outputToken)?.asset ?? '0x',
+      inputToken: (await sodax.configService.getHubAssetInfo(params.srcChain, params.inputToken))?.asset ?? '0x',
+      outputToken: (await sodax.configService.getHubAssetInfo(params.dstChain, params.outputToken))?.asset ?? '0x',
       inputAmount: params.inputAmount,
       minOutputAmount: params.minOutputAmount,
       deadline: params.deadline,

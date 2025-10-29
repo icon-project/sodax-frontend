@@ -53,7 +53,7 @@ const stellarSpokeProvider = new StellarSpokeProvider(stellarWalletProvider, ste
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
-const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
+const hubChainConfig = getHubChainConfig();
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
   chainConfig: hubChainConfig,
@@ -66,8 +66,8 @@ const sodax = new Sodax({
 } satisfies SodaxConfig);
 
 const hubProvider = new EvmHubProvider({
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: hubChainConfig,
+  config: hubConfig,
+  configService: sodax.configService,
 });
 
 async function estimateWithdrawGas() {
@@ -113,6 +113,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
       amount,
     },
     stellarSpokeProvider.chainConfig.chain.id,
+    sodax.configService,
   );
 
   const txHash = await SpokeService.deposit(

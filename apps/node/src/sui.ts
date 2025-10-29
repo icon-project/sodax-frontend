@@ -34,15 +34,10 @@ const SUI_CHAIN_ID = SUI_MAINNET_CHAIN_ID;
 const SUI_RPC_URL = IS_TESTNET ? 'https://fullnode.testnet.sui.io' : 'https://fullnode.mainnet.sui.io';
 
 
-const hubChainConfig = getHubChainConfig(HUB_CHAIN_ID);
-const hubProvider = new EvmHubProvider({
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: hubChainConfig,
-});
-
+const hubChainConfig = getHubChainConfig();
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
@@ -53,8 +48,13 @@ const sodax = new Sodax({
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
+const hubProvider = new EvmHubProvider({
+  config: hubConfig,
+  configService: sodax.configService,
+});
+
 const relayerApiEndpoint = DEFAULT_RELAYER_API_ENDPOINT;
-const bridgeService = new BridgeService(hubProvider, relayerApiEndpoint);
+const bridgeService = new BridgeService({ hubProvider, relayerApiEndpoint, config: undefined, configService: sodax.configService });
 
 const suiConfig = spokeChainConfig[SUI_CHAIN_ID] as SuiSpokeChainConfig;
 const suiWalletMnemonics = process.env.SUI_MNEMONICS;
@@ -88,6 +88,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
       amount,
     },
     suiSpokeProvider.chainConfig.chain.id,
+    sodax.configService,
   );
 
   const txHash: Hash = await SpokeService.deposit(
