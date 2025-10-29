@@ -1,7 +1,7 @@
 import { type Address, type Hash, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { vaultTokenAbi } from '../../abis/index.js';
-import type { EvmContractCall, TokenInfo, VaultReserves } from '../../types.js';
-import type { IEvmWalletProvider } from '../../index.js';
+import type { EvmContractCall, VaultReserves } from '../../types.js';
+import type { IEvmWalletProvider, TokenInfo } from '@sodax/types';
 
 export class EvmVaultTokenService {
   private constructor() {}

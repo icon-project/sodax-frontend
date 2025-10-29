@@ -1,12 +1,12 @@
 import { type Address, type Hex, type PublicClient, encodeFunctionData } from 'viem';
 import { assetManagerAbi } from '../../abis/index.js';
-import { getHubAssetInfo } from '../../constants.js';
 import type { EvmHubProvider } from '../../entities/Providers.js';
-import type { AssetInfo, EvmContractCall } from '../../types.js';
+import type { EvmContractCall } from '../../types.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import { Erc20Service } from '../shared/Erc20Service.js';
 import { EvmVaultTokenService } from './EvmVaultTokenService.js';
-import type { SpokeChainId } from '@sodax/types';
+import type { SpokeChainId, AssetInfo } from '@sodax/types';
+import type { ConfigService } from '../../config/ConfigService.js';
 
 export type EvmDepositToDataParams = {
   token: Hex | string;
@@ -71,9 +71,13 @@ export class EvmAssetManagerService {
    * @returns {Hex} Encoded contract calls for the deposit transaction.
    * @throws Will throw an error if the asset or vault address is not found.
    */
-  public static depositToData(params: EvmDepositToDataParams, spokeChainId: SpokeChainId): Hex {
+  public static depositToData(
+    params: EvmDepositToDataParams,
+    spokeChainId: SpokeChainId,
+    configService: ConfigService,
+  ): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = getHubAssetInfo(spokeChainId, params.token);
+    const assetConfig = configService.getHubAssetInfo(spokeChainId, params.token);
 
     if (!assetConfig) {
       throw new Error('[depositToData] Hub asset not found');
@@ -104,7 +108,7 @@ export class EvmAssetManagerService {
     spokeChainId: SpokeChainId,
   ): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = getHubAssetInfo(spokeChainId, params.token);
+    const assetConfig = hubProvider.configService.getHubAssetInfo(spokeChainId, params.token);
 
     if (!assetConfig) {
       throw new Error('[withdrawAssetData] Hub asset not found');

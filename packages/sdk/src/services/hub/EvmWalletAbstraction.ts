@@ -1,8 +1,7 @@
 import type { Address } from 'viem';
 import { walletFactoryAbi } from '../../abis/index.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { type Hex, getIntentRelayChainId } from '../../index.js';
-import type { SpokeChainId } from '@sodax/types';
+import { type SpokeChainId, getIntentRelayChainId, type Hex } from '@sodax/types';
 
 export class EvmWalletAbstraction {
   private constructor() {}

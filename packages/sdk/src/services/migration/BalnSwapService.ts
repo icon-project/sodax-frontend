@@ -3,9 +3,10 @@ import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 import { type Address, type Hex, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { balnSwapAbi } from '../../abis/balnSwap.abi.js';
 import type { EvmContractCall, EvmReturnType, IconContractAddress, PromiseEvmTxReturnType } from '../../types.js';
-import { encodeContractCalls, Erc20Service, getHubAssetInfo } from '../../index.js';
+import { encodeContractCalls, Erc20Service } from '../../index.js';
 import type { EvmHubProvider, SonicSpokeProvider } from '../../entities/index.js';
 import invariant from 'tiny-invariant';
+import type { ConfigService } from '../../config/ConfigService.js';
 
 /**
  * Lockup periods in seconds
@@ -83,6 +84,10 @@ export type BalnLockParams = {
   lockId: bigint;
 };
 
+export type BalnSwapServiceConstructorParams = {
+  hubProvider: EvmHubProvider;
+};
+
 /**
  * Service for handling BALN swap operations on the hub chain.
  * Provides functionality to interact directly with the BALN swap contract.
@@ -90,7 +95,7 @@ export type BalnLockParams = {
 export class BalnSwapService {
   private readonly hubProvider: EvmHubProvider;
 
-  constructor(hubProvider: EvmHubProvider) {
+  constructor({ hubProvider }: BalnSwapServiceConstructorParams) {
     this.hubProvider = hubProvider;
   }
 
@@ -138,10 +143,11 @@ export class BalnSwapService {
    *
    * @param balnToken - The address of the BALN token
    * @param params - The BALN swap parameters including amount, lockup period, and recipient
+   * @param configService - The config service
    * @returns Encoded transaction data for the BALN swap operation
    */
-  async swapData(balnToken: IconContractAddress, params: BalnMigrateParams): Promise<Hex> {
-    const assetConfig = getHubAssetInfo(ICON_MAINNET_CHAIN_ID, balnToken);
+  swapData(balnToken: IconContractAddress, params: BalnMigrateParams, configService: ConfigService): Hex {
+    const assetConfig = configService.getHubAssetInfo(ICON_MAINNET_CHAIN_ID, balnToken);
     invariant(assetConfig, `hub asset not found for baln token: ${balnToken}`);
 
     const calls: EvmContractCall[] = [];

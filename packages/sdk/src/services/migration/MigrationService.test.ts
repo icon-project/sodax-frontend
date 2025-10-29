@@ -11,16 +11,12 @@ import {
   SonicSpokeProvider,
   EvmHubProvider,
   type EvmHubProviderConfig,
-  getHubChainConfig,
-  spokeChainConfig,
   SpokeService,
   SonicSpokeService,
   Erc20Service,
   DEFAULT_RELAY_TX_TIMEOUT,
   encodeAddress,
-  type EvmRawTransaction,
   type PacketData,
-  getIntentRelayChainId,
   type IcxTokenType,
   type MigrationAction,
   type UnifiedBnUSDMigrateParams,
@@ -32,12 +28,25 @@ import {
   isNewbnUSDChainId,
   isLegacybnUSDToken,
   isNewbnUSDToken,
+  Sodax,
+  getHubChainConfig,
+  DEFAULT_RELAYER_API_ENDPOINT,
 } from '../../index.js';
-import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import type { IIconWalletProvider, IEvmWalletProvider, SpokeChainId, Address } from '@sodax/types';
+import {
+  ICON_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+  getIntentRelayChainId,
+  type EvmRawTransaction,
+  type IIconWalletProvider,
+  type IEvmWalletProvider,
+  type SpokeChainId,
+  type Address,
+} from '@sodax/types';
 import * as IntentRelayApiService from '../../services/intentRelay/IntentRelayApiService.js';
 import * as SharedUtils from '../../utils/shared-utils.js';
 
+const sodax = new Sodax();
 const mockEvmAddress = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' satisfies `0x${string}`;
 
 // Mock payloads and parameters at the top for re-use
@@ -85,7 +94,7 @@ const mockSonicWalletProvider = {
 
 const mockHubConfig: EvmHubProviderConfig = {
   hubRpcUrl: 'https://rpc.soniclabs.com',
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
 
 const mockIconSpokeProvider = new IconSpokeProvider(mockIconWalletProvider, spokeChainConfig[ICON_MAINNET_CHAIN_ID]);
@@ -95,7 +104,7 @@ const mockSonicSpokeProvider = new SonicSpokeProvider(
   spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
 );
 
-const mockHubProvider = new EvmHubProvider(mockHubConfig);
+const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.configService });
 
 const mockTxHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
 const mockHubTxHash = '0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
@@ -118,12 +127,12 @@ describe('MigrationService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    migrationService = new MigrationService(mockHubProvider);
+    migrationService = new MigrationService({ hubProvider: mockHubProvider, configService: sodax.configService, relayerApiEndpoint: DEFAULT_RELAYER_API_ENDPOINT });
   });
 
   describe('constructor', () => {
     it('should initialize with default config', () => {
-      const service = new MigrationService(mockHubProvider);
+      const service = new MigrationService({ hubProvider: mockHubProvider, configService: sodax.configService, relayerApiEndpoint: DEFAULT_RELAYER_API_ENDPOINT });
       expect(service).toBeInstanceOf(MigrationService);
     });
 
@@ -131,7 +140,7 @@ describe('MigrationService', () => {
       const customConfig = {
         relayerApiEndpoint: 'https://custom-relayer.com' as const,
       };
-      const service = new MigrationService(mockHubProvider, customConfig);
+      const service = new MigrationService({ hubProvider: mockHubProvider, configService: sodax.configService, relayerApiEndpoint: customConfig.relayerApiEndpoint });
       expect(service).toBeInstanceOf(MigrationService);
     });
   });
@@ -569,7 +578,7 @@ describe('MigrationService', () => {
   describe('createMigrateIntent', () => {
     it('should successfully create migration intent', async () => {
       vi.spyOn(migrationService['icxMigration'], 'getAvailableAmount').mockResolvedValueOnce(10000000000000000000n);
-      vi.spyOn(migrationService['icxMigration'], 'migrateData').mockReturnValue('0xmigrationdata');
+      vi.spyOn(migrationService['icxMigration'], 'migrateData').mockResolvedValueOnce('0xmigrationdata');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
 
       const result = await migrationService.createMigrateIcxToSodaIntent(mockMigrationParams, mockIconSpokeProvider);
@@ -589,7 +598,7 @@ describe('MigrationService', () => {
       };
 
       vi.spyOn(migrationService['icxMigration'], 'getAvailableAmount').mockResolvedValueOnce(10000000000000000000n);
-      vi.spyOn(migrationService['icxMigration'], 'migrateData').mockReturnValue('0xmigrationdata');
+      vi.spyOn(migrationService['icxMigration'], 'migrateData').mockResolvedValueOnce('0xmigrationdata');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockRawTx);
 
       const result = await migrationService.createMigrateIcxToSodaIntent(
@@ -671,7 +680,7 @@ describe('MigrationService', () => {
 
     it('should return error when SpokeService.deposit fails', async () => {
       vi.spyOn(migrationService['icxMigration'], 'getAvailableAmount').mockResolvedValueOnce(10000000000000000000n);
-      vi.spyOn(migrationService['icxMigration'], 'migrateData').mockReturnValue('0xmigrationdata');
+      vi.spyOn(migrationService['icxMigration'], 'migrateData').mockResolvedValueOnce('0xmigrationdata');
       vi.spyOn(SpokeService, 'deposit').mockRejectedValue(new Error('Deposit failed'));
 
       const result = await migrationService.createMigrateIcxToSodaIntent(mockMigrationParams, mockIconSpokeProvider);
@@ -686,7 +695,7 @@ describe('MigrationService', () => {
   describe('createRevertMigrationIntent', () => {
     it('should successfully create revert migration intent', async () => {
       vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0xUserRouterAddress');
-      vi.spyOn(migrationService['icxMigration'], 'revertMigration').mockReturnValue('0xrevertdata');
+      vi.spyOn(migrationService['icxMigration'], 'revertMigration').mockResolvedValueOnce('0xrevertdata');
       vi.spyOn(SonicSpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
 
       const result = await migrationService.createRevertSodaToIcxMigrationIntent(
@@ -709,7 +718,7 @@ describe('MigrationService', () => {
       };
 
       vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0xUserRouterAddress');
-      vi.spyOn(migrationService['icxMigration'], 'revertMigration').mockReturnValue('0xrevertdata');
+      vi.spyOn(migrationService['icxMigration'], 'revertMigration').mockResolvedValueOnce('0xrevertdata');
       vi.spyOn(SonicSpokeService, 'deposit').mockResolvedValueOnce(mockRawTx);
 
       const result = await migrationService.createRevertSodaToIcxMigrationIntent(
@@ -740,7 +749,7 @@ describe('MigrationService', () => {
 
     it('should return error when SonicSpokeService.deposit fails', async () => {
       vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0xUserRouterAddress');
-      vi.spyOn(migrationService['icxMigration'], 'revertMigration').mockReturnValue('0xrevertdata');
+      vi.spyOn(migrationService['icxMigration'], 'revertMigration').mockResolvedValueOnce('0xrevertdata');
       vi.spyOn(SonicSpokeService, 'deposit').mockRejectedValue(new Error('Deposit failed'));
 
       const result = await migrationService.createRevertSodaToIcxMigrationIntent(
@@ -757,7 +766,7 @@ describe('MigrationService', () => {
     it('should call revertMigration with correct parameters', async () => {
       const revertMigrationSpy = vi
         .spyOn(migrationService['icxMigration'], 'revertMigration')
-        .mockReturnValue('0xrevertdata');
+        .mockResolvedValueOnce('0xrevertdata');
       vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0xUserRouterAddress');
       vi.spyOn(SonicSpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
 
@@ -968,7 +977,9 @@ describe('MigrationService', () => {
     describe('createMigratebnUSDIntent', () => {
       it('should successfully create legacy to new bnUSD migration intent', async () => {
         vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
-        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce("0x2170Ed0880ac9A755fd29B2688956BD959F933F8");
+        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce(
+          '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
+        );
 
         const result = await migrationService.createMigratebnUSDIntent(
           mockBnUSDLegacyToNewParams,
@@ -983,7 +994,9 @@ describe('MigrationService', () => {
 
       it('should successfully create new to legacy bnUSD migration intent', async () => {
         vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockTxHash);
-        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce("0x2170Ed0880ac9A755fd29B2688956BD959F933F8");
+        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce(
+          '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
+        );
 
         const result = await migrationService.createMigratebnUSDIntent(
           mockBnUSDNewToLegacyParams,
@@ -1005,7 +1018,9 @@ describe('MigrationService', () => {
         };
 
         vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce(mockRawTx);
-        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce("0x2170Ed0880ac9A755fd29B2688956BD959F933F8");
+        vi.spyOn(SharedUtils, 'deriveUserWalletAddress').mockResolvedValueOnce(
+          '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
+        );
 
         const result = await migrationService.createMigratebnUSDIntent(
           mockBnUSDLegacyToNewParams,

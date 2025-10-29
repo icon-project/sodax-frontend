@@ -23,7 +23,6 @@ import {
   type IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
   StellarSpokeProvider,
-  supportedSpokeChains,
 } from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
@@ -36,6 +35,7 @@ import {
   useSwap,
   useStellarTrustlineCheck,
   useRequestTrustline,
+  useSodaxContext,
 } from '@sodax/dapp-kit';
 import {
   getXChainType,
@@ -62,6 +62,7 @@ export default function SwapCard({
     value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>,
   ) => void;
 }) {
+  const { sodax } = useSodaxContext();
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
   const sourceWalletProvider = useWalletProvider(sourceChain);
@@ -76,6 +77,7 @@ export default function SwapCard({
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceProvider);
+  const supportedSpokeChains = sodax.configService.getSupportedSpokeChains();
   const destProvider = useSpokeProvider(destChain, useWalletProvider(destChain));
   const {
     data: hasSufficientTrustline,

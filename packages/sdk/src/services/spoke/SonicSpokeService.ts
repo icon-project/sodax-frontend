@@ -9,12 +9,10 @@ import type {
   PartnerFee,
   PromiseEvmTxReturnType,
   Result,
-  SolverConfig,
   TxReturnType,
 } from '../../types.js';
 import { Erc20Service, EvmSolverService, type CreateIntentParams, type Intent } from '../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
-import { getHubAssetInfo, getIntentRelayChainId } from '../../constants.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import {
   SONIC_MAINNET_CHAIN_ID,
@@ -22,10 +20,13 @@ import {
   type Hex,
   type HubAddress,
   type SpokeChainId,
+  type SolverConfig,
+  getIntentRelayChainId,
 } from '@sodax/types';
 import type { MoneyMarketDataService } from '../../moneyMarket/MoneyMarketDataService.js';
 import invariant from 'tiny-invariant';
 import { encodeAddress, randomUint256 } from '../../utils/shared-utils.js';
+import type { ConfigService } from '../../index.js';
 
 export type SonicSpokeDepositParams = {
   from: Address; // The address of the user on the spoke chain
@@ -192,7 +193,7 @@ export class SonicSpokeService {
 
     const outputToken =
       createIntentParams.dstChain !== SONIC_MAINNET_CHAIN_ID
-        ? getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset
+        ? hubProvider.configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset
         : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(
@@ -326,6 +327,7 @@ export class SonicSpokeService {
    * @param amount - The amount to withdraw
    * @param spokeProvider - The spoke provider
    * @param moneyMarketService - The money market service
+   * @param configService - The config service
    * @returns {WithdrawInfo} WithdrawInfo containing aToken address, amount and vault address
    */
   public static async getWithdrawInfo(
@@ -333,8 +335,9 @@ export class SonicSpokeService {
     amount: bigint,
     spokeProvider: SonicSpokeProvider,
     dataService: MoneyMarketDataService,
+    configService: ConfigService,
   ): Promise<WithdrawInfo> {
-    const assetConfig = getHubAssetInfo(spokeProvider.chainConfig.chain.id, token);
+    const assetConfig = configService.getHubAssetInfo(spokeProvider.chainConfig.chain.id, token);
 
     if (!assetConfig) {
       throw new Error('[SonicSpokeService.getWithdrawInfo] Hub asset not found');
@@ -363,6 +366,7 @@ export class SonicSpokeService {
    * @param amount - The amount to borrow
    * @param chainId - The chain ID
    * @param moneyMarketService - The money market service
+   * @param configService - The config service
    * @returns BorrowInfo containing variable debt token address and vault address
    */
   public static async getBorrowInfo(
@@ -370,8 +374,9 @@ export class SonicSpokeService {
     amount: bigint,
     chainId: SpokeChainId,
     dataService: MoneyMarketDataService,
+    configService: ConfigService,
   ): Promise<BorrowInfo> {
-    const assetConfig = getHubAssetInfo(chainId, token);
+    const assetConfig = configService.getHubAssetInfo(chainId, token);
 
     if (!assetConfig) {
       throw new Error('[SonicSpokeService.getBorrowInfo] Hub asset not found');

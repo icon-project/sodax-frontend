@@ -18,7 +18,7 @@ import type {
   WalletSimulationParams,
   Result,
 } from '../../types.js';
-import type { Address, Hex, HubAddress } from '@sodax/types';
+import { getIntentRelayChainId, type Address, type Hex, type HubAddress } from '@sodax/types';
 import { InjectiveSpokeService } from './InjectiveSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';
@@ -37,7 +37,6 @@ import {
 } from '../../guards.js';
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
-import { getIntentRelayChainId } from '../../constants.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
 
 /**

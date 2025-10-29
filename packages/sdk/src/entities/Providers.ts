@@ -10,9 +10,7 @@ import {
   type WalletClient,
   createPublicClient,
 } from 'viem';
-import { getEvmViemChain, getHubChainConfig } from '../constants.js';
-import type { EvmChainId } from '@sodax/types';
-import type { EvmHubChainConfig, EvmSpokeChainConfig, SonicSpokeChainConfig, SpokeChainConfig } from '../types.js';
+import { getEvmViemChain } from '../constants.js';
 import type { InjectiveSpokeProvider } from './injective/InjectiveSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
@@ -26,7 +24,13 @@ import {
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
   type ISolanaWalletProvider,
+  type EvmSpokeChainConfig,
+  type SonicSpokeChainConfig,
+  type SpokeChainConfig,
+  type EvmChainId,
+  type EvmHubChainConfig,
 } from '@sodax/types';
+import { type ConfigService, getHubChainConfig } from '../index.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -59,11 +63,17 @@ export type EvmHubProviderConfig = {
   chainConfig: EvmHubChainConfig;
 };
 
+export type EvmHubProviderConstructorParams = {
+  config?: EvmHubProviderConfig;
+  configService: ConfigService;
+};
+
 export class EvmHubProvider {
   public readonly publicClient: PublicClient<HttpTransport>;
   public readonly chainConfig: EvmHubChainConfig;
+  public readonly configService: ConfigService;
 
-  constructor(config?: EvmHubProviderConfig) {
+  constructor({ config, configService }: EvmHubProviderConstructorParams) {
     if (config) {
       this.publicClient = createPublicClient({
         transport: http(config.hubRpcUrl),
@@ -76,8 +86,9 @@ export class EvmHubProvider {
         transport: http('https://rpc.soniclabs.com'),
         chain: getEvmViemChain(SONIC_MAINNET_CHAIN_ID),
       });
-      this.chainConfig = getHubChainConfig(SONIC_MAINNET_CHAIN_ID);
+      this.chainConfig = getHubChainConfig();
     }
+    this.configService = configService;
   }
 }
 

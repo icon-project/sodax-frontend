@@ -1,5 +1,3 @@
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import { ChainIdToIntentRelayChainId } from './constants.js';
 import type {
   JsonRpcPayloadResponse,
   ResponseAddressType,
@@ -21,21 +19,15 @@ import {
 } from './entities/index.js';
 import type {
   EvmHubChainConfig,
-  EvmSpokeChainConfig,
   HubChainConfig,
-  IconAddress,
-  IntentRelayChainId,
   IntentError,
-  MoneyMarketConfig,
   MoneyMarketConfigParams,
   Optional,
   PartnerFeeAmount,
   PartnerFeeConfig,
   PartnerFeePercentage,
   Prettify,
-  SolverConfig,
   SolverConfigParams,
-  SpokeChainConfig,
   MoneyMarketError,
   MoneyMarketUnknownError,
   IcxMigrateParams,
@@ -43,6 +35,16 @@ import type {
   BalnMigrateParams,
   IcxCreateRevertMigrationParams,
 } from './index.js';
+import {
+  type EvmSpokeChainConfig,
+  type SpokeChainConfig,
+  type SolverConfig,
+  type MoneyMarketConfig,
+  type IconAddress,
+  type IntentRelayChainId,
+  SONIC_MAINNET_CHAIN_ID,
+  ChainIdToIntentRelayChainId,
+} from '@sodax/types';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';

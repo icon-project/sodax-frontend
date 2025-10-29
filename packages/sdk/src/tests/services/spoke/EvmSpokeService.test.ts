@@ -1,18 +1,21 @@
-import { getIntentRelayChainId } from '../../../index.js';
 import { encodeFunctionData, type Address, type Hash, type HttpTransport, type PublicClient } from 'viem';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { connectionAbi } from '../../../abis/index.js';
 import type { EvmHubProviderConfig } from '../../../entities/index.js';
 import {
   getHubChainConfig,
-  spokeChainConfig,
   EvmHubProvider,
   type EvmSpokeDepositParams,
   type EvmSpokeProvider,
   EvmSpokeService,
-  type IEvmWalletProvider,
+  Sodax,
 } from '../../../index.js';
-import { AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import {
+  AVALANCHE_MAINNET_CHAIN_ID,
+  getIntentRelayChainId,
+  spokeChainConfig,
+  type IEvmWalletProvider,
+} from '@sodax/types';
 
 // Hoisted mocks must be before any other code
 vi.mock('../../../utils/evm-utils.js', () => ({
@@ -69,6 +72,7 @@ vi.mock('../../../constants.js', async importOriginal => {
 });
 
 describe('EvmSpokeService', () => {
+  const sodax = new Sodax();
   const mockToken = '0x1234567890123456789012345678901234567890' as Address;
   const mockUser = '0x4444444444444444444444444444444444444444' as Address;
   const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
@@ -109,10 +113,10 @@ describe('EvmSpokeService', () => {
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const mockHubProvider = new EvmHubProvider(mockHubConfig);
+  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.configService });
 
   beforeEach(() => {
     vi.resetAllMocks();

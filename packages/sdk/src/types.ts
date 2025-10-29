@@ -10,34 +10,26 @@ import type {
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from './entities/index.js';
-import type {
-  bnUSDLegacySpokeChainIds,
-  bnUSDLegacyTokens,
-  newbnUSDSpokeChainIds,
-  spokeChainConfig,
-  ChainIdToIntentRelayChainId,
-} from './index.js';
+import type { bnUSDLegacySpokeChainIds, bnUSDLegacyTokens, newbnUSDSpokeChainIds } from './index.js';
 import type { EvmSpokeDepositParams, SonicSpokeDepositParams } from './services/index.js';
 import type { IconSpokeDepositParams } from './services/spoke/IconSpokeService.js';
 import type { SolanaSpokeDepositParams } from './services/spoke/SolanaSpokeService.js';
 import type { StellarSpokeDepositParams } from './services/spoke/StellarSpokeService.js';
 import type { SuiSpokeDepositParams } from './services/spoke/SuiSpokeService.js';
 import type {
-  ChainType,
-  Token,
-  HubChainId,
   SpokeChainId,
   Hex,
   Address,
   EvmRawTransaction,
   StellarRawTransaction,
   InjectiveRawTransaction,
-  InjectiveNetworkEnv,
   SolanaBase58PublicKey,
   ICON_MAINNET_CHAIN_ID,
-  XToken,
   HttpUrl,
-  BaseSpokeChainInfo,
+  IconAddress,
+  MoneyMarketConfig,
+  SolverConfig,
+  spokeChainConfig,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
@@ -45,68 +37,6 @@ export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
 export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
 export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
-
-export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
-
-export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
-
-export type HubChainInfo<T extends ChainType> = {
-  name: string;
-  id: HubChainId;
-  type: T;
-};
-
-export type AssetInfo = {
-  chainId: bigint;
-  spokeAddress: `0x${string}`;
-};
-
-export type HubAssetInfo = { asset: Address; decimal: number; vault: Address };
-
-export type BaseSpokeChainConfig<T extends ChainType> = {
-  chain: SpokeChainInfo<T>;
-  addresses: { [key: string]: Address | string | Uint8Array };
-  supportedTokens: Record<string, XToken>;
-  nativeToken: Address | string;
-  bnUSD: Address | string;
-};
-
-export type BaseHubChainConfig<T extends ChainType> = {
-  chain: HubChainInfo<T>;
-  addresses: { [key: string]: Address | string | Uint8Array };
-  supportedTokens: Token[];
-  nativeToken: Address | string;
-};
-
-export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
-  addresses: {
-    assetManager: Address;
-    hubWallet: Address;
-    xTokenManager: Address;
-    icxMigration: Address;
-    balnSwap: Address;
-    sodaToken: Address;
-    sodaVault: Address;
-    stakedSoda: Address;
-    xSoda: Address;
-    stakingRouter: Address;
-  };
-
-  nativeToken: Address;
-  wrappedNativeToken: Address;
-};
-
-export type RelayerApiConfig = {
-  relayerApiEndpoint: HttpUrl;
-};
-
-export type MoneyMarketConfig = {
-  uiPoolDataProvider: Address;
-  lendingPool: Address;
-  poolAddressesProvider: Address;
-  bnUSD: Address;
-  bnUSDVault: Address;
-};
 
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type SolverServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
@@ -126,106 +56,9 @@ export type Default = {
   default: boolean;
 };
 
-export type EvmSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
-  addresses: {
-    assetManager: Address;
-    connection: Address;
-  };
-  nativeToken: Address | string;
+export type RelayerApiConfig = {
+  relayerApiEndpoint: HttpUrl;
 };
-
-export type SonicSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
-  addresses: {
-    walletRouter: Address;
-    wrappedSonic: Address;
-  };
-  nativeToken: Address;
-};
-
-export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
-  addresses: {
-    originalAssetManager: string;
-    assetManagerConfigId: string;
-    connection: string;
-    xTokenManager: string;
-    rateLimit: string;
-    testToken: string;
-  };
-  rpc_url: string;
-};
-
-export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
-  rpcUrl: string;
-  walletAddress: string;
-  addresses: {
-    assetManager: string;
-    connection: string;
-    xTokenManager: string;
-    rateLimit: string;
-    testToken: string;
-  };
-  nativeToken: string;
-  prefix: string;
-  gasPrice: string;
-  isBrowser: boolean;
-  networkId: string;
-  network: InjectiveNetworkEnv;
-};
-
-export type StellarAssetTrustline = {
-  assetCode: string;
-  contractId: string;
-  assetIssuer: string;
-};
-
-export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
-  addresses: {
-    assetManager: string;
-    connection: string;
-    xTokenManager: string;
-    rateLimit: string;
-    testToken: string;
-  };
-  horizonRpcUrl: HttpUrl;
-  sorobanRpcUrl: HttpUrl;
-  trustlineConfigs: StellarAssetTrustline[];
-};
-
-export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
-  addresses: {
-    assetManager: IconAddress;
-    connection: IconAddress;
-    rateLimit: IconAddress;
-    wICX: `cx${string}`;
-  };
-  nid: Hex;
-};
-
-export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
-  addresses: {
-    assetManager: string;
-    connection: string;
-    xTokenManager: string;
-    rateLimit: string;
-    testToken: string;
-  };
-  chain: SpokeChainInfo<'SOLANA'>;
-  rpcUrl: string;
-  walletAddress: string;
-  nativeToken: string;
-  gasPrice: string;
-};
-
-export type HubChainConfig = EvmHubChainConfig;
-
-export type SpokeChainConfig =
-  | EvmSpokeChainConfig
-  | SonicSpokeChainConfig
-  | InjectiveSpokeChainConfig
-  | IconSpokeChainConfig
-  | SuiSpokeChainConfig
-  | StellarSpokeChainConfig
-  | SolanaChainConfig;
 
 export type EvmContractCall = {
   address: Address; // Target address of the call
@@ -247,14 +80,6 @@ export type EvmTransferParams = {
   to: Hex;
   amount: bigint;
   data: Hex;
-};
-
-export type TokenInfo = {
-  decimals: number;
-  depositFee: bigint;
-  withdrawalFee: bigint;
-  maxDeposit: bigint;
-  isSupported: boolean;
 };
 
 export type UnstakeSodaRequest = {
@@ -330,13 +155,11 @@ export type OptionalFee = { fee?: PartnerFee };
 
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
-export type IconAddress = `hx${string}` | `cx${string}`;
 export type IconContractAddress = `cx${string}`;
 export type IcxTokenType =
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['addresses']['wICX']
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['nativeToken'];
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
-export type HttpPrefixedUrl = `http${string}`;
 
 export type SpokeDepositParams = EvmSpokeDepositParams | InjectiveSpokeDepositParams | IconSpokeDepositParams;
 
@@ -371,11 +194,6 @@ export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
             : T extends SonicSpokeProvider
               ? Address
               : never;
-
-export type SolverConfig = {
-  intentsContract: Address; // Intents Contract (Hub)
-  solverApiEndpoint: HttpUrl;
-};
 
 export type SolverConfigParams =
   | Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
@@ -549,16 +367,11 @@ export type PromiseTxReturnType<
             ? PromiseInjectiveTxReturnType<Raw>
             : never;
 
-export type VaultType = {
-  address: Address; // vault address
-  reserves: Address[]; // hub asset addresses contained in the vault
-};
-
 export type Prettify<T> = {
   [K in keyof T]: T[K];
 } & {};
 
-export type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
+export type Optional<T, K extends keyof T = keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
 type ExtractKeys<T> = T extends unknown ? keyof T : never;
 
 export type SpokeTokenSymbols = ExtractKeys<(typeof spokeChainConfig)[SpokeChainId]['supportedTokens']>;

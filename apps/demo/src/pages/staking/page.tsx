@@ -12,7 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { spokeChainConfig, supportedSpokeChains } from '@sodax/sdk';
+import { spokeChainConfig } from '@sodax/sdk';
 import type { XToken } from '@sodax/types';
 import {
   getXChainType,
@@ -38,6 +38,7 @@ import {
   useUnstakeApprove,
   useInstantUnstakeApprove,
   useInstantUnstakeAllowance,
+  useSodaxContext,
 } from '@sodax/dapp-kit';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -48,6 +49,7 @@ import { UnstakingInfo } from '@/components/staking/UnstakingInfo';
 import { SodaBalance } from '@/components/staking/SodaBalance';
 
 export default function StakingPage() {
+  const { sodax } = useSodaxContext();
   const { openWalletModal, selectChainId, selectedChainId } = useAppStore();
 
   const [stakeAmount, setStakeAmount] = useState<string>('');
@@ -60,6 +62,7 @@ export default function StakingPage() {
   console.log('selected chain id:', selectedChainId);
   console.log('wallet provider:', walletProvider);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
+  const supportedSpokeChains = sodax.configService.getSupportedSpokeChains();
 
   // Staking info hooks
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);

@@ -28,7 +28,7 @@ const hubRpcUrl = 'https://rpc.soniclabs.com';
 
 const hubConfig = {
   hubRpcUrl,
-  chainConfig: getHubChainConfig(hubChainId),
+  chainConfig: getHubChainConfig(),
 } satisfies SodaxConfig['hubProviderConfig'];
 
 const moneyMarketConfig = getMoneyMarketConfig(hubChainId);

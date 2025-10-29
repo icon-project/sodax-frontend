@@ -2,9 +2,9 @@ import { bcs } from '@mysten/sui/bcs';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction, type TransactionResult } from '@mysten/sui/transactions';
 import { type Hex, toHex } from 'viem';
-import type { PromiseSuiTxReturnType, SuiReturnType, SuiSpokeChainConfig } from '../../types.js';
+import type { PromiseSuiTxReturnType, SuiReturnType } from '../../types.js';
 import type { ISpokeProvider } from '../index.js';
-import type { ISuiWalletProvider } from '@sodax/types';
+import type { ISuiWalletProvider, SuiSpokeChainConfig } from '@sodax/types';
 import { SuiSpokeService } from '../../services/spoke/SuiSpokeService.js';
 
 type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };

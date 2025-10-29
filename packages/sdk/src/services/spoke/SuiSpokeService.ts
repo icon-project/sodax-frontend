@@ -3,15 +3,14 @@ import type { EvmHubProvider } from '../../entities/index.js';
 import type { SuiSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
 import {
   type DepositSimulationParams,
-  type HubAddress,
   type PromiseSuiTxReturnType,
   type SuiGasEstimate,
   encodeAddress,
   type SuiRawTransaction,
-  getIntentRelayChainId,
 } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { Transaction } from '@mysten/sui/transactions';
+import { getIntentRelayChainId, type HubAddress } from '@sodax/types';
 
 export type SuiSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain

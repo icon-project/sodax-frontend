@@ -8,19 +8,21 @@ import {
   encodeAddress,
   hexToBigInt,
 } from './shared-utils.js';
-import type { IEvmWalletProvider, SpokeChainId } from '@sodax/types';
 import {
+  type IEvmWalletProvider,
+  type SpokeChainId,
   BSC_MAINNET_CHAIN_ID,
-  EvmHubProvider,
-  EvmSpokeProvider,
-  getHubChainConfig,
   SONIC_MAINNET_CHAIN_ID,
-  SonicSpokeProvider,
   spokeChainConfig,
-  type EvmHubProviderConfig,
-} from '../index.js';
+} from '@sodax/types';
+import { getHubChainConfig, type EvmHubProviderConfig } from '../index.js';
+import { Sodax } from '../entities/Sodax.js';
+import { EvmHubProvider } from '../entities/Providers.js';
 
+import { EvmSpokeProvider } from '../entities/Providers.js';
+import { SonicSpokeProvider } from '../entities/Providers.js';
 describe('calculatePercentageAmount', () => {
+  const sodax = new Sodax();
   const address = '0x0000000000000000000000000000000000000001' as `0x${string}`;
   const mockHubWalletAddress = '0x1234567890123456789012345678901234567890';
 
@@ -32,14 +34,17 @@ describe('calculatePercentageAmount', () => {
   } as unknown as IEvmWalletProvider;
 
   const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
-  const mockSonicSpokeProvider = new SonicSpokeProvider(mockEvmWalletProvider, spokeChainConfig[SONIC_MAINNET_CHAIN_ID]);
+  const mockSonicSpokeProvider = new SonicSpokeProvider(
+    mockEvmWalletProvider,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
+  );
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const mockHubProvider = new EvmHubProvider(mockHubConfig);
+  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.configService });
 
   it('should calculate percentage amount correctly', () => {
     const testCases = [

@@ -4,18 +4,14 @@ import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokePr
 import {
   CustomStellarAccount,
   type DepositSimulationParams,
-  type HubAddress,
   type PromiseStellarTxReturnType,
   type Result,
   STELLAR_DEFAULT_TX_TIMEOUT_SECONDS,
   type StellarGasEstimate,
-  type StellarRawTransaction,
   type StellarReturnType,
   encodeAddress,
-  getIntentRelayChainId,
   parseToStroops,
   sleep,
-  spokeChainConfig,
 } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import {
@@ -28,7 +24,13 @@ import {
   Asset,
   BASE_FEE,
 } from '@stellar/stellar-sdk';
-import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import {
+  STELLAR_MAINNET_CHAIN_ID,
+  getIntentRelayChainId,
+  spokeChainConfig,
+  type HubAddress,
+  type StellarRawTransaction,
+} from '@sodax/types';
 
 export type StellarSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
