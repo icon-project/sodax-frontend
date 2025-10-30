@@ -534,7 +534,7 @@ export class SonicSpokeService {
     moneyMarketService: MoneyMarketService,
     userRouterAddress?: HubAddress,
   ): Promise<Hex> {
-    const userRouter = userRouterAddress ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
+    const userRouter =  (await SonicSpokeService.getUserRouter(from, spokeProvider));
 
     let token = withdrawInfo.token;
     if (withdrawInfo.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
@@ -567,19 +567,20 @@ export class SonicSpokeService {
       value: bigint;
       data: `0x${string}`;
     }[];
-
     // move aTokens to user wallet address
-    // const transferFromCall = Erc20Service.encodeTransferFrom(
-    //   withdrawInfo.aTokenAddress,
-    //   from,
-    //   userRouter,
-    //   withdrawInfo.aTokenAmount,
-    // );
-    // calls.unshift({
-    //   address: transferFromCall.address,
-    //   value: transferFromCall.value,
-    //   data: transferFromCall.data,
-    // });
+    const transferFromCall = Erc20Service.encodeTransferFrom(
+      withdrawInfo.aTokenAddress,
+      from,
+      userRouter,
+      withdrawInfo.aTokenAmount,
+    );
+
+    calls.unshift({
+      address: transferFromCall.address,
+      value: transferFromCall.value,
+      data: transferFromCall.data,
+    });
+    console.log('calls', calls);  
 
     return encodeContractCalls(calls);
   }
