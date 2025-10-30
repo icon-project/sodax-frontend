@@ -9,15 +9,15 @@ import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import type { AggregatedReserveData } from '@sodax/sdk';
 
-export function BorrowButton({ token, reserve }: { token: XToken, reserve: AggregatedReserveData }) {
+export function BorrowButton({ token, aToken, reserve }: { token: XToken, aToken: XToken, reserve: AggregatedReserveData }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token, spokeProvider);
 
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'borrow', spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({...token, decimals: aToken.decimals}, amount, 'borrow', spokeProvider);
+  const { approve, isLoading: isApproving } = useMMApprove({...token, decimals: aToken.decimals}, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleBorrow = async () => {

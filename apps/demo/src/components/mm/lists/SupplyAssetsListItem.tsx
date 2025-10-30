@@ -23,7 +23,7 @@ export function SupplyAssetsListItem({ token, balance, walletBalance, debt, rese
     symbol: 'aToken-${token.symbol}',
     name: 'aToken-${token.name}',
     xChainId: token.xChainId,
-  }
+  };
 
   return (
     <TableRow>
@@ -38,7 +38,7 @@ export function SupplyAssetsListItem({ token, balance, walletBalance, debt, rese
         <WithdrawButton token={token} aToken={aToken} reserve={reserve} />
       </TableCell>
       <TableCell>
-        <BorrowButton token={token} reserve={reserve} />
+        <BorrowButton token={token} aToken={aToken} reserve={reserve} />
       </TableCell>
       <TableCell>
         <RepayButton token={token} reserve={reserve} />
