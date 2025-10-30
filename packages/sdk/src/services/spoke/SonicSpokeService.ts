@@ -342,17 +342,11 @@ export class SonicSpokeService {
 
     const vaultAddress = assetConfig.vault;
 
-    const [normalizedIncome, reserveData] = await Promise.all([
-      dataService.getReserveNormalizedIncome(vaultAddress),
-      dataService.getReserveData(vaultAddress),
-    ]);
-
-    const aTokenAddress = reserveData.aTokenAddress;
-    const aTokenAmount = MoneyMarketService.calculateATokenAmount(amount, normalizedIncome);
+    const aTokenAddress = (await dataService.getReserveData(vaultAddress)).aTokenAddress;
 
     return {
       aTokenAddress,
-      aTokenAmount,
+      aTokenAmount: amount,
       token,
     };
   }
