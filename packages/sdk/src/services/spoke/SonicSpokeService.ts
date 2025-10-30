@@ -406,7 +406,7 @@ export class SonicSpokeService {
       const spenderAddress = spender ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
 
       return Erc20Service.isAllowanceValid(
-        withdrawInfo.token,
+        withdrawInfo.aTokenAddress,
         withdrawInfo.aTokenAmount,
         from,
         spenderAddress,
@@ -532,9 +532,8 @@ export class SonicSpokeService {
     amount: bigint,
     spokeProvider: SonicSpokeProvider,
     moneyMarketService: MoneyMarketService,
-    userRouterAddress?: HubAddress,
   ): Promise<Hex> {
-    const userRouter =  (await SonicSpokeService.getUserRouter(from, spokeProvider));
+    const userRouter = await SonicSpokeService.getUserRouter(from, spokeProvider);
 
     let token = withdrawInfo.token;
     if (withdrawInfo.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
@@ -580,7 +579,7 @@ export class SonicSpokeService {
       value: transferFromCall.value,
       data: transferFromCall.data,
     });
-    console.log('calls', calls);  
+    console.log('calls', calls);
 
     return encodeContractCalls(calls);
   }
