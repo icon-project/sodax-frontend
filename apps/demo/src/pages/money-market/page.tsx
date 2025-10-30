@@ -20,7 +20,7 @@ export default function MoneyMarketPage() {
       <div className="container mx-auto p-4 mt-10 space-y-4">
         <div className="flex items-center gap-2">
           <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
-          <div className="text-sm">hub wallet address: {walletAddressOnHub}</div>
+          <div className="text-sm">Hub wallet address: {walletAddressOnHub}</div>
         </div>
         {xAccount?.address ? (
           <SupplyAssetsList />
