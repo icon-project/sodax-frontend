@@ -282,7 +282,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 <div className="flex flex-col justify-start items-center gap-2">
                   <div className="inline-flex justify-start items-center gap-1">
                     <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                      {inputAmount}
+                      {formatBalance(inputAmount, usdPrice)}
                     </div>
                     <div className="justify-start text-clay-light text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
                       {inputToken.symbol}

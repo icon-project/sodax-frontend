@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 
 const shakeVariants = {
   shake: {
-    x: [0, -10, 10, -8, 8, 0],
+    x: [0, -20, 20, -16, 16, 0],
     transition: { duration: 0.5 },
   },
 };
@@ -36,7 +36,7 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<typeof Dial
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-cream-white opacity-90 backdrop-blur-[12px]',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-cream-white/40 backdrop-blur-sm',
         className,
       )}
       {...props}

@@ -17,7 +17,7 @@ import { Loader2 } from 'lucide-react';
 import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 
-export default function SwapCommitButton({
+export default function SwapReviewButton({
   quoteQuery,
   handleReview,
 }: {
@@ -42,28 +42,36 @@ export default function SwapCommitButton({
   const destinationChainType = getXChainType(outputToken.xChainId);
 
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress;
-  const { data: stellarAccountValidation, refetch } = useValidateStellarAccount(
-    validateChainAddress(finalDestinationAddress, 'STELLAR') ? finalDestinationAddress : null,
+
+  const { data: stellarAccountValidation } = useValidateStellarAccount(
+    outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID ? finalDestinationAddress : undefined,
   );
   const handleActivateStellarAccount = async () => {
     if (!finalDestinationAddress) {
       return;
     }
     await activateStellarAccount({ address: finalDestinationAddress });
-    refetch();
   };
-  const { mutateAsync: activateStellarAccount, isPending: isActivatingStellarAccount } = useActivateStellarAccount();
+  const {
+    activateStellarAccount,
+    isLoading: isActivatingStellarAccount,
+    isActivated: isActivatedStellarAccount,
+  } = useActivateStellarAccount();
 
   // trustline check
-  const { data: stellarTrustlineValidation, refetch: refetchStellarTrustline } = useValidateStellarTrustline(
-    validateChainAddress(finalDestinationAddress, 'STELLAR') ? finalDestinationAddress : null,
+  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(
+    outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID ? finalDestinationAddress : undefined,
     outputToken,
   );
 
   const destinationWalletProvider = useWalletProvider(outputToken.xChainId);
   const destinationSpokeProvider = useSpokeProvider(outputToken.xChainId, destinationWalletProvider);
 
-  const { mutateAsync: requestTrustline, isPending: isRequestingTrustline } = useRequestTrustline(outputToken.address);
+  const {
+    requestTrustline,
+    isLoading: isRequestingTrustline,
+    isRequested: hasTrustline,
+  } = useRequestTrustline(outputToken.address);
   const handleRequestTrustline = async () => {
     if (!quoteQuery.data?.ok || !quoteQuery.data.value) {
       return;
@@ -73,7 +81,6 @@ export default function SwapCommitButton({
       amount: quoteQuery.data.value.quoted_amount,
       spokeProvider: destinationSpokeProvider as SpokeProvider,
     });
-    refetchStellarTrustline();
   };
 
   return (
@@ -107,6 +114,7 @@ export default function SwapCommitButton({
           {inputError}
         </Button>
       ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&
+        !isActivatedStellarAccount &&
         stellarAccountValidation?.ok === false &&
         validateChainAddress(finalDestinationAddress, 'STELLAR') ? (
         <Button
@@ -120,7 +128,8 @@ export default function SwapCommitButton({
         </Button>
       ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&
         stellarTrustlineValidation?.ok === false &&
-        validateChainAddress(finalDestinationAddress, 'STELLAR') ? (
+        !hasTrustline &&
+        validateChainAddress(finalDestinationAddress || '', 'STELLAR') ? (
         <Button
           variant="cherry"
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
