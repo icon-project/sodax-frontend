@@ -41,7 +41,7 @@ function NetworkIcon({
   const shouldDim = hoveredIcon !== null && !isHovered;
 
   return (
-    <div
+    <motion.div
       data-network-icon="true"
       className={`relative shrink-0 cursor-pointer p-2 ${
         shouldDim ? 'opacity-60 grayscale-[0.5]' : 'opacity-100 grayscale-0'
@@ -53,9 +53,10 @@ function NetworkIcon({
         e.stopPropagation();
         onClick();
       }}
-      style={{
-        transform: isHovered ? 'scale(1.3)' : 'scale(1)',
+      animate={{
+        scale: isHovered ? 1.3 : 1,
       }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
     >
       <div className="ring ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded rounded-[4px]">
         {imageSrc === 'Icon' && <IcxIcon />}
@@ -72,7 +73,7 @@ function NetworkIcon({
         {imageSrc === 'Arbitrum' && <ArbitrumIcon />}
         {imageSrc === 'LightLink' && <LightLinkIcon />}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
