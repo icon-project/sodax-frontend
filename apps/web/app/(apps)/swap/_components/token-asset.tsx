@@ -48,13 +48,13 @@ function NetworkIcon({
       }`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      whileHover={{
+        scale: 1.3,
+      }}
       onMouseDown={e => {
         e.preventDefault();
         e.stopPropagation();
         onClick();
-      }}
-      animate={{
-        scale: isHovered ? 1.3 : 1,
       }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
