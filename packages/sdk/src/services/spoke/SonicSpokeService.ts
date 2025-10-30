@@ -535,16 +535,11 @@ export class SonicSpokeService {
   ): Promise<Hex> {
     const userRouter = await SonicSpokeService.getUserRouter(from, spokeProvider);
 
-    let token = withdrawInfo.token;
-    if (withdrawInfo.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
-      token = spokeProvider.chainConfig.addresses.wrappedSonic;
-    }
-
     // Add withdraw call
     const withdrawCall = moneyMarketService.buildWithdrawData(
       userRouter,
       from,
-      token,
+      withdrawInfo.token,
       amount,
       spokeProvider.chainConfig.chain.id,
     );

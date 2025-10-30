@@ -72,6 +72,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
             type="button"
             variant="default"
             onClick={handleApprove}
+            disabled={isAllowanceLoading || hasAllowed || isApproving}
           >
             {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
           </Button>
