@@ -11,7 +11,6 @@ import { isLegacybnUSDToken, isNewbnUSDToken, spokeChainConfig } from '@sodax/sd
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 import { getChainName } from '@/constants/chains';
 import BigNumber from 'bignumber.js';
-import { useBreakpoint } from '@/hooks/useBreakPoint';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export enum CurrencyInputPanelType {
@@ -45,13 +44,11 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   isChainConnected = false,
 }: CurrencyInputPanelProps) => {
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
-  const breakpoint = useBreakpoint();
   const isMobile = useIsMobile();
-  const is_mobile = breakpoint < 480;
-  const is_legacy_bnusd = currency.symbol === 'bnUSD (legacy)';
-  const is_new_bnusd = currency.symbol === 'bnUSD';
-  const token_label = is_legacy_bnusd ? 'OLD' : is_new_bnusd ? 'NEW' : null;
-  const is_bnusd = is_legacy_bnusd || is_new_bnusd;
+  const isLegacyBnUSD = currency.symbol === 'bnUSD (legacy)';
+  const isNewBnUSD = currency.symbol === 'bnUSD';
+  const tokenLabel = isLegacyBnUSD ? 'OLD' : isNewBnUSD ? 'NEW' : null;
+  const isBnUSD = isLegacyBnUSD || isNewBnUSD;
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -112,7 +109,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                   .decimalPlaces(2, BigNumber.ROUND_FLOOR)
                   .toFixed(2)} available`}
               </span>
-              {is_mobile && (
+              {isMobile && (
                 <Button
                   variant="default"
                   size="tiny"
@@ -145,16 +142,16 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           </div>
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-normal text-(length:--body-super-comfortable) flex-none">
             <span className="inline-flex items-baseline leading-none relative top-[0.125rem]">
-              <span className="font-['InterRegular']">{is_bnusd ? 'bnUSD' : currency.symbol}</span>
-              {token_label && (
+              <span className="font-['InterRegular']">{isBnUSD ? 'bnUSD' : currency.symbol}</span>
+              {tokenLabel && (
                 <span className="text-negative ml-[0.25rem] font-['InterBold'] text-(size:--body-tiny) relative -top-[0.125rem] leading-none">
-                  {token_label}
+                  {tokenLabel}
                 </span>
               )}
             </span>
           </div>
 
-          {type === CurrencyInputPanelType.INPUT && !is_mobile && (
+          {type === CurrencyInputPanelType.INPUT && !isMobile && (
             <Button
               variant="default"
               size="tiny"
