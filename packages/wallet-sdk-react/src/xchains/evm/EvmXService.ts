@@ -1,5 +1,19 @@
 import { XService } from '@/core/XService';
-import type { RpcConfig, XToken } from '@sodax/types';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  AVALANCHE_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
+  NIBIRU_MAINNET_CHAIN_ID,
+  OPTIMISM_MAINNET_CHAIN_ID,
+  POLYGON_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  type RpcConfig,
+  type XToken,
+} from '@sodax/types';
 import { getWagmiChainId, isNativeToken } from '@/utils';
 
 import { type Address, defineChain, erc20Abi } from 'viem';
@@ -48,17 +62,17 @@ export const createWagmiConfig = (config: RpcConfig) => {
   return createConfig({
     chains: [mainnet, avalanche, arbitrum, base, bsc, sonic, optimism, polygon, nibiru, hyper, lightlinkPhoenix],
     transports: {
-      [mainnet.id]: http(config['mainnet']),
-      [avalanche.id]: http(config['avalanche']),
-      [arbitrum.id]: http(config['arbitrum']),
-      [base.id]: http(config['base']),
-      [bsc.id]: http(config['bsc']),
-      [sonic.id]: http(config['sonic']),
-      [optimism.id]: http(config['optimism']),
-      [polygon.id]: http(config['polygon']),
-      [nibiru.id]: http(config['nibiru']),
-      [hyper.id]: http(config['hyper']),
-      [lightlinkPhoenix.id]: http(config['lightlinkPhoenix']),
+      [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
+      [avalanche.id]: http(config[AVALANCHE_MAINNET_CHAIN_ID]),
+      [arbitrum.id]: http(config[ARBITRUM_MAINNET_CHAIN_ID]),
+      [base.id]: http(config[BASE_MAINNET_CHAIN_ID]),
+      [bsc.id]: http(config[BSC_MAINNET_CHAIN_ID]),
+      [sonic.id]: http(config[SONIC_MAINNET_CHAIN_ID]),
+      [optimism.id]: http(config[OPTIMISM_MAINNET_CHAIN_ID]),
+      [polygon.id]: http(config[POLYGON_MAINNET_CHAIN_ID]),
+      [nibiru.id]: http(config[NIBIRU_MAINNET_CHAIN_ID]),
+      [hyper.id]: http(config[HYPEREVM_MAINNET_CHAIN_ID]),
+      [lightlinkPhoenix.id]: http(config[LIGHTLINK_MAINNET_CHAIN_ID]),
     },
   });
 };
