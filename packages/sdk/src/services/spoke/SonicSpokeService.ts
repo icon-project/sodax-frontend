@@ -345,17 +345,11 @@ export class SonicSpokeService {
 
     const vaultAddress = assetConfig.vault;
 
-    const [normalizedIncome, reserveData] = await Promise.all([
-      dataService.getReserveNormalizedIncome(vaultAddress),
-      dataService.getReserveData(vaultAddress),
-    ]);
-
-    const aTokenAddress = reserveData.aTokenAddress;
-    const aTokenAmount = MoneyMarketService.calculateATokenAmount(amount, normalizedIncome);
+    const aTokenAddress = (await dataService.getReserveData(vaultAddress)).aTokenAddress;
 
     return {
       aTokenAddress,
-      aTokenAmount,
+      aTokenAmount: amount,
       token,
     };
   }
@@ -411,7 +405,7 @@ export class SonicSpokeService {
       const spenderAddress = spender ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
 
       return Erc20Service.isAllowanceValid(
-        withdrawInfo.token,
+        withdrawInfo.aTokenAddress,
         withdrawInfo.aTokenAmount,
         from,
         spenderAddress,
@@ -537,20 +531,14 @@ export class SonicSpokeService {
     amount: bigint,
     spokeProvider: SonicSpokeProvider,
     moneyMarketService: MoneyMarketService,
-    userRouterAddress?: HubAddress,
   ): Promise<Hex> {
-    const userRouter = userRouterAddress ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
-
-    let token = withdrawInfo.token;
-    if (withdrawInfo.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
-      token = spokeProvider.chainConfig.addresses.wrappedSonic;
-    }
+    const userRouter = await SonicSpokeService.getUserRouter(from, spokeProvider);
 
     // Add withdraw call
     const withdrawCall = moneyMarketService.buildWithdrawData(
       userRouter,
       from,
-      token,
+      withdrawInfo.token,
       amount,
       spokeProvider.chainConfig.chain.id,
     );
@@ -572,19 +560,20 @@ export class SonicSpokeService {
       value: bigint;
       data: `0x${string}`;
     }[];
-
     // move aTokens to user wallet address
-    // const transferFromCall = Erc20Service.encodeTransferFrom(
-    //   withdrawInfo.aTokenAddress,
-    //   from,
-    //   userRouter,
-    //   withdrawInfo.aTokenAmount,
-    // );
-    // calls.unshift({
-    //   address: transferFromCall.address,
-    //   value: transferFromCall.value,
-    //   data: transferFromCall.data,
-    // });
+    const transferFromCall = Erc20Service.encodeTransferFrom(
+      withdrawInfo.aTokenAddress,
+      from,
+      userRouter,
+      withdrawInfo.aTokenAmount,
+    );
+
+    calls.unshift({
+      address: transferFromCall.address,
+      value: transferFromCall.value,
+      data: transferFromCall.data,
+    });
+    console.log('calls', calls);
 
     return encodeContractCalls(calls);
   }

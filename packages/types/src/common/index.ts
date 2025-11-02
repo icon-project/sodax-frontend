@@ -50,29 +50,17 @@ export interface WalletAddressProvider {
 
 export type HttpUrl = `http://${string}` | `https://${string}`;
 
-export type RpcConfig = {
-  // EVM chains - all use string RPC URLs
-  sonic?: string;
-  '0xa86a.avax'?: string;
-  '0xa4b1.arbitrum'?: string;
-  '0x2105.base'?: string;
-  '0x38.bsc'?: string;
-  '0xa.optimism'?: string;
-  '0x89.polygon'?: string;
-  nibiru?: string;
-
-  // Other chains - all use string RPC URLs
-  'injective-1'?: string;
-  sui?: string;
-  solana?: string;
-  '0x1.icon'?: string;
-
-  // Stellar - uses object with horizon and soroban RPC URLs
-  stellar?: {
-    horizonRpcUrl?: HttpUrl;
-    sorobanRpcUrl?: HttpUrl;
-  };
+// Type for Stellar RPC configuration with horizon and soroban URLs
+export type StellarRpcConfig = {
+  horizonRpcUrl?: HttpUrl;
+  sorobanRpcUrl?: HttpUrl;
 };
+
+// Mapped type that uses ChainId as keys and assigns appropriate value types
+// Stellar uses StellarRpcConfig, all other chains use string
+export type RpcConfig = Partial<{
+  [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID ? StellarRpcConfig : string;
+}> & { [ETHEREUM_MAINNET_CHAIN_ID]?: string | undefined };
 
 export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
 export type IntentRelayChainIdMap = Record<ChainId, IntentRelayChainId>;

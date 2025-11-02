@@ -37,10 +37,11 @@ export function useMMAllowance(
     queryKey: ['allowance', token.address, amount, action],
     queryFn: async () => {
       if (!spokeProvider) throw new Error('Spoke provider is required');
+      const actionBasedDecimals = action === 'withdraw' || action === 'borrow' ? 18 : token.decimals; // withdraw and borrow actions are in aToken decimals
       const allowance = await sodax.moneyMarket.isAllowanceValid(
         {
           token: token.address,
-          amount: parseUnits(amount, token.decimals),
+          amount: parseUnits(amount, actionBasedDecimals),
           action,
         },
         spokeProvider,

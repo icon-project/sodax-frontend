@@ -1076,7 +1076,6 @@ export class MoneyMarketService {
         params.amount,
         spokeProvider,
         this,
-        hubWallet,
       );
     } else {
       data = this.buildWithdrawData(
