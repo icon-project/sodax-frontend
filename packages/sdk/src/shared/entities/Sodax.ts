@@ -1,11 +1,5 @@
 import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
-import {
-  SolverService,
-  MigrationService,
-  BackendApiService,
-  BridgeService,
-  StakingService,
-} from '../../index.js';
+import { SwapService, MigrationService, BackendApiService, BridgeService, StakingService } from '../../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
 import type { HttpUrl } from '@sodax/types';
 import type {
@@ -20,7 +14,7 @@ import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 import { ConfigService } from '../config/index.js';
 
 export type SodaxConfig = {
-  solver?: SolverConfigParams; // optional Solver service enabling intent based swaps
+  swap?: SolverConfigParams; // optional Solver service enabling intent based swaps
   moneyMarket?: MoneyMarketConfigParams; // optional Money Market service enabling cross-chain lending and borrowing
   migration?: MigrationServiceConfig; // optional Migration service enabling ICX migration to SODA
   bridge?: BridgeServiceConfig; // optional Bridge service enabling cross-chain transfers
@@ -37,7 +31,7 @@ export type SodaxConfig = {
 export class Sodax {
   public readonly instanceConfig?: SodaxConfig;
 
-  public readonly solver: SolverService; // Solver service enabling intent based swaps
+  public readonly swap: SwapService; // Solver service enabling intent based swaps
   public readonly moneyMarket: MoneyMarketService; // Money Market service enabling cross-chain lending and borrowing
   public readonly migration: MigrationService; // ICX migration service enabling ICX migration to SODA
   public readonly backendApi: BackendApiService; // backend API service enabling backend API endpoints
@@ -60,15 +54,15 @@ export class Sodax {
       },
     });
     this.hubProvider = new EvmHubProvider({ config: config?.hubProviderConfig, configService: this.config }); // default to Sonic mainnet
-    this.solver =
-      config && config.solver
-        ? new SolverService({
-            config: config.solver,
+    this.swap =
+      config && config.swap
+        ? new SwapService({
+            config: config.swap,
             configService: this.config,
             hubProvider: this.hubProvider,
             relayerApiEndpoint: this.relayerApiEndpoint,
           })
-        : new SolverService({
+        : new SwapService({
             config: undefined,
             configService: this.config,
             hubProvider: this.hubProvider,

@@ -70,7 +70,7 @@ const solverConfig = {
 } satisfies SolverConfigParams;
 
 const sodax = new Sodax({
-  solver: solverConfig,
+  swap: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);

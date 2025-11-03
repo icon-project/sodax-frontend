@@ -2,7 +2,7 @@ import { type HttpUrl, type SpokeChainId, getIntentRelayChainId } from '@sodax/t
 import type { Result } from '../../types.js';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
-import type { IntentError } from '../../../swap/SolverService.js';
+import type { IntentError } from '../../../swap/SwapService.js';
 import { DEFAULT_RELAY_TX_TIMEOUT } from '../../constants.js';
 import type { SpokeProvider } from '../../entities/Providers.js';
 import type { Hex } from 'viem';

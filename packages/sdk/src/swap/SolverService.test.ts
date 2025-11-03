@@ -16,7 +16,7 @@ import {
   type PartnerFee,
   type RelayTxStatus,
   type Result,
-  SolverService,
+  SwapService,
   isIntentSubmitTxFailedError,
   isIntentCreationFailedError,
   isIntentPostExecutionFailedError,
@@ -34,6 +34,7 @@ import { Sodax } from '../shared/entities/Sodax.js';
 import { EvmSpokeProvider } from '../shared/entities/Providers.js';
 import { EvmHubProvider } from '../shared/entities/Providers.js';
 import {
+  isSwapSupportedToken,
   ARBITRUM_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
   type Address,
@@ -41,13 +42,15 @@ import {
   getIntentRelayChainId,
   spokeChainConfig,
   type SolverConfig,
+  type Token,
+  type SpokeChainId,
 } from '@sodax/types';
 import type { GetBlockReturnType } from 'viem';
 
 // Define a type for Intent with fee amount
 type IntentWithFee = Intent & FeeAmount;
 
-describe('SolverService', async () => {
+describe('SwapService', async () => {
   const mockIntentsContract = '0x0987654321098765432109876543210987654321' satisfies Address;
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
   const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
@@ -85,12 +88,12 @@ describe('SolverService', async () => {
   const feeAmount = 1000n; // 1000 of input token
   const feePercentage = 100; // 1% fee
 
-  const solverService = new SolverService({
+  const swapService = new SwapService({
     config: mockSolverConfig,
     configService: sodax.config,
     hubProvider: mockHubProvider,
   });
-  const solverServiceWithPercentageFee = new SolverService({
+  const solverServiceWithPercentageFee = new SwapService({
     config: {
       ...mockSolverConfig,
       partnerFee: {
@@ -101,7 +104,7 @@ describe('SolverService', async () => {
     configService: sodax.config,
     hubProvider: mockHubProvider,
   });
-  const solverServiceWithAmountFee = new SolverService({
+  const solverServiceWithAmountFee = new SwapService({
     config: {
       ...mockSolverConfig,
       partnerFee: {
@@ -170,8 +173,8 @@ describe('SolverService', async () => {
     return {
       intentId: BigInt(1),
       creator: creator,
-      inputToken: (sodax.config.getHubAssetInfo(params.srcChain, params.inputToken))?.asset ?? '0x',
-      outputToken: (sodax.config.getHubAssetInfo(params.dstChain, params.outputToken))?.asset ?? '0x',
+      inputToken: sodax.config.getHubAssetInfo(params.srcChain, params.inputToken)?.asset ?? '0x',
+      outputToken: sodax.config.getHubAssetInfo(params.dstChain, params.outputToken)?.asset ?? '0x',
       inputAmount: params.inputAmount,
       minOutputAmount: params.minOutputAmount,
       deadline: params.deadline,
@@ -190,6 +193,35 @@ describe('SolverService', async () => {
     vi.restoreAllMocks();
   });
 
+  describe('swap configs', () => {
+    it('should return the correct spoke chain configs', () => {
+      const result = sodax.config.getSupportedSpokeChains();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should return the correct supported swap tokens for a given spoke chain ID', () => {
+      const supportedSwapTokensForChainId: readonly Token[] =
+        sodax.swap.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
+      expect(Array.isArray(supportedSwapTokensForChainId)).toBe(true);
+      expect(supportedSwapTokensForChainId.length).toBeGreaterThan(0);
+    });
+
+    it('should return the correct supported swap tokens for a given spoke chain ID', () => {
+      const supportedSwapTokensPerChain: Record<SpokeChainId, readonly Token[]> = sodax.swap.getSupportedSwapTokens();
+      expect(supportedSwapTokensPerChain).toBeDefined();
+      expect(Object.keys(supportedSwapTokensPerChain).length).toBeGreaterThan(0);
+      expect(supportedSwapTokensPerChain[ARBITRUM_MAINNET_CHAIN_ID].length).toBeGreaterThan(0);
+    });
+
+    it('should check if token is swap supported', () => {
+      const supportedSwapTokensForChainId: readonly Token[] =
+        sodax.swap.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
+      const token = supportedSwapTokensForChainId[0];
+      expect(token && isSwapSupportedToken(ARBITRUM_MAINNET_CHAIN_ID, token.address)).toBe(true);
+    });
+  });
+
   describe('getQuote', () => {
     it('should return a successful quote response', async () => {
       // Mock fetch response
@@ -201,7 +233,7 @@ describe('SolverService', async () => {
         }),
       });
 
-      const result = await solverService.getQuote(mockQuoteRequest);
+      const result = await swapService.getQuote(mockQuoteRequest);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -230,7 +262,7 @@ describe('SolverService', async () => {
         }),
       });
 
-      const result = await solverService.getQuote(mockQuoteRequest);
+      const result = await swapService.getQuote(mockQuoteRequest);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -242,7 +274,7 @@ describe('SolverService', async () => {
       // Mock fetch throwing an error
       global.fetch = vi.fn().mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await solverService.getQuote(mockQuoteRequest);
+      const result = await swapService.getQuote(mockQuoteRequest);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -319,7 +351,7 @@ describe('SolverService', async () => {
 
       vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
 
-      const result = await solverService.getSwapDeadline();
+      const result = await swapService.getSwapDeadline();
 
       expect(result).toBe(1700000000n + 300n); // timestamp + 5 minutes (300 seconds)
       expect(mockHubProvider.publicClient.getBlock).toHaveBeenCalledWith({
@@ -336,7 +368,7 @@ describe('SolverService', async () => {
       vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
 
       const customDeadline = 600n; // 10 minutes
-      const result = await solverService.getSwapDeadline(customDeadline);
+      const result = await swapService.getSwapDeadline(customDeadline);
 
       expect(result).toBe(1700000000n + 600n); // timestamp + 10 minutes
       expect(mockHubProvider.publicClient.getBlock).toHaveBeenCalledWith({
@@ -352,7 +384,7 @@ describe('SolverService', async () => {
 
       vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
 
-      await expect(solverService.getSwapDeadline(0n)).rejects.toThrow('Deadline must be greater than 0');
+      await expect(swapService.getSwapDeadline(0n)).rejects.toThrow('Deadline must be greater than 0');
     });
 
     it('should handle very large deadline offset', async () => {
@@ -363,7 +395,7 @@ describe('SolverService', async () => {
       vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
 
       const largeDeadline = 2n ** 64n - 1n; // Very large deadline
-      const result = await solverService.getSwapDeadline(largeDeadline);
+      const result = await swapService.getSwapDeadline(largeDeadline);
 
       expect(result).toBe(1700000000n + largeDeadline);
     });
@@ -376,14 +408,14 @@ describe('SolverService', async () => {
       vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
 
       const negativeDeadline = -300n; // Negative deadline
-      await expect(solverService.getSwapDeadline(negativeDeadline)).rejects.toThrow('Deadline must be greater than 0');
+      await expect(swapService.getSwapDeadline(negativeDeadline)).rejects.toThrow('Deadline must be greater than 0');
     });
 
     it('should handle hub provider errors', async () => {
       const mockError = new Error('Failed to get block');
       vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockRejectedValueOnce(mockError);
 
-      await expect(solverService.getSwapDeadline()).rejects.toThrow('Failed to get block');
+      await expect(swapService.getSwapDeadline()).rejects.toThrow('Failed to get block');
       expect(mockHubProvider.publicClient.getBlock).toHaveBeenCalledWith({
         includeTransactions: false,
         blockTag: 'latest',
@@ -397,7 +429,7 @@ describe('SolverService', async () => {
 
       vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
 
-      const result = await solverService.getSwapDeadline(DEFAULT_DEADLINE_OFFSET);
+      const result = await swapService.getSwapDeadline(DEFAULT_DEADLINE_OFFSET);
       expect(result).toBe(mockBlock.timestamp + DEFAULT_DEADLINE_OFFSET);
     });
 
@@ -409,7 +441,7 @@ describe('SolverService', async () => {
       vi.spyOn(mockHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(mockBlock);
 
       // @ts-expect-error Testing null parameter
-      await expect(solverService.getSwapDeadline(null)).rejects.toThrow('Deadline must be greater than 0');
+      await expect(swapService.getSwapDeadline(null)).rejects.toThrow('Deadline must be greater than 0');
     });
   });
 
@@ -426,7 +458,7 @@ describe('SolverService', async () => {
       });
 
       const result: Result<SolverExecutionResponse, SolverErrorResponse> =
-        await solverService.postExecution(mockExecutionRequest);
+        await swapService.postExecution(mockExecutionRequest);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -456,7 +488,7 @@ describe('SolverService', async () => {
         }),
       });
 
-      const result = await solverService.postExecution(mockExecutionRequest);
+      const result = await swapService.postExecution(mockExecutionRequest);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -476,7 +508,7 @@ describe('SolverService', async () => {
         }),
       });
 
-      const result = await solverService.getStatus(mockStatusRequest);
+      const result = await swapService.getStatus(mockStatusRequest);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -505,7 +537,7 @@ describe('SolverService', async () => {
         }),
       });
 
-      const result = await solverService.getStatus(mockStatusRequest);
+      const result = await swapService.getStatus(mockStatusRequest);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -529,7 +561,7 @@ describe('SolverService', async () => {
       const mockIntent = await createMockIntent(mockCreateIntentParams);
       const mockIntentWithFee: IntentWithFee = { ...mockIntent, feeAmount };
 
-      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'createIntent').mockResolvedValueOnce({
         ok: true,
         value: [mockTxHash, mockIntentWithFee, '0x'],
       });
@@ -544,7 +576,7 @@ describe('SolverService', async () => {
         ok: true,
         value: mockPacketData,
       });
-      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'postExecution').mockResolvedValueOnce({
         ok: true,
         value: {
           answer: 'OK',
@@ -552,7 +584,7 @@ describe('SolverService', async () => {
         },
       });
 
-      const result = await solverService.swap({
+      const result = await swapService.swap({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -563,14 +595,14 @@ describe('SolverService', async () => {
         expect(result.value[0]).toBeDefined();
         expect(result.value[1]).toEqual(mockIntentWithFee);
       }
-      expect(solverService['createIntent']).toHaveBeenCalledWith({
+      expect(swapService['createIntent']).toHaveBeenCalledWith({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
-        fee: solverService.config.partnerFee,
+        fee: swapService.config.partnerFee,
         raw: false,
         skipSimulation: false,
       });
-      expect(solverService['postExecution']).toHaveBeenCalledWith({
+      expect(swapService['postExecution']).toHaveBeenCalledWith({
         intent_tx_hash: mockTxHash,
       });
       expect(IntentRelayApiService.submitTransaction).toHaveBeenCalled();
@@ -579,7 +611,7 @@ describe('SolverService', async () => {
     it('should handle createIntent error', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
 
-      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'createIntent').mockResolvedValueOnce({
         ok: false,
         error: {
           code: 'CREATION_FAILED',
@@ -590,7 +622,7 @@ describe('SolverService', async () => {
         } satisfies IntentError<'CREATION_FAILED'>,
       });
 
-      const result = await solverService.swap({
+      const result = await swapService.swap({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -604,7 +636,7 @@ describe('SolverService', async () => {
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
-      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'createIntent').mockResolvedValueOnce({
         ok: true,
         value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
@@ -612,7 +644,7 @@ describe('SolverService', async () => {
         success: false,
         message: 'Transaction submission failed',
       });
-      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'postExecution').mockResolvedValueOnce({
         ok: true,
         value: {
           answer: 'OK',
@@ -620,7 +652,7 @@ describe('SolverService', async () => {
         },
       });
 
-      const result = await solverService.swap({
+      const result = await swapService.swap({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -642,7 +674,7 @@ describe('SolverService', async () => {
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
-      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'createIntent').mockResolvedValueOnce({
         ok: true,
         value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
@@ -650,7 +682,7 @@ describe('SolverService', async () => {
         success: false,
         message: 'Transaction submission failed',
       });
-      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'postExecution').mockResolvedValueOnce({
         ok: true,
         value: {
           answer: 'OK',
@@ -658,7 +690,7 @@ describe('SolverService', async () => {
         },
       });
 
-      const result = await solverService.swap({
+      const result = await swapService.swap({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -672,11 +704,11 @@ describe('SolverService', async () => {
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
-      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'createIntent').mockResolvedValueOnce({
         ok: true,
         value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
-      vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'submitIntent').mockResolvedValueOnce({
         ok: false,
         error: {
           code: 'SUBMIT_TX_FAILED',
@@ -686,7 +718,7 @@ describe('SolverService', async () => {
           },
         },
       });
-      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'postExecution').mockResolvedValueOnce({
         ok: true,
         value: {
           answer: 'OK',
@@ -694,7 +726,7 @@ describe('SolverService', async () => {
         },
       });
 
-      const result = await solverService.swap({
+      const result = await swapService.swap({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -710,11 +742,11 @@ describe('SolverService', async () => {
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
-      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'createIntent').mockResolvedValueOnce({
         ok: true,
         value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
-      vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'submitIntent').mockResolvedValueOnce({
         ok: true,
         value: {
           success: true,
@@ -738,7 +770,7 @@ describe('SolverService', async () => {
         },
       });
 
-      const result = await solverService.swap({
+      const result = await swapService.swap({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -752,11 +784,11 @@ describe('SolverService', async () => {
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
-      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'createIntent').mockResolvedValueOnce({
         ok: true,
         value: [mockTxHash, { ...mockIntent, feeAmount: feeAmount }, '0x'],
       });
-      vi.spyOn(solverService, 'submitIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'submitIntent').mockResolvedValueOnce({
         ok: true,
         value: {
           success: true,
@@ -769,7 +801,7 @@ describe('SolverService', async () => {
         value: mockPacketData,
       });
 
-      vi.spyOn(solverService, 'postExecution').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'postExecution').mockResolvedValueOnce({
         ok: false,
         error: {
           detail: {
@@ -779,7 +811,7 @@ describe('SolverService', async () => {
         },
       });
 
-      const result = await solverService.swap({
+      const result = await swapService.swap({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -791,7 +823,7 @@ describe('SolverService', async () => {
     it('should handle swap unknown error', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
 
-      vi.spyOn(solverService, 'swap').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'swap').mockResolvedValueOnce({
         ok: false,
         error: {
           code: 'UNKNOWN',
@@ -802,7 +834,7 @@ describe('SolverService', async () => {
         } satisfies IntentError<'UNKNOWN'>,
       });
 
-      const result = await solverService.swap({
+      const result = await swapService.swap({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -819,13 +851,13 @@ describe('SolverService', async () => {
       const mockIntent = await createMockIntent(mockCreateIntentParams);
       const mockIntentWithFee: IntentWithFee = { ...mockIntent, feeAmount };
 
-      vi.spyOn(solverService, 'createIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'createIntent').mockResolvedValueOnce({
         ok: true,
         value: [mockTxHash, mockIntentWithFee, '0x'],
       });
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockCreatorHubWalletAddress);
 
-      const result = await solverService.createIntent({
+      const result = await swapService.createIntent({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
         fee: mockFee,
@@ -847,11 +879,11 @@ describe('SolverService', async () => {
       const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
-      vi.spyOn(solverService, 'cancelIntent').mockResolvedValueOnce({
+      vi.spyOn(swapService, 'cancelIntent').mockResolvedValueOnce({
         ok: true,
         value: mockTxHash,
       });
-      const result = await solverService.cancelIntent(mockIntent, mockBscSpokeProvider, false);
+      const result = await swapService.cancelIntent(mockIntent, mockBscSpokeProvider, false);
 
       expect(result.ok).toBe(true);
       expect(result.ok && result.value).toBe(mockTxHash);
@@ -865,7 +897,7 @@ describe('SolverService', async () => {
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
       vi.spyOn(EvmSolverService, 'getIntent').mockResolvedValueOnce(mockIntent);
-      const result = await solverService.getIntent(mockTxHash);
+      const result = await swapService.getIntent(mockTxHash);
 
       expect(result).toEqual(mockIntent);
     });
@@ -876,10 +908,10 @@ describe('SolverService', async () => {
       const mockCreateIntentParams = await createMockIntentParams();
       const mockIntent = await createMockIntent(mockCreateIntentParams);
 
-      vi.spyOn(solverService, 'getIntentHash').mockReturnValueOnce(
+      vi.spyOn(swapService, 'getIntentHash').mockReturnValueOnce(
         '0x8196c6646c0d811b2ff19ffdf61533ad2d73d724fcd69c77ec243a908364a35e',
       );
-      const result = solverService.getIntentHash(mockIntent);
+      const result = swapService.getIntentHash(mockIntent);
 
       expect(result).toBe('0x8196c6646c0d811b2ff19ffdf61533ad2d73d724fcd69c77ec243a908364a35e');
     });
@@ -894,7 +926,7 @@ describe('SolverService', async () => {
         value: true,
       });
 
-      const result = await solverService.isAllowanceValid({
+      const result = await swapService.isAllowanceValid({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -906,7 +938,7 @@ describe('SolverService', async () => {
       expect(Erc20Service.isAllowanceValid).toHaveBeenCalledWith(
         mockCreateIntentParams.inputToken,
         mockCreateIntentParams.inputAmount +
-          calculateFeeAmount(mockCreateIntentParams.inputAmount, solverService.config.partnerFee),
+          calculateFeeAmount(mockCreateIntentParams.inputAmount, swapService.config.partnerFee),
         await mockEvmWalletProvider.getWalletAddress(),
         mockBscSpokeProvider.chainConfig.addresses.assetManager,
         mockBscSpokeProvider,
@@ -921,7 +953,7 @@ describe('SolverService', async () => {
         value: false,
       });
 
-      const result = await solverService.isAllowanceValid({
+      const result = await swapService.isAllowanceValid({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -945,7 +977,7 @@ describe('SolverService', async () => {
         },
       } as unknown as SpokeProvider;
 
-      const result = await solverService.isAllowanceValid({
+      const result = await swapService.isAllowanceValid({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockNonEvmSpokeProvider,
       });
@@ -965,7 +997,7 @@ describe('SolverService', async () => {
         error: mockError,
       });
 
-      const result = await solverService.isAllowanceValid({
+      const result = await swapService.isAllowanceValid({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -982,7 +1014,7 @@ describe('SolverService', async () => {
 
       vi.spyOn(Erc20Service, 'isAllowanceValid').mockRejectedValueOnce(mockError);
 
-      const result = await solverService.isAllowanceValid({
+      const result = await swapService.isAllowanceValid({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -1001,7 +1033,7 @@ describe('SolverService', async () => {
 
       vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockTxHash);
 
-      const result = await solverService.approve({
+      const result = await swapService.approve({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });
@@ -1013,7 +1045,7 @@ describe('SolverService', async () => {
       expect(Erc20Service.approve).toHaveBeenCalledWith(
         mockCreateIntentParams.inputToken,
         mockCreateIntentParams.inputAmount +
-          calculateFeeAmount(mockCreateIntentParams.inputAmount, solverService.config.partnerFee),
+          calculateFeeAmount(mockCreateIntentParams.inputAmount, swapService.config.partnerFee),
         mockBscSpokeProvider.chainConfig.addresses.assetManager,
         mockBscSpokeProvider,
         undefined,
@@ -1031,7 +1063,7 @@ describe('SolverService', async () => {
 
       vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockRawTx);
 
-      const result = await solverService.approve({
+      const result = await swapService.approve({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
         raw: true,
@@ -1044,7 +1076,7 @@ describe('SolverService', async () => {
       expect(Erc20Service.approve).toHaveBeenCalledWith(
         mockCreateIntentParams.inputToken,
         mockCreateIntentParams.inputAmount +
-          calculateFeeAmount(mockCreateIntentParams.inputAmount, solverService.config.partnerFee),
+          calculateFeeAmount(mockCreateIntentParams.inputAmount, swapService.config.partnerFee),
         mockBscSpokeProvider.chainConfig.addresses.assetManager,
         mockBscSpokeProvider,
         true,
@@ -1064,7 +1096,7 @@ describe('SolverService', async () => {
         },
       } as unknown as SpokeProvider;
 
-      const result = await solverService.approve({
+      const result = await swapService.approve({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockNonEvmSpokeProvider,
       });
@@ -1083,7 +1115,7 @@ describe('SolverService', async () => {
 
       vi.spyOn(Erc20Service, 'approve').mockRejectedValueOnce(mockError);
 
-      const result = await solverService.approve({
+      const result = await swapService.approve({
         intentParams: mockCreateIntentParams,
         spokeProvider: mockBscSpokeProvider,
       });

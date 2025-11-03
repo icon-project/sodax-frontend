@@ -1,6 +1,6 @@
 # Swaps (Solver)
 
-Solver part of the SDK provides abstractions to assist you with interacting with the cross-chain Intent Smart Contracts, Solver and Relay API.
+Swaps part of the SDK provides abstractions to assist you with interacting with the cross-chain Intent Smart Contracts, Solver and Relay API.
 
 ## Using SDK Config and Constants
 
@@ -17,17 +17,17 @@ const sodax = new Sodax();
 await sodax.initialize();
 
 // all supported spoke chains
-export const spokeChains: SpokeChainId[] = sodax.getSupportedSpokeChains();
+export const spokeChains: SpokeChainId[] = sodax.config.getSupportedSpokeChains();
 
 // using spoke chain id to retrieve supported tokens for swap (solver intent swaps)
-const supportedSwapTokensForChainId: readonly Token[] = sodax.getSupportedSwapTokensByChainId(spokeChainId);
+// NOTE: empty array indicates no tokens are supported, you should filter out empty arrays
+const supportedSwapTokensForChainId: readonly Token[] = sodax.swap.getSupportedSwapTokensByChainId(spokeChainId);
 
-const supportedSwapTokensPerChain: Record<SpokeChainId, readonly Token[]> = sodax.getSupportedSwapTokens();
+// object containing all supported swap tokens per chain ID
+const supportedSwapTokensPerChain: Record<SpokeChainId, readonly Token[]> = sodax.swap.getSupportedSwapTokens();
 
-// all swap tokens
-
-// check if token address for given spoke chain id is supported in solver
-const isSolverSupportedToken: boolean = isSolverSupportedToken(spokeChainId, token)
+// check if token address for given spoke chain id is supported in swaps
+const isSwapSupportedToken: boolean = isSwapSupportedToken(spokeChainId, token)
 ```
 
 Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for more.
@@ -69,7 +69,7 @@ const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of
     quote_type: 'exact_input',
   } satisfies SolverIntentQuoteRequest;
 
-  const result = await sodax.solver.getQuote(quoteRequest);
+  const result = await sodax.swap.getQuote(quoteRequest);
 
   if (result.ok) {
     // success
@@ -112,11 +112,11 @@ All solver functions use object parameters for better readability and extensibil
 The `getPartnerFee` function allows you to calculate the partner fee for a given input amount before creating an intent. This is useful for displaying fee information to users or calculating the total cost of a swap.
 
 ```typescript
-import { SolverService } from "@sodax/sdk";
+import { SwapService } from "@sodax/sdk";
 
 // Calculate fee for a given input amount
 const inputAmount = 1000000000000000n; // 1 WETH (18 decimals)
-const fee = sodax.solver.getPartnerFee(inputAmount);
+const fee = sodax.swap.getPartnerFee(inputAmount);
 
 console.log('Fee amount:', fee); // Fee in input token units
 console.log('Fee percentage:', Number(fee) / Number(inputAmount) * 100); // Fee as percentage
@@ -130,14 +130,14 @@ console.log('Amount after fee deduction:', inputAmount - fee); // Actual amount 
 The `getSwapDeadline` function allows you to calculate a deadline timestamp for your swap by querying the hub chain's current block timestamp and adding a deadline offset. This is useful for setting expiration times for intents to prevent them from being executed after a certain period.
 
 ```typescript
-import { SolverService } from "@sodax/sdk";
+import { SwapService } from "@sodax/sdk";
 
 // Get deadline with default 5-minute offset
-const deadline = await sodax.solver.getSwapDeadline();
+const deadline = await sodax.swap.getSwapDeadline();
 console.log('Swap deadline (5 min from now):', deadline);
 
 // Get deadline with custom offset (e.g., 10 minutes)
-const customDeadline = await sodax.solver.getSwapDeadline(600n); // 600 seconds = 10 minutes
+const customDeadline = await sodax.swap.getSwapDeadline(600n); // 600 seconds = 10 minutes
 console.log('Swap deadline (10 min from now):', customDeadline);
 
 // Use the deadline in your intent parameters
@@ -156,7 +156,7 @@ Before creating an intent, you need to ensure that the Asset Manager contract ha
 
 ```typescript
 import {
-  SolverService,
+  SwapService,
   BSC_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID
 } from "@sodax/sdk"
@@ -164,7 +164,7 @@ import {
 const evmWalletAddress = evmWalletProvider.getWalletAddress();
 
 // First check if approval is needed
-const isApproved = await sodax.solver.isAllowanceValid({
+const isApproved = await sodax.swap.isAllowanceValid({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
 });
@@ -174,7 +174,7 @@ if (!isApproved.ok) {
   console.error('Failed to check allowance:', isApproved.error);
 } else if (!isApproved.value) {
   // Approve Sodax to transfer your tokens
-  const approveResult = await sodax.solver.approve({
+  const approveResult = await sodax.swap.approve({
     intentParams: createIntentParams,
     spokeProvider: bscSpokeProvider,
   });
@@ -231,13 +231,13 @@ The `estimateGas` function allows you to estimate the gas cost for raw transacti
 
 ```typescript
 import {
-  SolverService,
+  SwapService,
   BSC_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID
 } from "@sodax/sdk"
 
 // Example: Estimate gas for an intent creation transaction
-const createIntentResult = await sodax.solver.createIntent({
+const createIntentResult = await sodax.swap.createIntent({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
   fee, // optional - uses configured partner fee if not provided
@@ -248,7 +248,7 @@ if (createIntentResult.ok) {
   const [rawTx, intent] = createIntentResult.value;
   
   // Estimate gas for the raw transaction
-  const gasEstimate = await SolverService.estimateGas(rawTx, bscSpokeProvider);
+  const gasEstimate = await SwapService.estimateGas(rawTx, bscSpokeProvider);
   
   if (gasEstimate.ok) {
     console.log('Estimated gas:', gasEstimate.value);
@@ -258,7 +258,7 @@ if (createIntentResult.ok) {
 }
 
 // Example: Estimate gas for an approval transaction
-const approveResult = await sodax.solver.approve({
+const approveResult = await sodax.swap.approve({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
   raw: true // true = get raw transaction
@@ -268,7 +268,7 @@ if (approveResult.ok) {
   const rawTx = approveResult.value;
   
   // Estimate gas for the approval transaction
-  const gasEstimate = await SolverService.estimateGas(rawTx, bscSpokeProvider);
+  const gasEstimate = await SwapService.estimateGas(rawTx, bscSpokeProvider);
   
   if (gasEstimate.ok) {
     console.log('Estimated gas for approval:', gasEstimate.value);
@@ -286,7 +286,7 @@ Example for BSC -> ARB Intent Order:
 
 ```typescript
   import {
-    SolverService,
+    SwapService,
     SolverConfig,
     BSC_MAINNET_CHAIN_ID,
     ARBITRUM_MAINNET_CHAIN_ID
@@ -303,7 +303,7 @@ Example for BSC -> ARB Intent Order:
    * IMPORTANT: you should primarily swap function unless you require custom step by step handling
   **/
 
-  const swapResult = await sodax.solver.swap({
+  const swapResult = await sodax.swap.swap({
     intentParams: createIntentParams,
     spokeProvider: bscSpokeProvider,
     fee, // optional - uses configured partner fee if not provided
@@ -326,7 +326,7 @@ Example for BSC -> ARB Intent Order:
   // creates and submits on-chain transaction or returns raw transaction
   // NOTE: after intent is created on-chain it should also be posted
   // to Solver API and submitted to Relay API (see swap function on how it is done)
-  const createIntentResult = await sodax.solver.createIntent({
+  const createIntentResult = await sodax.swap.createIntent({
     intentParams: createIntentParams,
     spokeProvider: bscSpokeProvider,
     fee, // optional - uses configured partner fee if not provided
@@ -356,7 +356,7 @@ const submitPayload = {
   },
 } satisfies IntentRelayRequest<'submit'>;
 
-const submitResult = await sodax.solver.submitIntent(submitPayload);
+const submitResult = await sodax.swap.submitIntent(submitPayload);
 
 if (submitResult.ok) {
   const { success, message } = submitResult.value;
@@ -373,7 +373,7 @@ if (submitResult.ok) {
 Retrieve intent data using tx hash obtained from intent creation response.
 
 ```typescript
-const intent = await sodax.solver.getIntent(txHash);
+const intent = await sodax.swap.getIntent(txHash);
 ```
 
 ### Cancel Intent Order
@@ -383,7 +383,7 @@ Active Intent Order can be cancelled using Intent. See [Get Intent Order](#get-i
 
 ```typescript
 
-const result = await sodax.solver.cancelIntent(
+const result = await sodax.swap.cancelIntent(
   intent,
   bscSpokeProvider,
   false, // true = get raw transaction, false = execute and return tx hash
@@ -402,7 +402,7 @@ if (result.ok) {
 Retrieve status of intent.
 
 ```typescript
-const result = await sodax.solver.getStatus({
+const result = await sodax.swap.getStatus({
     intent_tx_hash: '0x...', // tx hash of create intent blockchain transaction
   } satisfies SolverIntentStatusRequest);
 ```
@@ -413,7 +413,7 @@ const result = await sodax.solver.getStatus({
 Get Intent Hash (keccak256) used as an ID of intent in smart contract.
 
 ```typescript
-const intentHash = sodax.solver.getIntentHash(intent);
+const intentHash = sodax.swap.getIntentHash(intent);
 ```
 
 ## Error Handling
@@ -440,7 +440,7 @@ import {
 The `swap` function performs multiple operations in sequence, and each step can fail. The returned error type can be checked using the helper functions:
 
 ```typescript
-const swapResult = await sodax.solver.swap({
+const swapResult = await sodax.swap.swap({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
   fee, // optional - uses configured partner fee if not provided
@@ -509,7 +509,7 @@ if (!swapResult.ok) {
 The `createIntent` function has a simpler error structure since it only handles intent creation on spoke chain (source chain):
 
 ```typescript
-const createIntentResult = await sodax.solver.createIntent({
+const createIntentResult = await sodax.swap.createIntent({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
   fee, // optional - uses configured partner fee if not provided

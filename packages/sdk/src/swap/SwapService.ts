@@ -35,7 +35,7 @@ import type {
   SolverIntentStatusResponse,
   Result,
   SolverConfigParams,
-  SolverServiceConfig,
+  SwapServiceConfig,
   TxReturnType,
   GetEstimateGasReturnType,
   GetAddressType,
@@ -166,19 +166,19 @@ export type SwapParams<S extends SpokeProvider> = Prettify<
   } & OptionalFee
 >;
 
-export type SolverServiceConstructorParams = {
+export type SwapServiceConstructorParams = {
   config: SolverConfigParams | undefined;
   configService: ConfigService;
   hubProvider: EvmHubProvider;
   relayerApiEndpoint?: HttpUrl;
 };
 
-export class SolverService {
-  readonly config: SolverServiceConfig;
+export class SwapService {
+  readonly config: SwapServiceConfig;
   readonly hubProvider: EvmHubProvider;
   readonly configService: ConfigService;
 
-  public constructor({ config, configService, hubProvider, relayerApiEndpoint }: SolverServiceConstructorParams) {
+  public constructor({ config, configService, hubProvider, relayerApiEndpoint }: SwapServiceConstructorParams) {
     if (!config) {
       this.config = {
         ...getSolverConfig(SONIC_MAINNET_CHAIN_ID), // default to mainnet config
@@ -230,7 +230,7 @@ export class SolverService {
    *     "quote_type": "exact_input"
    * } satisfies SolverIntentQuoteRequest
    *
-   * const response = await solverService.getQuote(payload);
+   * const response = await swapService.getQuote(payload);
    *
    * if (response.ok) {
    *   const quotedAmount = response.value.quoted_amount;
@@ -255,7 +255,7 @@ export class SolverService {
    * @returns {Promise<bigint>} The partner fee amount (denominated in input tokens)
    *
    * @example
-   * const fee: bigint = await solverService.getPartnerFee(1000000000000000n);
+   * const fee: bigint = await swapService.getPartnerFee(1000000000000000n);
    * console.log('Partner fee:', fee);
    */
   public getPartnerFee(inputAmount: bigint): bigint {
@@ -272,7 +272,7 @@ export class SolverService {
    * @returns {Promise<bigint>} The solver fee amount (denominated in input tokens)
    *
    * @example
-   * const fee: bigint = await solverService.getSolverFee(1000000000000000n);
+   * const fee: bigint = await swapService.getSolverFee(1000000000000000n);
    * console.log('Solver fee:', fee);
    */
   public getSolverFee(inputAmount: bigint): bigint {
@@ -290,7 +290,7 @@ export class SolverService {
    *     "intent_tx_hash": "a0dd7652-b360-4123-ab2d-78cfbcd20c6b" // destination tx hash from relay packet
    * } satisfies SolverIntentStatusRequest
    *
-   * const response = await solverService.getStatus(request);
+   * const response = await swapService.getStatus(request);
    *
    * if (response.ok) {
    *   const { status, intent_hash } = response.value;
@@ -316,7 +316,7 @@ export class SolverService {
    *     "intent_tx_hash": "0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af",
    * } satisfies SolverExecutionRequest
    *
-   * const response = await solverService.postExecution(request);
+   * const response = await swapService.postExecution(request);
    *
    * if (response.ok) {
    *   const { answer, intent_hash } = response.value;
@@ -346,7 +346,7 @@ export class SolverService {
    *     },
    * } satisfies IntentRelayRequest<'submit'>;
    *
-   * const submitResult = await solverService.submitIntent(submitPayload);
+   * const submitResult = await swapService.submitIntent(submitPayload);
    *
    * if (submitResult.ok) {
    *   const { success, message } = submitResult.value;
@@ -406,7 +406,7 @@ export class SolverService {
    *   or an IntentError if the operation fails.
    *
    * @example
-   * const swapResult = await solverService.swap({
+   * const swapResult = await swapService.swap({
    *   intentParams: {
    *     inputToken: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
    *     outputToken: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
@@ -465,7 +465,7 @@ export class SolverService {
    *   or an IntentError if the operation fails.
    *
    * @example
-   * const createAndSubmitIntentResult = await solverService.createAndSubmitIntent({
+   * const createAndSubmitIntentResult = await swapService.createAndSubmitIntent({
    *   intentParams: {
    *     inputToken: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
    *     outputToken: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
@@ -665,7 +665,7 @@ export class SolverService {
    *   data: '0x', // Additional arbitrary data
    * } satisfies CreateIntentParams;
    *
-   * const isAllowanceValid = await sodax.solver.isAllowanceValid({
+   * const isAllowanceValid = await sodax.swap.isAllowanceValid({
    *   intentParams: createIntentParams,
    *   spokeProvider: bscSpokeProvider,
    * });
@@ -749,7 +749,7 @@ export class SolverService {
    *   data: '0x', // Additional arbitrary data
    * } satisfies CreateIntentParams;
    *
-   * const approveResult = await sodax.solver.approve({
+   * const approveResult = await sodax.swap.approve({
    *   intentParams: createIntentParams,
    *   spokeProvider: bscSpokeProvider,
    * });
@@ -850,7 +850,7 @@ export class SolverService {
    *     "data": "0x..", // Additional arbitrary data
    * } satisfies CreateIntentParams;
    *
-   * const createIntentResult = await solverService.createIntent({
+   * const createIntentResult = await swapService.createIntent({
    *   intentParams: payload,
    *   spokeProvider,
    *   fee, // optional
@@ -882,8 +882,14 @@ export class SolverService {
       this.configService.isValidOriginalAssetAddress(params.dstChain, params.outputToken),
       `Unsupported spoke chain token (params.dstChain): ${params.dstChain}, params.outputToken): ${params.outputToken}`,
     );
-    invariant(this.configService.isValidSpokeChainId(params.srcChain), `Invalid spoke chain (params.srcChain): ${params.srcChain}`);
-    invariant(this.configService.isValidSpokeChainId(params.dstChain), `Invalid spoke chain (params.dstChain): ${params.dstChain}`);
+    invariant(
+      this.configService.isValidSpokeChainId(params.srcChain),
+      `Invalid spoke chain (params.srcChain): ${params.srcChain}`,
+    );
+    invariant(
+      this.configService.isValidSpokeChainId(params.dstChain),
+      `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
+    );
 
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
@@ -976,8 +982,14 @@ export class SolverService {
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>>> {
     try {
-      invariant(this.configService.isValidIntentRelayChainId(intent.srcChain), `Invalid intent.srcChain: ${intent.srcChain}`);
-      invariant(this.configService.isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
+      invariant(
+        this.configService.isValidIntentRelayChainId(intent.srcChain),
+        `Invalid intent.srcChain: ${intent.srcChain}`,
+      );
+      invariant(
+        this.configService.isValidIntentRelayChainId(intent.dstChain),
+        `Invalid intent.dstChain: ${intent.dstChain}`,
+      );
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       // derive users hub wallet address
@@ -1040,20 +1052,20 @@ export class SolverService {
     return block.timestamp + deadline;
   }
 
-    /**
+  /**
    * Get the list of all supported swap tokens for a given spoke chain ID
    * @param chainId The chain ID
    * @returns {readonly Token[]} - Array of supported tokens
    */
-    public getSupportedSwapTokensByChainId(chainId: SpokeChainId): readonly Token[] {
-      return this.configService.getSupportedSwapTokensByChainId(chainId);
-    }
+  public getSupportedSwapTokensByChainId(chainId: SpokeChainId): readonly Token[] {
+    return this.configService.getSupportedSwapTokensByChainId(chainId);
+  }
 
-    /**
-     * Get the list of all supported swap tokens
-     * @returns {GetSwapTokensApiResponse} - Object containing all supported swap tokens
-     */
-    public getSupportedSwapTokens(): GetSwapTokensApiResponse {
-      return this.configService.getSupportedSwapTokens();
-    }
+  /**
+   * Get the list of all supported swap tokens
+   * @returns {GetSwapTokensApiResponse} - Object containing all supported swap tokens
+   */
+  public getSupportedSwapTokens(): GetSwapTokensApiResponse {
+    return this.configService.getSupportedSwapTokens();
+  }
 }

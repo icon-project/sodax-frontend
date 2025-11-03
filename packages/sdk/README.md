@@ -107,7 +107,7 @@ const sodax = new Sodax();
 
 // Use default config but put fee on solver (intent swaps)
 const sodaxWithSolverFees = new Sodax({
-  solver: { partnerFee: partnerFeePercentage },
+  swap: { partnerFee: partnerFeePercentage },
 });
 
 // Use default config with fee on money market (borrows)
@@ -117,7 +117,7 @@ const sodaxWithMoneyMarketFees = new Sodax({
 
 // or use default config with fees on both solver and money market
 const sodaxWithFees = new Sodax({
-  solver: { partnerFee: partnerFeePercentage },
+  swap: { partnerFee: partnerFeePercentage },
   moneyMarket: { partnerFee: partnerFeePercentage },
 });
 ```
@@ -181,7 +181,7 @@ const hubConfig = {
 
 // Initialize Sodax using custom/default configurations
 const sodax = new Sodax({
-  solver: solverConfig,
+  swap: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 });
@@ -273,20 +273,20 @@ const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
 The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for all Sodax operations (swaps, money market operations, approvals) to provide users with accurate gas estimates.
 
 The function is available on all service classes:
-- `SolverService.estimateGas()` - for solver/intent operations (reachable through `sodax.solver`)
+- `SwapService.estimateGas()` - for solver/intent operations (reachable through `sodax.swap`)
 - `MoneyMarketService.estimateGas()` - for money market operations (reachable through `sodax.moneyMarket`)
 - `SpokeService.estimateGas()` - for general spoke chain operations
 
 ```typescript
 import { 
-  SolverService, 
+  SwapService, 
   MoneyMarketService, 
   SpokeService,
   MoneyMarketSupplyParams 
 } from "@sodax/sdk";
 
 // Example: Estimate gas for a solver swap transaction
-const createIntentResult = await sodax.solver.createIntent(
+const createIntentResult = await sodax.swap.createIntent(
   createIntentParams,
   bscSpokeProvider,
   partnerFeeAmount,
@@ -297,7 +297,7 @@ if (createIntentResult.ok) {
   const [rawTx, intent] = createIntentResult.value;
   
   // Estimate gas for the raw transaction
-  const gasEstimate = await SolverService.estimateGas(rawTx, bscSpokeProvider);
+  const gasEstimate = await SwapService.estimateGas(rawTx, bscSpokeProvider);
   
   if (gasEstimate.ok) {
     console.log('Estimated gas for swap:', gasEstimate.value);
@@ -327,7 +327,7 @@ if (supplyResult.ok) {
 }
 
 // Example: Estimate gas for an approval transaction
-const approveResult = await sodax.solver.approve(
+const approveResult = await sodax.swap.approve(
   tokenAddress,
   amount,
   bscSpokeProvider,
@@ -351,7 +351,7 @@ if (approveResult.ok) {
 ### Accessing Sodax Features
 
 Sodax feature set currently contain:
-- Solver: used for intent based swaps. Please find documentation for Solver part of the SDK in [SOLVER.md](./docs/SOLVER.md)
+- Swap (Solver): used for intent based swaps. Please find documentation for Solver part of the SDK in [SOLVER.md](./docs/SOLVER.md)
 - Money Market: used for lending and borowing. Please find documentation for Solver part of the SDK in [MONEY_MARKET.md](./docs/MONEY_MARKET.md)
 - Bridge: provides functionality to bridge tokens between different blockchain chains [BRIDGE.md](./docs/BRIDGE.md)
 - Staking: provides functionality to stake SODA tokens from different blockchain chains [STAKING.md](./docs/STAKING.md)

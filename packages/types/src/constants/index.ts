@@ -2156,7 +2156,7 @@ export const solverConfig = {
 export const getSolverConfig = (chainId: HubChainId): SolverConfig => solverConfig[chainId];
 
 // currently supported spoke chain tokens for solver
-export const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
+export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   [SONIC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
@@ -2272,11 +2272,11 @@ export const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
 } as const;
 
 // get supported spoke chain tokens for solver
-export const getSupportedSolverTokens = (chainId: SpokeChainId): readonly Token[] => solverSupportedTokens[chainId];
+export const getSupportedSolverTokens = (chainId: SpokeChainId): readonly Token[] => swapSupportedTokens[chainId];
 
 // check if token address for given spoke chain id is supported
-export const isSolverSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
-  solverSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
+export const isSwapSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
+  swapSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
 
 const moneyMarketConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
@@ -2414,7 +2414,7 @@ export const moneyMarketReserveAssets = [
 
 export const defaultSodaxConfig = {
   supportedChains: CHAIN_IDS,
-  supportedSwapTokens: solverSupportedTokens,
+  supportedSwapTokens: swapSupportedTokens,
   supportedMoneyMarketTokens: moneyMarketSupportedTokens,
   supportedMoneyMarketReserveAssets: moneyMarketReserveAssets,
   supportedHubAssets: hubAssets,
