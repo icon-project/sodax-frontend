@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
   useLayoutEffect(() => {
     const calculateHeight = (): void => {
-      if (ref.current) {
+      if (pathname !== '/' && ref.current) {
         setHeight(ref.current.offsetHeight);
       }
     };

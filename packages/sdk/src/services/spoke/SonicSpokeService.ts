@@ -13,7 +13,7 @@ import type {
   TxReturnType,
 } from '../../types.js';
 import { Erc20Service, EvmSolverService, type CreateIntentParams, type Intent } from '../index.js';
-import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
+import type { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
 import { getHubAssetInfo, getIntentRelayChainId } from '../../constants.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import {
