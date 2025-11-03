@@ -410,11 +410,3 @@ textarea[readonly] {
 [role="dialog"] {
   box-shadow: 0px 20px 160px 0px rgba(185, 172, 171, 0.4) !important;
 }
-
-html {
-  scrollbar-width: none; /* hides scrollbar but still scrollable */
-}
-
-::-webkit-scrollbar {
-  display: none;
-}

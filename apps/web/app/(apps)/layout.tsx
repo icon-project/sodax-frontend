@@ -13,7 +13,7 @@ import { useAppStore } from '@/stores/app-store-provider';
 import { motion } from 'framer-motion';
 import LandingPage from '../page';
 import { headerVariants, contentVariants, mainContentVariants } from '@/constants/animation';
-import { useRef, useState } from 'react';
+import { useRef, useState, useLayoutEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -21,6 +21,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
   const pathname = usePathname();
+
+  useLayoutEffect(() => {
+    const calculateHeight = (): void => {
+      if (ref.current) {
+        setHeight(ref.current.offsetHeight);
+      }
+    };
+
+    calculateHeight();
+  }, [pathname]);
+
   return (
     <SwapStoreProvider>
       <MigrationStoreProvider>
@@ -28,7 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <LandingPage />
         </div>
         <ModalStoreProvider>
-          <div className="min-h-screen md:pb-0 w-screen overflow-x-hidden">
+          <div className="min-h-screen w-[100%] overflow-hidden">
             <motion.div variants={headerVariants} initial="closed" animate={isSwitchingPage ? 'open' : 'closed'}>
               <Header />
             </motion.div>
@@ -42,14 +53,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             >
               <div className="w-full lg:w-[1024px] lg:max-w-[1024px] absolute md:-top-34 -top-36 left-1/2 -translate-x-1/2">
                 <motion.div
-                  key={pathname}
                   variants={mainContentVariants}
                   initial={{ y: 30, opacity: 0 }}
                   animate={isSwitchingPage ? 'open' : 'closed'}
                   className="flex justify-center items-start min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)]"
-                  onAnimationComplete={() => {
-                    setHeight(ref.current?.offsetHeight || 0);
-                  }}
                 >
                   <RouteTabs />
                   <div

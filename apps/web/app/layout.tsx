@@ -28,14 +28,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <div className="h-screen overflow-x-hidden">
-          <SidebarProvider>
-            <AppSidebar />
-            <Providers>
-              <AppStoreProvider>{children}</AppStoreProvider>
-            </Providers>
-          </SidebarProvider>
-        </div>
+        <SidebarProvider>
+          <AppSidebar />
+          <Providers>
+            <AppStoreProvider>{children}</AppStoreProvider>
+          </Providers>
+        </SidebarProvider>
       </body>
     </html>
   );

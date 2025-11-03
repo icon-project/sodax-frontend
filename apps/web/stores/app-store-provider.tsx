@@ -13,6 +13,7 @@ export const AppStoreContext = createContext<AppStoreApi | undefined>(undefined)
 export interface AppStoreProviderProps {
   children: ReactNode;
 }
+
 export const AppStoreProvider = ({ children }: AppStoreProviderProps) => {
   const storeRef = useRef<AppStoreApi | undefined>(undefined);
   const router = useRouter();
