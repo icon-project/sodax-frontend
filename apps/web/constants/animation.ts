@@ -60,7 +60,7 @@ export const itemVariants = {
   },
 };
 
-export const swapVariants = {
+export const listVariants = {
   open: {
     transition: { delayChildren: stagger(0.07, { startDelay: 0.2 }) },
   },

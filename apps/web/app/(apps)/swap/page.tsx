@@ -19,7 +19,7 @@ import SwapReviewButton from './_components/swap-review-button';
 import AnimatedNumber from '@/components/shared/animated-number';
 import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { itemVariants, swapVariants } from '@/constants/animation';
+import { itemVariants, listVariants } from '@/constants/animation';
 
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
@@ -173,7 +173,7 @@ export default function SwapPage() {
     <motion.div className="w-full">
       <motion.div
         className="w-full flex flex-col"
-        variants={swapVariants}
+        variants={listVariants}
         initial={false}
         animate={isOpen ? 'open' : 'closed'}
       >
