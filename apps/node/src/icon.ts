@@ -60,7 +60,7 @@ const sodax = new Sodax({
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
-const hubProvider = new EvmHubProvider({ config: hubConfig, configService: sodax.configService });
+const hubProvider = new EvmHubProvider({ config: hubConfig, configService: sodax.config });
 
 
 
@@ -72,7 +72,7 @@ async function depositTo(token: IconAddress, amount: bigint, recipient: Address)
       amount,
     },
     iconSpokeChainConfig.chain.id,
-    sodax.configService,
+    sodax.config,
   );
 
   const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;

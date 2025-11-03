@@ -60,10 +60,10 @@ describe('SolverService', async () => {
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: sodax.configService.getHubChainConfig(),
+    chainConfig: sodax.config.getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.configService });
+  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.config });
 
   const mockQuoteRequest = {
     token_src: bscEthToken,
@@ -87,7 +87,7 @@ describe('SolverService', async () => {
 
   const solverService = new SolverService({
     config: mockSolverConfig,
-    configService: sodax.configService,
+    configService: sodax.config,
     hubProvider: mockHubProvider,
   });
   const solverServiceWithPercentageFee = new SolverService({
@@ -98,21 +98,20 @@ describe('SolverService', async () => {
         percentage: feePercentage,
       },
     },
-    configService: sodax.configService,
+    configService: sodax.config,
     hubProvider: mockHubProvider,
   });
-  const solverServiceWithAmountFee = new SolverService(
-    {
+  const solverServiceWithAmountFee = new SolverService({
     config: {
       ...mockSolverConfig,
       partnerFee: {
         address: '0x0000000000000000000000000000000000000000',
-          amount: feeAmount,
-        },
+        amount: feeAmount,
       },
-      configService: sodax.configService,
-      hubProvider: mockHubProvider,
-    });
+    },
+    configService: sodax.config,
+    hubProvider: mockHubProvider,
+  });
 
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
@@ -171,8 +170,8 @@ describe('SolverService', async () => {
     return {
       intentId: BigInt(1),
       creator: creator,
-      inputToken: (await sodax.configService.getHubAssetInfo(params.srcChain, params.inputToken))?.asset ?? '0x',
-      outputToken: (await sodax.configService.getHubAssetInfo(params.dstChain, params.outputToken))?.asset ?? '0x',
+      inputToken: (sodax.config.getHubAssetInfo(params.srcChain, params.inputToken))?.asset ?? '0x',
+      outputToken: (sodax.config.getHubAssetInfo(params.dstChain, params.outputToken))?.asset ?? '0x',
       inputAmount: params.inputAmount,
       minOutputAmount: params.minOutputAmount,
       deadline: params.deadline,

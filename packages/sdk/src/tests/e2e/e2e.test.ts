@@ -112,14 +112,16 @@ describe('e2e', () => {
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {
     const vaultGetAllTokenInfoMap = new Map<string, Address[]>();
 
-    for (const spokeChain of sodax.configService.getSupportedSpokeChains()) {
+    for (const spokeChain of sodax.config.getSupportedSpokeChains()) {
       console.log('************************************************');
-      const supportedTokens: readonly Token[] = Object.values(sodax.configService.getSupportedMoneyMarketTokensByChainId(spokeChain));
+      const supportedTokens: readonly Token[] = Object.values(
+        sodax.config.getSupportedMoneyMarketTokensByChainId(spokeChain),
+      );
 
       for (const token of supportedTokens) {
         console.log('--------------------------------');
         console.log(`${spokeChain} ${token.symbol} ${token.address}`);
-        const hubAsset = sodax.configService.getHubAssetInfo(spokeChain, token.address);
+        const hubAsset = sodax.config.getHubAssetInfo(spokeChain, token.address);
 
         if (!hubAsset) {
           throw new Error(`Hub asset not found for token ${token.address} on chain ${spokeChain}`);
@@ -172,7 +174,7 @@ describe('e2e', () => {
       console.log(`${spokeChain} ${assets.length} assets`);
       console.log('--------------------------------');
       for (const asset of assets) {
-        const originalToken = sodax.configService.getOriginalAssetAddress(spokeChain as SpokeChainId, asset);
+        const originalToken = sodax.config.getOriginalAssetAddress(spokeChain as SpokeChainId, asset);
         console.log(`${spokeChain} ${asset} ${originalToken}`);
         expect(originalToken).toBeDefined();
       }

@@ -78,7 +78,7 @@ const sodax = new Sodax({
 
 const evmHubProvider = new EvmHubProvider({
   config: hubConfig,
-  configService: sodax.configService,
+  configService: sodax.config,
 });
 
 async function depositTo(token: string, amount: bigint, recipient: Address): Promise<void> {
@@ -89,7 +89,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
       amount,
     },
     spokeProvider.chainConfig.chain.id,
-    sodax.configService,
+    sodax.config,
   );
   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
   const txHash: Hash = await SpokeService.deposit(

@@ -86,15 +86,19 @@ describe('BridgeService', () => {
 
       // Find a token on the destination chain that shares the same vault as the source token
       // (Assume testnet config or mock config is set up so that USDC on Arbitrum shares the same vault)
-      const bridgeableTokensResult = await sodax.bridge.getBridgeableTokens(fromToken.xChainId, toChainId, fromToken.address);
+      const bridgeableTokensResult = await sodax.bridge.getBridgeableTokens(
+        fromToken.xChainId,
+        toChainId,
+        fromToken.address,
+      );
 
       expect(Array.isArray(bridgeableTokensResult.ok && bridgeableTokensResult.value)).toBe(true);
 
       // All returned tokens should have the same vault as the source token
       if (bridgeableTokensResult.ok) {
-        const srcAssetInfo = await sodax.configService.getHubAssetInfo(fromToken.xChainId, fromToken.address);
+        const srcAssetInfo = sodax.config.getHubAssetInfo(fromToken.xChainId, fromToken.address);
         for (const token of bridgeableTokensResult.value) {
-          const dstAssetInfo = await sodax.configService.getHubAssetInfo(toChainId, token.address);
+          const dstAssetInfo = sodax.config.getHubAssetInfo(toChainId, token.address);
           expect(dstAssetInfo?.vault.toLowerCase()).toBe(srcAssetInfo?.vault.toLowerCase());
         }
       }
@@ -112,7 +116,11 @@ describe('BridgeService', () => {
 
       const toChainId = ARBITRUM_MAINNET_CHAIN_ID;
 
-      const bridgeableTokensResult = await sodax.bridge.getBridgeableTokens(fromToken.xChainId, toChainId, fromToken.address);
+      const bridgeableTokensResult = await sodax.bridge.getBridgeableTokens(
+        fromToken.xChainId,
+        toChainId,
+        fromToken.address,
+      );
 
       expect(!bridgeableTokensResult.ok && bridgeableTokensResult.error).toBeDefined();
     });

@@ -62,7 +62,7 @@ export default function StakingPage() {
   console.log('selected chain id:', selectedChainId);
   console.log('wallet provider:', walletProvider);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
-  const supportedSpokeChains = sodax.configService.getSupportedSpokeChains();
+  const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
 
   // Staking info hooks
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);

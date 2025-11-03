@@ -44,7 +44,7 @@ describe('calculatePercentageAmount', () => {
     chainConfig: getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.configService });
+  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.config });
 
   it('should calculate percentage amount correctly', () => {
     const testCases = [

@@ -58,8 +58,8 @@ export default function BridgePage() {
 
   const [toTokenChainId, setToTokenChainId] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const toAccount = useXAccount(toTokenChainId);
-  const supportedSpokeChains = sodax.configService.getSupportedSpokeChains();
-  const supportedTokensPerChain = sodax.configService.getSupportedTokensPerChain();
+  const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
+  const supportedTokensPerChain = sodax.config.getSupportedTokensPerChain();
 
 
   // Fetch bridgeable tokens and set toToken when bridgeableTokens is defined

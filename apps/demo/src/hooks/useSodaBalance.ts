@@ -43,7 +43,7 @@ export function useSodaBalance(
         return 0n;
       }
 
-      const sodaToken = sodax.configService.findSupportedTokenBySymbol(chainId, 'SODA');
+      const sodaToken = sodax.config.findSupportedTokenBySymbol(chainId, 'SODA');
 
       if (!sodaToken) {
         return 0n;

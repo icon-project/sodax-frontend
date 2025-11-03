@@ -67,7 +67,7 @@ const sodax = new Sodax({
 
 const hubProvider = new EvmHubProvider({
   config: hubConfig,
-  configService: sodax.configService,
+  configService: sodax.config,
 });
 
 async function estimateWithdrawGas() {
@@ -113,7 +113,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
       amount,
     },
     stellarSpokeProvider.chainConfig.chain.id,
-    sodax.configService,
+    sodax.config,
   );
 
   const txHash = await SpokeService.deposit(

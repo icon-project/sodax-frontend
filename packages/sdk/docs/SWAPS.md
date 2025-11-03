@@ -1,19 +1,30 @@
-# Solver
+# Swaps (Solver)
 
 Solver part of the SDK provides abstractions to assist you with interacting with the cross-chain Intent Smart Contracts, Solver and Relay API.
 
 ## Using SDK Config and Constants
 
 SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
+All of the configurations are reachable through `config` property of Sodax instance (e.g. `sodax.config`)
 
 ```typescript
-import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token } from "@sodax/sdk"
+import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token, Sodax } from "@sodax/sdk"
+
+const sodax = new Sodax();
+
+// if you want dynamic (backend API based - contains latest tokens) configuration make sure to initialize instance before usage!
+// by default configuration from specific SDK version you are using is used
+await sodax.initialize();
 
 // all supported spoke chains
-export const spokeChains: SpokeChainId[] = supportedSpokeChains;
+export const spokeChains: SpokeChainId[] = sodax.getSupportedSpokeChains();
 
-// using spoke chain id to retrieve supported tokens for solver (intent swaps)
-const supportedSolverTokens: readonly Token[] = getSupportedSolverTokens(spokeChainId);
+// using spoke chain id to retrieve supported tokens for swap (solver intent swaps)
+const supportedSwapTokensForChainId: readonly Token[] = sodax.getSupportedSwapTokensByChainId(spokeChainId);
+
+const supportedSwapTokensPerChain: Record<SpokeChainId, readonly Token[]> = sodax.getSupportedSwapTokens();
+
+// all swap tokens
 
 // check if token address for given spoke chain id is supported in solver
 const isSolverSupportedToken: boolean = isSolverSupportedToken(spokeChainId, token)

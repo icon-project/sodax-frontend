@@ -116,7 +116,7 @@ describe('EvmSpokeService', () => {
     chainConfig: getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.configService });
+  const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.config });
 
   beforeEach(() => {
     vi.resetAllMocks();

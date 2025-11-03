@@ -104,7 +104,7 @@ const mockSonicSpokeProvider = new SonicSpokeProvider(
   spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
 );
 
-const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.configService });
+const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.config });
 
 const mockTxHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
 const mockHubTxHash = '0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321';
@@ -127,12 +127,20 @@ describe('MigrationService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    migrationService = new MigrationService({ hubProvider: mockHubProvider, configService: sodax.configService, relayerApiEndpoint: DEFAULT_RELAYER_API_ENDPOINT });
+    migrationService = new MigrationService({
+      hubProvider: mockHubProvider,
+      configService: sodax.config,
+      relayerApiEndpoint: DEFAULT_RELAYER_API_ENDPOINT,
+    });
   });
 
   describe('constructor', () => {
     it('should initialize with default config', () => {
-      const service = new MigrationService({ hubProvider: mockHubProvider, configService: sodax.configService, relayerApiEndpoint: DEFAULT_RELAYER_API_ENDPOINT });
+      const service = new MigrationService({
+        hubProvider: mockHubProvider,
+        configService: sodax.config,
+        relayerApiEndpoint: DEFAULT_RELAYER_API_ENDPOINT,
+      });
       expect(service).toBeInstanceOf(MigrationService);
     });
 
@@ -140,7 +148,11 @@ describe('MigrationService', () => {
       const customConfig = {
         relayerApiEndpoint: 'https://custom-relayer.com' as const,
       };
-      const service = new MigrationService({ hubProvider: mockHubProvider, configService: sodax.configService, relayerApiEndpoint: customConfig.relayerApiEndpoint });
+      const service = new MigrationService({
+        hubProvider: mockHubProvider,
+        configService: sodax.config,
+        relayerApiEndpoint: customConfig.relayerApiEndpoint,
+      });
       expect(service).toBeInstanceOf(MigrationService);
     });
   });

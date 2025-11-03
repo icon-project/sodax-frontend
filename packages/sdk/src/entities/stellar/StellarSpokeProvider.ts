@@ -18,7 +18,7 @@ import {
 import type { PromiseStellarTxReturnType, StellarReturnType } from '../../types.js';
 import { toHex, type Hex } from 'viem';
 import type { ISpokeProvider } from '../Providers.js';
-import type { IStellarWalletProvider, HttpUrl, StellarRpcConfig } from '@sodax/types';
+import type { IStellarWalletProvider, StellarRpcConfig, StellarSpokeChainConfig } from '@sodax/types';
 import { STELLAR_DEFAULT_TX_TIMEOUT_SECONDS, STELLAR_PRIORITY_FEE } from '../../constants.js';
 import { CustomSorobanServer } from './CustomSorobanServer.js';
 

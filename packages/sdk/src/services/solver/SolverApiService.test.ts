@@ -22,12 +22,13 @@ describe('SolverApiService', async () => {
   const sodax = new Sodax();
 
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
-  const bscEthHubTokenAsset = (await sodax.configService.getHubAssetInfo(BSC_MAINNET_CHAIN_ID, bscEthToken))?.asset;
+  const bscEthHubTokenAsset = (sodax.config.getHubAssetInfo(BSC_MAINNET_CHAIN_ID, bscEthToken))?.asset;
   if (!bscEthHubTokenAsset) {
     throw new Error('BSC ETH token asset not found');
   }
   const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
-  const arbWbtcHubTokenAsset = (await sodax.configService.getHubAssetInfo(ARBITRUM_MAINNET_CHAIN_ID, arbWbtcToken))?.asset;
+  const arbWbtcHubTokenAsset = (sodax.config.getHubAssetInfo(ARBITRUM_MAINNET_CHAIN_ID, arbWbtcToken))
+    ?.asset;
   if (!arbWbtcHubTokenAsset) {
     throw new Error('BSC WBTC token asset not found');
   }
@@ -56,7 +57,7 @@ describe('SolverApiService', async () => {
         json: () => Promise.resolve(mockResponse),
       });
 
-      const result = await SolverApiService.getQuote(payload, mockConfig, sodax.configService);
+      const result = await SolverApiService.getQuote(payload, mockConfig, sodax.config);
 
       expect(result.ok).toBe(true);
       if (result.ok) {
@@ -71,8 +72,12 @@ describe('SolverApiService', async () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            token_src: (await sodax.configService.getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src))?.asset ?? '',
-            token_dst: (await sodax.configService.getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst))?.asset ?? '',
+            token_src:
+              (sodax.config.getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src))?.asset ??
+              '',
+            token_dst:
+              (sodax.config.getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst))?.asset ??
+              '',
             amount: payload.amount.toString(),
             quote_type: payload.quote_type,
           }),
@@ -93,7 +98,7 @@ describe('SolverApiService', async () => {
         json: () => Promise.resolve(mockError),
       });
 
-      const result = await SolverApiService.getQuote(payload, mockConfig, sodax.configService);
+      const result = await SolverApiService.getQuote(payload, mockConfig, sodax.config);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -104,7 +109,7 @@ describe('SolverApiService', async () => {
     it('should handle network errors', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await SolverApiService.getQuote(payload, mockConfig, sodax.configService);
+      const result = await SolverApiService.getQuote(payload, mockConfig, sodax.config);
 
       expect(result.ok).toBe(false);
       if (!result.ok) {

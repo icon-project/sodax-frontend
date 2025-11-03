@@ -42,7 +42,6 @@ import {
 const sodax = new Sodax();
 
 describe('MoneyMarketService', () => {
-
   // Mock wallet providers
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
@@ -68,7 +67,7 @@ describe('MoneyMarketService', () => {
     chainConfig: getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const hubProvider = new EvmHubProvider({ config: hubConfig, configService: sodax.configService });
+  const hubProvider = new EvmHubProvider({ config: hubConfig, configService: sodax.config });
 
   // Money market service instance
   const moneyMarket = new MoneyMarketService({
@@ -79,7 +78,7 @@ describe('MoneyMarketService', () => {
       },
     },
     hubProvider,
-    configService: sodax.configService,
+    configService: sodax.config,
   });
 
   // Test parameters - use real supported tokens
@@ -1112,8 +1111,8 @@ describe('MoneyMarketService', () => {
       const testAsset = moneyMarketReserveAssets[0];
       const wrongAsset = '0x0000000000000000000000000000000000000000';
 
-      expect(sodax.configService.isMoneyMarketReserveAsset(testAsset)).toBe(true);
-      expect(sodax.configService.isMoneyMarketReserveAsset(wrongAsset)).toBe(false);
+      expect(sodax.config.isMoneyMarketReserveAsset(testAsset)).toBe(true);
+      expect(sodax.config.isMoneyMarketReserveAsset(wrongAsset)).toBe(false);
     });
 
     describe('Error Handling', () => {

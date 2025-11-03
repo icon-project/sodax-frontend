@@ -7,7 +7,7 @@ Money Market part of SDK provides abstractions to assist you with interacting wi
 SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
 
 ```typescript
-import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token } from "@sodax/sdk"
+import { supportedSpokeChains, getSupportedMoneyMarketTokens, SpokeChainId, Token } from "@sodax/sdk"
 
 // all supported spoke chains
 export const spokeChains: SpokeChainId[] = supportedSpokeChains;

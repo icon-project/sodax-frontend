@@ -4,6 +4,8 @@ import type {
   EVM_CHAIN_IDS,
   ChainIdToIntentRelayChainId,
   HubVaultSymbols,
+  ETHEREUM_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
 } from '../constants/index.js';
 import type { InjectiveNetworkEnv } from '../injective/index.js';
 

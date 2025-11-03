@@ -65,7 +65,7 @@ const sodax = new Sodax({
 
 const hubProvider = new EvmHubProvider({
   config: hubConfig,
-  configService: sodax.configService,
+  configService: sodax.config,
 });
 
 const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
@@ -83,7 +83,7 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
       amount,
     },
     spokeProvider.chainConfig.chain.id,
-    sodax.configService
+    sodax.config
   );
 
   const txHash: Hash = await SpokeService.deposit(

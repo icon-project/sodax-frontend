@@ -48,7 +48,7 @@ export const useBackendMoneyMarketPosition = (
         return undefined;
       }
 
-      return sodax.backendApiService.getMoneyMarketPosition(userAddress);
+      return sodax.backendApi.getMoneyMarketPosition(userAddress);
     },
     enabled: !!userAddress && userAddress.length > 0,
     retry: 3,

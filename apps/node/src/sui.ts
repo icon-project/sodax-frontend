@@ -50,11 +50,11 @@ const sodax = new Sodax({
 
 const hubProvider = new EvmHubProvider({
   config: hubConfig,
-  configService: sodax.configService,
+  configService: sodax.config,
 });
 
 const relayerApiEndpoint = DEFAULT_RELAYER_API_ENDPOINT;
-const bridgeService = new BridgeService({ hubProvider, relayerApiEndpoint, config: undefined, configService: sodax.configService });
+const bridgeService = new BridgeService({ hubProvider, relayerApiEndpoint, config: undefined, configService: sodax.config });
 
 const suiConfig = spokeChainConfig[SUI_CHAIN_ID] as SuiSpokeChainConfig;
 const suiWalletMnemonics = process.env.SUI_MNEMONICS;
@@ -88,7 +88,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
       amount,
     },
     suiSpokeProvider.chainConfig.chain.id,
-    sodax.configService,
+    sodax.config,
   );
 
   const txHash: Hash = await SpokeService.deposit(

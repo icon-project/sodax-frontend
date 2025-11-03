@@ -35,42 +35,42 @@ export type SodaxConfig = {
  * @see https://docs.sodax.com
  */
 export class Sodax {
-  public readonly config?: SodaxConfig;
+  public readonly instanceConfig?: SodaxConfig;
 
   public readonly solver: SolverService; // Solver service enabling intent based swaps
   public readonly moneyMarket: MoneyMarketService; // Money Market service enabling cross-chain lending and borrowing
   public readonly migration: MigrationService; // ICX migration service enabling ICX migration to SODA
-  public readonly backendApiService: BackendApiService; // backend API service enabling backend API endpoints
+  public readonly backendApi: BackendApiService; // backend API service enabling backend API endpoints
   public readonly bridge: BridgeService; // Bridge service enabling cross-chain transfers
   public readonly staking: StakingService; // Staking service enabling SODA staking operations
-  public readonly configService: ConfigService; // Config service enabling configuration data fetching from the backend API or fallbacking to default values
+  public readonly config: ConfigService; // Config service enabling configuration data fetching from the backend API or fallbacking to default values
 
   public readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
   public readonly relayerApiEndpoint: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
 
   constructor(config?: SodaxConfig) {
-    this.config = config;
+    this.instanceConfig = config;
     this.relayerApiEndpoint = config?.relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT;
-    this.backendApiService = new BackendApiService(config?.backendApiConfig);
-    this.configService = new ConfigService({
-      backendApiService: this.backendApiService,
+    this.backendApi = new BackendApiService(config?.backendApiConfig);
+    this.config = new ConfigService({
+      backendApiService: this.backendApi,
       config: {
         backendApiUrl: config?.backendApiConfig?.baseURL,
         timeout: config?.backendApiConfig?.timeout,
       },
     });
-    this.hubProvider = new EvmHubProvider({ config: config?.hubProviderConfig, configService: this.configService }); // default to Sonic mainnet
+    this.hubProvider = new EvmHubProvider({ config: config?.hubProviderConfig, configService: this.config }); // default to Sonic mainnet
     this.solver =
       config && config.solver
         ? new SolverService({
             config: config.solver,
-            configService: this.configService,
+            configService: this.config,
             hubProvider: this.hubProvider,
             relayerApiEndpoint: this.relayerApiEndpoint,
           })
         : new SolverService({
             config: undefined,
-            configService: this.configService,
+            configService: this.config,
             hubProvider: this.hubProvider,
             relayerApiEndpoint: this.relayerApiEndpoint,
           }); // default to mainnet config
@@ -81,13 +81,13 @@ export class Sodax {
             config: config.moneyMarket,
             hubProvider: this.hubProvider,
             relayerApiEndpoint: this.relayerApiEndpoint,
-            configService: this.configService,
+            configService: this.config,
           })
         : new MoneyMarketService({
             config: undefined,
             hubProvider: this.hubProvider,
             relayerApiEndpoint: this.relayerApiEndpoint,
-            configService: this.configService,
+            configService: this.config,
           }); // default to mainnet config
 
     this.migration =
@@ -95,12 +95,12 @@ export class Sodax {
         ? new MigrationService({
             relayerApiEndpoint: this.relayerApiEndpoint,
             hubProvider: this.hubProvider,
-            configService: this.configService,
+            configService: this.config,
           })
         : new MigrationService({
             relayerApiEndpoint: this.relayerApiEndpoint,
             hubProvider: this.hubProvider,
-            configService: this.configService,
+            configService: this.config,
           });
 
     this.bridge =
@@ -109,18 +109,18 @@ export class Sodax {
             hubProvider: this.hubProvider,
             relayerApiEndpoint: this.relayerApiEndpoint,
             config: config.bridge,
-            configService: this.configService,
+            configService: this.config,
           })
         : new BridgeService({
             hubProvider: this.hubProvider,
             relayerApiEndpoint: this.relayerApiEndpoint,
             config: undefined,
-            configService: this.configService,
+            configService: this.config,
           });
     this.staking = new StakingService({
       hubProvider: this.hubProvider,
       relayerApiEndpoint: this.relayerApiEndpoint,
-      configService: this.configService,
+      configService: this.config,
     });
   }
 
@@ -132,7 +132,7 @@ export class Sodax {
    */
   public async initialize(): Promise<Result<void>> {
     try {
-      await this.configService.initialize();
+      await this.config.initialize();
 
       return {
         ok: true,

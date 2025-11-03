@@ -59,7 +59,7 @@ const sodax = new Sodax({
 
 const hubProvider = new EvmHubProvider({
   config: hubConfig,
-  configService: sodax.configService,
+  configService: sodax.config,
 });
 
 const relayerBackendUrl = IS_TESTNET
@@ -127,7 +127,7 @@ async function depositTo(token: PublicKey, amount: bigint, recipient: Address) {
       amount,
     },
     solanaSpokeChainConfig.chain.id,
-    sodax.configService,
+    sodax.config,
   );
 
   const txHash: Hash = await SpokeService.deposit(
