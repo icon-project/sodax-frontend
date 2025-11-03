@@ -3,20 +3,23 @@ import type { ChainType } from '@sodax/types';
 
 export type AppState = {
   primaryChainType: ChainType;
+  isSwitchingPage: boolean;
 };
 
 export type AppActions = {
   setPrimaryChainType: (primaryChainType: ChainType) => void;
+  setIsSwitchingPage: (isSwitchingPage: boolean) => void;
 };
 
 export type AppStore = AppState & AppActions;
 
 export const initAppStore = (): AppState => {
-  return { primaryChainType: 'EVM' };
+  return { primaryChainType: 'EVM', isSwitchingPage: true };
 };
 
 export const defaultInitState: AppState = {
   primaryChainType: 'EVM',
+  isSwitchingPage: true,
 };
 
 export const createAppStore = (initState: AppState = defaultInitState) => {
@@ -28,6 +31,15 @@ export const createAppStore = (initState: AppState = defaultInitState) => {
         return {
           ...prevState,
           primaryChainType,
+        };
+      });
+    },
+
+    setIsSwitchingPage: (isSwitchingPage: boolean) => {
+      set(prevState => {
+        return {
+          ...prevState,
+          isSwitchingPage,
         };
       });
     },

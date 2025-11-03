@@ -4,6 +4,7 @@ import './globals.css';
 import Providers from '../providers/providers';
 import AppSidebar from '@/components/landing/sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { AppStoreProvider } from '@/stores/app-store-provider';
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
   variable: '--font-geist-sans',
@@ -30,7 +31,9 @@ export default function RootLayout({
         <div className="h-screen overflow-x-hidden">
           <SidebarProvider>
             <AppSidebar />
-            <Providers>{children}</Providers>
+            <Providers>
+              <AppStoreProvider>{children}</AppStoreProvider>
+            </Providers>
           </SidebarProvider>
         </div>
       </body>

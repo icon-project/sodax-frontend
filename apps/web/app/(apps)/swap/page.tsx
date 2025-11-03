@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import CurrencyInputPanel, { CurrencyInputPanelType } from './_components/currency-input-panel';
 import SwapConfirmDialog from './_components/swap-confirm-dialog';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,10 @@ import { formatUnits, parseUnits } from 'viem';
 import { ExternalLinkIcon } from 'lucide-react';
 import Link from 'next/link';
 import SwapReviewButton from './_components/swap-review-button';
+import AnimatedNumber from '@/components/shared/animated-number';
 import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
+import { motion } from 'framer-motion';
+import { itemVariants, swapVariants } from '@/constants/animation';
 
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
@@ -158,10 +161,23 @@ export default function SwapPage() {
     setFixedMinOutputAmount(undefined);
   };
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsOpen(true);
+    }, 500);
+  }, []);
+
   return (
-    <div className="w-full">
-      <div className="gap-(--layout-space-comfortable) w-full flex flex-col">
-        <div className="inline-flex flex-col justify-start items-start gap-4">
+    <motion.div className="w-full">
+      <motion.div
+        className="w-full flex flex-col"
+        variants={swapVariants}
+        initial={false}
+        animate={isOpen ? 'open' : 'closed'}
+      >
+        <motion.div className="inline-flex flex-col justify-start items-start gap-4" variants={itemVariants}>
           <div className="self-stretch mix-blend-multiply justify-end">
             <span className="text-yellow-dark text-(length:--app-title) font-bold font-['InterRegular'] leading-9">
               Swap{' '}
@@ -170,12 +186,25 @@ export default function SwapPage() {
               everywhere
             </span>
           </div>
-          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle)">
-            Access 66 assets across 12 networks.
+          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex gap-1">
+            Access{' '}
+            <AnimatedNumber
+              to={63}
+              className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-6"
+            />
+            assets across
+            <AnimatedNumber
+              to={12}
+              className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-5"
+            />
+            networks.
           </div>
-        </div>
+        </motion.div>
 
-        <div className="inline-flex flex-col justify-start items-start gap-2 w-full">
+        <motion.div
+          className="inline-flex flex-col justify-start items-start gap-2 w-full mt-(--layout-space-comfortable)"
+          variants={itemVariants}
+        >
           <div className="relative w-full">
             <CurrencyInputPanel
               type={CurrencyInputPanelType.INPUT}
@@ -212,29 +241,32 @@ export default function SwapPage() {
             onCustomDestinationAddressChange={setCustomDestinationAddress}
             usdPrice={outputTokenPrice}
           />
-        </div>
+        </motion.div>
+        <motion.div variants={itemVariants} className="mt-(--layout-space-comfortable)">
+          <SwapReviewButton quoteQuery={quoteQuery} handleReview={handleReview} />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          {quoteQuery.data?.ok === false ? (
+            <div className="mt-(--layout-space-comfortable) text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight flex gap-1 items-center">
+              Need help?
+              <Link
+                href="https://x.com/sodaxlabs"
+                target="_blank"
+                className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
+              >
+                Get support on Discord <ExternalLinkIcon className="w-4 h-4" />
+              </Link>
+            </div>
+          ) : (
+            sourceAddress && (
+              <div className="mt-(--layout-space-small) text-clay-light font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
+                Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+              </div>
+            )
+          )}
+        </motion.div>
+      </motion.div>
 
-        <SwapReviewButton quoteQuery={quoteQuery} handleReview={handleReview} />
-      </div>
-
-      {quoteQuery.data?.ok === false ? (
-        <div className="mt-(--layout-space-comfortable) text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight flex gap-1 items-center">
-          Need help?
-          <Link
-            href="https://x.com/sodaxlabs"
-            target="_blank"
-            className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
-          >
-            Get support on Discord <ExternalLinkIcon className="w-4 h-4" />
-          </Link>
-        </div>
-      ) : (
-        sourceAddress && (
-          <div className="mt-3 text-clay-light font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
-            Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
-          </div>
-        )
-      )}
       <SwapConfirmDialog
         open={isSwapConfirmOpen}
         inputToken={inputToken}
@@ -249,6 +281,6 @@ export default function SwapPage() {
         swapFeesUsdValue={swapFeesUsdValue}
         usdPrice={outputTokenPrice}
       />
-    </div>
+    </motion.div>
   );
 }
