@@ -1,4 +1,4 @@
-import { WalletAbstractionService } from './../services/hub/WalletAbstractionService.js';
+import { WalletAbstractionService } from '../shared/services/hub/WalletAbstractionService.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   MoneyMarketService,
@@ -23,13 +23,20 @@ import {
   type MoneyMarketError,
   isMoneyMarketBorrowUnknownError,
   Erc20Service,
+  type MoneyMarketEncodeSupplyParams,
+  poolAbi,
+  type MoneyMarketEncodeWithdrawParams,
+  type MoneyMarketEncodeBorrowParams,
+  type MoneyMarketEncodeRepayParams,
+  type MoneyMarketEncodeRepayWithATokensParams,
+  hubAssets,
 } from '../index.js';
-import { Sodax } from '../entities/Sodax.js';
-import { SonicSpokeService } from '../services/spoke/SonicSpokeService.js';
-import { EvmSpokeProvider } from '../entities/Providers.js';
-import { EvmHubProvider } from '../entities/Providers.js';
-import { SonicSpokeProvider } from '../entities/Providers.js';
-import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
+import { Sodax } from '../shared/entities/Sodax.js';
+import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
+import { EvmSpokeProvider } from '../shared/entities/Providers.js';
+import { EvmHubProvider } from '../shared/entities/Providers.js';
+import { SonicSpokeProvider } from '../shared/entities/Providers.js';
+import * as IntentRelayApiService from '../shared/services/intentRelay/IntentRelayApiService.js';
 import {
   BSC_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
@@ -38,6 +45,7 @@ import {
   type Address,
   type EvmRawTransaction,
 } from '@sodax/types';
+import {decodeFunctionData} from "viem";
 
 const sodax = new Sodax();
 
@@ -1507,6 +1515,162 @@ describe('MoneyMarketService', () => {
           expect(result.ok).toBe(false);
           expect(!result.ok && isMoneyMarketRepayUnknownError(result.error)).toBeTruthy();
         });
+      });
+    });
+  });
+  describe('encoding methods', () => {
+    const mockToken = '0x0000000000000000000000000000000000000000' as Address;
+    const mockVault =
+      hubAssets['0xa86a.avax'][mockToken]?.vault ?? ('0x0000000000000000000000000000000000000001' as Address);
+    const mockLendingPool = '0x3333333333333333333333333333333333333333' as Address;
+    const mockUser = '0x4444444444444444444444444444444444444444' as Address;
+    const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
+
+    describe('encodeSupply', () => {
+      it('should correctly encode supply transaction', () => {
+        const supplyParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          onBehalfOf: mockUser,
+          referralCode: 0,
+        } satisfies MoneyMarketEncodeSupplyParams;
+
+        const encodedCall = MoneyMarketService.encodeSupply(supplyParams, mockLendingPool);
+
+        expect(encodedCall).toEqual({
+          address: mockLendingPool,
+          value: 0n,
+          data: expect.any(String),
+        });
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('supply');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          mockUser.toLowerCase(),
+          0,
+        ]);
+      });
+    });
+
+    describe('encodeWithdraw', () => {
+      it('should correctly encode withdraw transaction', () => {
+        const withdrawParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          to: mockUser,
+        } satisfies MoneyMarketEncodeWithdrawParams;
+
+        const encodedCall = MoneyMarketService.encodeWithdraw(withdrawParams, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('withdraw');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          mockUser.toLowerCase(),
+        ]);
+      });
+    });
+
+    describe('encodeBorrow', () => {
+      it('should correctly encode borrow transaction', () => {
+        const borrowParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          interestRateMode: 2n,
+          referralCode: 0,
+          onBehalfOf: mockUser,
+        } satisfies MoneyMarketEncodeBorrowParams;
+
+        const encodedCall = MoneyMarketService.encodeBorrow(borrowParams, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('borrow');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          2n,
+          0,
+          mockUser.toLowerCase(),
+        ]);
+      });
+    });
+
+    describe('encodeRepay', () => {
+      it('should correctly encode repay transaction', () => {
+        const repayParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          interestRateMode: 2n,
+          onBehalfOf: mockUser,
+        } satisfies MoneyMarketEncodeRepayParams;
+
+        const encodedCall = MoneyMarketService.encodeRepay(repayParams, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('repay');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          2n,
+          mockUser.toLowerCase(),
+        ]);
+      });
+    });
+
+    describe('encodeRepayWithATokens', () => {
+      it('should correctly encode repayWithATokens transaction', () => {
+        const repayParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          interestRateMode: 2n,
+        } satisfies MoneyMarketEncodeRepayWithATokensParams;
+
+        const encodedCall = MoneyMarketService.encodeRepayWithATokens(repayParams, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('repayWithATokens');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          2n,
+        ]);
+      });
+    });
+
+    describe('encodeSetUserUseReserveAsCollateral', () => {
+      it('should correctly encode setUserUseReserveAsCollateral transaction', () => {
+        const encodedCall = MoneyMarketService.encodeSetUserUseReserveAsCollateral(mockToken, true, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('setUserUseReserveAsCollateral');
+        expect(decoded.args).toEqual([mockToken, true]);
       });
     });
   });

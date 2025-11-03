@@ -1,6 +1,6 @@
 import { type Hex, encodeFunctionData, isAddress } from 'viem';
-import { poolAbi } from '../abis/pool.abi.js';
-import type { EvmHubProvider, SpokeProvider } from '../entities/index.js';
+import { poolAbi } from '../shared/abis/pool.abi.js';
+import type { EvmHubProvider, SpokeProvider } from '../shared/entities/index.js';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
   isConfiguredMoneyMarketConfig,
@@ -25,10 +25,10 @@ import type {
   Result,
   SpokeTxHash,
   TxReturnType,
-} from '../types.js';
-import { calculateFeeAmount, deriveUserWalletAddress, encodeAddress, encodeContractCalls } from '../utils/index.js';
-import { EvmAssetManagerService, EvmVaultTokenService } from '../services/hub/index.js';
-import { Erc20Service } from '../services/shared/index.js';
+} from '../shared/types.js';
+import { calculateFeeAmount, deriveUserWalletAddress, encodeAddress, encodeContractCalls } from '../shared/utils/index.js';
+import { EvmAssetManagerService, EvmVaultTokenService } from '../shared/services/hub/index.js';
+import { Erc20Service } from '../shared/services/erc-20/index.js';
 import invariant from 'tiny-invariant';
 import {
   SONIC_MAINNET_CHAIN_ID,
@@ -39,13 +39,13 @@ import {
   getMoneyMarketConfig,
   type GetMoneyMarketTokensApiResponse,
 } from '@sodax/types';
-import { wrappedSonicAbi } from '../abis/wrappedSonic.abi.js';
+import { wrappedSonicAbi } from '../shared/abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
-import { StellarSpokeService } from '../services/spoke/StellarSpokeService.js';
-import { SonicSpokeService } from '../services/spoke/SonicSpokeService.js';
-import { EvmSpokeProvider } from '../entities/Providers.js';
-import { SonicSpokeProvider } from '../entities/Providers.js';
-import { StellarSpokeProvider } from '../entities/stellar/StellarSpokeProvider.js';
+import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
+import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
+import { EvmSpokeProvider } from '../shared/entities/Providers.js';
+import { SonicSpokeProvider } from '../shared/entities/Providers.js';
+import { StellarSpokeProvider } from '../shared/entities/stellar/StellarSpokeProvider.js';
 
 export type MoneyMarketEncodeSupplyParams = {
   asset: Address; // The address of the asset to supply.
