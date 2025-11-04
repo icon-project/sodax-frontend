@@ -15,7 +15,8 @@ import CurrencyInputPanel, { CurrencyInputPanelType } from './currency-input-pan
 import { useMigrationStore } from '../_stores/migration-store-provider';
 import { icxToken, sodaToken } from '../_stores/migration-store';
 import { MigrateButton } from './migrate-button';
-
+import { itemVariants } from '@/constants/animation';
+import { motion } from 'framer-motion';
 export default function IcxsodaMigration() {
   const { address: iconAddress } = useXAccount('ICON');
   const { address: sonicAddress } = useXAccount('EVM');
@@ -83,7 +84,7 @@ export default function IcxsodaMigration() {
   return (
     <div className="flex flex-col w-full gap-(--layout-space-comfortable)">
       <div className="inline-flex flex-col justify-start items-start gap-2">
-        <div className="relative w-full">
+        <motion.div className="relative w-full" variants={itemVariants}>
           <CurrencyInputPanel
             type={CurrencyInputPanelType.INPUT}
             chainId={direction.from}
@@ -104,41 +105,49 @@ export default function IcxsodaMigration() {
           >
             <SwitchDirectionIcon className="w-3 h-3" />
           </Button>
-        </div>
+        </motion.div>
 
-        <CurrencyInputPanel
-          type={CurrencyInputPanelType.OUTPUT}
-          chainId={direction.to}
-          currency={currencies.to}
-          currencyBalance={getBalanceForChain(direction.to, currencies.to)}
-          inputValue={typedValue}
-          onChainSelect={(chainId, token) => setChainForCurrency('to', chainId, token)}
-          isChainConnected={isDestinationChainConnected}
-        />
+        <motion.div variants={itemVariants} className="w-full">
+          <CurrencyInputPanel
+            type={CurrencyInputPanelType.OUTPUT}
+            chainId={direction.to}
+            currency={currencies.to}
+            currencyBalance={getBalanceForChain(direction.to, currencies.to)}
+            inputValue={typedValue}
+            onChainSelect={(chainId, token) => setChainForCurrency('to', chainId, token)}
+            isChainConnected={isDestinationChainConnected}
+          />
+        </motion.div>
       </div>
 
       <div className="inline-flex flex-col justify-start items-start gap-4">
-        <MigrateButton />
-
-        <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
-          Takes ~1 min · Network fee: {direction.from === ICON_MAINNET_CHAIN_ID ? '~0.02 ICX' : '~0.1 Sonic'}
-        </div>
-
-        <div className="self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 p-(--layout-space-comfortable) lg:mt-4 mt-2">
-          <div className="self-stretch inline-flex justify-center items-center gap-2">
-            <div className="w-4 h-4 relative mix-blend-multiply">
-              <Image src="/symbol_dark.png" alt="" width={16} height={16} />
+        <motion.div variants={itemVariants}>
+          <MigrateButton />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <div className="text-center justify-center text-clay-light font-['InterRegular'] leading-tight text-(size:--body-comfortable)">
+            Takes ~1 min · Network fee: {direction.from === ICON_MAINNET_CHAIN_ID ? '~0.02 ICX' : '~0.1 Sonic'}
+          </div>
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <div className="self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 p-(--layout-space-comfortable) lg:mt-4 mt-2">
+            <div className="self-stretch inline-flex justify-center items-center gap-2">
+              <div className="w-4 h-4 relative mix-blend-multiply">
+                <Image src="/symbol_dark.png" alt="" width={16} height={16} />
+              </div>
+              <div className="flex-1 justify-center text-espresso text-base font-['InterBold'] text-(size:--body-super-comfortable) leading-tight">
+                {direction.from === ICON_MAINNET_CHAIN_ID
+                  ? "You're migrating to Sonic"
+                  : "You're migrating back to ICON"}
+              </div>
             </div>
-            <div className="flex-1 justify-center text-espresso text-base font-['InterBold'] text-(size:--body-super-comfortable) leading-tight">
-              {direction.from === ICON_MAINNET_CHAIN_ID ? "You're migrating to Sonic" : "You're migrating back to ICON"}
+            <div className="self-stretch justify-center text-clay text-xs font-medium font-['InterRegular'] text-(size:--body-comfortable) leading-tight">
+              {direction.from === ICON_MAINNET_CHAIN_ID
+                ? "You won't need S token to receive your SODA. But you will for any future transactions on Sonic."
+                : 'ICX will be sent to your connected ICON wallet.'}
             </div>
           </div>
-          <div className="self-stretch justify-center text-clay text-xs font-medium font-['InterRegular'] text-(size:--body-comfortable) leading-tight">
-            {direction.from === ICON_MAINNET_CHAIN_ID
-              ? "You won't need S token to receive your SODA. But you will for any future transactions on Sonic."
-              : 'ICX will be sent to your connected ICON wallet.'}
-          </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
