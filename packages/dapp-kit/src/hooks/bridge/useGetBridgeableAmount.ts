@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { Result, SpokeChainId, XToken } from '@sodax/sdk';
+import type { XToken } from '@sodax/sdk';
 
 /**
  * Hook for getting the amount available to be bridged.

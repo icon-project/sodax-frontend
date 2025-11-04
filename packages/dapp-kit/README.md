@@ -44,6 +44,26 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Check if Stellar trustline is established for an asset (`useStellarTrustlineCheck`)
   - Request creation of Stellar trustline line for an asset (`useRequestTrustline`)
 
+- Staking
+  - Stake SODA tokens to receive xSODA shares (`useStake`)
+  - Unstake xSODA shares (`useUnstake`)
+  - Instant unstake xSODA shares with penalty (`useInstantUnstake`)
+  - Claim unstaked SODA tokens after unstaking period (`useClaim`)
+  - Cancel unstake request (`useCancelUnstake`)
+  - Check SODA token allowance for staking (`useStakeAllowance`)
+  - Approve SODA token spending for staking (`useStakeApprove`)
+  - Check xSODA token allowance for unstaking (`useUnstakeAllowance`)
+  - Approve xSODA token spending for unstaking (`useUnstakeApprove`)
+  - Check xSODA token allowance for instant unstaking (`useInstantUnstakeAllowance`)
+  - Approve xSODA token spending for instant unstaking (`useInstantUnstakeApprove`)
+  - Get comprehensive staking information (`useStakingInfo`)
+  - Get unstaking information with penalty details (`useUnstakingInfoWithPenalty`)
+  - Get unstaking information (`useUnstakingInfo`)
+  - Get staking configuration (`useStakingConfig`)
+  - Get stake ratio (SODA to xSODA conversion rate) (`useStakeRatio`)
+  - Get instant unstake ratio (xSODA to SODA conversion rate with penalty) (`useInstantUnstakeRatio`)
+  - Get converted assets amount for xSODA shares (`useConvertedAssets`)
+
 ## Installation
 
 ```bash
@@ -68,30 +88,32 @@ pnpm install @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk-react
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SodaxWalletProvider } from '@sodax/wallet-sdk-react';
 import { SodaxProvider } from '@sodax/dapp-kit';
+import type { RpcConfig } from '@sodax/types';
 
 const queryClient = new QueryClient();
 
-const rpcConfig = {
-  "solana": "private rpc url",
+const rpcConfig: RpcConfig = {
+  // EVM chains
+  sonic: 'https://rpc.soniclabs.com',
+  '0xa86a.avax': 'https://api.avax.network/ext/bc/C/rpc',
+  '0xa4b1.arbitrum': 'https://arb1.arbitrum.io/rpc',
+  '0x2105.base': 'https://mainnet.base.org',
+  '0x38.bsc': 'https://bsc-dataseed1.binance.org',
+  '0xa.optimism': 'https://mainnet.optimism.io',
+  '0x89.polygon': 'https://polygon-rpc.com',
+  
+  // Other chains
+  '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
+  solana: 'https://solana-mainnet.g.alchemy.com/v2/your-api-key',
+  sui: 'https://fullnode.mainnet.sui.io',
+  'injective-1': 'https://sentry.tm.injective.network:26657',
 };
 
 function App() {
   return (
     <SodaxProvider testnet={false} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
-        <SodaxWalletProvider
-          config={{
-            EVM: {
-              wagmiConfig: wagmiConfig,
-            },
-            SUI: {
-              isMainnet: true,
-            },
-            SOLANA: {
-              endpoint: 'https://solana-mainnet.g.alchemy.com/v2/your-api-key',
-            },
-          }}
-        >
+        <SodaxWalletProvider rpcConfig={rpcConfig}>
           <YourApp />
         </SodaxWalletProvider>
       </QueryClientProvider>

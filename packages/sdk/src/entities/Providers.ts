@@ -11,13 +11,8 @@ import {
   createPublicClient,
 } from 'viem';
 import { getEvmViemChain, getHubChainConfig } from '../constants.js';
-import type {
-  EvmChainId,
-  EvmHubChainConfig,
-  EvmSpokeChainConfig,
-  SonicSpokeChainConfig,
-  SpokeChainConfig,
-} from '../types.js';
+import type { EvmChainId } from '@sodax/types';
+import type { EvmHubChainConfig, EvmSpokeChainConfig, SonicSpokeChainConfig, SpokeChainConfig } from '../types.js';
 import type { InjectiveSpokeProvider } from './injective/InjectiveSpokeProvider.js';
 import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';

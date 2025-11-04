@@ -16,6 +16,7 @@ import type {
   TxReturnType,
   DepositSimulationParams,
   WalletSimulationParams,
+  Result,
 } from '../../types.js';
 import type { Address, Hex, HubAddress } from '@sodax/types';
 import { InjectiveSpokeService } from './InjectiveSpokeService.js';
@@ -382,7 +383,7 @@ export class SpokeService {
       return SonicSpokeService.getDeposit(token, spokeProvider);
     }
 
-      if (spokeProvider instanceof NearSpokeProvider) {
+    if (spokeProvider instanceof NearSpokeProvider) {
       return NearSpokeService.getDeposit(token, spokeProvider);
     }
 
@@ -418,7 +419,10 @@ export class SpokeService {
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: encodeAddress(spokeProvider.chainConfig.chain.id, await spokeProvider.walletProvider.getWalletAddress()),
+          srcAddress: encodeAddress(
+            spokeProvider.chainConfig.chain.id,
+            await spokeProvider.walletProvider.getWalletAddress(),
+          ),
           payload,
         },
         hubProvider,
@@ -470,10 +474,13 @@ export class SpokeService {
     }
     if (isStellarSpokeProvider(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await StellarSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        StellarSpokeProvider,
-        R
-      > as TxReturnType<T, R>;
+      return (await StellarSpokeService.callWallet(
+        from,
+        payload,
+        spokeProvider,
+        hubProvider,
+        raw,
+      )) satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<T, R>;
     }
 
     if (isNearSpokeProvider(spokeProvider)) {
@@ -498,7 +505,10 @@ export class SpokeService {
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: encodeAddress(spokeProvider.chainConfig.chain.id, await spokeProvider.walletProvider.getWalletAddress()),
+          srcAddress: encodeAddress(
+            spokeProvider.chainConfig.chain.id,
+            await spokeProvider.walletProvider.getWalletAddress(),
+          ),
           payload,
         },
         hubProvider,
@@ -535,7 +545,27 @@ export class SpokeService {
       return NearSpokeService.getAvailable(token as string, spokeProvider);
     }
 
-
     throw new Error('Invalid spoke provider');
+  }
+  /**
+   * Verifies the transaction hash for the spoke chain to exist on chain.
+   * Only stellar and solana need to be verified. For other chains, we assume the transaction exists on chain.
+   * @param txHash - The transaction hash to verify.
+   * @param spokeProvider - The spoke provider.
+   * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the verification.
+   */
+  public static async verifyTxHash(txHash: string, spokeProvider: SpokeProvider): Promise<Result<boolean>> {
+    if (isSolanaSpokeProvider(spokeProvider)) {
+      return SolanaSpokeService.waitForConfirmation(spokeProvider, txHash);
+    }
+    if (isStellarSpokeProvider(spokeProvider)) {
+      return StellarSpokeService.waitForTransaction(spokeProvider, txHash);
+    }
+
+    // only stellar and solana need to be verified
+    return {
+      ok: true,
+      value: true,
+    };
   }
 }

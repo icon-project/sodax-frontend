@@ -13,7 +13,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
+import { calculateExchangeRate } from '@/lib/utils';
+import { parseUnits, formatUnits } from 'viem';
 import {
   type CreateIntentParams,
   getSupportedSolverTokens,
@@ -89,7 +90,7 @@ export default function SwapCard({
   if (trustlineError) {
     console.error('trustlineError', trustlineError);
   }
-  const { mutateAsync: requestTrustline } = useRequestTrustline(destToken?.address);
+  const { requestTrustline } = useRequestTrustline(destToken?.address);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
   const onChangeDirection = () => {
@@ -123,7 +124,7 @@ export default function SwapCard({
       token_src_blockchain_id: sourceChain,
       token_dst: destToken.address,
       token_dst_blockchain_id: destChain,
-      amount: scaleTokenAmount(sourceAmount, sourceToken.decimals),
+      amount: parseUnits(sourceAmount, sourceToken.decimals),
       quote_type: 'exact_input',
     } satisfies SolverIntentQuoteRequest;
   }, [sourceToken, destToken, sourceChain, destChain, sourceAmount]);
@@ -141,7 +142,7 @@ export default function SwapCard({
   const exchangeRate = useMemo(() => {
     return calculateExchangeRate(
       new BigNumber(sourceAmount),
-      new BigNumber(normaliseTokenAmount(quote?.quoted_amount ?? 0n, destToken?.decimals ?? 0)),
+      new BigNumber(formatUnits(quote?.quoted_amount ?? 0n, destToken?.decimals ?? 0)),
     );
   }, [quote, sourceAmount, destToken]);
 
@@ -189,7 +190,7 @@ export default function SwapCard({
     const createIntentParams = {
       inputToken: sourceToken.address, // The address of the input token on hub chain
       outputToken: destToken.address, // The address of the output token on hub chain
-      inputAmount: scaleTokenAmount(sourceAmount, sourceToken.decimals), // The amount of input tokens
+      inputAmount: parseUnits(sourceAmount, sourceToken.decimals), // The amount of input tokens
       minOutputAmount: BigInt(minOutputAmount.toFixed(0)), // The minimum amount of output tokens to accept
       deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires (0 = no deadline)
       allowPartialFill: false, // Whether the intent can be partially filled
@@ -328,7 +329,7 @@ export default function SwapCard({
             <Input
               type="number"
               placeholder="0.0"
-              value={quote ? normaliseTokenAmount(quote?.quoted_amount, destToken?.decimals ?? 0) : ''}
+              value={quote ? formatUnits(quote?.quoted_amount, destToken?.decimals ?? 0) : ''}
               readOnly
             />
           </div>
@@ -379,7 +380,7 @@ export default function SwapCard({
           <div className="flex justify-between items-center">
             <span>Minimum Output Amount</span>
             <span>
-              {minOutputAmount ? normaliseTokenAmount(minOutputAmount.toString(), destToken?.decimals ?? 0) : '0'}{' '}
+              {minOutputAmount ? formatUnits(BigInt(minOutputAmount.toFixed(0)), destToken?.decimals ?? 0) : '0'}{' '}
               {destToken?.symbol}
             </span>
           </div>
@@ -408,21 +409,16 @@ export default function SwapCard({
                 <div>
                   outputToken: {intentOrderPayload?.outputToken} on {intentOrderPayload?.dstChain}
                 </div>
-                <div>
-                  inputAmount: {normaliseTokenAmount(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}
-                </div>
+                <div>inputAmount: {formatUnits(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}</div>
                 <div>deadline: {new Date(Number(intentOrderPayload?.deadline) * 1000).toLocaleString()}</div>
                 <div>allowPartialFill: {intentOrderPayload?.allowPartialFill.toString()}</div>
                 <div>srcAddress: {intentOrderPayload?.srcAddress}</div>
                 <div>dstAddress: {intentOrderPayload?.dstAddress}</div>
                 <div>solver: {intentOrderPayload?.solver}</div>
                 <div>data: {intentOrderPayload?.data}</div>
+                <div>amount: {formatUnits(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}</div>
                 <div>
-                  amount: {normaliseTokenAmount(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}
-                </div>
-                <div>
-                  outputAmount:{' '}
-                  {normaliseTokenAmount(intentOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)}
+                  outputAmount: {formatUnits(intentOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)}
                 </div>
                 {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
                   <div className="text-red-500">Insufficient Stellar trustline (request trustline to proceed)</div>

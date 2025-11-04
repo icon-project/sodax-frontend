@@ -1,4 +1,12 @@
-import type { ChainId } from '@sodax/types';
+import type {
+  ChainId,
+  IEvmWalletProvider,
+  IIconWalletProvider,
+  IInjectiveWalletProvider,
+  ISolanaWalletProvider,
+  IStellarWalletProvider,
+  ISuiWalletProvider,
+} from '@sodax/types';
 import { useMemo } from 'react';
 import {
   EvmWalletProvider,
@@ -9,9 +17,7 @@ import {
   SolanaWalletProvider,
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
-import type { InjectiveEoaAddress } from '@sodax/types';
 import { usePublicClient, useWalletClient } from 'wagmi';
-import { getWagmiChainId } from '../utils';
 import { type SolanaXService, type StellarXService, useXAccount, useXService } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
@@ -37,22 +43,18 @@ import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 export function useWalletProvider(
   spokeChainId: ChainId | undefined,
 ):
-  | EvmWalletProvider
-  | SuiWalletProvider
-  | IconWalletProvider
-  | InjectiveWalletProvider
-  | StellarWalletProvider
-  | SolanaWalletProvider
+  | IEvmWalletProvider
+  | ISuiWalletProvider
+  | IIconWalletProvider
+  | IInjectiveWalletProvider
+  | IStellarWalletProvider
+  | ISolanaWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
-
   // EVM-specific hooks
-  const evmPublicClient = usePublicClient({
-    chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
-  });
-  const { data: evmWalletClient } = useWalletClient({
-    chainId: spokeChainId ? getWagmiChainId(spokeChainId) : undefined,
-  });
+  const evmPublicClient = usePublicClient();
+
+  const { data: evmWalletClient } = useWalletClient();
 
   // Cross-chain hooks
   const xService = useXService(getXChainType(spokeChainId));
@@ -104,19 +106,16 @@ export function useWalletProvider(
           // throw new Error('InjectiveXService is not initialized');
         }
 
-        const { walletAddress, msgBroadcaster } = {
-          walletAddress: xAccount.address,
-          msgBroadcaster: injectiveXService.msgBroadcaster,
-        };
-
         return new InjectiveWalletProvider({
-          walletAddress: walletAddress as InjectiveEoaAddress | undefined,
-          msgBroadcaster: msgBroadcaster,
+          msgBroadcaster: injectiveXService.msgBroadcaster,
         });
       }
 
       case 'STELLAR': {
         const stellarXService = xService as StellarXService;
+        if (!stellarXService.walletsKit) {
+          return undefined;
+        }
 
         return new StellarWalletProvider({
           type: 'BROWSER_EXTENSION',
@@ -129,11 +128,11 @@ export function useWalletProvider(
         const solanaXService = xService as SolanaXService;
 
         if (!solanaXService.wallet) {
-          throw new Error('Wallet is not initialized');
+          return undefined;
         }
 
         if (!solanaXService.connection) {
-          throw new Error('Connection is not initialized');
+          return undefined;
         }
 
         return new SolanaWalletProvider({

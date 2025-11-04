@@ -21,6 +21,7 @@ import type {
   NewbnUSDChainId,
   XToken,
   NearSpokeChainConfig,
+  BaseSpokeChainInfo,
 } from './index.js';
 import {
   type ChainId,
@@ -44,6 +45,7 @@ import {
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   NEAR_MAINNET_CHAIN_ID,
+  baseChainInfo,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -64,19 +66,6 @@ export const DEFAULT_BACKEND_API_HEADERS = {
 
 export const VAULT_TOKEN_DECIMALS = 18;
 
-export const EVM_CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-  HYPEREVM_MAINNET_CHAIN_ID,
-  LIGHTLINK_MAINNET_CHAIN_ID,
-] as const;
-
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
 export const ChainIdToIntentRelayChainId = {
   [AVALANCHE_MAINNET_CHAIN_ID]: 6n,
@@ -94,7 +83,7 @@ export const ChainIdToIntentRelayChainId = {
   [NIBIRU_MAINNET_CHAIN_ID]: 7235938n,
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
-  [NEAR_MAINNET_CHAIN_ID]:15n,
+  [NEAR_MAINNET_CHAIN_ID]: 15n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -330,7 +319,11 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
       icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
       balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',
-      sodaToken: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963', // SODA token on Sonic
+      sodaToken: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963',
+      sodaVault: '0x21685E341DE7844135329914Be6Bd8D16982d834',
+      stakedSoda: '0x4333B324102d00392038ca92537DfbB8CB0DAc68',
+      xSoda: '0xADC6561Cc8FC31767B4917CCc97F510D411378d9',
+      stakingRouter: '0xE287Cd568543d880e0F0DfaDCE18B44930759367',
     },
     nativeToken: '0x0000000000000000000000000000000000000000',
     wrappedNativeToken: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
@@ -342,11 +335,7 @@ export const getHubChainConfig = (chainId: HubChainId): EvmHubChainConfig => hub
 
 export const spokeChainConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'Sonic',
-      id: SONIC_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[SONIC_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       walletRouter: '0xC67C3e55c665E78b25dc9829B3Aa5af47d914733',
       wrappedSonic: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
@@ -407,7 +396,7 @@ export const spokeChainConfig = {
       testToken: '3Q2HS3png7fLaYerqCun3zw8rnBZo2Ksvdg6RHTyM4Ns',
       xTokenManager: '',
     },
-    chain: { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', type: 'SOLANA' },
+    chain: baseChainInfo[SOLANA_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'SOLANA'>,
     nativeToken: '11111111111111111111111111111111' as const,
     bnUSD: '3rSPCLNEF7Quw4wX8S1NyKivELoyij8eYA2gJwBgt4V5',
     supportedTokens: {
@@ -445,11 +434,7 @@ export const spokeChainConfig = {
     walletAddress: '',
   } as const satisfies SolanaChainConfig,
   [AVALANCHE_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'Avalanche',
-      id: AVALANCHE_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[AVALANCHE_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x5bDD1E1C5173F4c912cC919742FB94A55ECfaf86',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
@@ -495,11 +480,7 @@ export const spokeChainConfig = {
     },
   } as const satisfies EvmSpokeChainConfig,
   [NIBIRU_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'Nibiru',
-      id: NIBIRU_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[NIBIRU_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
       connection: '0x772FFE538E45b2cDdFB5823041EC26C44815B9AB',
@@ -531,11 +512,7 @@ export const spokeChainConfig = {
     },
   } as const satisfies EvmSpokeChainConfig,
   [ARBITRUM_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'Arbitrum',
-      id: ARBITRUM_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[ARBITRUM_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
@@ -609,11 +586,7 @@ export const spokeChainConfig = {
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [BASE_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'BASE',
-      id: BASE_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[BASE_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
@@ -673,11 +646,7 @@ export const spokeChainConfig = {
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [OPTIMISM_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'Optimism',
-      id: OPTIMISM_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[OPTIMISM_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
@@ -737,11 +706,7 @@ export const spokeChainConfig = {
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [BSC_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'BSC',
-      id: BSC_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[BSC_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
@@ -794,11 +759,7 @@ export const spokeChainConfig = {
     },
   } as const satisfies EvmSpokeChainConfig,
   [POLYGON_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'Polygon',
-      id: POLYGON_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[POLYGON_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
       connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
@@ -837,11 +798,7 @@ export const spokeChainConfig = {
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [HYPEREVM_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'HyperEVM',
-      id: HYPEREVM_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[HYPEREVM_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0xAfd6A6e4287A511D3BAAd013093815268846FBb7',
       connection: '0xA143488cDc5B74B366231E6A4d5a55A2D9Dc8484',
@@ -870,14 +827,17 @@ export const spokeChainConfig = {
         address: '0xA28C70F92a1B2513edCdDD29c2E5195a4B785aB2',
         xChainId: HYPEREVM_MAINNET_CHAIN_ID,
       },
+      USDC: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0xb88339CB7199b77E23DB6E890353E22632Ba630f',
+        xChainId: HYPEREVM_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [LIGHTLINK_MAINNET_CHAIN_ID]: {
-    chain: {
-      name: 'lightlink',
-      id: LIGHTLINK_MAINNET_CHAIN_ID,
-      type: 'EVM',
-    },
+    chain: baseChainInfo[LIGHTLINK_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x4A1C82744cDDeE675A255fB289Cb0917A482e7C7',
       connection: '0x6D2126DB97dd88AfA85127253807D04A066b6746',
@@ -993,11 +953,7 @@ export const spokeChainConfig = {
       testToken: '',
       xTokenManager: '',
     },
-    chain: {
-      id: INJECTIVE_MAINNET_CHAIN_ID,
-      name: 'Injective',
-      type: 'INJECTIVE',
-    },
+    chain: baseChainInfo[INJECTIVE_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'INJECTIVE'>,
     nativeToken: 'inj' as const,
     bnUSD: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/bnUSD',
     networkId: 'injective-1',
@@ -1104,11 +1060,7 @@ export const spokeChainConfig = {
     bnUSD: 'CD6YBFFWMU2UJHX2NGRJ7RN76IJVTCC7MRA46DUBXNB7E6W7H7JRJ2CX',
     horizonRpcUrl: 'https://horizon.stellar.org',
     sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
-    chain: {
-      name: 'Stellar',
-      id: STELLAR_MAINNET_CHAIN_ID,
-      type: 'STELLAR',
-    },
+    chain: baseChainInfo[STELLAR_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'STELLAR'>,
   } as const satisfies StellarSpokeChainConfig,
   [SUI_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -1203,11 +1155,7 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI' as const,
     bnUSD: '0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD',
     rpc_url: 'https://fullnode.mainnet.sui.io:443',
-    chain: {
-      name: 'Sui',
-      id: SUI_MAINNET_CHAIN_ID,
-      type: 'SUI',
-    },
+    chain: baseChainInfo[SUI_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'SUI'>,
   } as const satisfies SuiSpokeChainConfig,
   [ICON_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -1216,11 +1164,7 @@ export const spokeChainConfig = {
       rateLimit: 'cxbbdcea9e6757023a046067ba8daa3c4c50304358',
       wICX: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d',
     },
-    chain: {
-      id: ICON_MAINNET_CHAIN_ID,
-      name: 'ICON',
-      type: 'ICON',
-    },
+    chain: baseChainInfo[ICON_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'ICON'>,
     supportedTokens: {
       ICX: {
         symbol: 'ICX',
@@ -1264,31 +1208,27 @@ export const spokeChainConfig = {
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
-  [NEAR_MAINNET_CHAIN_ID]:{
-    nativeToken:"",
+  [NEAR_MAINNET_CHAIN_ID]: {
+    chain: baseChainInfo[NEAR_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'NEAR'>,
+    nativeToken: '',
     addresses: {
-      assetManager:"",
-      connection: "",
-      rateLimit: "",
-      xTokenManager:"",
-      intentFiller:""
+      assetManager: '',
+      connection: '',
+      rateLimit: '',
+      xTokenManager: '',
+      intentFiller: '',
     },
-     chain: {
-      id: NEAR_MAINNET_CHAIN_ID,
-      name: 'NEAR',
-      type: 'NEAR',
+    supportedTokens: {
+      bnUSD: {
+        address: '',
+        symbol: 'bnUSD',
+        decimals: 24,
+        name: 'BNUSD',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
     },
-    supportedTokens:{
-        bnUSD:{
-            address:"",
-            symbol:"bnUSD",
-            decimals:24,
-            name:"BNUSD",
-            xChainId:NEAR_MAINNET_CHAIN_ID,
-        },
-    },
-     bnUSD: "",
-     rpc_url:"",
+    bnUSD: '',
+    rpc_url: '',
   } as const satisfies NearSpokeChainConfig,
 } as const;
 
@@ -1923,6 +1863,13 @@ export const hubAssets: Record<
       name: 'SODAX',
       vault: hubVaults.sodaSODA.address,
     },
+    [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
+      asset: '0x0f78b995d113712deeb17d96638e9d7525d409c6',
+      decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      vault: hubVaults.sodaUSDC.address,
+    },
   },
   [LIGHTLINK_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].nativeToken]: {
@@ -2230,7 +2177,7 @@ export const hubAssets: Record<
       vault: '0x', // no vault yet
     },
   },
-  [NEAR_MAINNET_CHAIN_ID]:{}as const
+  [NEAR_MAINNET_CHAIN_ID]: {} as const,
 } as const;
 
 export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';
@@ -2298,7 +2245,12 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
-  [HYPEREVM_MAINNET_CHAIN_ID]: [] as const satisfies Token[],
+  [HYPEREVM_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDC,
+  ] as const satisfies Token[],
   [LIGHTLINK_MAINNET_CHAIN_ID]: [
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
@@ -2309,7 +2261,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['BNB.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SOL.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['XLM.LL'],
-    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['INJ.LL'],
+    // spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['INJ.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SUI.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['S.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['POL.LL'],
@@ -2322,7 +2274,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   ] as const satisfies Token[],
   [ICON_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
-    spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.wICX,
+    // spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.wICX,
     spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     // spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.BALN, // NOTE: Not Implemented
     // spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.OMM, // NOTE: Not Implemented
@@ -2353,7 +2305,7 @@ const solverSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.USDC, // NOTE: Not Implemented
   ] as const satisfies Token[],
-  [NEAR_MAINNET_CHAIN_ID]:[]
+  [NEAR_MAINNET_CHAIN_ID]: [],
 } as const;
 
 // get supported spoke chain tokens for solver
@@ -2483,7 +2435,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
-  [NEAR_MAINNET_CHAIN_ID]:[] as const,
+  [NEAR_MAINNET_CHAIN_ID]: [] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
 export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
@@ -2602,4 +2554,8 @@ export const isNativeToken = (chainId: SpokeChainId, token: Token | string): boo
   }
 
   return token.address.toLowerCase() === spokeChainConfig[chainId].nativeToken.toLowerCase();
+};
+export const findSupportedTokenBySymbol = (chainId: SpokeChainId, symbol: string): XToken | undefined => {
+  const supportedTokens = Object.values(spokeChainConfig[chainId].supportedTokens);
+  return supportedTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
 };

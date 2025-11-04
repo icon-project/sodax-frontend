@@ -1,27 +1,46 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, MinusIcon, CopyIcon, Loader2, Info, XIcon } from 'lucide-react';
+import { PlusIcon, MinusIcon, CopyIcon, Loader2 } from 'lucide-react';
 import type { ChainType } from '@sodax/types';
 import { EVMChainItem } from './evm-chain-item';
-import { useXAccount, useXConnect, useXConnectors, useXDisconnect, type XConnector } from '@sodax/wallet-sdk-react';
-import { useCallback, useState } from 'react';
+import {
+  useXAccount,
+  useXConnect,
+  useXConnectors,
+  useXDisconnect,
+  type XConnector,
+  type XAccount,
+} from '@sodax/wallet-sdk-react';
+import { useCallback, useEffect, useState } from 'react';
 import { shortenAddress } from '@/lib/utils';
 import { chainGroupMap } from './wallet-modal';
+import { delay } from '@/lib/utils';
 
 export type ChainItemProps = {
   chainType: ChainType;
   setActiveXChainType: (chainType: ChainType) => void;
-  onSuccess?: () => void;
+  hoveredChainType?: ChainType | undefined;
+  setHoveredChainType?: (chainType: ChainType | undefined) => void;
+  onSuccess?: (xConnector: XConnector, xAccount: XAccount) => Promise<void>;
 };
 
-export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChainType, onSuccess }) => {
+export const ChainItem: React.FC<ChainItemProps> = ({
+  chainType,
+  setActiveXChainType,
+  hoveredChainType,
+  setHoveredChainType,
+  onSuccess,
+}) => {
   const { address } = useXAccount(chainType);
   const xConnectors = useXConnectors(chainType);
   const { mutateAsync: xConnect, isPending } = useXConnect();
   const [showCopied, setShowCopied] = useState(false);
   const [copiedFadingOut, setCopiedFadingOut] = useState(false);
   const xDisconnect = useXDisconnect();
+
+  const [connected, setConnected] = useState(false);
+  const xAccount = useXAccount(chainType);
 
   const handleConnect = useCallback(async () => {
     if (xConnectors.length === 0) {
@@ -31,12 +50,20 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
     if (xConnectors.length === 1) {
       try {
         await xConnect(xConnectors[0] as XConnector);
-        onSuccess?.();
+        setConnected(true);
+        await delay(500);
       } catch (e) {}
     } else {
       setActiveXChainType(chainType);
     }
-  }, [xConnect, xConnectors, setActiveXChainType, chainType, onSuccess]);
+  }, [xConnect, xConnectors, setActiveXChainType, chainType]);
+
+  useEffect(() => {
+    if (connected && xAccount.address) {
+      onSuccess?.(xConnectors[0] as XConnector, xAccount);
+      setConnected(false);
+    }
+  }, [onSuccess, xConnectors[0], xAccount, connected]);
 
   const onCopyAddress = () => {
     if (!address) return;
@@ -57,19 +84,34 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
   }, [xDisconnect, chainType]);
 
   if (chainType === 'EVM') {
-    return <EVMChainItem handleConnect={handleConnect} handleDisconnect={handleDisconnect} isPending={isPending} />;
+    return (
+      <EVMChainItem
+        handleConnect={handleConnect}
+        handleDisconnect={handleDisconnect}
+        isPending={isPending}
+        setHoveredChainType={setHoveredChainType}
+        hoveredChainType={hoveredChainType}
+      />
+    );
   }
   return (
     <div
       className={`
           inline-flex justify-between items-center
           transition-opacity duration-200
-          hover:opacity-100
           group
-          opacity-60
           cursor-pointer py-4 pl-1
+          z-[10]
           ${isPending === true || address ? 'opacity-100' : ''}
+          ${hoveredChainType === undefined || hoveredChainType === chainType ? 'opacity-100' : 'opacity-60'}
         `}
+      onMouseEnter={() => {
+        setHoveredChainType?.(chainType);
+      }}
+      onMouseLeave={() => {
+        setHoveredChainType?.(undefined);
+      }}
+      onClick={address ? handleDisconnect : handleConnect}
     >
       <div className="flex flex-col gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-4">
@@ -93,11 +135,18 @@ export const ChainItem: React.FC<ChainItemProps> = ({ chainType, setActiveXChain
             </div>
           </div>
 
-          <div className="flex justify-start items-center gap-1">
+          <div className="flex justify-start items-center gap-1 z-[11]">
             <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex gap-1 items-center">
               {address ? shortenAddress(address, 4) : isPending ? 'Waiting for wallet' : chainGroupMap[chainType].name}
               {address && (
-                <CopyIcon className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay" onClick={onCopyAddress} />
+                <CopyIcon
+                  className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay"
+                  onClick={e => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onCopyAddress();
+                  }}
+                />
               )}
               {showCopied && (
                 <div

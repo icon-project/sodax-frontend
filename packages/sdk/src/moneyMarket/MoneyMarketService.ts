@@ -29,7 +29,6 @@ import type {
   GetAddressType,
   GetEstimateGasReturnType,
   GetSpokeDepositParamsType,
-  HttpUrl,
   HubTxHash,
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,
@@ -42,7 +41,7 @@ import { calculateFeeAmount, deriveUserWalletAddress, encodeAddress, encodeContr
 import { EvmAssetManagerService, EvmVaultTokenService } from '../services/hub/index.js';
 import { Erc20Service } from '../services/shared/index.js';
 import invariant from 'tiny-invariant';
-import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Token, type Address } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, type Token, type Address, type HttpUrl } from '@sodax/types';
 import { wrappedSonicAbi } from '../abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
 import { StellarSpokeService } from '../services/spoke/StellarSpokeService.js';
@@ -547,6 +546,22 @@ export class MoneyMarketService {
         return txResult;
       }
 
+      // verify the spoke tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_SUPPLY_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: verifyTxHashResult.error,
+            },
+          },
+        };
+      }
+
       let intentTxHash: string | null = null;
       if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
         const packetResult = await relayTxAndWaitPacket(
@@ -745,6 +760,22 @@ export class MoneyMarketService {
         return txResult;
       }
 
+      // verify the spoke tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_BORROW_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: verifyTxHashResult.error,
+            },
+          },
+        };
+      }
+
       let intentTxHash: string | null = null;
       if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
         const packetResult = await relayTxAndWaitPacket(
@@ -847,7 +878,7 @@ export class MoneyMarketService {
 
     let txResult: TxReturnType<S, R>;
     if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
-      txResult = await SonicSpokeService.callWallet(data, spokeProvider);
+      txResult = await SonicSpokeService.callWallet(data, spokeProvider, raw);
     } else {
       txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
     }
@@ -905,6 +936,22 @@ export class MoneyMarketService {
 
       if (!txResult.ok) {
         return txResult;
+      }
+
+      // verify the spoke tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_WITHDRAW_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: verifyTxHashResult.error,
+            },
+          },
+        };
       }
 
       let intentTxHash: string | null = null;
@@ -1014,7 +1061,6 @@ export class MoneyMarketService {
         params.amount,
         spokeProvider,
         this,
-        hubWallet,
       );
     } else {
       data = this.buildWithdrawData(
@@ -1084,6 +1130,22 @@ export class MoneyMarketService {
 
       if (!txResult.ok) {
         return txResult;
+      }
+
+      // verify the spoke tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_REPAY_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: verifyTxHashResult.error,
+            },
+          },
+        };
       }
 
       let intentTxHash: string | null = null;

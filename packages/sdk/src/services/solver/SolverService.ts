@@ -18,6 +18,7 @@ import {
   type WaitUntilIntentExecutedPayload,
   adjustAmountByFee,
   calculateFeeAmount,
+  calculatePercentageFeeAmount,
   deriveUserWalletAddress,
   encodeContractCalls,
   getIntentRelayChainId,
@@ -33,7 +34,6 @@ import type {
   EvmContractCall,
   FeeAmount,
   GetSpokeDepositParamsType,
-  HttpUrl,
   SolverErrorResponse,
   SolverExecutionRequest,
   SolverExecutionResponse,
@@ -61,6 +61,7 @@ import {
   type Address,
   type Hex,
   type Hash,
+  type HttpUrl,
   SOLANA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { StellarSpokeService } from '../spoke/StellarSpokeService.js';
@@ -245,20 +246,33 @@ export class SolverService {
   }
 
   /**
-   * Get the fee for a given input amount
+   * Get the partner fee for a given input amount
    * @param {bigint} inputAmount - The amount of input tokens
-   * @returns {Promise<bigint>} The fee amount (denominated in input tokens)
+   * @returns {Promise<bigint>} The partner fee amount (denominated in input tokens)
    *
    * @example
-   * const fee: bigint = await solverService.getFee(1000000000000000n);
-   * console.log('Fee:', fee);
+   * const fee: bigint = await solverService.getPartnerFee(1000000000000000n);
+   * console.log('Partner fee:', fee);
    */
-  public getFee(inputAmount: bigint): bigint {
+  public getPartnerFee(inputAmount: bigint): bigint {
     if (!this.config.partnerFee) {
       return 0n;
     }
 
     return calculateFeeAmount(inputAmount, this.config.partnerFee);
+  }
+
+  /**
+   * Get the solver fee for a given input amount (0.1% fee)
+   * @param {bigint} inputAmount - The amount of input tokens
+   * @returns {Promise<bigint>} The solver fee amount (denominated in input tokens)
+   *
+   * @example
+   * const fee: bigint = await solverService.getSolverFee(1000000000000000n);
+   * console.log('Solver fee:', fee);
+   */
+  public getSolverFee(inputAmount: bigint): bigint {
+    return calculatePercentageFeeAmount(inputAmount, 10);
   }
 
   /**
@@ -500,9 +514,25 @@ export class SolverService {
         return createIntentResult;
       }
 
-      // then submit the deposit tx hash of spoke chain to the intent relay
       const [spokeTxHash, intent, data] = createIntentResult.value;
 
+      // then verify the spoke tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(spokeTxHash, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATION_FAILED',
+            data: {
+              payload: params,
+              error: verifyTxHashResult.error,
+            },
+          },
+        };
+      }
+
+      // then submit the deposit tx hash of spoke chain to the intent relay
       let dstIntentTxHash: string;
 
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
@@ -766,7 +796,12 @@ export class SolverService {
       }
 
       if (spokeProvider instanceof StellarSpokeProvider) {
-        const result = await StellarSpokeService.requestTrustline(params.inputToken, params.inputAmount, spokeProvider, raw);
+        const result = await StellarSpokeService.requestTrustline(
+          params.inputToken,
+          params.inputAmount,
+          spokeProvider,
+          raw,
+        );
         return {
           ok: true,
           value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,

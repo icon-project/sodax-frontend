@@ -1,11 +1,24 @@
 import { XService } from '@/core/XService';
-import type { ChainId, XToken } from '@sodax/types';
-import type { EVMConfig } from '@/types';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  AVALANCHE_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
+  NIBIRU_MAINNET_CHAIN_ID,
+  OPTIMISM_MAINNET_CHAIN_ID,
+  POLYGON_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  type RpcConfig,
+  type XToken,
+} from '@sodax/types';
 import { getWagmiChainId, isNativeToken } from '@/utils';
 
-import { type Address, type PublicClient, type WalletClient, defineChain, erc20Abi } from 'viem';
-import { getPublicClient, getWalletClient } from 'wagmi/actions';
-import { createConfig, http, type Transport } from 'wagmi';
+import { type Address, defineChain, erc20Abi } from 'viem';
+import { getPublicClient } from 'wagmi/actions';
+import { type Config, createConfig, http } from 'wagmi';
 import {
   mainnet,
   avalanche,
@@ -18,19 +31,6 @@ import {
   nibiru,
   lightlinkPhoenix,
 } from 'wagmi/chains';
-
-import {
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-  HYPEREVM_MAINNET_CHAIN_ID,
-  LIGHTLINK_MAINNET_CHAIN_ID,
-} from '@sodax/types';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
@@ -58,37 +58,22 @@ export const hyper = /*#__PURE__*/ defineChain({
   },
 });
 
-const evmChainMap = {
-  [AVALANCHE_MAINNET_CHAIN_ID]: avalanche,
-  [ARBITRUM_MAINNET_CHAIN_ID]: arbitrum,
-  [BASE_MAINNET_CHAIN_ID]: base,
-  [BSC_MAINNET_CHAIN_ID]: bsc,
-  [SONIC_MAINNET_CHAIN_ID]: sonic,
-  [OPTIMISM_MAINNET_CHAIN_ID]: optimism,
-  [POLYGON_MAINNET_CHAIN_ID]: polygon,
-  [NIBIRU_MAINNET_CHAIN_ID]: nibiru,
-  [HYPEREVM_MAINNET_CHAIN_ID]: hyper,
-  [LIGHTLINK_MAINNET_CHAIN_ID]: lightlinkPhoenix,
-} as const;
-
-export type EvmChainId = keyof typeof evmChainMap;
-
-export const getWagmiConfig = (chains: EvmChainId[]) => {
-  const mappedChains = chains.map(chain => evmChainMap[chain]);
-  const finalChains = mappedChains.length > 0 ? mappedChains : [mainnet];
-
-  const transports = finalChains.reduce(
-    (acc, chain) => {
-      acc[chain.id] = http();
-      return acc;
-    },
-    {} as Record<number, Transport>,
-  );
-
+export const createWagmiConfig = (config: RpcConfig) => {
   return createConfig({
-    chains: finalChains as [typeof mainnet, ...(typeof mainnet)[]],
-    transports,
-    // ssr: true,
+    chains: [mainnet, avalanche, arbitrum, base, bsc, sonic, optimism, polygon, nibiru, hyper, lightlinkPhoenix],
+    transports: {
+      [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
+      [avalanche.id]: http(config[AVALANCHE_MAINNET_CHAIN_ID]),
+      [arbitrum.id]: http(config[ARBITRUM_MAINNET_CHAIN_ID]),
+      [base.id]: http(config[BASE_MAINNET_CHAIN_ID]),
+      [bsc.id]: http(config[BSC_MAINNET_CHAIN_ID]),
+      [sonic.id]: http(config[SONIC_MAINNET_CHAIN_ID]),
+      [optimism.id]: http(config[OPTIMISM_MAINNET_CHAIN_ID]),
+      [polygon.id]: http(config[POLYGON_MAINNET_CHAIN_ID]),
+      [nibiru.id]: http(config[NIBIRU_MAINNET_CHAIN_ID]),
+      [hyper.id]: http(config[HYPEREVM_MAINNET_CHAIN_ID]),
+      [lightlinkPhoenix.id]: http(config[LIGHTLINK_MAINNET_CHAIN_ID]),
+    },
   });
 };
 
@@ -99,7 +84,8 @@ export const getWagmiConfig = (chains: EvmChainId[]) => {
 
 export class EvmXService extends XService {
   private static instance: EvmXService;
-  private config: EVMConfig | undefined;
+  public wagmiConfig: Config | undefined;
+
   private constructor() {
     super('EVM');
   }
@@ -115,46 +101,30 @@ export class EvmXService extends XService {
     return EvmXService.instance;
   }
 
-  public setConfig(config: EVMConfig) {
-    this.config = config;
-  }
-
-  getPublicClient(chainId: number): PublicClient | undefined {
-    if (!this.config) {
-      throw new Error('EvmXService: config is not initialized yet');
-    }
-
-    // @ts-ignore
-    return getPublicClient(getWagmiConfig(this.config.chains), { chainId });
-  }
-
-  public async getWalletClient(chainId: number): Promise<WalletClient> {
-    if (!this.config) {
-      throw new Error('EvmXService: config is not initialized yet');
-    }
-    return await getWalletClient(getWagmiConfig(this.config.chains), { chainId });
-  }
-
-  async getBalance(address: string | undefined, xToken: XToken, xChainId: ChainId): Promise<bigint> {
+  async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
     if (!address) return 0n;
+    if (!this.wagmiConfig) return 0n;
 
-    const chainId = getWagmiChainId(xChainId);
+    const chainId = getWagmiChainId(xToken.xChainId);
 
     if (isNativeToken(xToken)) {
-      const balance = await this.getPublicClient(chainId)?.getBalance({ address: address as Address });
+      const balance = await getPublicClient(this.wagmiConfig, { chainId: chainId })?.getBalance({
+        address: address as Address,
+      });
       return balance || 0n;
     }
 
     throw new Error(`Unsupported token: ${xToken.symbol}`);
   }
 
-  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: ChainId) {
+  async getBalances(address: string | undefined, xTokens: XToken[]) {
     if (!address) return {};
+    if (!this.wagmiConfig) return {};
 
     const balancePromises = xTokens
       .filter(xToken => isNativeToken(xToken))
       .map(async xToken => {
-        const balance = await this.getBalance(address, xToken, xChainId);
+        const balance = await this.getBalance(address, xToken);
         return { symbol: xToken.symbol, address: xToken.address, balance };
       });
 
@@ -165,7 +135,8 @@ export class EvmXService extends XService {
     }, {});
 
     const nonNativeXTokens = xTokens.filter(xToken => !isNativeToken(xToken));
-    const result = await this.getPublicClient(getWagmiChainId(xChainId))?.multicall({
+    const xChainId = xTokens[0].xChainId;
+    const result = await getPublicClient(this.wagmiConfig, { chainId: getWagmiChainId(xChainId) })?.multicall({
       contracts: nonNativeXTokens.map(token => ({
         abi: erc20Abi,
         address: token.address as `0x${string}`,

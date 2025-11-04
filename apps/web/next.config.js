@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
@@ -14,15 +15,23 @@ const nextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
-    // If client-side, don't polyfill `fs`
-    if (!isServer) {
-      config.resolve.fallback = {
-        fs: false,
-      };
-    }
 
-    return config;
+  async headers() {
+    return [
+      {
+        source: '/(.*)', // Apply to all routes
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY', // Prevent all framing
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'none';", // Modern protection
+          },
+        ],
+      },
+    ];
   },
 };
 

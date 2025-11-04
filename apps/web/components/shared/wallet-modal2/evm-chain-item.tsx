@@ -8,6 +8,7 @@ import { EvmMultiConnectIcon } from '@/components/icons';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { shortenAddress } from '@/lib/utils';
 import { useState } from 'react';
+import type { ChainType } from '@sodax/types';
 
 export const EVM_CHAIN_ICONS = [
   '/chain/0x2105.base.png',
@@ -17,15 +18,24 @@ export const EVM_CHAIN_ICONS = [
   '/chain/0xa.optimism.png',
   '/chain/0xa4b1.arbitrum.png',
   '/chain/sonic.png',
+  '/chain/lightlink.png',
 ];
 
 export type EVMChainItemProps = {
   handleConnect: () => void;
   handleDisconnect: () => void;
   isPending: boolean;
+  setHoveredChainType?: (chainType: ChainType | undefined) => void;
+  hoveredChainType?: ChainType | undefined;
 };
 
-export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handleDisconnect, isPending }) => {
+export const EVMChainItem: React.FC<EVMChainItemProps> = ({
+  handleConnect,
+  handleDisconnect,
+  isPending,
+  setHoveredChainType,
+  hoveredChainType,
+}) => {
   const { address } = useXAccount('EVM');
   const [showCopied, setShowCopied] = useState(false);
   const [copiedFadingOut, setCopiedFadingOut] = useState(false);
@@ -50,10 +60,17 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handl
           transition-opacity duration-200
           hover:opacity-100
           group
-          opacity-60
           cursor-pointer py-4 pl-1
           ${address ? 'opacity-100' : ''}
+          ${hoveredChainType === undefined || hoveredChainType === 'EVM' ? 'opacity-100' : 'opacity-60'}
         `}
+      onMouseEnter={() => {
+        setHoveredChainType?.('EVM');
+      }}
+      onMouseLeave={() => {
+        setHoveredChainType?.(undefined);
+      }}
+      onClick={address ? handleDisconnect : handleConnect}
     >
       <div className="flex flex-col gap-2 w-full">
         <div className="inline-flex justify-start items-center gap-1">
@@ -107,9 +124,16 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({ handleConnect, handl
           </div>
 
           <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex gap-1 items-center">
-            {address ? shortenAddress(address, 4) : 'EVM'}
+            {!showCopied && address ? shortenAddress(address, 4) : 'EVM'}
             {address && (
-              <CopyIcon className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay" onClick={onCopyAddress} />
+              <CopyIcon
+                className="w-4 h-4 cursor-pointer text-cherry-grey hover:text-clay"
+                onClick={e => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onCopyAddress();
+                }}
+              />
             )}
             {showCopied && (
               <div

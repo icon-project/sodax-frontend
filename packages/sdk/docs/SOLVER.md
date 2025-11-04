@@ -98,14 +98,14 @@ All solver functions use object parameters for better readability and extensibil
 
 ### Get Fee
 
-The `getFee` function allows you to calculate the partner fee for a given input amount before creating an intent. This is useful for displaying fee information to users or calculating the total cost of a swap.
+The `getPartnerFee` function allows you to calculate the partner fee for a given input amount before creating an intent. This is useful for displaying fee information to users or calculating the total cost of a swap.
 
 ```typescript
 import { SolverService } from "@sodax/sdk";
 
 // Calculate fee for a given input amount
 const inputAmount = 1000000000000000n; // 1 WETH (18 decimals)
-const fee = sodax.solver.getFee(inputAmount);
+const fee = sodax.solver.getPartnerFee(inputAmount);
 
 console.log('Fee amount:', fee); // Fee in input token units
 console.log('Fee percentage:', Number(fee) / Number(inputAmount) * 100); // Fee as percentage

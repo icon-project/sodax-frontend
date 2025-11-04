@@ -1,24 +1,44 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { useXConnect, type XConnector } from '@sodax/wallet-sdk-react';
+import { useXConnect, type XConnector, type XAccount, useXAccount } from '@sodax/wallet-sdk-react';
 import { chainGroupMap } from './wallet-modal';
 import { EVM_CHAIN_ICONS } from './evm-chain-item';
+import { delay } from '@/lib/utils';
 
 export type WalletItemProps = {
   xConnector: XConnector;
-  onSuccess?: (xConnector: XConnector) => void;
+  hoveredWalletId?: string | undefined;
+  setHoveredWalletId?: (walletId: string | undefined) => void;
+  onSuccess?: (xConnector: XConnector, xAccount: XAccount) => Promise<void>;
 };
 
-export const WalletItem: React.FC<WalletItemProps> = ({ xConnector, onSuccess }) => {
+export const WalletItem: React.FC<WalletItemProps> = ({
+  xConnector,
+  hoveredWalletId,
+  setHoveredWalletId,
+  onSuccess,
+}) => {
   const { mutateAsync: xConnect, isPending } = useXConnect();
+
+  const [connected, setConnected] = useState(false);
+
+  const xAccount = useXAccount(xConnector.xChainType);
 
   const handleConnect = useCallback(async () => {
     await xConnect(xConnector);
-    onSuccess?.(xConnector);
-  }, [xConnect, xConnector, onSuccess]);
+    setConnected(true);
+    await delay(500);
+  }, [xConnect, xConnector]);
+
+  useEffect(() => {
+    if (connected && xAccount.address) {
+      onSuccess?.(xConnector, xAccount);
+      setConnected(false);
+    }
+  }, [onSuccess, xConnector, xAccount, connected]);
 
   const { icon, name, chainType } = chainGroupMap[xConnector.xChainType];
   const isEVM = chainType === 'EVM';
@@ -28,12 +48,18 @@ export const WalletItem: React.FC<WalletItemProps> = ({ xConnector, onSuccess })
         className={`
           inline-flex justify-between items-center
           transition-opacity duration-200
-          hover:opacity-100
           group
-          opacity-60
           cursor-pointer py-4
           ${isPending === true ? 'opacity-100' : ''}
+          ${hoveredWalletId === undefined || hoveredWalletId === xConnector.id ? 'opacity-100' : 'opacity-60'}
         `}
+        onMouseEnter={() => {
+          setHoveredWalletId?.(xConnector.id);
+        }}
+        onMouseLeave={() => {
+          if (!isPending) setHoveredWalletId?.(undefined);
+        }}
+        onClick={handleConnect}
       >
         <div className="flex justify-start items-center gap-4">
           <div className="flex justify-start items-center flex-wrap content-center">
