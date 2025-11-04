@@ -2,31 +2,103 @@
 
 Money Market part of SDK provides abstractions to assist you with interacting with the cross-chain Money Market Smart Contracts.
 
-## Using SDK Config and Constants
-
-SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
+All money market operations are accessed through the `moneyMarket` property of a `Sodax` instance:
 
 ```typescript
-import { supportedSpokeChains, getSupportedMoneyMarketTokens, SpokeChainId, Token } from "@sodax/sdk"
+import { Sodax, type SpokeChainId, type Token } from "@sodax/sdk";
 
-// all supported spoke chains
-export const spokeChains: SpokeChainId[] = supportedSpokeChains;
+const sodax = new Sodax();
 
-// using spoke chain id to retrieve supported tokens address (on spoke chain = original address) for money market
-const supportedMoneyMarketTokens: readonly Token[] = getSupportedMoneyMarketTokens(spokeChainId)
-
-// check if token address for given spoke chain id is supported
-const isMoneyMarketSupportedToken: boolean = isMoneyMarketSupportedToken(spokeChainId, token)
-
-// Get all supported reserves (hub chain token addresses, i.e. money market on Sonic chain)
-const supportedReserves = sodax.moneyMarket.getSupportedReserves();
+// All money market methods are available through sodax.moneyMarket
+const supplyResult = await sodax.moneyMarket.supply(supplyParams, spokeProvider);
 ```
 
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for more.
+## Using SDK Config and Constants
+
+SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume. All configurations are accessible through the `config` property of the Sodax instance (`sodax.config`), or through service-specific properties for convenience.
+
+**IMPORTANT**: If you want dynamic (backend API based - contains latest tokens) configuration, make sure to initialize the instance before usage:
+```typescript
+await sodax.initialize();
+```
+By default, configuration from the specific SDK version you are using is used.
+
+```typescript
+import { Sodax, type SpokeChainId, type Token, type Address } from "@sodax/sdk";
+
+const sodax = new Sodax();
+await sodax.initialize(); // Initialize for dynamic config (optional but recommended)
+
+// All supported spoke chains (general config)
+const spokeChains: SpokeChainId[] = sodax.config.getSupportedSpokeChains();
+
+// Get supported money market tokens for a specific chain
+const supportedMoneyMarketTokens: readonly Token[] = sodax.moneyMarket.getSupportedTokensByChainId(chainId);
+
+// Get all supported money market tokens per chain
+const allMoneyMarketTokens = sodax.moneyMarket.getSupportedTokens();
+
+// Get all supported reserves (hub chain token addresses, i.e. money market on Sonic chain)
+const supportedReserves: readonly Address[] = sodax.moneyMarket.getSupportedReserves();
+
+// Check if token address for given spoke chain id is supported (through config service)
+const isMoneyMarketSupportedToken: boolean = sodax.config.isMoneyMarketSupportedToken(chainId, token);
+
+// Alternative: Access through config service
+const moneyMarketTokensFromConfig: readonly Token[] = sodax.config.getSupportedMoneyMarketTokensByChainId(chainId);
+const allMoneyMarketTokensFromConfig = sodax.config.getSupportedMoneyMarketTokens();
+```
+
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for additional static constants and configurations.
+
+## Available Methods
+
+All money market methods are accessible through `sodax.moneyMarket`:
+
+### Token & Reserve Configuration
+- `getSupportedTokensByChainId(chainId)` - Get supported money market tokens for a specific chain
+- `getSupportedTokens()` - Get all supported money market tokens per chain
+- `getSupportedReserves()` - Get all supported money market reserves (hub chain addresses)
+
+### Allowance & Approval
+- `isAllowanceValid(params, spokeProvider)` - Check if token approval is needed
+- `approve(params, spokeProvider, raw?)` - Approve tokens or request trustline (Stellar)
+
+### Money Market Operations
+- `supply(params, spokeProvider, timeout?)` - Supply tokens (complete operation with relay)
+- `createSupplyIntent(params, spokeProvider, raw?)` - Create supply intent only
+- `borrow(params, spokeProvider, timeout?)` - Borrow tokens (complete operation with relay)
+- `createBorrowIntent(params, spokeProvider, raw?)` - Create borrow intent only
+- `withdraw(params, spokeProvider, timeout?)` - Withdraw tokens (complete operation with relay)
+- `createWithdrawIntent(params, spokeProvider, raw?)` - Create withdraw intent only
+- `repay(params, spokeProvider, timeout?)` - Repay tokens (complete operation with relay)
+- `createRepayIntent(params, spokeProvider, raw?)` - Create repay intent only
+
+### Data Retrieval & Formatting
+- `data.getReservesList()` - Get list of all reserve addresses
+- `data.getReservesData()` - Get raw aggregated reserve data
+- `data.getReservesHumanized()` - Get humanized reserve data
+- `data.getReserveData(asset)` - Get specific reserve data
+- `data.getUserReservesData(spokeProvider)` - Get raw user reserve data
+- `data.getUserReservesHumanized(spokeProvider)` - Get humanized user reserve data
+- `data.formatReservesUSD(request)` - Format reserves with USD conversions
+- `data.formatUserSummary(request)` - Format user portfolio summary with USD conversions
+
+### Utility Methods
+- `MoneyMarketService.estimateGas(rawTx, spokeProvider)` - Estimate gas for raw transactions (static method)
 
 ### Initialising Spoke Provider
 
 Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider) section to see how BSC spoke provider used as `bscSpokeProvider` can be created.
+
+### Function Parameters Structure
+
+All money market functions use object parameters for better readability and extensibility. The common parameter structure includes:
+
+- **`params`**: The money market operation parameters (`MoneyMarketSupplyParams`, `MoneyMarketBorrowParams`, `MoneyMarketWithdrawParams`, or `MoneyMarketRepayParams`) containing token address, amount, and action type
+- **`spokeProvider`**: The spoke provider instance for the source chain
+- **`raw`**: (Optional) Whether to return raw transaction data instead of executing the transaction. Used in `create*Intent` and `approve` methods. Default: `false`
+- **`timeout`**: (Optional) Timeout in milliseconds for relay operations (default: 60 seconds). Used in `supply`, `borrow`, `withdraw`, and `repay` methods
 
 ## Allowance and Approval
 
@@ -213,7 +285,8 @@ const supplyResult = await sodax.moneyMarket.createSupplyIntent(
 if (supplyResult.ok) {
   const rawTx = supplyResult.value;
   
-  // Estimate gas for the raw transaction
+  // Estimate gas for the raw transaction (static method)
+  // Note: MoneyMarketService.estimateGas is a static method
   const gasEstimate = await MoneyMarketService.estimateGas(rawTx, spokeProvider);
   
   if (gasEstimate.ok) {
@@ -233,7 +306,7 @@ const approveResult = await sodax.moneyMarket.approve(
 if (approveResult.ok) {
   const rawTx = approveResult.value;
   
-  // Estimate gas for the approval transaction
+  // Estimate gas for the approval transaction (static method)
   const gasEstimate = await MoneyMarketService.estimateGas(rawTx, spokeProvider);
   
   if (gasEstimate.ok) {
@@ -318,37 +391,50 @@ import { MoneyMarketSupplyParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 const supplyParams: MoneyMarketSupplyParams = {
   token: '0x...', // Address of the token (spoke chain) to supply
   amount: 1000n, // Amount to supply (in token decimals)
+  action: 'supply',
 };
 
 // First check and set allowance if needed
 const isAllowanceValid = await sodax.moneyMarket.isAllowanceValid(supplyParams, spokeProvider);
 
-if (!isAllowanceValid.ok || !isAllowanceValid.value) {
+if (!isAllowanceValid.ok) {
+  // Handle error
+  console.error('Allowance check failed:', isAllowanceValid.error);
+  return;
+}
+
+if (!isAllowanceValid.value) {
+  // Approve the money market contract to spend tokens
   const approveResult = await sodax.moneyMarket.approve(
-    supplyParams.token as Address,
-    supplyParams.amount,
-    spokeProvider.chainConfig.addresses.assetManager,
-    spokeProvider
+    supplyParams,
+    spokeProvider,
+    false // Optional: true = return raw transaction, false = execute and return tx hash (default: false)
   );
 
   if (!approveResult.ok) {
     // Handle approval error
+    console.error('Approval failed:', approveResult.error);
     return;
   }
+
+  // Wait for approval transaction to be confirmed before proceeding
+  const txHash = approveResult.value;
+  console.log('Approval transaction:', txHash);
 }
 
-// Supply and submit to Solver API
+// Supply and submit to Solver API (complete operation)
 const supplyAndSubmitResult = await sodax.moneyMarket.supply(
   supplyParams,
   spokeProvider,
-  DEFAULT_RELAY_TX_TIMEOUT // Optional: timeout in milliseconds (default: 1 minute)
+  DEFAULT_RELAY_TX_TIMEOUT // Optional: timeout in milliseconds (default: 60 seconds)
 );
 
 if (supplyAndSubmitResult.ok) {
   const [spokeTxHash, hubTxHash] = supplyAndSubmitResult.value;
-  // Handle success
+  console.log('Supply successful:', { spokeTxHash, hubTxHash });
 } else {
   // Handle error
+  console.error('Supply failed:', supplyAndSubmitResult.error);
 }
 
 // Create supply intent only (without submitting to Solver API)
@@ -360,9 +446,10 @@ const supplyResult = await sodax.moneyMarket.createSupplyIntent(
 
 if (supplyResult.ok) {
   const txHash = supplyResult.value;
-  // Handle success
+  console.log('Supply intent created:', txHash);
 } else {
   // Handle error
+  console.error('Supply intent creation failed:', supplyResult.error);
 }
 ```
 
@@ -378,22 +465,24 @@ import { MoneyMarketBorrowParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for borrow operation
 const borrowParams: MoneyMarketBorrowParams = {
-  token: '0x...', // Address of the token (spoke chain) to supply
+  token: '0x...', // Address of the token (spoke chain) to borrow
   amount: 1000n, // Amount to borrow (in token decimals)
+  action: 'borrow',
 };
 
-// Borrow and submit to Solver API
+// Borrow and submit to Solver API (complete operation)
 const borrowAndSubmitResult = await sodax.moneyMarket.borrow(
   borrowParams,
   spokeProvider,
-  DEFAULT_RELAY_TX_TIMEOUT // Optional: timeout in milliseconds (default: 1 minute)
+  DEFAULT_RELAY_TX_TIMEOUT // Optional: timeout in milliseconds (default: 60 seconds)
 );
 
 if (borrowAndSubmitResult.ok) {
   const [spokeTxHash, hubTxHash] = borrowAndSubmitResult.value;
-  // Handle success
+  console.log('Borrow successful:', { spokeTxHash, hubTxHash });
 } else {
   // Handle error
+  console.error('Borrow failed:', borrowAndSubmitResult.error);
 }
 
 // Create borrow intent only (without submitting to Solver API)
@@ -405,9 +494,10 @@ const borrowResult = await sodax.moneyMarket.createBorrowIntent(
 
 if (borrowResult.ok) {
   const txHash = borrowResult.value;
-  // Handle success
+  console.log('Borrow intent created:', txHash);
 } else {
   // Handle error
+  console.error('Borrow intent creation failed:', borrowResult.error);
 }
 ```
 
@@ -423,22 +513,24 @@ import { MoneyMarketWithdrawParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk"
 
 // Parameters for withdraw operation
 const withdrawParams: MoneyMarketWithdrawParams = {
-  token: '0x...', // Address of the token (spoke chain) to supply
+  token: '0x...', // Address of the token (spoke chain) to withdraw
   amount: 1000n, // Amount to withdraw (in token decimals)
+  action: 'withdraw',
 };
 
-// Withdraw and submit to Solver API
+// Withdraw and submit to Solver API (complete operation)
 const withdrawAndSubmitResult = await sodax.moneyMarket.withdraw(
   withdrawParams,
   spokeProvider,
-  DEFAULT_RELAY_TX_TIMEOUT // Optional: timeout in milliseconds (default: 1 minute)
+  DEFAULT_RELAY_TX_TIMEOUT // Optional: timeout in milliseconds (default: 60 seconds)
 );
 
 if (withdrawAndSubmitResult.ok) {
   const [spokeTxHash, hubTxHash] = withdrawAndSubmitResult.value;
-  // Handle success
+  console.log('Withdraw successful:', { spokeTxHash, hubTxHash });
 } else {
   // Handle error
+  console.error('Withdraw failed:', withdrawAndSubmitResult.error);
 }
 
 // Create withdraw intent only (without submitting to Solver API)
@@ -450,9 +542,10 @@ const withdrawResult = await sodax.moneyMarket.createWithdrawIntent(
 
 if (withdrawResult.ok) {
   const txHash = withdrawResult.value;
-  // Handle success
+  console.log('Withdraw intent created:', txHash);
 } else {
   // Handle error
+  console.error('Withdraw intent creation failed:', withdrawResult.error);
 }
 ```
 
@@ -468,39 +561,52 @@ import { MoneyMarketRepayParams, DEFAULT_RELAY_TX_TIMEOUT } from "@sodax/sdk";
 
 // Parameters for repay operation
 const repayParams: MoneyMarketRepayParams = {
-  token: '0x...', // Address of the token (spoke chain) to supply
+  token: '0x...', // Address of the token (spoke chain) to repay
   amount: 1000n, // Amount to repay (in token decimals)
+  action: 'repay',
 };
 
 // First check and set allowance if needed
 const isAllowanceValid = await sodax.moneyMarket.isAllowanceValid(repayParams, spokeProvider);
 
-if (!isAllowanceValid.ok || !isAllowanceValid.value) {
+if (!isAllowanceValid.ok) {
+  // Handle error
+  console.error('Allowance check failed:', isAllowanceValid.error);
+  return;
+}
+
+if (!isAllowanceValid.value) {
+  // Approve the money market contract to spend tokens
   const approveResult = await sodax.moneyMarket.approve(
-    repayParams.token as Address,
-    repayParams.amount,
-    spokeProvider.chainConfig.addresses.assetManager,
-    spokeProvider
+    repayParams,
+    spokeProvider,
+    false // Optional: true = return raw transaction, false = execute and return tx hash (default: false)
   );
 
   if (!approveResult.ok) {
     // Handle approval error
+    console.error('Approval failed:', approveResult.error);
     return;
   }
+
+  // Wait for approval transaction to be confirmed before proceeding
+  const txHash = approveResult.value;
+  console.log('Approval transaction:', txHash);
 }
 
-// Repay and submit to Solver API
+// Repay and submit to Solver API (complete operation)
 const repayAndSubmitResult = await sodax.moneyMarket.repay(
   repayParams,
   spokeProvider,
-  DEFAULT_RELAY_TX_TIMEOUT // Optional: timeout in milliseconds (default: 1 minute)
+  DEFAULT_RELAY_TX_TIMEOUT // Optional: timeout in milliseconds (default: 60 seconds)
 );
 
 if (repayAndSubmitResult.ok) {
   const [spokeTxHash, hubTxHash] = repayAndSubmitResult.value;
-  // Handle success
+  console.log('Repay successful:', { spokeTxHash, hubTxHash });
 } else {
   // Handle error
+  console.error('Repay failed:', repayAndSubmitResult.error);
 }
 
 // Create repay intent only (without submitting to Solver API)
@@ -512,9 +618,10 @@ const repayResult = await sodax.moneyMarket.createRepayIntent(
 
 if (repayResult.ok) {
   const txHash = repayResult.value;
-  // Handle success
+  console.log('Repay intent created:', txHash);
 } else {
   // Handle error
+  console.error('Repay intent creation failed:', repayResult.error);
 }
 ```
 

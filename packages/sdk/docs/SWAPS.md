@@ -2,13 +2,24 @@
 
 Swaps part of the SDK provides abstractions to assist you with interacting with the cross-chain Intent Smart Contracts, Solver and Relay API.
 
+All swap operations are accessed through the `swap` property of a `Sodax` instance:
+
+```typescript
+import { Sodax, SpokeChainId, Token } from "@sodax/sdk";
+
+const sodax = new Sodax();
+
+// All swap methods are available through sodax.swap
+const quote = await sodax.swap.getQuote(quoteRequest);
+```
+
 ## Using SDK Config and Constants
 
 SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
 All of the configurations are reachable through `config` property of Sodax instance (e.g. `sodax.config`)
 
 ```typescript
-import { supportedSpokeChains, getSupportedSolverTokens, SpokeChainId, Token, Sodax } from "@sodax/sdk"
+import { SpokeChainId, Token, Sodax } from "@sodax/sdk";
 
 const sodax = new Sodax();
 
@@ -17,7 +28,7 @@ const sodax = new Sodax();
 await sodax.initialize();
 
 // all supported spoke chains
-export const spokeChains: SpokeChainId[] = sodax.config.getSupportedSpokeChains();
+const spokeChains: SpokeChainId[] = sodax.config.getSupportedSpokeChains();
 
 // using spoke chain id to retrieve supported tokens for swap (solver intent swaps)
 // NOTE: empty array indicates no tokens are supported, you should filter out empty arrays
@@ -32,6 +43,38 @@ const isSwapSupportedToken: boolean = isSwapSupportedToken(spokeChainId, token)
 
 Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for more.
 
+## Available Methods
+
+All swap methods are accessible through `sodax.swap`:
+
+### Quote & Fee Methods
+- `getQuote(request)` - Request a quote from the solver API
+- `getPartnerFee(inputAmount)` - Calculate partner fee for a given input amount
+- `getSolverFee(inputAmount)` - Calculate solver fee (0.1%) for a given input amount
+- `getSwapDeadline(offset?)` - Get deadline timestamp for a swap
+
+### Intent Creation & Execution
+- `swap(params)` - Complete swap operation (recommended, handles all steps automatically)
+- `createAndSubmitIntent(params)` - Create and submit intent (alternative to swap)
+- `createIntent(params)` - Create intent only (for custom handling)
+- `submitIntent(payload)` - Submit intent to relay API (for custom handling)
+- `postExecution(request)` - Post execution to Solver API(for custom handling)
+
+### Intent Management
+- `getIntent(txHash)` - Retrieve intent from hub chain transaction hash
+- `getIntentHash(intent)` - Get keccak256 hash of an intent
+- `getStatus(request)` - Get intent status from Solver API
+- `cancelIntent(intent, spokeProvider, raw?)` - Cancel an active intent
+
+### Token Approval
+- `isAllowanceValid(params)` - Check if token approval is needed
+- `approve(params, raw?)` - Approve tokens or request trustline (Stellar)
+
+### Utility Methods
+- `getSupportedSwapTokensByChainId(chainId)` - Get supported swap tokens for a chain
+- `getSupportedSwapTokens()` - Get all supported swap tokens per chain
+- `SwapService.estimateGas(rawTx, spokeProvider)` - Estimate gas for raw transactions (static method)
+
 ### Initialising Spoke Provider
 
 Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider) section to see how BSC spoke provider used as `bscSpokeProvider` can be created.
@@ -39,7 +82,7 @@ Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider)
 ### Request a Quote
 
 Requesting a quote should require you to just consume user input amount and converting it to the appropriate token amount (scaled by token decimals).
-All the required configurations (chain id [nid], token decimals and address) should be loaded as described in [Load SDK Config](#load-sdk-config).
+All the required configurations (chain id [nid], token decimals and address) should be loaded as described in [Using SDK Config and Constants](#using-sdk-config-and-constants).
 
 Quoting API supports different types of quotes:
 - "exact_input": "amount" parameter is the amount the user want's to swap (e.g. the user is asking for a quote to swap 1 WETH to xxx SUI)
@@ -48,34 +91,35 @@ Quoting API supports different types of quotes:
 ```typescript
 import {
   Sodax,
-  getHubChainConfig,
   BSC_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID,
-  SolverIntentQuoteRequest,
-  Result,
-  SolverIntentQuoteResponse,
-  SolverErrorResponse
+  type SolverIntentQuoteRequest,
+  type SolverErrorResponse
 } from "@sodax/sdk";
+
+const sodax = new Sodax();
 
 const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';  // Address of the ETH token on BSC (spoke chain)
 const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of the wBTC token on ARB (spoke chain)
 
-  const quoteRequest = {
-    token_src: bscEthToken,
-    token_dst: arbWbtcToken,
-    token_src_blockchain_id: BSC_MAINNET_CHAIN_ID,
-    token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
-    amount: 1000n,
-    quote_type: 'exact_input',
-  } satisfies SolverIntentQuoteRequest;
+const quoteRequest = {
+  token_src: bscEthToken,
+  token_dst: arbWbtcToken,
+  token_src_blockchain_id: BSC_MAINNET_CHAIN_ID,
+  token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
+  amount: 1000000000000000n, // 1 WETH (18 decimals)
+  quote_type: 'exact_input',
+} satisfies SolverIntentQuoteRequest;
 
-  const result = await sodax.swap.getQuote(quoteRequest);
+const result = await sodax.swap.getQuote(quoteRequest);
 
-  if (result.ok) {
-    // success
-  } else {
-    // handle error
-  }
+if (result.ok) {
+  const { quoted_amount } = result.value;
+  console.log('Quoted amount:', quoted_amount);
+} else {
+  // handle error
+  console.error('Quote failed:', result.error);
+}
 ```
 
 ### Create Intent Params
@@ -104,35 +148,49 @@ All solver functions use object parameters for better readability and extensibil
 - **`intentParams`**: The `CreateIntentParams` object containing swap details
 - **`spokeProvider`**: The spoke provider instance for the source chain
 - **`fee`**: (Optional) Partner fee configuration. If not provided, uses the default partner fee from config. **Note**: Fees are now deducted from the input amount rather than added to it.
-- **`raw`**: (Optional) Whether to return raw transaction data instead of executing the transaction
-- **`timeout`**: (Optional) Timeout in milliseconds for relay operations (default: 60 seconds)
+- **`raw`**: (Optional) Whether to return raw transaction data instead of executing the transaction.
+- **`timeout`**: (Optional) Timeout in milliseconds for relay operations (default: 60 seconds).
+- **`skipSimulation`**: (Optional) Whether to skip transaction simulation (default: false).
 
-### Get Fee
+### Get Fees
+
+The swap service provides two fee calculation methods:
+
+#### Get Partner Fee
 
 The `getPartnerFee` function allows you to calculate the partner fee for a given input amount before creating an intent. This is useful for displaying fee information to users or calculating the total cost of a swap.
 
 ```typescript
-import { SwapService } from "@sodax/sdk";
-
-// Calculate fee for a given input amount
+// Calculate partner fee for a given input amount
 const inputAmount = 1000000000000000n; // 1 WETH (18 decimals)
-const fee = sodax.swap.getPartnerFee(inputAmount);
+const partnerFee = sodax.swap.getPartnerFee(inputAmount);
 
-console.log('Fee amount:', fee); // Fee in input token units
-console.log('Fee percentage:', Number(fee) / Number(inputAmount) * 100); // Fee as percentage
-console.log('Amount after fee deduction:', inputAmount - fee); // Actual amount used for swap
+console.log('Partner fee amount:', partnerFee); // Fee in input token units
+console.log('Partner fee percentage:', Number(partnerFee) / Number(inputAmount) * 100); // Fee as percentage
+console.log('Amount after fee deduction:', inputAmount - partnerFee); // Actual amount used for swap
 ```
 
-**Note**: If no partner fee is configured, the function returns `0n`. The fee is deducted from the input amount, so the actual amount used for the swap will be `inputAmount - fee`.
+**Note**: If no partner fee is configured, the function returns `0n`. The fee is deducted from the input amount, so the actual amount used for the swap will be `inputAmount - partnerFee`.
+
+#### Get Solver Fee
+
+The `getSolverFee` function calculates the solver fee (0.1% fee) for a given input amount. This is the standard fee charged by the solver service.
+
+```typescript
+// Calculate solver fee for a given input amount
+const inputAmount = 1000000000000000n; // 1 WETH (18 decimals)
+const solverFee = sodax.swap.getSolverFee(inputAmount);
+
+console.log('Solver fee amount:', solverFee); // Fee in input token units (0.1% of inputAmount)
+console.log('Solver fee percentage:', Number(solverFee) / Number(inputAmount) * 100); // Should be 0.1%
+```
 
 ### Get Swap Deadline
 
 The `getSwapDeadline` function allows you to calculate a deadline timestamp for your swap by querying the hub chain's current block timestamp and adding a deadline offset. This is useful for setting expiration times for intents to prevent them from being executed after a certain period.
 
 ```typescript
-import { SwapService } from "@sodax/sdk";
-
-// Get deadline with default 5-minute offset
+// Get deadline with default 5-minute offset (300 seconds)
 const deadline = await sodax.swap.getSwapDeadline();
 console.log('Swap deadline (5 min from now):', deadline);
 
@@ -156,12 +214,11 @@ Before creating an intent, you need to ensure that the Asset Manager contract ha
 
 ```typescript
 import {
-  SwapService,
   BSC_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID
-} from "@sodax/sdk"
+} from "@sodax/sdk";
 
-const evmWalletAddress = evmWalletProvider.getWalletAddress();
+const evmWalletAddress = await evmWalletProvider.getWalletAddress();
 
 // First check if approval is needed
 const isApproved = await sodax.swap.isAllowanceValid({
@@ -183,12 +240,14 @@ if (!isApproved.ok) {
     // Handle error
     console.error('Failed to approve tokens:', approveResult.error);
   } else {
-    // wait for tx hash from approveResult.value to be mined before proceeding
+    // Wait for tx hash from approveResult.value to be mined before proceeding
+    const txHash = approveResult.value;
+    console.log('Approval transaction:', txHash);
   }
 }
 
 // Now you can proceed with creating the intent
-// ... continue with createIntent or createAndSubmitIntent ...
+// ... continue with createIntent or swap ...
 ```
 
 **Important**: The approval amount is now the same as the `inputAmount` specified in your intent parameters. The fee is automatically deducted from this amount during intent creation, so you only need to approve the exact amount you want to swap.
@@ -227,14 +286,16 @@ if (!hasTrustline) {
 
 ### Estimate Gas for Raw Transactions
 
-The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for intent creation and approval transactions to provide users with accurate gas estimates.
+The `estimateGas` static method allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for intent creation and approval transactions to provide users with accurate gas estimates.
+
+**Note**: This is a static method, so it can be called directly on `SwapService` or through `sodax.swap.constructor.estimateGas()`.
 
 ```typescript
 import {
   SwapService,
   BSC_MAINNET_CHAIN_ID,
   ARBITRUM_MAINNET_CHAIN_ID
-} from "@sodax/sdk"
+} from "@sodax/sdk";
 
 // Example: Estimate gas for an intent creation transaction
 const createIntentResult = await sodax.swap.createIntent({
@@ -247,7 +308,8 @@ const createIntentResult = await sodax.swap.createIntent({
 if (createIntentResult.ok) {
   const [rawTx, intent] = createIntentResult.value;
   
-  // Estimate gas for the raw transaction
+  // Estimate gas for the raw transaction (static method)
+  // Note: SwapService.estimateGas is a static method
   const gasEstimate = await SwapService.estimateGas(rawTx, bscSpokeProvider);
   
   if (gasEstimate.ok) {
@@ -267,7 +329,7 @@ const approveResult = await sodax.swap.approve({
 if (approveResult.ok) {
   const rawTx = approveResult.value;
   
-  // Estimate gas for the approval transaction
+  // Estimate gas for the approval transaction (static method)
   const gasEstimate = await SwapService.estimateGas(rawTx, bscSpokeProvider);
   
   if (gasEstimate.ok) {
@@ -284,61 +346,82 @@ Creating Intent Order requires creating spoke provider for the chain that intent
 
 Example for BSC -> ARB Intent Order:
 
+#### Swap (Recommended Method)
+
+The `swap` method is the recommended way to perform a complete swap operation. It handles all the steps automatically:
+
+1. Create intent deposit tx on spoke (source) chain
+2. Submit tx hash to relayer API
+3. Wait for relayer to relay tx data to the hub chain (Sonic)
+4. Post hub chain tx hash to the Solver API
+
 ```typescript
-  import {
-    SwapService,
-    SolverConfig,
-    BSC_MAINNET_CHAIN_ID,
-    ARBITRUM_MAINNET_CHAIN_ID
-  } from "@sodax/sdk"
+import {
+  BSC_MAINNET_CHAIN_ID,
+  ARBITRUM_MAINNET_CHAIN_ID
+} from "@sodax/sdk";
 
 /**
-   *
-   * Create swap which does following steps for you
-   * 1. create intent deposit tx on spoke (source) chain - createIntent function
-   * 2. submit tx hash to relayer API - submitIntent function
-   * 3. wait for relayer to relay tx data to the hub chain (Sonic) - waitUntilIntentExecuted function
-   * 4. post hub chain tx hash to the Solver API - postExecution function
-   *
-   * IMPORTANT: you should primarily swap function unless you require custom step by step handling
-  **/
+ * Create swap which does all steps for you automatically
+ * IMPORTANT: You should primarily use swap function unless you require custom step by step handling
+ */
+const swapResult = await sodax.swap.swap({
+  intentParams: createIntentParams,
+  spokeProvider: bscSpokeProvider,
+  fee, // optional - uses configured partner fee if not provided
+  timeout, // optional - timeout in milliseconds (default: 60 seconds)
+  skipSimulation, // optional - whether to skip transaction simulation (default: false)
+});
 
-  const swapResult = await sodax.swap.swap({
-    intentParams: createIntentParams,
-    spokeProvider: bscSpokeProvider,
-    fee, // optional - uses configured partner fee if not provided
-    timeout, // optional - timeout in milliseconds (default: 60 seconds)
-  });
+if (!swapResult.ok) {
+  // handle error as described in Error Handling section
+}
 
-    if (!swapResult.ok) {
-    // handle error as described in Error Handling section
-  }
+// solverExecutionResponse, created Intent data, and intent delivery info
+const [solverExecutionResponse, intent, intentDeliveryInfo] = swapResult.value;
+```
 
-  // solverExecutionResponse, created Intent data, and intent delivery info
-  const [solverExecutionResponse, intent, intentDeliveryInfo] = swapResult.value;
+#### Create And Submit Intent (Alternative Method - Equal to Swap)
 
-  /**
-   *
-   * Create intent transaction or return raw transaction data
-   *
-  **/
+If you need more control over the process, you can use `createAndSubmitIntent` which is equivalent to `swap`:
 
-  // creates and submits on-chain transaction or returns raw transaction
-  // NOTE: after intent is created on-chain it should also be posted
-  // to Solver API and submitted to Relay API (see swap function on how it is done)
-  const createIntentResult = await sodax.swap.createIntent({
-    intentParams: createIntentParams,
-    spokeProvider: bscSpokeProvider,
-    fee, // optional - uses configured partner fee if not provided
-    raw: true, // true = get raw transaction, false = execute and return tx hash
-  });
+```typescript
+const createAndSubmitIntentResult = await sodax.swap.createAndSubmitIntent({
+  intentParams: createIntentParams,
+  spokeProvider: bscSpokeProvider,
+  fee, // optional - uses configured partner fee if not provided
+  timeout, // optional - timeout in milliseconds (default: 60 seconds)
+  skipSimulation, // optional - whether to skip transaction simulation (default: false)
+});
 
-  if (!createIntentResult.ok) {
-    // handle error
-  }
+if (!createAndSubmitIntentResult.ok) {
+  // handle error
+}
 
-  // txHash/rawTx, Intent & FeeAmount, and create intent data (Hex) - for createIntent
-  const [rawTx, intent, intentDataHex] = createIntentResult.value;
+const [solverExecutionResponse, intent, intentDeliveryInfo] = createAndSubmitIntentResult.value;
+```
+
+#### Create Intent Only
+
+If you need to create an intent without automatically submitting it (for custom handling), use `createIntent`:
+
+```typescript
+// Creates intent on-chain transaction or returns raw transaction
+// NOTE: After intent is created on-chain it should also be posted
+// to Solver API and submitted to Relay API (see swap function on how it is done)
+const createIntentResult = await sodax.swap.createIntent({
+  intentParams: createIntentParams,
+  spokeProvider: bscSpokeProvider,
+  fee, // optional - uses configured partner fee if not provided
+  raw: true, // true = get raw transaction, false = execute and return tx hash
+});
+
+if (!createIntentResult.ok) {
+  // handle error
+}
+
+// txHash/rawTx, Intent & FeeAmount, and create intent data (Hex)
+const [rawTx, intent, intentDataHex] = createIntentResult.value;
 ```
 
 **Important**: When creating an intent, the fee is automatically deducted from the `inputAmount` specified in your `createIntentParams`. The actual amount used for the swap will be `inputAmount - feeAmount`. Make sure your `inputAmount` is sufficient to cover both the swap amount and the fee.
@@ -347,7 +430,11 @@ Example for BSC -> ARB Intent Order:
 
 Submit the spoke chain transaction hash to the relay API for processing. This step is required after creating an intent on the spoke chain.
 
+**Note**: This is typically handled automatically by the `swap` or `createAndSubmitIntent` methods. You only need to call this manually if you're using `createIntent` separately.
+
 ```typescript
+import type { IntentRelayRequest } from "@sodax/sdk";
+
 const submitPayload = {
   action: 'submit',
   params: {
@@ -368,21 +455,55 @@ if (submitResult.ok) {
 }
 ```
 
-### Get Intent Order
+### Post Execution to Solver API
 
-Retrieve intent data using tx hash obtained from intent creation response.
+Post execution of intent order transaction executed on hub chain to Solver API. This step is typically handled automatically by the `swap` or `createAndSubmitIntent` methods.
+
+**Note**: This is usually called automatically after the intent is executed on the hub chain. You only need to call this manually if you're handling the flow step by step.
 
 ```typescript
+import type { SolverExecutionRequest } from "@sodax/sdk";
+
+const postExecutionRequest = {
+  intent_tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af', // Hub chain transaction hash
+} satisfies SolverExecutionRequest;
+
+const postExecutionResult = await sodax.swap.postExecution(postExecutionRequest);
+
+if (postExecutionResult.ok) {
+  const { answer, intent_hash } = postExecutionResult.value;
+  console.log('[postExecution] answer:', answer);
+  console.log('[postExecution] intent_hash:', intent_hash);
+} else {
+  // handle error
+  console.error('[postExecution] error:', postExecutionResult.error);
+}
+```
+
+### Get Intent Order
+
+Retrieve intent data using transaction hash from the hub chain (destination transaction hash).
+
+```typescript
+// Get intent from hub chain transaction hash
+// Note: Use the dst_tx_hash from intentDeliveryInfo or relay packet
 const intent = await sodax.swap.getIntent(txHash);
+console.log('Intent:', intent);
 ```
 
 ### Cancel Intent Order
 
 Active Intent Order can be cancelled using Intent. See [Get Intent Order](#get-intent-order) on how to obtain intent.
-**Note** create intent functions also return intent data for convenience.
+
+**Note**: Create intent functions also return intent data for convenience, so you can use the intent from the creation response.
 
 ```typescript
+import type { Intent } from "@sodax/sdk";
 
+// Get intent first (or use intent from createIntent/swap response)
+const intent: Intent = await sodax.swap.getIntent(txHash);
+
+// Cancel the intent
 const result = await sodax.swap.cancelIntent(
   intent,
   bscSpokeProvider,
@@ -390,21 +511,36 @@ const result = await sodax.swap.cancelIntent(
 );
 
 if (result.ok) {
-  console.log('[cancelIntent] txHash', result.value);
+  console.log('[cancelIntent] txHash:', result.value);
 } else {
   // handle error
-  console.error('[cancelIntent] error', result.error);
+  console.error('[cancelIntent] error:', result.error);
 }
 ```
 
 ### Get Intent Status
 
-Retrieve status of intent.
+Retrieve status of intent from the Solver API.
+
+**Note**: The `intent_tx_hash` should be the destination transaction hash (hub chain transaction hash), which can be obtained from `intentDeliveryInfo.dstTxHash` or the relay packet `dst_tx_hash` property.
 
 ```typescript
-const result = await sodax.swap.getStatus({
-    intent_tx_hash: '0x...', // tx hash of create intent blockchain transaction
-  } satisfies SolverIntentStatusRequest);
+import type { SolverIntentStatusRequest } from "@sodax/sdk";
+
+const statusRequest = {
+  intent_tx_hash: '0x...', // Hub chain transaction hash (dst_tx_hash from relay packet)
+} satisfies SolverIntentStatusRequest;
+
+const result = await sodax.swap.getStatus(statusRequest);
+
+if (result.ok) {
+  const { status, intent_hash } = result.value;
+  console.log('Intent status:', status);
+  console.log('Intent hash:', intent_hash);
+} else {
+  // handle error
+  console.error('Failed to get status:', result.error);
+}
 ```
 
 
@@ -413,7 +549,12 @@ const result = await sodax.swap.getStatus({
 Get Intent Hash (keccak256) used as an ID of intent in smart contract.
 
 ```typescript
-const intentHash = sodax.swap.getIntentHash(intent);
+import type { Intent, Hex } from "@sodax/sdk";
+
+// Get the keccak256 hash of an intent
+// This hash serves as the intent ID on the hub chain
+const intentHash: Hex = sodax.swap.getIntentHash(intent);
+console.log('Intent hash:', intentHash);
 ```
 
 ## Error Handling

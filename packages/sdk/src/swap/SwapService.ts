@@ -58,7 +58,6 @@ import {
   getIntentRelayChainId,
   getSolverConfig,
   type Token,
-  type GetSwapTokensApiResponse,
 } from '@sodax/types';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import { EvmSpokeProvider } from '../shared/entities/Providers.js';
@@ -252,10 +251,10 @@ export class SwapService {
   /**
    * Get the partner fee for a given input amount
    * @param {bigint} inputAmount - The amount of input tokens
-   * @returns {Promise<bigint>} The partner fee amount (denominated in input tokens)
+   * @returns {bigint} The partner fee amount (denominated in input tokens)
    *
    * @example
-   * const fee: bigint = await swapService.getPartnerFee(1000000000000000n);
+   * const fee: bigint = swapService.getPartnerFee(1000000000000000n);
    * console.log('Partner fee:', fee);
    */
   public getPartnerFee(inputAmount: bigint): bigint {
@@ -269,10 +268,10 @@ export class SwapService {
   /**
    * Get the solver fee for a given input amount (0.1% fee)
    * @param {bigint} inputAmount - The amount of input tokens
-   * @returns {Promise<bigint>} The solver fee amount (denominated in input tokens)
+   * @returns {bigint} The solver fee amount (denominated in input tokens)
    *
    * @example
-   * const fee: bigint = await swapService.getSolverFee(1000000000000000n);
+   * const fee: bigint = swapService.getSolverFee(1000000000000000n);
    * console.log('Solver fee:', fee);
    */
   public getSolverFee(inputAmount: bigint): bigint {
@@ -401,6 +400,7 @@ export class SwapService {
    *   - spokeProvider: The spoke provider instance.
    *   - fee: (Optional) Partner fee configuration.
    *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
+   *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
    * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>}
    *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info,
    *   or an IntentError if the operation fails.
@@ -460,6 +460,7 @@ export class SwapService {
    *   - spokeProvider: The spoke provider instance.
    *   - fee: (Optional) Partner fee configuration.
    *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
+   *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
    * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>}
    *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info,
    *   or an IntentError if the operation fails.
@@ -832,6 +833,7 @@ export class SwapService {
    *   - spokeProvider: The spoke provider instance.
    *   - fee: (Optional) Partner fee configuration.
    *   - raw: (Optional) Whether to return the raw transaction data instead of executing it
+   *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
    * @returns {Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>>} The encoded contract call or raw transaction data, Intent and intent data as hex
    *
    * @example
@@ -974,7 +976,7 @@ export class SwapService {
    * @param {Intent} intent - The intent to cancel
    * @param {ISpokeProvider} spokeProvider - The spoke provider
    * @param {boolean} raw - Whether to return the raw transaction
-   * @returns {Promise<TxReturnType<T, R>>} The encoded contract call
+   * @returns {Promise<TxReturnType<S, R>>} The encoded contract call
    */
   public async cancelIntent<S extends SpokeProvider, R extends boolean = false>(
     intent: Intent,
@@ -1040,9 +1042,9 @@ export class SwapService {
   /**
    * Gets the deadline for a swap by querying hub chain block timestamp and adding the deadline offset
    * @param {bigint} deadline (default: 5 minutes) - The deadline offset in seconds for the swap to be cancelled
-   * @returns {bigint} The deadline for the swap as a sum of hub chain block timestamp and deadline offset
+   * @returns {Promise<bigint>} The deadline for the swap as a sum of hub chain block timestamp and deadline offset
    */
-  public async getSwapDeadline(deadline = DEFAULT_DEADLINE_OFFSET): Promise<bigint> {
+  public async getSwapDeadline(deadline: bigint = DEFAULT_DEADLINE_OFFSET): Promise<bigint> {
     invariant(deadline > 0n, 'Deadline must be greater than 0');
 
     const block = await this.hubProvider.publicClient.getBlock({
@@ -1054,7 +1056,7 @@ export class SwapService {
 
   /**
    * Get the list of all supported swap tokens for a given spoke chain ID
-   * @param chainId The chain ID
+   * @param {SpokeChainId} chainId - The chain ID
    * @returns {readonly Token[]} - Array of supported tokens
    */
   public getSupportedSwapTokensByChainId(chainId: SpokeChainId): readonly Token[] {
@@ -1063,9 +1065,9 @@ export class SwapService {
 
   /**
    * Get the list of all supported swap tokens
-   * @returns {GetSwapTokensApiResponse} - Object containing all supported swap tokens
+   * @returns {Record<SpokeChainId, readonly Token[]>} - Object containing all supported swap tokens
    */
-  public getSupportedSwapTokens(): GetSwapTokensApiResponse {
+  public getSupportedSwapTokens(): Record<SpokeChainId, readonly Token[]> {
     return this.configService.getSupportedSwapTokens();
   }
 }
