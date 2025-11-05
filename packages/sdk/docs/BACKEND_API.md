@@ -51,7 +51,7 @@ const backendApi = sodax.backendApi;
 
 ```typescript
 type BackendApiConfig = {
-  baseURL?: HttpUrl;           // API endpoint URL (default: 'https://apiv1.coolify.iconblockchain.xyz')
+  baseURL?: HttpUrl;           // API endpoint URL (default: 'https://api.sodax.com/v1/be')
   timeout?: number;            // Request timeout in milliseconds (default: 30000)
   headers?: Record<string, string>; // Custom headers (default: Content-Type and Accept)
 }
@@ -60,7 +60,7 @@ type BackendApiConfig = {
 ### Default Configuration
 
 ```typescript
-const DEFAULT_BACKEND_API_ENDPOINT = 'https://apiv1.coolify.iconblockchain.xyz';
+const DEFAULT_BACKEND_API_ENDPOINT = 'https://api.sodax.com/v1/be';
 const DEFAULT_BACKEND_API_TIMEOUT = 30000; // 30 seconds
 const DEFAULT_BACKEND_API_HEADERS = {
   'Content-Type': 'application/json',
@@ -546,7 +546,7 @@ async function example() {
   // Initialize Sodax with custom backend API configuration
   const sodax = new Sodax({
     backendApiConfig: {
-      baseURL: 'https://apiv1.coolify.iconblockchain.xyz',
+      baseURL: 'https://api.sodax.com/v1/be',
       timeout: 60000,
       headers: {
         'Authorization': 'Bearer your-api-token'
