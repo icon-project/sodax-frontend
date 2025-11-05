@@ -169,7 +169,7 @@ importers:
         version: 22.18.1
       '@vitejs/plugin-react':
         specifier: 4.2.1
-        version: 4.2.1(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
+        version: 4.2.1(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))
       bignumber.js:
         specifier: 'catalog:'
         version: 9.3.1
@@ -199,7 +199,7 @@ importers:
         version: 2.6.0
       tailwindcss-animate:
         specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@3.4.17)
+        version: 1.0.7(tailwindcss@3.4.18(tsx@4.20.5)(yaml@2.8.1))
       viem:
         specifier: 'catalog:'
         version: 2.29.2(bufferutil@4.0.9)(typescript@5.5.4)(utf-8-validate@6.0.5)(zod@3.25.76)
@@ -212,7 +212,7 @@ importers:
     devDependencies:
       '@bangjelkoski/vite-plugin-node-polyfills':
         specifier: ^0.0.2
-        version: 0.0.2(rollup@4.50.1)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
+        version: 0.0.2(rollup@4.50.1)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))
       '@types/react':
         specifier: ^19.0.8
         version: 19.1.12
@@ -230,19 +230,19 @@ importers:
         version: 8.5.6
       tailwindcss:
         specifier: ^3.4.14
-        version: 3.4.17
+        version: 3.4.18(tsx@4.20.5)(yaml@2.8.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
       vite:
         specifier: ^5.4.11
-        version: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+        version: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
       vite-plugin-svgr:
         specifier: 4.2.0
-        version: 4.2.0(rollup@4.50.1)(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
+        version: 4.2.0(rollup@4.50.1)(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))
       vite-tsconfig-paths:
         specifier: 4.3.1
-        version: 4.3.1(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
+        version: 4.3.1(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))
 
   apps/node:
     dependencies:
@@ -306,7 +306,7 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.1.4
-        version: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+        version: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
 
   apps/web:
     dependencies:
@@ -506,7 +506,7 @@ importers:
         version: 5.30.5(@types/node@24.3.1)(typescript@5.5.4)
       tsup:
         specifier: 'catalog:'
-        version: 8.5.0(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1)
+        version: 8.5.0(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
@@ -573,16 +573,16 @@ importers:
         version: 22.18.1
       '@vitest/coverage-v8':
         specifier: 'catalog:'
-        version: 2.1.9(vitest@2.1.9(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
+        version: 2.1.9(vitest@2.1.9(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))
       tsup:
         specifier: 'catalog:'
-        version: 8.5.0(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1)
+        version: 8.5.0(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
       vitest:
         specifier: 'catalog:'
-        version: 2.1.9(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+        version: 2.1.9(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
 
   packages/types:
     devDependencies:
@@ -651,16 +651,16 @@ importers:
         version: 22.18.1
       '@vitest/coverage-v8':
         specifier: 'catalog:'
-        version: 2.1.9(vitest@2.1.9(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
+        version: 2.1.9(vitest@2.1.9(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))
       tsup:
         specifier: 'catalog:'
-        version: 8.5.0(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1)
+        version: 8.5.0(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
       vitest:
         specifier: 'catalog:'
-        version: 2.1.9(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+        version: 2.1.9(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
 
   packages/wallet-sdk-react:
     dependencies:
@@ -751,13 +751,13 @@ importers:
         version: 5.30.5(@types/node@24.3.1)(typescript@5.5.4)
       tsup:
         specifier: 'catalog:'
-        version: 8.5.0(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1)
+        version: 8.5.0(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1)
       typescript:
         specifier: 'catalog:'
         version: 5.5.4
       vitest:
         specifier: ^2.1.3
-        version: 2.1.9(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0)
+        version: 2.1.9(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0)
 
 packages:
 
@@ -5253,9 +5253,11 @@ packages:
 
   '@walletconnect/ethereum-provider@2.18.1':
     resolution: {integrity: sha512-TrokAAz20xcJVurnVkWnmwgIy0owzShZLZrjkWYBdDYmGwvsSWZ3SjamgiU7q5kwh0a8ICIvSvZIzYEGNnFFGA==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/ethereum-provider@2.21.1':
     resolution: {integrity: sha512-SSlIG6QEVxClgl1s0LMk4xr2wg4eT3Zn/Hb81IocyqNSGfXpjtawWxKxiC5/9Z95f1INyBD6MctJbL/R1oBwIw==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/events@1.0.1':
     resolution: {integrity: sha512-NPTqaoi0oPBVNuLv7qPaJazmGHs5JGyO8eEAk5VGKmJzDR7AHzD4k6ilox5kxk1iwiOnFopBOOMLs86Oa76HpQ==}
@@ -5339,21 +5341,27 @@ packages:
 
   '@walletconnect/sign-client@2.17.2':
     resolution: {integrity: sha512-/wigdCIQjlBXSWY43Id0IPvZ5biq4HiiQZti8Ljvx408UYjmqcxcBitbj2UJXMYkid7704JWAB2mw32I1HgshQ==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/sign-client@2.18.1':
     resolution: {integrity: sha512-LqsZ4YwR1jXNLhZp3aJiQ4bPO68pCwpp2drhu5KyvTqEYevf1/ckeQ1gQegQQ5e+TXUaPVH2B5lBPTL3SJVvPw==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/sign-client@2.19.0':
     resolution: {integrity: sha512-+GkuJzPK9SPq+RZgdKHNOvgRagxh/hhYWFHOeSiGh3DyAQofWuFTq4UrN/MPjKOYswSSBKfIa+iqKYsi4t8zLQ==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/sign-client@2.19.1':
     resolution: {integrity: sha512-OgBHRPo423S02ceN3lAzcZ3MYb1XuLyTTkKqLmKp/icYZCyRzm3/ynqJDKndiBLJ5LTic0y07LiZilnliYqlvw==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/sign-client@2.21.0':
     resolution: {integrity: sha512-z7h+PeLa5Au2R591d/8ZlziE0stJvdzP9jNFzFolf2RG/OiXulgFKum8PrIyXy+Rg2q95U9nRVUF9fWcn78yBA==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/sign-client@2.21.1':
     resolution: {integrity: sha512-QaXzmPsMnKGV6tc4UcdnQVNOz4zyXgarvdIQibJ4L3EmLat73r5ZVl4c0cCOcoaV7rgM9Wbphgu5E/7jNcd3Zg==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/solana-adapter@0.0.8':
     resolution: {integrity: sha512-Qb7MT8SdkeBldfUCmF+rYW6vL98mxPuT1yAwww5X2vpx7xEPZvFCoAKnyT5fXu0v56rMxhW3MGejnHyyYdDY7Q==}
@@ -5387,21 +5395,27 @@ packages:
 
   '@walletconnect/universal-provider@2.17.2':
     resolution: {integrity: sha512-yIWDhBODRa9J349d/i1sObzon0vy4n+7R3MvGQQYaU1EVrV+WfoGSRsu8U7rYsL067/MAUu9t/QrpPblaSbz7g==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/universal-provider@2.18.1':
     resolution: {integrity: sha512-kI/tUgrV/L+oPGGhyvV8jj4qhOIIVd98W32N9ElymqQlMihspRGJee5RYprRBxcjD3V/dCi+kn4VXPUQL1EEdA==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/universal-provider@2.19.0':
     resolution: {integrity: sha512-e9JvadT5F8QwdLmd7qBrmACq04MT7LQEe1m3X2Fzvs3DWo8dzY8QbacnJy4XSv5PCdxMWnua+2EavBk8nrI9QA==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/universal-provider@2.19.1':
     resolution: {integrity: sha512-4rdLvJ2TGDIieNWW3sZw2MXlX65iHpTuKb5vyvUHQtjIVNLj+7X/09iUAI/poswhtspBK0ytwbH+AIT/nbGpjg==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/universal-provider@2.21.0':
     resolution: {integrity: sha512-mtUQvewt+X0VBQay/xOJBvxsB3Xsm1lTwFjZ6WUwSOTR1X+FNb71hSApnV5kbsdDIpYPXeQUbGt2se1n5E5UBg==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/universal-provider@2.21.1':
     resolution: {integrity: sha512-Wjx9G8gUHVMnYfxtasC9poGm8QMiPCpXpbbLFT+iPoQskDDly8BwueWnqKs4Mx2SdIAWAwuXeZ5ojk5qQOxJJg==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/utils@2.11.2':
     resolution: {integrity: sha512-LyfdmrnZY6dWqlF4eDrx5jpUwsB2bEPjoqR5Z6rXPiHJKUOdJt7az+mNOn5KTSOlRpd1DmozrBrWr+G9fFLYVw==}
@@ -7455,6 +7469,10 @@ packages:
     resolution: {integrity: sha512-twQoecYPiVA5K/h6SxtORw/Bs3ar+mLUtoPSc7iMXzQzK8d7eJ/R09wmTwAjiamETn1cXYPGfNnu7DMoHgu12w==}
     hasBin: true
 
+  jiti@2.6.1:
+    resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
+    hasBin: true
+
   jose@5.10.0:
     resolution: {integrity: sha512-s+3Al/p9g32Iq+oqXxkW//7jk2Vig6FF1CFqzVXoTUXt2qz89YWbL+OwS17NFYEvxC35n0FKeGO2LGYSxeM2Gg==}
 
@@ -7597,8 +7615,20 @@ packages:
   lighthouse-logger@1.4.2:
     resolution: {integrity: sha512-gPWxznF6TKmUHrOQjlVo2UbaL2EJ71mb2CCeRs/2qBpi4L/g4LUVc9+3lKQ6DTUZwJswfM7ainGrLO1+fOqa2g==}
 
+  lightningcss-android-arm64@1.30.2:
+    resolution: {integrity: sha512-BH9sEdOCahSgmkVhBLeU7Hc9DWeZ1Eb6wNS6Da8igvUwAe0sqROHddIlvU06q3WyXVEOYDZ6ykBZQnjTbmo4+A==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [arm64]
+    os: [android]
+
   lightningcss-darwin-arm64@1.30.1:
     resolution: {integrity: sha512-c8JK7hyE65X1MHMN+Viq9n11RRC7hgin3HhYKhrMyaXflk5GVplZ60IxyoVtzILeKr+xAJwg6zK6sjTBJ0FKYQ==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [arm64]
+    os: [darwin]
+
+  lightningcss-darwin-arm64@1.30.2:
+    resolution: {integrity: sha512-ylTcDJBN3Hp21TdhRT5zBOIi73P6/W0qwvlFEk22fkdXchtNTOU4Qc37SkzV+EKYxLouZ6M4LG9NfZ1qkhhBWA==}
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [darwin]
@@ -7609,8 +7639,20 @@ packages:
     cpu: [x64]
     os: [darwin]
 
+  lightningcss-darwin-x64@1.30.2:
+    resolution: {integrity: sha512-oBZgKchomuDYxr7ilwLcyms6BCyLn0z8J0+ZZmfpjwg9fRVZIR5/GMXd7r9RH94iDhld3UmSjBM6nXWM2TfZTQ==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [x64]
+    os: [darwin]
+
   lightningcss-freebsd-x64@1.30.1:
     resolution: {integrity: sha512-kmW6UGCGg2PcyUE59K5r0kWfKPAVy4SltVeut+umLCFoJ53RdCUWxcRDzO1eTaxf/7Q2H7LTquFHPL5R+Gjyig==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [x64]
+    os: [freebsd]
+
+  lightningcss-freebsd-x64@1.30.2:
+    resolution: {integrity: sha512-c2bH6xTrf4BDpK8MoGG4Bd6zAMZDAXS569UxCAGcA7IKbHNMlhGQ89eRmvpIUGfKWNVdbhSbkQaWhEoMGmGslA==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [freebsd]
@@ -7621,8 +7663,20 @@ packages:
     cpu: [arm]
     os: [linux]
 
+  lightningcss-linux-arm-gnueabihf@1.30.2:
+    resolution: {integrity: sha512-eVdpxh4wYcm0PofJIZVuYuLiqBIakQ9uFZmipf6LF/HRj5Bgm0eb3qL/mr1smyXIS1twwOxNWndd8z0E374hiA==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [arm]
+    os: [linux]
+
   lightningcss-linux-arm64-gnu@1.30.1:
     resolution: {integrity: sha512-gB72maP8rmrKsnKYy8XUuXi/4OctJiuQjcuqWNlJQ6jZiWqtPvqFziskH3hnajfvKB27ynbVCucKSm2rkQp4Bw==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [arm64]
+    os: [linux]
+
+  lightningcss-linux-arm64-gnu@1.30.2:
+    resolution: {integrity: sha512-UK65WJAbwIJbiBFXpxrbTNArtfuznvxAJw4Q2ZGlU8kPeDIWEX1dg3rn2veBVUylA2Ezg89ktszWbaQnxD/e3A==}
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [linux]
@@ -7633,8 +7687,20 @@ packages:
     cpu: [arm64]
     os: [linux]
 
+  lightningcss-linux-arm64-musl@1.30.2:
+    resolution: {integrity: sha512-5Vh9dGeblpTxWHpOx8iauV02popZDsCYMPIgiuw97OJ5uaDsL86cnqSFs5LZkG3ghHoX5isLgWzMs+eD1YzrnA==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [arm64]
+    os: [linux]
+
   lightningcss-linux-x64-gnu@1.30.1:
     resolution: {integrity: sha512-piWx3z4wN8J8z3+O5kO74+yr6ze/dKmPnI7vLqfSqI8bccaTGY5xiSGVIJBDd5K5BHlvVLpUB3S2YCfelyJ1bw==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [x64]
+    os: [linux]
+
+  lightningcss-linux-x64-gnu@1.30.2:
+    resolution: {integrity: sha512-Cfd46gdmj1vQ+lR6VRTTadNHu6ALuw2pKR9lYq4FnhvgBc4zWY1EtZcAc6EffShbb1MFrIPfLDXD6Xprbnni4w==}
     engines: {node: '>= 12.0.0'}
     cpu: [x64]
     os: [linux]
@@ -7645,8 +7711,20 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  lightningcss-linux-x64-musl@1.30.2:
+    resolution: {integrity: sha512-XJaLUUFXb6/QG2lGIW6aIk6jKdtjtcffUT0NKvIqhSBY3hh9Ch+1LCeH80dR9q9LBjG3ewbDjnumefsLsP6aiA==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [x64]
+    os: [linux]
+
   lightningcss-win32-arm64-msvc@1.30.1:
     resolution: {integrity: sha512-mSL4rqPi4iXq5YVqzSsJgMVFENoa4nGTT/GjO2c0Yl9OuQfPsIfncvLrEW6RbbB24WtZ3xP/2CCmI3tNkNV4oA==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [arm64]
+    os: [win32]
+
+  lightningcss-win32-arm64-msvc@1.30.2:
+    resolution: {integrity: sha512-FZn+vaj7zLv//D/192WFFVA0RgHawIcHqLX9xuWiQt7P0PtdFEVaxgF9rjM/IRYHQXNnk61/H/gb2Ei+kUQ4xQ==}
     engines: {node: '>= 12.0.0'}
     cpu: [arm64]
     os: [win32]
@@ -7657,8 +7735,18 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  lightningcss-win32-x64-msvc@1.30.2:
+    resolution: {integrity: sha512-5g1yc73p+iAkid5phb4oVFMB45417DkRevRbt/El/gKXJk4jid+vPFF/AXbxn05Aky8PapwzZrdJShv5C0avjw==}
+    engines: {node: '>= 12.0.0'}
+    cpu: [x64]
+    os: [win32]
+
   lightningcss@1.30.1:
     resolution: {integrity: sha512-xi6IyHML+c9+Q3W0S4fCQJOym42pyurFiJUHEcEyHS0CeKzia4yZDEsLlqOFykxOdHpNy0NmvVO31vcSqAxJCg==}
+    engines: {node: '>= 12.0.0'}
+
+  lightningcss@1.30.2:
+    resolution: {integrity: sha512-utfs7Pr5uJyyvDETitgsaqSyjCb2qNRAtuqUeWIAKztsOYdcACf2KtARYXg2pSvhkt+9NfoaNY7fxjl6nuMjIQ==}
     engines: {node: '>= 12.0.0'}
 
   lilconfig@3.1.3:
@@ -8484,23 +8572,11 @@ packages:
     peerDependencies:
       postcss: ^8.0.0
 
-  postcss-js@4.0.1:
-    resolution: {integrity: sha512-dDLF8pEO191hJMtlHFPRa8xsizHaM82MLfNkUHdUtVEV3tgTp5oj+8qbEqYM57SLfc74KSbw//4SeJma2LRVIw==}
+  postcss-js@4.1.0:
+    resolution: {integrity: sha512-oIAOTqgIo7q2EOwbhb8UalYePMvYoIeRY2YKntdpFQXNosSu3vLrniGgmH9OKs/qAkfoj5oB3le/7mINW1LCfw==}
     engines: {node: ^12 || ^14 || >= 16}
     peerDependencies:
       postcss: ^8.4.21
-
-  postcss-load-config@4.0.2:
-    resolution: {integrity: sha512-bSVhyJGL00wMVoPUzAVAnbEoWyqRxkjv64tUl427SKnPrENtq6hJwUojroMz2VB+Q1edmi4IfrAPpami5VVgMQ==}
-    engines: {node: '>= 14'}
-    peerDependencies:
-      postcss: '>=8.0.9'
-      ts-node: '>=9.0.0'
-    peerDependenciesMeta:
-      postcss:
-        optional: true
-      ts-node:
-        optional: true
 
   postcss-load-config@6.0.1:
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
@@ -9388,8 +9464,8 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders'
 
-  tailwindcss@3.4.17:
-    resolution: {integrity: sha512-w33E2aCvSDP0tW9RZuNXadXlkHXqFzSkQew/aIa2i/Sj8fThxwovwlXHSPXTbAHwEIhBFXAedUhP2tueAKP8Og==}
+  tailwindcss@3.4.18:
+    resolution: {integrity: sha512-6A2rnmW5xZMdw11LYjhcI5846rt9pbLSabY5XPxo+XWdxwZaFEn47Go4NzFiHu9sNNmr/kXivP1vStfvMaK1GQ==}
     engines: {node: '>=14.0.0'}
     hasBin: true
 
@@ -10856,11 +10932,11 @@ snapshots:
       - ws
       - zod
 
-  '@bangjelkoski/vite-plugin-node-polyfills@0.0.2(rollup@4.50.1)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))':
+  '@bangjelkoski/vite-plugin-node-polyfills@0.0.2(rollup@4.50.1)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))':
     dependencies:
       '@bangjelkoski/node-stdlib-browser': 0.0.1
       '@rollup/plugin-inject': 5.0.5(rollup@4.50.1)
-      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
     transitivePeerDependencies:
       - rollup
 
@@ -17959,18 +18035,18 @@ snapshots:
     dependencies:
       '@vanilla-extract/css': 1.17.3(babel-plugin-macros@3.1.0)
 
-  '@vitejs/plugin-react@4.2.1(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))':
+  '@vitejs/plugin-react@4.2.1(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))':
     dependencies:
       '@babel/core': 7.28.4
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.28.4)
       '@babel/plugin-transform-react-jsx-source': 7.27.1(@babel/core@7.28.4)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.2
-      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@2.1.9(vitest@2.1.9(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))':
+  '@vitest/coverage-v8@2.1.9(vitest@2.1.9(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -17984,7 +18060,7 @@ snapshots:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vitest: 2.1.9(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -17995,21 +18071,21 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 1.2.0
 
-  '@vitest/mocker@2.1.9(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))':
+  '@vitest/mocker@2.1.9(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))':
     dependencies:
       '@vitest/spy': 2.1.9
       estree-walker: 3.0.3
       magic-string: 0.30.19
     optionalDependencies:
-      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
 
-  '@vitest/mocker@2.1.9(vite@5.4.20(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0))':
+  '@vitest/mocker@2.1.9(vite@5.4.20(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0))':
     dependencies:
       '@vitest/spy': 2.1.9
       estree-walker: 3.0.3
       magic-string: 0.30.19
     optionalDependencies:
-      vite: 5.4.20(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0)
 
   '@vitest/pretty-format@2.1.9':
     dependencies:
@@ -21085,7 +21161,7 @@ snapshots:
     dependencies:
       '@types/node': 24.3.1
       cosmiconfig: 9.0.0(typescript@5.6.1-rc)
-      jiti: 2.5.1
+      jiti: 2.6.1
       typescript: 5.6.1-rc
 
   cosmiconfig@5.2.1:
@@ -22619,6 +22695,8 @@ snapshots:
 
   jiti@2.5.1: {}
 
+  jiti@2.6.1: {}
+
   jose@5.10.0: {}
 
   joycon@3.1.1: {}
@@ -22766,34 +22844,67 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  lightningcss-android-arm64@1.30.2:
+    optional: true
+
   lightningcss-darwin-arm64@1.30.1:
+    optional: true
+
+  lightningcss-darwin-arm64@1.30.2:
     optional: true
 
   lightningcss-darwin-x64@1.30.1:
     optional: true
 
+  lightningcss-darwin-x64@1.30.2:
+    optional: true
+
   lightningcss-freebsd-x64@1.30.1:
+    optional: true
+
+  lightningcss-freebsd-x64@1.30.2:
     optional: true
 
   lightningcss-linux-arm-gnueabihf@1.30.1:
     optional: true
 
+  lightningcss-linux-arm-gnueabihf@1.30.2:
+    optional: true
+
   lightningcss-linux-arm64-gnu@1.30.1:
+    optional: true
+
+  lightningcss-linux-arm64-gnu@1.30.2:
     optional: true
 
   lightningcss-linux-arm64-musl@1.30.1:
     optional: true
 
+  lightningcss-linux-arm64-musl@1.30.2:
+    optional: true
+
   lightningcss-linux-x64-gnu@1.30.1:
+    optional: true
+
+  lightningcss-linux-x64-gnu@1.30.2:
     optional: true
 
   lightningcss-linux-x64-musl@1.30.1:
     optional: true
 
+  lightningcss-linux-x64-musl@1.30.2:
+    optional: true
+
   lightningcss-win32-arm64-msvc@1.30.1:
     optional: true
 
+  lightningcss-win32-arm64-msvc@1.30.2:
+    optional: true
+
   lightningcss-win32-x64-msvc@1.30.1:
+    optional: true
+
+  lightningcss-win32-x64-msvc@1.30.2:
     optional: true
 
   lightningcss@1.30.1:
@@ -22810,6 +22921,23 @@ snapshots:
       lightningcss-linux-x64-musl: 1.30.1
       lightningcss-win32-arm64-msvc: 1.30.1
       lightningcss-win32-x64-msvc: 1.30.1
+
+  lightningcss@1.30.2:
+    dependencies:
+      detect-libc: 2.0.4
+    optionalDependencies:
+      lightningcss-android-arm64: 1.30.2
+      lightningcss-darwin-arm64: 1.30.2
+      lightningcss-darwin-x64: 1.30.2
+      lightningcss-freebsd-x64: 1.30.2
+      lightningcss-linux-arm-gnueabihf: 1.30.2
+      lightningcss-linux-arm64-gnu: 1.30.2
+      lightningcss-linux-arm64-musl: 1.30.2
+      lightningcss-linux-x64-gnu: 1.30.2
+      lightningcss-linux-x64-musl: 1.30.2
+      lightningcss-win32-arm64-msvc: 1.30.2
+      lightningcss-win32-x64-msvc: 1.30.2
+    optional: true
 
   lilconfig@3.1.3: {}
 
@@ -23848,23 +23976,25 @@ snapshots:
       read-cache: 1.0.0
       resolve: 1.22.10
 
-  postcss-js@4.0.1(postcss@8.5.6):
+  postcss-js@4.1.0(postcss@8.5.6):
     dependencies:
       camelcase-css: 2.0.1
       postcss: 8.5.6
 
-  postcss-load-config@4.0.2(postcss@8.5.6):
+  postcss-load-config@6.0.1(jiti@1.21.7)(postcss@8.5.6)(tsx@4.20.5)(yaml@2.8.1):
     dependencies:
       lilconfig: 3.1.3
-      yaml: 2.8.1
     optionalDependencies:
+      jiti: 1.21.7
       postcss: 8.5.6
+      tsx: 4.20.5
+      yaml: 2.8.1
 
-  postcss-load-config@6.0.1(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(yaml@2.8.1):
+  postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.5)(yaml@2.8.1):
     dependencies:
       lilconfig: 3.1.3
     optionalDependencies:
-      jiti: 2.5.1
+      jiti: 2.6.1
       postcss: 8.5.6
       tsx: 4.20.5
       yaml: 2.8.1
@@ -24980,15 +25110,15 @@ snapshots:
 
   tailwind-merge@3.3.1: {}
 
-  tailwindcss-animate@1.0.7(tailwindcss@3.4.17):
+  tailwindcss-animate@1.0.7(tailwindcss@3.4.18(tsx@4.20.5)(yaml@2.8.1)):
     dependencies:
-      tailwindcss: 3.4.17
+      tailwindcss: 3.4.18(tsx@4.20.5)(yaml@2.8.1)
 
   tailwindcss-animate@1.0.7(tailwindcss@4.1.13):
     dependencies:
       tailwindcss: 4.1.13
 
-  tailwindcss@3.4.17:
+  tailwindcss@3.4.18(tsx@4.20.5)(yaml@2.8.1):
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
@@ -25006,14 +25136,15 @@ snapshots:
       picocolors: 1.1.1
       postcss: 8.5.6
       postcss-import: 15.1.0(postcss@8.5.6)
-      postcss-js: 4.0.1(postcss@8.5.6)
-      postcss-load-config: 4.0.2(postcss@8.5.6)
+      postcss-js: 4.1.0(postcss@8.5.6)
+      postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.6)(tsx@4.20.5)(yaml@2.8.1)
       postcss-nested: 6.2.0(postcss@8.5.6)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.10
       sucrase: 3.35.0
     transitivePeerDependencies:
-      - ts-node
+      - tsx
+      - yaml
 
   tailwindcss@4.1.13: {}
 
@@ -25144,7 +25275,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.0(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1):
+  tsup@8.5.0(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.5)(typescript@5.5.4)(yaml@2.8.1):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.25.9)
       cac: 6.7.14
@@ -25155,7 +25286,7 @@ snapshots:
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(jiti@2.5.1)(postcss@8.5.6)(tsx@4.20.5)(yaml@2.8.1)
+      postcss-load-config: 6.0.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.5)(yaml@2.8.1)
       resolve-from: 5.0.0
       rollup: 4.50.1
       source-map: 0.8.0-beta.0
@@ -25553,13 +25684,13 @@ snapshots:
       - utf-8-validate
       - zod
 
-  vite-node@2.1.9(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0):
+  vite-node@2.1.9(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 1.1.2
-      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -25571,13 +25702,13 @@ snapshots:
       - supports-color
       - terser
 
-  vite-node@2.1.9(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0):
+  vite-node@2.1.9(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.1
       es-module-lexer: 1.7.0
       pathe: 1.1.2
-      vite: 5.4.20(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -25589,29 +25720,29 @@ snapshots:
       - supports-color
       - terser
 
-  vite-plugin-svgr@4.2.0(rollup@4.50.1)(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)):
+  vite-plugin-svgr@4.2.0(rollup@4.50.1)(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)):
     dependencies:
       '@rollup/pluginutils': 5.3.0(rollup@4.50.1)
       '@svgr/core': 8.1.0(typescript@5.5.4)
       '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0(typescript@5.5.4))
-      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
     transitivePeerDependencies:
       - rollup
       - supports-color
       - typescript
 
-  vite-tsconfig-paths@4.3.1(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)):
+  vite-tsconfig-paths@4.3.1(typescript@5.5.4)(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)):
     dependencies:
       debug: 4.4.1
       globrex: 0.1.2
       tsconfck: 3.1.6(typescript@5.5.4)
     optionalDependencies:
-      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0):
+  vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.6
@@ -25619,10 +25750,10 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.18.1
       fsevents: 2.3.3
-      lightningcss: 1.30.1
+      lightningcss: 1.30.2
       terser: 5.44.0
 
-  vite@5.4.20(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0):
+  vite@5.4.20(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.6
@@ -25630,13 +25761,13 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.3.1
       fsevents: 2.3.3
-      lightningcss: 1.30.1
+      lightningcss: 1.30.2
       terser: 5.44.0
 
-  vitest@2.1.9(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0):
+  vitest@2.1.9(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0):
     dependencies:
       '@vitest/expect': 2.1.9
-      '@vitest/mocker': 2.1.9(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0))
+      '@vitest/mocker': 2.1.9(vite@5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0))
       '@vitest/pretty-format': 2.1.9
       '@vitest/runner': 2.1.9
       '@vitest/snapshot': 2.1.9
@@ -25652,8 +25783,8 @@ snapshots:
       tinyexec: 0.3.2
       tinypool: 1.1.1
       tinyrainbow: 1.2.0
-      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
-      vite-node: 2.1.9(@types/node@22.18.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
+      vite-node: 2.1.9(@types/node@22.18.1)(lightningcss@1.30.2)(terser@5.44.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.18.1
@@ -25668,10 +25799,10 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@2.1.9(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0):
+  vitest@2.1.9(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0):
     dependencies:
       '@vitest/expect': 2.1.9
-      '@vitest/mocker': 2.1.9(vite@5.4.20(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0))
+      '@vitest/mocker': 2.1.9(vite@5.4.20(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0))
       '@vitest/pretty-format': 2.1.9
       '@vitest/runner': 2.1.9
       '@vitest/snapshot': 2.1.9
@@ -25687,8 +25818,8 @@ snapshots:
       tinyexec: 0.3.2
       tinypool: 1.1.1
       tinyrainbow: 1.2.0
-      vite: 5.4.20(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0)
-      vite-node: 2.1.9(@types/node@24.3.1)(lightningcss@1.30.1)(terser@5.44.0)
+      vite: 5.4.20(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0)
+      vite-node: 2.1.9(@types/node@24.3.1)(lightningcss@1.30.2)(terser@5.44.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.3.1

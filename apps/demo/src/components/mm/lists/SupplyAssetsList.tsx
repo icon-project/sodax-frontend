@@ -1,28 +1,18 @@
 import React, { useMemo } from 'react';
-import { getSpokeTokenAddressByVault, useReservesData, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
+import { useReservesData, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { getMoneyMarketConfig, moneyMarketSupportedTokens, SONIC_MAINNET_CHAIN_ID, type UserReserveData } from '@sodax/sdk';
-import type { Token, XToken } from '@sodax/types';
-import { findReserveByUnderlyingAsset, findUserReserveBySpokeTokenAddress } from '@/lib/utils';
+import { useSupportedTokens } from '@/hooks/useSupportedTokens';
+import { useFormattedReserves } from '@/hooks/useFormattedReserves';
 
 export function SupplyAssetsList() {
   const { selectedChainId } = useAppStore();
 
-  const tokens = useMemo(
-    () =>
-      moneyMarketSupportedTokens[selectedChainId].map((t: Token) => {
-        return {
-          ...t,
-          xChainId: selectedChainId,
-        } satisfies XToken;
-      }),
-    [selectedChainId],
-  );
+  const tokens = useSupportedTokens(selectedChainId);
 
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
@@ -36,6 +26,8 @@ export function SupplyAssetsList() {
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
   const { data: reserves, isLoading: isReservesLoading } = useReservesData();
 
+  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useFormattedReserves();
+
   return (
     <Card>
       <CardHeader>
@@ -48,6 +40,12 @@ export function SupplyAssetsList() {
               <TableHead>Asset</TableHead>
               <TableHead>Wallet Balance</TableHead>
               <TableHead>Balance</TableHead>
+              <TableHead>Total Supply</TableHead>
+              <TableHead>Supply APY</TableHead>
+              <TableHead>Supply APR</TableHead>
+              <TableHead>Total Borrow</TableHead>
+              <TableHead>Borrow APY</TableHead>
+              <TableHead>Borrow APR</TableHead>
               <TableHead>Debt</TableHead>
               <TableHead>Action</TableHead>
               <TableHead>Action</TableHead>
@@ -56,58 +54,43 @@ export function SupplyAssetsList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {
-              isUserReservesLoading || isReservesLoading || !userReserves || !reserves ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center">Loading...</TableCell>
-                </TableRow>
-              ) : (
-                userReserves && reserves && tokens.map(token => {
-                  try {
-                    let userReserve: UserReserveData;
-                    if (token.symbol === 'bnUSD') {
-                      // bnUSD is special case, because both bnUSD and bnUSDVault are bnUSD reserves
-                      const bnUSDReserve = userReserves?.[0]?.find(
-                        r => getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSD.toLowerCase() ===
-                        r.underlyingAsset.toLowerCase(),
-                      );
-                      const bnUSDVaultReserve = userReserves?.[0]?.find(
-                        r => getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault.toLowerCase() ===
-                        r.underlyingAsset.toLowerCase()
-                      );
-    
-                      if (!bnUSDReserve || !bnUSDVaultReserve) {
-                        return null;
+            {isUserReservesLoading ||
+            isReservesLoading ||
+            isFormattedReservesLoading ||
+            !userReserves ||
+            !reserves ||
+            !formattedReserves ? (
+              <TableRow>
+                <TableCell colSpan={10} className="text-center">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : (
+              userReserves &&
+              reserves &&
+              tokens.map(token => {
+                try {
+                  return (
+                    <SupplyAssetsListItem
+                      key={token.address}
+                      token={token}
+                      walletBalance={
+                        balances?.[token.address]
+                          ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
+                          : '-'
                       }
-    
-                      // we just merge the two bnUSD reserves into one bnUSD vault reserve, but you should be aware of the differences
-                      const mergedbnUSDReserve = {
-                        ...bnUSDVaultReserve,
-                        scaledATokenBalance: bnUSDReserve?.scaledATokenBalance + bnUSDVaultReserve?.scaledATokenBalance,
-                        scaledVariableDebt: bnUSDReserve?.scaledVariableDebt + bnUSDVaultReserve?.scaledVariableDebt,
-                      };
-                      userReserve = mergedbnUSDReserve;
-                    } else {
-                      userReserve = findUserReserveBySpokeTokenAddress(userReserves[0], selectedChainId, token);
-                    }
-                    return (
-                      <SupplyAssetsListItem
-                        key={token.address}
-                        token={token}
-                        walletBalance={
-                          balances?.[token.address] ? formatUnits(balances?.[token.address] || 0n, token.decimals) : '-'
-                        }
-                        balance={formatUnits(userReserve.scaledATokenBalance || 0n, 18)}
-                        debt={formatUnits(userReserve.scaledVariableDebt || 0n, 18)}
-                        reserve={findReserveByUnderlyingAsset(userReserve.underlyingAsset, reserves[0])}
-                      />
-                    );
-                  } catch {
-                    console.log('error token', token);
-                  }
-                })
-              )
-            }
+                      reserves={reserves[0]}
+                      formattedReserves={formattedReserves}
+                      userReserves={userReserves[0]}
+                      selectedChainId={selectedChainId}
+                    />
+                  );
+                } catch (error) {
+                  console.log('Error rendering token', token, error);
+                  return null;
+                }
+              })
+            )}
           </TableBody>
         </Table>
       </CardContent>
