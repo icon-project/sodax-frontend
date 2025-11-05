@@ -49,17 +49,20 @@ const iconSpokeProvider = new IconSpokeProvider(iconSpokeWallet, iconSpokeChainC
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
-const hubProvider = new EvmHubProvider(hubConfig);
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const sodax = new Sodax({
-  solver: solverConfig,
+  swap: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
+
+const hubProvider = new EvmHubProvider({ config: hubConfig, configService: sodax.config });
+
+
 
 async function depositTo(token: IconAddress, amount: bigint, recipient: Address) {
   const data = EvmAssetManagerService.depositToData(
@@ -69,6 +72,7 @@ async function depositTo(token: IconAddress, amount: bigint, recipient: Address)
       amount,
     },
     iconSpokeChainConfig.chain.id,
+    sodax.config,
   );
 
   const walletAddress = (await iconSpokeProvider.walletProvider.getWalletAddress()) as IconAddress;

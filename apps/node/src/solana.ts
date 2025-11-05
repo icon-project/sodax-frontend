@@ -46,21 +46,21 @@ const solanaSpokeProvider = new SolanaSpokeProvider(solanaWallet, solanaSpokeCha
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
-
-const hubProvider = new EvmHubProvider({
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: hubConfig.chainConfig,
-});
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const sodax = new Sodax({
-  solver: solverConfig,
+  swap: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
+
+const hubProvider = new EvmHubProvider({
+  config: hubConfig,
+  configService: sodax.config,
+});
 
 const relayerBackendUrl = IS_TESTNET
   ? 'https://53naa6u2qd.execute-api.us-east-1.amazonaws.com/test'
@@ -127,6 +127,7 @@ async function depositTo(token: PublicKey, amount: bigint, recipient: Address) {
       amount,
     },
     solanaSpokeChainConfig.chain.id,
+    sodax.config,
   );
 
   const txHash: Hash = await SpokeService.deposit(

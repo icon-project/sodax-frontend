@@ -58,8 +58,10 @@ const spokeProvider = new InjectiveSpokeProvider(config, walletProvider);
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
+
+const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const solverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
@@ -67,17 +69,16 @@ const solverConfig = {
   partnerFee: undefined,
 } satisfies SolverConfigParams;
 
-const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
-
 const sodax = new Sodax({
-  solver: solverConfig,
+  swap: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
+
 const evmHubProvider = new EvmHubProvider({
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+  config: hubConfig,
+  configService: sodax.config,
 });
 
 async function depositTo(token: string, amount: bigint, recipient: Address): Promise<void> {
@@ -88,6 +89,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
       amount,
     },
     spokeProvider.chainConfig.chain.id,
+    sodax.config,
   );
   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
   const txHash: Hash = await SpokeService.deposit(

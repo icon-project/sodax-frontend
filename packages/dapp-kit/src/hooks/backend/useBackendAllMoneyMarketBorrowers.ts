@@ -53,7 +53,7 @@ export const useBackendAllMoneyMarketBorrowers = (
         return undefined;
       }
 
-      return sodax.backendApiService.getAllMoneyMarketBorrowers(params);
+      return sodax.backendApi.getAllMoneyMarketBorrowers(params);
     },
     enabled: !!params && !!params.offset && !!params.limit,
     retry: 3,

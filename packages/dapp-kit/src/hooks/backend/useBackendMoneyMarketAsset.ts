@@ -49,7 +49,7 @@ export const useBackendMoneyMarketAsset = (
         return undefined;
       }
 
-      return sodax.backendApiService.getMoneyMarketAsset(reserveAddress);
+      return sodax.backendApi.getMoneyMarketAsset(reserveAddress);
     },
     enabled: !!reserveAddress && reserveAddress.length > 0,
     retry: 3,

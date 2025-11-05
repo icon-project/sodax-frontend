@@ -59,7 +59,7 @@ export default function IcxsodaMigration() {
       let gasFeeEstimate: bigint;
       const fullBalance = normaliseTokenAmount(balance, currencies.from.decimals);
       const fullBalanceBigInt = parseUnits(fullBalance, currencies.from.decimals);
-      const feeAmount = sodax.solver.getPartnerFee(fullBalanceBigInt);
+      const feeAmount = sodax.swap.getPartnerFee(fullBalanceBigInt);
       if (direction.from === ICON_MAINNET_CHAIN_ID) {
         gasFeeEstimate = parseUnits(
           (0.02 * Number(fullBalance) < 0.02 ? 0.02 : 0.02 * Number(fullBalance)).toString(),
