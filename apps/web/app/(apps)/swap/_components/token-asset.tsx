@@ -58,7 +58,7 @@ function NetworkIcon({
       }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
     >
-      <div className="ring ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded">
+      <div className="ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded">
         {imageSrc === 'Icon' && <IcxIcon />}
         {imageSrc === 'Avalanche' && <AvalancheIcon />}
         {imageSrc === 'Base' && <BaseIcon />}
