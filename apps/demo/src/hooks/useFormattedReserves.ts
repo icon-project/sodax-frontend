@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
   EvmHubProvider,
   MoneyMarketDataService,
@@ -7,35 +6,30 @@ import {
   type ReserveDataWithPrice,
   type FormatReservesUSDRequest,
 } from '@sodax/sdk';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * Fetches and formats all reserves with USD values from the Money Market SDK.
  * Returns a fully typed array of formatted reserve data.
  */
 export function useFormattedReserves() {
-  const [formattedReserves, setFormattedReserves] = useState<(ReserveDataWithPrice & FormatReserveUSDResponse)[]>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
+  const { data } = useQuery({
+    queryKey: ['formatted-reserves'],
+    queryFn: async () => {
       const hubProvider = new EvmHubProvider();
       const mmDataService = new MoneyMarketDataService(hubProvider);
 
-      // Fetch humanized reserves data
       const reservesHumanized: ReservesDataHumanized = await mmDataService.getReservesHumanized();
 
-      // Build data with price
       const reservesWithPrice: FormatReservesUSDRequest<ReserveDataWithPrice> =
         mmDataService.buildReserveDataWithPrice(reservesHumanized);
 
-      // Format reserves into USD
       const formatted: (ReserveDataWithPrice & FormatReserveUSDResponse)[] =
         mmDataService.formatReservesUSD(reservesWithPrice);
 
-      setFormattedReserves(formatted);
-    };
+      return formatted;
+    },
+  });
 
-    fetchData();
-  }, []);
-
-  return formattedReserves;
+  return data; // Return just the data, like the old implementation
 }

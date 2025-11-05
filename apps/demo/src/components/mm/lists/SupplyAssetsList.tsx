@@ -10,6 +10,7 @@ import { findReserveByUnderlyingAsset } from '@/lib/utils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { useSupportedTokens } from '@/hooks/useSupportedTokens';
 import { useFormattedReserves } from '@/hooks/useFormattedReserves';
+import type { AggregatedReserveData, UserReserveData } from '@sodax/sdk';
 
 export function SupplyAssetsList() {
   const { selectedChainId } = useAppStore();
@@ -70,9 +71,9 @@ export function SupplyAssetsList() {
                   // Get all metrics and user reserve data from the hook
                   const metrics = useReserveMetrics({
                     token,
-                    reserves: reserves[0],
-                    formattedReserves,
-                    userReserves: [userReserves[0]],
+                    reserves: reserves[0] as AggregatedReserveData[],
+                    formattedReserves: formattedReserves || [],
+                    userReserves: [userReserves[0]] as UserReserveData[][],
                     selectedChainId,
                   });
 
