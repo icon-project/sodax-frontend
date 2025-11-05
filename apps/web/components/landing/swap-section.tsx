@@ -36,7 +36,12 @@ const SwapSection = () => {
           variant="outline"
           className="px-6 font-['InterMedium'] cursor-pointer text-(length:--body-comfortable)"
           size="lg"
-          onClick={() => router.push('/swap')}
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+              router.push('/swap');
+            }, 300);
+          }}
         >
           Swap now
         </Button>
