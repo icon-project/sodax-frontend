@@ -37,7 +37,7 @@ export const useStatus = (
   return useQuery({
     queryKey: [intent_tx_hash],
     queryFn: async () => {
-      return sodax.solver.getStatus({ intent_tx_hash });
+      return sodax.swap.getStatus({ intent_tx_hash });
     },
     refetchInterval: 3000, // 3s
   });

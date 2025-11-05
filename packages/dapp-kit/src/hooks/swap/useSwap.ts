@@ -47,7 +47,7 @@ export function useSwap(
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
-      return sodax.solver.swap({
+      return sodax.swap.swap({
         intentParams: params,
         spokeProvider,
       });

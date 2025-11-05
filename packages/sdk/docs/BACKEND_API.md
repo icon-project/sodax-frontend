@@ -23,7 +23,7 @@ import { Sodax } from '@sodax/sdk';
 
 // Initialize with default configuration
 const sodax = new Sodax();
-const backendApi = sodax.backendApiService;
+const backendApi = sodax.backendApi;
 ```
 
 ### Custom Configuration
@@ -42,7 +42,7 @@ const sodax = new Sodax({
   }
 });
 
-const backendApi = sodax.backendApiService;
+const backendApi = sodax.backendApi;
 ```
 
 ## Configuration
@@ -75,7 +75,7 @@ const DEFAULT_BACKEND_API_HEADERS = {
 Retrieves intent details using a transaction hash.
 
 ```typescript
-const intent = await sodax.backendApiService.getIntentByTxHash('0x123...abc');
+const intent = await sodax.backendApi.getIntentByTxHash('0x123...abc');
 ```
 
 **Request:**
@@ -146,7 +146,7 @@ interface IntentResponse {
 Retrieves intent details using an intent hash.
 
 ```typescript
-const intent = await sodax.backendApiService.getIntentByHash('0x456...def');
+const intent = await sodax.backendApi.getIntentByHash('0x456...def');
 ```
 
 **Request:**
@@ -163,7 +163,7 @@ const intent = await sodax.backendApiService.getIntentByHash('0x456...def');
 Retrieves the solver orderbook with pagination support.
 
 ```typescript
-const orderbook = await sodax.backendApiService.getOrderbook({
+const orderbook = await sodax.backendApi.getOrderbook({
   offset: '0',
   limit: '10'
 });
@@ -253,7 +253,7 @@ interface OrderbookResponse {
 Retrieves money market position for a specific user.
 
 ```typescript
-const position = await sodax.backendApiService.getMoneyMarketPosition('0x789...ghi');
+const position = await sodax.backendApi.getMoneyMarketPosition('0x789...ghi');
 ```
 
 **Request:**
@@ -298,7 +298,7 @@ interface MoneyMarketPosition {
 Retrieves all available money market assets.
 
 ```typescript
-const assets = await sodax.backendApiService.getAllMoneyMarketAssets();
+const assets = await sodax.backendApi.getAllMoneyMarketAssets();
 ```
 
 **Request:**
@@ -352,7 +352,7 @@ interface MoneyMarketAsset {
 Retrieves details for a specific money market asset.
 
 ```typescript
-const asset = await sodax.backendApiService.getMoneyMarketAsset('0xabc...123');
+const asset = await sodax.backendApi.getMoneyMarketAsset('0xabc...123');
 ```
 
 **Request:**
@@ -367,7 +367,7 @@ const asset = await sodax.backendApiService.getMoneyMarketAsset('0xabc...123');
 Retrieves borrowers for a specific money market asset with pagination.
 
 ```typescript
-const borrowers = await sodax.backendApiService.getMoneyMarketAssetBorrowers(
+const borrowers = await sodax.backendApi.getMoneyMarketAssetBorrowers(
   '0xabc...123',
   { offset: '0', limit: '10' }
 );
@@ -410,7 +410,7 @@ interface MoneyMarketAssetBorrowers {
 Retrieves suppliers for a specific money market asset with pagination.
 
 ```typescript
-const suppliers = await sodax.backendApiService.getMoneyMarketAssetSuppliers(
+const suppliers = await sodax.backendApi.getMoneyMarketAssetSuppliers(
   '0xabc...123',
   { offset: '0', limit: '10' }
 );
@@ -453,7 +453,7 @@ interface MoneyMarketAssetSuppliers {
 Retrieves all money market borrowers with pagination.
 
 ```typescript
-const allBorrowers = await sodax.backendApiService.getAllMoneyMarketBorrowers({
+const allBorrowers = await sodax.backendApi.getAllMoneyMarketBorrowers({
   offset: '0',
   limit: '10'
 });
@@ -483,7 +483,7 @@ The BackendApiService includes comprehensive error handling for various scenario
 ### Timeout Errors
 ```typescript
 try {
-  const result = await sodax.backendApiService.getOrderbook({ offset: '0', limit: '10' });
+  const result = await sodax.backendApi.getOrderbook({ offset: '0', limit: '10' });
 } catch (error) {
   if (error.message.includes('timeout')) {
     console.error('Request timed out after 30 seconds');
@@ -494,7 +494,7 @@ try {
 ### HTTP Errors
 ```typescript
 try {
-  const result = await sodax.backendApiService.getIntentByTxHash('invalid-hash');
+  const result = await sodax.backendApi.getIntentByTxHash('invalid-hash');
 } catch (error) {
   if (error.message.includes('HTTP 404')) {
     console.error('Intent not found');
@@ -507,7 +507,7 @@ try {
 ### Network Errors
 ```typescript
 try {
-  const result = await sodax.backendApiService.getAllMoneyMarketAssets();
+  const result = await sodax.backendApi.getAllMoneyMarketAssets();
 } catch (error) {
   console.error('Network error:', error.message);
 }
@@ -520,7 +520,7 @@ try {
 You can dynamically set custom headers for API requests:
 
 ```typescript
-sodax.backendApiService.setHeaders({
+sodax.backendApi.setHeaders({
   'Authorization': 'Bearer new-token',
   'X-Custom-Header': 'custom-value'
 });
@@ -531,7 +531,7 @@ sodax.backendApiService.setHeaders({
 Retrieve the current base URL being used:
 
 ```typescript
-const baseURL = sodax.backendApiService.getBaseURL();
+const baseURL = sodax.backendApi.getBaseURL();
 console.log('API Base URL:', baseURL);
 ```
 
@@ -556,7 +556,7 @@ async function example() {
 
   try {
     // Get solver orderbook
-    const orderbook = await sodax.backendApiService.getOrderbook({
+    const orderbook = await sodax.backendApi.getOrderbook({
       offset: '0',
       limit: '5'
     });
@@ -564,16 +564,16 @@ async function example() {
 
     // Get user's money market position
     const userAddress = '0x789...ghi';
-    const position = await sodax.backendApiService.getMoneyMarketPosition(userAddress);
+    const position = await sodax.backendApi.getMoneyMarketPosition(userAddress);
     console.log('User Position:', position);
 
     // Get all money market assets
-    const assets = await sodax.backendApiService.getAllMoneyMarketAssets();
+    const assets = await sodax.backendApi.getAllMoneyMarketAssets();
     console.log('Available Assets:', assets);
 
     // Get intent by transaction hash
     const txHash = '0x123...abc';
-    const intent = await sodax.backendApiService.getIntentByTxHash(txHash);
+    const intent = await sodax.backendApi.getIntentByTxHash(txHash);
     console.log('Intent Details:', intent);
 
   } catch (error) {

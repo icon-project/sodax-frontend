@@ -45,7 +45,7 @@ export const useBackendIntentByHash = (intentHash: string | undefined): UseQuery
         return undefined;
       }
 
-      return sodax.backendApiService.getIntentByHash(intentHash);
+      return sodax.backendApi.getIntentByHash(intentHash);
     },
     enabled: !!intentHash && intentHash.length > 0,
     retry: 3,
