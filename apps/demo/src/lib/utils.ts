@@ -1,13 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import {
-  type AggregatedReserveData,
-  SolverIntentStatusCode,
-  type SpokeChainId,
-  type UserReserveData,
-  type XToken,
-} from '@sodax/sdk';
+import { type AggregatedReserveData, SolverIntentStatusCode, type SpokeChainId, type UserReserveData, type XToken } from '@sodax/sdk';
 import { getSpokeTokenAddressByVault } from '@sodax/dapp-kit';
 
 export function cn(...inputs: ClassValue[]) {
@@ -101,38 +95,13 @@ export function findReserveByUnderlyingAsset(
   return reserve;
 }
 
-export function findUserReserveBySpokeTokenAddress(
-  userReserves: readonly UserReserveData[],
-  selectedChainId: SpokeChainId,
-  token: XToken,
-): UserReserveData {
+export  function findUserReserveBySpokeTokenAddress(userReserves: readonly UserReserveData[], selectedChainId: SpokeChainId, token: XToken): UserReserveData {
   const result = userReserves.find(
-    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase(),
+    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase()
   );
 
   if (!result) {
     throw new Error(`User reserve not found for spoke token address: ${token.address}`);
   }
   return result;
-}
-
-/**
- * Formats a large number into a compact, human-readable form.
- * Examples:
- *  - 2450000 → "2.45M"
- *  - 1180 → "1.18K"
- *  - 9520000000 → "9.52B"
- */
-export function formatCompactNumber(value: string | number | bigint): string {
-  const num = typeof value === 'bigint' ? Number(value) : typeof value === 'string' ? Number.parseFloat(value) : value;
-
-  if (!Number.isFinite(num)) return '-';
-
-  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(4).replace(/\.?0+$/, '')}B`;
-
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(4).replace(/\.?0+$/, '')}M`;
-
-  if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
-
-  return num.toFixed(4);
 }
