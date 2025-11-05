@@ -979,7 +979,7 @@ export class MigrationService {
   async createMigrateIcxToSodaIntent<R extends boolean = false>(
     params: IcxMigrateParams,
     spokeProvider: IconSpokeProvider,
-    raw?: boolean,
+    raw?: R,
   ): Promise<Result<TxReturnType<IconSpokeProvider, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
       invariant(params.amount > 0, 'Amount must be greater than 0');
