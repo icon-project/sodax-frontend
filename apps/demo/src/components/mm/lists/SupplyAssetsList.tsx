@@ -6,11 +6,8 @@ import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { findReserveByUnderlyingAsset } from '@/lib/utils';
-import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { useSupportedTokens } from '@/hooks/useSupportedTokens';
 import { useFormattedReserves } from '@/hooks/useFormattedReserves';
-import type { AggregatedReserveData, UserReserveData } from '@sodax/sdk';
 
 export function SupplyAssetsList() {
   const { selectedChainId } = useAppStore();
@@ -29,7 +26,7 @@ export function SupplyAssetsList() {
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
   const { data: reserves, isLoading: isReservesLoading } = useReservesData();
 
-  const formattedReserves = useFormattedReserves();
+  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useFormattedReserves();
 
   return (
     <Card>
@@ -57,7 +54,12 @@ export function SupplyAssetsList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isUserReservesLoading || isReservesLoading || !userReserves || !reserves ? (
+            {isUserReservesLoading ||
+            isReservesLoading ||
+            isFormattedReservesLoading ||
+            !userReserves ||
+            !reserves ||
+            !formattedReserves ? (
               <TableRow>
                 <TableCell colSpan={10} className="text-center">
                   Loading...
@@ -68,23 +70,6 @@ export function SupplyAssetsList() {
               reserves &&
               tokens.map(token => {
                 try {
-                  // Get all metrics and user reserve data from the hook
-                  const metrics = useReserveMetrics({
-                    token,
-                    reserves: reserves[0] as AggregatedReserveData[],
-                    formattedReserves: formattedReserves || [],
-                    userReserves: [userReserves[0]] as UserReserveData[][],
-                    selectedChainId,
-                  });
-
-                  // For tokens where metrics.userReserve is undefined, skip rendering
-                  if (!metrics.userReserve) {
-                    return null;
-                  }
-
-                  // This needs to stay exactly the same to preserve the fix
-                  const reserve = findReserveByUnderlyingAsset(metrics.userReserve.underlyingAsset, reserves[0]);
-
                   return (
                     <SupplyAssetsListItem
                       key={token.address}
@@ -94,17 +79,10 @@ export function SupplyAssetsList() {
                           ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
                           : '-'
                       }
-                      balance={Number(formatUnits(metrics.userReserve.scaledATokenBalance || 0n, 18)).toFixed(4)}
-                      debt={Number(formatUnits(metrics.userReserve.scaledVariableDebt || 0n, 18)).toFixed(4)}
-                      reserve={reserve}
-                      supplyApy={metrics.supplyAPY}
-                      supplyAPR={metrics.supplyAPR}
-                      borrowApy={metrics.borrowAPY}
-                      borrowAPR={metrics.borrowAPR}
-                      totalSupply={metrics.totalSupply}
-                      totalBorrow={metrics.totalBorrow}
-                      totalLiquidityUSD={metrics.totalLiquidityUSD}
-                      totalBorrowsUSD={metrics.totalBorrowsUSD}
+                      reserves={reserves[0]}
+                      formattedReserves={formattedReserves}
+                      userReserves={userReserves[0]}
+                      selectedChainId={selectedChainId}
                     />
                   );
                 } catch (error) {

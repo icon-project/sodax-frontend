@@ -1,49 +1,61 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import type { XToken } from '@sodax/types';
+import type { ChainId, XToken } from '@sodax/types';
 import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
 import { BorrowButton } from './BorrowButton';
 import { RepayButton } from './RepayButton';
-import type { AggregatedReserveData } from '@sodax/sdk';
+import type { AggregatedReserveData, UserReserveData } from '@sodax/sdk';
+import { useReserveMetrics } from '@/hooks/useReserveMetrics';
+import { findReserveByUnderlyingAsset } from '@/lib/utils';
+import { formatUnits } from 'viem';
+import type { FormattedReserve } from '@/hooks/useFormattedReserves';
+
 interface SupplyAssetsListItemProps {
   token: XToken;
   walletBalance: string;
-  balance: string;
-  debt: string;
-  reserve: AggregatedReserveData;
-  supplyApy?: string;
-  supplyAPR?: string;
-  totalSupply?: string;
-  totalBorrow?: string;
-  borrowApy?: string;
-  borrowAPR?: string;
-  totalLiquidityUSD?: string;
-  totalBorrowsUSD?: string;
+  // Add these new props needed for the logic
+  reserves: readonly AggregatedReserveData[];
+  formattedReserves: FormattedReserve[];
+  userReserves: readonly UserReserveData[];
+  selectedChainId: ChainId;
 }
 
 export function SupplyAssetsListItem({
   token,
-  balance,
   walletBalance,
-  debt,
-  reserve,
-  supplyApy = '-',
-  supplyAPR = '-',
-  totalSupply = '-',
-  totalBorrow = '-',
-  borrowApy = '-',
-  borrowAPR = '-',
-  totalLiquidityUSD = '-',
-  totalBorrowsUSD = '-',
+  reserves,
+  formattedReserves,
+  userReserves,
+  selectedChainId,
 }: SupplyAssetsListItemProps) {
+  // Get all metrics and user reserve data from the hook
+  const metrics = useReserveMetrics({
+    token,
+    reserves: reserves as AggregatedReserveData[],
+    formattedReserves: formattedReserves,
+    userReserves: [userReserves as UserReserveData[]] as UserReserveData[][],
+    selectedChainId,
+  });
+
+  // For tokens where metrics.userReserve is undefined, skip rendering
+  if (!metrics.userReserve) {
+    return null;
+  }
+
+  // This needs to stay exactly the same to preserve the fix
+  const reserve = findReserveByUnderlyingAsset(metrics.userReserve.underlyingAsset, reserves);
+
+  const balance = Number(formatUnits(metrics.userReserve.scaledATokenBalance || 0n, 18)).toFixed(4);
+  const debt = Number(formatUnits(metrics.userReserve.scaledVariableDebt || 0n, 18)).toFixed(4);
+
   // TODO use ERC20 hook to get the aToken token info as XToken
   // this is just quickfix
   const aToken: XToken = {
     address: reserve.aTokenAddress,
     decimals: 18,
-    symbol: 'aToken-${token.symbol}',
-    name: 'aToken-${token.name}',
+    symbol: `aToken-${token.symbol}`,
+    name: `aToken-${token.name}`,
     xChainId: token.xChainId,
   };
 
@@ -54,18 +66,18 @@ export function SupplyAssetsListItem({
       <TableCell>{balance}</TableCell>
       <TableCell>
         <div className="flex flex-col items-start">
-          {totalSupply} <span className="text-xs">{totalLiquidityUSD}</span>
+          {metrics.totalSupply || '-'} <span className="text-xs">{metrics.totalLiquidityUSD || '-'}</span>
         </div>
       </TableCell>
-      <TableCell>{supplyApy}</TableCell>
-      <TableCell>{supplyAPR}</TableCell>
+      <TableCell>{metrics.supplyAPY || '-'}</TableCell>
+      <TableCell>{metrics.supplyAPR || '-'}</TableCell>
       <TableCell>
         <div className="flex flex-col items-start">
-          {totalBorrow} <span className="text-xs">{totalBorrowsUSD}</span>
+          {metrics.totalBorrow || '-'} <span className="text-xs">{metrics.totalBorrowsUSD || '-'}</span>
         </div>
       </TableCell>
-      <TableCell>{borrowApy}</TableCell>
-      <TableCell>{borrowAPR}</TableCell>
+      <TableCell>{metrics.borrowAPY || '-'}</TableCell>
+      <TableCell>{metrics.borrowAPR || '-'}</TableCell>
       <TableCell>{debt}</TableCell>
       <TableCell>
         <SupplyButton token={token} reserve={reserve} />
