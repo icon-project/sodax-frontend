@@ -57,7 +57,7 @@ describe('BackendApiService', () => {
       const result = await backendApiService.getIntentByTxHash(txHash);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `https://apiv1.coolify.iconblockchain.xyz/intent/tx/${txHash}`,
+        `https://api.sodax.com/v1/be/intent/tx/${txHash}`,
         expect.objectContaining({
           method: 'GET',
           headers: expect.objectContaining({
@@ -106,7 +106,7 @@ describe('BackendApiService', () => {
       const result = await backendApiService.getIntentByHash(intentHash);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `https://apiv1.coolify.iconblockchain.xyz/intent/${intentHash}`,
+        `https://api.sodax.com/v1/be/intent/${intentHash}`,
         expect.objectContaining({
           method: 'GET',
           headers: expect.objectContaining({
@@ -163,7 +163,7 @@ describe('BackendApiService', () => {
       const result = await backendApiService.getOrderbook({ offset: '0', limit: '10' });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://apiv1.coolify.iconblockchain.xyz/solver/orderbook?offset=0&limit=10',
+        'https://api.sodax.com/v1/be/solver/orderbook?offset=0&limit=10',
         expect.objectContaining({ method: 'GET' }),
       );
       expect(result).toEqual(mockData);
@@ -196,7 +196,7 @@ describe('BackendApiService', () => {
       const result = await backendApiService.getMoneyMarketPosition(userAddress);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `https://apiv1.coolify.iconblockchain.xyz/moneymarket/position/${userAddress}`,
+        `https://api.sodax.com/v1/be/moneymarket/position/${userAddress}`,
         expect.objectContaining({ method: 'GET' }),
       );
       expect(result).toEqual(mockData);
@@ -231,7 +231,7 @@ describe('BackendApiService', () => {
       const result = await backendApiService.getAllMoneyMarketAssets();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://apiv1.coolify.iconblockchain.xyz/moneymarket/asset/all',
+        'https://api.sodax.com/v1/be/moneymarket/asset/all',
         expect.objectContaining({ method: 'GET' }),
       );
       expect(result).toEqual(mockData);
@@ -258,7 +258,7 @@ describe('BackendApiService', () => {
       const result = await backendApiService.getAllMoneyMarketBorrowers({ offset: '0', limit: '10' });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://apiv1.coolify.iconblockchain.xyz/moneymarket/borrowers?offset=0&limit=10',
+        'https://api.sodax.com/v1/be/moneymarket/borrowers?offset=0&limit=10',
         expect.objectContaining({ method: 'GET' }),
       );
       expect(result).toEqual(mockData);
@@ -281,7 +281,7 @@ describe('BackendApiService', () => {
       const result = await backendApiService.getAllMoneyMarketBorrowers({ offset: '20', limit: '5' });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://apiv1.coolify.iconblockchain.xyz/moneymarket/borrowers?offset=20&limit=5',
+        'https://api.sodax.com/v1/be/moneymarket/borrowers?offset=20&limit=5',
         expect.objectContaining({ method: 'GET' }),
       );
       expect(result).toEqual(mockData);
@@ -312,7 +312,7 @@ describe('BackendApiService', () => {
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `https://apiv1.coolify.iconblockchain.xyz/moneymarket/asset/${reserveAddress}/borrowers?offset=0&limit=10`,
+        `https://api.sodax.com/v1/be/moneymarket/asset/${reserveAddress}/borrowers?offset=0&limit=10`,
         expect.objectContaining({ method: 'GET' }),
       );
       expect(result).toEqual(mockData);
@@ -343,7 +343,7 @@ describe('BackendApiService', () => {
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `https://apiv1.coolify.iconblockchain.xyz/moneymarket/asset/${reserveAddress}/suppliers?offset=0&limit=10`,
+        `https://api.sodax.com/v1/be/moneymarket/asset/${reserveAddress}/suppliers?offset=0&limit=10`,
         expect.objectContaining({ method: 'GET' }),
       );
       expect(result).toEqual(mockData);
@@ -383,7 +383,7 @@ describe('BackendApiService', () => {
     it('should return base URL', () => {
       const baseURL = backendApiService.getBaseURL();
 
-      expect(baseURL).toBe('https://apiv1.coolify.iconblockchain.xyz');
+      expect(baseURL).toBe('https://api.sodax.com/v1/be');
     });
   });
 });
