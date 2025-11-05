@@ -7,19 +7,26 @@ export const headerVariants = {
   },
   closed: {
     opacity: 0,
-    transition: { duration: 1 },
+    transition: { duration: 0.5 },
   },
 };
 
 export const contentVariants = {
   open: {
     opacity: 1,
-    transition: { duration: 3, delay: 0.5, y: { stiffness: 1000, velocity: -100 } },
+    transition: {
+      duration: 3,
+      delay: 0.5,
+      y: { stiffness: 1000, velocity: -100, ease: [0, 0.71, 0.2, 1.01], duration: 1 },
+    },
     y: 0,
   },
   closed: {
-    opacity: 0.5,
-    transition: { duration: 1, y: { stiffness: 1000 } },
+    opacity: 1,
+    transition: {
+      duration: 3,
+      y: { stiffness: 1000, duration: 1, ease: [0.8, -0.01, 0.29, 1] },
+    },
     y: '75vh',
   },
 };
@@ -27,19 +34,19 @@ export const contentVariants = {
 export const mainContentVariants = {
   open: {
     opacity: 1,
-    y: 0,
     transition: {
-      opacity: { delay: 0.5, duration: 0.3 },
-      y: { delay: 0.5, duration: 0.2, velocity: -100 },
+      opacity: { delay: 0.3, duration: 0.2 },
+      y: { delay: 0.3, velocity: -500, duration: 0.3 },
     },
+    y: 0,
   },
   closed: {
-    opacity: 0.5,
-    y: '75vh',
+    opacity: 1,
     transition: {
-      duration: 1,
-      y: { stiffness: 1000 },
+      duration: 3,
+      y: { stiffness: 1000, duration: 1, delay: 0.1, ease: [0.8, -0.01, 0.29, 1] },
     },
+    y: '75vh',
   },
 };
 
