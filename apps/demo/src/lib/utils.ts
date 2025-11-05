@@ -1,7 +1,13 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { type AggregatedReserveData, SolverIntentStatusCode, type SpokeChainId, type UserReserveData, type XToken } from '@sodax/sdk';
+import {
+  type AggregatedReserveData,
+  SolverIntentStatusCode,
+  type SpokeChainId,
+  type UserReserveData,
+  type XToken,
+} from '@sodax/sdk';
 import { getSpokeTokenAddressByVault } from '@sodax/dapp-kit';
 
 export function cn(...inputs: ClassValue[]) {
@@ -95,9 +101,13 @@ export function findReserveByUnderlyingAsset(
   return reserve;
 }
 
-export  function findUserReserveBySpokeTokenAddress(userReserves: readonly UserReserveData[], selectedChainId: SpokeChainId, token: XToken): UserReserveData {
+export function findUserReserveBySpokeTokenAddress(
+  userReserves: readonly UserReserveData[],
+  selectedChainId: SpokeChainId,
+  token: XToken,
+): UserReserveData {
   const result = userReserves.find(
-    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase()
+    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase(),
   );
 
   if (!result) {
@@ -105,3 +115,14 @@ export  function findUserReserveBySpokeTokenAddress(userReserves: readonly UserR
   }
   return result;
 }
+
+// Utility function to format numbers according to specified rules
+export const formatBalance = (amount: string, price: number): string => {
+  if (!amount || amount === '') return '';
+
+  const decimals = price >= 10000 ? 6 : 4;
+  if (new BigNumber(amount).isZero()) {
+    return '0';
+  }
+  return new BigNumber(amount).decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed(decimals);
+};

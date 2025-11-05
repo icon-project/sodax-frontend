@@ -43,6 +43,7 @@ import {
   useXAccount,
   useXDisconnect,
   useWalletProvider,
+  useXBalances,
 } from '@sodax/wallet-sdk-react';
 import {
   type ChainId,
@@ -52,6 +53,7 @@ import {
   type ChainType,
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
+  type XToken,
 } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 
@@ -62,20 +64,50 @@ export default function SwapCard({
     value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>,
   ) => void;
 }) {
+  //chain and account states
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
   const sourceWalletProvider = useWalletProvider(sourceChain);
   const sourceProvider = useSpokeProvider(sourceChain, sourceWalletProvider);
+
   const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const destAccount = useXAccount(destChain);
+
+  // Wallet and swap hooks
   const { openWalletModal } = useAppStore();
   const { mutateAsync: swap } = useSwap(sourceProvider);
+
+  // Token and amount states
   const [sourceToken, setSourceToken] = useState<Token | undefined>(getSupportedSolverTokens(ICON_MAINNET_CHAIN_ID)[0]);
   const [destToken, setDestToken] = useState<Token | undefined>(getSupportedSolverTokens(POLYGON_MAINNET_CHAIN_ID)[0]);
+
+  // Balance fetching- Fetch source token balance for the connected wallet
+  const { data: balances } = useXBalances({
+    xChainId: sourceChain,
+    xTokens: sourceToken ? [sourceToken as XToken] : [],
+    address: sourceAccount.address,
+  });
+  const sourceTokenBalance = balances?.[sourceToken?.address ?? ''] ?? 0n;
+
+  // Fetch destination token balance for the connected wallet
+  const { data: destBalances } = useXBalances({
+    xChainId: destChain,
+    xTokens: destToken ? [destToken as XToken] : [],
+    address: destAccount.address,
+  });
+  const destTokenBalance = destBalances?.[destToken?.address ?? ''] ?? 0n;
+
+  // Swap amount and intent payload states
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
+
+  // ===== APPROVAL MANAGEMENT =====
+  // Check if token spending is approved for the swap
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceProvider);
+
+  // ===== STELLAR TRUSTLINE CHECK =====
+  // For Stellar chains, verify trustline exists for the destination token
   const destProvider = useSpokeProvider(destChain, useWalletProvider(destChain));
   const {
     data: hasSufficientTrustline,
@@ -298,6 +330,12 @@ export default function SwapCard({
             </SelectContent>
           </Select>
         </div>
+        <div className="mix-blend-multiply text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex gap-1">
+          <span className="hidden sm:inline">Balance:</span>
+          <span className="inline">
+            {Number(formatUnits(sourceTokenBalance, sourceToken?.decimals ?? 0)).toFixed(4)}
+          </span>
+        </div>
         <div className="flex-grow">
           <Label htmlFor="fromAddress">Source address</Label>
           <div className="flex items-center gap-2">
@@ -348,6 +386,10 @@ export default function SwapCard({
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="mix-blend-multiply text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex gap-1">
+          <span className="hidden sm:inline">Balance:</span>
+          <span className="inline">{Number(formatUnits(destTokenBalance, destToken?.decimals ?? 0)).toFixed(4)}</span>
         </div>
         <div className="flex-grow">
           <Label htmlFor="toAddress">Destination address</Label>
