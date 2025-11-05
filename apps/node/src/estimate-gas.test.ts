@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Hex, ICON_MAINNET_CHAIN_ID, IconSpokeProvider, Sodax, SONIC_MAINNET_CHAIN_ID, spokeChainConfig, SpokeService } from '@sodax/sdk';
+import { type Hex, ICON_MAINNET_CHAIN_ID, IconSpokeProvider, Sodax, SONIC_MAINNET_CHAIN_ID, spokeChainConfig, SpokeService } from '@sodax/sdk';
 import { EvmWalletProvider, IconWalletProvider } from '@sodax/wallet-sdk-core';
 
 const sodax = new Sodax();
