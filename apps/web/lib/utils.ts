@@ -7,7 +7,7 @@ import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, supportedSpokeChains, isLegacybnUSDToken, isNewbnUSDToken } from '@sodax/sdk';
+import { getSupportedSolverTokens, isLegacybnUSDToken, isNewbnUSDToken, supportedSpokeChains } from '@sodax/sdk';
 import type { XToken, SpokeChainId, Token } from '@sodax/types';
 import { formatUnits } from 'viem';
 
@@ -274,5 +274,8 @@ export const formatBalance = (amount: string, price: number): string => {
   if (!amount || amount === '') return '';
 
   const decimals = price >= 10000 ? 6 : 4;
+  if (new BigNumber(amount).isZero()) {
+    return '0';
+  }
   return new BigNumber(amount).decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed(decimals);
 };

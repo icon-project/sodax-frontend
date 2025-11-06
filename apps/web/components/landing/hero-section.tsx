@@ -8,7 +8,6 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
-import { ArrowRightIcon } from '../icons/arrow-right-icon';
 import { MainCtaButton } from './main-cta-button';
 import { SodaxIcon } from '../icons/sodax-icon';
 import { Separator } from '@radix-ui/react-separator';
@@ -204,7 +203,6 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
             </div>
           </div>
         </div>
-        <ArrowRightIcon className="absolute bottom-[-48px] left-1/2 -translate-x-1/2 rotate-270" fill="#A55C55" />
       </div>
     </div>
   );

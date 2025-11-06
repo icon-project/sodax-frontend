@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { useMMAllowance, useSupply, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import type { AggregatedReserveData } from '@sodax/sdk';
 
-export function SupplyButton({ token }: { token: XToken }) {
+export function SupplyButton({ token, reserve }: { token: XToken, reserve: AggregatedReserveData }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const walletProvider = useWalletProvider(token.xChainId);

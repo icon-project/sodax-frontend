@@ -1,6 +1,5 @@
 import type React from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { ConnectedChainsDisplay } from '@/components/shared/connected-chains-display';
 import { useXAccounts } from '@sodax/wallet-sdk-react';
 import { useModalStore } from '@/stores/modal-store-provider';
@@ -8,10 +7,11 @@ import { MODAL_ID } from '@/stores/modal-store';
 import { SodaxIcon } from '../icons/sodax-icon';
 import { MainCtaButton } from '../landing/main-cta-button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useAppStore } from '@/stores/app-store-provider';
 
 export function Header(): React.JSX.Element {
   const openModal = useModalStore(state => state.openModal);
-
+  const { setIsSwitchingPage } = useAppStore(state => state);
   const xAccounts = useXAccounts();
   const connectedChains = Object.entries(xAccounts).filter(([, account]) => account?.address);
   const connectedWalletsCount = connectedChains.length;
@@ -42,11 +42,12 @@ export function Header(): React.JSX.Element {
 
         <div className="flex justify-end gap-8">
           <div className="hidden lg:flex justify-end items-center gap-4">
-            <Link href="/">
-              <span className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer">
-                About
-              </span>
-            </Link>
+            <span
+              className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
+              onClick={() => setIsSwitchingPage(false)}
+            >
+              About
+            </span>
           </div>
           <div className="inline-flex justify-center items-start relative">
             {connectedWalletsCount >= 1 ? (

@@ -42,7 +42,7 @@ export const useBackendAllMoneyMarketAssets = (): UseQueryResult<MoneyMarketAsse
   return useQuery({
     queryKey: ['backend', 'moneymarket', 'assets', 'all'],
     queryFn: async (): Promise<MoneyMarketAsset[]> => {
-      return sodax.backendApiService.getAllMoneyMarketAssets();
+      return sodax.backendApi.getAllMoneyMarketAssets();
     },
     retry: 3,
   });

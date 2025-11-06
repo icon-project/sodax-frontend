@@ -5,7 +5,6 @@ import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
 import { ScrollAreaPrimitive, ScrollBar } from '@/components/ui/scroll-area';
 import { TokenAsset } from './token-asset';
-import { TokenGroupAsset } from './token-group-asset';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface TokenListProps {
@@ -44,8 +43,21 @@ export function TokenList({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (assetsRef.current && !assetsRef.current.contains(event.target as Node) && clickedAsset !== null) {
-        onClickOutside();
+      // Check if the click is on a network icon or its children
+      const target = event.target as Element;
+      const isNetworkIcon =
+        target.closest('[data-network-icon]') || target.closest('.fixed.pointer-events-auto.z-\\[53\\]');
+
+      if (
+        assetsRef.current &&
+        !assetsRef.current.contains(event.target as Node) &&
+        clickedAsset !== null &&
+        !isNetworkIcon
+      ) {
+        // Add a small delay to allow network icon clicks to process first
+        setTimeout(() => {
+          onClickOutside();
+        }, 10);
       }
     };
 
@@ -88,7 +100,6 @@ export function TokenList({
   const renderTokenSymbol = ({ symbol, tokens }: { symbol: string; tokens: XToken[] }) => {
     const tokenCount = tokens.length;
     const isHovered = shouldApplyHover && hoveredAsset === symbol;
-    const isThisAssetClicked = clickedAsset === symbol;
 
     const shouldBlurOtherAssets = clickedAsset !== null && clickedAsset !== symbol;
 
@@ -102,18 +113,20 @@ export function TokenList({
 
     if (tokenCount > 1) {
       return (
-        <TokenGroupAsset
+        <TokenAsset
           key={symbol}
-          symbol={symbol}
+          name={symbol}
+          isGroup={true}
           tokenCount={tokenCount}
           tokens={tokens}
-          isClicked={isThisAssetClicked}
-          isBlurred={shouldBlurOtherAssets}
-          onClick={(e: React.MouseEvent) => {
-            onAssetClick(e, symbol);
-            setBackdropShow(true);
+          onClick={(e?: React.MouseEvent) => {
+            if (e) {
+              onAssetClick(e, symbol);
+              setBackdropShow(true);
+            }
           }}
           onChainClick={handleChainClick}
+          isClicked={clickedAsset === symbol}
           {...commonProps}
         />
       );
@@ -137,7 +150,7 @@ export function TokenList({
     <>
       {backdropShow && (
         <div
-          className="rounded-[32px] fixed inset-0 z-50"
+          className="rounded-[32px] fixed inset-0 z-[55]"
           onClick={() => {
             setBackdropShow(false);
             setHoveredAsset(null);
@@ -147,7 +160,7 @@ export function TokenList({
       )}
       <ScrollAreaPrimitive.Root
         data-slot="scroll-area"
-        className={showAllAssets ? 'h-[calc(80vh-192px)]' : 'h-[292px]'}
+        className={showAllAssets ? 'h-[calc(80vh-192px)] overflow-hidden' : 'h-[292px]'}
       >
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"

@@ -39,10 +39,11 @@ export function useMMApprove(token: XToken, spokeProvider: SpokeProvider | undef
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
+      const actionBasedDecimals = action === 'withdraw' || action === 'borrow' ? 18 : token.decimals; // withdraw and borrow actions are in aToken decimals
       const allowance = await sodax.moneyMarket.approve(
         {
           token: token.address,
-          amount: parseUnits(amount, token.decimals),
+          amount: parseUnits(amount, actionBasedDecimals),
           action,
         },
         spokeProvider,
