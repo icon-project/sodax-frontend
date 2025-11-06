@@ -1,34 +1,13 @@
-import type { HUB_CHAIN_IDS, CHAIN_IDS, ETHEREUM_MAINNET_CHAIN_ID } from '../constants/index.js';
-import {
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-  HYPEREVM_MAINNET_CHAIN_ID,
-  LIGHTLINK_MAINNET_CHAIN_ID,
-  SOLANA_MAINNET_CHAIN_ID,
+import type {
+  HUB_CHAIN_IDS,
+  CHAIN_IDS,
+  EVM_CHAIN_IDS,
+  ChainIdToIntentRelayChainId,
+  HubVaultSymbols,
+  ETHEREUM_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
-  INJECTIVE_MAINNET_CHAIN_ID,
-  SUI_MAINNET_CHAIN_ID,
-  ICON_MAINNET_CHAIN_ID,
 } from '../constants/index.js';
-
-export const EVM_CHAIN_IDS = [
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
-  HYPEREVM_MAINNET_CHAIN_ID,
-  LIGHTLINK_MAINNET_CHAIN_ID,
-] as const;
+import type { InjectiveNetworkEnv } from '../injective/index.js';
 
 export type HubChainId = (typeof HUB_CHAIN_IDS)[number];
 
@@ -37,19 +16,6 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 export type ChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainType = 'ICON' | 'EVM' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA';
-
-export type EvmSpokeChainId = (typeof EVM_CHAIN_IDS)[number];
-
-export type EvmChainId = (typeof EVM_CHAIN_IDS)[number];
-
-export type GetSpokeChainIdType<T extends ChainType> = T extends 'EVM' ? EvmSpokeChainId : SpokeChainId;
-
-export type BaseSpokeChainInfo<T extends ChainType> = {
-  name: string;
-  id: GetSpokeChainIdType<T>;
-  chainId: string | number;
-  type: T;
-};
 
 export type Chain = {
   id: string | number;
@@ -98,95 +64,203 @@ export type RpcConfig = Partial<{
   [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID ? StellarRpcConfig : string;
 }> & { [ETHEREUM_MAINNET_CHAIN_ID]?: string | undefined };
 
-export const baseChainInfo: Record<ChainId, BaseSpokeChainInfo<ChainType>> = {
-  [SONIC_MAINNET_CHAIN_ID]: {
-    name: 'Sonic',
-    id: SONIC_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 146,
-  },
-  [SOLANA_MAINNET_CHAIN_ID]: {
-    name: 'Solana',
-    id: SOLANA_MAINNET_CHAIN_ID,
-    type: 'SOLANA',
-    chainId: 'solana',
-  },
-  [AVALANCHE_MAINNET_CHAIN_ID]: {
-    name: 'Avalanche',
-    id: AVALANCHE_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 43_114,
-  },
-  [NIBIRU_MAINNET_CHAIN_ID]: {
-    name: 'Nibiru',
-    id: NIBIRU_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 6_900,
-  },
-  [ARBITRUM_MAINNET_CHAIN_ID]: {
-    name: 'Arbitrum',
-    id: ARBITRUM_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 42_161,
-  },
-  [BASE_MAINNET_CHAIN_ID]: {
-    name: 'Base',
-    id: BASE_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 8453,
-  },
-  [OPTIMISM_MAINNET_CHAIN_ID]: {
-    name: 'Optimism',
-    id: OPTIMISM_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 10,
-  },
-  [BSC_MAINNET_CHAIN_ID]: {
-    name: 'BSC',
-    id: BSC_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 56,
-  },
-  [POLYGON_MAINNET_CHAIN_ID]: {
-    name: 'Polygon',
-    id: POLYGON_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 137,
-  },
-  [HYPEREVM_MAINNET_CHAIN_ID]: {
-    name: 'Hyper',
-    id: HYPEREVM_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 999,
-  },
-  [LIGHTLINK_MAINNET_CHAIN_ID]: {
-    name: 'LightLink',
-    id: LIGHTLINK_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 1890,
-  },
-  [INJECTIVE_MAINNET_CHAIN_ID]: {
-    name: 'Injective',
-    id: INJECTIVE_MAINNET_CHAIN_ID,
-    type: 'INJECTIVE',
-    chainId: 'injective-1',
-  },
-  [STELLAR_MAINNET_CHAIN_ID]: {
-    name: 'Stellar',
-    id: STELLAR_MAINNET_CHAIN_ID,
-    type: 'STELLAR',
-    chainId: 'stellar',
-  },
-  [SUI_MAINNET_CHAIN_ID]: {
-    name: 'SUI',
-    id: SUI_MAINNET_CHAIN_ID,
-    type: 'SUI',
-    chainId: 'sui',
-  },
-  [ICON_MAINNET_CHAIN_ID]: {
-    name: 'ICON',
-    id: ICON_MAINNET_CHAIN_ID,
-    type: 'ICON',
-    chainId: '0x1.icon',
-  },
+export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
+export type IntentRelayChainIdMap = Record<ChainId, IntentRelayChainId>;
+export type SpokeChainConfigMap = Record<SpokeChainId, SpokeChainConfig>;
+export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
+export type EvmChainId = (typeof EVM_CHAIN_IDS)[number];
+export type EvmSpokeChainId = (typeof EVM_CHAIN_IDS)[number];
+
+export type GetSpokeChainIdType<T extends ChainType> = T extends 'EVM' ? EvmSpokeChainId : SpokeChainId;
+
+export type BaseSpokeChainInfo<T extends ChainType> = {
+  name: string;
+  id: GetSpokeChainIdType<T>;
+  chainId: string | number;
+
+  type: T;
+};
+
+export type HubAssetInfo = { asset: Address; decimal: number; vault: Address };
+
+export type BaseHubChainConfig<T extends ChainType> = {
+  chain: HubChainInfo<T>;
+  addresses: { [key: string]: Address | string | Uint8Array };
+  supportedTokens: Token[];
+  nativeToken: Address | string;
+};
+
+export type HubChainInfo<T extends ChainType> = {
+  name: string;
+  id: HubChainId;
+  type: T;
+};
+
+export type HubChainConfig = EvmHubChainConfig;
+
+export type AssetInfo = {
+  chainId: bigint;
+  spokeAddress: `0x${string}`;
+};
+
+export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
+  addresses: {
+    assetManager: Address;
+    hubWallet: Address;
+    xTokenManager: Address;
+    icxMigration: Address;
+    balnSwap: Address;
+    sodaToken: Address;
+    sodaVault: Address;
+    stakedSoda: Address;
+    xSoda: Address;
+    stakingRouter: Address;
+  };
+
+  nativeToken: Address;
+  wrappedNativeToken: Address;
+};
+
+export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
+
+export type BaseSpokeChainConfig<T extends ChainType> = {
+  chain: SpokeChainInfo<T>;
+  addresses: { [key: string]: string | Uint8Array };
+  supportedTokens: Record<string, XToken>;
+  nativeToken: string;
+  bnUSD: string;
+};
+
+export type SonicSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
+  addresses: {
+    walletRouter: Address;
+    wrappedSonic: Address;
+  };
+  nativeToken: Address;
+};
+
+export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  chain: SpokeChainInfo<'SOLANA'>;
+  rpcUrl: string;
+  walletAddress: string;
+  nativeToken: string;
+  gasPrice: string;
+};
+
+export type StellarAssetTrustline = {
+  assetCode: string;
+  contractId: string;
+  assetIssuer: string;
+};
+
+export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  horizonRpcUrl: HttpUrl;
+  sorobanRpcUrl: HttpUrl;
+  trustlineConfigs: StellarAssetTrustline[];
+};
+
+export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
+  rpcUrl: string;
+  walletAddress: string;
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  nativeToken: string;
+  prefix: string;
+  gasPrice: string;
+  isBrowser: boolean;
+  networkId: string;
+  network: InjectiveNetworkEnv;
+};
+
+export type EvmSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
+  addresses: {
+    assetManager: Address;
+    connection: Address;
+  };
+  nativeToken: string;
+};
+
+export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
+  addresses: {
+    originalAssetManager: string;
+    assetManagerConfigId: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  rpc_url: string;
+};
+
+export type IconAddress = `hx${string}` | `cx${string}`;
+export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
+  addresses: {
+    assetManager: IconAddress;
+    connection: IconAddress;
+    rateLimit: IconAddress;
+    wICX: `cx${string}`;
+  };
+  nid: Hex;
+};
+
+export type SpokeChainConfig =
+  | EvmSpokeChainConfig
+  | SonicSpokeChainConfig
+  | InjectiveSpokeChainConfig
+  | IconSpokeChainConfig
+  | SuiSpokeChainConfig
+  | StellarSpokeChainConfig
+  | SolanaChainConfig;
+
+export type SolverConfig = {
+  intentsContract: Address; // Intents Contract (Hub)
+  solverApiEndpoint: HttpUrl;
+};
+
+export type MoneyMarketConfig = {
+  uiPoolDataProvider: Address;
+  lendingPool: Address;
+  poolAddressesProvider: Address;
+  bnUSD: Address;
+  bnUSDVault: Address;
+};
+
+export type VaultType = {
+  address: Address; // vault address
+  reserves: Address[]; // hub asset addresses contained in the vault
+};
+
+export type HubAsset = {
+  asset: Address;
+  decimal: number;
+  vault: Address;
+  symbol: string;
+  name: string;
+};
+
+export type TokenInfo = {
+  decimals: number;
+  depositFee: bigint;
+  withdrawalFee: bigint;
+  maxDeposit: bigint;
+  isSupported: boolean;
 };
