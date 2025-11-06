@@ -21,8 +21,6 @@ import {
   spokeChainConfig,
   STELLAR_MAINNET_CHAIN_ID,
   StellarSpokeProvider,
-  supportedSpokeChains,
-  supportedTokensPerChain,
 } from '@sodax/sdk';
 import type { ChainType, SpokeChainId, XToken } from '@sodax/types';
 import {
@@ -60,6 +58,9 @@ export default function BridgePage() {
 
   const [toTokenChainId, setToTokenChainId] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const toAccount = useXAccount(toTokenChainId);
+  const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
+  const supportedTokensPerChain = sodax.config.getSupportedTokensPerChain();
+
 
   // Fetch bridgeable tokens and set toToken when bridgeableTokens is defined
   const { data: bridgeableTokens, isLoading: isLoadingBridgeableTokens } = useGetBridgeableTokens(

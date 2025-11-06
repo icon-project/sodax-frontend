@@ -127,7 +127,7 @@ export function RouteTabs(): React.JSX.Element {
         />
       </div>
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[96px]">
+      <div className="md:hidden fixed -bottom-24 left-0 right-0 z-50 h-[96px]">
         <div className="relative">
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-[96px] flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">

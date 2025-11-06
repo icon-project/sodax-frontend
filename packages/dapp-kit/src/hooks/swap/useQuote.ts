@@ -61,7 +61,7 @@ export const useQuote = (
       if (!payload) {
         return undefined;
       }
-      return sodax.solver.getQuote(payload);
+      return sodax.swap.getQuote(payload);
     },
     enabled: !!payload,
     refetchInterval: 3000,

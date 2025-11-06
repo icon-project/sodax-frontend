@@ -5,9 +5,9 @@ import type { SpokeChainId } from '@sodax/types';
 import {
   EvmSpokeProvider,
   SonicSpokeProvider,
-  findSupportedTokenBySymbol,
   type SpokeProvider,
 } from '@sodax/sdk';
+import { useSodaxContext } from '@sodax/dapp-kit';
 
 /**
  * Hook for getting the SODA token balance of the connected wallet on a specific chain.
@@ -34,10 +34,7 @@ export function useSodaBalance(
   userAddress: string | undefined,
   spokeProvider: SpokeProvider | undefined,
 ): UseQueryResult<bigint, Error> {
-  console.log('useSodaBalance hook called with:');
-  console.log('spokeProvider', spokeProvider);
-  console.log('chainId', chainId);
-  console.log('userAddress', userAddress);
+  const { sodax } = useSodaxContext();
 
   return useQuery({
     queryKey: ['soda-balance', chainId, userAddress],
@@ -46,7 +43,7 @@ export function useSodaBalance(
         return 0n;
       }
 
-      const sodaToken = findSupportedTokenBySymbol(chainId, 'SODA');
+      const sodaToken = sodax.config.findSupportedTokenBySymbol(chainId, 'SODA');
 
       if (!sodaToken) {
         return 0n;
@@ -55,9 +52,6 @@ export function useSodaBalance(
       try {
         // For EVM chains, use the public client to read the balance
         if (spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider) {
-          console.log('Reading SODA balance for EVM chain');
-          console.log('SODA token address:', sodaToken.address);
-          console.log('User address:', userAddress);
           return await spokeProvider.publicClient.readContract({
             address: sodaToken.address as `0x${string}`,
             abi: erc20Abi,

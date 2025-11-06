@@ -38,7 +38,7 @@ export function useCancelSwap(
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
-      return sodax.solver.cancelIntent(intent, spokeProvider, raw);
+      return sodax.swap.cancelIntent(intent, spokeProvider, raw);
     },
   });
 }

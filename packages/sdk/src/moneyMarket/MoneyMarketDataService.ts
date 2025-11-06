@@ -1,4 +1,4 @@
-import type { EvmHubProvider, SpokeProvider } from '../entities/Providers.js';
+import type { EvmHubProvider, SpokeProvider } from '../shared/entities/Providers.js';
 import type {
   AggregatedReserveData,
   BaseCurrencyInfo,
@@ -24,7 +24,7 @@ import {
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
 import type { Address } from '@sodax/types';
-import { deriveUserWalletAddress } from '../utils/shared-utils.js';
+import { deriveUserWalletAddress } from '../shared/utils/shared-utils.js';
 
 export class MoneyMarketDataService {
   public readonly uiPoolDataProviderService: UiPoolDataProviderService;

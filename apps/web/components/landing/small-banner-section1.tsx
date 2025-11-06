@@ -31,7 +31,12 @@ const SmallBannerSection1 = () => {
             variant="outline"
             className="px-6 font-['InterMedium'] cursor-pointer"
             size="lg"
-            onClick={() => router.push('/migrate')}
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setTimeout(() => {
+                router.push('/migrate');
+              }, 500);
+            }}
           >
             Migrate
           </Button>
