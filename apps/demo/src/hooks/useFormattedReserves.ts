@@ -1,11 +1,5 @@
-import {
-  EvmHubProvider,
-  MoneyMarketDataService,
-  type ReservesDataHumanized,
-  type FormatReserveUSDResponse,
-  type ReserveDataWithPrice,
-  type FormatReservesUSDRequest,
-} from '@sodax/sdk';
+import { useSodaxContext } from '@sodax/dapp-kit';
+import type { FormatReserveUSDResponse, ReserveDataWithPrice } from '@sodax/sdk';
 import { useQuery } from '@tanstack/react-query';
 
 // Export this type - it matches exactly what the SDK's formatReserves returns
@@ -16,20 +10,19 @@ export type FormattedReserve = ReserveDataWithPrice & FormatReserveUSDResponse;
  * Returns a fully typed array of formatted reserve data.
  */
 export function useFormattedReserves() {
+  const { sodax } = useSodaxContext();
+
   return useQuery({
     queryKey: ['formatted-reserves'],
     queryFn: async (): Promise<FormattedReserve[]> => {
-      const hubProvider = new EvmHubProvider();
-      const mmDataService = new MoneyMarketDataService(hubProvider);
+      // This is the exact pattern from useUserFormattedSummary
+      const reserves = await sodax.moneyMarket.data.getReservesHumanized();
 
-      const reservesHumanized: ReservesDataHumanized = await mmDataService.getReservesHumanized();
+      const formattedReserves = sodax.moneyMarket.data.formatReservesUSD(
+        sodax.moneyMarket.data.buildReserveDataWithPrice(reserves),
+      );
 
-      const reservesWithPrice: FormatReservesUSDRequest<ReserveDataWithPrice> =
-        mmDataService.buildReserveDataWithPrice(reservesHumanized);
-
-      const formatted: FormattedReserve[] = mmDataService.formatReservesUSD(reservesWithPrice);
-
-      return formatted;
+      return formattedReserves;
     },
   });
 }
