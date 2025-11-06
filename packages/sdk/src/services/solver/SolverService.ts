@@ -848,10 +848,10 @@ export class SolverService {
 
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      invariant(
-        params.srcAddress.toLowerCase() === walletAddress.toLowerCase(),
-        'srcAddress must be the same as wallet address',
-      );
+      // invariant(
+      //   params.srcAddress.toLowerCase() === walletAddress.toLowerCase(),
+      //   'srcAddress must be the same as wallet address',
+      // );
 
       // derive users hub wallet address
       const creatorHubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);

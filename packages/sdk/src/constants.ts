@@ -170,6 +170,7 @@ export const HubVaultSymbols = [
   'sodaS',
   'IbnUSD',
   'sodaHYPE',
+  'sodaNEAR',
 ] as const;
 
 export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
@@ -294,6 +295,13 @@ export const SodaTokens = {
     address: '0x6E81124fC5d2Bf666B16a0A5d90066eBf35c7411',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
+  sodaNEAR: {
+    address: "0xe0734837956AE1BC1F59D8e9Fb01d11f7A54F10F",
+    name: "Soda NEAR",
+    symbol: "sodaNEAR",
+    decimals: 24,
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
 } as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
 
 export const SodaTokensAsHubAssets: Record<
@@ -325,8 +333,8 @@ const hubChainConfig: Record<HubChainId, EvmHubChainConfig> = {
       type: 'EVM',
     },
     addresses: {
-      assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
-      hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
+      assetManager: '0x1B06762a8B9286f6A1B290579834e555a5F60557',
+      hubWallet: '0x103328BFB6321AD198D5dc4075a171f01c0472E5',
       xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
       icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
       balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',
@@ -1265,13 +1273,13 @@ export const spokeChainConfig = {
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
   [NEAR_MAINNET_CHAIN_ID]:{
-    nativeToken:"",
+    nativeToken:"near",
     addresses: {
-      assetManager:"",
-      connection: "",
-      rateLimit: "",
+      assetManager:"asset-manager.sodax-near.testnet",
+      connection: "connectionv3.sodax-near-v2.testnet",
+      rateLimit: "rate-limits.sodax-near.testnet",
       xTokenManager:"",
-      intentFiller:""
+      intentFiller:"intent-filler.sodax-near.testnet"
     },
      chain: {
       id: NEAR_MAINNET_CHAIN_ID,
@@ -1280,15 +1288,22 @@ export const spokeChainConfig = {
     },
     supportedTokens:{
         bnUSD:{
-            address:"",
+            address:"bnusd.sodax-near.testnet",
             symbol:"bnUSD",
             decimals:24,
             name:"BNUSD",
             xChainId:NEAR_MAINNET_CHAIN_ID,
         },
+          NEAR: {
+          address: "NEAR",
+          name: "NEAR",
+          symbol: "NEAR",
+          decimals: 24,
+          xChainId:NEAR_MAINNET_CHAIN_ID,
+        },
     },
-     bnUSD: "",
-     rpc_url:"",
+     bnUSD: "bnusd.sodax-near.testnet",
+     rpc_url:"https://rpc.testnet.near.org",
   } as const satisfies NearSpokeChainConfig,
 } as const;
 
@@ -1472,6 +1487,12 @@ export const hubVaults = {
       '0xc3f020057510ffe10ceb882e1b48238b43d78a5e',
       '0x9d58508ad10d34048a11640735ca5075bba07b35',
       '0xC1df02fb7b1b06bE886592C89F6955387998B2f7',
+    ] as const,
+  },
+  [SodaTokens.sodaNEAR.symbol]: {
+    address: '0xe0734837956AE1BC1F59D8e9Fb01d11f7A54F10F',
+    reserves: [
+      '0x779d309654d099263e9342b87929a6a8a4863c93', // NEAR NEAR hub asset
     ] as const,
   },
   [SodaTokens.sodaHYPE.symbol]: {
@@ -2230,7 +2251,22 @@ export const hubAssets: Record<
       vault: '0x', // no vault yet
     },
   },
-  [NEAR_MAINNET_CHAIN_ID]:{}as const
+  [NEAR_MAINNET_CHAIN_ID]:{
+    [spokeChainConfig[NEAR_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0x779d309654d099263e9342b87929a6a8a4863c93',
+      decimal: 24,
+      symbol: 'NEAR',
+      name: 'NEAR',
+      vault: hubVaults.sodaNEAR.address,
+    },
+    [spokeChainConfig[NEAR_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0xf8877c8b6dc2628fd564ef0a55009e09a7652410',
+      decimal: 24,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: hubVaults.bnUSD.address,
+    },
+  }
 } as const;
 
 export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';

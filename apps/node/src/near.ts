@@ -33,7 +33,7 @@ dotenv.config();
 const privateKey = process.env.NEAR_PRIVATE_KEY as Hex;
 const accountId=process.env.NEAR_ACCOUNT_ID;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
-const HUB_RPC_URL = IS_TESTNET? 'https://sonic-testnet.drpc.org':'https://rpc.soniclabs.com';
+const HUB_RPC_URL = IS_TESTNET? 'https://rpc.testnet.soniclabs.com':'https://rpc.soniclabs.com';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 
 const DEFAULT_SPOKE_RPC_URL = IS_TESTNET
@@ -65,7 +65,7 @@ const hubConfig = {
 } satisfies EvmHubProviderConfig;
 
 const solverConfig = {
-  intentsContract: '0x611d800F24b5844Ea874B330ef4Ad6f1d5812f29',
+  intentsContract: '0x0427eD01190d8a3f441877B36E87cB8E8A2Ace3c',
   solverApiEndpoint: 'https://staging-sodax.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
@@ -127,7 +127,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
       from: walletAddress,
       token,
       amount,
-      data,
+      data:"0x",
     },
     spokeProvider,
     evmHubProvider,
@@ -151,14 +151,16 @@ async function withdrawAsset(
     evmHubProvider,
     spokeProvider.chainConfig.chain.id,
   );
+  console.log(data);
   const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
     walletAddressBytes,
     evmHubProvider,
   );
+  console.log(hubWallet);
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
+  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider, false, true);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -362,11 +364,12 @@ async function fillIntentHubRaw(
   console.log('Input amount:', inputAmount.toString());
   console.log('Output amount:', outputAmount.toString());
 
-  const provider = new ethers.JsonRpcProvider("https://rpc.blaze.soniclabs.com ");
+  const provider = new ethers.JsonRpcProvider("https://rpc.testnet.soniclabs.com ");
 const signer = new ethers.Wallet(evmSpokePrivateKey as string, provider);
+// console.log("SIGNER:",signer);
 
 // --- Contract ABI and Address ---
-const contractAddress = "0x611d800F24b5844Ea874B330ef4Ad6f1d5812f29";
+const contractAddress = "0x0427eD01190d8a3f441877B36E87cB8E8A2Ace3c";
 const contractAbi = [
   "function fillIntent((uint256 intentId,address creator,address inputToken,address outputToken,uint256 inputAmount,uint256 minOutputAmount,uint256 deadline,bool allowPartialFill,uint256 srcChain,uint256 dstChain,bytes srcAddress,bytes dstAddress,address solver,bytes data),uint256,uint256,uint256) external"
 ];

@@ -105,7 +105,7 @@ export class LocalWalletProvider implements INearWalletProvider {
     this.account = new Account(accountId, this.rpcProvider, signer);
   }
   async getWalletAddress(): Promise<string> {
-    return this.account.accountId;
+    return this.getWalletAddressBytes();
   }
   async getWalletAddressBytes(): Promise<Hex> {
     return toHex(Buffer.from(this.account.accountId, 'utf-8'));
