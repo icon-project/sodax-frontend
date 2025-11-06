@@ -1294,6 +1294,13 @@ export const spokeChainConfig = {
         address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         xChainId: ETHEREUM_MAINNET_CHAIN_ID,
       },
+      LL: {
+        symbol: 'LL',
+        name: 'LightLink',
+        decimals: 18,
+        address: '0x0921799CB1d702148131024d18fCdE022129Dc73',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
@@ -2352,6 +2359,7 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const,
 } as const;
 
