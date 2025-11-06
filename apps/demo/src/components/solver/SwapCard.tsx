@@ -276,7 +276,7 @@ export default function SwapCard({
           />
         </div>
         <div className="flex space-x-2">
-          <div className="flex-grow">
+          <div className="grow">
             <Input
               type="number"
               placeholder="0.0"
@@ -300,7 +300,7 @@ export default function SwapCard({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex-grow">
+        <div className="grow">
           <Label htmlFor="fromAddress">Source address</Label>
           <div className="flex items-center gap-2">
             <Input id="fromAddress" type="text" placeholder="" value={sourceAccount.address || ''} disabled={true} />
@@ -327,7 +327,7 @@ export default function SwapCard({
           />
         </div>
         <div className="flex space-x-2">
-          <div className="flex-grow">
+          <div className="grow">
             <Input
               type="number"
               placeholder="0.0"
@@ -351,7 +351,7 @@ export default function SwapCard({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex-grow">
+        <div className="grow">
           <Label htmlFor="toAddress">Destination address</Label>
           <div className="flex items-center gap-2">
             <Input id="toAddress" type="text" value={destAccount.address || ''} placeholder="" disabled={true} />
