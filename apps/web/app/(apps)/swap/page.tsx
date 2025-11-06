@@ -204,6 +204,7 @@ export default function SwapPage() {
         <motion.div
           className="inline-flex flex-col justify-start items-start gap-2 w-full mt-(--layout-space-comfortable)"
           variants={itemVariants}
+          layout={false}
         >
           <div className="relative w-full">
             <CurrencyInputPanel
