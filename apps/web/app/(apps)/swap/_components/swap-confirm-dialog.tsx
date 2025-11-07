@@ -117,6 +117,21 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     }
   };
 
+  const handleSwapConfirm = async (): Promise<void> => {
+    const result = await executeSwap(intentOrderPayload as CreateIntentParams);
+
+    if (!result.ok) {
+      const errorMessage = getSwapErrorMessage(result.error?.code || 'UNKNOWN');
+      setSwapError(errorMessage);
+      setDstTxHash('');
+      return;
+    }
+
+    const [, , intentDeliveryInfo] = result.value;
+    setDstTxHash(intentDeliveryInfo.dstTxHash);
+    setSwapStatus(SolverIntentStatusCode.NOT_STARTED_YET);
+  };
+
   const handleClose = (): void => {
     const isWaitingForSolvedStatus = !!dstTxHash && !swapError;
     if (isWaitingForSolvedStatus || isSwapPending) {
@@ -133,21 +148,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     setApprovalError(null);
     resetSwapExecutionState();
     onClose?.();
-  };
-
-  const handleSwapConfirm = async (): Promise<void> => {
-    const result = await executeSwap(intentOrderPayload as CreateIntentParams);
-
-    if (!result.ok) {
-      const errorMessage = getSwapErrorMessage(result.error?.code || 'UNKNOWN');
-      setSwapError(errorMessage);
-      setDstTxHash('');
-      return;
-    }
-
-    const [, , intentDeliveryInfo] = result.value;
-    setDstTxHash(intentDeliveryInfo.dstTxHash);
-    setSwapStatus(SolverIntentStatusCode.NOT_STARTED_YET);
   };
 
   return (
