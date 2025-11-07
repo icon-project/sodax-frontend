@@ -11,15 +11,13 @@ export function ChainSelector({
 }) {
   return (
     <Select value={selectedChainId} onValueChange={selectChainId}>
-      <SelectTrigger className="w-[200px]">
-        <div className="flex items-center gap-2">
-          <SelectValue placeholder="Select a chain" />
-        </div>
+      <SelectTrigger className="w-[200px] bg-white border-cherry-grey text-cherry-dark hover:border-cherry-soda transition-colors">
+        <SelectValue placeholder="Select a chain" />
       </SelectTrigger>
       <SelectContent>
         {Object.values(baseChainInfo).map(xChain => (
           <SelectItem key={xChain.id} value={xChain.id}>
-            {xChain.name}
+            <div className="flex items-center gap-2">{xChain.name}</div>
           </SelectItem>
         ))}
       </SelectContent>

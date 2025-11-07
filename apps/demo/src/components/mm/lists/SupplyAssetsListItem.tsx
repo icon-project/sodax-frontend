@@ -1,11 +1,9 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken } from '@sodax/types';
-import { SupplyButton } from './SupplyButton';
-import { WithdrawButton } from './WithdrawButton';
-import { BorrowButton } from './BorrowButton';
-import { RepayButton } from './RepayButton';
+import { MoneyMarketActionButton } from './MoneyMarketActionButton';
 import type { AggregatedReserveData } from '@sodax/sdk';
+
 interface SupplyAssetsListItemProps {
   token: XToken;
   walletBalance: string;
@@ -15,33 +13,41 @@ interface SupplyAssetsListItemProps {
 }
 
 export function SupplyAssetsListItem({ token, balance, walletBalance, debt, reserve }: SupplyAssetsListItemProps) {
-  // TODO use ERC20 hook to get the aToken token info as XToken
-  // this is just quickfix
   const aToken: XToken = {
     address: reserve.aTokenAddress,
     decimals: 18,
-    symbol: 'aToken-${token.symbol}',
-    name: 'aToken-${token.name}',
+    symbol: `aToken-${token.symbol}`,
+    name: `aToken-${token.name}`,
     xChainId: token.xChainId,
   };
 
   return (
-    <TableRow>
-      <TableCell>{token.symbol}</TableCell>
-      <TableCell>{walletBalance}</TableCell>
-      <TableCell>{balance}</TableCell>
-      <TableCell>{debt}</TableCell>
+    <TableRow className="hover:bg-cream/30 transition-colors">
       <TableCell>
-        <SupplyButton token={token} reserve={reserve} />
+        <span className="font-medium text-cherry-dark py-4">{token.symbol}</span>
       </TableCell>
       <TableCell>
-        <WithdrawButton token={token} aToken={aToken} reserve={reserve} />
+        <span className="font-mono text-sm text-clay">
+          {walletBalance !== '-' ? Number.parseFloat(walletBalance).toFixed(4) : '-'}
+        </span>
       </TableCell>
       <TableCell>
-        <BorrowButton token={token} aToken={aToken} reserve={reserve} />
+        <span className="font-mono text-sm text-clay">{Number.parseFloat(balance).toFixed(4)}</span>
       </TableCell>
       <TableCell>
-        <RepayButton token={token} reserve={reserve} />
+        <span className="font-mono text-sm text-clay">{Number.parseFloat(debt).toFixed(4)}</span>
+      </TableCell>
+      <TableCell>
+        <MoneyMarketActionButton action="supply" token={token} reserve={reserve} />
+      </TableCell>
+      <TableCell>
+        <MoneyMarketActionButton action="withdraw" token={token} aToken={aToken} reserve={reserve} />
+      </TableCell>
+      <TableCell>
+        <MoneyMarketActionButton action="borrow" token={token} aToken={aToken} reserve={reserve} />
+      </TableCell>
+      <TableCell>
+        <MoneyMarketActionButton action="repay" token={token} reserve={reserve} />
       </TableCell>
     </TableRow>
   );
