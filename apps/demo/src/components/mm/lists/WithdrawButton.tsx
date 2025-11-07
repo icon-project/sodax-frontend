@@ -7,8 +7,9 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@so
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
+import type { AggregatedReserveData } from '@sodax/sdk';
 
-export function WithdrawButton({ token }: { token: XToken }) {
+export function WithdrawButton({ token, aToken, reserve }: { token: XToken, aToken: XToken, reserve: AggregatedReserveData }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const { selectedChainId } = useAppStore();
@@ -16,7 +17,6 @@ export function WithdrawButton({ token }: { token: XToken }) {
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, spokeProvider);
-
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'withdraw', spokeProvider);
   const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);

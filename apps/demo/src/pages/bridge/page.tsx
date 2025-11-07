@@ -21,8 +21,6 @@ import {
   spokeChainConfig,
   STELLAR_MAINNET_CHAIN_ID,
   StellarSpokeProvider,
-  supportedSpokeChains,
-  supportedTokensPerChain,
 } from '@sodax/sdk';
 import type { ChainType, SpokeChainId, XToken } from '@sodax/types';
 import {
@@ -60,6 +58,9 @@ export default function BridgePage() {
 
   const [toTokenChainId, setToTokenChainId] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const toAccount = useXAccount(toTokenChainId);
+  const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
+  const supportedTokensPerChain = sodax.config.getSupportedTokensPerChain();
+
 
   // Fetch bridgeable tokens and set toToken when bridgeableTokens is defined
   const { data: bridgeableTokens, isLoading: isLoadingBridgeableTokens } = useGetBridgeableTokens(
@@ -157,7 +158,7 @@ export default function BridgePage() {
   if (trustlineError) {
     console.error('trustlineError', trustlineError);
   }
-  const { mutateAsync: requestTrustline } = useRequestTrustline(order?.dstAsset);
+  const { requestTrustline } = useRequestTrustline(order?.dstAsset);
 
   const handleBridge = async (order: CreateBridgeIntentParams) => {
     setOpen(false);
@@ -235,7 +236,7 @@ export default function BridgePage() {
             />
           </div>
           <div className="flex space-x-2">
-            <div className="flex-grow">
+            <div className="grow">
               <Input type="number" placeholder="0.0" value={fromAmount} onChange={handleFromAmountChange} />
             </div>
             <Select
@@ -261,7 +262,7 @@ export default function BridgePage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex-grow">
+          <div className="grow">
             <Label htmlFor="fromAddress">Source address</Label>
             <div className="flex items-center gap-2">
               <Input id="fromAddress" type="text" placeholder="" value={fromAccount.address || ''} disabled={true} />
@@ -288,7 +289,7 @@ export default function BridgePage() {
             />
           </div>
           <div className="flex space-x-2">
-            <div className="flex-grow">
+            <div className="grow">
               <Input type="number" placeholder="0.0" value={fromAmount} readOnly />
             </div>
             {isLoadingBridgeableTokens ? (
@@ -316,7 +317,7 @@ export default function BridgePage() {
               </Select>
             )}
           </div>
-          <div className="flex-grow">
+          <div className="grow">
             <Label htmlFor="toAddress">Destination address</Label>
             <div className="flex items-center gap-2">
               <Input id="toAddress" type="text" value={toAccount.address || ''} placeholder="" disabled={true} />

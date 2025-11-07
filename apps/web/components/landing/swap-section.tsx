@@ -2,12 +2,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { ArrowRightIcon } from '../icons/arrow-right-icon';
 
 const SwapSection = () => {
   const router = useRouter();
 
   return (
-    <div className="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white mt-4 pt-14 md:pt-18 relative overflow-hidden section2">
+    <div className="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white mt-4 pt-14 md:pt-18 relative section2">
       <Image
         className="mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[632px] md:w-[765px] max-w-[765px] z-0"
         src="/banner1.png"
@@ -35,11 +36,17 @@ const SwapSection = () => {
           variant="outline"
           className="px-6 font-['InterMedium'] cursor-pointer text-(length:--body-comfortable)"
           size="lg"
-          onClick={() => router.push('/swap')}
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+              router.push('/swap');
+            }, 300);
+          }}
         >
           Swap now
         </Button>
       </div>
+      <ArrowRightIcon className="absolute bottom-[-48px] left-1/2 -translate-x-1/2 rotate-270" fill="#f8f3f3" />
     </div>
   );
 };

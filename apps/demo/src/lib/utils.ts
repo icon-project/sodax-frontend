@@ -1,7 +1,8 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { SolverIntentStatusCode } from '@sodax/sdk';
+import { type AggregatedReserveData, SolverIntentStatusCode, type SpokeChainId, type UserReserveData, type XToken } from '@sodax/sdk';
+import { getSpokeTokenAddressByVault } from '@sodax/dapp-kit';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -81,4 +82,26 @@ export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): st
     return `${hours}h ${minutes}m remaining`;
   }
   return `${minutes}m remaining`;
+}
+
+export function findReserveByUnderlyingAsset(
+  underlyingAsset: string,
+  reserves: readonly AggregatedReserveData[],
+): AggregatedReserveData {
+  const reserve = reserves.find(reserve => reserve.underlyingAsset.toLowerCase() === underlyingAsset.toLowerCase());
+  if (!reserve) {
+    throw new Error(`Reserve not found for underlying asset: ${underlyingAsset}`);
+  }
+  return reserve;
+}
+
+export  function findUserReserveBySpokeTokenAddress(userReserves: readonly UserReserveData[], selectedChainId: SpokeChainId, token: XToken): UserReserveData {
+  const result = userReserves.find(
+    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase()
+  );
+
+  if (!result) {
+    throw new Error(`User reserve not found for spoke token address: ${token.address}`);
+  }
+  return result;
 }

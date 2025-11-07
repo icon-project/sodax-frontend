@@ -1,6 +1,7 @@
 {
   "name": "sodax-demo",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "engines": {
     "node": ">=18.0.0"
@@ -42,26 +43,33 @@
     "react-dom": "^19.0.0",
     "react-router": "^7.6.1",
     "tailwind-merge": "^2.5.4",
-    "tailwindcss-animate": "^1.0.7",
     "viem": "catalog:",
     "web-vitals": "^2.1.4",
     "zustand": "4.5.2"
   },
   "devDependencies": {
     "@bangjelkoski/vite-plugin-node-polyfills": "^0.0.2",
+    "@tailwindcss/vite": "^4.1.16",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
-    "autoprefixer": "^10.4.20",
     "babel-plugin-macros": "3.1.0",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.14",
+    "tailwindcss": "^4.1.16",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "catalog:",
     "vite": "^5.4.11",
     "vite-plugin-svgr": "4.2.0",
     "vite-tsconfig-paths": "4.3.1"
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

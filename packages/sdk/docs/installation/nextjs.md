@@ -147,7 +147,7 @@ export default function Page() {
 
   useEffect(() => {
     const getQuote = async () => {
-      const quote = await sodax.solver.getQuote(payload);
+      const quote = await sodax.swap.getQuote(payload);
       console.log(quote);
     }
     getQuote();

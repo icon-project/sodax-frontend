@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { XToken } from '@sodax/types';
 import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
@@ -15,6 +15,7 @@ import BigNumber from 'bignumber.js';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -27,7 +28,6 @@ interface CurrencyInputPanelProps {
   currencyBalance: bigint;
   inputValue?: string;
   onInputChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onInputFocus?: () => void;
   onMaxClick?: () => void;
   onCurrencyChange?: (currency: XToken) => void;
   className?: string;
@@ -45,7 +45,6 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   currencyBalance,
   inputValue = '',
   onInputChange,
-  onInputFocus,
   onMaxClick,
   onCurrencyChange,
   className = '',
@@ -60,11 +59,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
   const { outputToken } = useSwapState();
-  useEffect(() => {
-    if (type === CurrencyInputPanelType.INPUT && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [type]);
+  const isMobile = useIsMobile();
 
   const handleTokenSelect = (selectedToken: XToken): void => {
     if (onCurrencyChange) {
@@ -96,12 +91,20 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
     outputToken,
   );
 
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    const target = e.target as HTMLElement;
+    if (target.tagName !== 'INPUT' && !target.closest('input')) {
+      inputRef.current?.focus();
+    }
+  };
+
   return (
     <div
       className={`w-full relative rounded-(--layout-container-radius) outline-[#e4dada] justify-between items-center group ${className} outline-2 outline-offset-[-2px] hover:outline-4 hover:outline-offset-[-4px] sm:outline-3 sm:outline-offset-[-3px] sm:hover:outline-5 sm:hover:outline-offset-[-5px] md:outline-4 md:outline-offset-[-4px] md:hover:outline-6 md:hover:outline-offset-[-6px]`}
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
+      onClick={handleContainerClick}
     >
-      <div className="flex inline-flex justify-between w-full">
+      <div className="inline-flex justify-between w-full">
         <div className="inline-flex justify-start items-center gap-(--layout-space-small)">
           <div className="cursor-pointer" onClick={() => setIsTokenSelectorOpen(true)}>
             <CurrencyLogo
@@ -141,8 +144,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             )}
 
             {type === CurrencyInputPanelType.OUTPUT && onSwapAndSendToggle && (
-              <div className="inline-flex justify-start items-center gap-2 w-[40px] md:w-[150px]">
-                <span className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] hidden md:block">
+              <div className="inline-flex justify-start items-center gap-2 w-32 md:w-[150px]">
+                <span className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular']">
                   Swap and send
                 </span>
                 <Switch
@@ -158,13 +161,15 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         <div className="h-12 pr-0 sm:pr-6 inline-flex flex-col justify-center items-end gap-1">
           <div className="text-right justify-center text-espresso font-normal font-['InterRegular'] leading-relaxed">
             <Input
+              autoFocus={type === CurrencyInputPanelType.INPUT && !isMobile}
               type="number"
               ref={inputRef}
               value={type === CurrencyInputPanelType.OUTPUT ? formatBalance(inputValue, usdPrice) : inputValue}
               onChange={onInputChange}
-              onFocus={onInputFocus}
+              onClick={e => e.stopPropagation()}
+              onFocus={e => e.stopPropagation()}
               placeholder="0"
-              className="!text-2xl text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso [&::selection]:bg-cherry-brighter [&::selection]:text-espresso [&::-moz-selection]:bg-cherry-brighter [&::-moz-selection]:text-espresso placeholder:text-espresso"
+              className="!text-2xl text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso [&::selection]:bg-cherry-brighter [&::selection]:text-espresso [&::-moz-selection]:bg-cherry-brighter [&::-moz-selection]:text-espresso placeholder:text-espresso w-32 -ml-32 sm:ml-0 md:w-full !px-0 h-7 rounded-none"
               readOnly={type === CurrencyInputPanelType.OUTPUT}
             />
           </div>
@@ -182,6 +187,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
               placeholder="Enter destination address"
               value={customDestinationAddress}
               onChange={e => handleChange(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              onFocus={e => e.stopPropagation()}
               className={`h-10 flex-1 text-(length:--body-small) border-cream-white focus:!border-cream-white rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 ${!isValidAddress ? 'text-negative focus-visible:text-negative' : ''}`}
             />
           </div>
