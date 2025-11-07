@@ -118,25 +118,21 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   };
 
   const handleClose = (): void => {
-    setApprovalError(null);
-    
-    if (swapStatus === SolverIntentStatusCode.SOLVED) {
-      onClose?.();
-      resetSwapExecutionState();
-      setInputAmount('');
-      return;
-    }
-
     const isWaitingForSolvedStatus = !!dstTxHash && !swapError;
     if (isWaitingForSolvedStatus || isSwapPending) {
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
       return;
     }
+    
+    if (swapStatus === SolverIntentStatusCode.SOLVED) {
+      setInputAmount('');
+    }
 
-    onClose?.();
-    resetSwapExecutionState();
     setIsShaking(false);
+    setApprovalError(null);
+    resetSwapExecutionState();
+    onClose?.();
   };
 
   const handleSwapConfirm = async (): Promise<void> => {
