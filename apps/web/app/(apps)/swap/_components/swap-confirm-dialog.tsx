@@ -54,14 +54,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     swapError,
     swapStatus,
   } = useSwapState();
-  const {
-    setInputAmount,
-    setDstTxHash,
-    setSwapError,
-    setSwapStatus,
-    setAllowanceConfirmed,
-    resetSwapExecutionState,
-  } = useSwapActions();
+  const { setInputAmount, setDstTxHash, setSwapError, setSwapStatus, setAllowanceConfirmed, resetSwapExecutionState } =
+    useSwapActions();
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress || '';
@@ -98,11 +92,15 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     if (dstTxHash && status?.ok) {
       const statusCode = status.value.status;
       setSwapStatus(statusCode);
-      if(statusCode === SolverIntentStatusCode.FAILED) {
+      if (statusCode === SolverIntentStatusCode.SOLVED) {
+        setDstTxHash('');
+      }
+
+      if (statusCode === SolverIntentStatusCode.FAILED) {
         setSwapError({ title: 'Swap failed', message: 'Please try again.' });
       }
     }
-  }, [dstTxHash, status, setSwapStatus, setSwapError]);
+  }, [dstTxHash, status, setSwapStatus, setSwapError, setDstTxHash]);
 
   const handleApprove = async (): Promise<void> => {
     try {
@@ -139,7 +137,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       setTimeout(() => setIsShaking(false), 500);
       return;
     }
-    
+
     if (swapStatus === SolverIntentStatusCode.SOLVED) {
       setInputAmount('');
     }
