@@ -43,7 +43,6 @@ export const useSwapState = () => {
   const customDestinationAddress = useSwapStore(state => state.customDestinationAddress);
   const slippageTolerance = useSwapStore(state => state.slippageTolerance);
   const swapStatus = useSwapStore(state => state.swapStatus);
-  const isSwapSuccessful = useSwapStore(state => state.isSwapSuccessful);
   const swapError = useSwapStore(state => state.swapError);
   const dstTxHash = useSwapStore(state => state.dstTxHash);
   const allowanceConfirmed = useSwapStore(state => state.allowanceConfirmed);
@@ -56,7 +55,6 @@ export const useSwapState = () => {
     customDestinationAddress,
     slippageTolerance,
     swapStatus,
-    isSwapSuccessful,
     swapError,
     dstTxHash,
     allowanceConfirmed,
@@ -73,7 +71,6 @@ export const useSwapActions = () => {
   const switchTokens = useSwapStore(state => state.switchTokens);
   const resetSwapState = useSwapStore(state => state.resetSwapState);
   const setSwapStatus = useSwapStore(state => state.setSwapStatus);
-  const setIsSwapSuccessful = useSwapStore(state => state.setIsSwapSuccessful);
   const setSwapError = useSwapStore(state => state.setSwapError);
   const setDstTxHash = useSwapStore(state => state.setDstTxHash);
   const setAllowanceConfirmed = useSwapStore(state => state.setAllowanceConfirmed);
@@ -89,7 +86,6 @@ export const useSwapActions = () => {
     switchTokens,
     resetSwapState,
     setSwapStatus,
-    setIsSwapSuccessful,
     setSwapError,
     setDstTxHash,
     setAllowanceConfirmed,

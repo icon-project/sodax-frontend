@@ -30,7 +30,7 @@ const SwapButton: React.FC<SwapButtonProps> = ({
   onSwapConfirm,
   isApproving,
 }: SwapButtonProps): React.JSX.Element => {
-  const { inputToken, outputToken, isSwapSuccessful, swapError, allowanceConfirmed, swapStatus, dstTxHash } =
+  const { inputToken, outputToken, swapError, allowanceConfirmed, swapStatus, dstTxHash } =
     useSwapState();
   const { setAllowanceConfirmed } = useSwapActions();
 
@@ -60,7 +60,7 @@ const SwapButton: React.FC<SwapButtonProps> = ({
     }
   }, [hasAllowed, setAllowanceConfirmed]);
 
-  if (isSwapSuccessful) {
+  if (swapStatus === SolverIntentStatusCode.SOLVED) {
     return (
       <div className="flex w-full flex-col gap-4">
         <Button variant="cherry" className="w-full text-white font-semibold font-['InterRegular']" onClick={onClose}>
