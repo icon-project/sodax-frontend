@@ -56,7 +56,7 @@ export const useBackendMoneyMarketAssetSuppliers = (params: {
         return undefined;
       }
 
-      return sodax.backendApiService.getMoneyMarketAssetSuppliers(params.reserveAddress, {
+      return sodax.backendApi.getMoneyMarketAssetSuppliers(params.reserveAddress, {
         offset: params.offset,
         limit: params.limit,
       });

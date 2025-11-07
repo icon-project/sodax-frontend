@@ -44,7 +44,7 @@ export const useBackendIntentByTxHash = (txHash: string | undefined): UseQueryRe
         return undefined;
       }
 
-      return sodax.backendApiService.getIntentByTxHash(txHash);
+      return sodax.backendApi.getIntentByTxHash(txHash);
     },
     enabled: !!txHash && txHash.length > 0,
     retry: 3,

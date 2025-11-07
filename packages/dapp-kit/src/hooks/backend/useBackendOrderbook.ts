@@ -54,7 +54,7 @@ export const useBackendOrderbook = (
         return undefined;
       }
 
-      return sodax.backendApiService.getOrderbook(params);
+      return sodax.backendApi.getOrderbook(params);
     },
     enabled: !!params && !!params.offset && !!params.limit,
     staleTime: 30 * 1000, // 30 seconds for real-time data

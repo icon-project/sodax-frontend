@@ -20,25 +20,29 @@ import {
   waitForTransactionReceipt,
   type EvmSpokeChainConfig,
   EvmSpokeProvider,
-  type EvmChainId
+  type EvmChainId,
 } from '@sodax/sdk';
 
 import { type Address, encodeFunctionData, type Hash, type Hex, toHex } from 'viem';
-import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, INJECTIVE_MAINNET_CHAIN_ID, NEAR_MAINNET_CHAIN_ID, type EvmRawTransaction } from '@sodax/types';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  type SpokeChainId,
+  INJECTIVE_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID,
+  type EvmRawTransaction,
+} from '@sodax/types';
 import dotenv from 'dotenv';
 import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 dotenv.config();
 
 // load PK from .env
 const privateKey = process.env.NEAR_PRIVATE_KEY as Hex;
-const accountId=process.env.NEAR_ACCOUNT_ID;
+const accountId = process.env.NEAR_ACCOUNT_ID;
 const IS_TESTNET = process.env.IS_TESTNET === 'true';
-const HUB_RPC_URL = IS_TESTNET? 'https://sonic-testnet.drpc.org':'https://rpc.soniclabs.com';
+const HUB_RPC_URL = IS_TESTNET ? 'https://sonic-testnet.drpc.org' : 'https://rpc.soniclabs.com';
 const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 
-const DEFAULT_SPOKE_RPC_URL = IS_TESTNET
-  ? 'https://rpc.testnet.near.org'
-  : 'https://rpc.mainnet.near.org';
+const DEFAULT_SPOKE_RPC_URL = IS_TESTNET ? 'https://rpc.testnet.near.org' : 'https://rpc.mainnet.near.org';
 
 const DEFAULT_SPOKE_CHAIN_ID = NEAR_MAINNET_CHAIN_ID;
 
@@ -54,14 +58,13 @@ if (!accountId) {
 
 const spokeConfig = spokeChainConfig[SPOKE_CHAIN_ID] as NearSpokeChainConfig;
 
+const walletProvider = new LocalWalletProvider(SPOKE_RPC_URL, accountId, privateKey);
 
-const walletProvider = new LocalWalletProvider(SPOKE_RPC_URL,accountId,privateKey);
-
-const spokeProvider = new NearSpokeProvider(walletProvider,spokeConfig);
+const spokeProvider = new NearSpokeProvider(walletProvider, spokeConfig);
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
 
 const solverConfig = {
@@ -73,14 +76,14 @@ const solverConfig = {
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const sodax = new Sodax({
-  solver: solverConfig,
+  swap: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
 const evmHubProvider = new EvmHubProvider({
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+  config: hubConfig,
+  configService: sodax.config,
 });
 
 const evmSpokePrivateKey = process.env.EVM_SPOKE_PRIVATE_KEY;
@@ -90,7 +93,7 @@ if (!evmSpokePrivateKey) {
 }
 
 const EVM_SPOKE_CHAIN_ID = (process.env.EVM_SPOKE_CHAIN_ID || 'sonic') as EvmChainId & SpokeChainId;
-const EVM_SPOKE_RPC_URL=HUB_RPC_URL;
+const EVM_SPOKE_RPC_URL = HUB_RPC_URL;
 
 const spokeEvmWallet = new EvmWalletProvider({
   privateKey: evmSpokePrivateKey as Hex,
@@ -101,11 +104,8 @@ const spokeEvmWallet = new EvmWalletProvider({
 const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
 const evmSpokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
-
-
-
 async function depositTo(token: string, amount: bigint, recipient: Address): Promise<void> {
-   const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -119,6 +119,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
       amount,
     },
     spokeProvider.chainConfig.chain.id,
+    sodax.config,
   );
   //const data="0x";
   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
@@ -135,7 +136,6 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
 
   console.log('[depositTo] txHash', txHash);
 }
-
 
 async function withdrawAsset(
   token: string,
@@ -163,12 +163,10 @@ async function withdrawAsset(
   console.log('[withdrawAsset] txHash', txHash);
 }
 
-
 async function getAvailable(token: string) {
   const balance = await SpokeService.getAvailable(token, spokeProvider);
   console.log('[Available]:', balance);
 }
-
 
 async function getLimit(token: string) {
   const balance = await SpokeService.getLimit(token, spokeProvider);
@@ -176,9 +174,8 @@ async function getLimit(token: string) {
 }
 
 async function createIntent(amount: bigint, inputToken: string, outputToken: string) {
-
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddressBytes()) as Address;
-   const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+  const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
     walletAddressBytes,
@@ -200,41 +197,36 @@ async function createIntent(amount: bigint, inputToken: string, outputToken: str
     data: '0x',
   } satisfies CreateIntentParams;
 
-  const txHash = await sodax.solver.createIntent({
+  const txHash = await sodax.swap.createIntent({
     intentParams: intent,
     spokeProvider,
   });
   console.log('[createIntent] txHash', txHash);
 }
 
-async function fillIntent(fill_id:bigint,intent_hash:Hex,token:string,amount:bigint){
-  const receiver= await spokeProvider.walletProvider.getWalletAddress();
-   const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
-   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
+async function fillIntent(fill_id: bigint, intent_hash: Hex, token: string, amount: bigint) {
+  const receiver = await spokeProvider.walletProvider.getWalletAddress();
+  const walletAddressBytes = await spokeProvider.walletProvider.getWalletAddressBytes();
+  const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
     walletAddressBytes,
     evmHubProvider,
   );
-  const fillData= {
+  const fillData = {
     fill_id,
     amount,
     intent_hash,
     receiver,
-    solver:"0xf089255c81c4d3d39b1e0954d9f40359ae50347e",
-    token
-
+    solver: '0xf089255c81c4d3d39b1e0954d9f40359ae50347e',
+    token,
   } as FillData;
-  const txn= await spokeProvider.fillIntent(fillData);
-  const hash= await spokeProvider.submit(txn);
+  const txn = await spokeProvider.fillIntent(fillData);
+  const hash = await spokeProvider.submit(txn);
   console.log(`[TxnHash]:${hash}`);
-  
-
 }
 
-
-
 async function fillIntentHub(
-  fill_id:bigint,
+  fill_id: bigint,
   intentId: bigint,
   inputToken: Address,
   outputToken: Address,
@@ -243,8 +235,7 @@ async function fillIntentHub(
 ) {
   // Get the wallet client and account
   const walletClient = evmSpokeProvider.walletProvider;
-  const walletAddress= await spokeProvider.walletProvider.getWalletAddressBytes();
-
+  const walletAddress = await spokeProvider.walletProvider.getWalletAddressBytes();
 
   // Get the creator's wallet on the hub chain
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
@@ -275,10 +266,10 @@ async function fillIntentHub(
   console.log('Input amount:', inputAmount.toString());
   console.log('Output amount:', outputAmount.toString());
 
-  const evmAccount= await walletClient.getWalletAddress();
+  const evmAccount = await walletClient.getWalletAddress();
 
   try {
-  const rawTx = {
+    const rawTx = {
       from: evmAccount,
       to: solverConfig.intentsContract as `0x${string}`,
       data: encodeFunctionData({
@@ -322,16 +313,16 @@ async function fillIntentHub(
     throw error;
   }
 }
-import * as ethers from "ethers";
+import * as ethers from 'ethers';
 async function fillIntentHubRaw(
-  fill_id:bigint,
+  fill_id: bigint,
   intentId: bigint,
   inputToken: Address,
   outputToken: Address,
   inputAmount: bigint,
-  outputAmount: bigint){
-  const walletAddress= await spokeProvider.walletProvider.getWalletAddressBytes();
-
+  outputAmount: bigint,
+) {
+  const walletAddress = await spokeProvider.walletProvider.getWalletAddressBytes();
 
   // Get the creator's wallet on the hub chain
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
@@ -362,36 +353,28 @@ async function fillIntentHubRaw(
   console.log('Input amount:', inputAmount.toString());
   console.log('Output amount:', outputAmount.toString());
 
-  const provider = new ethers.JsonRpcProvider("https://rpc.blaze.soniclabs.com ");
-const signer = new ethers.Wallet(evmSpokePrivateKey as string, provider);
+  const provider = new ethers.JsonRpcProvider('https://rpc.blaze.soniclabs.com ');
+  const signer = new ethers.Wallet(evmSpokePrivateKey as string, provider);
 
-// --- Contract ABI and Address ---
-const contractAddress = "0x611d800F24b5844Ea874B330ef4Ad6f1d5812f29";
-const contractAbi = [
-  "function fillIntent((uint256 intentId,address creator,address inputToken,address outputToken,uint256 inputAmount,uint256 minOutputAmount,uint256 deadline,bool allowPartialFill,uint256 srcChain,uint256 dstChain,bytes srcAddress,bytes dstAddress,address solver,bytes data),uint256,uint256,uint256) external"
-];
-const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+  // --- Contract ABI and Address ---
+  const contractAddress = '0x611d800F24b5844Ea874B330ef4Ad6f1d5812f29';
+  const contractAbi = [
+    'function fillIntent((uint256 intentId,address creator,address inputToken,address outputToken,uint256 inputAmount,uint256 minOutputAmount,uint256 deadline,bool allowPartialFill,uint256 srcChain,uint256 dstChain,bytes srcAddress,bytes dstAddress,address solver,bytes data),uint256,uint256,uint256) external',
+  ];
+  const contract = new ethers.Contract(contractAddress, contractAbi, signer);
 
-// --- Other Arguments ---
-const _inputAmount = inputAmount;
-const _outputAmount = outputAmount;
-const _externalFillId = fill_id;
+  // --- Other Arguments ---
+  const _inputAmount = inputAmount;
+  const _outputAmount = outputAmount;
+  const _externalFillId = fill_id;
 
-const tx = await contract.fillIntent(
-    intent,
-    _inputAmount,
-    _outputAmount,
-    _externalFillId,
-    {
-      gasLimit: 1_000_000n // or higher if needed
-    }
-  );
+  const tx = await contract.fillIntent(intent, _inputAmount, _outputAmount, _externalFillId, {
+    gasLimit: 1_000_000n, // or higher if needed
+  });
 
-  console.log("Transaction sent:", tx.hash);
+  console.log('Transaction sent:', tx.hash);
   const receipt = await tx.wait();
-  console.log("Transaction confirmed:", receipt.transactionHash);
-
-
+  console.log('Transaction confirmed:', receipt.transactionHash);
 }
 // Main function to decide which function to call
 async function main() {
@@ -408,43 +391,40 @@ async function main() {
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     const recipient = process.argv[5] as Hex; // Get recipient address from command line argument
     await withdrawAsset(token, amount, recipient);
-  }else if (functionName === 'get_limit') {
+  } else if (functionName === 'get_limit') {
     const token = process.argv[3] as string;
     await getLimit(token);
-  }  else if (functionName === 'get_available') {
+  } else if (functionName === 'get_available') {
     const token = process.argv[3] as string;
     await getAvailable(token);
-  }  else if (functionName === 'createIntent') {
-      const amount = BigInt(process.argv[3]); // Get amount from command line argument
-      const inputToken = process.argv[4] as Address; // Get output token address from command line argument
-      const outputToken = process.argv[5] as Address; // Get output token address from command line argument
-      await createIntent(amount, inputToken, outputToken);
-    
-    } else if(functionName==="fillIntent") {
-      const fill_id=BigInt(process.argv[3]);
-      const intent_hash= process.argv[4] as Hex;
-      const token= process.argv[5] as string;
-      const amount= BigInt(process.argv[6]);
-      await fillIntent(fill_id,intent_hash,token,amount);
-
-
-    }else if (functionName === 'fillIntentHub') {
-        const fillId=BigInt(process.argv[3])
-        const intentId = BigInt(process.argv[4]); // Get intent ID from command line argument
-        const inputToken = process.argv[5] as Address; // Get input token address
-        const outputToken = process.argv[6] as Address; // Get output token address
-        const inputAmount = BigInt(process.argv[7]); // Get input amount
-        const outputAmount = BigInt(process.argv[8]); // Get output amount
-        await fillIntentHub(fillId,intentId, inputToken, outputToken, inputAmount, outputAmount);
-      }else if (functionName === 'fillIntentHubRaw') {
-        const fillId=BigInt(process.argv[3])
-        const intentId = BigInt(process.argv[4]); // Get intent ID from command line argument
-        const inputToken = process.argv[5] as Address; // Get input token address
-        const outputToken = process.argv[6] as Address; // Get output token address
-        const inputAmount = BigInt(process.argv[7]); // Get input amount
-        const outputAmount = BigInt(process.argv[8]); // Get output amount
-        await fillIntentHubRaw(fillId,intentId, inputToken, outputToken, inputAmount, outputAmount);
-      }else {
+  } else if (functionName === 'createIntent') {
+    const amount = BigInt(process.argv[3]); // Get amount from command line argument
+    const inputToken = process.argv[4] as Address; // Get output token address from command line argument
+    const outputToken = process.argv[5] as Address; // Get output token address from command line argument
+    await createIntent(amount, inputToken, outputToken);
+  } else if (functionName === 'fillIntent') {
+    const fill_id = BigInt(process.argv[3]);
+    const intent_hash = process.argv[4] as Hex;
+    const token = process.argv[5] as string;
+    const amount = BigInt(process.argv[6]);
+    await fillIntent(fill_id, intent_hash, token, amount);
+  } else if (functionName === 'fillIntentHub') {
+    const fillId = BigInt(process.argv[3]);
+    const intentId = BigInt(process.argv[4]); // Get intent ID from command line argument
+    const inputToken = process.argv[5] as Address; // Get input token address
+    const outputToken = process.argv[6] as Address; // Get output token address
+    const inputAmount = BigInt(process.argv[7]); // Get input amount
+    const outputAmount = BigInt(process.argv[8]); // Get output amount
+    await fillIntentHub(fillId, intentId, inputToken, outputToken, inputAmount, outputAmount);
+  } else if (functionName === 'fillIntentHubRaw') {
+    const fillId = BigInt(process.argv[3]);
+    const intentId = BigInt(process.argv[4]); // Get intent ID from command line argument
+    const inputToken = process.argv[5] as Address; // Get input token address
+    const outputToken = process.argv[6] as Address; // Get output token address
+    const inputAmount = BigInt(process.argv[7]); // Get input amount
+    const outputAmount = BigInt(process.argv[8]); // Get output amount
+    await fillIntentHubRaw(fillId, intentId, inputToken, outputToken, inputAmount, outputAmount);
+  } else {
     console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
   }
 }

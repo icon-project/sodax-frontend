@@ -13,6 +13,7 @@
     "icon": "pnpm run build && node dist/icon.js",
     "near": "pnpm run build && node dist/near.js",
     "bnusd-migration-test": "pnpm run build && node dist/bnusd-migration.test.js",
+    "estimate-gas-test": "pnpm run build && node dist/estimate-gas.test.js",
     "backend-api-test": "pnpm run build && node dist/backend-api.test.js",
     "solana": "pnpm run build && node dist/solana.js",
     "example": "pnpm run build && node dist/examples/injective/index.js",

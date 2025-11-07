@@ -95,19 +95,31 @@ Current Relayer API endpoints:
 
 ## Usage
 
-The Sodax SDK is initialized by creating a new `Sodax` instance with your desired configuration. The SDK supports both Solver (for intent-based swaps) and Money Market (for cross-chain lending and borrowing) services.
+The Sodax SDK is initialized by creating a new `Sodax` instance with your desired configuration. The SDK supports both Swaps (for intent-based solver swaps) and Money Market (for cross-chain lending and borrowing) services.
 
-Both Solver and Money Market configuration and optional. You can always choose to use just a specific feature.
+Both Swaps (Solver) and Money Market configuration and optional. You can always choose to use just a specific feature.
 
 ### Basic Configuration
 
 ```typescript
+import { Sodax } from '@sodax/sdk';
+
 // Initialize Sodax using default Sonic mainnet configurations (no fees)
 const sodax = new Sodax();
 
-// Use default config but put fee on solver (intent swaps)
-const sodaxWithSolverFees = new Sodax({
-  solver: { partnerFee: partnerFeePercentage },
+// If you want dynamic (backend API based - contains latest tokens) configuration,
+// make sure to initialize the instance before usage!
+// By default, configuration from the specific SDK version you are using is used
+await sodax.initialize();
+
+// Use default config but put fee on swaps (solver intent swaps)
+const partnerFeePercentage = {
+  address: '0x0000000000000000000000000000000000000000', // address to receive fee
+  percentage: 100, // 100 = 1%, 10000 = 100%
+};
+
+const sodaxWithSwapFees = new Sodax({
+  swap: { partnerFee: partnerFeePercentage },
 });
 
 // Use default config with fee on money market (borrows)
@@ -115,122 +127,171 @@ const sodaxWithMoneyMarketFees = new Sodax({
   moneyMarket: { partnerFee: partnerFeePercentage },
 });
 
-// or use default config with fees on both solver and money market
+// Or use default config with fees on both swaps and money market
 const sodaxWithFees = new Sodax({
-  solver: { partnerFee: partnerFeePercentage },
+  swap: { partnerFee: partnerFeePercentage },
   moneyMarket: { partnerFee: partnerFeePercentage },
 });
 ```
 
 ### Custom Configuration
 
-Sodax SDK can be customized for partner fee, solver or money market configuration.
+Sodax SDK can be customized for partner fee, swaps or money market configuration.
 
 ```typescript
 import {
   Sodax,
   PartnerFee,
   SolverConfigParams,
+  MoneyMarketConfigParams,
+  EvmHubProviderConfig,
   getSolverConfig,
   getMoneyMarketConfig,
+  getHubChainConfig,
+  SONIC_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
 
 // Partner fee can be defined as a percentage or a definite token amount.
 // Fee is optional, you can leave it empty/undefined.
 const partnerFeePercentage = {
-  address: '0x0000000000000000000000000000000000000000', // address to receive fee too
+  address: '0x0000000000000000000000000000000000000000', // address to receive fee
   percentage: 100, // 100 = 1%, 10000 = 100%
 } satisfies PartnerFee;
 
 const partnerFeeAmount = {
-  address: '0x0000000000000000000000000000000000000000', // address to receive fee too
+  address: '0x0000000000000000000000000000000000000000', // address to receive fee
   amount: 1000n, // definite amount denominated in token decimal precision
 } satisfies PartnerFee;
 
 // Solver config is optional and is required only if you want to use intent based swaps.
 // You can either use custom solver config or the default one (based on hub chain id - defaults to Sonic chain as hub)
 
-// example of custom solver config
+// Example of custom solver config
 const customSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: partnerFeePercentage, // or partnerFeeAmount
 } satisfies SolverConfigParams;
 
-// pre-defined default solver config per hub chain id (Sonic hub is the default)
+// Pre-defined default solver config per hub chain id (Sonic hub is the default)
 const solverConfig: SolverConfigParams = getSolverConfig(SONIC_MAINNET_CHAIN_ID);
 
-  // example of custom money market config
+// Example of custom money market config
 const customMoneyMarketConfig = {
   lendingPool: '0x553434896D39F867761859D0FE7189d2Af70514E',
   uiPoolDataProvider: '0xC04d746C38f1E51C8b3A3E2730250bbAC2F271bf',
   poolAddressesProvider: '0x036aDe0aBAA4c82445Cb7597f2d6d6130C118c7b',
   bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38',
   bnUSDVault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
-} satisfies MoneyMarketConfig;
+} satisfies MoneyMarketConfigParams;
 
-// pre-defined default money market config per hub chain id (Sonic hub is the default)
+// Pre-defined default money market config per hub chain id (Sonic hub is the default)
 const moneyMarketConfig = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID);
 
-// example of custom hub config
+// Example of custom hub config
 const hubConfig = {
   hubRpcUrl: 'https://rpc.soniclabs.com',
   chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
 } satisfies EvmHubProviderConfig;
 
-
 // Initialize Sodax using custom/default configurations
 const sodax = new Sodax({
-  solver: solverConfig,
+  swap: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 });
+
+// Initialize with dynamic configuration (recommended for latest tokens/chains)
+await sodax.initialize();
 ```
 
 ### Using SDK Config and Constants
 
-SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
+SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume. All configurations are accessible through the `config` property of the Sodax instance (`sodax.config`), or through service-specific properties for convenience.
 
-**NOTE** you should generally only use `spokeChains` configuration to retrieve all supported chains and then invoke per spoke chain based configurations. If you are using hub configurations you should know what you are doing.
+**NOTE**: You should generally only use spoke chains configuration to retrieve all supported chains and then invoke per spoke chain based configurations. If you are using hub configurations you should know what you are doing.
 
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for more.
+**IMPORTANT**: If you want dynamic (backend API based - contains latest tokens) configuration, make sure to initialize the instance before usage:
+```typescript
+await sodax.initialize();
+```
+By default, configuration from the specific SDK version you are using is used.
+
+#### General Configuration (sodax.config)
 
 ```typescript
-import {
-  getHubChainConfig,
-  supportedHubAssets,
-  supportedHubChains,
-  supportedSpokeChains,
-  spokeChainConfig,
-  getSupportedSolverTokens,
-  moneyMarketReserveAssets,
-} from "@sodax/sdk";
+import { Sodax, type SpokeChainId, type HubChainId } from "@sodax/sdk";
 
-const hubChainConfig = getHubChainConfig(SONIC_MAINNET_CHAIN_ID);
+const sodax = new Sodax();
+await sodax.initialize(); // Initialize for dynamic config (optional but recommended)
 
-// all supported hub chains (Sonic mainnet and testnet)
-export const hubChains: HubChainId[] = supportedHubChains;
+// All supported hub chains (Sonic mainnet and testnet)
+const hubChains: HubChainId[] = sodax.config.getSupportedHubChains();
 
-// all supported spoke chains
-export const spokeChains: SpokeChainId[] = supportedSpokeChains;
+// All supported spoke chains
+const spokeChains: SpokeChainId[] = sodax.config.getSupportedSpokeChains();
 
-// all hub assets (original asset addresses mapped to "Abstracted evm addresses")
-export const hubAssets: Set<Address> = supportedHubAssets;
+// Get all chains configuration
+const chains = sodax.config.getChains();
 
-// all money market reserve addresses on hub chain (sonic)
-export const moneyMarketReserves = moneyMarketReserveAssets;
+// Get hub assets configuration
+const hubAssets = sodax.config.getHubAssets();
 
-// record mapping spoke chain Id to spoke chain configs
-export spokeChainConfigRecord : Record<SpokeChainId, SpokeChainConfig> = spokeChainConfig;
+// Get hub vaults configuration
+const hubVaults = sodax.config.getHubVaults();
 
-// using spoke chain id to retrieve supported tokens for solver (intent swaps)
-const supportedSolverTokens: readonly Token[] = getSupportedSolverTokens(spokeChainId);
+// Get money market reserve assets
+const moneyMarketReserves = sodax.config.getMoneyMarketReserveAssets();
 
-// using spoke chain id to retrieve supported tokens address (on spoke chain = original address) for money market
-const supportedMoneyMarketTokens: readonly Token[] = getSupportedMoneyMarketTokens(spokeChainId)
+// Check if a token is valid for a given chain
+const isValid = sodax.config.isValidOriginalAssetAddress(chainId, tokenAddress);
 
-// checkout constants.ts for all configs available
+// Get hub asset info for a given chain and original asset
+const hubAssetInfo = sodax.config.getHubAssetInfo(chainId, tokenAddress);
 ```
+
+#### Swap Configuration (sodax.swap)
+
+```typescript
+import { Sodax, type SpokeChainId, type Token } from "@sodax/sdk";
+
+const sodax = new Sodax();
+await sodax.initialize(); // Initialize for dynamic config (optional but recommended)
+
+// Get supported swap tokens for a specific chain
+const supportedSwapTokens: readonly Token[] = sodax.swap.getSupportedSwapTokensByChainId(chainId);
+
+// Get all supported swap tokens per chain
+const allSwapTokens: Record<SpokeChainId, readonly Token[]> = sodax.swap.getSupportedSwapTokens();
+
+// Alternative: Access through config service
+const swapTokensFromConfig: readonly Token[] = sodax.config.getSupportedSwapTokensByChainId(chainId);
+const allSwapTokensFromConfig = sodax.config.getSupportedSwapTokens();
+```
+
+#### Money Market Configuration (sodax.moneyMarket)
+
+```typescript
+import { Sodax, type SpokeChainId, type Token, type Address } from "@sodax/sdk";
+
+const sodax = new Sodax();
+await sodax.initialize(); // Initialize for dynamic config (optional but recommended)
+
+// Get supported money market tokens for a specific chain
+const supportedMoneyMarketTokens: readonly Token[] = sodax.moneyMarket.getSupportedTokensByChainId(chainId);
+
+// Get all supported money market tokens
+const allMoneyMarketTokens = sodax.moneyMarket.getSupportedTokens();
+
+// Get supported money market reserves
+const reserves: readonly Address[] = sodax.moneyMarket.getSupportedReserves();
+
+// Alternative: Access through config service
+const moneyMarketTokensFromConfig: readonly Token[] = sodax.config.getSupportedMoneyMarketTokensByChainId(chainId);
+const allMoneyMarketTokensFromConfig = sodax.config.getSupportedMoneyMarketTokens();
+```
+
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for additional static constants and configurations.
 
 ### Wallet Providers
 
@@ -273,20 +334,20 @@ const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
 The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for all Sodax operations (swaps, money market operations, approvals) to provide users with accurate gas estimates.
 
 The function is available on all service classes:
-- `SolverService.estimateGas()` - for solver/intent operations (reachable through `sodax.solver`)
+- `SwapService.estimateGas()` - for solver/intent operations (reachable through `sodax.swap`)
 - `MoneyMarketService.estimateGas()` - for money market operations (reachable through `sodax.moneyMarket`)
 - `SpokeService.estimateGas()` - for general spoke chain operations
 
 ```typescript
 import { 
-  SolverService, 
+  SwapService, 
   MoneyMarketService, 
   SpokeService,
   MoneyMarketSupplyParams 
 } from "@sodax/sdk";
 
 // Example: Estimate gas for a solver swap transaction
-const createIntentResult = await sodax.solver.createIntent(
+const createIntentResult = await sodax.swap.createIntent(
   createIntentParams,
   bscSpokeProvider,
   partnerFeeAmount,
@@ -297,7 +358,7 @@ if (createIntentResult.ok) {
   const [rawTx, intent] = createIntentResult.value;
   
   // Estimate gas for the raw transaction
-  const gasEstimate = await SolverService.estimateGas(rawTx, bscSpokeProvider);
+  const gasEstimate = await SwapService.estimateGas(rawTx, bscSpokeProvider);
   
   if (gasEstimate.ok) {
     console.log('Estimated gas for swap:', gasEstimate.value);
@@ -327,7 +388,7 @@ if (supplyResult.ok) {
 }
 
 // Example: Estimate gas for an approval transaction
-const approveResult = await sodax.solver.approve(
+const approveResult = await sodax.swap.approve(
   tokenAddress,
   amount,
   bscSpokeProvider,
@@ -351,8 +412,8 @@ if (approveResult.ok) {
 ### Accessing Sodax Features
 
 Sodax feature set currently contain:
-- Solver: used for intent based swaps. Please find documentation for Solver part of the SDK in [SOLVER.md](./docs/SOLVER.md)
-- Money Market: used for lending and borowing. Please find documentation for Solver part of the SDK in [MONEY_MARKET.md](./docs/MONEY_MARKET.md)
+- Swap (Solver): used for intent based swaps. Please find documentation for Swaps part of the SDK in [SWAPS.md](./docs/SWAPS.md)
+- Money Market: used for lending and borowing. Please find documentation for Money Market part of the SDK in [MONEY_MARKET.md](./docs/MONEY_MARKET.md)
 - Bridge: provides functionality to bridge tokens between different blockchain chains [BRIDGE.md](./docs/BRIDGE.md)
 - Staking: provides functionality to stake SODA tokens from different blockchain chains [STAKING.md](./docs/STAKING.md)
 
