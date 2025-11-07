@@ -102,7 +102,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
         setSwapError({ title: 'Swap failed', message: 'Please try again.' });
       }
     }
-  }, [dstTxHash, status, setSwapStatus]);
+  }, [dstTxHash, status, setSwapStatus, setSwapError]);
 
   const handleApprove = async (): Promise<void> => {
     try {
