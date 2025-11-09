@@ -25,7 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const isMobile = useIsMobile();
   const { fromLanding } = useAppStore(state => state);
   const { setFromLanding } = useAppStore(state => state);
-  console.log('fromLanding', fromLanding);
+
   useLayoutEffect(() => {
     const calculateHeight = (): void => {
       if (pathname !== '/' && ref.current) {
