@@ -23,8 +23,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const [height, setHeight] = useState(0);
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const { fromLanding } = useAppStore(state => state);
-  const { setFromLanding } = useAppStore(state => state);
+  const { triggerAnimation } = useAppStore(state => state);
+  const { setTriggerAnimation } = useAppStore(state => state);
 
   useLayoutEffect(() => {
     const calculateHeight = (): void => {
@@ -37,10 +37,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
-    if (fromLanding) {
-      setFromLanding(false);
+    if (triggerAnimation) {
+      setTriggerAnimation(false);
     }
-  }, [fromLanding, setFromLanding]);
+  }, [triggerAnimation, setTriggerAnimation]);
 
   return (
     <SwapStoreProvider>
@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div className="min-h-screen w-[100%] overflow-hidden">
             <motion.div
               variants={headerVariants}
-              initial={!fromLanding ? 'open' : 'closed'}
+              initial={!triggerAnimation ? 'open' : 'closed'}
               animate={isSwitchingPage ? 'open' : 'closed'}
               layout
             >
@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
             <motion.div
               variants={contentVariants}
-              initial={!fromLanding ? 'open' : { y: '300px' }}
+              initial={!triggerAnimation ? 'open' : { y: '300px' }}
               animate={isSwitchingPage ? 'open' : 'closed'}
               className="bg-cream-white relative min-h-[calc(100vh-240px)]"
               style={{ height: !isMobile ? height - 136 : height - 40 }}
@@ -70,7 +70,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <div className="w-full lg:w-[1024px] lg:max-w-[1024px] absolute md:-top-34 -top-36 left-1/2 -translate-x-1/2">
                 <motion.div
                   variants={mainContentVariants}
-                  initial={!fromLanding ? 'open' : { y: 30, opacity: 0 }}
+                  initial={!triggerAnimation ? 'open' : { y: 30, opacity: 0 }}
                   animate={isSwitchingPage ? 'open' : 'closed'}
                   className="flex justify-center items-start min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)]"
                   layout
