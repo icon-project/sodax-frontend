@@ -2,10 +2,11 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useAppStore } from '@/stores/app-store-provider';
 
 const SmallBannerSection1 = () => {
   const router = useRouter();
-
+  const { setFromLanding } = useAppStore(state => state);
   return (
     <div className="flex flex-col lg:flex-row">
       <div className="w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-almost-white h-[440px] sm:h-[480px] md:h-[480px] mt-4 lg:mr-4 relative z-1">
@@ -35,6 +36,7 @@ const SmallBannerSection1 = () => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               setTimeout(() => {
                 router.push('/migrate');
+                setFromLanding(true);
               }, 500);
             }}
           >
