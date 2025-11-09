@@ -4,25 +4,25 @@ import type { ChainType } from '@sodax/types';
 export type AppState = {
   primaryChainType: ChainType;
   isSwitchingPage: boolean;
-  triggerAnimation: boolean;
+  shouldTriggerAnimation: boolean;
 };
 
 export type AppActions = {
   setPrimaryChainType: (primaryChainType: ChainType) => void;
   setIsSwitchingPage: (isSwitchingPage: boolean) => void;
-  setTriggerAnimation: (triggerAnimation: boolean) => void;
+  setShouldTriggerAnimation: (shouldTriggerAnimation: boolean) => void;
 };
 
 export type AppStore = AppState & AppActions;
 
 export const initAppStore = (): AppState => {
-  return { primaryChainType: 'EVM', isSwitchingPage: true, triggerAnimation: false };
+  return { primaryChainType: 'EVM', isSwitchingPage: true, shouldTriggerAnimation: false };
 };
 
 export const defaultInitState: AppState = {
   primaryChainType: 'EVM',
   isSwitchingPage: true,
-  triggerAnimation: false,
+  shouldTriggerAnimation: false,
 };
 
 export const createAppStore = (initState: AppState = defaultInitState) => {
@@ -47,11 +47,11 @@ export const createAppStore = (initState: AppState = defaultInitState) => {
       });
     },
 
-    setTriggerAnimation: (triggerAnimation: boolean) => {
+    setShouldTriggerAnimation: (shouldTriggerAnimation: boolean) => {
       set(prevState => {
         return {
           ...prevState,
-          triggerAnimation,
+          shouldTriggerAnimation,
         };
       });
     },

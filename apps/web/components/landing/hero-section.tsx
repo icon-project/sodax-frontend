@@ -34,7 +34,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
   const carouselRef = useRef(null);
   const [api, setApi] = useState<CarouselApi>();
   const router = useRouter();
-  const { setTriggerAnimation } = useAppStore(state => state);
+  const { setShouldTriggerAnimation } = useAppStore(state => state);
   useEffect(() => {
     if (!api) {
       return;
@@ -100,7 +100,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
               <MainCtaButton
                 onClick={() => {
                   router.push('/swap');
-                  setTriggerAnimation(true);
+                  setShouldTriggerAnimation(true);
                 }}
               >
                 launch apps
@@ -211,7 +211,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
               <MainCtaButton
                 onClick={() => {
                   router.push('/swap');
-                  setTriggerAnimation(true);
+                  setShouldTriggerAnimation(true);
                 }}
               >
                 launch apps

@@ -6,7 +6,7 @@ import { useAppStore } from '@/stores/app-store-provider';
 
 const SmallBannerSection1 = () => {
   const router = useRouter();
-  const { setTriggerAnimation } = useAppStore(state => state);
+  const { setShouldTriggerAnimation } = useAppStore(state => state);
   return (
     <div className="flex flex-col lg:flex-row">
       <div className="w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-almost-white h-[440px] sm:h-[480px] md:h-[480px] mt-4 lg:mr-4 relative z-1">
@@ -35,8 +35,8 @@ const SmallBannerSection1 = () => {
             onClick={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               setTimeout(() => {
+                setShouldTriggerAnimation(true);
                 router.push('/migrate');
-                setTriggerAnimation(true);
               }, 500);
             }}
           >
