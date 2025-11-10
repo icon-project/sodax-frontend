@@ -1,10 +1,17 @@
 import { defineChain, type Chain } from 'viem';
-import { arbitrum, avalanche, base, bsc, nibiru, optimism, polygon, sonic, lightlinkPhoenix } from 'viem/chains';
-import type {
-  LegacybnUSDChainId,
-  LegacybnUSDToken,
-  NewbnUSDChainId,
-} from '../index.js';
+import {
+  arbitrum,
+  avalanche,
+  base,
+  bsc,
+  nibiru,
+  optimism,
+  polygon,
+  sonic,
+  lightlinkPhoenix,
+  mainnet,
+} from 'viem/chains';
+import type { LegacybnUSDChainId, LegacybnUSDToken, NewbnUSDChainId } from '../index.js';
 import {
   type Token,
   type SpokeChainId,
@@ -24,6 +31,7 @@ import {
   LIGHTLINK_MAINNET_CHAIN_ID,
   spokeChainConfig,
   type EvmChainId,
+  ETHEREUM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -92,6 +100,8 @@ export function getEvmViemChain(id: EvmChainId): Chain {
       return hyper;
     case LIGHTLINK_MAINNET_CHAIN_ID:
       return lightlinkPhoenix;
+    case ETHEREUM_MAINNET_CHAIN_ID:
+      return mainnet;
     default:
       throw new Error(`Unsupported EVM chain ID: ${id}`);
   }
@@ -156,7 +166,6 @@ export const getAllLegacybnUSDTokens = (): { token: LegacybnUSDToken; chainId: L
 
 // export const isMoneyMarketReserveHubAsset = (hubAsset: Address): boolean =>
 //   moneyMarketReserveHubAssetsSet.has(hubAsset.toLowerCase() as Address);
-
 
 // export const originalAssetTohubAssetMap: Map<SpokeChainId, Map<OriginalAssetAddress, HubAssetInfo>> = new Map(
 //   Object.entries(hubAssets).map(([chainId, assets]) => [
