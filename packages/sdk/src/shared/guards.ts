@@ -9,6 +9,7 @@ import {
   SolanaSpokeProvider,
   StellarSpokeProvider,
   SuiSpokeProvider,
+  NearSpokeProvider,
   type EvmUninitializedConfig,
   type EvmInitializedConfig,
   type EvmUninitializedPrivateKeyConfig,
@@ -368,4 +369,13 @@ export function isBalnMigrateParams(value: unknown): value is BalnMigrateParams 
 
 export function isIcxCreateRevertMigrationParams(value: unknown): value is IcxCreateRevertMigrationParams {
   return typeof value === 'object' && value !== null && 'amount' in value && 'to' in value;
+}
+
+export function isNearSpokeProvider(value: SpokeProvider): value is StellarSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof NearSpokeProvider &&
+    value.chainConfig.chain.type === 'NEAR'
+  );
 }

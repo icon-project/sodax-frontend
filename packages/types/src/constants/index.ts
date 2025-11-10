@@ -20,6 +20,7 @@ import type {
   SpokeChainId,
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
+  NearSpokeChainConfig,
   Token,
   VaultType,
   XToken,
@@ -41,6 +42,7 @@ export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
 export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
 export const HYPEREVM_MAINNET_CHAIN_ID = 'hyper';
 export const LIGHTLINK_MAINNET_CHAIN_ID = 'lightlink';
+export const NEAR_MAINNET_CHAIN_ID = 'near';
 export const ETHEREUM_MAINNET_CHAIN_ID = 'ethereum';
 
 export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
@@ -62,6 +64,7 @@ export const CHAIN_IDS = [
   NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID,
 ] as const;
 
 export const EVM_CHAIN_IDS = [
@@ -168,6 +171,12 @@ export const baseChainInfo = {
     type: 'ICON',
     chainId: '0x1.icon',
   },
+  [NEAR_MAINNET_CHAIN_ID]: {
+    name: 'Near',
+    id: NEAR_MAINNET_CHAIN_ID,
+    type: 'NEAR',
+    chainId: 'near',
+  },
 } as const satisfies Record<ChainId, BaseSpokeChainInfo<ChainType>>;
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
@@ -187,6 +196,7 @@ export const ChainIdToIntentRelayChainId = {
   [NIBIRU_MAINNET_CHAIN_ID]: 7235938n,
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
+  [NEAR_MAINNET_CHAIN_ID]: 15n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -371,7 +381,7 @@ export const hubChainConfig = {
   nativeToken: '0x0000000000000000000000000000000000000000',
   wrappedNativeToken: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
   supportedTokens: [],
-} as const satisfies EvmHubChainConfig
+} as const satisfies EvmHubChainConfig;
 
 export const spokeChainConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
@@ -1248,6 +1258,34 @@ export const spokeChainConfig = {
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
+  [NEAR_MAINNET_CHAIN_ID]: {
+    chain: baseChainInfo[NEAR_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'NEAR'>,
+    nativeToken: '',
+    addresses: {
+      assetManager: 'asset-manager.sodax-near.testnet',
+      connection: 'connectionv3.sodax-near-v2.testnet',
+      rateLimit: 'rate-limits.sodax-near.testnet',
+      xTokenManager: '',
+      intentFiller: 'intent-filler.sodax-near.testnet',
+    },
+    supportedTokens: {
+      NEAR: {
+        symbol: 'NEAR',
+        name: 'NEAR',
+        decimals: 24,
+        address: '0x',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        address: 'bnusd.sodax-near.testnet',
+        symbol: 'bnUSD',
+        decimals: 24,
+        name: 'bnUSD',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
+    },
+    bnUSD: 'bnusd.sodax-near.testnet',
+  } as const satisfies NearSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
 
 // All addresses are now lowercase for consistency and correctness
@@ -2144,6 +2182,7 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: '0x', // no vault yet
     },
   },
+  [NEAR_MAINNET_CHAIN_ID]: {} as const,
 } as const;
 
 export const solverConfig = {
@@ -2269,6 +2308,7 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.USDC, // NOTE: Not Implemented
   ] as const satisfies Token[],
+  [NEAR_MAINNET_CHAIN_ID]: [] as const satisfies Token[],
 } as const;
 
 // get supported spoke chain tokens for solver
@@ -2397,6 +2437,10 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
+  ] as const,
+  [NEAR_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.NEAR,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 

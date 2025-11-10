@@ -71,7 +71,6 @@ const hubProvider = new EvmHubProvider({
 const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
 const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
-
 async function depositTo(token: Address, amount: bigint, recipient: Address) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   console.log(recipient);
@@ -83,7 +82,7 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
       amount,
     },
     spokeProvider.chainConfig.chain.id,
-    sodax.config
+    sodax.config,
   );
 
   const txHash: Hash = await SpokeService.deposit(
