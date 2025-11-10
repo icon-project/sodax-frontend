@@ -24,7 +24,7 @@ import { getXChainType } from '../actions';
  * ```
  */
 function isChainType(chainIdentifier: ChainType | ChainId): chainIdentifier is ChainType {
-  return ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA'].includes(chainIdentifier);
+  return ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR'].includes(chainIdentifier);
 }
 
 export function useXAccount(chainIdentifier?: ChainType | ChainId): XAccount {

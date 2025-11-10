@@ -220,7 +220,6 @@ export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
     testToken?: string;
     intentFiller: string;
   };
-  rpc_url: string;
 };
 
 export type IconAddress = `hx${string}` | `cx${string}`;

@@ -1262,23 +1262,29 @@ export const spokeChainConfig = {
     chain: baseChainInfo[NEAR_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'NEAR'>,
     nativeToken: '',
     addresses: {
-      assetManager: '',
-      connection: '',
-      rateLimit: '',
+      assetManager: 'asset-manager.sodax-near.testnet',
+      connection: 'connectionv3.sodax-near-v2.testnet',
+      rateLimit: 'rate-limits.sodax-near.testnet',
       xTokenManager: '',
-      intentFiller: '',
+      intentFiller: 'intent-filler.sodax-near.testnet',
     },
     supportedTokens: {
+      NEAR: {
+        symbol: 'NEAR',
+        name: 'NEAR',
+        decimals: 24,
+        address: '0x',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
       bnUSD: {
-        address: '',
+        address: 'bnusd.sodax-near.testnet',
         symbol: 'bnUSD',
         decimals: 24,
-        name: 'BNUSD',
+        name: 'bnUSD',
         xChainId: NEAR_MAINNET_CHAIN_ID,
       },
     },
-    bnUSD: '',
-    rpc_url: '',
+    bnUSD: 'bnusd.sodax-near.testnet',
   } as const satisfies NearSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
 
@@ -2432,7 +2438,10 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
-  [NEAR_MAINNET_CHAIN_ID]: [] as const,
+  [NEAR_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.NEAR,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
 // export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>

@@ -9,6 +9,7 @@ import { SolanaXConnector } from '../xchains/solana';
 import { useStellarXConnectors } from '../xchains/stellar/useStellarXConnectors';
 import { SuiXConnector } from '../xchains/sui';
 import { useXService } from './useXService';
+import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
 
 /**
  * Hook to retrieve available wallet connectors for a specific blockchain type.
@@ -19,7 +20,7 @@ import { useXService } from './useXService';
  * - Stellar: Uses custom Stellar connectors
  * - Solana: Uses Solana wallet adapters (filtered to installed wallets only)
  *
- * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA')
+ * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'NEAR')
  * @returns An array of XConnector instances compatible with the specified chain type
  */
 
@@ -28,7 +29,7 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
   const evmConnectors = useConnectors();
   const suiWallets = useWallets();
   const { data: stellarXConnectors } = useStellarXConnectors();
-
+  const { data: nearXConnectors } = useNearXConnectors();
   const { wallets: solanaWallets } = useWallet();
 
   const xConnectors = useMemo((): XConnector[] => {
@@ -47,10 +48,12 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
         return solanaWallets
           .filter(wallet => wallet.readyState === 'Installed')
           .map(wallet => new SolanaXConnector(wallet));
+      case 'NEAR':
+        return nearXConnectors || [];
       default:
         return xService.getXConnectors();
     }
-  }, [xService, xChainType, evmConnectors, suiWallets, stellarXConnectors, solanaWallets]);
+  }, [xService, xChainType, evmConnectors, suiWallets, stellarXConnectors, solanaWallets, nearXConnectors]);
 
   return xConnectors;
 }
