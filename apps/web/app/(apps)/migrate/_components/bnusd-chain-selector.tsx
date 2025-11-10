@@ -1,5 +1,5 @@
 import type React from 'react';
-import { Dialog, DialogClose, DialogContent,  DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { XToken, SpokeChainId } from '@sodax/types';
 import Image from 'next/image';
 import { XIcon } from 'lucide-react';
