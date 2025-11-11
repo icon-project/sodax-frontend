@@ -13,6 +13,7 @@ import type {
   UserReserveDataHumanized,
   UiPoolDataProviderInterface,
 } from './MoneyMarketTypes.js';
+import { erc20BnusdAbi } from '../shared/abis/erc20-bnusd.abi.js';
 
 export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
   private readonly hubProvider: EvmHubProvider;
@@ -90,16 +91,64 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
   }
 
   /**
+   * @description Get the bnUSD facilitator bucket
+   * @returns {Promise<readonly [bigint, bigint]>} - The bnUSD [cap, current borrowed]
+   */
+  public async getBnusdFacilitatorBucket(): Promise<readonly [bigint, bigint]> {
+    return this.hubProvider.publicClient.readContract({
+      address: getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD,
+      abi: erc20BnusdAbi,
+      functionName: 'getFacilitatorBucket',
+      args: [getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSDAToken],
+    });
+  }
+
+  /**
    * Get detailed data for all reserves in the pool
    * @returns {Promise<readonly [readonly AggregatedReserveData[], BaseCurrencyInfo]>} - Tuple containing array of reserve data and base currency info
    */
   public async getReservesData(): Promise<readonly [readonly AggregatedReserveData[], BaseCurrencyInfo]> {
-    return this.hubProvider.publicClient.readContract({
-      address: this.uiPoolDataProvider,
-      abi: uiPoolDataAbi,
-      functionName: 'getReservesData',
-      args: [this.poolAddressesProvider],
-    });
+    const [reserveData, bnUSDFacilitatorBucket] = await Promise.all([
+      await this.hubProvider.publicClient.readContract({
+        address: this.uiPoolDataProvider,
+        abi: uiPoolDataAbi,
+        functionName: 'getReservesData',
+        args: [this.poolAddressesProvider],
+      }),
+      await this.getBnusdFacilitatorBucket(),
+    ]);
+
+    const [cap, currentBorrowed] = bnUSDFacilitatorBucket;
+    const reserves = reserveData[0];
+    const baseCurrencyInfo = reserveData[1];
+    const bnUSD = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD.toLowerCase();
+    const bnUSDVault = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSDVault.toLowerCase();
+
+    // merge bnUSD vault and bnUSD Debt (bnUSD) reserves into one bnUSD reserve (vault)
+    const bnUSDReserve = reserves.find(
+      r => bnUSD === r.underlyingAsset.toLowerCase(),
+    );
+    const bnUSDVaultReserve = reserves.find(
+      r => bnUSDVault === r.underlyingAsset.toLowerCase(),
+    );
+
+    if (!bnUSDReserve || !bnUSDVaultReserve) {
+      return reserveData;
+    }
+
+    const mergedBNUSDReserve = {
+      ...bnUSDVaultReserve,
+      borrowCap: cap,
+      availableLiquidity: cap - currentBorrowed,
+      totalScaledVariableDebt: bnUSDReserve.totalScaledVariableDebt + bnUSDVaultReserve.totalScaledVariableDebt,
+      virtualUnderlyingBalance: bnUSDReserve.virtualUnderlyingBalance + bnUSDVaultReserve.virtualUnderlyingBalance,
+      accruedToTreasury: bnUSDReserve.accruedToTreasury + bnUSDVaultReserve.accruedToTreasury,
+    };
+
+    return [
+      [mergedBNUSDReserve, ...reserves.filter(r => r.underlyingAsset.toLowerCase() !== bnUSD && r.underlyingAsset.toLowerCase() !== bnUSDVault)],
+      baseCurrencyInfo,
+    ];
   }
 
   /**
@@ -110,12 +159,40 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
    * @returns {Promise<readonly [readonly UserReserveData[], number]>} - Tuple containing array of user reserve data and eMode category ID
    */
   public async getUserReservesData(userAddress: Address): Promise<readonly [readonly UserReserveData[], number]> {
-    return this.hubProvider.publicClient.readContract({
+    const userReserves = await this.hubProvider.publicClient.readContract({
       address: this.uiPoolDataProvider,
       abi: uiPoolDataAbi,
       functionName: 'getUserReservesData',
       args: [this.poolAddressesProvider, userAddress],
     });
+
+    const userReservesData = userReserves[0];
+    const eModeCategoryId = userReserves[1];
+    const bnUSD = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD.toLowerCase();
+    const bnUSDVault = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSDVault.toLowerCase();
+
+    // merge bnUSD vault and bnUSD Debt (bnUSD) reserves into one bnUSD reserve (vault)
+    const bnUSDReserve = userReservesData.find(
+      r => bnUSD === r.underlyingAsset.toLowerCase(),
+    );
+    const bnUSDVaultReserve = userReservesData.find(
+      r => bnUSDVault === r.underlyingAsset.toLowerCase(),
+    );
+
+    if (!bnUSDReserve || !bnUSDVaultReserve) {
+      return userReserves;
+    }
+
+    const mergedBNUSDReserve = {
+      ...bnUSDVaultReserve,
+      scaledATokenBalance: bnUSDReserve.scaledATokenBalance + bnUSDVaultReserve.scaledATokenBalance,
+      scaledVariableDebt: bnUSDReserve.scaledVariableDebt + bnUSDVaultReserve.scaledVariableDebt,
+    }
+
+    return [
+      [mergedBNUSDReserve, ...userReservesData.filter(r => r.underlyingAsset.toLowerCase() !== bnUSD && r.underlyingAsset.toLowerCase() !== bnUSDVault)],
+      eModeCategoryId,
+    ];
   }
 
   /**

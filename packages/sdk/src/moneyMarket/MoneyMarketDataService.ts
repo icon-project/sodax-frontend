@@ -23,8 +23,9 @@ import {
 } from './math-utils/index.js';
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
-import type { Address } from '@sodax/types';
+import type { Address, Erc20Token } from '@sodax/types';
 import { deriveUserWalletAddress } from '../shared/utils/shared-utils.js';
+import { Erc20Service } from '../shared/index.js';
 
 export class MoneyMarketDataService {
   public readonly uiPoolDataProviderService: UiPoolDataProviderService;
@@ -35,6 +36,10 @@ export class MoneyMarketDataService {
     this.hubProvider = hubProvider;
     this.uiPoolDataProviderService = new UiPoolDataProviderService(hubProvider);
     this.lendingPoolService = new LendingPoolService(hubProvider);
+  }
+
+  public async getATokenData(aToken: Address): Promise<Erc20Token> {
+    return Erc20Service.getErc20Token(aToken, this.hubProvider.publicClient);
   }
 
   /**
