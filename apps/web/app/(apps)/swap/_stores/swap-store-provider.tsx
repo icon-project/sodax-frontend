@@ -42,6 +42,10 @@ export const useSwapState = () => {
   const isSwapAndSend = useSwapStore(state => state.isSwapAndSend);
   const customDestinationAddress = useSwapStore(state => state.customDestinationAddress);
   const slippageTolerance = useSwapStore(state => state.slippageTolerance);
+  const swapStatus = useSwapStore(state => state.swapStatus);
+  const swapError = useSwapStore(state => state.swapError);
+  const dstTxHash = useSwapStore(state => state.dstTxHash);
+  const allowanceConfirmed = useSwapStore(state => state.allowanceConfirmed);
 
   return {
     inputToken,
@@ -50,6 +54,10 @@ export const useSwapState = () => {
     isSwapAndSend,
     customDestinationAddress,
     slippageTolerance,
+    swapStatus,
+    swapError,
+    dstTxHash,
+    allowanceConfirmed,
   };
 };
 
@@ -62,6 +70,11 @@ export const useSwapActions = () => {
   const setSlippageTolerance = useSwapStore(state => state.setSlippageTolerance);
   const switchTokens = useSwapStore(state => state.switchTokens);
   const resetSwapState = useSwapStore(state => state.resetSwapState);
+  const setSwapStatus = useSwapStore(state => state.setSwapStatus);
+  const setSwapError = useSwapStore(state => state.setSwapError);
+  const setDstTxHash = useSwapStore(state => state.setDstTxHash);
+  const setAllowanceConfirmed = useSwapStore(state => state.setAllowanceConfirmed);
+  const resetSwapExecutionState = useSwapStore(state => state.resetSwapExecutionState);
 
   return {
     setInputToken,
@@ -72,6 +85,11 @@ export const useSwapActions = () => {
     setSlippageTolerance,
     switchTokens,
     resetSwapState,
+    setSwapStatus,
+    setSwapError,
+    setDstTxHash,
+    setAllowanceConfirmed,
+    resetSwapExecutionState,
   };
 };
 
