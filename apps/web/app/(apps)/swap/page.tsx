@@ -204,6 +204,7 @@ export default function SwapPage() {
         <motion.div
           className="inline-flex flex-col justify-start items-start gap-2 w-full mt-(--layout-space-comfortable)"
           variants={itemVariants}
+          layout={false}
         >
           <div className="relative w-full">
             <CurrencyInputPanel
@@ -269,17 +270,11 @@ export default function SwapPage() {
 
       <SwapConfirmDialog
         open={isSwapConfirmOpen}
-        inputToken={inputToken}
-        outputToken={outputToken}
-        sourceAddress={sourceAddress || ''}
-        finalDestinationAddress={
-          isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || ''
-        }
         outputAmount={fixedOutputAmount}
-        onClose={handleDialogClose}
         minOutputAmount={fixedMinOutputAmount}
         swapFeesUsdValue={swapFeesUsdValue}
         usdPrice={outputTokenPrice}
+        onClose={handleDialogClose}
       />
     </motion.div>
   );
