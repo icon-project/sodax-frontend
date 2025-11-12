@@ -218,6 +218,7 @@ export const HubVaultSymbols = [
   'sodaS',
   'IbnUSD',
   'sodaHYPE',
+  'sodaLL',
 ] as const;
 
 export const SodaTokens = {
@@ -340,7 +341,14 @@ export const SodaTokens = {
     address: '0x6E81124fC5d2Bf666B16a0A5d90066eBf35c7411',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
-} as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
+  sodaLL: {
+    symbol: 'sodaLL',
+    name: 'Soda LL',
+    decimals: 18,
+    address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+} as const satisfies Record<HubVaultSymbol, XToken>;
 
 export const SodaTokensAsHubAssets: Record<
   string,
@@ -1491,6 +1499,10 @@ export const hubVaults = {
     address: '0x6e81124fc5d2bf666b16a0a5d90066ebf35c7411',
     reserves: ['0x7288622bc2d39553f34d5b81c88c3f979d91dbc7'],
   },
+  [SodaTokens.sodaLL.symbol]: {
+    address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
+    reserves: ['0xee6236c791db0755c9bc333b4c7c85ab754f2a0a'],
+  },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
 export const hubVaultTokensMap: Map<string, Token> = new Map(
@@ -2227,6 +2239,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'SODA',
       name: 'SODAX',
       vault: hubVaults.sodaSODA.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL.address]: {
+      asset: '0xee6236c791db0755c9bc333b4c7c85ab754f2a0a',
+      decimal: 18,
+      symbol: 'LL',
+      name: 'LightLink',
+      vault: hubVaults.sodaLL.address,
     },
   },
 } as const;
