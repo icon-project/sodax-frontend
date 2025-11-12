@@ -74,7 +74,7 @@ export class MoneyMarketDataService {
    * @returns {Promise<readonly Address[]>} - List of reserve asset addresses
    */
   public async getReservesList(unfiltered = false): Promise<readonly Address[]> {
-    return this.uiPoolDataProviderService.getReservesList();
+    return this.uiPoolDataProviderService.getReservesList(unfiltered);
   }
 
   /**

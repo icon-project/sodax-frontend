@@ -77,7 +77,7 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
   }
   /**
    * Get the list of all reserves in the pool
-   * @param unfiltered - If true, return the list of all reserves in the pool (including bnUSD (debt) reserve)
+   * @param unfiltered - If true, returns all reserves in the pool (including bnUSD (debt) reserve); if false (default), filters out bnUSD.
    * @returns {Promise<readonly Address[]>} - Array of reserve addresses
    */
   public async getReservesList(unfiltered = false): Promise<readonly Address[]> {
@@ -118,13 +118,13 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
    */
   public async getReservesData(): Promise<readonly [readonly AggregatedReserveData[], BaseCurrencyInfo]> {
     const [reserveData, bnUSDFacilitatorBucket] = await Promise.all([
-      await this.hubProvider.publicClient.readContract({
+      this.hubProvider.publicClient.readContract({
         address: this.uiPoolDataProvider,
         abi: uiPoolDataAbi,
         functionName: 'getReservesData',
         args: [this.poolAddressesProvider],
       }),
-      await this.getBnusdFacilitatorBucket(),
+      this.getBnusdFacilitatorBucket(),
     ]);
 
     const [cap, currentBorrowed] = bnUSDFacilitatorBucket;
