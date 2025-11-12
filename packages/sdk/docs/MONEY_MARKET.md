@@ -27,7 +27,7 @@ By default, configuration from the specific SDK version you are using is used.
 import { Sodax, type SpokeChainId, type Token, type Address } from "@sodax/sdk";
 
 const sodax = new Sodax();
-await sodax.initialize(); // Initialize for dynamic config (optional but recommended)
+await sodax.initialize(); // Initialize for dynamic config (optional)
 
 // All supported spoke chains (general config)
 const spokeChains: SpokeChainId[] = sodax.config.getSupportedSpokeChains();
@@ -193,34 +193,7 @@ The allowance and approval system supports different actions depending on the sp
 
 ### Stellar Trustline Requirements
 
-For Stellar-based money market operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain:
-
-```typescript
-import { StellarSpokeService } from "@sodax/sdk";
-
-// When Stellar is the destination chain, check and establish trustlines
-if (isStellarDestination) {
-  // Check if sufficient trustline exists for the destination token
-  const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
-    destinationTokenAddress,
-    amount,
-    stellarSpokeProvider
-  );
-
-  if (!hasTrustline) {
-    // Request trustline for the destination token
-    const trustlineResult = await StellarSpokeService.requestTrustline(
-      destinationTokenAddress,
-      amount,
-      stellarSpokeProvider,
-      false // false = execute transaction, true = return raw transaction
-    );
-    
-    // Wait for trustline transaction to be confirmed before proceeding
-    console.log('Trustline established:', trustlineResult);
-  }
-}
-```
+For Stellar-based money market operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain. See [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#money-market) for detailed information and code examples.
 
 ### Complete Example
 

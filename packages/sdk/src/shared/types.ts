@@ -208,6 +208,7 @@ export type SolverIntentQuoteRequest = {
   token_dst_blockchain_id: SpokeChainId; // Destination chain id
   amount: bigint; // Amount to swap
   quote_type: QuoteType; // Quote type
+  fee?: PartnerFee; // Optional partner fee configuration
 };
 
 export type SolverIntentQuoteResponseRaw = {
