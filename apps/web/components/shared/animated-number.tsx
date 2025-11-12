@@ -16,7 +16,7 @@ interface AnimatedNumberProps {
  * @param duration - Animation duration in seconds (default: 3)
  * @param className - CSS classes to apply to the component
  */
-export default function AnimatedNumber({ to, duration = 3, className }: AnimatedNumberProps): JSX.Element {
+export default function AnimatedNumber({ to, duration = 3, className }: AnimatedNumberProps): React.JSX.Element {
   const count = useMotionValue(0);
   const rounded = useTransform(() => Math.round(count.get()));
 
