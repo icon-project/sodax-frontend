@@ -12,7 +12,6 @@ import {
   type LegacybnUSDChainId,
   type NewbnUSDChainId,
   HYPEREVM_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
 import { availableChains } from '@/constants/chains';
@@ -65,7 +64,6 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
       return newbnUSDSpokeChainIds2
         .filter(
           chainId =>
-            chainId !== NIBIRU_MAINNET_CHAIN_ID &&
             chainId !== HYPEREVM_MAINNET_CHAIN_ID &&
             chainId !== ETHEREUM_MAINNET_CHAIN_ID,
         )

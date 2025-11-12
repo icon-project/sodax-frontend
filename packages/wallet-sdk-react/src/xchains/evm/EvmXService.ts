@@ -7,7 +7,6 @@ import {
   ETHEREUM_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
@@ -28,7 +27,6 @@ import {
   arbitrum,
   bsc,
   sonic,
-  nibiru,
   lightlinkPhoenix,
 } from 'wagmi/chains';
 
@@ -60,7 +58,7 @@ export const hyper = /*#__PURE__*/ defineChain({
 
 export const createWagmiConfig = (config: RpcConfig) => {
   return createConfig({
-    chains: [mainnet, avalanche, arbitrum, base, bsc, sonic, optimism, polygon, nibiru, hyper, lightlinkPhoenix],
+    chains: [mainnet, avalanche, arbitrum, base, bsc, sonic, optimism, polygon, hyper, lightlinkPhoenix],
     transports: {
       [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
       [avalanche.id]: http(config[AVALANCHE_MAINNET_CHAIN_ID]),
@@ -70,7 +68,6 @@ export const createWagmiConfig = (config: RpcConfig) => {
       [sonic.id]: http(config[SONIC_MAINNET_CHAIN_ID]),
       [optimism.id]: http(config[OPTIMISM_MAINNET_CHAIN_ID]),
       [polygon.id]: http(config[POLYGON_MAINNET_CHAIN_ID]),
-      [nibiru.id]: http(config[NIBIRU_MAINNET_CHAIN_ID]),
       [hyper.id]: http(config[HYPEREVM_MAINNET_CHAIN_ID]),
       [lightlinkPhoenix.id]: http(config[LIGHTLINK_MAINNET_CHAIN_ID]),
     },
