@@ -2310,6 +2310,7 @@ const moneyMarketConfig = {
     uiPoolDataProvider: '0xC04d746C38f1E51C8b3A3E2730250bbAC2F271bf',
     poolAddressesProvider: '0x036aDe0aBAA4c82445Cb7597f2d6d6130C118c7b',
     bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38',
+    bnUSDAToken: '0xa2cDA49735e42f0905496E40a66B3C5475Ed69dF',
     bnUSDVault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
   } satisfies MoneyMarketConfig,
 } as const;

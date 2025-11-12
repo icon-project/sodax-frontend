@@ -1,9 +1,42 @@
-import { encodeFunctionData, erc20Abi, type Address } from 'viem';
+import { encodeFunctionData, erc20Abi, type Address, type PublicClient } from 'viem';
 import type { EvmContractCall, EvmReturnType, PromiseEvmTxReturnType, Result } from '../../types.js';
 import type { EvmSpokeProvider, SonicSpokeProvider } from '../../entities/Providers.js';
+import type { Erc20Token } from '@sodax/types';
 
 export class Erc20Service {
   private constructor() {}
+
+  public static async getErc20Token(token: Address, publicClient: PublicClient): Promise<Erc20Token> {
+    /**
+     * Fetches the ERC20 token name, symbol, and decimals using a single multicall via viem.
+     * @param token - Token contract address
+     * @param publicClient - Viem PublicClient instance
+     * @returns Erc20Token object containing name, symbol, and decimals
+     */
+    const [name, symbol, decimals] = await publicClient.multicall({
+      contracts: [
+        {
+          address: token,
+          abi: erc20Abi,
+          functionName: 'name',
+        },
+        {
+          address: token,
+          abi: erc20Abi,
+          functionName: 'symbol',
+        },
+        {
+          address: token,
+          abi: erc20Abi,
+          functionName: 'decimals',
+        },
+      ],
+      allowFailure: false,
+    });
+
+    // Each result is in the form { result: TYPE }
+    return { name, symbol, decimals, address: token };
+  }
 
   /**
    * Check if spender has enough ERC20 allowance for given amount
