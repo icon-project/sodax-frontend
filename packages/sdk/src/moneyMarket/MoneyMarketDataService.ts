@@ -70,9 +70,10 @@ export class MoneyMarketDataService {
 
   /**
    * Get the reserves list
+   * @param unfiltered - If true, return the list of all reserves in the pool (including bnUSD (debt) reserve)
    * @returns {Promise<readonly Address[]>} - List of reserve asset addresses
    */
-  public async getReservesList(): Promise<readonly Address[]> {
+  public async getReservesList(unfiltered = false): Promise<readonly Address[]> {
     return this.uiPoolDataProviderService.getReservesList();
   }
 

@@ -77,17 +77,26 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
   }
   /**
    * Get the list of all reserves in the pool
-   * @param uiPoolDataProvider - The address of the UI Pool Data Provider
-   * @param poolAddressesProvider - The address of the Pool Addresses Provider
+   * @param unfiltered - If true, return the list of all reserves in the pool (including bnUSD (debt) reserve)
    * @returns {Promise<readonly Address[]>} - Array of reserve addresses
    */
-  public async getReservesList(): Promise<readonly Address[]> {
-    return this.hubProvider.publicClient.readContract({
+  public async getReservesList(unfiltered = false): Promise<readonly Address[]> {
+    const reservesList = await this.hubProvider.publicClient.readContract({
       address: this.uiPoolDataProvider,
       abi: uiPoolDataAbi,
       functionName: 'getReservesList',
       args: [this.poolAddressesProvider],
     });
+
+    if (unfiltered) {
+      return reservesList;
+    }
+
+    // filter out bnUSD (debt) reserve by default
+    return reservesList.filter(
+      reserve =>
+        reserve.toLowerCase() !== getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD.toLowerCase()
+    );
   }
 
   /**
@@ -125,12 +134,8 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
     const bnUSDVault = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSDVault.toLowerCase();
 
     // merge bnUSD vault and bnUSD Debt (bnUSD) reserves into one bnUSD reserve (vault)
-    const bnUSDReserve = reserves.find(
-      r => bnUSD === r.underlyingAsset.toLowerCase(),
-    );
-    const bnUSDVaultReserve = reserves.find(
-      r => bnUSDVault === r.underlyingAsset.toLowerCase(),
-    );
+    const bnUSDReserve = reserves.find(r => bnUSD === r.underlyingAsset.toLowerCase());
+    const bnUSDVaultReserve = reserves.find(r => bnUSDVault === r.underlyingAsset.toLowerCase());
 
     if (!bnUSDReserve || !bnUSDVaultReserve) {
       return reserveData;
@@ -146,7 +151,12 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
     };
 
     return [
-      [mergedBNUSDReserve, ...reserves.filter(r => r.underlyingAsset.toLowerCase() !== bnUSD && r.underlyingAsset.toLowerCase() !== bnUSDVault)],
+      [
+        mergedBNUSDReserve,
+        ...reserves.filter(
+          r => r.underlyingAsset.toLowerCase() !== bnUSD && r.underlyingAsset.toLowerCase() !== bnUSDVault,
+        ),
+      ],
       baseCurrencyInfo,
     ];
   }
@@ -172,12 +182,8 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
     const bnUSDVault = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSDVault.toLowerCase();
 
     // merge bnUSD vault and bnUSD Debt (bnUSD) reserves into one bnUSD reserve (vault)
-    const bnUSDReserve = userReservesData.find(
-      r => bnUSD === r.underlyingAsset.toLowerCase(),
-    );
-    const bnUSDVaultReserve = userReservesData.find(
-      r => bnUSDVault === r.underlyingAsset.toLowerCase(),
-    );
+    const bnUSDReserve = userReservesData.find(r => bnUSD === r.underlyingAsset.toLowerCase());
+    const bnUSDVaultReserve = userReservesData.find(r => bnUSDVault === r.underlyingAsset.toLowerCase());
 
     if (!bnUSDReserve || !bnUSDVaultReserve) {
       return userReserves;
@@ -187,10 +193,15 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
       ...bnUSDVaultReserve,
       scaledATokenBalance: bnUSDReserve.scaledATokenBalance + bnUSDVaultReserve.scaledATokenBalance,
       scaledVariableDebt: bnUSDReserve.scaledVariableDebt + bnUSDVaultReserve.scaledVariableDebt,
-    }
+    };
 
     return [
-      [mergedBNUSDReserve, ...userReservesData.filter(r => r.underlyingAsset.toLowerCase() !== bnUSD && r.underlyingAsset.toLowerCase() !== bnUSDVault)],
+      [
+        mergedBNUSDReserve,
+        ...userReservesData.filter(
+          r => r.underlyingAsset.toLowerCase() !== bnUSD && r.underlyingAsset.toLowerCase() !== bnUSDVault,
+        ),
+      ],
       eModeCategoryId,
     ];
   }
