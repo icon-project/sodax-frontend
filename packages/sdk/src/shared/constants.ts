@@ -4,7 +4,6 @@ import {
   avalanche,
   base,
   bsc,
-  nibiru,
   optimism,
   polygon,
   sonic,
@@ -22,7 +21,6 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   SUI_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
@@ -94,8 +92,6 @@ export function getEvmViemChain(id: EvmChainId): Chain {
       return bsc;
     case POLYGON_MAINNET_CHAIN_ID:
       return polygon;
-    case NIBIRU_MAINNET_CHAIN_ID:
-      return nibiru;
     case HYPEREVM_MAINNET_CHAIN_ID:
       return hyper;
     case LIGHTLINK_MAINNET_CHAIN_ID:
