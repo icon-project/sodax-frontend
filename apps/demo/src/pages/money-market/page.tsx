@@ -1,12 +1,13 @@
 import React from 'react';
 
 import { ChainSelector } from '@/components/shared/ChainSelector';
-import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
+import { SupplyAssetsList } from '@/components/mm/lists/supply-per-chain/SupplyAssetsList';
 import { Button } from '@/components/ui/button';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { useDeriveUserWalletAddress, useSpokeProvider } from '@sodax/dapp-kit';
 import { Wallet } from 'lucide-react';
+import { BorrowAssetsList } from '@/components/mm/lists/borrow-cross-chain/BorrowAssetsList';
 
 export default function MoneyMarketPage() {
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
@@ -17,7 +18,7 @@ export default function MoneyMarketPage() {
   const { data: walletAddressOnHub } = useDeriveUserWalletAddress(spokeProvider, xAccount?.address);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-almost-white via-cream-white to-vibrant-white">
+    <main className="min-h-screen bg-linear-to-br from-almost-white via-cream-white to-vibrant-white">
       <div className="container mx-auto px-4 py-4 max-w-7xl">
         {/* Header Section */}
         <div className="my-3">
@@ -48,6 +49,7 @@ export default function MoneyMarketPage() {
         {xAccount?.address ? (
           <div className="animate-in fade-in duration-500">
             <SupplyAssetsList />
+            <BorrowAssetsList />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[500px] bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-12">

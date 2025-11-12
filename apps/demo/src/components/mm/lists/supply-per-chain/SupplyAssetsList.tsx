@@ -57,7 +57,6 @@ export function SupplyAssetsList() {
               <TableHead className="text-cherry-dark font-bold">Debt</TableHead>
               <TableHead className="text-cherry-dark font-bold">Supply</TableHead>
               <TableHead className="text-cherry-dark font-bold">Withdraw</TableHead>
-              <TableHead className="text-cherry-dark font-bold">Borrow</TableHead>
               <TableHead className="text-cherry-dark font-bold">Repay</TableHead>
             </TableRow>
           </TableHeader>

@@ -3,21 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  useMMAllowance,
-  useSupply,
-  useMMApprove,
-  useSpokeProvider,
-  useBorrow,
-  useRepay,
-  useWithdraw,
-} from '@sodax/dapp-kit';
+import { useMMAllowance, useSupply, useMMApprove, useSpokeProvider, useRepay, useWithdraw } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import type { AggregatedReserveData } from '@sodax/sdk';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
-type ActionType = 'supply' | 'borrow' | 'repay' | 'withdraw';
+export type ActionType = 'supply' | 'repay' | 'withdraw';
 
 interface MoneyMarketActionButtonProps {
   action: ActionType;
@@ -31,25 +23,16 @@ const actionConfig = {
     label: 'Supply',
     title: 'Supply',
     verb: 'Supplying',
-    hook: useSupply,
-  },
-  borrow: {
-    label: 'Borrow',
-    title: 'Borrow',
-    verb: 'Borrowing',
-    hook: useBorrow,
   },
   repay: {
     label: 'Repay',
     title: 'Repay',
     verb: 'Repaying',
-    hook: useRepay,
   },
   withdraw: {
     label: 'Withdraw',
     title: 'Withdraw',
     verb: 'Withdrawing',
-    hook: useWithdraw,
   },
 };
 
@@ -62,13 +45,20 @@ export function MoneyMarketActionButton({ action, token, aToken, reserve }: Mone
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
 
   // Determine which token to use based on action
-  const tokenToUse = token;
+  const tokenToUse = action === 'withdraw' && aToken ? aToken : token;
 
-  // Use the appropriate hook based on action type
-  const { mutateAsync, isPending, error, reset: resetError } = config.hook(tokenToUse, spokeProvider);
+  // call hooks unconditionally, ALWAYS in the same order
+  const supplyMutation = useSupply(token, spokeProvider);
+  const repayMutation = useRepay(token, spokeProvider);
+  const withdrawMutation = useWithdraw(tokenToUse, spokeProvider);
+
+  // Now select which mutation to use based on action
+  const currentMutation = action === 'supply' ? supplyMutation : action === 'repay' ? repayMutation : withdrawMutation;
+
+  const { mutateAsync, isPending, error, reset: resetError } = currentMutation;
 
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, action, spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
+  const { approve, isLoading: isApproving, error: approveError } = useMMApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleAction = async () => {
@@ -90,7 +80,11 @@ export function MoneyMarketActionButton({ action, token, aToken, reserve }: Mone
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action });
+    try {
+      await approve({ amount, action });
+    } catch (err) {
+      console.error('Approval error:', err);
+    }
   };
 
   return (
@@ -107,9 +101,9 @@ export function MoneyMarketActionButton({ action, token, aToken, reserve }: Mone
           {config.label}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md border-cherry-grey/20">
+      <DialogContent className="sm:max-w-md border-cherry-grey/20" aria-describedby="money-market-description">
         <DialogHeader>
-          <DialogTitle className="text-cherry-dark text-center">
+          <DialogTitle id="money-market-description" className="text-cherry-dark text-center">
             {config.title} {token.symbol}
           </DialogTitle>
         </DialogHeader>
@@ -134,10 +128,10 @@ export function MoneyMarketActionButton({ action, token, aToken, reserve }: Mone
             </div>
           </div>
 
-          {error && (
+          {(error || approveError) && (
             <div className="flex items-start gap-2 p-3 bg-negative/10 border border-negative/20 rounded-lg">
-              <AlertCircle className="w-4 h-4 text-negative flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-negative">{error.message}</p>
+              <AlertCircle className="w-4 h-4 text-negative shrink-0 mt-0.5" />
+              <p className="text-sm text-negative">{error?.message || approveError?.message}</p>
             </div>
           )}
         </div>
@@ -148,7 +142,7 @@ export function MoneyMarketActionButton({ action, token, aToken, reserve }: Mone
             type="button"
             variant="cherry"
             onClick={handleApprove}
-            disabled={isAllowanceLoading || hasAllowed || isApproving || !amount}
+            disabled={isAllowanceLoading || hasAllowed || isApproving || !amount || !spokeProvider}
           >
             {isApproving ? (
               <>
@@ -172,7 +166,7 @@ export function MoneyMarketActionButton({ action, token, aToken, reserve }: Mone
               type="button"
               variant="cherry"
               onClick={handleAction}
-              disabled={!hasAllowed || isPending || !amount}
+              disabled={!hasAllowed || isPending || !amount || !spokeProvider}
             >
               {isPending ? (
                 <>

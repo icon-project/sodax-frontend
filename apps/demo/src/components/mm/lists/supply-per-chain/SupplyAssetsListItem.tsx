@@ -1,7 +1,7 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken } from '@sodax/types';
-import { MoneyMarketActionButton } from './MoneyMarketActionButton';
+import { MoneyMarketActionButton } from '../MoneyMarketActionButton';
 import type { AggregatedReserveData } from '@sodax/sdk';
 
 interface SupplyAssetsListItemProps {
@@ -42,9 +42,6 @@ export function SupplyAssetsListItem({ token, balance, walletBalance, debt, rese
       </TableCell>
       <TableCell>
         <MoneyMarketActionButton action="withdraw" token={token} aToken={aToken} reserve={reserve} />
-      </TableCell>
-      <TableCell>
-        <MoneyMarketActionButton action="borrow" token={token} aToken={aToken} reserve={reserve} />
       </TableCell>
       <TableCell>
         <MoneyMarketActionButton action="repay" token={token} reserve={reserve} />
