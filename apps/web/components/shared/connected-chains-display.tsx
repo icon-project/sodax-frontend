@@ -5,20 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { useXAccounts } from '@sodax/wallet-sdk-react';
-import { getChainIconByName } from '@/constants/chains';
-
-const EVM_CHAIN_ICONS = [
-  '/chain/ethereum.png',
-  '/chain/0x2105.base.png',
-  '/chain/0x38.bsc.png',
-  '/chain/0xa86a.avax.png',
-  '/chain/0x89.polygon.png',
-  '/chain/0xa.optimism.png',
-  '/chain/0xa4b1.arbitrum.png',
-  '/chain/sonic.png',
-  '/chain/lightlink.png',
-  '/chain/hyper.png',
-];
+import { getChainIconByName, EVM_CHAIN_ICONS } from '@/constants/chains';
 
 interface ConnectedChainsDisplayProps {
   onClick?: () => void;

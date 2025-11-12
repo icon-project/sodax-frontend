@@ -21,6 +21,19 @@ export interface ChainUI {
   icon: string;
 }
 
+export const EVM_CHAIN_ICONS = [
+  '/chain/ethereum.png',
+  '/chain/0x2105.base.png',
+  '/chain/0x38.bsc.png',
+  '/chain/0xa86a.avax.png',
+  '/chain/0x89.polygon.png',
+  '/chain/0xa.optimism.png',
+  '/chain/0xa4b1.arbitrum.png',
+  '/chain/sonic.png',
+  '/chain/lightlink.png',
+  '/chain/hyper.png',
+];
+
 /**
  * Available chains for UI components with display information
  * Maps SPOKE_CHAIN_IDS to human-readable names and icon paths

@@ -5,7 +5,7 @@ import { PlusIcon, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useXConnect, type XConnector, type XAccount, useXAccount } from '@sodax/wallet-sdk-react';
 import { chainGroupMap } from './wallet-modal';
-import { EVM_CHAIN_ICONS } from './evm-chain-item';
+import { EVM_CHAIN_ICONS } from '@/constants/chains';
 import { delay } from '@/lib/utils';
 
 export type WalletItemProps = {
