@@ -70,7 +70,7 @@ export default function TokenSelectDialog({
     <Dialog open={isOpen} onOpenChange={onHandleOpenChange}>
       <DialogContent
         enableMotion={true}
-        className="shadow-none md:max-w-[480px] w-[90%] p-12 bg-vibrant-white gap-0 block min-h-134"
+        className="shadow-none md:max-w-[480px] w-[90%] p-12 bg-vibrant-white gap-0 min-h-134 block"
         hideCloseButton={true}
       >
         <DialogTitle className="flex justify-end w-full h-4 relative p-0">
