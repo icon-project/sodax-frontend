@@ -19,6 +19,8 @@ import { InjectiveIcon } from '@/components/icons/chains/injective';
 import { SonicIcon } from '@/components/icons/chains/sonic';
 import { OptimismIcon } from '@/components/icons/chains/optimism';
 import { LightLinkIcon } from '@/components/icons/chains/lightlink';
+import { EthereumIcon } from '@/components/icons/chains/ethereum';
+import { HyperIcon } from '@/components/icons/chains/hyper';
 import { createPortal } from 'react-dom';
 
 interface NetworkIconProps {
@@ -72,6 +74,8 @@ function NetworkIcon({
         {imageSrc === 'Optimism' && <OptimismIcon />}
         {imageSrc === 'Arbitrum' && <ArbitrumIcon />}
         {imageSrc === 'LightLink' && <LightLinkIcon />}
+        {imageSrc === 'Ethereum' && <EthereumIcon />}
+        {imageSrc === 'Hyper' && <HyperIcon />}
       </div>
     </motion.div>
   );

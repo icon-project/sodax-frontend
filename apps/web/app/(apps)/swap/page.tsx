@@ -270,17 +270,11 @@ export default function SwapPage() {
 
       <SwapConfirmDialog
         open={isSwapConfirmOpen}
-        inputToken={inputToken}
-        outputToken={outputToken}
-        sourceAddress={sourceAddress || ''}
-        finalDestinationAddress={
-          isSwapAndSend && customDestinationAddress ? customDestinationAddress : destinationAddress || ''
-        }
         outputAmount={fixedOutputAmount}
-        onClose={handleDialogClose}
         minOutputAmount={fixedMinOutputAmount}
         swapFeesUsdValue={swapFeesUsdValue}
         usdPrice={outputTokenPrice}
+        onClose={handleDialogClose}
       />
     </motion.div>
   );
