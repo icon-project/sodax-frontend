@@ -34,7 +34,6 @@ export class Erc20Service {
       allowFailure: false,
     });
 
-    // Each result is in the form { result: TYPE }
     return { name, symbol, decimals, address: token };
   }
 
