@@ -38,7 +38,6 @@ export const OPTIMISM_MAINNET_CHAIN_ID = '0xa.optimism';
 export const POLYGON_MAINNET_CHAIN_ID = '0x89.polygon';
 export const SOLANA_MAINNET_CHAIN_ID = 'solana';
 export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
-export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
 export const HYPEREVM_MAINNET_CHAIN_ID = 'hyper';
 export const LIGHTLINK_MAINNET_CHAIN_ID = 'lightlink';
 export const ETHEREUM_MAINNET_CHAIN_ID = 'ethereum';
@@ -59,7 +58,6 @@ export const CHAIN_IDS = [
   SOLANA_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
@@ -73,7 +71,6 @@ export const EVM_CHAIN_IDS = [
   SONIC_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
@@ -97,12 +94,6 @@ export const baseChainInfo = {
     id: AVALANCHE_MAINNET_CHAIN_ID,
     type: 'EVM',
     chainId: 43_114,
-  },
-  [NIBIRU_MAINNET_CHAIN_ID]: {
-    name: 'Nibiru',
-    id: NIBIRU_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 6_900,
   },
   [ARBITRUM_MAINNET_CHAIN_ID]: {
     name: 'Arbitrum',
@@ -192,7 +183,6 @@ export const ChainIdToIntentRelayChainId = {
   [SUI_MAINNET_CHAIN_ID]: 21n,
   [STELLAR_MAINNET_CHAIN_ID]: 27n,
   [ICON_MAINNET_CHAIN_ID]: 1768124270n,
-  [NIBIRU_MAINNET_CHAIN_ID]: 7235938n,
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
   [ETHEREUM_MAINNET_CHAIN_ID]: 2n,
@@ -214,10 +204,10 @@ export const HubVaultSymbols = [
   'sodaUSDC',
   'bnUSD',
   'sodaPOL',
-  'sodaNIBI',
   'sodaS',
   'IbnUSD',
   'sodaHYPE',
+  'sodaLL',
 ] as const;
 
 export const SodaTokens = {
@@ -268,13 +258,6 @@ export const SodaTokens = {
     name: 'Soda INJ',
     decimals: 18,
     address: '0x1f22279C89B213944b7Ea41daCB0a868DdCDFd13',
-    xChainId: SONIC_MAINNET_CHAIN_ID,
-  },
-  sodaNIBI: {
-    symbol: 'sodaNIBI',
-    name: 'Soda NIBI',
-    decimals: 18,
-    address: '0xc6c85287a8b173A509C2F198bB719A8a5a2d0C68',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
   sodaSUI: {
@@ -340,7 +323,14 @@ export const SodaTokens = {
     address: '0x6E81124fC5d2Bf666B16a0A5d90066eBf35c7411',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
-} as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
+  sodaLL: {
+    symbol: 'sodaLL',
+    name: 'Soda LL',
+    decimals: 18,
+    address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+} as const satisfies Record<HubVaultSymbol, XToken>;
 
 export const SodaTokensAsHubAssets: Record<
   string,
@@ -525,38 +515,6 @@ export const spokeChainConfig = {
         decimals: 18,
         address: '0x390ceed555905ec225Da330A188EA04e85570f00',
         xChainId: AVALANCHE_MAINNET_CHAIN_ID,
-      },
-    },
-  } as const satisfies EvmSpokeChainConfig,
-  [NIBIRU_MAINNET_CHAIN_ID]: {
-    chain: baseChainInfo[NIBIRU_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
-    addresses: {
-      assetManager: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
-      connection: '0x772FFE538E45b2cDdFB5823041EC26C44815B9AB',
-    },
-    nativeToken: '0x0000000000000000000000000000000000000000' as const,
-    bnUSD: '0x043fb7e23350Dd5b77dE5E228B528763DEcb9131',
-    supportedTokens: {
-      NIBI: {
-        symbol: 'NIBI',
-        name: 'Nibiru',
-        decimals: 6,
-        address: '0x0000000000000000000000000000000000000000',
-        xChainId: NIBIRU_MAINNET_CHAIN_ID,
-      },
-      bnUSD: {
-        symbol: 'bnUSD',
-        name: 'bnUSD',
-        decimals: 18,
-        address: '0x043fb7e23350Dd5b77dE5E228B528763DEcb9131',
-        xChainId: NIBIRU_MAINNET_CHAIN_ID,
-      },
-      SODA: {
-        symbol: 'SODA',
-        name: 'SODAX',
-        decimals: 18,
-        address: '0x5bda87f18109CA85fa7ADDf1D48B97734e9dc6F5',
-        xChainId: NIBIRU_MAINNET_CHAIN_ID,
       },
     },
   } as const satisfies EvmSpokeChainConfig,
@@ -1325,13 +1283,6 @@ export const hubVaults = {
       '0xb592d2631ccf245119532e025d11188cfadb6777',
     ] as const,
   },
-  [SodaTokens.sodaNIBI.symbol]: {
-    address: '0xc6c85287a8b173a509c2f198bb719a8a5a2d0c68',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0xe0064414c2c1a636a9424c7a17d86fbf7fd3f190',
-    ] as const,
-  },
   [SodaTokens.sodaPOL.symbol]: {
     address: '0x208ed38f4783328aa9ebfec360d32e7520a9b779',
     reserves: [
@@ -1490,6 +1441,10 @@ export const hubVaults = {
   [SodaTokens.sodaHYPE.symbol]: {
     address: '0x6e81124fc5d2bf666b16a0a5d90066ebf35c7411',
     reserves: ['0x7288622bc2d39553f34d5b81c88c3f979d91dbc7'],
+  },
+  [SodaTokens.sodaLL.symbol]: {
+    address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
+    reserves: ['0xee6236c791db0755c9bc333b4c7c85ab754f2a0a'],
   },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
@@ -1760,29 +1715,6 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x0eD0d274dC77ef460DC96b9fBaFF3EDB074e0471',
-      decimal: 18,
-      symbol: 'SODA',
-      name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
-    },
-  },
-  [NIBIRU_MAINNET_CHAIN_ID]: {
-    [spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: '0xe0064414c2c1a636a9424C7a17D86fbF7FD3f190',
-      decimal: 18,
-      symbol: 'NIBI',
-      name: 'Nibiru',
-      vault: hubVaults.sodaNIBI.address,
-    },
-    [spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].bnUSD]: {
-      asset: '0x11b93C162aABFfD026539bb3B9F9eC22c8b7ef8a',
-      decimal: 18,
-      symbol: 'bnUSD',
-      name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
-    },
-    [spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
-      asset: '0x26cd76cB5622Dc8638670A16E0Da5a51394A8DB1',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
@@ -2228,6 +2160,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'SODAX',
       vault: hubVaults.sodaSODA.address,
     },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL.address]: {
+      asset: '0xee6236c791db0755c9bc333b4c7c85ab754f2a0a',
+      decimal: 18,
+      symbol: 'LL',
+      name: 'LightLink',
+      vault: hubVaults.sodaLL.address,
+    },
   },
 } as const;
 
@@ -2349,11 +2288,6 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
-  [NIBIRU_MAINNET_CHAIN_ID]: [
-    // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.NIBI, // NOTE: Not Implemented
-    // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
-    // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.USDC, // NOTE: Not Implemented
-  ] as const satisfies Token[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
@@ -2376,6 +2310,7 @@ const moneyMarketConfig = {
     uiPoolDataProvider: '0xC04d746C38f1E51C8b3A3E2730250bbAC2F271bf',
     poolAddressesProvider: '0x036aDe0aBAA4c82445Cb7597f2d6d6130C118c7b',
     bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38',
+    bnUSDAToken: '0xa2cDA49735e42f0905496E40a66B3C5475Ed69dF',
     bnUSDVault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
   } satisfies MoneyMarketConfig,
 } as const;
@@ -2481,7 +2416,6 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
-  [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
   [SONIC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,

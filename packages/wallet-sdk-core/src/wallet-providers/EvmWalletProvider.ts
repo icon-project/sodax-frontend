@@ -2,7 +2,7 @@ import type { ChainId, EvmRawTransaction, EvmRawTransactionReceipt, IEvmWalletPr
 import type { Account, Address, Chain, Transport, Hash, PublicClient, WalletClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createWalletClient, createPublicClient, http } from 'viem';
-import { sonic, avalanche, arbitrum, base, optimism, bsc, polygon, nibiru, mainnet } from 'viem/chains';
+import { sonic, avalanche, arbitrum, base, optimism, bsc, polygon, mainnet } from 'viem/chains';
 import {
   SONIC_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -11,7 +11,6 @@ import {
   OPTIMISM_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
@@ -31,8 +30,6 @@ export function getEvmViemChain(id: ChainId): Chain {
       return bsc;
     case POLYGON_MAINNET_CHAIN_ID:
       return polygon;
-    case NIBIRU_MAINNET_CHAIN_ID:
-      return nibiru;
     case ETHEREUM_MAINNET_CHAIN_ID:
       return mainnet;
     default:

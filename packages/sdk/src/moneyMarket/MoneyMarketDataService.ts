@@ -23,8 +23,9 @@ import {
 } from './math-utils/index.js';
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
-import type { Address } from '@sodax/types';
+import type { Address, Erc20Token } from '@sodax/types';
 import { deriveUserWalletAddress } from '../shared/utils/shared-utils.js';
+import { Erc20Service } from '../shared/index.js';
 
 export class MoneyMarketDataService {
   public readonly uiPoolDataProviderService: UiPoolDataProviderService;
@@ -35,6 +36,10 @@ export class MoneyMarketDataService {
     this.hubProvider = hubProvider;
     this.uiPoolDataProviderService = new UiPoolDataProviderService(hubProvider);
     this.lendingPoolService = new LendingPoolService(hubProvider);
+  }
+
+  public async getATokenData(aToken: Address): Promise<Erc20Token> {
+    return Erc20Service.getErc20Token(aToken, this.hubProvider.publicClient);
   }
 
   /**
@@ -65,10 +70,11 @@ export class MoneyMarketDataService {
 
   /**
    * Get the reserves list
+   * @param unfiltered - If true, return the list of all reserves in the pool (including bnUSD (debt) reserve)
    * @returns {Promise<readonly Address[]>} - List of reserve asset addresses
    */
-  public async getReservesList(): Promise<readonly Address[]> {
-    return this.uiPoolDataProviderService.getReservesList();
+  public async getReservesList(unfiltered = false): Promise<readonly Address[]> {
+    return this.uiPoolDataProviderService.getReservesList(unfiltered);
   }
 
   /**
