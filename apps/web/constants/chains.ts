@@ -3,7 +3,6 @@ import {
   AVALANCHE_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
-  // INJECTIVE_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
@@ -12,6 +11,8 @@ import {
   SOLANA_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export interface ChainUI {
@@ -38,11 +39,6 @@ export const availableChains: ChainUI[] = [
   },
   { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png' },
   { id: BSC_MAINNET_CHAIN_ID, name: 'BSC', icon: '/chain/0x38.bsc.png' },
-  // {
-  //   id: INJECTIVE_MAINNET_CHAIN_ID,
-  //   name: 'Injective',
-  //   icon: '/chain/injective-1.png',
-  // },
   { id: SUI_MAINNET_CHAIN_ID, name: 'Sui', icon: '/chain/sui.png' },
   {
     id: OPTIMISM_MAINNET_CHAIN_ID,
@@ -62,6 +58,8 @@ export const availableChains: ChainUI[] = [
     name: 'LightLink',
     icon: '/chain/lightlink.png',
   },
+  { id: HYPEREVM_MAINNET_CHAIN_ID, name: 'Hyper', icon: '/chain/hyper.png' },
+  { id: ETHEREUM_MAINNET_CHAIN_ID, name: 'Ethereum', icon: '/chain/ethereum.png' },
 ];
 
 /**
