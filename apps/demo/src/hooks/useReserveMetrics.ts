@@ -98,7 +98,6 @@ export function useReserveMetrics({
       r =>
         getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase(),
     );
-
     // Default metrics
     let supplyAPR = '-';
     let borrowAPR = '-';
@@ -118,15 +117,12 @@ export function useReserveMetrics({
       supplyAPY = `${getCompoundedRate(liquidityRate).toFixed(4)}%`;
       borrowAPY = `${getCompoundedRate(variableBorrowRate).toFixed(4)}%`;
 
-      const available = BigInt(reserve.availableLiquidity ?? 0n);
-      const borrowed = BigInt(reserve.totalScaledVariableDebt ?? 0n);
-      const total = available + borrowed;
-
-      const rawTotalSupply = formatUnits(total, token.decimals);
-      const rawTotalBorrow = formatUnits(borrowed, token.decimals);
-
-      totalSupply = formatCompactNumber(Number.parseFloat(rawTotalSupply));
-      totalBorrow = formatCompactNumber(Number.parseFloat(rawTotalBorrow));
+      // All amounts from SDK are in WAD format (1e18)
+      const availableLiquidity = BigInt(reserve.availableLiquidity ?? 0n);
+      const totalVariableDebt = BigInt(reserve.totalScaledVariableDebt ?? 0n);
+      const total = availableLiquidity + totalVariableDebt;
+      totalSupply = formatCompactNumber(Number(formatUnits(total, 18)));
+      totalBorrow = formatCompactNumber(Number(formatUnits(totalVariableDebt, 18)));
 
       if (formattedReserve) {
         totalLiquidityUSD = `$${Number(formattedReserve.totalLiquidityUSD ?? 0).toFixed(2)}`;
@@ -147,8 +143,6 @@ export function useReserveMetrics({
     };
   } catch (error) {
     console.error(`Error in useReserveMetrics for ${token.symbol} (${token.address}):`, error);
-
-    // Return safe fallback structure
     return {
       userReserve: undefined,
       supplyAPR: '-',

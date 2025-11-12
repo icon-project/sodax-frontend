@@ -5,8 +5,7 @@ import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
 import { BorrowButton } from './BorrowButton';
 import { RepayButton } from './RepayButton';
-import type { AggregatedReserveData, UserReserveData } from '@sodax/sdk';
-import type { FormattedReserve } from '@/hooks/useFormattedReserves';
+import type { AggregatedReserveData, FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { findReserveByUnderlyingAsset } from '@/lib/utils';
 import { formatUnits } from 'viem';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
@@ -15,7 +14,7 @@ interface SupplyAssetsListItemProps {
   token: XToken;
   walletBalance: string;
   reserves: readonly AggregatedReserveData[];
-  formattedReserves: FormattedReserve[];
+  formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
   selectedChainId: ChainId;
 }

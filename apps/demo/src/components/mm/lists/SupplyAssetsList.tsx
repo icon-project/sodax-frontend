@@ -8,7 +8,7 @@ import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
 import { moneyMarketSupportedTokens } from '@sodax/sdk';
 import type { Token, XToken } from '@sodax/types';
-import { useFormattedReserves } from '@/hooks/useFormattedReserves';
+import { useReservesUsdFormat } from '@sodax/dapp-kit';
 
 export function SupplyAssetsList() {
   const { selectedChainId } = useAppStore();
@@ -36,7 +36,7 @@ export function SupplyAssetsList() {
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
   const { data: reserves, isLoading: isReservesLoading } = useReservesData();
 
-  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useFormattedReserves();
+  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   return (
     <Card>
       <CardHeader>
