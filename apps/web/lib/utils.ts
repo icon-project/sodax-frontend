@@ -71,7 +71,7 @@ const filterLegacyTokens = (tokens: readonly Token[]): Token[] => {
  */
 export const getAllSupportedSolverTokens = (): XToken[] => {
   const allTokens: XToken[] = [];
-
+  // Object.entries(swapSupportedTokens).flatMap(([chainId, tokens]) => tokens.map(token => ({ ...token, xChainId: chainId })));
   // Filter out Nibiru chain from supported chains
   const filteredSupportedChains = supportedSpokeChains.filter(chainId =>
     availableChains.find(chain => chain.id === chainId),
