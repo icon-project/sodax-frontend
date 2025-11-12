@@ -88,28 +88,10 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
               )}
             </div>
           ) : (
-            <div className="flex gap-1">
+            <div className="flex">
               <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
                 EVM multi-connect
               </div>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Info className="w-4 h-4 cursor-pointer" />
-                </PopoverTrigger>
-                <PopoverContent className="w-auto -mt-22 rounded-full border-none relative">
-                  <div className="inline-flex justify-center items-center gap-2">
-                    <p className="text-(length:--body-comfortable) font-medium text-espresso">
-                      One address, many networks.
-                    </p>
-                    <PopoverClose asChild>
-                      <XIcon className="w-3 h-3 cursor-pointer text-espresso" />
-                    </PopoverClose>
-                  </div>
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                    <EvmMultiConnectIcon />
-                  </div>
-                </PopoverContent>
-              </Popover>
             </div>
           )}
 
