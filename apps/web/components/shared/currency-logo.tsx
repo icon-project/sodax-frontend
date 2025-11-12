@@ -10,6 +10,7 @@ interface CurrencyLogoProps {
   tokenCount?: number;
   isClicked?: boolean;
   isHovered?: boolean;
+  hideNetwork?: boolean;
 }
 
 const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
@@ -20,6 +21,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
   tokenCount,
   isClicked = false,
   isHovered = false,
+  hideNetwork = false,
 }) => {
   return (
     <div className={`w-12 h-12 relative ${className}`}>
@@ -37,22 +39,24 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
           priority
         />
       </div>
-      <div
-        data-property-1="Active"
-        className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden relative"
-      >
-        <Image
-          className="w-4 h-4"
-          src={`/chain/${currency.xChainId}.png`}
-          alt={currency.xChainId}
-          width={16}
-          height={16}
-          priority
-        />
-        {isChainConnected && (
-          <div className="absolute -bottom-[2px] -right-[2px] w-[10px] h-[10px] bg-green-500 rounded-full border-2 border-white shadow-sm" />
-        )}
-      </div>
+      {!hideNetwork && (
+        <div
+          data-property-1="Active"
+          className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden relative"
+        >
+          <Image
+            className="w-4 h-4"
+            src={`/chain/${currency.xChainId}.png`}
+            alt={currency.xChainId}
+            width={16}
+            height={16}
+            priority
+          />
+          {isChainConnected && (
+            <div className="absolute -bottom-[2px] -right-[2px] w-[10px] h-[10px] bg-green-500 rounded-full border-2 border-white shadow-sm" />
+          )}
+        </div>
+      )}
       {isGroup && tokenCount && (
         <div className="transition-opacity duration-200" style={{ opacity: isClicked ? 0 : 1 }}>
           <div

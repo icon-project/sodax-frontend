@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
-import { animate, useMotionValue, useTransform } from 'framer-motion';
-import { motion } from 'framer-motion';
+import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 
 interface AnimatedNumberProps {
   to: number;
   duration?: number;
   className?: string;
+  decimalPlaces?: number;
 }
 
 /**
@@ -15,18 +15,28 @@ interface AnimatedNumberProps {
  * @param to - Target number to animate to
  * @param duration - Animation duration in seconds (default: 3)
  * @param className - CSS classes to apply to the component
+ * @param decimalPlaces - Number of decimal places to display (undefined keeps rounding to the nearest integer)
  */
-export default function AnimatedNumber({ to, duration = 3, className }: AnimatedNumberProps): JSX.Element {
+export default function AnimatedNumber({
+  to,
+  duration = 3,
+  className,
+  decimalPlaces,
+}: AnimatedNumberProps): JSX.Element {
   const count = useMotionValue(0);
-  const rounded = useTransform(() => Math.round(count.get()));
+  const formatted = useTransform(count, (value: number) => {
+    if (decimalPlaces === undefined) {
+      return Math.round(value).toString();
+    }
+    return value.toFixed(decimalPlaces);
+  });
 
   useEffect(() => {
     const controls = animate(count, to, {
       duration,
-      onUpdate: (latest: number) => {},
     });
     return () => controls.stop();
   }, [count, to, duration]);
 
-  return <motion.pre className={className}>{rounded}</motion.pre>;
+  return <motion.pre className={className}>{formatted}</motion.pre>;
 }

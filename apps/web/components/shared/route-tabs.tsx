@@ -27,7 +27,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'savings',
     label: 'Savings',
     content: 'a quick savings',
-    enabled: false,
+    enabled: true,
   },
   {
     value: 'loans',

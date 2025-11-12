@@ -410,3 +410,7 @@ textarea[readonly] {
 [role="dialog"] {
   box-shadow: 0px 20px 160px 0px rgba(185, 172, 171, 0.4) !important;
 }
+
+.network-accordion h3 {
+  padding-top: 0px !important;
+}
