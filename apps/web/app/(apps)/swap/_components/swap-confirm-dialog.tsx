@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import type BigNumber from 'bignumber.js';
@@ -19,40 +19,6 @@ import type { SpokeChainId } from '@sodax/types';
 import { getSwapErrorMessage, formatBalance } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
-
-interface SwapStatusMonitorProps {
-  dstTxHash: string;
-  onSwapSuccessful: () => void;
-  onSwapFailed: () => void;
-  onUpdateSwapStatus: (statusCode: SolverIntentStatusCode) => void;
-}
-
-function SwapStatusMonitor({
-  dstTxHash,
-  onSwapSuccessful,
-  onSwapFailed,
-  onUpdateSwapStatus,
-}: SwapStatusMonitorProps): React.JSX.Element | null {
-  const { data: status } = useStatus(dstTxHash as `0x${string}`);
-  const hasCalledSuccess = useRef<boolean>(false);
-  const hasCalledFailed = useRef<boolean>(false);
-
-  useEffect(() => {
-    if (status?.ok && !hasCalledSuccess.current && !hasCalledFailed.current) {
-      const statusCode = status.value.status;
-      onUpdateSwapStatus(statusCode);
-      if (statusCode === SolverIntentStatusCode.SOLVED) {
-        hasCalledSuccess.current = true;
-        onSwapSuccessful();
-      } else if (statusCode === SolverIntentStatusCode.FAILED) {
-        hasCalledFailed.current = true;
-        onSwapFailed();
-      }
-    }
-  }, [status, onSwapSuccessful, onSwapFailed, onUpdateSwapStatus]);
-
-  return null;
-}
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -85,26 +51,17 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     isSwapAndSend,
     customDestinationAddress,
     dstTxHash,
-    isSwapSuccessful,
     swapError,
+    swapStatus,
   } = useSwapState();
-  const {
-    setInputAmount,
-    setDstTxHash,
-    setIsSwapSuccessful,
-    setSwapError,
-    setSwapStatus,
-    setAllowanceConfirmed,
-    resetSwapExecutionState,
-  } = useSwapActions();
+  const { setInputAmount, setDstTxHash, setSwapError, setSwapStatus, setAllowanceConfirmed, resetSwapExecutionState } =
+    useSwapActions();
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress || '';
-  const walletProvider = useWalletProvider(inputToken.xChainId);
-  const spokeProvider = useSpokeProvider(inputToken.xChainId, walletProvider);
-  const sourceXAccount = useXAccount(inputToken.xChainId);
   const sourceWalletProvider = useWalletProvider(inputToken.xChainId);
   const sourceSpokeProvider = useSpokeProvider(inputToken.xChainId, sourceWalletProvider);
+  const sourceXAccount = useXAccount(inputToken.xChainId);
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceSpokeProvider);
 
   const intentOrderPayload = useMemo(() => {
@@ -128,70 +85,38 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     } satisfies CreateIntentParams;
   }, [inputToken, outputToken, minOutputAmount, inputAmount, sourceAddress, finalDestinationAddress]);
 
-  const handleSwapSuccessful = useCallback(() => {
-    setIsSwapSuccessful(true);
-  }, [setIsSwapSuccessful]);
-
-  const handleSwapFailed = useCallback(() => {
-    setIsSwapSuccessful(false);
-    setSwapError({ title: 'Swap failed', message: 'Please try again.' });
-  }, [setIsSwapSuccessful, setSwapError]);
+  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceSpokeProvider);
+  const { data: status } = useStatus((dstTxHash || '0x') as `0x${string}`);
 
   useEffect(() => {
-    if (open) {
-      setAllowanceConfirmed(false);
-      setApprovalError(null);
-    }
-  }, [open, setAllowanceConfirmed]);
+    if (dstTxHash && status?.ok) {
+      const statusCode = status.value.status;
+      setSwapStatus(statusCode);
+      if (statusCode === SolverIntentStatusCode.SOLVED) {
+        setDstTxHash('');
+      }
 
-  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, spokeProvider);
+      if (statusCode === SolverIntentStatusCode.FAILED) {
+        setSwapError({ title: 'Swap failed', message: 'Please try again.' });
+      }
+    }
+  }, [dstTxHash, status, setSwapStatus, setSwapError, setDstTxHash]);
 
   const handleApprove = async (): Promise<void> => {
-    if (!intentOrderPayload) {
-      setApprovalError('Intent params not available for approval');
-      return;
-    }
-
     try {
-      setApprovalError(null);
-      const value = await approve({ params: intentOrderPayload });
+      const value = await approve({ params: intentOrderPayload as CreateIntentParams });
       if (value) {
         setAllowanceConfirmed(true);
       } else {
-        setApprovalError('Failed to approve tokens');
+        setApprovalError('Failed to approve tokens.');
       }
     } catch (error) {
       setApprovalError(error instanceof Error ? error.message : 'Approval failed. Please try again.');
     }
   };
 
-  const handleClose = (): void => {
-    setSwapError(null);
-    if (isSwapSuccessful) {
-      onClose?.();
-      resetSwapExecutionState();
-      setInputAmount('0');
-      return;
-    }
-
-    const isWaitingForSolvedStatus = !!dstTxHash && !swapError;
-    if (isWaitingForSolvedStatus || isSwapPending) {
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 500);
-      return;
-    }
-
-    onClose?.();
-    setIsShaking(false);
-  };
-
   const handleSwapConfirm = async (): Promise<void> => {
-    if (!intentOrderPayload) {
-      setSwapError({ title: 'Swap Error', message: 'Intent params not available' });
-      return;
-    }
-
-    const result = await executeSwap(intentOrderPayload);
+    const result = await executeSwap(intentOrderPayload as CreateIntentParams);
 
     if (!result.ok) {
       const errorMessage = getSwapErrorMessage(result.error?.code || 'UNKNOWN');
@@ -205,16 +130,26 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     setSwapStatus(SolverIntentStatusCode.NOT_STARTED_YET);
   };
 
+  const handleClose = (): void => {
+    const isWaitingForSolvedStatus = !!dstTxHash && !swapError;
+    if (isWaitingForSolvedStatus || isSwapPending) {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+      return;
+    }
+
+    if (swapStatus === SolverIntentStatusCode.SOLVED) {
+      setInputAmount('');
+    }
+
+    setIsShaking(false);
+    setApprovalError(null);
+    resetSwapExecutionState();
+    onClose?.();
+  };
+
   return (
     <>
-      {dstTxHash && (
-        <SwapStatusMonitor
-          dstTxHash={dstTxHash}
-          onSwapSuccessful={handleSwapSuccessful}
-          onSwapFailed={handleSwapFailed}
-          onUpdateSwapStatus={setSwapStatus}
-        />
-      )}
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
           enableMotion={true}
@@ -244,7 +179,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
           <div className={`flex w-full justify-center ${swapError ? 'opacity-40' : ''}`}>
             <div className="w-60 pb-6 inline-flex justify-between items-center">
               <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
-                <div className={`${isSwapSuccessful ? 'grayscale opacity-50' : ''}`}>
+                <div className={`${swapStatus === SolverIntentStatusCode.SOLVED ? 'grayscale opacity-50' : ''}`}>
                   <CurrencyLogo currency={inputToken} />
                 </div>
                 <div className="flex flex-col justify-start items-center gap-2">
@@ -272,7 +207,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 </div>
               </div>
               <div className="w-16 h-9 inline-flex flex-col justify-between items-center">
-                {isSwapSuccessful ? (
+                {swapStatus === SolverIntentStatusCode.SOLVED ? (
                   <>
                     <ChevronsRight className="w-4 h-4 text-clay-light" />
                     <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
@@ -319,7 +254,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
           <SwapButton
             intentOrderPayload={intentOrderPayload}
-            spokeProvider={spokeProvider}
+            spokeProvider={sourceSpokeProvider}
             isSwapPending={isSwapPending}
             onClose={handleClose}
             onApprove={handleApprove}
@@ -327,7 +262,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             isApproving={isApproving}
           />
 
-          {isSwapSuccessful ? (
+          {swapStatus === SolverIntentStatusCode.SOLVED ? (
             <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
               Enjoying SODAX?
               <Link

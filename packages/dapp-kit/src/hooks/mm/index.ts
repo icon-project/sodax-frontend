@@ -6,3 +6,4 @@ export * from './useUserReservesData';
 export * from './useReservesData';
 export * from './useMMAllowance';
 export * from './useMMApprove';
+export * from './useAToken';

@@ -25,6 +25,8 @@ import type {
   XToken,
 } from '../common/index.js';
 
+export const CONFIG_VERSION = 4; // Increment this when the config is updated
+
 // chain ids (actual for evm chains), custom for other chains not having native ids
 export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
 export const ARBITRUM_MAINNET_CHAIN_ID = '0xa4b1.arbitrum';
@@ -38,7 +40,6 @@ export const OPTIMISM_MAINNET_CHAIN_ID = '0xa.optimism';
 export const POLYGON_MAINNET_CHAIN_ID = '0x89.polygon';
 export const SOLANA_MAINNET_CHAIN_ID = 'solana';
 export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
-export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
 export const HYPEREVM_MAINNET_CHAIN_ID = 'hyper';
 export const LIGHTLINK_MAINNET_CHAIN_ID = 'lightlink';
 export const ETHEREUM_MAINNET_CHAIN_ID = 'ethereum';
@@ -59,9 +60,9 @@ export const CHAIN_IDS = [
   SOLANA_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
 ] as const;
 
 export const EVM_CHAIN_IDS = [
@@ -72,9 +73,9 @@ export const EVM_CHAIN_IDS = [
   SONIC_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
 ] as const;
 
 export const baseChainInfo = {
@@ -95,12 +96,6 @@ export const baseChainInfo = {
     id: AVALANCHE_MAINNET_CHAIN_ID,
     type: 'EVM',
     chainId: 43_114,
-  },
-  [NIBIRU_MAINNET_CHAIN_ID]: {
-    name: 'Nibiru',
-    id: NIBIRU_MAINNET_CHAIN_ID,
-    type: 'EVM',
-    chainId: 6_900,
   },
   [ARBITRUM_MAINNET_CHAIN_ID]: {
     name: 'Arbitrum',
@@ -168,6 +163,12 @@ export const baseChainInfo = {
     type: 'ICON',
     chainId: '0x1.icon',
   },
+  [ETHEREUM_MAINNET_CHAIN_ID]: {
+    name: 'Ethereum',
+    id: ETHEREUM_MAINNET_CHAIN_ID,
+    type: 'EVM',
+    chainId: 1,
+  },
 } as const satisfies Record<ChainId, BaseSpokeChainInfo<ChainType>>;
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
@@ -184,9 +185,9 @@ export const ChainIdToIntentRelayChainId = {
   [SUI_MAINNET_CHAIN_ID]: 21n,
   [STELLAR_MAINNET_CHAIN_ID]: 27n,
   [ICON_MAINNET_CHAIN_ID]: 1768124270n,
-  [NIBIRU_MAINNET_CHAIN_ID]: 7235938n,
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
+  [ETHEREUM_MAINNET_CHAIN_ID]: 2n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -205,10 +206,10 @@ export const HubVaultSymbols = [
   'sodaUSDC',
   'bnUSD',
   'sodaPOL',
-  'sodaNIBI',
   'sodaS',
   'IbnUSD',
   'sodaHYPE',
+  'sodaLL',
 ] as const;
 
 export const SodaTokens = {
@@ -259,13 +260,6 @@ export const SodaTokens = {
     name: 'Soda INJ',
     decimals: 18,
     address: '0x1f22279C89B213944b7Ea41daCB0a868DdCDFd13',
-    xChainId: SONIC_MAINNET_CHAIN_ID,
-  },
-  sodaNIBI: {
-    symbol: 'sodaNIBI',
-    name: 'Soda NIBI',
-    decimals: 18,
-    address: '0xc6c85287a8b173A509C2F198bB719A8a5a2d0C68',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
   sodaSUI: {
@@ -331,7 +325,14 @@ export const SodaTokens = {
     address: '0x6E81124fC5d2Bf666B16a0A5d90066eBf35c7411',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
-} as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
+  sodaLL: {
+    symbol: 'sodaLL',
+    name: 'Soda LL',
+    decimals: 18,
+    address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+} as const satisfies Record<HubVaultSymbol, XToken>;
 
 export const SodaTokensAsHubAssets: Record<
   string,
@@ -371,7 +372,7 @@ export const hubChainConfig = {
   nativeToken: '0x0000000000000000000000000000000000000000',
   wrappedNativeToken: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
   supportedTokens: [],
-} as const satisfies EvmHubChainConfig
+} as const satisfies EvmHubChainConfig;
 
 export const spokeChainConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
@@ -516,38 +517,6 @@ export const spokeChainConfig = {
         decimals: 18,
         address: '0x390ceed555905ec225Da330A188EA04e85570f00',
         xChainId: AVALANCHE_MAINNET_CHAIN_ID,
-      },
-    },
-  } as const satisfies EvmSpokeChainConfig,
-  [NIBIRU_MAINNET_CHAIN_ID]: {
-    chain: baseChainInfo[NIBIRU_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
-    addresses: {
-      assetManager: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
-      connection: '0x772FFE538E45b2cDdFB5823041EC26C44815B9AB',
-    },
-    nativeToken: '0x0000000000000000000000000000000000000000' as const,
-    bnUSD: '0x043fb7e23350Dd5b77dE5E228B528763DEcb9131',
-    supportedTokens: {
-      NIBI: {
-        symbol: 'NIBI',
-        name: 'Nibiru',
-        decimals: 6,
-        address: '0x0000000000000000000000000000000000000000',
-        xChainId: NIBIRU_MAINNET_CHAIN_ID,
-      },
-      bnUSD: {
-        symbol: 'bnUSD',
-        name: 'bnUSD',
-        decimals: 18,
-        address: '0x043fb7e23350Dd5b77dE5E228B528763DEcb9131',
-        xChainId: NIBIRU_MAINNET_CHAIN_ID,
-      },
-      SODA: {
-        symbol: 'SODA',
-        name: 'SODAX',
-        decimals: 18,
-        address: '0x5bda87f18109CA85fa7ADDf1D48B97734e9dc6F5',
-        xChainId: NIBIRU_MAINNET_CHAIN_ID,
       },
     },
   } as const satisfies EvmSpokeChainConfig,
@@ -1248,6 +1217,52 @@ export const spokeChainConfig = {
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
+  [ETHEREUM_MAINNET_CHAIN_ID]: {
+    chain: baseChainInfo[ETHEREUM_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
+    addresses: {
+      assetManager: '0x39E77f86C1B1f3fbAb362A82b49D2E86C09659B4',
+      connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
+    bnUSD: '0x1f22279C89B213944b7Ea41daCB0a868DdCDFd13',
+    supportedTokens: {
+      ETH: {
+        symbol: 'ETH',
+        name: 'ETH',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '0x1f22279C89B213944b7Ea41daCB0a868DdCDFd13',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+      SODA: {
+        symbol: 'SODA',
+        name: 'SODAX',
+        decimals: 18,
+        address: '0x4A1C82744cDDeE675A255fB289Cb0917A482e7C7',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+      USDC: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+      LL: {
+        symbol: 'LL',
+        name: 'LightLink',
+        decimals: 18,
+        address: '0x0921799CB1d702148131024d18fCdE022129Dc73',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+    } as const,
+  } as const satisfies EvmSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
 
 // All addresses are now lowercase for consistency and correctness
@@ -1268,13 +1283,6 @@ export const hubVaults = {
       // hub asset addresses contained in the vault
       '0x039e2fb66102314ce7b64ce5ce3e5183bc94ad38',
       '0xb592d2631ccf245119532e025d11188cfadb6777',
-    ] as const,
-  },
-  [SodaTokens.sodaNIBI.symbol]: {
-    address: '0xc6c85287a8b173a509c2f198bb719a8a5a2d0c68',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0xe0064414c2c1a636a9424c7a17d86fbf7fd3f190',
     ] as const,
   },
   [SodaTokens.sodaPOL.symbol]: {
@@ -1435,6 +1443,10 @@ export const hubVaults = {
   [SodaTokens.sodaHYPE.symbol]: {
     address: '0x6e81124fc5d2bf666b16a0a5d90066ebf35c7411',
     reserves: ['0x7288622bc2d39553f34d5b81c88c3f979d91dbc7'],
+  },
+  [SodaTokens.sodaLL.symbol]: {
+    address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
+    reserves: ['0xee6236c791db0755c9bc333b4c7c85ab754f2a0a'],
   },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
@@ -1705,29 +1717,6 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x0eD0d274dC77ef460DC96b9fBaFF3EDB074e0471',
-      decimal: 18,
-      symbol: 'SODA',
-      name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
-    },
-  },
-  [NIBIRU_MAINNET_CHAIN_ID]: {
-    [spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: '0xe0064414c2c1a636a9424C7a17D86fbF7FD3f190',
-      decimal: 18,
-      symbol: 'NIBI',
-      name: 'Nibiru',
-      vault: hubVaults.sodaNIBI.address,
-    },
-    [spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].bnUSD]: {
-      asset: '0x11b93C162aABFfD026539bb3B9F9eC22c8b7ef8a',
-      decimal: 18,
-      symbol: 'bnUSD',
-      name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
-    },
-    [spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
-      asset: '0x26cd76cB5622Dc8638670A16E0Da5a51394A8DB1',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
@@ -2144,6 +2133,43 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: '0x', // no vault yet
     },
   },
+  [ETHEREUM_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH.address]: {
+      asset: '0xaeafa26e43f46cd83efe89b1e57c858eb5685a24',
+      decimal: 18,
+      symbol: 'ETH',
+      name: 'ETH',
+      vault: hubVaults.sodaETH.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0x13df82eb4c6b7d4bb85669d227e6d24342e4f588',
+      decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: hubVaults.bnUSD.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
+      asset: '0x46bd0ce9b2b455ac4377cd142ecb8b719715197d',
+      decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      vault: hubVaults.sodaUSDC.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
+      asset: '0x12affee59ceb8be6788a25f9b36149a717795a51',
+      decimal: 18,
+      symbol: 'SODA',
+      name: 'SODAX',
+      vault: hubVaults.sodaSODA.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL.address]: {
+      asset: '0xee6236c791db0755c9bc333b4c7c85ab754f2a0a',
+      decimal: 18,
+      symbol: 'LL',
+      name: 'LightLink',
+      vault: hubVaults.sodaLL.address,
+    },
+  },
 } as const;
 
 export const solverConfig = {
@@ -2229,7 +2255,7 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SUI.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['S.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['POL.LL'],
-    // spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'],
   ] as const satisfies Token[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
@@ -2264,11 +2290,13 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
-  [NIBIRU_MAINNET_CHAIN_ID]: [
-    // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.NIBI, // NOTE: Not Implemented
-    // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
-    // spokeChainConfig[NIBIRU_MAINNET_CHAIN_ID].supportedTokens.USDC, // NOTE: Not Implemented
-  ] as const satisfies Token[],
+  [ETHEREUM_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
+  ] as const,
 } as const;
 
 // get supported spoke chain tokens for solver
@@ -2284,6 +2312,7 @@ const moneyMarketConfig = {
     uiPoolDataProvider: '0xC04d746C38f1E51C8b3A3E2730250bbAC2F271bf',
     poolAddressesProvider: '0x036aDe0aBAA4c82445Cb7597f2d6d6130C118c7b',
     bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38',
+    bnUSDAToken: '0xa2cDA49735e42f0905496E40a66B3C5475Ed69dF',
     bnUSDVault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
   } satisfies MoneyMarketConfig,
 } as const;
@@ -2389,7 +2418,6 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
-  [NIBIRU_MAINNET_CHAIN_ID]: [] as const,
   [SONIC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
@@ -2397,6 +2425,12 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
+  ] as const,
+  [ETHEREUM_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 

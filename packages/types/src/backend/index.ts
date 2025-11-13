@@ -12,6 +12,7 @@ export type GetSpokeChainConfigApiResponse = SpokeChainConfigMap;
 export type GetHubVaultsApiResponse = Record<HubVaultSymbol, VaultType>;
 export type GetMoneyMarketReserveAssetsApiResponse = readonly Address[];
 export type GetAllConfigApiResponse = {
+  version?: number;
   supportedChains: GetChainsApiResponse;
   supportedSwapTokens: GetSwapTokensApiResponse;
   supportedMoneyMarketTokens: GetMoneyMarketTokensApiResponse;

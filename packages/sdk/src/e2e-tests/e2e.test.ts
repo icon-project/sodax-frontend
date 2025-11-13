@@ -6,7 +6,6 @@ import {
   BSC_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
   INJECTIVE_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   SOLANA_MAINNET_CHAIN_ID,
@@ -17,6 +16,7 @@ import {
   type SpokeChainId,
   type Token,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
   SodaTokens,
   hubVaults,
 } from '@sodax/types';
@@ -104,9 +104,9 @@ describe('e2e', () => {
       '0x514569c788b096595672e0f68ec72387a22ac67b', // trevinSUI
     ],
     [SONIC_MAINNET_CHAIN_ID]: [],
-    [NIBIRU_MAINNET_CHAIN_ID]: [],
     [HYPEREVM_MAINNET_CHAIN_ID]: [],
     [LIGHTLINK_MAINNET_CHAIN_ID]: [],
+    [ETHEREUM_MAINNET_CHAIN_ID]: [],
   };
 
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {
