@@ -56,6 +56,7 @@ const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   'USDT.LL': 'tether',
   'ETH.LL': 'ethereum',
   'BTC.LL': 'bitcoin',
+  'HYPE.LL': 'hyperliquid',
 
   // Chain-specific native tokens
   INJ: 'injective',
