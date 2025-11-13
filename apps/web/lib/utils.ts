@@ -71,7 +71,6 @@ const filterLegacyTokens = (tokens: readonly Token[]): Token[] => {
  */
 export const getAllSupportedSolverTokens = (): XToken[] => {
   const allTokens: XToken[] = [];
-  // Object.entries(swapSupportedTokens).flatMap(([chainId, tokens]) => tokens.map(token => ({ ...token, xChainId: chainId })));
   const filteredSupportedChains = supportedSpokeChains.filter(chainId =>
     availableChains.find(chain => chain.id === chainId),
   );

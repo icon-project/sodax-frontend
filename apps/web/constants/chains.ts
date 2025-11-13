@@ -22,7 +22,7 @@ export interface ChainUI {
 }
 
 export const EVM_CHAIN_ICONS = [
-  '/chain/ethereum.png',
+  // '/chain/ethereum.png',
   '/chain/0x2105.base.png',
   '/chain/0x38.bsc.png',
   '/chain/0xa86a.avax.png',
@@ -72,7 +72,7 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/lightlink.png',
   },
   { id: HYPEREVM_MAINNET_CHAIN_ID, name: 'Hyper', icon: '/chain/hyper.png' },
-  { id: ETHEREUM_MAINNET_CHAIN_ID, name: 'Ethereum', icon: '/chain/ethereum.png' },
+  // { id: ETHEREUM_MAINNET_CHAIN_ID, name: 'Ethereum', icon: '/chain/ethereum.png' },
 ];
 
 /**
