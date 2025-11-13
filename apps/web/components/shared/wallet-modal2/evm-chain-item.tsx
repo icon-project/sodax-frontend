@@ -1,10 +1,7 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, MinusIcon, CopyIcon, Loader2, Info, XIcon } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { PopoverClose } from '@radix-ui/react-popover';
-import { EvmMultiConnectIcon } from '@/components/icons';
+import { PlusIcon, MinusIcon, CopyIcon, Loader2 } from 'lucide-react';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { shortenAddress } from '@/lib/utils';
 import { useState } from 'react';
