@@ -35,7 +35,9 @@ export function BorrowAssetsListItem({ token, walletBalance, asset, disabled = f
         <span className="font-medium text-cherry-dark">{asset.symbol}</span>
         <span className="text-clay-light text-xs ml-1">{getChainLabel(asset.chainId)}</span>
       </TableCell>
-      <TableCell>{walletBalance}</TableCell>
+      <TableCell>
+        <span className="font-mono text-sm text-clay">{walletBalance}</span>
+      </TableCell>
       <TableCell>
         <span className="font-mono text-sm text-clay">
           {availableLiquidity === '--' ? availableLiquidity : Number.parseFloat(availableLiquidity).toFixed(2)}
