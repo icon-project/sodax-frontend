@@ -73,7 +73,7 @@ export class ConfigService {
     try {
       const response = await this.backendApiService.getAllConfig();
 
-      // if the config version is not set or is less than the current version, throw an error
+      // if the config version is not set or is less than the current version, log a warning and fall back to default config
       if (!response.version || response.version < CONFIG_VERSION) {
         console.warn(
           `Dynamic config version is less than the current version, resorting to the default one. Current version: ${CONFIG_VERSION}, response version: ${response.version}`,
