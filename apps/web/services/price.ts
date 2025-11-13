@@ -22,7 +22,7 @@ const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   BNB: 'binancecoin',
   AVAX: 'avalanche-2',
   LL: 'lightlink',
-  HYPE: 'Hyperliquid',
+  HYPE: 'hyperliquid',
   XLM: 'stellar',
   POL: 'polygon-ecosystem-token',
   SODA: 'icon',
