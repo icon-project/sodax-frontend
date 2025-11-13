@@ -25,6 +25,8 @@ import type {
   XToken,
 } from '../common/index.js';
 
+export const CONFIG_VERSION = 4; // Increment this when the config is updated
+
 // chain ids (actual for evm chains), custom for other chains not having native ids
 export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
 export const ARBITRUM_MAINNET_CHAIN_ID = '0xa4b1.arbitrum';
@@ -2253,7 +2255,7 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SUI.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['S.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['POL.LL'],
-    // spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'],
   ] as const satisfies Token[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
