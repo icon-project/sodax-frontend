@@ -74,34 +74,7 @@ if (result.ok) {
 
 ### Stellar Trustline Requirements
 
-For Stellar-based staking operations, you need to handle trustlines when Stellar is used as the source chain:
-
-```typescript
-import { StellarSpokeService } from "@sodax/sdk";
-
-// When Stellar is the source chain, check and establish trustlines
-if (isStellarSource) {
-  // Check if sufficient trustline exists for the SODA token
-  const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
-    sodaTokenAddress,
-    amount,
-    stellarSpokeProvider
-  );
-
-  if (!hasTrustline) {
-    // Request trustline for the SODA token
-    const trustlineResult = await StellarSpokeService.requestTrustline(
-      sodaTokenAddress,
-      amount,
-      stellarSpokeProvider,
-      false // false = execute transaction, true = return raw transaction
-    );
-    
-    // Wait for trustline transaction to be confirmed before proceeding
-    console.log('Trustline established:', trustlineResult);
-  }
-}
-```
+For Stellar-based staking operations, you need to handle trustlines when Stellar is used as the source chain. See [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#staking) for detailed information and code examples.
 
 **Note**: Staking operations always flow from spoke chains (including Stellar) to the hub chain (Sonic), so Stellar is only used as a source chain for staking operations.
 
@@ -746,7 +719,7 @@ The typical staking operation follows this sequence:
 
 1. **Check allowance** using `isAllowanceValid()`
 2. **Approve tokens** using `approve()` if needed
-3. **For Stellar source chains**: Check and establish trustlines using `StellarSpokeService.hasSufficientTrustline()` and `StellarSpokeService.requestTrustline()` if needed
+3. **For Stellar source chains**: Check and establish trustlines (see [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#staking))
 4. **Execute staking operation** using `stake()`, `unstake()`, `instantUnstake()`, `claim()`, or `cancelUnstake()`
 5. **Monitor progress** using the returned transaction hashes
 

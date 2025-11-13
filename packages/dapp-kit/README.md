@@ -302,6 +302,7 @@ function BridgeComponent() {
 - [`useReservesData()`](./src/hooks/mm/useReservesData.ts) - Get reserves data
 - [`useMMAllowance()`](./src/hooks/mm/useMMAllowance.ts) - Check token allowance for a specific amount
 - [`useMMApprove()`](./src/hooks/mm/useMMApprove.ts) - Approve token spending
+- [`useAToken()`](./src/hooks/mm/useAToken.ts) - Fetch aToken token data
 
 #### Swap Hooks
 - [`useQuote()`](./src/hooks/swap/useQuote.ts) - Get quote for an intent order

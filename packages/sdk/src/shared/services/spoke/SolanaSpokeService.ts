@@ -332,29 +332,33 @@ export class SolanaSpokeService {
     spokeProvider: SolanaSpokeProvider,
     signature: string,
     commitment: Finality = 'finalized',
-    timeoutMs = 60_000, // total time to wait
+    timeoutMs = 120_000, // total time to wait
   ): Promise<Result<boolean>> {
-    const connection = new Connection(spokeProvider.chainConfig.rpcUrl, commitment);
-    const deadline = Date.now() + timeoutMs;
+    try {
+      const connection = new Connection(spokeProvider.chainConfig.rpcUrl, commitment);
+      const deadline = Date.now() + timeoutMs;
 
-    while (Date.now() < deadline) {
-      try {
-        const tx = await connection.getTransaction(signature, { commitment, maxSupportedTransactionVersion: 0 });
-        if (tx) {
-          if (tx.meta?.err) {
-            return { ok: false, error: new Error(JSON.stringify(tx.meta.err)) };
+      while (Date.now() < deadline) {
+        try {
+          const tx = await connection.getTransaction(signature, { commitment, maxSupportedTransactionVersion: 0 });
+          if (tx) {
+            if (tx.meta?.err) {
+              return { ok: false, error: new Error(JSON.stringify(tx.meta.err)) };
+            }
+            return { ok: true, value: true };
           }
-          return { ok: true, value: true };
+        } catch {
+          // ignore transient RPC errors and keep polling
         }
-      } catch {
-        // ignore transient RPC errors and keep polling
+        await new Promise(r => setTimeout(r, 750)); // linear 750ms retry
       }
-      await new Promise(r => setTimeout(r, 750)); // linear 750ms retry
-    }
 
-    return {
-      ok: false,
-      error: new Error(`Timed out after ${timeoutMs}ms waiting for ${commitment} confirmation for ${signature}`),
-    };
+      return {
+        ok: false,
+        error: new Error(`Timed out after ${timeoutMs}ms waiting for ${commitment} confirmation for ${signature}`),
+      };
+    } catch (error) {
+      return { ok: false, error: new Error(`Failed to get transaction confirmation: ${JSON.stringify(error)}`) };
+    }
   }
 }
