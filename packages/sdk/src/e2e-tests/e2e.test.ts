@@ -18,6 +18,7 @@ import {
   type Token,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
   SodaTokens,
   hubVaults,
 } from '@sodax/types';
@@ -109,6 +110,7 @@ describe('e2e', () => {
     [HYPEREVM_MAINNET_CHAIN_ID]: [],
     [LIGHTLINK_MAINNET_CHAIN_ID]: [],
     [ETHEREUM_MAINNET_CHAIN_ID]: [],
+    [REDBELLY_MAINNET_CHAIN_ID]: [],
   };
 
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {

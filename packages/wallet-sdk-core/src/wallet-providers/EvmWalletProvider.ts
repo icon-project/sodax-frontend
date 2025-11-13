@@ -2,7 +2,18 @@ import type { ChainId, EvmRawTransaction, EvmRawTransactionReceipt, IEvmWalletPr
 import type { Account, Address, Chain, Transport, Hash, PublicClient, WalletClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createWalletClient, createPublicClient, http } from 'viem';
-import { sonic, avalanche, arbitrum, base, optimism, bsc, polygon, nibiru, mainnet } from 'viem/chains';
+import {
+  sonic,
+  avalanche,
+  arbitrum,
+  base,
+  optimism,
+  bsc,
+  polygon,
+  nibiru,
+  mainnet,
+  redbellyMainnet,
+} from 'viem/chains';
 import {
   SONIC_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -13,6 +24,7 @@ import {
   POLYGON_MAINNET_CHAIN_ID,
   NIBIRU_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export function getEvmViemChain(id: ChainId): Chain {
@@ -35,6 +47,8 @@ export function getEvmViemChain(id: ChainId): Chain {
       return nibiru;
     case ETHEREUM_MAINNET_CHAIN_ID:
       return mainnet;
+    case REDBELLY_MAINNET_CHAIN_ID:
+      return redbellyMainnet;
     default:
       throw new Error(`Unsupported EVM chain ID: ${id}`);
   }

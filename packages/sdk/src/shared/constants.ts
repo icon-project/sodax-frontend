@@ -10,6 +10,7 @@ import {
   sonic,
   lightlinkPhoenix,
   mainnet,
+  redbellyMainnet,
 } from 'viem/chains';
 import type { LegacybnUSDChainId, LegacybnUSDToken, NewbnUSDChainId } from '../index.js';
 import {
@@ -32,6 +33,7 @@ import {
   spokeChainConfig,
   type EvmChainId,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -102,6 +104,8 @@ export function getEvmViemChain(id: EvmChainId): Chain {
       return lightlinkPhoenix;
     case ETHEREUM_MAINNET_CHAIN_ID:
       return mainnet;
+    case REDBELLY_MAINNET_CHAIN_ID:
+      return redbellyMainnet;
     default:
       throw new Error(`Unsupported EVM chain ID: ${id}`);
   }

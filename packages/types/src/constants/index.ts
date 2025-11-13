@@ -42,7 +42,7 @@ export const NIBIRU_MAINNET_CHAIN_ID = 'nibiru';
 export const HYPEREVM_MAINNET_CHAIN_ID = 'hyper';
 export const LIGHTLINK_MAINNET_CHAIN_ID = 'lightlink';
 export const ETHEREUM_MAINNET_CHAIN_ID = 'ethereum';
-
+export const REDBELLY_MAINNET_CHAIN_ID = 'redbelly';
 export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
 
 // ordered with Sonic first as it can act as both hub and spoke
@@ -63,6 +63,7 @@ export const CHAIN_IDS = [
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
 ] as const;
 
 export const EVM_CHAIN_IDS = [
@@ -77,6 +78,7 @@ export const EVM_CHAIN_IDS = [
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
 ] as const;
 
 export const baseChainInfo = {
@@ -176,6 +178,12 @@ export const baseChainInfo = {
     type: 'EVM',
     chainId: 1,
   },
+  [REDBELLY_MAINNET_CHAIN_ID]: {
+    name: 'Redbelly',
+    id: REDBELLY_MAINNET_CHAIN_ID,
+    type: 'EVM',
+    chainId: 151,
+  },
 } as const satisfies Record<ChainId, BaseSpokeChainInfo<ChainType>>;
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
@@ -196,6 +204,7 @@ export const ChainIdToIntentRelayChainId = {
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
   [ETHEREUM_MAINNET_CHAIN_ID]: 2n,
+  [REDBELLY_MAINNET_CHAIN_ID]: 726564n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -218,6 +227,7 @@ export const HubVaultSymbols = [
   'sodaS',
   'IbnUSD',
   'sodaHYPE',
+  'sodaRBNT',
 ] as const;
 
 export const SodaTokens = {
@@ -339,6 +349,13 @@ export const SodaTokens = {
     decimals: 18,
     address: '0x6E81124fC5d2Bf666B16a0A5d90066eBf35c7411',
     xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaRBNT: {
+    symbol: 'sodaRBNT',
+    name: 'Soda RBNT',
+    decimals: 18,
+    address: '0x4B207114F9118dEAC56436e1aE3c45648783c7Ac',
+    xChainId: REDBELLY_MAINNET_CHAIN_ID,
   },
 } as const satisfies Record<HubVaultSymbol, XToken & { symbol: HubVaultSymbol }>;
 
@@ -1303,6 +1320,115 @@ export const spokeChainConfig = {
       },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
+  [REDBELLY_MAINNET_CHAIN_ID]: {
+    chain: baseChainInfo[REDBELLY_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
+    addresses: {
+      assetManager: '0x39E77f86C1B1f3fbAb362A82b49D2E86C09659B4',
+      connection: '0x---',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
+    bnUSD: '0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8',
+    supportedTokens: {
+      RBNT: {
+        symbol: 'RBNT',
+        name: 'RBNT',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      SODA: {
+        symbol: 'SODA',
+        name: 'SODAX',
+        decimals: 18,
+        address: '0x5034479da62Ec95360165BB45ead266A48519E85',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      USDC: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0x8201c02d4AB2214471E8C3AD6475C8b0CD9F2D06',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rETH: {
+        symbol: 'rETH',
+        name: 'RedBelly Ethereum',
+        decimals: 18,
+        address: '0xb5239140745067502ee35B4E2dC2869418Db8309',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rBTC: {
+        symbol: 'rBTC',
+        name: 'RedBelly Bitcoin',
+        decimals: 18,
+        address: '0x79F9B344bB64aF1E89B0C3d20ded4f299F4ff262',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rSOL: {
+        symbol: 'rSOL',
+        name: 'RedBelly SOL',
+        decimals: 18,
+        address: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rBNB: {
+        symbol: 'rBNB',
+        name: 'RedBelly BNB',
+        decimals: 18,
+        address: '0x674A76BE36eE36f201df3F918fe0d30AC969FFaB',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rHYPE: {
+        symbol: 'rHYPE',
+        name: 'RedBelly HYPE',
+        decimals: 18,
+        address: '0x30E603F6f4A0642579A9Eb87F39E97C3d63c5185',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rAVAX: {
+        symbol: 'rAVAX',
+        name: 'RedBelly AVAX',
+        decimals: 18,
+        address: '0xdEa692287E2cE8Cb08FA52917Be0F16b1DACDC87',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rXLM: {
+        symbol: 'rXLM',
+        name: 'RedBelly XLM',
+        decimals: 18,
+        address: '0xD6728c68158F8B1c2DD9C2c075b7Ec14Be82B056',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rSUI: {
+        symbol: 'rSUI',
+        name: 'RedBelly SUI',
+        decimals: 18,
+        address: '0x5a075872cb75F68668364Fa9295eCFcE9A1114e2',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rS: {
+        symbol: 'rS',
+        name: 'RedBelly S',
+        decimals: 18,
+        address: '0xd891190A2382c75e3091Bbff3a119e4C578E8ebb',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rPOL: {
+        symbol: 'rPOL',
+        name: 'RedBelly POL',
+        decimals: 18,
+        address: '0x390ceed555905ec225Da330A188EA04e85570f00',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+    } as const,
+  } as const satisfies EvmSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
 
 // All addresses are now lowercase for consistency and correctness
@@ -1488,8 +1614,14 @@ export const hubVaults = {
     ] as const,
   },
   [SodaTokens.sodaHYPE.symbol]: {
-    address: '0x6e81124fc5d2bf666b16a0a5d90066ebf35c7411',
+    address: SodaTokens.sodaHYPE.address,
     reserves: ['0x7288622bc2d39553f34d5b81c88c3f979d91dbc7'],
+  },
+  [SodaTokens.sodaRBNT.symbol]: {
+    address: SodaTokens.sodaRBNT.address,
+    reserves: [
+      '0x4081e0676c5137161b61601756e6524058a9c5c5', //native
+    ],
   },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
@@ -2229,6 +2361,106 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: hubVaults.sodaSODA.address,
     },
   },
+  [REDBELLY_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.RBNT.address]: {
+      asset: '0x4081e0676c5137161b61601756e6524058a9c5c5',
+      decimal: 18,
+      symbol: 'RBNT',
+      name: 'RedBelly Native Token',
+      vault: SodaTokens.sodaRBNT.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.bnUSD.address]: {
+      asset: '0x650a42ad3017190399b1797b6a7f65240c258e5d',
+      decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: SodaTokens.bnUSD.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
+      asset: '0x855ecace4fe3f9f1e648591af6ba4e9fbd2bf987',
+      decimal: 18,
+      symbol: 'SODA',
+      name: 'SODAX',
+      vault: SodaTokens.sodaSODA.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
+      asset: '0xedbe83a638da53d0f31f51b9f6b65ea0e8c3b4bf',
+      decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      vault: SodaTokens.sodaUSDC.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rETH.address]: {
+      asset: '0x87baf5eb9c67a86a5260b7ec739d0c4a4a450ae3',
+      decimal: 18,
+      symbol: 'rETH',
+      name: 'RedBelly Ethereum',
+      vault: SodaTokens.sodaETH.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBTC.address]: {
+      asset: '0xe88e7117a2f84bad69cb35440617cb4cbf5d39d1',
+      decimal: 18,
+      symbol: 'rBTC',
+      name: 'RedBelly Bitcoin',
+      vault: SodaTokens.sodaBTC.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSOL.address]: {
+      asset: '0x12cb9f7ea402a75dc0b670097c9c376e778b3480',
+      decimal: 18,
+      symbol: 'rSOL',
+      name: 'RedBelly SOL',
+      vault: SodaTokens.sodaSOL.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBNB.address]: {
+      asset: '0x1926ea1492bc849865b9dc40576226d0f2ac2865',
+      decimal: 18,
+      symbol: 'rBNB',
+      name: 'RedBelly BNB',
+      vault: SodaTokens.sodaBNB.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rHYPE.address]: {
+      asset: '0xc01d5d8fed35e897be5b402c96edb3b6cee50223',
+      decimal: 18,
+      symbol: 'rHYPE',
+      name: 'RedBelly HYPE',
+      vault: SodaTokens.sodaHYPE.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rAVAX.address]: {
+      asset: '0x9cb238c213d490d64e9be025e3e9f80c49068b74',
+      decimal: 18,
+      symbol: 'rAVAX',
+      name: 'RedBelly AVAX',
+      vault: SodaTokens.sodaAVAX.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rXLM.address]: {
+      asset: '0x38e2866396e5246072450fdde24b67cec6113987',
+      decimal: 18,
+      symbol: 'rXLM',
+      name: 'RedBelly XLM',
+      vault: SodaTokens.sodaXLM.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSUI.address]: {
+      asset: '0xa98bf33d2bc3fdf851c3d680db4676bba33b7142',
+      decimal: 18,
+      symbol: 'rSUI',
+      name: 'RedBelly SUI',
+      vault: SodaTokens.sodaSUI.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rS.address]: {
+      asset: '0x8f3a13d920fe2e0b80fe4981c430e9ee528e80aa',
+      decimal: 18,
+      symbol: 'rS',
+      name: 'RedBelly S',
+      vault: SodaTokens.sodaS.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rPOL.address]: {
+      asset: '0x3afeb3584649342a967629bb39a135dce2db8ebf',
+      decimal: 18,
+      symbol: 'rPOL',
+      name: 'RedBelly POL',
+      vault: SodaTokens.sodaPOL.address,
+    },
+  },
 } as const;
 
 export const solverConfig = {
@@ -2361,6 +2593,12 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const,
+  [REDBELLY_MAINNET_CHAIN_ID]: [
+    /*
+    @todo-xx
+    to be added, please contact
+    */
+  ] as const satisfies Token[],
 } as const;
 
 // get supported spoke chain tokens for solver
@@ -2496,6 +2734,22 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
+  [REDBELLY_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.RBNT,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rETH,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBTC,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSOL,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBNB,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rHYPE,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rAVAX,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rXLM,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSUI,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rS,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rPOL,
+  ] as const satisfies Token[],
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
 // export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>

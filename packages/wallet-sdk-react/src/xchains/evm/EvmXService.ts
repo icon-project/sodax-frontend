@@ -10,13 +10,14 @@ import {
   NIBIRU_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   type RpcConfig,
   type XToken,
 } from '@sodax/types';
 import { getWagmiChainId, isNativeToken } from '@/utils';
 
-import { type Address, defineChain, erc20Abi } from 'viem';
+import { type Address, type Chain, defineChain, erc20Abi } from 'viem';
 import { getPublicClient } from 'wagmi/actions';
 import { type Config, createConfig, http } from 'wagmi';
 import {
@@ -30,6 +31,7 @@ import {
   sonic,
   nibiru,
   lightlinkPhoenix,
+  redbellyMainnet,
 } from 'wagmi/chains';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
@@ -60,7 +62,20 @@ export const hyper = /*#__PURE__*/ defineChain({
 
 export const createWagmiConfig = (config: RpcConfig) => {
   return createConfig({
-    chains: [mainnet, avalanche, arbitrum, base, bsc, sonic, optimism, polygon, nibiru, hyper, lightlinkPhoenix],
+    chains: [
+      mainnet,
+      avalanche,
+      arbitrum,
+      base,
+      bsc,
+      sonic,
+      optimism,
+      polygon,
+      nibiru,
+      hyper,
+      lightlinkPhoenix,
+      redbellyMainnet,
+    ],
     transports: {
       [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
       [avalanche.id]: http(config[AVALANCHE_MAINNET_CHAIN_ID]),
@@ -73,6 +88,7 @@ export const createWagmiConfig = (config: RpcConfig) => {
       [nibiru.id]: http(config[NIBIRU_MAINNET_CHAIN_ID]),
       [hyper.id]: http(config[HYPEREVM_MAINNET_CHAIN_ID]),
       [lightlinkPhoenix.id]: http(config[LIGHTLINK_MAINNET_CHAIN_ID]),
+      [redbellyMainnet.id]: http(config[REDBELLY_MAINNET_CHAIN_ID]),
     },
   });
 };
@@ -108,53 +124,83 @@ export class EvmXService extends XService {
     const chainId = getWagmiChainId(xToken.xChainId);
 
     if (isNativeToken(xToken)) {
-      const balance = await getPublicClient(this.wagmiConfig, { chainId: chainId })?.getBalance({
-        address: address as Address,
-      });
-      return balance || 0n;
+      return this._getChainBalance(address, chainId);
     }
 
     throw new Error(`Unsupported token: ${xToken.symbol}`);
+  }
+
+  // get erc20 token balance in a chain (evm chain only)
+  async _getTokenBalance(address: string | undefined, chainId: number, tokenAddress: string): Promise<bigint> {
+    const publicClient = getPublicClient(this.wagmiConfig as Config, { chainId: chainId });
+    if (!publicClient) throw new Error('Public client not found');
+    const balance = await publicClient.readContract({
+      abi: erc20Abi,
+      address: tokenAddress as `0x${string}`,
+      functionName: 'balanceOf',
+      args: [address as `0x${string}`],
+    });
+    return balance || 0n;
+  }
+
+  //get native balance of the chain (evm chain only)
+  async _getChainBalance(address: string | undefined, chainId: number) {
+    const balance = await getPublicClient(this.wagmiConfig as Config, { chainId: chainId })?.getBalance({
+      address: address as Address,
+    });
+    return balance || 0n;
   }
 
   async getBalances(address: string | undefined, xTokens: XToken[]) {
     if (!address) return {};
     if (!this.wagmiConfig) return {};
 
-    const balancePromises = xTokens
+    const nativeTokenBalancePromises = xTokens
       .filter(xToken => isNativeToken(xToken))
       .map(async xToken => {
         const balance = await this.getBalance(address, xToken);
         return { symbol: xToken.symbol, address: xToken.address, balance };
       });
 
-    const balances = await Promise.all(balancePromises);
-    const tokenMap = balances.reduce((map, { address, balance }) => {
+    const nativeTokenBalances = await Promise.all(nativeTokenBalancePromises);
+    const tokenMap = nativeTokenBalances.reduce((map, { address, balance }) => {
       if (balance) map[address] = balance;
       return map;
     }, {});
 
     const nonNativeXTokens = xTokens.filter(xToken => !isNativeToken(xToken));
     const xChainId = xTokens[0].xChainId;
-    const result = await getPublicClient(this.wagmiConfig, { chainId: getWagmiChainId(xChainId) })?.multicall({
-      contracts: nonNativeXTokens.map(token => ({
-        abi: erc20Abi,
-        address: token.address as `0x${string}`,
-        functionName: 'balanceOf',
-        args: [address],
-        chainId: getWagmiChainId(xChainId),
-      })),
-    });
 
-    return nonNativeXTokens
-      .map((token, index) => ({
-        symbol: token.symbol,
-        address: token.address,
-        balance: result?.[index]?.result?.toString() || '0',
-      }))
-      .reduce((acc, balance) => {
-        acc[balance.address] = balance.balance;
+    const viemChain: Chain = this.wagmiConfig.chains.find(chain => chain.id === getWagmiChainId(xChainId)) as Chain;
+    const chainId = getWagmiChainId(xChainId);
+
+    const publicClient = getPublicClient(this.wagmiConfig, { chainId: chainId });
+    if (!publicClient) throw new Error('Public client not found');
+
+    if (viemChain?.contracts?.multicall3) {
+      //multicall supports
+      const result = await publicClient.multicall({
+        contracts: nonNativeXTokens.map(token => ({
+          abi: erc20Abi,
+          address: token.address as `0x${string}`,
+          functionName: 'balanceOf',
+          args: [address],
+        })),
+      });
+
+      return nonNativeXTokens.reduce((acc, token, index) => {
+        acc[token.address] = result?.[index]?.result?.toString() || '0';
         return acc;
       }, tokenMap);
+    }
+
+    const nonNativeTokenBalances: bigint[] = await Promise.all(
+      nonNativeXTokens.map(token => this._getTokenBalance(address, chainId, token.address)),
+    );
+
+    return nonNativeXTokens.reduce((acc, token, idx) => {
+      acc[token.address] = nonNativeTokenBalances[idx] || '0';
+      return acc;
+    }, tokenMap);
   }
 }
