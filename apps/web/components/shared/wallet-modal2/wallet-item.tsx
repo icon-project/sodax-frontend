@@ -65,10 +65,7 @@ export const WalletItem: React.FC<WalletItemProps> = ({
           {isEVM && (
             <div className="flex justify-between items-center gap-4 w-full">
               <div className="flex justify-start items-center gap-4">
-                <div
-                  data-property-1="Active"
-                  className="rounded-[6px] inline-flex flex-col justify-center items-center overflow-hidden z-51"
-                >
+                <div className="rounded-[6px] inline-flex flex-col justify-center items-center overflow-hidden z-51">
                   <Image
                     src={xConnector.icon?.trim() || ''}
                     alt={xConnector.name}
@@ -100,10 +97,7 @@ export const WalletItem: React.FC<WalletItemProps> = ({
                     <div className="w-6 relative rounded-[6px] shadow-[4px_0px_4px_rgba(175,145,145)] outline-4 outline-white inline-flex flex-col justify-start items-start overflow-hidden ml-1">
                       <Image src={icon} alt={name} width={24} height={24} className="rounded-[6px]" />
                     </div>
-                    <div
-                      data-property-1="Active"
-                      className="rounded-[6px] inline-flex flex-col justify-center items-center overflow-hidden z-51 shadow-[4px_0px_4px_rgba(175,145,145)] outline-4 outline-white"
-                    >
+                    <div className="rounded-[6px] inline-flex flex-col justify-center items-center overflow-hidden z-51 shadow-[4px_0px_4px_rgba(175,145,145)] outline-4 outline-white">
                       <Image
                         src={xConnector.icon?.trim() || ''}
                         alt={xConnector.name}
