@@ -14,13 +14,35 @@ interface CoinGeckoPriceResponse {
 // - Staking derivatives (afSUI, mSUI, haSUI, vSUI, yapSUI, trevinSUI)
 const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   // Cross-chain tokens
-  ETH: 'ethereum',
-  WETH: 'ethereum',
+
   USDC: 'usd-coin',
   USDT: 'tether',
+  bnUSD: 'bnusd',
   SOL: 'solana',
   BNB: 'binancecoin',
   AVAX: 'avalanche-2',
+  LL: 'lightlink',
+  HYPE: 'Hyperliquid',
+  XLM: 'stellar',
+  POL: 'polygon-ecosystem-token',
+  SODA: 'icon',
+
+  S: 'sonic-3',
+  wS: 'wrapped-sonic',
+
+  BTC: 'bitcoin',
+  WBTC: 'wrapped-bitcoin',
+  cbBTC: 'coinbase-wrapped-btc',
+  tBTC: 'tbtc',
+  BTCB: 'binance-bitcoin',
+
+  ETH: 'ethereum',
+  WETH: 'weth',
+  weETH: 'wrapped-eeth',
+  wstETH: 'wrapped-steth',
+  ETHB: 'ethereum',
+
+  //LightLink
   'AVAX.LL': 'avalanche-2',
   'BNB.LL': 'binancecoin',
   'SOL.LL': 'solana',
@@ -28,97 +50,27 @@ const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   'INJ.LL': 'injective',
   'SUI.LL': 'sui',
   'S.LL': 'sonic-3',
-  'POL.LL': 'matic-network',
+  'POL.LL': 'polygon-ecosystem-token',
   'bnUSD.LL': 'bnusd',
   'USDC.LL': 'usd-coin',
   'USDT.LL': 'tether',
   'ETH.LL': 'ethereum',
   'BTC.LL': 'bitcoin',
-  MATIC: 'matic-network',
-  POL: 'matic-network',
-  BTC: 'bitcoin',
-  WBTC: 'wrapped-bitcoin',
-  SODA: 'sodax',
-  S: 'sonic-3',
-  wS: 'sonic-3',
-  bnUSD: 'bnusd',
-  weETH: 'wrapped-eether',
-  wstETH: 'wrapped-staked-ether',
-  cbBTC: 'coinbase-wrapped-btc',
-  tBTC: 'tbtc',
-  ETHB: 'ethereum',
-  BTCB: 'bitcoin-bep2',
 
   // Chain-specific native tokens
   INJ: 'injective',
-  SUI: 'sui',
   ICX: 'icon',
-  BALN: 'balanced',
 
-  // Additional common tokens
-  DAI: 'dai',
-  LINK: 'chainlink',
-  UNI: 'uniswap',
-  AAVE: 'aave',
-  CRV: 'curve-dao-token',
-  COMP: 'compound-governance-token',
-  MKR: 'maker',
-  YFI: 'yearn-finance',
-  SNX: 'havven',
-  BAL: 'balancer',
-  SUSHI: 'sushi',
-  '1INCH': '1inch',
-  ZRX: '0x',
-  BAT: 'basic-attention-token',
-  REP: 'augur',
-  ZEC: 'zcash',
-  XRP: 'ripple',
-  ADA: 'cardano',
-  DOT: 'polkadot',
-  LTC: 'litecoin',
-  BCH: 'bitcoin-cash',
-  XLM: 'stellar',
-  EOS: 'eos',
-  TRX: 'tron',
-  XMR: 'monero',
-  DASH: 'dash',
-  NEO: 'neo',
-  VET: 'vechain',
-  ATOM: 'cosmos',
-  ALGO: 'algorand',
-  XTZ: 'tezos',
-  FIL: 'filecoin',
-  ICP: 'internet-computer',
-  THETA: 'theta-token',
-  FTT: 'ftx-token',
-  LUNA: 'terra-luna-2',
-  DOGE: 'dogecoin',
-  SHIB: 'shiba-inu',
-  CHZ: 'chiliz',
-  HOT: 'holochain',
-  ENJ: 'enjincoin',
-  MANA: 'decentraland',
-  SAND: 'the-sandbox',
-  AXS: 'axie-infinity',
-  GALA: 'gala',
-  ROBLOX: 'roblox',
-  RUNE: 'thorchain',
-  KSM: 'kusama',
-  GRT: 'the-graph',
+  //Sui
+  SUI: 'sui',
+  afSUI: 'aftermath-staked-sui',
+  haSUI: 'haedal-staked-sui',
+  vSUI: 'volo-staked-sui',
+  mSUI: 'sui',
+  yapSUI: 'sui',
+  trevinSUI: 'sui',
 };
 
-// Sui staking derivatives that derive their value from SUI
-// These tokens represent staked SUI positions and typically have a 1:1 ratio with SUI
-const SUI_STAKING_DERIVATIVES = [
-  'afSUI', // Aftermath Staked Sui
-  'mSUI', // Mirai Staked SUI
-  'haSUI', // haSUI
-  'vSUI', // Volo Staked SUI
-  'yapSUI', // Yap Staked SUI
-  'trevinSUI', // Trevin Staked SUI
-] as const;
-
-// const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3';
 const COINGECKO_WRAPPER_API_BASE = 'https://coingecko-wrapper-cyan.vercel.app';
 const priceCache = new Map<string, { price: number; timestamp: number }>();
 
@@ -133,14 +85,6 @@ export async function getTokenPrice(token: XToken): Promise<number> {
     const stablecoins = ['USDC', 'USDT', 'bnUSD'];
     if (stablecoins.includes(token.symbol)) {
       return 1;
-    }
-
-    // Handle Sui staking derivatives - they derive their value from SUI
-    if (SUI_STAKING_DERIVATIVES.includes(token.symbol as (typeof SUI_STAKING_DERIVATIVES)[number])) {
-      const suiPrice = await getTokenPrice({ ...token, symbol: 'SUI' });
-      // Staking derivatives typically have a 1:1 ratio with the underlying token
-      // In a real implementation, you might want to fetch the actual exchange rate
-      return suiPrice;
     }
 
     const coinGeckoId = TOKEN_TO_COINGECKO_ID[token.symbol];
@@ -195,11 +139,7 @@ export async function calculateUSDValue(token: XToken, amount: string): Promise<
  * @returns boolean - Whether the token is supported
  */
 export function isTokenSupported(tokenSymbol: string): boolean {
-  return (
-    TOKEN_TO_COINGECKO_ID[tokenSymbol] !== undefined ||
-    SUI_STAKING_DERIVATIVES.includes(tokenSymbol as (typeof SUI_STAKING_DERIVATIVES)[number]) ||
-    ['USDC', 'USDT', 'bnUSD'].includes(tokenSymbol)
-  );
+  return TOKEN_TO_COINGECKO_ID[tokenSymbol] !== undefined || ['USDC', 'USDT', 'bnUSD'].includes(tokenSymbol);
 }
 
 /**
@@ -207,7 +147,7 @@ export function isTokenSupported(tokenSymbol: string): boolean {
  * @returns string[] - Array of all supported token symbols
  */
 export function getSupportedTokenSymbols(): string[] {
-  return [...Object.keys(TOKEN_TO_COINGECKO_ID), ...SUI_STAKING_DERIVATIVES, 'USDC', 'USDT', 'bnUSD'];
+  return [...Object.keys(TOKEN_TO_COINGECKO_ID), 'USDC', 'USDT', 'bnUSD'];
 }
 
 /**
