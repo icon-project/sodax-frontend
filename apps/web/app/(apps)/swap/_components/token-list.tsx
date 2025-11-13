@@ -160,11 +160,11 @@ export function TokenList({
       )}
       <ScrollAreaPrimitive.Root
         data-slot="scroll-area"
-        className={showAllAssets ? 'h-[calc(80vh-192px)] overflow-hidden' : 'h-[292px]'}
+        className={showAllAssets ? 'h-[calc(80vh-192px)] overflow-hidden mt-8' : 'mt-8'}
       >
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
-          className={`h-full mt-4 pt-4 pb-4 pl-5 pr-5 w-full content-stretch ${clickedAsset ? '' : ''}`}
+          className={`h-full pl-5 pr-5 w-full content-stretch ${clickedAsset ? '' : ''}`}
         >
           <motion.div
             ref={assetsRef}

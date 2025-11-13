@@ -227,7 +227,7 @@ export class SwapService {
    *     "token_dst_blockchain_id":"0xa4b1.arbitrum",
    *     "amount":1000000000000000n,
    *     "quote_type": "exact_input"
-   * } satisfies SolverIntentQuoteRequest
+   * } satisfies SolverIntentQuoteRequest & OptionalFee
    *
    * const response = await swapService.getQuote(payload);
    *
@@ -243,7 +243,7 @@ export class SwapService {
   ): Promise<Result<SolverIntentQuoteResponse, SolverErrorResponse>> {
     payload = {
       ...payload,
-      amount: adjustAmountByFee(payload.amount, this.config.partnerFee, payload.quote_type),
+      amount: adjustAmountByFee(payload.amount, payload.fee ?? this.config.partnerFee, payload.quote_type),
     } satisfies SolverIntentQuoteRequest;
     return SolverApiService.getQuote(payload, this.config, this.configService);
   }

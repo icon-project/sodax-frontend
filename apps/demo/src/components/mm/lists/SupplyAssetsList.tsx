@@ -6,12 +6,7 @@ import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import {
-  getMoneyMarketConfig,
-  moneyMarketSupportedTokens,
-  SONIC_MAINNET_CHAIN_ID,
-  type UserReserveData,
-} from '@sodax/sdk';
+import { moneyMarketSupportedTokens, type UserReserveData } from '@sodax/sdk';
 import type { Token, XToken } from '@sodax/types';
 import { findReserveByUnderlyingAsset, findUserReserveBySpokeTokenAddress } from '@/lib/utils';
 
@@ -54,6 +49,7 @@ export function SupplyAssetsList() {
               <TableHead>Wallet Balance</TableHead>
               <TableHead>Balance</TableHead>
               <TableHead>Debt</TableHead>
+              <TableHead>Available</TableHead>
               <TableHead>Action</TableHead>
               <TableHead>Action</TableHead>
               <TableHead>Action</TableHead>
@@ -72,34 +68,11 @@ export function SupplyAssetsList() {
               reserves &&
               tokens.map(token => {
                 try {
-                  let userReserve: UserReserveData;
-                  if (token.symbol === 'bnUSD') {
-                    // bnUSD is special case, because both bnUSD and bnUSDVault are bnUSD reserves
-                    const bnUSDReserve = userReserves?.[0]?.find(
-                      r =>
-                        getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSD.toLowerCase() ===
-                        r.underlyingAsset.toLowerCase(),
-                    );
-                    const bnUSDVaultReserve = userReserves?.[0]?.find(
-                      r =>
-                        getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault.toLowerCase() ===
-                        r.underlyingAsset.toLowerCase(),
-                    );
-
-                    if (!bnUSDReserve || !bnUSDVaultReserve) {
-                      return null;
-                    }
-
-                    // we just merge the two bnUSD reserves into one bnUSD vault reserve, but you should be aware of the differences
-                    const mergedbnUSDReserve = {
-                      ...bnUSDVaultReserve,
-                      scaledATokenBalance: bnUSDReserve?.scaledATokenBalance + bnUSDVaultReserve?.scaledATokenBalance,
-                      scaledVariableDebt: bnUSDReserve?.scaledVariableDebt + bnUSDVaultReserve?.scaledVariableDebt,
-                    };
-                    userReserve = mergedbnUSDReserve;
-                  } else {
-                    userReserve = findUserReserveBySpokeTokenAddress(userReserves[0], selectedChainId, token);
-                  }
+                  const userReserve: UserReserveData = findUserReserveBySpokeTokenAddress(
+                    userReserves[0],
+                    selectedChainId,
+                    token,
+                  );
                   return (
                     <SupplyAssetsListItem
                       key={token.address}
@@ -112,7 +85,7 @@ export function SupplyAssetsList() {
                       reserve={findReserveByUnderlyingAsset(userReserve.underlyingAsset, reserves[0])}
                     />
                   );
-                } catch (err) {
+                } catch {
                   console.log('error token', token);
                 }
               })

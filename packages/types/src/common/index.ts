@@ -36,7 +36,14 @@ export type Token = {
   address: string;
 };
 
-export type XToken = Token & {
+export type Erc20Token = {
+  name: string;
+  symbol: string;
+  decimals: number;
+  address: Address;
+};
+
+export type XToken = (Token | Erc20Token) & {
   xChainId: ChainId;
 };
 
@@ -243,6 +250,7 @@ export type MoneyMarketConfig = {
   poolAddressesProvider: Address;
   bnUSD: Address;
   bnUSDVault: Address;
+  bnUSDAToken: Address;
 };
 
 export type VaultType = {

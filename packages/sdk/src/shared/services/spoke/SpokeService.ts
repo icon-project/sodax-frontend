@@ -403,7 +403,10 @@ export class SpokeService {
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: encodeAddress(spokeProvider.chainConfig.chain.id, await spokeProvider.walletProvider.getWalletAddress()),
+          srcAddress: encodeAddress(
+            spokeProvider.chainConfig.chain.id,
+            await spokeProvider.walletProvider.getWalletAddress(),
+          ),
           payload,
         },
         hubProvider,
@@ -455,10 +458,13 @@ export class SpokeService {
     }
     if (isStellarSpokeProvider(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await StellarSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        StellarSpokeProvider,
-        R
-      > as TxReturnType<T, R>;
+      return (await StellarSpokeService.callWallet(
+        from,
+        payload,
+        spokeProvider,
+        hubProvider,
+        raw,
+      )) satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<T, R>;
     }
 
     throw new Error('Invalid spoke provider');
@@ -476,7 +482,10 @@ export class SpokeService {
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: encodeAddress(spokeProvider.chainConfig.chain.id, await spokeProvider.walletProvider.getWalletAddress()),
+          srcAddress: encodeAddress(
+            spokeProvider.chainConfig.chain.id,
+            await spokeProvider.walletProvider.getWalletAddress(),
+          ),
           payload,
         },
         hubProvider,
@@ -497,7 +506,18 @@ export class SpokeService {
    */
   public static async verifyTxHash(txHash: string, spokeProvider: SpokeProvider): Promise<Result<boolean>> {
     if (isSolanaSpokeProvider(spokeProvider)) {
-      return SolanaSpokeService.waitForConfirmation(spokeProvider, txHash);
+      const result = await SolanaSpokeService.waitForConfirmation(spokeProvider, txHash);
+
+      if (!result.ok) {
+        console.warn(`Solana verifyTxHash failed: ${result.error}`);
+        console.warn('Returning true to assume transaction exists on chain in future ');
+        return {
+          ok: true,
+          value: true,
+        };
+      }
+
+      return result;
     }
     if (isStellarSpokeProvider(spokeProvider)) {
       return StellarSpokeService.waitForTransaction(spokeProvider, txHash);
@@ -507,6 +527,6 @@ export class SpokeService {
     return {
       ok: true,
       value: true,
-    }
+    };
   }
 }

@@ -115,3 +115,7 @@ export function findUserReserveBySpokeTokenAddress(
   }
   return result;
 }
+
+export function BigIntMin(a: bigint, b: bigint): bigint {
+  return a < b ? a : b;
+}

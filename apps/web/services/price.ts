@@ -10,7 +10,7 @@ interface CoinGeckoPriceResponse {
 // Map of token symbols to CoinGecko IDs
 // Includes all tokens supported across the Sodax ecosystem:
 // - Cross-chain tokens (ETH, USDC, USDT, etc.)
-// - Chain-specific tokens (NIBI, INJ, SUI, ICX, BALN)
+// - Chain-specific tokens (INJ, SUI, ICX, BALN)
 // - Staking derivatives (afSUI, mSUI, haSUI, vSUI, yapSUI, trevinSUI)
 const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   // Cross-chain tokens
@@ -50,7 +50,6 @@ const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   BTCB: 'bitcoin-bep2',
 
   // Chain-specific native tokens
-  NIBI: 'nibiru',
   INJ: 'injective',
   SUI: 'sui',
   ICX: 'icon',

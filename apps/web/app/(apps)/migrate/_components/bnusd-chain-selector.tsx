@@ -1,5 +1,5 @@
 import type React from 'react';
-import { Dialog, DialogClose, DialogContent,  DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { XToken, SpokeChainId } from '@sodax/types';
 import Image from 'next/image';
 import { XIcon } from 'lucide-react';
@@ -12,7 +12,7 @@ import {
   type LegacybnUSDChainId,
   type NewbnUSDChainId,
   HYPEREVM_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
 import { availableChains } from '@/constants/chains';
 import { Separator } from '@/components/ui/separator';
@@ -62,7 +62,11 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
         availableChains.find(chain => chain.id === chainId),
       );
       return newbnUSDSpokeChainIds2
-        .filter(chainId => chainId !== NIBIRU_MAINNET_CHAIN_ID && chainId !== HYPEREVM_MAINNET_CHAIN_ID)
+        .filter(
+          chainId =>
+            chainId !== HYPEREVM_MAINNET_CHAIN_ID &&
+            chainId !== ETHEREUM_MAINNET_CHAIN_ID,
+        )
         .map(chainId => {
           const config = spokeChainConfig[chainId as NewbnUSDChainId];
           const token = config.supportedTokens.bnUSD;
