@@ -1,11 +1,13 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { formatUnits } from 'viem';
-import type { ChainId } from '@sodax/types';
+import type { ChainId, XToken } from '@sodax/types';
 import { BorrowButton } from '../BorrowButton';
 import { getChainLabel } from '@/lib/borrowUtils';
 
 interface BorrowAssetsListItemProps {
+  token: XToken;
+  walletBalance: string;
   asset: {
     symbol: string;
     decimals: number;
@@ -18,7 +20,7 @@ interface BorrowAssetsListItemProps {
   disabled?: boolean;
 }
 
-export function BorrowAssetsListItem({ asset, disabled = false }: BorrowAssetsListItemProps) {
+export function BorrowAssetsListItem({ token, walletBalance, asset, disabled = false }: BorrowAssetsListItemProps) {
   // Format the available liquidity
   const availableLiquidity = asset.availableLiquidity
     ? formatUnits(BigInt(asset.availableLiquidity), asset.decimals)
@@ -33,6 +35,7 @@ export function BorrowAssetsListItem({ asset, disabled = false }: BorrowAssetsLi
         <span className="font-medium text-cherry-dark">{asset.symbol}</span>
         <span className="text-clay-light text-xs ml-1">{getChainLabel(asset.chainId)}</span>
       </TableCell>
+      <TableCell>{walletBalance}</TableCell>
       <TableCell>
         <span className="font-mono text-sm text-clay">
           {availableLiquidity === '--' ? availableLiquidity : Number.parseFloat(availableLiquidity).toFixed(2)}
@@ -42,7 +45,7 @@ export function BorrowAssetsListItem({ asset, disabled = false }: BorrowAssetsLi
         <span className="font-mono text-sm text-clay">{borrowAPYPercent}%</span>
       </TableCell>
       <TableCell>
-        <BorrowButton asset={asset} disabled={disabled} />
+        <BorrowButton token={token} asset={asset} disabled={disabled} />
       </TableCell>
     </TableRow>
   );

@@ -1,6 +1,7 @@
+import { getSpokeTokenAddressByVault } from '@sodax/dapp-kit';
 import { hubVaults, hubAssets, baseChainInfo } from '@sodax/sdk';
 import type { MoneyMarketAsset } from '@sodax/sdk';
-import type { ChainId } from '@sodax/types';
+import type { ChainId, SpokeChainId, XToken } from '@sodax/types';
 
 /**
  * Find the MoneyMarketAsset for a borrowable asset
@@ -28,9 +29,15 @@ export interface BorrowableAssetWithData {
   // Market data from backend
   availableLiquidity?: string;
   borrowAPY?: string;
+  token: XToken;
 }
 
-export function getBorrowableAssetsWithMarketData(allMoneyMarketAssets: MoneyMarketAsset[]): BorrowableAssetWithData[] {
+export function getBorrowableAssetsWithMarketData(
+  allMoneyMarketAssets: MoneyMarketAsset[],
+  tokens: XToken[],
+): BorrowableAssetWithData[] {
+  const tokenMap = new Map(tokens.map(t => [t.address.toLowerCase(), t]));
+
   const assets: BorrowableAssetWithData[] = [];
   const seen = new Set<string>();
 
@@ -54,7 +61,14 @@ export function getBorrowableAssetsWithMarketData(allMoneyMarketAssets: MoneyMar
       }
 
       const market = findMoneyMarketAssetForBorrowable(hubAsset.vault, allMoneyMarketAssets);
-      if (!market) continue;
+      const spokeTokenAddress = getSpokeTokenAddressByVault(chainId as SpokeChainId, hubAsset.vault);
+
+      if (!spokeTokenAddress) continue;
+
+      // Find the XToken that belongs to this vault on this chain
+      const token = tokens.find(t => t.address.toLowerCase() === spokeTokenAddress.toLowerCase());
+
+      if (!token) continue;
 
       const uniqueKey = hubAsset.vault.toLowerCase();
       if (seen.has(uniqueKey)) continue;
@@ -68,6 +82,7 @@ export function getBorrowableAssetsWithMarketData(allMoneyMarketAssets: MoneyMar
         vault: hubAsset.vault,
         availableLiquidity: market?.totalATokenBalance,
         borrowAPY: market?.variableBorrowRate,
+        token,
       });
     }
   }

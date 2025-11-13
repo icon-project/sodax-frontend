@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import type { ChainId } from '@sodax/types';
+import type { ChainId, XToken } from '@sodax/types';
 import { SuccessModal } from './SuccessModal';
 import { BorrowModal } from './borrow/BorrowModal';
 
 interface BorrowButtonProps {
+  token: XToken;
   asset: {
     symbol: string;
     decimals: number;
@@ -14,7 +15,7 @@ interface BorrowButtonProps {
   disabled?: boolean;
 }
 
-export function BorrowButton({ asset, disabled }: BorrowButtonProps) {
+export function BorrowButton({ asset, disabled, token }: BorrowButtonProps) {
   const [open, setOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [borrowedAmount, setBorrowAmount] = useState('');

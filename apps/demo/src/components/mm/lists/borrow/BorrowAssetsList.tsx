@@ -2,18 +2,45 @@ import React, { useMemo } from 'react';
 import { useUserReservesData, useSpokeProvider, useBackendAllMoneyMarketAssets } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
+import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { BorrowAssetsListItem } from './BorrowAssetsListItem';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
+import { moneyMarketSupportedTokens, type Token, type XToken } from '@sodax/types';
+import { formatUnits } from 'viem';
 
 export function BorrowAssetsList() {
   const { selectedChainId } = useAppStore();
 
+  // ALL tokens from ALL chains
+  const allTokens = useMemo(() => {
+    return Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
+      chainTokens.map(t => ({
+        ...t,
+        xChainId: chainId,
+      })),
+    ) as XToken[];
+  }, []);
+
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
+
+  const tokensForSelectedChain = useMemo(
+    () =>
+      moneyMarketSupportedTokens[selectedChainId].map((t: Token) => ({
+        ...t,
+        xChainId: selectedChainId,
+      })),
+    [selectedChainId],
+  );
+
+  const { data: balances } = useXBalances({
+    xChainId: selectedChainId,
+    xTokens: tokensForSelectedChain,
+    address,
+  });
 
   // Fetch user reserves to check if they have collateral
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
@@ -30,8 +57,8 @@ export function BorrowAssetsList() {
   // Get all borrowable assets with their market data
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];
-    return getBorrowableAssetsWithMarketData(allMoneyMarketAssets);
-  }, [allMoneyMarketAssets]);
+    return getBorrowableAssetsWithMarketData(allMoneyMarketAssets, allTokens);
+  }, [allMoneyMarketAssets, allTokens]);
 
   const isLoading = isUserReservesLoading || isAssetsLoading;
 
@@ -54,6 +81,7 @@ export function BorrowAssetsList() {
             <TableHeader className="sticky top-0 bg-cream z-20">
               <TableRow className="border-b border-cherry-grey/20">
                 <TableHead className="text-cherry-dark font-bold">Asset</TableHead>
+                <TableHead className="text-cherry-dark font-bold">Wallet balance</TableHead>
                 <TableHead className="text-cherry-dark font-bold">Available Liquidity</TableHead>
                 <TableHead className="text-cherry-dark font-bold"> Borrow APY</TableHead>
                 <TableHead className="text-cherry-dark font-bold">Action</TableHead>
@@ -77,8 +105,14 @@ export function BorrowAssetsList() {
                   borrowableAssets.map(asset => (
                     <BorrowAssetsListItem
                       key={`${asset.chainId}-${asset.address}`}
+                      token={asset.token}
                       asset={asset}
                       disabled={!hasCollateral}
+                      walletBalance={
+                        asset.token && balances?.[asset.token.address]
+                          ? formatUnits(balances[asset.token.address], asset.token.decimals)
+                          : '-'
+                      }
                     />
                   ))
                 )}
