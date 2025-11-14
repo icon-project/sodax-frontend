@@ -210,6 +210,8 @@ export const HubVaultSymbols = [
   'IbnUSD',
   'sodaHYPE',
   'sodaLL',
+  'sodaWEETH',
+  'sodaWSTETH',
 ] as const;
 
 export const SodaTokens = {
@@ -330,6 +332,20 @@ export const SodaTokens = {
     name: 'Soda LL',
     decimals: 18,
     address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaWEETH: {
+    symbol: 'sodaWEETH',
+    name: 'SODA WEETH',
+    decimals: 18,
+    address: '0xCb6B152D3a943f25157381aFcA7fEFCD2ef5a357',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaWSTETH: {
+    symbol: 'sodaWSTETH',
+    name: 'SODA WSTETH',
+    decimals: 18,
+    address: '0x58b0538D7EEaeE69EF32f9F1dE5cbF32A10a977B',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
 } as const satisfies Record<HubVaultSymbol, XToken>;
@@ -765,6 +781,13 @@ export const spokeChainConfig = {
         address: '0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3',
         xChainId: BSC_MAINNET_CHAIN_ID,
       },
+      weETH: {
+        symbol: 'weETH',
+        name: 'Wrapped eETH',
+        decimals: 18,
+        address: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A',
+        xChainId: BSC_MAINNET_CHAIN_ID,
+      },
     },
   } as const satisfies EvmSpokeChainConfig,
   [POLYGON_MAINNET_CHAIN_ID]: {
@@ -802,6 +825,13 @@ export const spokeChainConfig = {
         name: 'SODAX',
         decimals: 18,
         address: '0xDDF645F33eDAD18fC23E01416eD0267A1bF59D45',
+        xChainId: POLYGON_MAINNET_CHAIN_ID,
+      },
+      wstETH: {
+        symbol: 'wstETH',
+        name: 'Wrapped liquid staked Ether 2.0',
+        decimals: 18,
+        address: '0x03b54a6e9a984069379fae1a4fc4dbae93b3bccd',
         xChainId: POLYGON_MAINNET_CHAIN_ID,
       },
     } as const,
@@ -1261,6 +1291,20 @@ export const spokeChainConfig = {
         address: '0x0921799CB1d702148131024d18fCdE022129Dc73',
         xChainId: ETHEREUM_MAINNET_CHAIN_ID,
       },
+      weETH: {
+        symbol: 'weETH',
+        name: 'Wrapped Ethereum',
+        decimals: 18,
+        address: '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+      wstETH: {
+        symbol: 'wstETH',
+        name: 'Wrapped liquid staked Ether 2.0',
+        decimals: 18,
+        address: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
@@ -1447,6 +1491,26 @@ export const hubVaults = {
   [SodaTokens.sodaLL.symbol]: {
     address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
     reserves: ['0xee6236c791db0755c9bc333b4c7c85ab754f2a0a'],
+  },
+  [SodaTokens.sodaWEETH.symbol]: {
+    address: '0xCb6B152D3a943f25157381aFcA7fEFCD2ef5a357',
+    reserves: [
+      '0x37a3e4ae512b7132c139643a5ac4b7148997d0e8',
+      '0x55e0Ad45eB97493B3045eEE417fb6726CB85dfd4',
+      '0xE121c0Dc2B33c00ff31ee3D902D248cc3f19Ea50',
+      '0x08D5cf039De35627fD5C0f48B8AF4a1647a462E8',
+      '0xc1a14e759e8c2a8128a1fe0288c12390fbaee6d2',
+    ],
+  },
+  [SodaTokens.sodaWSTETH.symbol]: {
+    address: '0x58b0538D7EEaeE69EF32f9F1dE5cbF32A10a977B',
+    reserves: [
+      '0xa2b668c577ab44301ebb820cb29c2a233d1607ab',
+      '0x494aaEaEfDF5964d4Ed400174e8c5b98C00957aA',
+      '0x61e26f611090CdC6bc79A7Bf156b0fD10f1fC212',
+      '0x2D5A7837D68b0c2CC4b14C2af2a1F0Ef420DDDc5',
+      '0xa95e972dbff57f3b561763ae88fd5f235a8f2711',
+    ],
   },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
