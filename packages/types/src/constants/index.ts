@@ -1830,6 +1830,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'SODAX',
       vault: hubVaults.sodaSODA.address,
     },
+    [spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
+      asset: '0xc1a14e759e8c2a8128a1fe0288c12390fbaee6d2',
+      decimal: 18,
+      symbol: 'weETH',
+      name: 'Wrapped eETH',
+      vault: hubVaults.sodaWEETH.address,
+    },
   },
   [POLYGON_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].nativeToken]: {
