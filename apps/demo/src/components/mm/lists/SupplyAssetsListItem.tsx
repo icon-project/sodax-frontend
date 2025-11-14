@@ -3,7 +3,6 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken } from '@sodax/types';
 import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
-import { BorrowButton } from './BorrowButton';
 import { RepayButton } from './RepayButton';
 import { formatUnits } from 'viem';
 import type { AggregatedReserveData } from '@sodax/sdk';
@@ -66,9 +65,6 @@ export function SupplyAssetsListItem({ token, balance, walletBalance, debt, rese
       </TableCell>
       <TableCell>
         <WithdrawButton token={token} aToken={aToken} reserve={reserve} />
-      </TableCell>
-      <TableCell>
-        <BorrowButton token={token} aToken={aToken} reserve={reserve} />
       </TableCell>
       <TableCell>
         <RepayButton token={token} reserve={reserve} />
