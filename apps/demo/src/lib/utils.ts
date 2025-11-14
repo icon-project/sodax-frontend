@@ -1,8 +1,14 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { type AggregatedReserveData, SolverIntentStatusCode, type SpokeChainId, type UserReserveData, type XToken } from '@sodax/sdk';
-import { getSpokeTokenAddressByVault } from '@sodax/dapp-kit';
+import {
+  type AggregatedReserveData,
+  hubAssets,
+  SolverIntentStatusCode,
+  type SpokeChainId,
+  type UserReserveData,
+  type XToken,
+} from '@sodax/sdk';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -95,9 +101,13 @@ export function findReserveByUnderlyingAsset(
   return reserve;
 }
 
-export  function findUserReserveBySpokeTokenAddress(userReserves: readonly UserReserveData[], selectedChainId: SpokeChainId, token: XToken): UserReserveData {
+export function findUserReserveBySpokeTokenAddress(
+  userReserves: readonly UserReserveData[],
+  selectedChainId: SpokeChainId,
+  token: XToken,
+): UserReserveData {
   const result = userReserves.find(
-    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase()
+    r => hubAssets[selectedChainId]?.[token.address]?.vault?.toLowerCase() === r.underlyingAsset.toLowerCase(),
   );
 
   if (!result) {
