@@ -49,7 +49,7 @@ const moneyMarketTokensFromConfig: readonly Token[] = sodax.config.getSupportedM
 const allMoneyMarketTokensFromConfig = sodax.config.getSupportedMoneyMarketTokens();
 ```
 
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for additional static constants and configurations.
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts) for additional static constants and configurations.
 
 ## Available Methods
 
