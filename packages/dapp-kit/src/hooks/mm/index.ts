@@ -7,3 +7,4 @@ export * from './useReservesData';
 export * from './useMMAllowance';
 export * from './useMMApprove';
 export * from './useAToken';
+export * from './useReservesUsdFormat';
