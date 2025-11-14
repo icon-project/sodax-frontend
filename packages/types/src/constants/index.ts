@@ -1860,6 +1860,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'SODAX',
       vault: hubVaults.sodaSODA.address,
     },
+    [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
+      asset: '0xa95e972dbff57f3b561763ae88fd5f235a8f2711',
+      decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
+      vault: hubVaults.sodaWSTETH.address,
+    },
   },
   [HYPEREVM_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].nativeToken]: {
