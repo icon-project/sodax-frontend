@@ -848,7 +848,7 @@ The SDK provides powerful formatting capabilities to convert raw blockchain data
 #### Formatting User Data
 - `formatUserSummary()` - Format user portfolio summary with USD conversions
 
-**NOTE** if you need more customized formatting checkout [math-utils](../src/shared/services/moneyMarket/math-utils/).
+**NOTE** if you need more customized formatting checkout [math-utils](https://github.com/icon-project/sodax-frontend/tree/main/packages/sdk/src/moneyMarket/math-utils).
 
 ### Complete Example: Fetching and Formatting Data
 
