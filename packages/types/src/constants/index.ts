@@ -2233,6 +2233,20 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'LightLink',
       vault: hubVaults.sodaLL.address,
     },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
+      asset: '0x37a3e4ae512b7132c139643a5ac4b7148997d0e8',
+      decimal: 18,
+      symbol: 'weETH',
+      name: 'Wrapped eETH',
+      vault: hubVaults.sodaWEETH.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
+      asset: '0xa2b668c577ab44301ebb820cb29c2a233d1607ab',
+      decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
+      vault: hubVaults.sodaWSTETH.address,
+    },
   },
 } as const;
 
