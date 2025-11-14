@@ -1031,6 +1031,15 @@ export class SwapService {
   }
 
   /**
+   * Gets the intent state from a transaction hash (on Hub chain)
+   * @param {Hash} txHash - The transaction hash on Hub chain
+   * @returns {Promise<IntentState>} The intent state
+   */
+  public getFilledIntent(txHash: Hash): Promise<IntentState> {
+    return EvmSolverService.getFilledIntent(txHash, this.config, this.hubProvider);
+  }
+
+  /**
    * Gets the keccak256 hash of an intent. Hash serves as the intent id on Hub chain.
    * @param {Intent} intent - The intent
    * @returns {Hex} The keccak256 hash of the intent
