@@ -1715,18 +1715,18 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
-      asset: '0x55e0ad45eb97493b3045eee417fb6726cb85dfd4',
+      asset: '0x55e0Ad45eB97493B3045eEE417fb6726CB85dfd4',
       decimal: 18,
       symbol: 'weETH',
       name: 'Wrapped eETH',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWEETH.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
-      asset: '0x494aaeaefdf5964d4ed400174e8c5b98c00957aa',
+      asset: '0x494aaEaEfDF5964d4Ed400174e8c5b98C00957aA',
       decimal: 18,
       symbol: 'wstETH',
       name: 'Wrapped Staked Ethereum',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWSTETH.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x17fF8Ad5EBe6CA8B15751067cD0c89f0E580CD17',
@@ -1763,14 +1763,14 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'wstETH',
       name: 'Wrapped Staked Ethereum',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWSTETH.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
       asset: '0xE121c0Dc2B33c00ff31ee3D902D248cc3f19Ea50',
       decimal: 18,
       symbol: 'weETH',
       name: 'Wrapped eETH',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWEETH.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
       asset: '0xc168067d95109003805aC865ae556e8476DC69bc',
