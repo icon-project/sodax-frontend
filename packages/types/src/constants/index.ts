@@ -1640,14 +1640,14 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'weETH',
       name: 'Wrapped eETH',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWEETH.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
       asset: '0x2D5A7837D68b0c2CC4b14C2af2a1F0Ef420DDDc5',
       decimal: 18,
       symbol: 'wstETH',
       name: 'Wrapped Staked Ethereum',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWSTETH.address, // no vault yet
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.tBTC.address]: {
       asset: '0x96Fc8540736f1598b7E235e6dE8814062b3b5d3B',
