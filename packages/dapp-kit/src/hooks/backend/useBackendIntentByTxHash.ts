@@ -35,7 +35,10 @@ import { useSodaxContext } from '../shared/useSodaxContext';
  * - Uses React Query for efficient caching and state management
  * - Automatically handles error states and loading indicators
  */
-export const useBackendIntentByTxHash = (txHash: string | undefined): UseQueryResult<IntentResponse | undefined> => {
+export const useBackendIntentByTxHash = (
+  txHash: string | undefined,
+  refetchInterval = 1000,
+): UseQueryResult<IntentResponse | undefined> => {
   const { sodax } = useSodaxContext();
 
   return useQuery({
@@ -47,7 +50,7 @@ export const useBackendIntentByTxHash = (txHash: string | undefined): UseQueryRe
 
       return sodax.backendApi.getIntentByTxHash(txHash);
     },
-    refetchInterval: 1000,
+    refetchInterval,
     enabled: !!txHash && txHash.length > 0,
     retry: 3,
   });
