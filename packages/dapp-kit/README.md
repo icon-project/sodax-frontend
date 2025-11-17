@@ -289,40 +289,40 @@ function BridgeComponent() {
 
 ### Components
 
-- [`SodaxProvider`](./src/providers/SodaxProvider.tsx) - Main provider component for Sodax ecosystem integration
+- [`SodaxProvider`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/providers/SodaxProvider.tsx) - Main provider component for Sodax ecosystem integration
 
 ### Hooks
 
 #### Money Market Hooks
-- [`useBorrow()`](./src/hooks/mm/useBorrow.ts) - Borrow tokens from the money market
-- [`useRepay()`](./src/hooks/mm/useRepay.ts) - Repay borrowed tokens
-- [`useSupply()`](./src/hooks/mm/useSupply.ts) - Supply tokens to the money market
-- [`useWithdraw()`](./src/hooks/mm/useWithdraw.ts) - Withdraw supplied tokens
-- [`useUserReservesData()`](./src/hooks/mm/useUserReservesData.ts) - Get user's reserves data(supplied asset and debt)
-- [`useReservesData()`](./src/hooks/mm/useReservesData.ts) - Get reserves data
-- [`useMMAllowance()`](./src/hooks/mm/useMMAllowance.ts) - Check token allowance for a specific amount
-- [`useMMApprove()`](./src/hooks/mm/useMMApprove.ts) - Approve token spending
-- [`useAToken()`](./src/hooks/mm/useAToken.ts) - Fetch aToken token data
+- [`useBorrow()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/mm/useBorrow.ts) - Borrow tokens from the money market
+- [`useRepay()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/mm/useRepay.ts) - Repay borrowed tokens
+- [`useSupply()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/mm/useSupply.ts) - Supply tokens to the money market
+- [`useWithdraw()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/mm/useWithdraw.ts) - Withdraw supplied tokens
+- [`useUserReservesData()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/mm/useUserReservesData.ts) - Get user's reserves data(supplied asset and debt)
+- [`useReservesData()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/mm/useReservesData.ts) - Get reserves data
+- [`useMMAllowance()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/mm/useMMAllowance.ts) - Check token allowance for a specific amount
+- [`useMMApprove()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/mm/useMMApprove.ts) - Approve token spending
+- [`useAToken()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/mm/useAToken.ts) - Fetch aToken token data
 
 #### Swap Hooks
-- [`useQuote()`](./src/hooks/swap/useQuote.ts) - Get quote for an intent order
-- [`useSwap()`](./src/hooks/swap/useSwap.ts) - Create and submit an intent order
-- [`useStatus()`](./src/hooks/swap/useStatus.ts) - Get status of an intent order
-- [`useSwapAllowance()`](./src/hooks/swap/useSwapAllowance.ts) - Check token allowance for an intent order
-- [`useSwapApprove()`](./src/hooks/swap/useSwapApprove.ts) - Approve token spending
-- [`useCancelSwap()`](./src/hooks/swap/useCancelSwap.ts) - Cancel a swap intent order
+- [`useQuote()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useQuote.ts) - Get quote for an intent order
+- [`useSwap()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useSwap.ts) - Create and submit an intent order
+- [`useStatus()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useStatus.ts) - Get status of an intent order
+- [`useSwapAllowance()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useSwapAllowance.ts) - Check token allowance for an intent order
+- [`useSwapApprove()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useSwapApprove.ts) - Approve token spending
+- [`useCancelSwap()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useCancelSwap.ts) - Cancel a swap intent order
 
 #### Shared Hooks
-- [`useSodaxContext()`](./src/hooks/shared/useSodaxContext.ts) - Access Sodax context and configuration
-- [`useEstimateGas()`](./src/hooks/shared/useEstimateGas.ts) - Estimate gas costs for transactions
-- [`useDeriveUserWalletAddress()`](./src/hooks/shared/useDeriveUserWalletAddress.ts) - Derive user wallet address for hub abstraction
+- [`useSodaxContext()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/shared/useSodaxContext.ts) - Access Sodax context and configuration
+- [`useEstimateGas()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/shared/useEstimateGas.ts) - Estimate gas costs for transactions
+- [`useDeriveUserWalletAddress()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/shared/useDeriveUserWalletAddress.ts) - Derive user wallet address for hub abstraction
 
 #### Bridge Hooks
-- [`useBridge()`](./src/hooks/bridge/useBridge.ts) - Execute bridge transactions to transfer tokens between chains
-- [`useBridgeAllowance()`](./src/hooks/bridge/useBridgeAllowance.ts) - Check token allowance for bridge operations
-- [`useBridgeApprove()`](./src/hooks/bridge/useBridgeApprove.ts) - Approve token spending for bridge actions
-- [`useGetBridgeableAmount()`](./src/hooks/bridge/useGetBridgeableAmount.ts) - Get maximum amount available to be bridged
-- [`useGetBridgeableTokens()`](./src/hooks/bridge/useGetBridgeableTokens.ts) - Get available destination tokens for bridging
+- [`useBridge()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/bridge/useBridge.ts) - Execute bridge transactions to transfer tokens between chains
+- [`useBridgeAllowance()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/bridge/useBridgeAllowance.ts) - Check token allowance for bridge operations
+- [`useBridgeApprove()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/bridge/useBridgeApprove.ts) - Approve token spending for bridge actions
+- [`useGetBridgeableAmount()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/bridge/useGetBridgeableAmount.ts) - Get maximum amount available to be bridged
+- [`useGetBridgeableTokens()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/bridge/useGetBridgeableTokens.ts) - Get available destination tokens for bridging
 
 ## Contributing
 

@@ -41,7 +41,7 @@ const supportedSwapTokensPerChain: Record<SpokeChainId, readonly Token[]> = soda
 const isSwapSupportedToken: boolean = isSwapSupportedToken(spokeChainId, token)
 ```
 
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for more.
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts) for more.
 
 ## Available Methods
 

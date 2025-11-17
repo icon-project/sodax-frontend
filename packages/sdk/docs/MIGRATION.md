@@ -22,7 +22,7 @@ const iconChainId: SpokeChainId = ICON_MAINNET_CHAIN_ID;
 const migrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;
 ```
 
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for more.
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts) for more.
 
 ### Initialising Providers
 
