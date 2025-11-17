@@ -1,9 +1,7 @@
 import { formatUnits } from 'viem';
-import { getSpokeTokenAddressByVault } from '@sodax/dapp-kit';
 
-import { SONIC_MAINNET_CHAIN_ID, type ChainId, type XToken } from '@sodax/types';
+import { hubAssets, type ChainId, type XToken } from '@sodax/types';
 import type { AggregatedReserveData, FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
-import { getMoneyMarketConfig } from '@sodax/sdk';
 import { formatCompactNumber } from '@/lib/utils';
 
 /**
@@ -63,41 +61,10 @@ export function useReserveMetrics({
   selectedChainId,
 }: UseReserveMetricsProps): ReserveMetricsResult {
   try {
-    let userReserve: UserReserveData | undefined;
-
-    // Handle bnUSD special case (merge bnUSD + bnUSDVault)
-    if (token.symbol === 'bnUSD') {
-      const config = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID);
-      const bnUSDReserve = userReserves?.[0]?.find(r => config.bnUSD.toLowerCase() === r.underlyingAsset.toLowerCase());
-      const bnUSDVaultReserve = userReserves?.[0]?.find(
-        r => config.bnUSDVault.toLowerCase() === r.underlyingAsset.toLowerCase(),
-      );
-
-      if (bnUSDReserve && bnUSDVaultReserve) {
-        userReserve = {
-          ...bnUSDVaultReserve,
-          scaledATokenBalance: bnUSDReserve.scaledATokenBalance + bnUSDVaultReserve.scaledATokenBalance,
-          scaledVariableDebt: bnUSDReserve.scaledVariableDebt + bnUSDVaultReserve.scaledVariableDebt,
-        };
-      }
-    } else {
-      userReserve = userReserves?.[0]?.find(
-        r =>
-          getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() ===
-          token.address.toLowerCase(),
-      );
-    }
-
-    // Matching reserves and formatted data
-    const reserve = reserves?.find(
-      r =>
-        getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase(),
-    );
-
-    const formattedReserve = formattedReserves?.find(
-      r =>
-        getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase(),
-    );
+    const vault = hubAssets[selectedChainId][token.address].vault;
+    const userReserve = userReserves?.[0]?.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+    const reserve = reserves?.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+    const formattedReserve = formattedReserves?.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
     // Default metrics
     let supplyAPR = '-';
     let borrowAPR = '-';

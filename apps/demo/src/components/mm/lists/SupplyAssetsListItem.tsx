@@ -9,8 +9,8 @@ import { formatUnits } from 'viem';
 import type { AggregatedReserveData, FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
 import { Skeleton } from '@/components/ui/skeleton';
-import { findReserveByUnderlyingAsset } from '@/lib/utils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
+
 interface SupplyAssetsListItemProps {
   token: XToken;
   walletBalance: string;

@@ -3,12 +3,12 @@ import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
 import {
   type AggregatedReserveData,
+  hubAssets,
   SolverIntentStatusCode,
   type SpokeChainId,
   type UserReserveData,
   type XToken,
 } from '@sodax/sdk';
-import { getSpokeTokenAddressByVault } from '@sodax/dapp-kit';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -106,9 +106,8 @@ export function findUserReserveBySpokeTokenAddress(
   selectedChainId: SpokeChainId,
   token: XToken,
 ): UserReserveData {
-  const result = userReserves.find(
-    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase(),
-  );
+  const vault = hubAssets[selectedChainId][token.address].vault;
+  const result = userReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
 
   if (!result) {
     throw new Error(`User reserve not found for spoke token address: ${token.address}`);

@@ -6,8 +6,7 @@ import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { moneyMarketSupportedTokens, type UserReserveData } from '@sodax/sdk';
-import type { Token, XToken } from '@sodax/types';
+import { moneyMarketSupportedTokens, type XToken, type UserReserveData } from '@sodax/sdk';
 import { findReserveByUnderlyingAsset, findUserReserveBySpokeTokenAddress } from '@/lib/utils';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 
@@ -16,7 +15,7 @@ export function SupplyAssetsList() {
 
   const tokens = useMemo(
     () =>
-      moneyMarketSupportedTokens[selectedChainId].map((t: Token) => {
+      moneyMarketSupportedTokens[selectedChainId].map(t => {
         return {
           ...t,
           xChainId: selectedChainId,
