@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   InputGroup,
   InputGroupAddon,
@@ -11,13 +10,12 @@ import Image from 'next/image';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
-export default function CurrencySearchPanel() {
-  const [searchQuery, setSearchQuery] = useState('');
+interface CurrencySearchPanelProps {
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+}
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-  };
-
+export default function CurrencySearchPanel({ searchQuery, onSearchChange }: CurrencySearchPanelProps) {
   return (
     <div className="w-full gap-(--layout-space-small) flex">
       <InputGroup className="rounded-full w-full md:w-44 h-10 bg-almost-white border-none shadow-none mix-blend-multiply">
@@ -26,7 +24,12 @@ export default function CurrencySearchPanel() {
             <SearchIcon className="w-4 h-4 text-clay-light" />
           </InputGroupText>
         </InputGroupAddon>
-        <InputGroupInput placeholder="Search" className="placeholder:text-clay-light font-['InterRegular']" />
+        <InputGroupInput
+          placeholder="Search"
+          className="placeholder:text-clay-light font-['InterRegular']"
+          onChange={e => onSearchChange(e.target.value)}
+          value={searchQuery}
+        />
         <InputGroupAddon align="inline-end">
           <InputGroupButton className="outline-none gap-1">
             <div className="w-6 h-6 grid grid-cols-2 gap-1 p-[2px]">

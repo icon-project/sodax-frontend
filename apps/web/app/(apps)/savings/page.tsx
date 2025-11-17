@@ -9,6 +9,11 @@ import CurrencyList from './_components/currency-list';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
 
   useEffect(() => {
     setTimeout(() => {
@@ -44,11 +49,11 @@ export default function SavingsPage() {
       </motion.div>
 
       <motion.div className="w-full" variants={itemVariants}>
-        <CurrencySearchPanel />
+        <CurrencySearchPanel searchQuery={searchQuery} onSearchChange={handleSearchChange} />
       </motion.div>
 
       <motion.div className="w-full" variants={itemVariants}>
-        <CurrencyList />
+        <CurrencyList searchQuery={searchQuery} />
       </motion.div>
     </motion.div>
   );

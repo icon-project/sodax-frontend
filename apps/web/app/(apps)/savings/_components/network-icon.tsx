@@ -11,6 +11,8 @@ import { OptimismIcon } from '@/components/icons/chains/optimism';
 import { ArbitrumIcon } from '@/components/icons/chains/arbitrum';
 import { LightLinkIcon } from '@/components/icons/chains/lightlink';
 import { IcxIcon } from '@/components/icons/chains/icon';
+import { HyperIcon } from '@/components/icons/chains/hyper';
+import { EthereumIcon } from '@/components/icons/chains/ethereum';
 
 interface NetworkIconProps {
   imageSrc: string;
@@ -20,7 +22,7 @@ interface NetworkIconProps {
 export default function NetworkIcon({ imageSrc, className }: NetworkIconProps): React.JSX.Element {
   return (
     <div className={`ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded w-4 h-4 ${className}`}>
-      {imageSrc === 'Icon' && <IcxIcon />}
+      {imageSrc === 'ICON' && <IcxIcon />}
       {imageSrc === 'Avalanche' && <AvalancheIcon />}
       {imageSrc === 'Base' && <BaseIcon />}
       {imageSrc === 'BSC' && <BnbIcon />}
@@ -33,6 +35,8 @@ export default function NetworkIcon({ imageSrc, className }: NetworkIconProps): 
       {imageSrc === 'Optimism' && <OptimismIcon />}
       {imageSrc === 'Arbitrum' && <ArbitrumIcon />}
       {imageSrc === 'LightLink' && <LightLinkIcon />}
+      {imageSrc === 'Hyper' && <HyperIcon />}
+      {imageSrc === 'Ethereum' && <EthereumIcon />}
     </div>
   );
 }
