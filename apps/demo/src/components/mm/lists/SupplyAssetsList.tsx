@@ -53,37 +53,42 @@ export function SupplyAssetsList() {
               <TableHead>Action</TableHead>
               <TableHead>Action</TableHead>
               <TableHead>Action</TableHead>
-              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {
-              isUserReservesLoading || isReservesLoading || !userReserves || !reserves ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center">Loading...</TableCell>
-                </TableRow>
-              ) : (
-                userReserves && reserves && tokens.map(token => {
-                  try {
-                    const userReserve: UserReserveData = findUserReserveBySpokeTokenAddress(userReserves[0], selectedChainId, token);
-                    return (
-                      <SupplyAssetsListItem
-                        key={token.address}
-                        token={token}
-                        walletBalance={
-                          balances?.[token.address] ? formatUnits(balances?.[token.address] || 0n, token.decimals) : '-'
-                        }
-                        balance={formatUnits(userReserve.scaledATokenBalance || 0n, 18)}
-                        debt={formatUnits(userReserve.scaledVariableDebt || 0n, 18)}
-                        reserve={findReserveByUnderlyingAsset(userReserve.underlyingAsset, reserves[0])}
-                      />
-                    );
-                  } catch {
-                    console.log('error token', token);
-                  }
-                })
-              )
-            }
+            {isUserReservesLoading || isReservesLoading || !userReserves || !reserves ? (
+              <TableRow>
+                <TableCell colSpan={10} className="text-center">
+                  Loading...
+                </TableCell>
+              </TableRow>
+            ) : (
+              userReserves &&
+              reserves &&
+              tokens.map(token => {
+                try {
+                  const userReserve: UserReserveData = findUserReserveBySpokeTokenAddress(
+                    userReserves[0],
+                    selectedChainId,
+                    token,
+                  );
+                  return (
+                    <SupplyAssetsListItem
+                      key={token.address}
+                      token={token}
+                      walletBalance={
+                        balances?.[token.address] ? formatUnits(balances?.[token.address] || 0n, token.decimals) : '-'
+                      }
+                      balance={formatUnits(userReserve.scaledATokenBalance || 0n, 18)}
+                      debt={formatUnits(userReserve.scaledVariableDebt || 0n, 18)}
+                      reserve={findReserveByUnderlyingAsset(userReserve.underlyingAsset, reserves[0])}
+                    />
+                  );
+                } catch {
+                  console.log('error token', token);
+                }
+              })
+            )}
           </TableBody>
         </Table>
       </CardContent>
