@@ -5,7 +5,10 @@ import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
 import { BorrowButton } from './BorrowButton';
 import { RepayButton } from './RepayButton';
+import { formatUnits } from 'viem';
 import type { AggregatedReserveData } from '@sodax/sdk';
+import { useAToken } from '@sodax/dapp-kit';
+import { Skeleton } from '@/components/ui/skeleton';
 interface SupplyAssetsListItemProps {
   token: XToken;
   walletBalance: string;
@@ -15,15 +18,41 @@ interface SupplyAssetsListItemProps {
 }
 
 export function SupplyAssetsListItem({ token, balance, walletBalance, debt, reserve }: SupplyAssetsListItemProps) {
-  // TODO use ERC20 hook to get the aToken token info as XToken
-  // this is just quickfix
-  const aToken: XToken = {
-    address: reserve.aTokenAddress,
-    decimals: 18,
-    symbol: 'aToken-${token.symbol}',
-    name: 'aToken-${token.name}',
-    xChainId: token.xChainId,
-  };
+  const { data: aToken, isLoading: isATokenLoading } = useAToken(reserve.aTokenAddress);
+
+  if (isATokenLoading || !aToken) {
+    return (
+      <TableRow>
+        <TableCell colSpan={10}>
+          <Skeleton className="h-4 w-full" />
+        </TableCell>
+        <TableCell colSpan={10}>
+          <Skeleton className="h-4 w-full" />
+        </TableCell>
+        <TableCell colSpan={10}>
+          <Skeleton className="h-4 w-full" />
+        </TableCell>
+        <TableCell colSpan={10}>
+          <Skeleton className="h-4 w-full" />
+        </TableCell>
+        <TableCell colSpan={10}>
+          <Skeleton className="h-4 w-full" />
+        </TableCell>
+        <TableCell colSpan={10}>
+          <Skeleton className="h-4 w-full" />
+        </TableCell>
+      </TableRow>
+    );
+  }
+
+  const availableToBorrow =
+    reserve.borrowCap === 0n
+      ? formatUnits(reserve.availableLiquidity, aToken.decimals)
+      : Math.min(
+          Number.parseFloat(formatUnits(reserve.availableLiquidity, aToken.decimals)),
+          Number.parseInt(reserve.borrowCap.toString()) -
+            Number.parseFloat(formatUnits(reserve.totalScaledVariableDebt, aToken.decimals)),
+        );
 
   return (
     <TableRow>
@@ -31,6 +60,7 @@ export function SupplyAssetsListItem({ token, balance, walletBalance, debt, rese
       <TableCell>{walletBalance}</TableCell>
       <TableCell>{balance}</TableCell>
       <TableCell>{debt}</TableCell>
+      <TableCell>{availableToBorrow}</TableCell>
       <TableCell>
         <SupplyButton token={token} reserve={reserve} />
       </TableCell>

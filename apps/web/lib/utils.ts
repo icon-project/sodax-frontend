@@ -71,8 +71,6 @@ const filterLegacyTokens = (tokens: readonly Token[]): Token[] => {
  */
 export const getAllSupportedSolverTokens = (): XToken[] => {
   const allTokens: XToken[] = [];
-
-  // Filter out Nibiru chain from supported chains
   const filteredSupportedChains = supportedSpokeChains.filter(chainId =>
     availableChains.find(chain => chain.id === chainId),
   );
@@ -91,6 +89,10 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
 
       if (chainId !== '0x1.icon') {
         filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
+      }
+
+      if(chainId === 'hyper') {
+        filteredTokens = filteredTokens.filter(token => token.symbol !== 'SODA');
       }
 
       const xTokens: XToken[] = filteredTokens.map((token: Token) => ({
@@ -127,6 +129,10 @@ export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[
 
     if (chainId !== '0x1.icon') {
       filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
+    }
+
+    if(chainId === 'hyper') {
+      filteredTokens = filteredTokens.filter(token => token.symbol !== 'SODA');
     }
 
     return filteredTokens.map((token: Token) => ({

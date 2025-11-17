@@ -29,7 +29,7 @@ export function CurrencySearchPanel({
   const [hoveredChain, setHoveredChain] = useState<string | null>(null);
   return (
     <div
-      className={`mt-4 box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 ${
+      className={`mt-4 box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 h-12 ${
         isUsdtClicked ? 'blur filter opacity-30' : ''
       }`}
     >

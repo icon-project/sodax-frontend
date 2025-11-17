@@ -41,7 +41,7 @@ const supportedSwapTokensPerChain: Record<SpokeChainId, readonly Token[]> = soda
 const isSwapSupportedToken: boolean = isSwapSupportedToken(spokeChainId, token)
 ```
 
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for more.
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts) for more.
 
 ## Available Methods
 
@@ -254,35 +254,11 @@ if (!isApproved.ok) {
 
 ### Stellar Trustline Requirements
 
-For Stellar-based operations, the allowance and approval system works differently:
+For Stellar-based swap operations, the allowance and approval system works differently:
 
 - **Source Chain (Stellar)**: The standard `isAllowanceValid` and `approve` methods work as expected for EVM chains, but for Stellar as the source chain, these methods check and establish trustlines instead.
 
-- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually establish trustlines before executing actions like swaps, money market operations, or bridging. Use the Stellar-specific methods:
-
-```typescript
-import { StellarSpokeService } from "@sodax/sdk";
-
-// Check if sufficient trustline exists for the destination token
-const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
-  destinationTokenAddress,
-  amount,
-  stellarSpokeProvider
-);
-
-if (!hasTrustline) {
-  // Request trustline for the destination token
-  const trustlineResult = await StellarSpokeService.requestTrustline(
-    destinationTokenAddress,
-    amount,
-    stellarSpokeProvider,
-    false // false = execute transaction, true = return raw transaction
-  );
-  
-  // Wait for trustline transaction to be confirmed before proceeding
-  console.log('Trustline established:', trustlineResult);
-}
-```
+- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually establish trustlines before executing swaps. See [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#swaps) for detailed information and code examples.
 
 ### Estimate Gas for Raw Transactions
 
