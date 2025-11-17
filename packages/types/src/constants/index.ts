@@ -210,6 +210,8 @@ export const HubVaultSymbols = [
   'IbnUSD',
   'sodaHYPE',
   'sodaLL',
+  'sodaWEETH',
+  'sodaWSTETH',
 ] as const;
 
 export const SodaTokens = {
@@ -330,6 +332,20 @@ export const SodaTokens = {
     name: 'Soda LL',
     decimals: 18,
     address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaWEETH: {
+    symbol: 'sodaWEETH',
+    name: 'SODA WEETH',
+    decimals: 18,
+    address: '0xCb6B152D3a943f25157381aFcA7fEFCD2ef5a357',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaWSTETH: {
+    symbol: 'sodaWSTETH',
+    name: 'SODA WSTETH',
+    decimals: 18,
+    address: '0x58b0538D7EEaeE69EF32f9F1dE5cbF32A10a977B',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
 } as const satisfies Record<HubVaultSymbol, XToken>;
@@ -765,6 +781,13 @@ export const spokeChainConfig = {
         address: '0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3',
         xChainId: BSC_MAINNET_CHAIN_ID,
       },
+      weETH: {
+        symbol: 'weETH',
+        name: 'Wrapped eETH',
+        decimals: 18,
+        address: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A',
+        xChainId: BSC_MAINNET_CHAIN_ID,
+      },
     },
   } as const satisfies EvmSpokeChainConfig,
   [POLYGON_MAINNET_CHAIN_ID]: {
@@ -802,6 +825,13 @@ export const spokeChainConfig = {
         name: 'SODAX',
         decimals: 18,
         address: '0xDDF645F33eDAD18fC23E01416eD0267A1bF59D45',
+        xChainId: POLYGON_MAINNET_CHAIN_ID,
+      },
+      wstETH: {
+        symbol: 'wstETH',
+        name: 'Wrapped liquid staked Ether 2.0',
+        decimals: 18,
+        address: '0x03b54a6e9a984069379fae1a4fc4dbae93b3bccd',
         xChainId: POLYGON_MAINNET_CHAIN_ID,
       },
     } as const,
@@ -1261,6 +1291,20 @@ export const spokeChainConfig = {
         address: '0x0921799CB1d702148131024d18fCdE022129Dc73',
         xChainId: ETHEREUM_MAINNET_CHAIN_ID,
       },
+      weETH: {
+        symbol: 'weETH',
+        name: 'Wrapped Ethereum',
+        decimals: 18,
+        address: '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+      wstETH: {
+        symbol: 'wstETH',
+        name: 'Wrapped liquid staked Ether 2.0',
+        decimals: 18,
+        address: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
@@ -1448,6 +1492,26 @@ export const hubVaults = {
     address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
     reserves: ['0xee6236c791db0755c9bc333b4c7c85ab754f2a0a'],
   },
+  [SodaTokens.sodaWEETH.symbol]: {
+    address: '0xCb6B152D3a943f25157381aFcA7fEFCD2ef5a357',
+    reserves: [
+      '0x37a3e4ae512b7132c139643a5ac4b7148997d0e8',
+      '0x55e0Ad45eB97493B3045eEE417fb6726CB85dfd4',
+      '0xE121c0Dc2B33c00ff31ee3D902D248cc3f19Ea50',
+      '0x08D5cf039De35627fD5C0f48B8AF4a1647a462E8',
+      '0xc1a14e759e8c2a8128a1fe0288c12390fbaee6d2',
+    ],
+  },
+  [SodaTokens.sodaWSTETH.symbol]: {
+    address: '0x58b0538D7EEaeE69EF32f9F1dE5cbF32A10a977B',
+    reserves: [
+      '0xa2b668c577ab44301ebb820cb29c2a233d1607ab',
+      '0x494aaEaEfDF5964d4Ed400174e8c5b98C00957aA',
+      '0x61e26f611090CdC6bc79A7Bf156b0fD10f1fC212',
+      '0x2D5A7837D68b0c2CC4b14C2af2a1F0Ef420DDDc5',
+      '0xa95e972dbff57f3b561763ae88fd5f235a8f2711',
+    ],
+  },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
 export const hubVaultTokensMap: Map<string, Token> = new Map(
@@ -1576,14 +1640,14 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'weETH',
       name: 'Wrapped eETH',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWEETH.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
       asset: '0x2D5A7837D68b0c2CC4b14C2af2a1F0Ef420DDDc5',
       decimal: 18,
       symbol: 'wstETH',
       name: 'Wrapped Staked Ethereum',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWSTETH.address, // no vault yet
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.tBTC.address]: {
       asset: '0x96Fc8540736f1598b7E235e6dE8814062b3b5d3B',
@@ -1651,18 +1715,18 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: hubVaults.bnUSD.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
-      asset: '0x55e0ad45eb97493b3045eee417fb6726cb85dfd4',
+      asset: '0x55e0Ad45eB97493B3045eEE417fb6726CB85dfd4',
       decimal: 18,
       symbol: 'weETH',
       name: 'Wrapped eETH',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWEETH.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
-      asset: '0x494aaeaefdf5964d4ed400174e8c5b98c00957aa',
+      asset: '0x494aaEaEfDF5964d4Ed400174e8c5b98C00957aA',
       decimal: 18,
       symbol: 'wstETH',
       name: 'Wrapped Staked Ethereum',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWSTETH.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x17fF8Ad5EBe6CA8B15751067cD0c89f0E580CD17',
@@ -1699,14 +1763,14 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'wstETH',
       name: 'Wrapped Staked Ethereum',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWSTETH.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
       asset: '0xE121c0Dc2B33c00ff31ee3D902D248cc3f19Ea50',
       decimal: 18,
       symbol: 'weETH',
       name: 'Wrapped eETH',
-      vault: '0x', // no vault yet
+      vault: hubVaults.sodaWEETH.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
       asset: '0xc168067d95109003805aC865ae556e8476DC69bc',
@@ -1766,6 +1830,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'SODAX',
       vault: hubVaults.sodaSODA.address,
     },
+    [spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
+      asset: '0xc1a14e759e8c2a8128a1fe0288c12390fbaee6d2',
+      decimal: 18,
+      symbol: 'weETH',
+      name: 'Wrapped eETH',
+      vault: hubVaults.sodaWEETH.address,
+    },
   },
   [POLYGON_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].nativeToken]: {
@@ -1795,6 +1866,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'SODA',
       name: 'SODAX',
       vault: hubVaults.sodaSODA.address,
+    },
+    [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
+      asset: '0xa95e972dbff57f3b561763ae88fd5f235a8f2711',
+      decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
+      vault: hubVaults.sodaWSTETH.address,
     },
   },
   [HYPEREVM_MAINNET_CHAIN_ID]: {
@@ -2169,6 +2247,20 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'LightLink',
       vault: hubVaults.sodaLL.address,
     },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
+      asset: '0x37a3e4ae512b7132c139643a5ac4b7148997d0e8',
+      decimal: 18,
+      symbol: 'weETH',
+      name: 'Wrapped eETH',
+      vault: hubVaults.sodaWEETH.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
+      asset: '0xa2b668c577ab44301ebb820cb29c2a233d1607ab',
+      decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
+      vault: hubVaults.sodaWSTETH.address,
+    },
   },
 } as const;
 
@@ -2238,7 +2330,7 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   [HYPEREVM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    // spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
   [LIGHTLINK_MAINNET_CHAIN_ID]: [
@@ -2294,7 +2386,7 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
-    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    // spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const,
 } as const;
@@ -2332,8 +2424,8 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.WBTC,
-    // spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
-    // spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.tBTC,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
@@ -2342,9 +2434,9 @@ export const moneyMarketSupportedTokens = {
   [BASE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-    // spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC,
-    // spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.cbBTC,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
@@ -2352,8 +2444,8 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDC,
-    // spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
-    // spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
@@ -2362,6 +2454,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.wstETH,
   ] as const,
   [BSC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BNB,
@@ -2369,6 +2462,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BTCB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.weETH,
   ] as const,
   [HYPEREVM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
@@ -2431,6 +2525,8 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
   ] as const,
 } as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
 
