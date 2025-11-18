@@ -216,8 +216,9 @@ export class BackendApiService implements IConfigApi {
 
   // Intent endpoints
   /**
-   * Get intent details by transaction hash
-   * @param txHash - Transaction hash
+   * Get intent details by intent created transaction hash from the hub chain.
+   * Intents are only created on the hub chain, so the transaction hash must be from the hub chain.
+   * @param txHash - The intent created transaction hash from the hub chain
    * @returns Promise<IntentResponse>
    */
   public async getIntentByTxHash(txHash: string): Promise<IntentResponse> {
@@ -379,7 +380,9 @@ export class BackendApiService implements IConfigApi {
    * @returns Promise<GetMoneyMarketTokensApiResponse>
    */
   public async getMoneyMarketReserveAssets(): Promise<GetMoneyMarketReserveAssetsApiResponse> {
-    return this.makeRequest<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', { method: 'GET' });
+    return this.makeRequest<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', {
+      method: 'GET',
+    });
   }
 
   /**
