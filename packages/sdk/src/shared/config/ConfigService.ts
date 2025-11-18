@@ -54,7 +54,6 @@ export class ConfigService {
   private supportedSodaVaultAssetsSet!: Set<Address>;
   private intentRelayChainIdToSpokeChainIdMap!: Map<IntentRelayChainId, SpokeChainId>;
   private supportedTokensPerChain!: Map<SpokeChainId, readonly XToken[]>;
-  private hubVaultsAddressSet!: Set<Address>;
   private moneyMarketReserveAssetsSet!: Set<Address>;
   private spokeChainIdsSet!: Set<SpokeChainId>;
 
@@ -242,10 +241,6 @@ export class ConfigService {
 
   public isMoneyMarketReserveHubAsset(hubAsset: Address): boolean {
     return this.moneyMarketReserveAssetsSet.has(hubAsset.toLowerCase() as Address);
-  }
-
-  public getHubVaultsAddressSet(): Set<Address> {
-    return this.hubVaultsAddressSet;
   }
 
   private loadSodaxConfigDataStructures(sodaxConfig: GetAllConfigApiResponse): void {
