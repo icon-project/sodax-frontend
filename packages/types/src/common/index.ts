@@ -252,11 +252,6 @@ export type MoneyMarketConfig = {
   bnUSDAToken: Address;
 };
 
-export type VaultType = {
-  address: Address; // vault address
-  reserves: Address[]; // hub asset addresses contained in the vault
-};
-
 export type HubAsset = {
   asset: Address;
   decimal: number;

@@ -9,7 +9,6 @@ import type {
   GetChainsApiResponse,
   GetHubAssetsApiResponse,
   GetHubAssetsByChainIdApiResponse,
-  GetHubVaultsApiResponse,
   GetMoneyMarketReserveAssetsApiResponse,
   GetMoneyMarketTokensApiResponse,
   GetMoneyMarketTokensByChainIdApiResponse,
@@ -402,14 +401,6 @@ export class BackendApiService implements IConfigApi {
    */
   public async getHubAssets(): Promise<GetHubAssetsApiResponse> {
     return this.makeRequest<GetHubAssetsApiResponse>('/config/hub/assets', { method: 'GET' });
-  }
-
-  /**
-   * Get all supported Soda hub vaults
-   * @returns Promise<GetHubVaultsApiResponse>
-   */
-  public async getHubVaults(): Promise<GetHubVaultsApiResponse> {
-    return this.makeRequest<GetHubVaultsApiResponse>('/config/hub/vaults', { method: 'GET' });
   }
 
   /**

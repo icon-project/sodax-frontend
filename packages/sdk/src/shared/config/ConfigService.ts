@@ -13,7 +13,6 @@ import {
   type SpokeChainId,
   type Token,
   type XToken,
-  type GetHubVaultsApiResponse,
   type EvmHubChainConfig,
   type GetAllConfigApiResponse,
   defaultSodaxConfig,
@@ -55,7 +54,6 @@ export class ConfigService {
   private supportedSodaVaultAssetsSet!: Set<Address>;
   private intentRelayChainIdToSpokeChainIdMap!: Map<IntentRelayChainId, SpokeChainId>;
   private supportedTokensPerChain!: Map<SpokeChainId, readonly XToken[]>;
-  private hubVaultsAddressSet!: Set<Address>;
   private moneyMarketReserveAssetsSet!: Set<Address>;
   private spokeChainIdsSet!: Set<SpokeChainId>;
 
@@ -110,10 +108,6 @@ export class ConfigService {
 
   public getHubAssets(): GetHubAssetsApiResponse {
     return this.sodaxConfig.supportedHubAssets;
-  }
-
-  public getHubVaults(): GetHubVaultsApiResponse {
-    return this.sodaxConfig.supportedHubVaults;
   }
 
   public getRelayChainIdMap(): GetRelayChainIdMapApiResponse {
@@ -249,13 +243,8 @@ export class ConfigService {
     return this.moneyMarketReserveAssetsSet.has(hubAsset.toLowerCase() as Address);
   }
 
-  public getHubVaultsAddressSet(): Set<Address> {
-    return this.hubVaultsAddressSet;
-  }
-
   private loadSodaxConfigDataStructures(sodaxConfig: GetAllConfigApiResponse): void {
     this.loadHubAssetDataStructures(sodaxConfig.supportedHubAssets);
-    this.loadHubVaultsDataStructures(sodaxConfig.supportedHubVaults);
     this.loadSpokeChainDataStructures(sodaxConfig.supportedChains);
     this.loadRelayChainIdMapDataStructures(sodaxConfig.relayChainIdMap);
     this.loadSpokeChainConfigDataStructures(sodaxConfig.spokeChainConfig);
@@ -295,10 +284,6 @@ export class ConfigService {
         Object.values(assets).map(info => info.vault.toLowerCase() as Address),
       ),
     );
-  }
-
-  private loadHubVaultsDataStructures(hubVaults: GetHubVaultsApiResponse): void {
-    this.hubVaultsAddressSet = new Set(Object.values(hubVaults).map(vault => vault.address.toLowerCase() as Address));
   }
 
   private loadSpokeChainDataStructures(chains: GetChainsApiResponse): void {
