@@ -9,7 +9,6 @@ import type {
   GetChainsApiResponse,
   GetHubAssetsApiResponse,
   GetHubAssetsByChainIdApiResponse,
-  GetHubVaultsApiResponse,
   GetMoneyMarketReserveAssetsApiResponse,
   GetMoneyMarketTokensApiResponse,
   GetMoneyMarketTokensByChainIdApiResponse,
@@ -216,8 +215,9 @@ export class BackendApiService implements IConfigApi {
 
   // Intent endpoints
   /**
-   * Get intent details by transaction hash
-   * @param txHash - Transaction hash
+   * Get intent details by intent created transaction hash from the hub chain.
+   * Intents are only created on the hub chain, so the transaction hash must be from the hub chain.
+   * @param txHash - The intent created transaction hash from the hub chain
    * @returns Promise<IntentResponse>
    */
   public async getIntentByTxHash(txHash: string): Promise<IntentResponse> {
@@ -379,7 +379,9 @@ export class BackendApiService implements IConfigApi {
    * @returns Promise<GetMoneyMarketTokensApiResponse>
    */
   public async getMoneyMarketReserveAssets(): Promise<GetMoneyMarketReserveAssetsApiResponse> {
-    return this.makeRequest<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', { method: 'GET' });
+    return this.makeRequest<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', {
+      method: 'GET',
+    });
   }
 
   /**
@@ -399,14 +401,6 @@ export class BackendApiService implements IConfigApi {
    */
   public async getHubAssets(): Promise<GetHubAssetsApiResponse> {
     return this.makeRequest<GetHubAssetsApiResponse>('/config/hub/assets', { method: 'GET' });
-  }
-
-  /**
-   * Get all supported Soda hub vaults
-   * @returns Promise<GetHubVaultsApiResponse>
-   */
-  public async getHubVaults(): Promise<GetHubVaultsApiResponse> {
-    return this.makeRequest<GetHubVaultsApiResponse>('/config/hub/vaults', { method: 'GET' });
   }
 
   /**
