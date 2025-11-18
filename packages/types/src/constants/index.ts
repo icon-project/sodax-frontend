@@ -350,10 +350,7 @@ export const SodaTokens = {
   },
 } as const satisfies Record<HubVaultSymbol, XToken>;
 
-export const SodaTokensAsHubAssets: Record<
-  string,
-  { asset: Address; decimal: number; vault: Address; symbol: string; name: string }
-> = Object.values(SodaTokens).reduce(
+export const SodaTokensAsHubAssets: Record<string, HubAsset> = Object.values(SodaTokens).reduce(
   (acc, token) => {
     acc[token.address] = {
       asset: token.address,
@@ -364,12 +361,8 @@ export const SodaTokensAsHubAssets: Record<
     };
     return acc;
   },
-  {} as Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>,
+  {} as Record<string, HubAsset>,
 );
-export const SodaVaultTokensSet = new Set(Object.values(SodaTokens).map(token => token.address.toLowerCase()));
-export const isSodaVaultToken = (address: string): boolean => {
-  return SodaVaultTokensSet.has(address.toLowerCase());
-};
 
 export const hubChainConfig = {
   chain: baseChainInfo[SONIC_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
@@ -1514,22 +1507,6 @@ export const hubVaults = {
   },
 } as const satisfies Record<HubVaultSymbol, VaultType>;
 
-export const hubVaultTokensMap: Map<string, Token> = new Map(
-  Object.entries(hubVaults).map(([symbol, vault]) => [
-    vault.address.toLowerCase(),
-    {
-      address: vault.address.toLowerCase(),
-      symbol,
-      name: symbol,
-      decimals: 18,
-    },
-  ]),
-);
-
-export const getHubVaultTokenByAddress = (address: string): Token | undefined => {
-  return hubVaultTokensMap.get(address.toLowerCase());
-};
-
 export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
   [SONIC_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].nativeToken]: {
@@ -2537,6 +2514,7 @@ export const moneyMarketSupportedTokens = {
 // export const getSupportedMoneyMarketTokens = (chainId: SpokeChainId): readonly Token[] =>
 //   moneyMarketSupportedTokens[chainId];
 
+// !TODO: moneyMarketReserveAssets can be drived from hubAssets.
 export const moneyMarketReserveAssets = [
   ...Object.values(hubVaults).map(vault => vault.address),
   getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault,
