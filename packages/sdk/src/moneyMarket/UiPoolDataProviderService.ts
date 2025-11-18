@@ -95,7 +95,7 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
     // filter out bnUSD (debt) reserve by default
     return reservesList.filter(
       reserve =>
-        reserve.toLowerCase() !== getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD.toLowerCase()
+        reserve.toLowerCase() !== getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD.toLowerCase(),
     );
   }
 
@@ -148,6 +148,7 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
       totalScaledVariableDebt: bnUSDReserve.totalScaledVariableDebt + bnUSDVaultReserve.totalScaledVariableDebt,
       virtualUnderlyingBalance: bnUSDReserve.virtualUnderlyingBalance + bnUSDVaultReserve.virtualUnderlyingBalance,
       accruedToTreasury: bnUSDReserve.accruedToTreasury + bnUSDVaultReserve.accruedToTreasury,
+      variableBorrowRate: bnUSDReserve.variableBorrowRate,
     };
 
     return [
