@@ -125,18 +125,6 @@ export class Sodax {
    * @param sodax - The Sodax instance to initialize.
    */
   public async initialize(): Promise<Result<void>> {
-    try {
-      await this.config.initialize();
-
-      return {
-        ok: true,
-        value: undefined,
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error,
-      };
-    }
+    return this.config.initialize();
   }
 }
