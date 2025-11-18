@@ -1,15 +1,5 @@
 import { defineChain, type Chain } from 'viem';
-import {
-  arbitrum,
-  avalanche,
-  base,
-  bsc,
-  optimism,
-  polygon,
-  sonic,
-  lightlinkPhoenix,
-  mainnet,
-} from 'viem/chains';
+import { arbitrum, avalanche, base, bsc, optimism, polygon, sonic, lightlinkPhoenix, mainnet } from 'viem/chains';
 import type { LegacybnUSDChainId, LegacybnUSDToken, NewbnUSDChainId } from '../index.js';
 import {
   type Token,
@@ -150,15 +140,6 @@ export const getAllLegacybnUSDTokens = (): { token: LegacybnUSDToken; chainId: L
     chainId,
   }));
 };
-
-// export const hubVaultsAddressSet = new Set<Address>(
-//   Object.values(hubVaults).map(vault => vault.address.toLowerCase() as Address),
-// );
-
-// all hub assets contained in the money market reserves (supply / borrow assets)
-// export const moneyMarketReserveHubAssetsSet = new Set<Address>(
-//   Object.values(hubVaults).flatMap(vault => vault.reserves.map(reserve => reserve.toLowerCase() as Address)),
-// );
 
 // export const isMoneyMarketReserveHubAsset = (hubAsset: Address): boolean =>
 //   moneyMarketReserveHubAssetsSet.has(hubAsset.toLowerCase() as Address);
