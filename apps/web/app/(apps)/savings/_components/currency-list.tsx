@@ -35,9 +35,9 @@ export default function CurrencyList({
   );
 
   //This is for mock data only
-  const stablecoins = ['bnUSD', 'USDC', 'USDT', 'BTC', 'ETH'];
+  const stablecoins = ['bnUSD', 'USDC', 'USDT', 'BTC'];
 
-  const megaAssets = [{ BTC: ['BTCB', 'WBTC', 'cbBTC', 'tBTC'] }, { ETH: ['ETH', 'WETH', 'weETH', 'wstETH', 'ETHB'] }];
+  const megaAssets = [{ BTC: ['BTCB', 'WBTC', 'cbBTC', 'tBTC'] }];
 
   const megaAssetSymbolMap = useMemo(() => {
     const map = new Map<string, string[]>();
