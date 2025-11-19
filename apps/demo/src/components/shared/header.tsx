@@ -48,6 +48,16 @@ export function NavigationMenu() {
       >
         Staking
       </NavLink>
+      <NavLink
+        to="/dex"
+        className={({ isActive }) =>
+          `text-sm font-medium transition-colors hover:text-primary ${
+            isActive ? 'text-primary' : 'text-muted-foreground'
+          }`
+        }
+      >
+        DEX
+      </NavLink>
     </nav>
   );
 }

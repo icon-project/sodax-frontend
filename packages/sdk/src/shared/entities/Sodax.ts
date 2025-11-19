@@ -1,5 +1,13 @@
 import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
-import { SwapService, MigrationService, BackendApiService, BridgeService, StakingService } from '../../index.js';
+import {
+  SwapService,
+  MigrationService,
+  BackendApiService,
+  BridgeService,
+  StakingService,
+  DexService,
+  type DexServiceConfig,
+} from '../../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
 import type { HttpUrl } from '@sodax/types';
 import type {
@@ -18,6 +26,7 @@ export type SodaxConfig = {
   moneyMarket?: MoneyMarketConfigParams; // optional Money Market service enabling cross-chain lending and borrowing
   migration?: MigrationServiceConfig; // optional Migration service enabling ICX migration to SODA
   bridge?: BridgeServiceConfig; // optional Bridge service enabling cross-chain transfers
+  dex?: DexServiceConfig; // optional Dex service enabling DEX operations
   hubProviderConfig?: EvmHubProviderConfig; // hub provider for the hub chain (e.g. Sonic mainnet)
   relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
   backendApiConfig?: BackendApiConfig; // backend API config used to interact with the backend API
@@ -37,6 +46,7 @@ export class Sodax {
   public readonly backendApi: BackendApiService; // backend API service enabling backend API endpoints
   public readonly bridge: BridgeService; // Bridge service enabling cross-chain transfers
   public readonly staking: StakingService; // Staking service enabling SODA staking operations
+  public readonly dex: DexService; // Dex service enabling DEX operations
   public readonly config: ConfigService; // Config service enabling configuration data fetching from the backend API or fallbacking to default values
 
   public readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
@@ -112,6 +122,11 @@ export class Sodax {
             configService: this.config,
           });
     this.staking = new StakingService({
+      hubProvider: this.hubProvider,
+      relayerApiEndpoint: this.relayerApiEndpoint,
+      configService: this.config,
+    });
+    this.dex = new DexService({
       hubProvider: this.hubProvider,
       relayerApiEndpoint: this.relayerApiEndpoint,
       configService: this.config,
