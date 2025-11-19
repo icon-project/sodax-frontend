@@ -208,6 +208,7 @@ export function TokenAsset({
     <>
       <motion.div
         ref={assetRef}
+        layout
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{
           opacity: isHoverDimmed ? 0.5 : 1,
@@ -215,7 +216,7 @@ export function TokenAsset({
         }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className={`px-2 flex flex-col gap-2 items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 pb-3 ${
+        className={`flex flex-col gap-2 items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 w-12 h-22 ${
           isClickBlurred ? 'blur filter opacity-30' : isHoverDimmed ? 'opacity-50' : ''
         } ${isClicked && isGroup ? 'z-[9999]' : ''}`}
         data-name="Asset"

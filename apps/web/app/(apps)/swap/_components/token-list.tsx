@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
-import { ScrollAreaPrimitive, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollAreaPrimitive, ScrollBar, ScrollArea } from '@/components/ui/scroll-area';
 import { TokenAsset } from './token-asset';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -70,10 +70,6 @@ export function TokenList({
   const filteredTokens = uniqueTokenSymbols.filter(({ symbol }: { symbol: string; tokens: XToken[] }) =>
     symbol.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-
-  const sortedTokens = showAllAssets ? filteredTokens.sort((a, b) => a.symbol.localeCompare(b.symbol)) : filteredTokens;
-
-  const displayTokens = showAllAssets ? sortedTokens : sortedTokens.slice(0, 15);
 
   const shouldApplyHover = clickedAsset === null;
 
@@ -158,35 +154,18 @@ export function TokenList({
           }}
         />
       )}
-      <ScrollAreaPrimitive.Root
-        data-slot="scroll-area"
-        className={showAllAssets ? 'h-[calc(80vh-192px)] overflow-hidden mt-6' : 'mt-6'}
-      >
-        <ScrollAreaPrimitive.Viewport
-          data-slot="scroll-area-viewport"
-          className={`h-full pt-2 pl-5 pr-5 w-full content-stretch ${clickedAsset ? '' : ''}`}
+      <ScrollArea className={`h-81 pt-2 pl-5 pr-5 w-full content-stretch ${clickedAsset ? '' : ''}`}>
+        <motion.div
+          ref={assetsRef}
+          className={`h-79 [flex-flow:wrap] box-border content-start flex gap-y-4 gap-x-6 items-start justify-center px-0 relative shrink-0 w-full flex-1 ${
+            isChainSelectorOpen ? 'blur filter opacity-30' : ''
+          }`}
+          data-name="Assets"
+          layout
         >
-          <motion.div
-            ref={assetsRef}
-            layout
-            className={`flex-wrap box-border content-start flex gap-0 items-start justify-center px-0 relative shrink-0 w-full flex-1 ${
-              isChainSelectorOpen ? 'blur filter opacity-30' : ''
-            }`}
-            data-name="Assets"
-          >
-            <AnimatePresence mode="popLayout">{displayTokens.map(renderTokenSymbol)}</AnimatePresence>
-          </motion.div>
-        </ScrollAreaPrimitive.Viewport>
-        {showAllAssets && <ScrollBar />}
-      </ScrollAreaPrimitive.Root>
-      {!showAllAssets && filteredTokens.length > 15 && (
-        <div
-          className={`mt-4 w-full text-center text-(length:--body-super-comfortable) text-espresso hover:font-bold font-['InterRegular'] leading-tight cursor-pointer z-1 ${isChainSelectorOpen || clickedAsset !== null ? 'blur filter opacity-30' : ''}`}
-          onClick={onViewAllAssets}
-        >
-          View all assets
-        </div>
-      )}
+          <AnimatePresence mode="popLayout">{filteredTokens.map(renderTokenSymbol)}</AnimatePresence>
+        </motion.div>
+      </ScrollArea>
     </>
   );
 }
