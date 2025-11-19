@@ -11,7 +11,7 @@ import { shortenAddress } from '@/lib/utils';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useSwapApprove, useSpokeProvider, useSwap, useStatus } from '@sodax/dapp-kit';
-import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
+import { type CreateIntentParams, type IntentState, SolverIntentStatusCode } from '@sodax/sdk';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useSwapActions, useSwapState } from '../_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
@@ -19,6 +19,8 @@ import type { SpokeChainId } from '@sodax/types';
 import { getSwapErrorMessage, formatBalance } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
+import { useSodaxContext } from '@sodax/dapp-kit';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -63,7 +65,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const sourceSpokeProvider = useSpokeProvider(inputToken.xChainId, sourceWalletProvider);
   const sourceXAccount = useXAccount(inputToken.xChainId);
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceSpokeProvider);
-
+  const [filledIntent, setFilledIntent] = useState<IntentState | null>(null);
+  const { sodax } = useSodaxContext();
   const intentOrderPayload = useMemo(() => {
     if (!inputToken || !outputToken || !minOutputAmount || !inputAmount || !sourceAddress || !finalDestinationAddress) {
       return undefined;
@@ -89,10 +92,18 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const { data: status } = useStatus((dstTxHash || '0x') as `0x${string}`);
 
   useEffect(() => {
+    const getFilledIntent = async () => {
+      if (status?.ok) {
+        const filledIntent = await sodax.swap.getFilledIntent(status.value.fill_tx_hash as `0x${string}`);
+        setFilledIntent(filledIntent);
+      }
+    };
+
     if (dstTxHash && status?.ok) {
       const statusCode = status.value.status;
       setSwapStatus(statusCode);
       if (statusCode === SolverIntentStatusCode.SOLVED) {
+        getFilledIntent();
         setDstTxHash('');
       }
 
@@ -100,7 +111,14 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
         setSwapError({ title: 'Swap failed', message: 'Please try again.' });
       }
     }
-  }, [dstTxHash, status, setSwapStatus, setSwapError, setDstTxHash]);
+  }, [dstTxHash, status, setSwapStatus, setSwapError, setDstTxHash, sodax]);
+
+  const displayedOutputValue = useMemo(() => {
+    if (filledIntent) {
+      return formatBalance(formatUnits(filledIntent.receivedOutput, outputToken.decimals), usdPrice);
+    }
+    return formatBalance(outputAmount ? formatUnits(outputAmount, outputToken.decimals) : '0', usdPrice);
+  }, [filledIntent, outputAmount, outputToken.decimals, usdPrice]);
 
   const handleApprove = async (): Promise<void> => {
     try {
@@ -145,6 +163,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     setIsShaking(false);
     setApprovalError(null);
     resetSwapExecutionState();
+    setFilledIntent(null);
     onClose?.();
   };
 
@@ -227,9 +246,18 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 <CurrencyLogo currency={outputToken} />
                 <div className="flex flex-col justify-start items-center gap-2">
                   <div className="inline-flex justify-start items-center gap-1">
-                    <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                      {formatBalance(outputAmount ? formatUnits(outputAmount, outputToken.decimals) : '0', usdPrice)}
-                    </div>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={displayedOutputValue}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight"
+                      >
+                        {displayedOutputValue}
+                      </motion.div>
+                    </AnimatePresence>
                     <div className="justify-start text-clay-light text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
                       {outputToken.symbol}
                     </div>

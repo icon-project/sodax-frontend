@@ -62,6 +62,8 @@ All swap methods are accessible through `sodax.swap`:
 
 ### Intent Management
 - `getIntent(txHash)` - Retrieve intent from hub chain transaction hash
+- `getFilledIntent(txHash)` - Get the filled intent state from the hub chain transaction hash by parsing the `IntentFilled` event.  
+  Useful for obtaining the final exact output amount and state details after an intent has been executed.
 - `getIntentHash(intent)` - Get keccak256 hash of an intent
 - `getStatus(request)` - Get intent status from Solver API
 - `cancelIntent(intent, spokeProvider, raw?)` - Cancel an active intent
@@ -466,6 +468,40 @@ Retrieve intent data using transaction hash from the hub chain (destination tran
 const intent = await sodax.swap.getIntent(txHash);
 console.log('Intent:', intent);
 ```
+
+### Get Filled Intent
+
+Retrieve the intent state from a transaction hash on the hub chain. This method extracts the intent state from the `IntentFilled` event logs emitted when an intent is filled by a solver.
+
+**Note**: The `txHash` should be the hub chain transaction hash where the intent was filled. This can be obtained from the solver execution response.
+
+```typescript
+import type { Hash, IntentState } from "@sodax/sdk";
+
+// Get filled intent state from hub chain transaction hash
+// This retrieves the intent state from IntentFilled event logs
+const txHash: Hash = '0x...'; // Hub chain transaction hash where intent was filled
+
+try {
+  const intentState: IntentState = await sodax.swap.getFilledIntent(txHash);
+  
+  console.log('Intent exists:', intentState.exists);
+  console.log('Remaining input:', intentState.remainingInput);
+  console.log('Received output:', intentState.receivedOutput);
+  console.log('Pending payment:', intentState.pendingPayment);
+} catch (error) {
+  // Handle error - no filled intent found for the transaction hash
+  console.error('Failed to get filled intent:', error);
+}
+```
+
+**IntentState Structure:**
+- `exists`: `boolean` - Whether the intent exists
+- `remainingInput`: `bigint` - Remaining input amount that hasn't been filled
+- `receivedOutput`: `bigint` - Amount of output tokens received
+- `pendingPayment`: `boolean` - Whether there is a pending payment
+
+**Note**: This method throws an error if no filled intent is found for the given transaction hash. Make sure the transaction hash corresponds to a transaction that contains an `IntentFilled` event.
 
 ### Cancel Intent Order
 
