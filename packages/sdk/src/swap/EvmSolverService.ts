@@ -29,12 +29,15 @@ import {
   type FeeData,
   type Intent,
   type IntentData,
+  type IntentState,
   IntentDataType,
 } from './index.js';
 import { SONIC_MAINNET_CHAIN_ID, getIntentRelayChainId, type Hash, type Hex, type SolverConfig } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
 export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventAbi>[number];
+export const IntentFilledEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentFilled' });
+export type IntentFilledEventLog = GetLogsReturnType<typeof IntentFilledEventAbi>[number];
 
 export class EvmSolverService {
   private constructor() {}
@@ -56,12 +59,12 @@ export class EvmSolverService {
   ): [Hex, Intent, bigint] {
     const inputToken =
       createIntentParams.srcChain !== SONIC_MAINNET_CHAIN_ID
-        ? (configService.getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken))?.asset
+        ? configService.getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset
         : (createIntentParams.inputToken as `0x${string}`);
 
     const outputToken =
       createIntentParams.dstChain !== SONIC_MAINNET_CHAIN_ID
-        ? (configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken))?.asset
+        ? configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset
         : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(
@@ -197,6 +200,44 @@ export class EvmSolverService {
     }
 
     throw new Error(`No intent found for ${txHash}`);
+  }
+
+  /**
+   * Gets a filled intent from a transaction hash
+   * @param {Hash} txHash - The transaction hash
+   * @param {SolverConfig} solverConfig - The solver configuration
+   * @param {EvmHubProvider} hubProvider - The EVM hub provider
+   * @returns {Promise<IntentState>} The intent state
+   */
+  public static async getFilledIntent(
+    txHash: Hash,
+    solverConfig: SolverConfig,
+    hubProvider: EvmHubProvider,
+  ): Promise<IntentState> {
+    const receipt = await hubProvider.publicClient.waitForTransactionReceipt({ hash: txHash });
+    const logs: IntentFilledEventLog[] = parseEventLogs({
+      abi: IntentsAbi,
+      eventName: 'IntentFilled',
+      logs: receipt.logs,
+      strict: true,
+    });
+
+    for (const log of logs) {
+      if (log.address.toLowerCase() === solverConfig.intentsContract.toLowerCase()) {
+        if (!log.args.intentHash || !log.args.intentState) {
+          continue;
+        }
+
+        return {
+          exists: log.args.intentState.exists,
+          remainingInput: log.args.intentState.remainingInput,
+          receivedOutput: log.args.intentState.receivedOutput,
+          pendingPayment: log.args.intentState.pendingPayment,
+        } satisfies IntentState;
+      }
+    }
+
+    throw new Error(`No filled intent found for ${txHash}`);
   }
 
   /**

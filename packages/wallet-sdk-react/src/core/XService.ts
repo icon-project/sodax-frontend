@@ -45,7 +45,7 @@ export abstract class XService {
    * @param xTokens Array of tokens to get balances for
    * @returns Promise resolving to object mapping token addresses to balances
    */
-  public async getBalances(address: string | undefined, xTokens: XToken[]): Promise<Record<string, bigint>> {
+  public async getBalances(address: string | undefined, xTokens: readonly XToken[]): Promise<Record<string, bigint>> {
     if (!address) return {};
 
     const balancePromises = xTokens.map(async xToken => {

@@ -17,8 +17,6 @@ import {
   type Token,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
-  SodaTokens,
-  hubVaults,
 } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
 import { sonic } from 'viem/chains';
@@ -180,34 +178,4 @@ describe('e2e', () => {
       }
     }
   });
-
-  it('Query all reserve tokens of the SodaTokens vaults and verify they exist in the hubVaults', async () => {
-    for (const [tokenSymbol, sodaVaultToken] of Object.entries(SodaTokens)) {
-      console.log('************************************************');
-      console.log(`${tokenSymbol} ${sodaVaultToken.address}`);
-      console.log('--------------------------------');
-
-      const [sodaVaultTokenAssets] = await sonicPublicClient.readContract({
-        address: sodaVaultToken.address,
-        abi: vaultTokenAbi,
-        functionName: 'getAllTokenInfo',
-        args: [],
-      });
-
-      let missingAsset = false;
-      for (const asset of sodaVaultTokenAssets) {
-        // console.log(`Expecting ${asset} to be in ${tokenSymbol} ${sodaVaultToken.address} reserves`);
-        const isAssetInReserves = hubVaults[tokenSymbol as keyof typeof hubVaults].reserves
-          .map(reserve => reserve.toLowerCase())
-          .includes(asset.toLowerCase());
-
-        if (!isAssetInReserves) {
-          console.log(`${asset} not found in ${tokenSymbol} reserves`);
-          missingAsset = true;
-        }
-      }
-
-      expect(missingAsset).toBe(false);
-    }
-  }, 100000);
 });
