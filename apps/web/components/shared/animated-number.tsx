@@ -22,7 +22,7 @@ export default function AnimatedNumber({
   duration = 3,
   className,
   decimalPlaces,
-}: AnimatedNumberProps): JSX.Element {
+}: AnimatedNumberProps): React.ReactElement {
   const count = useMotionValue(0);
   const formatted = useTransform(count, (value: number) => {
     if (decimalPlaces === undefined) {
