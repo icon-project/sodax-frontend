@@ -6,10 +6,12 @@ import { useEffect, useState } from 'react';
 import AnimatedNumber from '@/components/shared/animated-number';
 import CurrencySearchPanel from './_components/currency-search-panel';
 import CurrencyList from './_components/currency-list';
+import { cn } from '@/lib/utils';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [openValue, setOpenValue] = useState('');
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -48,12 +50,12 @@ export default function SavingsPage() {
         </div>
       </motion.div>
 
-      <motion.div className="w-full" variants={itemVariants}>
+      <motion.div className={cn('w-full', openValue === '' ? 'opacity-100' : '!opacity-40')} variants={itemVariants}>
         <CurrencySearchPanel searchQuery={searchQuery} onSearchChange={handleSearchChange} />
       </motion.div>
 
-      <motion.div className="w-full" variants={itemVariants}>
-        <CurrencyList searchQuery={searchQuery} />
+      <motion.div className="w-full flex-grow-1" variants={itemVariants}>
+        <CurrencyList searchQuery={searchQuery} openValue={openValue} setOpenValue={setOpenValue} />
       </motion.div>
     </motion.div>
   );

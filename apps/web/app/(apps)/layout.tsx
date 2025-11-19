@@ -34,6 +34,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     };
 
     calculateHeight();
+
+    // Watch for content size changes using ResizeObserver
+    if (pathname === '/savings' && ref.current) {
+      const resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const newHeight = entry.target.getBoundingClientRect().height;
+          if (newHeight > 0) {
+            setHeight(newHeight);
+          }
+        }
+      });
+
+      resizeObserver.observe(ref.current);
+
+      return () => {
+        resizeObserver.disconnect();
+      };
+    }
   }, [pathname]);
 
   useEffect(() => {
@@ -54,7 +72,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               variants={headerVariants}
               initial={!shouldTriggerAnimation ? 'open' : 'closed'}
               animate={isSwitchingPage ? 'open' : 'closed'}
-              layout
             >
               <Header />
             </motion.div>
@@ -63,9 +80,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               variants={contentVariants}
               initial={!shouldTriggerAnimation ? 'open' : { y: '300px' }}
               animate={isSwitchingPage ? 'open' : 'closed'}
-              className="bg-cream-white relative min-h-[calc(100vh-240px)]"
+              className="bg-cream-white relative min-h-[calc(100vh-240px)] "
               style={{ height: !isMobile ? height - 136 : height - 40 }}
-              layout
             >
               <div className="w-full lg:w-[1024px] lg:max-w-[1024px] absolute md:-top-34 -top-36 left-1/2 -translate-x-1/2">
                 <motion.div
@@ -73,7 +89,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   initial={!shouldTriggerAnimation ? 'open' : { y: 30, opacity: 0 }}
                   animate={isSwitchingPage ? 'open' : 'closed'}
                   className="flex justify-center items-start min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)]"
-                  layout
                 >
                   <RouteTabs />
                   <div

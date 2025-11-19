@@ -6,6 +6,7 @@ import { ChevronDownIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from './button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 function Accordion({ ...props }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
   return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
@@ -56,20 +57,29 @@ function AccordionTriggerWithButton({
   children,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
+  const isMobile = useIsMobile();
   return (
     <AccordionPrimitive.Header className="flex">
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          'focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>button]:rotate-180 items-center py-0',
+          'focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 justify-between gap-4 rounded-md text-left text-sm font-medium transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>button]:rotate-180 [&[data-state=open]>svg]:rotate-180 items-center py-0',
           className,
         )}
         {...props}
       >
         {children}
-        <Button variant="outline" size="sm" className="w-12 h-12 translate-y-0.5 transition-transform duration-200 ">
-          <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 " />
-        </Button>
+        {isMobile ? (
+          <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200" />
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-12 h-12 translate-y-0.5 transition-transform duration-200 group-hover:!outline-[#D7CDCB]"
+          >
+            <ChevronDownIcon className="text-muted-foreground pointer-events-none size-4 shrink-0 " />
+          </Button>
+        )}
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>
   );
