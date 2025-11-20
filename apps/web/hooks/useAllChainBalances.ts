@@ -109,31 +109,3 @@ export function useAllChainBalances(): Record<string, ChainBalanceEntry[]> {
 
   return allBalances || {};
 }
-
-/**
- * Helper function to get aggregated balance for a token address across all chains
- * @param balances Balance map from useAllChainBalances
- * @param tokenAddress Token address to get balance for
- * @returns Aggregated balance across all chains
- */
-export function getAggregatedBalance(balances: Record<string, ChainBalanceEntry[]>, tokenAddress: string): bigint {
-  const entries = balances[tokenAddress] || [];
-  return entries.reduce((sum, entry) => sum + entry.balance, 0n);
-}
-
-/**
- * Helper function to get balance for a specific token on a specific chain
- * @param balances Balance map from useAllChainBalances
- * @param tokenAddress Token address to get balance for
- * @param chainId Chain ID to get balance for
- * @returns Balance for the token on the specified chain, or 0n if not found
- */
-export function getChainBalance(
-  balances: Record<string, ChainBalanceEntry[]>,
-  tokenAddress: string,
-  chainId: SpokeChainId,
-): bigint {
-  const entries = balances[tokenAddress] || [];
-  const entry = entries.find(e => e.chainId === chainId);
-  return entry?.balance || 0n;
-}

@@ -22,10 +22,10 @@ import { LightLinkIcon } from '@/components/icons/chains/lightlink';
 import { EthereumIcon } from '@/components/icons/chains/ethereum';
 import { HyperIcon } from '@/components/icons/chains/hyper';
 import { createPortal } from 'react-dom';
-import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { formatUnits } from 'viem';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import BigNumber from 'bignumber.js';
+import { ChevronDownIcon } from 'lucide-react';
 
 interface NetworkIconProps {
   imageSrc: string;
@@ -163,6 +163,7 @@ interface TokenAssetProps {
   name: string;
   token?: XToken;
   sourceBalance: bigint;
+  isHoldToken: boolean;
   isClickBlurred: boolean;
   isHoverDimmed: boolean;
   isHovered: boolean;
@@ -181,6 +182,7 @@ export function TokenAsset({
   name,
   sourceBalance,
   token,
+  isHoldToken,
   isClickBlurred,
   isHoverDimmed,
   isHovered,
@@ -250,11 +252,11 @@ export function TokenAsset({
                 : 'opacity-100 text-clay font-medium'
           }`}
         >
-          {name}
+          {name} {tokenCount && tokenCount > 1 && <ChevronDownIcon className="w-2 h-2 text-clay ml-1" />}
         </div>
 
         <div className="flex font-medium h-[13px]">
-          {sourceBalance > 0n && (
+          {isHoldToken && (
             <>
               <motion.p
                 className="relative shrink-0 text-clay !text-(length:--body-fine-print)"
@@ -268,7 +270,7 @@ export function TokenAsset({
                 }}
               >
                 {sourceBalance > 0n
-                  ? formatBalance(formatUnits(sourceBalance, token?.decimals || 0), token?.decimals || 0)
+                  ? formatBalance(formatUnits(sourceBalance, token?.decimals || 0), usdPrice || 0)
                   : '0'}
               </motion.p>
               <motion.p
@@ -282,11 +284,7 @@ export function TokenAsset({
                   ease: 'easeInOut',
                 }}
               >
-                {`$(${new BigNumber(
-                  formatBalance(formatUnits(sourceBalance, token?.decimals || 0), token?.decimals || 0),
-                )
-                  .multipliedBy(usdPrice || 0)
-                  .toFixed(2)})`}
+                {`$(${new BigNumber(formatUnits(sourceBalance, token?.decimals || 0)).multipliedBy(usdPrice || 0).toFixed(2)})`}
               </motion.p>
             </>
           )}

@@ -5,7 +5,7 @@ import type { SpokeChainId, XToken } from '@sodax/types';
 import { Button } from '@/components/ui/button';
 import { CurrencySearchPanel } from './currency-search-panel';
 import { TokenList } from './token-list';
-import { DialogContent, Dialog, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { DialogContent, Dialog, DialogClose } from '@/components/ui/dialog';
 
 export default function TokenSelectDialog({
   isOpen,
@@ -21,8 +21,8 @@ export default function TokenSelectDialog({
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
   const [selectedChainFilter, setSelectedChainFilter] = useState<SpokeChainId | null>(null);
 
-  const handleAssetClick = (e: React.MouseEvent, symbol: string) => {
-    setClickedAsset(clickedAsset === symbol ? null : symbol);
+  const handleAssetClick = (e: React.MouseEvent, assetId: string) => {
+    setClickedAsset(clickedAsset === assetId ? null : assetId);
   };
 
   const handleClickOutside = () => {
