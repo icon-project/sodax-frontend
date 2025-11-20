@@ -115,6 +115,7 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     stakedSoda: Address;
     xSoda: Address;
     stakingRouter: Address;
+    multiHubWalletManager: Address;
   };
 
   nativeToken: Address;
