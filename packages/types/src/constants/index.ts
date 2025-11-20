@@ -2045,7 +2045,7 @@ export const solverConfig = {
 export const getSolverConfig = (chainId: HubChainId): SolverConfig => solverConfig[chainId];
 
 // currently supported spoke chain tokens for solver
-export const swapSupportedTokens: Record<SpokeChainId, readonly XToken[]> = {
+export const swapSupportedTokens = {
   [SONIC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH,
@@ -2160,7 +2160,7 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly XToken[]> = {
     // spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const satisfies XToken[],
-} as const;
+} as const satisfies Record<SpokeChainId, readonly XToken[]>;
 
 // get supported spoke chain tokens for solver
 export const getSupportedSolverTokens = (chainId: SpokeChainId): readonly Token[] => swapSupportedTokens[chainId];
@@ -2183,7 +2183,7 @@ const moneyMarketConfig = {
 export const getMoneyMarketConfig = (chainId: HubChainId): MoneyMarketConfig => moneyMarketConfig[chainId];
 
 // currently supported spoke chain tokens for money market
-export const moneyMarketSupportedTokens: Record<SpokeChainId, readonly XToken[]> = {
+export const moneyMarketSupportedTokens = {
   [AVALANCHE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.AVAX,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDT,
@@ -2299,7 +2299,7 @@ export const moneyMarketSupportedTokens: Record<SpokeChainId, readonly XToken[]>
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
   ] as const satisfies XToken[],
-} as const;
+} as const satisfies Record<SpokeChainId, readonly XToken[]>;
 
 // export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
 //   moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
