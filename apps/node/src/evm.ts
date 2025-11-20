@@ -71,7 +71,6 @@ const hubProvider = new EvmHubProvider({
 const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
 const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
-
 async function depositTo(token: Address, amount: bigint, recipient: Address) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   console.log(recipient);
@@ -83,7 +82,7 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
       amount,
     },
     spokeProvider.chainConfig.chain.id,
-    sodax.config
+    sodax.config,
   );
 
   const txHash: Hash = await SpokeService.deposit(
@@ -376,6 +375,11 @@ async function getIntent(txHash: string) {
   console.log(intent);
 }
 
+async function getIntentState(txHash: string) {
+  const intentState = await sodax.swap.getFilledIntent(txHash as Hash);
+  console.log(intentState);
+}
+
 // Main function to decide which function to call
 async function main() {
   const functionName = process.argv[2]; // Get function name from command line argument
@@ -425,9 +429,12 @@ async function main() {
   } else if (functionName === 'getIntent') {
     const txHash = process.argv[3]; // Get txHash from command line argument
     await getIntent(txHash);
+  } else if (functionName === 'getIntentState') {
+    const txHash = process.argv[3]; // Get txHash from command line argument
+    await getIntentState(txHash);
   } else {
     console.log(
-      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "createIntent", "fillIntent", or "cancelIntent".',
+      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "createIntent", "fillIntent", "cancelIntent", "getIntent", or "getIntentState".',
     );
   }
 }

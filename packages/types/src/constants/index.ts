@@ -21,11 +21,10 @@ import type {
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
   Token,
-  VaultType,
   XToken,
 } from '../common/index.js';
 
-export const CONFIG_VERSION = 4; // Increment this when the config is updated
+export const CONFIG_VERSION = 5; // Increment this when the config is updated
 
 // chain ids (actual for evm chains), custom for other chains not having native ids
 export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
@@ -210,6 +209,8 @@ export const HubVaultSymbols = [
   'IbnUSD',
   'sodaHYPE',
   'sodaLL',
+  'sodaWEETH',
+  'sodaWSTETH',
 ] as const;
 
 export const SodaTokens = {
@@ -332,12 +333,23 @@ export const SodaTokens = {
     address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
+  sodaWEETH: {
+    symbol: 'sodaWEETH',
+    name: 'SODA WEETH',
+    decimals: 18,
+    address: '0xCb6B152D3a943f25157381aFcA7fEFCD2ef5a357',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaWSTETH: {
+    symbol: 'sodaWSTETH',
+    name: 'SODA WSTETH',
+    decimals: 18,
+    address: '0x58b0538D7EEaeE69EF32f9F1dE5cbF32A10a977B',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
 } as const satisfies Record<HubVaultSymbol, XToken>;
 
-export const SodaTokensAsHubAssets: Record<
-  string,
-  { asset: Address; decimal: number; vault: Address; symbol: string; name: string }
-> = Object.values(SodaTokens).reduce(
+export const SodaTokensAsHubAssets: Record<string, HubAsset> = Object.values(SodaTokens).reduce(
   (acc, token) => {
     acc[token.address] = {
       asset: token.address,
@@ -348,12 +360,8 @@ export const SodaTokensAsHubAssets: Record<
     };
     return acc;
   },
-  {} as Record<string, { asset: Address; decimal: number; vault: Address; symbol: string; name: string }>,
+  {} as Record<string, HubAsset>,
 );
-export const SodaVaultTokensSet = new Set(Object.values(SodaTokens).map(token => token.address.toLowerCase()));
-export const isSodaVaultToken = (address: string): boolean => {
-  return SodaVaultTokensSet.has(address.toLowerCase());
-};
 
 export const hubChainConfig = {
   chain: baseChainInfo[SONIC_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
@@ -765,6 +773,13 @@ export const spokeChainConfig = {
         address: '0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3',
         xChainId: BSC_MAINNET_CHAIN_ID,
       },
+      weETH: {
+        symbol: 'weETH',
+        name: 'Wrapped eETH',
+        decimals: 18,
+        address: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A',
+        xChainId: BSC_MAINNET_CHAIN_ID,
+      },
     },
   } as const satisfies EvmSpokeChainConfig,
   [POLYGON_MAINNET_CHAIN_ID]: {
@@ -802,6 +817,13 @@ export const spokeChainConfig = {
         name: 'SODAX',
         decimals: 18,
         address: '0xDDF645F33eDAD18fC23E01416eD0267A1bF59D45',
+        xChainId: POLYGON_MAINNET_CHAIN_ID,
+      },
+      wstETH: {
+        symbol: 'wstETH',
+        name: 'Wrapped liquid staked Ether 2.0',
+        decimals: 18,
+        address: '0x03b54a6e9a984069379fae1a4fc4dbae93b3bccd',
         xChainId: POLYGON_MAINNET_CHAIN_ID,
       },
     } as const,
@@ -1261,210 +1283,23 @@ export const spokeChainConfig = {
         address: '0x0921799CB1d702148131024d18fCdE022129Dc73',
         xChainId: ETHEREUM_MAINNET_CHAIN_ID,
       },
+      weETH: {
+        symbol: 'weETH',
+        name: 'Wrapped Ethereum',
+        decimals: 18,
+        address: '0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+      wstETH: {
+        symbol: 'wstETH',
+        name: 'Wrapped liquid staked Ether 2.0',
+        decimals: 18,
+        address: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
-
-// All addresses are now lowercase for consistency and correctness
-export const hubVaults = {
-  [SodaTokens.IbnUSD.symbol]: {
-    // ICON bnUSD (Migration) vault on Sonic contains legacy bnUSD tokens (stellar, sui, icon)
-    address: '0x9D4b663Eb075d2a1C7B8eaEFB9eCCC0510388B51',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x654DdDf32a9a2aC53f5FB54bf1e93F66791f8047',
-      '0xddf6AD38F9C9451C1F4cDf369040F6869e37393e',
-      '0x1559B52d2e165da1505a542EA37C543c9137f52a',
-    ] as const,
-  },
-  [SodaTokens.sodaS.symbol]: {
-    address: '0x62ecc3eeb80a162c57624b3ff80313fe69f5203e',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x039e2fb66102314ce7b64ce5ce3e5183bc94ad38',
-      '0xb592d2631ccf245119532e025d11188cfadb6777',
-    ] as const,
-  },
-  [SodaTokens.sodaPOL.symbol]: {
-    address: '0x208ed38f4783328aa9ebfec360d32e7520a9b779',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x9ee17486571917837210824b0d4cadfe3b324d12',
-    ] as const,
-  },
-  [SodaTokens.bnUSD.symbol]: {
-    // new bnUSD vault on Sonic (also contains IbnUSD vault token as part of it)
-    address: '0xe801ca34e19abcbfea12025378d19c4fbe250131',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0xabbb91c0617090f0028bdc27597cd0d038f3a833',
-      '0xbdf1f453fcb61424011bbddcb96cfdb30f3fe876',
-      '0x94dc79ce9c515ba4ae4d195da8e6ab86c69bfc38',
-      '0x5ce6c1c51ff762cf3acd21396257046f694168b6',
-      '0xdf5639d91359866f266b56d60d98ede9feedd100',
-      '0x238384ae2b4f0ec189ecb5031859ba306b2679c5',
-      '0x419ca9054e44e94ceab52846ecdc3997439bbca6',
-      '0x18f85f9e80ff9496eebd5979a051af16ce751567',
-      '0x289cda1043b4ce26bdca3c12e534f56b24308a5b',
-      '0x23225ab8e63fca4070296678cb46566d57e1bbe3',
-      '0x14c65b1cdc0b821569081b1f77342da0d0cbf439',
-      '0xdf23097b9aeb917bf8fb70e99b6c528fffa35364',
-      '0x11b93c162aabffd026539bb3b9f9ec22c8b7ef8a',
-      '0x69425ffb14704124a58d6f69d510f74a59d9a5bc',
-      '0x9d4b663eb075d2a1c7b8eaefb9eccc0510388b51',
-      '0xD1d14BF3324C901855A1f7d0d5CA4c8458D2a780',
-      '0x19feaf3043dfa69b365d05495630e840a2b9a9dc',
-    ] as const,
-  },
-  [SodaTokens.sodaSODA.symbol]: {
-    // SODA SODA vault
-    address: '0x21685e341de7844135329914be6bd8d16982d834',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963', // SODA SODA hub asset
-      '0xf51d7082375cdca8C19C74e1A0c77dA482aFDa4e',
-      '0x93a367E5B37a1B9E8D04ef25a6Af40d181a3DfFF',
-      '0x17fF8Ad5EBe6CA8B15751067cD0c89f0E580CD17',
-      '0x4d12c72A8633588097D10e57b559ed642588e4C6',
-      '0x26cd76cB5622Dc8638670A16E0Da5a51394A8DB1',
-      '0x0eD0d274dC77ef460DC96b9fBaFF3EDB074e0471',
-      '0x8D78A620E009Ba751Eb40d77A5e9Db48A3F2016b',
-      '0x4Cf5Ce9594AEDdc5D3efe9d4Cdf0b944b4e73A53',
-      '0xD749B5FfFED7cEDaa3239abDd16D677179C29AEc',
-      '0x07Db7b1a96ebE474B20F52fF487cEE415adee79e',
-      '0x20Ce75CdcEe44B1308365447b91B9c26e2b71Ffd',
-      '0x5Db9CEc919f40C50809D9490DC3BbA4F05b0a1D7',
-      '0x655730024B673B3378CD6031B1Cd01eaE9afb138',
-      '0x4cf5ce9594aeddc5d3efe9d4cdf0b944b4e73a53',
-    ] as const,
-  },
-  [SodaTokens.sodaAVAX.symbol]: {
-    // SODA AVAX vault
-    address: '0x14238d267557e9d799016ad635b53cd15935d290',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0xc9e4f0b6195f389d9d2b639f2878b7674eb9d8cd', // AvalancheAVAX hub asset
-    ] as const,
-  },
-  [SodaTokens.sodaBNB.symbol]: {
-    // SODA BNB vault
-    address: '0x40cd41b35db9e5109ae7e54b44de8625db320e6b',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x13b70564b1ec12876b20fab5d1bb630311312f4f', // BSC BNB hub asset
-    ] as const,
-  },
-  [SodaTokens.sodaETH.symbol]: {
-    // SODA ETH vault
-    address: '0x4effb5813271699683c25c734f4dabc45b363709',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x70178089842be7f8e4726b33f0d1569db8021faa', // BASE ETH hub asset
-      '0xad332860dd3b6f0e63f4f66e9457900917ac78cd', // Optimism ETH hub asset
-      '0xdcd9578b51ef55239b6e68629d822a8d97c95b86', // Arbitrum ETH hub asset
-      '0x57fc2ac5701e463ae261adbd6c99fbeb48ce5293', // BSC ETH hub asset
-      '0x50c42deacd8fc9773493ed674b675be577f2634b', // Sonic WETH hub asset
-      '0x19920ef8fe1a9d51fdb0914abbb2f970c74dca68', // Lightlink ETH hub asset
-    ] as const,
-  },
-  [SodaTokens.sodaBTC.symbol]: {
-    // SODA BTC vault
-    address: '0x7a1a5555842ad2d0ed274d09b5c4406a95799d5d',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x2803a23a3ba6b09e57d1c71dec0d9efdbb00a27f', // BASE cbBTC hub asset,
-      '0xfb0acb1b2720b620935f50a6dd3f7fea52b2fcbe', // Arbitrum wBTC hub asset
-      '0x96fc8540736f1598b7e235e6de8814062b3b5d3b', // Arbitrum tBTC hub asset,
-      '0xd8a24c71fea5bb81c66c01e532de7d9b11e13905', // BSC BTCB hub asset
-      '0x03E99853C6376b13a4c6e4d0A115F1639c9FA14e',
-    ] as const,
-  },
-  [SodaTokens.sodaSUI.symbol]: {
-    // SODA SUI vault
-    address: '0xdc5b4b00f98347e95b9f94911213dab4c687e1e3',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x4676b2a551b25c04e235553c1c81019337384673', // SUI SUI hub asset
-    ] as const,
-  },
-  [SodaTokens.sodaINJ.symbol]: {
-    // SODA INJ vault
-    address: '0x1f22279c89b213944b7ea41dacb0a868ddcdfd13',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0xd375590b4955f6ea5623f799153f9b787a3bd319', // Injective INJ hub asset
-    ] as const,
-  },
-  [SodaTokens.sodaXLM.symbol]: {
-    // SODA XLM vault
-    address: '0x6bc8c37cba91f76e68c9e6d689a9c21e4d32079b',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x8ac68af223907fb1b893086601a3d99e00f2fa9d', // Stellar XLM hub asset
-    ] as const,
-  },
-  [SodaTokens.sodaSOL.symbol]: {
-    // SODA SOL vault
-    address: '0xdea692287e2ce8cb08fa52917be0f16b1dacdc87',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x0c09e69a4528945de6d16c7e469dea6996fdf636', // Solana SOL hub asset
-    ] as const,
-  },
-  [SodaTokens.sodaUSDT.symbol]: {
-    // SODA USDT vault
-    address: '0xbdf1f453fcb61424011bbddcb96cfdb30f3fe876',
-    reserves: [
-      // hub asset addresses contained in the vault
-      '0x41fd5c169e014e2a657b9de3553f7a7b735fe47a',
-      '0xc168067d95109003805ac865ae556e8476dc69bc',
-      '0x3c0a80c6a1110fc80309382b3989ec626c135ee9',
-      '0x6047828dc181963ba44974801ff68e538da5eaf9', // Sonic USDT
-    ] as const,
-  },
-  [SodaTokens.sodaUSDC.symbol]: {
-    address: '0xabbb91c0617090f0028bdc27597cd0d038f3a833',
-    reserves: [
-      '0x41abf4b1559ff709ef8150079bcb26db1fffd117',
-      '0x72e852545b024ddcbc5b70c1bcbdaa025164259c',
-      '0xb7c213cbd24967de9838fa014668fddb338f724b',
-      '0xdb7bda65c3a1c51d64dc4444e418684677334109',
-      '0xa36893ba308b332fdebfa95916d1df3a2e3cf8b3',
-      '0x29219dd400f2bf60e5a23d13be72b486d4038894',
-      '0x5635369c8a29a081d26c2e9e28012fca548ba0cb',
-      '0x3d73437dd81b3f9ec82752beb1752f03a8531710',
-      '0x4bc1211faa06fb50ff61a70331f56167ae511057',
-      '0x348007b53f25a9a857ab8ea81ec9e3ccbcf440f2',
-      '0xc3f020057510ffe10ceb882e1b48238b43d78a5e',
-      '0x9d58508ad10d34048a11640735ca5075bba07b35',
-      '0xC1df02fb7b1b06bE886592C89F6955387998B2f7',
-    ] as const,
-  },
-  [SodaTokens.sodaHYPE.symbol]: {
-    address: '0x6e81124fc5d2bf666b16a0a5d90066ebf35c7411',
-    reserves: ['0x7288622bc2d39553f34d5b81c88c3f979d91dbc7'],
-  },
-  [SodaTokens.sodaLL.symbol]: {
-    address: '0x14C5eB2D25dFb834852dFc85744875d1eCb09748',
-    reserves: ['0xee6236c791db0755c9bc333b4c7c85ab754f2a0a'],
-  },
-} as const satisfies Record<HubVaultSymbol, VaultType>;
-
-export const hubVaultTokensMap: Map<string, Token> = new Map(
-  Object.entries(hubVaults).map(([symbol, vault]) => [
-    vault.address.toLowerCase(),
-    {
-      address: vault.address.toLowerCase(),
-      symbol,
-      name: symbol,
-      decimals: 18,
-    },
-  ]),
-);
-
-export const getHubVaultTokenByAddress = (address: string): Token | undefined => {
-  return hubVaultTokensMap.get(address.toLowerCase());
-};
 
 export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
   [SONIC_MAINNET_CHAIN_ID]: {
@@ -1473,49 +1308,49 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'S',
       name: 'Sonic',
-      vault: hubVaults.sodaS.address,
+      vault: SodaTokens.sodaS.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].bnUSD]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].bnUSD,
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
       decimal: 18,
       symbol: 'wS',
       name: 'Sonic',
-      vault: hubVaults.sodaS.address,
+      vault: SodaTokens.sodaS.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.WETH.address,
       decimal: 18,
       symbol: 'WETH',
       name: 'Wrapped Ethereum',
-      vault: hubVaults.sodaETH.address,
+      vault: SodaTokens.sodaETH.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address,
       decimal: 6,
       symbol: 'USDC ',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.address,
       decimal: 6,
       symbol: 'USDT',
       name: 'Tether USD',
-      vault: hubVaults.sodaUSDT.address,
+      vault: SodaTokens.sodaUSDT.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA.address,
       decimal: 18,
       symbol: 'SODA',
       name: 'SODA',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
     ...SodaTokensAsHubAssets,
   },
@@ -1525,35 +1360,35 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'AVAX',
       name: 'AVAX',
-      vault: hubVaults.sodaAVAX.address,
+      vault: SodaTokens.sodaAVAX.address,
     },
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
       asset: '0x41Fd5c169e014e2A657B9de3553f7a7b735Fe47A',
       decimal: 6,
       symbol: 'USDT',
       name: 'Tether USD',
-      vault: hubVaults.sodaUSDT.address,
+      vault: SodaTokens.sodaUSDT.address,
     },
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x41abF4B1559FF709Ef8150079BcB26DB1Fffd117',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x289cDa1043b4Ce26BDCa3c12E534f56b24308A5B',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0xf51d7082375cdca8C19C74e1A0c77dA482aFDa4e',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
   },
   [ARBITRUM_MAINNET_CHAIN_ID]: {
@@ -1562,63 +1397,63 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'ETH',
       name: 'Ethereum',
-      vault: hubVaults.sodaETH.address,
+      vault: SodaTokens.sodaETH.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.WBTC.address]: {
       asset: '0xfB0ACB1b2720B620935F50a6dd3F7FEA52b2FCBe',
       decimal: 8,
       symbol: 'WBTC',
       name: 'Wrapped Bitcoin',
-      vault: hubVaults.sodaBTC.address,
+      vault: SodaTokens.sodaBTC.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
       asset: '0x08D5cf039De35627fD5C0f48B8AF4a1647a462E8',
       decimal: 18,
       symbol: 'weETH',
       name: 'Wrapped eETH',
-      vault: '0x', // no vault yet
+      vault: SodaTokens.sodaWEETH.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
       asset: '0x2D5A7837D68b0c2CC4b14C2af2a1F0Ef420DDDc5',
       decimal: 18,
       symbol: 'wstETH',
       name: 'Wrapped Staked Ethereum',
-      vault: '0x', // no vault yet
+      vault: SodaTokens.sodaWSTETH.address, // no vault yet
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.tBTC.address]: {
       asset: '0x96Fc8540736f1598b7E235e6dE8814062b3b5d3B',
       decimal: 18,
       symbol: 'tBTC',
       name: 'Arbitrum tBTC',
-      vault: hubVaults.sodaBTC.address,
+      vault: SodaTokens.sodaBTC.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
       asset: '0x3C0a80C6a1110fC80309382b3989eC626c135eE9',
       decimal: 6,
       symbol: 'USDT',
       name: 'Tether USD',
-      vault: hubVaults.sodaUSDT.address,
+      vault: SodaTokens.sodaUSDT.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0xdB7BdA65c3a1C51D64dC4444e418684677334109',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x419cA9054E44E94ceAb52846eCdC3997439BBcA6',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x93a367E5B37a1B9E8D04ef25a6Af40d181a3DfFF',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
   },
   [BASE_MAINNET_CHAIN_ID]: {
@@ -1627,49 +1462,49 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'ETH',
       name: 'Ethereum',
-      vault: hubVaults.sodaETH.address,
+      vault: SodaTokens.sodaETH.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.cbBTC.address]: {
       asset: '0x2803a23a3BA6b09e57D1c71deC0D9eFdBB00A27F',
       decimal: 8,
       symbol: 'cbBTC',
       name: 'Coinbase Wrapped BTC',
-      vault: hubVaults.sodaBTC.address,
+      vault: SodaTokens.sodaBTC.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x72E852545B024ddCbc5b70C1bCBDAA025164259C',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0xDF5639D91359866f266b56D60d98edE9fEEDd100',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
-      asset: '0x55e0ad45eb97493b3045eee417fb6726cb85dfd4',
+      asset: '0x55e0Ad45eB97493B3045eEE417fb6726CB85dfd4',
       decimal: 18,
       symbol: 'weETH',
       name: 'Wrapped eETH',
-      vault: '0x', // no vault yet
+      vault: SodaTokens.sodaWEETH.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
-      asset: '0x494aaeaefdf5964d4ed400174e8c5b98c00957aa',
+      asset: '0x494aaEaEfDF5964d4Ed400174e8c5b98C00957aA',
       decimal: 18,
       symbol: 'wstETH',
       name: 'Wrapped Staked Ethereum',
-      vault: '0x', // no vault yet
+      vault: SodaTokens.sodaWSTETH.address,
     },
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x17fF8Ad5EBe6CA8B15751067cD0c89f0E580CD17',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
   },
   [OPTIMISM_MAINNET_CHAIN_ID]: {
@@ -1678,49 +1513,49 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'ETH',
       name: 'Ethereum',
-      vault: hubVaults.sodaETH.address,
+      vault: SodaTokens.sodaETH.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x238384AE2b4F0EC189ecB5031859bA306B2679c5',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0xb7C213CbD24967dE9838fa014668FDDB338f724B',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
       asset: '0x61e26f611090CdC6bc79A7Bf156b0fD10f1fC212',
       decimal: 18,
       symbol: 'wstETH',
       name: 'Wrapped Staked Ethereum',
-      vault: '0x', // no vault yet
+      vault: SodaTokens.sodaWSTETH.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
       asset: '0xE121c0Dc2B33c00ff31ee3D902D248cc3f19Ea50',
       decimal: 18,
       symbol: 'weETH',
       name: 'Wrapped eETH',
-      vault: '0x', // no vault yet
+      vault: SodaTokens.sodaWEETH.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
       asset: '0xc168067d95109003805aC865ae556e8476DC69bc',
       decimal: 6,
       symbol: 'USDT',
       name: 'Tether USD',
-      vault: hubVaults.sodaUSDT.address,
+      vault: SodaTokens.sodaUSDT.address,
     },
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x0eD0d274dC77ef460DC96b9fBaFF3EDB074e0471',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
   },
   [BSC_MAINNET_CHAIN_ID]: {
@@ -1729,42 +1564,49 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'BNB',
       name: 'BNB',
-      vault: hubVaults.sodaBNB.address,
+      vault: SodaTokens.sodaBNB.address,
     },
     [spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.ETHB.address]: {
       asset: '0x57fC2aC5701e463ae261AdBd6C99FBeB48Ce5293',
       decimal: 18,
       symbol: 'ETHB',
       name: 'Wrapped Ethereum',
-      vault: hubVaults.sodaETH.address,
+      vault: SodaTokens.sodaETH.address,
     },
     [spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BTCB.address]: {
       asset: '0xD8A24c71FEa5bB81c66C01e532dE7d9B11e13905',
       decimal: 18,
       symbol: 'BTCB',
       name: 'Wrapped Bitcoin',
-      vault: hubVaults.sodaBTC.address,
+      vault: SodaTokens.sodaBTC.address,
     },
     [spokeChainConfig[BSC_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x5Ce6C1c51ff762cF3acD21396257046f694168b6',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x9d58508ad10d34048a11640735ca5075bba07b35',
       decimal: 18,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x4d12c72A8633588097D10e57b559ed642588e4C6',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
+    },
+    [spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
+      asset: '0xc1a14e759e8c2a8128a1fe0288c12390fbaee6d2',
+      decimal: 18,
+      symbol: 'weETH',
+      name: 'Wrapped eETH',
+      vault: SodaTokens.sodaWEETH.address,
     },
   },
   [POLYGON_MAINNET_CHAIN_ID]: {
@@ -1773,28 +1615,35 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'MATIC',
       name: 'Polygon',
-      vault: hubVaults.sodaPOL.address,
+      vault: SodaTokens.sodaPOL.address,
     },
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x18f85f9E80ff9496EeBD5979a051AF16Ce751567',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0xa36893ba308b332FDEbfa95916D1dF3a2e3CF8B3',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x8D78A620E009Ba751Eb40d77A5e9Db48A3F2016b',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
+    },
+    [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
+      asset: '0xa95e972dbff57f3b561763ae88fd5f235a8f2711',
+      decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
+      vault: SodaTokens.sodaWSTETH.address,
     },
   },
   [HYPEREVM_MAINNET_CHAIN_ID]: {
@@ -1803,28 +1652,28 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'HYPE',
       name: 'HYPE',
-      vault: hubVaults.sodaHYPE.address,
+      vault: SodaTokens.sodaHYPE.address,
     },
     [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x19feaf3043dfa69b365d05495630e840a2b9a9dc',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x4cf5ce9594aeddc5d3efe9d4cdf0b944b4e73a53',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
     [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x0f78b995d113712deeb17d96638e9d7525d409c6',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
   },
   [LIGHTLINK_MAINNET_CHAIN_ID]: {
@@ -1833,98 +1682,98 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'ETH',
       name: 'ETH',
-      vault: hubVaults.sodaETH.address,
+      vault: SodaTokens.sodaETH.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x14ab2ab7a76838b9205488efc3f700d0632ce8c7',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0xe4faab621fb6716e32057b7ea7356219936519ac',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0xe5159e2a89aeec2fc63d6c25adda3541670af101',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['BTC.LL'].address]: {
       asset: '0x54582cdb0c145398b532e34f0851ffc1bbc88b4e',
       decimal: 18,
       symbol: 'BTC.LL',
       name: 'Bitcoin LightLink',
-      vault: hubVaults.sodaBTC.address,
+      vault: SodaTokens.sodaBTC.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['AVAX.LL'].address]: {
       asset: '0x415ff3ea8c905ef65cd82665c5534d0e4ff9221a',
       decimal: 18,
       symbol: 'AVAX.LL',
       name: 'Avalanche LightLink',
-      vault: hubVaults.sodaAVAX.address,
+      vault: SodaTokens.sodaAVAX.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['BNB.LL'].address]: {
       asset: '0xd32e524da9d64db4c37a50f1ee197b591e97dc05',
       decimal: 18,
       symbol: 'BNB.LL',
       name: 'BNB LightLink',
-      vault: hubVaults.sodaBNB.address,
+      vault: SodaTokens.sodaBNB.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SOL.LL'].address]: {
       asset: '0xd70c16f1e2c4207dc4c44bc69c8a1b82b50cf9e2',
       decimal: 18,
       symbol: 'SOL.LL',
       name: 'Solana LightLink',
-      vault: hubVaults.sodaSOL.address,
+      vault: SodaTokens.sodaSOL.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['XLM.LL'].address]: {
       asset: '0x18008b18964bc2c90521a7596ff9988743c97fd4',
       decimal: 18,
       symbol: 'XLM.LL',
       name: 'Stellar LightLink',
-      vault: hubVaults.sodaXLM.address,
+      vault: SodaTokens.sodaXLM.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['INJ.LL'].address]: {
       asset: '0xb036daab0c772b080babb84b8695c3ca858925b6',
       decimal: 18,
       symbol: 'INJ.LL',
       name: 'Injective LightLink',
-      vault: hubVaults.sodaINJ.address,
+      vault: SodaTokens.sodaINJ.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['SUI.LL'].address]: {
       asset: '0x425852cca84e5f44d7b8ebb964b21bde585b4571',
       decimal: 18,
       symbol: 'SUI.LL',
       name: 'Sui LightLink',
-      vault: hubVaults.sodaSUI.address,
+      vault: SodaTokens.sodaSUI.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['S.LL'].address]: {
       asset: '0xb592d2631ccf245119532e025d11188cfadb6777',
       decimal: 18,
       symbol: 'S.LL',
       name: 'Sonic LightLink',
-      vault: hubVaults.sodaS.address,
+      vault: SodaTokens.sodaS.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['POL.LL'].address]: {
       asset: '0x15ba35f87f259b9b50d53a2fec271bb10020b090',
       decimal: 18,
       symbol: 'POL.LL',
       name: 'Polygon LightLink',
-      vault: hubVaults.sodaPOL.address,
+      vault: SodaTokens.sodaPOL.address,
     },
     [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'].address]: {
       asset: '0xea7e97b4597f724844426c32248ba80bd29c75f8',
       decimal: 18,
       symbol: 'HYPE.LL',
       name: 'HyperEVM LightLink',
-      vault: hubVaults.sodaHYPE.address,
+      vault: SodaTokens.sodaHYPE.address,
     },
   },
   [INJECTIVE_MAINNET_CHAIN_ID]: {
@@ -1933,28 +1782,28 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'INJ',
       name: 'Injective',
-      vault: hubVaults.sodaINJ.address,
+      vault: SodaTokens.sodaINJ.address,
     },
     [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x69425FFb14704124A58d6F69d510f74A59D9a5bC',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x4bc1211faa06fb50ff61a70331f56167ae511057',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x20Ce75CdcEe44B1308365447b91B9c26e2b71Ffd',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
   },
   [STELLAR_MAINNET_CHAIN_ID]: {
@@ -1963,35 +1812,35 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 7,
       symbol: 'XLM',
       name: 'Stellar Lumens',
-      vault: hubVaults.sodaXLM.address,
+      vault: SodaTokens.sodaXLM.address,
     },
     [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x23225Ab8E63FCa4070296678cb46566d57E1BBe3',
       decimal: 7,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x348007B53F25A9A857aB8eA81ec9E3CCBCf440f2',
       decimal: 7,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD.address]: {
       asset: '0x1559b52d2e165da1505a542ea37c543c9137f52a',
       decimal: 18,
       symbol: 'legacybnUSD',
       name: 'legacybnUSD',
-      vault: hubVaults.IbnUSD.address,
+      vault: SodaTokens.IbnUSD.address,
     },
     [spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0xD749B5FfFED7cEDaa3239abDd16D677179C29AEc',
       decimal: 7,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
   },
   [SUI_MAINNET_CHAIN_ID]: {
@@ -2000,21 +1849,21 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 9,
       symbol: 'SUI',
       name: 'Sui',
-      vault: hubVaults.sodaSUI.address,
+      vault: SodaTokens.sodaSUI.address,
     },
     [spokeChainConfig[SUI_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0xDf23097B9AEb917Bf8fb70e99b6c528fffA35364',
       decimal: 9,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x5635369c8a29A081d26C2e9e28012FCa548BA0Cb',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.afSUI.address]: {
       asset: '0x039666bd0cbc96a66c40e8541af465beaa81aa7e',
@@ -2063,14 +1912,14 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 9,
       symbol: 'bnUSD',
       name: 'legacybnUSD',
-      vault: hubVaults.IbnUSD.address,
+      vault: SodaTokens.IbnUSD.address,
     },
     [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x5Db9CEc919f40C50809D9490DC3BbA4F05b0a1D7',
       decimal: 9,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
   },
   [SOLANA_MAINNET_CHAIN_ID]: {
@@ -2079,28 +1928,28 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 9,
       symbol: 'SOL',
       name: 'Solana',
-      vault: hubVaults.sodaSOL.address,
+      vault: SodaTokens.sodaSOL.address,
     },
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x14C65b1CDc0B821569081b1F77342dA0D0CbF439',
       decimal: 9,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0xC3f020057510ffE10Ceb882e1B48238b43d78a5e',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x07Db7b1a96ebE474B20F52fF487cEE415adee79e',
       decimal: 9,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
   },
   [ICON_MAINNET_CHAIN_ID]: {
@@ -2123,7 +1972,7 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.IbnUSD.address,
+      vault: SodaTokens.IbnUSD.address,
     },
     [spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.BALN.address]: {
       asset: '0xde8e19a099fedf9d617599f62c5f7f020d92b572',
@@ -2139,35 +1988,49 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 18,
       symbol: 'ETH',
       name: 'ETH',
-      vault: hubVaults.sodaETH.address,
+      vault: SodaTokens.sodaETH.address,
     },
     [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].bnUSD]: {
       asset: '0x13df82eb4c6b7d4bb85669d227e6d24342e4f588',
       decimal: 18,
       symbol: 'bnUSD',
       name: 'bnUSD',
-      vault: hubVaults.bnUSD.address,
+      vault: SodaTokens.bnUSD.address,
     },
     [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0x46bd0ce9b2b455ac4377cd142ecb8b719715197d',
       decimal: 6,
       symbol: 'USDC',
       name: 'USD Coin',
-      vault: hubVaults.sodaUSDC.address,
+      vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
       asset: '0x12affee59ceb8be6788a25f9b36149a717795a51',
       decimal: 18,
       symbol: 'SODA',
       name: 'SODAX',
-      vault: hubVaults.sodaSODA.address,
+      vault: SodaTokens.sodaSODA.address,
     },
     [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL.address]: {
       asset: '0xee6236c791db0755c9bc333b4c7c85ab754f2a0a',
       decimal: 18,
       symbol: 'LL',
       name: 'LightLink',
-      vault: hubVaults.sodaLL.address,
+      vault: SodaTokens.sodaLL.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH.address]: {
+      asset: '0x37a3e4ae512b7132c139643a5ac4b7148997d0e8',
+      decimal: 18,
+      symbol: 'weETH',
+      name: 'Wrapped eETH',
+      vault: SodaTokens.sodaWEETH.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH.address]: {
+      asset: '0xa2b668c577ab44301ebb820cb29c2a233d1607ab',
+      decimal: 18,
+      symbol: 'wstETH',
+      name: 'Wrapped Staked Ethereum',
+      vault: SodaTokens.sodaWSTETH.address,
     },
   },
 } as const;
@@ -2238,7 +2101,7 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
   [HYPEREVM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    // spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies Token[],
   [LIGHTLINK_MAINNET_CHAIN_ID]: [
@@ -2294,7 +2157,7 @@ export const swapSupportedTokens: Record<SpokeChainId, readonly Token[]> = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
-    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    // spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const,
 } as const;
@@ -2332,8 +2195,8 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.WBTC,
-    // spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
-    // spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.tBTC,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
@@ -2342,9 +2205,9 @@ export const moneyMarketSupportedTokens = {
   [BASE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-    // spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC,
-    // spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.cbBTC,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
@@ -2352,8 +2215,8 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDC,
-    // spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
-    // spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const,
@@ -2362,6 +2225,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.wstETH,
   ] as const,
   [BSC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BNB,
@@ -2369,6 +2233,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BTCB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.weETH,
   ] as const,
   [HYPEREVM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
@@ -2431,8 +2296,10 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
   ] as const,
-} as const satisfies Record<SpokeChainId, Readonly<Token[]>>;
+} as const satisfies Record<SpokeChainId, Readonly<XToken[]>>;
 
 // export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
 //   moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
@@ -2442,7 +2309,7 @@ export const moneyMarketSupportedTokens = {
 //   moneyMarketSupportedTokens[chainId];
 
 export const moneyMarketReserveAssets = [
-  ...Object.values(hubVaults).map(vault => vault.address),
+  ...Object.values(SodaTokens).map(vault => vault.address),
   getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault,
 ] as const satisfies Address[];
 
@@ -2452,7 +2319,6 @@ export const defaultSodaxConfig = {
   supportedMoneyMarketTokens: moneyMarketSupportedTokens,
   supportedMoneyMarketReserveAssets: moneyMarketReserveAssets,
   supportedHubAssets: hubAssets,
-  supportedHubVaults: hubVaults,
   relayChainIdMap: ChainIdToIntentRelayChainId,
   spokeChainConfig: spokeChainConfig,
 } satisfies GetAllConfigApiResponse;

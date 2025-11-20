@@ -4,13 +4,13 @@ import type { IntentResponse } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
 /**
- * Hook for fetching intent details by transaction hash from the backend API.
+ * Hook for fetching intent details by intent created transaction hash from the backend API.
  *
- * This hook provides access to intent data associated with a specific transaction hash,
- * including intent details, events, and transaction information. The data is automatically
- * fetched and cached using React Query.
+ * This hook provides access to intent data associated with the transaction hash from when
+ * the intent was created on the hub chain, including intent details, events, and transaction
+ * information. The data is automatically fetched and cached using React Query.
  *
- * @param {string | undefined} txHash - The transaction hash to fetch intent for. If undefined, the query will be disabled.
+ * @param {string | undefined} txHash - The intent created transaction hash from the hub chain to fetch intent for. If undefined, the query will be disabled.
  *
  * @returns {UseQueryResult<IntentResponse | undefined>} A query result object containing:
  *   - data: The intent response data when available
@@ -30,11 +30,15 @@ import { useSodaxContext } from '../shared/useSodaxContext';
  * ```
  *
  * @remarks
+ * - Intents are only created on the hub chain, so the transaction hash must be from the hub chain
  * - The query is disabled when txHash is undefined or empty
  * - Uses React Query for efficient caching and state management
  * - Automatically handles error states and loading indicators
  */
-export const useBackendIntentByTxHash = (txHash: string | undefined): UseQueryResult<IntentResponse | undefined> => {
+export const useBackendIntentByTxHash = (
+  txHash: string | undefined,
+  refetchInterval = 1000,
+): UseQueryResult<IntentResponse | undefined> => {
   const { sodax } = useSodaxContext();
 
   return useQuery({
@@ -46,6 +50,7 @@ export const useBackendIntentByTxHash = (txHash: string | undefined): UseQueryRe
 
       return sodax.backendApi.getIntentByTxHash(txHash);
     },
+    refetchInterval,
     enabled: !!txHash && txHash.length > 0,
     retry: 3,
   });

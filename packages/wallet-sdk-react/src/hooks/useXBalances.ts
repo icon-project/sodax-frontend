@@ -44,7 +44,7 @@ export function useXBalances({
   xChainId,
   xTokens,
   address,
-}: { xChainId: ChainId; xTokens: XToken[]; address: string | undefined }): UseQueryResult<{
+}: { xChainId: ChainId; xTokens: readonly XToken[]; address: string | undefined }): UseQueryResult<{
   [key: string]: bigint;
 }> {
   const xService = useXService(getXChainType(xChainId));

@@ -18,17 +18,7 @@ import { getWagmiChainId, isNativeToken } from '@/utils';
 import { type Address, defineChain, erc20Abi } from 'viem';
 import { getPublicClient } from 'wagmi/actions';
 import { type Config, createConfig, http } from 'wagmi';
-import {
-  mainnet,
-  avalanche,
-  base,
-  optimism,
-  polygon,
-  arbitrum,
-  bsc,
-  sonic,
-  lightlinkPhoenix,
-} from 'wagmi/chains';
+import { mainnet, avalanche, base, optimism, polygon, arbitrum, bsc, sonic, lightlinkPhoenix } from 'wagmi/chains';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
@@ -59,6 +49,7 @@ export const hyper = /*#__PURE__*/ defineChain({
 export const createWagmiConfig = (config: RpcConfig) => {
   return createConfig({
     chains: [mainnet, avalanche, arbitrum, base, bsc, sonic, optimism, polygon, hyper, lightlinkPhoenix],
+    ssr: true,
     transports: {
       [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
       [avalanche.id]: http(config[AVALANCHE_MAINNET_CHAIN_ID]),
