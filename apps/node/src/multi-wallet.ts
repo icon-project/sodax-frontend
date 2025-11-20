@@ -68,18 +68,18 @@ async function createWallet(tag: string | Hex) {
   console.log('txHash:', txHash);
 }
 
-async function registerWallet(wallet: Address, tag: Hex) {
-  const call = await EvmMultiWalletService.registerWallet(wallet, tag, hubEvmWallet);
+async function registerWallet(wallet: Address, tag: string | Hex) {
+  const call = await EvmMultiWalletService.registerWallet(wallet, toHexTag(tag), hubEvmWallet);
   console.log('call:', call);
 }
 
-async function unregisterWallet(wallet: Address, tag: Hex) {
-  const call = await EvmMultiWalletService.unregisterWallet(wallet, tag, hubEvmWallet);
+async function unregisterWallet(wallet: Address, tag: string | Hex) {
+  const call = await EvmMultiWalletService.unregisterWallet(wallet, toHexTag(tag), hubEvmWallet);
   console.log('call:', call);
 }
 
-async function updateTag(wallet: Address, oldTag: Hex, newTag: Hex) {
-  const call = await EvmMultiWalletService.updateWalletTag(wallet, oldTag, newTag, hubEvmWallet);
+async function updateTag(wallet: Address, oldTag: Hex | string, newTag: Hex | string) {
+  const call = await EvmMultiWalletService.updateWalletTag(wallet, toHexTag(oldTag), toHexTag(newTag), hubEvmWallet);
   console.log('call:', call);
 }
 
@@ -105,13 +105,13 @@ async function isOwner(wallet: Address, owner: Address) {
   console.log('isOwner:', state);
 }
 
-async function walletsByTag(user: Address, tag: Hex) {
-  const wallets = await EvmMultiWalletService.getWalletsOfByTag(user, tag, hubProvider.publicClient);
+async function walletsByTag(user: Address, tag: Hex | string) {
+  const wallets = await EvmMultiWalletService.getWalletsOfByTag(user, toHexTag(tag), hubProvider.publicClient);
   console.log(wallets);
 }
 
 async function allWalletsByTags(user: Address, tagsCsv: string) {
-  const tags: Hex[] = tagsCsv.split(',') as Hex[];
+  const tags: Hex[] = tagsCsv.split(',').map((t) => toHexTag(t)) as Hex[];
   const wallets = await EvmMultiWalletService.getAllWalletsOf(user, tags, hubProvider.publicClient);
   console.log(wallets);
 }

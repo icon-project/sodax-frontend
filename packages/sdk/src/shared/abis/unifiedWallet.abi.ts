@@ -1,10 +1,10 @@
 export const unifiedWalletAbi = [
         {
             "type": "function",
-            "name": "acceptInvite",
+            "name": "addOwner",
             "inputs": [
                 {
-                    "name": "inviter",
+                    "name": "owner",
                     "type": "address",
                     "internalType": "address"
                 }
@@ -74,19 +74,6 @@ export const unifiedWalletAbi = [
                 }
             ],
             "stateMutability": "view"
-        },
-        {
-            "type": "function",
-            "name": "inviteOwner",
-            "inputs": [
-                {
-                    "name": "invitee",
-                    "type": "address",
-                    "internalType": "address"
-                }
-            ],
-            "outputs": [],
-            "stateMutability": "nonpayable"
         },
         {
             "type": "function",
