@@ -1,28 +1,18 @@
-import React, { useMemo } from 'react';
-import { useReservesData, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
+import React from 'react';
+import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { moneyMarketSupportedTokens, type XToken, type UserReserveData } from '@sodax/sdk';
-import { findReserveByUnderlyingAsset, findUserReserveBySpokeTokenAddress } from '@/lib/utils';
+import { moneyMarketSupportedTokens } from '@sodax/sdk';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 
 export function SupplyAssetsList() {
   const { selectedChainId } = useAppStore();
 
-  const tokens = useMemo(
-    () =>
-      moneyMarketSupportedTokens[selectedChainId].map(t => {
-        return {
-          ...t,
-          xChainId: selectedChainId,
-        } satisfies XToken;
-      }),
-    [selectedChainId],
-  );
+  const tokens = moneyMarketSupportedTokens[selectedChainId];
 
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
@@ -34,11 +24,7 @@ export function SupplyAssetsList() {
   });
 
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
-  const { data: reserves, isLoading: isReservesLoading } = useReservesData();
-
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
-
-  const aggregatedReserves = reserves?.[0] ?? [];
 
   return (
     <Card>
@@ -67,12 +53,7 @@ export function SupplyAssetsList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isUserReservesLoading ||
-            isReservesLoading ||
-            isFormattedReservesLoading ||
-            !userReserves ||
-            !reserves ||
-            !formattedReserves ? (
+            {isUserReservesLoading || isFormattedReservesLoading || !userReserves || !formattedReserves ? (
               <TableRow>
                 <TableCell colSpan={10} className="text-center">
                   Loading...
@@ -80,35 +61,19 @@ export function SupplyAssetsList() {
               </TableRow>
             ) : (
               userReserves &&
-              reserves &&
-              tokens.map(token => {
-                try {
-                  const userReserve: UserReserveData = findUserReserveBySpokeTokenAddress(
-                    userReserves[0],
-                    selectedChainId,
-                    token,
-                  );
-                  return (
-                    <SupplyAssetsListItem
-                      key={token.address}
-                      token={token}
-                      walletBalance={
-                        balances?.[token.address]
-                          ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
-                          : '-'
-                      }
-                      balance={formatUnits(userReserve.scaledATokenBalance || 0n, 18)}
-                      debt={formatUnits(userReserve.scaledVariableDebt || 0n, 18)}
-                      reserve={findReserveByUnderlyingAsset(userReserve.underlyingAsset, aggregatedReserves)}
-                      formattedReserves={formattedReserves}
-                      userReserves={userReserves[0]}
-                      selectedChainId={selectedChainId}
-                    />
-                  );
-                } catch {
-                  console.log('error token', token);
-                }
-              })
+              tokens.map(token => (
+                <SupplyAssetsListItem
+                  key={token.address}
+                  token={token}
+                  walletBalance={
+                    balances?.[token.address]
+                      ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
+                      : '-'
+                  }
+                  formattedReserves={formattedReserves}
+                  userReserves={userReserves[0]}
+                />
+              ))
             )}
           </TableBody>
         </Table>
