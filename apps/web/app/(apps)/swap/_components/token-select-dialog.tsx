@@ -20,7 +20,6 @@ export default function TokenSelectDialog({
   const [searchQuery, setSearchQuery] = useState('');
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
   const [selectedChainFilter, setSelectedChainFilter] = useState<SpokeChainId | null>(null);
-  const [showAllAssets, setShowAllAssets] = useState(false);
 
   const handleAssetClick = (e: React.MouseEvent, symbol: string) => {
     setClickedAsset(clickedAsset === symbol ? null : symbol);
@@ -48,10 +47,6 @@ export default function TokenSelectDialog({
     setIsChainSelectorOpen(false);
   };
 
-  const handleViewAllAssets = () => {
-    setShowAllAssets(!showAllAssets);
-  };
-
   const onHandleOpenChange = (open: boolean) => {
     if (clickedAsset !== null) {
       setClickedAsset(null);
@@ -60,7 +55,6 @@ export default function TokenSelectDialog({
 
     onClose();
     setSearchQuery('');
-    setShowAllAssets(false);
     setIsChainSelectorOpen(false);
     setSelectedChainFilter(null);
     setClickedAsset(null);
@@ -70,20 +64,19 @@ export default function TokenSelectDialog({
     <Dialog open={isOpen} onOpenChange={onHandleOpenChange}>
       <DialogContent
         enableMotion={true}
-        className="shadow-none md:max-w-[480px] w-[90%] p-12 bg-vibrant-white gap-0 min-h-134 block"
+        className="shadow-none md:max-w-[480px] w-[90%] p-12 bg-vibrant-white gap-0 block"
         hideCloseButton={true}
       >
-        <DialogTitle className="flex justify-end w-full h-4 relative p-0">
+        <div className="flex justify-end w-full h-4 relative p-0">
           <DialogClose className="pt-0" asChild>
             <Button
               variant="ghost"
-              className={`absolute outline-none w-12 h-12 rounded-full text-clay-light hover:text-clay transition-colors cursor-pointer top-0 !-mr-4 ${clickedAsset !== null ? 'blur filter' : ''}`}
+              className={`absolute outline-none w-12 h-12 rounded-full text-clay-light hover:text-clay transition-colors cursor-pointer -top-3 !-mr-4 ${clickedAsset !== null ? 'blur filter' : ''}`}
             >
               <XIcon className="w-4 h-4 pointer-events-none" />
             </Button>
           </DialogClose>
-        </DialogTitle>
-
+        </div>
         <CurrencySearchPanel
           isUsdtClicked={clickedAsset !== null}
           searchQuery={searchQuery}
@@ -107,8 +100,6 @@ export default function TokenSelectDialog({
           onClose={onClose}
           selectedChainFilter={selectedChainFilter}
           isChainSelectorOpen={isChainSelectorOpen}
-          showAllAssets={showAllAssets}
-          onViewAllAssets={handleViewAllAssets}
         />
       </DialogContent>
     </Dialog>

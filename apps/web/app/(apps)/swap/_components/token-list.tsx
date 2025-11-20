@@ -3,9 +3,10 @@ import { useState, useRef, useEffect } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
-import { ScrollAreaPrimitive, ScrollBar, ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { TokenAsset } from './token-asset';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAllChainBalances, getAggregatedBalance, getChainBalance } from '@/hooks/useAllChainBalances';
 
 interface TokenListProps {
   clickedAsset: string | null;
@@ -16,8 +17,6 @@ interface TokenListProps {
   onClose: () => void;
   selectedChainFilter: SpokeChainId | null;
   isChainSelectorOpen: boolean;
-  showAllAssets: boolean;
-  onViewAllAssets: () => void;
 }
 
 export function TokenList({
@@ -29,18 +28,21 @@ export function TokenList({
   onClose,
   selectedChainFilter,
   isChainSelectorOpen,
-  showAllAssets,
-  onViewAllAssets,
 }: TokenListProps): React.JSX.Element {
   const assetsRef = useRef<HTMLDivElement>(null);
   const [hoveredAsset, setHoveredAsset] = useState<string | null>(null);
+
+  // Generate unique identifier for token (symbol + chainId)
+  const getTokenUniqueId = (token: XToken): string => {
+    return `${token.symbol}-${token.xChainId}`;
+  };
 
   const allSupportedTokens = selectedChainFilter
     ? getSupportedSolverTokensForChain(selectedChainFilter)
     : getAllSupportedSolverTokens();
 
-  const uniqueTokenSymbols = getUniqueTokenSymbols(allSupportedTokens);
-
+  // const uniqueTokenSymbols = getUniqueTokenSymbols(allSupportedTokens);
+  const allBalances = useAllChainBalances();
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Check if the click is on a network icon or its children
@@ -67,8 +69,8 @@ export function TokenList({
     };
   }, [clickedAsset, onClickOutside]);
 
-  const filteredTokens = uniqueTokenSymbols.filter(({ symbol }: { symbol: string; tokens: XToken[] }) =>
-    symbol.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredTokens = allSupportedTokens.filter((token: XToken) =>
+    token.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const shouldApplyHover = clickedAsset === null;
@@ -93,50 +95,50 @@ export function TokenList({
     setBackdropShow(false);
   };
 
-  const renderTokenSymbol = ({ symbol, tokens }: { symbol: string; tokens: XToken[] }) => {
-    const tokenCount = tokens.length;
-    const isHovered = shouldApplyHover && hoveredAsset === symbol;
+  const renderTokenSymbol = (token: XToken) => {
+    const tokenUniqueId = getTokenUniqueId(token);
+    const isHovered = shouldApplyHover && hoveredAsset === tokenUniqueId;
 
-    const shouldBlurOtherAssets = clickedAsset !== null && clickedAsset !== symbol;
+    const shouldBlurOtherAssets = clickedAsset !== null && clickedAsset !== token.symbol;
 
     const commonProps = {
       isClickBlurred: shouldBlurOtherAssets,
-      isHoverDimmed: shouldApplyHover && hoveredAsset !== null && hoveredAsset !== symbol,
+      isHoverDimmed: shouldApplyHover && hoveredAsset !== null && hoveredAsset !== tokenUniqueId,
       isHovered,
-      onMouseEnter: () => shouldApplyHover && setHoveredAsset(symbol),
+      onMouseEnter: () => shouldApplyHover && setHoveredAsset(tokenUniqueId),
       onMouseLeave: () => shouldApplyHover && setHoveredAsset(null),
     };
 
-    if (tokenCount > 1) {
-      return (
-        <TokenAsset
-          key={symbol}
-          name={symbol}
-          isGroup={true}
-          tokenCount={tokenCount}
-          tokens={tokens}
-          onClick={(e?: React.MouseEvent) => {
-            if (e) {
-              onAssetClick(e, symbol);
-              setBackdropShow(true);
-            }
-          }}
-          onChainClick={handleChainClick}
-          isClicked={clickedAsset === symbol}
-          {...commonProps}
-        />
-      );
-    }
-
-    const singleToken = tokens[0];
-    if (!singleToken) return null;
+    // if (tokenCount > 1) {
+    //   // Aggregate balances across all tokens in the group
+    //   return (
+    //     <TokenAsset
+    //       key={token.symbol}
+    //       name={token.symbol}
+    //       sourceBalance={0n}
+    //       isGroup={true}
+    //       tokenCount={1}
+    //       tokens={[token]}
+    //       onClick={(e?: React.MouseEvent) => {
+    //         if (e) {
+    //           onAssetClick(e, token.symbol);
+    //           setBackdropShow(true);
+    //         }
+    //       }}
+    //       onChainClick={handleChainClick}
+    //       isClicked={clickedAsset === token.symbol}
+    //       {...commonProps}
+    //     />
+    //   );
+    // }
 
     return (
       <TokenAsset
-        key={symbol}
-        name={symbol}
-        token={singleToken}
-        onClick={() => handleTokenAssetClick(singleToken)}
+        key={tokenUniqueId}
+        name={token.symbol}
+        token={token}
+        sourceBalance={getChainBalance(allBalances, token.address, token.xChainId)}
+        onClick={() => handleTokenAssetClick(token)}
         {...commonProps}
       />
     );
@@ -154,10 +156,10 @@ export function TokenList({
           }}
         />
       )}
-      <ScrollArea className={`h-81 pt-2 pl-5 pr-5 w-full content-stretch ${clickedAsset ? '' : ''}`}>
+      <ScrollArea className={`mt-4 h-81 w-full content-stretch ${clickedAsset ? '' : ''}`}>
         <motion.div
           ref={assetsRef}
-          className={`h-79 [flex-flow:wrap] box-border content-start flex gap-y-4 gap-x-6 items-start justify-center px-0 relative shrink-0 w-full flex-1 ${
+          className={`h-81 pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center px-0 relative shrink-0 w-full flex-1 ${
             isChainSelectorOpen ? 'blur filter opacity-30' : ''
           }`}
           data-name="Assets"

@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { motion } from 'motion/react';
-import { getAllSupportedSolverTokens } from '@/lib/utils';
+import { formatBalance, getAllSupportedSolverTokens } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
 import { ArbitrumIcon } from '@/components/icons/chains/arbitrum';
 import { IcxIcon } from '@/components/icons/chains/icon';
@@ -22,6 +22,10 @@ import { LightLinkIcon } from '@/components/icons/chains/lightlink';
 import { EthereumIcon } from '@/components/icons/chains/ethereum';
 import { HyperIcon } from '@/components/icons/chains/hyper';
 import { createPortal } from 'react-dom';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { formatUnits } from 'viem';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
+import BigNumber from 'bignumber.js';
 
 interface NetworkIconProps {
   imageSrc: string;
@@ -98,7 +102,6 @@ function StackedNetworks({
 }: StackedNetworksProps): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
   const allSupportedTokens = getAllSupportedSolverTokens();
-
   const getNetworkInfo = (chainId: string): { image: string; name: string } => {
     const chain = availableChains.find(chain => chain.id === chainId);
     return chain ? { image: chain.icon, name: chain.name } : { image: '/chain/sonic.png', name: 'Sonic' };
@@ -159,6 +162,7 @@ function StackedNetworks({
 interface TokenAssetProps {
   name: string;
   token?: XToken;
+  sourceBalance: bigint;
   isClickBlurred: boolean;
   isHoverDimmed: boolean;
   isHovered: boolean;
@@ -175,6 +179,7 @@ interface TokenAssetProps {
 
 export function TokenAsset({
   name,
+  sourceBalance,
   token,
   isClickBlurred,
   isHoverDimmed,
@@ -192,11 +197,12 @@ export function TokenAsset({
   const chainIds = isGroup && tokens ? [...new Set(tokens.map(t => t.xChainId))] : [];
   const [portalPosition, setPortalPosition] = useState<{ top: number; left: number } | null>(null);
 
+  const { data: usdPrice } = useTokenPrice(token || ({} as XToken));
   useEffect(() => {
     if (isClicked && isGroup && assetRef.current) {
       const rect = assetRef.current.getBoundingClientRect();
       setPortalPosition({
-        top: rect.bottom - 30,
+        top: rect.bottom - 40,
         left: rect.left + rect.width / 2,
       });
     } else {
@@ -216,7 +222,7 @@ export function TokenAsset({
         }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className={`flex flex-col gap-2 items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 w-12 h-22 ${
+        className={`px-3 flex flex-col items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 w-18 pb-4 ${
           isClickBlurred ? 'blur filter opacity-30' : isHoverDimmed ? 'opacity-50' : ''
         } ${isClicked && isGroup ? 'z-[9999]' : ''}`}
         data-name="Asset"
@@ -235,18 +241,55 @@ export function TokenAsset({
             />
           )}
         </div>
-        <div className="relative h-6 w-full">
-          <div
-            className={`font-['InterRegular'] leading-[0] absolute inset-0 flex items-center justify-center text-(length:--body-small) transition-all duration-200 ${
-              isClicked && isGroup
-                ? 'opacity-0'
-                : isHovered
-                  ? 'opacity-100 text-espresso font-bold'
-                  : 'opacity-100 text-clay font-medium'
-            }`}
-          >
-            {name}
-          </div>
+        <div
+          className={`font-['InterRegular'] flex items-center justify-center text-(length:--body-small) transition-all duration-200 mt-2 ${
+            isClicked && isGroup
+              ? 'opacity-0'
+              : isHovered
+                ? 'opacity-100 text-espresso font-bold'
+                : 'opacity-100 text-clay font-medium'
+          }`}
+        >
+          {name}
+        </div>
+
+        <div className="flex font-medium h-[13px]">
+          {sourceBalance > 0n && (
+            <>
+              <motion.p
+                className="relative shrink-0 text-clay !text-(length:--body-fine-print)"
+                animate={{
+                  x: isHovered ? -28 : 0,
+                  color: isHovered ? '#483534' : '#8e7e7d',
+                }}
+                transition={{
+                  duration: 0.3,
+                  ease: 'easeInOut',
+                }}
+              >
+                {sourceBalance > 0n
+                  ? formatBalance(formatUnits(sourceBalance, token?.decimals || 0), token?.decimals || 0)
+                  : '0'}
+              </motion.p>
+              <motion.p
+                className="absolute left-1/2 shrink-0 text-clay !text-(length:--body-fine-print)"
+                animate={{
+                  opacity: isHovered ? 1 : 0,
+                  x: isHovered ? 4 : 0,
+                }}
+                transition={{
+                  duration: 0.3,
+                  ease: 'easeInOut',
+                }}
+              >
+                {`$(${new BigNumber(
+                  formatBalance(formatUnits(sourceBalance, token?.decimals || 0), token?.decimals || 0),
+                )
+                  .multipliedBy(usdPrice || 0)
+                  .toFixed(2)})`}
+              </motion.p>
+            </>
+          )}
         </div>
       </motion.div>
       {isGroup && (
