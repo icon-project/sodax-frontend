@@ -90,31 +90,6 @@ export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): st
   return `${minutes}m remaining`;
 }
 
-export function findReserveByUnderlyingAsset(
-  underlyingAsset: string,
-  reserves: readonly AggregatedReserveData[],
-): AggregatedReserveData {
-  const reserve = reserves.find(reserve => reserve.underlyingAsset.toLowerCase() === underlyingAsset.toLowerCase());
-  if (!reserve) {
-    throw new Error(`Reserve not found for underlying asset: ${underlyingAsset}`);
-  }
-  return reserve;
-}
-
-export function findUserReserveBySpokeTokenAddress(
-  userReserves: readonly UserReserveData[],
-  selectedChainId: SpokeChainId,
-  token: XToken,
-): UserReserveData {
-  const vault = hubAssets[selectedChainId][token.address].vault;
-  const result = userReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
-
-  if (!result) {
-    throw new Error(`User reserve not found for spoke token address: ${token.address}`);
-  }
-  return result;
-}
-
 export function BigIntMin(a: bigint, b: bigint): bigint {
   return a < b ? a : b;
 }

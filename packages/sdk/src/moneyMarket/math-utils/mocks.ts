@@ -33,6 +33,7 @@ export class ReserveMock {
       liquidityRate: RAY.multipliedBy(1).toString(),
       totalScaledVariableDebt: '0',
       lastUpdateTimestamp: 1,
+      aTokenAddress: '0x',
       borrowCap: '0',
       supplyCap: '0',
       debtCeiling: '0',

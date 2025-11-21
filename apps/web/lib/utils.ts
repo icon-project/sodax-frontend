@@ -91,10 +91,6 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
         filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
       }
 
-      if(chainId === 'hyper') {
-        filteredTokens = filteredTokens.filter(token => token.symbol !== 'SODA');
-      }
-
       const xTokens: XToken[] = filteredTokens.map((token: Token) => ({
         ...token,
         xChainId: chainId,
@@ -129,10 +125,6 @@ export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[
 
     if (chainId !== '0x1.icon') {
       filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
-    }
-
-    if(chainId === 'hyper') {
-      filteredTokens = filteredTokens.filter(token => token.symbol !== 'SODA');
     }
 
     return filteredTokens.map((token: Token) => ({

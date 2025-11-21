@@ -1,7 +1,7 @@
 import { formatUnits } from 'viem';
 
-import { hubAssets, type ChainId, type XToken } from '@sodax/types';
-import type { AggregatedReserveData, FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
+import { hubAssets, type XToken } from '@sodax/types';
+import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { formatCompactNumber } from '@/lib/utils';
 
 /**
@@ -12,10 +12,8 @@ import { formatCompactNumber } from '@/lib/utils';
  * Handles special cases like merging `bnUSD` and `bnUSDVault` reserves.
  *
  * @param {XToken} token - Target token for which metrics are computed.
- * @param {AggregatedReserveData[]} reserves - All aggregated reserve data.
  * @param {FormatReserveUSDResponse[]} formattedReserves - USD-normalized reserve data.
  * @param {UserReserveData[][]} userReserves - Nested user reserve data arrays.
- * @param {ChainId} selectedChainId - Active chain ID.
  *
  * @returns {ReserveMetricsResult} Computed reserve metrics, including APRs, APYs,
  * total supply/borrow (in tokens and USD), and user-specific reserve data.
@@ -35,14 +33,13 @@ function getCompoundedRate(rate: number) {
 
 interface UseReserveMetricsProps {
   token: XToken;
-  reserves: readonly AggregatedReserveData[];
   formattedReserves: FormatReserveUSDResponse[];
-  userReserves: UserReserveData[][];
-  selectedChainId: ChainId;
+  userReserves: UserReserveData[];
 }
 
 interface ReserveMetricsResult {
   userReserve?: UserReserveData;
+  formattedReserve?: FormatReserveUSDResponse;
   supplyAPR: string;
   borrowAPR: string;
   supplyAPY: string;
@@ -55,16 +52,13 @@ interface ReserveMetricsResult {
 
 export function useReserveMetrics({
   token,
-  reserves,
   formattedReserves,
   userReserves,
-  selectedChainId,
 }: UseReserveMetricsProps): ReserveMetricsResult {
   try {
-    const vault = hubAssets[selectedChainId][token.address].vault;
-    const userReserve = userReserves?.[0]?.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
-    const reserve = reserves?.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
-    const formattedReserve = formattedReserves?.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+    const vault = hubAssets[token.xChainId][token.address].vault;
+    const userReserve = userReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+    const formattedReserve = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
     // Default metrics
     let supplyAPR = '-';
     let borrowAPR = '-';
@@ -75,21 +69,20 @@ export function useReserveMetrics({
     let totalLiquidityUSD = '-';
     let totalBorrowsUSD = '-';
 
-    if (reserve) {
-      const liquidityRate = Number(reserve.liquidityRate) / 1e27;
-      const variableBorrowRate = Number(reserve.variableBorrowRate) / 1e27;
+    if (formattedReserve) {
+      const liquidityRate = Number(formattedReserve.liquidityRate) / 1e27;
+      const variableBorrowRate = Number(formattedReserve.variableBorrowRate) / 1e27;
 
       supplyAPR = `${(liquidityRate * 100).toFixed(4)}%`;
       borrowAPR = `${(variableBorrowRate * 100).toFixed(4)}%`;
       supplyAPY = `${getCompoundedRate(liquidityRate).toFixed(4)}%`;
       borrowAPY = `${getCompoundedRate(variableBorrowRate).toFixed(4)}%`;
 
-      // All amounts from SDK are in WAD format (1e18)
-      const availableLiquidity = BigInt(reserve.availableLiquidity ?? 0n);
-      const totalVariableDebt = BigInt(reserve.totalScaledVariableDebt ?? 0n);
+      const availableLiquidity = Number(formatUnits(BigInt(formattedReserve.availableLiquidity), 18));
+      const totalVariableDebt = Number(formattedReserve.totalScaledVariableDebt);
       const total = availableLiquidity + totalVariableDebt;
-      totalSupply = formatCompactNumber(Number(formatUnits(total, 18)));
-      totalBorrow = formatCompactNumber(Number(formatUnits(totalVariableDebt, 18)));
+      totalSupply = formatCompactNumber(Number(total));
+      totalBorrow = formatCompactNumber(Number(totalVariableDebt));
 
       if (formattedReserve) {
         totalLiquidityUSD = `$${Number(formattedReserve.totalLiquidityUSD ?? 0).toFixed(2)}`;
@@ -99,6 +92,7 @@ export function useReserveMetrics({
 
     return {
       userReserve,
+      formattedReserve,
       supplyAPR,
       borrowAPR,
       supplyAPY,
@@ -112,6 +106,7 @@ export function useReserveMetrics({
     console.error(`Error in useReserveMetrics for ${token.symbol} (${token.address}):`, error);
     return {
       userReserve: undefined,
+      formattedReserve: undefined,
       supplyAPR: '-',
       borrowAPR: '-',
       supplyAPY: '-',
