@@ -30,6 +30,7 @@ import type {
   MoneyMarketConfig,
   SolverConfig,
   spokeChainConfig,
+  ConcentratedLiquidityConfig,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
@@ -39,9 +40,15 @@ export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
+export type ConcentratedLiquidityServiceConfig = Prettify<
+  ConcentratedLiquidityConfig & PartnerFeeConfig & RelayerApiConfig
+>;
 export type SwapServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
+export type ConcentratedLiquidityConfigParams =
+  | Prettify<ConcentratedLiquidityConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
+  | Optional<PartnerFeeConfig, 'partnerFee'>;
 export type BackendApiConfig = {
   baseURL?: HttpUrl;
   timeout?: number;
@@ -161,7 +168,14 @@ export type IcxTokenType =
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['nativeToken'];
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 
-export type SpokeDepositParams = EvmSpokeDepositParams | InjectiveSpokeDepositParams | IconSpokeDepositParams;
+export type SpokeDepositParams =
+  | EvmSpokeDepositParams
+  | InjectiveSpokeDepositParams
+  | SuiSpokeDepositParams
+  | IconSpokeDepositParams
+  | StellarSpokeDepositParams
+  | SolanaSpokeDepositParams
+  | SonicSpokeDepositParams;
 
 export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? EvmSpokeDepositParams
@@ -177,7 +191,7 @@ export type GetSpokeDepositParamsType<T extends SpokeProvider> = T extends EvmSp
             ? SolanaSpokeDepositParams
             : T extends SonicSpokeProvider
               ? SonicSpokeDepositParams
-              : never;
+              : SpokeDepositParams;
 
 export type GetAddressType<T extends SpokeProvider> = T extends EvmSpokeProvider
   ? Address

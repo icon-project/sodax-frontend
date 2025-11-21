@@ -23,7 +23,7 @@ import {
   CONFIG_VERSION,
 } from '@sodax/types';
 import type { BackendApiService } from '../../backendApi/BackendApiService.js';
-import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT } from '../constants.js';
+import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT, StatATokenAddresses } from '../constants.js';
 import type { Result } from '../types.js';
 
 export type ConfigServiceConfig = {
@@ -228,6 +228,19 @@ export class ConfigService {
     }
     return result;
   }
+
+  public getOriginalAssetAddressFromStakedATokenAddress = (
+    chainId: SpokeChainId,
+    address: Address,
+  ): OriginalAssetAddress => {
+    const normalizedAddress = address.toLowerCase() as keyof typeof StatATokenAddresses;
+    const sodaToken = StatATokenAddresses[normalizedAddress] ?? address;
+    const originalAssetAddresses = this.getOriginalAssetInfoFromVault(chainId, sodaToken);
+    if (!originalAssetAddresses.length) {
+      throw new Error('[getOriginalAssetAddressFromStakedATokenAddress] Original asset address not found');
+    }
+    return originalAssetAddresses[0] as OriginalAssetAddress;
+  };
 
   public isMoneyMarketSupportedToken(chainId: SpokeChainId, token: string): boolean {
     return this.sodaxConfig.supportedMoneyMarketTokens[chainId].some(
