@@ -36,6 +36,13 @@ export function TokenList({
   const shouldApplyHover = clickedAsset === null;
   const [backdropShow, setBackdropShow] = useState(false);
 
+  useEffect(() => {
+    if (clickedAsset === null) {
+      setBackdropShow(false);
+      setHoveredAsset(null);
+    }
+  }, [clickedAsset]);
+
   const handleTokenAssetClick = (token: XToken) => {
     if (onTokenSelect) {
       onTokenSelect(token);
