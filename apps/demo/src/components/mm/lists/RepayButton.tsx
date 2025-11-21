@@ -7,9 +7,8 @@ import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
-import type { AggregatedReserveData } from '@sodax/sdk';
 
-export function RepayButton({ token, reserve }: { token: XToken, reserve: AggregatedReserveData }) {
+export function RepayButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
 

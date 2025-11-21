@@ -7,9 +7,8 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@so
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
-import type { AggregatedReserveData } from '@sodax/sdk';
 
-export function WithdrawButton({ token, aToken, reserve }: { token: XToken, aToken: XToken, reserve: AggregatedReserveData }) {
+export function WithdrawButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const { selectedChainId } = useAppStore();
