@@ -23,7 +23,7 @@ import {
   type ConcentratedLiquidityConfig,
   type Address,
 } from '@sodax/types';
-import type { PoolKey } from '@pancakeswap/infinity-sdk';
+import type { PoolKey } from '../dex/types.js';
 
 export const DEFAULT_MAX_RETRY = 3;
 export const DEFAULT_RELAY_TX_TIMEOUT = 120000; // 120 seconds

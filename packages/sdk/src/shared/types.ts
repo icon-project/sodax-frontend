@@ -40,15 +40,12 @@ export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
-export type ConcentratedLiquidityServiceConfig = Prettify<
-  ConcentratedLiquidityConfig & PartnerFeeConfig & RelayerApiConfig
+export type ClServiceConfig = Prettify<
+  ConcentratedLiquidityConfig & RelayerApiConfig
 >;
 export type SwapServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
-export type ConcentratedLiquidityConfigParams =
-  | Prettify<ConcentratedLiquidityConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
-  | Optional<PartnerFeeConfig, 'partnerFee'>;
 export type BackendApiConfig = {
   baseURL?: HttpUrl;
   timeout?: number;
@@ -159,6 +156,8 @@ export type FeeAmount = {
 };
 
 export type OptionalFee = { fee?: PartnerFee };
+
+export type OptionalSkipSimulation = { skipSimulation?: boolean };
 
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 

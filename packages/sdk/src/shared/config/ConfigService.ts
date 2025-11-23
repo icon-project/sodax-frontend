@@ -23,8 +23,9 @@ import {
   CONFIG_VERSION,
 } from '@sodax/types';
 import type { BackendApiService } from '../../backendApi/BackendApiService.js';
-import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT, StatATokenAddresses } from '../constants.js';
+import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT, dexPools, StatATokenAddresses } from '../constants.js';
 import type { Result } from '../types.js';
+import type { PoolKey } from '../../dex/types.js';
 
 export type ConfigServiceConfig = {
   backendApiUrl: HttpUrl | undefined;
@@ -241,6 +242,11 @@ export class ConfigService {
     }
     return originalAssetAddresses[0] as OriginalAssetAddress;
   };
+
+  public getDexPools(): PoolKey[] {
+    // TODO make those dynamic in future
+    return Object.values(dexPools);
+  }
 
   public isMoneyMarketSupportedToken(chainId: SpokeChainId, token: string): boolean {
     return this.sodaxConfig.supportedMoneyMarketTokens[chainId].some(

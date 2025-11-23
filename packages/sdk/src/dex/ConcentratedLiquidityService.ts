@@ -1,4 +1,3 @@
-// packages/sdk/src/services/concentratedLiquidity/ConcentratedLiquidityService.ts
 import type { Hex, PublicClient, HttpTransport } from 'viem';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
@@ -10,7 +9,6 @@ import {
   SpokeService,
   encodeContractCalls,
   deriveUserWalletAddress,
-  dexPools,
   relayTxAndWaitPacket,
   DEFAULT_RELAY_TX_TIMEOUT,
   SolanaSpokeProvider,
@@ -26,34 +24,12 @@ import {
 } from '../index.js';
 import type { Address, HttpUrl, OriginalAssetAddress } from '@sodax/types';
 import type { EvmHubProvider } from '../shared/entities/Providers.js';
+import type { Prettify, OptionalTimeout, OptionalSkipSimulation, ClServiceConfig } from '../shared/types.js';
 import { erc20Abi, maxUint160, maxUint48 } from 'viem';
 import { Price, Token } from '@pancakeswap/swap-sdk-core';
 
-// Local type definitions to avoid import issues
-type ConcentratedLiquidityConfig = {
-  permit2: Address;
-  clPoolManager: Address;
-  router: Address;
-  clPositionManager: Address;
-  clPositionDescriptor: Address;
-  clQuoter: Address;
-  clTickLens: Address;
-  defaultHook: Address;
-  stataTokenFactory: Address;
-  defaultTickSpacing: number;
-  defaultBitmap: bigint;
-};
-
-type RelayerApiConfig = {
-  relayerApiEndpoint: HttpUrl;
-};
-
-type ConcentratedLiquidityServiceConfig = ConcentratedLiquidityConfig & RelayerApiConfig;
+import type { PoolKey, CLPositionConfig } from './types.js';
 import {
-  type EncodedPoolKey,
-  type PoolKey,
-  type Slot0,
-  type CLPositionConfig,
   CLPoolManagerAbi,
   CLPositionManagerAbi,
   decodePoolKey,
@@ -129,7 +105,28 @@ export type ConcentratedLiquidityParams =
   | ConcentratedLiquidityBurnPositionParams
   | ConcentratedLiquidityWithdrawParams;
 
-export type ConcentratedLiquidityPositionInfo = {
+// Parameter types for refactored functions following SwapService pattern
+export type SupplyLiquidityParams<S extends SpokeProvider> = Prettify<{
+  supplyParams: ConcentratedLiquiditySupplyParams;
+  spokeProvider: S;
+}>;
+
+export type IncreaseLiquidityParams<S extends SpokeProvider> = Prettify<{
+  increaseParams: ConcentratedLiquidityIncreaseLiquidityParams;
+  spokeProvider: S;
+}>;
+
+export type DecreaseLiquidityParams<S extends SpokeProvider> = Prettify<{
+  decreaseParams: ConcentratedLiquidityDecreaseLiquidityParams;
+  spokeProvider: S;
+}>;
+
+export type BurnPositionParams<S extends SpokeProvider> = Prettify<{
+  burnParams: ConcentratedLiquidityBurnPositionParams;
+  spokeProvider: S;
+}>;
+
+export type ClPositionInfo = {
   // Raw position data from PancakeSwap Infinity
   poolKey: PoolKey;
   tickLower: number;
@@ -168,7 +165,7 @@ export type TokenWithConversion = Token & {
 /**
  * Extended token object with StatAToken metadata
  */
-type EnrichedToken = {
+export type EnrichedToken = {
   token: Token;
   isStatAToken: boolean;
   conversionRate?: bigint;
@@ -329,8 +326,12 @@ export type ClServiceConstructorParams = {
   configService: ConfigService;
 };
 
-export class ConcentratedLiquidityService {
-  public readonly config: ConcentratedLiquidityServiceConfig;
+/**
+ * Concetration Liquidity Service provides a high-level interface for concentrated liquidity operations
+ * including supply liquidity, increase liquidity, decrease liquidity, and burn position.
+ */
+export class ClService {
+  public readonly config: ClServiceConfig;
   private readonly relayerApiEndpoint: HttpUrl;
   private readonly hubProvider: EvmHubProvider;
   private readonly configService: ConfigService;
@@ -350,8 +351,14 @@ export class ConcentratedLiquidityService {
     poolKey: PoolKey,
   ): { token0: OriginalAssetAddress; token1: OriginalAssetAddress } {
     return {
-      token0: this.configService.getOriginalAssetAddressFromStakedATokenAddress(spokeProvider.chainConfig.chain.id, poolKey.currency0),
-      token1: this.configService.getOriginalAssetAddressFromStakedATokenAddress(spokeProvider.chainConfig.chain.id, poolKey.currency1),
+      token0: this.configService.getOriginalAssetAddressFromStakedATokenAddress(
+        spokeProvider.chainConfig.chain.id,
+        poolKey.currency0,
+      ),
+      token1: this.configService.getOriginalAssetAddressFromStakedATokenAddress(
+        spokeProvider.chainConfig.chain.id,
+        poolKey.currency1,
+      ),
     };
   }
 
@@ -362,6 +369,7 @@ export class ConcentratedLiquidityService {
     params: ConcentratedLiquiditySupplyParams,
     spokeProvider: S,
     raw?: R,
+    skipSimulation?: boolean,
   ): Promise<Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED'>>> {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
@@ -399,9 +407,16 @@ export class ConcentratedLiquidityService {
       calls.push(supplyCall);
 
       const encodedCalls = encodeContractCalls(calls);
-      const txResult = await SpokeService.callWallet(hubWallet, encodedCalls, spokeProvider, this.hubProvider, raw);
+      const txResult = await SpokeService.callWallet(
+        hubWallet,
+        encodedCalls,
+        spokeProvider,
+        this.hubProvider,
+        raw,
+        skipSimulation,
+      );
 
-      return { ok: true, value: txResult as TxReturnType<S, R> };
+      return { ok: true, value: txResult satisfies TxReturnType<S, R> };
     } catch (error) {
       console.error('executeSupplyLiquidity error:', error);
       return {
@@ -421,6 +436,7 @@ export class ConcentratedLiquidityService {
     params: ConcentratedLiquidityIncreaseLiquidityParams,
     spokeProvider: S,
     raw?: R,
+    skipSimulation?: boolean,
   ): Promise<Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'>>> {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
@@ -454,14 +470,15 @@ export class ConcentratedLiquidityService {
 
       // Execute the transaction
 
-      const txResult = await SpokeService.callWallet(
+      const txResult = (await SpokeService.callWallet(
         hubWallet,
         encodeContractCalls(calls),
         spokeProvider,
         this.hubProvider,
         raw,
-      );
-      return { ok: true, value: txResult as TxReturnType<S, R> };
+        skipSimulation,
+      )) satisfies TxReturnType<S, R>;
+      return { ok: true, value: txResult satisfies TxReturnType<S, R> };
     } catch (error) {
       return {
         ok: false,
@@ -480,6 +497,7 @@ export class ConcentratedLiquidityService {
     params: ConcentratedLiquidityDecreaseLiquidityParams,
     spokeProvider: S,
     raw?: R,
+    skipSimulation?: boolean,
   ): Promise<Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'>>> {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
@@ -512,8 +530,9 @@ export class ConcentratedLiquidityService {
         spokeProvider,
         this.hubProvider,
         raw,
+        skipSimulation,
       );
-      return { ok: true, value: txResult as TxReturnType<S, R> };
+      return { ok: true, value: txResult satisfies TxReturnType<S, R> };
     } catch (error) {
       return {
         ok: false,
@@ -535,6 +554,7 @@ export class ConcentratedLiquidityService {
     params: ConcentratedLiquidityBurnPositionParams,
     spokeProvider: S,
     raw?: R,
+    skipSimulation?: boolean,
   ): Promise<Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_BURN_POSITION_INTENT_FAILED'>>> {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
@@ -571,8 +591,9 @@ export class ConcentratedLiquidityService {
         spokeProvider,
         this.hubProvider,
         raw,
+        skipSimulation,
       );
-      return { ok: true, value: txResult as TxReturnType<S, R> };
+      return { ok: true, value: txResult satisfies TxReturnType<S, R> };
     } catch (error) {
       return {
         ok: false,
@@ -606,185 +627,53 @@ export class ConcentratedLiquidityService {
   }
 
   /**
-   * Helper: Convert price to nearest valid tick
-   * @param price - The price as a number
-   * @param token0 - The base token
-   * @param token1 - The quote token
-   * @param tickSpacing - The tick spacing for the pool
-   * @returns The nearest valid tick
-   */
-  public priceToTick(price: number, token0: Token, token1: Token, tickSpacing: number): bigint {
-    // Convert price to Price object
-    const priceObj = new Price(
-      token0,
-      token1,
-      BigInt(10 ** token0.decimals),
-      BigInt(Math.floor(price * 10 ** token1.decimals)),
-    );
-
-    // Calculate tick from sqrtPriceX96
-    const sqrtRatioX96 =
-      (BigInt(priceObj.numerator.toString()) * BigInt(2) ** BigInt(96)) / BigInt(priceObj.denominator.toString());
-
-    // Calculate tick: tick = log1.0001(price) = log(price) / log(1.0001)
-    const tick = Math.floor(Math.log(Number(sqrtRatioX96) / 2 ** 96) / Math.log(1.0001));
-
-    // Round to nearest valid tick based on tickSpacing
-    const roundedTick = Math.round(tick / tickSpacing) * tickSpacing;
-
-    return BigInt(roundedTick);
-  }
-
-  /**
-   * Helper: Calculate liquidity from token amounts
-   * @param amount0 - Amount of token0
-   * @param amount1 - Amount of token1
-   * @param tickLower - Lower tick
-   * @param tickUpper - Upper tick
-   * @param currentTick - Current pool tick
-   * @returns The liquidity value
-   */
-  public calculateLiquidityFromAmounts(
-    amount0: bigint,
-    amount1: bigint,
-    tickLower: bigint,
-    tickUpper: bigint,
-    currentTick: bigint,
-  ): bigint {
-    const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
-    const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
-    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
-    if (amount0 === 0n) {
-      return maxLiquidityForAmount0Precise(sqrtRatioX96Lower, sqrtRatioX96Upper, amount0);
-    }
-    if (amount1 === 0n) {
-      return maxLiquidityForAmount1(sqrtRatioX96Lower, sqrtRatioX96Upper, amount1);
-    }
-    return maxLiquidityForAmounts(sqrtRatioX96Current, sqrtRatioX96Lower, sqrtRatioX96Upper, amount0, amount1, true);
-  }
-
-  /**
-   * Helper: Calculate token1 amount needed given token0 amount and price range
-   * @param amount0 - Amount of token0
-   * @param tickLower - Lower tick
-   * @param tickUpper - Upper tick
-   * @param currentTick - Current pool tick
-   * @returns The required amount of token1
-   */
-  public calculateAmount1FromAmount0(
-    amount0: bigint,
-    tickLower: bigint,
-    tickUpper: bigint,
-    currentTick: bigint,
-  ): bigint {
-    if (amount0 === 0n) return 0n;
-
-    const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
-    const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
-    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
-
-    // Calculate liquidity using only amount0 (use a very large value for amount1 to not constrain)
-    const liquidity = maxLiquidityForAmounts(
-      sqrtRatioX96Current,
-      sqrtRatioX96Lower,
-      sqrtRatioX96Upper,
-      amount0,
-      BigInt('0xffffffffffffffffffffffffffffffff'), // max uint128
-      true,
-    );
-
-    // Calculate amount1 from liquidity using PositionMath
-    const amount1 = PositionMath.getToken1Amount(
-      Number(currentTick),
-      Number(tickLower),
-      Number(tickUpper),
-      sqrtRatioX96Current,
-      liquidity,
-    );
-
-    return amount1;
-  }
-
-  /**
-   * Helper: Calculate token0 amount needed given token1 amount and price range
-   * @param amount1 - Amount of token1
-   * @param tickLower - Lower tick
-   * @param tickUpper - Upper tick
-   * @param currentTick - Current pool tick
-   * @returns The required amount of token0
-   */
-  public calculateAmount0FromAmount1(
-    amount1: bigint,
-    tickLower: bigint,
-    tickUpper: bigint,
-    currentTick: bigint,
-  ): bigint {
-    if (amount1 === 0n) return 0n;
-
-    const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
-    const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
-    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
-
-    // Calculate liquidity using only amount1 (use a very large value for amount0 to not constrain)
-    const liquidity = maxLiquidityForAmounts(
-      sqrtRatioX96Current,
-      sqrtRatioX96Lower,
-      sqrtRatioX96Upper,
-      BigInt('0xffffffffffffffffffffffffffffffff'), // max uint128
-      amount1,
-      true,
-    );
-
-    // Calculate amount0 from liquidity using PositionMath
-    const amount0 = PositionMath.getToken0Amount(
-      Number(currentTick),
-      Number(tickLower),
-      Number(tickUpper),
-      sqrtRatioX96Current,
-      liquidity,
-    );
-
-    return amount0;
-  }
-
-  /**
    * Supply liquidity and wait for the transaction to be relayed to the hub
    * This method wraps executeSupplyLiquidity and relays the transaction to the hub
    */
-  public async supplyLiquidity<S extends SpokeProvider>(
-    params: ConcentratedLiquiditySupplyParams,
-    spokeProvider: S,
+  public async supplyLiquidity<S extends SpokeProvider>({
+    supplyParams,
+    spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>> {
+    skipSimulation = false,
+  }: Prettify<SupplyLiquidityParams<S> & OptionalTimeout & OptionalSkipSimulation>): Promise<
+    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
+  > {
     try {
-      const txResult = await this.executeSupplyLiquidity(params, spokeProvider, false);
+      const txResult = await this.executeSupplyLiquidity(supplyParams, spokeProvider, false, skipSimulation);
 
       if (!txResult.ok) {
-        return txResult as Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>;
+        return txResult;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
-        spokeProvider,
-        this.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider,
+          this.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
-            } as GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-          },
-        };
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
+            },
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       console.error('supplyLiquidity error:', error);
       return {
@@ -793,7 +682,7 @@ export class ConcentratedLiquidityService {
           code: 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR',
           data: {
             error: error,
-            payload: params,
+            payload: supplyParams,
           },
         },
       };
@@ -804,40 +693,52 @@ export class ConcentratedLiquidityService {
    * Increase liquidity and wait for the transaction to be relayed to the hub
    * This method wraps executeIncreaseLiquidity and relays the transaction to the hub
    */
-  public async increaseLiquidity<S extends SpokeProvider>(
-    params: ConcentratedLiquidityIncreaseLiquidityParams,
-    spokeProvider: S,
+  public async increaseLiquidity<S extends SpokeProvider>({
+    increaseParams,
+    spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>> {
+  }: Prettify<IncreaseLiquidityParams<S> & OptionalTimeout>): Promise<
+    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
+  > {
     try {
-      const txResult = await this.executeIncreaseLiquidity(params, spokeProvider, false);
+      const txResult = await this.executeIncreaseLiquidity(increaseParams, spokeProvider, false);
 
       if (!txResult.ok) {
-        return txResult as Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>;
+        return txResult satisfies Result<
+          [SpokeTxHash, HubTxHash],
+          ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>
+        >;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
-        spokeProvider,
-        this.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider,
+          this.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
-            } as GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-          },
-        };
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
+            },
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       return {
         ok: false,
@@ -845,7 +746,7 @@ export class ConcentratedLiquidityService {
           code: 'INCREASE_LIQUIDITY_UNKNOWN_ERROR',
           data: {
             error: error,
-            payload: params,
+            payload: increaseParams,
           },
         },
       };
@@ -856,40 +757,52 @@ export class ConcentratedLiquidityService {
    * Decrease liquidity and wait for the transaction to be relayed to the hub
    * This method wraps executeDecreaseLiquidity and relays the transaction to the hub
    */
-  public async decreaseLiquidity<S extends SpokeProvider>(
-    params: ConcentratedLiquidityDecreaseLiquidityParams,
-    spokeProvider: S,
+  public async decreaseLiquidity<S extends SpokeProvider>({
+    decreaseParams,
+    spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>> {
+  }: Prettify<DecreaseLiquidityParams<S> & OptionalTimeout>): Promise<
+    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
+  > {
     try {
-      const txResult = await this.executeDecreaseLiquidity(params, spokeProvider, false);
+      const txResult = await this.executeDecreaseLiquidity(decreaseParams, spokeProvider, false);
 
       if (!txResult.ok) {
-        return txResult as Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>;
+        return txResult satisfies Result<
+          [SpokeTxHash, HubTxHash],
+          ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>
+        >;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
-        spokeProvider,
-        this.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider,
+          this.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
-            } as GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-          },
-        };
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
+            },
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       return {
         ok: false,
@@ -897,7 +810,7 @@ export class ConcentratedLiquidityService {
           code: 'DECREASE_LIQUIDITY_UNKNOWN_ERROR',
           data: {
             error: error,
-            payload: params,
+            payload: decreaseParams,
           },
         },
       };
@@ -908,40 +821,52 @@ export class ConcentratedLiquidityService {
    * Burn position and wait for the transaction to be relayed to the hub
    * This method wraps executeBurnPosition and relays the transaction to the hub
    */
-  public async burnPosition<S extends SpokeProvider>(
-    params: ConcentratedLiquidityBurnPositionParams,
-    spokeProvider: S,
+  public async burnPosition<S extends SpokeProvider>({
+    burnParams,
+    spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>> {
+  }: Prettify<BurnPositionParams<S> & OptionalTimeout>): Promise<
+    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
+  > {
     try {
-      const txResult = await this.executeBurnPosition(params, spokeProvider, false);
+      const txResult = await this.executeBurnPosition(burnParams, spokeProvider, false);
 
       if (!txResult.ok) {
-        return txResult as Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>;
+        return txResult satisfies Result<
+          [SpokeTxHash, HubTxHash],
+          ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>
+        >;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
-        spokeProvider,
-        this.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider,
+          this.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
-            } as GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-          },
-        };
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
+            },
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       return {
         ok: false,
@@ -949,7 +874,7 @@ export class ConcentratedLiquidityService {
           code: 'BURN_POSITION_UNKNOWN_ERROR',
           data: {
             error: error,
-            payload: params,
+            payload: burnParams,
           },
         },
       };
@@ -957,7 +882,7 @@ export class ConcentratedLiquidityService {
   }
 
   public getPools(): PoolKey[] {
-    return Object.values(dexPools);
+    return this.configService.getDexPools()
   }
 
   /**
@@ -987,9 +912,9 @@ export class ConcentratedLiquidityService {
       ]);
 
       return {
-        symbol: symbol as string,
-        name: name as string,
-        decimals: decimals as number,
+        symbol,
+        name,
+        decimals,
         address: tokenAddress,
       };
     } catch (error) {
@@ -1016,10 +941,7 @@ export class ConcentratedLiquidityService {
    * Get conversion rate for a StatAToken (1 share = X underlying assets)
    * Returns conversion rate with 1e18 precision
    */
-  private async getStatATokenConversionRate(
-    statATokenAddress: Address,
-    publicClient: PublicClient<HttpTransport>,
-  ): Promise<bigint> {
+  private async getStatATokenConversionRate(statATokenAddress: Address): Promise<bigint> {
     try {
       // Get conversion rate: how much underlying per 1 share (1e18)
       const oneShare = BigInt(10 ** 18); // 1 share
@@ -1042,7 +964,7 @@ export class ConcentratedLiquidityService {
     token: Token,
     publicClient: PublicClient<HttpTransport>,
   ): Promise<EnrichedToken> {
-    const isStatAToken = this.isStatAToken(token.address as Address);
+    const isStatAToken = this.isStatAToken(token.address);
 
     if (!isStatAToken) {
       return {
@@ -1053,7 +975,7 @@ export class ConcentratedLiquidityService {
 
     try {
       // Get conversion rate
-      const conversionRate = await this.getStatATokenConversionRate(token.address as Address, publicClient);
+      const conversionRate = await this.getStatATokenConversionRate(token.address);
 
       // Get underlying token info
       const normalizedAddress = token.address.toLowerCase() as keyof typeof StatATokenAddresses;
@@ -1102,7 +1024,7 @@ export class ConcentratedLiquidityService {
       // Get pool ID
       const poolId = getPoolId(poolKey);
       // Get slot0 data using the pool manager contract
-      const slot0Data: Slot0 = await publicClient.readContract({
+      const slot0Data = await publicClient.readContract({
         address: poolKey.poolManager,
         abi: CLPoolManagerAbi,
         functionName: 'getSlot0',
@@ -1110,15 +1032,15 @@ export class ConcentratedLiquidityService {
       });
 
       // Destructure slot0 data
-      const [sqrtPriceX96, tick, protocolFee, lpFee] = slot0Data as [bigint, number, number, number, boolean];
+      const [sqrtPriceX96, tick, protocolFee, lpFee] = slot0Data;
 
       const [token0, token1] = await Promise.all([
         this.getTokenInfo(poolKey.currency0, publicClient),
         this.getTokenInfo(poolKey.currency1, publicClient),
       ]);
 
-      const currency0 = new Token(146, poolKey.currency0 as Address, token0.decimals, token0.symbol, token0.name);
-      const currency1 = new Token(146, poolKey.currency1 as Address, token1.decimals, token1.symbol, token1.name);
+      const currency0 = new Token(146, poolKey.currency0, token0.decimals, token0.symbol, token0.name);
+      const currency1 = new Token(146, poolKey.currency1, token1.decimals, token1.symbol, token1.name);
 
       // Get StatAToken enrichment data for both tokens
       const [enrichment0, enrichment1] = await Promise.all([
@@ -1146,7 +1068,7 @@ export class ConcentratedLiquidityService {
         functionName: 'getLiquidity',
         args: [poolId],
       });
-      totalLiquidity = liquidityResult as bigint;
+      totalLiquidity = liquidityResult;
 
       // Extract fee tier and tick spacing
       const feeTier = poolKey.fee;
@@ -1159,10 +1081,10 @@ export class ConcentratedLiquidityService {
         poolKey: {
           currency0: poolKey.currency0,
           currency1: poolKey.currency1,
-          hooks: poolKey.hooks as `0x${string}`,
+          hooks: poolKey.hooks ?? '0x',
           poolManager: poolKey.poolManager,
           fee: poolKey.fee,
-          parameters: (typeof poolKey.parameters === 'string' ? poolKey.parameters : '0x') as `0x${string}`,
+          parameters: typeof poolKey.parameters === 'string' ? poolKey.parameters : '0x',
         },
         sqrtPriceX96,
         currentTick: tick,
@@ -1210,7 +1132,7 @@ export class ConcentratedLiquidityService {
   public async getPositionInfo(
     tokenId: bigint,
     publicClient: PublicClient<HttpTransport>,
-  ): Promise<ConcentratedLiquidityPositionInfo> {
+  ): Promise<ClPositionInfo> {
     // Read position data from the position manager using PancakeSwap SDK ABI
     const positionData = await publicClient.readContract({
       address: this.config.clPositionManager,
@@ -1230,7 +1152,7 @@ export class ConcentratedLiquidityService {
       feeGrowthInside0LastX128,
       feeGrowthInside1LastX128,
       subscriber,
-    ] = positionData as unknown as [EncodedPoolKey, number, number, bigint, bigint, bigint, Address];
+    ] = positionData;
     const poolKey = decodePoolKey(encodedPoolKey, 'CL');
 
     // Get pool data to get current tick and token decimals
@@ -1263,7 +1185,7 @@ export class ConcentratedLiquidityService {
       args: [poolId],
     });
 
-    const [feeGrowthGlobal0X128, feeGrowthGlobal1X128] = feeGrowthGlobals as [bigint, bigint];
+    const [feeGrowthGlobal0X128, feeGrowthGlobal1X128] = feeGrowthGlobals;
 
     // Get tick info for lower and upper ticks
     const [tickLowerInfo, tickUpperInfo] = await Promise.all([
@@ -1281,25 +1203,10 @@ export class ConcentratedLiquidityService {
       }),
     ]);
 
-    // Extract feeGrowthOutside values from tick info
-    // TickInfo structure: { liquidityGross, liquidityNet, feeGrowthOutside0X128, feeGrowthOutside1X128 }
-    const tickLowerData = tickLowerInfo as {
-      liquidityGross: bigint;
-      liquidityNet: bigint;
-      feeGrowthOutside0X128: bigint;
-      feeGrowthOutside1X128: bigint;
-    };
-    const tickUpperData = tickUpperInfo as {
-      liquidityGross: bigint;
-      liquidityNet: bigint;
-      feeGrowthOutside0X128: bigint;
-      feeGrowthOutside1X128: bigint;
-    };
-
-    const feeGrowthOutside0X128Lower = tickLowerData.feeGrowthOutside0X128;
-    const feeGrowthOutside1X128Lower = tickLowerData.feeGrowthOutside1X128;
-    const feeGrowthOutside0X128Upper = tickUpperData.feeGrowthOutside0X128;
-    const feeGrowthOutside1X128Upper = tickUpperData.feeGrowthOutside1X128;
+    const feeGrowthOutside0X128Lower = tickLowerInfo.feeGrowthOutside0X128;
+    const feeGrowthOutside1X128Lower = tickLowerInfo.feeGrowthOutside1X128;
+    const feeGrowthOutside0X128Upper = tickUpperInfo.feeGrowthOutside0X128;
+    const feeGrowthOutside1X128Upper = tickUpperInfo.feeGrowthOutside1X128;
 
     // Calculate fee growth inside the position's tick range
     // If current tick is below the position, all fee growth is "above"
@@ -1371,5 +1278,147 @@ export class ConcentratedLiquidityService {
       ...(unclaimedFees0Underlying !== undefined && { unclaimedFees0Underlying }),
       ...(unclaimedFees1Underlying !== undefined && { unclaimedFees1Underlying }),
     };
+  }
+
+  /**
+   * Helper: Calculate liquidity from token amounts
+   * @param amount0 - Amount of token0
+   * @param amount1 - Amount of token1
+   * @param tickLower - Lower tick
+   * @param tickUpper - Upper tick
+   * @param currentTick - Current pool tick
+   * @returns The liquidity value
+   */
+  public static calculateLiquidityFromAmounts(
+    amount0: bigint,
+    amount1: bigint,
+    tickLower: bigint,
+    tickUpper: bigint,
+    currentTick: bigint,
+  ): bigint {
+    const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
+    const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
+    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
+    if (amount0 === 0n) {
+      return maxLiquidityForAmount0Precise(sqrtRatioX96Lower, sqrtRatioX96Upper, amount0);
+    }
+    if (amount1 === 0n) {
+      return maxLiquidityForAmount1(sqrtRatioX96Lower, sqrtRatioX96Upper, amount1);
+    }
+    return maxLiquidityForAmounts(sqrtRatioX96Current, sqrtRatioX96Lower, sqrtRatioX96Upper, amount0, amount1, true);
+  }
+
+  /**
+   * Helper: Calculate token1 amount needed given token0 amount and price range
+   * @param amount0 - Amount of token0
+   * @param tickLower - Lower tick
+   * @param tickUpper - Upper tick
+   * @param currentTick - Current pool tick
+   * @returns The required amount of token1
+   */
+  public static calculateAmount1FromAmount0(
+    amount0: bigint,
+    tickLower: bigint,
+    tickUpper: bigint,
+    currentTick: bigint,
+  ): bigint {
+    if (amount0 === 0n) return 0n;
+
+    const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
+    const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
+    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
+
+    // Calculate liquidity using only amount0 (use a very large value for amount1 to not constrain)
+    const liquidity = maxLiquidityForAmounts(
+      sqrtRatioX96Current,
+      sqrtRatioX96Lower,
+      sqrtRatioX96Upper,
+      amount0,
+      BigInt('0xffffffffffffffffffffffffffffffff'), // max uint128
+      true,
+    );
+
+    // Calculate amount1 from liquidity using PositionMath
+    const amount1 = PositionMath.getToken1Amount(
+      Number(currentTick),
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtRatioX96Current,
+      liquidity,
+    );
+
+    return amount1;
+  }
+
+  /**
+   * Helper: Calculate token0 amount needed given token1 amount and price range
+   * @param amount1 - Amount of token1
+   * @param tickLower - Lower tick
+   * @param tickUpper - Upper tick
+   * @param currentTick - Current pool tick
+   * @returns The required amount of token0
+   */
+  public static calculateAmount0FromAmount1(
+    amount1: bigint,
+    tickLower: bigint,
+    tickUpper: bigint,
+    currentTick: bigint,
+  ): bigint {
+    if (amount1 === 0n) return 0n;
+
+    const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
+    const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
+    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
+
+    // Calculate liquidity using only amount1 (use a very large value for amount0 to not constrain)
+    const liquidity = maxLiquidityForAmounts(
+      sqrtRatioX96Current,
+      sqrtRatioX96Lower,
+      sqrtRatioX96Upper,
+      BigInt('0xffffffffffffffffffffffffffffffff'), // max uint128
+      amount1,
+      true,
+    );
+
+    // Calculate amount0 from liquidity using PositionMath
+    const amount0 = PositionMath.getToken0Amount(
+      Number(currentTick),
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtRatioX96Current,
+      liquidity,
+    );
+
+    return amount0;
+  }
+
+  /**
+   * Helper: Convert price to nearest valid tick
+   * @param price - The price as a number
+   * @param token0 - The base token
+   * @param token1 - The quote token
+   * @param tickSpacing - The tick spacing for the pool
+   * @returns The nearest valid tick
+   */
+  public static priceToTick(price: number, token0: Token, token1: Token, tickSpacing: number): bigint {
+    // Convert price to Price object
+    const priceObj = new Price(
+      token0,
+      token1,
+      BigInt(10 ** token0.decimals),
+      BigInt(Math.floor(price * 10 ** token1.decimals)),
+    );
+
+    // Calculate tick from sqrtPriceX96
+    const sqrtRatioX96 =
+      (BigInt(priceObj.numerator.toString()) * BigInt(2) ** BigInt(96)) / BigInt(priceObj.denominator.toString());
+
+    // Calculate tick: tick = log1.0001(price) = log(price) / log(1.0001)
+    const tick = Math.floor(Math.log(Number(sqrtRatioX96) / 2 ** 96) / Math.log(1.0001));
+
+    // Round to nearest valid tick based on tickSpacing
+    const roundedTick = Math.round(tick / tickSpacing) * tickSpacing;
+
+    return BigInt(roundedTick);
   }
 }

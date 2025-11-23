@@ -1,0 +1,663 @@
+// apps/demo/src/components/dex/ManageLiquidity.tsx
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2 } from 'lucide-react';
+import type { ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
+import type { XAccount } from '@sodax/wallet-sdk-react';
+
+interface ManageLiquidityProps {
+  poolData: PoolData | null;
+  xAccount: XAccount | null;
+  spokeProvider: SpokeProvider | null;
+  pools: PoolKey[];
+  selectedPoolIndex: number;
+  // Form state
+  token0Amount: string;
+  token1Amount: string;
+  token0Balance: bigint;
+  token1Balance: bigint;
+  minPrice: string;
+  maxPrice: string;
+  liquidityToken0Amount: string;
+  liquidityToken1Amount: string;
+  slippageTolerance: string;
+  positionId: string;
+  positionInfo: ClPositionInfo | null;
+  isValidPosition: boolean;
+  loading: boolean;
+  // Handlers
+  onToken0AmountChange: (value: string) => void;
+  onToken1AmountChange: (value: string) => void;
+  onLiquidityToken0AmountChange: (value: string) => void;
+  onLiquidityToken1AmountChange: (value: string) => void;
+  onMinPriceChange: (value: string) => void;
+  onMaxPriceChange: (value: string) => void;
+  onSlippageToleranceChange: (value: string) => void;
+  onPositionIdChange: (value: string) => void;
+  onClearPosition: () => void;
+  onDeposit: (tokenIndex: 0 | 1) => Promise<void>;
+  onWithdraw: (tokenIndex: 0 | 1) => Promise<void>;
+  onSupplyLiquidity: () => Promise<void>;
+  onDecreaseLiquidity: () => Promise<void>;
+  onBurnPosition: () => Promise<void>;
+  // Helper functions
+  formatAmount: (amount: bigint, decimals: number) => string;
+  calculateUnderlyingAmount: (wrappedAmount: bigint, conversionRate: bigint, decimals: number) => string;
+}
+
+export function ManageLiquidity({
+  poolData,
+  xAccount,
+  spokeProvider,
+  pools,
+  selectedPoolIndex,
+  token0Amount,
+  token1Amount,
+  token0Balance,
+  token1Balance,
+  minPrice,
+  maxPrice,
+  liquidityToken0Amount,
+  liquidityToken1Amount,
+  slippageTolerance,
+  positionId,
+  positionInfo,
+  isValidPosition,
+  loading,
+  onToken0AmountChange,
+  onToken1AmountChange,
+  onLiquidityToken0AmountChange,
+  onLiquidityToken1AmountChange,
+  onMinPriceChange,
+  onMaxPriceChange,
+  onSlippageToleranceChange,
+  onPositionIdChange,
+  onClearPosition,
+  onDeposit,
+  onWithdraw,
+  onSupplyLiquidity,
+  onDecreaseLiquidity,
+  onBurnPosition,
+  formatAmount,
+  calculateUnderlyingAmount,
+}: ManageLiquidityProps): JSX.Element | null {
+  if (!poolData || !xAccount?.address) {
+    return null;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Manage Liquidity</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="deposit" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="deposit">Deposit</TabsTrigger>
+            <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="deposit" className="space-y-4">
+            {/* Token 0 Deposit */}
+            <div className="space-y-2">
+              <Label htmlFor="token0-deposit">{poolData.token0.symbol}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="token0-deposit"
+                  type="number"
+                  placeholder="0.0"
+                  value={token0Amount}
+                  onChange={e => onToken0AmountChange(e.target.value)}
+                  className="flex-1"
+                />
+                <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
+                  {poolData.token0.symbol}
+                </span>
+              </div>
+              <div className="text-xs space-y-1">
+                <p className="text-muted-foreground">
+                  Balance: {formatAmount(token0Balance, poolData.token0.decimals)} {poolData.token0.symbol}
+                </p>
+                {poolData.token0IsStatAToken &&
+                  poolData.token0ConversionRate &&
+                  poolData.token0UnderlyingToken &&
+                  token0Balance > 0n && (
+                    <p className="text-blue-600 dark:text-blue-400">
+                      ≈{' '}
+                      {calculateUnderlyingAmount(
+                        token0Balance,
+                        poolData.token0ConversionRate,
+                        poolData.token0UnderlyingToken.decimals,
+                      )}{' '}
+                      {poolData.token0UnderlyingToken.symbol} (underlying)
+                    </p>
+                  )}
+              </div>
+              <Button onClick={() => onDeposit(0)} disabled={loading || !token0Amount} className="w-full">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Deposit {poolData.token0.symbol}
+              </Button>
+            </div>
+
+            {/* Token 1 Deposit */}
+            <div className="space-y-2">
+              <Label htmlFor="token1-deposit">{poolData.token1.symbol}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="token1-deposit"
+                  type="number"
+                  placeholder="0.0"
+                  value={token1Amount}
+                  onChange={e => onToken1AmountChange(e.target.value)}
+                  className="flex-1"
+                />
+                <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
+                  {poolData.token1.symbol}
+                </span>
+              </div>
+              <div className="text-xs space-y-1">
+                <p className="text-muted-foreground">
+                  Balance: {formatAmount(token1Balance, poolData.token1.decimals)} {poolData.token1.symbol}
+                </p>
+                {poolData.token1IsStatAToken &&
+                  poolData.token1ConversionRate &&
+                  poolData.token1UnderlyingToken &&
+                  token1Balance > 0n && (
+                    <p className="text-blue-600 dark:text-blue-400">
+                      ≈{' '}
+                      {calculateUnderlyingAmount(
+                        token1Balance,
+                        poolData.token1ConversionRate,
+                        poolData.token1UnderlyingToken.decimals,
+                      )}{' '}
+                      {poolData.token1UnderlyingToken.symbol} (underlying)
+                    </p>
+                  )}
+              </div>
+              <Button onClick={() => onDeposit(1)} disabled={loading || !token1Amount} className="w-full">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Deposit {poolData.token1.symbol}
+              </Button>
+            </div>
+
+            {/* Supply Liquidity Section */}
+            <Card className="bg-primary/5 border-primary/20">
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  {positionId && isValidPosition ? 'Manage Position' : 'Supply Liquidity to Pool'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Position ID Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="position-id" className="text-sm font-medium">
+                    Position ID (Optional)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="position-id"
+                      type="text"
+                      placeholder="Enter position ID to increase/decrease liquidity"
+                      value={positionId}
+                      onChange={e => onPositionIdChange(e.target.value)}
+                    />
+                    {positionId && (
+                      <Button type="button" variant="outline" size="sm" onClick={onClearPosition}>
+                        Clear
+                      </Button>
+                    )}
+                  </div>
+                  {isValidPosition && positionInfo && (
+                    <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+                      <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
+                        ✓ Valid Position Found
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div className="space-y-1">
+                          <div>
+                            <span className="text-muted-foreground">Current {poolData.token0.symbol}:</span>
+                            <span className="ml-1 font-mono">
+                              {formatAmount(positionInfo.amount0, poolData.token0.decimals)}
+                            </span>
+                          </div>
+                          {positionInfo.amount0Underlying &&
+                            poolData.token0IsStatAToken &&
+                            poolData.token0UnderlyingToken && (
+                              <div className="text-blue-600 dark:text-blue-400 pl-2">
+                                <span className="text-muted-foreground">≈</span>
+                                <span className="ml-1 font-mono">
+                                  {formatAmount(
+                                    positionInfo.amount0Underlying,
+                                    poolData.token0UnderlyingToken.decimals,
+                                  )}
+                                </span>
+                                <span className="ml-1">{poolData.token0UnderlyingToken.symbol}</span>
+                              </div>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                          <div>
+                            <span className="text-muted-foreground">Current {poolData.token1.symbol}:</span>
+                            <span className="ml-1 font-mono">
+                              {formatAmount(positionInfo.amount1, poolData.token1.decimals)}
+                            </span>
+                          </div>
+                          {positionInfo.amount1Underlying &&
+                            poolData.token1IsStatAToken &&
+                            poolData.token1UnderlyingToken && (
+                              <div className="text-blue-600 dark:text-blue-400 pl-2">
+                                <span className="text-muted-foreground">≈</span>
+                                <span className="ml-1 font-mono">
+                                  {formatAmount(
+                                    positionInfo.amount1Underlying,
+                                    poolData.token1UnderlyingToken.decimals,
+                                  )}
+                                </span>
+                                <span className="ml-1">{poolData.token1UnderlyingToken.symbol}</span>
+                              </div>
+                            )}
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-muted-foreground">Liquidity:</span>
+                          <span className="ml-1 font-mono">{positionInfo.liquidity.toString()}</span>
+                        </div>
+                        <div className="col-span-2 pt-2 border-t border-green-200 dark:border-green-800">
+                          <p className="font-medium text-green-800 dark:text-green-200 mb-1">💰 Unclaimed Fees</p>
+                        </div>
+                        <div className="space-y-1">
+                          <div>
+                            <span className="text-muted-foreground">Fees {poolData.token0.symbol}:</span>
+                            <span className="ml-1 font-mono font-semibold text-green-700 dark:text-green-300">
+                              {formatAmount(positionInfo.unclaimedFees0, poolData.token0.decimals)}
+                            </span>
+                          </div>
+                          {positionInfo.unclaimedFees0Underlying &&
+                            poolData.token0IsStatAToken &&
+                            poolData.token0UnderlyingToken && (
+                              <div className="text-blue-600 dark:text-blue-400 pl-2">
+                                <span className="text-muted-foreground">≈</span>
+                                <span className="ml-1 font-mono">
+                                  {formatAmount(
+                                    positionInfo.unclaimedFees0Underlying,
+                                    poolData.token0UnderlyingToken.decimals,
+                                  )}
+                                </span>
+                                <span className="ml-1">{poolData.token0UnderlyingToken.symbol}</span>
+                              </div>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                          <div>
+                            <span className="text-muted-foreground">Fees {poolData.token1.symbol}:</span>
+                            <span className="ml-1 font-mono font-semibold text-green-700 dark:text-green-300">
+                              {formatAmount(positionInfo.unclaimedFees1, poolData.token1.decimals)}
+                            </span>
+                          </div>
+                          {positionInfo.unclaimedFees1Underlying &&
+                            poolData.token1IsStatAToken &&
+                            poolData.token1UnderlyingToken && (
+                              <div className="text-blue-600 dark:text-blue-400 pl-2">
+                                <span className="text-muted-foreground">≈</span>
+                                <span className="ml-1 font-mono">
+                                  {formatAmount(
+                                    positionInfo.unclaimedFees1Underlying,
+                                    poolData.token1UnderlyingToken.decimals,
+                                  )}
+                                </span>
+                                <span className="ml-1">{poolData.token1UnderlyingToken.symbol}</span>
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {positionId && !isValidPosition && (
+                    <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                      Enter a position ID to increase liquidity or leave empty to create new position
+                    </p>
+                  )}
+                </div>
+
+                {/* Price Range */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Price Range</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="min-price" className="text-xs text-muted-foreground">
+                        Min Price
+                      </Label>
+                      <Input
+                        id="min-price"
+                        type="number"
+                        placeholder="0.0"
+                        value={minPrice}
+                        onChange={e => onMinPriceChange(e.target.value)}
+                        step="0.000001"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="max-price" className="text-xs text-muted-foreground">
+                        Max Price
+                      </Label>
+                      <Input
+                        id="max-price"
+                        type="number"
+                        placeholder="0.0"
+                        value={maxPrice}
+                        onChange={e => onMaxPriceChange(e.target.value)}
+                        step="0.000001"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Current price: {poolData.price ? Number(poolData.price.toSignificant(6)) : 'N/A'}{' '}
+                    {poolData.token1.symbol}/{poolData.token0.symbol}
+                  </p>
+                </div>
+
+                {/* Token Amounts */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Token Amounts</Label>
+                  <div className="space-y-2">
+                    <div>
+                      <Label htmlFor="liquidity-token0" className="text-xs text-muted-foreground">
+                        {poolData.token0.symbol} Amount
+                      </Label>
+                      <Input
+                        id="liquidity-token0"
+                        type="number"
+                        placeholder="0.0"
+                        value={liquidityToken0Amount}
+                        onChange={e => onLiquidityToken0AmountChange(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Auto-calculates {poolData.token1.symbol} amount based on price range
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="liquidity-token1" className="text-xs text-muted-foreground">
+                        {poolData.token1.symbol} Amount
+                      </Label>
+                      <Input
+                        id="liquidity-token1"
+                        type="number"
+                        placeholder="0.0"
+                        value={liquidityToken1Amount}
+                        onChange={e => onLiquidityToken1AmountChange(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Auto-calculates {poolData.token0.symbol} amount based on price range
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Slippage Tolerance */}
+                <div className="space-y-2">
+                  <Label htmlFor="slippage" className="text-sm font-medium">
+                    Slippage Tolerance
+                  </Label>
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      id="slippage"
+                      type="number"
+                      placeholder="0.5"
+                      value={slippageTolerance}
+                      onChange={e => onSlippageToleranceChange(e.target.value)}
+                      step="0.1"
+                      min="0"
+                      max="50"
+                      className="w-24"
+                    />
+                    <span className="text-sm text-muted-foreground">%</span>
+                    <div className="flex gap-1 ml-auto">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSlippageToleranceChange('0.1')}
+                        className="h-7 text-xs"
+                      >
+                        0.1%
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSlippageToleranceChange('0.5')}
+                        className="h-7 text-xs"
+                      >
+                        0.5%
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onSlippageToleranceChange('1')}
+                        className="h-7 text-xs"
+                      >
+                        1%
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Reduces liquidity calculation to protect against price changes. Your full token balance is used as
+                    the maximum.
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-2">
+                  <Button
+                    onClick={onSupplyLiquidity}
+                    disabled={loading || !minPrice || !maxPrice || !liquidityToken0Amount || !liquidityToken1Amount}
+                    className="w-full"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                    {positionId && isValidPosition ? 'Increase Liquidity' : 'Supply Liquidity (New Position)'}
+                  </Button>
+
+                  {positionId && isValidPosition && (
+                    <>
+                      <div className="space-y-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                        <Label htmlFor="decrease-percentage" className="text-sm font-medium">
+                          Decrease Liquidity (%)
+                        </Label>
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            id="decrease-percentage"
+                            type="number"
+                            placeholder="Enter % to remove (e.g., 50 for 50%)"
+                            value={liquidityToken0Amount}
+                            onChange={e => {
+                              onLiquidityToken0AmountChange(e.target.value);
+                              onLiquidityToken1AmountChange('');
+                            }}
+                            min="0"
+                            max="100"
+                            step="1"
+                          />
+                          <span className="text-sm text-muted-foreground">%</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Enter percentage of position to remove (100 = all liquidity)
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          onClick={onDecreaseLiquidity}
+                          disabled={loading || !liquidityToken0Amount}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                          Decrease Liquidity
+                        </Button>
+                        <Button
+                          onClick={onBurnPosition}
+                          disabled={loading || !positionInfo}
+                          variant="destructive"
+                          className="w-full"
+                          title="Remove all liquidity and burn this position NFT"
+                        >
+                          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                          Burn Position
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  {positionId && isValidPosition && positionInfo && positionInfo.liquidity > 0n && (
+                    <div className="text-xs text-blue-600 dark:text-blue-400 text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800 space-y-1">
+                      <p className="font-medium">ℹ️ Burn will automatically remove liquidity</p>
+                      <div className="mt-1">
+                        <p>
+                          Will withdraw: {formatAmount(positionInfo.amount0, poolData.token0.decimals)}{' '}
+                          {poolData.token0.symbol} + {formatAmount(positionInfo.amount1, poolData.token1.decimals)}{' '}
+                          {poolData.token1.symbol}
+                        </p>
+                        {(positionInfo.amount0Underlying || positionInfo.amount1Underlying) && (
+                          <p className="text-xs mt-1">
+                            {positionInfo.amount0Underlying &&
+                              poolData.token0IsStatAToken &&
+                              poolData.token0UnderlyingToken && (
+                                <>
+                                  ≈{' '}
+                                  {formatAmount(
+                                    positionInfo.amount0Underlying,
+                                    poolData.token0UnderlyingToken.decimals,
+                                  )}{' '}
+                                  {poolData.token0UnderlyingToken.symbol}
+                                </>
+                              )}
+                            {positionInfo.amount0Underlying &&
+                              positionInfo.amount1Underlying &&
+                              poolData.token0IsStatAToken &&
+                              poolData.token1IsStatAToken &&
+                              ' + '}
+                            {positionInfo.amount1Underlying &&
+                              poolData.token1IsStatAToken &&
+                              poolData.token1UnderlyingToken && (
+                                <>
+                                  {formatAmount(
+                                    positionInfo.amount1Underlying,
+                                    poolData.token1UnderlyingToken.decimals,
+                                  )}{' '}
+                                  {poolData.token1UnderlyingToken.symbol}
+                                </>
+                              )}{' '}
+                            (underlying)
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="withdraw" className="space-y-4">
+            {/* Token 0 Withdraw */}
+            <div className="space-y-2">
+              <Label htmlFor="token0-withdraw">{poolData.token0.symbol}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="token0-withdraw"
+                  type="number"
+                  placeholder="0.0"
+                  value={token0Amount}
+                  onChange={e => onToken0AmountChange(e.target.value)}
+                  className="flex-1"
+                />
+                <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
+                  {poolData.token0.symbol}
+                </span>
+              </div>
+              <div className="text-xs space-y-1">
+                <p className="text-muted-foreground">
+                  Balance: {formatAmount(token0Balance, poolData.token0.decimals)} {poolData.token0.symbol}
+                </p>
+                {poolData.token0IsStatAToken &&
+                  poolData.token0ConversionRate &&
+                  poolData.token0UnderlyingToken &&
+                  token0Balance > 0n && (
+                    <p className="text-blue-600 dark:text-blue-400">
+                      ≈{' '}
+                      {calculateUnderlyingAmount(
+                        token0Balance,
+                        poolData.token0ConversionRate,
+                        poolData.token0UnderlyingToken.decimals,
+                      )}{' '}
+                      {poolData.token0UnderlyingToken.symbol} (underlying)
+                    </p>
+                  )}
+              </div>
+              <Button
+                onClick={() => onWithdraw(0)}
+                disabled={loading || !token0Amount}
+                variant="destructive"
+                className="w-full"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Withdraw {poolData.token0.symbol}
+              </Button>
+            </div>
+
+            {/* Token 1 Withdraw */}
+            <div className="space-y-2">
+              <Label htmlFor="token1-withdraw">{poolData.token1.symbol}</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="token1-withdraw"
+                  type="number"
+                  placeholder="0.0"
+                  value={token1Amount}
+                  onChange={e => onToken1AmountChange(e.target.value)}
+                  className="flex-1"
+                />
+                <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
+                  {poolData.token1.symbol}
+                </span>
+              </div>
+              <div className="text-xs space-y-1">
+                <p className="text-muted-foreground">
+                  Balance: {formatAmount(token1Balance, poolData.token1.decimals)} {poolData.token1.symbol}
+                </p>
+                {poolData.token1IsStatAToken &&
+                  poolData.token1ConversionRate &&
+                  poolData.token1UnderlyingToken &&
+                  token1Balance > 0n && (
+                    <p className="text-blue-600 dark:text-blue-400">
+                      ≈{' '}
+                      {calculateUnderlyingAmount(
+                        token1Balance,
+                        poolData.token1ConversionRate,
+                        poolData.token1UnderlyingToken.decimals,
+                      )}{' '}
+                      {poolData.token1UnderlyingToken.symbol} (underlying)
+                    </p>
+                  )}
+              </div>
+              <Button
+                onClick={() => onWithdraw(1)}
+                disabled={loading || !token1Amount}
+                variant="destructive"
+                className="w-full"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Withdraw {poolData.token1.symbol}
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}
+

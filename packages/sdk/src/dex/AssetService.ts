@@ -408,28 +408,35 @@ export class AssetService {
         return txResult as Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
-        spokeProvider,
-        this.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider,
+          this.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
-            } as GetAssetServiceError<'SUBMIT_TX_FAILED'>,
-          },
-        };
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              } as GetAssetServiceError<'SUBMIT_TX_FAILED'>,
+            },
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       return {
         ok: false,
@@ -478,28 +485,35 @@ export class AssetService {
         return txResult as Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>;
       }
 
-      const packetResult = await relayTxAndWaitPacket(
-        txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
-        spokeProvider,
-        this.relayerApiEndpoint,
-        timeout,
-      );
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider,
+          this.relayerApiEndpoint,
+          timeout,
+        );
 
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            data: {
-              error: packetResult.error,
-              payload: txResult.value,
-            } as GetAssetServiceError<'SUBMIT_TX_FAILED'>,
-          },
-        };
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              } as GetAssetServiceError<'SUBMIT_TX_FAILED'>,
+            },
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
+      return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
       return {
         ok: false,
