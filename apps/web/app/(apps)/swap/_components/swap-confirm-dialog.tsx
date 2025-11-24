@@ -94,7 +94,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   useEffect(() => {
     const getFilledIntent = async () => {
       if (status?.ok) {
-        const filledIntent = await sodax.swap.getFilledIntent(status.value.fill_tx_hash as `0x${string}`);
+        const filledIntent = await sodax.swaps.getFilledIntent(status.value.fill_tx_hash as `0x${string}`);
         setFilledIntent(filledIntent);
       }
     };
