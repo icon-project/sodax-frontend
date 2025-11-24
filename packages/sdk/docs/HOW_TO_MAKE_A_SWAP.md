@@ -101,11 +101,11 @@ Before creating a swap, you may want to check which tokens are supported for swa
 
 ```typescript
 // Get all supported swap tokens for a specific chain
-const supportedTokens = sodax.swap.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
+const supportedTokens = sodax.swaps.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
 console.log('Supported tokens on Arbitrum:', supportedTokens);
 
 // Get all supported swap tokens across all chains
-const allSupportedTokens = sodax.swap.getSupportedSwapTokens();
+const allSupportedTokens = sodax.swaps.getSupportedSwapTokens();
 console.log('All supported tokens:', allSupportedTokens);
 
 // Each token object contains address, decimals, symbol, etc.
@@ -146,7 +146,7 @@ const quoteRequest = {
   quote_type: 'exact_input', // or 'exact_output'
 } satisfies SolverIntentQuoteRequest;
 
-const quoteResult = await sodax.swap.getQuote(quoteRequest);
+const quoteResult = await sodax.swaps.getQuote(quoteRequest);
 
 if (!quoteResult.ok) {
   console.error('Failed to get quote:', quoteResult.error);
@@ -173,7 +173,7 @@ const createIntentParams: CreateIntentParams = {
   outputToken: polygonPolToken,
   inputAmount: inputAmount,
   minOutputAmount: 900000n, // Minimum output you're willing to accept
-  deadline: 0n, // 0 = no deadline, or use sodax.swap.getSwapDeadline() for a deadline
+  deadline: 0n, // 0 = no deadline, or use sodax.swaps.getSwapDeadline() for a deadline
   allowPartialFill: false,
   srcChain: ARBITRUM_MAINNET_CHAIN_ID,
   dstChain: POLYGON_MAINNET_CHAIN_ID,
@@ -184,7 +184,7 @@ const createIntentParams: CreateIntentParams = {
 };
 
 // Check if approval is needed
-const allowanceResult = await sodax.swap.isAllowanceValid({
+const allowanceResult = await sodax.swaps.isAllowanceValid({
   intentParams: createIntentParams,
   spokeProvider: arbSpokeProvider,
 });
@@ -211,7 +211,7 @@ If the allowance check returned `false`, you need to approve the Asset Manager c
 if (!allowanceResult.value) {
   console.log('Approving tokens...');
   
-  const approveResult = await sodax.swap.approve({
+  const approveResult = await sodax.swaps.approve({
     intentParams: createIntentParams,
     spokeProvider: arbSpokeProvider,
   });
@@ -249,7 +249,7 @@ Now that you have approval (if needed), prepare the complete intent parameters. 
 const walletAddress = await evmWalletProvider.getWalletAddress();
 
 // Optionally get a deadline (5 minutes from now by default)
-const deadline = await sodax.swap.getSwapDeadline(); // or use 0n for no deadline
+const deadline = await sodax.swaps.getSwapDeadline(); // or use 0n for no deadline
 
 // Prepare complete intent parameters
 const createIntentParams: CreateIntentParams = {
@@ -280,7 +280,7 @@ Now you're ready to execute the swap. The `swap` method handles all steps automa
 4. Posts the hub chain transaction hash to the Solver API
 
 ```typescript
-const swapResult = await sodax.swap.swap({
+const swapResult = await sodax.swaps.swap({
   intentParams: createIntentParams,
   spokeProvider: arbSpokeProvider,
   // Optional parameters:
@@ -338,7 +338,7 @@ async function checkIntentStatus(
 
   while (attempt < maxAttempts) {
     attempt++;
-    const statusResult = await sodax.swap.getStatus(statusRequest);
+    const statusResult = await sodax.swaps.getStatus(statusRequest);
 
     if (!statusResult.ok) {
       console.error(`[Attempt ${attempt}] Failed to check intent status:`, statusResult.error);
@@ -494,7 +494,7 @@ if (!swapResult.ok) {
     //   successful re-submission is made
     
     // You can manually retry submission:
-    // const retryResult = await sodax.swap.submitIntent({
+    // const retryResult = await sodax.swaps.submitIntent({
     //   action: 'submit',
     //   params: {
     //     chain_id: getIntentRelayChainId(createIntentParams.srcChain).toString(),
@@ -591,7 +591,7 @@ async function executeSwap(
       quote_type: 'exact_input',
     };
 
-    const quoteResult = await sodax.swap.getQuote(quoteRequest);
+    const quoteResult = await sodax.swaps.getQuote(quoteRequest);
     if (!quoteResult.ok) {
       console.error('Failed to get quote:', quoteResult.error);
       return;
@@ -605,7 +605,7 @@ async function executeSwap(
     const walletAddress = await evmWalletProvider.getWalletAddress();
     // Five minutes in seconds (300 seconds)
     const fiveMinutesInSeconds = 300n;
-    const deadline = await sodax.swap.getSwapDeadline(fiveMinutesInSeconds);
+    const deadline = await sodax.swaps.getSwapDeadline(fiveMinutesInSeconds);
 
     const createIntentParams: CreateIntentParams = {
       inputToken: arbEthToken,
@@ -622,7 +622,7 @@ async function executeSwap(
       data: '0x',
     };
 
-    const allowanceResult = await sodax.swap.isAllowanceValid({
+    const allowanceResult = await sodax.swaps.isAllowanceValid({
       intentParams: createIntentParams,
       spokeProvider: arbSpokeProvider,
     });
@@ -635,7 +635,7 @@ async function executeSwap(
     // Step 5: Approve if Needed
     if (!allowanceResult.value) {
       console.log('Step 5: Approving tokens...');
-      const approveResult = await sodax.swap.approve({
+      const approveResult = await sodax.swaps.approve({
         intentParams: createIntentParams,
         spokeProvider: arbSpokeProvider,
       });
@@ -657,7 +657,7 @@ async function executeSwap(
 
     // Step 6: Execute Swap
     console.log('Step 6: Executing swap...');
-    const swapResult = await sodax.swap.swap({
+    const swapResult = await sodax.swaps.swap({
       intentParams: createIntentParams,
       spokeProvider: arbSpokeProvider,
     });
@@ -725,7 +725,7 @@ async function checkIntentStatus(
 
   while (attempt < maxAttempts) {
     attempt++;
-    const statusResult = await sodax.swap.getStatus(statusRequest);
+    const statusResult = await sodax.swaps.getStatus(statusRequest);
 
     if (!statusResult.ok) {
       console.error(`[Attempt ${attempt}] Failed to check intent status:`, statusResult.error);

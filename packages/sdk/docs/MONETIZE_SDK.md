@@ -64,7 +64,7 @@ import {
   type SolverIntentQuoteRequest,
 } from "@sodax/sdk";
 
-const result = await sodax.swap.getQuote({
+const result = await sodax.swaps.getQuote({
   token_src: '0x...', // The address of the source token on the spoke chain
   token_dst: '0x...', // The address of the destination token on the spoke chain
   token_src_blockchain_id: BSC_MAINNET_CHAIN_ID,  // Source chain ID (e.g. Binance Smart Chain)
@@ -86,7 +86,7 @@ if (result.ok) {
 ### Swap request with fees
 
 ```typescript
-const swapResult = await sodax.swap.swap({
+const swapResult = await sodax.swaps.swap({
   intentParams: {
     inputToken: '0x...',  // The address of the input token on the spoke chain
     outputToken: '0x...', // The address of the output token on the spoke chain
