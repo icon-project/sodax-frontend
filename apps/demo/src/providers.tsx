@@ -25,7 +25,7 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   const sodaxConfig = useMemo(() => {
     return {
-      swap: isSolverProduction ? productionSolverConfig : stagingSolverConfig,
+      swaps: isSolverProduction ? productionSolverConfig : stagingSolverConfig,
     } satisfies SodaxConfig;
   }, [isSolverProduction]);
 

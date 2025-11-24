@@ -58,7 +58,7 @@ const hubConfig = {
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const sodax = new Sodax({
-  swap: solverConfig,
+  swaps: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
@@ -227,7 +227,7 @@ async function createIntent(amount: bigint, nativeToken: Address, inputToken: Ad
     data: '0x',
   } satisfies CreateIntentParams;
 
-  const txHash = await sodax.swap.createIntent({
+  const txHash = await sodax.swaps.createIntent({
     intentParams: intent,
     spokeProvider,
   });
@@ -359,9 +359,9 @@ async function fillIntent(
 
 // uses spoke assets to create intents
 async function cancelIntent(intentCreateTxHash: string) {
-  const intent = await sodax.swap.getIntent(intentCreateTxHash as Hash);
+  const intent = await sodax.swaps.getIntent(intentCreateTxHash as Hash);
 
-  const txResult = await sodax.swap.cancelIntent(intent, spokeProvider);
+  const txResult = await sodax.swaps.cancelIntent(intent, spokeProvider);
 
   if (txResult.ok) {
     console.log('[cancelIntent] txHash', txResult.value);
@@ -371,12 +371,12 @@ async function cancelIntent(intentCreateTxHash: string) {
 }
 
 async function getIntent(txHash: string) {
-  const intent = await sodax.swap.getIntent(txHash as Hash);
+  const intent = await sodax.swaps.getIntent(txHash as Hash);
   console.log(intent);
 }
 
 async function getIntentState(txHash: string) {
-  const intentState = await sodax.swap.getFilledIntent(txHash as Hash);
+  const intentState = await sodax.swaps.getFilledIntent(txHash as Hash);
   console.log(intentState);
 }
 

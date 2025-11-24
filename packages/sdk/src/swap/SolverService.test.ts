@@ -202,13 +202,13 @@ describe('SwapService', async () => {
 
     it('should return the correct supported swap tokens for a given spoke chain ID', () => {
       const supportedSwapTokensForChainId: readonly Token[] =
-        sodax.swap.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
+        sodax.swaps.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
       expect(Array.isArray(supportedSwapTokensForChainId)).toBe(true);
       expect(supportedSwapTokensForChainId.length).toBeGreaterThan(0);
     });
 
     it('should return the correct supported swap tokens for a given spoke chain ID', () => {
-      const supportedSwapTokensPerChain: Record<SpokeChainId, readonly Token[]> = sodax.swap.getSupportedSwapTokens();
+      const supportedSwapTokensPerChain: Record<SpokeChainId, readonly Token[]> = sodax.swaps.getSupportedSwapTokens();
       expect(supportedSwapTokensPerChain).toBeDefined();
       expect(Object.keys(supportedSwapTokensPerChain).length).toBeGreaterThan(0);
       expect(supportedSwapTokensPerChain[ARBITRUM_MAINNET_CHAIN_ID].length).toBeGreaterThan(0);
@@ -216,7 +216,7 @@ describe('SwapService', async () => {
 
     it('should check if token is swap supported', () => {
       const supportedSwapTokensForChainId: readonly Token[] =
-        sodax.swap.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
+        sodax.swaps.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
       const token = supportedSwapTokensForChainId[0];
       expect(token && isSwapSupportedToken(ARBITRUM_MAINNET_CHAIN_ID, token.address)).toBe(true);
     });
