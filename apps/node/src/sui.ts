@@ -43,7 +43,7 @@ const hubConfig = {
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const sodax = new Sodax({
-  swap: solverConfig,
+  swaps: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);

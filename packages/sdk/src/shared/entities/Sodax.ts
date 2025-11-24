@@ -14,7 +14,7 @@ import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 import { ConfigService } from '../config/index.js';
 
 export type SodaxConfig = {
-  swap?: SolverConfigParams; // optional Solver service enabling intent based swaps
+  swaps?: SolverConfigParams; // optional Solver service enabling intent based swaps
   moneyMarket?: MoneyMarketConfigParams; // optional Money Market service enabling cross-chain lending and borrowing
   migration?: MigrationServiceConfig; // optional Migration service enabling ICX migration to SODA
   bridge?: BridgeServiceConfig; // optional Bridge service enabling cross-chain transfers
@@ -31,7 +31,7 @@ export type SodaxConfig = {
 export class Sodax {
   public readonly instanceConfig?: SodaxConfig;
 
-  public readonly swap: SwapService; // Solver service enabling intent based swaps
+  public readonly swaps: SwapService; // Solver service enabling intent based swaps
   public readonly moneyMarket: MoneyMarketService; // Money Market service enabling cross-chain lending and borrowing
   public readonly migration: MigrationService; // ICX migration service enabling ICX migration to SODA
   public readonly backendApi: BackendApiService; // backend API service enabling backend API endpoints
@@ -54,10 +54,10 @@ export class Sodax {
       },
     });
     this.hubProvider = new EvmHubProvider({ config: config?.hubProviderConfig, configService: this.config }); // default to Sonic mainnet
-    this.swap =
-      config && config.swap
+    this.swaps =
+      config && config.swaps
         ? new SwapService({
-            config: config.swap,
+            config: config.swaps,
             configService: this.config,
             hubProvider: this.hubProvider,
             relayerApiEndpoint: this.relayerApiEndpoint,
