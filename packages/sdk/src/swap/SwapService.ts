@@ -666,7 +666,7 @@ export class SwapService {
    *   data: '0x', // Additional arbitrary data
    * } satisfies CreateIntentParams;
    *
-   * const isAllowanceValid = await sodax.swap.isAllowanceValid({
+   * const isAllowanceValid = await sodax.swaps.isAllowanceValid({
    *   intentParams: createIntentParams,
    *   spokeProvider: bscSpokeProvider,
    * });
@@ -750,7 +750,7 @@ export class SwapService {
    *   data: '0x', // Additional arbitrary data
    * } satisfies CreateIntentParams;
    *
-   * const approveResult = await sodax.swap.approve({
+   * const approveResult = await sodax.swaps.approve({
    *   intentParams: createIntentParams,
    *   spokeProvider: bscSpokeProvider,
    * });

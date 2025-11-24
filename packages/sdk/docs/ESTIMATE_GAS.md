@@ -16,7 +16,7 @@ import {
 } from "@sodax/sdk";
 
 // Example: Estimate gas for a solver swap transaction
-const createIntentResult = await sodax.swap.createIntent(
+const createIntentResult = await sodax.swaps.createIntent(
   createIntentParams,
   bscSpokeProvider,
   partnerFeeAmount,
@@ -57,7 +57,7 @@ if (supplyResult.ok) {
 }
 
 // Example: Estimate gas for an approval transaction
-const approveResult = await sodax.swap.approve(
+const approveResult = await sodax.swaps.approve(
   tokenAddress,
   amount,
   bscSpokeProvider,

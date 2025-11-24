@@ -60,7 +60,7 @@ const hubConfig = {
 } satisfies EvmHubProviderConfig;
 
 const sodax = new Sodax({
-  swap: solverConfig,
+  swaps: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
