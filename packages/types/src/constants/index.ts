@@ -24,7 +24,7 @@ import type {
   XToken,
 } from '../common/index.js';
 
-export const CONFIG_VERSION = 8; // Increment this when the config is updated
+export const CONFIG_VERSION = 9; // Increment this when the config is updated
 
 // chain ids (actual for evm chains), custom for other chains not having native ids
 export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
