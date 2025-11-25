@@ -24,7 +24,7 @@ import {
 } from '../index.js';
 import type { Address, HttpUrl, OriginalAssetAddress } from '@sodax/types';
 import type { EvmHubProvider } from '../shared/entities/Providers.js';
-import type { Prettify, OptionalTimeout, OptionalSkipSimulation, ClServiceConfig } from '../shared/types.js';
+import type { Prettify, OptionalTimeout, OptionalSkipSimulation, ClServiceConfig, RelayOptionalExtraData } from '../shared/types.js';
 import { erc20Abi, maxUint160, maxUint48 } from 'viem';
 import { Price, Token } from '@pancakeswap/swap-sdk-core';
 
@@ -370,7 +370,10 @@ export class ClService {
     spokeProvider: S,
     raw?: R,
     skipSimulation?: boolean,
-  ): Promise<Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED'>>> {
+  ): Promise<
+    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED'>> &
+      RelayOptionalExtraData
+  > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
@@ -416,7 +419,14 @@ export class ClService {
         skipSimulation,
       );
 
-      return { ok: true, value: txResult satisfies TxReturnType<S, R> };
+      return {
+        ok: true,
+        value: txResult satisfies TxReturnType<S, R>,
+        data: {
+          address: hubWallet,
+          payload: encodedCalls,
+        },
+      };
     } catch (error) {
       console.error('executeSupplyLiquidity error:', error);
       return {
@@ -437,7 +447,10 @@ export class ClService {
     spokeProvider: S,
     raw?: R,
     skipSimulation?: boolean,
-  ): Promise<Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'>>> {
+  ): Promise<
+    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'>> &
+      RelayOptionalExtraData
+  > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
@@ -470,15 +483,23 @@ export class ClService {
 
       // Execute the transaction
 
+      const data: Hex = encodeContractCalls(calls);
       const txResult = (await SpokeService.callWallet(
         hubWallet,
-        encodeContractCalls(calls),
+        data,
         spokeProvider,
         this.hubProvider,
         raw,
         skipSimulation,
       )) satisfies TxReturnType<S, R>;
-      return { ok: true, value: txResult satisfies TxReturnType<S, R> };
+      return {
+        ok: true,
+        value: txResult satisfies TxReturnType<S, R>,
+        data: {
+          address: hubWallet,
+          payload: encodeContractCalls(calls),
+        },
+      };
     } catch (error) {
       return {
         ok: false,
@@ -498,7 +519,10 @@ export class ClService {
     spokeProvider: S,
     raw?: R,
     skipSimulation?: boolean,
-  ): Promise<Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'>>> {
+  ): Promise<
+    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'>> &
+      RelayOptionalExtraData
+  > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
@@ -532,7 +556,14 @@ export class ClService {
         raw,
         skipSimulation,
       );
-      return { ok: true, value: txResult satisfies TxReturnType<S, R> };
+      return {
+        ok: true,
+        value: txResult satisfies TxReturnType<S, R>,
+        data: {
+          address: hubWallet,
+          payload: encodeContractCalls(calls),
+        },
+      };
     } catch (error) {
       return {
         ok: false,
@@ -555,7 +586,10 @@ export class ClService {
     spokeProvider: S,
     raw?: R,
     skipSimulation?: boolean,
-  ): Promise<Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_BURN_POSITION_INTENT_FAILED'>>> {
+  ): Promise<
+    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_BURN_POSITION_INTENT_FAILED'>> &
+      RelayOptionalExtraData
+  > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
@@ -585,15 +619,23 @@ export class ClService {
       calls.push(burnCall);
 
       // Execute the transaction
+      const data: Hex = encodeContractCalls(calls);
       const txResult = await SpokeService.callWallet(
         hubWallet,
-        encodeContractCalls(calls),
+        data,
         spokeProvider,
         this.hubProvider,
         raw,
         skipSimulation,
       );
-      return { ok: true, value: txResult satisfies TxReturnType<S, R> };
+      return {
+        ok: true,
+        value: txResult satisfies TxReturnType<S, R>,
+        data: {
+          address: hubWallet,
+          payload: data,
+        },
+      };
     } catch (error) {
       return {
         ok: false,
@@ -649,7 +691,7 @@ export class ClService {
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
           spokeProvider,
           this.relayerApiEndpoint,
           timeout,
@@ -714,7 +756,7 @@ export class ClService {
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
           spokeProvider,
           this.relayerApiEndpoint,
           timeout,
@@ -778,7 +820,7 @@ export class ClService {
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
           spokeProvider,
           this.relayerApiEndpoint,
           timeout,
@@ -842,7 +884,7 @@ export class ClService {
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? undefined : undefined,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
           spokeProvider,
           this.relayerApiEndpoint,
           timeout,
@@ -882,7 +924,7 @@ export class ClService {
   }
 
   public getPools(): PoolKey[] {
-    return this.configService.getDexPools()
+    return this.configService.getDexPools();
   }
 
   /**
@@ -1129,10 +1171,7 @@ export class ClService {
    * });
    * ```
    */
-  public async getPositionInfo(
-    tokenId: bigint,
-    publicClient: PublicClient<HttpTransport>,
-  ): Promise<ClPositionInfo> {
+  public async getPositionInfo(tokenId: bigint, publicClient: PublicClient<HttpTransport>): Promise<ClPositionInfo> {
     // Read position data from the position manager using PancakeSwap SDK ABI
     const positionData = await publicClient.readContract({
       address: this.config.clPositionManager,

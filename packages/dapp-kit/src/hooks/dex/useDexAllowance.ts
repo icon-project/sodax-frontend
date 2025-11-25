@@ -1,8 +1,7 @@
-// apps/demo/src/components/dex/hooks/useDexAllowance.ts
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { SpokeProvider, OriginalAssetAddress } from '@sodax/sdk';
 import type { Address } from 'viem';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface AllowanceParams {
   asset: OriginalAssetAddress;
@@ -37,20 +36,27 @@ export function useDexAllowance(
   const { sodax } = useSodaxContext();
 
   return useQuery({
-    queryKey: ['dex', 'allowance', params?.asset, params?.poolToken, params?.amount.toString(), spokeProvider?.chainConfig.chain.id],
+    queryKey: [
+      'dex',
+      'allowance',
+      params?.asset,
+      params?.poolToken,
+      params?.amount.toString(),
+      spokeProvider?.chainConfig.chain.id,
+    ],
     queryFn: async () => {
       if (!params || !spokeProvider) {
         throw new Error('Params and spoke provider are required');
       }
 
-      const allowanceResult = await sodax.dex.assetService.isAllowanceValid(
-        {
+      const allowanceResult = await sodax.dex.assetService.isAllowanceValid({
+        depositParams: {
           asset: params.asset,
           amount: params.amount,
           poolToken: params.poolToken,
         },
         spokeProvider,
-      );
+      });
 
       if (!allowanceResult.ok) {
         return false;
@@ -62,4 +68,3 @@ export function useDexAllowance(
     staleTime: 5000, // Consider data stale after 5 seconds
   });
 }
-

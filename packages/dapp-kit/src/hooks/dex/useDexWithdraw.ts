@@ -1,7 +1,6 @@
-// apps/demo/src/components/dex/hooks/useDexWithdraw.ts
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import type { ClPositionInfo, PoolData, PoolKey, SpokeProvider, OriginalAssetAddress } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import type { PoolData, PoolKey, SpokeProvider, OriginalAssetAddress } from '@sodax/sdk';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface WithdrawParams {
   tokenIndex: 0 | 1;
@@ -57,14 +56,14 @@ export function useDexWithdraw(
       const amountBigInt = BigInt(Math.floor(amountNum * 10 ** token.decimals));
 
       // Execute withdraw
-      const withdrawResult = await sodax.dex.assetService.withdraw(
-        {
+      const withdrawResult = await sodax.dex.assetService.withdraw({
+        withdrawParams: {
           poolToken: token.address,
           asset: originalAsset,
           amount: amountBigInt,
         },
         spokeProvider,
-      );
+      });
 
       if (!withdrawResult.ok) {
         throw new Error(`Withdraw failed: ${withdrawResult.error.code}`);

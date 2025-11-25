@@ -6,11 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Wallet } from 'lucide-react';
 import type { ChainType } from '@sodax/sdk';
 import type { ChainId } from '@sodax/types';
-import { getXChainType, type XAccount } from '@sodax/wallet-sdk-react';
+import { getXChainType, useEvmSwitchChain, type XAccount } from '@sodax/wallet-sdk-react';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 
 interface SetupProps {
-  selectedChainId: ChainId | null;
+  selectedChainId: ChainId;
   selectChainId: (chainId: ChainId) => void;
   xAccount: XAccount | null;
   openWalletModal: () => void;
@@ -24,6 +24,8 @@ export function Setup({
   openWalletModal,
   disconnect,
 }: SetupProps): JSX.Element {
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
+
   return (
     <Card>
       <CardHeader>
@@ -55,17 +57,24 @@ export function Setup({
                   {xAccount.address.slice(0, 6)}...{xAccount.address.slice(-4)}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (selectedChainId) {
-                    disconnect(getXChainType(selectedChainId) as ChainType);
-                  }
-                }}
-              >
-                Disconnect
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (selectedChainId) {
+                      disconnect(getXChainType(selectedChainId) as ChainType);
+                    }
+                  }}
+                >
+                  Disconnect
+                </Button>
+                {isWrongChain && (
+                  <Button className="w-full max-w-[120px]" type="button" variant="default" onClick={handleSwitchChain}>
+                    Switch Chain
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex items-center justify-between p-3 border rounded-md border-dashed">
@@ -78,4 +87,3 @@ export function Setup({
     </Card>
   );
 }
-

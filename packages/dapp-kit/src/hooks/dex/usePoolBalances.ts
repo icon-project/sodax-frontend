@@ -1,7 +1,6 @@
-// apps/demo/src/components/dex/hooks/usePoolBalances.ts
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { ClService, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import type { PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface PoolBalances {
   token0Balance: bigint;

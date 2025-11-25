@@ -1,7 +1,6 @@
-// apps/demo/src/components/dex/hooks/usePoolData.ts
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { ClService, PoolData, PoolKey } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import type { PoolData, PoolKey } from '@sodax/sdk';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 /**
  * Hook for loading pool data for a selected pool.

@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import type { ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
 import type { XAccount } from '@sodax/wallet-sdk-react';
+import { useDexAllowance } from '@sodax/dapp-kit';
 
 interface ManageLiquidityProps {
   poolData: PoolData | null;
@@ -660,4 +661,3 @@ export function ManageLiquidity({
     </Card>
   );
 }
-

@@ -1,7 +1,6 @@
-// apps/demo/src/components/dex/hooks/usePools.ts
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { ClService, PoolKey } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import type { PoolKey } from '@sodax/sdk';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 /**
  * Hook for loading available pools list from the DEX service.

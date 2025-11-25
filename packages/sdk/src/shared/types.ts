@@ -432,7 +432,7 @@ export type GetEstimateGasReturnType<T extends SpokeProvider> = T['chainConfig']
             ? InjectiveGasEstimate
             : GasEstimateType; // default to all gas estimate types union type
 
-export type OptionalRaw<R extends boolean = false> = { raw?: R };
+export type OptionalRaw<R extends boolean> = { raw?: R };
 export type OptionalTimeout = { timeout?: number };
 export type RelayExtraData = { address: Hex; payload: Hex };
 export type RelayOptionalExtraData = { data?: RelayExtraData };

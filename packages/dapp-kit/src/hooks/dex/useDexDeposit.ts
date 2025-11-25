@@ -1,7 +1,6 @@
-// apps/demo/src/components/dex/hooks/useDexDeposit.ts
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 import type { PoolData, PoolKey, SpokeProvider, OriginalAssetAddress } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface DepositParams {
   tokenIndex: 0 | 1;
@@ -33,9 +32,7 @@ interface DepositParams {
  * });
  * ```
  */
-export function useDexDeposit(
-  spokeProvider: SpokeProvider | null,
-): UseMutationResult<void, Error, DepositParams> {
+export function useDexDeposit(spokeProvider: SpokeProvider | null): UseMutationResult<void, Error, DepositParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
@@ -60,14 +57,14 @@ export function useDexDeposit(
       const amountBigInt = BigInt(Math.floor(amountNum * 10 ** token.decimals));
 
       // Check allowance
-      const allowanceResult = await sodax.dex.assetService.isAllowanceValid(
-        {
+      const allowanceResult = await sodax.dex.assetService.isAllowanceValid({
+        depositParams: {
           asset: originalAsset,
           amount: amountBigInt,
           poolToken: token.address,
         },
         spokeProvider,
-      );
+      });
 
       if (!allowanceResult.ok) {
         throw new Error('Allowance check failed');
@@ -75,15 +72,15 @@ export function useDexDeposit(
 
       // Approve if needed
       if (!allowanceResult.value) {
-        const approveResult = await sodax.dex.assetService.approve(
-          {
+        const approveResult = await sodax.dex.assetService.approve({
+          depositParams: {
             asset: originalAsset,
             amount: amountBigInt,
             poolToken: token.address,
           },
           spokeProvider,
-          false,
-        );
+          raw: false,
+        });
 
         if (!approveResult.ok) {
           throw new Error('Approval failed');
@@ -91,14 +88,14 @@ export function useDexDeposit(
       }
 
       // Execute deposit
-      const depositResult = await sodax.dex.assetService.deposit(
-        {
+      const depositResult = await sodax.dex.assetService.deposit({
+        depositParams: {
           asset: originalAsset,
           amount: amountBigInt,
           poolToken: token.address,
         },
         spokeProvider,
-      );
+      });
 
       if (!depositResult.ok) {
         throw new Error(`Deposit failed: ${depositResult.error?.code || 'Unknown error'}`);
@@ -110,4 +107,3 @@ export function useDexDeposit(
     },
   });
 }
-

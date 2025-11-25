@@ -1,7 +1,6 @@
-// apps/demo/src/components/dex/hooks/useSupplyLiquidity.ts
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 import { ClService, type PoolData, type PoolKey, type SpokeProvider } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface SupplyLiquidityParams {
   poolData: PoolData;

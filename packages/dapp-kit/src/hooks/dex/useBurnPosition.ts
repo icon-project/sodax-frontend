@@ -1,7 +1,6 @@
-// apps/demo/src/components/dex/hooks/useBurnPosition.ts
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 import type { ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface BurnPositionParams {
   poolKey: PoolKey;

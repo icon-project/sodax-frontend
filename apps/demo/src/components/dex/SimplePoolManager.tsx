@@ -20,7 +20,7 @@ import {
   useSupplyLiquidity,
   useDecreaseLiquidity,
   useBurnPosition,
-} from './hooks';
+} from '@sodax/dapp-kit';
 
 export function SimplePoolManager(): JSX.Element {
   // Wallet integration

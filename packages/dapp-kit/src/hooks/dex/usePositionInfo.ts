@@ -1,7 +1,6 @@
-// apps/demo/src/components/dex/hooks/usePositionInfo.ts
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { ClPositionInfo, PoolKey } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface PositionInfoWithValidation {
   positionInfo: ClPositionInfo;

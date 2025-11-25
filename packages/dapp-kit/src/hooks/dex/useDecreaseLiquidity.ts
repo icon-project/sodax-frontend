@@ -1,7 +1,6 @@
-// apps/demo/src/components/dex/hooks/useDecreaseLiquidity.ts
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 import type { ClPositionInfo, PoolKey, SpokeProvider } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface DecreaseLiquidityParams {
   poolKey: PoolKey;

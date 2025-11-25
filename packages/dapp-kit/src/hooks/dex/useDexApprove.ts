@@ -1,8 +1,7 @@
-// apps/demo/src/components/dex/hooks/useDexApprove.ts
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 import type { SpokeProvider, OriginalAssetAddress } from '@sodax/sdk';
 import type { Address } from 'viem';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface ApproveParams {
   asset: OriginalAssetAddress;
@@ -30,9 +29,7 @@ interface ApproveParams {
  * });
  * ```
  */
-export function useDexApprove(
-  spokeProvider: SpokeProvider | null,
-): UseMutationResult<boolean, Error, ApproveParams> {
+export function useDexApprove(spokeProvider: SpokeProvider | null): UseMutationResult<boolean, Error, ApproveParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
@@ -42,15 +39,15 @@ export function useDexApprove(
         throw new Error('Spoke provider is required');
       }
 
-      const approveResult = await sodax.dex.assetService.approve(
-        {
+      const approveResult = await sodax.dex.assetService.approve({
+        depositParams: {
           asset,
           amount,
           poolToken,
         },
         spokeProvider,
-        false,
-      );
+        raw: false,
+      });
 
       if (!approveResult.ok) {
         throw new Error('Approval failed');
@@ -64,4 +61,3 @@ export function useDexApprove(
     },
   });
 }
-
