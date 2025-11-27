@@ -3,7 +3,7 @@ import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { formatBalance, getAllSupportedSolverTokens } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
 import { ArbitrumIcon } from '@/components/icons/chains/arbitrum';
@@ -218,6 +218,9 @@ export function TokenAsset({
         ref={assetRef}
         layout
         initial={{ opacity: 0, scale: 0.8 }}
+        whileHover={{
+          zIndex: 9999,
+        }}
         animate={{
           opacity: isHoverDimmed ? 0.5 : 1,
           scale: isHovered ? 1.1 : 1,
@@ -249,19 +252,22 @@ export function TokenAsset({
               ? 'opacity-0'
               : isHovered
                 ? 'opacity-100 text-espresso font-bold'
-                : 'opacity-100 text-clay font-medium'
+                : isHoldToken
+                  ? 'opacity-100 text-espresso font-medium'
+                  : 'opacity-100 text-clay font-medium'
           }`}
         >
           {name} {tokenCount && tokenCount > 1 && <ChevronDownIcon className="w-2 h-2 text-clay ml-1" />}
         </div>
 
-        <div className="flex font-medium h-[13px]">
+        <div className="flex font-medium h-[13px] gap-1">
           {isHoldToken && (
-            <>
+            <div className="flex items-center gap-1 justify-start">
               <motion.p
-                className="relative shrink-0 text-clay !text-(length:--body-fine-print)"
+                className="relative shrink-0 text-clay !text-(length:--text-body-fine-print)"
+                layout="position"
                 animate={{
-                  x: isHovered ? -28 : 0,
+                  x: isHovered ? -2 : 0,
                   color: isHovered ? '#483534' : '#8e7e7d',
                 }}
                 transition={{
@@ -269,24 +275,28 @@ export function TokenAsset({
                   ease: 'easeInOut',
                 }}
               >
-                {sourceBalance > 0n
-                  ? formatBalance(formatUnits(sourceBalance, token?.decimals || 0), usdPrice || 0)
-                  : '0'}
+                {formatBalance(formatUnits(sourceBalance, token?.decimals || 0), usdPrice || 0)}
               </motion.p>
-              <motion.p
-                className="absolute left-1/2 shrink-0 text-clay !text-(length:--body-fine-print)"
-                animate={{
-                  opacity: isHovered ? 1 : 0,
-                  x: isHovered ? 4 : 0,
-                }}
-                transition={{
-                  duration: 0.3,
-                  ease: 'easeInOut',
-                }}
-              >
-                {`$(${new BigNumber(formatUnits(sourceBalance, token?.decimals || 0)).multipliedBy(usdPrice || 0).toFixed(2)})`}
-              </motion.p>
-            </>
+              <AnimatePresence>
+                {isHovered && (
+                  <motion.p
+                    className="shrink-0 text-clay !text-(length:--text-body-fine-print)"
+                    animate={{
+                      opacity: isHovered ? 1 : 0,
+                      x: isHovered ? 2 : 0,
+                    }}
+                    transition={{
+                      duration: 0.3,
+                      ease: 'easeInOut',
+                    }}
+                  >
+                    {`$(${new BigNumber(formatUnits(sourceBalance, token?.decimals || 0))
+                      .multipliedBy(usdPrice || 0)
+                      .toFixed(2)})`}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
           )}
         </div>
       </motion.div>
