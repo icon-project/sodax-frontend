@@ -1,8 +1,9 @@
 import type React from 'react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
-import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn, getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import { TokenAsset } from './token-asset';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
@@ -102,7 +103,7 @@ export function TokenList({
     const platform: XToken[] = [];
 
     for (const token of filteredTokens) {
-      if (hasTokenBalance(allBalances, token)) {
+      if (hasTokenBalance(allBalances, token) && getChainBalance(allBalances, token) > 0n) {
         hold.push(token);
       } else {
         platform.push(token);
@@ -213,14 +214,15 @@ export function TokenList({
       onMouseEnter: () => shouldApplyHover && setHoveredAsset(tokenUniqueId),
       onMouseLeave: () => shouldApplyHover && setHoveredAsset(null),
     };
+    const balance = getChainBalance(allBalances, token);
 
     return (
       <TokenAsset
         key={tokenUniqueId}
         name={token.symbol}
         token={token}
-        sourceBalance={getChainBalance(allBalances, token)}
-        isHoldToken={true}
+        sourceBalance={balance}
+        isHoldToken={balance > 0n}
         onClick={() => handleTokenAssetClick(token)}
         {...commonProps}
       />
@@ -239,21 +241,32 @@ export function TokenList({
           }}
         />
       )}
-      <ScrollArea className={`mt-4 h-81 w-full content-stretch ${clickedAsset ? '' : ''}`}>
-        <motion.div
-          ref={assetsRef}
-          className={`h-81 pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center px-0 relative shrink-0 w-full flex-1 ${
-            isChainSelectorOpen ? 'blur filter opacity-30' : ''
-          }`}
-          data-name="Assets"
-          layout
+
+      <ScrollAreaPrimitive.Root
+        data-slot="scroll-area"
+        className={`mt-4 h-[calc(80vh-176px)] md:h-126 w-full content-stretch ${clickedAsset ? '' : ''}`}
+      >
+        <ScrollAreaPrimitive.Viewport
+          data-slot="scroll-area-viewport"
+          className="ring-ring/10 dark:ring-ring/20 dark:outline-ring/40 outline-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] focus-visible:ring-4 focus-visible:outline-1 px-6"
         >
-          <AnimatePresence mode="popLayout">
-            {sortedHoldTokens.map(renderHoldTokenSymbol)}{' '}
-            {uniqueTokenSymbols.map(({ symbol, tokens }) => renderPlatformTokenSymbol(symbol, tokens))}
-          </AnimatePresence>
-        </motion.div>
-      </ScrollArea>
+          <motion.div
+            ref={assetsRef}
+            className={`h-[calc(80vh-176px)] md:h-126 pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center px-0 relative shrink-0 w-full flex-1 ${
+              isChainSelectorOpen ? 'blur filter opacity-30' : ''
+            }`}
+            data-name="Assets"
+            layout
+          >
+            <AnimatePresence mode="popLayout">
+              {sortedHoldTokens.map(renderHoldTokenSymbol)}{' '}
+              {uniqueTokenSymbols.map(({ symbol, tokens }) => renderPlatformTokenSymbol(symbol, tokens))}
+            </AnimatePresence>
+          </motion.div>
+        </ScrollAreaPrimitive.Viewport>
+        <ScrollBar />
+        <ScrollAreaPrimitive.Corner />
+      </ScrollAreaPrimitive.Root>
     </>
   );
 }

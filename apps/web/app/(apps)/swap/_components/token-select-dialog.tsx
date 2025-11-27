@@ -64,14 +64,14 @@ export default function TokenSelectDialog({
     <Dialog open={isOpen} onOpenChange={onHandleOpenChange}>
       <DialogContent
         enableMotion={true}
-        className="shadow-none md:max-w-[480px] w-[90%] p-12 bg-vibrant-white gap-0 block"
+        className="shadow-none md:max-w-[480px] w-[90%] py-12 bg-vibrant-white gap-0 block h-[80vh] md:h-170"
         hideCloseButton={true}
       >
         <div className="flex justify-end w-full h-4 relative p-0">
           <DialogClose className="pt-0" asChild>
             <Button
               variant="ghost"
-              className={`absolute outline-none w-12 h-12 rounded-full text-clay-light hover:text-clay transition-colors cursor-pointer -top-3 !-mr-4 ${clickedAsset !== null ? 'blur filter' : ''}`}
+              className={`absolute outline-none w-12 h-12 rounded-full text-clay-light hover:text-clay transition-colors cursor-pointer -top-3  ${clickedAsset !== null ? 'blur filter' : ''}`}
             >
               <XIcon className="w-4 h-4 pointer-events-none" />
             </Button>
