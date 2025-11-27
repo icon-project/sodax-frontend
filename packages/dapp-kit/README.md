@@ -188,63 +188,64 @@ function MoneyMarketComponent({ token }: { token: XToken }) {
   );
 }
 
-// Token Management
-import { useMMAllowance, useApprove } from '@sodax/dapp-kit';
-
-function TokenManagementComponent() {
-  // Check token allowance
-  const { data: hasAllowed } = useMMAllowance(token, amount);
-  
-  // Approve token spending
-  const { approve, isLoading: isApproving } = useApprove(token);
-  const handleApprove = async (amount: string) => {
-    await approve(amount);
-  };
-}
-
-// Wallet Address Derivation
-import { useDeriveUserWalletAddress, useSpokeProvider } from '@sodax/dapp-kit';
-
-function WalletAddressComponent() {
-  const spokeProvider = useSpokeProvider(chainId, walletProvider);
-  
-  // Derive user wallet address for hub abstraction
-  const { data: derivedAddress, isLoading, error } = useDeriveUserWalletAddress(spokeProvider, userAddress);
-  
-  return (
-    <div>
-      {isLoading && <div>Deriving wallet address...</div>}
-      {error && <div>Error: {error.message}</div>}
-      {derivedAddress && <div>Derived Address: {derivedAddress}</div>}
-    </div>
-  );
-}
-
 // Swap Operations
-import { useQuote, useSwap, useStatus } from '@sodax/dapp-kit';
+import { useQuote, useSwap, useStatus, useSpokeProvider } from '@sodax/dapp-kit';
+import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import { type CreateIntentParams } from '@sodax/sdk';
+import { parseUnits } from 'viem';
+import type { SpokeChainId } from '@sodax/types';
 
 function SwapComponent() {
+  const sourceChain: SpokeChainId = '0xa86a.avax';
+  const destChain: SpokeChainId = '0xa4b1.arbitrum';
+  const sourceWalletProvider = useWalletProvider(sourceChain);
+  const sourceProvider = useSpokeProvider(sourceChain, sourceWalletProvider);
+
   // Get quote for an intent order
   const { data: quote, isLoading: isQuoteLoading } = useQuote({
     token_src: '0x...',
-    token_src_blockchain_id: '0xa86a.avax',
+    token_src_blockchain_id: sourceChain,
     token_dst: '0x...',
-    token_dst_blockchain_id: '0xa4b1.arbitrum',
+    token_dst_blockchain_id: destChain,
     amount: '1000000000000000000',
     quote_type: 'exact_input',
   });
 
   // Create and submit an intent order
-  const { mutateAsync: swap, isPending: isCreating } = useSwap();
+  const { mutateAsync: swap } = useSwap(sourceProvider);
   const handleSwap = async () => {
-    const order = await swap({
-      token_src: '0x...',
-      token_src_blockchain_id: '0xa86a.avax',
-      token_dst: '0x...',
-      token_dst_blockchain_id: '0xa4b1.arbitrum',
-      amount: '1000000000000000000',
-      quote_type: 'exact_input',
-    });
+    if (!sourceProvider) {
+      console.error('Source provider not available');
+      return;
+    }
+
+    const intentOrderPayload: CreateIntentParams = {
+      inputToken: '0x...', // The address of the input token on hub chain
+      outputToken: '0x...', // The address of the output token on hub chain
+      inputAmount: parseUnits('1', 18), // The amount of input tokens
+      minOutputAmount: BigInt('900000000000000000'), // The minimum amount of output tokens to accept
+      deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires
+      allowPartialFill: false, // Whether the intent can be partially filled
+      srcChain: sourceChain, // Chain ID where input tokens originate
+      dstChain: destChain, // Chain ID where output tokens should be delivered
+      srcAddress: await sourceProvider.walletProvider.getWalletAddress(), // Source address
+      dstAddress: '0x...', // Destination address
+      solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
+      data: '0x', // Additional arbitrary data
+    };
+
+    const result = await swap(intentOrderPayload);
+
+    if (result.ok) {
+      const [response, intent, intentDeliveryInfo] = result.value;
+      console.log('Swap successful:', {
+        intentHash: response.intent_hash,
+        intent,
+        intentDeliveryInfo,
+      });
+    } else {
+      console.error('Error creating and submitting intent:', result.error);
+    }
   };
 
   // Get status of an intent order
