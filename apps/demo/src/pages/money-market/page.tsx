@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { ChainSelector } from '@/components/shared/ChainSelector';
-import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
+import { AssetList } from '@/components/mm/lists/AssetList';
 import { Button } from '@/components/ui/button';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
@@ -23,7 +23,7 @@ export default function MoneyMarketPage() {
           <div className="text-sm">hub wallet address: {walletAddressOnHub}</div>
         </div>
         {xAccount?.address ? (
-          <SupplyAssetsList />
+          <AssetList />
         ) : (
           <div className="flex justify-center items-center h-[600px] border-2">
             <Button onClick={openWalletModal}>Connect</Button>

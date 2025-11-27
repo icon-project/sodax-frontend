@@ -1,3 +1,4 @@
+// apps/demo/src/components/mm/lists/AssetItem.tsx
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken } from '@sodax/types';
@@ -11,19 +12,19 @@ import { useAToken } from '@sodax/dapp-kit';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 
-interface SupplyAssetsListItemProps {
+interface AssetItemProps {
   token: XToken;
   walletBalance: string;
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
 }
 
-export function SupplyAssetsListItem({
+export function AssetItem({
   token,
   walletBalance,
   formattedReserves,
   userReserves,
-}: SupplyAssetsListItemProps) {
+}: AssetItemProps) {
   const metrics = useReserveMetrics({
     token,
     formattedReserves: formattedReserves,
@@ -114,3 +115,4 @@ export function SupplyAssetsListItem({
     </TableRow>
   );
 }
+
