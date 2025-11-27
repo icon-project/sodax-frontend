@@ -1,14 +1,14 @@
 // apps/demo/src/components/dex/ManageLiquidity.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
-import type { ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import type { ChainId, ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
 import type { XAccount } from '@sodax/wallet-sdk-react';
-import { useDexAllowance } from '@sodax/dapp-kit';
+import { useCreateDepositParams, useDexAllowance, useDexApprove, useDexDeposit, useDexWithdraw } from '@sodax/dapp-kit';
 
 interface ManageLiquidityProps {
   poolData: PoolData | null;
@@ -17,8 +17,6 @@ interface ManageLiquidityProps {
   pools: PoolKey[];
   selectedPoolIndex: number;
   // Form state
-  token0Amount: string;
-  token1Amount: string;
   token0Balance: bigint;
   token1Balance: bigint;
   minPrice: string;
@@ -29,10 +27,9 @@ interface ManageLiquidityProps {
   positionId: string;
   positionInfo: ClPositionInfo | null;
   isValidPosition: boolean;
-  loading: boolean;
+  selectedPoolKey: PoolKey | null;
+  selectedChainId: ChainId | null;
   // Handlers
-  onToken0AmountChange: (value: string) => void;
-  onToken1AmountChange: (value: string) => void;
   onLiquidityToken0AmountChange: (value: string) => void;
   onLiquidityToken1AmountChange: (value: string) => void;
   onMinPriceChange: (value: string) => void;
@@ -40,8 +37,6 @@ interface ManageLiquidityProps {
   onSlippageToleranceChange: (value: string) => void;
   onPositionIdChange: (value: string) => void;
   onClearPosition: () => void;
-  onDeposit: (tokenIndex: 0 | 1) => Promise<void>;
-  onWithdraw: (tokenIndex: 0 | 1) => Promise<void>;
   onSupplyLiquidity: () => Promise<void>;
   onDecreaseLiquidity: () => Promise<void>;
   onBurnPosition: () => Promise<void>;
@@ -56,8 +51,6 @@ export function ManageLiquidity({
   spokeProvider,
   pools,
   selectedPoolIndex,
-  token0Amount,
-  token1Amount,
   token0Balance,
   token1Balance,
   minPrice,
@@ -68,9 +61,6 @@ export function ManageLiquidity({
   positionId,
   positionInfo,
   isValidPosition,
-  loading,
-  onToken0AmountChange,
-  onToken1AmountChange,
   onLiquidityToken0AmountChange,
   onLiquidityToken1AmountChange,
   onMinPriceChange,
@@ -78,17 +68,155 @@ export function ManageLiquidity({
   onSlippageToleranceChange,
   onPositionIdChange,
   onClearPosition,
-  onDeposit,
-  onWithdraw,
   onSupplyLiquidity,
   onDecreaseLiquidity,
   onBurnPosition,
   formatAmount,
   calculateUnderlyingAmount,
+  selectedPoolKey,
+  selectedChainId,
 }: ManageLiquidityProps): JSX.Element | null {
   if (!poolData || !xAccount?.address) {
+    console.warn('[ManageLiquidity] Pool data or xAccount address is required');
     return null;
   }
+
+  // UI state
+  const [error, setError] = useState<string>('');
+
+  // Reset state when chain changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: setter functions are stable
+  useEffect(() => {
+    setToken0Amount('');
+    setToken1Amount('');
+  }, [selectedChainId]);
+
+  // Form state
+  const [token0Amount, setToken0Amount] = useState<string>('');
+  const [token1Amount, setToken1Amount] = useState<string>('');
+
+  const createDepositParams0 = useCreateDepositParams({
+    tokenIndex: 0,
+    amount: token0Amount,
+    poolData,
+    poolKey: pools[selectedPoolIndex],
+    spokeProvider,
+  });
+  const createDepositParams1 = useCreateDepositParams({
+    tokenIndex: 1,
+    amount: token1Amount,
+    poolData,
+    poolKey: pools[selectedPoolIndex],
+    spokeProvider,
+  });
+  const { data: hasToken0Allowed, isLoading: isToken0AllowanceLoading } = useDexAllowance({
+    params: createDepositParams0,
+    spokeProvider,
+  });
+  const { data: hasToken1Allowed, isLoading: isToken1AllowanceLoading } = useDexAllowance({
+    params: createDepositParams1,
+    spokeProvider,
+  });
+  const { mutateAsync: approveToken0, isPending: isApprovingToken0 } = useDexApprove(spokeProvider);
+  const { mutateAsync: approveToken1, isPending: isApprovingToken1 } = useDexApprove(spokeProvider);
+
+  // Hooks for mutations
+  const depositMutation = useDexDeposit(spokeProvider ?? null);
+  const withdrawMutation = useDexWithdraw(spokeProvider ?? null);
+
+  // Handle mutation errors and success
+  useEffect(() => {
+    if (depositMutation.isSuccess) {
+      setError('');
+    } else if (depositMutation.error) {
+      setError(`Deposit failed: ${depositMutation.error.message}`);
+    }
+  }, [depositMutation.isSuccess, depositMutation.error]);
+
+  useEffect(() => {
+    if (withdrawMutation.isSuccess) {
+      setError('');
+    } else if (withdrawMutation.error) {
+      setError(`Withdraw failed: ${withdrawMutation.error.message}`);
+    }
+  }, [withdrawMutation.isSuccess, withdrawMutation.error]);
+
+  // Combined loading state
+  const loading = depositMutation.isPending || withdrawMutation.isPending;
+
+  const handleApproveToken0 = async () => {
+    await approveToken0(createDepositParams0);
+  };
+  const handleApproveToken1 = async () => {
+    await approveToken1(createDepositParams1);
+  };
+
+  // Handle deposit
+  const handleDeposit = async (tokenIndex: 0 | 1): Promise<void> => {
+    if (!poolData || !spokeProvider || !selectedPoolKey) {
+      setError('Please ensure wallet is connected and services are initialized');
+      return;
+    }
+
+    const params = tokenIndex === 0 ? createDepositParams0 : createDepositParams1;
+    if (!params) {
+      setError('Please enter a valid amount');
+      return;
+    }
+
+    setError('');
+
+    try {
+      await depositMutation.mutateAsync(params);
+
+      // Clear form
+      if (tokenIndex === 0) {
+        setToken0Amount('');
+      } else {
+        setToken1Amount('');
+      }
+      setError('');
+    } catch (err) {
+      console.error('Deposit failed:', err);
+      setError(`Deposit failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
+  // Handle withdraw
+  const handleWithdraw = async (tokenIndex: 0 | 1): Promise<void> => {
+    if (!poolData || !spokeProvider || !selectedPoolKey) {
+      setError('Please ensure wallet is connected and services are initialized');
+      return;
+    }
+
+    const amount = tokenIndex === 0 ? token0Amount : token1Amount;
+    if (!amount || Number.parseFloat(amount) <= 0) {
+      setError('Please enter a valid amount');
+      return;
+    }
+
+    setError('');
+
+    try {
+      await withdrawMutation.mutateAsync({
+        tokenIndex,
+        amount,
+        poolData,
+        poolKey: selectedPoolKey,
+      });
+
+      // Clear form
+      if (tokenIndex === 0) {
+        setToken0Amount('');
+      } else {
+        setToken1Amount('');
+      }
+      setError('');
+    } catch (err) {
+      console.error('Withdraw failed:', err);
+      setError(`Withdraw failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
 
   return (
     <Card>
@@ -112,7 +240,7 @@ export function ManageLiquidity({
                   type="number"
                   placeholder="0.0"
                   value={token0Amount}
-                  onChange={e => onToken0AmountChange(e.target.value)}
+                  onChange={e => setToken0Amount(e.target.value)}
                   className="flex-1"
                 />
                 <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
@@ -138,7 +266,16 @@ export function ManageLiquidity({
                     </p>
                   )}
               </div>
-              <Button onClick={() => onDeposit(0)} disabled={loading || !token0Amount} className="w-full">
+              <Button
+                className="w-full"
+                type="button"
+                variant="default"
+                onClick={handleApproveToken0}
+                disabled={createDepositParams0 === undefined || isToken0AllowanceLoading || hasToken0Allowed || isApprovingToken0}
+              >
+                {isApprovingToken0 ? 'Approving...' : hasToken0Allowed ? 'Approved' : 'Approve'}
+              </Button>
+              <Button onClick={() => handleDeposit(0)} disabled={loading || !token0Amount} className="w-full">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Deposit {poolData.token0.symbol}
               </Button>
@@ -153,7 +290,7 @@ export function ManageLiquidity({
                   type="number"
                   placeholder="0.0"
                   value={token1Amount}
-                  onChange={e => onToken1AmountChange(e.target.value)}
+                  onChange={e => setToken1Amount(e.target.value)}
                   className="flex-1"
                 />
                 <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
@@ -179,7 +316,16 @@ export function ManageLiquidity({
                     </p>
                   )}
               </div>
-              <Button onClick={() => onDeposit(1)} disabled={loading || !token1Amount} className="w-full">
+              <Button
+                className="w-full"
+                type="button"
+                variant="default"
+                onClick={handleApproveToken1}
+                disabled={createDepositParams1 === undefined || isToken1AllowanceLoading || hasToken1Allowed || isApprovingToken1}
+              >
+                {isApprovingToken1 ? 'Approving...' : hasToken1Allowed ? 'Approved' : 'Approve'}
+              </Button>
+              <Button onClick={() => handleDeposit(1)} disabled={loading || !token1Amount} className="w-full">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Deposit {poolData.token1.symbol}
               </Button>
@@ -573,7 +719,7 @@ export function ManageLiquidity({
                   type="number"
                   placeholder="0.0"
                   value={token0Amount}
-                  onChange={e => onToken0AmountChange(e.target.value)}
+                  onChange={e => setToken0Amount(e.target.value)}
                   className="flex-1"
                 />
                 <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
@@ -600,7 +746,7 @@ export function ManageLiquidity({
                   )}
               </div>
               <Button
-                onClick={() => onWithdraw(0)}
+                onClick={() => handleWithdraw(0)}
                 disabled={loading || !token0Amount}
                 variant="destructive"
                 className="w-full"
@@ -619,7 +765,7 @@ export function ManageLiquidity({
                   type="number"
                   placeholder="0.0"
                   value={token1Amount}
-                  onChange={e => onToken1AmountChange(e.target.value)}
+                  onChange={e => setToken1Amount(e.target.value)}
                   className="flex-1"
                 />
                 <span className="inline-flex items-center rounded-md border border-input bg-background px-3 text-sm font-medium">
@@ -646,7 +792,7 @@ export function ManageLiquidity({
                   )}
               </div>
               <Button
-                onClick={() => onWithdraw(1)}
+                onClick={() => handleWithdraw(1)}
                 disabled={loading || !token1Amount}
                 variant="destructive"
                 className="w-full"
@@ -658,6 +804,14 @@ export function ManageLiquidity({
           </TabsContent>
         </Tabs>
       </CardContent>
+
+      {/* Error Display */}
+      {error && (
+        <div className="flex items-start gap-3 rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <div className="flex-1">{error}</div>
+        </div>
+      )}
     </Card>
   );
 }

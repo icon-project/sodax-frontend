@@ -14,8 +14,6 @@ import {
   usePoolData,
   usePoolBalances,
   usePositionInfo,
-  useDexDeposit,
-  useDexWithdraw,
   useLiquidityAmounts,
   useSupplyLiquidity,
   useDecreaseLiquidity,
@@ -38,22 +36,19 @@ export function SimplePoolManager(): JSX.Element {
     data: poolDataRaw,
     isLoading: isLoadingPoolData,
     error: poolDataError,
-  } = usePoolData(selectedPoolKey, selectedPoolIndex >= 0);
+  } = usePoolData({
+    poolKey: selectedPoolKey || null,
+  });
   const poolData = poolDataRaw ?? null;
 
   // Pool balances
-  const { data: balances } = usePoolBalances(
+  const { data: balances } = usePoolBalances({
     poolData,
-    selectedPoolKey,
-    spokeProvider ?? null,
-    !!poolData && !!spokeProvider,
-  );
+    poolKey: selectedPoolKey || null,
+    spokeProvider: spokeProvider ?? null,
+  });
   const token0Balance = balances?.token0Balance ?? 0n;
   const token1Balance = balances?.token1Balance ?? 0n;
-
-  // Form state
-  const [token0Amount, setToken0Amount] = useState<string>('');
-  const [token1Amount, setToken1Amount] = useState<string>('');
 
   // Liquidity supply state
   const [minPrice, setMinPrice] = useState<string>('');
@@ -72,11 +67,10 @@ export function SimplePoolManager(): JSX.Element {
 
   // Position management state
   const [positionId, setPositionId] = useState<string>('');
-  const { data: positionData } = usePositionInfo(
-    positionId || null,
-    selectedPoolKey,
-    !!positionId && !!selectedPoolKey,
-  );
+  const { data: positionData } = usePositionInfo({
+    tokenId: positionId || null,
+    poolKey: selectedPoolKey || null,
+  });
   const positionInfo = positionData?.positionInfo ?? null;
   const isValidPosition = positionData?.isValid ?? false;
 
@@ -87,8 +81,6 @@ export function SimplePoolManager(): JSX.Element {
   // biome-ignore lint/correctness/useExhaustiveDependencies: setter functions are stable
   useEffect(() => {
     setSelectedPoolIndex(-1);
-    setToken0Amount('');
-    setToken1Amount('');
   }, [selectedChainId]);
 
   // Handle position info changes - pre-fill price range
@@ -114,8 +106,6 @@ export function SimplePoolManager(): JSX.Element {
   }, [poolDataError]);
 
   // Hooks for mutations
-  const depositMutation = useDexDeposit(spokeProvider ?? null);
-  const withdrawMutation = useDexWithdraw(spokeProvider ?? null);
   const supplyLiquidityMutation = useSupplyLiquidity(spokeProvider ?? null);
   const decreaseLiquidityMutation = useDecreaseLiquidity(spokeProvider ?? null);
   const burnPositionMutation = useBurnPosition(spokeProvider ?? null);
@@ -123,28 +113,10 @@ export function SimplePoolManager(): JSX.Element {
   // Combined loading state
   const loading =
     isLoadingPoolData ||
-    depositMutation.isPending ||
-    withdrawMutation.isPending ||
     supplyLiquidityMutation.isPending ||
     decreaseLiquidityMutation.isPending ||
     burnPositionMutation.isPending;
 
-  // Handle mutation errors and success
-  useEffect(() => {
-    if (depositMutation.isSuccess) {
-      setError('');
-    } else if (depositMutation.error) {
-      setError(`Deposit failed: ${depositMutation.error.message}`);
-    }
-  }, [depositMutation.isSuccess, depositMutation.error]);
-
-  useEffect(() => {
-    if (withdrawMutation.isSuccess) {
-      setError('');
-    } else if (withdrawMutation.error) {
-      setError(`Withdraw failed: ${withdrawMutation.error.message}`);
-    }
-  }, [withdrawMutation.isSuccess, withdrawMutation.error]);
 
   useEffect(() => {
     if (supplyLiquidityMutation.isSuccess) {
@@ -172,77 +144,7 @@ export function SimplePoolManager(): JSX.Element {
     }
   }, [burnPositionMutation.isSuccess, burnPositionMutation.error]);
 
-  // Handle deposit
-  const handleDeposit = async (tokenIndex: 0 | 1): Promise<void> => {
-    if (!poolData || !spokeProvider || !selectedPoolKey) {
-      setError('Please ensure wallet is connected and services are initialized');
-      return;
-    }
 
-    const amount = tokenIndex === 0 ? token0Amount : token1Amount;
-    if (!amount || Number.parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount');
-      return;
-    }
-
-    setError('');
-
-    try {
-      await depositMutation.mutateAsync({
-        tokenIndex,
-        amount,
-        poolData,
-        poolKey: selectedPoolKey,
-      });
-
-      // Clear form
-      if (tokenIndex === 0) {
-        setToken0Amount('');
-      } else {
-        setToken1Amount('');
-      }
-      setError('');
-    } catch (err) {
-      console.error('Deposit failed:', err);
-      setError(`Deposit failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
-  };
-
-  // Handle withdraw
-  const handleWithdraw = async (tokenIndex: 0 | 1): Promise<void> => {
-    if (!poolData || !spokeProvider || !selectedPoolKey) {
-      setError('Please ensure wallet is connected and services are initialized');
-      return;
-    }
-
-    const amount = tokenIndex === 0 ? token0Amount : token1Amount;
-    if (!amount || Number.parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount');
-      return;
-    }
-
-    setError('');
-
-    try {
-      await withdrawMutation.mutateAsync({
-        tokenIndex,
-        amount,
-        poolData,
-        poolKey: selectedPoolKey,
-      });
-
-      // Clear form
-      if (tokenIndex === 0) {
-        setToken0Amount('');
-      } else {
-        setToken1Amount('');
-      }
-      setError('');
-    } catch (err) {
-      console.error('Withdraw failed:', err);
-      setError(`Withdraw failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
-  };
 
   // Handle supply liquidity
   const handleSupplyLiquidity = async (): Promise<void> => {
@@ -423,8 +325,6 @@ export function SimplePoolManager(): JSX.Element {
         spokeProvider={spokeProvider ?? null}
         pools={pools}
         selectedPoolIndex={selectedPoolIndex}
-        token0Amount={token0Amount}
-        token1Amount={token1Amount}
         token0Balance={token0Balance}
         token1Balance={token1Balance}
         minPrice={minPrice}
@@ -435,9 +335,6 @@ export function SimplePoolManager(): JSX.Element {
         positionId={positionId}
         positionInfo={positionInfo}
         isValidPosition={isValidPosition}
-        loading={loading}
-        onToken0AmountChange={setToken0Amount}
-        onToken1AmountChange={setToken1Amount}
         onLiquidityToken0AmountChange={handleToken0AmountChange}
         onLiquidityToken1AmountChange={handleToken1AmountChange}
         onMinPriceChange={setMinPrice}
@@ -445,13 +342,13 @@ export function SimplePoolManager(): JSX.Element {
         onSlippageToleranceChange={setSlippageTolerance}
         onPositionIdChange={handlePositionIdChange}
         onClearPosition={handleClearPosition}
-        onDeposit={handleDeposit}
-        onWithdraw={handleWithdraw}
         onSupplyLiquidity={handleSupplyLiquidity}
         onDecreaseLiquidity={handleDecreaseLiquidity}
         onBurnPosition={handleBurnPosition}
         formatAmount={formatAmount}
         calculateUnderlyingAmount={calculateUnderlyingAmount}
+        selectedPoolKey={selectedPoolKey}
+        selectedChainId={selectedChainId}
       />
 
       {/* Error Display */}
