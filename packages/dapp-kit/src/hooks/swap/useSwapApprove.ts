@@ -10,16 +10,34 @@ interface UseApproveReturn {
 }
 
 /**
- * Hook for approving token spending for money market actions
- * @param token The token to approve spending for
- * @param spokeProvider The spoke provider instance for the chain
- * @returns Object containing approve function, loading state, error state and reset function
- * @example
- * ```tsx
- * const { approve, isLoading, error } = useApprove(token, spokeProvider);
+ * Hook for approving token spending for swap operations.
  *
- * // Approve tokens for supply action
- * await approve({ amount: "100", action: "supply" });
+ * This hook provides a mutation function to approve token spending for cross-chain swap intents.
+ *
+ * @param {CreateIntentParams | undefined} params - The swap intent parameters. If undefined, the approval will fail.
+ * @param {SpokeProvider | undefined} spokeProvider - The spoke provider instance for the chain
+ *
+ * @returns {UseApproveReturn} Object containing:
+ *   - approve: Function to approve token spending for the swap intent
+ *   - isLoading: Boolean indicating if the approval is in progress
+ *   - error: Error object if the approval failed
+ *   - resetError: Function to reset the error state
+ *
+ * @example
+ * ```typescript
+ * const { approve, isLoading, error } = useSwapApprove(params, spokeProvider);
+ *
+ * // Approve tokens for swap action
+ * await approve({
+ *   params: {
+ *     token_src: '0x...',
+ *     token_src_blockchain_id: 'arbitrum',
+ *     token_dst: '0x...',
+ *     token_dst_blockchain_id: 'polygon',
+ *     amount: '1000000000000000000',
+ *     min_output_amount: '900000000000000000'
+ *   }
+ * });
  * ```
  */
 
