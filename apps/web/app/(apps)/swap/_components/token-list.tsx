@@ -1,8 +1,8 @@
 import type React from 'react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
-import { cn, getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
+import { ScrollBar } from '@/components/ui/scroll-area';
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import { TokenAsset } from './token-asset';
 import { motion, AnimatePresence } from 'motion/react';
