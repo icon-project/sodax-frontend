@@ -1,6 +1,14 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import { ClService, type PoolData, type PoolKey, type SpokeProvider } from '@sodax/sdk';
+import {
+  ClService,
+  type HubTxHash,
+  type SpokeTxHash,
+  type PoolData,
+  type PoolKey,
+  type SpokeProvider,
+} from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
+import { parseUnits } from 'viem';
 
 interface SupplyLiquidityParams {
   poolData: PoolData;
@@ -40,7 +48,7 @@ interface SupplyLiquidityParams {
  */
 export function useSupplyLiquidity(
   spokeProvider: SpokeProvider | null,
-): UseMutationResult<void, Error, SupplyLiquidityParams> {
+): UseMutationResult<[SpokeTxHash, HubTxHash], Error, SupplyLiquidityParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
@@ -77,8 +85,8 @@ export function useSupplyLiquidity(
         throw new Error('Min price must be less than max price');
       }
 
-      const amount0BigInt = BigInt(Math.floor(amount0 * 10 ** poolData.token0.decimals));
-      const amount1BigInt = BigInt(Math.floor(amount1 * 10 ** poolData.token1.decimals));
+      const amount0BigInt = parseUnits(liquidityToken0Amount, poolData.token0.decimals);
+      const amount1BigInt = parseUnits(liquidityToken1Amount, poolData.token1.decimals);
 
       // Convert prices to ticks
       const token0 = poolData.token0;
@@ -124,25 +132,29 @@ export function useSupplyLiquidity(
         if (!increaseResult.ok) {
           throw new Error(`Increase liquidity failed: ${increaseResult.error?.code || 'Unknown error'}`);
         }
-      } else {
-        // Mint new position
-        const supplyResult = await sodax.dex.clService.supplyLiquidity({
-          supplyParams: {
-            poolKey,
-            tickLower,
-            tickUpper,
-            liquidity,
-            amount0Max: amount0BigInt,
-            amount1Max: amount1BigInt,
-            sqrtPriceX96: poolData.sqrtPriceX96,
-          },
-          spokeProvider,
-        });
 
-        if (!supplyResult.ok) {
-          throw new Error(`Supply liquidity failed: ${supplyResult.error?.code || 'Unknown error'}`);
-        }
+        return increaseResult.value;
       }
+
+      // Mint new position
+      const supplyResult = await sodax.dex.clService.supplyLiquidity({
+        supplyParams: {
+          poolKey,
+          tickLower,
+          tickUpper,
+          liquidity,
+          amount0Max: amount0BigInt,
+          amount1Max: amount1BigInt,
+          sqrtPriceX96: poolData.sqrtPriceX96,
+        },
+        spokeProvider,
+      });
+
+      if (!supplyResult.ok) {
+        throw new Error(`Supply liquidity failed: ${supplyResult.error?.code || 'Unknown error'}`);
+      }
+
+      return supplyResult.value;
     },
     onSuccess: () => {
       // Invalidate relevant queries
@@ -151,4 +163,3 @@ export function useSupplyLiquidity(
     },
   });
 }
-

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import type { PoolData, PoolKey, SpokeProvider, OriginalAssetAddress } from '@sodax/sdk';
+import type { PoolData, PoolKey, SpokeProvider, OriginalAssetAddress, SpokeTxHash, HubTxHash } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
+import { parseUnits } from 'viem';
 
 interface WithdrawParams {
   tokenIndex: 0 | 1;
@@ -10,28 +11,41 @@ interface WithdrawParams {
 }
 
 /**
- * Hook for withdrawing tokens from a pool.
+ * React hook to withdraw tokens from a DEX pool to the user's wallet.
  *
- * This hook handles the withdrawal of tokens from a pool back to the user's wallet.
+ * This hook executes a withdrawal operation for a selected token in a pool, returning the funds to the connected user.
+ * It automatically triggers a refetch of pool balances upon a successful withdrawal to keep the UI up-to-date.
  *
- * @param {SpokeProvider | null} spokeProvider - The spoke provider for the chain
- * @returns {UseMutationResult<void, Error, WithdrawParams>} Mutation result with withdraw function
+ * @param {SpokeProvider | null} spokeProvider
+ *   The SpokeProvider instance for the current chain. Pass `null` to disable the mutation.
+ *
+ * @returns {UseMutationResult<[SpokeTxHash, HubTxHash], Error, WithdrawParams>}
+ *   A React Query mutation object:
+ *   - `mutateAsync(withdrawParams)` initiates the withdrawal using {@link WithdrawParams}
+ *   - `isPending` boolean set during mutation
+ *   - `error` available if withdrawal fails
  *
  * @example
  * ```typescript
  * const { mutateAsync: withdraw, isPending, error } = useDexWithdraw(spokeProvider);
  *
  * await withdraw({
- *   tokenIndex: 0,
- *   amount: '50',
+ *   tokenIndex: 0,         // 0 for token0, 1 for token1
+ *   amount: '50',          // Amount to withdraw as a string, will be parsed to BigInt base units
  *   poolData,
  *   poolKey,
  * });
  * ```
+ *
+ * @remarks
+ * - The input amount must be non-empty and strictly greater than zero.
+ * - Throws if any required argument is missing or invalid.
+ * - The returned tuple: [spokeTxHash, hubTxHash] from the SDK after withdrawal.
+ * - Internally invalidates the `['dex', 'poolBalances']` query on success.
  */
 export function useDexWithdraw(
   spokeProvider: SpokeProvider | null,
-): UseMutationResult<void, Error, WithdrawParams> {
+): UseMutationResult<[SpokeTxHash, HubTxHash], Error, WithdrawParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
@@ -53,14 +67,13 @@ export function useDexWithdraw(
       }
 
       const originalAsset: OriginalAssetAddress = tokenIndex === 0 ? assets.token0 : assets.token1;
-      const amountBigInt = BigInt(Math.floor(amountNum * 10 ** token.decimals));
 
       // Execute withdraw
       const withdrawResult = await sodax.dex.assetService.withdraw({
         withdrawParams: {
           poolToken: token.address,
           asset: originalAsset,
-          amount: amountBigInt,
+          amount: parseUnits(amount, token.decimals),
         },
         spokeProvider,
       });
@@ -68,6 +81,8 @@ export function useDexWithdraw(
       if (!withdrawResult.ok) {
         throw new Error(`Withdraw failed: ${withdrawResult.error.code}`);
       }
+
+      return withdrawResult.value;
     },
     onSuccess: () => {
       // Invalidate balances query to refetch after withdraw
@@ -75,4 +90,3 @@ export function useDexWithdraw(
     },
   });
 }
-

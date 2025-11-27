@@ -1,108 +1,71 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import type { PoolData, PoolKey, SpokeProvider, OriginalAssetAddress } from '@sodax/sdk';
+import type { SpokeProvider, CreateDepositParams, SpokeTxHash, HubTxHash } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-interface DepositParams {
-  tokenIndex: 0 | 1;
-  amount: string;
-  poolData: PoolData;
-  poolKey: PoolKey;
-}
-
 /**
- * Hook for depositing tokens to a pool.
+ * React hook to perform a token deposit into a DEX pool.
  *
- * This hook handles the complete deposit flow including:
- * - Checking token allowance
- * - Approving tokens if needed
- * - Executing the deposit transaction
+ * This hook wraps the deposit action for a pool on the active chain. The user must have approved
+ * enough token allowance for the DEX before calling this (see {@link useDexAllowance}, {@link useDexApprove}).
  *
- * @param {SpokeProvider | null} spokeProvider - The spoke provider for the chain
- * @returns {UseMutationResult<void, Error, DepositParams>} Mutation result with deposit function
+ * On success, the pool balances will be refetched for UI updates.
+ *
+ * @param {SpokeProvider | null} spokeProvider
+ *   The SpokeProvider instance for the desired chain. Pass `null` to disable/defer the mutation.
+ *
+ * @returns {UseMutationResult<[SpokeTxHash, HubTxHash], Error, CreateDepositParams>}
+ *   A React Query mutation object with:
+ *   - `mutateAsync(depositParams)`: Executes the deposit using {@link CreateDepositParams}.
+ *   - `isPending`: Boolean state for mutation loading.
+ *   - `error`: Any error thrown by the deposit attempt.
  *
  * @example
  * ```typescript
  * const { mutateAsync: deposit, isPending, error } = useDexDeposit(spokeProvider);
  *
  * await deposit({
- *   tokenIndex: 0,
- *   amount: '100',
- *   poolData,
- *   poolKey,
+ *   asset,             // Asset address being deposited
+ *   amount,            // Amount as bigint (in base units)
+ *   poolToken,         // Pool token/contract address
+ *   ...                // (other fields required by CreateDepositParams)
  * });
  * ```
+ *
+ * @remarks
+ * - The returned tuple is: [spokeTxHash, hubTxHash] from the Sodax SDK after deposit.
+ * - Throws if `spokeProvider` or `depositParams` are missing.
+ * - Automatically refetches pool balances after a successful deposit.
  */
-export function useDexDeposit(spokeProvider: SpokeProvider | null): UseMutationResult<void, Error, DepositParams> {
+export function useDexDeposit(
+  spokeProvider: SpokeProvider | null,
+): UseMutationResult<[SpokeTxHash, HubTxHash], Error, CreateDepositParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ tokenIndex, amount, poolData, poolKey }: DepositParams) => {
+    mutationFn: async (depositParams: CreateDepositParams): Promise<[SpokeTxHash, HubTxHash]> => {
       if (!spokeProvider) {
         throw new Error('Spoke provider is required');
       }
 
-      const amountNum = Number.parseFloat(amount);
-      if (!amount || amountNum <= 0) {
-        throw new Error('Please enter a valid amount');
+      if (!depositParams) {
+        throw new Error('Deposit params are required');
       }
 
-      const token = tokenIndex === 0 ? poolData.token0 : poolData.token1;
-      const assets = sodax.dex.clService.getAssetsForPool(spokeProvider, poolKey);
-      if (!assets) {
-        throw new Error('Failed to get assets for pool');
-      }
-
-      const originalAsset: OriginalAssetAddress = tokenIndex === 0 ? assets.token0 : assets.token1;
-      const amountBigInt = BigInt(Math.floor(amountNum * 10 ** token.decimals));
-
-      // Check allowance
-      const allowanceResult = await sodax.dex.assetService.isAllowanceValid({
-        depositParams: {
-          asset: originalAsset,
-          amount: amountBigInt,
-          poolToken: token.address,
-        },
-        spokeProvider,
-      });
-
-      if (!allowanceResult.ok) {
-        throw new Error('Allowance check failed');
-      }
-
-      // Approve if needed
-      if (!allowanceResult.value) {
-        const approveResult = await sodax.dex.assetService.approve({
-          depositParams: {
-            asset: originalAsset,
-            amount: amountBigInt,
-            poolToken: token.address,
-          },
-          spokeProvider,
-          raw: false,
-        });
-
-        if (!approveResult.ok) {
-          throw new Error('Approval failed');
-        }
-      }
-
-      // Execute deposit
+      // Perform the deposit operation
       const depositResult = await sodax.dex.assetService.deposit({
-        depositParams: {
-          asset: originalAsset,
-          amount: amountBigInt,
-          poolToken: token.address,
-        },
+        depositParams,
         spokeProvider,
       });
 
       if (!depositResult.ok) {
         throw new Error(`Deposit failed: ${depositResult.error?.code || 'Unknown error'}`);
       }
+
+      return depositResult.value;
     },
     onSuccess: () => {
-      // Invalidate balances query to refetch after deposit
+      // Refetch pool balances after a successful deposit
       queryClient.invalidateQueries({ queryKey: ['dex', 'poolBalances'] });
     },
   });

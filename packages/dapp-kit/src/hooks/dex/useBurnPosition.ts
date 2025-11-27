@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import type { ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
+import type { ClPositionInfo, HubTxHash, PoolData, PoolKey, SpokeProvider, SpokeTxHash } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface BurnPositionParams {
@@ -12,36 +12,43 @@ interface BurnPositionParams {
 }
 
 /**
- * Hook for burning a position NFT.
+ * React hook to burn a CL position NFT, removing liquidity if any remains before burning.
  *
- * This hook handles the complete burn process:
- * 1. If position has liquidity, decreases it to 0 first
- * 2. Burns the position NFT
+ * This hook automates the two-step burn workflow for CL position NFTs:
+ *  1. If the position contains liquidity, it calls decreaseLiquidity to zero the position first,
+ *     using the provided slippage settings and minimum acceptable withdrawal amounts.
+ *  2. Calls burnPosition to fully burn the NFT after removal.
  *
- * It includes a confirmation dialog if the position has liquidity.
+ * During execution, the hook optionally presents a confirmation dialog if any liquidity exists
+ * (the confirmation logic/UI should be handled by the caller, hook passes all relevant details).
+ * It handles all mutation, success/error propagation, and relevant react-query cache invalidation.
  *
- * @param {SpokeProvider | null} spokeProvider - The spoke provider for the chain
- * @param {boolean} skipConfirmation - Whether to skip the confirmation dialog (default: false)
- * @returns {UseMutationResult<void, Error, BurnPositionParams>} Mutation result with burn function
+ * @param {SpokeProvider | null} spokeProvider
+ *   The provider object representing the relevant network connection. Required.
+ * @returns {UseMutationResult<[SpokeTxHash, HubTxHash], Error, BurnPositionParams>}
+ *   The mutation object to invoke burning, including status, error and helpers.
  *
  * @example
  * ```typescript
  * const { mutateAsync: burnPosition, isPending, error } = useBurnPosition(spokeProvider);
- *
  * await burnPosition({
- *   poolKey,
- *   tokenId: '123',
- *   positionInfo,
- *   poolData,
- *   slippageTolerance: '0.5',
- *   formatAmount,
+ *   poolKey, // The PoolKey referencing the pool
+ *   tokenId: '123', // Position NFT ID as string
+ *   positionInfo, // Position details object (ClPositionInfo)
+ *   poolData, // PoolData for extra token/decimals/context
+ *   slippageTolerance: '0.5', // Slippage value, e.g. "0.5"
+ *   formatAmount: (amount, decimals) => ... // Function for formatting returned amounts
  * });
  * ```
+ *
+ * @remarks
+ * - Always use in combination with UI confirmation when position holds liquidity.
+ * - If `spokeProvider` is null, the mutation throws immediately.
+ * - Underlying mutation returns `[SpokeTxHash, HubTxHash]` tuple upon success.
  */
 export function useBurnPosition(
-  spokeProvider: SpokeProvider | null,
-  skipConfirmation = false,
-): UseMutationResult<void, Error, BurnPositionParams> {
+  spokeProvider: SpokeProvider | null
+): UseMutationResult<[SpokeTxHash, HubTxHash], Error, BurnPositionParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
@@ -52,7 +59,7 @@ export function useBurnPosition(
       }
 
       // Show confirmation dialog if position has liquidity
-      if (!skipConfirmation && positionInfo.liquidity > 0n) {
+      if (positionInfo.liquidity > 0n) {
         const token0Amount = `${formatAmount(positionInfo.amount0, poolData.token0.decimals)} ${poolData.token0.symbol}`;
         const token1Amount = `${formatAmount(positionInfo.amount1, poolData.token1.decimals)} ${poolData.token1.symbol}`;
 
@@ -67,17 +74,6 @@ export function useBurnPosition(
         if (positionInfo.amount1Underlying && poolData.token1IsStatAToken && poolData.token1UnderlyingToken) {
           const underlyingAmount = formatAmount(positionInfo.amount1Underlying, poolData.token1UnderlyingToken.decimals);
           token1Details += ` (≈${underlyingAmount} ${poolData.token1UnderlyingToken.symbol})`;
-        }
-
-        const confirmMessage = `This position has liquidity. Burning will:\n1. Remove all liquidity:\n   - ${token0Details}\n   - ${token1Details}\n2. Burn the NFT\n\nAre you sure?`;
-
-        if (!window.confirm(confirmMessage)) {
-          throw new Error('Burn cancelled by user');
-        }
-      } else if (!skipConfirmation) {
-        const confirmMessage = 'Are you sure you want to burn this position? This action cannot be undone.';
-        if (!window.confirm(confirmMessage)) {
-          throw new Error('Burn cancelled by user');
         }
       }
 
@@ -118,6 +114,8 @@ export function useBurnPosition(
       if (!burnResult.ok) {
         throw new Error(`Burn position failed: ${burnResult.error?.code || 'Unknown error'}`);
       }
+
+      return burnResult.value;
     },
     onSuccess: () => {
       // Invalidate relevant queries

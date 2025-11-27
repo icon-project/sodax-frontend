@@ -1,41 +1,53 @@
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { SpokeProvider, OriginalAssetAddress } from '@sodax/sdk';
-import type { Address } from 'viem';
+import { type QueryObserverOptions, useQuery, type UseQueryResult } from '@tanstack/react-query';
+import type { SpokeProvider, CreateDepositParams } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-interface AllowanceParams {
-  asset: OriginalAssetAddress;
-  amount: bigint;
-  poolToken: Address;
+export interface useDexAllowanceProps {
+  params: CreateDepositParams | undefined;
+  spokeProvider: SpokeProvider | null;
+  enabled?: boolean;
+  queryOptions?: QueryObserverOptions<boolean, Error>;
 }
 
 /**
- * Hook for checking token allowance for DEX operations.
+ * Hook to check if the user has approved sufficient token allowance for DEX deposits.
  *
- * This hook verifies if the user has approved enough tokens for a specific deposit operation.
- * It automatically queries and tracks the allowance status.
+ * This hook automatically queries and tracks the allowance status, indicating whether
+ * the user has granted enough allowance to allow a specific deposit to the DEX. It leverages
+ * React Query for status, caching, and background refetching.
  *
- * @param {AllowanceParams | null} params - The allowance parameters (asset, amount, poolToken)
- * @param {SpokeProvider | null} spokeProvider - The spoke provider to use for allowance checks
- * @param {boolean} enabled - Whether the query should be enabled (default: true)
- * @returns {UseQueryResult<boolean, Error>} Query result containing allowance status
+ * @param {CreateDepositParams | undefined} params
+ *   The deposit parameters: asset address, poolToken, and raw amount (BigInt), or undefined to disable.
+ * @param {SpokeProvider | undefined} spokeProvider
+ *   The provider interface for the selected chain. When undefined, the query is disabled.
+ * @param {boolean} [enabled]
+ *   Whether the allowance status check is enabled. Defaults to true if both params and spokeProvider are truthy.
+ * @param {QueryObserverOptions<boolean, Error>} [queryOptions]
+ *   Optional react-query options. Any override here (e.g. staleTime, refetchInterval) will merge with defaults.
+ *
+ * @returns {UseQueryResult<boolean, Error>}
+ *   React Query result object: `data` is boolean (true if allowance is sufficient), plus `isLoading`, `error`, etc.
  *
  * @example
  * ```typescript
- * const { data: hasAllowed, isLoading } = useDexAllowance(
- *   { asset, amount: parseUnits('100', 18), poolToken },
- *   spokeProvider
- * );
+ * const { data: isAllowed, isLoading, error } = useDexAllowance({
+ *   params: { asset, amount: parseUnits('100', 18), poolToken },
+ *   spokeProvider,
+ * });
+ * if (isLoading) return <Spinner />;
+ * if (error) return <div>Error: {error.message}</div>;
+ * if (isAllowed) { ... }
  * ```
+ *
+ * @remarks
+ * - The allowance is checked every 5 seconds as long as enabled, params, and spokeProvider are all defined.
+ * - Returns `false` if allowance cannot be determined or any error occurs in isAllowanceValid.
+ * - Suitable for gating UI actions that require token approval before depositing in the DEX.
  */
-export function useDexAllowance(
-  params: AllowanceParams | null,
-  spokeProvider: SpokeProvider | null,
-  enabled = true,
-): UseQueryResult<boolean, Error> {
-  const { sodax } = useSodaxContext();
-
-  return useQuery({
+export function useDexAllowance({
+  params,
+  spokeProvider,
+  queryOptions = {
     queryKey: [
       'dex',
       'allowance',
@@ -44,6 +56,13 @@ export function useDexAllowance(
       params?.amount.toString(),
       spokeProvider?.chainConfig.chain.id,
     ],
+    enabled: !!params && !!spokeProvider,
+  },
+}: useDexAllowanceProps): UseQueryResult<boolean, Error> {
+  const { sodax } = useSodaxContext();
+
+  return useQuery({
+    ...queryOptions,
     queryFn: async () => {
       if (!params || !spokeProvider) {
         throw new Error('Params and spoke provider are required');
@@ -64,7 +83,5 @@ export function useDexAllowance(
 
       return allowanceResult.value;
     },
-    enabled: enabled && params !== null && spokeProvider !== null,
-    staleTime: 5000, // Consider data stale after 5 seconds
   });
 }

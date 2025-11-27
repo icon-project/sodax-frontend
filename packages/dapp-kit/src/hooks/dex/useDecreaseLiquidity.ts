@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import type { ClPositionInfo, PoolKey, SpokeProvider } from '@sodax/sdk';
+import type { ClPositionInfo, HubTxHash, PoolKey, SpokeProvider, SpokeTxHash } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface DecreaseLiquidityParams {
@@ -34,7 +34,7 @@ interface DecreaseLiquidityParams {
  */
 export function useDecreaseLiquidity(
   spokeProvider: SpokeProvider | null,
-): UseMutationResult<void, Error, DecreaseLiquidityParams> {
+): UseMutationResult<[SpokeTxHash, HubTxHash], Error, DecreaseLiquidityParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
@@ -76,6 +76,8 @@ export function useDecreaseLiquidity(
       if (!decreaseResult.ok) {
         throw new Error(`Decrease liquidity failed: ${decreaseResult.error?.code || 'Unknown error'}`);
       }
+
+      return decreaseResult.value;
     },
     onSuccess: () => {
       // Invalidate relevant queries
@@ -84,4 +86,3 @@ export function useDecreaseLiquidity(
     },
   });
 }
-
