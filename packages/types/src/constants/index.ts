@@ -477,6 +477,13 @@ export const spokeChainConfig = {
         address: '8Bj8gSbga8My8qRkT1RrvgxFBExiGFgdRNHFaR9o2T3Q',
         xChainId: SOLANA_MAINNET_CHAIN_ID,
       },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+        xChainId: SOLANA_MAINNET_CHAIN_ID,
+      },
     },
     gasPrice: '500000',
     rpcUrl: 'https://api.mainnet-beta.solana.com',
@@ -660,6 +667,13 @@ export const spokeChainConfig = {
         address: '0xdc5B4b00F98347E95b9F94911213DAB4C687e1e3',
         xChainId: BASE_MAINNET_CHAIN_ID,
       },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0xfde4c96c8593536e31f229ea8f37b2ada2699bb2',
+        xChainId: BASE_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [OPTIMISM_MAINNET_CHAIN_ID]: {
@@ -780,6 +794,13 @@ export const spokeChainConfig = {
         address: '0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A',
         xChainId: BSC_MAINNET_CHAIN_ID,
       },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 18,
+        address: '0x55d398326f99059ff775485246999027b3197955',
+        xChainId: BSC_MAINNET_CHAIN_ID,
+      },
     },
   } as const satisfies EvmSpokeChainConfig,
   [POLYGON_MAINNET_CHAIN_ID]: {
@@ -826,6 +847,13 @@ export const spokeChainConfig = {
         address: '0x03b54a6e9a984069379fae1a4fc4dbae93b3bccd',
         xChainId: POLYGON_MAINNET_CHAIN_ID,
       },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
+        xChainId: POLYGON_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [HYPEREVM_MAINNET_CHAIN_ID]: {
@@ -863,6 +891,13 @@ export const spokeChainConfig = {
         name: 'USD Coin',
         decimals: 6,
         address: '0xb88339CB7199b77E23DB6E890353E22632Ba630f',
+        xChainId: HYPEREVM_MAINNET_CHAIN_ID,
+      },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb',
         xChainId: HYPEREVM_MAINNET_CHAIN_ID,
       },
     } as const,
@@ -974,6 +1009,13 @@ export const spokeChainConfig = {
         address: '0x127b64fb645279F8aca786c507b94dde81F02d16',
         xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
       },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0x6308fa9545126237158778e74AE1b6b89022C5c0',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [INJECTIVE_MAINNET_CHAIN_ID]: {
@@ -1015,6 +1057,13 @@ export const spokeChainConfig = {
         name: 'SODAX',
         decimals: 18,
         address: 'factory/inj1d036ftaatxpkqsu9hja8r24rv3v33chz3appxp/soda',
+        xChainId: INJECTIVE_MAINNET_CHAIN_ID,
+      },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: 'peggy0xdAC17F958D2ee523a2206206994597C13D831ec7',
         xChainId: INJECTIVE_MAINNET_CHAIN_ID,
       },
     },
@@ -1182,6 +1231,13 @@ export const spokeChainConfig = {
         address: '0x0a0393721732617a2a771535e83c0a46f04aeef7d03239bbbb1249bc0981b952::soda::SODA',
         xChainId: SUI_MAINNET_CHAIN_ID,
       },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0x375f70cf2ae4c00bf37117d0c85a2c71545e6ee05c4a5c7d282cd66a4504b068::usdt::USDT',
+        xChainId: SUI_MAINNET_CHAIN_ID,
+      },
     },
     nativeToken: '0x0000000000000000000000000000000000000000000000000000000000000002::sui::SUI' as const,
     bnUSD: '0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD',
@@ -1295,6 +1351,13 @@ export const spokeChainConfig = {
         name: 'Wrapped liquid staked Ether 2.0',
         decimals: 18,
         address: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
         xChainId: ETHEREUM_MAINNET_CHAIN_ID,
       },
     } as const,
@@ -1506,6 +1569,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'SODAX',
       vault: SodaTokens.sodaSODA.address,
     },
+    [spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x23889bd0e8e718d47a72fdd8b82da39ec856240f',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
   },
   [OPTIMISM_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].nativeToken]: {
@@ -1608,6 +1678,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'Wrapped eETH',
       vault: SodaTokens.sodaWEETH.address,
     },
+    [spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x627c7369e9cfb99e11ee7163efb23f12bfd8cce6',
+      decimal: 18,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
   },
   [POLYGON_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].nativeToken]: {
@@ -1645,6 +1722,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'Wrapped Staked Ethereum',
       vault: SodaTokens.sodaWSTETH.address,
     },
+    [spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0xc5dfa58a0f80646d1067d894920acd870ff1888b',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
   },
   [HYPEREVM_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].nativeToken]: {
@@ -1674,6 +1758,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'USDC',
       name: 'USD Coin',
       vault: SodaTokens.sodaUSDC.address,
+    },
+    [spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x87f73744d919447e6f8220f268bcbbfa0cbfafa3',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
     },
   },
   [LIGHTLINK_MAINNET_CHAIN_ID]: {
@@ -1775,6 +1866,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'HyperEVM LightLink',
       vault: SodaTokens.sodaHYPE.address,
     },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x46b95b9c77bfbd0fe647091ccdf5dccf279ec149',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
   },
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ.address]: {
@@ -1804,6 +1902,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'SODA',
       name: 'SODAX',
       vault: SodaTokens.sodaSODA.address,
+    },
+    [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0xb3bdde94ee6ec50c06291d8e49dfeae12992ce01',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
     },
   },
   [STELLAR_MAINNET_CHAIN_ID]: {
@@ -1921,6 +2026,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'SODAX',
       vault: SodaTokens.sodaSODA.address,
     },
+    [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0xad8901fe2c8defe467fa1df7af78d755e53485ab',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
   },
   [SOLANA_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL.address]: {
@@ -1950,6 +2062,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'SODA',
       name: 'SODAX',
       vault: SodaTokens.sodaSODA.address,
+    },
+    [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x891c7ab9047eb087b5a988a2638e7056f67adc5c',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
     },
   },
   [ICON_MAINNET_CHAIN_ID]: {
@@ -2097,6 +2216,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BTCB,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [HYPEREVM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
@@ -2210,6 +2330,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.cbBTC,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [OPTIMISM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2226,6 +2347,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [BSC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BNB,
@@ -2234,11 +2356,13 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [HYPEREVM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [LIGHTLINK_MAINNET_CHAIN_ID]: [
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2254,12 +2378,14 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['POL.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [ICON_MAINNET_CHAIN_ID]: [
     // spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
@@ -2276,12 +2402,14 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [INJECTIVE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [SONIC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
@@ -2298,6 +2426,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainId, readonly XToken[]>;
 
