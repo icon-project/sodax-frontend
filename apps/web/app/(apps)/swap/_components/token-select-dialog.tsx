@@ -41,7 +41,7 @@ export default function TokenSelectDialog({
 
   const visibleTokens = useMemo(() => filterBySearch(chainFilteredTokens), [filterBySearch, chainFilteredTokens]);
 
-  const unfilteredVisibleTokens = useMemo(() => {
+  const allChainVisibleTokens = useMemo(() => {
     if (selectedChain) {
       return allTokens;
     }
@@ -68,8 +68,8 @@ export default function TokenSelectDialog({
 
   const filteredTokenGroups = useMemo(() => splitTokensByBalance(visibleTokens), [splitTokensByBalance, visibleTokens]);
   const unfilteredTokenGroups = useMemo(
-    () => splitTokensByBalance(unfilteredVisibleTokens),
-    [splitTokensByBalance, unfilteredVisibleTokens],
+    () => splitTokensByBalance(allChainVisibleTokens),
+    [splitTokensByBalance, allChainVisibleTokens],
   );
 
   const { data: tokenPrices } = useAllTokenPrices(filteredTokenGroups.holdTokens);
