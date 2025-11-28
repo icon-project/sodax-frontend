@@ -35,7 +35,7 @@ export function CurrencySearchPanel({
     >
       <div className="w-full flex justify-center">
         <div
-          className={`w-full md:w-64 h-12 px-6 rounded-[32px] outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center transition-all duration-200
+          className={`w-60 sm:w-64 h-12 px-6 rounded-[32px] outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center transition-all duration-200
           }`}
         >
           <div className="flex items-center">
@@ -116,8 +116,8 @@ export function CurrencySearchPanel({
             {isChainSelectorOpen && (
               <div className="fixed inset-0 flex items-center justify-center z-50 mt-36">
                 <div className="absolute inset-0 bg-transparent" onClick={handleChainSelectorClick} />
-                <div className="relative bg-transparent border-none w-64">
-                  <div className="grid grid-cols-2 overflow-hidden pl-2 py-1">
+                <div className="relative bg-transparent border-none">
+                  <div className="grid grid-cols-2 overflow-hidden p-2 gap-x-4">
                     {/* All Networks Option */}
                     <div
                       className={`group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
@@ -125,7 +125,7 @@ export function CurrencySearchPanel({
                       onMouseEnter={() => setHoveredChain('all')}
                       onMouseLeave={() => setHoveredChain(null)}
                     >
-                      <div className="w-6 h-6  ring-4 ring-white rounded-[6px] shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden">
+                      <div className="w-6 h-6  ring-4 ring-white rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145,1)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden bg-cream-white">
                         <>
                           <Image
                             src="/chain/0x2105.base.png"

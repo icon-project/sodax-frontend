@@ -25,20 +25,30 @@ export default function TokenSelectDialog({
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
   const [selectedChainFilter, setSelectedChainFilter] = useState<SpokeChainId | null>(null);
 
-  // Preload balances when dialog is open or about to open
   const allBalances = useAllChainBalances();
 
-  // Get all supported tokens based on chain filter
+  const allUnfilteredTokens = useMemo(() => {
+    return getAllSupportedSolverTokens();
+  }, []);
+
   const allSupportedTokens = useMemo(() => {
     return selectedChainFilter ? getSupportedSolverTokensForChain(selectedChainFilter) : getAllSupportedSolverTokens();
   }, [selectedChainFilter]);
 
-  // Filter tokens based on search query
   const filteredTokens = useMemo(() => {
     return allSupportedTokens.filter((token: XToken) => token.symbol.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [allSupportedTokens, searchQuery]);
 
-  // Calculate holdTokens and platformTokens based on balances
+  const filteredUnfilteredTokens = useMemo(() => {
+    if (selectedChainFilter !== null) {
+      return allUnfilteredTokens;
+    }
+
+    return allUnfilteredTokens.filter((token: XToken) =>
+      token.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [allUnfilteredTokens, searchQuery, selectedChainFilter]);
+
   const { holdTokens, platformTokens } = useMemo(() => {
     const hold: XToken[] = [];
     const platform: XToken[] = [];
@@ -54,8 +64,24 @@ export default function TokenSelectDialog({
     return { holdTokens: hold, platformTokens: platform };
   }, [filteredTokens, allBalances]);
 
-  // Preload token prices for holdTokens when dialog is open
+  const { holdTokens: unfilteredHoldTokens, platformTokens: unfilteredPlatformTokens } = useMemo(() => {
+    const hold: XToken[] = [];
+    const platform: XToken[] = [];
+
+    for (const token of filteredUnfilteredTokens) {
+      if (hasTokenBalance(allBalances, token) && getChainBalance(allBalances, token) > 0n) {
+        hold.push(token);
+      } else {
+        platform.push(token);
+      }
+    }
+
+    return { holdTokens: hold, platformTokens: platform };
+  }, [filteredUnfilteredTokens, allBalances]);
+
   const { data: tokenPrices } = useAllTokenPrices(holdTokens);
+
+  const { data: unfilteredTokenPrices } = useAllTokenPrices(unfilteredHoldTokens);
 
   const handleAssetClick = (e: React.MouseEvent, assetId: string) => {
     setClickedAsset(clickedAsset === assetId ? null : assetId);
@@ -81,6 +107,14 @@ export default function TokenSelectDialog({
   const handleChainSelect = (chainId: string) => {
     setSelectedChainFilter(chainId as SpokeChainId);
     setIsChainSelectorOpen(false);
+  };
+
+  const handleTokenSelect = (token: XToken) => {
+    onTokenSelect?.(token);
+    setSearchQuery('');
+    setIsChainSelectorOpen(false);
+    setSelectedChainFilter(null);
+    setClickedAsset(null);
   };
 
   const onHandleOpenChange = (open: boolean) => {
@@ -124,23 +158,43 @@ export default function TokenSelectDialog({
           selectedChainId={selectedChainFilter}
         />
 
-        <TokenList
-          clickedAsset={clickedAsset}
-          onAssetClick={handleAssetClick}
-          onClickOutside={handleClickOutside}
-          searchQuery={searchQuery}
-          onTokenSelect={token => {
-            onTokenSelect?.(token as XToken);
-            setSearchQuery('');
-          }}
-          onClose={onClose}
-          selectedChainFilter={selectedChainFilter}
-          isChainSelectorOpen={isChainSelectorOpen}
-          allBalances={allBalances}
-          tokenPrices={tokenPrices}
-          holdTokens={holdTokens}
-          platformTokens={platformTokens}
-        />
+        <div className="relative">
+          {selectedChainFilter !== null && (
+            <div className="absolute inset-0 blur filter opacity-30 pointer-events-none z-0">
+              <TokenList
+                clickedAsset={clickedAsset}
+                onAssetClick={handleAssetClick}
+                onClickOutside={handleClickOutside}
+                onTokenSelect={handleTokenSelect}
+                onClose={onClose}
+                isChainSelectorOpen={isChainSelectorOpen}
+                allBalances={allBalances}
+                tokenPrices={unfilteredTokenPrices}
+                holdTokens={unfilteredHoldTokens}
+                platformTokens={unfilteredPlatformTokens}
+                selectedChainFilter={selectedChainFilter}
+                isFiltered={false}
+              />
+            </div>
+          )}
+
+          <div className={selectedChainFilter !== null ? 'relative z-10' : ''}>
+            <TokenList
+              clickedAsset={clickedAsset}
+              onAssetClick={handleAssetClick}
+              onClickOutside={handleClickOutside}
+              onTokenSelect={handleTokenSelect}
+              onClose={onClose}
+              isChainSelectorOpen={isChainSelectorOpen}
+              allBalances={allBalances}
+              tokenPrices={tokenPrices}
+              holdTokens={holdTokens}
+              platformTokens={platformTokens}
+              selectedChainFilter={selectedChainFilter}
+              isFiltered={selectedChainFilter !== null}
+            />
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
