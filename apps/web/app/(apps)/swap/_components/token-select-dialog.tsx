@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/swap/_components/token-select-dialog.tsx
 import type React from 'react';
 import { useState, useMemo } from 'react';
 import { XIcon } from 'lucide-react';

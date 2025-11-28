@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/swap/_components/token-list.tsx
 import type React from 'react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
