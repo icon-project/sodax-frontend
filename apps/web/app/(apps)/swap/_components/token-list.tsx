@@ -1,14 +1,13 @@
+// apps/web/app/(apps)/swap/_components/token-list.tsx
 import type React from 'react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
-import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { ScrollBar } from '@/components/ui/scroll-area';
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import { TokenAsset } from './token-asset';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAllChainBalances } from '@/hooks/useAllChainBalances';
-import { getUniqueTokenSymbols, getChainBalance, hasTokenBalance } from '@/lib/token-utils';
-import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
+import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
+import { getUniqueTokenSymbols, getChainBalance } from '@/lib/token-utils';
 import { formatUnits } from 'viem';
 
 interface TokenListProps {
@@ -20,6 +19,10 @@ interface TokenListProps {
   onClose: () => void;
   selectedChainFilter: SpokeChainId | null;
   isChainSelectorOpen: boolean;
+  allBalances: Record<string, ChainBalanceEntry[]>;
+  tokenPrices: Record<string, number> | undefined;
+  holdTokens: XToken[];
+  platformTokens: XToken[];
 }
 
 export function TokenList({
@@ -31,6 +34,10 @@ export function TokenList({
   onClose,
   selectedChainFilter,
   isChainSelectorOpen,
+  allBalances,
+  tokenPrices,
+  holdTokens,
+  platformTokens,
 }: TokenListProps): React.JSX.Element {
   const assetsRef = useRef<HTMLDivElement>(null);
   const [hoveredAsset, setHoveredAsset] = useState<string | null>(null);
@@ -87,33 +94,6 @@ export function TokenList({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [clickedAsset, onClickOutside]);
-
-  const allSupportedTokens = selectedChainFilter
-    ? getSupportedSolverTokensForChain(selectedChainFilter)
-    : getAllSupportedSolverTokens();
-
-  const allBalances = useAllChainBalances();
-
-  const filteredTokens = allSupportedTokens.filter((token: XToken) =>
-    token.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const { holdTokens, platformTokens } = useMemo(() => {
-    const hold: XToken[] = [];
-    const platform: XToken[] = [];
-
-    for (const token of filteredTokens) {
-      if (hasTokenBalance(allBalances, token) && getChainBalance(allBalances, token) > 0n) {
-        hold.push(token);
-      } else {
-        platform.push(token);
-      }
-    }
-
-    return { holdTokens: hold, platformTokens: platform };
-  }, [filteredTokens, allBalances]);
-
-  const { data: tokenPrices } = useAllTokenPrices(holdTokens);
 
   const sortedHoldTokens = useMemo(() => {
     if (!tokenPrices) {
