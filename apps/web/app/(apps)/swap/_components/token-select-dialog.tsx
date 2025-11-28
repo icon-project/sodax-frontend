@@ -1,11 +1,15 @@
 import type React from 'react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { XIcon } from 'lucide-react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { Button } from '@/components/ui/button';
 import { CurrencySearchPanel } from './currency-search-panel';
 import { TokenList } from './token-list';
 import { DialogContent, Dialog, DialogClose } from '@/components/ui/dialog';
+import { useAllChainBalances } from '@/hooks/useAllChainBalances';
+import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
+import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
+import { getChainBalance, hasTokenBalance } from '@/lib/token-utils';
 
 export default function TokenSelectDialog({
   isOpen,
@@ -20,6 +24,38 @@ export default function TokenSelectDialog({
   const [searchQuery, setSearchQuery] = useState('');
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
   const [selectedChainFilter, setSelectedChainFilter] = useState<SpokeChainId | null>(null);
+
+  // Preload balances when dialog is open or about to open
+  const allBalances = useAllChainBalances();
+
+  // Get all supported tokens based on chain filter
+  const allSupportedTokens = useMemo(() => {
+    return selectedChainFilter ? getSupportedSolverTokensForChain(selectedChainFilter) : getAllSupportedSolverTokens();
+  }, [selectedChainFilter]);
+
+  // Filter tokens based on search query
+  const filteredTokens = useMemo(() => {
+    return allSupportedTokens.filter((token: XToken) => token.symbol.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [allSupportedTokens, searchQuery]);
+
+  // Calculate holdTokens and platformTokens based on balances
+  const { holdTokens, platformTokens } = useMemo(() => {
+    const hold: XToken[] = [];
+    const platform: XToken[] = [];
+
+    for (const token of filteredTokens) {
+      if (hasTokenBalance(allBalances, token) && getChainBalance(allBalances, token) > 0n) {
+        hold.push(token);
+      } else {
+        platform.push(token);
+      }
+    }
+
+    return { holdTokens: hold, platformTokens: platform };
+  }, [filteredTokens, allBalances]);
+
+  // Preload token prices for holdTokens when dialog is open
+  const { data: tokenPrices } = useAllTokenPrices(holdTokens);
 
   const handleAssetClick = (e: React.MouseEvent, assetId: string) => {
     setClickedAsset(clickedAsset === assetId ? null : assetId);
@@ -100,6 +136,10 @@ export default function TokenSelectDialog({
           onClose={onClose}
           selectedChainFilter={selectedChainFilter}
           isChainSelectorOpen={isChainSelectorOpen}
+          allBalances={allBalances}
+          tokenPrices={tokenPrices}
+          holdTokens={holdTokens}
+          platformTokens={platformTokens}
         />
       </DialogContent>
     </Dialog>
