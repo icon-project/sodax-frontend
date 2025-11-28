@@ -268,7 +268,7 @@ async function swapWithStellarDestination(
   }
 
   // Step 2: Proceed with swap operation
-  const swapResult = await sodax.swap.swap({
+  const swapResult = await sodax.swaps.swap({
     intentParams: swapParams,
     spokeProvider: sourceSpokeProvider,
   });

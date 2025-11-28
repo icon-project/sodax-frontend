@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { motion } from 'motion/react';
-import { getAllSupportedSolverTokens } from '@/lib/utils';
+import { formatBalance, getAllSupportedSolverTokens } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
 import { ArbitrumIcon } from '@/components/icons/chains/arbitrum';
 import { IcxIcon } from '@/components/icons/chains/icon';
@@ -22,6 +22,9 @@ import { LightLinkIcon } from '@/components/icons/chains/lightlink';
 import { EthereumIcon } from '@/components/icons/chains/ethereum';
 import { HyperIcon } from '@/components/icons/chains/hyper';
 import { createPortal } from 'react-dom';
+import { formatUnits } from 'viem';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { ChevronDownIcon } from 'lucide-react';
 
 interface NetworkIconProps {
   imageSrc: string;
@@ -98,7 +101,6 @@ function StackedNetworks({
 }: StackedNetworksProps): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
   const allSupportedTokens = getAllSupportedSolverTokens();
-
   const getNetworkInfo = (chainId: string): { image: string; name: string } => {
     const chain = availableChains.find(chain => chain.id === chainId);
     return chain ? { image: chain.icon, name: chain.name } : { image: '/chain/sonic.png', name: 'Sonic' };
@@ -159,6 +161,8 @@ function StackedNetworks({
 interface TokenAssetProps {
   name: string;
   token?: XToken;
+  sourceBalance: bigint;
+  isHoldToken: boolean;
   isClickBlurred: boolean;
   isHoverDimmed: boolean;
   isHovered: boolean;
@@ -175,7 +179,9 @@ interface TokenAssetProps {
 
 export function TokenAsset({
   name,
+  sourceBalance,
   token,
+  isHoldToken,
   isClickBlurred,
   isHoverDimmed,
   isHovered,
@@ -192,11 +198,12 @@ export function TokenAsset({
   const chainIds = isGroup && tokens ? [...new Set(tokens.map(t => t.xChainId))] : [];
   const [portalPosition, setPortalPosition] = useState<{ top: number; left: number } | null>(null);
 
+  const { data: usdPrice } = useTokenPrice(token || ({} as XToken));
   useEffect(() => {
     if (isClicked && isGroup && assetRef.current) {
       const rect = assetRef.current.getBoundingClientRect();
       setPortalPosition({
-        top: rect.bottom - 30,
+        top: rect.bottom - 40,
         left: rect.left + rect.width / 2,
       });
     } else {
@@ -208,14 +215,18 @@ export function TokenAsset({
     <>
       <motion.div
         ref={assetRef}
+        layout
         initial={{ opacity: 0, scale: 0.8 }}
+        whileHover={{
+          zIndex: 9999,
+        }}
         animate={{
           opacity: isHoverDimmed ? 0.5 : 1,
           scale: isHovered ? 1.1 : 1,
         }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className={`px-2 flex flex-col gap-2 items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 pb-3 ${
+        className={`px-3 flex flex-col items-center justify-start relative cursor-pointer shrink-0 transition-all duration-200 w-18 pb-4 ${
           isClickBlurred ? 'blur filter opacity-30' : isHoverDimmed ? 'opacity-50' : ''
         } ${isClicked && isGroup ? 'z-[9999]' : ''}`}
         data-name="Asset"
@@ -234,18 +245,58 @@ export function TokenAsset({
             />
           )}
         </div>
-        <div className="relative h-6 w-full">
-          <div
-            className={`font-['InterRegular'] leading-[0] absolute inset-0 flex items-center justify-center text-(length:--body-small) transition-all duration-200 ${
-              isClicked && isGroup
-                ? 'opacity-0'
-                : isHovered
-                  ? 'opacity-100 text-espresso font-bold'
+        <div
+          className={`font-['InterRegular'] flex items-center justify-center text-(length:--body-small) transition-all duration-200 mt-2 ${
+            isClicked && isGroup
+              ? 'opacity-0'
+              : isHovered
+                ? 'opacity-100 text-espresso font-bold'
+                : isHoldToken
+                  ? 'opacity-100 text-espresso font-medium'
                   : 'opacity-100 text-clay font-medium'
-            }`}
-          >
-            {name}
-          </div>
+          }`}
+        >
+          {name} {tokenCount && tokenCount > 1 && <ChevronDownIcon className="w-2 h-2 text-clay ml-1" />}
+        </div>
+
+        <div className="flex font-medium h-[13px] gap-1">
+          {isHoldToken && (
+            <div className="flex items-center gap-1 justify-start">
+              <motion.p
+                className="relative shrink-0 text-clay !text-(length:--text-body-fine-print)"
+                // layout="position"
+                animate={{
+                  // x: isHovered ? -2 : 0,
+                  color: isHovered ? '#483534' : '#8e7e7d',
+                }}
+                transition={{
+                  duration: 0.3,
+                  ease: 'easeInOut',
+                }}
+              >
+                {formatBalance(formatUnits(sourceBalance, token?.decimals || 0), usdPrice || 0)}
+              </motion.p>
+              {/* <AnimatePresence>
+                {isHovered && (
+                  <motion.p
+                    className="shrink-0 text-clay !text-(length:--text-body-fine-print)"
+                    animate={{
+                      opacity: isHovered ? 1 : 0,
+                      x: isHovered ? 2 : 0,
+                    }}
+                    transition={{
+                      duration: 0.3,
+                      ease: 'easeInOut',
+                    }}
+                  >
+                    {`$(${new BigNumber(formatUnits(sourceBalance, token?.decimals || 0))
+                      .multipliedBy(usdPrice || 0)
+                      .toFixed(2)})`}
+                  </motion.p>
+                )}
+              </AnimatePresence> */}
+            </div>
+          )}
         </div>
       </motion.div>
       {isGroup && (

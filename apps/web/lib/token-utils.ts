@@ -1,5 +1,5 @@
-// apps/web/lib/token-utils.ts
 import type { XToken } from '@sodax/types';
+import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
 /**
  * Group tokens by their symbol
@@ -48,3 +48,28 @@ export const filterTokensBySymbolAndChain = (tokens: XToken[], symbol: string, c
     return symbolMatch && chainMatch;
   });
 };
+
+/**
+ * Helper function to get balance for a specific token on a specific chain
+ * @param balances Balance map from useAllChainBalances
+ * @param tokenAddress Token address to get balance for
+ * @param chainId Chain ID to get balance for
+ * @returns Balance for the token on the specified chain, or 0n if not found
+ */
+export function getChainBalance(balances: Record<string, ChainBalanceEntry[]>, token: XToken): bigint {
+  const entries = balances[token.address] || [];
+  const entry = entries.find(e => e.chainId === token.xChainId);
+  return entry?.balance || 0n;
+}
+
+/**
+ * Helper function to check if a token address exists in balances
+ * @param balances Balance map from useAllChainBalances
+ * @param tokenAddress Token address to check
+ * @returns true if the token address exists in balances, false otherwise
+ */
+export function hasTokenBalance(balances: Record<string, ChainBalanceEntry[]>, token: XToken): boolean {
+  const entries = balances[token.address] || [];
+  const entry = entries.find(e => e.chainId === token.xChainId);
+  return entry !== undefined;
+}

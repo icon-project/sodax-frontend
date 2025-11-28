@@ -8,6 +8,7 @@ import type {
   UserReserveData,
   UserReserveDataHumanized,
   ReserveDataLegacy,
+  ReserveDataHumanized,
 } from './MoneyMarketTypes.js';
 import {
   formatReserves,
@@ -145,7 +146,7 @@ export class MoneyMarketDataService {
   /**
    * @description Util function to build the request for the formatReserves function
    */
-  public buildReserveDataWithPrice(reserves: ReservesDataHumanized): FormatReservesUSDRequest<ReserveDataWithPrice> {
+  public buildReserveDataWithPrice(reserves: ReservesDataHumanized): FormatReservesUSDRequest<ReserveDataHumanized> {
     // Current UNIX timestamp in seconds
     const currentUnixTimestamp: number = Math.floor(Date.now() / 1000);
     const baseCurrencyData = reserves.baseCurrencyData;
@@ -194,10 +195,10 @@ export class MoneyMarketDataService {
    * @param {FormatReservesUSDRequest<ReserveDataWithPrice>} - the request parameters
    * @returns {FormatReserveUSDResponse<FormatReservesUSDRequest>} - an array of formatted configuration and live usage data for each reserve in a Sodax market
    */
-  public formatReservesUSD(
-    params: FormatReservesUSDRequest<ReserveDataWithPrice>,
-  ): (ReserveData & { priceInMarketReferenceCurrency: string } & FormatReserveUSDResponse)[] {
-    return formatReserves(params);
+  public formatReservesUSD<T extends ReserveDataWithPrice>(
+    params: FormatReservesUSDRequest<T>,
+  ): FormatReserveUSDResponse[] {
+    return formatReserves<T>(params);
   }
 
   /**
