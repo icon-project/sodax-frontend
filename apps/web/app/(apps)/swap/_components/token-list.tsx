@@ -13,30 +13,30 @@ interface TokenListProps {
   clickedAsset: string | null;
   onAssetClick: (e: React.MouseEvent, assetId: string) => void;
   onClickOutside: () => void;
-  searchQuery: string;
   onTokenSelect?: (token: XToken) => void;
   onClose: () => void;
-  selectedChainFilter: SpokeChainId | null;
   isChainSelectorOpen: boolean;
   allBalances: Record<string, ChainBalanceEntry[]>;
   tokenPrices: Record<string, number> | undefined;
   holdTokens: XToken[];
   platformTokens: XToken[];
+  selectedChainFilter: SpokeChainId | null;
+  isFiltered: boolean;
 }
 
 export function TokenList({
   clickedAsset,
   onAssetClick,
   onClickOutside,
-  searchQuery,
   onTokenSelect,
   onClose,
-  selectedChainFilter,
   isChainSelectorOpen,
   allBalances,
   tokenPrices,
   holdTokens,
   platformTokens,
+  selectedChainFilter,
+  isFiltered,
 }: TokenListProps): React.JSX.Element {
   const assetsRef = useRef<HTMLDivElement>(null);
   const [hoveredAsset, setHoveredAsset] = useState<string | null>(null);
@@ -49,6 +49,14 @@ export function TokenList({
       setHoveredAsset(null);
     }
   }, [clickedAsset]);
+
+  useEffect(() => {
+    if (selectedChainFilter !== null) {
+      setTimeout(() => {
+        setHoveredAsset(null);
+      }, 100);
+    }
+  }, [selectedChainFilter]);
 
   const handleTokenAssetClick = (token: XToken) => {
     if (onTokenSelect) {
@@ -231,9 +239,9 @@ export function TokenList({
         >
           <motion.div
             ref={assetsRef}
-            className={`h-[calc(80vh-176px)] md:h-126 pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center px-0 relative shrink-0 w-full flex-1 ${
+            className={`h-[calc(80vh-176px)] md:h-126 pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 ${
               isChainSelectorOpen ? 'blur filter opacity-30' : ''
-            }`}
+            } ${isFiltered ? 'px-10' : 'px-0'}`}
             data-name="Assets"
             layout
           >
