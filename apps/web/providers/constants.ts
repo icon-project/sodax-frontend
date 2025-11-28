@@ -64,6 +64,7 @@ export const rpcConfig: RpcConfig = {
   '0x89.polygon': 'https://polygon-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   ethereum: 'https://eth-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  lightlink: 'https://replicator.phoenix.lightlink.io/rpc/v1',
 
   // Other chains
   '0x1.icon': 'https://ctz.solidwallet.io/api/v3',

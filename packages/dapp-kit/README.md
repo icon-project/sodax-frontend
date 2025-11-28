@@ -26,12 +26,14 @@ pnpm add @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk-react @sodax/sd
 
    **Recommended RPC providers by chain:**
 
-   - **EVM chains** (Sonic, Avalanche, Arbitrum, Base, BSC, Optimism, Polygon, etc.): Use [Alchemy](https://www.alchemy.com/) or [QuickNode](https://www.quicknode.com/)
-   - **Solana**: Use [Alchemy](https://www.alchemy.com/) or [QuickNode](https://www.quicknode.com/)
-   - **Stellar**: Use [QuickNode](https://www.quicknode.com/)
-   - **Sui**: Use [Alchemy](https://www.alchemy.com/) or [QuickNode](https://www.quicknode.com/)
-   - **Injective**: Use [QuickNode](https://www.quicknode.com/)
-   - **ICON**: Use the public RPC endpoint `https://ctz.solidwallet.io/api/v3`
+   - **EVM chains** (Sonic, Avalanche, Arbitrum, Base, BSC, Optimism, Polygon, LightLink, etc.):
+     - For most EVM chains (Sonic, Avalanche, Arbitrum, Base, BSC, Optimism, Polygon, etc.), use reliable private endpoints from providers such as [Alchemy](https://www.alchemy.com/) or [QuickNode](https://www.quicknode.com/) for production usage.
+     - **LightLink (Phoenix Mainnet):** Use the public RPC endpoint recommended in the [official LightLink documentation](https://docs.lightlink.io/lightlink-protocol/building-on-lightlink/live-networks):
+   - **Solana:** Use [Alchemy](https://www.alchemy.com/) or [QuickNode](https://www.quicknode.com/).
+   - **Stellar:** Use [QuickNode](https://www.quicknode.com/).
+   - **Sui:** Use [Alchemy](https://www.alchemy.com/) or [QuickNode](https://www.quicknode.com/).
+   - **Injective:** Use [QuickNode](https://www.quicknode.com/).
+   - **ICON:** Use the public RPC endpoint recommended in the [official ICON documentation](https://docs.icon.community/develop-on-icon-chain/networks#rpc-endpoints).
 
    After signing up with your chosen provider, you'll receive private RPC endpoints that you can use in your `rpcConfig`. These endpoints typically include an API key in the URL for authentication and rate limit management.
 
