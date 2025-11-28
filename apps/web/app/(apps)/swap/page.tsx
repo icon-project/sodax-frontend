@@ -75,7 +75,7 @@ export default function SwapPage() {
       token_dst_blockchain_id: outputToken.xChainId,
       amount:
         parseUnits(inputAmount, inputToken.decimals) -
-        sodax.swap.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)),
+        sodax.swaps.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)),
       quote_type: 'exact_input' as QuoteType,
     };
 
@@ -102,11 +102,11 @@ export default function SwapPage() {
 
     return {
       partner: new BigNumber(
-        formatUnits(sodax.swap.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)), inputToken.decimals),
+        formatUnits(sodax.swaps.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)), inputToken.decimals),
       ),
-      solver: new BigNumber(formatUnits(sodax.swap.getSolverFee(calculatedOutputAmount), outputToken.decimals)),
+      solver: new BigNumber(formatUnits(sodax.swaps.getSolverFee(calculatedOutputAmount), outputToken.decimals)),
     };
-  }, [inputAmount, calculatedOutputAmount, inputToken.decimals, outputToken.decimals, sodax.swap]);
+  }, [inputAmount, calculatedOutputAmount, inputToken.decimals, outputToken.decimals, sodax.swaps]);
 
   const { data: inputTokenPrice } = useTokenPrice(inputToken);
   const swapFeesUsdValue = useMemo(() => {
@@ -145,7 +145,7 @@ export default function SwapPage() {
 
   const handleMaxClick = (): void => {
     if (isSourceChainConnected) {
-      const maxAvailableAmount = calculateMaxAvailableAmount(sourceBalance, inputToken.decimals, sodax.swap);
+      const maxAvailableAmount = calculateMaxAvailableAmount(sourceBalance, inputToken.decimals, sodax.swaps);
       setInputAmount(formatBalance(maxAvailableAmount, inputTokenPrice || 0));
     }
   };
