@@ -265,9 +265,9 @@ export function TokenAsset({
             <div className="flex items-center gap-1 justify-start">
               <motion.p
                 className="relative shrink-0 text-clay !text-(length:--text-body-fine-print)"
-                layout="position"
+                // layout="position"
                 animate={{
-                  x: isHovered ? -2 : 0,
+                  // x: isHovered ? -2 : 0,
                   color: isHovered ? '#483534' : '#8e7e7d',
                 }}
                 transition={{
@@ -277,7 +277,7 @@ export function TokenAsset({
               >
                 {formatBalance(formatUnits(sourceBalance, token?.decimals || 0), usdPrice || 0)}
               </motion.p>
-              <AnimatePresence>
+              {/* <AnimatePresence>
                 {isHovered && (
                   <motion.p
                     className="shrink-0 text-clay !text-(length:--text-body-fine-print)"
@@ -295,7 +295,7 @@ export function TokenAsset({
                       .toFixed(2)})`}
                   </motion.p>
                 )}
-              </AnimatePresence>
+              </AnimatePresence> */}
             </div>
           )}
         </div>
