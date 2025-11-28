@@ -66,7 +66,7 @@ pnpm add @sodax/dapp-kit @tanstack/react-query @sodax/wallet-sdk-react @sodax/sd
 
     function App() {
       return (
-        <SodaxProvider testnet={false} rpcConfig={rpcConfig}>
+        <SodaxProvider rpcConfig={rpcConfig}>
           <QueryClientProvider client={queryClient}>
             <SodaxWalletProvider rpcConfig={rpcConfig}>
               <YourApp />
