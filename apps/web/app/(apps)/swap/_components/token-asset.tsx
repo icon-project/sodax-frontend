@@ -3,7 +3,7 @@ import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { formatBalance, getAllSupportedSolverTokens } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
 import { ArbitrumIcon } from '@/components/icons/chains/arbitrum';
@@ -24,7 +24,6 @@ import { HyperIcon } from '@/components/icons/chains/hyper';
 import { createPortal } from 'react-dom';
 import { formatUnits } from 'viem';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
-import BigNumber from 'bignumber.js';
 import { ChevronDownIcon } from 'lucide-react';
 
 interface NetworkIconProps {
