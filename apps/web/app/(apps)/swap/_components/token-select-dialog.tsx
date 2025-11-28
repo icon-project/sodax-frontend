@@ -1,11 +1,11 @@
 import type React from 'react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { XIcon } from 'lucide-react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog';
 import { CurrencySearchPanel } from './currency-search-panel';
 import { TokenList } from './token-list';
-import { DialogContent, Dialog, DialogClose } from '@/components/ui/dialog';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
@@ -23,175 +23,153 @@ export default function TokenSelectDialog({
   const [clickedAsset, setClickedAsset] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isChainSelectorOpen, setIsChainSelectorOpen] = useState(false);
-  const [selectedChainFilter, setSelectedChainFilter] = useState<SpokeChainId | null>(null);
+  const [selectedChain, setSelectedChain] = useState<SpokeChainId | null>(null);
 
-  const allBalances = useAllChainBalances();
+  const balances = useAllChainBalances();
 
-  const allUnfilteredTokens = useMemo(() => {
-    return getAllSupportedSolverTokens();
-  }, []);
+  const allTokens = useMemo(() => getAllSupportedSolverTokens(), []);
 
-  const allSupportedTokens = useMemo(() => {
-    return selectedChainFilter ? getSupportedSolverTokensForChain(selectedChainFilter) : getAllSupportedSolverTokens();
-  }, [selectedChainFilter]);
+  const chainFilteredTokens = useMemo(() => {
+    return selectedChain ? getSupportedSolverTokensForChain(selectedChain) : allTokens;
+  }, [selectedChain, allTokens]);
 
-  const filteredTokens = useMemo(() => {
-    return allSupportedTokens.filter((token: XToken) => token.symbol.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [allSupportedTokens, searchQuery]);
+  const filterBySearch = useCallback(
+    (tokens: XToken[]): XToken[] =>
+      tokens.filter(token => token.symbol.toLowerCase().includes(searchQuery.toLowerCase())),
+    [searchQuery],
+  );
 
-  const filteredUnfilteredTokens = useMemo(() => {
-    if (selectedChainFilter !== null) {
-      return allUnfilteredTokens;
+  const visibleTokens = useMemo(() => filterBySearch(chainFilteredTokens), [filterBySearch, chainFilteredTokens]);
+
+  const allChainVisibleTokens = useMemo(() => {
+    if (selectedChain) {
+      return allTokens;
     }
+    return filterBySearch(allTokens);
+  }, [allTokens, selectedChain, filterBySearch]);
 
-    return allUnfilteredTokens.filter((token: XToken) =>
-      token.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [allUnfilteredTokens, searchQuery, selectedChainFilter]);
+  const splitTokensByBalance = useCallback(
+    (tokens: XToken[]) => {
+      const hold: XToken[] = [];
+      const platform: XToken[] = [];
 
-  const { holdTokens, platformTokens } = useMemo(() => {
-    const hold: XToken[] = [];
-    const platform: XToken[] = [];
-
-    for (const token of filteredTokens) {
-      if (hasTokenBalance(allBalances, token) && getChainBalance(allBalances, token) > 0n) {
-        hold.push(token);
-      } else {
-        platform.push(token);
+      for (const token of tokens) {
+        if (hasTokenBalance(balances, token) && getChainBalance(balances, token) > 0n) {
+          hold.push(token);
+        } else {
+          platform.push(token);
+        }
       }
-    }
 
-    return { holdTokens: hold, platformTokens: platform };
-  }, [filteredTokens, allBalances]);
+      return { holdTokens: hold, platformTokens: platform };
+    },
+    [balances],
+  );
 
-  const { holdTokens: unfilteredHoldTokens, platformTokens: unfilteredPlatformTokens } = useMemo(() => {
-    const hold: XToken[] = [];
-    const platform: XToken[] = [];
+  const filteredTokenGroups = useMemo(() => splitTokensByBalance(visibleTokens), [splitTokensByBalance, visibleTokens]);
+  const unfilteredTokenGroups = useMemo(
+    () => splitTokensByBalance(allChainVisibleTokens),
+    [splitTokensByBalance, allChainVisibleTokens],
+  );
 
-    for (const token of filteredUnfilteredTokens) {
-      if (hasTokenBalance(allBalances, token) && getChainBalance(allBalances, token) > 0n) {
-        hold.push(token);
-      } else {
-        platform.push(token);
-      }
-    }
+  const { data: tokenPrices } = useAllTokenPrices(filteredTokenGroups.holdTokens);
+  const { data: unfilteredTokenPrices } = useAllTokenPrices(unfilteredTokenGroups.holdTokens);
 
-    return { holdTokens: hold, platformTokens: platform };
-  }, [filteredUnfilteredTokens, allBalances]);
-
-  const { data: tokenPrices } = useAllTokenPrices(holdTokens);
-
-  const { data: unfilteredTokenPrices } = useAllTokenPrices(unfilteredHoldTokens);
-
-  const handleAssetClick = (e: React.MouseEvent, assetId: string) => {
-    setClickedAsset(clickedAsset === assetId ? null : assetId);
-  };
-
-  const handleClickOutside = () => {
+  const resetSelectionState = () => {
+    setSearchQuery('');
+    setIsChainSelectorOpen(false);
+    setSelectedChain(null);
     setClickedAsset(null);
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-  };
-
-  const handleChainSelectorClick = () => {
-    setIsChainSelectorOpen(!isChainSelectorOpen);
-  };
-
-  const handleShowAllChains = () => {
-    setSelectedChainFilter(null);
-    setIsChainSelectorOpen(false);
-  };
-
-  const handleChainSelect = (chainId: string) => {
-    setSelectedChainFilter(chainId as SpokeChainId);
-    setIsChainSelectorOpen(false);
+  const handleAssetClick = (_: React.MouseEvent, assetId: string) => {
+    setClickedAsset(prev => (prev === assetId ? null : assetId));
   };
 
   const handleTokenSelect = (token: XToken) => {
     onTokenSelect?.(token);
-    setSearchQuery('');
-    setIsChainSelectorOpen(false);
-    setSelectedChainFilter(null);
-    setClickedAsset(null);
+    resetSelectionState();
   };
 
-  const onHandleOpenChange = (open: boolean) => {
+  const handleDialogClose = () => {
     if (clickedAsset !== null) {
       setClickedAsset(null);
       return;
     }
 
+    resetSelectionState();
     onClose();
-    setSearchQuery('');
-    setIsChainSelectorOpen(false);
-    setSelectedChainFilter(null);
-    setClickedAsset(null);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onHandleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleDialogClose}>
       <DialogContent
-        enableMotion={true}
-        className="shadow-none md:max-w-[480px] w-[90%] py-12 bg-vibrant-white gap-0 block h-[80vh] md:h-170"
-        hideCloseButton={true}
+        enableMotion
+        hideCloseButton
+        className="block w-[90%] h-[80vh] md:h-170 md:max-w-[480px] py-12 bg-vibrant-white gap-0 shadow-none"
       >
-        <div className="flex justify-end w-full h-4 relative p-0">
-          <DialogClose className="pt-0" asChild>
+        <div className="relative flex justify-end h-4">
+          <DialogClose asChild>
             <Button
               variant="ghost"
-              className={`absolute outline-none w-12 h-12 rounded-full text-clay-light hover:text-clay transition-colors cursor-pointer -top-3  ${clickedAsset !== null ? 'blur filter' : ''}`}
+              className={`absolute -top-3 w-12 h-12 rounded-full transition-colors outline-none text-clay-light hover:text-clay ${
+                clickedAsset ? 'blur filter' : ''
+              }`}
             >
               <XIcon className="w-4 h-4 pointer-events-none" />
             </Button>
           </DialogClose>
         </div>
+
         <CurrencySearchPanel
-          isUsdtClicked={clickedAsset !== null}
+          isUsdtClicked={Boolean(clickedAsset)}
           searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          handleChainSelectorClick={handleChainSelectorClick}
+          onSearchChange={setSearchQuery}
+          handleChainSelectorClick={() => setIsChainSelectorOpen(v => !v)}
+          handleShowAllChains={() => {
+            setSelectedChain(null);
+            setIsChainSelectorOpen(false);
+          }}
+          handleChainSelect={chain => {
+            setSelectedChain(chain as SpokeChainId);
+            setIsChainSelectorOpen(false);
+          }}
           isChainSelectorOpen={isChainSelectorOpen}
-          handleShowAllChains={handleShowAllChains}
-          handleChainSelect={handleChainSelect}
-          selectedChainId={selectedChainFilter}
+          selectedChainId={selectedChain}
         />
 
         <div className="relative">
-          {selectedChainFilter !== null && (
-            <div className="absolute inset-0 blur filter opacity-30 pointer-events-none z-0">
+          {selectedChain && (
+            <div className="absolute inset-0 z-0 blur filter opacity-30 pointer-events-none">
               <TokenList
+                {...unfilteredTokenGroups}
                 clickedAsset={clickedAsset}
+                tokenPrices={unfilteredTokenPrices}
+                allBalances={balances}
+                selectedChainFilter={selectedChain}
+                isFiltered={false}
                 onAssetClick={handleAssetClick}
-                onClickOutside={handleClickOutside}
                 onTokenSelect={handleTokenSelect}
+                onClickOutside={() => setClickedAsset(null)}
                 onClose={onClose}
                 isChainSelectorOpen={isChainSelectorOpen}
-                allBalances={allBalances}
-                tokenPrices={unfilteredTokenPrices}
-                holdTokens={unfilteredHoldTokens}
-                platformTokens={unfilteredPlatformTokens}
-                selectedChainFilter={selectedChainFilter}
-                isFiltered={false}
               />
             </div>
           )}
 
-          <div className={selectedChainFilter !== null ? 'relative z-10' : ''}>
+          <div className={selectedChain ? 'relative z-10' : ''}>
             <TokenList
+              {...filteredTokenGroups}
               clickedAsset={clickedAsset}
+              tokenPrices={tokenPrices}
+              allBalances={balances}
+              selectedChainFilter={selectedChain}
+              isFiltered={Boolean(selectedChain)}
               onAssetClick={handleAssetClick}
-              onClickOutside={handleClickOutside}
               onTokenSelect={handleTokenSelect}
+              onClickOutside={() => setClickedAsset(null)}
               onClose={onClose}
               isChainSelectorOpen={isChainSelectorOpen}
-              allBalances={allBalances}
-              tokenPrices={tokenPrices}
-              holdTokens={holdTokens}
-              platformTokens={platformTokens}
-              selectedChainFilter={selectedChainFilter}
-              isFiltered={selectedChainFilter !== null}
             />
           </div>
         </div>
