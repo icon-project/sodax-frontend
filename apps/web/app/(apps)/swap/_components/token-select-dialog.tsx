@@ -40,10 +40,14 @@ export default function TokenSelectDialog({
   }, [allSupportedTokens, searchQuery]);
 
   const filteredUnfilteredTokens = useMemo(() => {
+    if (selectedChainFilter !== null) {
+      return allUnfilteredTokens;
+    }
+
     return allUnfilteredTokens.filter((token: XToken) =>
       token.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [allUnfilteredTokens, searchQuery]);
+  }, [allUnfilteredTokens, searchQuery, selectedChainFilter]);
 
   const { holdTokens, platformTokens } = useMemo(() => {
     const hold: XToken[] = [];
