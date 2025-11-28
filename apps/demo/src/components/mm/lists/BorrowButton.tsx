@@ -14,7 +14,7 @@ export function BorrowButton({ token }: { token: XToken }) {
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token, spokeProvider);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'borrow', spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
+  const { mutateAsync: approve, isPending: isApproving } = useMMApprove(spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleBorrow = async () => {
@@ -35,7 +35,7 @@ export function BorrowButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action: 'borrow' });
+    await approve({ token, amount, action: 'borrow' });
   };
 
   return (

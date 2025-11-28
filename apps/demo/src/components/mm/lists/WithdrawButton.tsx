@@ -14,7 +14,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, spokeProvider);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'withdraw', spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
+  const { mutateAsync: approve, isPending: isApproving } = useMMApprove(spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleWithdraw = async () => {
@@ -35,7 +35,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action: 'withdraw' });
+    await approve({ token, amount, action: 'withdraw' });
   };
 
   return (
