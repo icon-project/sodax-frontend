@@ -6,24 +6,23 @@ import { Label } from '@/components/ui/label';
 import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
-import { useAppStore } from '@/zustand/useAppStore';
 
 export function WithdrawButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const { selectedChainId } = useAppStore();
-
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, spokeProvider);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'withdraw', spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
+  const { mutateAsync: approve, isPending: isApproving } = useMMApprove(spokeProvider);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleWithdraw = async () => {
-    await withdraw(amount);
-    if (!error) {
+    try {
+      await withdraw(amount);
       setOpen(false);
+    } catch (err) {
+      console.error('Error in handleWithdraw:', err);
     }
   };
 
@@ -36,7 +35,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action: 'withdraw' });
+    await approve({ token, amount, action: 'withdraw' });
   };
 
   return (
@@ -65,6 +64,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
+        {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"

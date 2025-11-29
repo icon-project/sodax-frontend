@@ -12,7 +12,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   const queryClient = getQueryClient();
 
   return (
-    <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
+    <SodaxProvider config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
         <SodaxWalletProvider rpcConfig={rpcConfig}>{children}</SodaxWalletProvider>
       </QueryClientProvider>

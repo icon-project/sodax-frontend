@@ -76,7 +76,7 @@ export default function SwapCard({
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
-  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceProvider);
+  const { mutateAsync: approve, isPending: isApproving } = useSwapApprove(sourceProvider);
   const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
   const destProvider = useSpokeProvider(destChain, useWalletProvider(destChain));
   const {

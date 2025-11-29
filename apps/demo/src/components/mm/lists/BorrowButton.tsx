@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
-import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 
 export function BorrowButton({ token }: { token: XToken }) {
@@ -14,9 +13,8 @@ export function BorrowButton({ token }: { token: XToken }) {
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token, spokeProvider);
-
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'borrow', spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
+  const { mutateAsync: approve, isPending: isApproving } = useMMApprove(spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleBorrow = async () => {
@@ -37,7 +35,7 @@ export function BorrowButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action: 'borrow' });
+    await approve({ token, amount, action: 'borrow' });
   };
 
   return (

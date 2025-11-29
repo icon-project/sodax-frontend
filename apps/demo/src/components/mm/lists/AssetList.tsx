@@ -1,15 +1,16 @@
+// apps/demo/src/components/mm/lists/AssetList.tsx
 import React from 'react';
 import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { formatUnits } from 'viem';
-import { SupplyAssetsListItem } from './SupplyAssetsListItem';
+import { AssetItem } from './AssetItem';
 import { useAppStore } from '@/zustand/useAppStore';
 import { moneyMarketSupportedTokens } from '@sodax/sdk';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 
-export function SupplyAssetsList() {
+export function AssetList() {
   const { selectedChainId } = useAppStore();
 
   const tokens = moneyMarketSupportedTokens[selectedChainId];
@@ -62,7 +63,7 @@ export function SupplyAssetsList() {
             ) : (
               userReserves &&
               tokens.map(token => (
-                <SupplyAssetsListItem
+                <AssetItem
                   key={token.address}
                   token={token}
                   walletBalance={
@@ -81,3 +82,4 @@ export function SupplyAssetsList() {
     </Card>
   );
 }
+
