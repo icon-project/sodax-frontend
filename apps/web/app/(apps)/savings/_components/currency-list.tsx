@@ -35,53 +35,12 @@ export default function CurrencyList({
   );
 
   //This is for mock data only
-  const stablecoins = ['bnUSD', 'USDC', 'USDT', 'BTC'];
-
-  const megaAssets = [{ BTC: ['BTCB', 'WBTC', 'cbBTC', 'tBTC'] }];
-
-  const megaAssetSymbolMap = useMemo(() => {
-    const map = new Map<string, string[]>();
-    megaAssets.forEach(asset => {
-      const entries = Object.entries(asset);
-      if (entries.length > 0) {
-        const firstEntry = entries[0];
-        if (firstEntry) {
-          const [megaSymbol, childSymbols] = firstEntry;
-          if (megaSymbol && childSymbols) {
-            map.set(megaSymbol, childSymbols as string[]);
-          }
-        }
-      }
-    });
-    return map;
-  }, []);
-
-  const megaAssetTokenSymbols = megaAssets.flatMap(asset => Object.values(asset)[0]);
+  const stablecoins = ['bnUSD', 'USDC', 'USDT'];
 
   const allTokens = tokens.filter(token => token !== undefined) as XToken[];
-  const regularTokens = allTokens.filter(token => !megaAssetTokenSymbols.includes(token.symbol));
-  const uniqueTokenSymbols = getUniqueTokenSymbols(regularTokens);
+  const uniqueTokenSymbols = getUniqueTokenSymbols(allTokens);
 
-  const megaAssetEntries = megaAssets
-    .map(asset => {
-      const entries = Object.entries(asset);
-      if (entries.length === 0) {
-        return { symbol: '', tokens: [] };
-      }
-      const firstEntry = entries[0];
-      if (!firstEntry) {
-        return { symbol: '', tokens: [] };
-      }
-      const [megaSymbol, childSymbols] = firstEntry;
-      const megaTokens = allTokens.filter(token => (childSymbols as string[]).includes(token.symbol));
-      return {
-        symbol: megaSymbol,
-        tokens: megaTokens,
-      };
-    })
-    .filter(entry => entry.symbol !== '' && entry.tokens.length > 0);
-
-  const allFilteredTokens = [...uniqueTokenSymbols, ...megaAssetEntries]
+  const allFilteredTokens = uniqueTokenSymbols
     .filter(token => token.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
       const aIsStablecoin = stablecoins.includes(a.symbol);
@@ -124,13 +83,7 @@ export default function CurrencyList({
                         animate={{ y: isCollapsed ? 0 : 4 }}
                         transition={{ duration: 0.4, ease: 'easeInOut' }}
                       >
-                        {megaAssetSymbolMap.has(symbol) ? (
-                          <>
-                            {symbol} <span className="text-clay">{megaAssetSymbolMap.get(symbol)?.join(' + ')}</span>
-                          </>
-                        ) : (
-                          symbol
-                        )}
+                        {symbol}
                       </motion.div>
                       <AnimatePresence>
                         {isCollapsed && (
@@ -263,40 +216,18 @@ export default function CurrencyList({
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
                 <div className="flex gap-(--layout-space-big)">
-                  {megaAssetSymbolMap.has(symbol) ? (
-                    getUniqueTokenSymbols(tokens).map(megaTokens =>
-                      megaTokens.tokens.length === 1 ? (
-                        <div className="flex flex-col gap-2" key={megaTokens.symbol}>
-                          <div className="flex">
-                            <CurrencyLogo currency={megaTokens.tokens[0] as XToken} />
-                          </div>
-                          <div className="text-clay text-(length:--body-small) font-['InterRegular'] text-center">
-                            {megaTokens.symbol}
-                          </div>
-                        </div>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex">
+                      {tokens.length === 1 ? (
+                        <CurrencyLogo currency={tokens[0] as XToken} />
                       ) : (
-                        <CurrencyLogo
-                          currency={megaTokens.tokens[0] as XToken}
-                          isGroup={true}
-                          tokenCount={megaTokens.tokens.length}
-                          key={megaTokens.symbol}
-                        />
-                      ),
-                    )
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      <div className="flex">
-                        {tokens.length === 1 ? (
-                          <CurrencyLogo currency={tokens[0] as XToken} />
-                        ) : (
-                          <CurrencyLogo currency={tokens[0] as XToken} isGroup={true} tokenCount={tokens.length} />
-                        )}
-                      </div>
-                      <div className="text-clay text-(length:--body-small) font-['InterRegular'] text-center">
-                        {symbol}
-                      </div>
+                        <CurrencyLogo currency={tokens[0] as XToken} isGroup={true} tokenCount={tokens.length} />
+                      )}
                     </div>
-                  )}
+                    <div className="text-clay text-(length:--body-small) font-['InterRegular'] text-center">
+                      {symbol}
+                    </div>
+                  </div>
                 </div>
               </motion.div>
               <motion.div
