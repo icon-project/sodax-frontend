@@ -4,10 +4,14 @@ import { useSodaxContext } from '../shared/useSodaxContext';
 
 /**
  * Hook for fetching formatted summary of Sodax user portfolio (holdings, total liquidity,
- *  collateral, borrows, liquidation threshold, health factor, available borrowing power, etc..).
+ * collateral, borrows, liquidation threshold, health factor, available borrowing power, etc.).
  *
  * This hook provides access to the current state of user portfolio in the money market protocol.
- * The data is automatically fetched and cached using React Query.
+ * The data includes aggregated metrics such as total collateral, total debt, health factor,
+ * and available borrowing power. The data is automatically fetched and cached using React Query.
+ *
+ * @param spokeProvider - The spoke provider instance for the target chain
+ * @param address - The user's wallet address
  *
  * @example
  * ```typescript
