@@ -555,7 +555,7 @@ Create one spoke provider instance for each user wallet connection. Once created
 const arbSpokeProvider = new EvmSpokeProvider(evmWalletProvider, arbChainConfig);
 
 // Use the same instance for all operations
-await sodax.swap.createIntent(params, arbSpokeProvider);
+await sodax.swaps.createIntent(params, arbSpokeProvider);
 await sodax.moneyMarket.supply(supplyParams, arbSpokeProvider);
 ```
 
@@ -620,7 +620,7 @@ await sodax.initialize();
 const arbSpokeProvider = new EvmSpokeProvider(evmWalletProvider, arbChainConfig);
 
 // Use spoke provider for swap operations
-const createIntentResult = await sodax.swap.createIntent(
+const createIntentResult = await sodax.swaps.createIntent(
   createIntentParams,
   arbSpokeProvider
 );

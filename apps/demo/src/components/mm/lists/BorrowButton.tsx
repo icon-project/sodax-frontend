@@ -7,9 +7,8 @@ import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@soda
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
-import type { AggregatedReserveData } from '@sodax/sdk';
 
-export function BorrowButton({ token, aToken, reserve }: { token: XToken, aToken: XToken, reserve: AggregatedReserveData }) {
+export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const walletProvider = useWalletProvider(token.xChainId);

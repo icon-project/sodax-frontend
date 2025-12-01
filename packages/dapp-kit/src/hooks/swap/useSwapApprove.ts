@@ -44,7 +44,7 @@ export function useSwapApprove(
         throw new Error('Swap Params not found');
       }
 
-      const allowance = await sodax.swap.approve({
+      const allowance = await sodax.swaps.approve({
         intentParams: params,
         spokeProvider,
       });
