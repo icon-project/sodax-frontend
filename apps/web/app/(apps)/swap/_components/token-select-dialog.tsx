@@ -162,7 +162,12 @@ export default function TokenSelectDialog({
             </div>
           )}
 
-          <div className={selectedChain ? 'relative z-10' : ''}>
+          <div
+            className={selectedChain ? 'relative z-10' : ''}
+            onClick={() => {
+              setSelectedChain(null);
+            }}
+          >
             <TokenList
               {...filteredTokenGroups}
               clickedAsset={clickedAsset}
