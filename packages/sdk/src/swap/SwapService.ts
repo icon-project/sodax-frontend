@@ -65,19 +65,36 @@ import type { ConfigService } from '../shared/config/ConfigService.js';
 import { SonicSpokeProvider } from '../shared/entities/Providers.js';
 import { StellarSpokeProvider } from '../shared/entities/stellar/StellarSpokeProvider.js';
 
+/**
+ * Parameters for creating a new swap intent.
+ * Specifies all details for the creation of a cross-chain swap intent.
+ *
+ * @property inputToken - The address of the input token on the spoke chain.
+ * @property outputToken - The address of the output token on the spoke chain.
+ * @property inputAmount - The amount of input tokens to provide, denominated in the input token's decimals.
+ * @property minOutputAmount - The minimum amount of output tokens to accept, denominated in the output token's decimals.
+ * @property deadline - UNIX timestamp in seconds after which the intent expires (0 = no deadline).
+ * @property allowPartialFill - Whether the intent can be partially filled.
+ * @property srcChain - Chain ID where input tokens originate.
+ * @property dstChain - Chain ID where output tokens should be delivered.
+ * @property srcAddress - Sender address on source chain.
+ * @property dstAddress - Receiver address on destination chain.
+ * @property solver - Optional specific solver address (use address(0) for any solver).
+ * @property data - Additional arbitrary data (opaque, for advanced integrations/fees etc).
+ */
 export type CreateIntentParams = {
-  inputToken: string; // The address of the input token on spoke chain
-  outputToken: string; // The address of the output token on spoke chain
-  inputAmount: bigint; // The amount of input tokens
-  minOutputAmount: bigint; // The minimum amount of output tokens to accept
-  deadline: bigint; // Optional timestamp after which intent expires (0 = no deadline)
-  allowPartialFill: boolean; // Whether the intent can be partially filled
-  srcChain: SpokeChainId; // Chain ID where input tokens originate
-  dstChain: SpokeChainId; // Chain ID where output tokens should be delivered
-  srcAddress: string; // Source address (original address on spoke chain)
-  dstAddress: string; // Destination address (original address on spoke chain)
-  solver: Address; // Optional specific solver address (address(0) = any solver)
-  data: Hex; // Additional arbitrary data
+  inputToken: string;
+  outputToken: string;
+  inputAmount: bigint;
+  minOutputAmount: bigint;
+  deadline: bigint;
+  allowPartialFill: boolean;
+  srcChain: SpokeChainId;
+  dstChain: SpokeChainId;
+  srcAddress: string;
+  dstAddress: string;
+  solver: Address;
+  data: Hex;
 };
 
 export type Intent = {

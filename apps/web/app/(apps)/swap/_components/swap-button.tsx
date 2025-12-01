@@ -5,11 +5,10 @@ import { useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CircularProgressIcon } from '@/components/icons';
 import { Check } from 'lucide-react';
-import { SolverIntentStatusCode, type CreateIntentParams } from '@sodax/sdk';
+import { SolverIntentStatusCode, type CreateIntentParams, type SpokeProvider } from '@sodax/sdk';
 import { chainIdToChainName } from '@/providers/constants';
 import { useSwapState, useSwapActions } from '../_stores/swap-store-provider';
 import { useSwapAllowance } from '@sodax/dapp-kit';
-import type { SpokeProvider } from '@sodax/sdk';
 
 interface SwapButtonProps {
   intentOrderPayload: CreateIntentParams | undefined;
@@ -30,8 +29,7 @@ const SwapButton: React.FC<SwapButtonProps> = ({
   onSwapConfirm,
   isApproving,
 }: SwapButtonProps): React.JSX.Element => {
-  const { inputToken, outputToken, swapError, allowanceConfirmed, swapStatus, dstTxHash } =
-    useSwapState();
+  const { inputToken, outputToken, swapError, allowanceConfirmed, swapStatus, dstTxHash } = useSwapState();
   const { setAllowanceConfirmed } = useSwapActions();
 
   const isWaitingForSolvedStatus = useMemo(() => {
