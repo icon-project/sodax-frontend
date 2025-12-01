@@ -13,30 +13,47 @@ import { LightLinkIcon } from '@/components/icons/chains/lightlink';
 import { IcxIcon } from '@/components/icons/chains/icon';
 import { HyperIcon } from '@/components/icons/chains/hyper';
 import { EthereumIcon } from '@/components/icons/chains/ethereum';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  AVALANCHE_MAINNET_CHAIN_ID,
+  OPTIMISM_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  SUI_MAINNET_CHAIN_ID,
+  STELLAR_MAINNET_CHAIN_ID,
+  SOLANA_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  BSC_MAINNET_CHAIN_ID,
+  ICON_MAINNET_CHAIN_ID,
+  POLYGON_MAINNET_CHAIN_ID,
+  INJECTIVE_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
+  ETHEREUM_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
+} from '@sodax/types';
 
 interface NetworkIconProps {
-  imageSrc: string;
+  id: string;
   className?: string;
 }
 
-export default function NetworkIcon({ imageSrc, className }: NetworkIconProps): React.JSX.Element {
+export default function NetworkIcon({ id, className }: NetworkIconProps): React.JSX.Element {
   return (
     <div className={`ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded w-4 h-4 ${className}`}>
-      {imageSrc === 'ICON' && <IcxIcon />}
-      {imageSrc === 'Avalanche' && <AvalancheIcon />}
-      {imageSrc === 'Base' && <BaseIcon />}
-      {imageSrc === 'BSC' && <BnbIcon />}
-      {imageSrc === 'Polygon' && <PolygonIcon />}
-      {imageSrc === 'Solana' && <SolIcon />}
-      {imageSrc === 'Stellar' && <StellarIcon />}
-      {imageSrc === 'Sui' && <SuiIcon />}
-      {imageSrc === 'Injective' && <InjectiveIcon />}
-      {imageSrc === 'Sonic' && <SonicIcon />}
-      {imageSrc === 'Optimism' && <OptimismIcon />}
-      {imageSrc === 'Arbitrum' && <ArbitrumIcon />}
-      {imageSrc === 'LightLink' && <LightLinkIcon />}
-      {imageSrc === 'Hyper' && <HyperIcon />}
-      {imageSrc === 'Ethereum' && <EthereumIcon />}
+      {id === ICON_MAINNET_CHAIN_ID && <IcxIcon />}
+      {id === AVALANCHE_MAINNET_CHAIN_ID && <AvalancheIcon />}
+      {id === BASE_MAINNET_CHAIN_ID && <BaseIcon />}
+      {id === BSC_MAINNET_CHAIN_ID && <BnbIcon />}
+      {id === POLYGON_MAINNET_CHAIN_ID && <PolygonIcon />}
+      {id === SOLANA_MAINNET_CHAIN_ID && <SolIcon />}
+      {id === STELLAR_MAINNET_CHAIN_ID && <StellarIcon />}
+      {id === SUI_MAINNET_CHAIN_ID && <SuiIcon />}
+      {id === INJECTIVE_MAINNET_CHAIN_ID && <InjectiveIcon />}
+      {id === SONIC_MAINNET_CHAIN_ID && <SonicIcon />}
+      {id === OPTIMISM_MAINNET_CHAIN_ID && <OptimismIcon />}
+      {id === ARBITRUM_MAINNET_CHAIN_ID && <ArbitrumIcon />}
+      {id === LIGHTLINK_MAINNET_CHAIN_ID && <LightLinkIcon />}
+      {id === HYPEREVM_MAINNET_CHAIN_ID && <HyperIcon />}
+      {id === ETHEREUM_MAINNET_CHAIN_ID && <EthereumIcon />}
     </div>
   );
 }

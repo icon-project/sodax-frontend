@@ -80,7 +80,7 @@ function NetworkPicker({
             }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
-            <NetworkIcon imageSrc={network.name} />
+            <NetworkIcon id={network.id} />
           </motion.div>
         ))}
       </div>
