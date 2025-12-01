@@ -92,6 +92,11 @@ export default function TokenSelectDialog({
   };
 
   const handleDialogClose = () => {
+    if (selectedChain) {
+      setSelectedChain(null);
+      return;
+    }
+
     if (clickedAsset !== null) {
       setClickedAsset(null);
       return;
