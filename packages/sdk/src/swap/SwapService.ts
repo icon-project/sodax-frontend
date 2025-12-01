@@ -873,6 +873,7 @@ export class SwapService {
     spokeProvider,
     fee = this.config.partnerFee,
     raw,
+    skipSimulation = false
   }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<
     Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>
   > {
@@ -950,6 +951,7 @@ export class SwapService {
           spokeProvider satisfies S,
           this.hubProvider,
           raw,
+          skipSimulation,
         );
 
         return {
