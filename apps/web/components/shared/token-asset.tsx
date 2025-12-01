@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/swap/_components/token-asset.tsx
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import type { XToken } from '@sodax/types';
@@ -6,114 +5,36 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { motion } from 'motion/react';
 import { formatBalance, getAllSupportedSolverTokens } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
-import { ArbitrumIcon } from '@/components/icons/chains/arbitrum';
-import { IcxIcon } from '@/components/icons/chains/icon';
-import { BaseIcon } from '@/components/icons/chains/base';
-import { AvalancheIcon } from '@/components/icons/chains/avalanche';
-import { BnbIcon } from '@/components/icons/chains/bnb';
-import { PolygonIcon } from '@/components/icons/chains/polygon';
-import { SolIcon } from '@/components/icons/chains/sol';
-import { StellarIcon } from '@/components/icons/chains/stellar';
-import { SuiIcon } from '@/components/icons/chains/sui';
-import { InjectiveIcon } from '@/components/icons/chains/injective';
-import { SonicIcon } from '@/components/icons/chains/sonic';
-import { OptimismIcon } from '@/components/icons/chains/optimism';
-import { LightLinkIcon } from '@/components/icons/chains/lightlink';
-import { EthereumIcon } from '@/components/icons/chains/ethereum';
-import { HyperIcon } from '@/components/icons/chains/hyper';
+import NetworkIcon from '@/components/shared/network-icon';
 import { createPortal } from 'react-dom';
 import { formatUnits } from 'viem';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { ChevronDownIcon } from 'lucide-react';
 
-interface NetworkIconProps {
-  imageSrc: string;
-  isHovered: boolean;
-  hoveredIcon: number | null;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
-  onClick: () => void;
-}
-
-function NetworkIcon({
-  imageSrc,
-  isHovered,
-  hoveredIcon,
-  onMouseEnter,
-  onMouseLeave,
-  onClick,
-}: NetworkIconProps): React.JSX.Element {
-  const shouldDim = hoveredIcon !== null && !isHovered;
-
-  return (
-    <motion.div
-      data-network-icon="true"
-      className={`relative shrink-0 cursor-pointer p-2 ${
-        shouldDim ? 'opacity-60 grayscale-[0.5]' : 'opacity-100 grayscale-0'
-      }`}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      whileHover={{
-        scale: 1.3,
-      }}
-      onMouseDown={e => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick();
-      }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
-    >
-      <div className="ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded">
-        {imageSrc === 'ICON' && <IcxIcon />}
-        {imageSrc === 'Avalanche' && <AvalancheIcon />}
-        {imageSrc === 'Base' && <BaseIcon />}
-        {imageSrc === 'BSC' && <BnbIcon />}
-        {imageSrc === 'Polygon' && <PolygonIcon />}
-        {imageSrc === 'Solana' && <SolIcon />}
-        {imageSrc === 'Stellar' && <StellarIcon />}
-        {imageSrc === 'Sui' && <SuiIcon />}
-        {imageSrc === 'Injective' && <InjectiveIcon />}
-        {imageSrc === 'Sonic' && <SonicIcon />}
-        {imageSrc === 'Optimism' && <OptimismIcon />}
-        {imageSrc === 'Arbitrum' && <ArbitrumIcon />}
-        {imageSrc === 'LightLink' && <LightLinkIcon />}
-        {imageSrc === 'Ethereum' && <EthereumIcon />}
-        {imageSrc === 'Hyper' && <HyperIcon />}
-      </div>
-    </motion.div>
-  );
-}
-
-interface StackedNetworksProps {
-  isClicked: boolean;
-  chainIds: string[];
-  tokenSymbol: string;
-  onChainClick?: (token: XToken) => void;
-  position: { top: number; left: number } | null;
-}
-
-function StackedNetworks({
+function NetworkPicker({
   isClicked,
   chainIds,
   tokenSymbol,
-  onChainClick,
+  onSelect,
   position,
-}: StackedNetworksProps): React.JSX.Element | null {
+}: {
+  isClicked: boolean;
+  chainIds: string[];
+  tokenSymbol: string;
+  onSelect?: (token: XToken) => void;
+  position: { top: number; left: number } | null;
+}): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
-  const allSupportedTokens = getAllSupportedSolverTokens();
-  const getNetworkInfo = (chainId: string): { image: string; name: string } => {
-    const chain = availableChains.find(chain => chain.id === chainId);
-    return chain ? { image: chain.icon, name: chain.name } : { image: '/chain/sonic.png', name: 'Sonic' };
-  };
-
-  const networkInfos = chainIds.map(chainId => getNetworkInfo(chainId));
+  const allTokens = getAllSupportedSolverTokens();
+  const networks = chainIds.map(id => {
+    const chain = availableChains.find(c => c.id === id);
+    return { id, name: chain?.name ?? 'Unknown', icon: chain?.icon };
+  });
 
   const handleNetworkClick = (chainId: string): void => {
-    if (onChainClick) {
-      const token = allSupportedTokens.find(token => token.symbol === tokenSymbol && token.xChainId === chainId);
-      if (token) {
-        onChainClick(token);
-      }
+    const token = allTokens.find(token => token.symbol === tokenSymbol && token.xChainId === chainId);
+    if (token) {
+      onSelect?.(token);
     }
   };
 
@@ -131,25 +52,36 @@ function StackedNetworks({
       }}
     >
       <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2 text-center">
-        {hoveredIcon !== null && networkInfos[hoveredIcon] ? (
+        {hoveredIcon !== null && networks[hoveredIcon] ? (
           <>
-            {tokenSymbol} <span className="font-bold">on {networkInfos[hoveredIcon].name}</span>
+            {tokenSymbol} <span className="font-bold">on {networks[hoveredIcon].name}</span>
           </>
         ) : (
           'Choose a network'
         )}
       </div>
       <div className="[flex-flow:wrap] box-border content-start flex items-start justify-center p-0 relative shrink-0 w-[130px] overflow-visible pointer-events-auto">
-        {networkInfos.map((networkInfo, index) => (
-          <NetworkIcon
+        {networks.map((network, index) => (
+          <motion.div
             key={index}
-            imageSrc={networkInfo.name}
-            isHovered={hoveredIcon === index}
-            hoveredIcon={hoveredIcon}
+            data-network-icon="true"
+            className={`relative shrink-0 cursor-pointer p-2 ${
+              hoveredIcon !== null && hoveredIcon !== index ? 'opacity-60 grayscale-[0.5]' : 'opacity-100 grayscale-0'
+            }`}
             onMouseEnter={() => setHoveredIcon(index)}
             onMouseLeave={() => setHoveredIcon(null)}
-            onClick={() => handleNetworkClick(chainIds[index] ?? '')}
-          />
+            whileHover={{
+              scale: 1.3,
+            }}
+            onMouseDown={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleNetworkClick(chainIds[index] ?? '');
+            }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            <NetworkIcon id={network.id} />
+          </motion.div>
         ))}
       </div>
     </div>
@@ -264,9 +196,7 @@ export function TokenAsset({
             <div className="flex items-center gap-1 justify-start">
               <motion.p
                 className="relative shrink-0 text-clay !text-(length:--text-body-fine-print)"
-                // layout="position"
                 animate={{
-                  // x: isHovered ? -2 : 0,
                   color: isHovered ? '#483534' : '#8e7e7d',
                 }}
                 transition={{
@@ -276,35 +206,16 @@ export function TokenAsset({
               >
                 {formatBalance(formatUnits(sourceBalance, token?.decimals || 0), usdPrice || 0)}
               </motion.p>
-              {/* <AnimatePresence>
-                {isHovered && (
-                  <motion.p
-                    className="shrink-0 text-clay !text-(length:--text-body-fine-print)"
-                    animate={{
-                      opacity: isHovered ? 1 : 0,
-                      x: isHovered ? 2 : 0,
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      ease: 'easeInOut',
-                    }}
-                  >
-                    {`$(${new BigNumber(formatUnits(sourceBalance, token?.decimals || 0))
-                      .multipliedBy(usdPrice || 0)
-                      .toFixed(2)})`}
-                  </motion.p>
-                )}
-              </AnimatePresence> */}
             </div>
           )}
         </div>
       </motion.div>
       {isGroup && (
-        <StackedNetworks
+        <NetworkPicker
           isClicked={isClicked}
           chainIds={chainIds}
           tokenSymbol={name}
-          onChainClick={onChainClick}
+          onSelect={onChainClick}
           position={portalPosition}
         />
       )}
