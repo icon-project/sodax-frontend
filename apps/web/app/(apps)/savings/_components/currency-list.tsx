@@ -1,9 +1,6 @@
 import { Accordion } from '@/components/ui/accordion';
-import type { XToken, SpokeChainId, Token } from '@sodax/types';
 import { useMemo } from 'react';
-import { moneyMarketSupportedTokens } from '@sodax/sdk';
-import { getUniqueTokenSymbols } from '@/lib/token-utils';
-import { INJECTIVE_MAINNET_CHAIN_ID } from '@sodax/types';
+import { getUniqueTokenSymbols, sortStablecoinsFirst, flattenTokens } from '@/lib/utils';
 import TokenAccordionItem from './token-accordion-item';
 
 export default function CurrencyList({
@@ -31,26 +28,4 @@ export default function CurrencyList({
       ))}
     </Accordion>
   );
-}
-
-const STABLECOINS = ['bnUSD', 'USDC', 'USDT'];
-
-function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string }) {
-  const aStable = STABLECOINS.includes(a.symbol);
-  const bStable = STABLECOINS.includes(b.symbol);
-  if (aStable && !bStable) return -1;
-  if (!aStable && bStable) return 1;
-  return 0;
-}
-
-function flattenTokens(): XToken[] {
-  return Object.entries(moneyMarketSupportedTokens)
-    .flatMap(([chainId, items]) =>
-      items.map((t: Token) =>
-        chainId !== INJECTIVE_MAINNET_CHAIN_ID
-          ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
-          : undefined,
-      ),
-    )
-    .filter(Boolean) as XToken[];
 }

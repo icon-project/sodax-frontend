@@ -6,8 +6,9 @@ import NetworkIcon from '@/components/shared/network-icon';
 import { Button } from '@/components/ui/button';
 import { AlertCircleIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { cn } from '@/lib/utils';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import { cn, getUniqueByChain } from '@/lib/utils';
+import type { XToken } from '@sodax/types';
+import { TokenAsset } from '@/components/shared/token-asset';
 
 export default function TokenAccordionItem({
   group,
@@ -124,9 +125,27 @@ function ExpandedContent({
         <InfoBlock value="$34.9k" label="All deposits" />
       </div>
 
-      <div className="flex flex-col gap-2 items-center">
-        <CurrencyLogo currency={tokens[0] || ({} as XToken)} isGroup={tokens.length > 1} tokenCount={tokens.length} />
-        <div className="text-clay text-(length:--body-small)">{symbol}</div>
+      <div className="flex flex-wrap">
+        {tokens.map(t => (
+          <TokenAsset
+            key={t.xChainId}
+            name={symbol}
+            token={t}
+            sourceBalance={0n}
+            isHoldToken={false}
+            isClickBlurred={false}
+            isHoverDimmed={false}
+            isHovered={false}
+            onMouseEnter={() => {}}
+            onMouseLeave={() => {}}
+            onClick={() => {}}
+            // isGroup={tokens.length > 1}
+            // tokenCount={tokens.length}
+            tokens={tokens}
+            onChainClick={() => {}}
+            isClicked={false}
+          />
+        ))}
       </div>
 
       <div className="flex gap-4 items-center mt-4">
@@ -137,14 +156,6 @@ function ExpandedContent({
       </div>
     </>
   );
-}
-
-function getUniqueByChain(tokens: XToken[]): XToken[] {
-  const map = new Map<SpokeChainId, XToken>();
-  tokens.forEach(t => {
-    if (!map.has(t.xChainId)) map.set(t.xChainId, t);
-  });
-  return [...map.values()];
 }
 
 function InfoBlock({ value, label }: { value: string; label: string }) {

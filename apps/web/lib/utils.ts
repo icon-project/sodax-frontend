@@ -8,9 +8,10 @@ import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, supportedSpokeChains } from '@sodax/sdk';
+import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId } from '@sodax/types';
+import { INJECTIVE_MAINNET_CHAIN_ID } from '@sodax/types';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
 import { availableChains } from '@/constants/chains';
@@ -200,3 +201,33 @@ export const getSwapErrorMessage = (errorCode: string): { title: string; message
     }
   );
 };
+
+export const STABLECOINS = ['bnUSD', 'USDC', 'USDT'];
+
+export function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string }): number {
+  const aStable = STABLECOINS.includes(a.symbol);
+  const bStable = STABLECOINS.includes(b.symbol);
+  if (aStable && !bStable) return -1;
+  if (!aStable && bStable) return 1;
+  return 0;
+}
+
+export function flattenTokens(): XToken[] {
+  return Object.entries(moneyMarketSupportedTokens)
+    .flatMap(([chainId, items]) =>
+      items.map((t: Token) =>
+        chainId !== INJECTIVE_MAINNET_CHAIN_ID
+          ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
+          : undefined,
+      ),
+    )
+    .filter(Boolean) as XToken[];
+}
+
+export function getUniqueByChain(tokens: XToken[]): XToken[] {
+  const map = new Map<SpokeChainId, XToken>();
+  tokens.forEach(t => {
+    if (!map.has(t.xChainId)) map.set(t.xChainId, t);
+  });
+  return [...map.values()];
+}
