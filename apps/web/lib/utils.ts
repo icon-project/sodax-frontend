@@ -8,7 +8,7 @@ import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, isLegacybnUSDToken, isNewbnUSDToken, supportedSpokeChains } from '@sodax/sdk';
+import { getSupportedSolverTokens, supportedSpokeChains } from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId } from '@sodax/types';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
