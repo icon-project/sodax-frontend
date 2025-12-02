@@ -108,7 +108,7 @@ export default function BnusdMigration() {
           </div>
         </motion.div>
         <motion.div variants={itemVariants} className="w-full">
-          <div className="w-full self-stretch mix-blend-multiply bg-vibrant-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 p-(--layout-space-comfortable) lg:mt-4 mt-2">
+          <div className="w-full self-stretch bg-[#efe9e8] rounded-2xl inline-flex flex-col justify-start items-start gap-2 p-(--layout-space-comfortable) lg:mt-4 mt-2">
             <div className="self-stretch inline-flex justify-center items-center gap-2">
               <div className="w-4 h-4 relative mix-blend-multiply">
                 <Image src="/symbol_dark.png" alt="" width={16} height={16} />
