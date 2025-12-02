@@ -131,8 +131,8 @@ function ExpandedContent({
             key={t.xChainId}
             name={symbol}
             token={t}
-            sourceBalance={0n}
-            isHoldToken={false}
+            sourceBalance={100n}
+            isHoldToken={true}
             isClickBlurred={false}
             isHoverDimmed={false}
             isHovered={false}
