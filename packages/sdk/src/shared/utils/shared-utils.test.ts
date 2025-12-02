@@ -1,4 +1,3 @@
-import { WalletAbstractionService } from '../services/hub/WalletAbstractionService.js';
 import { describe, expect, it, vi } from 'vitest';
 import {
   adjustAmountByFee,
@@ -15,7 +14,7 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   spokeChainConfig,
 } from '@sodax/types';
-import { getHubChainConfig, type EvmHubProviderConfig } from '../../index.js';
+import { EvmWalletAbstraction, getHubChainConfig, type EvmHubProviderConfig } from '../../index.js';
 import { Sodax } from '../entities/Sodax.js';
 import { EvmHubProvider } from '../entities/Providers.js';
 
@@ -210,15 +209,23 @@ describe('calculatePercentageAmount', () => {
   });
 
   it('should get hub wallet address for non hub spoke provider', async () => {
-    vi.spyOn(WalletAbstractionService, 'getUserAbstractedWalletAddress').mockResolvedValueOnce(mockHubWalletAddress);
+    vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubWalletAddress);
 
-    const walletAddress = await deriveUserWalletAddress(mockBscSpokeProvider, mockHubProvider, mockHubWalletAddress);
+    const walletAddress = await deriveUserWalletAddress(
+      mockHubProvider,
+      mockBscSpokeProvider.chainConfig.chain.id,
+      mockHubWalletAddress,
+    );
 
     expect(walletAddress).toBe(mockHubWalletAddress);
   });
 
   it('should get same wallet address for hub spoke provider', async () => {
-    const walletAddress = await deriveUserWalletAddress(mockSonicSpokeProvider, mockHubProvider, mockHubWalletAddress);
+    const walletAddress = await deriveUserWalletAddress(
+      mockHubProvider,
+      mockSonicSpokeProvider.chainConfig.chain.id,
+      mockHubWalletAddress,
+    );
 
     expect(walletAddress).toBe(mockHubWalletAddress);
   });

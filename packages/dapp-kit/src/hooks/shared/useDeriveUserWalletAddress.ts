@@ -1,5 +1,4 @@
-// packages/dapp-kit/src/hooks/shared/useDeriveUserWalletAddress.ts
-import { deriveUserWalletAddress, type SpokeProvider } from '@sodax/sdk';
+import { deriveUserWalletAddress, type SpokeChainId } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from './useSodaxContext';
 import type { Address } from 'viem';
@@ -7,38 +6,45 @@ import type { Address } from 'viem';
 /**
  * Hook for deriving user wallet address for hub abstraction.
  *
- * This hook derives the user's abstracted wallet address for the hub chain.
- * If the spoke chain is the same as the hub chain, it returns the original wallet address.
- * Otherwise, it returns the abstracted wallet address for cross-chain operations.
+ * This hook derives the user's abstracted wallet address for the hub chain based on the spoke chain ID and address.
+ * If the spoke chain is the same as the hub chain, it returns the encoded spoke address.
+ * Otherwise, it derives and returns the abstracted wallet address for cross-chain operations.
  *
- * @param spokeProvider - The spoke provider instance for the origin chain
- * @param walletAddress - Optional user wallet address on spoke chain. If not provided, will fetch from spokeProvider
+ * The query is automatically enabled when both `spokeChainId` and `spokeAddress` are provided.
+ * This is a deterministic operation, so the result is cached and not refetched automatically.
+ *
+ * @param spokeChainId - Optional spoke chain ID. If not provided, the query will be disabled.
+ * @param spokeAddress - Optional user wallet address on the spoke chain. If not provided, the query will be disabled.
  * @returns A React Query result object containing:
- *   - data: The derived user wallet address when available
+ *   - data: The derived user wallet address (Address) when available
  *   - isLoading: Loading state indicator
- *   - error: Any error that occurred during derivation
+ *   - error: Any error that occurred during derivation (Error)
  *
  * @example
  * ```typescript
- * const { data: derivedAddress, isLoading, error } = useDeriveUserWalletAddress(spokeProvider, userAddress);
+ * const { data: derivedAddress, isLoading, error } = useDeriveUserWalletAddress(spokeChainId, userAddress);
+ *
+ * if (isLoading) return <div>Deriving address...</div>;
+ * if (error) return <div>Error: {error.message}</div>;
+ * if (derivedAddress) return <div>Derived Address: {derivedAddress}</div>;
  * ```
  */
 export function useDeriveUserWalletAddress(
-  spokeProvider: SpokeProvider | undefined,
-  walletAddress?: string | undefined,
+  spokeChainId?: SpokeChainId | undefined,
+  spokeAddress?: string | undefined,
 ): UseQueryResult<Address, Error> {
   const { sodax } = useSodaxContext();
 
   return useQuery({
-    queryKey: ['deriveUserWalletAddress', spokeProvider?.chainConfig.chain.id, walletAddress],
+    queryKey: ['deriveUserWalletAddress', spokeChainId, spokeAddress],
     queryFn: async (): Promise<Address> => {
-      if (!spokeProvider) {
-        throw new Error('Spoke provider is required');
+      if (!spokeChainId || !spokeAddress) {
+        throw new Error('Spoke chain id and address are required');
       }
 
-      return await deriveUserWalletAddress(spokeProvider, sodax.hubProvider, walletAddress);
+      return await deriveUserWalletAddress(sodax.hubProvider, spokeChainId, spokeAddress);
     },
-    enabled: !!spokeProvider,
+    enabled: !!spokeChainId && !!spokeAddress,
     refetchInterval: false, // This is a deterministic operation, no need to refetch
   });
 }

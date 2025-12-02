@@ -1,15 +1,14 @@
-import { WalletAbstractionService } from '../services/hub/WalletAbstractionService.js';
 import invariant from 'tiny-invariant';
 import {
   DEFAULT_MAX_RETRY,
   DEFAULT_RETRY_DELAY_MS,
   type EvmHubProvider,
+  EvmWalletAbstraction,
   FEE_PERCENTAGE_SCALE,
   isPartnerFeeAmount,
   isPartnerFeePercentage,
   type PartnerFee,
   type QuoteType,
-  type SpokeProvider,
 } from '../../index.js';
 import type { SpokeChainId, Address, Hex } from '@sodax/types';
 import { toHex } from 'viem';
@@ -178,21 +177,21 @@ export function hexToBigInt(hex: string): bigint {
 }
 
 /**
- * Derive user hub abstracted wallet address. Original address is used if spoke equals hub chain.
- * @param spokeProvider - Spoke provider instance for origin chain
- * @param hubProvider - Hub spoke provider
- * @param walletAddress - user original address on spoke chain
+ * Derive user hub wallet address based on the spoke chain id and address.
+ * @param hubProvider - Hub provider instance
+ * @param spokeChainId - Spoke chain id
+ * @param spokeAddress - Spoke address
  * @returns Abstracted user wallet address for spoke chains with different chain id than hub or original
  */
 export async function deriveUserWalletAddress(
-  spokeProvider: SpokeProvider,
   hubProvider: EvmHubProvider,
-  walletAddress?: string,
+  spokeChainId: SpokeChainId,
+  spokeAddress: string,
 ): Promise<Address> {
-  const address = (walletAddress ?? (await spokeProvider.walletProvider.getWalletAddress())) as Address;
-  return spokeProvider.chainConfig.chain.id === hubProvider.chainConfig.chain.id // on hub chain, use real user wallet address
-    ? address
-    : await WalletAbstractionService.getUserAbstractedWalletAddress(address, spokeProvider, hubProvider);
+  const encodedAddress = encodeAddress(spokeChainId, spokeAddress);
+  return spokeChainId === hubProvider.chainConfig.chain.id // on hub chain, use original user wallet address
+    ? encodedAddress
+    : await EvmWalletAbstraction.getUserHubWalletAddress(spokeChainId, encodedAddress, hubProvider);
 }
 
 export function parseToStroops(amount: string): bigint {

@@ -26,7 +26,12 @@ import type {
   SpokeTxHash,
   TxReturnType,
 } from '../shared/types.js';
-import { calculateFeeAmount, deriveUserWalletAddress, encodeAddress, encodeContractCalls } from '../shared/utils/index.js';
+import {
+  calculateFeeAmount,
+  deriveUserWalletAddress,
+  encodeAddress,
+  encodeContractCalls,
+} from '../shared/utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService } from '../shared/services/hub/index.js';
 import { Erc20Service } from '../shared/services/erc-20/index.js';
 import invariant from 'tiny-invariant';
@@ -87,6 +92,8 @@ export type MoneyMarketSupplyParams = {
   token: string; // spoke chain token address
   amount: bigint; // The amount of the asset to supply.
   action: 'supply';
+  dstChainId?: SpokeChainId;
+  dstAddress?: Address;
 };
 
 export type MoneyMarketBorrowParams = {
@@ -669,7 +676,9 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      const abstractedWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+      const dstChainId = params.dstChainId ?? spokeProvider.chainConfig.chain.id;
+      const dstAddress = params.dstAddress ?? walletAddress;
+      const abstractedWalletAddress = await deriveUserWalletAddress(this.hubProvider, dstChainId, dstAddress);
 
       const data: Hex = this.buildSupplyData(
         params.token,
@@ -879,8 +888,9 @@ export class MoneyMarketService {
     );
 
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const encodedAddress = encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress);
-    const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+    const spokeChainId = spokeProvider.chainConfig.chain.id;
+    const encodedAddress = encodeAddress(spokeChainId, walletAddress);
+    const hubWallet = await deriveUserWalletAddress(this.hubProvider, spokeChainId, walletAddress);
 
     const data: Hex = this.buildBorrowData(
       hubWallet,
@@ -1057,8 +1067,9 @@ export class MoneyMarketService {
     );
 
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const spokeChainId = spokeProvider.chainConfig.chain.id;
     const encodedAddress = encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress);
-    const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+    const hubWallet = await deriveUserWalletAddress(this.hubProvider, spokeChainId, walletAddress);
 
     let data: Hex;
     if (spokeProvider instanceof SonicSpokeProvider) {
@@ -1254,8 +1265,9 @@ export class MoneyMarketService {
     );
 
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
-    const data: Hex = this.buildRepayData(params.token, hubWallet, params.amount, spokeProvider.chainConfig.chain.id);
+    const spokeChainId = spokeProvider.chainConfig.chain.id;
+    const hubWallet = await deriveUserWalletAddress(this.hubProvider, spokeChainId, walletAddress);
+    const data: Hex = this.buildRepayData(params.token, hubWallet, params.amount, spokeChainId);
 
     let txResult: Awaited<PromiseTxReturnType<S, R>> | EvmReturnType<R>;
     if (
@@ -1393,7 +1405,10 @@ export class MoneyMarketService {
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount - feeAmount);
 
     if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
-      if (token.toLowerCase() === this.configService.spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
+      if (
+        token.toLowerCase() ===
+        this.configService.spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()
+      ) {
         const withdrawToCall = {
           address: assetAddress,
           value: 0n,
@@ -1453,7 +1468,10 @@ export class MoneyMarketService {
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount);
 
     if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
-      if (token.toLowerCase() === this.configService.spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()) {
+      if (
+        token.toLowerCase() ===
+        this.configService.spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()
+      ) {
         const withdrawToCall = {
           address: assetAddress,
           value: 0n,
