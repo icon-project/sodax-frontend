@@ -9,7 +9,7 @@ import { TokenList } from './token-list';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
-import { getChainBalance, hasTokenBalance } from '@/lib/token-utils';
+import { getChainBalance, hasTokenBalance } from '@/lib/utils';
 
 export default function TokenSelectDialog({
   isOpen,
