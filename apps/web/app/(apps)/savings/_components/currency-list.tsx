@@ -1,248 +1,56 @@
-import { Accordion, AccordionItem, AccordionContent, AccordionTriggerWithButton } from '@/components/ui/accordion';
-import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
-import CurrencyLogo from '@/components/shared/currency-logo';
-import type { Token, XToken, SpokeChainId } from '@sodax/types';
-import NetworkIcon from '@/components/shared/network-icon';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { AlertCircleIcon } from 'lucide-react';
+import { Accordion } from '@/components/ui/accordion';
+import type { XToken, SpokeChainId, Token } from '@sodax/types';
 import { useMemo } from 'react';
 import { moneyMarketSupportedTokens } from '@sodax/sdk';
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
 import { INJECTIVE_MAINNET_CHAIN_ID } from '@sodax/types';
-import { AnimatePresence, motion } from 'motion/react';
-import { cn } from '@/lib/utils';
+import TokenAccordionItem from './token-accordion-item';
 
 export default function CurrencyList({
   searchQuery,
   openValue,
   setOpenValue,
-}: { searchQuery: string; openValue: string; setOpenValue: (value: string) => void }) {
-  const tokens = useMemo(
+}: {
+  searchQuery: string;
+  openValue: string;
+  setOpenValue: (value: string) => void;
+}) {
+  const allTokens = useMemo(() => flattenTokens(), []);
+  const groupedTokens = useMemo(
     () =>
-      Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
-        chainTokens.map((t: Token) => {
-          if (chainId !== INJECTIVE_MAINNET_CHAIN_ID) {
-            return {
-              ...t,
-              xChainId: chainId as SpokeChainId,
-            } satisfies XToken;
-          }
-        }),
-      ),
-    [],
+      getUniqueTokenSymbols(allTokens)
+        .filter(t => t.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
+        .sort(sortStablecoinsFirst),
+    [allTokens, searchQuery],
   );
-
-  //This is for mock data only
-  const stablecoins = ['bnUSD', 'USDC', 'USDT'];
-
-  const allTokens = tokens.filter(token => token !== undefined) as XToken[];
-  const uniqueTokenSymbols = getUniqueTokenSymbols(allTokens);
-
-  const allFilteredTokens = uniqueTokenSymbols
-    .filter(token => token.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
-    .sort((a, b) => {
-      const aIsStablecoin = stablecoins.includes(a.symbol);
-      const bIsStablecoin = stablecoins.includes(b.symbol);
-      if (aIsStablecoin && !bIsStablecoin) return -1;
-      if (!aIsStablecoin && bIsStablecoin) return 1;
-      return 0;
-    });
 
   return (
     <Accordion type="single" collapsible className="network-accordion" value={openValue} onValueChange={setOpenValue}>
-      {allFilteredTokens.map(({ symbol, tokens }) => {
-        const isCollapsed = openValue !== symbol || openValue === '';
-        return (
-          <AccordionItem
-            key={symbol}
-            value={symbol}
-            className={cn(
-              'border-none',
-              openValue === '' ? 'opacity-100' : openValue === symbol ? 'opacity-100' : 'opacity-40',
-            )}
-          >
-            <Separator className="h-[1px] bg-clay opacity-30" />
-            <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30" />
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="w-full group"
-            >
-              <AccordionTriggerWithButton>
-                <Item variant="default" className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal)">
-                  <ItemMedia>
-                    <CurrencyLogo currency={tokens[0] as XToken} hideNetwork={true} />
-                  </ItemMedia>
-                  <ItemContent>
-                    <ItemTitle className="justify-between flex w-full">
-                      <motion.div
-                        className="text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold"
-                        data-name="Market name"
-                        animate={{ y: isCollapsed ? 0 : 4 }}
-                        transition={{ duration: 0.4, ease: 'easeInOut' }}
-                      >
-                        {symbol}
-                      </motion.div>
-                      <AnimatePresence>
-                        {isCollapsed && (
-                          <motion.div
-                            className="flex items-center gap-1 -mr-8 md:mr-0"
-                            data-name="APR"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <span className="text-espresso text-(length:--body-comfortable) font-['InterBlack']">
-                              5.52%
-                            </span>
-                            <span className="text-clay-light text-(length:--body-comfortable) font-['InterRegular']">
-                              APY
-                            </span>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </ItemTitle>
-                    <div className="flex w-full justify-between">
-                      <AnimatePresence>
-                        {isCollapsed && (
-                          <motion.div
-                            className="content-stretch flex h-[16px] items-center justify-between relative shrink-0 w-full"
-                            data-name="Row"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <motion.div
-                              className="content-stretch gap-0 flex items-center group-hover:gap-[2px] transition-all duration-200"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              {(() => {
-                                const uniqueTokensMap = new Map<SpokeChainId, XToken>();
-                                for (const token of tokens) {
-                                  if (!uniqueTokensMap.has(token.xChainId)) {
-                                    uniqueTokensMap.set(token.xChainId, token);
-                                  }
-                                }
-                                const uniqueTokens = Array.from(uniqueTokensMap.values());
-
-                                return uniqueTokens.length >= 10 ? (
-                                  <>
-                                    {uniqueTokens.slice(0, 9).map(token => (
-                                      <div
-                                        className="-mr-[2px] group-hover:mr-0 transition-all duration-200"
-                                        key={token.xChainId}
-                                      >
-                                        <NetworkIcon id={token.xChainId} />
-                                      </div>
-                                    ))}
-                                    <div className="ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded w-4 h-4 flex items-center justify-center bg-white">
-                                      <span className="text-espresso text-[8px] font-['InterRegular'] leading-none">
-                                        +{uniqueTokens.length - 9}
-                                      </span>
-                                    </div>
-                                  </>
-                                ) : (
-                                  uniqueTokens.map(token => (
-                                    <div
-                                      className="-mr-[2px] group-hover:mr-0 transition-all duration-200"
-                                      key={token.xChainId}
-                                    >
-                                      <NetworkIcon id={token.xChainId} />
-                                    </div>
-                                  ))
-                                );
-                              })()}
-                            </motion.div>
-                            <motion.div
-                              className="items-center gap-1 hidden md:flex"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <span className="text-clay-light text-(length:--body-small) font-['InterBold']">
-                                $28,067.62
-                              </span>
-                              <span className="text-clay-light text-(length:--body-small) font-['InterRegular']">
-                                paid-out (30d)
-                              </span>
-                            </motion.div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </ItemContent>
-                </Item>
-              </AccordionTriggerWithButton>
-            </motion.div>
-            <AccordionContent className="pl-0 md:pl-18 pb-8 flex flex-col gap-4">
-              <motion.div
-                className="flex items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-              >
-                <div className="flex h-12 items-center">
-                  <Separator orientation="vertical" className="bg-cream-white border-l-2" />
-                  <div className="flex-col pl-(--layout-space-small) pr-(--layout-space-normal)">
-                    <div className="text-espresso text-(length:--subtitle) font-['InterBold']">3.56%</div>
-                    <div className="text-clay-light text-(length:--body-small) font-['InterRegular'] flex gap-1">
-                      Current APY <AlertCircleIcon className="w-4 h-4 text-clay-light" />
-                    </div>
-                  </div>
-                  <Separator orientation="vertical" className="bg-cream-white border-l-2" />
-                  <div className="flex-col pl-(--layout-space-small) pr-(--layout-space-normal)">
-                    <div className="text-espresso text-(length:--subtitle) font-['InterBold']">$34.9k</div>
-                    <div className="text-clay-light text-(length:--body-small) font-['InterRegular'] flex gap-1">
-                      All deposits <AlertCircleIcon className="w-4 h-4 text-clay-light" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-              <motion.div
-                className="flex items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.2 }}
-              >
-                <div className="flex gap-(--layout-space-big)">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex">
-                      {tokens.length === 1 ? (
-                        <CurrencyLogo currency={tokens[0] as XToken} />
-                      ) : (
-                        <CurrencyLogo currency={tokens[0] as XToken} isGroup={true} tokenCount={tokens.length} />
-                      )}
-                    </div>
-                    <div className="text-clay text-(length:--body-small) font-['InterRegular'] text-center">
-                      {symbol}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-              <motion.div
-                className="flex gap-4 items-center mt-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-              >
-                <Button variant="cream" className="w-27">
-                  Continue
-                </Button>
-                <span className="text-clay text-(length:--body-small) font-['InterRegular']">
-                  Pick an assset to continue
-                </span>
-              </motion.div>
-            </AccordionContent>
-          </AccordionItem>
-        );
-      })}
+      {groupedTokens.map(group => (
+        <TokenAccordionItem key={group.symbol} group={group} openValue={openValue} />
+      ))}
     </Accordion>
   );
+}
+
+const STABLECOINS = ['bnUSD', 'USDC', 'USDT'];
+
+function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string }) {
+  const aStable = STABLECOINS.includes(a.symbol);
+  const bStable = STABLECOINS.includes(b.symbol);
+  if (aStable && !bStable) return -1;
+  if (!aStable && bStable) return 1;
+  return 0;
+}
+
+function flattenTokens(): XToken[] {
+  return Object.entries(moneyMarketSupportedTokens)
+    .flatMap(([chainId, items]) =>
+      items.map((t: Token) =>
+        chainId !== INJECTIVE_MAINNET_CHAIN_ID
+          ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
+          : undefined,
+      ),
+    )
+    .filter(Boolean) as XToken[];
 }

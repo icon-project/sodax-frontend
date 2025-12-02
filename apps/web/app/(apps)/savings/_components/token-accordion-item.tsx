@@ -1,0 +1,159 @@
+import { AccordionItem, AccordionTriggerWithButton, AccordionContent } from '@/components/ui/accordion';
+import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { Separator } from '@/components/ui/separator';
+import CurrencyLogo from '@/components/shared/currency-logo';
+import NetworkIcon from '@/components/shared/network-icon';
+import { Button } from '@/components/ui/button';
+import { AlertCircleIcon } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { cn } from '@/lib/utils';
+import type { SpokeChainId, XToken } from '@sodax/types';
+
+export default function TokenAccordionItem({
+  group,
+  openValue,
+}: {
+  group: { symbol: string; tokens: XToken[] };
+  openValue: string;
+}) {
+  const { symbol, tokens } = group;
+  const isCollapsed = openValue !== symbol || openValue === '';
+
+  return (
+    <AccordionItem
+      value={symbol}
+      className={cn(
+        'border-none',
+        openValue === '' ? 'opacity-100' : openValue === symbol ? 'opacity-100' : 'opacity-40',
+      )}
+    >
+      <Separator className="h-[1px] bg-clay opacity-30" />
+      <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30" />
+
+      <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.3, ease: 'easeOut' }} className="w-full group">
+        <AccordionTriggerWithButton>
+          <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal)">
+            <ItemMedia>
+              <CurrencyLogo currency={tokens[0] || ({} as XToken)} hideNetwork />
+            </ItemMedia>
+
+            <ItemContent>
+              <ItemTitle className="justify-between flex w-full">
+                <motion.div
+                  className="text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold"
+                  animate={{ y: isCollapsed ? 0 : 4 }}
+                  transition={{ duration: 0.4, ease: 'easeInOut' }}
+                >
+                  {symbol}
+                </motion.div>
+
+                <AnimatePresence>{isCollapsed && <CollapsedAPR />}</AnimatePresence>
+              </ItemTitle>
+
+              <AnimatePresence>{isCollapsed && <CollapsedRowInfo tokens={tokens} />}</AnimatePresence>
+            </ItemContent>
+          </Item>
+        </AccordionTriggerWithButton>
+      </motion.div>
+
+      <AccordionContent className="pl-0 md:pl-18 pb-8 flex flex-col gap-4">
+        <ExpandedContent tokens={tokens} symbol={symbol} />
+      </AccordionContent>
+    </AccordionItem>
+  );
+}
+
+function CollapsedAPR() {
+  return (
+    <motion.div
+      className="flex items-center gap-1 -mr-8 md:mr-0"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <span className="text-espresso text-(length:--body-comfortable) font-['InterBlack']">5.52%</span>
+      <span className="text-clay-light text-(length:--body-comfortable)">APY</span>
+    </motion.div>
+  );
+}
+
+function CollapsedRowInfo({ tokens }: { tokens: XToken[] }) {
+  const uniqueTokens = getUniqueByChain(tokens);
+
+  return (
+    <motion.div
+      className="flex h-[16px] items-center justify-between w-full"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <div className="flex items-center group-hover:gap-[2px] gap-0 transition-all">
+        {uniqueTokens.slice(0, 9).map(t => (
+          <div key={t.xChainId} className="-mr-[2px] group-hover:mr-0 transition-all duration-200">
+            <NetworkIcon id={t.xChainId} />
+          </div>
+        ))}
+        {uniqueTokens.length > 9 && (
+          <div className="ring-2 ring-white bg-white rounded w-4 h-4 flex items-center justify-center">
+            <span className="text-espresso text-[8px]">+{uniqueTokens.length - 9}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="hidden md:flex gap-1">
+        <span className="text-clay-light text-(length:--body-small) font-['InterBold']">$28,067.62</span>
+        <span className="text-clay-light text-(length:--body-small)">paid-out (30d)</span>
+      </div>
+    </motion.div>
+  );
+}
+
+function ExpandedContent({
+  tokens,
+  symbol,
+}: {
+  tokens: XToken[];
+  symbol: string;
+}) {
+  return (
+    <>
+      <div className="flex items-center">
+        <Separator orientation="vertical" className="bg-cream-white border-l-2" />
+        <InfoBlock value="3.56%" label="Current APY" />
+        <Separator orientation="vertical" className="bg-cream-white border-l-2" />
+        <InfoBlock value="$34.9k" label="All deposits" />
+      </div>
+
+      <div className="flex flex-col gap-2 items-center">
+        <CurrencyLogo currency={tokens[0] || ({} as XToken)} isGroup={tokens.length > 1} tokenCount={tokens.length} />
+        <div className="text-clay text-(length:--body-small)">{symbol}</div>
+      </div>
+
+      <div className="flex gap-4 items-center mt-4">
+        <Button variant="cream" className="w-27">
+          Continue
+        </Button>
+        <span className="text-clay text-(length:--body-small)">Pick an assset to continue</span>
+      </div>
+    </>
+  );
+}
+
+function getUniqueByChain(tokens: XToken[]): XToken[] {
+  const map = new Map<SpokeChainId, XToken>();
+  tokens.forEach(t => {
+    if (!map.has(t.xChainId)) map.set(t.xChainId, t);
+  });
+  return [...map.values()];
+}
+
+function InfoBlock({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="flex-col px-(--layout-space-normal)">
+      <div className="text-espresso text-(length:--subtitle) font-['InterBold']">{value}</div>
+      <div className="flex gap-1 text-clay-light text-(length:--body-small)">
+        {label} <AlertCircleIcon className="w-4 h-4" />
+      </div>
+    </div>
+  );
+}
