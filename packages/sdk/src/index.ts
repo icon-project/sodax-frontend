@@ -6,3 +6,4 @@ export * from './bridge/index.js';
 export * from './staking/index.js';
 export * from './migration/index.js';
 export * from '@sodax/types';
+export * from './intentHooks/index.js';
