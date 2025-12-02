@@ -2,14 +2,13 @@ import { Accordion, AccordionItem, AccordionContent, AccordionTriggerWithButton 
 import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import type { Token, XToken, SpokeChainId } from '@sodax/types';
-import NetworkIcon from './network-icon';
+import NetworkIcon from '@/components/shared/network-icon';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { AlertCircleIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import { moneyMarketSupportedTokens } from '@sodax/sdk';
 import { getUniqueTokenSymbols } from '@/lib/token-utils';
-import { getChainName } from '@/constants/chains';
 import { INJECTIVE_MAINNET_CHAIN_ID } from '@sodax/types';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -139,10 +138,7 @@ export default function CurrencyList({
                                         className="-mr-[2px] group-hover:mr-0 transition-all duration-200"
                                         key={token.xChainId}
                                       >
-                                        <NetworkIcon
-                                          key={token.xChainId}
-                                          imageSrc={getChainName(token.xChainId) || ''}
-                                        />
+                                        <NetworkIcon id={token.xChainId} />
                                       </div>
                                     ))}
                                     <div className="ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded w-4 h-4 flex items-center justify-center bg-white">
@@ -157,7 +153,7 @@ export default function CurrencyList({
                                       className="-mr-[2px] group-hover:mr-0 transition-all duration-200"
                                       key={token.xChainId}
                                     >
-                                      <NetworkIcon key={token.xChainId} imageSrc={getChainName(token.xChainId) || ''} />
+                                      <NetworkIcon id={token.xChainId} />
                                     </div>
                                   ))
                                 );
