@@ -118,10 +118,10 @@ function ExpandedContent({
 }) {
   return (
     <>
-      <div className="flex items-center">
-        <Separator orientation="vertical" className="bg-cream-white border-l-2" />
+      <div className="flex items-center h-12">
+        <Separator orientation="vertical" className="bg-cream-white border-l-2 h-12" />
         <InfoBlock value="3.56%" label="Current APY" />
-        <Separator orientation="vertical" className="bg-cream-white border-l-2" />
+        <Separator orientation="vertical" className="bg-cream-white border-l-2 h-12" />
         <InfoBlock value="$34.9k" label="All deposits" />
       </div>
 
