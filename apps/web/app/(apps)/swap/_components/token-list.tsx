@@ -6,7 +6,7 @@ import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import { TokenAsset } from '@/components/shared/token-asset';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
-import { getUniqueTokenSymbols, getChainBalance } from '@/lib/token-utils';
+import { getUniqueTokenSymbols, getChainBalance } from '@/lib/utils';
 import { formatUnits } from 'viem';
 
 interface TokenListProps {
