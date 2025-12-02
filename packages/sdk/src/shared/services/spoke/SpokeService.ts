@@ -3,7 +3,9 @@ import { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import {
   type EvmHubProvider,
   EvmSpokeProvider,
+  type RawSpokeProvider,
   SolanaSpokeProvider,
+  type SonicRawSpokeProvider,
   SonicSpokeProvider,
   type SpokeProvider,
   StellarSpokeProvider,
@@ -34,6 +36,7 @@ import {
   isSonicSpokeProvider,
   isStellarSpokeProvider,
   isSuiSpokeProvider,
+  isSonicRawSpokeProvider,
 } from '../../guards.js';
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
@@ -209,15 +212,17 @@ export class SpokeService {
    * @param {boolean} skipSimulation - Whether to skip deposit simulation (optional, defaults to false).
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
-  public static async deposit<T extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  public static async deposit<T extends SpokeProvider | RawSpokeProvider, R extends boolean = false>(
     params: GetSpokeDepositParamsType<T>,
     spokeProvider: T,
     hubProvider: EvmHubProvider,
     raw?: R,
     skipSimulation = false,
   ): Promise<PromiseTxReturnType<T, R>> {
-    if (spokeProvider instanceof SonicSpokeProvider) {
-      const _params: SonicSpokeDepositParams = params as GetSpokeDepositParamsType<SonicSpokeProvider>;
+    if (spokeProvider instanceof SonicSpokeProvider || isSonicRawSpokeProvider(spokeProvider)) {
+      const _params: SonicSpokeDepositParams = params as GetSpokeDepositParamsType<
+        SonicSpokeProvider | SonicRawSpokeProvider
+      >;
       return SonicSpokeService.deposit(_params, spokeProvider, raw) as PromiseTxReturnType<T, R>;
     }
     if (spokeProvider instanceof EvmSpokeProvider) {

@@ -1,7 +1,7 @@
 import { type Address, type Hex, fromHex } from 'viem';
 import type { InjectiveReturnType, PromiseInjectiveTxReturnType } from '../../types.js';
-import type { ISpokeProvider } from '../Providers.js';
-import type { IInjectiveWalletProvider, InjectiveExecuteResponse , InjectiveSpokeChainConfig} from '@sodax/types';
+import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
+import type { IInjectiveWalletProvider, InjectiveExecuteResponse , InjectiveSpokeChainConfig, WalletAddressProvider} from '@sodax/types';
 import { toBase64, ChainGrpcWasmApi, TxGrpcApi, fromBase64 } from '@injectivelabs/sdk-ts';
 import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 
@@ -57,18 +57,38 @@ export interface State {
   owner: string;
 }
 
-export class InjectiveSpokeProvider implements ISpokeProvider {
-  public readonly walletProvider: IInjectiveWalletProvider;
+export class InjectiveBaseSpokeProvider {
   public readonly chainConfig: InjectiveSpokeChainConfig;
-  private chainGrpcWasmApi: ChainGrpcWasmApi;
+  public readonly chainGrpcWasmApi: ChainGrpcWasmApi;
   public readonly txClient: TxGrpcApi;
 
-  constructor(conf: InjectiveSpokeChainConfig, walletProvider: IInjectiveWalletProvider) {
-    this.chainConfig = conf;
-    this.walletProvider = walletProvider;
+  constructor(chainConfig: InjectiveSpokeChainConfig) {
+    this.chainConfig = chainConfig;
     const endpoints = getNetworkEndpoints(Network.Mainnet);
     this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
     this.txClient = new TxGrpcApi(endpoints.grpc);
+  }
+}
+
+export class InjectiveRawSpokeProvider extends InjectiveBaseSpokeProvider implements IRawSpokeProvider {
+  public readonly walletProvider: WalletAddressProvider;
+  public readonly raw = true;
+
+  constructor(chainConfig: InjectiveSpokeChainConfig, walletAddress: string) {
+    super(chainConfig);
+    this.walletProvider = {
+      getWalletAddress: async () => walletAddress,
+    };
+  }
+}
+
+export class InjectiveSpokeProvider extends InjectiveBaseSpokeProvider implements ISpokeProvider {
+  public readonly walletProvider: IInjectiveWalletProvider;
+
+
+  constructor(conf: InjectiveSpokeChainConfig, walletProvider: IInjectiveWalletProvider) {
+    super(conf);
+    this.walletProvider = walletProvider;
   }
 
   // Query Methods

@@ -3,22 +3,41 @@ import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction, type TransactionResult } from '@mysten/sui/transactions';
 import { type Hex, toHex } from 'viem';
 import type { PromiseSuiTxReturnType, SuiReturnType } from '../../types.js';
-import type { ISpokeProvider } from '../index.js';
-import type { ISuiWalletProvider, SuiSpokeChainConfig } from '@sodax/types';
+import type { IRawSpokeProvider, ISpokeProvider } from '../index.js';
+import type { ISuiWalletProvider, SuiSpokeChainConfig, WalletAddressProvider } from '@sodax/types';
 import { SuiSpokeService } from '../../services/spoke/SuiSpokeService.js';
 
 type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
 type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | undefined };
-export class SuiSpokeProvider implements ISpokeProvider {
-  public readonly walletProvider: ISuiWalletProvider;
-  public chainConfig: SuiSpokeChainConfig;
+
+export class SuiBaseSpokeProvider {
+  public readonly chainConfig: SuiSpokeChainConfig;
   public readonly publicClient: SuiClient;
-  private assetManagerAddress: string | undefined;
+  public assetManagerAddress: string | undefined;
+
+  constructor(config: SuiSpokeChainConfig) {
+    this.chainConfig = config;
+    this.publicClient = new SuiClient({ url: getFullnodeUrl('mainnet') });
+  }
+}
+
+export class SuiRawSpokeProvider extends SuiBaseSpokeProvider implements IRawSpokeProvider {
+  public readonly walletProvider: WalletAddressProvider;
+  public readonly raw = true;
+
+  constructor(chainConfig: SuiSpokeChainConfig, walletAddress: string) {
+    super(chainConfig);
+    this.walletProvider = {
+      getWalletAddress: async () => walletAddress,
+    };
+  }
+}
+export class SuiSpokeProvider extends SuiBaseSpokeProvider implements ISpokeProvider {
+  public readonly walletProvider: ISuiWalletProvider;
 
   constructor(config: SuiSpokeChainConfig, wallet_provider: ISuiWalletProvider) {
-    this.chainConfig = config;
+    super(config);
     this.walletProvider = wallet_provider;
-    this.publicClient = new SuiClient({ url: getFullnodeUrl('mainnet') });
   }
 
   async getBalance(token: string): Promise<bigint> {

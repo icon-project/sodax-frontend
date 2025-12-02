@@ -1,7 +1,13 @@
 import { encodeFunctionData, erc20Abi, type Address, type PublicClient } from 'viem';
-import type { EvmContractCall, EvmReturnType, PromiseEvmTxReturnType, Result } from '../../types.js';
-import type { EvmSpokeProvider, SonicSpokeProvider } from '../../entities/Providers.js';
+import type { EvmContractCall, EvmReturnType, GetAddressType, PromiseEvmTxReturnType, Result } from '../../types.js';
+import type {
+  EvmRawSpokeProvider,
+  EvmSpokeProvider,
+  SonicRawSpokeProvider,
+  SonicSpokeProvider,
+} from '../../entities/Providers.js';
 import type { Erc20Token } from '@sodax/types';
+import { isEvmRawSpokeProvider, isSonicRawSpokeProvider } from '../../guards.js';
 
 export class Erc20Service {
   private constructor() {}
@@ -51,7 +57,7 @@ export class Erc20Service {
     amount: bigint,
     owner: Address,
     spender: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    spokeProvider: EvmSpokeProvider | EvmRawSpokeProvider | SonicSpokeProvider | SonicRawSpokeProvider,
   ): Promise<Result<boolean>> {
     try {
       if (token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
@@ -91,13 +97,15 @@ export class Erc20Service {
     token: Address,
     amount: bigint,
     spender: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmRawSpokeProvider | SonicRawSpokeProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
     const rawTx = {
-      from: walletAddress,
+      from: walletAddress as GetAddressType<
+        EvmSpokeProvider | EvmRawSpokeProvider | SonicSpokeProvider | SonicRawSpokeProvider
+      >,
       to: token,
       value: 0n,
       data: encodeFunctionData({
@@ -107,7 +115,7 @@ export class Erc20Service {
       }),
     } satisfies EvmReturnType<true>;
 
-    if (raw) {
+    if (raw || isEvmRawSpokeProvider(spokeProvider) || isSonicRawSpokeProvider(spokeProvider)) {
       return rawTx as EvmReturnType<R>;
     }
 

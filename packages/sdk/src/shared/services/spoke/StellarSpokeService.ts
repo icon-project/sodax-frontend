@@ -1,5 +1,5 @@
 import { type Address, type Hex, fromHex } from 'viem';
-import type { EvmHubProvider } from '../../entities/index.js';
+import type { EvmHubProvider, StellarRawSpokeProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
 import {
   CustomStellarAccount,
@@ -7,9 +7,11 @@ import {
   type PromiseStellarTxReturnType,
   type Result,
   STELLAR_DEFAULT_TX_TIMEOUT_SECONDS,
+  StellarBaseSpokeProvider,
   type StellarGasEstimate,
   type StellarReturnType,
   encodeAddress,
+  isStellarRawSpokeProvider,
   parseToStroops,
   sleep,
 } from '../../../index.js';
@@ -60,7 +62,7 @@ export class StellarSpokeService {
   public static async hasSufficientTrustline(
     token: string,
     amount: bigint,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProvider | StellarRawSpokeProvider,
   ): Promise<boolean> {
     // native token and legacy bnUSD do not require trustline
     if (
@@ -115,7 +117,7 @@ export class StellarSpokeService {
   public static async requestTrustline<R extends boolean = false>(
     token: string,
     amount: bigint,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProvider | StellarRawSpokeProvider,
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
     try {
@@ -147,7 +149,7 @@ export class StellarSpokeService {
         .setTimeout(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS)
         .build();
 
-      if (raw) {
+      if (raw || isStellarRawSpokeProvider(spokeProvider)) {
         const transactionXdr = transaction.toXDR();
 
         return {
@@ -195,7 +197,7 @@ export class StellarSpokeService {
 
   public static async deposit<R extends boolean = false>(
     params: StellarSpokeDepositParams,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProvider | StellarRawSpokeProvider,
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
@@ -226,7 +228,7 @@ export class StellarSpokeService {
    * @returns The balance of the token.
    */
   public static async getDeposit(token: string, spokeProvider: StellarSpokeProvider): Promise<bigint> {
-    return BigInt(await spokeProvider.getBalance(token));
+    return BigInt(await StellarBaseSpokeProvider.getBalance(token, spokeProvider));
   }
 
   /**
@@ -285,14 +287,15 @@ export class StellarSpokeService {
 
   private static async transfer<R extends boolean = false>(
     { token, recipient, amount, data = '0x' }: StellarTransferToHubParams,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProvider | StellarRawSpokeProvider,
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
-    return await spokeProvider.deposit(
+    return await StellarBaseSpokeProvider.deposit(
       token,
       amount.toString(),
       fromHex(recipient, 'bytes'),
       fromHex(data, 'bytes'),
+      spokeProvider,
       raw,
     );
   }
@@ -304,10 +307,11 @@ export class StellarSpokeService {
     spokeProvider: StellarSpokeProvider,
     raw?: R,
   ): PromiseStellarTxReturnType<R> {
-    return await spokeProvider.sendMessage(
+    return await StellarBaseSpokeProvider.sendMessage(
       dstChainId.toString(),
       fromHex(dstAddress, 'bytes'),
       fromHex(payload, 'bytes'),
+      spokeProvider,
       raw,
     );
   }

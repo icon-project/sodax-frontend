@@ -13,7 +13,7 @@ import type { EvmHubProvider } from '../../entities/index.js';
 import { getAssetManagerProgram, getConnectionProgram } from '../../entities/solana/Configs.js';
 import type { SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvider.js';
 import { AssetManagerPDA, ConnectionConfigPDA } from '../../entities/solana/pda/pda.js';
-import { convertTransactionInstructionToRaw, isNative } from '../../entities/solana/utils/utils.js';
+import { convertTransactionInstructionToRaw, isSolanaNativeToken } from '../../entities/solana/utils/utils.js';
 import type {
   DepositSimulationParams,
   PromiseSolanaTxReturnType,
@@ -99,7 +99,7 @@ export class SolanaSpokeService {
     const assetManagerProgramId = new PublicKey(spokeProvider.chainConfig.addresses.assetManager);
     const solToken = new PublicKey(token);
 
-    if (isNative(new PublicKey(solToken))) {
+    if (isSolanaNativeToken(new PublicKey(solToken))) {
       const vaultNative = AssetManagerPDA.vault_native(assetManagerProgramId);
       const balance = await spokeProvider.walletProvider.getBalance(vaultNative.pda.toBase58());
       return BigInt(balance);
@@ -188,7 +188,7 @@ export class SolanaSpokeService {
       addresses.connection,
     );
 
-    if (isNative(token)) {
+    if (isSolanaNativeToken(token)) {
       depositInstruction = await assetManagerProgram.methods
         .transfer(amountBN, Buffer.from(recipient.slice(2), 'hex'), Buffer.from(data.slice(2), 'hex'))
         .accountsStrict({

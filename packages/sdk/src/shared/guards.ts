@@ -4,11 +4,6 @@ import type {
   ResponseSigningType,
 } from './entities/icon/HanaWalletConnector.js';
 import {
-  InjectiveSpokeProvider,
-  IconSpokeProvider,
-  SolanaSpokeProvider,
-  StellarSpokeProvider,
-  SuiSpokeProvider,
   type EvmUninitializedConfig,
   type EvmInitializedConfig,
   type EvmUninitializedPrivateKeyConfig,
@@ -16,11 +11,16 @@ import {
   type SpokeProvider,
   EvmSpokeProvider,
   SonicSpokeProvider,
-} from './entities/index.js';
+  type EvmRawSpokeProvider,
+  type SonicRawSpokeProvider,
+  type RawSpokeProvider,
+} from './entities/Providers.js';
+import { InjectiveSpokeProvider, type InjectiveRawSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
+import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/IconSpokeProvider.js';
+import { SolanaSpokeProvider, type SolanaRawSpokeProvider } from './entities/solana/SolanaSpokeProvider.js';
+import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
+import type { StellarSpokeProvider, StellarRawSpokeProvider } from './entities/stellar/StellarSpokeProvider.js';
 import type {
-  EvmHubChainConfig,
-  HubChainConfig,
-  IntentError,
   MoneyMarketConfigParams,
   Optional,
   PartnerFeeAmount,
@@ -28,13 +28,13 @@ import type {
   PartnerFeePercentage,
   Prettify,
   SolverConfigParams,
-  MoneyMarketError,
-  MoneyMarketUnknownError,
-  IcxMigrateParams,
-  UnifiedBnUSDMigrateParams,
-  BalnMigrateParams,
-  IcxCreateRevertMigrationParams,
-} from '../index.js';
+} from './types.js';
+import type { EvmHubChainConfig, HubChainConfig } from '@sodax/types';
+import type { IntentError } from '../swap/SwapService.js';
+import type { MoneyMarketError, MoneyMarketUnknownError } from '../moneyMarket/MoneyMarketService.js';
+import type { IcxMigrateParams, IcxCreateRevertMigrationParams } from '../migration/IcxMigrationService.js';
+import type { UnifiedBnUSDMigrateParams } from '../migration/BnUSDMigrationService.js';
+import type { BalnMigrateParams } from '../migration/BalnSwapService.js';
 import {
   type EvmSpokeChainConfig,
   type SpokeChainConfig,
@@ -156,12 +156,7 @@ export function isSolanaSpokeProvider(value: SpokeProvider): value is SolanaSpok
 }
 
 export function isStellarSpokeProvider(value: SpokeProvider): value is StellarSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof StellarSpokeProvider &&
-    value.chainConfig.chain.type === 'STELLAR'
-  );
+  return typeof value === 'object' && value !== null && value.chainConfig.chain.type === 'STELLAR' && !('raw' in value);
 }
 
 export function isInjectiveSpokeProvider(value: SpokeProvider): value is InjectiveSpokeProvider {
@@ -368,4 +363,47 @@ export function isBalnMigrateParams(value: unknown): value is BalnMigrateParams 
 
 export function isIcxCreateRevertMigrationParams(value: unknown): value is IcxCreateRevertMigrationParams {
   return typeof value === 'object' && value !== null && 'amount' in value && 'to' in value;
+}
+
+export function isRawSpokeProvider(value: unknown): value is RawSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletProvider' in value &&
+    'chainConfig' in value &&
+    'raw' in value &&
+    value.raw === true
+  );
+}
+
+export function isEvmRawSpokeProvider(value: unknown): value is EvmRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'EVM';
+}
+
+export function isSolanaRawSpokeProvider(value: unknown): value is SolanaRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'SOLANA';
+}
+
+export function isStellarRawSpokeProvider(value: unknown): value is StellarRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STELLAR' && 'baseProvider' in value;
+}
+
+export function isIconRawSpokeProvider(value: unknown): value is IconRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'ICON';
+}
+
+export function isSuiRawSpokeProvider(value: unknown): value is SuiRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'SUI';
+}
+
+export function isInjectiveRawSpokeProvider(value: unknown): value is InjectiveRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'INJECTIVE';
+}
+
+export function isSonicRawSpokeProvider(value: unknown): value is SonicRawSpokeProvider {
+  return (
+    isRawSpokeProvider(value) &&
+    value.chainConfig.chain.type === 'EVM' &&
+    value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
+  );
 }

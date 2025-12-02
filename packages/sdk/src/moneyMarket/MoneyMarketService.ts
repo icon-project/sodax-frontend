@@ -3,7 +3,6 @@ import { poolAbi } from '../shared/abis/pool.abi.js';
 import type { EvmHubProvider, SpokeProvider } from '../shared/entities/index.js';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
-  isConfiguredMoneyMarketConfig,
   SpokeService,
   relayTxAndWaitPacket,
   type RelayErrorCode,
@@ -12,6 +11,7 @@ import {
   type RelayError,
   type ConfigService,
 } from '../index.js';
+import { isConfiguredMoneyMarketConfig } from '../shared/guards.js';
 import type {
   EvmContractCall,
   EvmReturnType,
