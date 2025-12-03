@@ -19,6 +19,7 @@ interface SwapButtonProps {
   onApprove: () => void | Promise<void>;
   onSwapConfirm: () => void | Promise<void>;
   isApproving: boolean;
+  targetChainSolved: boolean;
 }
 
 const SwapButton: React.FC<SwapButtonProps> = ({
@@ -29,9 +30,9 @@ const SwapButton: React.FC<SwapButtonProps> = ({
   onApprove,
   onSwapConfirm,
   isApproving,
+  targetChainSolved,
 }: SwapButtonProps): React.JSX.Element => {
-  const { inputToken, outputToken, swapError, allowanceConfirmed, swapStatus, dstTxHash } =
-    useSwapState();
+  const { inputToken, outputToken, swapError, allowanceConfirmed, swapStatus, dstTxHash } = useSwapState();
   const { setAllowanceConfirmed } = useSwapActions();
 
   const isWaitingForSolvedStatus = useMemo(() => {
@@ -60,7 +61,7 @@ const SwapButton: React.FC<SwapButtonProps> = ({
     }
   }, [hasAllowed, setAllowanceConfirmed]);
 
-  if (swapStatus === SolverIntentStatusCode.SOLVED) {
+  if (targetChainSolved) {
     return (
       <div className="flex w-full flex-col gap-4">
         <Button variant="cherry" className="w-full text-white font-semibold font-['InterRegular']" onClick={onClose}>
@@ -120,9 +121,7 @@ const SwapButton: React.FC<SwapButtonProps> = ({
                   ? 'Confirming Swap'
                   : swapStatus === SolverIntentStatusCode.NOT_STARTED_YET
                     ? 'Swap Created'
-                    : swapStatus === SolverIntentStatusCode.STARTED_NOT_FINISHED
-                      ? 'Swap in Progress'
-                      : 'Confirming Swap'}
+                    : 'Swap in Progress'}
               </span>
               <CircularProgressIcon width={16} height={16} stroke="white" progress={100} className="animate-spin" />
             </div>
