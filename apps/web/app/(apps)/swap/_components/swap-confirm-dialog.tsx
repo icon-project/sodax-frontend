@@ -90,15 +90,20 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       if (status?.ok) {
         const filledIntent = await sodax.swap.getFilledIntent(status.value.fill_tx_hash as `0x${string}`);
         setFilledIntent(filledIntent);
-        const packet = await waitUntilIntentExecuted({
-          intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
-          spokeTxHash: status.value.fill_tx_hash as `0x${string}`,
-          timeout: 300000, // 5 minutes
-          apiUrl: sodax.relayerApiEndpoint,
-        });
-        if (packet.ok) {
+        if (outputToken.xChainId === SONIC_MAINNET_CHAIN_ID) {
           setTargetChainSolved(true);
           setDstTxHash('');
+        } else {
+          const packet = await waitUntilIntentExecuted({
+            intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
+            spokeTxHash: status.value.fill_tx_hash as `0x${string}`,
+            timeout: 300000, // 5 minutes
+            apiUrl: sodax.relayerApiEndpoint,
+          });
+          if (packet.ok) {
+            setTargetChainSolved(true);
+            setDstTxHash('');
+          }
         }
       }
     };
@@ -114,7 +119,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
         setSwapError({ title: 'Swap failed', message: 'Please try again.' });
       }
     }
-  }, [dstTxHash, status, setSwapStatus, setSwapError, setDstTxHash, sodax]);
+  }, [dstTxHash, status, setSwapStatus, setSwapError, setDstTxHash, sodax, outputToken.xChainId]);
 
   const displayedOutputValue = useMemo(() => {
     if (filledIntent) {
