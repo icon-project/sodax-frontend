@@ -92,6 +92,9 @@ export type MoneyMarketSupplyParams = {
   token: string; // spoke chain token address
   amount: bigint; // The amount of the asset to supply.
   action: 'supply';
+  // Optional parameters: allow supplying assets to a different hub chain account.
+  // The specific hub account is determined by both dstChainId and dstAddress.
+  // If omitted, assets are supplied to the sender's default hub account.
   dstChainId?: SpokeChainId;
   dstAddress?: Address;
 };
@@ -100,18 +103,33 @@ export type MoneyMarketBorrowParams = {
   token: string; // spoke chain token address
   amount: bigint; // The amount of the asset to borrow.
   action: 'borrow';
+  // Optional parameters: allow borrowing assets to a different spoke account on a spoke chain.
+  // The specific spoke account is determined by both dstChainId and dstAddress.
+  // If omitted, assets are sent to the sender's default spoke account.
+  dstChainId?: SpokeChainId;
+  dstAddress?: Address;
 };
 
 export type MoneyMarketWithdrawParams = {
   token: string; // spoke chain token address
   amount: bigint; // The amount of the asset to withdraw.
   action: 'withdraw';
+  // Optional parameters: allow sending withdrawed assets to a different spoke account on a spoke chain.
+  // The specific spoke account is determined by both dstChainId and dstAddress.
+  // If omitted, assets are sent to the sender's default spoke account.
+  dstChainId?: SpokeChainId;
+  dstAddress?: Address;
 };
 
 export type MoneyMarketRepayParams = {
   token: string; // spoke chain token address
   amount: bigint; // The amount of the asset to repay.
   action: 'repay';
+  // Optional parameters: allow repaying assets to a different hub chain account.
+  // The specific hub account is determined by both dstChainId and dstAddress.
+  // If omitted, assets are repaid to the sender's default hub account.
+  dstChainId?: SpokeChainId;
+  dstAddress?: Address;
 };
 
 export type MoneyMarketParams =
@@ -674,15 +692,16 @@ export class MoneyMarketService {
         `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
       );
 
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const spokeWalletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const spokeChainId = spokeProvider.chainConfig.chain.id;
 
-      const dstChainId = params.dstChainId ?? spokeProvider.chainConfig.chain.id;
-      const dstAddress = params.dstAddress ?? walletAddress;
-      const abstractedWalletAddress = await deriveUserWalletAddress(this.hubProvider, dstChainId, dstAddress);
+      const dstChainId = params.dstChainId ?? spokeChainId;
+      const dstAddress = params.dstAddress ?? spokeWalletAddress;
+      const dstWalletAddressOnHub = await deriveUserWalletAddress(this.hubProvider, dstChainId, dstAddress);
 
       const data: Hex = this.buildSupplyData(
         params.token,
-        abstractedWalletAddress,
+        dstWalletAddressOnHub,
         params.amount,
         spokeProvider.chainConfig.chain.id,
       );
@@ -694,7 +713,7 @@ export class MoneyMarketService {
       ) {
         txResult = await SonicSpokeService.deposit(
           {
-            from: walletAddress as GetAddressType<SonicSpokeProvider>,
+            from: spokeWalletAddress as GetAddressType<SonicSpokeProvider>,
             token: params.token as GetAddressType<SonicSpokeProvider>,
             amount: params.amount,
             data,
@@ -705,8 +724,8 @@ export class MoneyMarketService {
       } else {
         txResult = await SpokeService.deposit(
           {
-            from: walletAddress,
-            to: abstractedWalletAddress,
+            from: spokeWalletAddress,
+            to: dstWalletAddressOnHub,
             token: params.token,
             amount: params.amount,
             data,
@@ -721,7 +740,7 @@ export class MoneyMarketService {
         ok: true,
         value: txResult as TxReturnType<S, R>,
         data: {
-          address: abstractedWalletAddress,
+          address: dstWalletAddressOnHub,
           payload: data,
         },
       };
@@ -1264,10 +1283,13 @@ export class MoneyMarketService {
       `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const spokeWalletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const spokeChainId = spokeProvider.chainConfig.chain.id;
-    const hubWallet = await deriveUserWalletAddress(this.hubProvider, spokeChainId, walletAddress);
-    const data: Hex = this.buildRepayData(params.token, hubWallet, params.amount, spokeChainId);
+
+    const dstChainId = params.dstChainId ?? spokeChainId;
+    const dstAddress = params.dstAddress ?? spokeWalletAddress;
+    const dstWalletAddressOnHub = await deriveUserWalletAddress(this.hubProvider, dstChainId, dstAddress);
+    const data: Hex = this.buildRepayData(params.token, dstWalletAddressOnHub, params.amount, spokeChainId);
 
     let txResult: Awaited<PromiseTxReturnType<S, R>> | EvmReturnType<R>;
     if (
@@ -1276,7 +1298,7 @@ export class MoneyMarketService {
     ) {
       txResult = await SonicSpokeService.deposit(
         {
-          from: walletAddress as GetAddressType<SonicSpokeProvider>,
+          from: spokeWalletAddress as GetAddressType<SonicSpokeProvider>,
           token: params.token as GetAddressType<SonicSpokeProvider>,
           amount: params.amount,
           data,
@@ -1287,8 +1309,8 @@ export class MoneyMarketService {
     } else {
       txResult = await SpokeService.deposit(
         {
-          from: walletAddress,
-          to: hubWallet,
+          from: spokeWalletAddress,
+          to: dstWalletAddressOnHub,
           token: params.token,
           amount: params.amount,
           data,
@@ -1303,7 +1325,7 @@ export class MoneyMarketService {
       ok: true,
       value: txResult as TxReturnType<S, R>,
       data: {
-        address: hubWallet,
+        address: dstWalletAddressOnHub,
         payload: data,
       },
     };
