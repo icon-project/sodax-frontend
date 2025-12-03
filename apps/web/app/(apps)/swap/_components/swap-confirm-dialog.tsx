@@ -47,16 +47,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [approvalError, setApprovalError] = useState<string | null>(null);
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
-  const {
-    inputToken,
-    outputToken,
-    inputAmount,
-    isSwapAndSend,
-    customDestinationAddress,
-    dstTxHash,
-    swapError,
-    swapStatus,
-  } = useSwapState();
+  const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, dstTxHash, swapError } =
+    useSwapState();
   const { setInputAmount, setDstTxHash, setSwapError, setSwapStatus, setAllowanceConfirmed, resetSwapExecutionState } =
     useSwapActions();
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
@@ -101,7 +93,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
         const packet = await waitUntilIntentExecuted({
           intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
           spokeTxHash: status.value.fill_tx_hash as `0x${string}`,
-          timeout: 120000,
+          timeout: 300000, // 5 minutes
           apiUrl: sodax.relayerApiEndpoint,
         });
         if (packet.ok) {
