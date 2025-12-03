@@ -91,7 +91,7 @@ export type MoneyMarketAction = 'supply' | 'borrow' | 'withdraw' | 'repay';
 /**
  * Parameters for a Money Market supply operation.
  *
- * @property token - Spoke chain token address to supply.
+ * @property token - The from chain token address to supply.
  * @property amount - The amount of the asset to supply.
  * @property action - The action type ('supply').
  * @property toChainId - (Optional) Target spoke chain ID to receive the supplied assets.
@@ -110,7 +110,7 @@ export type MoneyMarketSupplyParams = {
 /**
  * Parameters for a Money Market borrow operation.
  *
- * @property token - Spoke chain token address to borrow.
+ * @property token - The target chain token address to borrow.
  * @property amount - The amount of the asset to borrow.
  * @property action - Action type ('borrow').
  * @property toChainId - (Optional) Target spoke chain ID to receive the borrowed assets.
@@ -119,8 +119,8 @@ export type MoneyMarketSupplyParams = {
  *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
  */
 export type MoneyMarketBorrowParams = {
-  token: string; // spoke chain token address
-  amount: bigint; // The amount of the asset to borrow.
+  token: string;
+  amount: bigint;
   action: 'borrow';
   toChainId?: SpokeChainId;
   toAddress?: Address;
@@ -129,7 +129,7 @@ export type MoneyMarketBorrowParams = {
 /**
  * Parameters for a Money Market withdraw operation.
  *
- * @property token - The spoke chain token address to withdraw.
+ * @property token - The target chain token address to withdraw.
  * @property amount - The amount of the asset to withdraw.
  * @property action - The action type ('withdraw').
  * @property toChainId - (Optional) Target spoke chain ID to receive the withdrawn assets.
@@ -138,8 +138,8 @@ export type MoneyMarketBorrowParams = {
  *   Note:If omitted, assets are sent to the sender's default spoke account.
  */
 export type MoneyMarketWithdrawParams = {
-  token: string; // spoke chain token address
-  amount: bigint; // The amount of the asset to withdraw.
+  token: string;
+  amount: bigint;
   action: 'withdraw';
   toChainId?: SpokeChainId;
   toAddress?: Address;
@@ -148,7 +148,7 @@ export type MoneyMarketWithdrawParams = {
 /**
  * Parameters for a Money Market repay operation.
  *
- * @property token - The spoke chain token address to repay.
+ * @property token - The from chain token address to repay.
  * @property amount - The amount of the asset to repay.
  * @property action - The action type ('repay').
  * @property toChainId - (Optional) Target spoke chain ID to receive the repaid assets.
@@ -157,8 +157,8 @@ export type MoneyMarketWithdrawParams = {
  *   Note: If omitted, assets are repaid to the sender's default spoke account.
  */
 export type MoneyMarketRepayParams = {
-  token: string; // spoke chain token address
-  amount: bigint; // The amount of the asset to repay.
+  token: string;
+  amount: bigint;
   action: 'repay';
   toChainId?: SpokeChainId;
   toAddress?: Address;
@@ -719,16 +719,17 @@ export class MoneyMarketService {
       invariant(params.action === 'supply', 'Invalid action');
       invariant(params.token.length > 0, 'Token is required');
       invariant(params.amount > 0n, 'Amount must be greater than 0');
-      invariant(
-        this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
-        `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
-      );
 
       const fromChainId = spokeProvider.chainConfig.chain.id;
       const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
-
       const toChainId = params.toChainId ?? fromChainId;
       const toAddress = params.toAddress ?? fromAddress;
+
+      invariant(
+        this.configService.isMoneyMarketSupportedToken(fromChainId, params.token),
+        `Unsupported spoke chain (${fromChainId}) token: ${params.token}`,
+      );
+
       const toHubWallet = await deriveUserWalletAddress(this.hubProvider, toChainId, toAddress);
 
       const data: Hex = this.buildSupplyData(params.token, toHubWallet, params.amount, fromChainId);
@@ -925,16 +926,17 @@ export class MoneyMarketService {
     invariant(params.action === 'borrow', 'Invalid action');
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
-    invariant(
-      this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
-      `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
-    );
 
     const fromChainId = spokeProvider.chainConfig.chain.id;
     const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
-
     const toChainId = params.toChainId ?? fromChainId;
     const toAddress = params.toAddress ?? fromAddress;
+
+    invariant(
+      this.configService.isMoneyMarketSupportedToken(toChainId, params.token),
+      `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
+    );
+
     const encodedToAddress = encodeAddress(toChainId, toAddress);
     const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
 
@@ -1101,18 +1103,17 @@ export class MoneyMarketService {
     invariant(params.action === 'withdraw', 'Invalid action');
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
-    invariant(
-      this.configService.isMoneyMarketSupportedToken(
-        params.toChainId ?? spokeProvider.chainConfig.chain.id,
-        params.token,
-      ),
-      `Unsupported spoke chain (${params.toChainId ?? spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
-    );
 
     const fromChainId = spokeProvider.chainConfig.chain.id;
     const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
     const toChainId = params.toChainId ?? fromChainId;
     const toAddress = params.toAddress ?? fromAddress;
+
+    invariant(
+      this.configService.isMoneyMarketSupportedToken(toChainId, params.token),
+      `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
+    );
+
     const encodedToAddress = encodeAddress(toChainId, toAddress);
     const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
 
@@ -1300,16 +1301,17 @@ export class MoneyMarketService {
     invariant(params.action === 'repay', 'Invalid action');
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
-    invariant(
-      this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
-      `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
-    );
 
     const fromChainId = spokeProvider.chainConfig.chain.id;
     const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
-
     const toChainId = params.toChainId ?? fromChainId;
     const toAddress = params.toAddress ?? fromAddress;
+
+    invariant(
+      this.configService.isMoneyMarketSupportedToken(fromChainId, params.token),
+      `Unsupported spoke chain (${fromChainId}) token: ${params.token}`,
+    );
+
     const toHubWallet = await deriveUserWalletAddress(this.hubProvider, toChainId, toAddress);
     const data: Hex = this.buildRepayData(params.token, toHubWallet, params.amount, fromChainId);
 
