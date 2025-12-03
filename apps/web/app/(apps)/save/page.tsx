@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import AnimatedNumber from '@/components/shared/animated-number';
 import CurrencySearchPanel from './_components/currency-search-panel';
 import CurrencyList from './_components/currency-list';
-import { cn } from '@/lib/utils';
+import { delay } from '@/lib/utils';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,9 +18,9 @@ export default function SavingsPage() {
   };
 
   useEffect(() => {
-    setTimeout(() => {
+    delay(500).then(() => {
       setIsOpen(true);
-    }, 500);
+    });
   }, []);
 
   return (
@@ -39,19 +39,23 @@ export default function SavingsPage() {
             instantly
           </div>
         </div>
-        <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex gap-1">
-          Up to{' '}
+        <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex">
+          Up to
           <AnimatedNumber
             to={9.81}
             decimalPlaces={2}
-            className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-6"
+            className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-6 ml-1"
           />
           % with no lockups.
         </div>
       </motion.div>
 
-      <motion.div className={cn('w-full', openValue === '' ? 'opacity-100' : '!opacity-40')} variants={itemVariants}>
-        <CurrencySearchPanel searchQuery={searchQuery} onSearchChange={handleSearchChange} />
+      <motion.div className="w-full" variants={itemVariants}>
+        <CurrencySearchPanel
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          currencyListOpened={openValue !== ''}
+        />
       </motion.div>
 
       <motion.div className="w-full flex-grow-1" variants={itemVariants}>

@@ -9,16 +9,27 @@ import { ChevronDownIcon, SearchIcon } from 'lucide-react';
 import Image from 'next/image';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface CurrencySearchPanelProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  currencyListOpened: boolean;
 }
 
-export default function CurrencySearchPanel({ searchQuery, onSearchChange }: CurrencySearchPanelProps) {
+export default function CurrencySearchPanel({
+  searchQuery,
+  onSearchChange,
+  currencyListOpened,
+}: CurrencySearchPanelProps) {
   return (
     <div className="w-full gap-(--layout-space-small) flex">
-      <InputGroup className="rounded-full w-full md:w-44 h-10 bg-almost-white border-none shadow-none mix-blend-multiply">
+      <InputGroup
+        className={cn(
+          'rounded-full w-full md:w-44 h-10 border-none shadow-none mix-blend-multiply',
+          currencyListOpened ? 'bg-almost-white/60' : 'bg-almost-white',
+        )}
+      >
         <InputGroupAddon>
           <InputGroupText>
             <SearchIcon className="w-4 h-4 text-clay-light" />
@@ -56,21 +67,36 @@ export default function CurrencySearchPanel({ searchQuery, onSearchChange }: Cur
             value="stablecoins"
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none cursor-pointer p-0"
           >
-            <Badge variant="vibrant">2</Badge>
+            <Badge
+              variant="vibrant"
+              className={cn('mix-blend-multiply', currencyListOpened ? 'bg-vibrant-white/60' : 'bg-vibrant-white')}
+            >
+              2
+            </Badge>
             Stablecoins
           </TabsTrigger>
           <TabsTrigger
             value="assets"
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none cursor-pointer p-0"
           >
-            <Badge variant="vibrant">2</Badge>
+            <Badge
+              variant="vibrant"
+              className={cn('mix-blend-multiply', currencyListOpened ? 'bg-vibrant-white/60' : 'bg-vibrant-white')}
+            >
+              2
+            </Badge>
             Assets
           </TabsTrigger>
           <TabsTrigger
             value="top-apy"
             className="data-[state=active]:bg-transparent data-[state=active]:shadow-none cursor-pointer p-0"
           >
-            <Badge variant="vibrant">2</Badge>
+            <Badge
+              variant="vibrant"
+              className={cn('mix-blend-multiply', currencyListOpened ? 'bg-vibrant-white/60' : 'bg-vibrant-white')}
+            >
+              2
+            </Badge>
             Top APY
           </TabsTrigger>
         </TabsList>

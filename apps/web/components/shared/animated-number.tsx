@@ -34,6 +34,7 @@ export default function AnimatedNumber({
   useEffect(() => {
     const controls = animate(count, to, {
       duration,
+      ease: 'easeOut',
     });
     return () => controls.stop();
   }, [count, to, duration]);

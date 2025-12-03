@@ -31,7 +31,13 @@ export default function TokenAccordionItem({
       <Separator className="h-[1px] bg-clay opacity-30" />
       <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30" />
 
-      <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.3, ease: 'easeOut' }} className="w-full group">
+      <motion.div
+        whileHover={{
+          scale: isCollapsed ? 1.01 : 1,
+        }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="w-full group"
+      >
         <AccordionTriggerWithButton>
           <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal)">
             <ItemMedia>
@@ -119,9 +125,9 @@ function ExpandedContent({
   return (
     <>
       <div className="flex items-center h-12">
-        <Separator orientation="vertical" className="bg-cream-white border-l-2 h-12" />
+        <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
         <InfoBlock value="3.56%" label="Current APY" />
-        <Separator orientation="vertical" className="bg-cream-white border-l-2 h-12" />
+        <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
         <InfoBlock value="$34.9k" label="All deposits" />
       </div>
 
@@ -149,10 +155,10 @@ function ExpandedContent({
       </div>
 
       <div className="flex gap-4 items-center mt-4">
-        <Button variant="cream" className="w-27">
+        <Button variant="cream" className="w-27 mix-blend-multiply shadow-none">
           Continue
         </Button>
-        <span className="text-clay text-(length:--body-small)">Pick an assset to continue</span>
+        <span className="text-clay text-(length:--body-small) font-['InterRegular']">Select a source</span>
       </div>
     </>
   );
