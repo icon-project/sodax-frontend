@@ -325,7 +325,7 @@ export class SonicSpokeService {
    * Get withdraw information for a given token
    * @param token - The address of the underlying token
    * @param amount - The amount to withdraw
-   * @param spokeProvider - The spoke provider
+   * @param chainId - The chain ID of the underlying token
    * @param moneyMarketService - The money market service
    * @param configService - The config service
    * @returns {WithdrawInfo} WithdrawInfo containing aToken address, amount and vault address
@@ -333,11 +333,11 @@ export class SonicSpokeService {
   public static async getWithdrawInfo(
     token: Address,
     amount: bigint,
-    spokeProvider: SonicSpokeProvider,
+    chainId: SpokeChainId,
     dataService: MoneyMarketDataService,
     configService: ConfigService,
   ): Promise<WithdrawInfo> {
-    const assetConfig = configService.getHubAssetInfo(spokeProvider.chainConfig.chain.id, token);
+    const assetConfig = configService.getHubAssetInfo(chainId, token);
 
     if (!assetConfig) {
       throw new Error('[SonicSpokeService.getWithdrawInfo] Hub asset not found');
@@ -529,6 +529,8 @@ export class SonicSpokeService {
     from: Address,
     withdrawInfo: WithdrawInfo,
     amount: bigint,
+    toAddress: Address,
+    toChainId: SpokeChainId,
     spokeProvider: SonicSpokeProvider,
     moneyMarketService: MoneyMarketService,
   ): Promise<Hex> {
@@ -537,12 +539,13 @@ export class SonicSpokeService {
     // Add withdraw call
     const withdrawCall = moneyMarketService.buildWithdrawData(
       userRouter,
-      from,
+      toAddress,
       withdrawInfo.token,
       amount,
-      spokeProvider.chainConfig.chain.id,
+      toChainId,
     );
-    const calls = decodeAbiParameters(
+
+    const _calls = decodeAbiParameters(
       [
         {
           name: 'calls',
@@ -555,12 +558,9 @@ export class SonicSpokeService {
         },
       ],
       withdrawCall,
-    )[0] as {
-      address: Address;
-      value: bigint;
-      data: `0x${string}`;
-    }[];
-    // move aTokens to user wallet address
+    )[0];
+
+    // move aTokens from user wallet address to user router address
     const transferFromCall = Erc20Service.encodeTransferFrom(
       withdrawInfo.aTokenAddress,
       from,
@@ -568,12 +568,7 @@ export class SonicSpokeService {
       withdrawInfo.aTokenAmount,
     );
 
-    calls.unshift({
-      address: transferFromCall.address,
-      value: transferFromCall.value,
-      data: transferFromCall.data,
-    });
-    console.log('calls', calls);
+    const calls = [transferFromCall, ..._calls];
 
     return encodeContractCalls(calls);
   }

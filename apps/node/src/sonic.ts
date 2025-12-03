@@ -67,7 +67,12 @@ const spokeProvider = new SonicSpokeProvider(spokeEvmWallet, spokeChainConfig[HU
 
 // Initialize BridgeService
 const relayerApiEndpoint = DEFAULT_RELAYER_API_ENDPOINT;
-const bridgeService = new BridgeService({ hubProvider, relayerApiEndpoint, config: undefined, configService: sodax.config });
+const bridgeService = new BridgeService({
+  hubProvider,
+  relayerApiEndpoint,
+  config: undefined,
+  configService: sodax.config,
+});
 
 // 0xEEFdd69e94466D935022702Cddd9c4abD66Ce73Fz
 async function supply(token: Address, amount: bigint) {
@@ -221,7 +226,13 @@ async function borrowHighLevel(token: Address, amount: bigint) {
 
 async function withdraw(token: Address, amount: bigint) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
-  const withdrawInfo = await SonicSpokeService.getWithdrawInfo(token, amount, spokeProvider, sodax.moneyMarket.data, sodax.config);
+  const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
+    token,
+    amount,
+    spokeProvider.chainConfig.chain.id,
+    sodax.moneyMarket.data,
+    sodax.config,
+  );
   const approveHash = await SonicSpokeService.approveWithdraw(wallet, withdrawInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
   await new Promise(f => setTimeout(f, 1000));
@@ -230,6 +241,8 @@ async function withdraw(token: Address, amount: bigint) {
     wallet,
     withdrawInfo,
     amount,
+    wallet,
+    spokeProvider.chainConfig.chain.id,
     spokeProvider,
     sodax.moneyMarket,
   );
@@ -469,7 +482,13 @@ async function reverseMigrateBnUSD(
 
 async function borrowTo(token: Hex, amount: bigint, to: Hex, spokeChainId: SpokeChainId) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
-  const borrowInfo = await SonicSpokeService.getBorrowInfo(token, amount, spokeChainId, sodax.moneyMarket.data, sodax.config);
+  const borrowInfo = await SonicSpokeService.getBorrowInfo(
+    token,
+    amount,
+    spokeChainId,
+    sodax.moneyMarket.data,
+    sodax.config,
+  );
   const approveHash = await SonicSpokeService.approveBorrow(wallet, borrowInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
   await new Promise(f => setTimeout(f, 1000));
