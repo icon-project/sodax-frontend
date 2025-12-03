@@ -99,22 +99,29 @@ export type MoneyMarketSupplyParams = {
   dstAddress?: Address;
 };
 
+/**
+ * Parameters for initiating a borrow action on the Money Market.
+ * @property token - Spoke chain token address to borrow.
+ * @property amount - The amount of the asset to borrow.
+ * @property action - Action type ('borrow').
+ * @property toChainId - (Optional) Target spoke chain ID to receive the borrowed assets.
+ *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
+ * @property toAddress - (Optional) Target address on the spoke chain to receive the borrowed assets.
+ *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
+ */
 export type MoneyMarketBorrowParams = {
   token: string; // spoke chain token address
   amount: bigint; // The amount of the asset to borrow.
   action: 'borrow';
-  // Optional parameters: allow borrowing assets to a different spoke account on a spoke chain.
-  // The specific spoke account is determined by both dstChainId and dstAddress.
-  // If omitted, assets are sent to the sender's default spoke account.
-  dstChainId?: SpokeChainId;
-  dstAddress?: Address;
+  toChainId?: SpokeChainId;
+  toAddress?: Address;
 };
 
 export type MoneyMarketWithdrawParams = {
   token: string; // spoke chain token address
   amount: bigint; // The amount of the asset to withdraw.
   action: 'withdraw';
-  // Optional parameters: allow sending withdrawed assets to a different spoke account on a spoke chain.
+  // Optional parameters: send withdrawed assets to a different spoke account on a spoke chain.
   // The specific spoke account is determined by both toChainId and toAddress.
   // If omitted, assets are sent to the sender's default spoke account.
   toChainId?: SpokeChainId;
@@ -906,31 +913,28 @@ export class MoneyMarketService {
       `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const spokeChainId = spokeProvider.chainConfig.chain.id;
-    const encodedAddress = encodeAddress(spokeChainId, walletAddress);
-    const hubWallet = await deriveUserWalletAddress(this.hubProvider, spokeChainId, walletAddress);
+    const fromChainId = spokeProvider.chainConfig.chain.id;
+    const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-    const data: Hex = this.buildBorrowData(
-      hubWallet,
-      encodedAddress,
-      params.token,
-      params.amount,
-      spokeProvider.chainConfig.chain.id,
-    );
+    const toChainId = params.toChainId ?? fromChainId;
+    const toAddress = params.toAddress ?? fromAddress;
+    const encodedToAddress = encodeAddress(toChainId, toAddress);
+    const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
+
+    const data: Hex = this.buildBorrowData(fromHubWallet, encodedToAddress, params.token, params.amount, toChainId);
 
     let txResult: TxReturnType<S, R>;
-    if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
+    if (fromChainId === this.hubProvider.chainConfig.chain.id) {
       txResult = await SonicSpokeService.callWallet(data, spokeProvider, raw);
     } else {
-      txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
+      txResult = await SpokeService.callWallet(fromHubWallet, data, spokeProvider, this.hubProvider, raw);
     }
 
     return {
       ok: true,
       value: txResult satisfies TxReturnType<S, R>,
       data: {
-        address: hubWallet,
+        address: fromHubWallet,
         payload: data,
       },
     };
@@ -1364,26 +1368,26 @@ export class MoneyMarketService {
   /**
    * Build transaction data for borrowing from the money market pool
    * @param from - The user wallet address on the hub chain
-   * @param to - The user wallet address on the spoke chain
+   * @param toAddress - The user wallet address on the spoke chain
    * @param token - The address of the token to borrow
    * @param amount - The amount to borrow in hub chain decimals
-   * @param spokeChainId - The chain ID of the spoke chain
+   * @param toChainId - The chain ID of the spoke chain
    * @returns {Hex} The transaction data.
    */
   public buildBorrowData(
     from: Address,
-    to: Address | Hex,
+    toAddress: Address,
     token: string,
     amount: bigint,
-    spokeChainId: SpokeChainId,
+    toChainId: SpokeChainId,
   ): Hex {
-    invariant(this.configService.isValidSpokeChainId(spokeChainId), `Invalid spokeChainId: ${spokeChainId}`);
+    invariant(this.configService.isValidSpokeChainId(toChainId), `Invalid toChainId: ${toChainId}`);
     invariant(
-      this.configService.isValidOriginalAssetAddress(spokeChainId, token),
-      `Unsupported spoke chain (${spokeChainId}) token: ${token}`,
+      this.configService.isValidOriginalAssetAddress(toChainId, token),
+      `Unsupported spoke chain (${toChainId}) token: ${token}`,
     );
 
-    const assetConfig = this.configService.getHubAssetInfo(spokeChainId, token);
+    const assetConfig = this.configService.getHubAssetInfo(toChainId, token);
 
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
 
@@ -1424,7 +1428,7 @@ export class MoneyMarketService {
     calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount - feeAmount));
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount - feeAmount);
 
-    if (spokeChainId === this.hubProvider.chainConfig.chain.id) {
+    if (toChainId === this.hubProvider.chainConfig.chain.id) {
       if (
         token.toLowerCase() ===
         this.configService.spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()
@@ -1435,19 +1439,19 @@ export class MoneyMarketService {
           data: encodeFunctionData({
             abi: wrappedSonicAbi,
             functionName: 'withdrawTo',
-            args: [to, translatedAmountOut],
+            args: [toAddress, translatedAmountOut],
           }),
         };
 
         calls.push(withdrawToCall);
       } else {
-        calls.push(Erc20Service.encodeTransfer(assetAddress, to, translatedAmountOut));
+        calls.push(Erc20Service.encodeTransfer(assetAddress, toAddress, translatedAmountOut));
       }
     } else {
       calls.push(
         EvmAssetManagerService.encodeTransfer(
           assetAddress,
-          to,
+          toAddress,
           translatedAmountOut,
           this.hubProvider.chainConfig.addresses.assetManager,
         ),
