@@ -1102,8 +1102,11 @@ export class MoneyMarketService {
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
     invariant(
-      this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
-      `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
+      this.configService.isMoneyMarketSupportedToken(
+        params.toChainId ?? spokeProvider.chainConfig.chain.id,
+        params.token,
+      ),
+      `Unsupported spoke chain (${params.toChainId ?? spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
     );
 
     const fromChainId = spokeProvider.chainConfig.chain.id;
