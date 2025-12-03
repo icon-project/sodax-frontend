@@ -147,7 +147,6 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     }
 
     const [, , intentDeliveryInfo] = result.value;
-    console.log('intentDeliveryInfo', intentDeliveryInfo);
     setDstTxHash(intentDeliveryInfo.dstTxHash);
     setSwapStatus(SolverIntentStatusCode.NOT_STARTED_YET);
   };
