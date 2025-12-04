@@ -730,36 +730,23 @@ export class MoneyMarketService {
         `Unsupported spoke chain (${fromChainId}) token: ${params.token}`,
       );
 
+      const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
       const toHubWallet = await deriveUserWalletAddress(this.hubProvider, toChainId, toAddress);
 
       const data: Hex = this.buildSupplyData(params.token, toHubWallet, params.amount, fromChainId);
 
-      let txResult: Awaited<PromiseTxReturnType<S, R>> | EvmReturnType<R>;
-      if (fromChainId === this.hubProvider.chainConfig.chain.id && spokeProvider instanceof SonicSpokeProvider) {
-        txResult = await SonicSpokeService.deposit(
-          {
-            from: fromAddress as GetAddressType<SonicSpokeProvider>,
-            token: params.token as GetAddressType<SonicSpokeProvider>,
-            amount: params.amount,
-            data,
-          },
-          spokeProvider,
-          raw,
-        );
-      } else {
-        txResult = await SpokeService.deposit(
-          {
-            from: fromAddress,
-            to: toHubWallet,
-            token: params.token,
-            amount: params.amount,
-            data,
-          } as GetSpokeDepositParamsType<S>,
-          spokeProvider,
-          this.hubProvider,
-          raw,
-        );
-      }
+      const txResult = await SpokeService.deposit(
+        {
+          from: fromAddress,
+          to: fromChainId === this.hubProvider.chainConfig.chain.id ? undefined : fromHubWallet,
+          token: params.token,
+          amount: params.amount,
+          data,
+        } as GetSpokeDepositParamsType<S>,
+        spokeProvider,
+        this.hubProvider,
+        raw,
+      );
 
       return {
         ok: true,
