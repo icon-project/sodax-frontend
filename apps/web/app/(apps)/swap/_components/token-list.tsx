@@ -252,6 +252,7 @@ export function TokenList({
             </AnimatePresence>
           </motion.div>
         </ScrollAreaPrimitive.Viewport>
+        <div className="w-full h-16 left-0 bottom-0 absolute bg-gradient-to-t from-vibrant-white to-neutral-100/0 z-[100000]" />
         <ScrollBar />
         <ScrollAreaPrimitive.Corner />
       </ScrollAreaPrimitive.Root>
