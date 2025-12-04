@@ -110,7 +110,7 @@ function CollapsedRowInfo({ tokens }: { tokens: XToken[] }) {
         )}
       </div>
 
-      <div className="hidden md:flex gap-1">
+      <div className="hidden md:flex gap-1 shrink-0">
         <span className="text-clay-light text-(length:--body-small) font-['InterBold']">$28,067.62</span>
         <span className="text-clay-light text-(length:--body-small)">paid-out (30d)</span>
       </div>
