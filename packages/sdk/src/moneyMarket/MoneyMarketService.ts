@@ -89,12 +89,12 @@ export type MoneyMarketAction = 'supply' | 'borrow' | 'withdraw' | 'repay';
 /**
  * Parameters for a Money Market supply operation.
  *
- * @property token - The from chain token address to supply.
+ * @property token - The source chain token address to supply.
  * @property amount - The amount of the asset to supply.
  * @property action - The action type ('supply').
  * @property toChainId - (Optional) Target spoke chain ID to receive the supplied assets.
  *   Note: If omitted, assets are supplied to the sender's default spoke account.
- * @property toAddress - (Optional) The address on the target spoke chain that will receive the supplied assets.
+ * @property toAddress - (Optional) The address on the target chain that will receive the supplied assets.
  *   Note: If omitted, assets are supplied to the sender's default spoke account.
  */
 export type MoneyMarketSupplyParams = {
@@ -111,9 +111,9 @@ export type MoneyMarketSupplyParams = {
  * @property token - The target chain token address to borrow.
  * @property amount - The amount of the asset to borrow.
  * @property action - Action type ('borrow').
- * @property toChainId - (Optional) Target spoke chain ID to receive the borrowed assets.
+ * @property toChainId - (Optional) Target chain ID to receive the borrowed assets.
  *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
- * @property toAddress - (Optional) Target address on the spoke chain to receive the borrowed assets.
+ * @property toAddress - (Optional) Target address on the taret chain to receive the borrowed assets.
  *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
  */
 export type MoneyMarketBorrowParams = {
@@ -146,7 +146,7 @@ export type MoneyMarketWithdrawParams = {
 /**
  * Parameters for a Money Market repay operation.
  *
- * @property token - The from chain token address to repay.
+ * @property token - The source chain token address to repay.
  * @property amount - The amount of the asset to repay.
  * @property action - The action type ('repay').
  * @property toChainId - (Optional) Target spoke chain ID to receive the repaid assets.
@@ -731,7 +731,7 @@ export class MoneyMarketService {
       const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
       const toHubWallet = await deriveUserWalletAddress(this.hubProvider, toChainId, toAddress);
 
-      const data: Hex = this.buildSupplyData(params.token, toHubWallet, params.amount, fromChainId);
+      const data: Hex = this.buildSupplyData(fromChainId, params.token, params.amount, toHubWallet);
 
       const txResult = await SpokeService.deposit(
         {
@@ -1300,7 +1300,7 @@ export class MoneyMarketService {
     const toHubWallet = await deriveUserWalletAddress(this.hubProvider, toChainId, toAddress);
     const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
 
-    const data: Hex = this.buildRepayData(params.token, toHubWallet, params.amount, fromChainId);
+    const data: Hex = this.buildRepayData(fromChainId, params.token, params.amount, toHubWallet);
 
     const txResult = await SpokeService.deposit(
       {
@@ -1327,29 +1327,27 @@ export class MoneyMarketService {
 
   /**
    * Build transaction data for supplying to the money market pool
-   * @param token - The address of the token on spoke chain
-   * @param to - The user wallet address on the hub chain
+   * @param fromChainId - The chain ID of the source chain
+   * @param fromToken - The address of the token on source chain
    * @param amount - The amount to deposit
-   * @param fromChainId - The chain ID of the spoke chain
+   * @param toHubAddress - The user wallet address on the hub chain
    * @returns {Hex} The transaction data.
    */
-  public buildSupplyData(token: string, to: Address, amount: bigint, fromChainId: SpokeChainId): Hex {
+  public buildSupplyData(fromChainId: SpokeChainId, fromToken: string, amount: bigint, toHubAddress: Address): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = this.configService.getHubAssetInfo(fromChainId, token);
 
-    invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
+    const fromHubAsset = this.configService.getHubAssetInfo(fromChainId, fromToken as Address);
+    invariant(fromHubAsset, `hub asset not found for source chain token (token): ${fromToken}`);
 
-    const assetAddress = assetConfig.asset;
-    const vaultAddress = assetConfig.vault;
     const lendingPool = this.config.lendingPool;
 
-    calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
-    calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
-    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, amount);
-    calls.push(Erc20Service.encodeApprove(vaultAddress, lendingPool, translatedAmount));
+    calls.push(Erc20Service.encodeApprove(fromHubAsset.asset, fromHubAsset.vault, amount));
+    calls.push(EvmVaultTokenService.encodeDeposit(fromHubAsset.vault, fromHubAsset.asset, amount));
+    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(fromHubAsset.decimal, amount);
+    calls.push(Erc20Service.encodeApprove(fromHubAsset.vault, lendingPool, translatedAmount));
     calls.push(
       MoneyMarketService.encodeSupply(
-        { asset: vaultAddress, amount: translatedAmount, onBehalfOf: to, referralCode: 0 },
+        { asset: fromHubAsset.vault, amount: translatedAmount, onBehalfOf: toHubAddress, referralCode: 0 },
         lendingPool,
       ),
     );
@@ -1359,32 +1357,25 @@ export class MoneyMarketService {
 
   /**
    * Build transaction data for borrowing from the money market pool
-   * @param from - The user wallet address on the hub chain
-   * @param toAddress - The user wallet address on the spoke chain
-   * @param token - The address of the token to borrow
+   * @param fromHubAddress - The hub address of the user to borrow from
+   * @param toAddress - The user wallet address on the target chain
+   * @param toToken - The address of the token on the target chain
    * @param amount - The amount to borrow in hub chain decimals
-   * @param toChainId - The chain ID of the spoke chain
+   * @param toChainId - The chain ID of the target chain
    * @returns {Hex} The transaction data.
    */
   public buildBorrowData(
-    from: Address,
+    fromHubAddress: Address,
     toAddress: Address,
-    token: string,
+    toToken: string,
     amount: bigint,
     toChainId: SpokeChainId,
   ): Hex {
-    invariant(this.configService.isValidSpokeChainId(toChainId), `Invalid toChainId: ${toChainId}`);
-    invariant(
-      this.configService.isValidOriginalAssetAddress(toChainId, token),
-      `Unsupported spoke chain (${toChainId}) token: ${token}`,
-    );
+    const toHubAsset = this.configService.getHubAssetInfo(toChainId, toToken as Address);
+    invariant(toHubAsset, `hub asset not found for target chain token (toToken): ${toToken}`);
 
-    const assetConfig = this.configService.getHubAssetInfo(toChainId, token);
-
-    invariant(assetConfig, `hub asset not found for spoke chain token (token): ${token}`);
-
-    const assetAddress = assetConfig.asset;
-    const vaultAddress = assetConfig.vault;
+    const assetAddress = toHubAsset.asset;
+    const vaultAddress = toHubAsset.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
 
@@ -1394,7 +1385,7 @@ export class MoneyMarketService {
     if (bnUSDVault && bnUSD && bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
       calls.push(
         MoneyMarketService.encodeBorrow(
-          { asset: bnUSD, amount: amount, interestRateMode: 2n, referralCode: 0, onBehalfOf: from },
+          { asset: bnUSD, amount: amount, interestRateMode: 2n, referralCode: 0, onBehalfOf: fromHubAddress },
           this.config.lendingPool,
         ),
       );
@@ -1407,7 +1398,7 @@ export class MoneyMarketService {
     } else {
       calls.push(
         MoneyMarketService.encodeBorrow(
-          { asset: vaultAddress, amount: amount, interestRateMode: 2n, referralCode: 0, onBehalfOf: from },
+          { asset: vaultAddress, amount: amount, interestRateMode: 2n, referralCode: 0, onBehalfOf: fromHubAddress },
           this.config.lendingPool,
         ),
       );
@@ -1418,12 +1409,12 @@ export class MoneyMarketService {
     }
 
     calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount - feeAmount));
-    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount - feeAmount);
+    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(toHubAsset.decimal, amount - feeAmount);
 
     if (toChainId === this.hubProvider.chainConfig.chain.id) {
       if (
-        token.toLowerCase() ===
-        this.configService.spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()
+        assetAddress.toLowerCase() ===
+        this.configService.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()
       ) {
         const withdrawToCall = {
           address: assetAddress,
@@ -1455,44 +1446,42 @@ export class MoneyMarketService {
 
   /**
    * Build transaction data for withdrawing from the money market pool
-   * @param from - The user wallet address on the hub chain
-   * @param toAddress - The user wallet address on the spoke chain
-   * @param token - The address of the token to borrow
-   * @param amount - The amount to borrow in hub chain decimals
-   * @param toChainId - The chain ID of the spoke chain
+   * @param fromHubAddress - The hub address of the user to withdraw from
+   * @param toAddress - The user wallet address on the target chain
+   * @param toToken - The address of the token on the target chain
+   * @param amount - The amount to withdraw in hub chain decimals
+   * @param toChainId - The chain ID of the target chain
    * @returns {Hex} The transaction data.
    */
   public buildWithdrawData(
-    from: Address,
+    fromHubAddress: Address,
     toAddress: Address,
-    token: string,
+    toToken: string,
     amount: bigint,
     toChainId: SpokeChainId,
   ): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = this.configService.getHubAssetInfo(toChainId, token);
 
-    if (!assetConfig) {
-      throw new Error('[withdrawData] Hub asset not found');
-    }
+    const toHubAsset = this.configService.getHubAssetInfo(toChainId, toToken as Address);
+    invariant(toHubAsset, `hub asset not found for target chain token (toToken): ${toToken}`);
 
-    const assetAddress = assetConfig.asset;
-    const vaultAddress = assetConfig.vault;
+    const assetAddress = toHubAsset.asset;
+    const vaultAddress = toHubAsset.vault;
 
-    if (!assetAddress || !vaultAddress) {
-      throw new Error('Address not found');
-    }
     calls.push(
-      MoneyMarketService.encodeWithdraw({ asset: vaultAddress, amount: amount, to: from }, this.config.lendingPool),
+      MoneyMarketService.encodeWithdraw(
+        { asset: vaultAddress, amount: amount, to: fromHubAddress },
+        this.config.lendingPool,
+      ),
     );
-
     calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount));
-    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(assetConfig.decimal, amount);
+
+    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(toHubAsset.decimal, amount);
 
     if (toChainId === this.hubProvider.chainConfig.chain.id) {
       if (
-        token.toLowerCase() ===
-        this.configService.spokeChainConfig[this.hubProvider.chainConfig.chain.id].nativeToken.toLowerCase()
+        assetAddress.toLowerCase() ===
+        this.configService.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()
       ) {
         const withdrawToCall = {
           address: assetAddress,
@@ -1523,28 +1512,26 @@ export class MoneyMarketService {
 
   /**
    * Build transaction data for repaying to the money market pool
-   * @param token - The address of the token to repay
-   * @param to - The user wallet address on the hub chain
+   * @param fromChainId - The chain ID of the source chain
+   * @param fromToken - The address of the token on the source chain
    * @param amount - The amount to repay
-   * @param fromChainId - The chain ID of the spoke chain
+   * @param toHubAddress - The hub address of the user to repay to
    * @returns {Hex} The transaction data.
    */
-  public buildRepayData(token: string, to: Address, amount: bigint, fromChainId: SpokeChainId): Hex {
+  public buildRepayData(fromChainId: SpokeChainId, fromToken: string, amount: bigint, toHubAddress: Address): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = this.configService.getHubAssetInfo(fromChainId, token);
 
-    if (!assetConfig) {
-      throw new Error('[buildRepayData] Hub asset not found');
-    }
+    const fromHubAsset = this.configService.getHubAssetInfo(fromChainId, fromToken as Address);
+    invariant(fromHubAsset, `hub asset not found for source chain token (fromToken): ${fromToken}`);
 
-    const assetAddress = assetConfig.asset;
-    const vaultAddress = assetConfig.vault;
+    const assetAddress = fromHubAsset.asset;
+    const vaultAddress = fromHubAsset.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
-    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, amount);
+    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(fromHubAsset.decimal, amount);
 
     let repayToken = vaultAddress;
     if (bnUSDVault && bnUSD && bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
@@ -1555,7 +1542,7 @@ export class MoneyMarketService {
     calls.push(Erc20Service.encodeApprove(repayToken, this.config.lendingPool, translatedAmount));
     calls.push(
       MoneyMarketService.encodeRepay(
-        { asset: repayToken, amount: translatedAmount, interestRateMode: 2n, onBehalfOf: to },
+        { asset: repayToken, amount: translatedAmount, interestRateMode: 2n, onBehalfOf: toHubAddress },
         this.config.lendingPool,
       ),
     );

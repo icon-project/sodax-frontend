@@ -132,7 +132,7 @@ export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
 
 export type BaseSpokeChainConfig<T extends ChainType> = {
   chain: SpokeChainInfo<T>;
-  addresses: { [key: string]: string | Uint8Array };
+  addresses: { [key: string]: string };
   supportedTokens: Record<string, XToken>;
   nativeToken: string;
   bnUSD: string;

@@ -75,7 +75,6 @@ const sodax = new Sodax({
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
-
 const evmHubProvider = new EvmHubProvider({
   config: hubConfig,
   configService: sodax.config,
@@ -138,7 +137,7 @@ async function supply(token: string, amount: bigint): Promise<void> {
     evmHubProvider,
   );
 
-  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(spokeProvider.chainConfig.chain.id, token, amount, hubWallet);
 
   const txHash = await SpokeService.deposit(
     {
@@ -207,7 +206,7 @@ async function repay(token: string, amount: bigint): Promise<void> {
     walletAddressBytes,
     evmHubProvider,
   );
-  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(spokeProvider.chainConfig.chain.id, token, amount, hubWallet);
 
   const txHash: Hash = await SpokeService.deposit(
     {

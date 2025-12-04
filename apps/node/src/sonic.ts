@@ -92,7 +92,7 @@ async function supply(token: Address, amount: bigint) {
     console.log('[approve] txHash', txHash);
     await new Promise(f => setTimeout(f, 1000));
   }
-  const data = sodax.moneyMarket.buildSupplyData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(spokeProvider.chainConfig.chain.id, token, amount, wallet);
 
   const txHash = await SonicSpokeService.deposit(
     {
@@ -304,7 +304,7 @@ async function withdrawHighLevel(token: Address, amount: bigint) {
 async function repay(token: Address, amount: bigint) {
   const wallet = await spokeProvider.walletProvider.getWalletAddress();
   const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
-  const data = sodax.moneyMarket.buildRepayData(token, wallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildRepayData(spokeProvider.chainConfig.chain.id, token, amount, wallet);
   if (token !== '0x0000000000000000000000000000000000000000') {
     const txHash = await spokeProvider.walletProvider.sendTransaction({
       to: token,
