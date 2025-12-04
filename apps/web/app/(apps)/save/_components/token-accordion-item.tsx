@@ -45,22 +45,28 @@ export default function TokenAccordionItem({
             </ItemMedia>
 
             <ItemContent>
-              <ItemTitle className="justify-between flex w-full">
-                <motion.div
-                  className="content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold"
-                  animate={{ y: isCollapsed ? 0 : 4 }}
-                  transition={{ duration: 0.4, ease: 'easeOut', type: 'tween' }}
-                  style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
-                >
-                  {symbol}
-                </motion.div>
+              <motion.div
+                className="flex flex-col"
+                animate={{ height: isCollapsed ? 'auto' : '24px' }}
+                transition={{ duration: 0.3 }}
+              >
+                <ItemTitle className="justify-between flex w-full">
+                  <motion.div
+                    className="content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold"
+                    animate={{ y: isCollapsed ? 0 : 4 }}
+                    transition={{ duration: 0.4, ease: 'easeOut', type: 'tween' }}
+                    style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
+                  >
+                    {symbol}
+                  </motion.div>
 
-                <AnimatePresence>{isCollapsed && <CollapsedAPR />}</AnimatePresence>
-              </ItemTitle>
+                  <AnimatePresence>{isCollapsed && <CollapsedAPR />}</AnimatePresence>
+                </ItemTitle>
 
-              <AnimatePresence initial={false} mode="wait">
-                {isCollapsed && <CollapsedRowInfo tokens={tokens} />}
-              </AnimatePresence>
+                <AnimatePresence initial={false} mode="wait">
+                  {isCollapsed && <CollapsedRowInfo tokens={tokens} />}
+                </AnimatePresence>
+              </motion.div>
             </ItemContent>
           </Item>
         </AccordionTriggerWithButton>
@@ -92,7 +98,7 @@ function CollapsedRowInfo({ tokens }: { tokens: XToken[] }) {
 
   return (
     <motion.div
-      className="flex h-[16px] items-center justify-between w-full"
+      className="flex h-[16px] items-center justify-between w-full mt-[2px]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
