@@ -375,7 +375,7 @@ export class SpokeService {
   }
 
   /**
-   * Calls a contract on the spoke chain using the user's wallet.
+   * Calls the connection contract on the spoke chain to send a message to the hub wallet, which then executes the message's payload.
    * @param {HubAddress} from - The address of the user on the hub chain.
    * @param {Hex} payload - The payload to send to the contract.
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
