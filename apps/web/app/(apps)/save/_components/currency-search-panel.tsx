@@ -15,12 +15,14 @@ interface CurrencySearchPanelProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   currencyListOpened: boolean;
+  onSearchFocus?: () => void;
 }
 
 export default function CurrencySearchPanel({
   searchQuery,
   onSearchChange,
   currencyListOpened,
+  onSearchFocus,
 }: CurrencySearchPanelProps) {
   return (
     <div className="w-full gap-(--layout-space-small) flex">
@@ -39,6 +41,7 @@ export default function CurrencySearchPanel({
           placeholder="Search"
           className="placeholder:text-clay-light font-['InterRegular']"
           onChange={e => onSearchChange(e.target.value)}
+          onFocus={onSearchFocus}
           value={searchQuery}
         />
         <InputGroupAddon align="inline-end">

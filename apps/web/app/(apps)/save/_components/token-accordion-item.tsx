@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { cn, getUniqueByChain } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
 import { TokenAsset } from '@/components/shared/token-asset';
-
+import { accordionVariants } from '@/constants/animation';
 export default function TokenAccordionItem({
   group,
   openValue,
@@ -33,7 +33,7 @@ export default function TokenAccordionItem({
 
       <motion.div
         whileHover={{
-          scale: isCollapsed ? 1.01 : 1,
+          scale: isCollapsed ? 1.05 : 1,
         }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
         className="w-full group"
@@ -47,9 +47,10 @@ export default function TokenAccordionItem({
             <ItemContent>
               <ItemTitle className="justify-between flex w-full">
                 <motion.div
-                  className="text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold"
+                  className="content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold"
                   animate={{ y: isCollapsed ? 0 : 4 }}
-                  transition={{ duration: 0.4, ease: 'easeInOut' }}
+                  transition={{ duration: 0.4, ease: 'easeOut', type: 'tween' }}
+                  style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
                 >
                   {symbol}
                 </motion.div>
@@ -57,7 +58,9 @@ export default function TokenAccordionItem({
                 <AnimatePresence>{isCollapsed && <CollapsedAPR />}</AnimatePresence>
               </ItemTitle>
 
-              <AnimatePresence>{isCollapsed && <CollapsedRowInfo tokens={tokens} />}</AnimatePresence>
+              <AnimatePresence initial={false} mode="wait">
+                {isCollapsed && <CollapsedRowInfo tokens={tokens} />}
+              </AnimatePresence>
             </ItemContent>
           </Item>
         </AccordionTriggerWithButton>
@@ -123,7 +126,14 @@ function ExpandedContent({
   symbol: string;
 }) {
   return (
-    <>
+    <motion.div
+      variants={accordionVariants}
+      initial="closed"
+      animate="open"
+      exit="closed"
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className="overflow-hidden"
+    >
       <div className="flex items-center h-12">
         <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
         <InfoBlock value="3.56%" label="Current APY" />
@@ -160,7 +170,7 @@ function ExpandedContent({
         </Button>
         <span className="text-clay text-(length:--body-small) font-['InterRegular']">Select a source</span>
       </div>
-    </>
+    </motion.div>
   );
 }
 

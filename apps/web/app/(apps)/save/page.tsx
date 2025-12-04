@@ -55,6 +55,7 @@ export default function SavingsPage() {
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
           currencyListOpened={openValue !== ''}
+          onSearchFocus={() => setOpenValue('')}
         />
       </motion.div>
 
