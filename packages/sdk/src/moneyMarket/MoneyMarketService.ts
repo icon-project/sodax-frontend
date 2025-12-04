@@ -14,14 +14,12 @@ import {
 } from '../index.js';
 import type {
   EvmContractCall,
-  EvmReturnType,
   GetAddressType,
   GetEstimateGasReturnType,
   GetSpokeDepositParamsType,
   HubTxHash,
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,
-  PromiseTxReturnType,
   Result,
   SpokeTxHash,
   TxReturnType,
@@ -1300,37 +1298,22 @@ export class MoneyMarketService {
     );
 
     const toHubWallet = await deriveUserWalletAddress(this.hubProvider, toChainId, toAddress);
+    const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
+
     const data: Hex = this.buildRepayData(params.token, toHubWallet, params.amount, fromChainId);
 
-    let txResult: Awaited<PromiseTxReturnType<S, R>> | EvmReturnType<R>;
-    if (
-      spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id &&
-      spokeProvider instanceof SonicSpokeProvider
-    ) {
-      txResult = await SonicSpokeService.deposit(
-        {
-          from: fromAddress as GetAddressType<SonicSpokeProvider>,
-          token: params.token as GetAddressType<SonicSpokeProvider>,
-          amount: params.amount,
-          data,
-        },
-        spokeProvider,
-        raw,
-      );
-    } else {
-      txResult = await SpokeService.deposit(
-        {
-          from: fromAddress,
-          to: toHubWallet,
-          token: params.token,
-          amount: params.amount,
-          data,
-        } as GetSpokeDepositParamsType<S>,
-        spokeProvider,
-        this.hubProvider,
-        raw,
-      );
-    }
+    const txResult = await SpokeService.deposit(
+      {
+        from: fromAddress,
+        to: fromChainId === this.hubProvider.chainConfig.chain.id ? undefined : fromHubWallet,
+        token: params.token,
+        amount: params.amount,
+        data,
+      } as GetSpokeDepositParamsType<S>,
+      spokeProvider,
+      this.hubProvider,
+      raw,
+    );
 
     return {
       ok: true,
