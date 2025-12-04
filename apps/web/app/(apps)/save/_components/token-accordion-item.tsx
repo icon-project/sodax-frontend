@@ -147,7 +147,7 @@ function ExpandedContent({
         <InfoBlock value="$34.9k" label="All deposits" />
       </div>
 
-      <div className="flex flex-wrap">
+      <div className="flex flex-wrap mt-4">
         {tokens.map(t => (
           <TokenAsset
             key={t.xChainId}
