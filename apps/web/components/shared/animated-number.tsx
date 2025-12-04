@@ -25,10 +25,13 @@ export default function AnimatedNumber({
 }: AnimatedNumberProps): React.ReactElement {
   const count = useMotionValue(0);
   const formatted = useTransform(count, (value: number) => {
-    if (decimalPlaces === undefined) {
-      return Math.round(value).toString();
-    }
-    return value.toFixed(decimalPlaces);
+    const distanceLeft = Math.abs(to - value);
+
+    // Step smaller as we approach the target
+    const step = Math.max(0.1, distanceLeft / 20);
+    const displayValue = Math.round(value / step) * step;
+
+    return decimalPlaces !== undefined ? displayValue.toFixed(decimalPlaces) : Math.round(displayValue).toString();
   });
 
   useEffect(() => {
