@@ -28,86 +28,90 @@ export default function TokenAccordionItem({
         openValue === '' ? 'opacity-100' : openValue === symbol ? 'opacity-100' : 'opacity-40',
       )}
     >
-      <Separator className="h-[1px] bg-clay opacity-30" />
-      <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30" />
+      <motion.div layout="size">
+        <Separator className="h-[1px] bg-clay opacity-30" />
+        <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30" />
 
-      <motion.div
-        whileHover={{
-          scale: isCollapsed ? 1.05 : 1,
-        }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="w-full group"
-      >
-        <AccordionTriggerWithButton>
-          <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal)">
-            <ItemMedia>
-              <motion.div
-                className="relative cursor-pointer"
-                initial={false}
-                animate={{
-                  width: isCollapsed ? 48 : 48,
-                  height: isCollapsed ? 48 : 48,
-                }}
-                transition={{ duration: 0.4, ease: 'easeInOut', delay: 0 }}
-              >
+        <motion.div
+          whileHover={{
+            scale: isCollapsed ? 1.05 : 1,
+          }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="w-full group"
+        >
+          <AccordionTriggerWithButton>
+            <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal)">
+              <ItemMedia>
                 <motion.div
-                  className="absolute inset-0 flex items-center justify-center overflow-hidden"
+                  className="relative cursor-pointer"
                   initial={false}
                   animate={{
-                    borderRadius: isCollapsed ? 256 : 8,
-                    backgroundColor: '#ede6e6',
-                    boxShadow: isCollapsed
-                      ? '0px 0px 0px 0px rgba(175,145,145,0)'
-                      : '0px 8px 20px 0px rgba(175,145,145,0.2)',
+                    width: isCollapsed ? 48 : 48,
+                    height: isCollapsed ? 48 : 48,
                   }}
                   transition={{ duration: 0.4, ease: 'easeInOut', delay: 0 }}
                 >
-                  <div className="relative size-full flex items-center justify-center">
-                    <motion.div
-                      className="absolute inset-0 flex items-center justify-center"
-                      initial={{ opacity: 1 }}
-                      animate={{ opacity: isCollapsed ? 1 : 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <CurrencyLogo currency={tokens[0] || ({} as XToken)} hideNetwork />
-                    </motion.div>
-                    <InfoContent isVisible={!isCollapsed} />
-                  </div>
-                </motion.div>
-              </motion.div>
-            </ItemMedia>
-
-            <ItemContent>
-              <motion.div
-                className="flex flex-col"
-                animate={{ height: isCollapsed ? 'auto' : '24px' }}
-                transition={{ duration: 0.3 }}
-              >
-                <ItemTitle className="justify-between flex w-full">
                   <motion.div
-                    className="content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold"
-                    animate={{ y: isCollapsed ? 0 : 4 }}
-                    transition={{ duration: 0.4, ease: 'easeOut', type: 'tween' }}
-                    style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
+                    className="absolute inset-0 flex items-center justify-center overflow-hidden"
+                    initial={false}
+                    animate={{
+                      borderRadius: isCollapsed ? 256 : 8,
+                      backgroundColor: '#ede6e6',
+                      boxShadow: isCollapsed
+                        ? '0px 0px 0px 0px rgba(175,145,145,0)'
+                        : '0px 8px 20px 0px rgba(175,145,145,0.2)',
+                    }}
+                    transition={{ duration: 0.4, ease: 'easeInOut', delay: 0 }}
                   >
-                    {symbol}
+                    <div className="relative size-full flex items-center justify-center">
+                      <motion.div
+                        className="absolute inset-0 flex items-center justify-center"
+                        initial={{ opacity: 1 }}
+                        animate={{ opacity: isCollapsed ? 1 : 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <CurrencyLogo currency={tokens[0] || ({} as XToken)} hideNetwork />
+                      </motion.div>
+                      <InfoContent isVisible={!isCollapsed} />
+                    </div>
                   </motion.div>
+                </motion.div>
+              </ItemMedia>
 
-                  <AnimatePresence>{isCollapsed && <CollapsedAPR />}</AnimatePresence>
-                </ItemTitle>
+              <ItemContent>
+                <motion.div
+                  className="flex flex-col"
+                  animate={{ height: isCollapsed ? 'auto' : '24px' }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ItemTitle className="justify-between flex w-full">
+                    <motion.div
+                      className="content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold"
+                      animate={{ y: isCollapsed ? 0 : 4 }}
+                      transition={{ duration: 0.4, ease: 'easeOut', type: 'tween' }}
+                      style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
+                    >
+                      {symbol}
+                    </motion.div>
 
-                <AnimatePresence initial={false} mode="wait">
-                  {isCollapsed && <CollapsedRowInfo tokens={tokens} />}
-                </AnimatePresence>
-              </motion.div>
-            </ItemContent>
-          </Item>
-        </AccordionTriggerWithButton>
+                    <AnimatePresence>{isCollapsed && <CollapsedAPR />}</AnimatePresence>
+                  </ItemTitle>
+
+                  <AnimatePresence initial={false} mode="wait">
+                    {isCollapsed && <CollapsedRowInfo tokens={tokens} />}
+                  </AnimatePresence>
+                </motion.div>
+              </ItemContent>
+            </Item>
+          </AccordionTriggerWithButton>
+        </motion.div>
+
+        <AccordionContent forceMount className="relative">
+          <AnimatePresence initial={false} mode="wait">
+            {!isCollapsed && <ExpandedContent tokens={tokens} symbol={symbol} />}
+          </AnimatePresence>
+        </AccordionContent>
       </motion.div>
-
-      <AccordionContent className="pl-0 md:pl-18 pb-8 flex flex-col gap-4">
-        <ExpandedContent tokens={tokens} symbol={symbol} />
-      </AccordionContent>
     </AccordionItem>
   );
 }
@@ -170,7 +174,9 @@ function ExpandedContent({
       initial="closed"
       animate="open"
       exit="closed"
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      transition={{ duration: 0.5 }}
+      className="pl-0 md:pl-18 flex flex-col gap-4"
+      layout
     >
       <div className="flex items-center h-12">
         <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
@@ -202,7 +208,7 @@ function ExpandedContent({
         ))}
       </div>
 
-      <div className="flex gap-4 items-center mt-4">
+      <div className="flex gap-4 items-center mt-4 mb-8">
         <Button variant="cream" className="w-27 mix-blend-multiply shadow-none">
           Continue
         </Button>
