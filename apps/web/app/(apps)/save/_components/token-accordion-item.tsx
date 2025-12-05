@@ -26,7 +26,7 @@ export default function TokenAccordionItem({
     if (isCollapsed || !ref.current) return;
 
     const el = ref.current;
-    let timeout: any;
+    let timeout: ReturnType<typeof setTimeout>;
 
     const observer = new ResizeObserver(() => {
       clearTimeout(timeout);
