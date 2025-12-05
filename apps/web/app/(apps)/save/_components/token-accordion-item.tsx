@@ -64,7 +64,7 @@ export default function TokenAccordionItem({
             scale: isCollapsed ? 1.05 : 1,
           }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="w-full group"
+          className="w-full group pb-0"
         >
           <AccordionTriggerWithButton>
             <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal)">
@@ -201,11 +201,10 @@ function ExpandedContent({
       initial="closed"
       animate="open"
       exit="closed"
-      transition={{ duration: 0.5 }}
       className="pl-0 md:pl-18 flex flex-col gap-4"
       layout
     >
-      <div className="flex items-center h-12">
+      <div className="flex h-12">
         <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
         <InfoBlock value="3.56%" label="Current APY" />
         <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
