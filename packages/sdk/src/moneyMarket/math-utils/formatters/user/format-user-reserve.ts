@@ -3,22 +3,16 @@ import type { FormatReserveUSDResponse } from '../reserve/index.js';
 import type { UserReserveSummaryResponse } from './generate-user-reserve-summary.js';
 import type { ComputedUserReserve } from './index.js';
 
-export interface FormatUserReserveRequest<
-  T extends FormatReserveUSDResponse = FormatReserveUSDResponse,
-> {
+export interface FormatUserReserveRequest<T extends FormatReserveUSDResponse = FormatReserveUSDResponse> {
   reserve: UserReserveSummaryResponse<T>;
   marketReferenceCurrencyDecimals: number;
 }
 
-export interface FormatUserReserveResponse<
-  T extends FormatReserveUSDResponse = FormatReserveUSDResponse,
-> {
+export interface FormatUserReserveResponse<T extends FormatReserveUSDResponse = FormatReserveUSDResponse> {
   reserve: ComputedUserReserve<T>;
 }
 
-export function formatUserReserve<
-  T extends FormatReserveUSDResponse = FormatReserveUSDResponse,
->({
+export function formatUserReserve<T extends FormatReserveUSDResponse = FormatReserveUSDResponse>({
   reserve: _reserve,
   marketReferenceCurrencyDecimals,
 }: FormatUserReserveRequest<T>): ComputedUserReserve<T> {
@@ -26,8 +20,7 @@ export function formatUserReserve<
   const { reserve } = userReserve;
   const reserveDecimals = reserve.decimals;
 
-  const normalizeWithReserve = (n: BigNumberValue) =>
-    normalize(n, reserve.decimals);
+  const normalizeWithReserve = (n: BigNumberValue) => normalize(n, reserve.decimals);
 
   return {
     ...userReserve,

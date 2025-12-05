@@ -60,10 +60,7 @@ async function iconToSolTwoWayMigration() {
     endpoint: spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].rpcUrl,
   });
 
-  const solSpokeProvider = new SolanaSpokeProvider(
-    solanaWallet,
-    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID],
-  );
+  const solSpokeProvider = new SolanaSpokeProvider(solanaWallet, spokeChainConfig[SOLANA_MAINNET_CHAIN_ID]);
   const iconToSolanaResult = await sodax.migration.migratebnUSD(
     {
       srcChainId: iconSpokeProvider.chainConfig.chain.id,

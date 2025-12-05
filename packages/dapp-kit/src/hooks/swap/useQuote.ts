@@ -42,7 +42,7 @@ export const useQuote = (
   payload: SolverIntentQuoteRequest | undefined,
 ): UseQueryResult<Result<SolverIntentQuoteResponse, SolverErrorResponse> | undefined> => {
   const { sodax } = useSodaxContext();
-  
+
   // Create a serializable query key by converting BigInt to string
   const queryKey = useMemo(() => {
     if (!payload) return ['quote', undefined];

@@ -16,6 +16,7 @@ import {
   type UnifiedBnUSDMigrateParams,
   encodeAddress,
   MoneyMarketService,
+  StellarBaseSpokeProvider,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from '@sodax/wallet-sdk-core';
@@ -96,7 +97,7 @@ async function estimateWithdrawGas() {
 }
 
 async function getBalance(token: string) {
-  const balance = await stellarSpokeProvider.getBalance(token);
+  const balance = await StellarBaseSpokeProvider.getBalance(token, stellarSpokeProvider);
   console.log(balance);
 }
 

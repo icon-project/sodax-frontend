@@ -1,11 +1,11 @@
-import type { Address } from "@sodax/types";
+import type { Address } from '@sodax/types';
 
 export type PoolBaseCurrencyHumanized = {
   marketReferenceCurrencyDecimals: number;
   marketReferenceCurrencyPriceInUsd: string;
   networkBaseTokenPriceInUsd: string;
   networkBaseTokenPriceDecimals: number;
-}
+};
 
 export type ReserveDataHumanized = {
   originalId: number;
@@ -52,7 +52,7 @@ export type ReserveDataHumanized = {
   borrowableInIsolation: boolean;
   virtualAccActive: boolean;
   virtualUnderlyingBalance: string;
-}
+};
 
 export type UserReserveData = {
   underlyingAsset: string;
@@ -115,7 +115,7 @@ export type AggregatedReserveData = {
 export type ReservesDataHumanized = {
   reservesData: ReserveDataHumanized[];
   baseCurrencyData: PoolBaseCurrencyHumanized;
-}
+};
 
 export type UserReserveDataHumanized = {
   id: string;
@@ -123,7 +123,7 @@ export type UserReserveDataHumanized = {
   scaledATokenBalance: string;
   usageAsCollateralEnabledOnUser: boolean;
   scaledVariableDebt: string;
-}
+};
 
 export type EModeCategoryHumanized = {
   ltv: string;
@@ -132,7 +132,7 @@ export type EModeCategoryHumanized = {
   collateralBitmap: string;
   label: string;
   borrowableBitmap: string;
-}
+};
 
 export type EModeCategory = {
   ltv: number;
@@ -141,17 +141,17 @@ export type EModeCategory = {
   collateralBitmap: bigint;
   label: string;
   borrowableBitmap: bigint;
-}
+};
 
 export type EmodeDataHumanized = {
   id: number;
   eMode: EModeCategoryHumanized;
-}
+};
 
 export type EModeData = {
   id: number;
   eMode: EModeCategory;
-}
+};
 
 export type ReserveDataLegacy = {
   //stores the reserve configuration

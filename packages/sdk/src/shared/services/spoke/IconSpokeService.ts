@@ -3,16 +3,15 @@ const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkR
 const { Converter, CallTransactionBuilder, CallBuilder } = IconSdk;
 import * as rlp from 'rlp';
 import type { Address, Hex } from 'viem';
-import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
 import { getIconAddressBytes } from '../../entities/icon/utils.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { BigIntToHex, type ConfigService, encodeAddress } from '../../../index.js';
+import { BigIntToHex, type ConfigService, encodeAddress, isIconRawSpokeProvider } from '../../../index.js';
 import type {
   DepositSimulationParams,
   IconGasEstimate,
   IconRawTransaction,
-  IconReturnType,
-  PromiseIconTxReturnType,
+  IconSpokeProviderType,
+  TxReturnType,
 } from '../../types.js';
 import { type HubAddress, type IconAddress, getIntentRelayChainId } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
@@ -38,7 +37,7 @@ export class IconSpokeService {
 
   public static async estimateGas(
     rawTx: IconRawTransaction,
-    spokeProvider: IconSpokeProvider,
+    spokeProvider: IconSpokeProviderType,
   ): Promise<IconGasEstimate> {
     return estimateStepCost(rawTx, spokeProvider.debugRpcUrl);
   }
@@ -46,17 +45,17 @@ export class IconSpokeService {
   /**
    * Deposit tokens to the spoke chain.
    * @param {IconSpokeDepositParams} params - The parameters for the deposit
-   * @param {IconWalletProvider} spokeProvider - The provider for the spoke chain
+   * @param {IconSpokeProviderType} spokeProvider - The provider for the spoke chain
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain
    * @param {boolean} raw - The return type raw or just transaction hash
    * @returns {Promise<Result<string>>} A promise that resolves to the transaction hash
    */
   public static async deposit<R extends boolean = false>(
     params: IconSpokeDepositParams,
-    spokeProvider: IconSpokeProvider,
+    spokeProvider: IconSpokeProviderType,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseIconTxReturnType<R> {
+  ): Promise<TxReturnType<IconSpokeProviderType, R>> {
     const userWallet: Address =
       params.to ??
       (await EvmWalletAbstraction.getUserHubWalletAddress(
@@ -81,10 +80,10 @@ export class IconSpokeService {
   /**
    * Get the balance of the token in the spoke chain.
    * @param {string} token - The address of the token to get the balance of
-   * @param {IconWalletProvider} spokeProvider - The spoke provider
+   * @param {IconSpokeProviderType} spokeProvider - The spoke provider
    * @returns {Promise<bigint>} The balance of the token
    */
-  public static async getDeposit(token: string, spokeProvider: IconSpokeProvider): Promise<bigint> {
+  public static async getDeposit(token: string, spokeProvider: IconSpokeProviderType): Promise<bigint> {
     const transaction = new CallBuilder()
       .to(token)
       .method('balanceOf')
@@ -98,7 +97,7 @@ export class IconSpokeService {
    * Calls a contract on the spoke chain using the user's wallet.
    * @param {HubAddress} from - The address of the user on the hub chain
    * @param {Hex} payload - The payload to send to the contract
-   * @param {IconWalletProvider} spokeProvider - The provider for the spoke chain
+   * @param {IconSpokeProviderType} spokeProvider - The provider for the spoke chain
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain
    * @param {boolean} raw - The return type raw or just transaction hash
    * @returns {Promise<Result<string>>} A promise that resolves to the transaction hash
@@ -106,10 +105,10 @@ export class IconSpokeService {
   public static async callWallet<R extends boolean = false>(
     from: HubAddress,
     payload: Hex,
-    spokeProvider: IconSpokeProvider,
+    spokeProvider: IconSpokeProviderType,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseIconTxReturnType<R> {
+  ): Promise<TxReturnType<IconSpokeProviderType, R>> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return IconSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
@@ -117,13 +116,13 @@ export class IconSpokeService {
   /**
    * Generate simulation parameters for deposit from IconSpokeDepositParams.
    * @param {IconSpokeDepositParams} params - The deposit parameters.
-   * @param {IconSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {IconSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<DepositSimulationParams>} The simulation parameters.
    */
   public static async getSimulateDepositParams(
     params: IconSpokeDepositParams,
-    spokeProvider: IconSpokeProvider,
+    spokeProvider: IconSpokeProviderType,
     hubProvider: EvmHubProvider,
   ): Promise<DepositSimulationParams> {
     const to =
@@ -154,12 +153,12 @@ export class IconSpokeService {
   /**
    * Transfers tokens to the hub chain.
    */
-  private static async transfer<R extends boolean = false>(
+  private static async transfer<S extends IconSpokeProviderType, R extends boolean = false>(
     { token, recipient, amount, data }: IconTransferToHubParams,
-    spokeProvider: IconSpokeProvider,
+    spokeProvider: S,
     configService: ConfigService,
     raw?: R,
-  ): PromiseIconTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const rlpInput: rlp.Input = [data, recipient];
     const rlpEncodedData = rlp.encode(rlpInput);
     const hexData = `0x${Buffer.from(rlpEncodedData).toString('hex')}`;
@@ -191,8 +190,8 @@ export class IconSpokeService {
         .build(),
     );
 
-    if (raw) {
-      return rawTransaction satisfies IconReturnType<true> as IconReturnType<R>;
+    if (raw || isIconRawSpokeProvider(spokeProvider)) {
+      return rawTransaction satisfies TxReturnType<IconSpokeProviderType, true> as TxReturnType<S, R>;
     }
 
     return spokeProvider.walletProvider.sendTransaction({
@@ -202,19 +201,19 @@ export class IconSpokeService {
       nid: spokeProvider.chainConfig.nid,
       method: 'transfer',
       params: params,
-    }) satisfies PromiseIconTxReturnType<false> as PromiseIconTxReturnType<R>;
+    }) satisfies Promise<TxReturnType<IconSpokeProviderType, false>> as Promise<TxReturnType<S, R>>;
   }
 
   /**
    * Sends a message to the hub chain.
    */
-  private static async call<R extends boolean = false>(
+  private static async call<S extends IconSpokeProviderType, R extends boolean = false>(
     dstChainId: bigint,
     dstAddress: HubAddress,
     payload: Hex,
-    spokeProvider: IconSpokeProvider,
+    spokeProvider: IconSpokeProviderType,
     raw?: R,
-  ): PromiseIconTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const params = {
       dstChainId: dstChainId.toString(),
       dstAddress: dstAddress,
@@ -234,8 +233,11 @@ export class IconSpokeService {
       .params(params)
       .build();
 
-    if (raw) {
-      return Converter.toRawTransaction(transaction) as IconReturnType<R>;
+    if (raw || isIconRawSpokeProvider(spokeProvider)) {
+      return Converter.toRawTransaction(transaction) satisfies TxReturnType<
+        IconSpokeProviderType,
+        true
+      > as TxReturnType<S, R>;
     }
 
     return spokeProvider.walletProvider.sendTransaction({
@@ -245,6 +247,6 @@ export class IconSpokeService {
       value: '0x0',
       method: 'sendMessage',
       params: params,
-    }) satisfies PromiseIconTxReturnType<false> as PromiseIconTxReturnType<R>;
+    }) satisfies Promise<TxReturnType<IconSpokeProviderType, false>> as Promise<TxReturnType<S, R>>;
   }
 }

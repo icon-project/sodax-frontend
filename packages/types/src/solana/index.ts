@@ -37,6 +37,17 @@ export type SolanaRawTransactionInstruction = {
   data: Uint8Array;
 };
 
+export type SolanaTokenAmount = {
+  /** Raw amount of tokens as string ignoring decimals */
+  amount: string;
+  /** Number of decimals configured for token's mint */
+  decimals: number;
+  /** Token amount as float, accounts for decimals */
+  uiAmount: number | null;
+  /** Token amount as string, accounts for decimals */
+  uiAmountString?: string;
+};
+
 type TokenAmount = {
   /** Raw amount of tokens as string ignoring decimals */
   amount: string;
