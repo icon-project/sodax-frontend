@@ -307,6 +307,10 @@ function BridgeComponent() {
 #### Swap Hooks
 - [`useQuote()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useQuote.ts) - Get quote for an intent order
 - [`useSwap()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useSwap.ts) - Create and submit an intent order
+- [`useCreateLimitOrder()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useCreateLimitOrder.ts) - Create a limit order intent (no deadline, must be cancelled manually)
+- **Note**: Limit orders use `useSwapAllowance()` for checking token allowance (same as swaps)
+- **Note**: Limit orders use `useSwapApprove()` for approving token spending (same as swaps)
+- **Note**: Limit orders use `useCancelSwap()` for cancelling (same as swaps)
 - [`useStatus()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useStatus.ts) - Get status of an intent order
 - [`useSwapAllowance()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useSwapAllowance.ts) - Check token allowance for an intent order
 - [`useSwapApprove()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useSwapApprove.ts) - Approve token spending

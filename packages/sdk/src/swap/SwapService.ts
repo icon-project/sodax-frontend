@@ -80,6 +80,24 @@ export type CreateIntentParams = {
   data: Hex; // Additional arbitrary data
 };
 
+/**
+ * Parameters for creating a limit order intent.
+ * Similar to CreateIntentParams but without the deadline field (deadline is automatically set to 0n for limit orders).
+ *
+ * @property inputToken - The address of the input token on the spoke chain.
+ * @property outputToken - The address of the output token on the spoke chain.
+ * @property inputAmount - The amount of input tokens to provide, denominated in the input token's decimals.
+ * @property minOutputAmount - The minimum amount of output tokens to accept, denominated in the output token's decimals.
+ * @property allowPartialFill - Whether the intent can be partially filled.
+ * @property srcChain - Chain ID where input tokens originate.
+ * @property dstChain - Chain ID where output tokens should be delivered.
+ * @property srcAddress - Sender address on source chain.
+ * @property dstAddress - Receiver address on destination chain.
+ * @property solver - Optional specific solver address (use address(0) for any solver).
+ * @property data - Additional arbitrary data (opaque, for advanced integrations/fees etc).
+ */
+export type CreateLimitOrderParams = Omit<CreateIntentParams, 'deadline'>;
+
 export type Intent = {
   intentId: bigint; // Unique identifier for the intent
   creator: Address; // Address that created the intent (Wallet abstraction address on hub chain)
@@ -160,6 +178,14 @@ export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
 export type SwapParams<S extends SpokeProvider> = Prettify<
   {
     intentParams: CreateIntentParams;
+    spokeProvider: S;
+    skipSimulation?: boolean;
+  } & OptionalFee
+>;
+
+export type LimitOrderParams<S extends SpokeProvider> = Prettify<
+  {
+    intentParams: CreateLimitOrderParams;
     spokeProvider: S;
     skipSimulation?: boolean;
   } & OptionalFee
@@ -969,6 +995,76 @@ export class SwapService {
         },
       };
     }
+  }
+
+  /**
+   * Creates a limit order intent (no deadline, must be cancelled manually by user).
+   * Similar to swap but enforces deadline=0n (no deadline).
+   * Limit orders remain active until manually cancelled by the user.
+   *
+   * @param {Prettify<LimitOrderParams<S> & OptionalTimeout>} params - Object containing:
+   *   - intentParams: The parameters for creating the limit order (deadline is automatically set to 0n, deadline field should be omitted).
+   *   - spokeProvider: The spoke provider instance.
+   *   - fee: (Optional) Partner fee configuration.
+   *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
+   *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
+   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>} A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info, or an IntentError if the operation fails.
+   *
+   * @example
+   * const payload = {
+   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
+   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
+   *     "inputAmount": 1000000000000000n, // The amount of input tokens
+   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
+   *     // deadline is omitted - will be automatically set to 0n
+   *     "allowPartialFill": false, // Whether the intent can be partially filled
+   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
+   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
+   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
+   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
+   *     "data": "0x..", // Additional arbitrary data
+   * } satisfies CreateLimitOrderParams;
+   *
+   * const createLimitOrderResult = await swapService.createLimitOrder({
+   *   intentParams: payload,
+   *   spokeProvider,
+   *   fee, // optional
+   *   timeout, // optional
+   * });
+   *
+   * if (createLimitOrderResult.ok) {
+   *   const [solverExecutionResponse, intent, intentDeliveryInfo] = createLimitOrderResult.value;
+   *   console.log('Intent execution response:', solverExecutionResponse);
+   *   console.log('Intent:', intent);
+   *   console.log('Intent delivery info:', intentDeliveryInfo);
+   *   // Limit order is now active and will remain until cancelled manually
+   * } else {
+   *   // handle error
+   * }
+   */
+  public async createLimitOrder<S extends SpokeProvider>({
+    intentParams: params,
+    spokeProvider,
+    fee = this.config.partnerFee,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+    skipSimulation = false,
+  }: Prettify<LimitOrderParams<S> & OptionalTimeout>): Promise<
+    Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
+  > {
+    // Force deadline to 0n (no deadline) for limit orders
+    const limitOrderParams: CreateIntentParams = {
+      ...params,
+      deadline: 0n,
+    };
+
+    return this.createAndSubmitIntent({
+      intentParams: limitOrderParams,
+      spokeProvider,
+      fee,
+      timeout,
+      skipSimulation,
+    });
   }
 
   /**
