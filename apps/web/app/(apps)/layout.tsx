@@ -69,7 +69,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               variants={contentVariants}
               initial={!shouldTriggerAnimation ? 'open' : { y: '300px' }}
               animate={isSwitchingPage ? 'open' : 'closed'}
-              className="bg-cream-white relative min-h-[calc(100vh-240px)]"
+              className="bg-cream-white relative min-h-[calc(100vh-240px)] "
               style={{ height: !isMobile ? height - 136 : height - 40 }}
             >
               <div className="w-full lg:w-[1024px] lg:max-w-[1024px] absolute md:-top-34 -top-36 left-1/2 -translate-x-1/2">
