@@ -9,7 +9,13 @@ import type {
   PromiseEvmTxReturnType,
   TxReturnType,
 } from '../../types.js';
-import { type EvmRawTransaction, type Hex, type HubAddress, getIntentRelayChainId } from '@sodax/types';
+import {
+  type EvmRawTransaction,
+  type Hex,
+  type HubAddress,
+  type HubChainId,
+  getIntentRelayChainId,
+} from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
 
@@ -155,8 +161,7 @@ export class EvmSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): Promise<TxReturnType<EvmSpokeProvider, R>> {
-    const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    const result = await EvmSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
+    const result = await EvmSpokeService.call(hubProvider.chainConfig.chain.id, from, payload, spokeProvider, raw);
 
     return result satisfies TxReturnType<EvmSpokeProvider, R>;
   }
@@ -177,19 +182,11 @@ export class EvmSpokeService {
     spokeProvider: EvmSpokeProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
-    const txPayload = {
-      address: spokeProvider.chainConfig.addresses.assetManager,
-      abi: spokeAssetManagerAbi,
-      functionName: 'transfer',
-      args: [token, recipient, amount, data],
-      value: token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ? amount : undefined,
-    } as const;
-
     const from = await spokeProvider.walletProvider.getWalletAddress();
     const rawTx = {
       from,
-      to: txPayload.address,
-      value: txPayload.value ?? 0n,
+      to: spokeProvider.chainConfig.addresses.assetManager,
+      value: token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ? amount : 0n,
       data: encodeFunctionData({
         abi: spokeAssetManagerAbi,
         functionName: 'transfer',
@@ -214,28 +211,22 @@ export class EvmSpokeService {
    * @returns {PromiseEvmTxReturnType<R>} A promise that resolves to the transaction hash.
    */
   private static async call<R extends boolean = false>(
-    dstChainId: bigint,
+    dstChainId: HubChainId,
     dstAddress: HubAddress,
     payload: Hex,
     spokeProvider: EvmSpokeProvider,
     raw?: R,
   ): PromiseEvmTxReturnType<R> {
-    const txPayload = {
-      address: spokeProvider.chainConfig.addresses.connection,
-      abi: connectionAbi,
-      functionName: 'sendMessage',
-      args: [dstChainId, dstAddress, payload],
-    } as const;
-
+    const relayId = getIntentRelayChainId(dstChainId);
     const from = await spokeProvider.walletProvider.getWalletAddress();
     const rawTx = {
       from,
-      to: txPayload.address,
+      to: spokeProvider.chainConfig.addresses.connection,
       value: 0n,
       data: encodeFunctionData({
         abi: connectionAbi,
         functionName: 'sendMessage',
-        args: [dstChainId, dstAddress, payload],
+        args: [relayId, dstAddress, payload],
       }),
     } satisfies EvmReturnType<true>;
 

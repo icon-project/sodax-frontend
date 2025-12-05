@@ -913,7 +913,11 @@ export class SwapService {
       );
 
       // derive users hub wallet address
-      const creatorHubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+      const creatorHubWalletAddress = await deriveUserWalletAddress(
+        this.hubProvider,
+        spokeProvider.chainConfig.chain.id,
+        walletAddress,
+      );
 
       if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
         // on hub chain create intent directly
@@ -1007,7 +1011,11 @@ export class SwapService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       // derive users hub wallet address
-      const creatorHubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+      const creatorHubWalletAddress = await deriveUserWalletAddress(
+        this.hubProvider,
+        spokeProvider.chainConfig.chain.id,
+        walletAddress,
+      );
 
       const calls: EvmContractCall[] = [];
       const intentsContract = this.config.intentsContract;

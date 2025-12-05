@@ -33,7 +33,6 @@ const HUB_CHAIN_ID = SONIC_MAINNET_CHAIN_ID;
 const SUI_CHAIN_ID = SUI_MAINNET_CHAIN_ID;
 const SUI_RPC_URL = IS_TESTNET ? 'https://fullnode.testnet.sui.io' : 'https://fullnode.mainnet.sui.io';
 
-
 const hubChainConfig = getHubChainConfig();
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
@@ -54,7 +53,12 @@ const hubProvider = new EvmHubProvider({
 });
 
 const relayerApiEndpoint = DEFAULT_RELAYER_API_ENDPOINT;
-const bridgeService = new BridgeService({ hubProvider, relayerApiEndpoint, config: undefined, configService: sodax.config });
+const bridgeService = new BridgeService({
+  hubProvider,
+  relayerApiEndpoint,
+  config: undefined,
+  configService: sodax.config,
+});
 
 const suiConfig = spokeChainConfig[SUI_CHAIN_ID] as SuiSpokeChainConfig;
 const suiWalletMnemonics = process.env.SUI_MNEMONICS;
@@ -139,7 +143,7 @@ async function supply(token: string, amount: bigint): Promise<void> {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, suiSpokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(suiSpokeProvider.chainConfig.chain.id, token, amount, hubWallet);
 
   const txHash = await SpokeService.deposit(
     {
@@ -204,7 +208,7 @@ async function repay(token: string, amount: bigint): Promise<void> {
     walletAddressBytes,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, suiSpokeProvider.chainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(suiSpokeProvider.chainConfig.chain.id, token, amount, hubWallet);
 
   const txHash: Hash = await SpokeService.deposit(
     {

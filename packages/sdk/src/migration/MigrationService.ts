@@ -1,9 +1,4 @@
-import {
-  isLegacybnUSDChainId,
-  isLegacybnUSDToken,
-  isNewbnUSDChainId,
-  isNewbnUSDToken,
-} from '../shared/constants.js';
+import { isLegacybnUSDChainId, isLegacybnUSDToken, isNewbnUSDChainId, isNewbnUSDToken } from '../shared/constants.js';
 import invariant from 'tiny-invariant';
 import {
   type EvmHubProvider,
@@ -98,9 +93,9 @@ export const SupportedMigrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;
 export type MigrationTokens = (typeof SupportedMigrationTokens)[number];
 
 export type MigrationServiceConstructorParams = {
-  hubProvider: EvmHubProvider,
-  configService: ConfigService,
-  relayerApiEndpoint: HttpUrl,
+  hubProvider: EvmHubProvider;
+  configService: ConfigService;
+  relayerApiEndpoint: HttpUrl;
 };
 
 export class MigrationService {
@@ -922,7 +917,11 @@ export class MigrationService {
       }
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const creatorHubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+      const creatorHubWalletAddress = await deriveUserWalletAddress(
+        this.hubProvider,
+        spokeProvider.chainConfig.chain.id,
+        walletAddress,
+      );
 
       const txResult = await SpokeService.deposit(
         {
