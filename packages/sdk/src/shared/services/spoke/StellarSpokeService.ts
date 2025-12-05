@@ -1,15 +1,15 @@
 import { type Address, type Hex, fromHex } from 'viem';
-import type { EvmHubProvider, StellarRawSpokeProvider } from '../../entities/index.js';
+import type { EvmHubProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
 import {
   CustomStellarAccount,
   type DepositSimulationParams,
-  type PromiseStellarTxReturnType,
   type Result,
   STELLAR_DEFAULT_TX_TIMEOUT_SECONDS,
   StellarBaseSpokeProvider,
   type StellarGasEstimate,
-  type StellarReturnType,
+  type StellarSpokeProviderType,
+  type TxReturnType,
   encodeAddress,
   isStellarRawSpokeProvider,
   parseToStroops,
@@ -62,7 +62,7 @@ export class StellarSpokeService {
   public static async hasSufficientTrustline(
     token: string,
     amount: bigint,
-    spokeProvider: StellarSpokeProvider | StellarRawSpokeProvider,
+    spokeProvider: StellarSpokeProviderType,
   ): Promise<boolean> {
     // native token and legacy bnUSD do not require trustline
     if (
@@ -114,12 +114,12 @@ export class StellarSpokeService {
    * @param raw - Whether to return the raw transaction data.
    * @returns The transaction result.
    */
-  public static async requestTrustline<R extends boolean = false>(
+  public static async requestTrustline<S extends StellarSpokeProviderType, R extends boolean = false>(
     token: string,
     amount: bigint,
-    spokeProvider: StellarSpokeProvider | StellarRawSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     try {
       const asset = spokeProvider.chainConfig.trustlineConfigs.find(
         t => t.contractId.toLowerCase() === token.toLowerCase(),
@@ -157,12 +157,12 @@ export class StellarSpokeService {
           to: spokeProvider.chainConfig.addresses.assetManager,
           value: amount,
           data: transactionXdr,
-        } satisfies StellarReturnType<true> as StellarReturnType<R>;
+        } satisfies TxReturnType<StellarSpokeProviderType, true> as TxReturnType<S, R>;
       }
 
       const hash = await spokeProvider.signAndSendTransaction(transaction);
 
-      return `${hash}` as StellarReturnType<R>;
+      return `${hash}` satisfies TxReturnType<StellarSpokeProviderType, false> as TxReturnType<S, R>;
     } catch (error) {
       console.error('Error during requestTrustline:', error);
       throw error;
@@ -177,7 +177,7 @@ export class StellarSpokeService {
    */
   public static async estimateGas(
     rawTx: StellarRawTransaction,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProviderType,
   ): Promise<StellarGasEstimate> {
     const network = await spokeProvider.sorobanServer.getNetwork();
     let tx: Transaction | FeeBumpTransaction = TransactionBuilder.fromXDR(rawTx.data, network.passphrase);
@@ -195,12 +195,12 @@ export class StellarSpokeService {
     return BigInt(simulationForFee.minResourceFee);
   }
 
-  public static async deposit<R extends boolean = false>(
+  public static async deposit<S extends StellarSpokeProviderType, R extends boolean = false>(
     params: StellarSpokeDepositParams,
-    spokeProvider: StellarSpokeProvider | StellarRawSpokeProvider,
+    spokeProvider: S,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const userWallet: Address =
       params.to ??
       (await EvmWalletAbstraction.getUserHubWalletAddress(
@@ -227,20 +227,20 @@ export class StellarSpokeService {
    * @param spokeProvider - The spoke provider.
    * @returns The balance of the token.
    */
-  public static async getDeposit(token: string, spokeProvider: StellarSpokeProvider): Promise<bigint> {
+  public static async getDeposit(token: string, spokeProvider: StellarSpokeProviderType): Promise<bigint> {
     return BigInt(await StellarBaseSpokeProvider.getBalance(token, spokeProvider));
   }
 
   /**
    * Generate simulation parameters for deposit from StellarSpokeDepositParams.
    * @param {StellarSpokeDepositParams} params - The deposit parameters.
-   * @param {StellarSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {StellarSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<DepositSimulationParams>} The simulation parameters.
    */
   public static async getSimulateDepositParams(
     params: StellarSpokeDepositParams,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProviderType,
     hubProvider: EvmHubProvider,
   ): Promise<DepositSimulationParams> {
     const to =
@@ -277,19 +277,19 @@ export class StellarSpokeService {
   public static async callWallet<R extends boolean = false>(
     from: HubAddress,
     payload: Hex,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProviderType,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<StellarSpokeProviderType, R>> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return StellarSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
 
-  private static async transfer<R extends boolean = false>(
+  private static async transfer<S extends StellarSpokeProviderType, R extends boolean = false>(
     { token, recipient, amount, data = '0x' }: StellarTransferToHubParams,
-    spokeProvider: StellarSpokeProvider | StellarRawSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     return await StellarBaseSpokeProvider.deposit(
       token,
       amount.toString(),
@@ -300,13 +300,13 @@ export class StellarSpokeService {
     );
   }
 
-  private static async call<R extends boolean = false>(
+  private static async call<S extends StellarSpokeProviderType, R extends boolean = false>(
     dstChainId: bigint,
     dstAddress: HubAddress,
     payload: Hex,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     return await StellarBaseSpokeProvider.sendMessage(
       dstChainId.toString(),
       fromHex(dstAddress, 'bytes'),

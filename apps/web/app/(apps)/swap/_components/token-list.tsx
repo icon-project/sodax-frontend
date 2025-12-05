@@ -228,7 +228,7 @@ export function TokenList({
           }}
         />
       )}
-      
+
       <ScrollAreaPrimitive.Root
         data-slot="scroll-area"
         className={`mt-4 h-[calc(80vh-176px)] md:h-126 w-full content-stretch ${clickedAsset ? '' : ''}`}

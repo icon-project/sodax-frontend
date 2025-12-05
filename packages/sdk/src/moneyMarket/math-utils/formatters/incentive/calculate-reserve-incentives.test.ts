@@ -1,8 +1,4 @@
-import {
-  ReserveIncentiveMock,
-  ReserveMock,
-  UserReserveMock,
-} from '../../mocks.js';
+import { ReserveIncentiveMock, ReserveMock, UserReserveMock } from '../../mocks.js';
 import { calculateReserveDebt } from '../reserve/calculate-reserve-debt.js';
 import { calculateReserveIncentives } from './calculate-reserve-incentives.js';
 import { describe, expect, it } from 'vitest';
@@ -12,14 +8,9 @@ describe('calculateReserveIncentives', () => {
   const reserveMock = new ReserveMock().addLiquidity(100).addVariableDebt(50);
   const reserveIncentiveMock = new ReserveIncentiveMock();
   describe('WMATIC reserve data (was actual data which was on reserve)', () => {
-    const calculateReserveDebtResult = calculateReserveDebt(
-      reserveMock.reserve,
-      1,
-    );
+    const calculateReserveDebtResult = calculateReserveDebt(reserveMock.reserve, 1);
 
-    const totalLiquidity = calculateReserveDebtResult.totalDebt.plus(
-      reserveMock.reserve.availableLiquidity,
-    );
+    const totalLiquidity = calculateReserveDebtResult.totalDebt.plus(reserveMock.reserve.availableLiquidity);
 
     const reserve = {
       ...userReserveMock.reserve,
@@ -33,25 +24,15 @@ describe('calculateReserveIncentives', () => {
           ...reserveIncentiveMock.reserveIncentive,
         },
         totalLiquidity: totalLiquidity.toString(),
-        totalVariableDebt:
-          calculateReserveDebtResult.totalVariableDebt.toString(),
+        totalVariableDebt: calculateReserveDebtResult.totalVariableDebt.toString(),
         decimals: 18,
-        priceInMarketReferenceCurrency:
-          userReserveMock.reserve.priceInMarketReferenceCurrency,
+        priceInMarketReferenceCurrency: userReserveMock.reserve.priceInMarketReferenceCurrency,
         marketReferenceCurrencyDecimals: 8,
       });
-      expect(result.aIncentivesData?.[0]?.incentiveAPR).toBe(
-        '0.00000000000021024',
-      );
-      expect(result.vIncentivesData?.[0]?.incentiveAPR).toBe(
-        '0.00000000000063072',
-      );
-      expect(result.aIncentivesData?.[0]?.rewardTokenAddress).toBe(
-        '0x0000000000000000000000000000000000000000',
-      );
-      expect(result.vIncentivesData?.[0]?.rewardTokenAddress).toBe(
-        '0x0000000000000000000000000000000000000000',
-      );
+      expect(result.aIncentivesData?.[0]?.incentiveAPR).toBe('0.00000000000021024');
+      expect(result.vIncentivesData?.[0]?.incentiveAPR).toBe('0.00000000000063072');
+      expect(result.aIncentivesData?.[0]?.rewardTokenAddress).toBe('0x0000000000000000000000000000000000000000');
+      expect(result.vIncentivesData?.[0]?.rewardTokenAddress).toBe('0x0000000000000000000000000000000000000000');
     });
   });
 });

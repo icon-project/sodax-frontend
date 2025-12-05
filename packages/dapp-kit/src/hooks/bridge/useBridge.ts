@@ -1,5 +1,12 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BridgeError, BridgeErrorCode, SpokeTxHash, HubTxHash, Result, CreateBridgeIntentParams } from '@sodax/sdk';
+import type {
+  BridgeError,
+  BridgeErrorCode,
+  SpokeTxHash,
+  HubTxHash,
+  Result,
+  CreateBridgeIntentParams,
+} from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { SpokeProvider } from '@sodax/sdk';
 

@@ -15,7 +15,7 @@ import {
   type xdr,
   type Transaction,
 } from '@stellar/stellar-sdk';
-import type { PromiseStellarTxReturnType, StellarReturnType } from '../../types.js';
+import type { StellarSpokeProviderType, TxReturnType } from '../../types.js';
 import { toHex, type Hex } from 'viem';
 import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
 import type {
@@ -93,10 +93,7 @@ export class StellarBaseSpokeProvider {
     this.contract = new Contract(config.addresses.assetManager);
   }
 
-  public static async getBalance(
-    tokenAddress: string,
-    provider: StellarSpokeProvider | StellarRawSpokeProvider,
-  ): Promise<number> {
+  public static async getBalance(tokenAddress: string, provider: StellarSpokeProviderType): Promise<number> {
     const [network, walletAddress] = await Promise.all([
       provider.sorobanServer.getNetwork(),
       provider.walletProvider.getWalletAddress(),
@@ -130,7 +127,7 @@ export class StellarBaseSpokeProvider {
     account: CustomStellarAccount,
     network: StellarRpc.Api.GetNetworkResponse,
     operation: xdr.Operation<Operation.InvokeHostFunction>,
-    provider: StellarSpokeProvider | StellarRawSpokeProvider,
+    provider: StellarSpokeProviderType,
   ): Promise<[Transaction, StellarRpc.Api.SimulateTransactionResponse]> {
     const simulationForFee = await provider.sorobanServer.simulateTransaction(
       new TransactionBuilder(account.getAccountClone(), {
@@ -164,14 +161,14 @@ export class StellarBaseSpokeProvider {
     return [priorityTransaction, simulation];
   }
 
-  public static async deposit<R extends boolean = false>(
+  public static async deposit<S extends StellarSpokeProviderType, R extends boolean = false>(
     token: string,
     amount: string,
     recipient: Uint8Array,
     data: Uint8Array,
-    provider: StellarSpokeProvider | StellarRawSpokeProvider,
+    provider: S,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     try {
       const [network, walletAddress] = await Promise.all([
         provider.sorobanServer.getNetwork(),
@@ -181,7 +178,14 @@ export class StellarBaseSpokeProvider {
       const accountResponse = await provider.server.loadAccount(walletAddress);
       const stellarAccount = new CustomStellarAccount(accountResponse);
 
-      const depositCall = StellarBaseSpokeProvider.buildDepositCall(walletAddress, token, amount, recipient, data, provider);
+      const depositCall = StellarBaseSpokeProvider.buildDepositCall(
+        walletAddress,
+        token,
+        amount,
+        recipient,
+        data,
+        provider,
+      );
       const [rawPriorityTx, simulation] = await StellarBaseSpokeProvider.buildPriorityStellarTransaction(
         stellarAccount,
         network,
@@ -197,7 +201,7 @@ export class StellarBaseSpokeProvider {
           to: provider.chainConfig.addresses.assetManager,
           value: BigInt(amount),
           data: transactionXdr,
-        } satisfies StellarReturnType<true> as StellarReturnType<R>;
+        } satisfies TxReturnType<StellarSpokeProviderType, true> as TxReturnType<S, R>;
       }
 
       const hash = await provider.submitOrRestoreAndRetry(
@@ -208,7 +212,7 @@ export class StellarBaseSpokeProvider {
         simulation,
       );
 
-      return `${hash}` as StellarReturnType<R>;
+      return `${hash}` satisfies TxReturnType<StellarSpokeProviderType, false> as TxReturnType<S, R>;
     } catch (error) {
       console.error('Error during deposit:', error);
       throw error;
@@ -221,7 +225,7 @@ export class StellarBaseSpokeProvider {
     amount: string,
     recipient: Uint8Array,
     data: Uint8Array,
-    provider: StellarSpokeProvider | StellarRawSpokeProvider,
+    provider: StellarSpokeProviderType,
   ): xdr.Operation<Operation.InvokeHostFunction> {
     return provider.contract.call(
       'transfer',
@@ -235,13 +239,13 @@ export class StellarBaseSpokeProvider {
     );
   }
 
-  public static async sendMessage<R extends boolean = false>(
+  public static async sendMessage<S extends StellarSpokeProviderType, R extends boolean = false>(
     dst_chain_id: string,
     dst_address: Uint8Array,
     payload: Uint8Array,
-    provider: StellarSpokeProvider | StellarRawSpokeProvider,
+    provider: S,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     try {
       const [network, walletAddress] = await Promise.all([
         provider.sorobanServer.getNetwork(),
@@ -250,7 +254,13 @@ export class StellarBaseSpokeProvider {
       const accountResponse = await provider.server.loadAccount(walletAddress);
       const stellarAccount = new CustomStellarAccount(accountResponse);
 
-      const sendMessageCall = StellarBaseSpokeProvider.buildSendMessageCall(walletAddress, dst_chain_id, dst_address, payload, provider);
+      const sendMessageCall = StellarBaseSpokeProvider.buildSendMessageCall(
+        walletAddress,
+        dst_chain_id,
+        dst_address,
+        payload,
+        provider,
+      );
 
       const [rawPriorityTx, simulation] = await StellarBaseSpokeProvider.buildPriorityStellarTransaction(
         stellarAccount,
@@ -269,7 +279,7 @@ export class StellarBaseSpokeProvider {
           to: provider.chainConfig.addresses.assetManager,
           value: 0n,
           data: transactionXdr,
-        } satisfies StellarReturnType<true> as StellarReturnType<R>;
+        } satisfies TxReturnType<StellarSpokeProviderType, true> as TxReturnType<S, R>;
       }
 
       const hash = await provider.submitOrRestoreAndRetry(
@@ -280,7 +290,7 @@ export class StellarBaseSpokeProvider {
         simulation,
       );
 
-      return `${hash}` as StellarReturnType<R>;
+      return `${hash}` satisfies TxReturnType<StellarSpokeProviderType, false> as TxReturnType<S, R>;
     } catch (error) {
       console.error('Error during sendMessage:', error);
       throw error;
@@ -292,7 +302,7 @@ export class StellarBaseSpokeProvider {
     dst_chain_id: string,
     dst_address: Uint8Array,
     payload: Uint8Array,
-    provider: StellarSpokeProvider | StellarRawSpokeProvider,
+    provider: StellarSpokeProviderType,
   ): xdr.Operation<Operation.InvokeHostFunction> {
     const connection = new Contract(provider.chainConfig.addresses.connection);
 

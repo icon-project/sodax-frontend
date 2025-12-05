@@ -1,6 +1,6 @@
 import invariant from 'tiny-invariant';
 import { DEFAULT_MAX_RETRY, DEFAULT_RETRY_DELAY_MS, FEE_PERCENTAGE_SCALE } from '../constants.js';
-import type { EvmHubProvider, EvmWalletAbstraction, RawSpokeProvider, SpokeProvider } from '../entities/Providers.js';
+import type { EvmHubProvider } from '../entities/Providers.js';
 import { isPartnerFeeAmount, isPartnerFeePercentage } from '../guards.js';
 import type { PartnerFee, QuoteType } from '../types.js';
 import type { SpokeChainId, Address, Hex } from '@sodax/types';
@@ -8,6 +8,7 @@ import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
 import { Address as StellarAddress } from '@stellar/stellar-sdk';
+import { EvmWalletAbstraction } from '../services/index.js';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,

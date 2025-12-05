@@ -1,12 +1,7 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { erc20Abi } from '../shared/abis/index.js';
 import type { EvmContractCall, IcxTokenType } from '../shared/types.js';
-import {
-  encodeContractCalls,
-  Erc20Service,
-  EvmAssetManagerService,
-  type EvmHubProvider,
-} from '../index.js';
+import { encodeContractCalls, Erc20Service, EvmAssetManagerService, type EvmHubProvider } from '../index.js';
 import { icxSwapAbi } from '../shared/abis/icxSwap.abi.js';
 import invariant from 'tiny-invariant';
 import { ICON_MAINNET_CHAIN_ID, type IconEoaAddress, type IconAddress } from '@sodax/types';

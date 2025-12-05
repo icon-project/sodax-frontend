@@ -1,11 +1,13 @@
 import { encodeFunctionData, erc20Abi, type Address, type PublicClient } from 'viem';
-import type { EvmContractCall, EvmReturnType, GetAddressType, PromiseEvmTxReturnType, Result } from '../../types.js';
 import type {
-  EvmRawSpokeProvider,
-  EvmSpokeProvider,
-  SonicRawSpokeProvider,
-  SonicSpokeProvider,
-} from '../../entities/Providers.js';
+  EvmContractCall,
+  EvmReturnType,
+  EvmSpokeProviderType,
+  GetAddressType,
+  Result,
+  SonicSpokeProviderType,
+  TxReturnType,
+} from '../../types.js';
 import type { Erc20Token } from '@sodax/types';
 import { isEvmRawSpokeProvider, isSonicRawSpokeProvider } from '../../guards.js';
 
@@ -57,7 +59,7 @@ export class Erc20Service {
     amount: bigint,
     owner: Address,
     spender: Address,
-    spokeProvider: EvmSpokeProvider | EvmRawSpokeProvider | SonicSpokeProvider | SonicRawSpokeProvider,
+    spokeProvider: EvmSpokeProviderType | SonicSpokeProviderType,
   ): Promise<Result<boolean>> {
     try {
       if (token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
@@ -97,15 +99,13 @@ export class Erc20Service {
     token: Address,
     amount: bigint,
     spender: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmRawSpokeProvider | SonicRawSpokeProvider,
+    spokeProvider: EvmSpokeProviderType | SonicSpokeProviderType,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
+  ): Promise<TxReturnType<EvmSpokeProviderType | SonicSpokeProviderType, R>> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
     const rawTx = {
-      from: walletAddress as GetAddressType<
-        EvmSpokeProvider | EvmRawSpokeProvider | SonicSpokeProvider | SonicRawSpokeProvider
-      >,
+      from: walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
       to: token,
       value: 0n,
       data: encodeFunctionData({
@@ -119,7 +119,9 @@ export class Erc20Service {
       return rawTx as EvmReturnType<R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return spokeProvider.walletProvider.sendTransaction(rawTx) satisfies Promise<
+      TxReturnType<EvmSpokeProviderType | SonicSpokeProviderType, false>
+    > as Promise<TxReturnType<EvmSpokeProviderType | SonicSpokeProviderType, R>>;
   }
 
   /**

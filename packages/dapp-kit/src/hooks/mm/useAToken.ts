@@ -24,9 +24,7 @@ import { useSodaxContext } from '../shared/useSodaxContext';
  *   - isLoading: Loading state indicator.
  *   - error: Any error that occurred during data fetching.
  */
-export function useAToken(
-  aToken: Address | undefined,
-): UseQueryResult<XToken, Error> {
+export function useAToken(aToken: Address | undefined): UseQueryResult<XToken, Error> {
   const { sodax } = useSodaxContext();
 
   return useQuery({

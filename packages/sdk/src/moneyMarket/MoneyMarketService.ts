@@ -11,9 +11,10 @@ import {
   type RelayError,
   type ConfigService,
 } from '../index.js';
-import { isConfiguredMoneyMarketConfig } from '../shared/guards.js';
+import { isConfiguredMoneyMarketConfig, isSonicSpokeProviderType } from '../shared/guards.js';
 import type {
   EvmContractCall,
+  EvmSpokeProviderType,
   GetAddressType,
   GetEstimateGasReturnType,
   GetSpokeDepositParamsType,
@@ -21,7 +22,9 @@ import type {
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,
   Result,
+  SonicSpokeProviderType,
   SpokeTxHash,
+  StellarSpokeProviderType,
   TxReturnType,
 } from '../shared/types.js';
 import {
@@ -458,7 +461,7 @@ export class MoneyMarketService {
         const result = await StellarSpokeService.requestTrustline(params.token, params.amount, spokeProvider, raw);
         return {
           ok: true,
-          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
@@ -475,7 +478,7 @@ export class MoneyMarketService {
           spokeProvider.chainConfig.addresses.assetManager,
           spokeProvider,
           raw,
-        )) satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<S, R>;
+        )) satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>;
 
         return {
           ok: true,
@@ -510,7 +513,7 @@ export class MoneyMarketService {
             withdrawInfo,
             spokeProvider,
             raw,
-          )) satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<S, R>;
+          )) satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>;
 
           return {
             ok: true,
@@ -531,7 +534,7 @@ export class MoneyMarketService {
             borrowInfo,
             spokeProvider,
             raw,
-          )) satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<S, R>;
+          )) satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>;
 
           return {
             ok: true,
@@ -550,7 +553,7 @@ export class MoneyMarketService {
             userRouter,
             spokeProvider,
             raw,
-          )) satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<S, R>;
+          )) satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>;
 
           return {
             ok: true,
@@ -928,7 +931,7 @@ export class MoneyMarketService {
     const data: Hex = this.buildBorrowData(fromHubWallet, encodedToAddress, params.token, params.amount, toChainId);
 
     let txResult: TxReturnType<S, R>;
-    if (fromChainId === this.hubProvider.chainConfig.chain.id) {
+    if (fromChainId === this.hubProvider.chainConfig.chain.id && isSonicSpokeProviderType(spokeProvider)) {
       txResult = await SonicSpokeService.callWallet(data, spokeProvider, raw);
     } else {
       txResult = await SpokeService.callWallet(fromHubWallet, data, spokeProvider, this.hubProvider, raw);

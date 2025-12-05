@@ -43,10 +43,7 @@ export function useDeriveUserWalletAddress(
       }
 
       // Determine if spokeChainId is a SpokeProvider object or SpokeChainId value
-      spokeChainId =
-        typeof spokeChainId === 'object'
-          ? spokeChainId.chainConfig.chain.id
-          : spokeChainId;
+      spokeChainId = typeof spokeChainId === 'object' ? spokeChainId.chainConfig.chain.id : spokeChainId;
 
       return await deriveUserWalletAddress(sodax.hubProvider, spokeChainId, spokeAddress);
     },

@@ -5,7 +5,7 @@ import {
   DEFAULT_RELAY_TX_TIMEOUT,
 } from '../shared/constants.js';
 import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
-import type { EvmHubProvider, SpokeProvider } from '../shared/entities/Providers.js';
+import type { EvmHubProvider, SpokeProvider, SpokeProviderType } from '../shared/entities/Providers.js';
 import type {
   GetRelayResponse,
   IntentDeliveryInfo,
@@ -25,9 +25,10 @@ import {
 import { encodeContractCalls } from '../shared/utils/evm-utils.js';
 import {
   isConfiguredSolverConfig,
-  isEvmRawSpokeProvider,
+  isEvmSpokeProviderType,
   isSonicRawSpokeProvider,
-  isStellarRawSpokeProvider,
+  isSonicSpokeProviderType,
+  isStellarSpokeProviderType,
 } from '../shared/guards.js';
 import type {
   EvmContractCall,
@@ -50,6 +51,9 @@ import type {
   Prettify,
   OptionalTimeout,
   OptionalFee,
+  EvmSpokeProviderType,
+  SonicSpokeProviderType,
+  StellarSpokeProviderType,
 } from '../shared/types.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { SolverApiService } from './SolverApiService.js';
@@ -67,15 +71,8 @@ import {
   type Token,
 } from '@sodax/types';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
-import {
-  type EvmRawSpokeProvider,
-  EvmSpokeProvider,
-  type RawSpokeProvider,
-  type SonicRawSpokeProvider,
-} from '../shared/entities/Providers.js';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 import { SonicSpokeProvider } from '../shared/entities/Providers.js';
-import { StellarSpokeProvider } from '../shared/entities/stellar/StellarSpokeProvider.js';
 
 export type CreateIntentParams = {
   inputToken: string; // The address of the input token on spoke chain
@@ -169,7 +166,7 @@ export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   data: IntentErrorData<T>;
 };
 
-export type SwapParams<S extends SpokeProvider | RawSpokeProvider> = Prettify<
+export type SwapParams<S extends SpokeProviderType> = Prettify<
   {
     intentParams: CreateIntentParams;
     spokeProvider: S;
@@ -691,35 +688,35 @@ export class SwapService {
    *   console.log('Approval required');
    * }
    */
-  public async isAllowanceValid<S extends SpokeProvider | RawSpokeProvider>({
+  public async isAllowanceValid<S extends SpokeProviderType>({
     intentParams: params,
     spokeProvider,
   }: SwapParams<S>): Promise<Result<boolean>> {
     // apply fee to input amount without changing original params
     try {
-      if (spokeProvider instanceof EvmSpokeProvider || isEvmRawSpokeProvider(spokeProvider)) {
+      if (isEvmSpokeProviderType(spokeProvider)) {
         const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
         return await Erc20Service.isAllowanceValid(
-          params.inputToken as GetAddressType<EvmSpokeProvider>,
+          params.inputToken as GetAddressType<EvmSpokeProviderType>,
           params.inputAmount,
-          walletAddress as GetAddressType<EvmSpokeProvider | EvmRawSpokeProvider>,
+          walletAddress as GetAddressType<EvmSpokeProviderType>,
           spokeProvider.chainConfig.addresses.assetManager,
           spokeProvider,
         );
       }
 
-      if (spokeProvider instanceof SonicSpokeProvider || isSonicRawSpokeProvider(spokeProvider)) {
+      if (isSonicSpokeProviderType(spokeProvider)) {
         const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
         return await Erc20Service.isAllowanceValid(
-          params.inputToken as GetAddressType<SonicSpokeProvider>,
+          params.inputToken as GetAddressType<SonicSpokeProviderType>,
           params.inputAmount,
-          walletAddress as GetAddressType<SonicSpokeProvider | SonicRawSpokeProvider>,
+          walletAddress as GetAddressType<SonicSpokeProviderType>,
           getSolverConfig(SONIC_MAINNET_CHAIN_ID).intentsContract,
           spokeProvider,
         );
       }
 
-      if (spokeProvider instanceof StellarSpokeProvider || isStellarRawSpokeProvider(spokeProvider)) {
+      if (isStellarSpokeProviderType(spokeProvider)) {
         return {
           ok: true,
           value: await StellarSpokeService.hasSufficientTrustline(params.inputToken, params.inputAmount, spokeProvider),
@@ -776,15 +773,15 @@ export class SwapService {
    *   console.log('Approval transaction:', txHash);
    * }
    */
-  public async approve<S extends SpokeProvider | RawSpokeProvider, R extends boolean = false>({
+  public async approve<S extends SpokeProviderType, R extends boolean = false>({
     intentParams: params,
     spokeProvider,
     raw,
   }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>>> {
     try {
-      if (spokeProvider instanceof EvmSpokeProvider || isEvmRawSpokeProvider(spokeProvider)) {
+      if (isEvmSpokeProviderType(spokeProvider)) {
         const result = await Erc20Service.approve(
-          params.inputToken as GetAddressType<EvmSpokeProvider>,
+          params.inputToken as GetAddressType<EvmSpokeProviderType>,
           params.inputAmount,
           spokeProvider.chainConfig.addresses.assetManager,
           spokeProvider,
@@ -793,13 +790,13 @@ export class SwapService {
 
         return {
           ok: true,
-          value: result satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
       if (spokeProvider instanceof SonicSpokeProvider || isSonicRawSpokeProvider(spokeProvider)) {
         const result = await Erc20Service.approve(
-          params.inputToken as GetAddressType<SonicSpokeProvider>,
+          params.inputToken as GetAddressType<SonicSpokeProviderType>,
           params.inputAmount,
           getSolverConfig(SONIC_MAINNET_CHAIN_ID).intentsContract,
           spokeProvider,
@@ -808,11 +805,11 @@ export class SwapService {
 
         return {
           ok: true,
-          value: result satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
-      if (spokeProvider instanceof StellarSpokeProvider || isStellarRawSpokeProvider(spokeProvider)) {
+      if (isStellarSpokeProviderType(spokeProvider)) {
         const result = await StellarSpokeService.requestTrustline(
           params.inputToken,
           params.inputAmount,
@@ -821,7 +818,7 @@ export class SwapService {
         );
         return {
           ok: true,
-          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
@@ -880,7 +877,7 @@ export class SwapService {
    *   // handle error
    * }
    */
-  public async createIntent<S extends SpokeProvider | RawSpokeProvider, R extends boolean = false>({
+  public async createIntent<S extends SpokeProviderType, R extends boolean = false>({
     intentParams: params,
     spokeProvider,
     fee = this.config.partnerFee,
@@ -919,7 +916,10 @@ export class SwapService {
         walletAddress,
       );
 
-      if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
+      if (
+        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id &&
+        isSonicSpokeProviderType(spokeProvider)
+      ) {
         // on hub chain create intent directly
 
         const [txResult, intent, feeAmount, data] = await SonicSpokeService.createSwapIntent(
@@ -927,7 +927,7 @@ export class SwapService {
           creatorHubWalletAddress,
           this.config,
           fee,
-          spokeProvider as SonicSpokeProvider | SonicRawSpokeProvider,
+          spokeProvider,
           this.hubProvider,
           raw,
         );
@@ -935,7 +935,7 @@ export class SwapService {
         return {
           ok: true,
           value: [
-            txResult satisfies TxReturnType<SonicSpokeProvider | SonicRawSpokeProvider, R> as TxReturnType<S, R>,
+            txResult satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>,
             { ...intent, feeAmount } as Intent & FeeAmount,
             data,
           ],
@@ -955,7 +955,7 @@ export class SwapService {
           fee,
         );
 
-        const txResult = await SpokeService.deposit(
+        const txResult = (await SpokeService.deposit(
           {
             from: walletAddress,
             to: creatorHubWalletAddress,
@@ -966,7 +966,7 @@ export class SwapService {
           spokeProvider satisfies S,
           this.hubProvider,
           raw,
-        );
+        )) satisfies TxReturnType<S, R>;
 
         return {
           ok: true,
@@ -990,11 +990,11 @@ export class SwapService {
   /**
    * Cancels an intent
    * @param {Intent} intent - The intent to cancel
-   * @param {ISpokeProvider} spokeProvider - The spoke provider
+   * @param {SpokeProviderType} spokeProvider - The spoke provider
    * @param {boolean} raw - Whether to return the raw transaction
    * @returns {Promise<TxReturnType<S, R>>} The encoded contract call
    */
-  public async cancelIntent<S extends SpokeProvider, R extends boolean = false>(
+  public async cancelIntent<S extends SpokeProviderType, R extends boolean = false>(
     intent: Intent,
     spokeProvider: S,
     raw?: R,
@@ -1021,13 +1021,13 @@ export class SwapService {
       const intentsContract = this.config.intentsContract;
       calls.push(EvmSolverService.encodeCancelIntent(intent, intentsContract));
       const data = encodeContractCalls(calls);
-      const txResult = await SpokeService.callWallet(
+      const txResult = (await SpokeService.callWallet(
         creatorHubWalletAddress,
         data,
         spokeProvider,
         this.hubProvider,
         raw,
-      );
+      )) satisfies TxReturnType<S, R>;
 
       return {
         ok: true,

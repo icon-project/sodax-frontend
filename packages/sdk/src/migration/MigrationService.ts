@@ -34,6 +34,9 @@ import {
   waitUntilIntentExecuted,
   StellarSpokeProvider,
   type IconContractAddress,
+  type EvmSpokeProviderType,
+  type SonicSpokeProviderType,
+  type StellarSpokeProviderType,
 } from '../index.js';
 import {
   ICON_MAINNET_CHAIN_ID,
@@ -300,7 +303,7 @@ export class MigrationService {
 
           return {
             ok: true,
-            value: result satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<S, R>,
+            value: result satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>,
           };
         }
 
@@ -308,7 +311,7 @@ export class MigrationService {
           const result = await StellarSpokeService.requestTrustline(params.srcbnUSD, params.amount, spokeProvider, raw);
           return {
             ok: true,
-            value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+            value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
           };
         }
 
@@ -323,7 +326,7 @@ export class MigrationService {
         invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
         if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
-          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+          const evmSpokeProvider = spokeProvider as EvmSpokeProviderType | SonicSpokeProviderType;
           let spender: Address;
           const wallet = await spokeProvider.walletProvider.getWalletAddress();
           if (spokeProvider instanceof SonicSpokeProvider) {
@@ -341,7 +344,10 @@ export class MigrationService {
 
           return {
             ok: true,
-            value: result satisfies TxReturnType<EvmSpokeProvider | SonicSpokeProvider, R> as TxReturnType<S, R>,
+            value: result satisfies TxReturnType<EvmSpokeProviderType | SonicSpokeProviderType, R> as TxReturnType<
+              S,
+              R
+            >,
           };
         }
 
@@ -349,7 +355,7 @@ export class MigrationService {
           const result = await StellarSpokeService.requestTrustline(params.srcbnUSD, params.amount, spokeProvider, raw);
           return {
             ok: true,
-            value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+            value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
           };
         }
 
@@ -367,7 +373,7 @@ export class MigrationService {
 
           return {
             ok: true,
-            value: result satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<S, R>,
+            value: result satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>,
           };
         }
 

@@ -212,3 +212,5 @@ export type RawSpokeProvider = (
   | SonicRawSpokeProvider
 ) &
   IRawSpokeProvider;
+
+export type SpokeProviderType = SpokeProvider | RawSpokeProvider;

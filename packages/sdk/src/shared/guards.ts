@@ -8,26 +8,33 @@ import {
   type EvmInitializedConfig,
   type EvmUninitializedPrivateKeyConfig,
   type EvmUninitializedBrowserConfig,
-  type SpokeProvider,
   EvmSpokeProvider,
   SonicSpokeProvider,
   type EvmRawSpokeProvider,
   type SonicRawSpokeProvider,
   type RawSpokeProvider,
+  type SpokeProviderType,
 } from './entities/Providers.js';
 import { InjectiveSpokeProvider, type InjectiveRawSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/IconSpokeProvider.js';
 import { SolanaSpokeProvider, type SolanaRawSpokeProvider } from './entities/solana/SolanaSpokeProvider.js';
 import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
-import type { StellarSpokeProvider, StellarRawSpokeProvider } from './entities/stellar/StellarSpokeProvider.js';
+import { StellarSpokeProvider, type StellarRawSpokeProvider } from './entities/stellar/StellarSpokeProvider.js';
 import type {
+  EvmSpokeProviderType,
+  IconSpokeProviderType,
+  InjectiveSpokeProviderType,
   MoneyMarketConfigParams,
   Optional,
   PartnerFeeAmount,
   PartnerFeeConfig,
   PartnerFeePercentage,
   Prettify,
+  SolanaSpokeProviderType,
   SolverConfigParams,
+  SonicSpokeProviderType,
+  StellarSpokeProviderType,
+  SuiSpokeProviderType,
 } from './types.js';
 import type { EvmHubChainConfig, HubChainConfig } from '@sodax/types';
 import type { IntentError } from '../swap/SwapService.js';
@@ -127,61 +134,109 @@ export function isPartnerFeePercentage(value: unknown): value is PartnerFeePerce
   return typeof value === 'object' && value !== null && 'address' in value && 'percentage' in value;
 }
 
-export function isEvmSpokeProvider(value: SpokeProvider): value is EvmSpokeProvider {
+export function isEvmSpokeProviderType(value: SpokeProviderType): value is EvmSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isEvmSpokeProvider(value) || isEvmRawSpokeProvider(value));
+}
+
+export function isEvmSpokeProvider(value: SpokeProviderType): value is EvmSpokeProvider {
   return (
     typeof value === 'object' &&
     value !== null &&
     value instanceof EvmSpokeProvider &&
+    !('raw' in value) &&
     value.chainConfig.chain.type === 'EVM'
   );
 }
 
-export function isSonicSpokeProvider(value: SpokeProvider): value is SonicSpokeProvider {
+export function isSonicSpokeProviderType(value: SpokeProviderType): value is SonicSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isSonicSpokeProvider(value) || isSonicRawSpokeProvider(value));
+}
+
+export function isSonicSpokeProvider(value: SpokeProviderType): value is SonicSpokeProvider {
   return (
     typeof value === 'object' &&
     value !== null &&
     value instanceof SonicSpokeProvider &&
     value.chainConfig.chain.type === 'EVM' &&
+    !('raw' in value) &&
     value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
   );
 }
 
-export function isSolanaSpokeProvider(value: SpokeProvider): value is SolanaSpokeProvider {
+export function isSolanaSpokeProviderType(value: SpokeProviderType): value is SolanaSpokeProviderType {
+  return (
+    typeof value === 'object' && value !== null && (isSolanaSpokeProvider(value) || isSolanaRawSpokeProvider(value))
+  );
+}
+
+export function isSolanaSpokeProvider(value: SpokeProviderType): value is SolanaSpokeProvider {
   return (
     typeof value === 'object' &&
     value !== null &&
     value instanceof SolanaSpokeProvider &&
+    !('raw' in value) &&
     value.chainConfig.chain.type === 'SOLANA'
   );
 }
 
-export function isStellarSpokeProvider(value: SpokeProvider): value is StellarSpokeProvider {
-  return typeof value === 'object' && value !== null && value.chainConfig.chain.type === 'STELLAR' && !('raw' in value);
+export function isStellarSpokeProviderType(value: SpokeProviderType): value is StellarSpokeProviderType {
+  return (
+    typeof value === 'object' && value !== null && (isStellarSpokeProvider(value) || isStellarRawSpokeProvider(value))
+  );
 }
 
-export function isInjectiveSpokeProvider(value: SpokeProvider): value is InjectiveSpokeProvider {
+export function isStellarSpokeProvider(value: SpokeProviderType): value is StellarSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof StellarSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'STELLAR'
+  );
+}
+
+export function isInjectiveSpokeProviderType(value: SpokeProviderType): value is InjectiveSpokeProviderType {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (isInjectiveSpokeProvider(value) || isInjectiveRawSpokeProvider(value))
+  );
+}
+
+export function isInjectiveSpokeProvider(value: SpokeProviderType): value is InjectiveSpokeProvider {
   return (
     typeof value === 'object' &&
     value !== null &&
     value instanceof InjectiveSpokeProvider &&
+    !('raw' in value) &&
     value.chainConfig.chain.type === 'INJECTIVE'
   );
 }
 
-export function isIconSpokeProvider(value: SpokeProvider): value is IconSpokeProvider {
+export function isIconSpokeProviderType(value: SpokeProviderType): value is IconSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isIconSpokeProvider(value) || isIconRawSpokeProvider(value));
+}
+
+export function isIconSpokeProvider(value: SpokeProviderType): value is IconSpokeProvider {
   return (
     typeof value === 'object' &&
     value !== null &&
     value instanceof IconSpokeProvider &&
+    !('raw' in value) &&
     value.chainConfig.chain.type === 'ICON'
   );
 }
 
-export function isSuiSpokeProvider(value: SpokeProvider): value is SuiSpokeProvider {
+export function isSuiSpokeProviderType(value: SpokeProviderType): value is SuiSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isSuiSpokeProvider(value) || isSuiRawSpokeProvider(value));
+}
+
+export function isSuiSpokeProvider(value: SpokeProviderType): value is SuiSpokeProvider {
   return (
     typeof value === 'object' &&
     value !== null &&
     value instanceof SuiSpokeProvider &&
+    !('raw' in value) &&
     value.chainConfig.chain.type === 'SUI'
   );
 }

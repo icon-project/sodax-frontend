@@ -1,5 +1,5 @@
 import type { Address } from '@sodax/types';
-import { SonicSpokeProvider, type EvmHubProvider, type RawSpokeProvider, type SpokeProvider } from '../../entities/index.js';
+import { SonicSpokeProvider, type EvmHubProvider, type SpokeProviderType } from '../../entities/index.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
 import { EvmWalletAbstraction } from './EvmWalletAbstraction.js';
 import { isSonicRawSpokeProvider } from '../../guards.js';
@@ -19,7 +19,7 @@ export class WalletAbstractionService {
    */
   public static async getUserAbstractedWalletAddress(
     address: string,
-    spokeProvider: SpokeProvider | RawSpokeProvider,
+    spokeProvider: SpokeProviderType,
     hubProvider: EvmHubProvider,
   ): Promise<Address> {
     const encodedAddress = encodeAddress(spokeProvider.chainConfig.chain.id, address);
