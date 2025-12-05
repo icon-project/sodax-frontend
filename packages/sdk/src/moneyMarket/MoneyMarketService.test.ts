@@ -45,7 +45,7 @@ import {
   type Address,
   type EvmRawTransaction,
 } from '@sodax/types';
-import {decodeFunctionData} from "viem";
+import { decodeFunctionData } from 'viem';
 
 const sodax = new Sodax();
 
@@ -228,7 +228,7 @@ describe('MoneyMarketService', () => {
       expect(SonicSpokeService.getWithdrawInfo).toHaveBeenCalledWith(
         sonicTestToken,
         testAmount,
-        sonicSpokeProvider,
+        sonicSpokeProvider.chainConfig.chain.id,
         moneyMarket.data,
         moneyMarket.configService,
       );
@@ -426,7 +426,7 @@ describe('MoneyMarketService', () => {
         expect(SonicSpokeService.getWithdrawInfo).toHaveBeenCalledWith(
           tokenAddress as Address,
           testAmount,
-          sonicSpokeProvider,
+          sonicSpokeProvider.chainConfig.chain.id,
           moneyMarket.data,
           moneyMarket.configService,
         );

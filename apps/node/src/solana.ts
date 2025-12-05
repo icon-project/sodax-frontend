@@ -184,7 +184,7 @@ async function withdrawAsset(token: PublicKey, amount: bigint, recipient: Addres
 async function supply(token: PublicKey, amount: bigint) {
   const hubWallet = await getUserWallet();
 
-  const data = sodax.moneyMarket.buildSupplyData(token.toString(), hubWallet, amount, solanaSpokeChainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(solanaSpokeChainConfig.chain.id, token.toString(), amount, hubWallet);
 
   const txHash = await SpokeService.deposit(
     {
@@ -264,10 +264,10 @@ async function repay(token: PublicKey, amount: bigint) {
   ]);
 
   const data: Hex = sodax.moneyMarket.buildRepayData(
-    token.toString(),
-    hubWallet,
-    amount,
     solanaSpokeChainConfig.chain.id,
+    token.toString(),
+    amount,
+    hubWallet,
   );
 
   const txHash: Hash = await SpokeService.deposit(
