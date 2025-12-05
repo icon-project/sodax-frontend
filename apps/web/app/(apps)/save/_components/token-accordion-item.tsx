@@ -138,7 +138,6 @@ function ExpandedContent({
       animate="open"
       exit="closed"
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className="overflow-hidden"
     >
       <div className="flex items-center h-12">
         <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
