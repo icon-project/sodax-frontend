@@ -41,7 +41,40 @@ export default function TokenAccordionItem({
         <AccordionTriggerWithButton>
           <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal)">
             <ItemMedia>
-              <CurrencyLogo currency={tokens[0] || ({} as XToken)} hideNetwork />
+              <motion.div
+                className="relative cursor-pointer"
+                initial={false}
+                animate={{
+                  width: isCollapsed ? 48 : 48,
+                  height: isCollapsed ? 48 : 48,
+                }}
+                transition={{ duration: 0.4, ease: 'easeInOut', delay: 0 }}
+              >
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center overflow-hidden"
+                  initial={false}
+                  animate={{
+                    borderRadius: isCollapsed ? 256 : 8,
+                    backgroundColor: '#ede6e6',
+                    boxShadow: isCollapsed
+                      ? '0px 0px 0px 0px rgba(175,145,145,0)'
+                      : '0px 8px 20px 0px rgba(175,145,145,0.2)',
+                  }}
+                  transition={{ duration: 0.4, ease: 'easeInOut', delay: 0 }}
+                >
+                  <div className="relative size-full flex items-center justify-center">
+                    <motion.div
+                      className="absolute inset-0 flex items-center justify-center"
+                      initial={{ opacity: 1 }}
+                      animate={{ opacity: isCollapsed ? 1 : 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <CurrencyLogo currency={tokens[0] || ({} as XToken)} hideNetwork />
+                    </motion.div>
+                    <InfoContent isVisible={!isCollapsed} />
+                  </div>
+                </motion.div>
+              </motion.div>
             </ItemMedia>
 
             <ItemContent>
@@ -187,5 +220,23 @@ function InfoBlock({ value, label }: { value: string; label: string }) {
         {label} <AlertCircleIcon className="w-4 h-4" />
       </div>
     </div>
+  );
+}
+
+function InfoContent({ isVisible }: { isVisible: boolean }) {
+  return (
+    <motion.div
+      className="content-stretch flex flex-col items-center justify-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isVisible ? 1 : 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <p className="font-['InterRegular'] font-bold leading-[1.4] relative shrink-0 text-clay !text-(length:--body-small)">
+        237
+      </p>
+      <p className="font-['InterRegular'] font-medium leading-[1.2] relative shrink-0 text-clay-light !text-[9px]">
+        USERS
+      </p>
+    </motion.div>
   );
 }
