@@ -98,7 +98,7 @@ export class SolanaRawSpokeProvider extends SolanaBaseSpokeProvider implements I
     }
     this.walletProvider = {
       getWalletAddress: async () => walletAddress,
-      buildV0Txn: this.buildV0Txn,
+      buildV0Txn: async (rawInstructions: SolanaRawTransactionInstruction[]) => this.buildV0Txn(rawInstructions),
       getBalance: (publicKey: SolanaBase58PublicKey) => SolanaBaseSpokeProvider.getBalance(this.connection, publicKey),
       getTokenAccountBalance: (publicKey: SolanaBase58PublicKey) =>
         SolanaBaseSpokeProvider.getTokenAccountBalance(this.connection, publicKey),
