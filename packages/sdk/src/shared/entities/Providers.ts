@@ -11,11 +11,10 @@ import {
   createPublicClient,
 } from 'viem';
 import { getEvmViemChain } from '../constants.js';
-import type { InjectiveSpokeProvider } from './injective/InjectiveSpokeProvider.js';
-import type { IconSpokeProvider } from './icon/IconSpokeProvider.js';
-import type { SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
-import type { StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
-import type { SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
+import type { InjectiveRawSpokeProvider, InjectiveSpokeProvider } from './injective/InjectiveSpokeProvider.js';
+import type { IconRawSpokeProvider, IconSpokeProvider } from './icon/IconSpokeProvider.js';
+import type { SolanaRawSpokeProvider, SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
+import type { SuiRawSpokeProvider, SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
 import {
   SONIC_MAINNET_CHAIN_ID,
   type IEvmWalletProvider,
@@ -29,14 +28,23 @@ import {
   type SpokeChainConfig,
   type EvmChainId,
   type EvmHubChainConfig,
+  type WalletAddressProvider,
 } from '@sodax/types';
-import { type ConfigService, getHubChainConfig } from '../../index.js';
+import type { ConfigService } from '../config/ConfigService.js';
+import { getHubChainConfig } from '../config/ConfigService.js';
+import type { StellarRawSpokeProvider, StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
 export interface ISpokeProvider {
   readonly walletProvider: IWalletProvider;
   readonly chainConfig: SpokeChainConfig;
+}
+
+export interface IRawSpokeProvider {
+  readonly walletProvider: WalletAddressProvider;
+  readonly chainConfig: SpokeChainConfig;
+  readonly raw: true;
 }
 
 export type EvmUninitializedBrowserConfig = {
@@ -92,13 +100,52 @@ export class EvmHubProvider {
   }
 }
 
-export class SonicSpokeProvider implements ISpokeProvider {
-  public readonly walletProvider: IEvmWalletProvider;
-  public readonly chainConfig: SonicSpokeChainConfig;
+export class SonicBaseSpokeProvider {
   public readonly publicClient: PublicClient<HttpTransport>;
+  public readonly chainConfig: SonicSpokeChainConfig;
+
+  constructor(chainConfig: SonicSpokeChainConfig, rpcUrl?: string) {
+    this.chainConfig = chainConfig;
+    if (rpcUrl) {
+      this.publicClient = createPublicClient({
+        transport: http(rpcUrl),
+        chain: getEvmViemChain(chainConfig.chain.id),
+      });
+    } else {
+      this.publicClient = createPublicClient({
+        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
+        chain: getEvmViemChain(chainConfig.chain.id),
+      });
+    }
+  }
+}
+
+export class SonicSpokeProvider extends SonicBaseSpokeProvider implements ISpokeProvider {
+  public readonly walletProvider: IEvmWalletProvider;
 
   constructor(walletProvider: IEvmWalletProvider, chainConfig: SonicSpokeChainConfig, rpcUrl?: string) {
+    super(chainConfig, rpcUrl);
     this.walletProvider = walletProvider;
+  }
+}
+
+export class SonicRawSpokeProvider extends SonicBaseSpokeProvider implements IRawSpokeProvider {
+  public readonly walletProvider: WalletAddressProvider;
+  public readonly raw = true;
+
+  constructor(walletAddress: Address, chainConfig: SonicSpokeChainConfig, rpcUrl?: string) {
+    super(chainConfig, rpcUrl);
+    this.walletProvider = {
+      getWalletAddress: async () => walletAddress,
+    };
+  }
+}
+
+export class EvmBaseSpokeProvider {
+  public readonly publicClient: PublicClient<HttpTransport>;
+  public readonly chainConfig: EvmSpokeChainConfig;
+
+  constructor(chainConfig: EvmSpokeChainConfig, rpcUrl?: string) {
     this.chainConfig = chainConfig;
     if (rpcUrl) {
       this.publicClient = createPublicClient({
@@ -114,31 +161,26 @@ export class SonicSpokeProvider implements ISpokeProvider {
   }
 }
 
-export class EvmSpokeProvider implements ISpokeProvider {
+export class EvmSpokeProvider extends EvmBaseSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: IEvmWalletProvider;
-  public readonly chainConfig: EvmSpokeChainConfig;
-  public readonly publicClient: PublicClient<HttpTransport>;
 
   constructor(walletProvider: IEvmWalletProvider, chainConfig: EvmSpokeChainConfig, rpcUrl?: string) {
+    super(chainConfig, rpcUrl);
     this.walletProvider = walletProvider;
-    this.chainConfig = chainConfig;
-    if (rpcUrl) {
-      this.publicClient = createPublicClient({
-        transport: http(rpcUrl),
-        chain: getEvmViemChain(chainConfig.chain.id),
-      });
-    } else {
-      this.publicClient = createPublicClient({
-        transport: http(getEvmViemChain(chainConfig.chain.id).rpcUrls.default.http[0]),
-        chain: getEvmViemChain(chainConfig.chain.id),
-      });
-    }
   }
 }
 
-export { InjectiveSpokeProvider } from './injective/InjectiveSpokeProvider.js';
-export { IconSpokeProvider } from './icon/IconSpokeProvider.js';
-export { getIconAddressBytes } from './icon/utils.js';
+export class EvmRawSpokeProvider extends EvmBaseSpokeProvider implements IRawSpokeProvider {
+  public readonly walletProvider: WalletAddressProvider;
+  public readonly raw = true;
+
+  constructor(walletAddress: Address, chainConfig: EvmSpokeChainConfig, rpcUrl?: string) {
+    super(chainConfig, rpcUrl);
+    this.walletProvider = {
+      getWalletAddress: async () => walletAddress,
+    };
+  }
+}
 
 export type IWalletProvider =
   | IEvmWalletProvider
@@ -159,3 +201,16 @@ export type SpokeProvider = (
   | SonicSpokeProvider
 ) &
   ISpokeProvider;
+
+export type RawSpokeProvider = (
+  | EvmRawSpokeProvider
+  | InjectiveRawSpokeProvider
+  | IconRawSpokeProvider
+  | SuiRawSpokeProvider
+  | StellarRawSpokeProvider
+  | SolanaRawSpokeProvider
+  | SonicRawSpokeProvider
+) &
+  IRawSpokeProvider;
+
+export type SpokeProviderType = SpokeProvider | RawSpokeProvider;

@@ -11,21 +11,22 @@ import {
 import { keccak256, type Address, type Hex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { getAssetManagerProgram, getConnectionProgram } from '../../entities/solana/Configs.js';
-import type { SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvider.js';
+import { SolanaBaseSpokeProvider, type SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvider.js';
 import { AssetManagerPDA, ConnectionConfigPDA } from '../../entities/solana/pda/pda.js';
-import { convertTransactionInstructionToRaw, isNative } from '../../entities/solana/utils/utils.js';
+import { convertTransactionInstructionToRaw, isSolanaNativeToken } from '../../entities/solana/utils/utils.js';
 import type {
   DepositSimulationParams,
-  PromiseSolanaTxReturnType,
   Result,
   SolanaGasEstimate,
   SolanaRawTransaction,
-  SolanaReturnType,
+  SolanaSpokeProviderType,
+  TxReturnType,
 } from '../../types.js';
 import { getIntentRelayChainId, type HubAddress, type SolanaBase58PublicKey } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import BN from 'bn.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
+import { isSolanaRawSpokeProvider } from '../../guards.js';
 
 export type SolanaSpokeDepositParams = {
   from: SolanaBase58PublicKey;
@@ -48,12 +49,12 @@ export class SolanaSpokeService {
   /**
    * Estimate the gas for a transaction.
    * @param {SolanaRawTransaction} rawTx - The raw transaction to estimate the gas for.
-   * @param {SolanaSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {SolanaSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<number | undefined>} The units consumed for the transaction.
    */
   public static async estimateGas(
     rawTx: SolanaRawTransaction,
-    spokeProvider: SolanaSpokeProvider,
+    spokeProvider: SolanaSpokeProviderType,
   ): Promise<SolanaGasEstimate> {
     const connection = new Connection(spokeProvider.chainConfig.rpcUrl, 'confirmed');
 
@@ -71,10 +72,10 @@ export class SolanaSpokeService {
 
   public static async deposit<R extends boolean = false>(
     params: SolanaSpokeDepositParams,
-    spokeProvider: SolanaSpokeProvider,
+    spokeProvider: SolanaSpokeProviderType,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseSolanaTxReturnType<R> {
+  ): Promise<TxReturnType<SolanaSpokeProviderType, R>> {
     const userWallet: Address =
       params.to ??
       (await EvmWalletAbstraction.getUserHubWalletAddress(
@@ -95,11 +96,11 @@ export class SolanaSpokeService {
     );
   }
 
-  public static async getDeposit(token: string, spokeProvider: SolanaSpokeProvider): Promise<bigint> {
+  public static async getDeposit(token: string, spokeProvider: SolanaSpokeProviderType): Promise<bigint> {
     const assetManagerProgramId = new PublicKey(spokeProvider.chainConfig.addresses.assetManager);
     const solToken = new PublicKey(token);
 
-    if (isNative(new PublicKey(solToken))) {
+    if (isSolanaNativeToken(new PublicKey(solToken))) {
       const vaultNative = AssetManagerPDA.vault_native(assetManagerProgramId);
       const balance = await spokeProvider.walletProvider.getBalance(vaultNative.pda.toBase58());
       return BigInt(balance);
@@ -123,10 +124,10 @@ export class SolanaSpokeService {
   public static async callWallet<R extends boolean = false>(
     from: HubAddress,
     payload: Hex,
-    spokeProvider: SolanaSpokeProvider,
+    spokeProvider: SolanaSpokeProviderType,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseSolanaTxReturnType<R> {
+  ): Promise<TxReturnType<SolanaSpokeProviderType, R>> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return SolanaSpokeService.call(BigInt(relayId), from, keccak256(payload), spokeProvider, raw);
   }
@@ -134,13 +135,13 @@ export class SolanaSpokeService {
   /**
    * Generate simulation parameters for deposit from SolanaSpokeDepositParams.
    * @param {SolanaSpokeDepositParams} params - The deposit parameters.
-   * @param {SolanaSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {SolanaSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<DepositSimulationParams>} The simulation parameters.
    */
   public static async getSimulateDepositParams(
     params: SolanaSpokeDepositParams,
-    spokeProvider: SolanaSpokeProvider,
+    spokeProvider: SolanaSpokeProviderType,
     hubProvider: EvmHubProvider,
   ): Promise<DepositSimulationParams> {
     const to =
@@ -165,30 +166,23 @@ export class SolanaSpokeService {
     };
   }
 
-  private static async transfer<R extends boolean = false>(
+  private static async transfer<S extends SolanaSpokeProviderType, R extends boolean = false>(
     { token, recipient, amount, data }: SolanaTransferToHubParams,
-    spokeProvider: SolanaSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseSolanaTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     let depositInstruction: TransactionInstruction;
     const amountBN = new BN(amount);
-    const { walletProvider, chainConfig } = spokeProvider;
+    const { chainConfig } = spokeProvider;
     const { rpcUrl, addresses } = chainConfig;
-    const walletPublicKey = new PublicKey(walletProvider.getWalletBase58PublicKey());
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const walletPublicKey = new PublicKey(walletAddress);
 
-    const assetManagerProgram = await getAssetManagerProgram(
-      walletProvider.getWalletBase58PublicKey(),
-      rpcUrl,
-      addresses.assetManager,
-    );
+    const assetManagerProgram = await getAssetManagerProgram(walletAddress, rpcUrl, addresses.assetManager);
 
-    const connectionProgram = await getConnectionProgram(
-      walletProvider.getWalletBase58PublicKey(),
-      rpcUrl,
-      addresses.connection,
-    );
+    const connectionProgram = await getConnectionProgram(walletAddress, rpcUrl, addresses.connection);
 
-    if (isNative(token)) {
+    if (isSolanaNativeToken(token)) {
       depositInstruction = await assetManagerProgram.methods
         .transfer(amountBN, Buffer.from(recipient.slice(2), 'hex'), Buffer.from(data.slice(2), 'hex'))
         .accountsStrict({
@@ -212,7 +206,10 @@ export class SolanaSpokeService {
         ])
         .instruction();
     } else {
-      const signerTokenAccount = await spokeProvider.walletProvider.getAssociatedTokenAddress(token.toBase58());
+      const signerTokenAccount = await SolanaBaseSpokeProvider.getAssociatedTokenAddress(
+        token.toBase58(),
+        walletAddress,
+      );
       depositInstruction = await assetManagerProgram.methods
         .transfer(amountBN, Buffer.from(recipient.slice(2), 'hex'), Buffer.from(data.slice(2), 'hex'))
         .accountsStrict({
@@ -251,16 +248,18 @@ export class SolanaSpokeService {
       convertTransactionInstructionToRaw(depositInstruction),
     ]);
 
-    if (raw) {
+    if (raw || isSolanaRawSpokeProvider(spokeProvider)) {
       return {
         from: walletPublicKey.toBase58(),
         to: assetManagerProgram.programId.toBase58(),
         value: BigInt(amountBN.toString()),
         data: Buffer.from(serializedTransaction).toString('base64'),
-      } satisfies SolanaReturnType<true> as SolanaReturnType<R>;
+      } satisfies TxReturnType<SolanaSpokeProviderType, true> as TxReturnType<S, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(serializedTransaction) as PromiseSolanaTxReturnType<R>;
+    return spokeProvider.walletProvider.sendTransaction(serializedTransaction) satisfies Promise<
+      TxReturnType<SolanaSpokeProviderType, false>
+    > as Promise<TxReturnType<S, R>>;
   }
 
   /**
@@ -272,19 +271,20 @@ export class SolanaSpokeService {
    * @param raw - Whether to return the raw transaction data.
    * @returns The transaction result.
    */
-  private static async call<R extends boolean = false>(
+  private static async call<S extends SolanaSpokeProviderType, R extends boolean = false>(
     dstChainId: bigint,
     dstAddress: HubAddress,
     payload: Hex,
-    spokeProvider: SolanaSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseSolanaTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const { walletProvider, chainConfig } = spokeProvider;
     const { rpcUrl, addresses } = chainConfig;
-    const walletPublicKey = new PublicKey(walletProvider.getWalletBase58PublicKey());
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const walletPublicKey = new PublicKey(walletAddress);
 
     const connectionProgram = await getConnectionProgram(
-      walletProvider.getWalletBase58PublicKey(),
+      await walletProvider.getWalletAddress(),
       rpcUrl,
       addresses.connection,
     );
@@ -317,15 +317,17 @@ export class SolanaSpokeService {
       convertTransactionInstructionToRaw(sendMessageInstruction),
     ]);
 
-    if (raw) {
+    if (raw || isSolanaRawSpokeProvider(spokeProvider)) {
       return {
         from: walletPublicKey.toBase58(),
         to: connectionProgram.programId.toBase58(),
         value: 0n,
         data: Buffer.from(serializedTransaction).toString('base64'),
-      } satisfies SolanaReturnType<true> as SolanaReturnType<R>;
+      } satisfies TxReturnType<SolanaSpokeProviderType, true> as TxReturnType<S, R>;
     }
-    return spokeProvider.walletProvider.sendTransaction(serializedTransaction) as PromiseSolanaTxReturnType<R>;
+    return spokeProvider.walletProvider.sendTransaction(serializedTransaction) satisfies Promise<
+      TxReturnType<SolanaSpokeProviderType, false>
+    > as Promise<TxReturnType<S, R>>;
   }
 
   public static async waitForConfirmation(

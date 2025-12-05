@@ -3,17 +3,15 @@ import React from 'react';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
 import { Button } from '@/components/ui/button';
-import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
+import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
-import { useDeriveUserWalletAddress, useSpokeProvider } from '@sodax/dapp-kit';
+import { useDeriveUserWalletAddress } from '@sodax/dapp-kit';
 
 export default function MoneyMarketPage() {
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
   const xAccount = useXAccount(selectedChainId);
 
-  const walletProvider = useWalletProvider(selectedChainId);
-  const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
-  const { data: walletAddressOnHub } = useDeriveUserWalletAddress(spokeProvider, xAccount?.address);
+  const { data: walletAddressOnHub } = useDeriveUserWalletAddress(selectedChainId, xAccount?.address);
 
   return (
     <main className="">

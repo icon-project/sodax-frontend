@@ -31,15 +31,9 @@ export function calculateReserveDebt(
   };
 }
 
-function getTotalVariableDebt(
-  reserveDebt: CalculateReserveDebtRequest,
-  currentTimestamp: number,
-): BigNumber {
+function getTotalVariableDebt(reserveDebt: CalculateReserveDebtRequest, currentTimestamp: number): BigNumber {
   return rayMul(
-    rayMul(
-      reserveDebt.totalScaledVariableDebt,
-      reserveDebt.variableBorrowIndex,
-    ),
+    rayMul(reserveDebt.totalScaledVariableDebt, reserveDebt.variableBorrowIndex),
     calculateCompoundedInterest({
       rate: reserveDebt.variableBorrowRate,
       currentTimestamp,

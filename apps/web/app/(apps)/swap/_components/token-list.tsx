@@ -1,40 +1,62 @@
 import type React from 'react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
-import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { TokenAsset } from './token-asset';
+import { ScrollBar } from '@/components/ui/scroll-area';
+import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
+import { TokenAsset } from '@/components/shared/token-asset';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAllChainBalances } from '@/hooks/useAllChainBalances';
-import { getUniqueTokenSymbols, getChainBalance, hasTokenBalance } from '@/lib/token-utils';
-import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
+import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
+import { getUniqueTokenSymbols, getChainBalance } from '@/lib/utils';
 import { formatUnits } from 'viem';
 
 interface TokenListProps {
   clickedAsset: string | null;
   onAssetClick: (e: React.MouseEvent, assetId: string) => void;
   onClickOutside: () => void;
-  searchQuery: string;
   onTokenSelect?: (token: XToken) => void;
   onClose: () => void;
-  selectedChainFilter: SpokeChainId | null;
   isChainSelectorOpen: boolean;
+  allBalances: Record<string, ChainBalanceEntry[]>;
+  tokenPrices: Record<string, number> | undefined;
+  holdTokens: XToken[];
+  platformTokens: XToken[];
+  selectedChainFilter: SpokeChainId | null;
+  isFiltered: boolean;
 }
 
 export function TokenList({
   clickedAsset,
   onAssetClick,
   onClickOutside,
-  searchQuery,
   onTokenSelect,
   onClose,
-  selectedChainFilter,
   isChainSelectorOpen,
+  allBalances,
+  tokenPrices,
+  holdTokens,
+  platformTokens,
+  selectedChainFilter,
+  isFiltered,
 }: TokenListProps): React.JSX.Element {
   const assetsRef = useRef<HTMLDivElement>(null);
   const [hoveredAsset, setHoveredAsset] = useState<string | null>(null);
   const shouldApplyHover = clickedAsset === null;
   const [backdropShow, setBackdropShow] = useState(false);
+
+  useEffect(() => {
+    if (clickedAsset === null) {
+      setBackdropShow(false);
+      setHoveredAsset(null);
+    }
+  }, [clickedAsset]);
+
+  useEffect(() => {
+    if (selectedChainFilter !== null) {
+      setTimeout(() => {
+        setHoveredAsset(null);
+      }, 100);
+    }
+  }, [selectedChainFilter]);
 
   const handleTokenAssetClick = (token: XToken) => {
     if (onTokenSelect) {
@@ -79,33 +101,6 @@ export function TokenList({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [clickedAsset, onClickOutside]);
-
-  const allSupportedTokens = selectedChainFilter
-    ? getSupportedSolverTokensForChain(selectedChainFilter)
-    : getAllSupportedSolverTokens();
-
-  const allBalances = useAllChainBalances();
-
-  const filteredTokens = allSupportedTokens.filter((token: XToken) =>
-    token.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const { holdTokens, platformTokens } = useMemo(() => {
-    const hold: XToken[] = [];
-    const platform: XToken[] = [];
-
-    for (const token of filteredTokens) {
-      if (hasTokenBalance(allBalances, token)) {
-        hold.push(token);
-      } else {
-        platform.push(token);
-      }
-    }
-
-    return { holdTokens: hold, platformTokens: platform };
-  }, [filteredTokens, allBalances]);
-
-  const { data: tokenPrices } = useAllTokenPrices(holdTokens);
 
   const sortedHoldTokens = useMemo(() => {
     if (!tokenPrices) {
@@ -206,14 +201,15 @@ export function TokenList({
       onMouseEnter: () => shouldApplyHover && setHoveredAsset(tokenUniqueId),
       onMouseLeave: () => shouldApplyHover && setHoveredAsset(null),
     };
+    const balance = getChainBalance(allBalances, token);
 
     return (
       <TokenAsset
         key={tokenUniqueId}
         name={token.symbol}
         token={token}
-        sourceBalance={getChainBalance(allBalances, token)}
-        isHoldToken={true}
+        sourceBalance={balance}
+        isHoldToken={balance > 0n}
         onClick={() => handleTokenAssetClick(token)}
         {...commonProps}
       />
@@ -232,21 +228,34 @@ export function TokenList({
           }}
         />
       )}
-      <ScrollArea className={`mt-4 h-81 w-full content-stretch ${clickedAsset ? '' : ''}`}>
-        <motion.div
-          ref={assetsRef}
-          className={`h-81 pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center px-0 relative shrink-0 w-full flex-1 ${
-            isChainSelectorOpen ? 'blur filter opacity-30' : ''
-          }`}
-          data-name="Assets"
-          layout
+
+      <ScrollAreaPrimitive.Root
+        data-slot="scroll-area"
+        className={`mt-4 h-[calc(80vh-176px)] md:h-126 w-full content-stretch ${clickedAsset ? '' : ''}`}
+      >
+        <div className="w-full h-16 left-0 top-0 absolute bg-gradient-to-b from-vibrant-white to-neutral-100/0 z-[100000]" />
+        <ScrollAreaPrimitive.Viewport
+          data-slot="scroll-area-viewport"
+          className="ring-ring/10 dark:ring-ring/20 dark:outline-ring/40 outline-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] focus-visible:ring-4 focus-visible:outline-1 px-6"
         >
-          <AnimatePresence mode="popLayout">
-            {sortedHoldTokens.map(renderHoldTokenSymbol)}{' '}
-            {uniqueTokenSymbols.map(({ symbol, tokens }) => renderPlatformTokenSymbol(symbol, tokens))}
-          </AnimatePresence>
-        </motion.div>
-      </ScrollArea>
+          <motion.div
+            ref={assetsRef}
+            className={`h-[calc(80vh-176px)] md:h-126 pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 ${
+              isChainSelectorOpen ? 'blur filter opacity-30' : ''
+            } ${isFiltered ? 'px-10' : 'px-0'}`}
+            data-name="Assets"
+            layout
+          >
+            <AnimatePresence mode="popLayout">
+              {sortedHoldTokens.map(renderHoldTokenSymbol)}{' '}
+              {uniqueTokenSymbols.map(({ symbol, tokens }) => renderPlatformTokenSymbol(symbol, tokens))}
+            </AnimatePresence>
+          </motion.div>
+        </ScrollAreaPrimitive.Viewport>
+        <div className="w-full h-16 left-0 bottom-0 absolute bg-gradient-to-t from-vibrant-white to-neutral-100/0 z-[100000]" />
+        <ScrollBar />
+        <ScrollAreaPrimitive.Corner />
+      </ScrollAreaPrimitive.Root>
     </>
   );
 }

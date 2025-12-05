@@ -33,6 +33,7 @@ import {
   type BridgeServiceConfig,
   StellarSpokeProvider,
   wrappedSonicAbi,
+  type StellarSpokeProviderType,
 } from '../index.js';
 import type { SpokeChainId, XToken, Hex, HttpUrl } from '@sodax/types';
 import { encodeFunctionData, isAddress } from 'viem';
@@ -72,11 +73,11 @@ export type BridgeExtraData = { address: Hex; payload: Hex };
 export type BridgeOptionalExtraData = { data?: BridgeExtraData };
 
 export type BridgeServiceConstructorParams = {
-  hubProvider: EvmHubProvider,
-  relayerApiEndpoint: HttpUrl,
-  config: BridgeServiceConfig | undefined,
-  configService: ConfigService,
-}
+  hubProvider: EvmHubProvider;
+  relayerApiEndpoint: HttpUrl;
+  config: BridgeServiceConfig | undefined;
+  configService: ConfigService;
+};
 
 /**
  * BridgeService is a service that allows you to bridge tokens between chains
@@ -266,7 +267,7 @@ export class BridgeService {
         const result = await StellarSpokeService.requestTrustline(params.srcAsset, params.amount, spokeProvider, raw);
         return {
           ok: true,
-          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
@@ -692,14 +693,18 @@ export class BridgeService {
    * @param token - The source token address
    * @returns XToken[] - Array of bridgeable tokens on the destination chain
    */
-  public getBridgeableTokens(from: SpokeChainId, to: SpokeChainId, token: string): Result<XToken[]>{
+  public getBridgeableTokens(from: SpokeChainId, to: SpokeChainId, token: string): Result<XToken[]> {
     try {
       const srcAssetInfo = this.configService.getHubAssetInfo(from, token);
       invariant(srcAssetInfo, `Hub asset not found for token ${token} on chain ${from}`);
 
       return {
         ok: true,
-        value: this.filterTokensWithSameVault(this.configService.spokeChainConfig[to].supportedTokens, to, srcAssetInfo),
+        value: this.filterTokensWithSameVault(
+          this.configService.spokeChainConfig[to].supportedTokens,
+          to,
+          srcAssetInfo,
+        ),
       };
     } catch (error) {
       return {
