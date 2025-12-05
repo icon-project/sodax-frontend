@@ -381,7 +381,7 @@ export const IntentsAbi = [
       },
     ],
     outputs: [],
-    stateMutability: 'nonpayable',
+    stateMutability: 'payable',
   },
   {
     type: 'function',
@@ -1048,6 +1048,11 @@ export const IntentsAbi = [
   {
     type: 'error',
     name: 'FillAlreadyExists',
+    inputs: [],
+  },
+  {
+    type: 'error',
+    name: 'FillNotFound',
     inputs: [],
   },
   {

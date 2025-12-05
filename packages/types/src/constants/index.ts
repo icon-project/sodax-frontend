@@ -2302,6 +2302,33 @@ const moneyMarketConfig = {
 
 export const getMoneyMarketConfig = (chainId: HubChainId): MoneyMarketConfig => moneyMarketConfig[chainId];
 
+// === HOOKS CONFIG ===
+
+/**
+ * Hook contract addresses configuration
+ * Note: intentsAddress and poolAddress are obtained from getSolverConfig and getMoneyMarketConfig
+ */
+export type HooksConfig = {
+  creditHookAddress: Address;
+  leverageHookAddress: Address;
+  debtSideLeverageHookAddress: Address;
+  deleverageHookAddress: Address;
+  liquidationHookAddress: Address;
+};
+
+// Mainnet hook contract addresses
+const hooksConfig = {
+  [SONIC_MAINNET_CHAIN_ID]: {
+    creditHookAddress: '0xe2A8E6023eB4C88c51472c8eB1332b87Dd09d8f7',
+    leverageHookAddress: '0xB0E2ee3C1dA131d4004f0b8cc2ca159FaA129B86',
+    debtSideLeverageHookAddress: '0x34aFac3b87c5585942D74a1F12eA13a33821D4bd',
+    deleverageHookAddress: '0x5fF9c34f1734c2B62c53231E6923D0967F95a8A3',
+    liquidationHookAddress: '0x9e6D9D2D9c900Be023d839910855A864eDE3ABBD',
+  } satisfies HooksConfig,
+} as const;
+
+export const getHooksConfig = (chainId: HubChainId): HooksConfig => hooksConfig[chainId];
+
 // currently supported spoke chain tokens for money market
 export const moneyMarketSupportedTokens = {
   [AVALANCHE_MAINNET_CHAIN_ID]: [
