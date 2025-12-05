@@ -1,4 +1,4 @@
-import { deriveUserWalletAddress, type SpokeChainId } from '@sodax/sdk';
+import { deriveUserWalletAddress, type SpokeProvider, type SpokeChainId } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from './useSodaxContext';
 import type { Address } from 'viem';
@@ -30,7 +30,7 @@ import type { Address } from 'viem';
  * ```
  */
 export function useDeriveUserWalletAddress(
-  spokeChainId?: SpokeChainId | undefined,
+  spokeChainId?: SpokeChainId | SpokeProvider | undefined,
   spokeAddress?: string | undefined,
 ): UseQueryResult<Address, Error> {
   const { sodax } = useSodaxContext();
@@ -41,6 +41,12 @@ export function useDeriveUserWalletAddress(
       if (!spokeChainId || !spokeAddress) {
         throw new Error('Spoke chain id and address are required');
       }
+
+      // Determine if spokeChainId is a SpokeProvider object or SpokeChainId value
+      spokeChainId =
+        typeof spokeChainId === 'object'
+          ? spokeChainId.chainConfig.chain.id
+          : spokeChainId;
 
       return await deriveUserWalletAddress(sodax.hubProvider, spokeChainId, spokeAddress);
     },
