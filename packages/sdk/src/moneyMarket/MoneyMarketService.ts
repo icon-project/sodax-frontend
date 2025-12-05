@@ -828,8 +828,11 @@ export class MoneyMarketService {
         };
       }
 
+      const fromChainId = spokeProvider.chainConfig.chain.id;
+      const toChainId = params.toChainId ?? fromChainId;
+
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+      if (toChainId !== SONIC_MAINNET_CHAIN_ID) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
@@ -1005,8 +1008,11 @@ export class MoneyMarketService {
         };
       }
 
+      const fromChainId = spokeProvider.chainConfig.chain.id;
+      const toChainId = params.toChainId ?? fromChainId;
+
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+      if (toChainId !== SONIC_MAINNET_CHAIN_ID) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
@@ -1107,7 +1113,7 @@ export class MoneyMarketService {
       const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
         params.token as GetAddressType<SonicSpokeProvider>,
         params.amount,
-        fromChainId,
+        toChainId,
         this.data,
         this.configService,
       );
