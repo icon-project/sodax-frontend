@@ -10,6 +10,7 @@ import { cn, getUniqueByChain } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
 import { TokenAsset } from '@/components/shared/token-asset';
 import { accordionVariants } from '@/constants/animation';
+import { useEffect, useRef } from 'react';
 export default function TokenAccordionItem({
   group,
   openValue,
@@ -17,8 +18,34 @@ export default function TokenAccordionItem({
   group: { symbol: string; tokens: XToken[] };
   openValue: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
   const { symbol, tokens } = group;
   const isCollapsed = openValue !== symbol || openValue === '';
+
+  useEffect(() => {
+    if (isCollapsed || !ref.current) return;
+
+    const el = ref.current;
+    let timeout: any;
+
+    const observer = new ResizeObserver(() => {
+      clearTimeout(timeout);
+
+      timeout = setTimeout(() => {
+        el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+      }, 120);
+    });
+
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+      clearTimeout(timeout);
+    };
+  }, [isCollapsed]);
 
   return (
     <AccordionItem
@@ -28,7 +55,7 @@ export default function TokenAccordionItem({
         openValue === '' ? 'opacity-100' : openValue === symbol ? 'opacity-100' : 'opacity-40',
       )}
     >
-      <motion.div layout="size">
+      <motion.div ref={ref} layout="size">
         <Separator className="h-[1px] bg-clay opacity-30" />
         <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30" />
 
