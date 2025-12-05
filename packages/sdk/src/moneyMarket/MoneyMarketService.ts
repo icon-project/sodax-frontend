@@ -355,7 +355,7 @@ export class MoneyMarketService {
           const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
             params.token as GetAddressType<SonicSpokeProvider>,
             params.amount,
-            spokeProvider.chainConfig.chain.id,
+            params.toChainId ?? spokeProvider.chainConfig.chain.id,
             this.data,
             this.configService,
           );
@@ -369,7 +369,7 @@ export class MoneyMarketService {
           const borrowInfo = await SonicSpokeService.getBorrowInfo(
             params.token as GetAddressType<SonicSpokeProvider>,
             params.amount,
-            spokeProvider.chainConfig.chain.id,
+            params.toChainId ?? spokeProvider.chainConfig.chain.id,
             this.data,
             this.configService,
           );
@@ -500,7 +500,7 @@ export class MoneyMarketService {
           const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
             params.token,
             params.amount,
-            spokeProvider.chainConfig.chain.id,
+            params?.toChainId ?? spokeProvider.chainConfig.chain.id,
             this.data,
             this.configService,
           );
@@ -521,7 +521,7 @@ export class MoneyMarketService {
           const borrowInfo = await SonicSpokeService.getBorrowInfo(
             params.token,
             params.amount,
-            spokeProvider.chainConfig.chain.id,
+            params?.toChainId ?? spokeProvider.chainConfig.chain.id,
             this.data,
             this.configService,
           );
