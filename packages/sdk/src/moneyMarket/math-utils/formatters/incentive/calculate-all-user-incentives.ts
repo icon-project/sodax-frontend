@@ -1,7 +1,4 @@
-import {
-  calculateUserReserveIncentives,
-  type UserReserveIncentive,
-} from './calculate-user-reserve-incentives.js';
+import { calculateUserReserveIncentives, type UserReserveIncentive } from './calculate-user-reserve-incentives.js';
 import type {
   ReservesIncentiveDataHumanized,
   UserReservesIncentivesDataHumanized,
@@ -34,32 +31,26 @@ export function calculateAllUserIncentives({
   currentTimestamp,
 }: CalculateAllUserIncentivesRequest): UserIncentiveDict {
   // calculate incentive per token
-  const allRewards = userIncentives
-    .flatMap((userIncentive: UserReservesIncentivesDataHumanized) => {
-      const reserve: ReservesIncentiveDataHumanized | undefined =
-        reserveIncentives.find(
-          (reserve: ReservesIncentiveDataHumanized) =>
-            reserve.underlyingAsset === userIncentive.underlyingAsset,
-        );
-      const userReserve: UserReserveCalculationData | undefined =
-        userReserves.find(
-          (userReserve: UserReserveCalculationData) =>
-            userReserve.reserve.underlyingAsset.toLowerCase() ===
-            userIncentive.underlyingAsset.toLowerCase(),
-        );
-      if (reserve) {
-        const reserveRewards: UserReserveIncentive[] =
-          calculateUserReserveIncentives({
-            reserveIncentives: reserve,
-            userIncentives: userIncentive,
-            userReserveData: userReserve,
-            currentTimestamp,
-          });
-        return reserveRewards;
-      }
+  const allRewards = userIncentives.flatMap((userIncentive: UserReservesIncentivesDataHumanized) => {
+    const reserve: ReservesIncentiveDataHumanized | undefined = reserveIncentives.find(
+      (reserve: ReservesIncentiveDataHumanized) => reserve.underlyingAsset === userIncentive.underlyingAsset,
+    );
+    const userReserve: UserReserveCalculationData | undefined = userReserves.find(
+      (userReserve: UserReserveCalculationData) =>
+        userReserve.reserve.underlyingAsset.toLowerCase() === userIncentive.underlyingAsset.toLowerCase(),
+    );
+    if (reserve) {
+      const reserveRewards: UserReserveIncentive[] = calculateUserReserveIncentives({
+        reserveIncentives: reserve,
+        userIncentives: userIncentive,
+        userReserveData: userReserve,
+        currentTimestamp,
+      });
+      return reserveRewards;
+    }
 
-      return [];
-    });
+    return [];
+  });
 
   // From the array of all deposit and borrow incentives, create dictionary indexed by reward token address
   const incentiveDict: UserIncentiveDict = {};
@@ -85,7 +76,7 @@ export function calculateAllUserIncentives({
       incentive.claimableRewards = incentive.claimableRewards.plus(reward.accruedRewards);
       incentive.assets.push(reward.tokenAddress);
     }
-  };
+  }
 
   return incentiveDict;
 }

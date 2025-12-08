@@ -183,11 +183,7 @@ describe('EvmAssetManagerService', async () => {
       const invalidParams = { ...depositParams, token: invalidToken, to: walletAddress };
 
       expect(() =>
-        EvmAssetManagerService.depositToData(
-          invalidParams,
-          mockBscSpokeProvider.chainConfig.chain.id,
-          sodax.config,
-        ),
+        EvmAssetManagerService.depositToData(invalidParams, mockBscSpokeProvider.chainConfig.chain.id, sodax.config),
       ).toThrow('[depositToData] Hub asset not found');
     });
   });

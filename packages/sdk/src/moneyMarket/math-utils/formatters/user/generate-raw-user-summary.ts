@@ -48,13 +48,11 @@ export function generateRawUserSummary({
     isolatedReserve,
   } = calculateUserReserveTotals({ userReserves, userEmodeCategoryId });
 
-  const _availableBorrowsMarketReferenceCurrency =
-    calculateAvailableBorrowsMarketReferenceCurrency({
-      collateralBalanceMarketReferenceCurrency:
-        totalCollateralMarketReferenceCurrency,
-      borrowBalanceMarketReferenceCurrency: totalBorrowsMarketReferenceCurrency,
-      currentLtv,
-    });
+  const _availableBorrowsMarketReferenceCurrency = calculateAvailableBorrowsMarketReferenceCurrency({
+    collateralBalanceMarketReferenceCurrency: totalCollateralMarketReferenceCurrency,
+    borrowBalanceMarketReferenceCurrency: totalBorrowsMarketReferenceCurrency,
+    currentLtv,
+  });
 
   const availableBorrowsMarketReferenceCurrency =
     isInIsolationMode && isolatedReserve
@@ -62,11 +60,8 @@ export function generateRawUserSummary({
           BigNumber.max(
             0,
             normalizeBN(
-              new BigNumber(isolatedReserve.debtCeiling).minus(
-                isolatedReserve.isolationModeTotalDebt,
-              ),
-              isolatedReserve.debtCeilingDecimals -
-                marketReferenceCurrencyDecimals,
+              new BigNumber(isolatedReserve.debtCeiling).minus(isolatedReserve.isolationModeTotalDebt),
+              isolatedReserve.debtCeilingDecimals - marketReferenceCurrencyDecimals,
             ),
           ),
           _availableBorrowsMarketReferenceCurrency,
@@ -103,8 +98,7 @@ export function generateRawUserSummary({
     currentLoanToValue: currentLtv,
     currentLiquidationThreshold,
     healthFactor: calculateHealthFactorFromBalances({
-      collateralBalanceMarketReferenceCurrency:
-        totalCollateralMarketReferenceCurrency,
+      collateralBalanceMarketReferenceCurrency: totalCollateralMarketReferenceCurrency,
       borrowBalanceMarketReferenceCurrency: totalBorrowsMarketReferenceCurrency,
       currentLiquidationThreshold,
     }),

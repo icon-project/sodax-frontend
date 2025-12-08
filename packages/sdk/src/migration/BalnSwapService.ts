@@ -2,9 +2,15 @@ import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
 // packages/sdk/src/services/hub/BalnSwapService.ts
 import { type Address, type Hex, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { balnSwapAbi } from '../shared/abis/balnSwap.abi.js';
-import type { EvmContractCall, EvmReturnType, IconContractAddress, PromiseEvmTxReturnType } from '../shared/types.js';
-import { encodeContractCalls, Erc20Service } from '../index.js';
-import type { EvmHubProvider, SonicSpokeProvider } from '../shared/entities/index.js';
+import type {
+  EvmContractCall,
+  GetAddressType,
+  IconContractAddress,
+  SonicSpokeProviderType,
+  TxReturnType,
+} from '../shared/types.js';
+import { encodeContractCalls, Erc20Service, isSonicRawSpokeProvider } from '../index.js';
+import type { EvmHubProvider } from '../shared/entities/index.js';
 import invariant from 'tiny-invariant';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
@@ -168,11 +174,11 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async claim<R extends boolean = false>(
+  async claim<S extends SonicSpokeProviderType, R extends boolean = false>(
     params: BalnLockParams,
-    spokeProvider: SonicSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const claimTx = this.encodeClaim(params.lockId);
     return await this.call(spokeProvider, claimTx, raw);
   }
@@ -184,11 +190,11 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async claimUnstaked<R extends boolean = false>(
+  async claimUnstaked<S extends SonicSpokeProviderType, R extends boolean = false>(
     params: BalnLockParams,
-    spokeProvider: SonicSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const claimUnstakedTx = this.encodeClaimUnstaked(params.lockId);
     return await this.call(spokeProvider, claimUnstakedTx, raw);
   }
@@ -200,11 +206,11 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async stake<R extends boolean = false>(
+  async stake<S extends SonicSpokeProviderType, R extends boolean = false>(
     params: BalnLockParams,
-    spokeProvider: SonicSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const stakeTx = this.encodeStake(params.lockId);
     return await this.call(spokeProvider, stakeTx, raw);
   }
@@ -216,11 +222,11 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async unstake<R extends boolean = false>(
+  async unstake<S extends SonicSpokeProviderType, R extends boolean = false>(
     params: BalnLockParams,
-    spokeProvider: SonicSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const unstakeTx = this.encodeUnstake(params.lockId);
     return await this.call(spokeProvider, unstakeTx, raw);
   }
@@ -232,11 +238,11 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async cancelUnstake<R extends boolean = false>(
+  async cancelUnstake<S extends SonicSpokeProviderType, R extends boolean = false>(
     params: BalnLockParams,
-    spokeProvider: SonicSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const cancelUnstakeTx = this.encodeCancelUnstake(params.lockId);
     return await this.call(spokeProvider, cancelUnstakeTx, raw);
   }
@@ -382,24 +388,26 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async call<R extends boolean = false>(
-    spokeProvider: SonicSpokeProvider,
+  async call<S extends SonicSpokeProviderType, R extends boolean = false>(
+    spokeProvider: S,
     rawTx: EvmContractCall,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const from = await spokeProvider.walletProvider.getWalletAddress();
 
     const tx = {
-      from,
+      from: from as GetAddressType<SonicSpokeProviderType>,
       to: rawTx.address,
       value: rawTx.value,
       data: rawTx.data,
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<SonicSpokeProviderType, true>;
 
-    if (raw) {
-      return tx as EvmReturnType<R>;
+    if (raw || isSonicRawSpokeProvider(spokeProvider)) {
+      return tx satisfies TxReturnType<SonicSpokeProviderType, true> as TxReturnType<S, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(tx) as PromiseEvmTxReturnType<R>;
+    return spokeProvider.walletProvider.sendTransaction(tx) satisfies Promise<
+      TxReturnType<SonicSpokeProviderType, false>
+    > as Promise<TxReturnType<S, R>>;
   }
 }

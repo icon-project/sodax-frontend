@@ -1,9 +1,25 @@
 import { type Address, type Hex, fromHex } from 'viem';
-import type { InjectiveReturnType, PromiseInjectiveTxReturnType } from '../../types.js';
-import type { ISpokeProvider } from '../Providers.js';
-import type { IInjectiveWalletProvider, InjectiveExecuteResponse , InjectiveSpokeChainConfig} from '@sodax/types';
-import { toBase64, ChainGrpcWasmApi, TxGrpcApi, fromBase64 } from '@injectivelabs/sdk-ts';
-import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
+import type { InjectiveSpokeProviderType, TxReturnType } from '../../types.js';
+import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
+import type {
+  IInjectiveWalletProvider,
+  InjectiveExecuteResponse,
+  InjectiveRawTransaction,
+  InjectiveSpokeChainConfig,
+  JsonObject,
+  WalletAddressProvider,
+} from '@sodax/types';
+import {
+  toBase64,
+  ChainGrpcWasmApi,
+  TxGrpcApi,
+  fromBase64,
+  MsgExecuteContract,
+  createTransactionForAddressAndMsg,
+} from '@injectivelabs/sdk-ts';
+import { Network, getNetworkEndpoints, type NetworkEndpoints } from '@injectivelabs/networks';
+import { isInjectiveRawSpokeProvider } from '../../guards.js';
+import type { CreateTransactionResult } from '@injectivelabs/sdk-ts';
 
 export interface InstantiateMsg {
   connection: string;
@@ -57,18 +73,17 @@ export interface State {
   owner: string;
 }
 
-export class InjectiveSpokeProvider implements ISpokeProvider {
-  public readonly walletProvider: IInjectiveWalletProvider;
+export class InjectiveBaseSpokeProvider {
   public readonly chainConfig: InjectiveSpokeChainConfig;
-  private chainGrpcWasmApi: ChainGrpcWasmApi;
+  public readonly chainGrpcWasmApi: ChainGrpcWasmApi;
   public readonly txClient: TxGrpcApi;
+  public readonly endpoints: NetworkEndpoints;
 
-  constructor(conf: InjectiveSpokeChainConfig, walletProvider: IInjectiveWalletProvider) {
-    this.chainConfig = conf;
-    this.walletProvider = walletProvider;
-    const endpoints = getNetworkEndpoints(Network.Mainnet);
-    this.chainGrpcWasmApi = new ChainGrpcWasmApi(endpoints.grpc);
-    this.txClient = new TxGrpcApi(endpoints.grpc);
+  constructor(chainConfig: InjectiveSpokeChainConfig) {
+    this.chainConfig = chainConfig;
+    this.endpoints = getNetworkEndpoints(Network.Mainnet);
+    this.chainGrpcWasmApi = new ChainGrpcWasmApi(this.endpoints.grpc);
+    this.txClient = new TxGrpcApi(this.endpoints.grpc);
   }
 
   // Query Methods
@@ -92,20 +107,107 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     return fromBase64(response.data as unknown as string) as unknown as number;
   }
 
+  async getRawTransaction(
+    chainId: string,
+    _: string,
+    senderAddress: string,
+    contractAddress: string,
+    msg: JsonObject,
+    memo?: string,
+  ): Promise<InjectiveRawTransaction> {
+    const msgExec = MsgExecuteContract.fromJSON({
+      contractAddress: contractAddress,
+      sender: senderAddress,
+      msg: msg as object,
+      funds: [],
+    });
+    const { txRaw }: CreateTransactionResult = await createTransactionForAddressAndMsg({
+      message: msgExec,
+      memo: memo || '',
+      address: senderAddress,
+      endpoint: this.endpoints.grpc,
+      chainId: chainId,
+    });
+
+    const rawTx = {
+      from: senderAddress as Hex,
+      to: contractAddress as Hex,
+      signedDoc: {
+        bodyBytes: txRaw.bodyBytes,
+        chainId: chainId,
+        accountNumber: BigInt(0),
+        authInfoBytes: txRaw.authInfoBytes,
+      },
+    };
+    return rawTx;
+  }
+
+  async send_message<S extends InjectiveSpokeProviderType, R extends boolean = false>(
+    sender: string,
+    dst_chain_id: string,
+    dst_address: Hex,
+    payload: Hex,
+    spokeProvider: S,
+    raw?: R,
+  ): Promise<TxReturnType<InjectiveSpokeProviderType, R>> {
+    const msg: ConnMsg = {
+      send_message: {
+        dst_chain_id: Number.parseInt(dst_chain_id),
+        dst_address: Array.from(fromHex(dst_address, 'bytes')),
+        payload: Array.from(fromHex(payload, 'bytes')),
+      },
+    };
+    if (raw || isInjectiveRawSpokeProvider(spokeProvider)) {
+      return (await spokeProvider.getRawTransaction(
+        this.chainConfig.networkId,
+        this.chainConfig.prefix,
+        sender,
+        this.chainConfig.addresses.connection,
+        msg,
+      )) satisfies TxReturnType<InjectiveSpokeProviderType, true> as TxReturnType<InjectiveSpokeProviderType, R>;
+    }
+    const res = await spokeProvider.walletProvider.execute(sender, this.chainConfig.addresses.connection, msg);
+    return res.transactionHash satisfies TxReturnType<InjectiveSpokeProviderType, false> as TxReturnType<
+      InjectiveSpokeProviderType,
+      R
+    >;
+  }
+}
+
+export class InjectiveRawSpokeProvider extends InjectiveBaseSpokeProvider implements IRawSpokeProvider {
+  public readonly walletProvider: WalletAddressProvider;
+  public readonly raw = true;
+
+  constructor(chainConfig: InjectiveSpokeChainConfig, walletAddress: string) {
+    super(chainConfig);
+    this.walletProvider = {
+      getWalletAddress: async () => walletAddress,
+    };
+  }
+}
+
+export class InjectiveSpokeProvider extends InjectiveBaseSpokeProvider implements ISpokeProvider {
+  public readonly walletProvider: IInjectiveWalletProvider;
+
+  constructor(conf: InjectiveSpokeChainConfig, walletProvider: IInjectiveWalletProvider) {
+    super(conf);
+    this.walletProvider = walletProvider;
+  }
+
   // Execute Methods (requires SigningCosmWasmClient)
 
   /**
    * Deposit tokens including native token to Injective Asset Manager.
    **/
-  static async deposit<R extends boolean = false>(
+  static async deposit<S extends InjectiveSpokeProviderType, R extends boolean = false>(
     sender: string,
     token_address: string,
     to: Address,
     amount: string,
     data: Hex = '0x',
-    spokeProvider: InjectiveSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseInjectiveTxReturnType<R> {
+  ): Promise<TxReturnType<InjectiveSpokeProviderType, R>> {
     const toBytes = fromHex(to, 'bytes');
     const dataBytes = fromHex(data, 'bytes');
 
@@ -120,14 +222,14 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
 
     const funds = [{ amount, denom: token_address }];
 
-    if (raw) {
-      return (await spokeProvider.walletProvider.getRawTransaction(
+    if (raw || isInjectiveRawSpokeProvider(spokeProvider)) {
+      return (await spokeProvider.getRawTransaction(
         spokeProvider.chainConfig.networkId,
         spokeProvider.chainConfig.prefix,
         sender,
         spokeProvider.chainConfig.addresses.assetManager,
         msg,
-      )) as InjectiveReturnType<R>;
+      )) satisfies TxReturnType<InjectiveSpokeProviderType, true> as TxReturnType<InjectiveSpokeProviderType, R>;
     }
 
     const res = await spokeProvider.walletProvider.execute(
@@ -136,7 +238,10 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
       msg,
       funds,
     );
-    return res.transactionHash as InjectiveReturnType<R>;
+    return res.transactionHash satisfies TxReturnType<InjectiveSpokeProviderType, false> as TxReturnType<
+      InjectiveSpokeProviderType,
+      R
+    >;
   }
 
   async receiveMessage(
@@ -188,33 +293,6 @@ export class InjectiveSpokeProvider implements ISpokeProvider {
     };
 
     return await this.walletProvider.execute(senderAddress, this.chainConfig.addresses.assetManager, msg);
-  }
-
-  async send_message<R extends boolean = false>(
-    sender: string,
-    dst_chain_id: string,
-    dst_address: Hex,
-    payload: Hex,
-    raw?: R,
-  ): PromiseInjectiveTxReturnType<R> {
-    const msg: ConnMsg = {
-      send_message: {
-        dst_chain_id: Number.parseInt(dst_chain_id),
-        dst_address: Array.from(fromHex(dst_address, 'bytes')),
-        payload: Array.from(fromHex(payload, 'bytes')),
-      },
-    };
-    if (raw) {
-      return (await this.walletProvider.getRawTransaction(
-        this.chainConfig.networkId,
-        this.chainConfig.prefix,
-        sender,
-        this.chainConfig.addresses.connection,
-        msg,
-      )) as InjectiveReturnType<R>;
-    }
-    const res = await this.walletProvider.execute(sender, this.chainConfig.addresses.connection, msg);
-    return res.transactionHash as InjectiveReturnType<R>;
   }
 
   // Helper Methods

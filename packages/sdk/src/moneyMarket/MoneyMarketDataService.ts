@@ -95,8 +95,9 @@ export class MoneyMarketDataService {
     spokeProvider: SpokeProvider,
   ): Promise<readonly [readonly UserReserveData[], number]> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const spokeChainId = spokeProvider.chainConfig.chain.id;
     // derive users hub wallet address
-    const hubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+    const hubWalletAddress = await deriveUserWalletAddress(this.hubProvider, spokeChainId, walletAddress);
     return this.uiPoolDataProviderService.getUserReservesData(hubWalletAddress);
   }
 
@@ -134,8 +135,9 @@ export class MoneyMarketDataService {
     userEmodeCategoryId: number;
   }> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const spokeChainId = spokeProvider.chainConfig.chain.id;
     // derive users hub wallet address
-    const hubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+    const hubWalletAddress = await deriveUserWalletAddress(this.hubProvider, spokeChainId, walletAddress);
     return this.uiPoolDataProviderService.getUserReservesHumanized(hubWalletAddress);
   }
 

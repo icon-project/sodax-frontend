@@ -7,7 +7,9 @@ import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SolverPage() {
   const { setIsSolverProduction, isSolverProduction } = useAppStore();
-  const [orders, setOrders] = useState<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>([]);
+  const [orders, setOrders] = useState<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>(
+    [],
+  );
 
   return (
     <div className="flex flex-col items-center content-center justify-center h-screen">
