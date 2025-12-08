@@ -88,7 +88,7 @@ export default function TokenAccordionItem({
                         ? '0px 0px 0px 0px rgba(175,145,145,0)'
                         : '0px 8px 20px 0px rgba(175,145,145,0.2)',
                     }}
-                    transition={{ duration: 0.4, ease: 'easeInOut', delay: 0 }}
+                    transition={{ duration: 0.4, ease: 'easeInOut' }}
                   >
                     <div className="relative size-full flex items-center justify-center">
                       <motion.div
@@ -261,7 +261,7 @@ function InfoContent({ isVisible }: { isVisible: boolean }) {
       className="content-stretch flex flex-col items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: isVisible ? 1 : 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.3, delay: isVisible ? 0.15 : 0 }}
     >
       <p className="font-['InterRegular'] font-bold leading-[1.4] relative shrink-0 text-clay !text-(length:--body-small)">
         237
