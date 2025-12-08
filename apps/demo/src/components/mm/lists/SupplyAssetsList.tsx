@@ -9,6 +9,20 @@ import { useAppStore } from '@/zustand/useAppStore';
 import { moneyMarketSupportedTokens } from '@sodax/sdk';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 
+const TABLE_HEADERS = [
+  'Asset',
+  'Wallet Balance',
+  'Balance',
+  'Total Supply',
+  'Supply APY',
+  'Supply APR',
+  'Debt',
+  'Available',
+  'Action',
+  'Action',
+  'Action',
+] as const;
+
 export function SupplyAssetsList() {
   const { selectedChainId } = useAppStore();
 
@@ -32,51 +46,44 @@ export function SupplyAssetsList() {
         <CardTitle>Markets</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Asset</TableHead>
-              <TableHead>Wallet Balance</TableHead>
-              <TableHead>Balance</TableHead>
-              <TableHead>Total Supply</TableHead>
-              <TableHead>Supply APY</TableHead>
-              <TableHead>Supply APR</TableHead>
-              <TableHead>Total Borrow</TableHead>
-              <TableHead>Borrow APY</TableHead>
-              <TableHead>Borrow APR</TableHead>
-              <TableHead>Debt</TableHead>
-              <TableHead>Available</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isUserReservesLoading || isFormattedReservesLoading || !userReserves || !formattedReserves ? (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center">
-                  Loading...
-                </TableCell>
+        <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
+          <Table>
+            <TableHeader className="sticky top-0 bg-cream z-20">
+              {' '}
+              <TableRow className="border-b border-cherry-grey/20">
+                {TABLE_HEADERS.map(header => (
+                  <TableHead key={header} className="text-cherry-dark font-bold">
+                    {header}
+                  </TableHead>
+                ))}
               </TableRow>
-            ) : (
-              userReserves &&
-              tokens.map(token => (
-                <SupplyAssetsListItem
-                  key={token.address}
-                  token={token}
-                  walletBalance={
-                    balances?.[token.address]
-                      ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
-                      : '-'
-                  }
-                  formattedReserves={formattedReserves}
-                  userReserves={userReserves[0]}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {isUserReservesLoading || isFormattedReservesLoading || !userReserves || !formattedReserves ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center">
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : (
+                userReserves &&
+                tokens.map(token => (
+                  <SupplyAssetsListItem
+                    key={token.address}
+                    token={token}
+                    walletBalance={
+                      balances?.[token.address]
+                        ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
+                        : '-'
+                    }
+                    formattedReserves={formattedReserves}
+                    userReserves={userReserves[0]}
+                  />
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

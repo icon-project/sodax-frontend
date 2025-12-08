@@ -54,10 +54,10 @@ export const WalletModal = ({ isOpen, onDismiss }: WalletModalProps) => {
                 <Separator className="h-1 bg-[#ffffff59]" />
 
                 {xChainTypes.map(wallet => (
-                  <>
-                    <WalletItem key={`wallet_${wallet.xChainType}`} {...wallet} />
-                    <Separator key={`wallet_${wallet.xChainType}_separator`} className="h-1 bg-[#ffffff59]" />
-                  </>
+                  <div key={wallet.xChainType} className="flex flex-col gap-4">
+                    <WalletItem {...wallet} />
+                    <Separator className="h-1 bg-[#ffffff59]" />
+                  </div>
                 ))}
               </div>
             </ScrollArea>

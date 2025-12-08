@@ -3,8 +3,10 @@ import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
 import {
   type AggregatedReserveData,
+  type ChainId,
   hubAssets,
   SolverIntentStatusCode,
+  spokeChainConfig,
   type SpokeChainId,
   type UserReserveData,
   type XToken,
@@ -113,4 +115,52 @@ export function formatCompactNumber(value: string | number | bigint): string {
   if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
 
   return num.toFixed(4);
+}
+
+export function getNativeChainForSymbol(symbol: string): ChainId | null {
+  for (const [chainId, config] of Object.entries(spokeChainConfig)) {
+    if (symbol in config.supportedTokens) {
+      return chainId as ChainId;
+    }
+  }
+  return null;
+}
+
+export function findReserveByUnderlyingAsset(
+  underlyingAsset: string,
+  reserves: readonly AggregatedReserveData[],
+): AggregatedReserveData {
+  const reserve = reserves.find(reserve => reserve.underlyingAsset.toLowerCase() === underlyingAsset.toLowerCase());
+  if (!reserve) {
+    throw new Error(`Reserve not found for underlying asset: ${underlyingAsset}`);
+  }
+  return reserve;
+}
+
+export function getSpokeTokenAddressByVault(chainId: SpokeChainId, vaultAddress: string): string | undefined {
+  const chainAssets = hubAssets[chainId];
+  if (!chainAssets) return undefined;
+
+  // The KEY in hubAssets is the spoke token address!
+  for (const [spokeTokenAddress, info] of Object.entries(chainAssets)) {
+    if (info.vault.toLowerCase() === vaultAddress.toLowerCase()) {
+      return spokeTokenAddress;
+    }
+  }
+  return undefined;
+}
+
+export function findUserReserveBySpokeTokenAddress(
+  userReserves: readonly UserReserveData[],
+  selectedChainId: SpokeChainId,
+  token: XToken,
+): UserReserveData {
+  const result = userReserves.find(
+    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase(),
+  );
+
+  if (!result) {
+    throw new Error(`User reserve not found for spoke token address: ${token.address}`);
+  }
+  return result;
 }
