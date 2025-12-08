@@ -1,7 +1,6 @@
 import { PublicKey, type TransactionInstruction } from '@solana/web3.js';
 import type { Hex } from 'viem';
-import { SOLANA_MAINNET_CHAIN_ID, spokeChainConfig, type SolanaChainConfig, type SolanaRawTransactionInstruction } from '@sodax/types';
-const solanaSpokeChainConfig = spokeChainConfig[SOLANA_MAINNET_CHAIN_ID] as SolanaChainConfig;
+import { SOLANA_MAINNET_CHAIN_ID, spokeChainConfig, type SolanaRawTransactionInstruction } from '@sodax/types';
 
 export function getSolanaAddressBytes(address: PublicKey): Hex {
   return `0x${Buffer.from(address.toBytes()).toString('hex')}` as Hex;
@@ -12,8 +11,8 @@ export function hexToSolanaAddress(hex: Hex): PublicKey {
   return new PublicKey(Buffer.from(hexWithoutPrefix, 'hex'));
 }
 
-export function isNative(address: PublicKey): boolean {
-  if (address.equals(new PublicKey(solanaSpokeChainConfig.nativeToken))) {
+export function isSolanaNativeToken(address: PublicKey): boolean {
+  if (address.equals(new PublicKey(spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].nativeToken))) {
     return true;
   }
   return false;

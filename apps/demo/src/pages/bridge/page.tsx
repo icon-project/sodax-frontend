@@ -61,7 +61,6 @@ export default function BridgePage() {
   const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
   const supportedTokensPerChain = sodax.config.getSupportedTokensPerChain();
 
-
   // Fetch bridgeable tokens and set toToken when bridgeableTokens is defined
   const { data: bridgeableTokens, isLoading: isLoadingBridgeableTokens } = useGetBridgeableTokens(
     fromToken.xChainId,

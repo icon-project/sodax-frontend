@@ -1,15 +1,19 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { isAddress as isEvmAddress, parseUnits } from 'viem';
+
+import { isAddress as isEvmAddress, parseUnits, formatUnits } from 'viem';
 import { PublicKey } from '@solana/web3.js';
 import { isValidSuiAddress } from '@mysten/sui/utils';
 import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, isLegacybnUSDToken, isNewbnUSDToken, supportedSpokeChains } from '@sodax/sdk';
-import type { XToken, SpokeChainId, Token } from '@sodax/types';
-import { formatUnits } from 'viem';
+import { getSupportedSolverTokens, supportedSpokeChains } from '@sodax/sdk';
+
+import type { Token, XToken, SpokeChainId } from '@sodax/types';
+import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
+
+import { availableChains } from '@/constants/chains';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -17,183 +21,26 @@ export function cn(...inputs: ClassValue[]) {
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-import { availableChains } from '@/constants/chains';
-
-/**
- * Shortens a blockchain address for display purposes
- * Supports both Ethereum (0x...) and Cosmos (inj1..., osmo1..., etc.) style addresses
- * @param address The full address to shorten
- * @param chars Number of characters to show at the beginning and end (default: 4 for Cosmos, 7 for Ethereum)
- * @returns Shortened address in format "0x1234...5678" or "inj1kq...5d3n"
- */
-export function shortenAddress(address: string, chars?: number): string {
+export function shortenAddress(address: string, chars = 4): string {
   if (!address) return '';
-
-  // For Cosmos-style addresses (start with letters like inj1, osmo1, etc.)
-  if (/^[a-z]+\d/.test(address)) {
-    const defaultChars = 4;
-    const charCount = chars ?? defaultChars;
-    return `${address.substring(0, charCount + 2)}...${address.substring(address.length - charCount)}`;
-  }
-
-  // For Ethereum-style addresses (start with 0x)
-  const defaultChars = 4;
-  const charCount = chars ?? defaultChars;
-  return `${address.substring(0, charCount + 2)}...${address.substring(address.length - charCount)}`;
+  return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
 }
 
-/**
- * Filter out legacy tokens to prevent duplicates
- * Uses SDK utilities to identify legacy tokens and only includes current versions
- * @param tokens Array of tokens to filter
- * @returns Filtered array with legacy tokens removed
- */
-const filterLegacyTokens = (tokens: readonly Token[]): Token[] => {
-  return tokens.filter((token: Token) => {
-    // Use SDK utilities to identify legacy tokens
-    const isLegacy = isLegacybnUSDToken(token);
-    const isNew = isNewbnUSDToken(token);
-
-    // For bnUSD tokens, only include the new version
-    if (token.symbol === 'bnUSD') {
-      return isNew && !isLegacy;
-    }
-
-    // For other tokens, exclude legacy versions
-    return !isLegacy;
-  });
-};
-
-/**
- * Get all supported solver tokens from all chains
- * Filters out legacy tokens to prevent duplicates
- * @returns Array of XToken objects with chain information
- */
-export const getAllSupportedSolverTokens = (): XToken[] => {
-  const allTokens: XToken[] = [];
-  const filteredSupportedChains = supportedSpokeChains.filter(chainId =>
-    availableChains.find(chain => chain.id === chainId),
-  );
-
-  for (const chainId of filteredSupportedChains) {
-    try {
-      // const supportedTokens = spokeChainConfig[chainId].supportedTokens;
-      const supportedTokens = getSupportedSolverTokens(chainId);
-      // Filter out legacy tokens to prevent duplicates
-      let filteredTokens = supportedTokens;
-      filteredTokens.map(token => {
-        if (token.symbol === 'bnUSD (legacy)') {
-          token.symbol = 'bnUSD';
-        }
-      });
-
-      if (chainId !== '0x1.icon') {
-        filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
-      }
-
-      const xTokens: XToken[] = filteredTokens.map((token: Token) => ({
-        ...token,
-        xChainId: chainId,
-      }));
-
-      allTokens.push(...xTokens);
-    } catch (error) {
-      console.warn(`Failed to get supported tokens for chain ${chainId}:`, error);
-    }
-  }
-
-  return allTokens;
-};
-
-/**
- * Get supported solver tokens for a specific chain
- * Filters out legacy tokens to prevent duplicates
- * @param chainId The chain ID to get tokens for
- * @returns Array of XToken objects for the specified chain
- */
-export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[] => {
+function isValidInjectiveAddress(addr: string): boolean {
   try {
-    const supportedTokens = getSupportedSolverTokens(chainId);
-
-    let filteredTokens = supportedTokens;
-
-    filteredTokens.map(token => {
-      if (token.symbol === 'bnUSD (legacy)') {
-        token.symbol = 'bnUSD';
-      }
-    });
-
-    if (chainId !== '0x1.icon') {
-      filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
-    }
-
-    return filteredTokens.map((token: Token) => ({
-      ...token,
-      xChainId: chainId,
-    }));
-  } catch (error) {
-    console.warn(`Failed to get supported tokens for chain ${chainId}:`, error);
-    return [];
-  }
-};
-
-export const getSwapErrorMessage = (errorCode: string): { title: string; message: string } => {
-  switch (errorCode) {
-    case 'SUBMIT_TX_FAILED':
-      return {
-        title: 'Transaction failed at source',
-        message: 'Your transaction couldn’t be broadcast. Your funds remain unchanged.',
-      };
-    case 'RELAY_TIMEOUT':
-      return {
-        title: 'Transaction timed out',
-        message: 'We couldn’t broadcast your transaction within the expected timeframe.',
-      };
-    case 'CREATION_FAILED':
-      return {
-        title: "Order couldn't be created.",
-        message: 'There was a problem with your order. Please check your network and balance.',
-      };
-    case 'POST_EXECUTION_FAILED':
-      return {
-        title: 'Transaction failed at destination.',
-        message: "The transaction couldn't be broadcast. Your funds will return in roughly 5 minutes.",
-      };
-    case 'INSUFFICIENT_BALANCE':
-      return {
-        title: 'Insufficient balance',
-        message: 'You do not have enough balance to swap.',
-      };
-    case 'INVALID_SOURCE_AMOUNT':
-      return {
-        title: 'Invalid source amount',
-        message: 'The source amount is invalid.',
-      };
-    default:
-      return {
-        title: 'Something went wrong.',
-        message: 'We can’t identify the issue right now. For help, follow the link below.',
-      };
-  }
-};
-
-function isValidInjectiveAddress(addr: string) {
-  try {
-    const dec = bech32.decode(addr);
-    return dec.prefix === 'inj'; // or other valid prefix
+    return bech32.decode(addr).prefix === 'inj';
   } catch {
     return false;
   }
 }
 
-function isValidIconAddress(addr: string) {
-  if (!/^h[ cx]/.test(addr)) return false;
-  // Additional checks via ICON SDK can go here.
-  return true;
+function isValidIconAddress(addr: string): boolean {
+  return /^h[ cx]/.test(addr);
 }
 
 export function validateChainAddress(address: string | null | undefined, chain: string): boolean {
   if (!address) return false;
+
   try {
     switch (chain) {
       case 'EVM':
@@ -217,29 +64,80 @@ export function validateChainAddress(address: string | null | undefined, chain: 
   }
 }
 
+function normalizeToken(token: Token): Token {
+  if (token.symbol === 'bnUSD (legacy)') {
+    return { ...token, symbol: 'bnUSD' };
+  }
+  return token;
+}
+
+export const getAllSupportedSolverTokens = (): XToken[] => {
+  const activeChains = supportedSpokeChains.filter(chainId => availableChains.some(chain => chain.id === chainId));
+
+  return activeChains.flatMap(chainId => {
+    try {
+      const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
+
+      return tokens.map(token => ({
+        ...token,
+        xChainId: chainId,
+      }));
+    } catch (error) {
+      console.warn(`Failed to load tokens for chain ${chainId}`, error);
+      return [];
+    }
+  });
+};
+
+export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[] => {
+  try {
+    const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
+
+    return tokens.map(token => ({
+      ...token,
+      xChainId: chainId,
+    }));
+  } catch (error) {
+    console.warn(`Failed to load tokens for chain ${chainId}`, error);
+    return [];
+  }
+};
+
+export const groupTokensBySymbol = (tokens: XToken[]): Record<string, XToken[]> =>
+  tokens.reduce<Record<string, XToken[]>>((acc, token) => {
+    const key = token.symbol.toLowerCase();
+    acc[key] ??= [];
+    acc[key].push(token);
+    return acc;
+  }, {});
+
+export const getUniqueTokenSymbols = (tokens: XToken[]): Array<{ symbol: string; tokens: XToken[] }> =>
+  Object.values(groupTokensBySymbol(tokens)).map(group => ({
+    symbol: group[0]?.symbol ?? '',
+    tokens: group,
+  }));
+
+export function getChainBalance(balances: Record<string, ChainBalanceEntry[]>, token: XToken): bigint {
+  return balances[token.address]?.find(e => e.chainId === token.xChainId)?.balance ?? 0n;
+}
+
+export function hasTokenBalance(balances: Record<string, ChainBalanceEntry[]>, token: XToken): boolean {
+  return balances[token.address]?.some(e => e.chainId === token.xChainId) ?? false;
+}
+
 export const calculateMaxAvailableAmount = (
   balance: bigint,
   tokenDecimals: number,
   solver: { getPartnerFee: (amount: bigint) => bigint },
 ): string => {
-  if (balance === 0n) {
-    return '0';
-  }
+  if (balance === 0n) return '0';
 
   try {
-    const fullBalance = formatUnits(balance, tokenDecimals);
-    const fullBalanceBigInt = parseUnits(fullBalance, tokenDecimals);
-    const feeAmount = solver.getPartnerFee(fullBalanceBigInt);
-
-    const availableBalanceBigInt = fullBalanceBigInt - feeAmount;
-
-    if (availableBalanceBigInt > 0n) {
-      return formatUnits(availableBalanceBigInt, tokenDecimals);
-    }
-
-    return '0';
+    const balanceBigInt = parseUnits(formatUnits(balance, tokenDecimals), tokenDecimals);
+    const available = balanceBigInt - solver.getPartnerFee(balanceBigInt);
+    return available > 0n ? formatUnits(available, tokenDecimals) : '0';
   } catch (error) {
-    console.error('Error calculating max available amount:', error);
+    console.error('Max amount calc failed:', error);
     return formatUnits(balance, tokenDecimals);
   }
 };
@@ -250,30 +148,55 @@ export const hasSufficientBalanceWithFee = (
   tokenDecimals: number,
   solver: { getPartnerFee: (amount: bigint) => bigint },
 ): boolean => {
-  if (!amount || amount === '0' || amount === '' || Number.isNaN(Number(amount))) {
-    return false;
-  }
+  if (!amount || Number(amount) <= 0) return false;
 
   try {
-    const amountBigInt = parseUnits(amount, tokenDecimals);
-    const feeAmount = solver.getPartnerFee(amountBigInt);
-    const totalRequired = amountBigInt + feeAmount;
-
-    return totalRequired <= balance;
-  } catch (error) {
-    console.error('Error checking sufficient balance with fee:', error);
-    const amountBigInt = parseUnits(amount, tokenDecimals);
-    return amountBigInt <= balance;
+    const value = parseUnits(amount, tokenDecimals);
+    return value + solver.getPartnerFee(value) <= balance;
+  } catch {
+    return parseUnits(amount, tokenDecimals) <= balance;
   }
 };
 
-// Utility function to format numbers according to specified rules
 export const formatBalance = (amount: string, price: number): string => {
-  if (!amount || amount === '') return '';
-
+  if (!amount || new BigNumber(amount).isZero()) return '0';
   const decimals = price >= 10000 ? 6 : 4;
-  if (new BigNumber(amount).isZero()) {
-    return '0';
-  }
+
   return new BigNumber(amount).decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed(decimals);
+};
+
+export const getSwapErrorMessage = (errorCode: string): { title: string; message: string } => {
+  const map: Record<string, { title: string; message: string }> = {
+    SUBMIT_TX_FAILED: {
+      title: 'Transaction failed at source',
+      message: 'Your transaction couldn’t be broadcast. Your funds remain unchanged.',
+    },
+    RELAY_TIMEOUT: {
+      title: 'Transaction timed out',
+      message: 'We couldn’t broadcast your transaction within the expected timeframe.',
+    },
+    CREATION_FAILED: {
+      title: "Order couldn't be created.",
+      message: 'There was a problem with your order. Please check your network and balance.',
+    },
+    POST_EXECUTION_FAILED: {
+      title: 'Transaction failed at destination.',
+      message: 'Your funds will return in roughly 5 minutes.',
+    },
+    INSUFFICIENT_BALANCE: {
+      title: 'Insufficient balance',
+      message: 'You do not have enough balance to swap.',
+    },
+    INVALID_SOURCE_AMOUNT: {
+      title: 'Invalid source amount',
+      message: 'The source amount is invalid.',
+    },
+  };
+
+  return (
+    map[errorCode] ?? {
+      title: 'Something went wrong.',
+      message: 'We can’t identify the issue right now.',
+    }
+  );
 };

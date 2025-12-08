@@ -1,5 +1,13 @@
 import 'dotenv/config';
-import { type Hex, ICON_MAINNET_CHAIN_ID, IconSpokeProvider, Sodax, SONIC_MAINNET_CHAIN_ID, spokeChainConfig, SpokeService } from '@sodax/sdk';
+import {
+  type Hex,
+  ICON_MAINNET_CHAIN_ID,
+  IconSpokeProvider,
+  Sodax,
+  SONIC_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+  SpokeService,
+} from '@sodax/sdk';
 import { EvmWalletProvider, IconWalletProvider } from '@sodax/wallet-sdk-core';
 
 const sodax = new Sodax();
@@ -12,17 +20,21 @@ const iconSpokeProvider = new IconSpokeProvider(
   spokeChainConfig[ICON_MAINNET_CHAIN_ID],
 );
 
-const evmWallet =  new EvmWalletProvider({
+const evmWallet = new EvmWalletProvider({
   privateKey: process.env.EVM_PRIVATE_KEY as Hex,
   chainId: SONIC_MAINNET_CHAIN_ID,
 });
 
 async function main() {
-  const rawTx = await sodax.migration.createMigrateIcxToSodaIntent({
-    address: spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken,
-    amount: BigInt(1e18),
-    to: await evmWallet.getWalletAddress(),
-  }, iconSpokeProvider, true);
+  const rawTx = await sodax.migration.createMigrateIcxToSodaIntent(
+    {
+      address: spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken,
+      amount: BigInt(1e18),
+      to: await evmWallet.getWalletAddress(),
+    },
+    iconSpokeProvider,
+    true,
+  );
 
   console.log('rawTx', rawTx);
 

@@ -9,7 +9,7 @@ import { TokenList } from './token-list';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
-import { getChainBalance, hasTokenBalance } from '@/lib/token-utils';
+import { getChainBalance, hasTokenBalance } from '@/lib/utils';
 
 export default function TokenSelectDialog({
   isOpen,
@@ -92,6 +92,11 @@ export default function TokenSelectDialog({
   };
 
   const handleDialogClose = () => {
+    if (selectedChain) {
+      setSelectedChain(null);
+      return;
+    }
+
     if (clickedAsset !== null) {
       setClickedAsset(null);
       return;
@@ -157,7 +162,12 @@ export default function TokenSelectDialog({
             </div>
           )}
 
-          <div className={selectedChain ? 'relative z-10' : ''}>
+          <div
+            className={selectedChain ? 'relative z-10' : ''}
+            onClick={() => {
+              setSelectedChain(null);
+            }}
+          >
             <TokenList
               {...filteredTokenGroups}
               clickedAsset={clickedAsset}

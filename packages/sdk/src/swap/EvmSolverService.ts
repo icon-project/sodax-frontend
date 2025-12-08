@@ -10,20 +10,13 @@ import {
   keccak256,
   parseEventLogs,
 } from 'viem';
-import {
-  Erc20Service,
-  type EvmContractCall,
-  type EvmHubProvider,
-  FEE_PERCENTAGE_SCALE,
-  type PartnerFee,
-  calculatePercentageFeeAmount,
-  encodeAddress,
-  encodeContractCalls,
-  isIntentRelayChainId,
-  isPartnerFeeAmount,
-  isPartnerFeePercentage,
-  randomUint256,
-} from '../index.js';
+import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
+import type { EvmContractCall, PartnerFee } from '../shared/types.js';
+import { FEE_PERCENTAGE_SCALE } from '../shared/constants.js';
+import { calculatePercentageFeeAmount, encodeAddress, randomUint256 } from '../shared/utils/shared-utils.js';
+import { encodeContractCalls } from '../shared/utils/evm-utils.js';
+import { isIntentRelayChainId } from '../shared/guards.js';
+import { isPartnerFeeAmount, isPartnerFeePercentage } from '../shared/guards.js';
 import {
   type CreateIntentParams,
   type FeeData,
@@ -34,6 +27,7 @@ import {
 } from './index.js';
 import { SONIC_MAINNET_CHAIN_ID, getIntentRelayChainId, type Hash, type Hex, type SolverConfig } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
+import type { EvmHubProvider } from '../shared/entities/Providers.js';
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
 export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventAbi>[number];
 export const IntentFilledEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentFilled' });

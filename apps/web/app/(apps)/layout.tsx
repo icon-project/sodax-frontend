@@ -14,27 +14,34 @@ import { motion } from 'framer-motion';
 import LandingPage from '../page';
 import { headerVariants, contentVariants, mainContentVariants } from '@/constants/animation';
 import { useRef, useState, useLayoutEffect, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const { isSwitchingPage } = useAppStore(state => state);
   const ref = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
-  const pathname = usePathname();
   const isMobile = useIsMobile();
   const { shouldTriggerAnimation } = useAppStore(state => state);
   const { setShouldTriggerAnimation } = useAppStore(state => state);
 
   useLayoutEffect(() => {
-    const calculateHeight = (): void => {
-      if (pathname !== '/' && ref.current) {
-        setHeight(ref.current.offsetHeight);
-      }
-    };
+    if (ref.current) {
+      const resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const newHeight = entry.target.getBoundingClientRect().height;
+          if (newHeight > 0) {
+            setHeight(newHeight);
+          }
+        }
+      });
 
-    calculateHeight();
-  }, [pathname]);
+      resizeObserver.observe(ref.current);
+
+      return () => {
+        resizeObserver.disconnect();
+      };
+    }
+  }, []);
 
   useEffect(() => {
     if (shouldTriggerAnimation) {
@@ -49,12 +56,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <LandingPage />
         </div>
         <ModalStoreProvider>
-          <div className="min-h-screen w-[100%] overflow-hidden">
+          <div className="max-h-screen sm:max-h-none sm:min-h-screen w-[100%] overflow-hidden">
             <motion.div
               variants={headerVariants}
               initial={!shouldTriggerAnimation ? 'open' : 'closed'}
               animate={isSwitchingPage ? 'open' : 'closed'}
-              layout
             >
               <Header />
             </motion.div>
@@ -65,7 +71,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               animate={isSwitchingPage ? 'open' : 'closed'}
               className="bg-cream-white relative min-h-[calc(100vh-240px)]"
               style={{ height: !isMobile ? height - 136 : height - 40 }}
-              layout
             >
               <div className="w-full lg:w-[1024px] lg:max-w-[1024px] absolute md:-top-34 -top-36 left-1/2 -translate-x-1/2">
                 <motion.div
@@ -73,7 +78,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   initial={!shouldTriggerAnimation ? 'open' : { y: 30, opacity: 0 }}
                   animate={isSwitchingPage ? 'open' : 'closed'}
                   className="flex justify-center items-start min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)]"
-                  layout
                 >
                   <RouteTabs />
                   <div

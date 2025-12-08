@@ -15,8 +15,7 @@ describe('formatReserve', () => {
 
     const second = formatReserve({
       reserve: reserve.reserve,
-      currentTimestamp:
-        reserve.reserve.lastUpdateTimestamp + 60 * 60 * 24 * 350,
+      currentTimestamp: reserve.reserve.lastUpdateTimestamp + 60 * 60 * 24 * 350,
     });
 
     expect(new BigNumber(second.totalDebt).gt(first.totalDebt)).toBe(true);
