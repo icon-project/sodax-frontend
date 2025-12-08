@@ -47,7 +47,7 @@ export const mainnetSolverConfig = {
 export const sodaxConfig = {
   hubProviderConfig: hubConfig,
   moneyMarket: moneyMarketConfig,
-  swap: mainnetSolverConfig,
+  swaps: mainnetSolverConfig,
   relayerApiEndpoint: testnet
     ? 'https://testnet-xcall-relay.nw.iconblockchain.xyz'
     : 'https://xcall-relay.nw.iconblockchain.xyz',
