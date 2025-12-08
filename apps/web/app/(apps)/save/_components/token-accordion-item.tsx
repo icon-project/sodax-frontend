@@ -83,7 +83,7 @@ export default function TokenAccordionItem({
                     initial={false}
                     animate={{
                       borderRadius: isCollapsed ? 256 : 8,
-                      backgroundColor: '#ede6e6',
+                      backgroundColor: '#e4dada',
                       boxShadow: !isCollapsed
                         ? '0px 0px 0px 0px rgba(175,145,145,0)'
                         : '0px 8px 20px 0px rgba(175,145,145,0.2)',
