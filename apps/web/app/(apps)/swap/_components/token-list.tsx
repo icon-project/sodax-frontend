@@ -233,7 +233,7 @@ export function TokenList({
         data-slot="scroll-area"
         className={`mt-4 h-[calc(80vh-176px)] md:h-126 w-full content-stretch ${clickedAsset ? '' : ''}`}
       >
-        <div className="w-full h-16 left-0 top-0 absolute bg-gradient-to-b from-vibrant-white to-neutral-100/0 z-[100000]" />
+        <div className="w-full h-16 left-0 top-0 absolute bg-gradient-to-b from-vibrant-white to-neutral-100/0 z-[100000] pointer-events-none" />
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
           className="ring-ring/10 dark:ring-ring/20 dark:outline-ring/40 outline-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] focus-visible:ring-4 focus-visible:outline-1 px-6"
@@ -252,7 +252,7 @@ export function TokenList({
             </AnimatePresence>
           </motion.div>
         </ScrollAreaPrimitive.Viewport>
-        <div className="w-full h-16 left-0 bottom-0 absolute bg-gradient-to-t from-vibrant-white to-neutral-100/0 z-[100000]" />
+        <div className="w-full h-16 left-0 bottom-0 absolute bg-gradient-to-t from-vibrant-white to-neutral-100/0 z-[100000] pointer-events-none" />
         <ScrollBar />
         <ScrollAreaPrimitive.Corner />
       </ScrollAreaPrimitive.Root>
