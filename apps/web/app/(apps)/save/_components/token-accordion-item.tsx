@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/save/_components/token-accordion-item.tsx
 import { AccordionItem, AccordionTriggerWithButton, AccordionContent } from '@/components/ui/accordion';
 import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
@@ -10,13 +11,24 @@ import { cn, getUniqueByChain } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
 import { TokenAsset } from '@/components/shared/token-asset';
 import { accordionVariants } from '@/constants/animation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
+import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
+import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { formatUnits } from 'viem';
+import type { FormatReserveUSDResponse } from '@sodax/sdk';
+import { useReserveMetrics } from '@/hooks/useReserveMetrics';
+import { hubAssets } from '@sodax/types';
+
 export default function TokenAccordionItem({
   group,
   openValue,
+  formattedReserves,
+  isFormattedReservesLoading,
 }: {
   group: { symbol: string; tokens: XToken[] };
   openValue: string;
+  formattedReserves?: FormatReserveUSDResponse[];
+  isFormattedReservesLoading: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { symbol, tokens } = group;
@@ -121,7 +133,15 @@ export default function TokenAccordionItem({
                       {symbol}
                     </motion.div>
 
-                    <AnimatePresence>{isCollapsed && <CollapsedAPR />}</AnimatePresence>
+                    <AnimatePresence>
+                      {isCollapsed && (
+                        <CollapsedAPR
+                          tokens={tokens}
+                          formattedReserves={formattedReserves}
+                          isFormattedReservesLoading={isFormattedReservesLoading}
+                        />
+                      )}
+                    </AnimatePresence>
                   </ItemTitle>
 
                   <AnimatePresence initial={false} mode="wait">
@@ -135,7 +155,14 @@ export default function TokenAccordionItem({
 
         <AccordionContent forceMount className="relative">
           <AnimatePresence initial={false} mode="wait">
-            {!isCollapsed && <ExpandedContent tokens={tokens} symbol={symbol} />}
+            {!isCollapsed && (
+              <ExpandedContent
+                tokens={tokens}
+                symbol={symbol}
+                formattedReserves={formattedReserves}
+                isFormattedReservesLoading={isFormattedReservesLoading}
+              />
+            )}
           </AnimatePresence>
         </AccordionContent>
       </motion.div>
@@ -143,7 +170,43 @@ export default function TokenAccordionItem({
   );
 }
 
-function CollapsedAPR() {
+function CollapsedAPR({
+  tokens,
+  formattedReserves,
+  isFormattedReservesLoading,
+}: {
+  tokens: XToken[];
+  formattedReserves?: FormatReserveUSDResponse[];
+  isFormattedReservesLoading: boolean;
+}) {
+  // Get supply APY from first token or average if multiple
+  const supplyAPY = useMemo(() => {
+    if (isFormattedReservesLoading || !formattedReserves || formattedReserves.length === 0) {
+      return '-';
+    }
+
+    // Try to get APY from first token
+    const firstToken = tokens[0];
+    if (!firstToken) return '-';
+
+    try {
+      const vault = hubAssets[firstToken.xChainId]?.[firstToken.address]?.vault;
+      if (!vault) return '-';
+
+      const formattedReserve = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+      if (!formattedReserve) return '-';
+
+      const SECONDS_PER_YEAR = 31536000;
+      const liquidityRate = Number(formattedReserve.liquidityRate) / 1e27;
+      const ratePerSecond = liquidityRate / SECONDS_PER_YEAR;
+      const apy = ((1 + ratePerSecond) ** SECONDS_PER_YEAR - 1) * 100;
+
+      return `${apy.toFixed(2)}%`;
+    } catch {
+      return '-';
+    }
+  }, [tokens, formattedReserves, isFormattedReservesLoading]);
+
   return (
     <motion.div
       className="flex items-center gap-1 -mr-8 md:mr-0"
@@ -151,7 +214,9 @@ function CollapsedAPR() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <span className="text-espresso text-(length:--body-comfortable) font-['InterBlack']">5.52%</span>
+      <span className="text-espresso text-(length:--body-comfortable) font-['InterBlack']">
+        {supplyAPY === '-' ? '-' : supplyAPY.replace('%', '')}
+      </span>
       <span className="text-clay-light text-(length:--body-comfortable)">APY</span>
     </motion.div>
   );
@@ -191,10 +256,56 @@ function CollapsedRowInfo({ tokens }: { tokens: XToken[] }) {
 function ExpandedContent({
   tokens,
   symbol,
+  formattedReserves,
+  isFormattedReservesLoading,
 }: {
   tokens: XToken[];
   symbol: string;
+  formattedReserves?: FormatReserveUSDResponse[];
+  isFormattedReservesLoading: boolean;
 }) {
+  // Calculate average APY and total deposits across all tokens
+  const { supplyAPY, totalLiquidityUSD } = useMemo(() => {
+    if (isFormattedReservesLoading || !formattedReserves || formattedReserves.length === 0) {
+      return { supplyAPY: '-', totalLiquidityUSD: '-' };
+    }
+
+    let totalAPY = 0;
+    let totalDeposits = 0;
+    let count = 0;
+
+    const SECONDS_PER_YEAR = 31536000;
+
+    tokens.forEach(token => {
+      try {
+        const vault = hubAssets[token.xChainId]?.[token.address]?.vault;
+        if (!vault) return;
+
+        const formattedReserve = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+        if (!formattedReserve) return;
+
+        const liquidityRate = Number(formattedReserve.liquidityRate) / 1e27;
+        const ratePerSecond = liquidityRate / SECONDS_PER_YEAR;
+        const apy = ((1 + ratePerSecond) ** SECONDS_PER_YEAR - 1) * 100;
+
+        totalAPY += apy;
+        totalDeposits += Number(formattedReserve.totalLiquidityUSD ?? 0);
+        count++;
+      } catch {
+        // Skip this token if there's an error
+      }
+    });
+
+    if (count === 0) {
+      return { supplyAPY: '-', totalLiquidityUSD: '-' };
+    }
+
+    const avgAPY = count > 0 ? `${(totalAPY / count).toFixed(2)}%` : '-';
+    const formattedDeposits = totalDeposits >= 1000 ? `$${(totalDeposits / 1000).toFixed(1)}k` : `$${totalDeposits.toFixed(2)}`;
+
+    return { supplyAPY: avgAPY, totalLiquidityUSD: formattedDeposits };
+  }, [tokens, formattedReserves, isFormattedReservesLoading]);
+
   return (
     <motion.div
       variants={accordionVariants}
@@ -206,30 +317,20 @@ function ExpandedContent({
     >
       <div className="flex h-12">
         <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
-        <InfoBlock value="3.56%" label="Current APY" />
+        <InfoBlock value={supplyAPY} label="Current APY" />
         <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
-        <InfoBlock value="$34.9k" label="All deposits" />
+        <InfoBlock value={totalLiquidityUSD} label="All deposits" />
       </div>
 
       <div className="flex flex-wrap mt-4 -ml-3">
         {tokens.map(t => (
-          <TokenAsset
+          <TokenAssetWithSupply
             key={t.xChainId}
-            name={symbol}
             token={t}
-            sourceBalance={100n}
-            isHoldToken={true}
-            isClickBlurred={false}
-            isHoverDimmed={false}
-            isHovered={false}
-            onMouseEnter={() => {}}
-            onMouseLeave={() => {}}
-            onClick={() => {}}
-            // isGroup={tokens.length > 1}
-            // tokenCount={tokens.length}
+            symbol={symbol}
             tokens={tokens}
-            onChainClick={() => {}}
-            isClicked={false}
+            formattedReserves={formattedReserves}
+            isFormattedReservesLoading={isFormattedReservesLoading}
           />
         ))}
       </div>
@@ -241,6 +342,63 @@ function ExpandedContent({
         <span className="text-clay text-(length:--body-small) font-['InterRegular']">Select a source</span>
       </div>
     </motion.div>
+  );
+}
+
+function TokenAssetWithSupply({
+  token,
+  symbol,
+  tokens,
+  formattedReserves,
+  isFormattedReservesLoading,
+}: {
+  token: XToken;
+  symbol: string;
+  tokens: XToken[];
+  formattedReserves?: FormatReserveUSDResponse[];
+  isFormattedReservesLoading: boolean;
+}) {
+  const { address } = useXAccount(token.xChainId);
+  const walletProvider = useWalletProvider(token.xChainId);
+  const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
+  const { data: balances } = useXBalances({
+    xChainId: token.xChainId,
+    xTokens: [token],
+    address,
+  });
+
+  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
+
+  const walletBalance = balances?.[token.address]
+    ? Number(formatUnits(balances[token.address] || 0n, token.decimals)).toFixed(4)
+    : '0';
+
+  const metrics = useReserveMetrics({
+    token,
+    formattedReserves: formattedReserves || [],
+    userReserves: userReserves?.[0] || [],
+  });
+
+  const supplyBalance = metrics.userReserve
+    ? Number(formatUnits(metrics.userReserve.scaledATokenBalance, 18)).toFixed(4)
+    : '0';
+
+  return (
+    <TokenAsset
+      name={symbol}
+      token={token}
+      sourceBalance={balances?.[token.address] || 0n}
+      isHoldToken={true}
+      isClickBlurred={false}
+      isHoverDimmed={false}
+      isHovered={false}
+      onMouseEnter={() => {}}
+      onMouseLeave={() => {}}
+      onClick={() => {}}
+      tokens={tokens}
+      onChainClick={() => {}}
+      isClicked={false}
+    />
   );
 }
 

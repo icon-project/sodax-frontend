@@ -231,3 +231,24 @@ export function getUniqueByChain(tokens: XToken[]): XToken[] {
   });
   return [...map.values()];
 }
+
+/**
+ * Formats a large number into a compact, human-readable form.
+ * Examples:
+ *  - 2450000 → "2.45M"
+ *  - 1180 → "1.18K"
+ *  - 9520000000 → "9.52B"
+ */
+export function formatCompactNumber(value: string | number | bigint): string {
+  const num = typeof value === 'bigint' ? Number(value) : typeof value === 'string' ? Number.parseFloat(value) : value;
+
+  if (!Number.isFinite(num)) return '-';
+
+  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(4).replace(/\.?0+$/, '')}B`;
+
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(4).replace(/\.?0+$/, '')}M`;
+
+  if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
+
+  return num.toFixed(4);
+}
