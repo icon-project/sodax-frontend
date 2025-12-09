@@ -6,21 +6,33 @@ import { Label } from '@/components/ui/label';
 import { useMMAllowance, useSupply, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 
 export function SupplyButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
-  const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply(token, spokeProvider);
+  const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply();
 
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'supply', spokeProvider);
   const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleSupply = async () => {
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
     try {
-      await supply(amount);
+      await supply({
+        params: {
+          token: token.address,
+          amount: parseUnits(amount, token.decimals),
+          action: 'supply',
+        },
+        spokeProvider,
+      });
       setOpen(false);
     } catch (err) {
       console.error('Error in handleSupply:', err);
@@ -65,7 +77,7 @@ export function SupplyButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
+        {error && <p className="text-red-500 text-sm mt-2">{error.code}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"

@@ -7,21 +7,33 @@ import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@soda
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 
 export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
-  const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow(token, spokeProvider);
+  const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow();
 
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'borrow', spokeProvider);
   const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleBorrow = async () => {
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
     try {
-      await borrow(amount);
+      await borrow({
+        params: {
+          token: token.address,
+          amount: parseUnits(amount, 18),
+          action: 'borrow',
+        },
+        spokeProvider,
+      });
       setOpen(false);
     } catch (err) {
       console.error('Error in handleBorrow:', err);
@@ -66,7 +78,7 @@ export function BorrowButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
+        {error && <p className="text-red-500 text-sm mt-2">{error?.code}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export function WithdrawButton({ token }: { token: XToken }) {
@@ -15,15 +16,29 @@ export function WithdrawButton({ token }: { token: XToken }) {
 
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
-  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, spokeProvider);
+  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw();
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'withdraw', spokeProvider);
   const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
   const handleWithdraw = async () => {
-    await withdraw(amount);
-    if (!error) {
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
+    try {
+      await withdraw({
+        params: {
+          token: token.address,
+          // vault token on hub chain decimals is 18
+          amount: parseUnits(amount, 18),
+          action: 'withdraw',
+        },
+        spokeProvider,
+      });
       setOpen(false);
+    } catch (err) {
+      console.error('Error in handleWithdraw:', err);
     }
   };
 
@@ -65,6 +80,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
+        {error && <p className="text-red-500 text-sm mt-2">{error.code}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"

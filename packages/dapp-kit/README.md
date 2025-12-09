@@ -144,24 +144,59 @@ return (
 
 // Money Market Operations
 import { useSupply, useWithdraw, useBorrow, useRepay, useUserReservesData } from '@sodax/dapp-kit';
+import { parseUnits } from 'viem';
 
 function MoneyMarketComponent() {
   // Supply tokens
-  const { mutateAsync: supply, isPending: isSupplying } = useSupply(token);
+  const { mutateAsync: supply, isPending: isSupplying } = useSupply();
   const handleSupply = async (amount: string) => {
-    await supply(amount);
+    await supply({
+      params: {
+        token: token.address,
+        amount: parseUnits(amount, token.decimals),
+        action: 'supply',
+      },
+      spokeProvider,
+    });
   };
 
   // Withdraw tokens
-  const { mutateAsync: withdraw, isPending: isWithdrawing } = useWithdraw(token, chainId);
+  const { mutateAsync: withdraw, isPending: isWithdrawing } = useWithdraw();
   const handleWithdraw = async (amount: string) => {
-    await withdraw(amount);
+    await withdraw({
+      params: {
+        token: token.address,
+        amount: parseUnits(amount, 18),
+        action: 'withdraw',
+      },
+      spokeProvider,
+    });
   };
 
   // Borrow tokens
-  const { mutateAsync: borrow, isPending: isBorrowing } = useBorrow(token, chainId);
+  const { mutateAsync: borrow, isPending: isBorrowing } = useBorrow();
   const handleBorrow = async (amount: string) => {
-    await borrow(amount);
+    await borrow({
+      params: {
+        token: token.address,
+        amount: parseUnits(amount, 18),
+        action: 'borrow',
+      },
+      spokeProvider,
+    });
+  };
+
+  // Repay tokens
+  const { mutateAsync: repay, isPending: isRepaying } = useRepay();
+  const handleRepay = async (amount: string) => {
+    await repay({
+      params: {
+        token: token.address,
+        amount: parseUnits(amount, token.decimals),
+        action: 'repay',
+      },
+      spokeProvider,
+    });
   };
 
   // Get user's supplied assets

@@ -93,7 +93,7 @@ export type MoneyMarketAction = 'supply' | 'borrow' | 'withdraw' | 'repay';
  * Parameters for a Money Market supply operation.
  *
  * @property token - The source chain token address to supply.
- * @property amount - The amount of the asset to supply.
+ * @property amount - The amount of the asset to supply (in token decimals).
  * @property action - The action type ('supply').
  * @property toChainId - (Optional) Target spoke chain ID to receive the supplied assets.
  *   Note: If omitted, assets are supplied to the sender's default spoke account.
@@ -112,7 +112,7 @@ export type MoneyMarketSupplyParams = {
  * Parameters for a Money Market borrow operation.
  *
  * @property token - The target chain token address to borrow.
- * @property amount - The amount of the asset to borrow.
+ * @property amount - The amount of the asset to borrow (in vault token decimals).
  * @property action - Action type ('borrow').
  * @property toChainId - (Optional) Target chain ID to receive the borrowed assets.
  *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
@@ -131,7 +131,7 @@ export type MoneyMarketBorrowParams = {
  * Parameters for a Money Market withdraw operation.
  *
  * @property token - The target chain token address to withdraw.
- * @property amount - The amount of the asset to withdraw.
+ * @property amount - The amount of the asset to withdraw (in vault token decimals).
  * @property action - The action type ('withdraw').
  * @property toChainId - (Optional) Target spoke chain ID to receive the withdrawn assets.
  *   Note: If omitted, assets are sent to the sender's default spoke account.
@@ -150,7 +150,7 @@ export type MoneyMarketWithdrawParams = {
  * Parameters for a Money Market repay operation.
  *
  * @property token - The source chain token address to repay.
- * @property amount - The amount of the asset to repay.
+ * @property amount - The amount of the asset to repay (in token decimals).
  * @property action - The action type ('repay').
  * @property toChainId - (Optional) Target spoke chain ID to receive the repaid assets.
  *   Note: If omitted, assets are repaid to the sender's default spoke account.

@@ -7,6 +7,7 @@ import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 
 export function RepayButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
@@ -14,14 +15,25 @@ export function RepayButton({ token }: { token: XToken }) {
 
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
-  const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay(token, spokeProvider);
+  const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay();
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'repay', spokeProvider);
   const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleRepay = async () => {
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
     try {
-      await repay(amount);
+      await repay({
+        params: {
+          token: token.address,
+          amount: parseUnits(amount, token.decimals),
+          action: 'repay',
+        },
+        spokeProvider,
+      });
       setOpen(false);
     } catch (err) {
       console.error('Error in handleRepay:', err);
@@ -66,7 +78,7 @@ export function RepayButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
+        {error && <p className="text-red-500 text-sm mt-2">{error.code}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"
