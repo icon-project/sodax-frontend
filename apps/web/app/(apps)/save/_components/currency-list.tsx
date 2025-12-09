@@ -24,6 +24,7 @@ export default function CurrencyList({
   );
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
+  console.log(formattedReserves);
 
   return (
     <Accordion type="single" collapsible className="network-accordion" value={openValue} onValueChange={setOpenValue}>

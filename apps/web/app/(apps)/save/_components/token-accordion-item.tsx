@@ -201,7 +201,7 @@ function CollapsedAPR({
       const ratePerSecond = liquidityRate / SECONDS_PER_YEAR;
       const apy = ((1 + ratePerSecond) ** SECONDS_PER_YEAR - 1) * 100;
 
-      return `${apy.toFixed(2)}%`;
+      return `${apy.toFixed(4)}%`;
     } catch {
       return '-';
     }
@@ -264,46 +264,41 @@ function ExpandedContent({
   formattedReserves?: FormatReserveUSDResponse[];
   isFormattedReservesLoading: boolean;
 }) {
-  // Calculate average APY and total deposits across all tokens
   const { supplyAPY, totalLiquidityUSD } = useMemo(() => {
     if (isFormattedReservesLoading || !formattedReserves || formattedReserves.length === 0) {
       return { supplyAPY: '-', totalLiquidityUSD: '-' };
     }
 
-    let totalAPY = 0;
-    let totalDeposits = 0;
-    let count = 0;
-
-    const SECONDS_PER_YEAR = 31536000;
-
-    tokens.forEach(token => {
-      try {
-        const vault = hubAssets[token.xChainId]?.[token.address]?.vault;
-        if (!vault) return;
-
-        const formattedReserve = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
-        if (!formattedReserve) return;
-
-        const liquidityRate = Number(formattedReserve.liquidityRate) / 1e27;
-        const ratePerSecond = liquidityRate / SECONDS_PER_YEAR;
-        const apy = ((1 + ratePerSecond) ** SECONDS_PER_YEAR - 1) * 100;
-
-        totalAPY += apy;
-        totalDeposits += Number(formattedReserve.totalLiquidityUSD ?? 0);
-        count++;
-      } catch {
-        // Skip this token if there's an error
-      }
-    });
-
-    if (count === 0) {
+    const firstToken = tokens[0];
+    if (!firstToken) {
       return { supplyAPY: '-', totalLiquidityUSD: '-' };
     }
 
-    const avgAPY = count > 0 ? `${(totalAPY / count).toFixed(2)}%` : '-';
-    const formattedDeposits = totalDeposits >= 1000 ? `$${(totalDeposits / 1000).toFixed(1)}k` : `$${totalDeposits.toFixed(2)}`;
+    try {
+      const vault = hubAssets[firstToken.xChainId]?.[firstToken.address]?.vault;
+      if (!vault) {
+        return { supplyAPY: '-', totalLiquidityUSD: '-' };
+      }
 
-    return { supplyAPY: avgAPY, totalLiquidityUSD: formattedDeposits };
+      const formattedReserve = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+      if (!formattedReserve) {
+        return { supplyAPY: '-', totalLiquidityUSD: '-' };
+      }
+
+      const SECONDS_PER_YEAR = 31536000;
+      const liquidityRate = Number(formattedReserve.liquidityRate) / 1e27;
+      const ratePerSecond = liquidityRate / SECONDS_PER_YEAR;
+      const apy = ((1 + ratePerSecond) ** SECONDS_PER_YEAR - 1) * 100;
+
+      const totalDeposits = Number(formattedReserve.totalLiquidityUSD ?? 0);
+      const formattedAPY = `${apy.toFixed(2)}%`;
+      const formattedDeposits =
+        totalDeposits >= 1000 ? `$${(totalDeposits / 1000).toFixed(1)}k` : `$${totalDeposits.toFixed(2)}`;
+
+      return { supplyAPY: formattedAPY, totalLiquidityUSD: formattedDeposits };
+    } catch {
+      return { supplyAPY: '-', totalLiquidityUSD: '-' };
+    }
   }, [tokens, formattedReserves, isFormattedReservesLoading]);
 
   return (
