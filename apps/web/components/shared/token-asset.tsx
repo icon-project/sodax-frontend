@@ -1,14 +1,13 @@
+// apps/web/components/shared/token-asset.tsx
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { motion } from 'motion/react';
-import { formatBalance, getAllSupportedSolverTokens } from '@/lib/utils';
+import { getAllSupportedSolverTokens } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
 import NetworkIcon from '@/components/shared/network-icon';
 import { createPortal } from 'react-dom';
-import { formatUnits } from 'viem';
-import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { ChevronDownIcon } from 'lucide-react';
 
 function NetworkPicker({
@@ -93,7 +92,7 @@ function NetworkPicker({
 interface TokenAssetProps {
   name: string;
   token?: XToken;
-  sourceBalance: bigint;
+  formattedBalance?: string;
   isHoldToken: boolean;
   isClickBlurred: boolean;
   isHoverDimmed: boolean;
@@ -111,7 +110,7 @@ interface TokenAssetProps {
 
 export function TokenAsset({
   name,
-  sourceBalance,
+  formattedBalance,
   token,
   isHoldToken,
   isClickBlurred,
@@ -129,8 +128,6 @@ export function TokenAsset({
   const assetRef = useRef<HTMLDivElement>(null);
   const chainIds = isGroup && tokens ? [...new Set(tokens.map(t => t.xChainId))] : [];
   const [portalPosition, setPortalPosition] = useState<{ top: number; left: number } | null>(null);
-
-  const { data: usdPrice } = useTokenPrice(token || ({} as XToken));
   useEffect(() => {
     if (isClicked && isGroup && assetRef.current) {
       const rect = assetRef.current.getBoundingClientRect();
@@ -192,7 +189,7 @@ export function TokenAsset({
         </div>
 
         <div className="flex font-medium h-[13px] gap-1">
-          {isHoldToken && (
+          {isHoldToken && formattedBalance && (
             <div className="flex items-center gap-1 justify-start">
               <motion.p
                 className="relative shrink-0 text-clay !text-(length:--text-body-fine-print)"
@@ -204,7 +201,7 @@ export function TokenAsset({
                   ease: 'easeInOut',
                 }}
               >
-                {formatBalance(formatUnits(sourceBalance, token?.decimals || 0), usdPrice || 0)}
+                {formattedBalance}
               </motion.p>
             </div>
           )}
