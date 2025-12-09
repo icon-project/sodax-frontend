@@ -1,12 +1,36 @@
 import { motion } from 'motion/react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import TokenAssetWithSupply from './token-asset-with-supply';
 import { accordionVariants } from '@/constants/animation';
 import type { XToken } from '@sodax/types';
-import type { FormatReserveUSDResponse } from '@sodax/sdk';
+import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { AlertCircleIcon } from 'lucide-react';
 import { useLiquidity } from '@/hooks/useAPY';
+import { formatUnits } from 'viem';
+import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
+import { useReserveMetrics } from '@/hooks/useReserveMetrics';
+import { TokenAsset } from '@/components/shared/token-asset';
+
+function calculateMetricsForToken(token: XToken, formattedReserves: FormatReserveUSDResponse[]) {
+  const { address } = useXAccount(token.xChainId);
+  const walletProvider = useWalletProvider(token.xChainId);
+  const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
+
+  const { data: userReserves } = useUserReservesData(spokeProvider, address);
+
+  const metrics = useReserveMetrics({
+    token,
+    formattedReserves: formattedReserves || [],
+    userReserves: userReserves?.[0] as UserReserveData[],
+  });
+
+  const supplyBalance = metrics.userReserve
+    ? Number(formatUnits(metrics.userReserve.scaledATokenBalance, 18)).toFixed(4)
+    : '0';
+
+  return { supplyBalance };
+}
 
 export default function AccordionExpandedContent({
   tokens,
@@ -20,6 +44,22 @@ export default function AccordionExpandedContent({
   isFormattedReservesLoading: boolean;
 }) {
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
+
+  const enrichedTokens = tokens.map(t => {
+    const metrics = calculateMetricsForToken(t, formattedReserves || []);
+    return {
+      ...t,
+      supplyBalance: metrics.supplyBalance,
+    };
+  });
+
+  const holdTokens = enrichedTokens
+    .filter(t => Number(t.supplyBalance) > 0)
+    .sort((a, b) => Number(b.supplyBalance) - Number(a.supplyBalance));
+
+  const platformTokens = enrichedTokens
+    .filter(t => Number(t.supplyBalance) === 0)
+    .sort((a, b) => a.symbol.localeCompare(b.symbol));
 
   return (
     <motion.div
@@ -38,19 +78,60 @@ export default function AccordionExpandedContent({
       </div>
 
       <div className="flex flex-wrap mt-4 -ml-3">
-        {tokens.map(t => (
-          <TokenAssetWithSupply
+        {holdTokens.map(t => (
+          <TokenAsset
             key={t.xChainId}
+            name={t.symbol}
             token={t}
-            symbol={symbol}
-            tokens={tokens}
-            formattedReserves={formattedReserves}
-            isFormattedReservesLoading={isFormattedReservesLoading}
+            formattedBalance={t.supplyBalance}
+            isHoldToken={true}
+            isClickBlurred={false}
+            isHoverDimmed={false}
+            isHovered={false}
+            onMouseEnter={() => {}}
+            onMouseLeave={() => {}}
+            onClick={() => {}}
+            onChainClick={() => {}}
+            isClicked={false}
           />
         ))}
+        {platformTokens.length > 1 ? (
+          <TokenAsset
+            key={platformTokens[0]?.xChainId}
+            name={platformTokens[0]?.symbol || ''}
+            token={platformTokens[0] || ({} as XToken)}
+            isHoldToken={false}
+            isGroup={true}
+            tokenCount={platformTokens.length}
+            tokens={platformTokens}
+            isClickBlurred={false}
+            isHoverDimmed={false}
+            isHovered={false}
+            onMouseEnter={() => {}}
+            onMouseLeave={() => {}}
+            onClick={() => {}}
+            onChainClick={() => {}}
+            isClicked={false}
+          />
+        ) : (
+          <TokenAsset
+            key={platformTokens[0]?.xChainId}
+            name={platformTokens[0]?.symbol || ''}
+            token={platformTokens[0] || ({} as XToken)}
+            isHoldToken={false}
+            isClickBlurred={false}
+            isHoverDimmed={false}
+            isHovered={false}
+            onMouseEnter={() => {}}
+            onMouseLeave={() => {}}
+            onClick={() => {}}
+            onChainClick={() => {}}
+            isClicked={false}
+          />
+        )}
       </div>
 
-      <div className="flex gap-4 items-center mt-4 mb-8">
+      <div className="flex gap-4 items-center mb-8">
         <Button variant="cream" className="w-27 mix-blend-multiply shadow-none">
           Continue
         </Button>
