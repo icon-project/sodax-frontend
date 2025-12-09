@@ -7,7 +7,7 @@ import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { AlertCircleIcon } from 'lucide-react';
 import { useLiquidity } from '@/hooks/useAPY';
 import { formatUnits } from 'viem';
-import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { TokenAsset } from '@/components/shared/token-asset';
