@@ -116,12 +116,12 @@ export default function SwapCard({
   };
 
   // Balance fetching- Fetch source token balance for the connected wallet
-  const { data: balances } = useXBalances({
+  const { data: sourceBalances } = useXBalances({
     xChainId: sourceChain,
     xTokens: sourceToken ? [sourceToken as XToken] : [],
     address: sourceAccount.address,
   });
-  const sourceTokenBalance = balances?.[sourceToken?.address ?? ''] ?? 0n;
+  const sourceTokenBalance = sourceBalances?.[sourceToken?.address ?? ''] ?? 0n;
 
   // Fetch destination token balance for the connected wallet
   const { data: destBalances } = useXBalances({
