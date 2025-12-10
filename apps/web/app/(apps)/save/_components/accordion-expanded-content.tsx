@@ -1,10 +1,8 @@
 import { motion } from 'motion/react';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { accordionVariants } from '@/constants/animation';
 import type { XToken } from '@sodax/types';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
-import { AlertCircleIcon } from 'lucide-react';
 import { useLiquidity } from '@/hooks/useAPY';
 import { formatUnits } from 'viem';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
@@ -13,6 +11,7 @@ import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { TokenAsset } from '@/components/shared/token-asset';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import AccordionInfoBlock from './accordion-info-block';
 
 function calculateMetricsForToken(token: XToken, formattedReserves: FormatReserveUSDResponse[]) {
   const { address } = useXAccount(token.xChainId);
@@ -143,13 +142,7 @@ export default function AccordionExpandedContent({
       className="pl-0 md:pl-18 flex flex-col gap-4"
       layout
     >
-      <div className="flex h-12">
-        <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
-        <InfoBlock value={apy.replace('%', '')} label="Current APY" />
-        <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
-        <InfoBlock value={deposits} label="All deposits" />
-      </div>
-
+      <AccordionInfoBlock apy={apy} deposits={deposits} />
       <div className="flex flex-wrap mt-4 -ml-3" ref={containerRef}>
         {displayItems.map((item, idx) => {
           const isSelected = selectedAsset === idx;
@@ -206,9 +199,7 @@ export default function AccordionExpandedContent({
           <Button
             variant="cherry"
             className="w-27 mix-blend-multiply shadow-none"
-            onClick={() => {
-              alert('simulate');
-            }}
+            onMouseDown={() => alert('simulate')}
           >
             Simulate
           </Button>
@@ -221,16 +212,5 @@ export default function AccordionExpandedContent({
         <span className="text-clay text-(length:--body-small) font-['InterRegular']">Select a source</span>
       </div>
     </motion.div>
-  );
-}
-
-function InfoBlock({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="flex-col px-(--layout-space-normal)">
-      <div className="text-espresso text-(length:--subtitle) font-['InterBold']">{value}</div>
-      <div className="flex gap-1 text-clay-light text-(length:--body-small)">
-        {label} <AlertCircleIcon className="w-4 h-4" />
-      </div>
-    </div>
   );
 }
