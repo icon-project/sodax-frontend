@@ -43,7 +43,7 @@ function NetworkPicker({
 
   const portalContent = (
     <div
-      className="fixed pointer-events-auto z-[53]"
+      className="fixed pointer-events-auto z-[53] data-network-icon"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,

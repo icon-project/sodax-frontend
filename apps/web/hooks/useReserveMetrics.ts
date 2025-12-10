@@ -118,7 +118,7 @@ export function useReserveMetrics({
       totalBorrowsUSD,
     };
   } catch (error) {
-    console.error(`Error in useReserveMetrics for ${token.symbol} (${token.address}):`, error);
+    // console.error(`Error in useReserveMetrics for ${token.symbol} (${token.address}):`, error);
     return {
       userReserve: undefined,
       formattedReserve: undefined,
@@ -133,4 +133,3 @@ export function useReserveMetrics({
     };
   }
 }
-

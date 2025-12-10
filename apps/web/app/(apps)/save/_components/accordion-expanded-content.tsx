@@ -14,53 +14,6 @@ import { TokenAsset } from '@/components/shared/token-asset';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
-function renderTokenAsset({
-  token,
-  isHoldToken,
-  isGroup = false,
-  tokenCount,
-  tokens,
-  isClicked,
-  onClick,
-  ref,
-  className,
-  supplyBalance,
-}: {
-  token: XToken;
-  isHoldToken: boolean;
-  isGroup?: boolean;
-  tokenCount?: number;
-  tokens?: XToken[];
-  isClicked?: boolean;
-  onClick: () => void;
-  ref: React.RefObject<HTMLDivElement>;
-  className?: string;
-  supplyBalance: string;
-}) {
-  return (
-    <div ref={ref} className={className}>
-      <TokenAsset
-        key={token?.xChainId}
-        name={token?.symbol || ''}
-        token={token}
-        isHoldToken={isHoldToken}
-        formattedBalance={supplyBalance}
-        isGroup={isGroup}
-        tokenCount={tokenCount}
-        tokens={tokens}
-        isClickBlurred={false}
-        isHoverDimmed={false}
-        isHovered={false}
-        onMouseEnter={() => {}}
-        onMouseLeave={() => {}}
-        onClick={onClick}
-        onChainClick={() => {}}
-        isClicked={isClicked}
-      />
-    </div>
-  );
-}
-
 function calculateMetricsForToken(token: XToken, formattedReserves: FormatReserveUSDResponse[]) {
   const { address } = useXAccount(token.xChainId);
   const walletProvider = useWalletProvider(token.xChainId);
@@ -91,37 +44,35 @@ export default function AccordionExpandedContent({
   isFormattedReservesLoading: boolean;
 }) {
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
-  const [clickedAsset, setClickedAsset] = useState<XToken | null>(null);
-  console.log(clickedAsset);
-  const [isOpend, setIsOpend] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
+  const [isAnyNonActiveHovered, setIsAnyNonActiveHovered] = useState(false);
   const tokenAssetRef = useRef<HTMLDivElement>(null);
-
+  const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Element;
 
-      const isNetworkIcon =
-        target.closest('[data-network-icon]') || target.closest('.fixed.pointer-events-auto.z-\\[53\\]');
+      const networkIcons = document.querySelectorAll('.data-network-icon');
+      const isClickInsideAsset = tokenAssetRef.current?.contains(target as Node);
 
-      const isClickOnAsset = tokenAssetRef.current?.contains(target as Node);
-
-      if (isClickOnAsset) {
-        return;
-      }
-
-      if (isOpend && !isNetworkIcon) {
-        setIsOpend(false);
+      if (networkIcons.length > 0) {
+        if (!isClickInsideAsset) setSelectedAsset(null);
+      } else {
+        if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+          setSelectedAsset(null);
+        }
       }
     };
 
-    if (isOpend) {
+    if (selectedAsset !== null) {
       document.addEventListener('mousedown', handleClickOutside);
-
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
+      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [isOpend]);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectedAsset]);
 
   const enrichedTokens = tokens.map(t => ({
     ...t,
@@ -135,6 +86,53 @@ export default function AccordionExpandedContent({
   const platformTokens = enrichedTokens
     .filter(t => Number(t.supplyBalance) === 0)
     .sort((a, b) => a.symbol.localeCompare(b.symbol));
+
+  type DisplayItem = {
+    token: XToken;
+    isHold: boolean;
+    isGroup?: boolean;
+    tokenCount?: number;
+    tokens?: XToken[];
+    supplyBalance: string;
+  };
+
+  const displayItems: DisplayItem[] = [
+    ...holdTokens.map(t => ({ token: t, isHold: true, supplyBalance: t.supplyBalance })),
+  ];
+
+  if (platformTokens.length > 0) {
+    if (platformTokens.length > 1)
+      displayItems.push({
+        token: platformTokens[0] || ({} as XToken),
+        isHold: false,
+        isGroup: true,
+        tokenCount: platformTokens.length,
+        tokens: platformTokens,
+        supplyBalance: platformTokens[0]?.supplyBalance || '0',
+      });
+    else
+      displayItems.push({
+        token: platformTokens[0] || ({} as XToken),
+        isHold: false,
+        supplyBalance: platformTokens[0]?.supplyBalance || '0',
+      });
+  }
+
+  const handleAssetClick = (index: number) => {
+    setSelectedAsset(prev => (prev === index ? null : index));
+  };
+
+  const handleAssetMouseEnter = (index: number) => {
+    if (selectedAsset !== null && selectedAsset !== index) {
+      setIsAnyNonActiveHovered(true);
+    }
+  };
+
+  const handleAssetMouseLeave = (index: number) => {
+    if (selectedAsset !== null && selectedAsset !== index) {
+      setIsAnyNonActiveHovered(false);
+    }
+  };
 
   return (
     <motion.div
@@ -152,46 +150,53 @@ export default function AccordionExpandedContent({
         <InfoBlock value={deposits} label="All deposits" />
       </div>
 
-      <div className="flex flex-wrap mt-4 -ml-3">
-        {holdTokens.map(t =>
-          renderTokenAsset({
-            token: t,
-            isHoldToken: true,
-            onClick: () => setClickedAsset(t),
-            supplyBalance: t.supplyBalance,
-            className: cn(isOpend && 'blur-sm'),
-            ref: tokenAssetRef as React.RefObject<HTMLDivElement>,
-          }),
-        )}
+      <div className="flex flex-wrap mt-4 -ml-3" ref={containerRef}>
+        {displayItems.map((item, idx) => {
+          const isSelected = selectedAsset === idx;
+          const shouldBlur = selectedAsset !== null && !isSelected;
+          const blurAmount = shouldBlur ? (isAnyNonActiveHovered ? 1 : 4) : 0;
 
-        {platformTokens.length > 1
-          ? renderTokenAsset({
-              token: platformTokens[0] || ({} as XToken),
-              isHoldToken: false,
-              isGroup: true,
-              tokenCount: platformTokens.length,
-              tokens: platformTokens,
-              isClicked: isOpend,
-              onClick: (e?: React.MouseEvent) => {
-                if (e) {
-                  e.stopPropagation();
-                }
-                setIsOpend(prev => !prev);
-              },
-              ref: tokenAssetRef as React.RefObject<HTMLDivElement>,
-              supplyBalance: platformTokens[0]?.supplyBalance || '0',
-            })
-          : renderTokenAsset({
-              token: platformTokens[0] || ({} as XToken),
-              isHoldToken: false,
-              onClick: () => setClickedAsset(platformTokens[0] || ({} as XToken)),
-              supplyBalance: platformTokens[0]?.supplyBalance || '0',
-              className: cn(isOpend && 'blur-sm'),
-              ref: tokenAssetRef as React.RefObject<HTMLDivElement>,
-            })}
+          const wrapperClass = cn(shouldBlur && 'opacity-40');
+
+          return (
+            <motion.div
+              key={`${item.token.xChainId || 'group'}-${idx}`}
+              ref={item.isGroup ? tokenAssetRef : undefined}
+              className={wrapperClass}
+              onMouseEnter={() => handleAssetMouseEnter(idx)}
+              onMouseLeave={() => handleAssetMouseLeave(idx)}
+              style={{ filter: `blur(${blurAmount}px)` }}
+              animate={{
+                opacity: shouldBlur ? 0.4 : 1,
+              }}
+              transition={{ duration: 0.18, ease: 'easeInOut' }}
+            >
+              <TokenAsset
+                key={item.token?.xChainId}
+                name={item.token?.symbol || ''}
+                token={item.token}
+                isHoldToken={item.isHold}
+                formattedBalance={item.supplyBalance}
+                isGroup={item.isGroup}
+                tokenCount={item.tokenCount}
+                tokens={item.tokens}
+                isClickBlurred={false}
+                isHoverDimmed={false}
+                isHovered={false}
+                onMouseEnter={() => {}}
+                onMouseLeave={() => {}}
+                onClick={() => {
+                  handleAssetClick(idx);
+                }}
+                onChainClick={() => {}}
+                isClicked={isSelected}
+              />
+            </motion.div>
+          );
+        })}
       </div>
 
-      <div className={cn('flex gap-4 items-center mb-8', isOpend && 'blur filter opacity-30')}>
+      <div className={cn('flex gap-4 items-center mb-8', selectedAsset !== null && 'blur filter opacity-30')}>
         <Button variant="cream" className="w-27 mix-blend-multiply shadow-none">
           Continue
         </Button>
