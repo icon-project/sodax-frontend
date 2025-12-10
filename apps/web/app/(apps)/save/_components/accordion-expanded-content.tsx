@@ -12,6 +12,8 @@ import { TokenAsset } from '@/components/shared/token-asset';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import AccordionInfoBlock from './accordion-info-block';
+import { CustomSlider } from '@/components/ui/customer-slider';
+import NetworkIcon from '@/components/shared/network-icon';
 
 function calculateMetricsForToken(token: XToken, formattedReserves: FormatReserveUSDResponse[]) {
   const { address } = useXAccount(token.xChainId);
@@ -45,8 +47,11 @@ export default function AccordionExpandedContent({
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
   const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
   const [isAnyNonActiveHovered, setIsAnyNonActiveHovered] = useState(false);
+  const [isShowDeposits, setIsShowDeposits] = useState(false);
   const tokenAssetRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [progress, setProgress] = useState([30]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Element;
@@ -140,54 +145,88 @@ export default function AccordionExpandedContent({
       animate="open"
       exit="closed"
       className="pl-0 md:pl-18 flex flex-col gap-4"
-      layout
     >
-      <AccordionInfoBlock apy={apy} deposits={deposits} />
-      <div className="flex flex-wrap mt-4 -ml-3" ref={containerRef}>
-        {displayItems.map((item, idx) => {
-          const isSelected = selectedAsset === idx;
-          const shouldBlur = selectedAsset !== null && !isSelected;
-          const blurAmount = shouldBlur ? (isAnyNonActiveHovered ? 1 : 4) : 0;
+      {isShowDeposits ? (
+        <div className="p-1">
+          <div className="flex gap-2 items-center">
+            <NetworkIcon id={tokens[0]?.xChainId || ''} className="scale-150" />
+            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
+              $10,000.00
+            </div>
+            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">worth of WBTC</div>
+          </div>
+          <div className="flex items-center">
+            <CustomSlider
+              defaultValue={[0]}
+              max={30}
+              step={1}
+              value={progress}
+              onValueChange={setProgress}
+              className="mt-8"
+              trackClassName="bg-cream-white"
+              rangeClassName="bg-[linear-gradient(135deg,#EDE6E6_25%,#E3BEBB_25%,#E3BEBB_50%,#EDE6E6_50%,#EDE6E6_75%,#E3BEBB_75%,#E3BEBB_100%)] 
+         [background-size:20px_20px]"
+              thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
+            ></CustomSlider>
+            {/* <span className="w-40 h-10">{progress[0]}%</span> */}
+          </div>
+          <div className="flex gap-2 items-center mt-6">
+            <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
+              Sample available:
+            </div>
+            <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">0 WBTC</div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <AccordionInfoBlock apy={apy} deposits={deposits} />
+          <div className="flex flex-wrap mt-4 -ml-3" ref={containerRef}>
+            {displayItems.map((item, idx) => {
+              const isSelected = selectedAsset === idx;
+              const shouldBlur = selectedAsset !== null && !isSelected;
+              const blurAmount = shouldBlur ? (isAnyNonActiveHovered ? 1 : 4) : 0;
 
-          const wrapperClass = cn(shouldBlur && 'opacity-40');
+              const wrapperClass = cn(shouldBlur && 'opacity-40');
 
-          return (
-            <motion.div
-              key={`${item.token.xChainId || 'group'}-${idx}`}
-              ref={item.isGroup ? tokenAssetRef : undefined}
-              className={wrapperClass}
-              onMouseEnter={() => handleAssetMouseEnter(idx)}
-              onMouseLeave={() => handleAssetMouseLeave(idx)}
-              style={{ filter: `blur(${blurAmount}px)` }}
-              animate={{
-                opacity: shouldBlur ? 0.4 : 1,
-              }}
-              transition={{ duration: 0.18, ease: 'easeInOut' }}
-            >
-              <TokenAsset
-                key={item.token?.xChainId}
-                name={item.token?.symbol || ''}
-                token={item.token}
-                isHoldToken={item.isHold}
-                formattedBalance={item.supplyBalance}
-                isGroup={item.isGroup}
-                tokenCount={item.tokenCount}
-                tokens={item.tokens}
-                isClickBlurred={false}
-                isHoverDimmed={false}
-                isHovered={false}
-                onMouseEnter={() => {}}
-                onMouseLeave={() => {}}
-                onClick={() => {
-                  handleAssetClick(idx);
-                }}
-                onChainClick={() => {}}
-                isClicked={isSelected}
-              />
-            </motion.div>
-          );
-        })}
-      </div>
+              return (
+                <motion.div
+                  key={`${item.token.xChainId || 'group'}-${idx}`}
+                  ref={item.isGroup ? tokenAssetRef : undefined}
+                  className={wrapperClass}
+                  onMouseEnter={() => handleAssetMouseEnter(idx)}
+                  onMouseLeave={() => handleAssetMouseLeave(idx)}
+                  style={{ filter: `blur(${blurAmount}px)` }}
+                  animate={{
+                    opacity: shouldBlur ? 0.4 : 1,
+                  }}
+                  transition={{ duration: 0.18, ease: 'easeInOut' }}
+                >
+                  <TokenAsset
+                    key={item.token?.xChainId}
+                    name={item.token?.symbol || ''}
+                    token={item.token}
+                    isHoldToken={item.isHold}
+                    formattedBalance={item.supplyBalance}
+                    isGroup={item.isGroup}
+                    tokenCount={item.tokenCount}
+                    tokens={item.tokens}
+                    isClickBlurred={false}
+                    isHoverDimmed={false}
+                    isHovered={false}
+                    onMouseEnter={() => {}}
+                    onMouseLeave={() => {}}
+                    onClick={() => {
+                      handleAssetClick(idx);
+                    }}
+                    onChainClick={() => {}}
+                    isClicked={isSelected}
+                  />
+                </motion.div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       <div
         className={cn(
@@ -199,7 +238,7 @@ export default function AccordionExpandedContent({
           <Button
             variant="cherry"
             className="w-27 mix-blend-multiply shadow-none"
-            onMouseDown={() => alert('simulate')}
+            onMouseDown={() => setIsShowDeposits(true)}
           >
             Simulate
           </Button>
