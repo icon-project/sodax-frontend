@@ -151,7 +151,6 @@ export default function TokenAccordionItem({
             {!isCollapsed && (
               <AccordionExpandedContent
                 tokens={tokens}
-                symbol={symbol}
                 formattedReserves={formattedReserves}
                 isFormattedReservesLoading={isFormattedReservesLoading}
               />

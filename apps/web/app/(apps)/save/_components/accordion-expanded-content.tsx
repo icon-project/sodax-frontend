@@ -11,6 +11,55 @@ import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { TokenAsset } from '@/components/shared/token-asset';
+import { useState, useRef, useEffect } from 'react';
+import { cn } from '@/lib/utils';
+
+function renderTokenAsset({
+  token,
+  isHoldToken,
+  isGroup = false,
+  tokenCount,
+  tokens,
+  isClicked,
+  onClick,
+  ref,
+  className,
+  supplyBalance,
+}: {
+  token: XToken;
+  isHoldToken: boolean;
+  isGroup?: boolean;
+  tokenCount?: number;
+  tokens?: XToken[];
+  isClicked?: boolean;
+  onClick: () => void;
+  ref: React.RefObject<HTMLDivElement>;
+  className?: string;
+  supplyBalance: string;
+}) {
+  return (
+    <div ref={ref} className={className}>
+      <TokenAsset
+        key={token?.xChainId}
+        name={token?.symbol || ''}
+        token={token}
+        isHoldToken={isHoldToken}
+        formattedBalance={supplyBalance}
+        isGroup={isGroup}
+        tokenCount={tokenCount}
+        tokens={tokens}
+        isClickBlurred={false}
+        isHoverDimmed={false}
+        isHovered={false}
+        onMouseEnter={() => {}}
+        onMouseLeave={() => {}}
+        onClick={onClick}
+        onChainClick={() => {}}
+        isClicked={isClicked}
+      />
+    </div>
+  );
+}
 
 function calculateMetricsForToken(token: XToken, formattedReserves: FormatReserveUSDResponse[]) {
   const { address } = useXAccount(token.xChainId);
@@ -34,24 +83,42 @@ function calculateMetricsForToken(token: XToken, formattedReserves: FormatReserv
 
 export default function AccordionExpandedContent({
   tokens,
-  symbol,
   formattedReserves,
   isFormattedReservesLoading,
 }: {
   tokens: XToken[];
-  symbol: string;
   formattedReserves?: FormatReserveUSDResponse[];
   isFormattedReservesLoading: boolean;
 }) {
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
+  const [clickedAsset, setClickedAsset] = useState<XToken | null>(null);
+  console.log(clickedAsset);
+  const [isOpend, setIsOpend] = useState(false);
+  const tokenAssetRef = useRef<HTMLDivElement>(null);
 
-  const enrichedTokens = tokens.map(t => {
-    const metrics = calculateMetricsForToken(t, formattedReserves || []);
-    return {
-      ...t,
-      supplyBalance: metrics.supplyBalance,
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent): void => {
+      const target = event.target as Element;
+
+      const isNetworkIcon =
+        target.closest('[data-network-icon]') || target.closest('.fixed.pointer-events-auto.z-\\[53\\]');
+
+      if (tokenAssetRef.current && !tokenAssetRef.current.contains(target as Node) && isOpend && !isNetworkIcon) {
+        setTimeout(() => setIsOpend(false), 10);
+      }
     };
-  });
+
+    if (isOpend) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpend]);
+
+  const enrichedTokens = tokens.map(t => ({
+    ...t,
+    supplyBalance: calculateMetricsForToken(t, formattedReserves || []).supplyBalance,
+  }));
 
   const holdTokens = enrichedTokens
     .filter(t => Number(t.supplyBalance) > 0)
@@ -78,60 +145,40 @@ export default function AccordionExpandedContent({
       </div>
 
       <div className="flex flex-wrap mt-4 -ml-3">
-        {holdTokens.map(t => (
-          <TokenAsset
-            key={t.xChainId}
-            name={t.symbol}
-            token={t}
-            formattedBalance={t.supplyBalance}
-            isHoldToken={true}
-            isClickBlurred={false}
-            isHoverDimmed={false}
-            isHovered={false}
-            onMouseEnter={() => {}}
-            onMouseLeave={() => {}}
-            onClick={() => {}}
-            onChainClick={() => {}}
-            isClicked={false}
-          />
-        ))}
-        {platformTokens.length > 1 ? (
-          <TokenAsset
-            key={platformTokens[0]?.xChainId}
-            name={platformTokens[0]?.symbol || ''}
-            token={platformTokens[0] || ({} as XToken)}
-            isHoldToken={false}
-            isGroup={true}
-            tokenCount={platformTokens.length}
-            tokens={platformTokens}
-            isClickBlurred={false}
-            isHoverDimmed={false}
-            isHovered={false}
-            onMouseEnter={() => {}}
-            onMouseLeave={() => {}}
-            onClick={() => {}}
-            onChainClick={() => {}}
-            isClicked={false}
-          />
-        ) : (
-          <TokenAsset
-            key={platformTokens[0]?.xChainId}
-            name={platformTokens[0]?.symbol || ''}
-            token={platformTokens[0] || ({} as XToken)}
-            isHoldToken={false}
-            isClickBlurred={false}
-            isHoverDimmed={false}
-            isHovered={false}
-            onMouseEnter={() => {}}
-            onMouseLeave={() => {}}
-            onClick={() => {}}
-            onChainClick={() => {}}
-            isClicked={false}
-          />
+        {holdTokens.map(t =>
+          renderTokenAsset({
+            token: t,
+            isHoldToken: true,
+            onClick: () => setClickedAsset(t),
+            supplyBalance: t.supplyBalance,
+            className: cn(isOpend && 'blur-sm'),
+            ref: tokenAssetRef as React.RefObject<HTMLDivElement>,
+          }),
         )}
+
+        {platformTokens.length > 1
+          ? renderTokenAsset({
+              token: platformTokens[0] || ({} as XToken),
+              isHoldToken: false,
+              isGroup: true,
+              tokenCount: platformTokens.length,
+              tokens: platformTokens,
+              isClicked: isOpend,
+              onClick: () => setIsOpend(true),
+              ref: tokenAssetRef as React.RefObject<HTMLDivElement>,
+              supplyBalance: platformTokens[0]?.supplyBalance || '0',
+            })
+          : renderTokenAsset({
+              token: platformTokens[0] || ({} as XToken),
+              isHoldToken: false,
+              onClick: () => setClickedAsset(platformTokens[0] || ({} as XToken)),
+              supplyBalance: platformTokens[0]?.supplyBalance || '0',
+              className: cn(isOpend && 'blur-sm'),
+              ref: tokenAssetRef as React.RefObject<HTMLDivElement>,
+            })}
       </div>
 
-      <div className="flex gap-4 items-center mb-8">
+      <div className={cn('flex gap-4 items-center mb-8', isOpend && 'blur filter opacity-30')}>
         <Button variant="cream" className="w-27 mix-blend-multiply shadow-none">
           Continue
         </Button>
