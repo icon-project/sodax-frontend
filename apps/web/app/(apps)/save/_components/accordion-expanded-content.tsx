@@ -103,16 +103,24 @@ export default function AccordionExpandedContent({
       const isNetworkIcon =
         target.closest('[data-network-icon]') || target.closest('.fixed.pointer-events-auto.z-\\[53\\]');
 
-      if (tokenAssetRef.current && !tokenAssetRef.current.contains(target as Node) && isOpend && !isNetworkIcon) {
-        setTimeout(() => setIsOpend(false), 10);
+      const isClickOnAsset = tokenAssetRef.current?.contains(target as Node);
+
+      if (isClickOnAsset) {
+        return;
+      }
+
+      if (isOpend && !isNetworkIcon) {
+        setIsOpend(false);
       }
     };
 
     if (isOpend) {
       document.addEventListener('mousedown', handleClickOutside);
-    }
 
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
   }, [isOpend]);
 
   const enrichedTokens = tokens.map(t => ({
@@ -164,7 +172,12 @@ export default function AccordionExpandedContent({
               tokenCount: platformTokens.length,
               tokens: platformTokens,
               isClicked: isOpend,
-              onClick: () => setIsOpend(true),
+              onClick: (e?: React.MouseEvent) => {
+                if (e) {
+                  e.stopPropagation();
+                }
+                setIsOpend(prev => !prev);
+              },
               ref: tokenAssetRef as React.RefObject<HTMLDivElement>,
               supplyBalance: platformTokens[0]?.supplyBalance || '0',
             })
