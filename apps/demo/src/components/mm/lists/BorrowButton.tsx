@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
+import type { MoneyMarketBorrowParams } from '@sodax/sdk';
 
 export function BorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
@@ -16,8 +17,22 @@ export function BorrowButton({ token }: { token: XToken }) {
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow();
 
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'borrow', spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
+  const params: MoneyMarketBorrowParams | undefined = useMemo(() => {
+    if (!amount) return undefined;
+    return {
+      token: token.address,
+      amount: parseUnits(amount, 18),
+      action: 'borrow',
+    };
+  }, [token.address, amount]);
+
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(params, spokeProvider);
+  const {
+    mutateAsync: approve,
+    isPending: isApproving,
+    error: approveError,
+    reset: resetApproveError,
+  } = useMMApprove();
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleBorrow = async () => {
@@ -25,13 +40,13 @@ export function BorrowButton({ token }: { token: XToken }) {
       console.error('spokeProvider is not available');
       return;
     }
+    if (!params) {
+      console.error('params is not available');
+      return;
+    }
     try {
       await borrow({
-        params: {
-          token: token.address,
-          amount: parseUnits(amount, 18),
-          action: 'borrow',
-        },
+        params,
         spokeProvider,
       });
       setOpen(false);
@@ -45,11 +60,24 @@ export function BorrowButton({ token }: { token: XToken }) {
     if (!newOpen) {
       setAmount('');
       resetError?.();
+      resetApproveError?.();
     }
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action: 'borrow' });
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
+    if (!params) {
+      console.error('params is not available');
+      return;
+    }
+    try {
+      await approve({ params, spokeProvider });
+    } catch (err) {
+      console.error('Error in handleApprove:', err);
+    }
   };
 
   return (
@@ -59,6 +87,7 @@ export function BorrowButton({ token }: { token: XToken }) {
           variant="outline"
           onClick={() => {
             resetError?.();
+            resetApproveError?.();
             setOpen(true);
           }}
         >
@@ -79,13 +108,14 @@ export function BorrowButton({ token }: { token: XToken }) {
           </div>
         </div>
         {error && <p className="text-red-500 text-sm mt-2">{error?.code}</p>}
+        {approveError && <p className="text-red-500 text-sm mt-2">{approveError?.message}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"
             type="button"
             variant="default"
             onClick={handleApprove}
-            disabled={isAllowanceLoading || hasAllowed || isApproving}
+            disabled={isAllowanceLoading || hasAllowed || isApproving || !params}
           >
             {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
           </Button>

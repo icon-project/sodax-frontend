@@ -1,13 +1,14 @@
-import React from 'react';
+// apps/demo/src/components/mm/lists/RepayButton.tsx
+import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
-import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
+import type { MoneyMarketRepayParams } from '@sodax/sdk';
 
 export function RepayButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
@@ -16,8 +17,23 @@ export function RepayButton({ token }: { token: XToken }) {
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
   const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay();
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'repay', spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
+
+  const params: MoneyMarketRepayParams | undefined = useMemo(() => {
+    if (!amount) return undefined;
+    return {
+      token: token.address,
+      amount: parseUnits(amount, token.decimals),
+      action: 'repay',
+    };
+  }, [token.address, token.decimals, amount]);
+
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(params, spokeProvider);
+  const {
+    mutateAsync: approve,
+    isPending: isApproving,
+    error: approveError,
+    reset: resetApproveError,
+  } = useMMApprove();
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleRepay = async () => {
@@ -25,13 +41,13 @@ export function RepayButton({ token }: { token: XToken }) {
       console.error('spokeProvider is not available');
       return;
     }
+    if (!params) {
+      console.error('params is not available');
+      return;
+    }
     try {
       await repay({
-        params: {
-          token: token.address,
-          amount: parseUnits(amount, token.decimals),
-          action: 'repay',
-        },
+        params,
         spokeProvider,
       });
       setOpen(false);
@@ -45,11 +61,24 @@ export function RepayButton({ token }: { token: XToken }) {
     if (!newOpen) {
       setAmount('');
       resetError?.();
+      resetApproveError?.();
     }
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action: 'repay' });
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
+    if (!params) {
+      console.error('params is not available');
+      return;
+    }
+    try {
+      await approve({ params, spokeProvider });
+    } catch (err) {
+      console.error('Error in handleApprove:', err);
+    }
   };
 
   return (
@@ -59,6 +88,7 @@ export function RepayButton({ token }: { token: XToken }) {
           variant="outline"
           onClick={() => {
             resetError?.();
+            resetApproveError?.();
             setOpen(true);
           }}
         >
@@ -78,14 +108,15 @@ export function RepayButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{error.code}</p>}
+        {error && <p className="text-red-500 text-sm mt-2">{error?.code}</p>}
+        {approveError && <p className="text-red-500 text-sm mt-2">{approveError?.message}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"
             type="button"
             variant="default"
             onClick={handleApprove}
-            disabled={isAllowanceLoading || hasAllowed || isApproving}
+            disabled={isAllowanceLoading || hasAllowed || isApproving || !params}
           >
             {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
           </Button>
