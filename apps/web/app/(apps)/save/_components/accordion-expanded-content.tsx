@@ -196,10 +196,28 @@ export default function AccordionExpandedContent({
         })}
       </div>
 
-      <div className={cn('flex gap-4 items-center mb-8', selectedAsset !== null && 'blur filter opacity-30')}>
-        <Button variant="cream" className="w-27 mix-blend-multiply shadow-none">
-          Continue
-        </Button>
+      <div
+        className={cn(
+          'flex gap-4 items-center mb-8',
+          displayItems[selectedAsset as number]?.isGroup && 'blur filter opacity-30',
+        )}
+      >
+        {selectedAsset !== null && !displayItems[selectedAsset as number]?.isGroup && (
+          <Button
+            variant="cherry"
+            className="w-27 mix-blend-multiply shadow-none"
+            onClick={() => {
+              alert('simulate');
+            }}
+          >
+            Simulate
+          </Button>
+        )}
+        {selectedAsset === null || displayItems[selectedAsset as number]?.isGroup ? (
+          <Button variant="cream" className="w-27 mix-blend-multiply shadow-none">
+            Continue
+          </Button>
+        ) : null}
         <span className="text-clay text-(length:--body-small) font-['InterRegular']">Select a source</span>
       </div>
     </motion.div>
