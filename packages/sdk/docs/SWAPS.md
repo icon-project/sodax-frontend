@@ -65,8 +65,9 @@ All swap methods are accessible through `sodax.swaps`:
 ### Intent Management
 
 - `getIntent(txHash)` - Retrieve intent from hub chain transaction hash
-- `getFilledIntent(txHash)` - Get the filled intent state from the hub chain transaction hash by parsing the `IntentFilled` event.  
+- `getFilledIntent(txHash)` - Get the filled intent state from the hub chain transaction hash by parsing the `IntentFilled` event.
   Useful for obtaining the final exact output amount and state details after an intent has been executed.
+- `getSolvedIntentPacket(params)` - Get the intent delivery info about solved intent from the Relayer API.
 - `getIntentHash(intent)` - Get keccak256 hash of an intent
 - `getStatus(request)` - Get intent status from Solver API
 - `cancelIntent(intent, spokeProvider, raw?)` - Cancel an active intent
@@ -714,6 +715,56 @@ if (result.ok) {
 }
 ```
 
+### Get Solved Intent Packet
+
+Get the intent delivery info about solved intent from the Relayer API. Packet data contains info about the intent execution on the destination chain.
+
+**Note**: This method should be called after `getStatus` returns a status of `SOLVED (3)`. The `fill_tx_hash` from the status response is used as the `fillTxHash` parameter.
+
+```typescript
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  SolverIntentStatusCode,
+  type SolverIntentStatusRequest,
+  type PacketData,
+  type IntentError
+} from "@sodax/sdk";
+
+// First, get the status to check if the intent is solved
+const statusRequest = {
+  intent_tx_hash: '0x...', // Hub chain transaction hash
+} satisfies SolverIntentStatusRequest;
+
+const statusResult = await sodax.swaps.getStatus(statusRequest);
+
+if (statusResult.ok && statusResult.value.status === SolverIntentStatusCode.SOLVED) {
+  const { fill_tx_hash } = statusResult.value;
+  
+  if (fill_tx_hash) {
+    // Get the packet data for the solved intent
+    const packetResult = await sodax.swaps.getSolvedIntentPacket({
+      chainId: ARBITRUM_MAINNET_CHAIN_ID, // Destination spoke chain ID
+      fillTxHash: fill_tx_hash, // Fill transaction hash from getStatus
+      timeout: 120000, // Optional: timeout in milliseconds (default: 120 seconds)
+    });
+
+    if (packetResult.ok) {
+      const packet: PacketData = packetResult.value;
+      console.log('Source chain ID:', packet.src_chain_id);
+      console.log('Source transaction hash:', packet.src_tx_hash);
+      console.log('Destination chain ID:', packet.dst_chain_id);
+      console.log('Destination transaction hash:', packet.dst_tx_hash);
+      console.log('Status:', packet.status);
+      console.log('Source address:', packet.src_address);
+      console.log('Destination address:', packet.dst_address);
+    } else {
+      // Handle timeout error
+      const error: IntentError<'RELAY_TIMEOUT'> = packetResult.error;
+      console.error('Failed to get solved intent packet:', error);
+    }
+  }
+}
+```
 
 ### Get Intent Hash
 
