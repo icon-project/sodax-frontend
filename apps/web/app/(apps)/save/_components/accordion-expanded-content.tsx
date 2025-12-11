@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { accordionVariants } from '@/constants/animation';
 import type { XToken } from '@sodax/types';
@@ -14,6 +15,8 @@ import { cn } from '@/lib/utils';
 import AccordionInfoBlock from './accordion-info-block';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import NetworkIcon from '@/components/shared/network-icon';
+import { ArrowLeft } from 'lucide-react';
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 
 function calculateMetricsForToken(token: XToken, formattedReserves: FormatReserveUSDResponse[]) {
   const { address } = useXAccount(token.xChainId);
@@ -155,20 +158,44 @@ export default function AccordionExpandedContent({
             </div>
             <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">worth of WBTC</div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2 mt-8">
             <CustomSlider
               defaultValue={[0]}
               max={30}
               step={1}
               value={progress}
               onValueChange={setProgress}
-              className="mt-8"
+              className="h-10"
               trackClassName="bg-cream-white"
               rangeClassName="bg-[linear-gradient(135deg,#EDE6E6_25%,#E3BEBB_25%,#E3BEBB_50%,#EDE6E6_50%,#EDE6E6_75%,#E3BEBB_75%,#E3BEBB_100%)] 
          [background-size:20px_20px]"
               thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
             ></CustomSlider>
-            {/* <span className="w-40 h-10">{progress[0]}%</span> */}
+            <InputGroup className="[--radius:9999px] border-4 border-cream-white w-40 h-10">
+              <InputGroupAddon className="text-muted-foreground pl-1.5">
+                <Image
+                  className="w-6 h-6 rounded-[256px]"
+                  src={`/coin/${tokens[0]?.symbol.toLowerCase()}.png`}
+                  alt={tokens[0]?.symbol || ''}
+                  width={24}
+                  height={24}
+                  priority
+                />
+              </InputGroupAddon>
+              <InputGroupInput
+                id="input-secure-19"
+                value={progress[0]?.toString() || '0'}
+                className="!text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular']"
+              />
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  size="icon-xs"
+                  className="text-clay text-[9px] font-['InterRegular'] font-normal !border-none !outline-none"
+                >
+                  MAX
+                </InputGroupButton>
+              </InputGroupAddon>
+            </InputGroup>
           </div>
           <div className="flex gap-2 items-center mt-6">
             <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
@@ -235,13 +262,20 @@ export default function AccordionExpandedContent({
         )}
       >
         {selectedAsset !== null && !displayItems[selectedAsset as number]?.isGroup && (
-          <Button
-            variant="cherry"
-            className="w-27 mix-blend-multiply shadow-none"
-            onMouseDown={() => setIsShowDeposits(true)}
-          >
-            Simulate
-          </Button>
+          <div className="flex gap-(--layout-space-small)">
+            {isShowDeposits && (
+              <Button variant="cream" className="w-10 h-10" onMouseDown={() => setIsShowDeposits(false)}>
+                <ArrowLeft />
+              </Button>
+            )}
+            <Button
+              variant="cherry"
+              className="w-27 mix-blend-multiply shadow-none"
+              onMouseDown={() => setIsShowDeposits(true)}
+            >
+              Simulate
+            </Button>
+          </div>
         )}
         {selectedAsset === null || displayItems[selectedAsset as number]?.isGroup ? (
           <Button variant="cream" className="w-27 mix-blend-multiply shadow-none">
