@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/swap/_components/token-list.tsx
 import type React from 'react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
@@ -6,7 +7,7 @@ import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
 import { TokenAsset } from '@/components/shared/token-asset';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
-import { getUniqueTokenSymbols, getChainBalance } from '@/lib/utils';
+import { getUniqueTokenSymbols, getChainBalance, formatBalance } from '@/lib/utils';
 import { formatUnits } from 'viem';
 
 interface TokenListProps {
@@ -162,7 +163,6 @@ export function TokenList({
       <TokenAsset
         key={tokenUniqueId}
         name={symbol}
-        sourceBalance={0n}
         isHoldToken={false}
         isGroup={true}
         tokenCount={tokens.length}
@@ -182,7 +182,6 @@ export function TokenList({
         key={tokenUniqueId}
         name={symbol}
         token={tokens[0]}
-        sourceBalance={0n}
         isHoldToken={false}
         onClick={() => handleTokenAssetClick(tokens[0] || ({} as XToken))}
         {...commonProps}
@@ -202,14 +201,24 @@ export function TokenList({
       onMouseLeave: () => shouldApplyHover && setHoveredAsset(null),
     };
     const balance = getChainBalance(allBalances, token);
+    const isHoldToken = balance > 0n;
+
+    // Calculate formatted balance if token is held and prices are available
+    let formattedBalance: string | undefined;
+    if (isHoldToken && tokenPrices) {
+      const priceKey = `${token.symbol}-${token.xChainId}`;
+      const usdPrice = tokenPrices[priceKey] || 0;
+      const balanceString = formatUnits(balance, token.decimals);
+      formattedBalance = formatBalance(balanceString, usdPrice);
+    }
 
     return (
       <TokenAsset
         key={tokenUniqueId}
         name={token.symbol}
         token={token}
-        sourceBalance={balance}
-        isHoldToken={balance > 0n}
+        formattedBalance={formattedBalance}
+        isHoldToken={isHoldToken}
         onClick={() => handleTokenAssetClick(token)}
         {...commonProps}
       />
@@ -233,7 +242,7 @@ export function TokenList({
         data-slot="scroll-area"
         className={`mt-4 h-[calc(80vh-176px)] md:h-126 w-full content-stretch ${clickedAsset ? '' : ''}`}
       >
-        <div className="w-full h-16 left-0 top-0 absolute bg-gradient-to-b from-vibrant-white to-neutral-100/0 z-[100000]" />
+        <div className="w-full h-16 left-0 top-0 absolute bg-gradient-to-b from-vibrant-white to-neutral-100/0 z-[100000] pointer-events-none" />
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
           className="ring-ring/10 dark:ring-ring/20 dark:outline-ring/40 outline-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] focus-visible:ring-4 focus-visible:outline-1 px-6"
@@ -252,7 +261,7 @@ export function TokenList({
             </AnimatePresence>
           </motion.div>
         </ScrollAreaPrimitive.Viewport>
-        <div className="w-full h-16 left-0 bottom-0 absolute bg-gradient-to-t from-vibrant-white to-neutral-100/0 z-[100000]" />
+        <div className="w-full h-16 left-0 bottom-0 absolute bg-gradient-to-t from-vibrant-white to-neutral-100/0 z-[100000] pointer-events-none" />
         <ScrollBar />
         <ScrollAreaPrimitive.Corner />
       </ScrollAreaPrimitive.Root>
