@@ -1,5 +1,4 @@
 import { motion } from 'motion/react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { accordionVariants } from '@/constants/animation';
 import type { XToken } from '@sodax/types';
@@ -9,14 +8,12 @@ import { formatUnits } from 'viem';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-import { TokenAsset } from '@/components/shared/token-asset';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import AccordionInfoBlock from './accordion-info-block';
-import { CustomSlider } from '@/components/ui/customer-slider';
-import NetworkIcon from '@/components/shared/network-icon';
+import AccordionDeposit from './accordion-deposit';
 import { ArrowLeft } from 'lucide-react';
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { TokenAssetWrapper } from './token-asset-wrapper';
 
 function calculateMetricsForToken(token: XToken, formattedReserves: FormatReserveUSDResponse[]) {
   const { address } = useXAccount(token.xChainId);
@@ -155,60 +152,7 @@ export default function AccordionExpandedContent({
       className="pl-0 md:pl-18 flex flex-col gap-4"
     >
       {isShowDeposits ? (
-        <div className="p-1">
-          <div className="flex gap-2 items-center">
-            <NetworkIcon id={selectedToken?.xChainId || ''} className="scale-150" />
-            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
-              $10,000.00
-            </div>
-            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">worth of WBTC</div>
-          </div>
-          <div className="flex items-center gap-2 mt-8">
-            <CustomSlider
-              defaultValue={[0]}
-              max={30}
-              step={1}
-              value={progress}
-              onValueChange={setProgress}
-              className="h-10"
-              trackClassName="bg-cream-white"
-              rangeClassName="bg-[linear-gradient(135deg,#EDE6E6_25%,#E3BEBB_25%,#E3BEBB_50%,#EDE6E6_50%,#EDE6E6_75%,#E3BEBB_75%,#E3BEBB_100%)] 
-         [background-size:20px_20px]"
-              thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
-            ></CustomSlider>
-            <InputGroup className="[--radius:9999px] border-4 border-cream-white w-40 h-10 pr-1">
-              <InputGroupAddon className="text-muted-foreground pl-1.5">
-                <Image
-                  className="w-6 h-6 rounded-[256px]"
-                  src={`/coin/${tokens[0]?.symbol.toLowerCase()}.png`}
-                  alt={tokens[0]?.symbol || ''}
-                  width={24}
-                  height={24}
-                  priority
-                />
-              </InputGroupAddon>
-              <InputGroupInput
-                id="input-secure-19"
-                value={progress[0]?.toString() || '0'}
-                className="!text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular']"
-              />
-              <InputGroupAddon align="inline-end">
-                <InputGroupButton
-                  size="icon-xs"
-                  className="text-clay text-[9px] font-['InterRegular'] font-normal !border-none !outline-none leading-0"
-                >
-                  MAX
-                </InputGroupButton>
-              </InputGroupAddon>
-            </InputGroup>
-          </div>
-          <div className="flex gap-2 items-center mt-6">
-            <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
-              Sample available:
-            </div>
-            <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">0 WBTC</div>
-          </div>
-        </div>
+        <AccordionDeposit selectedToken={selectedToken} progress={progress} setProgress={setProgress} tokens={tokens} />
       ) : (
         <>
           <AccordionInfoBlock apy={apy} deposits={deposits} />
@@ -233,66 +177,16 @@ export default function AccordionExpandedContent({
                   }}
                   transition={{ duration: 0.18, ease: 'easeInOut' }}
                 >
-                  {!item.isGroup ? (
-                    <TokenAsset
-                      key={item.token?.xChainId}
-                      name={item.token?.symbol || ''}
-                      token={item.token}
-                      isHoldToken={item.isHold}
-                      formattedBalance={item.supplyBalance}
-                      isGroup={item.isGroup}
-                      tokenCount={item.tokenCount}
-                      tokens={item.tokens}
-                      isClickBlurred={false}
-                      isHoverDimmed={false}
-                      isHovered={false}
-                      onMouseEnter={() => {}}
-                      onMouseLeave={() => {}}
-                      onClick={() => {
-                        handleAssetClick(idx);
-                        setSelectedToken(item.token);
-                      }}
-                    />
-                  ) : selectedToken ? (
-                    <TokenAsset
-                      key={selectedToken?.xChainId}
-                      name={selectedToken?.symbol || ''}
-                      token={selectedToken}
-                      isHoldToken={false}
-                      isGroup={false}
-                      isClickBlurred={false}
-                      isHoverDimmed={false}
-                      isHovered={false}
-                      onMouseEnter={() => {}}
-                      onMouseLeave={() => {}}
-                      onClick={() => {
-                        setSelectedToken(null);
-                      }}
-                    />
-                  ) : (
-                    <TokenAsset
-                      key={item.token?.xChainId}
-                      name={item.token?.symbol || ''}
-                      token={item.token}
-                      isHoldToken={item.isHold}
-                      formattedBalance={item.supplyBalance}
-                      isGroup={item.isGroup}
-                      tokenCount={item.tokenCount}
-                      tokens={item.tokens}
-                      isClickBlurred={false}
-                      isHoverDimmed={false}
-                      isHovered={false}
-                      onMouseEnter={() => {}}
-                      onMouseLeave={() => {}}
-                      onClick={() => {
-                        handleAssetClick(idx);
-                      }}
-                      onChainClick={token => {
-                        setSelectedToken(token);
-                      }}
-                      isClicked={isSelected}
-                    />
-                  )}
+                  <TokenAssetWrapper
+                    item={item}
+                    idx={idx}
+                    isSelected={isSelected}
+                    selectedToken={selectedToken}
+                    selectedAsset={selectedAsset}
+                    isAnyNonActiveHovered={isAnyNonActiveHovered}
+                    handleAssetClick={handleAssetClick}
+                    setSelectedToken={setSelectedToken}
+                  />
                 </motion.div>
               );
             })}
