@@ -12,6 +12,7 @@ export interface TabConfig {
   label: string;
   content: string;
   enabled: boolean;
+  href?: string;
 }
 
 export const tabConfigs: TabConfig[] = [
@@ -45,9 +46,38 @@ export const tabConfigs: TabConfig[] = [
   },
 ];
 
-export function RouteTabs(): React.JSX.Element {
+export const partnerTabConfigs: TabConfig[] = [
+  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, href: '/apps/partner' },
+  {
+    value: 'stats',
+    type: 'migrate',
+    label: 'Your stats',
+    content: '',
+    enabled: true,
+    href: '/apps/partner/stats',
+  },
+  { value: 'settings', type: 'migrate', label: 'Settings', content: '', enabled: true, href: '/apps/partner/settings' },
+];
+
+interface RouteTabsProps {
+  tabs?: TabConfig[];
+  hrefPrefix?: string;
+}
+
+export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.Element {
   const pathname = usePathname();
-  const current = pathname.split('/').pop() || 'migrate';
+
+  // if you added props earlier:
+  const usedTabs = tabs ?? tabConfigs;
+  // if you DIDN'T add props, just do:
+  /// const usedTabs = tabConfigs;
+
+  const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
+  const tabValues = usedTabs.map(t => t.value);
+
+  const current = tabValues.includes(lastSegment)
+    ? lastSegment // e.g. "swap", "migrate", "home", "your-stats"
+    : (usedTabs[0]?.value ?? 'migrate'); // fallback = first tab (Home for partner)
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
@@ -99,12 +129,17 @@ export function RouteTabs(): React.JSX.Element {
     <>
       <div
         ref={tabsContainerRef}
-        className="hidden md:flex md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-tl-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] relative lg:mt-4 min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)]"
+        className="md:flex md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-tl-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] relative lg:mt-4 min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)]"
         style={{ height: '-webkit-fill-available' }}
       >
         <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
-          {tabConfigs.map(tab => {
-            const active = current === tab.value;
+          {usedTabs.map(tab => {
+            const href = tab.href ?? `/${tab.value}`; // fallback old behavior
+
+            const active =
+              pathname === href ||
+              pathname.startsWith(`${href}/`) || // handles subpaths like /apps/partner/stats
+              pathname.endsWith(`/${tab.value}`); // old-style matching as extra safety
             return (
               <RouteTabItem
                 key={tab.value}
@@ -131,7 +166,7 @@ export function RouteTabs(): React.JSX.Element {
         <div className="relative">
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-[96px] flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
-              {tabConfigs.map(tab => {
+              {usedTabs.map(tab => {
                 const active = current === tab.value;
                 return (
                   <RouteTabItem
