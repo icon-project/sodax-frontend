@@ -1,7 +1,5 @@
-import type { SpokeProvider } from '@sodax/sdk';
-import type { XToken } from '@sodax/types';
-import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { parseUnits } from 'viem';
+import type { MoneyMarketError, MoneyMarketSupplyParams, RelayErrorCode, SpokeProvider } from '@sodax/sdk';
+import { useMutation } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface SupplyResponse {
@@ -16,49 +14,42 @@ interface SupplyResponse {
  * handling the entire supply process including transaction creation, submission,
  * and cross-chain communication.
  *
- * @param {XToken} spokeToken - The token to supply on the spoke chain. Must be an XToken with valid address and chain information.
- * @param {SpokeProvider} spokeProvider - The spoke provider to use for the supply transaction. Must be a valid SpokeProvider instance.
- *
- * @returns {UseMutationResult<SupplyResponse, Error, string>} A mutation result object with the following properties:
+ * @returns A mutation result object with the following properties:
  *   - mutateAsync: Function to execute the supply transaction
  *   - isPending: Boolean indicating if a transaction is in progress
  *   - error: Error object if the last transaction failed, null otherwise
  *
  * @example
  * ```typescript
- * const { mutateAsync: supply, isPending, error } = useSupply(spokeToken);
- * await supply('100');
+ * const { mutateAsync: supply, isPending, error } = useSupply();
+ * await supply({
+ *   params: {
+ *     token: '0x...',
+ *     amount: parseUnits('100', 18),
+ *     action: 'supply',
+ *   },
+ *   spokeProvider,
+ * });
  * ```
  *
  * @throws {Error} When:
- *   - spokeProvider is not available
+ *   - Transaction execution fails
  */
-export function useSupply(
-  spokeToken: XToken,
-  spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<SupplyResponse, Error, string> {
+export function useSupply() {
   const { sodax } = useSodaxContext();
 
-  return useMutation<SupplyResponse, Error, string>({
-    mutationFn: async (amount: string) => {
-      if (!spokeProvider) {
-        throw new Error('spokeProvider is not found');
-      }
-
-      const response = await sodax.moneyMarket.supply(
-        {
-          token: spokeToken.address,
-          amount: parseUnits(amount, spokeToken.decimals),
-          action: 'supply',
-        },
-        spokeProvider,
-      );
+  return useMutation<
+    SupplyResponse,
+    MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED' | 'SUPPLY_UNKNOWN_ERROR' | RelayErrorCode>,
+    { params: MoneyMarketSupplyParams; spokeProvider: SpokeProvider }
+  >({
+    mutationFn: async ({ params, spokeProvider }) => {
+      const response = await sodax.moneyMarket.supply(params, spokeProvider);
 
       if (!response.ok) {
-        throw new Error('Failed to supply tokens');
+        throw response.error;
       }
 
-      console.log('Supply transaction submitted:', response);
       return response;
     },
   });

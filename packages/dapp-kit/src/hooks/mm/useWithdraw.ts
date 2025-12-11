@@ -1,7 +1,5 @@
-import type { SpokeProvider } from '@sodax/sdk';
-import type { XToken } from '@sodax/types';
-import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { parseUnits } from 'viem';
+import type { MoneyMarketError, MoneyMarketWithdrawParams, RelayErrorCode, SpokeProvider } from '@sodax/sdk';
+import { useMutation } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
 interface WithdrawResponse {
@@ -16,49 +14,42 @@ interface WithdrawResponse {
  * handling the entire withdrawal process including transaction creation, submission,
  * and cross-chain communication.
  *
- * @param {XToken} spokeToken - The token to withdraw from the spoke chain. Must be an XToken with valid address and chain information.
- * @param {SpokeProvider} spokeProvider - The spoke provider to use for the withdraw transaction. Must be a valid SpokeProvider instance.
- *
- * @returns {UseMutationResult<WithdrawResponse, Error, string>} A mutation result object with the following properties:
+ * @returns A mutation result object with the following properties:
  *   - mutateAsync: Function to execute the withdraw transaction
  *   - isPending: Boolean indicating if a transaction is in progress
+ *   - error: Error object if the last transaction failed, null otherwise
+ *
  * @example
  * ```typescript
- * const { mutateAsync: withdraw, isPending, error } = useWithdraw(spokeToken);
- * await withdraw('100');
+ * const { mutateAsync: withdraw, isPending, error } = useWithdraw();
+ * await withdraw({
+ *   params: {
+ *     token: '0x...',
+ *     amount: parseUnits('100', 18),
+ *     action: 'withdraw',
+ *   },
+ *   spokeProvider,
+ * });
  * ```
  *
  * @throws {Error} When:
- *   - spokeProvider is not available
  *   - Transaction execution fails
  */
-export function useWithdraw(
-  spokeToken: XToken,
-  spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<WithdrawResponse, Error, string> {
+export function useWithdraw() {
   const { sodax } = useSodaxContext();
 
-  return useMutation<WithdrawResponse, Error, string>({
-    mutationFn: async (amount: string) => {
-      if (!spokeProvider) {
-        throw new Error('spokeProvider is not found');
-      }
-
-      const response = await sodax.moneyMarket.withdraw(
-        {
-          token: spokeToken.address,
-          // vault token on hub chain decimals is 18
-          amount: parseUnits(amount, 18),
-          action: 'withdraw',
-        },
-        spokeProvider,
-      );
+  return useMutation<
+    WithdrawResponse,
+    MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED' | 'WITHDRAW_UNKNOWN_ERROR' | RelayErrorCode>,
+    { params: MoneyMarketWithdrawParams; spokeProvider: SpokeProvider }
+  >({
+    mutationFn: async ({ params, spokeProvider }) => {
+      const response = await sodax.moneyMarket.withdraw(params, spokeProvider);
 
       if (!response.ok) {
-        throw new Error('Failed to withdraw tokens');
+        throw response.error;
       }
 
-      console.log('Withdraw transaction submitted:', response);
       return response;
     },
   });
