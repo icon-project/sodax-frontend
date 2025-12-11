@@ -3,54 +3,56 @@
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { ClaimFunds, type Reward } from './components/claim-funds';
+import { type PartnerFeeBalance, PartnerFeeBalancesCard } from './components/partner-fee-balance';
+import { getSupportedSolverTokens, SONIC_MAINNET_CHAIN_ID, type XToken } from '@sodax/types';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const [rewards, setRewards] = useState<Reward[]>([]);
-  const [isLoadingRewards, setIsLoadingRewards] = useState(true);
-  const [claimingToken, setClaimingToken] = useState<string | null>(null);
+  const [balances, setBalances] = useState<PartnerFeeBalance[]>([]);
+  const [isLoadingBalances, setIsLoadingBalances] = useState(true);
+  const [swappingSymbol, setSwappingSymbol] = useState<string | null>(null);
 
+  //TODO mock data, to be replaced this with real balanceOf calls.
   useEffect(() => {
-    // fake fetch
     const timer = setTimeout(() => {
-      setRewards([
-        { tokenSymbol: 'USDC', amount: '123.45' },
-        { tokenSymbol: 'SODA', amount: '50.00' },
-        { tokenSymbol: 'BTCB', amount: '0.01' },
-      ]);
-      setIsLoadingRewards(false);
+      const tokens = getSupportedSolverTokens(SONIC_MAINNET_CHAIN_ID) as XToken[];
+
+      const mockBalances: PartnerFeeBalance[] = tokens.map(t => ({
+        currency: t,
+        balance: '0.00',
+      }));
+
+      if (mockBalances[0]) mockBalances[0].balance = '123.45';
+      if (mockBalances[1]) mockBalances[1].balance = '50.00';
+
+      setBalances(mockBalances);
+      setIsLoadingBalances(false);
     }, 800);
 
     return () => clearTimeout(timer);
   }, []);
 
-  const handleClaim = async (tokenSymbol: string) => {
+  const handleSwapToUsdc = async (feeBalance: PartnerFeeBalance) => {
     try {
-      setClaimingToken(tokenSymbol);
+      setSwappingSymbol(feeBalance.currency.symbol);
 
-      // TODO:
-      // - connect wallet
-      // - call contract to claim that specific token
-      // - wait for tx
+      console.log('Pretend swap', feeBalance.currency.symbol, 'from', feeBalance.currency.address, 'to USDC');
 
       await new Promise(res => setTimeout(res, 2000));
 
-      // after success, set that token’s amount to "0.00"
-      setRewards(prev => prev.map(r => (r.tokenSymbol === tokenSymbol ? { ...r, amount: '0.00' } : r)));
+      setBalances(prev =>
+        prev.map(b => (b.currency.symbol === feeBalance.currency.symbol ? { ...b, balance: '0.00' } : b)),
+      );
     } catch (e) {
-      console.error('Error claiming', tokenSymbol, e);
+      console.error('Error swapping', feeBalance.currency.symbol, e);
     } finally {
-      setClaimingToken(null);
+      setSwappingSymbol(null);
     }
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsOpen(true);
-    }, 500);
-
+    const timer = setTimeout(() => setIsOpen(true), 500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -61,9 +63,9 @@ export default function PartnerPage() {
       initial={false}
       animate={isOpen ? 'open' : 'closed'}
     >
-      {/*Header*/}
+      {/* Header */}
       <div className="inline-flex flex-col justify-start items-start gap-(--layout-space-comfortable)">
-        <motion.div className="" variants={itemVariants}>
+        <motion.div variants={itemVariants}>
           <span className="text-yellow-dark font-bold leading-9 font-['InterRegular'] !text-(size:--app-title)">
             SODAX{' '}
           </span>
@@ -71,17 +73,18 @@ export default function PartnerPage() {
             Partners Portal
           </span>
           <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex gap-1">
-            Manage and claim your partner rewards
+            View your fee balances and swap them to USDC.
           </div>
         </motion.div>
       </div>
-      {/* Claim section */}
-      <motion.div>
-        <ClaimFunds
-          rewards={rewards}
-          isLoading={isLoadingRewards}
-          claimingToken={claimingToken}
-          onClaim={handleClaim}
+
+      {/* Fee balances section */}
+      <motion.div variants={itemVariants}>
+        <PartnerFeeBalancesCard
+          balances={balances}
+          isLoading={isLoadingBalances}
+          swappingSymbol={swappingSymbol}
+          onSwapToUsdc={handleSwapToUsdc}
         />
       </motion.div>
     </motion.div>
