@@ -70,7 +70,6 @@ All swap methods are accessible through `sodax.swaps`:
 - `getSolvedIntentPacket(params)` - Get the intent delivery info about solved intent from the Relayer API.
 - `getIntentHash(intent)` - Get keccak256 hash of an intent
 - `getStatus(request)` - Get intent status from Solver API
-- `getSolvedIntentPacket(params)` - Get packet data about solved intent execution from Relayer API
 - `cancelIntent(intent, spokeProvider, raw?)` - Cancel an active intent
 
 ### Token Approval
