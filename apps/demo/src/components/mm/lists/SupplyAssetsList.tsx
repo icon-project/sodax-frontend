@@ -49,7 +49,6 @@ export function SupplyAssetsList() {
         <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
           <Table>
             <TableHeader className="sticky top-0 bg-cream z-20">
-              {' '}
               <TableRow className="border-b border-cherry-grey/20">
                 {TABLE_HEADERS.map(header => (
                   <TableHead key={header} className="text-cherry-dark font-bold">

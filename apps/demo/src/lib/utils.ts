@@ -1,16 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import {
-  type AggregatedReserveData,
-  type ChainId,
-  hubAssets,
-  SolverIntentStatusCode,
-  spokeChainConfig,
-  type SpokeChainId,
-  type UserReserveData,
-  type XToken,
-} from '@sodax/sdk';
+import { hubAssets, SolverIntentStatusCode, type SpokeChainId } from '@sodax/sdk';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -117,26 +108,6 @@ export function formatCompactNumber(value: string | number | bigint): string {
   return num.toFixed(4);
 }
 
-export function getNativeChainForSymbol(symbol: string): ChainId | null {
-  for (const [chainId, config] of Object.entries(spokeChainConfig)) {
-    if (symbol in config.supportedTokens) {
-      return chainId as ChainId;
-    }
-  }
-  return null;
-}
-
-export function findReserveByUnderlyingAsset(
-  underlyingAsset: string,
-  reserves: readonly AggregatedReserveData[],
-): AggregatedReserveData {
-  const reserve = reserves.find(reserve => reserve.underlyingAsset.toLowerCase() === underlyingAsset.toLowerCase());
-  if (!reserve) {
-    throw new Error(`Reserve not found for underlying asset: ${underlyingAsset}`);
-  }
-  return reserve;
-}
-
 export function getSpokeTokenAddressByVault(chainId: SpokeChainId, vaultAddress: string): string | undefined {
   const chainAssets = hubAssets[chainId];
   if (!chainAssets) return undefined;
@@ -148,19 +119,4 @@ export function getSpokeTokenAddressByVault(chainId: SpokeChainId, vaultAddress:
     }
   }
   return undefined;
-}
-
-export function findUserReserveBySpokeTokenAddress(
-  userReserves: readonly UserReserveData[],
-  selectedChainId: SpokeChainId,
-  token: XToken,
-): UserReserveData {
-  const result = userReserves.find(
-    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase(),
-  );
-
-  if (!result) {
-    throw new Error(`User reserve not found for spoke token address: ${token.address}`);
-  }
-  return result;
 }

@@ -17,7 +17,6 @@ import { useWalletProvider, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { ChainId, XToken } from '@sodax/types';
 
 import { ChainSelector } from '@/components/shared/ChainSelector';
-import { useTokenOnChain } from '@/lib/getTokenOnChain';
 
 interface BorrowModalProps {
   isOpen: boolean;
@@ -35,12 +34,12 @@ export function BorrowModal({ isOpen, onClose, asset, onSuccess }: BorrowModalPr
   const [amount, setAmount] = useState('');
   const [selectedChain, setSelectedChain] = useState<ChainId>(asset.chainId);
 
-  const reserveChain: ChainId = asset.chainId;
+  const borrowExecutionChain: ChainId = asset.chainId;
 
   // 🧩 All hooks must run every render (even if data isn’t ready)
-  const walletProvider = useWalletProvider(reserveChain);
-  const spokeProvider = useSpokeProvider(reserveChain, walletProvider);
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(reserveChain);
+  const walletProvider = useWalletProvider(borrowExecutionChain);
+  const spokeProvider = useSpokeProvider(borrowExecutionChain, walletProvider);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(borrowExecutionChain);
 
   // 🧩 Access provider safely (optional chaining)
   const nativeToken = spokeProvider?.chainConfig?.supportedTokens?.[asset.symbol];
@@ -58,7 +57,6 @@ export function BorrowModal({ isOpen, onClose, asset, onSuccess }: BorrowModalPr
     xChainId: asset.chainId,
   };
 
-  const tokenOnSelectedChain = useTokenOnChain(asset.symbol, selectedChain);
   const borrow = useBorrow(tokenOnReserveChain, spokeProvider);
 
   const handleBorrow = async () => {
@@ -69,8 +67,7 @@ export function BorrowModal({ isOpen, onClose, asset, onSuccess }: BorrowModalPr
     onSuccess?.(amount);
   };
 
-  const canBorrow =
-    !!amount && !isWrongChain && !!borrow.mutateAsync && !borrow.isPending && !!tokenOnSelectedChain && !!spokeProvider;
+  const canBorrow = !!amount && !isWrongChain && !!borrow.mutateAsync && !borrow.isPending && !!spokeProvider;
 
   const allowedChains = [asset.chainId];
 
@@ -95,16 +92,6 @@ export function BorrowModal({ isOpen, onClose, asset, onSuccess }: BorrowModalPr
               allowedChains={allowedChains}
             />
 
-            {/* Token not available on destination */}
-            {!tokenOnSelectedChain && (
-              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900">
-                <AlertCircle className="w-4 h-4 mt-0.5" />
-                <p className="text-sm">
-                  {asset.symbol} isn't available on <b>{selectedChain}</b>. Pick another chain.
-                </p>
-              </div>
-            )}
-
             {/* Amount */}
             <div className="space-y-2">
               <Label className="text-clay">Amount</Label>
@@ -122,7 +109,7 @@ export function BorrowModal({ isOpen, onClose, asset, onSuccess }: BorrowModalPr
               <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">
                 <AlertCircle className="w-4 h-4 mt-0.5" />
                 <div className="flex-1 text-sm">
-                  Borrow must be executed on <b>{reserveChain}</b>.
+                  Borrow must be executed on <b>{borrowExecutionChain}</b>.
                 </div>
                 <Button variant="cherry" size="sm" onClick={handleSwitchChain}>
                   Switch

@@ -14,9 +14,7 @@ export default function MoneyMarketPage() {
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
   const xAccount = useXAccount(selectedChainId);
 
-  // Only pass selectedChainId if it's a valid SpokeProvider, otherwise undefined
-  const spokeProvider = selectedChainId as unknown as SpokeProvider | undefined;
-  const { data: walletAddressOnHub } = useDeriveUserWalletAddress(spokeProvider, xAccount?.address);
+  const { data: walletAddressOnHub } = useDeriveUserWalletAddress(selectedChainId, xAccount?.address);
 
   return (
     <main className="min-h-screen bg-linear-to-br from-almost-white via-cream-white to-vibrant-white">

@@ -36,8 +36,6 @@ export function getBorrowableAssetsWithMarketData(
   allMoneyMarketAssets: MoneyMarketAsset[],
   tokens: XToken[],
 ): BorrowableAssetWithData[] {
-  const tokenMap = new Map(tokens.map(t => [t.address.toLowerCase(), t]));
-
   const assets: BorrowableAssetWithData[] = [];
   const seen = new Set<string>();
 
