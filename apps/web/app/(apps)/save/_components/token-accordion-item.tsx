@@ -7,10 +7,10 @@ import { cn } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
 import { useEffect, useRef } from 'react';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
-import AccordionCollapsedInfo from './accordion-collapsed-info';
-import AccordionExpandedContent from './accordion-expanded-content';
-import AccordionCollapsedAPY from './accordion-collapsed-apy';
-import AccordionUserInfo from './accordion-user-info';
+import AccordionCollapsedInfo from './accordion/accordion-collapsed-info';
+import AccordionExpandedContent from './accordion/accordion-expanded-content';
+import AccordionCollapsedAPY from './accordion/accordion-collapsed-apy';
+import AccordionUserInfo from './accordion/accordion-user-info';
 
 export default function TokenAccordionItem({
   group,

@@ -2,38 +2,15 @@ import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { accordionVariants } from '@/constants/animation';
 import type { XToken } from '@sodax/types';
-import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
+import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import { useLiquidity } from '@/hooks/useAPY';
-import { formatUnits } from 'viem';
-import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
-import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
-import { useReserveMetrics } from '@/hooks/useReserveMetrics';
+import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import AccordionInfoBlock from './accordion-info-block';
 import AccordionDeposit from './accordion-deposit';
 import { ArrowLeft } from 'lucide-react';
 import { TokenAssetWrapper } from './token-asset-wrapper';
-
-function calculateMetricsForToken(token: XToken, formattedReserves: FormatReserveUSDResponse[]) {
-  const { address } = useXAccount(token.xChainId);
-  const walletProvider = useWalletProvider(token.xChainId);
-  const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
-
-  const { data: userReserves } = useUserReservesData(spokeProvider, address);
-
-  const metrics = useReserveMetrics({
-    token,
-    formattedReserves: formattedReserves || [],
-    userReserves: userReserves?.[0] as UserReserveData[],
-  });
-
-  const supplyBalance = metrics.userReserve
-    ? Number(formatUnits(metrics.userReserve.scaledATokenBalance, 18)).toFixed(4)
-    : '0';
-
-  return { supplyBalance };
-}
 
 export default function AccordionExpandedContent({
   tokens,
@@ -83,10 +60,7 @@ export default function AccordionExpandedContent({
     };
   }, [selectedAsset]);
 
-  const enrichedTokens = tokens.map(t => ({
-    ...t,
-    supplyBalance: calculateMetricsForToken(t, formattedReserves || []).supplyBalance,
-  }));
+  const enrichedTokens = useTokenSupplyBalances(tokens, formattedReserves || []);
 
   const holdTokens = enrichedTokens
     .filter(t => Number(t.supplyBalance) > 0)

@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/save/_components/accordion-deposit.tsx
 import Image from 'next/image';
 import type { XToken } from '@sodax/types';
 import { CustomSlider } from '@/components/ui/customer-slider';
@@ -12,7 +11,7 @@ interface AccordionDepositProps {
   tokens: XToken[];
 }
 
-export default function AccordionDeposit({ selectedToken, progress, setProgress, tokens }: AccordionDepositProps): JSX.Element {
+export default function AccordionDeposit({ selectedToken, progress, setProgress, tokens }: AccordionDepositProps) {
   return (
     <div className="p-1">
       <div className="flex gap-2 items-center">
@@ -70,4 +69,3 @@ export default function AccordionDeposit({ selectedToken, progress, setProgress,
     </div>
   );
 }
-
