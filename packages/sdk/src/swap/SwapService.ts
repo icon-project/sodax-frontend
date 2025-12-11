@@ -10,6 +10,7 @@ import type {
   GetRelayResponse,
   IntentDeliveryInfo,
   IntentRelayRequest,
+  PacketData,
   RelayErrorCode,
   WaitUntilIntentExecutedPayload,
 } from '../shared/services/intentRelay/IntentRelayApiService.js';
@@ -1057,6 +1058,29 @@ export class SwapService {
    */
   public getFilledIntent(txHash: Hash): Promise<IntentState> {
     return EvmSolverService.getFilledIntent(txHash, this.config, this.hubProvider);
+  }
+
+  /**
+   * Get the intent delivery info about solved intent from the Relayer API.
+   * Packet data contains info about the intent execution on the destination chain.
+   * @param {SpokeChainId} chainId - The destination spoke chain ID
+   * @param {string} fillTxHash - The fill transaction hash (received from getStatus when status is 3 - SOLVED)
+   * @param {number} timeout - The timeout in milliseconds (default: 120 seconds)
+   * @returns {Promise<PacketData>} The packet data
+   */
+  public async getSolvedIntentPacket({
+    chainId,
+    fillTxHash,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  }: { chainId: SpokeChainId; fillTxHash: string; timeout?: number }): Promise<
+    Result<PacketData, IntentError<'RELAY_TIMEOUT'>>
+  > {
+    return waitUntilIntentExecuted({
+      intentRelayChainId: getIntentRelayChainId(chainId).toString(),
+      spokeTxHash: fillTxHash,
+      timeout,
+      apiUrl: this.config.relayerApiEndpoint,
+    });
   }
 
   /**
