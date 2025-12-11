@@ -171,7 +171,7 @@ export default function AccordionExpandedContent({
          [background-size:20px_20px]"
               thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
             ></CustomSlider>
-            <InputGroup className="[--radius:9999px] border-4 border-cream-white w-40 h-10">
+            <InputGroup className="[--radius:9999px] border-4 border-cream-white w-40 h-10 pr-1">
               <InputGroupAddon className="text-muted-foreground pl-1.5">
                 <Image
                   className="w-6 h-6 rounded-[256px]"
@@ -190,7 +190,7 @@ export default function AccordionExpandedContent({
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
                   size="icon-xs"
-                  className="text-clay text-[9px] font-['InterRegular'] font-normal !border-none !outline-none"
+                  className="text-clay text-[9px] font-['InterRegular'] font-normal !border-none !outline-none leading-0"
                 >
                   MAX
                 </InputGroupButton>
