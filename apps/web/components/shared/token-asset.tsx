@@ -1,37 +1,29 @@
-// apps/web/components/shared/token-asset.tsx
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { motion } from 'motion/react';
-import { getAllSupportedSolverTokens } from '@/lib/utils';
-import { availableChains } from '@/constants/chains';
 import NetworkIcon from '@/components/shared/network-icon';
 import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from 'lucide-react';
+import { chainIdToChainName } from '@/providers/constants';
 
 function NetworkPicker({
   isClicked,
-  chainIds,
+  tokens,
   tokenSymbol,
   onSelect,
   position,
 }: {
   isClicked: boolean;
-  chainIds: string[];
+  tokens: XToken[];
   tokenSymbol: string;
   onSelect?: (token: XToken) => void;
   position: { top: number; left: number } | null;
 }): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
-  const allTokens = getAllSupportedSolverTokens();
-  const networks = chainIds.map(id => {
-    const chain = availableChains.find(c => c.id === id);
-    return { id, name: chain?.name ?? 'Unknown', icon: chain?.icon };
-  });
 
-  const handleNetworkClick = (chainId: string): void => {
-    const token = allTokens.find(token => token.symbol === tokenSymbol && token.xChainId === chainId);
+  const handleNetworkClick = (token: XToken): void => {
     if (token) {
       onSelect?.(token);
     }
@@ -51,16 +43,16 @@ function NetworkPicker({
       }}
     >
       <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2 text-center">
-        {hoveredIcon !== null && networks[hoveredIcon] ? (
+        {hoveredIcon !== null && tokens[hoveredIcon] ? (
           <>
-            {tokenSymbol} <span className="font-bold">on {networks[hoveredIcon].name}</span>
+            {tokenSymbol} <span className="font-bold">on {chainIdToChainName(tokens[hoveredIcon].xChainId)}</span>
           </>
         ) : (
           'Choose a network'
         )}
       </div>
       <div className="[flex-flow:wrap] box-border content-start flex items-start justify-center p-0 relative shrink-0 w-[130px] overflow-visible pointer-events-auto">
-        {networks.map((network, index) => (
+        {tokens.map((token, index) => (
           <motion.div
             key={index}
             data-network-icon="true"
@@ -75,11 +67,11 @@ function NetworkPicker({
             onMouseDown={e => {
               e.preventDefault();
               e.stopPropagation();
-              handleNetworkClick(chainIds[index] ?? '');
+              handleNetworkClick(token);
             }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
-            <NetworkIcon id={network.id} />
+            <NetworkIcon id={token.xChainId} />
           </motion.div>
         ))}
       </div>
@@ -126,7 +118,6 @@ export function TokenAsset({
   isClicked = false,
 }: TokenAssetProps): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
-  const chainIds = isGroup && tokens ? [...new Set(tokens.map(t => t.xChainId))] : [];
   const [portalPosition, setPortalPosition] = useState<{ top: number; left: number } | null>(null);
   useEffect(() => {
     if (isClicked && isGroup && assetRef.current) {
@@ -210,7 +201,7 @@ export function TokenAsset({
       {isGroup && (
         <NetworkPicker
           isClicked={isClicked}
-          chainIds={chainIds}
+          tokens={tokens || []}
           tokenSymbol={name}
           onSelect={onChainClick}
           position={portalPosition}

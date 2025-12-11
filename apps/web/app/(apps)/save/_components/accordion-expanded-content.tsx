@@ -53,6 +53,7 @@ export default function AccordionExpandedContent({
   const [isShowDeposits, setIsShowDeposits] = useState(false);
   const tokenAssetRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedPlatformToken, setSelectedPlatformToken] = useState<XToken | null>(null);
   const [progress, setProgress] = useState([30]);
 
   useEffect(() => {
@@ -63,7 +64,10 @@ export default function AccordionExpandedContent({
       const isClickInsideAsset = tokenAssetRef.current?.contains(target as Node);
 
       if (networkIcons.length > 0) {
-        if (!isClickInsideAsset) setSelectedAsset(null);
+        if (!isClickInsideAsset) {
+          setSelectedAsset(null);
+          setSelectedPlatformToken(null);
+        }
       } else {
         if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
           setSelectedAsset(null);
@@ -228,26 +232,65 @@ export default function AccordionExpandedContent({
                   }}
                   transition={{ duration: 0.18, ease: 'easeInOut' }}
                 >
-                  <TokenAsset
-                    key={item.token?.xChainId}
-                    name={item.token?.symbol || ''}
-                    token={item.token}
-                    isHoldToken={item.isHold}
-                    formattedBalance={item.supplyBalance}
-                    isGroup={item.isGroup}
-                    tokenCount={item.tokenCount}
-                    tokens={item.tokens}
-                    isClickBlurred={false}
-                    isHoverDimmed={false}
-                    isHovered={false}
-                    onMouseEnter={() => {}}
-                    onMouseLeave={() => {}}
-                    onClick={() => {
-                      handleAssetClick(idx);
-                    }}
-                    onChainClick={() => {}}
-                    isClicked={isSelected}
-                  />
+                  {!item.isGroup ? (
+                    <TokenAsset
+                      key={item.token?.xChainId}
+                      name={item.token?.symbol || ''}
+                      token={item.token}
+                      isHoldToken={item.isHold}
+                      formattedBalance={item.supplyBalance}
+                      isGroup={item.isGroup}
+                      tokenCount={item.tokenCount}
+                      tokens={item.tokens}
+                      isClickBlurred={false}
+                      isHoverDimmed={false}
+                      isHovered={false}
+                      onMouseEnter={() => {}}
+                      onMouseLeave={() => {}}
+                      onClick={() => {
+                        handleAssetClick(idx);
+                      }}
+                    />
+                  ) : selectedPlatformToken ? (
+                    <TokenAsset
+                      key={selectedPlatformToken?.xChainId}
+                      name={selectedPlatformToken?.symbol || ''}
+                      token={selectedPlatformToken}
+                      isHoldToken={false}
+                      isGroup={false}
+                      isClickBlurred={false}
+                      isHoverDimmed={false}
+                      isHovered={false}
+                      onMouseEnter={() => {}}
+                      onMouseLeave={() => {}}
+                      onClick={() => {
+                        setSelectedPlatformToken(null);
+                      }}
+                    />
+                  ) : (
+                    <TokenAsset
+                      key={item.token?.xChainId}
+                      name={item.token?.symbol || ''}
+                      token={item.token}
+                      isHoldToken={item.isHold}
+                      formattedBalance={item.supplyBalance}
+                      isGroup={item.isGroup}
+                      tokenCount={item.tokenCount}
+                      tokens={item.tokens}
+                      isClickBlurred={false}
+                      isHoverDimmed={false}
+                      isHovered={false}
+                      onMouseEnter={() => {}}
+                      onMouseLeave={() => {}}
+                      onClick={() => {
+                        handleAssetClick(idx);
+                      }}
+                      onChainClick={token => {
+                        setSelectedPlatformToken(token);
+                      }}
+                      isClicked={isSelected}
+                    />
+                  )}
                 </motion.div>
               );
             })}
@@ -258,10 +301,10 @@ export default function AccordionExpandedContent({
       <div
         className={cn(
           'flex gap-4 items-center mb-8',
-          displayItems[selectedAsset as number]?.isGroup && 'blur filter opacity-30',
+          !selectedPlatformToken && displayItems[selectedAsset as number]?.isGroup && 'blur filter opacity-30',
         )}
       >
-        {selectedAsset !== null && !displayItems[selectedAsset as number]?.isGroup && (
+        {((selectedAsset !== null && !displayItems[selectedAsset as number]?.isGroup) || selectedPlatformToken) && (
           <div className="flex gap-(--layout-space-small)">
             {isShowDeposits && (
               <Button variant="cream" className="w-10 h-10" onMouseDown={() => setIsShowDeposits(false)}>
@@ -277,7 +320,7 @@ export default function AccordionExpandedContent({
             </Button>
           </div>
         )}
-        {selectedAsset === null || displayItems[selectedAsset as number]?.isGroup ? (
+        {(selectedAsset === null || displayItems[selectedAsset as number]?.isGroup) && !selectedPlatformToken ? (
           <Button variant="cream" className="w-27 mix-blend-multiply shadow-none">
             Continue
           </Button>
