@@ -1066,7 +1066,7 @@ export class SwapService {
    * @param {SpokeChainId} chainId - The destination spoke chain ID
    * @param {string} fillTxHash - The fill transaction hash (received from getStatus when status is 3 - SOLVED)
    * @param {number} timeout - The timeout in milliseconds (default: 120 seconds)
-   * @returns {Promise<PacketData>} The packet data
+   * @returns {Promise<Result<PacketData, IntentError<'RELAY_TIMEOUT'>>>} A Result containing either the packet data or an IntentError with code 'RELAY_TIMEOUT'
    */
   public async getSolvedIntentPacket({
     chainId,
