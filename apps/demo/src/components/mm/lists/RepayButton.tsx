@@ -44,7 +44,8 @@ export function RepayButton({ token }: { token: XToken }) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
+          variant="cherry"
+          size="sm"
           onClick={() => {
             resetError?.();
             setOpen(true);
