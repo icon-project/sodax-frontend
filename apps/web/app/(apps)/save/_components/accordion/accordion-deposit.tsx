@@ -63,7 +63,9 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
           </div>
         )}
       </div>
-      <div className={cn('flex items-center gap-2 mt-8', balance > 0n ? 'opacity-100' : 'blur-sm')}>
+      <div
+        className={cn('flex items-center gap-2 mt-8', balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-sm' : '')}
+      >
         <CustomSlider
           defaultValue={[0]}
           max={Number(formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0))}
