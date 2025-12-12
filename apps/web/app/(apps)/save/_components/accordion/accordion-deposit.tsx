@@ -1,31 +1,73 @@
 import Image from 'next/image';
-import type { XToken } from '@sodax/types';
+import { useEffect, useMemo, useState } from 'react';
+import type { XToken, ChainId } from '@sodax/types';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import NetworkIcon from '@/components/shared/network-icon';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { formatBalance } from '@/lib/utils';
+import BigNumber from 'bignumber.js';
+import { formatUnits } from 'viem';
+import { chainIdToChainName } from '@/providers/constants';
+import { cn } from '@/lib/utils';
 
 interface AccordionDepositProps {
   selectedToken: XToken | null;
-  progress: number[];
-  setProgress: (value: number[]) => void;
   tokens: XToken[];
 }
 
-export default function AccordionDeposit({ selectedToken, progress, setProgress, tokens }: AccordionDepositProps) {
+export default function AccordionDeposit({ selectedToken, tokens }: AccordionDepositProps) {
+  const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
+  const [progress, setProgress] = useState([0]);
+
+  const { data: balances } = useXBalances({
+    xChainId: selectedToken?.xChainId as ChainId,
+    xTokens: selectedToken ? [selectedToken] : [],
+    address: sourceAddress,
+  });
+
+  const balance = balances?.[selectedToken?.address as string] ?? 0n;
+
+  const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
+  const usdValue = useMemo(() => {
+    return balance
+      ? new BigNumber(formatUnits(balance, selectedToken?.decimals ?? 0)).multipliedBy(tokenPrice ?? 0).toFixed(2)
+      : '0.00';
+  }, [balance, selectedToken, tokenPrice]);
+
+  useEffect(() => {
+    setProgress([Number(formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0))]);
+  }, [balance, selectedToken, tokenPrice]);
+
   return (
     <div className="p-1">
       <div className="flex gap-2 items-center">
         <NetworkIcon id={selectedToken?.xChainId || ''} className="scale-150" />
-        <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
-          $10,000.00
-        </div>
-        <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">worth of WBTC</div>
+        {!sourceAddress ? (
+          <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
+            Choose an amount to simulate yield.
+          </div>
+        ) : balance > 0n ? (
+          <>
+            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
+              ${usdValue}
+            </div>
+            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">
+              worth of {selectedToken?.symbol}
+            </div>
+          </>
+        ) : (
+          <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
+            No {selectedToken?.symbol} detected on {chainIdToChainName(selectedToken?.xChainId as ChainId)}.
+          </div>
+        )}
       </div>
-      <div className="flex items-center gap-2 mt-8">
+      <div className={cn('flex items-center gap-2 mt-8', balance > 0n ? 'opacity-100' : 'blur-sm')}>
         <CustomSlider
           defaultValue={[0]}
-          max={30}
-          step={1}
+          max={Number(formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0))}
+          step={0.01}
           value={progress}
           onValueChange={setProgress}
           className="h-10"
@@ -64,7 +106,9 @@ export default function AccordionDeposit({ selectedToken, progress, setProgress,
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
           Sample available:
         </div>
-        <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">0 WBTC</div>
+        <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">
+          {formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0)} {selectedToken?.symbol}
+        </div>
       </div>
     </div>
   );
