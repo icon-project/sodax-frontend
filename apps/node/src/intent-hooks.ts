@@ -10,6 +10,7 @@ import {
   type HookIntent,
   getSolverConfig,
   getMoneyMarketConfig,
+  getHooksConfig,
 } from '@sodax/types';
 import { poolAbi } from '@sodax/sdk';
 
@@ -276,12 +277,18 @@ async function createLeverageIntentWithPrerequisites(
   borrowAmount: string,
   deadline?: string,
   checkOnly?: boolean,
+  feeAmount?: string,
+  feeReceiver?: Address,
 ): Promise<void> {
   console.log('\n[createLeverageIntentWithPrerequisites] Creating leverage intent with prerequisites...');
   console.log(`[createLeverageIntentWithPrerequisites] Collateral Asset: ${collateralAsset}`);
   console.log(`[createLeverageIntentWithPrerequisites] Debt Asset: ${debtAsset}`);
   console.log(`[createLeverageIntentWithPrerequisites] Collateral Amount: ${collateralAmount}`);
   console.log(`[createLeverageIntentWithPrerequisites] Borrow Amount: ${borrowAmount}`);
+  if (feeAmount && feeReceiver) {
+    console.log(`[createLeverageIntentWithPrerequisites] Fee Amount: ${feeAmount}`);
+    console.log(`[createLeverageIntentWithPrerequisites] Fee Receiver: ${feeReceiver}`);
+  }
   if (checkOnly) {
     console.log('[createLeverageIntentWithPrerequisites] Check-only mode: will not create intent');
   }
@@ -293,6 +300,8 @@ async function createLeverageIntentWithPrerequisites(
       collateralAmount,
       borrowAmount,
       deadline,
+      feeAmount,
+      feeReceiver,
     },
     146,
     { checkOnly: checkOnly === true },
@@ -598,7 +607,9 @@ async function createLiquidationIntent(
  */
 async function getIntentHashFromTx(txHash: Hex): Promise<Hex | null> {
   try {
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: txHash,
+    });
     const solverConfig = getSolverConfig(HUB_CHAIN_ID);
     const userAddress = await getUserAddress();
 
@@ -820,7 +831,9 @@ async function cancelIntentWithData(intentData: {
  */
 async function getIntentDataFromTx(txHash: Hex): Promise<HookIntent | null> {
   try {
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: txHash,
+    });
     const solverConfig = getSolverConfig(HUB_CHAIN_ID);
     const userAddress = await getUserAddress();
 
@@ -983,9 +996,32 @@ async function ensureTokenApprovedForFill(tokenAddress: Address, amount: string)
 }
 
 /**
+ * Decode hook address from intent data
+ */
+function decodeHookAddressFromIntentData(data: string): Address | null {
+  try {
+    // Intent data format: 0x02 + ABI-encoded HookData
+    // HookData: {hook: address, data: bytes}
+    if (!data.startsWith('0x02')) {
+      return null;
+    }
+    // Skip 0x02 prefix (1 byte = 2 hex chars)
+    const hookDataBytes = data.slice(4); // Remove "0x02"
+    // ABI-encoded tuple: offset (32 bytes = 64 hex chars) + hook address (32 bytes = 64 hex chars, last 40 are the address)
+    // Hook address is at position: last 40 chars of the address field = hex chars 88-128
+    const hookAddressHex = `0x${hookDataBytes.slice(88, 128)}`; // Extract 20 bytes (40 hex chars)
+    return hookAddressHex.toLowerCase() as Address;
+  } catch (error) {
+    console.error('[decodeHookAddressFromIntentData] Error:', error);
+    return null;
+  }
+}
+
+/**
  * Fill an intent (using user address as solver)
  * Addresses are normalized to 20 bytes before passing to HooksService
  * Automatically approves inputToken if needed
+ * For debt side leverage hook, also approves outputToken to Intents contract
  */
 async function fillIntentWithData(
   intent: HookIntent,
@@ -997,9 +1033,14 @@ async function fillIntentWithData(
   console.log(`[fillIntentWithData] Input Amount: ${inputAmount}`);
   console.log(`[fillIntentWithData] Output Amount: ${outputAmount}`);
 
-  // Ensure inputToken is approved (solver needs to provide inputToken)
-  console.log('[fillIntentWithData] Ensuring inputToken is approved...');
-  await ensureTokenApprovedForFill(intent.inputToken, inputAmount);
+  // Decode hook address from intent data to check if it's debt side leverage
+  const hookAddress = decodeHookAddressFromIntentData(intent.data);
+  const hooksConfig = getHooksConfig(HUB_CHAIN_ID);
+  const isDebtSideLeverage = hookAddress?.toLowerCase() === hooksConfig.debtSideLeverageHookAddress.toLowerCase();
+
+  // Ensure outputToken is approved (solver needs to provide outputToken)
+  console.log('[fillIntentWithData] Ensuring outputToken is approved...');
+  await ensureTokenApprovedForFill(intent.outputToken, outputAmount);
 
   // Normalize addresses to 20 bytes before passing to HooksService
   const normalizedIntent: HookIntent = {
@@ -1009,10 +1050,14 @@ async function fillIntentWithData(
   };
 
   console.log(
-    `[fillIntentWithData] srcAddress (normalized): ${normalizedIntent.srcAddress} (${(normalizedIntent.srcAddress.length - 2) / 2} bytes)`,
+    `[fillIntentWithData] srcAddress (normalized): ${
+      normalizedIntent.srcAddress
+    } (${(normalizedIntent.srcAddress.length - 2) / 2} bytes)`,
   );
   console.log(
-    `[fillIntentWithData] dstAddress (normalized): ${normalizedIntent.dstAddress} (${(normalizedIntent.dstAddress.length - 2) / 2} bytes)`,
+    `[fillIntentWithData] dstAddress (normalized): ${
+      normalizedIntent.dstAddress
+    } (${(normalizedIntent.dstAddress.length - 2) / 2} bytes)`,
   );
 
   const result = await hooksService.fillIntent({
@@ -1083,8 +1128,8 @@ async function leverageAndDeleverage(
   // Step 3: Fill the leverage intent (using user address as solver)
   console.log('\n[leverageAndDeleverage] Step 3: Filling leverage intent...');
   // For leverage intent:
-  // - inputToken = debtAsset (bnUSD), inputAmount = borrowAmount
-  // - outputToken = collateralAsset (WETH), minOutputAmount = collateralAmount
+  // - inputToken = debtAsset (sodaUSDC), inputAmount = borrowAmount
+  // - outputToken = collateralAsset (sodaETH), minOutputAmount = collateralAmount
   // We need to fill with the exact amounts from the intent to avoid PartialFillNotAllowed
   await fillIntentWithData(intentData, intentData.inputAmount.toString(), intentData.minOutputAmount.toString());
 
@@ -1136,8 +1181,8 @@ async function leverageAndDeleverage(
   // Step 7: Fill the deleverage intent (using user address as solver)
   console.log('\n[leverageAndDeleverage] Step 7: Filling deleverage intent...');
   // For deleverage intent:
-  // - inputToken = debtAsset (bnUSD), inputAmount = repayAmount
-  // - outputToken = collateralAsset (WETH), minOutputAmount = withdrawAmount
+  // - inputToken = debtAsset (sodaUSDC), inputAmount = repayAmount
+  // - outputToken = collateralAsset (sodaETH), minOutputAmount = withdrawAmount
   // We need to fill with the exact amounts from the intent
   await fillIntentWithData(
     deleverageIntentData,
@@ -1162,7 +1207,7 @@ async function leverageAndDeleverage(
 // === UTILITY FUNCTIONS ===
 
 /**
- * Check balances for required test tokens (bnUSD and WETH)
+ * Check balances for required test tokens (sodaUSDC and sodaETH)
  * Note: If balance shows 0 but you see it on sodax.com/swap, it may be in a smart contract wallet
  */
 async function checkRequiredTokenBalances(): Promise<void> {
@@ -1172,60 +1217,60 @@ async function checkRequiredTokenBalances(): Promise<void> {
   console.log('Note: If balance shows 0 but visible on sodax.com/swap, it may be in a smart contract wallet\n');
 
   // Token addresses (18 decimals for both)
-  const bnUSDAddress: Address = '0xE801CA34E19aBCbFeA12025378D19c4FBE250131';
-  const wethAddress: Address = '0x50c42dEAcD8Fc9773493ED674b675bE577f2634b';
+  const sodaUSDCAddress: Address = '0xAbbb91c0617090F0028BDC27597Cd0D038F3A833';
+  const sodaETHAddress: Address = '0x4effB5813271699683C25c734F4daBc45B363709';
 
   try {
-    // Check bnUSD balance
-    const bnUSDBalance = await publicClient.readContract({
-      address: bnUSDAddress,
+    // Check sodaUSDC balance
+    const sodaUSDCBalance = await publicClient.readContract({
+      address: sodaUSDCAddress,
       abi: erc20Abi,
       functionName: 'balanceOf',
       args: [userAddress],
     });
 
-    // Check WETH balance
-    const wethBalance = await publicClient.readContract({
-      address: wethAddress,
+    // Check sodaETH balance
+    const sodaETHBalance = await publicClient.readContract({
+      address: sodaETHAddress,
       abi: erc20Abi,
       functionName: 'balanceOf',
       args: [userAddress],
     });
 
-    const bnUSDFormatted = formatUnits(bnUSDBalance, 18);
-    const wethFormatted = formatUnits(wethBalance, 18);
+    const sodaUSDCFormatted = formatUnits(sodaUSDCBalance, 18);
+    const sodaETHFormatted = formatUnits(sodaETHBalance, 18);
 
     console.log('Token Balances (Direct Wallet):');
-    console.log(`  bnUSD:   ${bnUSDFormatted} (raw: ${bnUSDBalance.toString()})`);
-    console.log(`  WETH:    ${wethFormatted} (raw: ${wethBalance.toString()})`);
+    console.log(`  sodaUSDC: ${sodaUSDCFormatted} (raw: ${sodaUSDCBalance.toString()})`);
+    console.log(`  sodaETH:  ${sodaETHFormatted} (raw: ${sodaETHBalance.toString()})`);
 
     // Check if balances meet minimum requirements (lowered for testing)
     console.log('\nBalance Status:');
-    const minBnUSD = BigInt('1000000000000000000'); // 1 bnUSD (lowered from 2.0)
-    const minWethRecommended = BigInt('10000000000000000'); // 0.01 WETH (recommended)
-    const minWethMinimum = BigInt('1000000000000000'); // 0.001 WETH (absolute minimum for testing)
+    const minSodaUSDC = BigInt('1000000000000000000'); // 1 sodaUSDC
+    const minSodaETHRecommended = BigInt('10000000000000000'); // 0.01 sodaETH (recommended)
+    const minSodaETHMinimum = BigInt('1000000000000000'); // 0.001 sodaETH (absolute minimum for testing)
 
-    if (bnUSDBalance >= minBnUSD) {
-      console.log(`  bnUSD: Sufficient (minimum: 1.0, have: ${bnUSDFormatted})`);
+    if (sodaUSDCBalance >= minSodaUSDC) {
+      console.log(`  sodaUSDC: Sufficient (minimum: 1.0, have: ${sodaUSDCFormatted})`);
     } else {
-      console.log(`   bnUSD: Low (minimum: 1.0, have: ${bnUSDFormatted})`);
+      console.log(`   sodaUSDC: Low (minimum: 1.0, have: ${sodaUSDCFormatted})`);
     }
 
-    if (wethBalance >= minWethRecommended) {
-      console.log(`  WETH: Sufficient (recommended: 0.01, have: ${wethFormatted})`);
-    } else if (wethBalance >= minWethMinimum) {
-      console.log(`   WETH: Low but testable (recommended: 0.01, minimum: 0.001, have: ${wethFormatted})`);
+    if (sodaETHBalance >= minSodaETHRecommended) {
+      console.log(`  sodaETH: Sufficient (recommended: 0.01, have: ${sodaETHFormatted})`);
+    } else if (sodaETHBalance >= minSodaETHMinimum) {
+      console.log(`   sodaETH: Low but testable (recommended: 0.01, minimum: 0.001, have: ${sodaETHFormatted})`);
       console.log('     Note: You can test with this amount, but some operations may be limited');
     } else {
-      console.log(`  WETH: Insufficient (minimum: 0.001, have: ${wethFormatted})`);
-      console.log('     Please swap for at least 0.001 WETH (0.0015+ recommended)');
+      console.log(`  sodaETH: Insufficient (minimum: 0.001, have: ${sodaETHFormatted})`);
+      console.log('     Please swap for at least 0.001 sodaETH (0.0015+ recommended)');
     }
 
-    if (wethBalance === 0n) {
+    if (sodaETHBalance === 0n) {
       console.log('\n💡 Tip: If you see balance on sodax.com/swap but not here,');
       console.log('   the tokens may be in a smart contract wallet. Transactions may still work.');
     }
-    console.log('\n💡 Note: Using WETH address: 0x50c42dEAcD8Fc9773493ED674b675bE577f2634b');
+    console.log(`\n💡 Note: Using sodaETH address: ${sodaETHAddress}`);
   } catch (error) {
     console.error('[checkRequiredTokenBalances] Error:', error);
   }
@@ -1419,6 +1464,8 @@ async function main(): Promise<void> {
         const borrowAmount = process.argv[6];
         const deadline = process.argv[7];
         const checkOnly = process.argv[8] === 'true';
+        const feeAmount = process.argv[9];
+        const feeReceiver = process.argv[10] as Address;
         await createLeverageIntentWithPrerequisites(
           collateralAsset,
           debtAsset,
@@ -1426,6 +1473,8 @@ async function main(): Promise<void> {
           borrowAmount,
           deadline,
           checkOnly,
+          feeAmount,
+          feeReceiver,
         );
         break;
       }

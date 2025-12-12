@@ -1,453 +1,224 @@
 # Intent Hooks SDK Usage Guide
 
-This guide provides comprehensive instructions for using the Intent Hooks SDK and the `intent-hooks.ts` CLI script.
+This guide provides comprehensive instructions for using the Intent Hooks SDK and the `intent-hooks.ts` CLI script to interact with the sodax protocol on Sonic Mainnet.
 
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
-2. [Setup](#setup)
-3. [Token Addresses](#token-addresses)
-4. [Common Workflows](#common-workflows)
-5. [Hook-Specific Guides](#hook-specific-guides)
+2. [Reference Addresses](#reference-addresses)
+3. [Setup & Configuration](#setup--configuration)
+4. [CLI Commands Guide](#cli-commands-guide)
+   - [General](#general)
+   - [Credit Hook (Limit Orders)](#credit-hook-limit-orders)
+   - [Leverage Hook](#leverage-hook)
+   - [Deleverage Hook](#deleverage-hook)
+   - [Debt Side Leverage Hook](#debt-side-leverage-hook)
+   - [Liquidation Hook](#liquidation-hook)
+5. [Common Workflows](#common-workflows)
 6. [Troubleshooting](#troubleshooting)
-7. [Transaction Reference](#transaction-reference)
 
 ## Prerequisites
 
-### Required Tokens
+1. **Environment Variable**: Set `EVM_PRIVATE_KEY` in your `.env` file (must be a funded wallet on Sonic Mainnet).
+2. **Tokens**: Ensure you have sufficient balances of `sodaUSDC` and `sodaETH`.
+3. **Node.js**: Ensure Node.js and `pnpm` are installed.
 
-- **bnUSD**: Stablecoin used for debt operations
-  - Address: `0xE801CA34E19aBCbFeA12025378D19c4FBE250131`
-  - Decimals: 18
+## Reference Addresses
 
-- **WETH**: Wrapped Ether used for collateral
-  - Address: `0x50c42dEAcD8Fc9773493ED674b675bE577f2634b`
-  - Decimals: 18
+### Tokens (Sonic Mainnet - Chain ID 146)
 
-### Environment Setup
+| Token | Symbol | Address | Decimals | Usage |
+|-------|--------|---------|----------|-------|
+| **sodaETH** | sodaETH | `0x4effB5813271699683C25c734F4daBc45B363709` | 18 | Collateral |
+| **sodaUSDC** | sodaUSDC | `0xAbbb91c0617090F0028BDC27597Cd0D038F3A833` | 18 | Debt |
 
-1. Set `EVM_PRIVATE_KEY` in your `.env` file
-2. Ensure you have sufficient token balances
-3. Check balances: `pnpm tsx src/intent-hooks.ts checkBalances`
+### Contract Addresses
 
-## Setup
+| Contract | Address |
+|----------|---------|
+| **Intents Contract** | `0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef` |
+| **Credit Hook** | `0xe2A8E6023eB4C88c51472c8eB1332b87Dd09d8f7` |
+| **Leverage Hook** | `0xB0E2ee3C1dA131d4004f0b8cc2ca159FaA129B86` |
+| **Debt Side Leverage Hook** | `0x34aFac3b87c5585942D74a1F12eA13a33821D4bd` |
+| **Deleverage Hook** | `0x5fF9c34f1734c2B62c53231E6923D0967F95a8A3` |
+| **Liquidation Hook** | `0x9e6D9D2D9c900Be023d839910855A864eDE3ABBD` |
 
-### Check Token Balances
+You can also view these addresses by running:
+```bash
+pnpm tsx src/intent-hooks.ts showAddresses
+```
+
+## Setup & Configuration
+
+Verify your setup by checking token balances:
 
 ```bash
 pnpm tsx src/intent-hooks.ts checkBalances
 ```
 
-This will display:
-- bnUSD balance
-- WETH balance
+**Note**: If the balance shows 0 but is visible on sodax.com/swap, tokens might be in a smart contract wallet.
 
-**Note**: If balance shows 0 but visible on sodax.com/swap, tokens may be in a smart contract wallet. Transactions may still work.
+### Address Normalization
+The SDK automatically handles address normalization (converting to 20 bytes), so you can safely paste addresses from block explorers.
+
+### Amount Units
+All amounts must be specified in **wei** (18 decimals).
+- 1.0 Token = `1000000000000000000`
+- 0.1 Token = `100000000000000000`
+
+## Intent Types & Purposes
+
+Understanding which hook to use and how they interact with your money market position:
+
+### 1. Credit Hook (Limit Orders)
+**Purpose**: Perform limit orders or spot swaps using your credit line or wallet balance.
+- **Mechanism**: You **delegate credit** (or approve token spending) to the Hook contract. The hook uses this to borrow the "Debt Asset" from your available credit line (or pull from wallet).
+- **Function**: The hook pays the "Debt Asset" to the solver, who in exchange provides the "Target Asset" to you.
+- **Use Case**: swapping assets without upfront capital (using credit), or paying off debts with other assets.
+
+### 2. Leverage Hook
+**Purpose**: Open or increase a leveraged position in a single transaction.
+- **Mechanism**: **Prerequisite: You must have an existing supply position.** You **delegate credit** to the Hook contract. The hook borrows the "Debt Asset" on your behalf against your existing collateral.
+- **Function**: The hook borrows the asset, sends it to the solver, and the solver swaps it for "Collateral Asset". The hook then deposits this new collateral back into your position, effectively increasing your exposure.
+- **Use Case**: Longing an asset with leverage (e.g., Borrow USDC -> Buy ETH -> Supply ETH).
+
+### 3. Deleverage Hook
+**Purpose**: Reduce leverage or close a position to avoid liquidation or take profits.
+- **Mechanism**: You **approve the Hook contract to spend your aTokens** (your receipt tokens for supplied collateral).
+- **Function**: The hook uses this approval to **withdraw** "Collateral Asset" from your position. It sends this collateral to the solver, who pays "Debt Asset" in return. The hook immediately uses this "Debt Asset" to **repay** your loan in the money market.
+- **Use Case**: Reducing risk, taking profits, or avoiding liquidation (e.g., Withdraw ETH -> Sell for USDC -> Repay USDC Debt).
+
+### 4. Debt Side Leverage Hook
+**Purpose**: Advanced leverage management, often for specific debt strategies.
+- **Mechanism**: Similar to the Leverage Hook, relies on **credit delegation**. You delegate borrowing power to the Hook.
+- **Function**: The hook borrows "Debt Asset" on your behalf (can be combined with user-provided capital). The solver swaps this for "Collateral Asset", which is deposited into your position. This is distinct from standard leverage in how it handles the initial capital source and accounting.
+- **Use Case**: Advanced yield farming or maximizing borrowing power against specific collateral.
+
+### 5. Liquidation Hook
+**Purpose**: Protocol health maintenance (for Liquidators).
+- **Mechanism**: Does not require user delegation. The protocol allows liquidation of positions with Health Factor < 1.0.
+- **Function**: The hook (called by a liquidator) pays "Debt Asset" to repay the user's bad debt. In return, the hook **seizes** a portion of the user's "Collateral Asset" (plus a liquidation bonus) and sends it to the solver/liquidator.
+- **Use Case**: Running a liquidation bot to earn profits and secure the protocol.
+
+## CLI Commands Guide
+
+### General
+
+| Command | Description |
+|---------|-------------|
+| `showAddresses` | Show all hook contract addresses |
+| `checkBalances` | Check sodaUSDC and sodaETH balances |
+| `getIntentState <hash>` | Check the state of an intent |
+| `cancelIntentFromTx <txHash>` | Cancel an intent using its transaction hash |
+
+### Credit Hook (Limit Orders)
+
+**Create Credit Intent:**
+```bash
+pnpm tsx src/intent-hooks.ts createCreditIntentWithPrerequisites \
+  <debtAsset_sodaUSDC> \
+  <targetAsset_sodaETH> \
+  <maxPayment_wei> \
+  <minReceive_wei> \
+  0  # deadline (0 = none)
+```
+*Auto-approves credit delegation.*
+
+**Fill Credit Intent (for Solvers):**
+```bash
+pnpm tsx src/intent-hooks.ts fillIntentWithData <tx_hash> <inputAmount> <outputAmount>
+```
+
+### Leverage Hook
+
+**Create Leverage Intent:**
+```bash
+pnpm tsx src/intent-hooks.ts createLeverageIntentWithPrerequisites \
+  <collateralAsset_sodaETH> \
+  <debtAsset_sodaUSDC> \
+  <collateralAmount_wei> \
+  <borrowAmount_wei> \
+  0
+```
+- `inputToken` (Solver Provides): debtAsset
+- `outputToken` (Solver Receives): collateralAsset
+
+### Deleverage Hook
+
+**Create Deleverage Intent:**
+```bash
+pnpm tsx src/intent-hooks.ts createDeleverageIntentWithPrerequisites \
+  <collateralAsset_sodaETH> \
+  <debtAsset_sodaUSDC> \
+  <withdrawAmount_wei> \
+  <repayAmount_wei> \
+  0
+```
+- `inputToken` (Hook Withdraws): collateralAsset
+- `outputToken` (Hook Repays): debtAsset (Solver provides this)
+
+### Debt Side Leverage Hook
+
+**Check Status:**
+```bash
+pnpm tsx src/intent-hooks.ts checkDebtSideLeverageStatus <debtAsset>
+```
+
+**Create Intent:**
+```bash
+pnpm tsx src/intent-hooks.ts createDebtSideLeverageIntentWithPrerequisites \
+  <collateralAsset> \
+  <debtAsset> \
+  <collateralAmount> \
+  <userProvidedAmount> \
+  <totalBorrowAmount> \
+  0
+```
+
+### Liquidation Hook
+
+**Check Opportunity:**
+```bash
+pnpm tsx src/intent-hooks.ts checkLiquidation <userAddress>
+```
+
+**Create Intent:**
+```bash
+pnpm tsx src/intent-hooks.ts createLiquidationIntent \
+  <collateralAsset> \
+  <debtAsset> \
+  <userToLiquidate> \
+  <collateralAmount> \
+  <debtAmount> \
+  0
+```
 
 ## Common Workflows
 
-### Complete Leverage → Fill → Deleverage → Fill Workflow
-
-This is the most common workflow for testing leverage and deleverage hooks:
+### Complete Leverage & Deleverage Test Loop
+This workflow tests the entire cycle: creating a leverage position, filling it, then unwinding it with deleverage.
 
 ```bash
 pnpm tsx src/intent-hooks.ts leverageAndDeleverage \
-  0x50c42dEAcD8Fc9773493ED674b675bE577f2634b \  # WETH (collateral)
-  0xE801CA34E19aBCbFeA12025378D19c4FBE250131 \  # bnUSD (debt)
-  <collateralAmount> \                          # Amount in wei
-  <borrowAmount>                                 # Amount in wei
+  0x4effB5813271699683C25c734F4daBc45B363709 \  # sodaETH
+  0xAbbb91c0617090F0028BDC27597Cd0D038F3A833 \  # sodaUSDC
+  <collateralAmount> \
+  <borrowAmount>
 ```
 
-**What it does:**
-1. Creates leverage intent with prerequisites (auto-approves credit delegation)
-2. Fills leverage intent (you act as solver)
-3. Creates deleverage intent with prerequisites (auto-approves aToken)
-4. Fills deleverage intent (you act as solver)
-
-**Successful Transaction Hashes:**
-- Leverage Intent: `0x0361059bb1267234227ab0274ec3f1313857ec93dbcc051361f302cdc0b0879d`
-- Leverage Fill: `0xf5a2456429e725ed4640e2575ced4421a5fe39bc47f0eaa7ae68e6d92d8895cc`
-- Deleverage Intent: `0xe12f729c5527198892a387934b2fccc119e199b9c68985b098286d5f8f707fc6`
-- Deleverage Fill: `0x611f736dfaa97e6527f12660b41c4b3392be1cb01d6de5605013bc40c8b982be`
-
-## Hook-Specific Guides
-
-### 1. Credit Hook (Limit Orders)
-
-#### Create Credit Intent
-
-```bash
-pnpm tsx src/intent-hooks.ts createCreditIntentWithPrerequisites \
-  0xE801CA34E19aBCbFeA12025378D19c4FBE250131 \  # debtAsset (bnUSD)
-  0x50c42dEAcD8Fc9773493ED674b675bE577f2634b \  # targetAsset (WETH)
-  <maxPayment> \                                 # Amount in wei
-  <minReceive> \                                 # Amount in wei
-  0                                               # deadline (0 = no deadline)
-```
-
-**Intent Structure:**
-- `inputToken`: debtAsset (bnUSD) - what solver provides
-- `outputToken`: targetAsset (WETH) - what solver receives
-- `inputAmount`: maxPayment
-- `minOutputAmount`: minReceive
-
-**Fill Credit Intent:**
-
-```bash
-pnpm tsx src/intent-hooks.ts fillIntentWithData \
-  <credit_intent_tx_hash> \
-  <inputAmount> \  # Amount in wei
-  <outputAmount>    # Amount in wei
-```
-
-**Important Notes:**
-- Requires credit delegation approval (auto-handled by `WithPrerequisites`)
-- Solver must approve `inputToken` (bnUSD) to Intents contract (auto-handled)
-- Solver must have sufficient WETH balance for hook execution
-- `maxPayment`: Maximum amount of debtAsset to pay
-- `minReceive`: Minimum amount of targetAsset to receive
-- Use exact amounts from intent to avoid `PartialFillNotAllowed` error
-
-### 2. Leverage Hook
-
-#### Create Leverage Intent
-
-```bash
-pnpm tsx src/intent-hooks.ts createLeverageIntentWithPrerequisites \
-  0x50c42dEAcD8Fc9773493ED674b675bE577f2634b \  # collateralAsset (WETH)
-  0xE801CA34E19aBCbFeA12025378D19c4FBE250131 \  # debtAsset (bnUSD)
-  <collateralAmount> \                          # Amount in wei
-  <borrowAmount> \                               # Amount in wei
-  0                                               # deadline
-```
-
-**Intent Structure:**
-- `inputToken`: debtAsset (bnUSD) - what solver provides
-- `outputToken`: collateralAsset (WETH) - what solver receives
-- `inputAmount`: borrowAmount
-- `minOutputAmount`: collateralAmount
-
-**Fill Leverage Intent:**
-
-```bash
-pnpm tsx src/intent-hooks.ts fillIntentWithData \
-  <leverage_intent_tx_hash> \
-  <inputAmount> \  # Amount in wei
-  <outputAmount>    # Amount in wei
-```
-
-**Important Notes:**
-- Solver must approve `inputToken` (bnUSD) to Intents contract (auto-handled)
-- Solver must have sufficient WETH balance for hook execution
-- Use exact amounts from intent to avoid `PartialFillNotAllowed` error
-
-### 3. Deleverage Hook
-
-#### Create Deleverage Intent
-
-```bash
-pnpm tsx src/intent-hooks.ts createDeleverageIntent \
-  0x50c42dEAcD8Fc9773493ED674b675bE577f2634b \  # collateralAsset (WETH)
-  0xE801CA34E19aBCbFeA12025378D19c4FBE250131 \  # debtAsset (bnUSD)
-  <withdrawAmount> \                             # Amount in wei
-  <repayAmount> \                                # Amount in wei
-  0                                               # deadline
-```
-
-**Intent Structure:**
-- `inputToken`: debtAsset (bnUSD) - what solver provides to repay debt
-- `outputToken`: collateralAsset (WETH) - what solver receives (withdrawn from pool)
-- `inputAmount`: repayAmount
-- `minOutputAmount`: withdrawAmount
-
-**Fill Deleverage Intent:**
-
-```bash
-pnpm tsx src/intent-hooks.ts fillIntentWithData \
-  <deleverage_intent_tx_hash> \
-  <inputAmount> \  # Amount in wei
-  <outputAmount>    # Amount in wei
-```
-
-**Important Notes:**
-- Requires aToken approval for collateralAsset (auto-handled by `WithPrerequisites`)
-- Solver must approve `inputToken` (bnUSD) to Intents contract (auto-handled)
-- Use exact amounts from intent to avoid `PartialFillNotAllowed` error
-
-### 4. Debt Side Leverage Hook
-
-#### Check Status
-
-```bash
-pnpm tsx src/intent-hooks.ts checkDebtSideLeverageStatus \
-  0xE801CA34E19aBCbFeA12025378D19c4FBE250131  # debtAsset
-```
-
-#### Create Debt Side Leverage Intent
-
-```bash
-pnpm tsx src/intent-hooks.ts createDebtSideLeverageIntentWithPrerequisites \
-  0x50c42dEAcD8Fc9773493ED674b675bE577f2634b \  # collateralAsset
-  0xE801CA34E19aBCbFeA12025378D19c4FBE250131 \  # debtAsset
-  <collateralAmount> \                          # Amount in wei
-  <userProvidedAmount> \                         # Amount in wei
-  <totalBorrowAmount> \                          # Amount in wei
-  0                                               # deadline
-```
-
-**Intent Structure:**
-- `inputToken`: debtAsset (bnUSD) - what solver provides (full totalBorrowAmount)
-- `outputToken`: collateralAsset (WETH) - what solver receives
-- `inputAmount`: totalBorrowAmount
-- `minOutputAmount`: collateralAmount
-
-**Fill Debt Side Leverage Intent:**
-
-```bash
-pnpm tsx src/intent-hooks.ts fillIntentWithData \
-  <debt_side_leverage_intent_tx_hash> \
-  <inputAmount> \  # Amount in wei (full totalBorrowAmount)
-  <outputAmount>    # Amount in wei
-```
-
-**Important Notes:**
-- Requires credit delegation approval for debtAsset (auto-handled)
-- Requires token approval for debtAsset to Debt Side Leverage Hook (auto-handled)
-- Solver must approve `inputToken` (bnUSD) to Intents contract (auto-handled)
-- Hook uses user's provided amount + solver's amount to supply collateral and borrow
-- Use exact amounts from intent to avoid `PartialFillNotAllowed` error
-
-### 5. Liquidation Hook
-
-#### Check Liquidation Opportunity
-
-```bash
-pnpm tsx src/intent-hooks.ts checkLiquidation \
-  0xUserAddressToCheck
-```
-
-This checks if a user's position is liquidatable by verifying their health factor.
-
-#### Create Liquidation Intent
-
-```bash
-pnpm tsx src/intent-hooks.ts createLiquidationIntent \
-  0x50c42dEAcD8Fc9773493ED674b675bE577f2634b \  # collateralAsset (WETH)
-  0xE801CA34E19aBCbFeA12025378D19c4FBE250131 \  # debtAsset (bnUSD)
-  0xUserToLiquidateAddress \                     # userToLiquidate
-  <collateralAmount> \                           # Amount in wei
-  <debtAmount> \                                  # Amount in wei
-  0                                               # deadline
-```
-
-**Intent Structure:**
-- `inputToken`: collateralAsset (WETH) - what solver provides (collateral to seize)
-- `outputToken`: debtAsset (bnUSD) - what solver receives (debt to repay)
-- `inputAmount`: collateralAmount
-- `minOutputAmount`: debtAmount
-
-**Fill Liquidation Intent:**
-
-```bash
-pnpm tsx src/intent-hooks.ts fillIntentWithData \
-  <liquidation_intent_tx_hash> \
-  <inputAmount> \    # Amount in wei
-  <outputAmount>      # Amount in wei
-```
-
-**Important Notes:**
-- The hook automatically checks if the position is liquidatable before creating the intent
-- User's health factor must be < 1.0 (represented as < 1e18 in wei) for liquidation to be possible
-- Solver must approve `inputToken` (collateralAsset) to Intents contract (auto-handled)
-- Use exact amounts from intent to avoid `PartialFillNotAllowed` error
-- The liquidation hook seizes collateral and repays debt on behalf of the liquidated user
-
-## Intent Lifecycle Operations
-
-### Get Intent Data from Transaction
-
-```bash
-pnpm tsx src/intent-hooks.ts fillIntentWithData \
-  <tx_hash> \
-  <inputAmount> \
-  <outputAmount>
-```
-
-This automatically:
-1. Retrieves intent data from the transaction
-2. Approves inputToken if needed
-3. Fills the intent
-
-### Cancel Intent
-
-You need to provide full intent data from the `IntentCreated` event:
-
-```bash
-pnpm tsx src/intent-hooks.ts cancelIntentWithData \
-  <intentId> \
-  <creator> \
-  <inputToken> \
-  <outputToken> \
-  <inputAmount> \
-  <minOutputAmount> \
-  <deadline> \
-  <allowPartialFill> \
-  <srcChain> \
-  <dstChain> \
-  <srcAddress> \
-  <dstAddress> \
-  <solver> \
-  <data>
-```
-
-**Note**: Get intent data from SonicScan `IntentCreated` event logs.
-
-### Check Intent State
-
-```bash
-pnpm tsx src/intent-hooks.ts getIntentState <intentHash>
-```
-
-## Approval Operations
-
-### Check Credit Delegation
-
-```bash
-pnpm tsx src/intent-hooks.ts checkDelegation \
-  0xE801CA34E19aBCbFeA12025378D19c4FBE250131 \  # debtAsset
-  leverage                                        # hookType
-```
-
-### Approve Credit Delegation
-
-```bash
-pnpm tsx src/intent-hooks.ts approveDelegation \
-  0xE801CA34E19aBCbFeA12025378D19c4FBE250131 \  # debtAsset
-  115792089237316195423570985008687907853269984665640564039457584007913129639935 \  # max amount
-  leverage
-```
-
-### Approve Token Spending
-
-```bash
-pnpm tsx src/intent-hooks.ts approveToken \
-  0x50c42dEAcD8Fc9773493ED674b675bE577f2634b \  # tokenAddress
-  115792089237316195423570985008687907853269984665640564039457584007913129639935 \  # max amount
-  leverage
-```
-
-### Approve aToken Spending
-
-```bash
-pnpm tsx src/intent-hooks.ts approveAToken \
-  0x50c42dEAcD8Fc9773493ED674b675bE577f2634b \  # underlyingAsset
-  115792089237316195423570985008687907853269984665640564039457584007913129639935 \  # max amount
-  deleverage
-```
-
-## Important Notes
-
-### Address Normalization
-
-- All addresses are automatically normalized to 20 bytes before being passed to HooksService
-- Addresses from events may be 32-byte ABI-encoded; they are automatically extracted
-- The `normalizeAddress` function handles this conversion
-
-### Amount Format
-
-- All amounts are in **wei** (smallest unit, 18 decimals)
-- Example: `1000000000000000` = 0.001 tokens
-- Example: `500000000000000000` = 0.5 tokens
-
-### Token Approvals
-
-- **Credit Delegation**: Required for leverage, debt side leverage hooks
-- **Token Approval**: Required for debt side leverage hook
-- **aToken Approval**: Required for deleverage hook
-- **Fill Approval**: Solver must approve `inputToken` to Intents contract (auto-handled)
-
-### Common Errors
-
-1. **`ERC20InsufficientBalance` (0xe450d38c)**
-   - **Cause**: Insufficient token balance
-   - **Solution**: Ensure sufficient balance for the operation
-   - **Note**: For leverage fills, solver needs WETH balance even though providing bnUSD
-
-2. **`IntentAlreadyExists`**
-   - **Cause**: Intent with same parameters already exists
-   - **Solution**: Cancel existing intent or use different parameters
-
-3. **`PartialFillNotAllowed`**
-   - **Cause**: Attempting to fill with different amounts than intent
-   - **Solution**: Use exact `inputAmount` and `minOutputAmount` from intent
-
-4. **`ERC20InsufficientAllowance`**
-   - **Cause**: Insufficient token allowance
-   - **Solution**: Approve tokens before operation (auto-handled by `WithPrerequisites` methods)
-
-5. **`IntentNotFound`**
-   - **Cause**: Intent doesn't exist or hash mismatch
-   - **Solution**: Verify intent data matches exactly (check address normalization)
-
-## Transaction Reference
-
-This section lists successful transaction hashes for reference. All amounts are in wei (18 decimals).
-
-### Complete Successful Workflow
-
-**Leverage → Fill → Deleverage → Fill (All Successful):**
-
-1. **Leverage Intent Creation**
-   - Tx Hash: `0x0361059bb1267234227ab0274ec3f1313857ec93dbcc051361f302cdc0b0879d`
-   - Command: `createLeverageIntentWithPrerequisites`
-
-2. **Leverage Intent Fill**
-   - Tx Hash: `0xf5a2456429e725ed4640e2575ced4421a5fe39bc47f0eaa7ae68e6d92d8895cc`
-   - Command: `fillIntentWithData` with exact amounts from intent
-
-3. **Deleverage Intent Creation**
-   - Tx Hash: `0xe12f729c5527198892a387934b2fccc119e199b9c68985b098286d5f8f707fc6`
-   - Command: `createDeleverageIntent`
-
-4. **Deleverage Intent Fill**
-   - Tx Hash: `0x611f736dfaa97e6527f12660b41c4b3392be1cb01d6de5605013bc40c8b982be`
-   - Command: `fillIntentWithData` with exact amounts from intent
-
-**All transactions completed successfully!** ✅
-
-### Credit Hook Workflow
-
-1. **Credit Intent Creation**
-   - Tx Hash: `0x5a448d0590f66cd0019abd262f4354133e58798601ff38e5f77463fe66bd705f`
-   - Command: `createCreditIntentWithPrerequisites`
-
-2. **Credit Intent Fill**
-   - Tx Hash: `0x7458296f347a9b3007a903f657a52056849cc1d68bbf87e8461415861b747b49`
-   - Command: `fillIntentWithData` with exact amounts from intent
-
-### Debt Side Leverage Hook Workflow
-
-1. **Debt Side Leverage Intent Creation**
-   - Tx Hash: `0x91a74feb63936b1e155b9ccfe2d356b003509d44c50ce226a32bf154523d2f0a`
-   - Command: `createDebtSideLeverageIntentWithPrerequisites`
-
-2. **Debt Side Leverage Intent Fill**
-   - Tx Hash: `0x61a61bf1eaffe72ba01eb7accf968e9670138a26d7c4bac1ded6cdb3b6fd3b02`
-   - Command: `fillIntentWithData` with exact amounts from intent
-
-## Contract Addresses
-
-- **Intents Contract**: `0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef`
-- **Credit Hook**: `0xe2A8E6023eB4C88c51472c8eB1332b87Dd09d8f7`
-- **Leverage Hook**: `0xB0E2ee3C1dA131d4004f0b8cc2ca159FaA129B86`
-- **Debt Side Leverage Hook**: `0x34aFac3b87c5585942D74a1F12eA13a33821D4bd`
-- **Deleverage Hook**: `0x5fF9c34f1734c2B62c53231E6923D0967F95a8A3`
-- **Liquidation Hook**: `0x9e6D9D2D9c900Be023d839910855A864eDE3ABBD`
-- **Chain ID**: 146 (Sonic Mainnet)
-
-
-## Getting Help
-
-1. Verify token balances: `checkBalances`
-2. Check intent state: `getIntentState`
-
+**Steps Performed:**
+1. Creates leverage intent (auto-approves delegation).
+2. Fills leverage intent (you act as solver).
+3. Verifies position.
+4. Creates deleverage intent (auto-approves aToken).
+5. Fills deleverage intent.
+
+## Troubleshooting
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `ERC20InsufficientBalance` | Low token balance | Ensure you have enough `sodaETH`/`sodaUSDC`. Solvers need `sodaETH` inventory. |
+| `IntentAlreadyExists` | Duplicate intent ID | Intent ID is random but based on params; try again or cancel existing. |
+| `PartialFillNotAllowed` | Wrong fill amounts | Use exact `inputAmount` and `minOutputAmount` when filling. |
+| `ERC20InsufficientAllowance` | Missing approval | Use the `...WithPrerequisites` commands to auto-approve. |
+| `IntentNotFound` | Hash mismatch | Verify intent data and address normalization. |

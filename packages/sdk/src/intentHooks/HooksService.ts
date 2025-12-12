@@ -29,6 +29,7 @@ import { erc20Abi } from '../shared/abis/erc20.abi.js';
 import { poolAbi } from '../shared/abis/pool.abi.js';
 import { variableDebtTokenAbi } from '../shared/abis/variableDebtToken.abi.js';
 import { IntentsAbi } from '../shared/abis/intents.abi.js';
+import { randomUint256 } from '../shared/utils/shared-utils.js';
 import type { Result } from '../shared/types.js';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
@@ -286,7 +287,7 @@ export class HooksService {
 
       const deadlineValue = params.deadline && params.deadline !== '' ? params.deadline : '0';
       const intent = {
-        intentId: 0n,
+        intentId: randomUint256(),
         creator: userAddress,
         inputToken: params.debtAsset as ViemAddress,
         outputToken: params.targetAsset as ViemAddress,
@@ -348,7 +349,7 @@ export class HooksService {
       );
 
       const intent = {
-        intentId: 0n,
+        intentId: randomUint256(),
         creator: userAddress,
         inputToken: params.debtAsset as ViemAddress,
         outputToken: params.collateralAsset as ViemAddress,
@@ -460,7 +461,7 @@ export class HooksService {
       );
 
       const intent = {
-        intentId: 0n,
+        intentId: randomUint256(),
         creator: userAddress,
         inputToken: params.debtAsset as ViemAddress,
         outputToken: params.collateralAsset as ViemAddress,
@@ -471,7 +472,7 @@ export class HooksService {
         srcChain: BigInt(chainId),
         dstChain: BigInt(chainId),
         srcAddress: userAddress.toLowerCase() as Hex,
-        dstAddress: userAddress.toLowerCase() as Hex,
+        dstAddress: (this.hooksConfig.debtSideLeverageHookAddress as string).toLowerCase() as Hex,
         solver: (params.solver || ZERO_ADDRESS) as ViemAddress, // Use provided solver or zero address (any solver)
         data: intentData,
       };
@@ -503,9 +504,10 @@ export class HooksService {
 
   /**
    * Get aToken approval information for deleverage
-   * @param collateralAsset - The address of the collateral asset
+   * Note: The hook contract checks aToken for intent.inputToken (collateralAsset), not debtAsset
+   * @param collateralAsset - The address of the collateral asset (inputToken in the intent)
    * @param userAddress - The user's wallet address
-   * @param withdrawAmount - The amount to withdraw
+   * @param withdrawAmount - The amount to withdraw (inputAmount in the intent)
    * @param feeAmount - Optional fee amount
    * @returns aToken approval information
    */
@@ -516,6 +518,7 @@ export class HooksService {
     feeAmount?: string,
   ): Promise<Result<ATokenApprovalInfo>> {
     try {
+      // Hook checks aToken for intent.inputToken (collateralAsset), which is what we withdraw
       const aTokenAddress = await this.getAToken(collateralAsset);
       const currentAllowance = await this.publicClient.readContract({
         address: aTokenAddress,
@@ -524,6 +527,7 @@ export class HooksService {
         args: [userAddress as ViemAddress, this.hooksConfig.deleverageHookAddress as ViemAddress],
       });
 
+      // Hook requires: allowance >= intent.inputAmount + fee
       const aTokensNeeded = BigInt(withdrawAmount) + BigInt(feeAmount || '0');
 
       return {
@@ -561,13 +565,16 @@ export class HooksService {
       );
 
       const intent = {
-        intentId: 0n,
+        intentId: randomUint256(),
         creator: userAddress,
-        // For deleverage: user provides debt token (bnUSD) to repay, receives collateral (WETH) withdrawn from pool
-        inputToken: params.debtAsset as ViemAddress, // User provides debt token to repay
-        outputToken: params.collateralAsset as ViemAddress, // User receives collateral withdrawn from pool
-        inputAmount: BigInt(params.repayAmount), // Amount of debt to repay
-        minOutputAmount: BigInt(params.withdrawAmount), // Minimum collateral to withdraw
+        // For deleverage: Hook's _onFillIntent expects:
+        // - intent.inputToken = collateralAsset (to withdraw using inputAmount)
+        // - intent.outputToken = debtAsset (to repay using outputAmount)
+        // The hook will pull outputToken (debtAsset) from its balance to repay
+        inputToken: params.collateralAsset as ViemAddress, // Collateral to withdraw from pool
+        outputToken: params.debtAsset as ViemAddress, // Debt to repay
+        inputAmount: BigInt(params.withdrawAmount), // Amount of collateral to withdraw
+        minOutputAmount: BigInt(params.repayAmount), // Amount of debt to repay
         deadline: BigInt(params.deadline || '0'),
         allowPartialFill: false,
         srcChain: BigInt(chainId),
@@ -678,7 +685,7 @@ export class HooksService {
       );
 
       const intent = {
-        intentId: 0n,
+        intentId: randomUint256(),
         creator: creatorAddress,
         inputToken: params.collateralAsset as ViemAddress,
         outputToken: params.debtAsset as ViemAddress,
@@ -770,6 +777,25 @@ export class HooksService {
       // For fillIntent, solver needs to provide output tokens
       // If output token is native, solver needs to send ETH with the transaction
       const isNativeOutput = params.intent.outputToken === ZERO_ADDRESS;
+
+      // Estimate gas first, then add 20% buffer for complex operations
+      const estimatedGas = await this.publicClient.estimateContractGas({
+        address: this.intentsAddress as ViemAddress,
+        abi: IntentsAbi,
+        functionName: 'fillIntent',
+        args: [
+          this.intentToContractFormat(params.intent),
+          BigInt(params.inputAmount),
+          BigInt(params.outputAmount),
+          externalFillId,
+        ],
+        account: this.walletClient.account,
+        ...(isNativeOutput ? { value: BigInt(params.outputAmount) } : {}),
+      });
+
+      // Add 30% buffer to handle gas estimation inaccuracies for complex hook operations
+      const gasLimit = (estimatedGas * 130n) / 100n;
+
       const hash = await this.walletClient.writeContract({
         address: this.intentsAddress as ViemAddress,
         abi: IntentsAbi,
@@ -782,10 +808,20 @@ export class HooksService {
         ],
         account: this.walletClient.account,
         chain: this.walletClient.chain,
+        gas: gasLimit,
         ...(isNativeOutput ? { value: BigInt(params.outputAmount) } : {}),
       });
 
-      await this.publicClient.waitForTransactionReceipt({ hash });
+      const receipt = await this.publicClient.waitForTransactionReceipt({
+        hash,
+      });
+
+      if (receipt.status === 'reverted') {
+        return {
+          ok: false,
+          error: new Error('Transaction reverted'),
+        };
+      }
 
       return {
         ok: true,
@@ -996,72 +1032,77 @@ export class HooksService {
    */
   private encodeIntentData(hookAddress: Address, hookData: string, feeReceiver?: Address, feeAmount?: string): Hex {
     // Encode HookData struct: {hook: address, data: bytes}
+    // Use tuple encoding without names to match Solidity's abi.decode expectations
     const hookDataBytes = hookData === '0x' || hookData === '' ? '0x' : (hookData as Hex);
     const encodedHookData = encodeAbiParameters(
       [
-        { name: 'hook', type: 'address' },
-        { name: 'data', type: 'bytes' },
+        {
+          type: 'tuple',
+          components: [
+            { type: 'address' }, // NO name field
+            { type: 'bytes' }, // NO name field
+          ],
+        },
       ],
-      [hookAddress, hookDataBytes],
+      [[hookAddress, hookDataBytes]], // Note: extra array wrapper for tuple
     );
 
     if (feeReceiver && feeAmount) {
       // With fee: Use ArrayData format
       // Step 1: Encode FeeData struct: {fee: uint256, receiver: address}
+      // Use tuple encoding without names to match Solidity's abi.decode expectations
       const encodedFeeData = encodeAbiParameters(
         [
-          { name: 'fee', type: 'uint256' },
-          { name: 'receiver', type: 'address' },
+          {
+            type: 'tuple',
+            components: [
+              { type: 'uint256' }, // NO name field
+              { type: 'address' }, // NO name field
+            ],
+          },
         ],
-        [BigInt(feeAmount), feeReceiver],
+        [[BigInt(feeAmount), feeReceiver]], // Note: extra array wrapper for tuple
       );
 
-      // Step 2: Encode DataEntry structs
-      // DataEntry for FeeData: {dataType: uint8(1), data: bytes}
-      // const feeDataEntry = encodeAbiParameters(
-      //   [
-      //     { name: 'dataType', type: 'uint8' },
-      //     { name: 'data', type: 'bytes' },
-      //   ],
-      //   [1, encodedFeeData],
-      // );
-
-      // DataEntry for HookData: {dataType: uint8(2), data: bytes}
-      // const hookDataEntry = encodeAbiParameters(
-      //   [
-      //     { name: 'dataType', type: 'uint8' },
-      //     { name: 'data', type: 'bytes' },
-      //   ],
-      //   [2, encodedHookData],
-      // );
-
       // Step 3: Encode ArrayData struct: {data: DataEntry[]}
-      // Note: ArrayData.data is DataEntry[], which is a struct array
-      // We need to encode it as a tuple array
+      // Match Solidity: ArrayData memory arrayData = ArrayData({data: entries});
+      // Then: bytes memory arrayEncoded = abi.encode(arrayData);
+      // ArrayData is a struct with one field: data (DataEntry[])
+      // DataEntry is a struct: {dataType: uint8, data: bytes}
       const arrayData = encodeAbiParameters(
         [
           {
-            name: 'data',
-            type: 'tuple[]',
+            type: 'tuple',
             components: [
-              { name: 'dataType', type: 'uint8' },
-              { name: 'data', type: 'bytes' },
+              {
+                name: 'data',
+                type: 'tuple[]',
+                components: [
+                  { name: 'dataType', type: 'uint8' },
+                  { name: 'data', type: 'bytes' },
+                ],
+              },
             ],
           },
         ],
         [
-          [
-            { dataType: 1, data: encodedFeeData },
-            { dataType: 2, data: encodedHookData },
-          ],
+          {
+            data: [
+              { dataType: 1, data: encodedFeeData },
+              { dataType: 2, data: encodedHookData },
+            ],
+          },
         ],
       );
 
-      // Step 4: Final encoding: uint8(0) + ArrayData bytes
+      // Step 4: Final encoding: abi.encodePacked(uint8(0), abi.encode(ArrayData))
+      // Match Solidity: bytes memory rawData = abi.encodePacked(uint8(0), arrayEncoded);
       return encodePacked(['uint8', 'bytes'], [0, arrayData]) as Hex;
     }
 
-    // Without fee: uint8(2) + abi.encode(HookData)
+    // Without fee: abi.encodePacked(uint8(2), abi.encode(HookData))
+    // Match Solidity: abi.encodePacked(uint8(2), abi.encode(HookData({hook: address, data: bytes})))
+    // Use encodePacked to match Solidity's abi.encodePacked exactly
     return encodePacked(['uint8', 'bytes'], [2, encodedHookData]) as Hex;
   }
 
@@ -1095,7 +1136,13 @@ export class HooksService {
     params: CreditHookParams,
     chainId: number,
     options?: { checkOnly?: boolean; autoApprove?: boolean },
-  ): Promise<Result<IntentCreationResult & { prerequisites: { creditDelegationApproved: boolean } }>> {
+  ): Promise<
+    Result<
+      IntentCreationResult & {
+        prerequisites: { creditDelegationApproved: boolean };
+      }
+    >
+  > {
     try {
       if (!this.walletClient) {
         return { ok: false, error: new Error('Wallet client required') };
@@ -1185,7 +1232,13 @@ export class HooksService {
     params: LeverageHookParams,
     chainId: number,
     options?: { checkOnly?: boolean; autoApprove?: boolean },
-  ): Promise<Result<IntentCreationResult & { prerequisites: { creditDelegationApproved: boolean } }>> {
+  ): Promise<
+    Result<
+      IntentCreationResult & {
+        prerequisites: { creditDelegationApproved: boolean };
+      }
+    >
+  > {
     try {
       if (!this.walletClient) {
         return { ok: false, error: new Error('Wallet client required') };
@@ -1200,14 +1253,18 @@ export class HooksService {
         return delegationStatus;
       }
 
-      let creditDelegationApproved = delegationStatus.value.delegated;
-      const neededAmount = BigInt(params.borrowAmount);
+      // When there's a fee, the hook checks: allowance >= borrowAmount + fee
+      // From unit test: ICreditDelegationToken(vDebtWeth).approveDelegation(address(_hook), borrowAmount+fee);
+      const feeAmount = params.feeAmount ? BigInt(params.feeAmount) : 0n;
+      const neededAmount = BigInt(params.borrowAmount) + feeAmount;
 
-      // Approve credit delegation if needed
+      let creditDelegationApproved = delegationStatus.value.delegated;
+
+      // Approve credit delegation if needed (must include fee if present)
       if (!creditDelegationApproved && autoApprove) {
         const approveResult = await this.approveCreditDelegation(
           params.debtAsset,
-          params.borrowAmount,
+          neededAmount.toString(),
           HookType.Leverage,
         );
         if (!approveResult.ok) {
@@ -1218,14 +1275,14 @@ export class HooksService {
         return {
           ok: false,
           error: new Error(
-            `Credit delegation not approved. Current allowance: ${delegationStatus.value.allowance}, needed: ${params.borrowAmount}`,
+            `Credit delegation not approved. Current allowance: ${delegationStatus.value.allowance}, needed: ${neededAmount.toString()} (borrowAmount: ${params.borrowAmount}${feeAmount > 0n ? ` + fee: ${feeAmount.toString()}` : ''})`,
           ),
         };
       } else if (BigInt(delegationStatus.value.allowance) < neededAmount) {
         if (autoApprove) {
           const approveResult = await this.approveCreditDelegation(
             params.debtAsset,
-            params.borrowAmount,
+            neededAmount.toString(),
             HookType.Leverage,
           );
           if (!approveResult.ok) {
@@ -1235,7 +1292,7 @@ export class HooksService {
           return {
             ok: false,
             error: new Error(
-              `Insufficient credit delegation allowance. Current: ${delegationStatus.value.allowance}, needed: ${params.borrowAmount}`,
+              `Insufficient credit delegation allowance. Current: ${delegationStatus.value.allowance}, needed: ${neededAmount.toString()} (borrowAmount: ${params.borrowAmount}${feeAmount > 0n ? ` + fee: ${feeAmount.toString()}` : ''})`,
             ),
           };
         }
@@ -1280,7 +1337,10 @@ export class HooksService {
   ): Promise<
     Result<
       IntentCreationResult & {
-        prerequisites: { creditDelegationApproved: boolean; tokenApproved: boolean };
+        prerequisites: {
+          creditDelegationApproved: boolean;
+          tokenApproved: boolean;
+        };
       }
     >
   > {
@@ -1311,14 +1371,14 @@ export class HooksService {
       let creditDelegationApproved = delegationStatus.value.delegated;
       let tokenApproved = BigInt(statusResult.value.tokenAllowance) >= BigInt(params.userProvidedAmount);
 
-      const neededDelegationAmount = BigInt(params.totalBorrowAmount);
+      const neededDelegationAmount = BigInt(params.totalBorrowAmount) - BigInt(params.userProvidedAmount);
       const neededTokenAmount = BigInt(params.userProvidedAmount);
 
       // Approve credit delegation if needed
       if (!creditDelegationApproved && autoApprove) {
         const approveResult = await this.approveCreditDelegation(
           params.debtAsset,
-          params.totalBorrowAmount,
+          neededDelegationAmount.toString(),
           HookType.DebtSideLeverage,
         );
         if (!approveResult.ok) {
@@ -1329,14 +1389,14 @@ export class HooksService {
         return {
           ok: false,
           error: new Error(
-            `Credit delegation not approved. Current allowance: ${delegationStatus.value.allowance}, needed: ${params.totalBorrowAmount}`,
+            `Credit delegation not approved. Current allowance: ${delegationStatus.value.allowance}, needed: ${neededDelegationAmount.toString()}`,
           ),
         };
       } else if (BigInt(delegationStatus.value.allowance) < neededDelegationAmount) {
         if (autoApprove) {
           const approveResult = await this.approveCreditDelegation(
             params.debtAsset,
-            params.totalBorrowAmount,
+            neededDelegationAmount.toString(),
             HookType.DebtSideLeverage,
           );
           if (!approveResult.ok) {
@@ -1346,7 +1406,7 @@ export class HooksService {
           return {
             ok: false,
             error: new Error(
-              `Insufficient credit delegation allowance. Current: ${delegationStatus.value.allowance}, needed: ${params.totalBorrowAmount}`,
+              `Insufficient credit delegation allowance. Current: ${delegationStatus.value.allowance}, needed: ${neededDelegationAmount.toString()}`,
             ),
           };
         }
@@ -1436,6 +1496,7 @@ export class HooksService {
       const autoApprove = options?.autoApprove !== false;
 
       // Check aToken approval info
+      // Hook checks aToken for the collateral asset (outputToken) which is what we withdraw
       const approvalInfo = await this.getATokenApprovalInfo(
         params.collateralAsset,
         userAddress,
@@ -1489,121 +1550,6 @@ export class HooksService {
         value: {
           ...createResult.value,
           prerequisites: { aTokenApproved },
-        },
-      };
-    } catch (error) {
-      return { ok: false, error };
-    }
-  }
-
-  /**
-   * Fill an intent with automatic prerequisite handling
-   * Automatically checks and approves output token if needed (for ERC20 tokens)
-   * For native tokens, checks balance
-   * @param params - Fill parameters
-   * @param options - Optional settings
-   *   - checkOnly: If true, only checks prerequisites without filling intent
-   *   - autoApprove: If true, automatically approves if needed (default: true)
-   * @returns Fill result with transaction hash and prerequisite info
-   */
-  async fillIntentWithPrerequisites(
-    params: FillHookIntentParams,
-    options?: { checkOnly?: boolean; autoApprove?: boolean },
-  ): Promise<Result<FillIntentResult & { prerequisites: { tokenApproved: boolean; hasBalance: boolean } }>> {
-    try {
-      if (!this.walletClient) {
-        return { ok: false, error: new Error('Wallet client required') };
-      }
-
-      const account = await getWalletAddress(this.walletClient);
-      const autoApprove = options?.autoApprove !== false;
-      const outputToken = params.intent.outputToken;
-      const outputAmount = BigInt(params.outputAmount);
-      const isNative = outputToken === ZERO_ADDRESS;
-
-      let tokenApproved = true; // Native tokens don't need approval
-      let hasBalance = false;
-
-      if (isNative) {
-        // Check native balance
-        const balance = await this.publicClient.getBalance({ address: account });
-        hasBalance = balance >= outputAmount;
-        if (!hasBalance) {
-          return {
-            ok: false,
-            error: new Error(
-              `Insufficient native balance. Current: ${balance.toString()}, needed: ${params.outputAmount}`,
-            ),
-          };
-        }
-      } else {
-        // Check ERC20 token balance and allowance
-        const [balance, allowance] = await Promise.all([
-          this.publicClient.readContract({
-            address: outputToken as ViemAddress,
-            abi: erc20Abi,
-            functionName: 'balanceOf',
-            args: [account],
-          }),
-          this.publicClient.readContract({
-            address: outputToken as ViemAddress,
-            abi: erc20Abi,
-            functionName: 'allowance',
-            args: [account, this.intentsAddress as ViemAddress],
-          }),
-        ]);
-
-        hasBalance = balance >= outputAmount;
-        tokenApproved = allowance >= outputAmount;
-
-        if (!hasBalance) {
-          return {
-            ok: false,
-            error: new Error(
-              `Insufficient token balance. Current: ${balance.toString()}, needed: ${params.outputAmount}`,
-            ),
-          };
-        }
-
-        // Approve token if needed
-        if (!tokenApproved && autoApprove) {
-          const approveResult = await this.approveToken(outputToken, params.outputAmount, HookType.Credit); // Use any hook type for approval
-          if (!approveResult.ok) {
-            return approveResult;
-          }
-          tokenApproved = true;
-        } else if (!tokenApproved) {
-          return {
-            ok: false,
-            error: new Error(
-              `Token not approved. Current allowance: ${allowance.toString()}, needed: ${params.outputAmount}`,
-            ),
-          };
-        }
-      }
-
-      if (options?.checkOnly) {
-        return {
-          ok: true,
-          value: {
-            txHash: '0x' as Hex,
-            filled: false,
-            prerequisites: { tokenApproved, hasBalance },
-          },
-        };
-      }
-
-      // Fill the intent
-      const fillResult = await this.fillIntent(params);
-      if (!fillResult.ok) {
-        return fillResult;
-      }
-
-      return {
-        ok: true,
-        value: {
-          ...fillResult.value,
-          prerequisites: { tokenApproved, hasBalance },
         },
       };
     } catch (error) {
