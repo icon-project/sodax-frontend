@@ -1,5 +1,5 @@
 import type { SpokeProvider } from '@sodax/sdk';
-import type { XToken } from '@sodax/types';
+import type { SpokeChainId, XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSodaxContext } from '../shared/useSodaxContext';
@@ -40,7 +40,7 @@ export function useSupply(
   const { sodax } = useSodaxContext();
 
   return useMutation<SupplyResponse, Error, string>({
-    mutationFn: async (amount: string) => {
+    mutationFn: async (amount: string, toChainId?: SpokeChainId, toAddress?: string) => {
       if (!spokeProvider) {
         throw new Error('spokeProvider is not found');
       }
@@ -50,6 +50,8 @@ export function useSupply(
           token: spokeToken.address,
           amount: parseUnits(amount, spokeToken.decimals),
           action: 'supply',
+          toChainId: toChainId,
+          toAddress: toAddress,
         },
         spokeProvider,
       );

@@ -105,7 +105,7 @@ export type MoneyMarketSupplyParams = {
   amount: bigint;
   action: 'supply';
   toChainId?: SpokeChainId;
-  toAddress?: Address;
+  toAddress?: string;
 };
 
 /**
@@ -124,7 +124,7 @@ export type MoneyMarketBorrowParams = {
   amount: bigint;
   action: 'borrow';
   toChainId?: SpokeChainId;
-  toAddress?: Address;
+  toAddress?: string;
 };
 
 /**
@@ -143,7 +143,7 @@ export type MoneyMarketWithdrawParams = {
   amount: bigint;
   action: 'withdraw';
   toChainId?: SpokeChainId;
-  toAddress?: Address;
+  toAddress?: string;
 };
 
 /**
@@ -162,7 +162,7 @@ export type MoneyMarketRepayParams = {
   amount: bigint;
   action: 'repay';
   toChainId?: SpokeChainId;
-  toAddress?: Address;
+  toAddress?: string;
 };
 
 export type MoneyMarketParams =
