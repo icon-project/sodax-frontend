@@ -76,7 +76,7 @@ export default function AccordionDepositButton({
     <Button
       variant="cherry"
       className="w-27 mix-blend-multiply shadow-none"
-      disabled={!selectedToken || balance === 0n}
+      disabled={!selectedToken || BigInt(balance) === 0n}
       onMouseDown={() => {
         console.log('deposit!');
       }}
