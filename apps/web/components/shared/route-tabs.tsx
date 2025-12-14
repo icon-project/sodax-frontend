@@ -48,15 +48,6 @@ export const tabConfigs: TabConfig[] = [
 
 export const partnerTabConfigs: TabConfig[] = [
   { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, href: '/apps/partner' },
-  {
-    value: 'stats',
-    type: 'migrate',
-    label: 'Your stats',
-    content: '',
-    enabled: true,
-    href: '/apps/partner/stats',
-  },
-  { value: 'settings', type: 'migrate', label: 'Settings', content: '', enabled: true, href: '/apps/partner/settings' },
 ];
 
 interface RouteTabsProps {
