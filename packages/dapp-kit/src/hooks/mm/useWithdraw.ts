@@ -1,5 +1,5 @@
 import type { SpokeProvider } from '@sodax/sdk';
-import type { XToken } from '@sodax/types';
+import type { SpokeChainId, XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSodaxContext } from '../shared/useSodaxContext';
@@ -39,7 +39,7 @@ export function useWithdraw(
   const { sodax } = useSodaxContext();
 
   return useMutation<WithdrawResponse, Error, string>({
-    mutationFn: async (amount: string) => {
+    mutationFn: async (amount: string, toChainId?: SpokeChainId, toAddress?: string) => {
       if (!spokeProvider) {
         throw new Error('spokeProvider is not found');
       }
@@ -50,6 +50,8 @@ export function useWithdraw(
           // vault token on hub chain decimals is 18
           amount: parseUnits(amount, 18),
           action: 'withdraw',
+          toChainId: toChainId,
+          toAddress: toAddress,
         },
         spokeProvider,
       );
