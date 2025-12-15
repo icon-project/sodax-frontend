@@ -193,7 +193,7 @@ export type SwapParams<S extends SpokeProviderType> = Prettify<
   } & OptionalFee
 >;
 
-export type LimitOrderParams<S extends SpokeProvider> = Prettify<
+export type LimitOrderParams<S extends SpokeProviderType> = Prettify<
   {
     intentParams: CreateLimitOrderParams;
     spokeProvider: S;
@@ -909,6 +909,7 @@ export class SwapService {
     spokeProvider,
     fee = this.config.partnerFee,
     raw,
+    skipSimulation = false,
   }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<
     Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>
   > {
@@ -993,6 +994,7 @@ export class SwapService {
           spokeProvider satisfies S,
           this.hubProvider,
           raw,
+          skipSimulation,
         )) satisfies TxReturnType<S, R>;
 
         return {
@@ -1080,6 +1082,76 @@ export class SwapService {
       spokeProvider,
       fee,
       timeout,
+      skipSimulation,
+    });
+  }
+
+  /**
+   * Creates a limit order intent (no deadline, must be cancelled manually by user).
+   * Similar to createIntent but enforces deadline=0n (no deadline) and uses LimitOrderParams.
+   * Limit orders remain active until manually cancelled by the user.
+   * NOTE: This method does not submit the intent to the Solver API
+   *
+   * @param {Prettify<LimitOrderParams<S> & OptionalRaw<R>>} params - Object containing:
+   *   - intentParams: The parameters for creating the limit order (deadline is automatically set to 0n, deadline field should be omitted).
+   *   - spokeProvider: The spoke provider instance.
+   *   - fee: (Optional) Partner fee configuration.
+   *   - raw: (Optional) Whether to return the raw transaction data instead of executing it
+   *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
+   * @returns {Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>>} The encoded contract call or raw transaction data, Intent and intent data as hex
+   *
+   * @example
+   * const payload = {
+   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
+   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
+   *     "inputAmount": 1000000000000000n, // The amount of input tokens
+   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
+   *     // deadline is omitted - will be automatically set to 0n
+   *     "allowPartialFill": false, // Whether the intent can be partially filled
+   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
+   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
+   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
+   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
+   *     "data": "0x..", // Additional arbitrary data
+   * } satisfies CreateLimitOrderParams;
+   *
+   * const createLimitOrderIntentResult = await swapService.createLimitOrderIntent({
+   *   intentParams: payload,
+   *   spokeProvider,
+   *   fee, // optional
+   *   raw, // optional
+   * });
+   *
+   * if (createLimitOrderIntentResult.ok) {
+   *   const [txResult, intent, intentData] = createLimitOrderIntentResult.value;
+   *   console.log('Transaction result:', txResult);
+   *   console.log('Intent:', intent);
+   *   console.log('Intent data:', intentData);
+   * } else {
+   *   // handle error
+   * }
+   */
+  public async createLimitOrderIntent<S extends SpokeProviderType, R extends boolean = false>({
+    intentParams: params,
+    spokeProvider,
+    fee = this.config.partnerFee,
+    raw,
+    skipSimulation = false,
+  }: Prettify<LimitOrderParams<S> & OptionalRaw<R>>): Promise<
+    Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>
+  > {
+    // Force deadline to 0n (no deadline) for limit orders
+    const limitOrderParams: CreateIntentParams = {
+      ...params,
+      deadline: 0n,
+    };
+
+    return this.createIntent({
+      intentParams: limitOrderParams,
+      spokeProvider,
+      fee,
+      raw,
       skipSimulation,
     });
   }
