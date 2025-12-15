@@ -41,8 +41,8 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
   }, [balance, selectedToken, tokenPrice]);
 
   return (
-    <div className="p-1">
-      <div className="flex gap-2 items-center">
+    <>
+      <div className="flex gap-2 items-center p-1.5">
         <NetworkIcon id={selectedToken?.xChainId || ''} className="scale-150" />
         {!sourceAddress ? (
           <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
@@ -64,7 +64,10 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
         )}
       </div>
       <div
-        className={cn('flex items-center gap-2 mt-8', balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-sm' : '')}
+        className={cn(
+          'flex items-center gap-2 mt-8',
+          balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-sm pl-4 sm:pl-3' : 'pl-4 sm:pl-3',
+        )}
       >
         <CustomSlider
           defaultValue={[0]}
@@ -112,6 +115,6 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
           {formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0)} {selectedToken?.symbol}
         </div>
       </div>
-    </div>
+    </>
   );
 }
