@@ -1085,6 +1085,41 @@ export class SwapService {
   }
 
   /**
+   * Cancels a limit order intent.
+   * This is a wrapper around cancelIntent since cancelling a limit order is the same as cancelling any intent.
+   *
+   * @param {Intent} intent - The limit order intent to cancel
+   * @param {SpokeProviderType} spokeProvider - The spoke provider
+   * @param {boolean} raw - Whether to return the raw transaction
+   * @returns {Promise<Result<TxReturnType<S, R>>>} The encoded contract call or transaction hash
+   *
+   * @example
+   * // Get intent first (or use intent from createLimitOrder response)
+   * const intent: Intent = await swapService.getIntent(txHash);
+   *
+   * // Cancel the limit order
+   * const result = await swapService.cancelLimitOrder(
+   *   intent,
+   *   spokeProvider,
+   *   false, // true = get raw transaction, false = execute and return tx hash
+   * );
+   *
+   * if (result.ok) {
+   *   console.log('[cancelLimitOrder] txHash:', result.value);
+   * } else {
+   *   // handle error
+   *   console.error('[cancelLimitOrder] error:', result.error);
+   * }
+   */
+  public async cancelLimitOrder<S extends SpokeProviderType, R extends boolean = false>(
+    intent: Intent,
+    spokeProvider: S,
+    raw?: R,
+  ): Promise<Result<TxReturnType<S, R>>> {
+    return this.cancelIntent(intent, spokeProvider, raw);
+  }
+
+  /**
    * Cancels an intent
    * @param {Intent} intent - The intent to cancel
    * @param {SpokeProviderType} spokeProvider - The spoke provider

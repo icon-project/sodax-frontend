@@ -72,6 +72,7 @@ All swap methods are accessible through `sodax.swaps`:
 - `getIntentHash(intent)` - Get keccak256 hash of an intent
 - `getStatus(request)` - Get intent status from Solver API
 - `cancelIntent(intent, spokeProvider, raw?)` - Cancel an active intent
+- `cancelLimitOrder(intent, spokeProvider, raw?)` - Cancel a limit order intent (wrapper around cancelIntent)
 
 ### Token Approval
 
@@ -486,12 +487,6 @@ const [solverExecutionResponse, intent, intentDeliveryInfo] = createLimitOrderRe
 // Get intent hash for tracking
 const intentHash = sodax.swaps.getIntentHash(intent);
 console.log('Limit order created with intent hash:', intentHash);
-
-// Later, to cancel the limit order:
-const cancelResult = await sodax.swaps.cancelIntent(intent, bscSpokeProvider);
-if (cancelResult.ok) {
-  console.log('Limit order cancelled:', cancelResult.value);
-}
 ```
 
 **Important Notes:**
@@ -499,6 +494,32 @@ if (cancelResult.ok) {
 - Limit orders remain active indefinitely until cancelled or filled
 - The fee is automatically deducted from the `inputAmount` just like regular swaps
 - Limit orders go through the same flow as swaps (create, submit to relay, wait for execution, post to Solver API)
+
+#### Cancel Limit Order
+
+Cancel a limit order intent. This is a wrapper around `cancelIntent` since cancelling a limit order is the same as cancelling any intent.
+
+**Note**: You can also use `cancelIntent` directly - both methods work identically. `cancelLimitOrder` is provided for semantic clarity when working with limit orders.
+
+```typescript
+import type { Intent } from "@sodax/sdk";
+
+// Get intent first (or use intent from createLimitOrder response)
+const intent: Intent = await sodax.swaps.getIntent(txHash);
+
+// Cancel the limit order
+const cancelResult = await sodax.swaps.cancelLimitOrder(
+  intent,
+  bscSpokeProvider,
+);
+
+if (cancelResult.ok) {
+  console.log('[cancelLimitOrder] txHash:', cancelResult.value);
+} else {
+  // handle error
+  console.error('[cancelLimitOrder] error:', cancelResult.error);
+}
+```
 
 #### Create And Submit Intent (Alternative Method - Equal to Swap)
 
