@@ -6,7 +6,7 @@ import { formatUnits } from 'viem';
 
 /**
  * Hook to manage partner fee data.
- * Handles fetching all supported tokens and getting balances (mocked for now).
+ * Handles fetching all supported tokens and getting balances.
  */
 
 type PartnerFeeBalance = {

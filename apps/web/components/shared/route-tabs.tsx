@@ -58,16 +58,13 @@ interface RouteTabsProps {
 export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.Element {
   const pathname = usePathname();
 
-  // if you added props earlier:
   const usedTabs = tabs ?? tabConfigs;
-  // if you DIDN'T add props, just do:
-  /// const usedTabs = tabConfigs;
 
   const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
   const tabValues = usedTabs.map(t => t.value);
 
   const current = tabValues.includes(lastSegment)
-    ? lastSegment // e.g. "swap", "migrate", "home", "your-stats"
+    ? lastSegment // e.g. "swap", "migrate", "home"
     : (usedTabs[0]?.value ?? 'migrate'); // fallback = first tab (Home for partner)
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});

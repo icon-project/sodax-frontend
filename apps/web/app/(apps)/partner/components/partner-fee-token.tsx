@@ -12,7 +12,7 @@ type PartnerFeeTokenProps = {
 
 export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: PartnerFeeTokenProps) {
   const numericAmount = Number(balance.balance);
-  // balance > 10 as having sufficient funds to swap
+  // balance > 10 as partner must have sufficient funds to swap and pay fees
   const hasBalance = numericAmount > 10;
   const isThisSwapping = swappingSymbol === balance.currency.symbol;
 
@@ -39,7 +39,7 @@ export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: Partn
         variant="cherry"
         className="disabled:opacity-60 disabled:cursor-not-allowed"
         onClick={() => onSwapToUsdc(balance)}
-        disabled={!hasBalance || isThisSwapping || balance.currency.symbol === 'USDC'} //TODO think what to do with the usdc case
+        disabled={!hasBalance || isThisSwapping || balance.currency.symbol === 'USDC'} //TODO to be agreed what to do with the usdc case
       >
         {isThisSwapping ? 'Swapping…' : 'Swap to USDC'}
       </Button>
