@@ -1,13 +1,11 @@
 import { Sodax } from '@sodax/sdk';
 
-
-
-const sodax = new Sodax()
+const sodax = new Sodax();
 
 async function main() {
   const orderbook = await sodax.backendApi.getOrderbook({
     offset: '0',
-    limit: '5'
+    limit: '5',
   });
   console.log('Orderbook:', orderbook);
 
@@ -15,7 +13,9 @@ async function main() {
 
   // 1. getIntentByTxHash (example txHash, replace with real if needed)
   try {
-    const intentByTxHash = await sodax.backendApi.getIntentByTxHash('0xe6c9496781ef863e7d83ad86265076a633939384d6227bbe8154bea7028191d3');
+    const intentByTxHash = await sodax.backendApi.getIntentByTxHash(
+      '0xe6c9496781ef863e7d83ad86265076a633939384d6227bbe8154bea7028191d3',
+    );
     console.log('getIntentByTxHash:', intentByTxHash);
   } catch (err) {
     console.error('getIntentByTxHash error:', err);
@@ -23,7 +23,9 @@ async function main() {
 
   // 2. getIntentByHash (example intentHash, replace with real if needed)
   try {
-    const intentByHash = await sodax.backendApi.getIntentByHash('0xe789418f2cc226e48a73d135392d7dd0bfded03f4adde43baa105abe3644761a');
+    const intentByHash = await sodax.backendApi.getIntentByHash(
+      '0xe789418f2cc226e48a73d135392d7dd0bfded03f4adde43baa105abe3644761a',
+    );
     console.log('getIntentByHash:', intentByHash);
   } catch (err) {
     console.error('getIntentByHash error:', err);
@@ -57,7 +59,10 @@ async function main() {
 
       // 7. getMoneyMarketAssetBorrowers
       try {
-        const mmAssetBorrowers = await sodax.backendApi.getMoneyMarketAssetBorrowers(reserveAddress, { offset: '0', limit: '5' });
+        const mmAssetBorrowers = await sodax.backendApi.getMoneyMarketAssetBorrowers(reserveAddress, {
+          offset: '0',
+          limit: '5',
+        });
         console.log('getMoneyMarketAssetBorrowers:', mmAssetBorrowers);
       } catch (err) {
         console.error('getMoneyMarketAssetBorrowers error:', err);
@@ -65,7 +70,10 @@ async function main() {
 
       // 8. getMoneyMarketAssetSuppliers
       try {
-        const mmAssetSuppliers = await sodax.backendApi.getMoneyMarketAssetSuppliers(reserveAddress, { offset: '0', limit: '5' });
+        const mmAssetSuppliers = await sodax.backendApi.getMoneyMarketAssetSuppliers(reserveAddress, {
+          offset: '0',
+          limit: '5',
+        });
         console.log('getMoneyMarketAssetSuppliers:', mmAssetSuppliers);
       } catch (err) {
         console.error('getMoneyMarketAssetSuppliers error:', err);
@@ -84,4 +92,4 @@ async function main() {
   }
 }
 
-main()
+main();

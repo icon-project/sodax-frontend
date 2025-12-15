@@ -11,7 +11,7 @@ import type {
   Prettify,
   GetAddressType,
   Result,
-  PromiseTxReturnType,
+  StellarSpokeProviderType,
 } from '../shared/types.js';
 import {
   encodeContractCalls,
@@ -302,7 +302,7 @@ export class StakingService {
           const result = await StellarSpokeService.requestTrustline(targetToken, params.amount, spokeProvider, raw);
           return {
             ok: true,
-            value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+            value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
           };
         }
       }
@@ -594,7 +594,7 @@ export class StakingService {
 
       const data: Hex = this.buildUnstakeData(hubWallet, params);
 
-      let txResult: PromiseTxReturnType<S, R> | TxReturnType<S, R>;
+      let txResult: Promise<TxReturnType<S, R>> | TxReturnType<S, R>;
       if (isHub) {
         txResult = await SpokeService.deposit(
           {
@@ -750,7 +750,7 @@ export class StakingService {
         params,
       );
 
-      let txResult: PromiseTxReturnType<S, R> | TxReturnType<S, R>;
+      let txResult: Promise<TxReturnType<S, R>> | TxReturnType<S, R>;
       if (isHub) {
         txResult = await SpokeService.deposit(
           {

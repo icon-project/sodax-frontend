@@ -49,10 +49,7 @@ export function rayPow(a: BigNumberValue, p: BigNumberValue): BigNumber {
  * RayPow is slow and gas intensive therefore in v2 we switched to binomial approximation on the contract level.
  * While the results ar not exact to the last decimal, they are close enough.
  */
-export function binomialApproximatedRayPow(
-  a: BigNumberValue,
-  p: BigNumberValue,
-): BigNumber {
+export function binomialApproximatedRayPow(a: BigNumberValue, p: BigNumberValue): BigNumber {
   const base = valueToZDBigNumber(a);
   const exp = valueToZDBigNumber(p);
   if (exp.eq(0)) return RAY;
@@ -63,15 +60,8 @@ export function binomialApproximatedRayPow(
   const basePowerThree = rayMul(basePowerTwo, base);
 
   const firstTerm = exp.multipliedBy(base);
-  const secondTerm = exp
-    .multipliedBy(expMinusOne)
-    .multipliedBy(basePowerTwo)
-    .div(2);
-  const thirdTerm = exp
-    .multipliedBy(expMinusOne)
-    .multipliedBy(expMinusTwo)
-    .multipliedBy(basePowerThree)
-    .div(6);
+  const secondTerm = exp.multipliedBy(expMinusOne).multipliedBy(basePowerTwo).div(2);
+  const thirdTerm = exp.multipliedBy(expMinusOne).multipliedBy(expMinusTwo).multipliedBy(basePowerThree).div(6);
 
   return RAY.plus(firstTerm).plus(secondTerm).plus(thirdTerm);
 }

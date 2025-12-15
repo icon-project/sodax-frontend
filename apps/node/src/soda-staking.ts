@@ -25,7 +25,7 @@ const sodax = new Sodax();
 async function unstake(amount: bigint) {
   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
   const result = await sodax.staking.unstake({ amount, account: walletAddress, action: 'unstake' }, spokeProvider);
-  
+
   if (result.ok) {
     console.log('[unstake] txHash', result.value);
   } else {

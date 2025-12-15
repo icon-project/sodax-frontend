@@ -16,6 +16,7 @@ import {
   type UnifiedBnUSDMigrateParams,
   encodeAddress,
   MoneyMarketService,
+  StellarBaseSpokeProvider,
 } from '@sodax/sdk';
 
 import { StellarWalletProvider, type StellarWalletConfig } from '@sodax/wallet-sdk-core';
@@ -74,32 +75,29 @@ async function estimateWithdrawGas() {
   try {
     const result = await sodax.moneyMarket.createWithdrawIntent(
       {
-        action: "withdraw",
+        action: 'withdraw',
         amount: BigInt(1000000),
-        token: "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+        token: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
       },
       stellarSpokeProvider,
-      true // true = get raw transaction
+      true, // true = get raw transaction
     );
 
     if (result.ok) {
       const rawTx = result.value;
 
       // Estimate gas for the withdraw transaction
-      const gasEstimate = await MoneyMarketService.estimateGas(
-        rawTx,
-        stellarSpokeProvider
-      );
+      const gasEstimate = await MoneyMarketService.estimateGas(rawTx, stellarSpokeProvider);
 
-      console.log("gasEstimate", gasEstimate);
+      console.log('gasEstimate', gasEstimate);
     }
   } catch (error) {
-    console.error("Error:", error);
+    console.error('Error:', error);
   }
 }
 
 async function getBalance(token: string) {
-  const balance = await stellarSpokeProvider.getBalance(token);
+  const balance = await StellarBaseSpokeProvider.getBalance(token, stellarSpokeProvider);
   console.log(balance);
 }
 
@@ -166,7 +164,7 @@ async function supply(token: string, amount: bigint) {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, stellarSpokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(stellarSpokeProvider.chainConfig.chain.id, token, amount, hubWallet);
 
   const txHash = await SpokeService.deposit(
     {
@@ -237,10 +235,10 @@ async function repay(token: string, amount: bigint) {
     hubProvider,
   );
   const data: Hex = sodax.moneyMarket.buildRepayData(
-    token,
-    hubWallet,
-    amount,
     stellarSpokeProvider.chainConfig.chain.id,
+    token,
+    amount,
+    hubWallet,
   );
 
   const txHash = await SpokeService.deposit(

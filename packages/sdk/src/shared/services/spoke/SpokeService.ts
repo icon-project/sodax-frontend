@@ -1,22 +1,29 @@
-import { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeProvider.js';
-import { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
-import {
-  type EvmHubProvider,
+import type { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeProvider.js';
+import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
+import type {
+  EvmHubProvider,
   EvmSpokeProvider,
   SolanaSpokeProvider,
   SonicSpokeProvider,
-  type SpokeProvider,
+  SpokeProvider,
+  SpokeProviderType,
   StellarSpokeProvider,
   SuiSpokeProvider,
 } from '../../entities/index.js';
 import type {
   GetEstimateGasReturnType,
   GetSpokeDepositParamsType,
-  PromiseTxReturnType,
   TxReturnType,
   DepositSimulationParams,
   WalletSimulationParams,
   Result,
+  EvmSpokeProviderType,
+  SonicSpokeProviderType,
+  InjectiveSpokeProviderType,
+  IconSpokeProviderType,
+  SuiSpokeProviderType,
+  SolanaSpokeProviderType,
+  StellarSpokeProviderType,
 } from '../../types.js';
 import { getIntentRelayChainId, type Address, type Hex, type HubAddress } from '@sodax/types';
 import { InjectiveSpokeService } from './InjectiveSpokeService.js';
@@ -27,13 +34,17 @@ import { StellarSpokeService } from './StellarSpokeService.js';
 import { SuiSpokeService } from './SuiSpokeService.js';
 import { SonicSpokeService, type SonicSpokeDepositParams } from './SonicSpokeService.js';
 import {
-  isInjectiveSpokeProvider,
-  isEvmSpokeProvider,
-  isIconSpokeProvider,
   isSolanaSpokeProvider,
   isSonicSpokeProvider,
   isStellarSpokeProvider,
-  isSuiSpokeProvider,
+  isSonicRawSpokeProvider,
+  isSolanaSpokeProviderType,
+  isStellarSpokeProviderType,
+  isSuiSpokeProviderType,
+  isIconSpokeProviderType,
+  isInjectiveSpokeProviderType,
+  isEvmSpokeProviderType,
+  isSonicSpokeProviderType,
 } from '../../guards.js';
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
@@ -53,49 +64,49 @@ export class SpokeService {
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
    */
-  public static async estimateGas<T extends SpokeProvider = SpokeProvider>(
+  public static async estimateGas<T extends SpokeProviderType>(
     params: TxReturnType<T, true>,
     spokeProvider: T,
   ): Promise<GetEstimateGasReturnType<T>> {
-    if (spokeProvider instanceof EvmSpokeProvider) {
+    if (isEvmSpokeProviderType(spokeProvider)) {
       return EvmSpokeService.estimateGas(
-        params as TxReturnType<EvmSpokeProvider, true>,
+        params as TxReturnType<EvmSpokeProviderType, true>,
         spokeProvider,
       ) satisfies Promise<GetEstimateGasReturnType<EvmSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
     }
-    if (spokeProvider instanceof SonicSpokeProvider) {
+    if (isSonicSpokeProviderType(spokeProvider)) {
       return SonicSpokeService.estimateGas(
-        params as TxReturnType<SonicSpokeProvider, true>,
+        params as TxReturnType<SonicSpokeProviderType, true>,
         spokeProvider,
       ) satisfies Promise<GetEstimateGasReturnType<SonicSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
     }
-    if (spokeProvider instanceof InjectiveSpokeProvider) {
+    if (isInjectiveSpokeProviderType(spokeProvider)) {
       return InjectiveSpokeService.estimateGas(
-        params as TxReturnType<InjectiveSpokeProvider, true>,
+        params as TxReturnType<InjectiveSpokeProviderType, true>,
         spokeProvider,
       ) satisfies Promise<GetEstimateGasReturnType<InjectiveSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
     }
-    if (spokeProvider instanceof IconSpokeProvider) {
+    if (isIconSpokeProviderType(spokeProvider)) {
       return IconSpokeService.estimateGas(
-        params as TxReturnType<IconSpokeProvider, true>,
+        params as TxReturnType<IconSpokeProviderType, true>,
         spokeProvider,
       ) satisfies Promise<GetEstimateGasReturnType<IconSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
     }
-    if (spokeProvider instanceof SuiSpokeProvider) {
+    if (isSuiSpokeProviderType(spokeProvider)) {
       return SuiSpokeService.estimateGas(
-        params as TxReturnType<SuiSpokeProvider, true>,
+        params as TxReturnType<SuiSpokeProviderType, true>,
         spokeProvider,
       ) satisfies Promise<GetEstimateGasReturnType<SuiSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
     }
-    if (spokeProvider instanceof SolanaSpokeProvider) {
+    if (isSolanaSpokeProviderType(spokeProvider)) {
       return SolanaSpokeService.estimateGas(
-        params as TxReturnType<SolanaSpokeProvider, true>,
+        params as TxReturnType<SolanaSpokeProviderType, true>,
         spokeProvider,
       ) satisfies Promise<GetEstimateGasReturnType<SolanaSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
     }
-    if (spokeProvider instanceof StellarSpokeProvider) {
+    if (isStellarSpokeProviderType(spokeProvider)) {
       return StellarSpokeService.estimateGas(
-        params as TxReturnType<StellarSpokeProvider, true>,
+        params as TxReturnType<StellarSpokeProviderType, true>,
         spokeProvider,
       ) satisfies Promise<GetEstimateGasReturnType<StellarSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
     }
@@ -207,126 +218,133 @@ export class SpokeService {
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @param {boolean} raw - Whether to return raw transaction data.
    * @param {boolean} skipSimulation - Whether to skip deposit simulation (optional, defaults to false).
-   * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
+   * @returns {Promise<TxReturnType<T, R>>} A promise that resolves to the transaction hash.
    */
-  public static async deposit<T extends SpokeProvider = SpokeProvider, R extends boolean = false>(
-    params: GetSpokeDepositParamsType<T>,
-    spokeProvider: T,
+  public static async deposit<S extends SpokeProviderType, R extends boolean = false>(
+    params: GetSpokeDepositParamsType<S>,
+    spokeProvider: S,
     hubProvider: EvmHubProvider,
     raw?: R,
     skipSimulation = false,
-  ): Promise<PromiseTxReturnType<T, R>> {
-    if (spokeProvider instanceof SonicSpokeProvider) {
-      const _params: SonicSpokeDepositParams = params as GetSpokeDepositParamsType<SonicSpokeProvider>;
-      return SonicSpokeService.deposit(_params, spokeProvider, raw) as PromiseTxReturnType<T, R>;
+  ): Promise<TxReturnType<S, R>> {
+    if (isSonicSpokeProvider(spokeProvider) || isSonicRawSpokeProvider(spokeProvider)) {
+      const _params: SonicSpokeDepositParams = params as GetSpokeDepositParamsType<SonicSpokeProviderType>;
+      return SonicSpokeService.deposit(_params, spokeProvider, raw) satisfies Promise<
+        TxReturnType<SonicSpokeProviderType, R>
+      > as Promise<TxReturnType<S, R>>;
     }
-    if (spokeProvider instanceof EvmSpokeProvider) {
+    if (isEvmSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return EvmSpokeService.deposit(
-        params as GetSpokeDepositParamsType<EvmSpokeProvider>,
+        params as GetSpokeDepositParamsType<EvmSpokeProviderType>,
         spokeProvider,
         hubProvider,
         raw,
-      ) as PromiseTxReturnType<T, R>;
+      ) satisfies Promise<TxReturnType<EvmSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
-    if (spokeProvider instanceof InjectiveSpokeProvider) {
+    if (isInjectiveSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return InjectiveSpokeService.deposit(params, spokeProvider, hubProvider, raw) as PromiseTxReturnType<T, R>;
+      return InjectiveSpokeService.deposit(
+        params as GetSpokeDepositParamsType<InjectiveSpokeProviderType>,
+        spokeProvider,
+        hubProvider,
+        raw,
+      ) satisfies Promise<TxReturnType<InjectiveSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
-    if (spokeProvider instanceof IconSpokeProvider) {
+    if (isIconSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return IconSpokeService.deposit(
-        params as GetSpokeDepositParamsType<IconSpokeProvider>,
+        params as GetSpokeDepositParamsType<IconSpokeProviderType>,
         spokeProvider,
         hubProvider,
         raw,
-      ) as PromiseTxReturnType<T, R>;
+      ) satisfies Promise<TxReturnType<IconSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
 
-    if (spokeProvider instanceof SuiSpokeProvider) {
+    if (isSuiSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return SuiSpokeService.deposit(
-        params as GetSpokeDepositParamsType<SuiSpokeProvider>,
+        params as GetSpokeDepositParamsType<SuiSpokeProviderType>,
         spokeProvider,
         hubProvider,
         raw,
-      ) as PromiseTxReturnType<T, R>;
+      ) satisfies Promise<TxReturnType<SuiSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
 
-    if (spokeProvider instanceof SolanaSpokeProvider) {
+    if (isSolanaSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return SolanaSpokeService.deposit(
-        params as GetSpokeDepositParamsType<SolanaSpokeProvider>,
+        params as GetSpokeDepositParamsType<SolanaSpokeProviderType>,
         spokeProvider,
         hubProvider,
         raw,
-      ) as PromiseTxReturnType<T, R>;
+      ) satisfies Promise<TxReturnType<SolanaSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
-    if (spokeProvider instanceof StellarSpokeProvider) {
+    if (isStellarSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return StellarSpokeService.deposit(
-        params as GetSpokeDepositParamsType<StellarSpokeProvider>,
+        params as GetSpokeDepositParamsType<StellarSpokeProviderType>,
         spokeProvider,
         hubProvider,
         raw,
-      ) as PromiseTxReturnType<T, R>;
+      ) satisfies Promise<TxReturnType<StellarSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
 
     throw new Error('Invalid spoke provider');
   }
 
-  public static getSimulateDepositParams<S extends SpokeProvider>(
+  public static getSimulateDepositParams<S extends SpokeProviderType>(
     params: GetSpokeDepositParamsType<S>,
     spokeProvider: S,
     hubProvider: EvmHubProvider,
   ): Promise<DepositSimulationParams> {
-    if (spokeProvider instanceof EvmSpokeProvider) {
+    if (isEvmSpokeProviderType(spokeProvider)) {
       return EvmSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<EvmSpokeProvider>,
+        params as GetSpokeDepositParamsType<EvmSpokeProviderType>,
         spokeProvider,
         hubProvider,
       );
     }
-    if (spokeProvider instanceof InjectiveSpokeProvider) {
+    if (isInjectiveSpokeProviderType(spokeProvider)) {
       return InjectiveSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<InjectiveSpokeProvider>,
+        params as GetSpokeDepositParamsType<InjectiveSpokeProviderType>,
         spokeProvider,
         hubProvider,
       );
     }
-    if (spokeProvider instanceof IconSpokeProvider) {
+    if (isIconSpokeProviderType(spokeProvider)) {
       return IconSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<IconSpokeProvider>,
+        params as GetSpokeDepositParamsType<IconSpokeProviderType>,
         spokeProvider,
         hubProvider,
       );
     }
-    if (spokeProvider instanceof SuiSpokeProvider) {
+    if (isSuiSpokeProviderType(spokeProvider)) {
       return SuiSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<SuiSpokeProvider>,
+        params as GetSpokeDepositParamsType<SuiSpokeProviderType>,
         spokeProvider,
         hubProvider,
       );
     }
-    if (spokeProvider instanceof SolanaSpokeProvider) {
+    if (isSolanaSpokeProviderType(spokeProvider)) {
       return SolanaSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<SolanaSpokeProvider>,
+        params as GetSpokeDepositParamsType<SolanaSpokeProviderType>,
         spokeProvider,
         hubProvider,
       );
     }
-    if (spokeProvider instanceof StellarSpokeProvider) {
+    if (isStellarSpokeProviderType(spokeProvider)) {
       return StellarSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<StellarSpokeProvider>,
+        params as GetSpokeDepositParamsType<StellarSpokeProviderType>,
         spokeProvider,
         hubProvider,
       );
     }
 
-    throw new Error('Invalid spoke provider');
+    throw new Error('[getSimulateDepositParams] Invalid spoke provider');
   }
 
-  public static async verifyDepositSimulation<S extends SpokeProvider>(
+  public static async verifyDepositSimulation<S extends SpokeProviderType>(
     params: GetSpokeDepositParamsType<S>,
     spokeProvider: S,
     hubProvider: EvmHubProvider,
@@ -345,29 +363,29 @@ export class SpokeService {
   /**
    * Get the balance of the token in the spoke chain.
    * @param {Address} token - The address of the token to get the balance of.
-   * @param {SpokeProvider} spokeProvider - The spoke provider.
+   * @param {SpokeProviderType} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static getDeposit(token: Address, spokeProvider: SpokeProvider): Promise<bigint> {
-    if (spokeProvider instanceof EvmSpokeProvider) {
+  public static getDeposit(token: Address, spokeProvider: SpokeProviderType): Promise<bigint> {
+    if (isEvmSpokeProviderType(spokeProvider)) {
       return EvmSpokeService.getDeposit(token, spokeProvider);
     }
-    if (spokeProvider instanceof InjectiveSpokeProvider) {
+    if (isInjectiveSpokeProviderType(spokeProvider)) {
       return InjectiveSpokeService.getDeposit(token, spokeProvider);
     }
-    if (spokeProvider instanceof StellarSpokeProvider) {
+    if (isStellarSpokeProviderType(spokeProvider)) {
       return StellarSpokeService.getDeposit(token, spokeProvider);
     }
-    if (spokeProvider instanceof SuiSpokeProvider) {
+    if (isSuiSpokeProviderType(spokeProvider)) {
       return SuiSpokeService.getDeposit(token, spokeProvider);
     }
-    if (spokeProvider instanceof IconSpokeProvider) {
+    if (isIconSpokeProviderType(spokeProvider)) {
       return IconSpokeService.getDeposit(token, spokeProvider);
     }
-    if (spokeProvider instanceof SolanaSpokeProvider) {
+    if (isSolanaSpokeProviderType(spokeProvider)) {
       return SolanaSpokeService.getDeposit(token, spokeProvider);
     }
-    if (spokeProvider instanceof SonicSpokeProvider) {
+    if (isSonicSpokeProviderType(spokeProvider)) {
       return SonicSpokeService.getDeposit(token, spokeProvider);
     }
 
@@ -375,14 +393,14 @@ export class SpokeService {
   }
 
   /**
-   * Calls a contract on the spoke chain using the user's wallet.
+   * Calls the connection contract on the spoke chain to send a message to the hub wallet, which then executes the message's payload.
    * @param {HubAddress} from - The address of the user on the hub chain.
    * @param {Hex} payload - The payload to send to the contract.
-   * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {SpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
-  public static async callWallet<T extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  public static async callWallet<T extends SpokeProviderType, R extends boolean = false>(
     from: HubAddress,
     payload: Hex,
     spokeProvider: T,
@@ -390,12 +408,11 @@ export class SpokeService {
     raw?: R,
     skipSimulation = false,
   ): Promise<TxReturnType<T, R>> {
-    if (isSonicSpokeProvider(spokeProvider)) {
-      return (await SonicSpokeService.callWallet(
-        payload,
-        spokeProvider as SonicSpokeProvider,
-        raw,
-      )) satisfies TxReturnType<SonicSpokeProvider, R> as TxReturnType<T, R>;
+    if (isSonicSpokeProviderType(spokeProvider)) {
+      return (await SonicSpokeService.callWallet(payload, spokeProvider, raw)) satisfies TxReturnType<
+        SonicSpokeProviderType,
+        R
+      > as TxReturnType<T, R>;
     }
 
     if (!skipSimulation) {
@@ -415,14 +432,14 @@ export class SpokeService {
         throw new Error('Simulation failed', { cause: result });
       }
     }
-    if (isEvmSpokeProvider(spokeProvider)) {
+    if (isEvmSpokeProviderType(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
       return (await EvmSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        EvmSpokeProvider,
+        EvmSpokeProviderType,
         R
       > as TxReturnType<T, R>;
     }
-    if (isInjectiveSpokeProvider(spokeProvider)) {
+    if (isInjectiveSpokeProviderType(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
       return (await InjectiveSpokeService.callWallet(
         from,
@@ -430,23 +447,23 @@ export class SpokeService {
         spokeProvider,
         hubProvider,
         raw,
-      )) satisfies TxReturnType<InjectiveSpokeProvider, R> as TxReturnType<T, R>;
+      )) satisfies TxReturnType<InjectiveSpokeProviderType, R> as TxReturnType<T, R>;
     }
-    if (isIconSpokeProvider(spokeProvider)) {
+    if (isIconSpokeProviderType(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
       return (await IconSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        IconSpokeProvider,
+        IconSpokeProviderType,
         R
       > as TxReturnType<T, R>;
     }
-    if (isSuiSpokeProvider(spokeProvider)) {
+    if (isSuiSpokeProviderType(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
       return (await SuiSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        SuiSpokeProvider,
+        SuiSpokeProviderType,
         R
       > as TxReturnType<T, R>;
     }
-    if (isSolanaSpokeProvider(spokeProvider)) {
+    if (isSolanaSpokeProviderType(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
       return (await SolanaSpokeService.callWallet(
         from,
@@ -454,9 +471,9 @@ export class SpokeService {
         spokeProvider,
         hubProvider,
         raw,
-      )) satisfies TxReturnType<SolanaSpokeProvider, R> as TxReturnType<T, R>;
+      )) satisfies TxReturnType<SolanaSpokeProviderType, R> as TxReturnType<T, R>;
     }
-    if (isStellarSpokeProvider(spokeProvider)) {
+    if (isStellarSpokeProviderType(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
       return (await StellarSpokeService.callWallet(
         from,
@@ -464,16 +481,16 @@ export class SpokeService {
         spokeProvider,
         hubProvider,
         raw,
-      )) satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<T, R>;
+      )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
     }
 
-    throw new Error('Invalid spoke provider');
+    throw new Error('[callWallet] Invalid spoke provider');
   }
 
   public static async verifySimulation(
     from: HubAddress,
     payload: Hex,
-    spokeProvider: SpokeProvider,
+    spokeProvider: SpokeProviderType,
     hubProvider: EvmHubProvider,
     skipSimulation: boolean,
   ): Promise<void> {
