@@ -50,7 +50,7 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
           </div>
         ) : balance > 0n ? (
           <>
-            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
+            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1 font-bold">
               ${usdValue}
             </div>
             <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">
