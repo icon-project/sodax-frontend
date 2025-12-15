@@ -7,16 +7,10 @@ import { SuccessModal } from './SuccessModal';
 
 interface BorrowButtonProps {
   token: XToken;
-  asset: {
-    symbol: string;
-    decimals: number;
-    address: string; // token address on its home chain
-    chainId: ChainId; // the chain where this version of the token currently is
-  };
   disabled?: boolean;
 }
 
-export function BorrowButton({ asset, disabled, token }: BorrowButtonProps) {
+export function BorrowButton({ disabled, token}: BorrowButtonProps) {
   const [open, setOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [borrowedAmount, setBorrowAmount] = useState('');
@@ -32,14 +26,14 @@ export function BorrowButton({ asset, disabled, token }: BorrowButtonProps) {
       <Button variant="cherry" size="sm" onClick={() => setOpen(true)} disabled={disabled}>
         Borrow
       </Button>
-      <BorrowModal isOpen={open} onClose={() => setOpen(false)} asset={asset} onSuccess={handleSuccess} />
+      <BorrowModal isOpen={open} onClose={() => setOpen(false)} token={token} onSuccess={handleSuccess} />
       <SuccessModal
         open={showSuccess}
         onClose={() => setShowSuccess(false)}
         title="Borrow Successful"
-        description={`Your ${asset.symbol} borrow transaction was confirmed!`}
+        description={`Your ${token.symbol} borrow transaction was confirmed!`}
         amount={borrowedAmount}
-        symbol={asset.symbol}
+        symbol={token.symbol}
       />
     </>
   );

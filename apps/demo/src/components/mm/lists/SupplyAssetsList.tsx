@@ -21,6 +21,7 @@ const TABLE_HEADERS = [
   'Action',
   'Action',
   'Action',
+  'Action',
 ] as const;
 
 export function SupplyAssetsList() {

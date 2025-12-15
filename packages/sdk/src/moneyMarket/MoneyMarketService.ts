@@ -118,11 +118,17 @@ export type MoneyMarketSupplyParams = {
  *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
  * @property toAddress - (Optional) Target address on the taret chain to receive the borrowed assets.
  *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
+ * @property fromChainId - (Optional) Source chain ID to borrow from.
+ *   Note: If omitted, borrowed assets are borrowed from the sender's default spoke account.
+ * @property fromAddress - (Optional) Source address on the source chain to borrow from.
+ *   Note: If omitted, borrowed assets are borrowed from the sender's default spoke account.
  */
 export type MoneyMarketBorrowParams = {
   token: string;
   amount: bigint;
   action: 'borrow';
+  fromChainId?: SpokeChainId;
+  fromAddress?: string;
   toChainId?: SpokeChainId;
   toAddress?: string;
 };
@@ -918,8 +924,8 @@ export class MoneyMarketService {
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
 
-    const fromChainId = spokeProvider.chainConfig.chain.id;
-    const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const fromChainId = params.fromChainId ?? spokeProvider.chainConfig.chain.id;
+    const fromAddress = params.fromAddress ?? await spokeProvider.walletProvider.getWalletAddress();
     const toChainId = params.toChainId ?? fromChainId;
     const toAddress = params.toAddress ?? fromAddress;
 

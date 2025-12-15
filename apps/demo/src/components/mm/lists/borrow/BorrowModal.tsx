@@ -17,70 +17,65 @@ import { useWalletProvider, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { ChainId, XToken } from '@sodax/types';
 
 import { ChainSelector } from '@/components/shared/ChainSelector';
+import type { MoneyMarketBorrowParams } from '@sodax/sdk';
+import { parseUnits } from 'viem';
+import { useAppStore } from '@/zustand/useAppStore';
 
 interface BorrowModalProps {
   isOpen: boolean;
   onClose: () => void;
-  asset: {
-    symbol: string;
-    decimals: number;
-    address: string; // token address on its home chain
-    chainId: ChainId; // Required: reserve chain
-  };
+  token: XToken;
   onSuccess?: (amount: string) => void;
+  requiresSwitchChain?: boolean;
 }
 
-export function BorrowModal({ isOpen, onClose, asset, onSuccess }: BorrowModalProps) {
+export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalProps) {
+  const { selectedChainId } = useAppStore();
   const [amount, setAmount] = useState('');
-  const [selectedChain, setSelectedChain] = useState<ChainId>(asset.chainId);
+  const [selectedChain, setSelectedChain] = useState<ChainId>(token.xChainId);
 
-  const borrowExecutionChain: ChainId = asset.chainId;
+  const borrowExecutionChain: ChainId = token.xChainId;
 
-  // 🧩 All hooks must run every render (even if data isn’t ready)
-  const walletProvider = useWalletProvider(borrowExecutionChain);
-  const spokeProvider = useSpokeProvider(borrowExecutionChain, walletProvider);
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(borrowExecutionChain);
+  // All hooks must run every render (even if data isn’t ready)
+  const fromChainWalletProvider = useWalletProvider(selectedChainId);
+  const toChainWalletProvider = useWalletProvider(token.xChainId);
+  const fromChainSpokeProvider = useSpokeProvider(selectedChainId, fromChainWalletProvider);
+  const toChainSpokeProvider = useSpokeProvider(token.xChainId, toChainWalletProvider);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
-  // 🧩 Access provider safely (optional chaining)
-  const nativeToken = spokeProvider?.chainConfig?.supportedTokens?.[asset.symbol];
-  const correctAddress =
-    nativeToken && nativeToken.address === '0x0000000000000000000000000000000000000000'
-      ? nativeToken.address
-      : asset.address;
+  const borrow = useBorrow(token, fromChainSpokeProvider);
 
-  // Construct the XToken safely
-  const tokenOnReserveChain: XToken = {
-    address: correctAddress,
-    decimals: asset.decimals,
-    symbol: asset.symbol,
-    name: asset.symbol,
-    xChainId: asset.chainId,
-  };
-
-  const borrow = useBorrow(tokenOnReserveChain, spokeProvider);
+  console.log('token', token);
 
   const handleBorrow = async () => {
-    if (!borrow.mutateAsync || !amount || isWrongChain || !spokeProvider) return;
+    if (!borrow.mutateAsync || !amount || !toChainSpokeProvider) return;
+    const walletAddress = await toChainSpokeProvider.walletProvider.getWalletAddress();
+    const params = {
+      token: token.address,
+      amount: parseUnits(amount, token.decimals),
+      action: 'borrow',
+      toChainId: token.xChainId,
+      toAddress: walletAddress,
+    } satisfies MoneyMarketBorrowParams;
+    console.log('params', params);
 
-    await borrow.mutateAsync(amount);
+    await borrow.mutateAsync(params);
     setAmount('');
     onSuccess?.(amount);
   };
 
-  const canBorrow = !!amount && !isWrongChain && !!borrow.mutateAsync && !borrow.isPending && !!spokeProvider;
-
-  const allowedChains = [asset.chainId];
+  const canBorrow = !!amount && !!borrow.mutateAsync && !borrow.isPending && !!fromChainSpokeProvider;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md border-cherry-grey/20">
         <DialogHeader>
-          <DialogTitle className="text-center text-cherry-dark">Borrow {asset.symbol}</DialogTitle>
+          <DialogTitle className="text-center text-cherry-dark">Borrow {token.symbol}</DialogTitle>
           <DialogDescription className="text-center">Choose amount and destination chain.</DialogDescription>
         </DialogHeader>
 
         {/* If provider not ready, show simple loading state */}
-        {!spokeProvider ? (
+        {!fromChainSpokeProvider ? (
           <div className="p-4 text-center text-clay">Loading provider…</div>
         ) : (
           <div className="space-y-2">
@@ -89,7 +84,7 @@ export function BorrowModal({ isOpen, onClose, asset, onSuccess }: BorrowModalPr
             <ChainSelector
               selectedChainId={selectedChain}
               selectChainId={setSelectedChain}
-              allowedChains={allowedChains}
+              allowedChains={[token.xChainId]}
             />
 
             {/* Amount */}

@@ -47,7 +47,7 @@ export function BorrowAssetsListItem({
     <TableRow className={`hover:bg-cream/30 transition-colors ${disabled ? 'opacity-50' : ''}`}>
       <TableCell>
         <span className="font-medium text-cherry-dark">{asset.symbol}</span>
-        <span className="text-clay-light text-xs ml-1">{getChainLabel(asset.chainId)}</span>
+        <span className="text-clay-light text-xs ml-1">{getChainLabel(token.xChainId)}</span>
       </TableCell>
       <TableCell>
         <span className="font-mono text-sm text-clay">{walletBalance}</span>
@@ -67,7 +67,7 @@ export function BorrowAssetsListItem({
         <span className="font-mono text-sm text-clay">{metrics.totalBorrow}</span>
       </TableCell>
       <TableCell>
-        <BorrowButton token={token} asset={asset} disabled={disabled} />
+        <BorrowButton token={token} disabled={disabled} />
       </TableCell>
     </TableRow>
   );

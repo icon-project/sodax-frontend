@@ -95,6 +95,9 @@ export function SupplyAssetsListItem({
         <SupplyButton token={token} />
       </TableCell>
       <TableCell>
+        <BorrowButton token={token} />
+      </TableCell>
+      <TableCell>
         <WithdrawButton token={token} />
       </TableCell>
       <TableCell>

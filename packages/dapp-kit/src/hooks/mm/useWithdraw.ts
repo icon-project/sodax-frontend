@@ -1,5 +1,5 @@
-import type { SpokeProvider } from '@sodax/sdk';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import type { MoneyMarketWithdrawParams, SpokeProvider } from '@sodax/sdk';
+import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSodaxContext } from '../shared/useSodaxContext';
@@ -9,6 +9,7 @@ interface WithdrawResponse {
   value: [string, string];
 }
 
+type WithdrawParams = string | MoneyMarketWithdrawParams;
 /**
  * Hook for withdrawing supplied tokens from the Sodax money market.
  *
@@ -35,24 +36,22 @@ interface WithdrawResponse {
 export function useWithdraw(
   spokeToken: XToken,
   spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<WithdrawResponse, Error, string> {
+): UseMutationResult<WithdrawResponse, Error, WithdrawParams> {
   const { sodax } = useSodaxContext();
 
-  return useMutation<WithdrawResponse, Error, string>({
-    mutationFn: async (amount: string, toChainId?: SpokeChainId, toAddress?: string) => {
+  return useMutation<WithdrawResponse, Error, WithdrawParams>({
+    mutationFn: async (param: WithdrawParams) => {
       if (!spokeProvider) {
         throw new Error('spokeProvider is not found');
       }
 
       const response = await sodax.moneyMarket.withdraw(
-        {
+        typeof param === 'string' ? {
           token: spokeToken.address,
           // vault token on hub chain decimals is 18
-          amount: parseUnits(amount, 18),
+          amount: parseUnits(param, 18),
           action: 'withdraw',
-          toChainId: toChainId,
-          toAddress: toAddress,
-        },
+        } : param,
         spokeProvider,
       );
 
