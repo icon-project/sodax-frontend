@@ -12,7 +12,8 @@ type PartnerFeeTokenProps = {
 
 export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: PartnerFeeTokenProps) {
   const numericAmount = Number(balance.balance);
-  const hasBalance = numericAmount > 0;
+  // balance > 10 as having sufficient funds to swap
+  const hasBalance = numericAmount > 10;
   const isThisSwapping = swappingSymbol === balance.currency.symbol;
 
   return (
