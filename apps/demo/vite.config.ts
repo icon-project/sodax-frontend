@@ -38,6 +38,10 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
 
     optimizeDeps: {
       include: ['buffer'],
+      exclude: [
+        '@ledgerhq/evm-tools',
+        '@bangjelkoski/ledgerhq-hw-app-eth',
+      ],
     },
     server: {
       // this ensures that the browser opens upon server start
@@ -49,6 +53,17 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
       global: 'globalThis',
       'process.env': env,
       'process.version': JSON.stringify(''),
+    },
+    build: {
+      rollupOptions: {
+        external: [
+          '@ledgerhq/evm-tools',
+          '@bangjelkoski/ledgerhq-hw-app-eth',
+          '@ledgerhq/hw-transport',
+          '@ledgerhq/hw-transport-webusb',
+          '@ledgerhq/hw-transport-webhid',
+        ],
+      },
     },
   };
 });
