@@ -1,4 +1,4 @@
-import type { XToken } from '@sodax/types';
+import type { SpokeChainId, XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSodaxContext } from '../shared/useSodaxContext';
@@ -40,7 +40,7 @@ export function useBorrow(
   const { sodax } = useSodaxContext();
 
   return useMutation<BorrowResponse, Error, string>({
-    mutationFn: async (amount: string) => {
+    mutationFn: async (amount: string, toChainId?: SpokeChainId, toAddress?: string) => {
       if (!spokeProvider) {
         throw new Error('spokeProvider is not found');
       }
@@ -50,6 +50,8 @@ export function useBorrow(
           token: spokeToken.address,
           amount: parseUnits(amount, 18),
           action: 'borrow',
+          toChainId: toChainId,
+          toAddress: toAddress,
         },
         spokeProvider,
       );
