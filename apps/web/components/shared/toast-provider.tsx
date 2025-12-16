@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 
 type ToastVariant = 'success' | 'error' | 'default';
 
@@ -36,12 +36,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const dismiss = useCallback((id: number) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
-
-  // Auto-dismiss after 4 seconds
-  //   useEffect(() => {
-  //     const timers = toasts.map(t => setTimeout(() => dismiss(t.id), 4000));
-  //     return () => timers.forEach(clearTimeout);
-  //   }, [toasts, dismiss]);
 
   return (
     <ToastContext.Provider value={{ toasts, toast, dismiss }}>
