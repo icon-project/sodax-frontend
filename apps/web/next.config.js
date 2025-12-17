@@ -33,6 +33,16 @@ const nextConfig = {
       },
     ];
   },
+
+  async redirects() {
+    return [
+      {
+        source: '/jobs/bd2025',
+        destination: 'https://airtable.com/appRBVNEi2GLr2FmW/pagZonJdvvCOgvwwF/form',
+        permanent: false, // 307 temporary redirect
+      },
+    ];
+  },
 };
 
 export default nextConfig;
