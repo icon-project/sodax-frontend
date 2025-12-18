@@ -80,7 +80,7 @@ export function CurrencySearchPanel({
                     alt="Selected Chain"
                     width={24}
                     height={24}
-                    className="rounded-[6px] shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] ring-4 ring-white overflow-hidden"
+                    className={`rounded-[6px] shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] ring-4 ring-white overflow-hidden ${selectedChainId === '0x2105.base' ? 'p-[2px] bg-white' : ''}`}
                     priority
                   />
                 </div>
@@ -91,7 +91,7 @@ export function CurrencySearchPanel({
                     alt="Base"
                     width={8}
                     height={8}
-                    className="rounded-[2px]"
+                    className="rounded-[2px] p-[1px] bg-white"
                     priority
                   />
                   <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" priority />
@@ -132,7 +132,7 @@ export function CurrencySearchPanel({
                             alt="Base"
                             width={8}
                             height={8}
-                            className="rounded-[2px]"
+                            className="rounded-[2px] p-[2px] bg-white"
                             priority
                           />
                           <Image
@@ -174,14 +174,18 @@ export function CurrencySearchPanel({
                         onMouseEnter={() => setHoveredChain(chain.id)}
                         onMouseLeave={() => setHoveredChain(null)}
                       >
-                        <Image
-                          src={chain.icon}
-                          alt={chain.name}
-                          width={24}
-                          height={24}
-                          className="rounded-[6px] ring-4 ring-white shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)]"
-                          priority
-                        />
+                        <div
+                          className={`w-6 h-6 flex items-center justify-center rounded-[6px] ring-4 ring-white shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] ${chain.id === '0x2105.base' ? 'bg-white p-[2px]' : ''}`}
+                        >
+                          <Image
+                            src={chain.icon}
+                            alt={chain.name}
+                            width={chain.id === '0x2105.base' ? 20 : 24}
+                            height={chain.id === '0x2105.base' ? 20 : 24}
+                            className="rounded-[6px]"
+                            priority
+                          />
+                        </div>
                         <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
                           {chain.name}
                         </div>
