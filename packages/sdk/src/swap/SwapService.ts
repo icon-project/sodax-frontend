@@ -718,7 +718,7 @@ export class SwapService {
   public async isAllowanceValid<S extends SpokeProviderType>({
     intentParams: params,
     spokeProvider,
-  }: SwapParams<S>): Promise<Result<boolean>> {
+  }: SwapParams<S> | LimitOrderParams<S>): Promise<Result<boolean>> {
     // apply fee to input amount without changing original params
     try {
       if (isEvmSpokeProviderType(spokeProvider)) {
@@ -804,7 +804,7 @@ export class SwapService {
     intentParams: params,
     spokeProvider,
     raw,
-  }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>>> {
+  }: Prettify<(SwapParams<S> | LimitOrderParams<S>) & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>>> {
     try {
       if (isEvmSpokeProviderType(spokeProvider)) {
         const result = await Erc20Service.approve(
