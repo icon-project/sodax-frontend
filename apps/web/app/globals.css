@@ -62,6 +62,7 @@
   --vibrant-white: #f9f7f5;
   --clay-light: #b9acab;
   --clay: #8e7e7d;
+  --clay-dark: #6b5c5b;
   --negative: #f37274;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
@@ -169,6 +170,7 @@
   --clay-light: #b9acab;
   --vibrant-white: #f9f7f5;
   --clay: #8e7e7d;
+  --clay-dark: #6b5c5b;
   --negative: #f37274;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
@@ -258,6 +260,7 @@
   --color-vibrant-white: var(--vibrant-white);
   --color-clay: var(--clay);
   --color-clay-light: var(--clay-light);
+  --color-clay-dark: var(--clay-dark);
   --color-cherry-brighter: var(--cherry-brighter);
   --color-negative: var(--negative);
   --text-app-title: var(--app-title-mobile);

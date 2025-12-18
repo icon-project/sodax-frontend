@@ -20,7 +20,7 @@ export default function AccordionCollapsedAPY({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
-      <span className="text-espresso text-(length:--body-comfortable) font-['InterBlack']">{apy.replace('%', '')}</span>
+      <span className="text-espresso text-(length:--body-comfortable) font-['InterBlack']">{apy}</span>
       <span className="text-clay-light text-(length:--body-comfortable)">APY</span>
     </motion.div>
   );
