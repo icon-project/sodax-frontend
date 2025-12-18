@@ -2,7 +2,7 @@
 
 Swaps part of the SDK provides abstractions to assist you with interacting with the cross-chain Intent Smart Contracts, Solver and Relay API.
 
-All swap operations are accessed through the `swap` property of a `Sodax` instance:
+All swap operations are accessed through the `swaps` property of a `Sodax` instance:
 
 ```typescript
 import { Sodax, SpokeChainId, Token } from "@sodax/sdk";
