@@ -57,7 +57,7 @@ export default function TokenAccordionItem({
       value={symbol}
       className={cn(
         'border-none',
-        openValue === '' ? 'opacity-100' : openValue === symbol ? 'opacity-100' : 'opacity-40',
+        openValue === '' ? 'opacity-100' : openValue === symbol ? 'opacity-100' : 'opacity-60',
       )}
     >
       <motion.div ref={ref} layout="size">
@@ -118,7 +118,10 @@ export default function TokenAccordionItem({
                 >
                   <ItemTitle className="justify-between flex w-full">
                     <motion.div
-                      className="content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold"
+                      className={cn(
+                        `content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold`,
+                        !isCollapsed ? 'font-bold' : '',
+                      )}
                       animate={{ y: isCollapsed ? 0 : 4 }}
                       transition={{ duration: 0.4, ease: 'easeOut', type: 'tween' }}
                       style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}

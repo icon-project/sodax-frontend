@@ -101,7 +101,12 @@ export default function AccordionDepositButton({
   };
 
   return (
-    <div className={cn('flex gap-4 items-center mb-8', !selectedToken && isGroup && 'blur filter opacity-30')}>
+    <div
+      className={cn(
+        'flex gap-4 items-center mb-8 transition-all duration-300',
+        !selectedToken && isGroup && 'blur filter opacity-30',
+      )}
+    >
       {(canInteract || selectedToken) && renderSimulationButtons()}
 
       {(!selectedToken || (isShowDeposits && sourceAddress)) && renderContinueButton()}
