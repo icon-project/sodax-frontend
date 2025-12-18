@@ -20,14 +20,7 @@ type ToastContextValue = {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([
-    {
-      id: 1,
-      title: 'Swap was successful!',
-      description: 'Swapped 12.5 S to USDC successfully.',
-      variant: 'success',
-    },
-  ]);
+  const [toasts, setToasts] = useState<Toast[]>([] as Toast[]);
 
   const toast = useCallback((toast: Omit<Toast, 'id'>) => {
     setToasts(prev => [...prev, { id: Date.now(), ...toast }]);
