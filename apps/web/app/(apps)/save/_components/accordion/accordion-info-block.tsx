@@ -5,7 +5,7 @@ export default function AccordionInfoBlock({ apy, deposits }: { apy: string; dep
   return (
     <div className="flex h-12">
       <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
-      <InfoBlock value={apy.replace('%', '')} label="Current APY" />
+      <InfoBlock value={apy} label="Current APY" />
       <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
       <InfoBlock value={deposits} label="All deposits" />
     </div>

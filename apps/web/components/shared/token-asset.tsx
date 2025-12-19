@@ -7,39 +7,46 @@ import NetworkIcon from '@/components/shared/network-icon';
 import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
+import { useFloating, autoUpdate, offset, flip, shift } from '@floating-ui/react';
 
 function NetworkPicker({
   isClicked,
   tokens,
   tokenSymbol,
   onSelect,
-  position,
+  reference,
 }: {
   isClicked: boolean;
   tokens: XToken[];
   tokenSymbol: string;
   onSelect?: (token: XToken) => void;
-  position: { top: number; left: number } | null;
+  reference: HTMLElement | null;
 }): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
 
-  const handleNetworkClick = (token: XToken): void => {
-    if (token) {
-      onSelect?.(token);
-    }
-  };
+  const { x, y, strategy, refs } = useFloating({
+    placement: 'bottom',
+    strategy: 'fixed',
+    middleware: [offset(-30), flip(), shift({ padding: 8 })],
+    whileElementsMounted: autoUpdate,
+  });
 
-  if (!isClicked || !position) {
-    return null;
-  }
+  useEffect(() => {
+    if (reference) {
+      refs.setReference(reference);
+    }
+  }, [reference, refs]);
+
+  if (!isClicked || !reference) return null;
 
   const portalContent = (
     <div
-      className="fixed pointer-events-auto z-[53] data-network-icon"
+      ref={refs.setFloating}
+      className="z-[53] pointer-events-auto"
       style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        transform: 'translate(-50%, 0)',
+        position: strategy,
+        top: y ?? 0,
+        left: x ?? 0,
       }}
     >
       <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2 text-center">
@@ -51,25 +58,23 @@ function NetworkPicker({
           'Choose a network'
         )}
       </div>
-      <div className="[flex-flow:wrap] box-border content-start flex items-start justify-center p-0 relative shrink-0 w-[130px] overflow-visible pointer-events-auto">
+
+      <div className="flex flex-wrap justify-center w-[130px]">
         {tokens.map((token, index) => (
           <motion.div
             key={index}
-            data-network-icon="true"
-            className={`relative shrink-0 cursor-pointer p-2 ${
-              hoveredIcon !== null && hoveredIcon !== index ? 'opacity-60 grayscale-[0.5]' : 'opacity-100 grayscale-0'
+            className={`p-2 cursor-pointer ${
+              hoveredIcon !== null && hoveredIcon !== index ? 'opacity-60 grayscale-[0.5]' : 'opacity-100'
             }`}
+            whileHover={{ scale: 1.3 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
             onMouseEnter={() => setHoveredIcon(index)}
             onMouseLeave={() => setHoveredIcon(null)}
-            whileHover={{
-              scale: 1.3,
-            }}
             onMouseDown={e => {
               e.preventDefault();
               e.stopPropagation();
-              handleNetworkClick(token);
+              onSelect?.(token);
             }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
           >
             <NetworkIcon id={token.xChainId} />
           </motion.div>
@@ -92,7 +97,6 @@ interface TokenAssetProps {
   onMouseEnter: () => void;
   onMouseLeave: () => void;
   onClick: (e?: React.MouseEvent) => void;
-  // Group-specific props
   isGroup?: boolean;
   tokenCount?: number;
   tokens?: XToken[];
@@ -118,18 +122,6 @@ export function TokenAsset({
   isClicked = false,
 }: TokenAssetProps): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
-  const [portalPosition, setPortalPosition] = useState<{ top: number; left: number } | null>(null);
-  useEffect(() => {
-    if (isClicked && isGroup && assetRef.current) {
-      const rect = assetRef.current.getBoundingClientRect();
-      setPortalPosition({
-        top: rect.bottom - 40,
-        left: rect.left + rect.width / 2,
-      });
-    } else {
-      setPortalPosition(null);
-    }
-  }, [isClicked, isGroup]);
 
   return (
     <>
@@ -137,9 +129,7 @@ export function TokenAsset({
         ref={assetRef}
         layout
         initial={{ opacity: 0, scale: 0.8 }}
-        whileHover={{
-          zIndex: 9999,
-        }}
+        whileHover={{ zIndex: 9999 }}
         animate={{
           opacity: isHoverDimmed ? 0.5 : 1,
           scale: isHovered ? 1.1 : 1,
@@ -157,7 +147,7 @@ export function TokenAsset({
         <div className="relative">
           {(token || (isGroup && tokens && tokens.length > 0)) && (
             <CurrencyLogo
-              currency={token || (tokens && tokens[0]) || ({} as XToken)}
+              currency={token || tokens?.[0] || ({} as XToken)}
               isGroup={isGroup}
               tokenCount={tokenCount}
               isClicked={isClickBlurred}
@@ -165,46 +155,40 @@ export function TokenAsset({
             />
           )}
         </div>
+
         <div
-          className={`font-['InterRegular'] flex items-center justify-center text-(length:--body-small) transition-all duration-200 mt-2 ${
+          className={`font-['InterRegular'] flex items-center justify-center text-(length:--body-small) mt-2 transition-all ${
             isClicked && isGroup
               ? 'opacity-0'
               : isHovered
                 ? 'opacity-100 text-espresso font-bold'
                 : isHoldToken
-                  ? 'opacity-100 text-espresso font-medium'
-                  : 'opacity-100 text-clay font-medium'
+                  ? 'text-espresso'
+                  : 'text-clay'
           }`}
         >
-          {name} {tokenCount && tokenCount > 1 && <ChevronDownIcon className="w-2 h-2 text-clay ml-1" />}
+          {name}
+          {tokenCount && tokenCount > 1 && <ChevronDownIcon className="w-2 h-2 text-clay ml-1" />}
         </div>
 
-        <div className="flex font-medium h-[13px] gap-1">
-          {isHoldToken && formattedBalance && (
-            <div className="flex items-center gap-1 justify-start">
-              <motion.p
-                className="relative shrink-0 text-clay !text-(length:--text-body-fine-print)"
-                animate={{
-                  color: isHovered ? '#483534' : '#8e7e7d',
-                }}
-                transition={{
-                  duration: 0.3,
-                  ease: 'easeInOut',
-                }}
-              >
-                {formattedBalance}
-              </motion.p>
-            </div>
-          )}
-        </div>
+        {isHoldToken && formattedBalance && (
+          <motion.p
+            className="text-clay !text-(length:--text-body-fine-print)"
+            animate={{ color: isHovered ? '#483534' : '#8e7e7d' }}
+            transition={{ duration: 0.3 }}
+          >
+            {formattedBalance}
+          </motion.p>
+        )}
       </motion.div>
+
       {isGroup && (
         <NetworkPicker
           isClicked={isClicked}
           tokens={tokens || []}
           tokenSymbol={name}
           onSelect={onChainClick}
-          position={portalPosition}
+          reference={assetRef.current}
         />
       )}
     </>
