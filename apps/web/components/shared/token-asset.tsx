@@ -8,6 +8,8 @@ import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useFloating, autoUpdate, offset, shift, limitShift } from '@floating-ui/react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 function NetworkPicker({
   isClicked,
@@ -24,6 +26,7 @@ function NetworkPicker({
 }): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
   const hasScrolledRef = useRef<boolean>(false);
+  const isMobile = useIsMobile();
 
   const { x, y, strategy, refs } = useFloating({
     placement: 'bottom',
@@ -88,7 +91,12 @@ function NetworkPicker({
         left: x ?? 0,
       }}
     >
-      <div className="font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2 text-center">
+      <div
+        className={cn(
+          "font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2",
+          isMobile ? 'text-left ml-5' : 'text-center',
+        )}
+      >
         {hoveredIcon !== null && tokens[hoveredIcon] ? (
           <>
             {tokenSymbol} <span className="font-bold">on {chainIdToChainName(tokens[hoveredIcon].xChainId)}</span>
@@ -98,7 +106,7 @@ function NetworkPicker({
         )}
       </div>
 
-      <div className="flex flex-wrap justify-center w-[140px] gap-3">
+      <div className={cn('flex flex-wrap justify-center w-[140px] gap-3', isMobile ? 'ml-4' : '')}>
         {tokens.map((token, index) => (
           <motion.div
             key={index}
