@@ -32,6 +32,7 @@ export default function AccordionExpandedContent({
 }) {
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
   const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
+  const [hoveredAsset, setHoveredAsset] = useState<number | null>(null);
   const [isAnyNonActiveHovered, setIsAnyNonActiveHovered] = useState(false);
   const [isShowDeposits, setIsShowDeposits] = useState(false);
   const tokenAssetRef = useRef<HTMLDivElement>(null);
@@ -50,11 +51,13 @@ export default function AccordionExpandedContent({
         if (!isClickInsideAsset) {
           setSelectedAsset(null);
           setSelectedToken(null);
+          setHoveredAsset(null);
         }
       } else {
         if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
           setSelectedAsset(null);
           setSelectedToken(null);
+          setHoveredAsset(null);
         }
       }
     };
@@ -103,16 +106,21 @@ export default function AccordionExpandedContent({
 
   const handleAssetClick = (index: number) => {
     setSelectedAsset(prev => (prev === index ? null : index));
+    setHoveredAsset(null);
   };
 
   const handleAssetMouseEnter = (index: number) => {
-    if (selectedAsset !== null && selectedAsset !== index) {
+    if (selectedAsset === null) {
+      setHoveredAsset(index);
+    } else if (selectedAsset !== index) {
       setIsAnyNonActiveHovered(true);
     }
   };
 
   const handleAssetMouseLeave = (index: number) => {
-    if (selectedAsset !== null && selectedAsset !== index) {
+    if (selectedAsset === null) {
+      setHoveredAsset(null);
+    } else if (selectedAsset !== index) {
       setIsAnyNonActiveHovered(false);
     }
   };
@@ -133,8 +141,10 @@ export default function AccordionExpandedContent({
           <div className="flex flex-wrap mt-4 -ml-3" ref={containerRef}>
             {displayItems.map((item, idx) => {
               const isSelected = selectedAsset === idx;
+              const isHovered = selectedAsset === null && hoveredAsset === idx;
               const shouldBlur = selectedAsset !== null && !isSelected;
               const blurAmount = shouldBlur ? (isAnyNonActiveHovered ? 1 : 4) : 0;
+              const shouldDim = selectedAsset === null && hoveredAsset !== null && hoveredAsset !== idx;
 
               const wrapperClass = cn(shouldBlur && 'opacity-40');
 
@@ -158,6 +168,8 @@ export default function AccordionExpandedContent({
                     selectedToken={selectedToken}
                     selectedAsset={selectedAsset}
                     isAnyNonActiveHovered={isAnyNonActiveHovered}
+                    isHovered={isHovered}
+                    isHoverDimmed={shouldDim}
                     handleAssetClick={handleAssetClick}
                     setSelectedToken={setSelectedToken}
                   />

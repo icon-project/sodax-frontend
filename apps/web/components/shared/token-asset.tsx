@@ -25,6 +25,7 @@ function NetworkPicker({
   reference: HTMLElement | null;
 }): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
+  const [isSingle, setIsSingle] = useState(false);
   const hasScrolledRef = useRef<boolean>(false);
   const isMobile = useIsMobile();
 
@@ -57,6 +58,7 @@ function NetworkPicker({
       if (!floatingEl) return;
 
       const floatingRect = floatingEl.getBoundingClientRect();
+      if (floatingRect.x < 30) setIsSingle(true);
       const viewportHeight = window.innerHeight;
 
       let deltaY = 0;
@@ -94,7 +96,7 @@ function NetworkPicker({
       <div
         className={cn(
           "font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2",
-          isMobile ? 'text-left ml-5' : 'text-center',
+          isMobile && isSingle ? 'text-left ml-5' : 'text-center',
         )}
       >
         {hoveredIcon !== null && tokens[hoveredIcon] ? (
@@ -106,7 +108,7 @@ function NetworkPicker({
         )}
       </div>
 
-      <div className={cn('flex flex-wrap justify-center w-[140px] gap-3', isMobile ? 'ml-4' : '')}>
+      <div className={cn('flex flex-wrap justify-center w-[140px] gap-3', isMobile && isSingle ? 'ml-4' : '')}>
         {tokens.map((token, index) => (
           <motion.div
             key={index}

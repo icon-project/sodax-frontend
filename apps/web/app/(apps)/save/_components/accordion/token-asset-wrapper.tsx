@@ -16,6 +16,8 @@ type Props = {
   selectedToken: XToken | null;
   isAnyNonActiveHovered: boolean;
   selectedAsset: number | null;
+  isHovered: boolean;
+  isHoverDimmed: boolean;
 
   handleAssetClick: (index: number) => void;
   setSelectedToken: (token: XToken | null) => void;
@@ -28,13 +30,15 @@ export function TokenAssetWrapper({
   selectedToken,
   isAnyNonActiveHovered,
   selectedAsset,
+  isHovered,
+  isHoverDimmed,
   handleAssetClick,
   setSelectedToken,
 }: Props) {
   const shared = {
-    isClickBlurred: false,
-    isHoverDimmed: false,
-    isHovered: false,
+    isClickBlurred: selectedAsset !== null && !isSelected,
+    isHoverDimmed,
+    isHovered,
     onMouseEnter: () => {},
     onMouseLeave: () => {},
   };
