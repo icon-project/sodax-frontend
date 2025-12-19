@@ -6,7 +6,7 @@ import { useXAccount } from '@sodax/wallet-sdk-react';
 import { shortenAddress } from '@/lib/utils';
 import { useState } from 'react';
 import type { ChainType } from '@sodax/types';
-import { EVM_CHAIN_ICONS, getChainIconClass } from '@/constants/chains';
+import { EVM_CHAIN_ICONS, getChainIconClass, getChainIconSize } from '@/constants/chains';
 
 export type EVMChainItemProps = {
   handleConnect: () => void;
