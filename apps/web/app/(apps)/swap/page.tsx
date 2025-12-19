@@ -35,6 +35,9 @@ export default function SwapPage() {
 
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
+  const isEthereum = inputToken.xChainId === 'ethereum' || outputToken.xChainId === 'ethereum';
+  const swapTimeLabel = isEthereum ? 'Takes longer (~3 mins)' : 'Takes ~30s';
+  const swapTimeClass = isEthereum ? 'text-cherry-bright' : 'text-clay-light';
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
@@ -260,10 +263,18 @@ export default function SwapPage() {
             </div>
           ) : (
             sourceAddress && (
-              <div className="mt-(--layout-space-small) text-clay-light font-['InterRegular'] leading-tight text-(length:--body-comfortable) flex gap-1">
-                <img src="/timer.svg" alt="timer icon" className="w-4 h-4" />
+              <div className="mt-(--layout-space-small) font-['InterRegular'] leading-tight text-(length:--body-comfortable) flex gap-1 items-center">
+                {!isEthereum ? (
+                  <img src="/timer.svg" alt="timer icon" className="w-4 h-4" />
+                ) : (
+                  <img src="/timer-cherry-bright.svg" alt="timer-cherry-bright icon" className="w-4 h-4" />
+                )}
                 <span>
-                  Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+                  <span className={swapTimeClass}>{swapTimeLabel}</span>
+                  <span className="text-clay-light">
+                    {' '}
+                    Total fees: {swapFeesUsdValue?.total && swapFeesUsdValue.total.toFixed(4)}
+                  </span>
                 </span>
               </div>
             )
