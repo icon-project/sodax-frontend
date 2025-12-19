@@ -6,7 +6,7 @@ import { useXAccount } from '@sodax/wallet-sdk-react';
 import { shortenAddress } from '@/lib/utils';
 import { useState } from 'react';
 import type { ChainType } from '@sodax/types';
-import { EVM_CHAIN_ICONS } from '@/constants/chains';
+import { EVM_CHAIN_ICONS, getChainIconClass } from '@/constants/chains';
 
 export type EVMChainItemProps = {
   handleConnect: () => void;
@@ -123,14 +123,14 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
             {EVM_CHAIN_ICONS.map((evmIcon, index) => (
               <div
                 key={index}
-                className={`rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden ${evmIcon.includes('0x2105') ? 'bg-white p-[2px]' : ''}`}
+                className={`rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden ${getChainIconClass(evmIcon)}`}
               >
                 <Image
                   key={index}
                   src={evmIcon}
                   alt={`EVM Chain ${index + 1}`}
-                  width={evmIcon.includes('0x2105') ? 20 : 24}
-                  height={evmIcon.includes('0x2105') ? 20 : 24}
+                  width={getChainIconSize(evmIcon, 24)}
+                  height={getChainIconSize(evmIcon, 24)}
                   className="rounded-sm shadow-[0px_6px_12px_0px_rgba(185,172,171,0.10)]"
                 />
               </div>
