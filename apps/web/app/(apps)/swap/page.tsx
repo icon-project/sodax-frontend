@@ -265,9 +265,9 @@ export default function SwapPage() {
             sourceAddress && (
               <div className="mt-(--layout-space-small) font-['InterRegular'] leading-tight text-(length:--body-comfortable) flex gap-1 items-center">
                 {!isEthereum ? (
-                  <img src="/timer.svg" alt="timer icon" className="w-4 h-4" />
+                  <img src="/timer.svg" alt="timer icon" className="w-4 h-4 mb-[2px]" />
                 ) : (
-                  <img src="/timer-cherry-bright.svg" alt="timer-cherry-bright icon" className="w-4 h-4" />
+                  <img src="/timer-cherry-bright.svg" alt="timer-cherry-bright icon" className="w-4 h-4 mb-[2px]" />
                 )}
                 <span>
                   <span className={swapTimeClass}>{swapTimeLabel}</span>
