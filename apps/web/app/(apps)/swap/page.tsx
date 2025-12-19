@@ -260,8 +260,11 @@ export default function SwapPage() {
             </div>
           ) : (
             sourceAddress && (
-              <div className="mt-(--layout-space-small) text-clay-light font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
-                Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+              <div className="mt-(--layout-space-small) text-clay-light font-['InterRegular'] leading-tight text-(length:--body-comfortable) flex gap-1">
+                <img src="/timer.svg" alt="timer icon" className="w-4 h-4" />
+                <span>
+                  Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+                </span>
               </div>
             )
           )}
