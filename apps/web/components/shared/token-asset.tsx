@@ -32,7 +32,7 @@ function NetworkPicker({
   const { x, y, strategy, refs } = useFloating({
     placement: 'bottom',
     strategy: 'fixed',
-    middleware: [offset(-30), shift({ padding: 8, limiter: limitShift() })],
+    middleware: [offset(-30), shift({ padding: 0, limiter: limitShift() })],
     whileElementsMounted: autoUpdate,
   });
 
@@ -108,11 +108,11 @@ function NetworkPicker({
         )}
       </div>
 
-      <div className={cn('flex flex-wrap justify-center w-[140px] gap-3', isMobile && isSingle ? 'ml-4' : '')}>
+      <div className={cn('flex flex-wrap justify-center w-[140px]', isMobile && isSingle ? 'ml-4' : '')}>
         {tokens.map((token, index) => (
           <motion.div
             key={index}
-            className={`cursor-pointer ${
+            className={`p-1.5 cursor-pointer ${
               hoveredIcon !== null && hoveredIcon !== index ? 'opacity-60 grayscale-[0.5]' : 'opacity-100'
             }`}
             whileHover={{ scale: 1.3 }}
