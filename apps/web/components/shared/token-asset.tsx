@@ -23,6 +23,7 @@ function NetworkPicker({
   reference: HTMLElement | null;
 }): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
+  const hasScrolledRef = useRef<boolean>(false);
 
   const { x, y, strategy, refs } = useFloating({
     placement: 'bottom',
@@ -37,8 +38,16 @@ function NetworkPicker({
     }
   }, [reference, refs]);
 
+  // Reset scroll flag when picker closes
   useEffect(() => {
-    if (!isClicked || !reference || x == null || y == null) return;
+    if (!isClicked) {
+      hasScrolledRef.current = false;
+    }
+  }, [isClicked]);
+
+  // Scroll adjustment: only once when opened
+  useEffect(() => {
+    if (!isClicked || !reference || x == null || y == null || hasScrolledRef.current) return;
 
     requestAnimationFrame(() => {
       const floatingEl = refs.floating.current;
@@ -56,10 +65,13 @@ function NetworkPicker({
       }
 
       if (deltaY !== 0) {
+        hasScrolledRef.current = true;
         window.scrollBy({
           top: deltaY,
           behavior: 'smooth',
         });
+      } else {
+        hasScrolledRef.current = true;
       }
     });
   }, [isClicked, reference, x, y, refs]);
@@ -86,11 +98,11 @@ function NetworkPicker({
         )}
       </div>
 
-      <div className="flex flex-wrap justify-center w-[130px]">
+      <div className="flex flex-wrap justify-center w-[140px] gap-3">
         {tokens.map((token, index) => (
           <motion.div
             key={index}
-            className={`p-2 cursor-pointer ${
+            className={`cursor-pointer ${
               hoveredIcon !== null && hoveredIcon !== index ? 'opacity-60 grayscale-[0.5]' : 'opacity-100'
             }`}
             whileHover={{ scale: 1.3 }}
