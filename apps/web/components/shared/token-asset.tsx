@@ -7,7 +7,7 @@ import NetworkIcon from '@/components/shared/network-icon';
 import { createPortal } from 'react-dom';
 import { ChevronDownIcon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
-import { useFloating, autoUpdate, offset, flip, shift } from '@floating-ui/react';
+import { useFloating, autoUpdate, offset, shift, limitShift } from '@floating-ui/react';
 
 function NetworkPicker({
   isClicked,
@@ -27,7 +27,7 @@ function NetworkPicker({
   const { x, y, strategy, refs } = useFloating({
     placement: 'bottom',
     strategy: 'fixed',
-    middleware: [offset(-30), flip(), shift({ padding: 8 })],
+    middleware: [offset(-30), shift({ padding: 8, limiter: limitShift() })],
     whileElementsMounted: autoUpdate,
   });
 
@@ -36,6 +36,33 @@ function NetworkPicker({
       refs.setReference(reference);
     }
   }, [reference, refs]);
+
+  useEffect(() => {
+    if (!isClicked || !reference || x == null || y == null) return;
+
+    requestAnimationFrame(() => {
+      const floatingEl = refs.floating.current;
+      if (!floatingEl) return;
+
+      const floatingRect = floatingEl.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      let deltaY = 0;
+
+      if (floatingRect.bottom > viewportHeight) {
+        deltaY = floatingRect.bottom - viewportHeight + 8;
+      } else if (floatingRect.top < 0) {
+        deltaY = floatingRect.top - 8;
+      }
+
+      if (deltaY !== 0) {
+        window.scrollBy({
+          top: deltaY,
+          behavior: 'smooth',
+        });
+      }
+    });
+  }, [isClicked, reference, x, y, refs]);
 
   if (!isClicked || !reference) return null;
 
