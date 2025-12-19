@@ -25,13 +25,12 @@ export default function SolverPage() {
   const [orderType, setOrderType] = useState<OrderType>(OrderType.Limit);
 
   return (
-    <main className="flex flex-col items-center content-center justify-center">
+    <main className="flex flex-col items-center content-center justify-center space-y-2">
       {orders.map((order, index) => (
         <OrderStatus key={index} order={order} />
       ))}
 
       <Tabs
-        className="mb-2"
         value={isSolverProduction ? Environment.Production : Environment.Staging}
         onValueChange={value => {
           setIsSolverProduction(value === Environment.Production);
@@ -44,7 +43,6 @@ export default function SolverPage() {
       </Tabs>
 
       <Tabs
-        className="mb-2"
         value={orderType}
         onValueChange={value => {
           setOrderType(value as OrderType);
@@ -57,7 +55,7 @@ export default function SolverPage() {
       </Tabs>
 
       {orderType === OrderType.Market && <SwapCard setOrders={setOrders} />}
-      {orderType === OrderType.Limit && <LimitOrderCard setOrders={setOrders} />}
+      {orderType === OrderType.Limit && <LimitOrderCard />}
     </main>
   );
 }

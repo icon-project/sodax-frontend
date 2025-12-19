@@ -6,7 +6,7 @@ import type { SpokeChainId } from '@sodax/types';
 import LimitOrderItem from './LimitOrderItem';
 import { Card } from '@/components/ui/card';
 
-const TABLE_HEADERS = ['Input Amount', 'Input Token', 'Output Amount', 'Output Token', 'Action'];
+const TABLE_HEADERS = ['Input', 'Output', 'Action'];
 
 function EmptyState({ message, className = 'text-muted-foreground' }: { message: string; className?: string }) {
   return (
@@ -43,7 +43,7 @@ export default function LimitOrderList({ spokeChainId }: { spokeChainId: SpokeCh
   const intents = userIntents?.items ?? [];
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
+    <Card className="w-full max-w-3xl mx-auto">
       <Table>
         <TableHeader>
           <TableRow>

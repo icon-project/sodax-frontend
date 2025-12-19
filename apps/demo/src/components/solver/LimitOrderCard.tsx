@@ -18,15 +18,12 @@ import { parseUnits, formatUnits } from 'viem';
 import {
   type CreateLimitOrderParams,
   getSupportedSolverTokens,
-  type Hex,
-  type Intent,
-  type IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
   StellarSpokeProvider,
 } from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
-import React, { type SetStateAction, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   useQuote,
   useSpokeProvider,
@@ -36,7 +33,6 @@ import {
   useStellarTrustlineCheck,
   useRequestTrustline,
   useSodaxContext,
-  useDeriveUserWalletAddress,
 } from '@sodax/dapp-kit';
 import {
   getXChainType,
@@ -56,14 +52,9 @@ import {
 } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import LimitOrderList from './LimitOrderList';
+import { useQueryClient } from '@tanstack/react-query';
 
-export default function LimitOrderCard({
-  setOrders,
-}: {
-  setOrders: (
-    value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>,
-  ) => void;
-}) {
+export default function LimitOrderCard() {
   const { sodax } = useSodaxContext();
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
@@ -96,7 +87,7 @@ export default function LimitOrderCard({
   }
   const { requestTrustline } = useRequestTrustline(destToken?.address);
   const [open, setOpen] = useState(false);
-  const [slippage, setSlippage] = useState<string>('0.5');
+
   const onChangeDirection = () => {
     setSourceChain(destChain);
     setDestChain(sourceChain);
@@ -221,14 +212,14 @@ export default function LimitOrderCard({
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as ChainId);
 
+  const queryClient = useQueryClient();
+
   const handleCreateLimitOrder = async (limitOrderPayload: CreateLimitOrderParams) => {
     setOpen(false);
     const result = await createLimitOrder(limitOrderPayload);
 
     if (result.ok) {
-      const [response, intent, intentDeliveryInfo] = result.value;
-
-      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, intentDeliveryInfo }]);
+      queryClient.invalidateQueries({ queryKey: ['backend', 'intent', 'user'] });
     } else {
       console.error('Error creating limit order:', result.error);
     }

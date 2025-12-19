@@ -60,7 +60,7 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
   // Format amounts
   const inputAmount = useMemo(() => {
     if (!inputToken) {
-      return intent.intent.inputAmount;
+      return undefined;
     }
 
     return formatUnits(BigInt(intent.intent.inputAmount), inputToken.decimals);
@@ -68,7 +68,7 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
 
   const outputAmount = useMemo(() => {
     if (!outputToken) {
-      return intent.intent.minOutputAmount;
+      return undefined;
     }
 
     return formatUnits(BigInt(intent.intent.minOutputAmount), outputToken.decimals);
@@ -111,21 +111,26 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
     }
   };
 
+  if (!inputToken || !outputToken || !inputAmount || !outputAmount) {
+    console.log('invalid intent', intent);
+    return (
+      <TableRow>
+        <TableCell colSpan={3} className="text-center">
+          <div className="text-muted-foreground">Invalid token or amount</div>
+        </TableCell>
+      </TableRow>
+    );
+  }
+
   return (
     <TableRow>
-      <TableCell>
-        {inputAmount} {inputToken?.symbol ?? ''}
+      <TableCell className="font-medium">
+        {inputAmount} {inputToken.symbol} on {inputToken.xChainId}
       </TableCell>
       <TableCell className="font-medium">
-        {inputToken ? `${inputToken.symbol} (${inputToken.name})` : intent.intent.inputToken}
+        {outputAmount} {outputToken.symbol} on {outputToken.xChainId}
       </TableCell>
-      <TableCell>
-        {outputAmount} {outputToken?.symbol ?? ''}
-      </TableCell>
-      <TableCell className="font-medium">
-        {outputToken ? `${outputToken.symbol} (${outputToken.name})` : intent.intent.outputToken}
-      </TableCell>
-      <TableCell>
+      <TableCell className="text-right">
         <Button size="sm" onClick={handleCancel} disabled={isCanceling || !intent.open}>
           <X className="h-4 w-4 mr-1" />
           {isCanceling ? 'Canceling...' : 'Cancel'}
