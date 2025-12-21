@@ -45,16 +45,14 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
           })}
         {hasEVMChains && (
           <>
-            {EVM_CHAIN_ICONS.slice(0, 6).map((icon, index) => {
-              return (
-                <div
-                  key={index}
-                  className="rounded-[4px] w-5 h-5 shadow-[4px_0px_4px_rgba(175,145,145)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden relative"
-                >
-                  <Image key={index} src={icon} alt={icon} width={20} height={20} className="rounded-[4px]" />
-                </div>
-              );
-            })}
+            {EVM_CHAIN_ICONS.slice(0, 6).map((icon, index) => (
+              <div
+                key={index}
+                className="rounded-[4px] w-5 h-5 shadow-[4px_0px_4px_rgba(175,145,145)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden relative"
+              >
+                <Image key={index} src={icon} alt={icon} width={20} height={20} className="rounded-[4px]" />
+              </div>
+            ))}
             <div className="rounded-[4px] w-5 h-5 shadow-[4px_0px_4px_rgba(175,145,145)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden relative bg-white">
               <div className="flex justify-center items-center">
                 <span className="text-[10px] text-clay leading-[1.4] font-['InterBold']">+</span>
@@ -66,11 +64,11 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
           </>
         )}
       </div>
-      !hasEVMChains && connectedChains.length === 1 && (
-      <div className="text-cherry-brighter text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
-        Welcome!
-      </div>
-      )
+      {!hasEVMChains && connectedChains.length === 1 && (
+        <div className="text-cherry-brighter text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
+          Welcome!
+        </div>
+      )}
       <Button
         variant="cherry"
         className="w-10 h-10 p-3 bg-cherry-bright rounded-[256px] inline-flex justify-center items-center gap-2 cursor-pointer"
