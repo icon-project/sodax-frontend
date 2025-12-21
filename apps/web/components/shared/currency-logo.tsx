@@ -42,7 +42,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
         className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden relative"
       >
         <Image
-          className={`w-4 h-4 ${currency.xChainId === '0x2105.base' ? 'p-[2px]' : ''}`}
+          className="w-4 h-4"
           src={`/chain/${currency.xChainId}.png`}
           alt={currency.xChainId}
           width={16}

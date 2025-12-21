@@ -174,16 +174,14 @@ export function CurrencySearchPanel({
                         onMouseEnter={() => setHoveredChain(chain.id)}
                         onMouseLeave={() => setHoveredChain(null)}
                       >
-                        <div className="w-6 h-6 flex items-center justify-center rounded-[6px] ring-4 ring-white shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)]">
-                          <Image
-                            src={chain.icon}
-                            alt={chain.name}
-                            width={24}
-                            height={24}
-                            className="rounded-[6px]"
-                            priority
-                          />
-                        </div>
+                        <Image
+                          src={chain.icon}
+                          alt={chain.name}
+                          width={24}
+                          height={24}
+                          className="rounded-[6px] ring-4 ring-white shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)]"
+                          priority
+                        />
                         <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
                           {chain.name}
                         </div>

@@ -32,11 +32,14 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
         {!hasEVMChains &&
           connectedChains.map(chain => {
             return (
-              <div
-                key={chain.chainType}
-                className="relative rounded shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.20)] outline outline-3 outline-white "
-              >
-                <Image className="rounded" src={chain.icon || ''} alt={chain.chainType} width={20} height={20} />
+              <div key={chain.chainType} className="relative">
+                <Image
+                  className="rounded shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.20)] outline outline-3 outline-white"
+                  src={chain.icon || ''}
+                  alt={chain.chainType}
+                  width={20}
+                  height={20}
+                />
               </div>
             );
           })}
@@ -63,11 +66,11 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
           </>
         )}
       </div>
-      {!hasEVMChains && connectedChains.length === 1 && (
-        <div className="text-cherry-brighter text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
-          Welcome!
-        </div>
-      )}
+      !hasEVMChains && connectedChains.length === 1 && (
+      <div className="text-cherry-brighter text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
+        Welcome!
+      </div>
+      )
       <Button
         variant="cherry"
         className="w-10 h-10 p-3 bg-cherry-bright rounded-[256px] inline-flex justify-center items-center gap-2 cursor-pointer"
