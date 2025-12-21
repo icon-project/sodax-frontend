@@ -104,19 +104,3 @@ export const getChainIconByName = (chainName: string): string | undefined => {
   const chain = availableChains.find(chain => chain.name.toLowerCase() === chainName.toLowerCase());
   return chain?.icon;
 };
-
-const isBaseChain = (chainIdOrIcon: string): boolean => {
-  return chainIdOrIcon.includes('0x2105.base');
-};
-
-export const getChainIconClass = (chainIdOrIcon: string): string => {
-  return isBaseChain(chainIdOrIcon) ? 'bg-white p-[2px]' : '';
-};
-
-export const getChainIconSize = (chainIdOrIcon: string, defaultSize: number): number => {
-  return isBaseChain(chainIdOrIcon) ? defaultSize - 4 : defaultSize;
-};
-
-export const getChainIconClassSmall = (chainIdOrIcon: string): string => {
-  return isBaseChain(chainIdOrIcon) ? 'bg-white p-[1px]' : '';
-};

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { useXAccounts } from '@sodax/wallet-sdk-react';
-import { getChainIconByName, EVM_CHAIN_ICONS, getChainIconClass } from '@/constants/chains';
+import { getChainIconByName, EVM_CHAIN_ICONS } from '@/constants/chains';
 
 interface ConnectedChainsDisplayProps {
   onClick?: () => void;
@@ -34,7 +34,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
             return (
               <div
                 key={chain.chainType}
-                className={`relative rounded shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.20)] outline outline-3 outline-white ${getChainIconClass(chain.icon || '')}`}
+                className="relative rounded shadow-[-4px_0px_4px_0px_rgba(175,145,145,0.20)] outline outline-3 outline-white "
               >
                 <Image className="rounded" src={chain.icon || ''} alt={chain.chainType} width={20} height={20} />
               </div>
@@ -46,7 +46,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
               return (
                 <div
                   key={index}
-                  className={`rounded-[4px] w-5 h-5 shadow-[4px_0px_4px_rgba(175,145,145)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden relative ${getChainIconClass(icon)}`}
+                  className="rounded-[4px] w-5 h-5 shadow-[4px_0px_4px_rgba(175,145,145)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden relative"
                 >
                   <Image key={index} src={icon} alt={icon} width={20} height={20} className="rounded-[4px]" />
                 </div>

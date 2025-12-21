@@ -2,13 +2,7 @@ import type React from 'react';
 import Image from 'next/image';
 import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import {
-  availableChains,
-  getChainIcon,
-  getChainIconClass,
-  getChainIconClassSmall,
-  getChainIconSize,
-} from '@/constants/chains';
+import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';
 
 interface CurrencySearchPanelProps {
@@ -84,9 +78,9 @@ export function CurrencySearchPanel({
                   <Image
                     src={getChainIcon(selectedChainId) || '/chain/0x2105.base.png'}
                     alt="Selected Chain"
-                    width={getChainIconSize(selectedChainId, 24)}
-                    height={getChainIconSize(selectedChainId, 24)}
-                    className={`rounded-[6px] shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] ring-4 ring-white overflow-hidden ${getChainIconClass(selectedChainId)}`}
+                    width={24}
+                    height={24}
+                    className="rounded-[6px] shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] ring-4 ring-white overflow-hidden"
                     priority
                   />
                 </div>
@@ -97,7 +91,7 @@ export function CurrencySearchPanel({
                     alt="Base"
                     width={8}
                     height={8}
-                    className={`rounded-[2px] ${getChainIconClassSmall('/chain/0x2105.base.png')}`}
+                    className="rounded-[2px]"
                     priority
                   />
                   <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" priority />
@@ -138,7 +132,7 @@ export function CurrencySearchPanel({
                             alt="Base"
                             width={8}
                             height={8}
-                            className={`rounded-[2px] ${getChainIconClass('/chain/0x2105.base.png')}`}
+                            className="rounded-[2px]"
                             priority
                           />
                           <Image
@@ -180,14 +174,12 @@ export function CurrencySearchPanel({
                         onMouseEnter={() => setHoveredChain(chain.id)}
                         onMouseLeave={() => setHoveredChain(null)}
                       >
-                        <div
-                          className={`w-6 h-6 flex items-center justify-center rounded-[6px] ring-4 ring-white shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] ${getChainIconClass(chain.id)}`}
-                        >
+                        <div className="w-6 h-6 flex items-center justify-center rounded-[6px] ring-4 ring-white shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)]">
                           <Image
                             src={chain.icon}
                             alt={chain.name}
-                            width={getChainIconSize(chain.id, 24)}
-                            height={getChainIconSize(chain.id, 24)}
+                            width={24}
+                            height={24}
                             className="rounded-[6px]"
                             priority
                           />
