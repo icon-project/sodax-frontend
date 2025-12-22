@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/save/_components/token-accordion-item.tsx
 import { AccordionItem, AccordionTriggerWithButton, AccordionContent } from '@/components/ui/accordion';
 import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
@@ -5,8 +6,9 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
+import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import AccordionCollapsedInfo from './accordion/accordion-collapsed-info';
 import AccordionExpandedContent from './accordion/accordion-expanded-content';
 import AccordionCollapsedAPY from './accordion/accordion-collapsed-apy';
@@ -26,6 +28,15 @@ export default function TokenAccordionItem({
   const ref = useRef<HTMLDivElement>(null);
   const { symbol, tokens } = group;
   const isCollapsed = openValue !== symbol || openValue === '';
+
+  // Calculate total supply balance for all tokens in the group
+  const enrichedTokens = useTokenSupplyBalances(tokens, formattedReserves || []);
+  const totalSupplyBalance = useMemo(() => {
+    const total = enrichedTokens.reduce((sum, token) => {
+      return sum + Number(token.supplyBalance || '0');
+    }, 0);
+    return total;
+  }, [enrichedTokens]);
 
   useEffect(() => {
     if (isCollapsed || !ref.current) return;
@@ -119,7 +130,7 @@ export default function TokenAccordionItem({
                   <ItemTitle className="justify-between flex w-full">
                     <motion.div
                       className={cn(
-                        `content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold`,
+                        `content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold gap-2`,
                         !isCollapsed ? 'font-bold' : '',
                       )}
                       animate={{ y: isCollapsed ? 0 : 4 }}
@@ -127,6 +138,11 @@ export default function TokenAccordionItem({
                       style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
                     >
                       {symbol}
+                      {totalSupplyBalance > 0 && (
+                        <span className='text-clay-light text-(length:--body-comfortable) font-medium font-["InterRegular"]'>
+                          {totalSupplyBalance}
+                        </span>
+                      )}
                     </motion.div>
 
                     <AnimatePresence>
