@@ -41,6 +41,9 @@ export default function AccordionExpandedContent({
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
 
   useEffect(() => {
+    if (tokens.length === 1) setSelectedToken(tokens[0] as XToken);
+  }, [tokens]);
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Element;
 
@@ -138,7 +141,7 @@ export default function AccordionExpandedContent({
       ) : (
         <>
           <AccordionInfoBlock apy={apy} deposits={deposits} />
-          <div className="flex flex-wrap mt-4 -ml-3" ref={containerRef}>
+          <div className="flex flex-wrap -ml-3 -my-[1px]" ref={containerRef}>
             {displayItems.map((item, idx) => {
               const isSelected = selectedAsset === idx;
               const isHovered = selectedAsset === null && hoveredAsset === idx;

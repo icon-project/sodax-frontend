@@ -42,7 +42,7 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
 
   return (
     <>
-      <div className="flex gap-2 items-center p-1.5">
+      <div className="flex gap-2 items-center h-12 pl-1">
         <NetworkIcon id={selectedToken?.xChainId || ''} className="scale-150" />
         {!sourceAddress ? (
           <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
@@ -65,7 +65,7 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
       </div>
       <div
         className={cn(
-          'flex items-center gap-2 mt-8',
+          'flex items-center gap-2 -mt-2',
           balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-sm pl-4 sm:pl-3' : 'pl-4 sm:pl-3',
         )}
       >
@@ -107,7 +107,7 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
           </InputGroupAddon>
         </InputGroup>
       </div>
-      <div className="flex gap-2 items-center mt-6">
+      <div className="flex gap-2 items-center -mt-2 mb-7">
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
           Sample available:
         </div>

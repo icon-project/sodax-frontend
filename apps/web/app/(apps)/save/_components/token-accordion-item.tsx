@@ -56,7 +56,7 @@ export default function TokenAccordionItem({
     <AccordionItem
       value={symbol}
       className={cn(
-        'border-none',
+        'border-none money-market',
         openValue === '' ? 'opacity-100' : openValue === symbol ? 'opacity-100' : 'opacity-60',
       )}
     >
@@ -72,7 +72,7 @@ export default function TokenAccordionItem({
           className="w-full group pb-0"
         >
           <AccordionTriggerWithButton>
-            <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal)">
+            <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal) border-none">
               <ItemMedia>
                 <motion.div
                   className="relative cursor-pointer"

@@ -81,7 +81,7 @@ export function TokenAssetWrapper({
   );
 
   const renderGroupExpanded = () => (
-    <div className="flex">
+    <div className="flex -ml-5">
       <div className="blur-sm">
         <TokenAsset
           {...shared}
