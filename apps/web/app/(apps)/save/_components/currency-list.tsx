@@ -1,9 +1,24 @@
-// apps/web/app/(apps)/save/_components/currency-list.tsx
 import { Accordion } from '@/components/ui/accordion';
 import { useMemo } from 'react';
 import { getUniqueTokenSymbols, sortStablecoinsFirst, flattenTokens } from '@/lib/utils';
 import TokenAccordionItem from './token-accordion-item';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
+import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
+import type { XToken } from '@sodax/types';
+
+function hasFunds(group: { symbol: string; tokens: XToken[] }, balanceMap: Map<string, string>): boolean {
+  return group.tokens.some(token => {
+    const key = `${token.xChainId}-${token.address}`;
+    const balance = balanceMap.get(key);
+    return balance ? Number(balance) > 0 : false;
+  });
+}
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <div className="px-0 py-2 font-['InterRegular'] text-(length:--body-small) font-medium text-clay">{title}</div>
+  );
+}
 
 export default function CurrencyList({
   searchQuery,
@@ -25,17 +40,77 @@ export default function CurrencyList({
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
 
+  const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
+
+  const enrichedTokens = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
+
+  const balanceMap = useMemo(() => {
+    const map = new Map<string, string>();
+    enrichedTokens.forEach(token => {
+      const key = `${token.xChainId}-${token.address}`;
+      map.set(key, token.supplyBalance);
+    });
+    return map;
+  }, [enrichedTokens]);
+
+  const { readyToEarn, availableToDeposit } = useMemo(() => {
+    const ready: typeof groupedTokens = [];
+    const available: typeof groupedTokens = [];
+
+    groupedTokens.forEach(group => {
+      if (hasFunds(group, balanceMap)) {
+        ready.push(group);
+      } else {
+        available.push(group);
+      }
+    });
+
+    return { readyToEarn: ready, availableToDeposit: available };
+  }, [groupedTokens, balanceMap]);
+
+  const hasAssets = readyToEarn.length > 0;
+
   return (
     <Accordion type="single" collapsible className="network-accordion" value={openValue} onValueChange={setOpenValue}>
-      {groupedTokens.map(group => (
-        <TokenAccordionItem
-          key={group.symbol}
-          group={group}
-          openValue={openValue}
-          formattedReserves={formattedReserves}
-          isFormattedReservesLoading={isFormattedReservesLoading}
-        />
-      ))}
+      {hasAssets ? (
+        <>
+          <SectionHeader title="Ready to earn" />
+          {readyToEarn.map(group => (
+            <TokenAccordionItem
+              key={group.symbol}
+              group={group}
+              openValue={openValue}
+              formattedReserves={formattedReserves}
+              isFormattedReservesLoading={isFormattedReservesLoading}
+            />
+          ))}
+
+          {availableToDeposit.length > 0 && (
+            <>
+              <SectionHeader title="Available to deposit" />
+              {availableToDeposit.map(group => (
+                <TokenAccordionItem
+                  key={group.symbol}
+                  group={group}
+                  openValue={openValue}
+                  formattedReserves={formattedReserves}
+                  isFormattedReservesLoading={isFormattedReservesLoading}
+                />
+              ))}
+            </>
+          )}
+        </>
+      ) : (
+        groupedTokens.map(group => (
+          <TokenAccordionItem
+            key={group.symbol}
+            group={group}
+            openValue={openValue}
+            formattedReserves={formattedReserves}
+            isFormattedReservesLoading={isFormattedReservesLoading}
+          />
+        ))
+      )}
     </Accordion>
   );
 }
