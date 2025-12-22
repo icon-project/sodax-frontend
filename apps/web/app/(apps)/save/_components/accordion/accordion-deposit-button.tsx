@@ -60,7 +60,7 @@ export default function AccordionDepositButton({
           className="w-27 mix-blend-multiply shadow-none"
           onMouseDown={() => setIsShowDeposits(true)}
         >
-          Simulate
+          Continue
         </Button>
       )}
 
@@ -87,12 +87,12 @@ export default function AccordionDepositButton({
 
   const getHelperText = () => {
     if (!isShowDeposits) {
-      return !selectedToken ? 'Select a source' : 'You’ll simulate yield next';
+      return !selectedToken ? 'Select a source' : 'See your yield next';
     }
     return sourceAddress ? (
       <div className="flex gap-2">
         <span className="text-clay-light">Yield/mo:</span>
-        <span className="font-['InterRegular']">~$148.12</span>
+        <span className="font-['InterRegular'] text-espresso font-medium">~$148.12</span>
         <AlertCircleIcon width={16} height={16} className="text-clay" />
       </div>
     ) : (

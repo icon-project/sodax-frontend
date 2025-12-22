@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { XToken, ChainId } from '@sodax/types';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import NetworkIcon from '@/components/shared/network-icon';
@@ -20,6 +20,7 @@ interface AccordionDepositProps {
 export default function AccordionDeposit({ selectedToken, tokens }: AccordionDepositProps) {
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
   const [progress, setProgress] = useState([0]);
+  const previousTokenAddressRef = useRef<string | undefined>(selectedToken?.address);
 
   const { data: balances } = useXBalances({
     xChainId: selectedToken?.xChainId as ChainId,
@@ -36,9 +37,40 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
       : '0.00';
   }, [balance, selectedToken, tokenPrice]);
 
-  useEffect(() => {
-    setProgress([Number(formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0))]);
+  const maxValue = useMemo(() => {
+    return Number(formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0));
   }, [balance, selectedToken, tokenPrice]);
+
+  // Reset progress to 0 when token changes
+  useEffect(() => {
+    const currentTokenAddress = selectedToken?.address;
+    if (previousTokenAddressRef.current !== currentTokenAddress) {
+      setProgress([0]);
+      previousTokenAddressRef.current = currentTokenAddress;
+    }
+  }, [selectedToken]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const inputValue = e.target.value;
+
+    // Allow empty input temporarily while typing
+    if (inputValue === '') {
+      setProgress([0]);
+      return;
+    }
+
+    // Parse the input value
+    const numericValue = Number.parseFloat(inputValue);
+
+    // Check if it's a valid number
+    if (Number.isNaN(numericValue)) {
+      return;
+    }
+
+    // Clamp the value between 0 and max
+    const clampedValue = Math.max(0, Math.min(numericValue, maxValue));
+    setProgress([clampedValue]);
+  };
 
   return (
     <>
@@ -71,7 +103,7 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
       >
         <CustomSlider
           defaultValue={[0]}
-          max={Number(formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0))}
+          max={maxValue}
           step={0.01}
           value={progress}
           onValueChange={setProgress}
@@ -81,31 +113,38 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
      [background-size:20px_20px]"
           thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
         />
-        <InputGroup className="[--radius:9999px] border-4 border-cream-white w-40 h-10 pr-1">
-          <InputGroupAddon className="text-muted-foreground pl-1.5">
-            <Image
-              className="w-6 h-6 rounded-[256px]"
-              src={`/coin/${tokens[0]?.symbol.toLowerCase()}.png`}
-              alt={tokens[0]?.symbol || ''}
-              width={24}
-              height={24}
-              priority
+        <div className="max-w-40">
+          <InputGroup className="[--radius:9999px] border-4 border-cream-white w-40 h-10 pr-1">
+            <InputGroupAddon className="text-muted-foreground pl-1.5">
+              <Image
+                className="w-6 h-6 rounded-[256px]"
+                src={`/coin/${tokens[0]?.symbol.toLowerCase()}.png`}
+                alt={tokens[0]?.symbol || ''}
+                width={24}
+                height={24}
+                priority
+              />
+            </InputGroupAddon>
+            <InputGroupInput
+              id="input-secure-19"
+              type="number"
+              min={0}
+              max={maxValue}
+              step={0.01}
+              value={progress[0]?.toString() || '0'}
+              onChange={handleInputChange}
+              className="!text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular']"
             />
-          </InputGroupAddon>
-          <InputGroupInput
-            id="input-secure-19"
-            value={progress[0]?.toString() || '0'}
-            className="!text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular']"
-          />
-          <InputGroupAddon align="inline-end">
-            <InputGroupButton
-              size="icon-xs"
-              className="text-clay text-[9px] font-['InterRegular'] font-normal !border-none !outline-none leading-0"
-            >
-              MAX
-            </InputGroupButton>
-          </InputGroupAddon>
-        </InputGroup>
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                size="icon-xs"
+                className="text-clay text-[9px] font-['InterRegular'] font-normal !border-none !outline-none leading-0"
+              >
+                MAX
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
       </div>
       <div className="flex gap-2 items-center -mt-2 mb-7">
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
