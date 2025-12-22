@@ -13,7 +13,7 @@ import type { QuoteType } from '@sodax/sdk';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
-import { ExternalLinkIcon } from 'lucide-react';
+import { ExternalLinkIcon, Timer } from 'lucide-react';
 import Link from 'next/link';
 import SwapReviewButton from './_components/swap-review-button';
 import AnimatedNumber from '@/components/shared/animated-number';
@@ -265,9 +265,9 @@ export default function SwapPage() {
             sourceAddress && (
               <div className="mt-(--layout-space-small) font-['InterRegular'] leading-tight text-(length:--body-comfortable) flex gap-1 items-center">
                 {!isEthereum ? (
-                  <img src="/timer.svg" alt="timer icon" className="w-4 h-4 mb-[2px]" />
+                  <Timer className="w-4 h-4 text-clay-light mb-[3px]" />
                 ) : (
-                  <img src="/timer-cherry-bright.svg" alt="timer-cherry-bright icon" className="w-4 h-4 mb-[2px]" />
+                  <Timer className="w-4 h-4 text-cherry-bright mb-[3px]" />
                 )}
                 <span>
                   <span className={swapTimeClass}>{swapTimeLabel}</span>
