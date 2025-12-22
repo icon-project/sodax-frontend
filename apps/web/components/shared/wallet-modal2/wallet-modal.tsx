@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useModalOpen, useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { ChainItem } from './chain-item';
-import type { ChainType } from '@sodax/types';
+import type { ChainId, ChainType } from '@sodax/types';
 import { Separator } from '@/components/ui/separator';
 import { XIcon } from 'lucide-react';
 import { ArrowLeftIcon } from 'lucide-react';
@@ -12,6 +12,7 @@ import { useXConnectors } from '@sodax/wallet-sdk-react';
 import { WalletItem } from './wallet-item';
 import { AllSupportItem } from './all-support-item';
 import { isRegisteredUser } from '@/apis/users';
+import { chainIdToChainName } from '@/providers/constants';
 
 type WalletModalProps = {
   modalId?: MODAL_ID;
@@ -86,8 +87,10 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   };
 
   const modalData = useModalStore(state => state.modals[modalId]?.modalData) as
-    | { primaryChainType: ChainType; isExpanded: boolean }
+    | { primaryChainType: ChainType; xChainId?: ChainId; isExpanded: boolean }
     | undefined;
+
+  const title = modalData?.xChainId && `Connect ${chainIdToChainName(modalData.xChainId)}`;
 
   const primaryChainGroups = useMemo(
     () => chainGroups.filter(chainGroup => chainGroup.chainType === (modalData?.primaryChainType || 'EVM')),
@@ -170,7 +173,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                   className="mix-blend-multiply"
                 />
                 <div className="flex-1 justify-center text-espresso text-base font-['InterBold'] leading-snug text-(length:--body-super-comfortable)">
-                  Connect wallets
+                  {title}
                 </div>
               </div>
               <DialogClose asChild>

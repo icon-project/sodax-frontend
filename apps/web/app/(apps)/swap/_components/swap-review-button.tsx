@@ -90,7 +90,10 @@ export default function SwapReviewButton({
           variant="cherry"
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
           onClick={() => {
-            openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: sourceChainType });
+            openModal(MODAL_ID.WALLET_MODAL, {
+              primaryChainType: sourceChainType,
+              xChainId: inputToken.xChainId,
+            });
           }}
         >
           {`Connect ${chainIdToChainName(inputToken.xChainId)}`}
