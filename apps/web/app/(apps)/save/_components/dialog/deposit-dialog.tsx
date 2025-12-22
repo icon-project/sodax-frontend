@@ -1,19 +1,15 @@
 'use client';
 
 import type React from 'react';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import type { XToken, ChainId } from '@sodax/types';
-import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
-import { useTokenPrice } from '@/hooks/useTokenPrice';
-import { formatUnits } from 'viem';
-import { formatBalance } from '@/lib/utils';
+import type { XToken } from '@sodax/types';
 import { useLiquidity } from '@/hooks/useAPY';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import { FilePenLine, XIcon } from 'lucide-react';
 import { TokenAsset } from '@/components/shared/token-asset';
-import { cn } from '@/lib/utils';
+// import { cn } from '@/lib/utils';
 
 interface DepositDialogProps {
   open: boolean;
@@ -37,21 +33,8 @@ export default function DepositDialog({
   const [isApproved, setIsApproved] = useState<boolean>(false);
   const [isApproving, setIsApproving] = useState<boolean>(false);
 
-  const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
-  const { data: balances } = useXBalances({
-    xChainId: selectedToken?.xChainId as ChainId,
-    xTokens: selectedToken ? [selectedToken] : [],
-    address: sourceAddress,
-  });
-
-  const balance = balances?.[selectedToken?.address as string] ?? 0n;
-  const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
+  // const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
   const { apy } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
-
-  const maxValue = useMemo(() => {
-    if (!selectedToken || !balance) return 0;
-    return Number(formatBalance(formatUnits(balance, selectedToken.decimals), tokenPrice ?? 0));
-  }, [balance, selectedToken, tokenPrice]);
 
   const handleContinue = (): void => {
     if (currentStep < 3) {
@@ -71,31 +54,12 @@ export default function DepositDialog({
   const handleDeposit = (): void => {
     // TODO: Implement actual deposit logic
     console.log('Depositing:', supplyBalance);
+    if (!isApproved) return;
     onOpenChange(false);
     // Reset state when closing
     setCurrentStep(1);
     setSupplyBalance('');
     setIsApproved(false);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const inputValue = e.target.value;
-    if (inputValue === '') {
-      setSupplyBalance('');
-      return;
-    }
-
-    const numericValue = Number.parseFloat(inputValue);
-    if (Number.isNaN(numericValue)) {
-      return;
-    }
-
-    const clampedValue = Math.max(0, Math.min(numericValue, maxValue));
-    setSupplyBalance(clampedValue.toString());
-  };
-
-  const handleMaxClick = (): void => {
-    setSupplyBalance(maxValue.toString());
   };
 
   const handleClose = (): void => {
@@ -148,7 +112,7 @@ export default function DepositDialog({
       <div className="flex flex-col gap-4">
         <div className="flex flex-col text-center">
           <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
-            Earn 3.56% APY
+            Earn {apy} APY
           </div>
           <div className="self-stretch text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
             Takes ~10 seconds
