@@ -7,6 +7,9 @@ import { chainIdToChainName } from '@/providers/constants';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import type { DisplayItem } from './accordion-expanded-content';
+import { useState } from 'react';
+import DepositDialog from '../dialog/deposit-dialog';
+import type { FormatReserveUSDResponse } from '@sodax/sdk';
 
 interface AccordionDepositButtonProps {
   selectedToken: XToken | null;
@@ -15,6 +18,9 @@ interface AccordionDepositButtonProps {
   isShowDeposits: boolean;
   setIsShowDeposits: (value: boolean) => void;
   sourceAddress: string | undefined;
+  tokens: XToken[];
+  formattedReserves?: FormatReserveUSDResponse[];
+  isFormattedReservesLoading?: boolean;
 }
 
 export default function AccordionDepositButton({
@@ -24,6 +30,9 @@ export default function AccordionDepositButton({
   isShowDeposits,
   setIsShowDeposits,
   sourceAddress,
+  tokens,
+  formattedReserves,
+  isFormattedReservesLoading,
 }: AccordionDepositButtonProps) {
   const { data: balances } = useXBalances({
     xChainId: selectedToken?.xChainId as ChainId,
@@ -33,6 +42,7 @@ export default function AccordionDepositButton({
 
   const balance = balances?.[selectedToken?.address as string] ?? 0n;
   const openModal = useModalStore(state => state.openModal);
+  const [isDepositDialogOpen, setIsDepositDialogOpen] = useState<boolean>(false);
 
   const assetItem = selectedAsset !== null ? displayItems[selectedAsset] : null;
   const isGroup = assetItem?.isGroup;
@@ -73,16 +83,26 @@ export default function AccordionDepositButton({
   );
 
   const renderContinueButton = () => (
-    <Button
-      variant="cherry"
-      className="w-27 mix-blend-multiply shadow-none"
-      disabled={!selectedToken || BigInt(balance) === 0n}
-      onMouseDown={() => {
-        console.log('deposit!');
-      }}
-    >
-      Continue
-    </Button>
+    <>
+      <Button
+        variant="cherry"
+        className="w-27 mix-blend-multiply shadow-none"
+        disabled={!selectedToken || BigInt(balance) === 0n}
+        onMouseDown={() => {
+          setIsDepositDialogOpen(true);
+        }}
+      >
+        Continue
+      </Button>
+      <DepositDialog
+        open={isDepositDialogOpen}
+        onOpenChange={setIsDepositDialogOpen}
+        selectedToken={selectedToken}
+        tokens={tokens}
+        formattedReserves={formattedReserves}
+        isFormattedReservesLoading={isFormattedReservesLoading}
+      />
+    </>
   );
 
   const getHelperText = () => {

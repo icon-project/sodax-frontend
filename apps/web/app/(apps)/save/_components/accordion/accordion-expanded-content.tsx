@@ -190,6 +190,9 @@ export default function AccordionExpandedContent({
         isShowDeposits={isShowDeposits}
         setIsShowDeposits={setIsShowDeposits}
         sourceAddress={sourceAddress}
+        tokens={tokens}
+        formattedReserves={formattedReserves}
+        isFormattedReservesLoading={isFormattedReservesLoading}
       />
     </motion.div>
   );
