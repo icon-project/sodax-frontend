@@ -9,7 +9,7 @@ import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
 import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { useQuote, useSodaxContext } from '@sodax/dapp-kit';
 import BigNumber from 'bignumber.js';
-import type { QuoteType } from '@sodax/sdk';
+import { ETHEREUM_MAINNET_CHAIN_ID, type QuoteType } from '@sodax/sdk';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
@@ -35,7 +35,10 @@ export default function SwapPage() {
 
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
-  const isEthereum = inputToken.xChainId === 'ethereum' || outputToken.xChainId === 'ethereum';
+
+  const isEthereum =
+    inputToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID || outputToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID;
+
   const swapTimeLabel = isEthereum ? 'Takes longer (~3 mins)' : 'Takes ~30s';
   const swapTimeClass = isEthereum ? 'text-cherry-bright' : 'text-clay-light';
 
@@ -265,9 +268,9 @@ export default function SwapPage() {
             sourceAddress && (
               <div className="mt-(--layout-space-small) font-['InterRegular'] leading-tight text-(length:--body-comfortable) flex gap-1 items-center">
                 {!isEthereum ? (
-                  <Timer className="w-4 h-4 text-clay-light mb-[3px]" />
+                  <Timer className="w-4 h-4 text-clay-light" />
                 ) : (
-                  <Timer className="w-4 h-4 text-cherry-bright mb-[3px]" />
+                  <Timer className="w-4 h-4 text-cherry-bright" />
                 )}
                 <span>
                   <span className={swapTimeClass}>{swapTimeLabel}</span>
