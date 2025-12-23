@@ -21,6 +21,8 @@ import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
 
+export const ETHEREUM_CHAIN_ID = 'ethereum' as const;
+
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
     useSwapState();
@@ -35,7 +37,11 @@ export default function SwapPage() {
 
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
-  const isEthereum = inputToken.xChainId === 'ethereum' || outputToken.xChainId === 'ethereum';
+
+  const isEthereum = inputToken.xChainId === ETHEREUM_CHAIN_ID || outputToken.xChainId === ETHEREUM_CHAIN_ID;
+  console.log('input xChainId:', inputToken.xChainId);
+  console.log('output xChainId:', outputToken.xChainId);
+
   const swapTimeLabel = isEthereum ? 'Takes longer (~3 mins)' : 'Takes ~30s';
   const swapTimeClass = isEthereum ? 'text-cherry-bright' : 'text-clay-light';
 
@@ -265,9 +271,9 @@ export default function SwapPage() {
             sourceAddress && (
               <div className="mt-(--layout-space-small) font-['InterRegular'] leading-tight text-(length:--body-comfortable) flex gap-1 items-center">
                 {!isEthereum ? (
-                  <Timer className="w-4 h-4 text-clay-light mb-[3px]" />
+                  <Timer className="w-4 h-4 text-clay-light" />
                 ) : (
-                  <Timer className="w-4 h-4 text-cherry-bright mb-[3px]" />
+                  <Timer className="w-4 h-4 text-cherry-bright" />
                 )}
                 <span>
                   <span className={swapTimeClass}>{swapTimeLabel}</span>
