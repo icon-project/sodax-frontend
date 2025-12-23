@@ -1411,7 +1411,7 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address,
       decimal: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.decimals,
-      symbol: 'USDC ',
+      symbol: 'USDC',
       name: 'USD Coin',
       vault: SodaTokens.sodaUSDC.address,
     },
