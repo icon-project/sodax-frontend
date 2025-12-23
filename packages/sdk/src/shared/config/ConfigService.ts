@@ -118,6 +118,10 @@ export class ConfigService {
     return this.sodaxConfig.supportedMoneyMarketTokens;
   }
 
+  public getMoneyMarketToken(chainId: SpokeChainId, token: string): Token | undefined {
+    return this.sodaxConfig.supportedMoneyMarketTokens[chainId].find(t => t.address.toLowerCase() === token.toLowerCase());
+  }
+
   public getMoneyMarketReserveAssets(): GetMoneyMarketReserveAssetsApiResponse {
     return this.sodaxConfig.supportedMoneyMarketReserveAssets;
   }
@@ -138,12 +142,16 @@ export class ConfigService {
     return this.supportedHubAssetsSet.has(hubAsset.toLowerCase() as Address);
   }
 
-  public isValidSodaVaultAsset(vault: Address): boolean {
+  public isValidSodaVaultAsset(vault: string): boolean {
     return this.supportedSodaVaultAssetsSet.has(vault.toLowerCase() as Address);
   }
 
-  public isValidVault(vault: Address): boolean {
-    return this.isValidSodaVaultAsset(vault);
+  public isValidVault(vault: string | Token): boolean {
+    if (typeof vault === 'string') {
+      return this.isValidSodaVaultAsset(vault);
+    }
+
+    return this.isValidSodaVaultAsset(vault.address);
   }
 
   public isValidChainHubAsset(chainId: SpokeChainId, hubAsset: Address): boolean {

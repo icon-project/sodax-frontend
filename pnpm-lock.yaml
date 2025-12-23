@@ -279,6 +279,9 @@ importers:
       bn.js:
         specifier: ^5.2.1
         version: 5.2.2
+      bs58:
+        specifier: ^6.0.0
+        version: 6.0.0
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1

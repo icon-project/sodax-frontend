@@ -328,10 +328,19 @@ export class MoneyMarketService {
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(params.token.length > 0, 'Token is required');
-      invariant(
-        this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
-        `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
-      );
+
+      if (params.action === 'withdraw' || params.action === 'borrow') {
+        const toChainId = params.toChainId ?? spokeProvider.chainConfig.chain.id;
+        invariant(
+          this.configService.isMoneyMarketSupportedToken(toChainId, params.token),
+          `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
+        );
+      } else {
+        invariant(
+          this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
+          `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
+        );
+      }
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
@@ -375,6 +384,7 @@ export class MoneyMarketService {
             params.toChainId ?? spokeProvider.chainConfig.chain.id,
             this.data,
             this.configService,
+            this.config,
           );
           return await SonicSpokeService.isBorrowApproved(
             walletAddress as GetAddressType<SonicSpokeProvider>,
@@ -445,10 +455,18 @@ export class MoneyMarketService {
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(params.token.length > 0, 'Token is required');
-      invariant(
-        this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
-        `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
-      );
+      if (params.action === 'withdraw' || params.action === 'borrow') {
+        const toChainId = params.toChainId ?? spokeProvider.chainConfig.chain.id;
+        invariant(
+          this.configService.isMoneyMarketSupportedToken(toChainId, params.token),
+          `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
+        );
+      } else {
+        invariant(
+          this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
+          `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
+        );
+      }
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
@@ -527,6 +545,7 @@ export class MoneyMarketService {
             params?.toChainId ?? spokeProvider.chainConfig.chain.id,
             this.data,
             this.configService,
+            this.config,
           );
 
           const result = (await SonicSpokeService.approveBorrow(
@@ -635,7 +654,7 @@ export class MoneyMarketService {
       }
 
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
@@ -831,11 +850,12 @@ export class MoneyMarketService {
         };
       }
 
-      const fromChainId = spokeProvider.chainConfig.chain.id;
-      const toChainId = params.toChainId ?? fromChainId;
-
       let intentTxHash: string | null = null;
-      if (toChainId !== SONIC_MAINNET_CHAIN_ID) {
+      // relay is not required only if borrow is happening on a Hub with target not being the hub chain
+      if (
+        spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id ||
+        (params.toChainId && params.toAddress && params.toChainId !== this.hubProvider.chainConfig.chain.id)
+      ) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
@@ -922,16 +942,14 @@ export class MoneyMarketService {
     const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
     const toChainId = params.toChainId ?? fromChainId;
     const toAddress = params.toAddress ?? fromAddress;
+    const dstToken = this.configService.getMoneyMarketToken(toChainId, params.token);
 
-    invariant(
-      this.configService.isMoneyMarketSupportedToken(toChainId, params.token),
-      `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
-    );
+    invariant(dstToken, `Money market token not found for spoke chain (${toChainId}) token: ${params.token}`);
 
     const encodedToAddress = encodeAddress(toChainId, toAddress);
     const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
 
-    const data: Hex = this.buildBorrowData(fromHubWallet, encodedToAddress, params.token, params.amount, toChainId);
+    const data: Hex = this.buildBorrowData(fromHubWallet, encodedToAddress, dstToken.address, params.amount, toChainId);
 
     let txResult: TxReturnType<S, R>;
     if (fromChainId === this.hubProvider.chainConfig.chain.id && isSonicSpokeProviderType(spokeProvider)) {
@@ -1011,11 +1029,15 @@ export class MoneyMarketService {
         };
       }
 
-      const fromChainId = spokeProvider.chainConfig.chain.id;
-      const toChainId = params.toChainId ?? fromChainId;
-
       let intentTxHash: string | null = null;
-      if (toChainId !== SONIC_MAINNET_CHAIN_ID) {
+      // relay is not required only if action is happening on a Hub with target not being the hub chain
+      if (
+        spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id ||
+        (params.toChainId &&
+          params.toAddress &&
+          params.toChainId !== this.hubProvider.chainConfig.chain.id &&
+          params.toAddress !== this.hubProvider.chainConfig.addresses.walletRouter)
+      ) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
@@ -1211,7 +1233,8 @@ export class MoneyMarketService {
       }
 
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== SONIC_MAINNET_CHAIN_ID) {
+      // relay is not required only if repay is happening from a Hub chain
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
@@ -1350,8 +1373,12 @@ export class MoneyMarketService {
 
     const lendingPool = this.config.lendingPool;
 
-    calls.push(Erc20Service.encodeApprove(fromHubAsset.asset, fromHubAsset.vault, amount));
-    calls.push(EvmVaultTokenService.encodeDeposit(fromHubAsset.vault, fromHubAsset.asset, amount));
+    if (!this.configService.isValidVault(fromHubAsset.asset)) {
+      // deposit non-vault token into the vault
+      calls.push(Erc20Service.encodeApprove(fromHubAsset.asset, fromHubAsset.vault, amount));
+      calls.push(EvmVaultTokenService.encodeDeposit(fromHubAsset.vault, fromHubAsset.asset, amount));
+    }
+
     const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(fromHubAsset.decimal, amount);
     calls.push(Erc20Service.encodeApprove(fromHubAsset.vault, lendingPool, translatedAmount));
     calls.push(
@@ -1380,26 +1407,35 @@ export class MoneyMarketService {
     amount: bigint,
     toChainId: SpokeChainId,
   ): Hex {
-    const toHubAsset = this.configService.getHubAssetInfo(toChainId, toToken as Address);
+    const toHubAsset = this.configService.getHubAssetInfo(toChainId, toToken);
+    const dstToken = this.configService.getMoneyMarketToken(toChainId, toToken);
     invariant(toHubAsset, `hub asset not found for target chain token (toToken): ${toToken}`);
+    invariant(dstToken, `Money market token not found for spoke chain (${toChainId}) token: ${toToken}`);
 
     const assetAddress = toHubAsset.asset;
     const vaultAddress = toHubAsset.vault;
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
 
-    const feeAmount = calculateFeeAmount(amount, this.config.partnerFee);
+    const translatedInAmount = EvmVaultTokenService.translateIncomingDecimals(toHubAsset.decimal, amount);
+    const feeAmount = calculateFeeAmount(translatedInAmount, this.config.partnerFee);
     const calls: EvmContractCall[] = [];
 
-    if (bnUSDVault && bnUSD && bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
+    if (bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
       calls.push(
         MoneyMarketService.encodeBorrow(
-          { asset: bnUSD, amount: amount, interestRateMode: 2n, referralCode: 0, onBehalfOf: fromHubAddress },
+          {
+            asset: bnUSD,
+            amount: translatedInAmount,
+            interestRateMode: 2n,
+            referralCode: 0,
+            onBehalfOf: fromHubAddress,
+          },
           this.config.lendingPool,
         ),
       );
-      calls.push(Erc20Service.encodeApprove(bnUSD, bnUSDVault, amount));
-      calls.push(EvmVaultTokenService.encodeDeposit(bnUSDVault, bnUSD, amount));
+      calls.push(Erc20Service.encodeApprove(bnUSD, bnUSDVault, translatedInAmount));
+      calls.push(EvmVaultTokenService.encodeDeposit(bnUSDVault, bnUSD, translatedInAmount));
 
       if (this.config.partnerFee && feeAmount) {
         calls.push(Erc20Service.encodeTransfer(bnUSDVault, this.config.partnerFee.address, feeAmount));
@@ -1407,7 +1443,13 @@ export class MoneyMarketService {
     } else {
       calls.push(
         MoneyMarketService.encodeBorrow(
-          { asset: vaultAddress, amount: amount, interestRateMode: 2n, referralCode: 0, onBehalfOf: fromHubAddress },
+          {
+            asset: vaultAddress,
+            amount: translatedInAmount,
+            interestRateMode: 2n,
+            referralCode: 0,
+            onBehalfOf: fromHubAddress,
+          },
           this.config.lendingPool,
         ),
       );
@@ -1417,8 +1459,23 @@ export class MoneyMarketService {
       }
     }
 
-    calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount - feeAmount));
-    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(toHubAsset.decimal, amount - feeAmount);
+    if (toToken.toLowerCase() !== vaultAddress.toLowerCase()) {
+      // if the target token is not the vault token, we need to withdraw the tokens from the vault
+      calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, translatedInAmount - feeAmount));
+    }
+
+    let translatedAmountOut: bigint;
+    if (this.configService.isValidVault(toToken)) {
+      translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(
+        toHubAsset.decimal,
+        translatedInAmount - feeAmount,
+      );
+    } else {
+      translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(
+        dstToken.decimals,
+        translatedInAmount - feeAmount,
+      );
+    }
 
     if (toChainId === this.hubProvider.chainConfig.chain.id) {
       if (
@@ -1472,20 +1529,33 @@ export class MoneyMarketService {
     const calls: EvmContractCall[] = [];
 
     const toHubAsset = this.configService.getHubAssetInfo(toChainId, toToken as Address);
+    const dstToken = this.configService.getMoneyMarketToken(toChainId, toToken);
     invariant(toHubAsset, `hub asset not found for target chain token (toToken): ${toToken}`);
+    invariant(dstToken, `Money market token not found for spoke chain (${toChainId}) token: ${toToken}`);
 
     const assetAddress = toHubAsset.asset;
     const vaultAddress = toHubAsset.vault;
 
+    const translatedInAmount = EvmVaultTokenService.translateIncomingDecimals(toHubAsset.decimal, amount);
+
     calls.push(
       MoneyMarketService.encodeWithdraw(
-        { asset: vaultAddress, amount: amount, to: fromHubAddress },
+        { asset: vaultAddress, amount: translatedInAmount, to: fromHubAddress },
         this.config.lendingPool,
       ),
     );
-    calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, amount));
 
-    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(toHubAsset.decimal, amount);
+    if (!this.configService.isValidVault(toToken)) {
+      // if the target token is not the vault token, we need to withdraw the tokens from the vault
+      calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, translatedInAmount));
+    }
+
+    let translatedAmountOut: bigint;
+    if (this.configService.isValidVault(toToken)) {
+      translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(toHubAsset.decimal, translatedInAmount);
+    } else {
+      translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(dstToken.decimals, translatedInAmount);
+    }
 
     if (toChainId === this.hubProvider.chainConfig.chain.id) {
       if (
@@ -1538,20 +1608,30 @@ export class MoneyMarketService {
     const bnUSDVault = this.config.bnUSDVault;
     const bnUSD = this.config.bnUSD;
 
-    calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
-    calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
-    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(fromHubAsset.decimal, amount);
+    const translatedAmountIn = EvmVaultTokenService.translateIncomingDecimals(fromHubAsset.decimal, amount);
 
     let repayToken = vaultAddress;
-    if (bnUSDVault && bnUSD && bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
+    if (bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
+      // when repaying bnUSD using vault token, bnUSD debt token gets repaid
       repayToken = bnUSD;
-      calls.push(EvmVaultTokenService.encodeWithdraw(bnUSDVault, bnUSD, translatedAmount));
+
+      if (assetAddress !== bnUSDVault) {
+        // if asset address is not bnUSD vault, we need to approve and deposit the asset into the vault
+        calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, translatedAmountIn));
+        calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, translatedAmountIn));
+      }
+
+      // withdraw the bnUSD debt token from the vault
+      calls.push(EvmVaultTokenService.encodeWithdraw(bnUSDVault, bnUSD, translatedAmountIn));
+    } else {
+      calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
+      calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
     }
 
-    calls.push(Erc20Service.encodeApprove(repayToken, this.config.lendingPool, translatedAmount));
+    calls.push(Erc20Service.encodeApprove(repayToken, this.config.lendingPool, translatedAmountIn));
     calls.push(
       MoneyMarketService.encodeRepay(
-        { asset: repayToken, amount: translatedAmount, interestRateMode: 2n, onBehalfOf: toHubAddress },
+        { asset: repayToken, amount: translatedAmountIn, interestRateMode: 2n, onBehalfOf: toHubAddress },
         this.config.lendingPool,
       ),
     );
