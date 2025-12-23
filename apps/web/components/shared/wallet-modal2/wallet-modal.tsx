@@ -13,6 +13,7 @@ import { WalletItem } from './wallet-item';
 import { AllSupportItem } from './all-support-item';
 import { isRegisteredUser } from '@/apis/users';
 import { chainIdToChainName } from '@/providers/constants';
+import { getChainIcon } from '@/constants/chains';
 
 type WalletModalProps = {
   modalId?: MODAL_ID;
@@ -89,6 +90,8 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   const modalData = useModalStore(state => state.modals[modalId]?.modalData) as
     | { primaryChainType: ChainType; xChainId?: ChainId; isExpanded: boolean }
     | undefined;
+
+  const selectedChainIcon = modalData?.xChainId ? getChainIcon(modalData.xChainId) : undefined;
 
   const title = modalData?.xChainId && `Connect ${chainIdToChainName(modalData.xChainId)}`;
 
@@ -194,6 +197,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       setActiveXChainType={setActiveXChainType}
                       setHoveredChainType={setHoveredChainType}
                       hoveredChainType={hoveredChainType}
+                      selectedChainIcon={selectedChainIcon}
                       onSuccess={async (_xConnector, xAccount) => {
                         if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
                           return;
