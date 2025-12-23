@@ -8,7 +8,7 @@ import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import type { DisplayItem } from './accordion-expanded-content';
 import { useState } from 'react';
-import DepositDialog from '../dialog/deposit-dialog';
+import DepositDialog from '../deposit-dialog/deposit-dialog';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 
 interface AccordionDepositButtonProps {

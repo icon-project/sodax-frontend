@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/save/_components/accordion/accordion-deposit.tsx
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { XToken, ChainId } from '@sodax/types';
@@ -11,6 +12,7 @@ import BigNumber from 'bignumber.js';
 import { formatUnits } from 'viem';
 import { chainIdToChainName } from '@/providers/constants';
 import { cn } from '@/lib/utils';
+import { useSaveActions } from '../../_stores/save-store-provider';
 
 interface AccordionDepositProps {
   selectedToken: XToken | null;
@@ -19,6 +21,7 @@ interface AccordionDepositProps {
 
 export default function AccordionDeposit({ selectedToken, tokens }: AccordionDepositProps) {
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
+  const { setDepositValue } = useSaveActions();
   const [progress, setProgress] = useState([0]);
   const previousTokenAddressRef = useRef<string | undefined>(selectedToken?.address);
 
@@ -46,9 +49,10 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
     const currentTokenAddress = selectedToken?.address;
     if (previousTokenAddressRef.current !== currentTokenAddress) {
       setProgress([0]);
+      setDepositValue(0);
       previousTokenAddressRef.current = currentTokenAddress;
     }
-  }, [selectedToken]);
+  }, [selectedToken, setDepositValue]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const inputValue = e.target.value;
@@ -56,6 +60,7 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
     // Allow empty input temporarily while typing
     if (inputValue === '') {
       setProgress([0]);
+      setDepositValue(0);
       return;
     }
 
@@ -70,6 +75,7 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
     // Clamp the value between 0 and max
     const clampedValue = Math.max(0, Math.min(numericValue, maxValue));
     setProgress([clampedValue]);
+    setDepositValue(clampedValue);
   };
 
   return (
@@ -104,9 +110,12 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
         <CustomSlider
           defaultValue={[0]}
           max={maxValue}
-          step={0.01}
+          step={0.001}
           value={progress}
-          onValueChange={setProgress}
+          onValueChange={value => {
+            setProgress(value);
+            setDepositValue(value[0] ?? 0);
+          }}
           className="h-10"
           trackClassName="bg-cream-white"
           rangeClassName="bg-[linear-gradient(135deg,#EDE6E6_25%,#E3BEBB_25%,#E3BEBB_50%,#EDE6E6_50%,#EDE6E6_75%,#E3BEBB_75%,#E3BEBB_100%)] 
@@ -130,7 +139,7 @@ export default function AccordionDeposit({ selectedToken, tokens }: AccordionDep
               type="number"
               min={0}
               max={maxValue}
-              step={0.01}
+              step={0.001}
               value={progress[0]?.toString() || '0'}
               onChange={handleInputChange}
               className="!text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular']"
