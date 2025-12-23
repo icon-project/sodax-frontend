@@ -41,6 +41,7 @@ export default function DepositDialogFooter({
   useEffect(() => {
     if (hasAllowed) {
       setCurrentStep(3);
+      setIsApproved(true);
     }
   }, [hasAllowed, setCurrentStep]);
 
