@@ -1615,7 +1615,7 @@ export class MoneyMarketService {
       // when repaying bnUSD using vault token, bnUSD debt token gets repaid
       repayToken = bnUSD;
 
-      if (assetAddress !== bnUSDVault) {
+      if (assetAddress.toLowerCase() !== bnUSDVault.toLowerCase()) {
         // if asset address is not bnUSD vault, we need to approve and deposit the asset into the vault
         calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, translatedAmountIn));
         calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, translatedAmountIn));
