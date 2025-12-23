@@ -21,8 +21,6 @@ import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
 
-export const ETHEREUM_CHAIN_ID = ETHEREUM_MAINNET_CHAIN_ID;
-
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
     useSwapState();
@@ -38,7 +36,8 @@ export default function SwapPage() {
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
 
-  const isEthereum = inputToken.xChainId === ETHEREUM_CHAIN_ID || outputToken.xChainId === ETHEREUM_CHAIN_ID;
+  const isEthereum =
+    inputToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID || outputToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID;
 
   const swapTimeLabel = isEthereum ? 'Takes longer (~3 mins)' : 'Takes ~30s';
   const swapTimeClass = isEthereum ? 'text-cherry-bright' : 'text-clay-light';
