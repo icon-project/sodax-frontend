@@ -39,11 +39,11 @@ export default function DepositDialogFooter({
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain((selectedToken?.xChainId || 'sonic') as ChainId);
 
   useEffect(() => {
-    if (hasAllowed) {
+    if (hasAllowed && !isWrongChain) {
       setCurrentStep(3);
       setIsApproved(true);
     }
-  }, [hasAllowed, setCurrentStep]);
+  }, [hasAllowed, setCurrentStep, isWrongChain]);
 
   useEffect(() => {
     onPendingChange?.(isPending);
