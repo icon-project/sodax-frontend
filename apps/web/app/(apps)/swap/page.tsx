@@ -9,7 +9,7 @@ import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
 import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { useQuote, useSodaxContext } from '@sodax/dapp-kit';
 import BigNumber from 'bignumber.js';
-import type { QuoteType } from '@sodax/sdk';
+import { ETHEREUM_MAINNET_CHAIN_ID, type QuoteType } from '@sodax/sdk';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
@@ -21,7 +21,7 @@ import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
 
-export const ETHEREUM_CHAIN_ID = 'ethereum' as const;
+export const ETHEREUM_CHAIN_ID = ETHEREUM_MAINNET_CHAIN_ID;
 
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
@@ -39,8 +39,6 @@ export default function SwapPage() {
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
 
   const isEthereum = inputToken.xChainId === ETHEREUM_CHAIN_ID || outputToken.xChainId === ETHEREUM_CHAIN_ID;
-  console.log('input xChainId:', inputToken.xChainId);
-  console.log('output xChainId:', outputToken.xChainId);
 
   const swapTimeLabel = isEthereum ? 'Takes longer (~3 mins)' : 'Takes ~30s';
   const swapTimeClass = isEthereum ? 'text-cherry-bright' : 'text-clay-light';
