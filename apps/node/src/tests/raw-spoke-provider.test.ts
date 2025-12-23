@@ -17,7 +17,9 @@ import {
   SUI_MAINNET_CHAIN_ID,
   SuiRawSpokeProvider,
 } from '@sodax/sdk';
-import { EvmWalletProvider, SuiWalletProvider } from '@sodax/wallet-sdk-core';
+import { EvmWalletProvider, SolanaWalletProvider, SuiWalletProvider } from '@sodax/wallet-sdk-core';
+import { Keypair } from '@solana/web3.js';
+import bs58 from "bs58";
 
 const evmPrivateKey = process.env.EVM_PRIVATE_KEY as Hex;
 const solanaPrivateKey = process.env.SOLANA_PRIVATE_KEY;
@@ -47,19 +49,17 @@ const suiWalletProvider = new SuiWalletProvider({
 });
 
 // used test solana wallet address due to Solana private key not working
-const solanaWalletAddress = 'EuenpE24dc6ve6STi8enwgXJ6yuR7fgUrFa3KSYHmFTv';
-// const solPrivateKeyUint8 = new Uint8Array(Buffer.from(solanaPrivateKey, 'hex'));
-// const keypair = Keypair.fromSecretKey(solPrivateKeyUint8);
-// const solanaWallet = new SolanaWalletProvider({
-//   privateKey: keypair.secretKey,
-//   endpoint: spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].rpcUrl,
-// });
+const keypair = Keypair.fromSecretKey(new Uint8Array(bs58.decode(solanaPrivateKey)));
+const solanaWallet = new SolanaWalletProvider({
+  privateKey: keypair.secretKey,
+  endpoint: spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].rpcUrl,
+});
 
-const [arbWalletAddress, sonicWalletAddress, suiWalletAddress] = await Promise.all([
+const [arbWalletAddress, sonicWalletAddress, suiWalletAddress, solanaWalletAddress] = await Promise.all([
   arbWalletProvider.getWalletAddress(),
   sonicWalletProvider.getWalletAddress(),
   suiWalletProvider.getWalletAddress(),
-  // solanaWallet.getWalletAddress(),
+  solanaWallet.getWalletAddress(),
 ]);
 const suiRawSpokeProvider = new SuiRawSpokeProvider(spokeChainConfig[SUI_MAINNET_CHAIN_ID], suiWalletAddress);
 const arbRawSpokeProvider = new EvmRawSpokeProvider(arbWalletAddress, spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID]);

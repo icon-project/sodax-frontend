@@ -9,11 +9,11 @@ import { SwitchDirectionIcon } from '@/components/icons/switch-direction-icon';
 import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { useQuote, useSodaxContext } from '@sodax/dapp-kit';
 import BigNumber from 'bignumber.js';
-import type { QuoteType } from '@sodax/sdk';
+import { ETHEREUM_MAINNET_CHAIN_ID, type QuoteType } from '@sodax/sdk';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
-import { ExternalLinkIcon } from 'lucide-react';
+import { ExternalLinkIcon, Timer } from 'lucide-react';
 import Link from 'next/link';
 import SwapReviewButton from './_components/swap-review-button';
 import AnimatedNumber from '@/components/shared/animated-number';
@@ -35,6 +35,12 @@ export default function SwapPage() {
 
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
+
+  const isEthereum =
+    inputToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID || outputToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID;
+
+  const swapTimeLabel = isEthereum ? 'Takes longer (~3 mins)' : 'Takes ~30s';
+  const swapTimeClass = isEthereum ? 'text-cherry-bright' : 'text-clay-light';
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
@@ -260,8 +266,19 @@ export default function SwapPage() {
             </div>
           ) : (
             sourceAddress && (
-              <div className="mt-(--layout-space-small) text-clay-light font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
-                Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+              <div className="mt-(--layout-space-small) font-['InterRegular'] leading-tight text-(length:--body-comfortable) flex gap-1 items-center">
+                {!isEthereum ? (
+                  <Timer className="w-4 h-4 text-clay-light" />
+                ) : (
+                  <Timer className="w-4 h-4 text-cherry-bright" />
+                )}
+                <span>
+                  <span className={swapTimeClass}>{swapTimeLabel}</span>
+                  <span className="text-clay-light">
+                    {' '}
+                    Total fees: {swapFeesUsdValue?.total && swapFeesUsdValue.total.toFixed(4)}
+                  </span>
+                </span>
               </div>
             )
           )}
