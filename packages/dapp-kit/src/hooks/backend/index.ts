@@ -10,6 +10,7 @@
 // Intent hooks
 export { useBackendIntentByTxHash } from './useBackendIntentByTxHash';
 export { useBackendIntentByHash } from './useBackendIntentByHash';
+export { useBackendUserIntents } from './useBackendUserIntents';
 
 // Solver hooks
 export { useBackendOrderbook } from './useBackendOrderbook';

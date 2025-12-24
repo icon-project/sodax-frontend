@@ -5,6 +5,7 @@
  */
 
 import type {
+  Address,
   GetAllConfigApiResponse,
   GetChainsApiResponse,
   GetHubAssetsApiResponse,
@@ -52,20 +53,27 @@ export interface IntentResponse {
   intent: {
     intentId: string;
     creator: string;
-    inputToken: string;
-    outputToken: string;
+    inputToken: `0x${string}`;
+    outputToken: `0x${string}`;
     inputAmount: string;
     minOutputAmount: string;
     deadline: string;
     allowPartialFill: boolean;
     srcChain: number;
     dstChain: number;
-    srcAddress: string;
-    dstAddress: string;
+    srcAddress: `0x${string}`;
+    dstAddress: `0x${string}`;
     solver: string;
     data: string;
   };
   events: unknown[];
+}
+
+export interface UserIntentsResponse {
+  total: number;
+  offset: number;
+  limit: number;
+  items: IntentResponse[];
 }
 
 // Solver endpoints types
@@ -248,6 +256,39 @@ export class BackendApiService implements IConfigApi {
     const endpoint = `/solver/orderbook?${queryString}`;
 
     return this.makeRequest<OrderbookResponse>(endpoint, { method: 'GET' });
+  }
+
+  /**
+   * Get all intents created by a specific user address with optional filters.
+   *
+   * @param params - Options to filter the user intents.
+   * @param params.userAddress - The user's wallet address on the hub chain (required).
+   * @param params.startDate - Optional. Start timestamp in milliseconds (number, required if filtering by date).
+   * @param params.endDate - Optional. End timestamp in milliseconds (number, required if filtering by date).
+   * @param params.limit - Optional. Max number of results (string).
+   * @param params.offset - Optional. Pagination offset (string).
+   *
+   * @returns {Promise<UserIntentsResponse>} Promise resolving to an array of intent responses for the user.
+   */
+  public async getUserIntents(params: {
+    userAddress: Address;
+    startDate?: number;
+    endDate?: number;
+    limit?: string;
+    offset?: string;
+  }): Promise<UserIntentsResponse> {
+    const { userAddress, startDate, endDate, limit, offset } = params;
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', new Date(startDate).toISOString());
+    if (endDate) queryParams.append('endDate', new Date(endDate).toISOString());
+    if (limit) queryParams.append('limit', limit);
+    if (offset) queryParams.append('offset', offset);
+
+    const queryString = queryParams.toString();
+    const endpoint =
+      queryString.length > 0 ? `/intent/user/${userAddress}?${queryString}` : `/intent/user/${userAddress}`;
+
+    return this.makeRequest<UserIntentsResponse>(endpoint, { method: 'GET' });
   }
 
   // Money Market endpoints
