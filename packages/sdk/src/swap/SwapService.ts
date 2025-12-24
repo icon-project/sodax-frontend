@@ -167,7 +167,18 @@ export type IntentPostExecutionFailedErrorData = SolverErrorResponse & {
   intentDeliveryInfo: IntentDeliveryInfo;
 };
 
-export type IntentErrorCode = RelayErrorCode | 'UNKNOWN' | 'CREATION_FAILED' | 'POST_EXECUTION_FAILED';
+export type IntentCancelFailedErrorData = {
+  payload: Intent;
+  error: unknown;
+};
+
+export type IntentErrorCode =
+  | RelayErrorCode
+  | 'UNKNOWN'
+  | 'CREATION_FAILED'
+  | 'POST_EXECUTION_FAILED'
+  | 'CANCEL_FAILED';
+
 export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOUT'
   ? IntentWaitUntilIntentExecutedFailedErrorData
   : T extends 'CREATION_FAILED'
@@ -178,7 +189,9 @@ export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOU
         ? IntentPostExecutionFailedErrorData
         : T extends 'UNKNOWN'
           ? IntentCreationFailedErrorData
-          : never;
+          : T extends 'CANCEL_FAILED'
+            ? IntentCancelFailedErrorData
+            : never;
 
 export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   code: T;
@@ -1157,38 +1170,51 @@ export class SwapService {
   }
 
   /**
-   * Cancels a limit order intent.
-   * This is a wrapper around cancelIntent since cancelling a limit order is the same as cancelling any intent.
+   * Syntactic sugar for cancelAndSubmitIntent: cancels a limit order intent and submits it to the Relayer API.
+   * Similar to swap function that wraps createAndSubmitIntent.
    *
-   * @param {Intent} intent - The limit order intent to cancel
-   * @param {SpokeProviderType} spokeProvider - The spoke provider
-   * @param {boolean} raw - Whether to return the raw transaction
-   * @returns {Promise<Result<TxReturnType<S, R>>>} The encoded contract call or transaction hash
+   * @param params - Object containing:
+   * @param params.intent - The limit order intent to cancel.
+   * @param params.spokeProvider - The spoke provider instance.
+   * @param params.timeout - (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
+   * @returns
+   *   A promise resolving to a Result containing a tuple of cancel transaction hash and destination transaction hash,
+   *   or an IntentError if the operation fails.
    *
    * @example
    * // Get intent first (or use intent from createLimitOrder response)
    * const intent: Intent = await swapService.getIntent(txHash);
    *
    * // Cancel the limit order
-   * const result = await swapService.cancelLimitOrder(
+   * const result = await swapService.cancelLimitOrder({
    *   intent,
    *   spokeProvider,
-   *   false, // true = get raw transaction, false = execute and return tx hash
-   * );
+   *   timeout, // optional
+   * });
    *
    * if (result.ok) {
-   *   console.log('[cancelLimitOrder] txHash:', result.value);
+   *   const [cancelTxHash, dstTxHash] = result.value;
+   *   console.log('Cancel transaction hash:', cancelTxHash);
+   *   console.log('Destination transaction hash:', dstTxHash);
    * } else {
    *   // handle error
    *   console.error('[cancelLimitOrder] error:', result.error);
    * }
    */
-  public async cancelLimitOrder<S extends SpokeProviderType, R extends boolean = false>(
-    intent: Intent,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<Result<TxReturnType<S, R>>> {
-    return this.cancelIntent(intent, spokeProvider, raw);
+  public async cancelLimitOrder<S extends SpokeProvider>({
+    intent,
+    spokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  }: {
+    intent: Intent;
+    spokeProvider: S;
+    timeout?: number;
+  }): Promise<Result<[string, string], IntentError<IntentErrorCode>>> {
+    return this.cancelAndSubmitIntent({
+      intent,
+      spokeProvider,
+      timeout,
+    });
   }
 
   /**
@@ -1202,7 +1228,7 @@ export class SwapService {
     intent: Intent,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>>> {
+  ): Promise<Result<TxReturnType<S, R>, IntentError<'CANCEL_FAILED'>>> {
     try {
       invariant(
         this.configService.isValidIntentRelayChainId(intent.srcChain),
@@ -1240,7 +1266,118 @@ export class SwapService {
     } catch (error) {
       return {
         ok: false,
-        error: error,
+        error: {
+          code: 'CANCEL_FAILED',
+          data: {
+            payload: intent,
+            error,
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Cancels an intent on the spoke chain, submits the cancel intent to the relayer API,
+   * and waits until the intent cancel is executed (on the destination/hub chain).
+   * Follows a similar workflow to createAndSubmitIntent, but for cancelling.
+   *
+   * @param params - The parameters for canceling and submitting the intent.
+   * @param params.intent - The intent to be canceled.
+   * @param params.spokeProvider - The provider for the spoke chain.
+   * @param params.timeout - Optional timeout in milliseconds (default: 60 seconds).
+   * @returns
+   *   A Result containing the SolverExecutionResponse (cancel tx), intent, and relay info,
+   *   or an IntentError on failure.
+   */
+  public async cancelAndSubmitIntent<S extends SpokeProvider>({
+    intent,
+    spokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  }: {
+    intent: Intent;
+    spokeProvider: S;
+    timeout?: number;
+  }): Promise<Result<[string, string], IntentError<IntentErrorCode>>> {
+    try {
+      // 1. Cancel the intent on the spoke chain
+      const cancelResult = await this.cancelIntent(intent, spokeProvider, false);
+
+      if (!cancelResult.ok) {
+        return cancelResult;
+      }
+
+      const cancelTxHash = cancelResult.value;
+
+      // 2. Verify the cancel tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(cancelTxHash, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CANCEL_FAILED',
+            data: {
+              payload: intent,
+              error: verifyTxHashResult.error,
+            },
+          },
+        };
+      }
+
+      // then submit the deposit tx hash of spoke chain to the intent relay
+      let dstIntentTxHash: string;
+
+      // 3. Submit the cancel tx hash of spoke chain to the intent relay
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const intentRelayChainId = intent.srcChain.toString();
+        const submitPayload: IntentRelayRequest<'submit'> = {
+          action: 'submit',
+          params: {
+            chain_id: intentRelayChainId,
+            tx_hash: cancelTxHash,
+          },
+        };
+
+        const submitResult = await this.submitIntent(submitPayload);
+
+        if (!submitResult.ok) {
+          return submitResult;
+        }
+
+        // then wait until the intent is executed on the intent relay
+        const packet = await waitUntilIntentExecuted({
+          intentRelayChainId,
+          spokeTxHash: cancelTxHash,
+          timeout,
+          apiUrl: this.config.relayerApiEndpoint,
+        });
+
+        if (!packet.ok) {
+          return {
+            ok: false,
+            error: packet.error,
+          };
+        }
+        dstIntentTxHash = packet.value.dst_tx_hash;
+      } else {
+        dstIntentTxHash = cancelTxHash;
+      }
+
+      return {
+        ok: true,
+        value: [cancelTxHash, dstIntentTxHash],
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CANCEL_FAILED',
+          data: {
+            payload: intent,
+            error,
+          },
+        },
       };
     }
   }

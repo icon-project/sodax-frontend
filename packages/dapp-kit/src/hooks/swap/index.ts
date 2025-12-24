@@ -5,3 +5,4 @@ export * from './useSwapAllowance';
 export * from './useSwapApprove';
 export * from './useCancelSwap';
 export * from './useCreateLimitOrder';
+export * from './useCancelLimitOrder';

@@ -5,7 +5,7 @@ import { formatUnits } from 'viem';
 import type { IntentResponse, Intent, IntentRelayChainId } from '@sodax/sdk';
 import { useMemo } from 'react';
 import type { SpokeChainId } from '@sodax/types';
-import { useCancelSwap, useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
+import { useCancelLimitOrder, useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
@@ -77,10 +77,13 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
   // Get provider for canceling (use srcChain since that's where the intent was created)
   const walletProvider = useWalletProvider(srcChainId);
   const spokeProvider = useSpokeProvider(srcChainId, walletProvider);
-  const { mutateAsync: cancelSwap, isPending: isCanceling } = useCancelSwap(spokeProvider);
+  const { mutateAsync: cancelLimitOrder, isPending: isCanceling } = useCancelLimitOrder();
 
   const handleCancel = async (): Promise<void> => {
     try {
+      if (!spokeProvider) {
+        return;
+      }
       const intentData: Intent = {
         intentId: BigInt(intent.intent.intentId),
         creator: intent.intent.creator as `0x${string}`,
@@ -98,7 +101,7 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
         data: intent.intent.data as `0x$string`,
       };
 
-      const result = await cancelSwap({ intent: intentData });
+      const result = await cancelLimitOrder({ intent: intentData, spokeProvider });
 
       if (result.ok) {
         // Invalidate queries to refresh the list
