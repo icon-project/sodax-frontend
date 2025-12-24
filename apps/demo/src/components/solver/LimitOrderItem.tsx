@@ -134,10 +134,14 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
         {outputAmount} {outputToken.symbol} on {outputToken.xChainId}
       </TableCell>
       <TableCell className="text-right">
-        <Button size="sm" onClick={handleCancel} disabled={isCanceling || !intent.open}>
-          <X className="h-4 w-4 mr-1" />
-          {isCanceling ? 'Canceling...' : 'Cancel'}
-        </Button>
+        {intent.open ? (
+          <Button size="sm" onClick={handleCancel} disabled={isCanceling}>
+            <X className="h-4 w-4 mr-1" />
+            {isCanceling ? 'Canceling...' : 'Cancel'}
+          </Button>
+        ) : (
+          <span className="text-muted-foreground font-medium">Solved</span>
+        )}
       </TableCell>
     </TableRow>
   );
