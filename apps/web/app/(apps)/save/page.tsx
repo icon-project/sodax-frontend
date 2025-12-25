@@ -7,6 +7,8 @@ import AnimatedNumber from '@/components/shared/animated-number';
 import CurrencySearchPanel from './_components/currency-search-panel';
 import CurrencyList from './_components/currency-list';
 import { delay } from '@/lib/utils';
+import CarouselWithPagination from './_components/carousel';
+import TotalSaveTokens from './_components/total-save-tokens';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,6 +32,8 @@ export default function SavingsPage() {
       initial={false}
       animate={isOpen ? 'open' : 'closed'}
     >
+      <TotalSaveTokens />
+      <CarouselWithPagination />
       <motion.div className="inline-flex flex-col justify-start items-start gap-4" variants={itemVariants}>
         <div className="self-stretch mix-blend-multiply justify-end">
           <div className="text-yellow-dark text-(length:--app-title) font-bold font-['InterRegular'] leading-9">
