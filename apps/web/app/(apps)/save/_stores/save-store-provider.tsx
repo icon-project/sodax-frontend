@@ -36,21 +36,25 @@ export const useSaveStore = <T,>(selector: (store: SaveStore) => T): T => {
 export const useSaveState = () => {
   const depositValue = useSaveStore(state => state.depositValue);
   const currentStep = useSaveStore(state => state.currentStep);
+  const tokenCount = useSaveStore(state => state.tokenCount);
 
   return {
     depositValue,
     currentStep,
+    tokenCount,
   };
 };
 
 export const useSaveActions = () => {
   const setDepositValue = useSaveStore(state => state.setDepositValue);
   const setCurrentStep = useSaveStore(state => state.setCurrentStep);
+  const setTokenCount = useSaveStore(state => state.setTokenCount);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
 
   return {
     setDepositValue,
     setCurrentStep,
+    setTokenCount,
     resetSaveState,
   };
 };

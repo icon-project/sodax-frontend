@@ -9,11 +9,13 @@ import CurrencyList from './_components/currency-list';
 import { delay } from '@/lib/utils';
 import CarouselWithPagination from './_components/carousel';
 import TotalSaveTokens from './_components/total-save-tokens';
+import { useSaveState } from './_stores/save-store-provider';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
   // const [searchQuery, setSearchQuery] = useState('');
   const [openValue, setOpenValue] = useState('');
+  const { tokenCount } = useSaveState();
 
   // const handleSearchChange = (value: string) => {
   //   setSearchQuery(value);
@@ -32,29 +34,32 @@ export default function SavingsPage() {
       initial={false}
       animate={isOpen ? 'open' : 'closed'}
     >
-      <div className="w-full flex flex-col gap-4">
-        <TotalSaveTokens />
-        <CarouselWithPagination />
-      </div>
-      <motion.div className="inline-flex flex-col justify-start items-start gap-4" variants={itemVariants}>
-        <div className="self-stretch mix-blend-multiply justify-end">
-          <div className="text-yellow-dark text-(length:--app-title) font-bold font-['InterRegular'] leading-9">
-            Deposit and earn{' '}
+      {tokenCount > 0 ? (
+        <motion.div className="w-full flex flex-col gap-4" variants={itemVariants}>
+          <TotalSaveTokens />
+          <CarouselWithPagination />
+        </motion.div>
+      ) : (
+        <motion.div className="inline-flex flex-col justify-start items-start gap-4" variants={itemVariants}>
+          <div className="self-stretch mix-blend-multiply justify-end">
+            <div className="text-yellow-dark text-(length:--app-title) font-bold font-['InterRegular'] leading-9">
+              Deposit and earn{' '}
+            </div>
+            <div className="text-yellow-dark text-(length:--app-title) font-normal font-['Shrikhand'] leading-9">
+              instantly
+            </div>
           </div>
-          <div className="text-yellow-dark text-(length:--app-title) font-normal font-['Shrikhand'] leading-9">
-            instantly
+          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex">
+            Up to
+            <AnimatedNumber
+              to={9.81}
+              decimalPlaces={2}
+              className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-6 ml-1"
+            />
+            % with no lockups.
           </div>
-        </div>
-        <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex">
-          Up to
-          <AnimatedNumber
-            to={9.81}
-            decimalPlaces={2}
-            className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-6 ml-1"
-          />
-          % with no lockups.
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* <motion.div className="w-full" variants={itemVariants}>
         <CurrencySearchPanel

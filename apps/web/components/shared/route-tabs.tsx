@@ -1,8 +1,10 @@
+// apps/web/components/shared/route-tabs.tsx
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import RouteTabItem from '@/components/shared/route-tab-item';
 import { ArrowRightIcon, ArrowUpIcon } from '@/components/icons';
+import { useSaveStore } from '@/app/(apps)/save/_stores/save-store-provider';
 
 import type { TabIconType } from './tab-icon';
 
@@ -48,6 +50,7 @@ export const tabConfigs: TabConfig[] = [
 export function RouteTabs(): React.JSX.Element {
   const pathname = usePathname();
   const current = pathname.split('/').pop() || 'migrate';
+  const tokenCount = useSaveStore(state => state.tokenCount);
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
@@ -64,7 +67,7 @@ export function RouteTabs(): React.JSX.Element {
     mobileTabRefs.current[value] = el;
   };
 
-  const updateArrows = () => {
+  const updateArrows = useCallback(() => {
     const container = tabsContainerRef.current;
     const activeDesktop = desktopTabRefs.current[current];
     if (container && activeDesktop) {
@@ -83,17 +86,17 @@ export function RouteTabs(): React.JSX.Element {
       const tabWidth = tabRect.width;
       setMobileArrowPosition(relativeLeft + tabWidth / 2 - 40);
     }
-  };
+  }, [current]);
 
   useEffect(() => {
     updateArrows();
-  }, [current]);
+  }, [updateArrows]);
 
   useEffect(() => {
     const onResize = () => updateArrows();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [current]);
+  }, [updateArrows]);
 
   return (
     <>
@@ -116,6 +119,7 @@ export function RouteTabs(): React.JSX.Element {
                 isMobile={false}
                 setRef={setDesktopTabRef(tab.value)}
                 enabled={tab.enabled}
+                badgeCount={tab.value === 'save' ? tokenCount : undefined}
               />
             );
           })}
@@ -144,6 +148,7 @@ export function RouteTabs(): React.JSX.Element {
                     isMobile
                     setRef={setMobileTabRef(tab.value)}
                     enabled={tab.enabled}
+                    badgeCount={tab.value === 'save' ? tokenCount : undefined}
                   />
                 );
               })}

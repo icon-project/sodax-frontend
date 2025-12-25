@@ -5,11 +5,13 @@ import { persist } from 'zustand/middleware';
 export type SaveState = {
   depositValue: number;
   currentStep: number;
+  tokenCount: number;
 };
 
 export type SaveActions = {
   setDepositValue: (value: number) => void;
   setCurrentStep: (step: number) => void;
+  setTokenCount: (count: number) => void;
   resetSaveState: () => void;
 };
 
@@ -18,6 +20,7 @@ export type SaveStore = SaveState & SaveActions;
 export const defaultSaveState: SaveState = {
   depositValue: 0,
   currentStep: 1,
+  tokenCount: 0,
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -27,6 +30,7 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         ...initState,
         setDepositValue: (value: number) => set({ depositValue: value }),
         setCurrentStep: (step: number) => set({ currentStep: step }),
+        setTokenCount: (count: number) => set({ tokenCount: count }),
         resetSaveState: () => set(defaultSaveState),
       }),
       {

@@ -20,6 +20,7 @@ import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useLiquidity } from '@/hooks/useAPY';
 import { chainIdToChainName } from '@/providers/constants';
+import { useSaveActions } from '../_stores/save-store-provider';
 
 interface NetworkBalance {
   networkId: string;
@@ -39,6 +40,7 @@ export default function CarouselWithPagination(): React.JSX.Element {
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
+  const { setTokenCount } = useSaveActions();
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const allTokens = useMemo(() => flattenTokens(), []);
@@ -90,6 +92,11 @@ export default function CarouselWithPagination(): React.JSX.Element {
 
     return items;
   }, [groupedTokens, enrichedTokens]);
+
+  // Update token count in store when carousel items change
+  React.useEffect(() => {
+    setTokenCount(carouselItems.length);
+  }, [carouselItems.length, setTokenCount]);
 
   React.useEffect(() => {
     if (!api) {
