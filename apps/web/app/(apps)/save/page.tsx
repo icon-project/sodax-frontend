@@ -32,8 +32,10 @@ export default function SavingsPage() {
       initial={false}
       animate={isOpen ? 'open' : 'closed'}
     >
-      <TotalSaveTokens />
-      <CarouselWithPagination />
+      <div className="w-full flex flex-col gap-4">
+        <TotalSaveTokens />
+        <CarouselWithPagination />
+      </div>
       <motion.div className="inline-flex flex-col justify-start items-start gap-4" variants={itemVariants}>
         <div className="self-stretch mix-blend-multiply justify-end">
           <div className="text-yellow-dark text-(length:--app-title) font-bold font-['InterRegular'] leading-9">
@@ -54,14 +56,14 @@ export default function SavingsPage() {
         </div>
       </motion.div>
 
-      <motion.div className="w-full" variants={itemVariants}>
+      {/* <motion.div className="w-full" variants={itemVariants}>
         <CurrencySearchPanel
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
           currencyListOpened={openValue !== ''}
           onSearchFocus={() => setOpenValue('')}
         />
-      </motion.div>
+      </motion.div> */}
 
       <motion.div className="w-full flex-grow-1" variants={itemVariants}>
         <CurrencyList searchQuery={searchQuery} openValue={openValue} setOpenValue={setOpenValue} />

@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/save/_components/carousel.tsx
 'use client';
 
 import * as React from 'react';
@@ -189,9 +188,9 @@ function CarouselItemData({
   }, [item.totalBalance, item.token.symbol, tokenPrice]);
 
   return (
-    <CarouselItem className="box-shadow-none mix-blend-multiply basis-1/1.5">
-      <Card className="bg-almost-white w-80 h-42 px-6 py-8">
-        <CardContent className="flex flex-col p-0">
+    <CarouselItem className="basis-1/1.5">
+      <Card className="bg-[#eee7e7] w-80 h-42 px-6 py-8 border-none !shadow-none">
+        <CardContent className="flex flex-col p-0 border-none">
           <div className="flex justify-end w-full">
             <Settings2 className="w-4 h-4 text-clay-light cursor-pointer" />
           </div>
@@ -208,7 +207,7 @@ function CarouselItemData({
                   {fiatValue}
                 </ItemDescription>
                 <ItemDescription className="flex justify-between flex-row w-full">
-                  <div className="flex gap-[2px]">
+                  <div className="flex gap-[2px] items-center -ml-[2px]">
                     {item.networksWithFunds.map((network, idx) => (
                       <NetworkBalanceTooltip
                         key={`${network.networkId}-${idx}`}
@@ -216,10 +215,15 @@ function CarouselItemData({
                         tokenPrice={tokenPrice}
                       />
                     ))}
+                    {item.networksWithFunds.length === 1 && (
+                      <span className="text-clay text-(length:--body-small) font-medium font-['InterRegular']">
+                        On {chainIdToChainName(item.networksWithFunds[0]?.networkId as SpokeChainId)}
+                      </span>
+                    )}
                   </div>
                   <div className="flex">
-                    <Badge className="h-4 w-[70px] mix-blend-multiply text-white bg-gradient-to-br from-cherry-bright to-cherry-brighter">
-                      <span className="text-[10px] font-['InterBold']">{apy} APY</span>
+                    <Badge className="h-4 min-w-[70px] mix-blend-multiply text-white bg-gradient-to-br from-cherry-bright to-cherry-brighter px-2">
+                      <span className="text-[10px] font-['InterBold'] mt-[1px]">{apy} APY</span>
                     </Badge>
                   </div>
                 </ItemDescription>
@@ -249,7 +253,7 @@ function NetworkBalanceTooltip({
     <Tooltip>
       <TooltipTrigger asChild>
         <div className="cursor-pointer">
-          <NetworkIcon id={network.networkId} className="scale-65" />
+          <NetworkIcon id={network.networkId} className="w-4 h-4 scale-65" />
         </div>
       </TooltipTrigger>
       <TooltipContent
