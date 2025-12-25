@@ -33,9 +33,14 @@ export default function DepositDialog({
   const { resetSaveState } = useSaveActions();
   const { apy } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
   const [isSupplyPending, setIsSupplyPending] = useState<boolean>(false);
+  const [isShaking, setIsShaking] = useState<boolean>(false);
 
   const handleClose = (): void => {
-    if (isSupplyPending) return;
+    if (isSupplyPending) {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+      return;
+    }
     onOpenChange(false);
     resetSaveState();
   };
@@ -45,6 +50,8 @@ export default function DepositDialog({
       <DialogContent
         className="w-full md:!max-w-[480px] p-8 md:p-12 md:pb-8 gap-0 sm:h-86 bg-vibrant-white"
         hideCloseButton
+        enableMotion={true}
+        shake={isShaking}
       >
         <DialogTitle className="flex w-full justify-end h-4 relative p-0">
           <XIcon
