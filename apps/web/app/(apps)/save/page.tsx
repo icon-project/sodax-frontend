@@ -4,7 +4,7 @@ import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import AnimatedNumber from '@/components/shared/animated-number';
-import CurrencySearchPanel from './_components/currency-search-panel';
+// import CurrencySearchPanel from './_components/currency-search-panel';
 import CurrencyList from './_components/currency-list';
 import { delay } from '@/lib/utils';
 import CarouselWithPagination from './_components/carousel';
@@ -12,12 +12,12 @@ import TotalSaveTokens from './_components/total-save-tokens';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  // const [searchQuery, setSearchQuery] = useState('');
   const [openValue, setOpenValue] = useState('');
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-  };
+  // const handleSearchChange = (value: string) => {
+  //   setSearchQuery(value);
+  // };
 
   useEffect(() => {
     delay(500).then(() => {
@@ -66,7 +66,7 @@ export default function SavingsPage() {
       </motion.div> */}
 
       <motion.div className="w-full flex-grow-1" variants={itemVariants}>
-        <CurrencyList searchQuery={searchQuery} openValue={openValue} setOpenValue={setOpenValue} />
+        <CurrencyList searchQuery={''} openValue={openValue} setOpenValue={setOpenValue} />
       </motion.div>
     </motion.div>
   );
