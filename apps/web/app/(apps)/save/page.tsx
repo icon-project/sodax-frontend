@@ -15,8 +15,8 @@ export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
   // const [searchQuery, setSearchQuery] = useState('');
   const [openValue, setOpenValue] = useState('');
-  const { tokenCount } = useSaveState();
-
+  const { showCarousel } = useSaveState();
+  console.log('showCarousel', showCarousel);
   // const handleSearchChange = (value: string) => {
   //   setSearchQuery(value);
   // };
@@ -34,7 +34,7 @@ export default function SavingsPage() {
       initial={false}
       animate={isOpen ? 'open' : 'closed'}
     >
-      {tokenCount > 0 ? (
+      {showCarousel ? (
         <motion.div className="w-full flex flex-col gap-4" variants={itemVariants}>
           <TotalSaveTokens />
           <CarouselWithPagination />
