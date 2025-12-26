@@ -144,7 +144,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
             )}
             {!isChainConnected && type === CurrencyInputPanelType.INPUT && (
               <div className="mix-blend-multiply text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex gap-1">
-                <span className="hidden sm:inline">Wallet not connected</span>
+                <span className=" sm:inline">Wallet not connected</span>
               </div>
             )}
 

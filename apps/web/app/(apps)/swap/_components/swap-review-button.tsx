@@ -16,6 +16,7 @@ import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { Loader2 } from 'lucide-react';
 import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
+import { getChainName } from '@/constants/chains';
 
 export default function SwapReviewButton({
   quoteQuery,
@@ -96,7 +97,7 @@ export default function SwapReviewButton({
             });
           }}
         >
-          {`Connect ${chainIdToChainName(inputToken.xChainId)}`}
+          {`Connect ${getChainName(inputToken.xChainId)}`}
         </Button>
       ) : isQuoteUnavailable ? (
         <Button variant="cherry" className="w-full md:w-[232px] text-(length:--body-comfortable) text-white" disabled>
@@ -148,7 +149,7 @@ export default function SwapReviewButton({
           className="w-full md:w-[232px] text-(length:--body-comfortable) text-white"
           onClick={handleSwitchChain}
         >
-          Switch to {chainIdToChainName(inputToken.xChainId)}
+          Switch to {getChainName(inputToken.xChainId)}
         </Button>
       ) : (
         <Button

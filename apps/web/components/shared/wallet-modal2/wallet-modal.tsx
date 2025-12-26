@@ -12,8 +12,7 @@ import { useXConnectors } from '@sodax/wallet-sdk-react';
 import { WalletItem } from './wallet-item';
 import { AllSupportItem } from './all-support-item';
 import { isRegisteredUser } from '@/apis/users';
-import { chainIdToChainName } from '@/providers/constants';
-import { getChainIcon } from '@/constants/chains';
+import { getChainIcon, getChainName } from '@/constants/chains';
 
 type WalletModalProps = {
   modalId?: MODAL_ID;
@@ -93,7 +92,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
 
   const selectedChainIcon = modalData?.xChainId ? getChainIcon(modalData.xChainId) : undefined;
 
-  const title = modalData?.xChainId && `Connect ${chainIdToChainName(modalData.xChainId)}`;
+  const title = modalData?.xChainId && `Connect ${getChainName(modalData.xChainId)}`;
 
   const primaryChainGroups = useMemo(
     () => chainGroups.filter(chainGroup => chainGroup.chainType === (modalData?.primaryChainType || 'EVM')),
