@@ -1,12 +1,14 @@
-import type { SpokeChainId, XToken } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { SpokeProvider } from '@sodax/sdk';
+import type { MoneyMarketBorrowParams, SpokeProvider } from '@sodax/sdk';
 interface BorrowResponse {
   ok: true;
   value: [string, string];
 }
+
+type BorrowParams = string | MoneyMarketBorrowParams;
 
 /**
  * Hook for borrowing tokens from the Sodax money market.
@@ -36,27 +38,34 @@ interface BorrowResponse {
 export function useBorrow(
   spokeToken: XToken,
   spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<BorrowResponse, Error, string> {
+): UseMutationResult<BorrowResponse, Error, BorrowParams> {
   const { sodax } = useSodaxContext();
 
-  return useMutation<BorrowResponse, Error, string>({
-    mutationFn: async (amount: string, toChainId?: SpokeChainId, toAddress?: string) => {
+  return useMutation<BorrowResponse, Error, BorrowParams>({
+    // input amount as string or MoneyMarketBorrowParams
+    mutationFn: async (param: BorrowParams) => {
       if (!spokeProvider) {
         throw new Error('spokeProvider is not found');
       }
 
       const response = await sodax.moneyMarket.borrow(
-        {
+        typeof param === 'string' ? {
           token: spokeToken.address,
-          amount: parseUnits(amount, 18),
+          amount: parseUnits(param, 18),
           action: 'borrow',
-          toChainId: toChainId,
-          toAddress: toAddress,
-        },
+        } : param,
         spokeProvider,
       );
 
       if (!response.ok) {
+        console.error(
+          'Failed to borrow tokens:',
+          JSON.stringify(
+            response.error.data.error instanceof Error
+              ? response.error.data.error.message
+              : (response.error.data.error ?? 'Unknown error'),
+          ),
+        );
         throw new Error('Failed to borrow tokens');
       }
 

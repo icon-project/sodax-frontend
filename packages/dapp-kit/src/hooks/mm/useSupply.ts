@@ -1,5 +1,5 @@
-import type { SpokeProvider } from '@sodax/sdk';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import type { MoneyMarketSupplyParams, SpokeProvider } from '@sodax/sdk';
+import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSodaxContext } from '../shared/useSodaxContext';
@@ -9,6 +9,7 @@ interface SupplyResponse {
   value: [string, string];
 }
 
+type SupplyParams = string | MoneyMarketSupplyParams;
 /**
  * Hook for supplying tokens to the Sodax money market.
  *
@@ -36,23 +37,21 @@ interface SupplyResponse {
 export function useSupply(
   spokeToken: XToken,
   spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<SupplyResponse, Error, string> {
+): UseMutationResult<SupplyResponse, Error, SupplyParams> {
   const { sodax } = useSodaxContext();
 
-  return useMutation<SupplyResponse, Error, string>({
-    mutationFn: async (amount: string, toChainId?: SpokeChainId, toAddress?: string) => {
+  return useMutation<SupplyResponse, Error, SupplyParams>({
+    mutationFn: async (param: SupplyParams) => {
       if (!spokeProvider) {
         throw new Error('spokeProvider is not found');
       }
 
       const response = await sodax.moneyMarket.supply(
-        {
+        typeof param === 'string' ? {
           token: spokeToken.address,
-          amount: parseUnits(amount, spokeToken.decimals),
+          amount: parseUnits(param, spokeToken.decimals),
           action: 'supply',
-          toChainId: toChainId,
-          toAddress: toAddress,
-        },
+        } : param,
         spokeProvider,
       );
 

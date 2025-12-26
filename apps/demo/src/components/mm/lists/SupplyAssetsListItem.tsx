@@ -74,11 +74,11 @@ export function SupplyAssetsListItem({
           Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)),
           Number.parseInt(metrics.formattedReserve.borrowCap) -
             Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
-        );
+        ).toFixed(6);
 
   return (
     <TableRow>
-      <TableCell>{token.symbol}</TableCell>
+      <TableCell className="font-bold text-cherry-dark">{token.symbol}</TableCell>
       <TableCell>{walletBalance}</TableCell>
       <TableCell>{formattedBalance}</TableCell>
       <TableCell>
@@ -89,24 +89,16 @@ export function SupplyAssetsListItem({
       </TableCell>
       <TableCell>{metrics.supplyAPY || '-'}</TableCell>
       <TableCell>{metrics.supplyAPR || '-'}</TableCell>
-      <TableCell>
-        <div className="flex flex-col items-start">
-          {metrics.totalBorrow || '-'}{' '}
-          <span className="text-xs text-muted-foreground">{metrics.totalBorrowsUSD || '-'}</span>
-        </div>
-      </TableCell>
-      <TableCell>{metrics.borrowAPY || '-'}</TableCell>
-      <TableCell>{metrics.borrowAPR || '-'}</TableCell>
       <TableCell>{formattedDebt}</TableCell>
       <TableCell>{availableToBorrow}</TableCell>
       <TableCell>
         <SupplyButton token={token} />
       </TableCell>
       <TableCell>
-        <WithdrawButton token={token} />
+        <BorrowButton token={token} />
       </TableCell>
       <TableCell>
-        <BorrowButton token={token} />
+        <WithdrawButton token={token} />
       </TableCell>
       <TableCell>
         <RepayButton token={token} />
