@@ -19,6 +19,7 @@ import { delay } from '@/lib/utils';
 
 export type ChainItemProps = {
   chainType: ChainType;
+  selectedChainIcon?: string;
   setActiveXChainType: (chainType: ChainType) => void;
   hoveredChainType?: ChainType | undefined;
   setHoveredChainType?: (chainType: ChainType | undefined) => void;
@@ -27,6 +28,7 @@ export type ChainItemProps = {
 
 export const ChainItem: React.FC<ChainItemProps> = ({
   chainType,
+  selectedChainIcon,
   setActiveXChainType,
   hoveredChainType,
   setHoveredChainType,
@@ -91,6 +93,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
         isPending={isPending}
         setHoveredChainType={setHoveredChainType}
         hoveredChainType={hoveredChainType}
+        selectedChainIcon={selectedChainIcon}
       />
     );
   }
