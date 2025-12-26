@@ -15,6 +15,7 @@ interface RouteTabItemProps {
   setRef?: (el: HTMLAnchorElement | null) => void;
   className?: string;
   enabled: boolean;
+  badgeCount?: number;
 }
 
 const RouteTabItem: React.FC<RouteTabItemProps> = ({
@@ -27,6 +28,7 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
   setRef,
   className = '',
   enabled,
+  badgeCount,
 }) => {
   const getTextClassName = (): string => {
     if (isMobile) {
@@ -65,8 +67,24 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
             (SOON)
           </span>
         )}
+        {isMobile && enabled && badgeCount !== undefined && badgeCount > 0 && (
+          <Badge
+            variant="vibrant"
+            className="text-clay font-bold font-['InterRegular'] text-[9px] w-[21px] h-[16px] ml-2"
+          >
+            {badgeCount}
+          </Badge>
+        )}
       </div>
       {!isMobile && !enabled && <Badge variant="desktop">SOON</Badge>}
+      {!isMobile && enabled && badgeCount !== undefined && badgeCount > 0 && (
+        <Badge
+          variant="vibrant"
+          className="text-clay font-bold font-['InterRegular'] text-[9px] w-[21px] h-[16px] ml-3"
+        >
+          {badgeCount}
+        </Badge>
+      )}
     </div>
   );
 

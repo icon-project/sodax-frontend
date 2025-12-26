@@ -8,9 +8,10 @@ import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, supportedSpokeChains } from '@sodax/sdk';
+import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId } from '@sodax/types';
+import { INJECTIVE_MAINNET_CHAIN_ID } from '@sodax/types';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
 import { availableChains } from '@/constants/chains';
@@ -200,3 +201,54 @@ export const getSwapErrorMessage = (errorCode: string): { title: string; message
     }
   );
 };
+
+export const STABLECOINS = ['bnUSD', 'USDC', 'USDT'];
+
+export function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string }): number {
+  const aStable = STABLECOINS.includes(a.symbol);
+  const bStable = STABLECOINS.includes(b.symbol);
+  if (aStable && !bStable) return -1;
+  if (!aStable && bStable) return 1;
+  return 0;
+}
+
+export function flattenTokens(): XToken[] {
+  return Object.entries(moneyMarketSupportedTokens)
+    .flatMap(([chainId, items]) =>
+      items.map((t: Token) =>
+        chainId !== INJECTIVE_MAINNET_CHAIN_ID
+          ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
+          : undefined,
+      ),
+    )
+    .filter(Boolean) as XToken[];
+}
+
+export function getUniqueByChain(tokens: XToken[]): XToken[] {
+  const map = new Map<SpokeChainId, XToken>();
+  tokens.forEach(t => {
+    if (!map.has(t.xChainId)) map.set(t.xChainId, t);
+  });
+  return [...map.values()];
+}
+
+/**
+ * Formats a large number into a compact, human-readable form.
+ * Examples:
+ *  - 2450000 → "2.45M"
+ *  - 1180 → "1.18K"
+ *  - 9520000000 → "9.52B"
+ */
+export function formatCompactNumber(value: string | number | bigint): string {
+  const num = typeof value === 'bigint' ? Number(value) : typeof value === 'string' ? Number.parseFloat(value) : value;
+
+  if (!Number.isFinite(num)) return '-';
+
+  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(4).replace(/\.?0+$/, '')}B`;
+
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(4).replace(/\.?0+$/, '')}M`;
+
+  if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
+
+  return num.toFixed(4);
+}
