@@ -6,12 +6,14 @@ export type SaveState = {
   depositValue: number;
   currentStep: number;
   tokenCount: number;
+  isSwitchingChain: boolean;
 };
 
 export type SaveActions = {
   setDepositValue: (value: number) => void;
   setCurrentStep: (step: number) => void;
   setTokenCount: (count: number) => void;
+  setIsSwitchingChain: (isSwitching: boolean) => void;
   resetSaveState: () => void;
 };
 
@@ -21,6 +23,7 @@ export const defaultSaveState: SaveState = {
   depositValue: 0,
   currentStep: 1,
   tokenCount: 0,
+  isSwitchingChain: false,
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -31,6 +34,7 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         setDepositValue: (value: number) => set({ depositValue: value }),
         setCurrentStep: (step: number) => set({ currentStep: step }),
         setTokenCount: (count: number) => set({ tokenCount: count }),
+        setIsSwitchingChain: (isSwitching: boolean) => set({ isSwitchingChain: isSwitching }),
         resetSaveState: () => set(defaultSaveState),
       }),
       {

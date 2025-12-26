@@ -22,7 +22,7 @@ export default function DepositDialogFooter({
   onClose,
 }: DepositDialogFooterProps): React.JSX.Element {
   const { currentStep, depositValue } = useSaveState();
-  const { setCurrentStep } = useSaveActions();
+  const { setCurrentStep, setIsSwitchingChain } = useSaveActions();
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const { approve, isLoading: isApproving } = useMMApprove(selectedToken as XToken, spokeProvider);
@@ -36,7 +36,17 @@ export default function DepositDialogFooter({
     spokeProvider,
   );
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain((selectedToken?.xChainId || 'sonic') as ChainId);
+  const { isWrongChain, handleSwitchChain: originalHandleSwitchChain } = useEvmSwitchChain(
+    (selectedToken?.xChainId || 'sonic') as ChainId,
+  );
+
+  const handleSwitchChain = (): void => {
+    setIsSwitchingChain(true);
+    originalHandleSwitchChain();
+    setTimeout(() => {
+      setIsSwitchingChain(false);
+    }, 1000);
+  };
 
   useEffect(() => {
     if (hasAllowed && !isWrongChain) {

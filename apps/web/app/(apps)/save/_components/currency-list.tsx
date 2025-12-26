@@ -1,10 +1,11 @@
 import { Accordion } from '@/components/ui/accordion';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { getUniqueTokenSymbols, sortStablecoinsFirst, flattenTokens } from '@/lib/utils';
 import TokenAccordionItem from './token-accordion-item';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import type { XToken } from '@sodax/types';
+import { useSaveState } from '../_stores/save-store-provider';
 
 function hasFunds(group: { symbol: string; tokens: XToken[] }, balanceMap: Map<string, string>): boolean {
   return group.tokens.some(token => {
@@ -39,10 +40,21 @@ export default function CurrencyList({
   );
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
+  const { isSwitchingChain } = useSaveState();
 
   const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
 
-  const enrichedTokens = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
+  const enrichedTokensResult = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
+  const cachedEnrichedTokensRef = useRef<typeof enrichedTokensResult>(enrichedTokensResult);
+
+  // Cache the result when not switching, use cached result when switching
+  const enrichedTokens = useMemo(() => {
+    if (isSwitchingChain) {
+      return cachedEnrichedTokensRef.current;
+    }
+    cachedEnrichedTokensRef.current = enrichedTokensResult;
+    return enrichedTokensResult;
+  }, [enrichedTokensResult, isSwitchingChain]);
 
   const balanceMap = useMemo(() => {
     const map = new Map<string, string>();

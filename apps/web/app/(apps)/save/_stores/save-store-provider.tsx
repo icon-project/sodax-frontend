@@ -37,11 +37,13 @@ export const useSaveState = () => {
   const depositValue = useSaveStore(state => state.depositValue);
   const currentStep = useSaveStore(state => state.currentStep);
   const tokenCount = useSaveStore(state => state.tokenCount);
+  const isSwitchingChain = useSaveStore(state => state.isSwitchingChain);
 
   return {
     depositValue,
     currentStep,
     tokenCount,
+    isSwitchingChain,
   };
 };
 
@@ -49,12 +51,14 @@ export const useSaveActions = () => {
   const setDepositValue = useSaveStore(state => state.setDepositValue);
   const setCurrentStep = useSaveStore(state => state.setCurrentStep);
   const setTokenCount = useSaveStore(state => state.setTokenCount);
+  const setIsSwitchingChain = useSaveStore(state => state.setIsSwitchingChain);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
 
   return {
     setDepositValue,
     setCurrentStep,
     setTokenCount,
+    setIsSwitchingChain,
     resetSaveState,
   };
 };
