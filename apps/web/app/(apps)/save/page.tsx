@@ -16,10 +16,17 @@ export default function SavingsPage() {
   // const [searchQuery, setSearchQuery] = useState('');
   const [openValue, setOpenValue] = useState('');
   const { showCarousel } = useSaveState();
+  const [isShowCarousel, setIsShowCarousel] = useState(false);
   console.log('showCarousel', showCarousel);
   // const handleSearchChange = (value: string) => {
   //   setSearchQuery(value);
   // };
+
+  useEffect(() => {
+    if (showCarousel) {
+      setIsShowCarousel(true);
+    }
+  }, [showCarousel]);
 
   useEffect(() => {
     delay(500).then(() => {
@@ -34,7 +41,7 @@ export default function SavingsPage() {
       initial={false}
       animate={isOpen ? 'open' : 'closed'}
     >
-      {showCarousel ? (
+      {isShowCarousel ? (
         <motion.div className="w-full flex flex-col gap-4" variants={itemVariants}>
           <TotalSaveTokens />
           <CarouselWithPagination />
