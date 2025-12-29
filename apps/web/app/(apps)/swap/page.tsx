@@ -169,6 +169,12 @@ export default function SwapPage() {
     }, 500);
   }, []);
 
+  console.log('sourceAddress', sourceAddress);
+  console.log('isSourceChainConnected', isSourceChainConnected);
+
+  console.log('destinationAddress', destinationAddress);
+  console.log('isDestinationChainConnected', isDestinationChainConnected);
+
   return (
     <motion.div className="w-full">
       <motion.div
