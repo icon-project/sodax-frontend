@@ -12,11 +12,11 @@ import { useReservesUsdFormat } from '@sodax/dapp-kit';
 const TABLE_HEADERS = [
   'Asset',
   'Wallet Balance',
-  'Balance',
+  'Supplied',
   'Total Supply',
   'Supply APY',
   'Supply APR',
-  'Debt',
+  'Borrowed',
   'Available',
   'Action',
   'Action',

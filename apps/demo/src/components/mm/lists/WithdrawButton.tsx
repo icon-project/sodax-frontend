@@ -7,6 +7,7 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@so
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
+import { parseUnits } from 'viem';
 
 export function WithdrawButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
@@ -21,7 +22,18 @@ export function WithdrawButton({ token }: { token: XToken }) {
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
   const handleWithdraw = async () => {
-    await withdraw(amount);
+    if (!amount) return;
+    if (!spokeProvider) return;
+
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
+    await withdraw({
+      token: token.address,
+      amount: parseUnits(amount, token.decimals),
+      action: 'withdraw',
+      toChainId: token.xChainId,
+      toAddress: walletAddress,
+    });
     if (!error) {
       setOpen(false);
     }

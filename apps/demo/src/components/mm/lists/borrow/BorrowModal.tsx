@@ -65,6 +65,8 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
   };
 
   const canBorrow = !!amount && !!borrow.mutateAsync && !borrow.isPending && !!fromChainSpokeProvider;
+  console.log('borrow source chain:', selectedChainId);
+  console.log('borrow destination chain:', token.xChainId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

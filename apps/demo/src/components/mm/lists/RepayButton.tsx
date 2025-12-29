@@ -7,6 +7,7 @@ import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 
 export function RepayButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
@@ -20,12 +21,19 @@ export function RepayButton({ token }: { token: XToken }) {
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleRepay = async () => {
-    try {
-      await repay(amount);
-      setOpen(false);
-    } catch (err) {
-      console.error('Error in handleRepay:', err);
-    }
+    if (!amount) return;
+    if (!spokeProvider) return;
+
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
+    await repay({
+      token: token.address,
+      action: 'repay',
+      toChainId: token.xChainId,
+      amount: parseUnits(amount, token.decimals),
+      toAddress: walletAddress,
+    });
+    setOpen(false);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
