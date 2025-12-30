@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, Loader2 } from 'lucide-react';
 
-import { useBorrow, useSpokeProvider } from '@sodax/dapp-kit';
+import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { ChainId, XToken } from '@sodax/types';
 
@@ -37,19 +37,39 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
   const borrowExecutionChain: ChainId = token.xChainId;
 
   // All hooks must run every render (even if data isn’t ready)
+  // Wallet + spoke for the EXECUTION CHAIN (user signs tx here)
   const fromChainWalletProvider = useWalletProvider(selectedChainId);
-  const toChainWalletProvider = useWalletProvider(token.xChainId);
   const fromChainSpokeProvider = useSpokeProvider(selectedChainId, fromChainWalletProvider);
-  const toChainSpokeProvider = useSpokeProvider(token.xChainId, toChainWalletProvider);
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
+  // Wallet + spoke tied to the token chain
+  // This is important for allowance checks & approvals
+  // For Sonic-specific MM actions, approvals are evaluated here
+  const destinationWalletProvider = useWalletProvider(token.xChainId);
+  const destinationSpokeProvider = useSpokeProvider(token.xChainId, destinationWalletProvider);
+
+  // Checks whether the MM contract already has permission
+  // to perform a BORROW action for this token & amount
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(
+    token,
+    amount,
+    'borrow',
+    destinationSpokeProvider,
+  );
+
+  // Triggers the approval transaction
+  const { approve, isLoading: isApproving } = useMMApprove(token, destinationSpokeProvider);
+
+  // The borrow transaction itself is executed on the EXECUTION CHAIN
+  // (selectedChainId), not the token chain
   const borrow = useBorrow(token, fromChainSpokeProvider);
+
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
   // console.log('token', token);
 
   const handleBorrow = async () => {
-    if (!borrow.mutateAsync || !amount || !toChainSpokeProvider) return;
-    const walletAddress = await toChainSpokeProvider.walletProvider.getWalletAddress();
+    if (!borrow.mutateAsync || !amount || !destinationSpokeProvider) return;
+    const walletAddress = await destinationSpokeProvider.walletProvider.getWalletAddress();
     const params = {
       token: token.address,
       amount: parseUnits(amount, token.decimals),
@@ -57,19 +77,19 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
       toChainId: token.xChainId,
       toAddress: walletAddress,
     } satisfies MoneyMarketBorrowParams;
-    // console.log('borrow params', params);
-    // console.log('BORROW ATTEMPT');
-    // console.log('Execution chain (wallet):', selectedChainId);
-    // console.log('Destination chain (toChainId):', token.xChainId);
-    // console.log('Selected chain (UI only):', destinationChainId);
-    // console.log('Token:', {
-    //   symbol: token.symbol,
-    //   address: token.address,
-    //   tokenChain: token.xChainId,
-    // });
-    // console.log('Amount (raw):', amount);
-    // console.log('Amount (parsed):', parseUnits(amount, token.decimals).toString());
-    // console.log('To address:', walletAddress);
+    console.log('borrow params', params);
+    console.log('BORROW ATTEMPT');
+    console.log('Execution chain (wallet):', selectedChainId);
+    console.log('Destination chain (toChainId):', token.xChainId);
+    console.log('Selected chain (UI only):', destinationChainId);
+    console.log('Token:', {
+      symbol: token.symbol,
+      address: token.address,
+      tokenChain: token.xChainId,
+    });
+    console.log('Amount (raw):', amount);
+    console.log('Amount (parsed):', parseUnits(amount, token.decimals).toString());
+    console.log('To address:', walletAddress);
 
     await borrow.mutateAsync(params);
     setAmount('');
@@ -79,6 +99,10 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
   const canBorrow = !!amount && !!borrow.mutateAsync && !borrow.isPending && !!fromChainSpokeProvider;
   // console.log('borrow source chain:', selectedChainId);
   // console.log('borrow destination chain:', token.xChainId);
+
+  const handleApprove = async () => {
+    await approve({ amount, action: 'borrow' });
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -94,7 +118,7 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
         ) : (
           <div className="space-y-2">
             {/* Destination chain */}
-            <Label className="text-negative">Receive on chain (where assets appear)</Label>
+            <Label className="text-clay">Receive on chain</Label>
             <ChainSelector
               selectedChainId={destinationChainId}
               selectChainId={setDestinationChainId}
@@ -112,7 +136,15 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
                 onChange={e => setAmount(e.target.value)}
               />
             </div>
-
+            <Button
+              className="w-full"
+              type="button"
+              variant="cherrySoda"
+              onClick={handleApprove}
+              disabled={isAllowanceLoading || hasAllowed || isApproving}
+            >
+              {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+            </Button>
             {/* Wrong network */}
             {isWrongChain && (
               <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900">

@@ -15,6 +15,7 @@ const buttonVariants = cva(
         ghost: 'hover:bg-accent hover:text-accent-foreground cursor-pointer',
         link: 'text-primary underline-offset-4 hover:underline cursor-pointer',
         cherry: 'bg-cherry-dark text-white hover:bg-cherry-soda hover:scale-105 cursor-pointer',
+        cherrySoda: 'bg-cherry-soda text-white hover:bg-cherry-dark hover:scale-105 cursor-pointer',
         cherryOutline:
           'bg-cherry-dark border-2 border-cherry-bright text-cherry-brighter hover:bg-cherry-brighter hover:text-cherry-dark hover:scale-105 cursor-pointer',
       },
