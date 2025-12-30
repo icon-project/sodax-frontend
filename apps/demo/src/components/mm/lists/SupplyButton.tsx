@@ -33,6 +33,13 @@ export function SupplyButton({ token }: { token: XToken }) {
       toAddress: walletAddress,
     });
     setOpen(false);
+    console.log('[SUPPLY]');
+    console.log('token:', token.symbol);
+    console.log('execution chain (wallet):', token.xChainId);
+    console.log('toChainId:', token.xChainId);
+    console.log('toAddress:', walletAddress);
+    console.log('amount (raw):', amount);
+    console.log('amount (parsed):', parseUnits(amount, token.decimals));
   };
 
   const handleOpenChange = (newOpen: boolean) => {

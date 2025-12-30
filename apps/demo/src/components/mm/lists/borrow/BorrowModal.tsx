@@ -32,7 +32,7 @@ interface BorrowModalProps {
 export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalProps) {
   const { selectedChainId } = useAppStore();
   const [amount, setAmount] = useState('');
-  const [selectedChain, setSelectedChain] = useState<ChainId>(token.xChainId);
+  const [destinationChainId, setDestinationChainId] = useState<ChainId>(token.xChainId);
 
   const borrowExecutionChain: ChainId = token.xChainId;
 
@@ -45,7 +45,7 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
 
   const borrow = useBorrow(token, fromChainSpokeProvider);
 
-  console.log('token', token);
+  // console.log('token', token);
 
   const handleBorrow = async () => {
     if (!borrow.mutateAsync || !amount || !toChainSpokeProvider) return;
@@ -57,7 +57,19 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
       toChainId: token.xChainId,
       toAddress: walletAddress,
     } satisfies MoneyMarketBorrowParams;
-    console.log('params', params);
+    // console.log('borrow params', params);
+    // console.log('BORROW ATTEMPT');
+    // console.log('Execution chain (wallet):', selectedChainId);
+    // console.log('Destination chain (toChainId):', token.xChainId);
+    // console.log('Selected chain (UI only):', destinationChainId);
+    // console.log('Token:', {
+    //   symbol: token.symbol,
+    //   address: token.address,
+    //   tokenChain: token.xChainId,
+    // });
+    // console.log('Amount (raw):', amount);
+    // console.log('Amount (parsed):', parseUnits(amount, token.decimals).toString());
+    // console.log('To address:', walletAddress);
 
     await borrow.mutateAsync(params);
     setAmount('');
@@ -65,8 +77,8 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
   };
 
   const canBorrow = !!amount && !!borrow.mutateAsync && !borrow.isPending && !!fromChainSpokeProvider;
-  console.log('borrow source chain:', selectedChainId);
-  console.log('borrow destination chain:', token.xChainId);
+  // console.log('borrow source chain:', selectedChainId);
+  // console.log('borrow destination chain:', token.xChainId);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -82,10 +94,10 @@ export function BorrowModal({ isOpen, onClose, token, onSuccess }: BorrowModalPr
         ) : (
           <div className="space-y-2">
             {/* Destination chain */}
-            <Label className="text-clay">Receive on chain</Label>
+            <Label className="text-negative">Receive on chain (where assets appear)</Label>
             <ChainSelector
-              selectedChainId={selectedChain}
-              selectChainId={setSelectedChain}
+              selectedChainId={destinationChainId}
+              selectChainId={setDestinationChainId}
               allowedChains={[token.xChainId]}
             />
 

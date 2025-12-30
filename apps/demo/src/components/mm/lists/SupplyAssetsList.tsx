@@ -6,7 +6,7 @@ import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-
 import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { moneyMarketSupportedTokens } from '@sodax/sdk';
+import { ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens } from '@sodax/sdk';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 
 const TABLE_HEADERS = [
@@ -28,6 +28,7 @@ export function SupplyAssetsList() {
   const { selectedChainId } = useAppStore();
 
   const tokens = moneyMarketSupportedTokens[selectedChainId];
+  const isIcon = selectedChainId === ICON_MAINNET_CHAIN_ID;
 
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
@@ -40,50 +41,57 @@ export function SupplyAssetsList() {
 
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Markets</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
-          <Table>
-            <TableHeader className="sticky top-0 bg-cream z-20">
-              <TableRow className="border-b border-cherry-grey/20">
-                {TABLE_HEADERS.map(header => (
-                  <TableHead key={header} className="text-cherry-dark font-bold">
-                    {header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isUserReservesLoading || isFormattedReservesLoading || !userReserves || !formattedReserves ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center">
-                    Loading...
-                  </TableCell>
+        {isIcon ? (
+          <div className=" text-center text-cherry-dark">
+            <p className="font-medium">
+              Money Market is not available on ICON. ICON is supported for swap and migration only.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
+            <Table>
+              <TableHeader className="sticky top-0 bg-cream z-20">
+                <TableRow className="border-b border-cherry-grey/20">
+                  {TABLE_HEADERS.map((header, index) => (
+                    <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
+                      {header}
+                    </TableHead>
+                  ))}
                 </TableRow>
-              ) : (
-                userReserves &&
-                tokens.map(token => (
-                  <SupplyAssetsListItem
-                    key={token.address}
-                    token={token}
-                    walletBalance={
-                      balances?.[token.address]
-                        ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
-                        : '-'
-                    }
-                    formattedReserves={formattedReserves}
-                    userReserves={userReserves[0]}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {isUserReservesLoading || isFormattedReservesLoading || !userReserves || !formattedReserves ? (
+                  <TableRow>
+                    <TableCell colSpan={10} className="text-center">
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  userReserves &&
+                  tokens.map(token => (
+                    <SupplyAssetsListItem
+                      key={token.address}
+                      token={token}
+                      walletBalance={
+                        balances?.[token.address]
+                          ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
+                          : '-'
+                      }
+                      formattedReserves={formattedReserves}
+                      userReserves={userReserves[0]}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
