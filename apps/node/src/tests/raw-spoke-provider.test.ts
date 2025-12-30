@@ -19,7 +19,7 @@ import {
 } from '@sodax/sdk';
 import { EvmWalletProvider, SolanaWalletProvider, SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { Keypair } from '@solana/web3.js';
-import bs58 from "bs58";
+import bs58 from 'bs58';
 
 const evmPrivateKey = process.env.EVM_PRIVATE_KEY as Hex;
 const solanaPrivateKey = process.env.SOLANA_PRIVATE_KEY;

@@ -17,7 +17,7 @@ const sodax = new Sodax({
       address: '0x0Ab764AB3816cD036Ea951bE973098510D8105A6',
       percentage: 100, // 1% for testing purposes
     },
-  }
+  },
 });
 
 /**
