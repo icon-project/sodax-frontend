@@ -18,6 +18,7 @@ type DepositTokenSelectItemProps = {
   isHoverDimmed: boolean;
   handleAssetClick: (index: number) => void;
   setSelectedToken: (token: XToken | null) => void;
+  setSelectedAsset: (asset: number | null) => void;
   tokenAssetRef?: React.RefObject<HTMLDivElement | null>;
 };
 
@@ -174,9 +175,6 @@ export function DepositTokenSelect({
               onMouseEnter={() => handleAssetMouseEnter(idx)}
               onMouseLeave={() => handleAssetMouseLeave(idx)}
               style={{ filter: `blur(${blurAmount}px)` }}
-              animate={{
-                opacity: shouldBlur ? 0.4 : 1,
-              }}
               transition={{ duration: 0.18, ease: 'easeInOut' }}
             >
               <DepositTokenSelectItem
