@@ -1,12 +1,11 @@
 // apps/web/app/(apps)/save/_components/asset-list.tsx
 import { Accordion } from '@/components/ui/accordion';
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import { getUniqueTokenSymbols, sortStablecoinsFirst, flattenTokens } from '@/lib/utils';
 import AssetListItem from './asset-list/asset-list-item';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
-import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
+import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import type { XToken } from '@sodax/types';
-import { useSaveState } from '../_stores/save-store-provider';
 
 function hasFunds(group: { symbol: string; tokens: XToken[] }, balanceMap: Map<string, string>): boolean {
   return group.tokens.some(token => {
@@ -41,30 +40,21 @@ export default function AssetList({
   );
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
-  const { isSwitchingChain } = useSaveState();
 
   const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
 
-  const enrichedTokensResult = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
-  const cachedEnrichedTokensRef = useRef<typeof enrichedTokensResult>(enrichedTokensResult);
-
-  // Cache the result when not switching, use cached result when switching
-  const enrichedTokens = useMemo(() => {
-    if (isSwitchingChain) {
-      return cachedEnrichedTokensRef.current;
-    }
-    cachedEnrichedTokensRef.current = enrichedTokensResult;
-    return enrichedTokensResult;
-  }, [enrichedTokensResult, isSwitchingChain]);
-
+  const allChainBalances = useAllChainBalances();
   const balanceMap = useMemo(() => {
     const map = new Map<string, string>();
-    enrichedTokens.forEach(token => {
+    allGroupTokens.forEach(token => {
       const key = `${token.xChainId}-${token.address}`;
-      map.set(key, token.supplyBalance);
+      const balanceEntries = allChainBalances[token.address] || [];
+      const balanceEntry = balanceEntries.find(entry => entry.chainId === token.xChainId);
+      const balance = balanceEntry ? balanceEntry.balance.toString() : '0';
+      map.set(key, balance);
     });
     return map;
-  }, [enrichedTokens]);
+  }, [allGroupTokens, allChainBalances]);
 
   const { readyToEarn, availableToDeposit } = useMemo(() => {
     const ready: typeof groupedTokens = [];

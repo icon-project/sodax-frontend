@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
 import { useEffect, useRef, useMemo } from 'react';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
-import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
+import { useTokenWalletBalances } from '@/hooks/useTokenWalletBalances';
 import AssetListItemContent from './asset-list-item-content';
 import AssetListItemHeader from './asset-list-item-header';
 
@@ -23,8 +23,8 @@ export default function AssetListItem({
   const ref = useRef<HTMLDivElement>(null);
   const { symbol, tokens } = group;
 
-  // Calculate total supply balance for all tokens in the group
-  const enrichedTokens = useTokenSupplyBalances(tokens, formattedReserves || []);
+  // Calculate total wallet balance for all tokens in the group
+  const enrichedTokens = useTokenWalletBalances(tokens);
   const totalSupplyBalance = useMemo(() => {
     const total = enrichedTokens.reduce((sum, token) => {
       return sum + Number(token.supplyBalance || '0');

@@ -4,7 +4,7 @@ import { accordionVariants } from '@/constants/animation';
 import type { XToken } from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import { useLiquidity } from '@/hooks/useAPY';
-import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
+import { useTokenWalletBalances } from '@/hooks/useTokenWalletBalances';
 import { useState, useRef, useEffect } from 'react';
 import DepositInputAmount from './deposit-input-amount';
 import { DepositTokenSelect } from './deposit-token-select';
@@ -71,7 +71,7 @@ export default function AssetListItemContent({
     };
   }, [selectedAsset]);
 
-  const enrichedTokens = useTokenSupplyBalances(tokens, formattedReserves || []);
+  const enrichedTokens = useTokenWalletBalances(tokens);
 
   const holdTokens = enrichedTokens
     .filter(t => Number(t.supplyBalance) > 0)
