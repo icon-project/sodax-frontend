@@ -5,7 +5,7 @@ import type { XToken, ChainId } from '@sodax/types';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import NetworkIcon from '@/components/shared/network-icon';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
-import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
+import { useXAccount, getXChainType } from '@sodax/wallet-sdk-react';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { formatBalance } from '@/lib/utils';
 import BigNumber from 'bignumber.js';
@@ -19,6 +19,7 @@ import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import DepositDialog from '../deposit-dialog/deposit-dialog';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
+import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 
 interface DepositInputAmountProps {
   selectedToken: XToken | null;
@@ -42,13 +43,10 @@ export default function DepositInputAmount({
   const openModal = useModalStore(state => state.openModal);
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState<boolean>(false);
 
-  const { data: balances } = useXBalances({
-    xChainId: selectedToken?.xChainId as ChainId,
-    xTokens: selectedToken ? [selectedToken] : [],
-    address: sourceAddress,
-  });
-
-  const balance = balances?.[selectedToken?.address as string] ?? 0n;
+  const allChainBalances = useAllChainBalances();
+  const balance = selectedToken
+    ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
+    : 0n;
 
   const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
   const usdValue = useMemo(() => {

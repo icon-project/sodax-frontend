@@ -2,24 +2,30 @@
 
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import AnimatedNumber from '@/components/shared/animated-number';
 import AssetList from './_components/asset-list';
 import { delay } from '@/lib/utils';
 import CarouselWithPagination from './_components/carousel';
 import TotalSaveTokens from './_components/total-save-tokens';
-import { useSaveState } from './_stores/save-store-provider';
+import { useSaveActions, useSaveState } from './_stores/save-store-provider';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [openValue, setOpenValue] = useState('');
   const { isShowCarousel } = useSaveState();
-
+  const { setDepositValue } = useSaveActions();
   useEffect(() => {
     delay(500).then(() => {
       setIsOpen(true);
     });
   }, []);
+
+  useEffect(() => {
+    if (openValue !== '') {
+      setDepositValue(0);
+    }
+  }, [openValue, setDepositValue]);
 
   return (
     <motion.div

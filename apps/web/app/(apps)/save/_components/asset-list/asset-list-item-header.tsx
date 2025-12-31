@@ -8,6 +8,7 @@ import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import { getUniqueByChain } from '@/lib/utils';
 import NetworkIcon from '@/components/shared/network-icon';
 import { useLiquidity } from '@/hooks/useAPY';
+import { useSaveState } from '../../_stores/save-store-provider';
 
 function UserInfo({ isVisible }: { isVisible: boolean }) {
   return (
@@ -91,7 +92,11 @@ export default function AssetListItemHeader({
   isFormattedReservesLoading,
 }: AssetListItemHeaderProps) {
   const { apy } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
+  const { depositValue } = useSaveState();
 
+  // Calculate displayed balance: totalSupplyBalance minus depositValue (live update)
+  const displayedBalance = Math.max(0, totalSupplyBalance - depositValue);
+  const isLive = depositValue > 0;
   return (
     <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal) border-none">
       <ItemMedia>
@@ -146,10 +151,21 @@ export default function AssetListItemHeader({
               style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
             >
               {symbol}
-              {totalSupplyBalance > 0 && (
+              {!isExpanded && totalSupplyBalance > 0 ? (
                 <span className='text-clay-light text-(length:--body-comfortable) font-medium font-["InterRegular"]'>
                   {totalSupplyBalance}
                 </span>
+              ) : (
+                displayedBalance > 0 && (
+                  <span
+                    className={cn(
+                      'text-(length:--body-comfortable) font-medium font-["InterRegular"]',
+                      isLive ? 'text-cherry-bright' : 'text-clay-light',
+                    )}
+                  >
+                    {displayedBalance}
+                  </span>
+                )
               )}
             </motion.div>
 
