@@ -33,6 +33,7 @@ function DepositTokenSelectItem({
   isHoverDimmed,
   handleAssetClick,
   setSelectedToken,
+  setSelectedAsset,
   tokenAssetRef,
 }: DepositTokenSelectItemProps) {
   const shared = {
@@ -100,7 +101,10 @@ function DepositTokenSelectItem({
           token={selectedToken || ({} as XToken)}
           isHoldToken={false}
           isGroup={false}
-          onClick={() => setSelectedToken(null)}
+          onClick={() => {
+            setSelectedToken(null);
+            setSelectedAsset(null);
+          }}
         />
       </div>
     </div>
@@ -124,6 +128,7 @@ type Props = {
   handleAssetMouseEnter: (index: number) => void;
   handleAssetMouseLeave: (index: number) => void;
   setSelectedToken: (token: XToken | null) => void;
+  setSelectedAsset: (asset: number | null) => void;
   onContinue?: () => void;
   containerRef?: React.RefObject<HTMLDivElement | null>;
   tokenAssetRef?: React.RefObject<HTMLDivElement | null>;
@@ -141,6 +146,7 @@ export function DepositTokenSelect({
   handleAssetMouseEnter,
   handleAssetMouseLeave,
   setSelectedToken,
+  setSelectedAsset,
   onContinue,
   containerRef,
   tokenAssetRef,
@@ -184,6 +190,7 @@ export function DepositTokenSelect({
                 isHoverDimmed={shouldDim}
                 handleAssetClick={handleAssetClick}
                 setSelectedToken={setSelectedToken}
+                setSelectedAsset={setSelectedAsset}
                 tokenAssetRef={tokenAssetRef}
               />
             </motion.div>

@@ -151,6 +151,7 @@ export default function AssetListItemContent({
           handleAssetMouseEnter={handleAssetMouseEnter}
           handleAssetMouseLeave={handleAssetMouseLeave}
           setSelectedToken={setSelectedToken}
+          setSelectedAsset={setSelectedAsset}
           onContinue={!isShowDeposits ? () => setIsShowDeposits(true) : undefined}
           containerRef={containerRef}
           tokenAssetRef={tokenAssetRef}
