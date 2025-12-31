@@ -66,10 +66,10 @@ export const rpcConfig: RpcConfig = {
   // hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
 
   // Other chains
-  // '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
-  // solana: 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // sui: 'https://fullnode.mainnet.sui.io',
-  // 'injective-1': 'https://sentry.tm.injective.network:26657',
+  '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
+  solana: 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  sui: 'https://fullnode.mainnet.sui.io',
+  'injective-1': 'https://sentry.tm.injective.network:26657',
   stellar: {
     horizonRpcUrl: 'https://horizon.stellar.org',
     sorobanRpcUrl: 'https://magical-bitter-frost.stellar-mainnet.quiknode.pro/78709b736890cf5a9bcb36e118b9d18e8ecdb7ee',
