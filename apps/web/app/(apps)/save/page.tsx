@@ -7,14 +7,13 @@ import { useEffect, useState, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import AnimatedNumber from '@/components/shared/animated-number';
 import AssetList from './_components/asset-list';
-import { delay, flattenTokens, getUniqueTokenSymbols } from '@/lib/utils';
+import { delay, flattenTokens, getUniqueTokenSymbols, calculateAPY } from '@/lib/utils';
 import CarouselWithPagination from './_components/carousel';
 import TotalSaveTokens from './_components/total-save-tokens';
 import { useSaveActions } from './_stores/save-store-provider';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
-import { hubAssets } from '@sodax/types';
 import type { XToken } from '@sodax/types';
 
 export interface NetworkBalance {
@@ -88,23 +87,7 @@ export default function SavingsPage() {
       }
 
       // Calculate APY
-      let apy = '-';
-      if (!isFormattedReservesLoading && formattedReserves && formattedReserves.length > 0) {
-        try {
-          const vault = hubAssets[firstToken.xChainId]?.[firstToken.address]?.vault;
-          if (vault) {
-            const entry = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
-            if (entry) {
-              const SECONDS = 31536000;
-              const liquidityRate = Number(entry.liquidityRate) / 1e27;
-              const apyValue = ((1 + liquidityRate / SECONDS) ** SECONDS - 1) * 100;
-              apy = `${apyValue.toFixed(2)}%`;
-            }
-          }
-        } catch {
-          // Keep default '-'
-        }
-      }
+      const apy = calculateAPY(formattedReserves, isFormattedReservesLoading, firstToken);
 
       items.push({
         token: firstToken,

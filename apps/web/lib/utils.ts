@@ -11,7 +11,8 @@ import BigNumber from 'bignumber.js';
 import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId } from '@sodax/types';
-import { INJECTIVE_MAINNET_CHAIN_ID } from '@sodax/types';
+import { INJECTIVE_MAINNET_CHAIN_ID, hubAssets } from '@sodax/types';
+import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
 import { availableChains } from '@/constants/chains';
@@ -251,4 +252,43 @@ export function formatCompactNumber(value: string | number | bigint): string {
   if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
 
   return num.toFixed(4);
+}
+
+/**
+ * Calculates APY (Annual Percentage Yield) for a token based on reserve data.
+ * Finds the vault address from hubAssets, matches it with formatted reserves,
+ * and calculates APY using the liquidity rate.
+ *
+ * @param formattedReserves - Array of formatted reserve data with USD values
+ * @param isFormattedReservesLoading - Whether reserves are currently loading
+ * @param token - The token to calculate APY for
+ * @returns Formatted APY string (e.g., "5.25%") or "-" if unavailable
+ */
+export function calculateAPY(
+  formattedReserves: FormatReserveUSDResponse[] | undefined,
+  isFormattedReservesLoading: boolean,
+  token: XToken,
+): string {
+  if (isFormattedReservesLoading || !formattedReserves || formattedReserves.length === 0) {
+    return '-';
+  }
+
+  try {
+    const vault = hubAssets[token.xChainId]?.[token.address]?.vault;
+    if (!vault) {
+      return '-';
+    }
+
+    const entry = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+    if (!entry) {
+      return '-';
+    }
+
+    const SECONDS = 31536000;
+    const liquidityRate = Number(entry.liquidityRate) / 1e27;
+    const apyValue = ((1 + liquidityRate / SECONDS) ** SECONDS - 1) * 100;
+    return `${apyValue.toFixed(2)}%`;
+  } catch {
+    return '-';
+  }
 }
