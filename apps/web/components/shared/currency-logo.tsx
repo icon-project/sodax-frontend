@@ -39,7 +39,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
           priority
         />
       </div>
-      {!hideNetwork && (
+      {!hideNetwork && !isGroup && (
         <div
           data-property-1="Active"
           className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden relative"

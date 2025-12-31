@@ -113,9 +113,8 @@ function DepositTokenSelectItem({
 
   let content: React.ReactNode;
   if (!item.isGroup) content = renderNormal();
-  else if (selectedToken) content = renderGroupExpanded();
+  else if (selectedToken && isSelected) content = renderGroupExpanded();
   else content = renderGroupCollapsed();
-
   return <>{content}</>;
 }
 
@@ -165,13 +164,10 @@ export function DepositTokenSelect({
           const blurAmount = shouldBlur ? (isAnyNonActiveHovered ? 1 : 4) : 0;
           const shouldDim = selectedAsset === null && hoveredAsset !== null && hoveredAsset !== idx;
 
-          const wrapperClass = cn(shouldBlur && 'opacity-40');
-
           return (
             <motion.div
               key={`${item.token.xChainId || 'group'}-${idx}`}
               ref={item.isGroup ? tokenAssetRef : undefined}
-              className={wrapperClass}
               onMouseEnter={() => handleAssetMouseEnter(idx)}
               onMouseLeave={() => handleAssetMouseLeave(idx)}
               style={{ filter: `blur(${blurAmount}px)` }}
