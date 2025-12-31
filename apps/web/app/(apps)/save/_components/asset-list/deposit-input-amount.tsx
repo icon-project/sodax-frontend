@@ -202,7 +202,14 @@ export default function DepositInputAmount({
       <div className="flex gap-4 items-center mb-8 transition-all duration-300">
         <div className="flex gap-(--layout-space-small)">
           {onBack && (
-            <Button variant="cream" className="w-10 h-10" onMouseDown={onBack}>
+            <Button
+              variant="cream"
+              className="w-10 h-10"
+              onMouseDown={() => {
+                onBack();
+                setDepositValue(0);
+              }}
+            >
               <ArrowLeft />
             </Button>
           )}
