@@ -6,8 +6,6 @@ import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useState, useRef, useEffect } from 'react';
-import { cn } from '@/lib/utils';
-import AssetMetrics from './asset-metrics';
 import DepositInputAmount from './deposit-input-amount';
 import { DepositTokenSelect } from './deposit-token-select';
 
@@ -143,49 +141,22 @@ export default function AssetListItemContent({
           onBack={() => setIsShowDeposits(false)}
         />
       ) : (
-        <>
-          <AssetMetrics apy={apy} deposits={deposits} />
-          <div className="flex flex-wrap -ml-3 -my-[1px]" ref={containerRef}>
-            {displayItems.map((item, idx) => {
-              const isSelected = selectedAsset === idx;
-              const isHovered = selectedAsset === null && hoveredAsset === idx;
-              const shouldBlur = selectedAsset !== null && !isSelected;
-              const blurAmount = shouldBlur ? (isAnyNonActiveHovered ? 1 : 4) : 0;
-              const shouldDim = selectedAsset === null && hoveredAsset !== null && hoveredAsset !== idx;
-
-              const wrapperClass = cn(shouldBlur && 'opacity-40');
-
-              return (
-                <motion.div
-                  key={`${item.token.xChainId || 'group'}-${idx}`}
-                  ref={item.isGroup ? tokenAssetRef : undefined}
-                  className={wrapperClass}
-                  onMouseEnter={() => handleAssetMouseEnter(idx)}
-                  onMouseLeave={() => handleAssetMouseLeave(idx)}
-                  style={{ filter: `blur(${blurAmount}px)` }}
-                  animate={{
-                    opacity: shouldBlur ? 0.4 : 1,
-                  }}
-                  transition={{ duration: 0.18, ease: 'easeInOut' }}
-                >
-                  <DepositTokenSelect
-                    item={item}
-                    idx={idx}
-                    isSelected={isSelected}
-                    selectedToken={selectedToken}
-                    selectedAsset={selectedAsset}
-                    isAnyNonActiveHovered={isAnyNonActiveHovered}
-                    isHovered={isHovered}
-                    isHoverDimmed={shouldDim}
-                    handleAssetClick={handleAssetClick}
-                    setSelectedToken={setSelectedToken}
-                    onContinue={!isShowDeposits ? () => setIsShowDeposits(true) : undefined}
-                  />
-                </motion.div>
-              );
-            })}
-          </div>
-        </>
+        <DepositTokenSelect
+          displayItems={displayItems}
+          selectedAsset={selectedAsset}
+          hoveredAsset={hoveredAsset}
+          isAnyNonActiveHovered={isAnyNonActiveHovered}
+          selectedToken={selectedToken}
+          handleAssetClick={handleAssetClick}
+          handleAssetMouseEnter={handleAssetMouseEnter}
+          handleAssetMouseLeave={handleAssetMouseLeave}
+          setSelectedToken={setSelectedToken}
+          onContinue={!isShowDeposits ? () => setIsShowDeposits(true) : undefined}
+          containerRef={containerRef}
+          tokenAssetRef={tokenAssetRef}
+          apy={apy}
+          deposits={deposits}
+        />
       )}
     </motion.div>
   );

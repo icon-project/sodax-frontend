@@ -1,18 +1,14 @@
 // apps/web/app/(apps)/save/_components/asset-list/deposit-token-select.tsx
+import { motion } from 'motion/react';
 import { TokenAsset } from '@/components/shared/token-asset';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
+import type { DisplayItem } from './asset-list-item-content';
+import AssetMetrics from './asset-metrics';
 
-type Props = {
-  item: {
-    token: XToken;
-    isHold: boolean;
-    isGroup?: boolean;
-    tokenCount?: number;
-    tokens?: XToken[];
-    supplyBalance: string;
-  };
+type DepositTokenSelectItemProps = {
+  item: DisplayItem;
   idx: number;
   isSelected: boolean;
   selectedToken: XToken | null;
@@ -20,13 +16,13 @@ type Props = {
   selectedAsset: number | null;
   isHovered: boolean;
   isHoverDimmed: boolean;
-
   handleAssetClick: (index: number) => void;
   setSelectedToken: (token: XToken | null) => void;
-  onContinue?: () => void;
+  tokenAssetRef?: React.RefObject<HTMLDivElement | null>;
 };
 
-export function DepositTokenSelect({
+// Internal component for rendering a single token select item
+function DepositTokenSelectItem({
   item,
   idx,
   isSelected,
@@ -37,8 +33,8 @@ export function DepositTokenSelect({
   isHoverDimmed,
   handleAssetClick,
   setSelectedToken,
-  onContinue,
-}: Props) {
+  tokenAssetRef,
+}: DepositTokenSelectItemProps) {
   const shared = {
     isClickBlurred: selectedAsset !== null && !isSelected,
     isHoverDimmed,
@@ -46,10 +42,6 @@ export function DepositTokenSelect({
     onMouseEnter: () => {},
     onMouseLeave: () => {},
   };
-
-  const shouldBlur = selectedAsset !== null && !isSelected;
-  const blurAmount = shouldBlur ? (isAnyNonActiveHovered ? 1 : 4) : 0;
-  const wrapperClass = cn(shouldBlur && 'opacity-40');
 
   const renderNormal = () => (
     <TokenAsset
@@ -119,31 +111,105 @@ export function DepositTokenSelect({
   else if (selectedToken) content = renderGroupExpanded();
   else content = renderGroupCollapsed();
 
+  return <>{content}</>;
+}
+
+type Props = {
+  displayItems: DisplayItem[];
+  selectedAsset: number | null;
+  hoveredAsset: number | null;
+  isAnyNonActiveHovered: boolean;
+  selectedToken: XToken | null;
+  handleAssetClick: (index: number) => void;
+  handleAssetMouseEnter: (index: number) => void;
+  handleAssetMouseLeave: (index: number) => void;
+  setSelectedToken: (token: XToken | null) => void;
+  onContinue?: () => void;
+  containerRef?: React.RefObject<HTMLDivElement | null>;
+  tokenAssetRef?: React.RefObject<HTMLDivElement | null>;
+  apy: string;
+  deposits: string;
+};
+
+export function DepositTokenSelect({
+  displayItems,
+  selectedAsset,
+  hoveredAsset,
+  isAnyNonActiveHovered,
+  selectedToken,
+  handleAssetClick,
+  handleAssetMouseEnter,
+  handleAssetMouseLeave,
+  setSelectedToken,
+  onContinue,
+  containerRef,
+  tokenAssetRef,
+  apy,
+  deposits,
+}: Props) {
   return (
     <>
-      <div className={wrapperClass} style={{ filter: `blur(${blurAmount}px)` }}>
-        {content}
-      </div>
-      <div
-        className={cn(
-          'flex gap-4 items-center mb-8 transition-all duration-300',
-          !selectedToken && item.isGroup && 'blur filter opacity-30',
-        )}
-      >
-        <div className="flex gap-4 items-center mb-8 transition-all duration-300">
-          <Button
-            variant="cherry"
-            className="w-27 mix-blend-multiply shadow-none"
-            disabled={!selectedToken}
-            onMouseDown={() => {
-              onContinue?.();
-            }}
-          >
-            Continue
-          </Button>
-          <span className="text-clay text-(length:--body-small) font-['InterRegular']">
-            {!selectedToken ? 'Select a source' : 'See your yield next'}
-          </span>
+      <AssetMetrics apy={apy} deposits={deposits} />
+      <div className="flex flex-wrap -ml-3 -my-[1px]" ref={containerRef}>
+        {displayItems.map((item, idx) => {
+          const isSelected = selectedAsset === idx;
+          const isHovered = selectedAsset === null && hoveredAsset === idx;
+          const shouldBlur = selectedAsset !== null && !isSelected;
+          const blurAmount = shouldBlur ? (isAnyNonActiveHovered ? 1 : 4) : 0;
+          const shouldDim = selectedAsset === null && hoveredAsset !== null && hoveredAsset !== idx;
+
+          const wrapperClass = cn(shouldBlur && 'opacity-40');
+
+          return (
+            <motion.div
+              key={`${item.token.xChainId || 'group'}-${idx}`}
+              ref={item.isGroup ? tokenAssetRef : undefined}
+              className={wrapperClass}
+              onMouseEnter={() => handleAssetMouseEnter(idx)}
+              onMouseLeave={() => handleAssetMouseLeave(idx)}
+              style={{ filter: `blur(${blurAmount}px)` }}
+              animate={{
+                opacity: shouldBlur ? 0.4 : 1,
+              }}
+              transition={{ duration: 0.18, ease: 'easeInOut' }}
+            >
+              <DepositTokenSelectItem
+                item={item}
+                idx={idx}
+                isSelected={isSelected}
+                selectedToken={selectedToken}
+                isAnyNonActiveHovered={isAnyNonActiveHovered}
+                selectedAsset={selectedAsset}
+                isHovered={isHovered}
+                isHoverDimmed={shouldDim}
+                handleAssetClick={handleAssetClick}
+                setSelectedToken={setSelectedToken}
+                tokenAssetRef={tokenAssetRef}
+              />
+            </motion.div>
+          );
+        })}
+        <div
+          className={cn(
+            'flex gap-4 items-center mb-8 transition-all duration-300',
+            !selectedToken && displayItems.some(item => item.isGroup) && 'blur filter opacity-30',
+          )}
+        >
+          <div className="flex gap-4 items-center mb-8 transition-all duration-300">
+            <Button
+              variant="cherry"
+              className="w-27 mix-blend-multiply shadow-none"
+              disabled={!selectedToken}
+              onMouseDown={() => {
+                onContinue?.();
+              }}
+            >
+              Continue
+            </Button>
+            <span className="text-clay text-(length:--body-small) font-['InterRegular']">
+              {!selectedToken ? 'Select a source' : 'See your yield next'}
+            </span>
+          </div>
         </div>
       </div>
     </>
