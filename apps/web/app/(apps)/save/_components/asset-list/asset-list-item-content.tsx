@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/save/_components/asset-list/asset-list-item-content.tsx
 import { motion } from 'motion/react';
 import { accordionVariants } from '@/constants/animation';
 import type { XToken } from '@sodax/types';
@@ -6,11 +7,9 @@ import { useLiquidity } from '@/hooks/useAPY';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import AccordionInfoBlock from './accordion-info-block';
-import AccordionDeposit from './accordion-deposit';
-import { TokenAssetWrapper } from './token-asset-wrapper';
-import { useXAccount } from '@sodax/wallet-sdk-react';
-import AccordionDepositButton from './accordion-deposit-button';
+import AssetMetrics from './asset-metrics';
+import DepositInputAmount from './deposit-input-amount';
+import { DepositTokenSelect } from './deposit-token-select';
 
 export type DisplayItem = {
   token: XToken;
@@ -21,7 +20,7 @@ export type DisplayItem = {
   supplyBalance: string;
 };
 
-export default function AccordionExpandedContent({
+export default function AssetListItemContent({
   tokens,
   formattedReserves,
   isFormattedReservesLoading,
@@ -38,7 +37,6 @@ export default function AccordionExpandedContent({
   const tokenAssetRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedToken, setSelectedToken] = useState<XToken | null>(null);
-  const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
 
   useEffect(() => {
     if (tokens.length === 1) setSelectedToken(tokens[0] as XToken);
@@ -137,10 +135,16 @@ export default function AccordionExpandedContent({
       className="pl-0 md:pl-18 flex flex-col gap-4"
     >
       {isShowDeposits ? (
-        <AccordionDeposit selectedToken={selectedToken} tokens={tokens} />
+        <DepositInputAmount
+          selectedToken={selectedToken}
+          tokens={tokens}
+          formattedReserves={formattedReserves}
+          isFormattedReservesLoading={isFormattedReservesLoading}
+          onBack={() => setIsShowDeposits(false)}
+        />
       ) : (
         <>
-          <AccordionInfoBlock apy={apy} deposits={deposits} />
+          <AssetMetrics apy={apy} deposits={deposits} />
           <div className="flex flex-wrap -ml-3 -my-[1px]" ref={containerRef}>
             {displayItems.map((item, idx) => {
               const isSelected = selectedAsset === idx;
@@ -164,7 +168,7 @@ export default function AccordionExpandedContent({
                   }}
                   transition={{ duration: 0.18, ease: 'easeInOut' }}
                 >
-                  <TokenAssetWrapper
+                  <DepositTokenSelect
                     item={item}
                     idx={idx}
                     isSelected={isSelected}
@@ -175,6 +179,7 @@ export default function AccordionExpandedContent({
                     isHoverDimmed={shouldDim}
                     handleAssetClick={handleAssetClick}
                     setSelectedToken={setSelectedToken}
+                    onContinue={!isShowDeposits ? () => setIsShowDeposits(true) : undefined}
                   />
                 </motion.div>
               );
@@ -182,18 +187,6 @@ export default function AccordionExpandedContent({
           </div>
         </>
       )}
-
-      <AccordionDepositButton
-        selectedToken={selectedToken}
-        selectedAsset={selectedAsset}
-        displayItems={displayItems}
-        isShowDeposits={isShowDeposits}
-        setIsShowDeposits={setIsShowDeposits}
-        sourceAddress={sourceAddress}
-        tokens={tokens}
-        formattedReserves={formattedReserves}
-        isFormattedReservesLoading={isFormattedReservesLoading}
-      />
     </motion.div>
   );
 }

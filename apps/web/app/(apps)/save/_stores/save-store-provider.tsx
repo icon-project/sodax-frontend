@@ -38,14 +38,14 @@ export const useSaveState = () => {
   const currentStep = useSaveStore(state => state.currentStep);
   const tokenCount = useSaveStore(state => state.tokenCount);
   const isSwitchingChain = useSaveStore(state => state.isSwitchingChain);
-  const showCarousel = useSaveStore(state => state.showCarousel);
+  const hasDeposits = useSaveStore(state => state.hasDeposits);
 
   return {
     depositValue,
     currentStep,
     tokenCount,
     isSwitchingChain,
-    showCarousel,
+    hasDeposits,
   };
 };
 
@@ -54,7 +54,7 @@ export const useSaveActions = () => {
   const setCurrentStep = useSaveStore(state => state.setCurrentStep);
   const setTokenCount = useSaveStore(state => state.setTokenCount);
   const setIsSwitchingChain = useSaveStore(state => state.setIsSwitchingChain);
-  const setShowCarousel = useSaveStore(state => state.setShowCarousel);
+  const setHasDeposits = useSaveStore(state => state.setHasDeposits);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
 
   return {
@@ -62,7 +62,7 @@ export const useSaveActions = () => {
     setCurrentStep,
     setTokenCount,
     setIsSwitchingChain,
-    setShowCarousel,
+    setHasDeposits,
     resetSaveState,
   };
 };

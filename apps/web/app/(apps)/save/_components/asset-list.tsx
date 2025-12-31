@@ -1,7 +1,8 @@
+// apps/web/app/(apps)/save/_components/asset-list.tsx
 import { Accordion } from '@/components/ui/accordion';
 import { useMemo, useRef } from 'react';
 import { getUniqueTokenSymbols, sortStablecoinsFirst, flattenTokens } from '@/lib/utils';
-import TokenAccordionItem from './token-accordion-item';
+import AssetListItem from './asset-list/asset-list-item';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import type { XToken } from '@sodax/types';
@@ -21,7 +22,7 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-export default function CurrencyList({
+export default function AssetList({
   searchQuery,
   openValue,
   setOpenValue,
@@ -88,10 +89,10 @@ export default function CurrencyList({
         <>
           <SectionHeader title="Ready to earn" />
           {readyToEarn.map(group => (
-            <TokenAccordionItem
+            <AssetListItem
               key={group.symbol}
               group={group}
-              openValue={openValue}
+              isExpanded={openValue === group.symbol}
               formattedReserves={formattedReserves}
               isFormattedReservesLoading={isFormattedReservesLoading}
             />
@@ -101,10 +102,10 @@ export default function CurrencyList({
             <>
               <SectionHeader title="Available to deposit" />
               {availableToDeposit.map(group => (
-                <TokenAccordionItem
+                <AssetListItem
                   key={group.symbol}
                   group={group}
-                  openValue={openValue}
+                  isExpanded={openValue === group.symbol}
                   formattedReserves={formattedReserves}
                   isFormattedReservesLoading={isFormattedReservesLoading}
                 />
@@ -114,10 +115,10 @@ export default function CurrencyList({
         </>
       ) : (
         groupedTokens.map(group => (
-          <TokenAccordionItem
+          <AssetListItem
             key={group.symbol}
             group={group}
-            openValue={openValue}
+            isExpanded={openValue === group.symbol}
             formattedReserves={formattedReserves}
             isFormattedReservesLoading={isFormattedReservesLoading}
           />

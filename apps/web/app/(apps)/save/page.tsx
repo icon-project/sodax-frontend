@@ -4,8 +4,7 @@ import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import AnimatedNumber from '@/components/shared/animated-number';
-// import CurrencySearchPanel from './_components/currency-search-panel';
-import CurrencyList from './_components/currency-list';
+import AssetList from './_components/asset-list';
 import { delay } from '@/lib/utils';
 import CarouselWithPagination from './_components/carousel';
 import TotalSaveTokens from './_components/total-save-tokens';
@@ -13,20 +12,8 @@ import { useSaveState } from './_stores/save-store-provider';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
-  // const [searchQuery, setSearchQuery] = useState('');
   const [openValue, setOpenValue] = useState('');
-  const { showCarousel } = useSaveState();
-  const [isShowCarousel, setIsShowCarousel] = useState(false);
-  console.log('showCarousel', showCarousel);
-  // const handleSearchChange = (value: string) => {
-  //   setSearchQuery(value);
-  // };
-
-  useEffect(() => {
-    if (showCarousel) {
-      setIsShowCarousel(true);
-    }
-  }, [showCarousel]);
+  const { hasDeposits } = useSaveState();
 
   useEffect(() => {
     delay(500).then(() => {
@@ -41,7 +28,7 @@ export default function SavingsPage() {
       initial={false}
       animate={isOpen ? 'open' : 'closed'}
     >
-      {isShowCarousel ? (
+      {hasDeposits ? (
         <motion.div className="w-full flex flex-col gap-4" variants={itemVariants}>
           <TotalSaveTokens />
           <CarouselWithPagination />
@@ -68,17 +55,8 @@ export default function SavingsPage() {
         </motion.div>
       )}
 
-      {/* <motion.div className="w-full" variants={itemVariants}>
-        <CurrencySearchPanel
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          currencyListOpened={openValue !== ''}
-          onSearchFocus={() => setOpenValue('')}
-        />
-      </motion.div> */}
-
       <motion.div className="w-full flex-grow-1" variants={itemVariants}>
-        <CurrencyList searchQuery={''} openValue={openValue} setOpenValue={setOpenValue} />
+        <AssetList searchQuery={''} openValue={openValue} setOpenValue={setOpenValue} />
       </motion.div>
     </motion.div>
   );

@@ -7,7 +7,7 @@ export type SaveState = {
   currentStep: number;
   tokenCount: number;
   isSwitchingChain: boolean;
-  showCarousel: boolean;
+  hasDeposits: boolean;
 };
 
 export type SaveActions = {
@@ -15,7 +15,7 @@ export type SaveActions = {
   setCurrentStep: (step: number) => void;
   setTokenCount: (count: number) => void;
   setIsSwitchingChain: (isSwitching: boolean) => void;
-  setShowCarousel: (show: boolean) => void;
+  setHasDeposits: (hasDeposits: boolean) => void;
   resetSaveState: () => void;
 };
 
@@ -26,7 +26,7 @@ export const defaultSaveState: SaveState = {
   currentStep: 1,
   tokenCount: 0,
   isSwitchingChain: false,
-  showCarousel: false,
+  hasDeposits: false,
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -38,12 +38,12 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         setCurrentStep: (step: number) => set({ currentStep: step }),
         setTokenCount: (count: number) => set({ tokenCount: count }),
         setIsSwitchingChain: (isSwitching: boolean) => set({ isSwitchingChain: isSwitching }),
-        setShowCarousel: (show: boolean) => set({ showCarousel: show }),
+        setHasDeposits: (hasDeposits: boolean) => set({ hasDeposits }),
         resetSaveState: () => {
           const currentState = get();
           set({
             ...defaultSaveState,
-            showCarousel: currentState.showCarousel,
+            hasDeposits: currentState.hasDeposits,
           });
         },
       }),
