@@ -13,7 +13,7 @@ import { useSaveState } from './_stores/save-store-provider';
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [openValue, setOpenValue] = useState('');
-  const { hasDeposits } = useSaveState();
+  const { isShowCarousel } = useSaveState();
 
   useEffect(() => {
     delay(500).then(() => {
@@ -28,7 +28,7 @@ export default function SavingsPage() {
       initial={false}
       animate={isOpen ? 'open' : 'closed'}
     >
-      {hasDeposits ? (
+      {isShowCarousel ? (
         <motion.div className="w-full flex flex-col gap-4" variants={itemVariants}>
           <TotalSaveTokens />
           <CarouselWithPagination />
