@@ -15,13 +15,13 @@ export default function TotalSaveTokens(): React.JSX.Element {
   const allTokens = useMemo(() => flattenTokens(), []);
   const groupedTokens = useMemo(() => getUniqueTokenSymbols(allTokens), [allTokens]);
   const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
-  const enrichedTokens = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
+  const tokensWithSupplyBalance = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
 
   // Get unique token symbols with balances > 0
   const tokensWithBalance = useMemo(() => {
     const tokensBySymbol = new Map<string, XToken>();
 
-    enrichedTokens.forEach(token => {
+    tokensWithSupplyBalance.forEach(token => {
       if (Number(token.supplyBalance) > 0) {
         // Use the first token of each symbol for icon display
         if (!tokensBySymbol.has(token.symbol)) {
@@ -31,7 +31,7 @@ export default function TotalSaveTokens(): React.JSX.Element {
     });
 
     return Array.from(tokensBySymbol.values());
-  }, [enrichedTokens]);
+  }, [tokensWithSupplyBalance]);
 
   // Get prices for all tokens with balances
   const { data: tokenPrices } = useAllTokenPrices(tokensWithBalance);
@@ -45,7 +45,7 @@ export default function TotalSaveTokens(): React.JSX.Element {
     let total = new BigNumber(0);
 
     groupedTokens.forEach(group => {
-      const tokensWithBalanceForSymbol = enrichedTokens.filter(
+      const tokensWithBalanceForSymbol = tokensWithSupplyBalance.filter(
         token => token.symbol === group.symbol && Number(token.supplyBalance) > 0,
       );
 
@@ -72,7 +72,7 @@ export default function TotalSaveTokens(): React.JSX.Element {
 
     const formatted = total.toFixed(2);
     return `$${Number(formatted).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }, [enrichedTokens, groupedTokens, tokenPrices, isFormattedReservesLoading]);
+  }, [tokensWithSupplyBalance, groupedTokens, tokenPrices, isFormattedReservesLoading]);
 
   return (
     <div className="w-full flex gap-2 justify-start">

@@ -71,13 +71,13 @@ export default function AssetListItemContent({
     };
   }, [selectedAsset]);
 
-  const enrichedTokens = useTokenWalletBalances(tokens);
+  const tokensWithBalances = useTokenWalletBalances(tokens);
 
-  const holdTokens = enrichedTokens
+  const holdTokens = tokensWithBalances
     .filter(t => Number(t.supplyBalance) > 0)
     .sort((a, b) => Number(b.supplyBalance) - Number(a.supplyBalance));
 
-  const platformTokens = enrichedTokens
+  const platformTokens = tokensWithBalances
     .filter(t => Number(t.supplyBalance) === 0)
     .sort((a, b) => a.symbol.localeCompare(b.symbol));
 

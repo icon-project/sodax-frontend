@@ -24,13 +24,13 @@ export default function AssetListItem({
   const { symbol, tokens } = group;
 
   // Calculate total wallet balance for all tokens in the group
-  const enrichedTokens = useTokenWalletBalances(tokens);
+  const tokensWithBalances = useTokenWalletBalances(tokens);
   const totalSupplyBalance = useMemo(() => {
-    const total = enrichedTokens.reduce((sum, token) => {
+    const total = tokensWithBalances.reduce((sum, token) => {
       return sum + Number(token.supplyBalance || '0');
     }, 0);
     return total;
-  }, [enrichedTokens]);
+  }, [tokensWithBalances]);
 
   useEffect(() => {
     if (!isExpanded || !ref.current) return;

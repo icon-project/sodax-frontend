@@ -1,102 +1,34 @@
+// apps/web/app/(apps)/save/_components/carousel.tsx
 'use client';
 
 import * as React from 'react';
 import { useMemo } from 'react';
-import BigNumber from 'bignumber.js';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
-import { cn, flattenTokens, getUniqueTokenSymbols, formatBalance } from '@/lib/utils';
+import { cn, formatBalance } from '@/lib/utils';
 import { Settings2 } from 'lucide-react';
 import CanLogo from '@/components/shared/can-logo';
 import { Item, ItemContent, ItemMedia, ItemTitle, ItemDescription } from '@/components/ui/item';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import type { SpokeChainId } from '@sodax/types';
 import NetworkIcon from '@/components/shared/network-icon';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useReservesUsdFormat } from '@sodax/dapp-kit';
-import type { FormatReserveUSDResponse } from '@sodax/sdk';
-import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
-import { useTokenPrice } from '@/hooks/useTokenPrice';
-import { useLiquidity } from '@/hooks/useAPY';
 import { chainIdToChainName } from '@/providers/constants';
-import { useSaveActions } from '../_stores/save-store-provider';
+import type { CarouselItemData, NetworkBalance } from '../page';
 
-interface NetworkBalance {
-  networkId: string;
-  balance: string;
-  token: XToken;
+interface CarouselWithPaginationProps {
+  carouselItems: CarouselItemData[];
+  tokenPrices?: Record<string, number>;
 }
 
-interface CarouselItemData {
-  token: XToken;
-  totalBalance: string;
-  fiatValue: string;
-  networksWithFunds: NetworkBalance[];
-  apy: string;
-}
-
-export default function CarouselWithPagination(): React.JSX.Element {
+export default function CarouselWithPagination({
+  carouselItems,
+  tokenPrices,
+}: CarouselWithPaginationProps): React.JSX.Element {
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
-  const { setTokenCount } = useSaveActions();
-
-  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
-  const allTokens = useMemo(() => flattenTokens(), []);
-  const groupedTokens = useMemo(() => getUniqueTokenSymbols(allTokens), [allTokens]);
-  const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
-  const enrichedTokens = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
-
-  // Filter and prepare carousel items with balances > 0
-  const carouselItems = useMemo((): CarouselItemData[] => {
-    const items: CarouselItemData[] = [];
-
-    groupedTokens.forEach(group => {
-      const tokensWithBalance = enrichedTokens.filter(
-        token => token.symbol === group.symbol && Number(token.supplyBalance) > 0,
-      );
-
-      if (tokensWithBalance.length === 0) {
-        return;
-      }
-
-      // Calculate total balance (sum of all balances for this token symbol)
-      const totalBalance = tokensWithBalance.reduce((sum, token) => {
-        return sum + Number(token.supplyBalance || '0');
-      }, 0);
-
-      // Get networks that have funds with their balances
-      const networksWithFunds: NetworkBalance[] = tokensWithBalance
-        .map(token => ({
-          networkId: token.xChainId,
-          balance: token.supplyBalance || '0',
-          token,
-        }))
-        .filter(network => network.networkId);
-
-      // Use first token for price and APY calculation
-      const firstToken = tokensWithBalance[0];
-      if (!firstToken) {
-        return;
-      }
-
-      items.push({
-        token: firstToken,
-        totalBalance: totalBalance.toFixed(6),
-        fiatValue: '0', // Will be calculated below
-        networksWithFunds,
-        apy: '-',
-      });
-    });
-
-    return items;
-  }, [groupedTokens, enrichedTokens]);
-
-  // Update token count in store when carousel items change
-  React.useEffect(() => {
-    setTokenCount(carouselItems.length);
-  }, [carouselItems.length, setTokenCount]);
 
   React.useEffect(() => {
     if (!api) {
@@ -132,12 +64,7 @@ export default function CarouselWithPagination(): React.JSX.Element {
         <CarouselContent>
           {carouselItems.length > 0 ? (
             carouselItems.map((item, index) => (
-              <CarouselItemData
-                key={`${item.token.symbol}-${index}`}
-                item={item}
-                formattedReserves={formattedReserves}
-                isFormattedReservesLoading={isFormattedReservesLoading}
-              />
+              <CarouselItemContent key={`${item.token.symbol}-${index}`} item={item} tokenPrices={tokenPrices} />
             ))
           ) : (
             <CarouselItem className="box-shadow-none mix-blend-multiply basis-1/1.5">
@@ -168,30 +95,20 @@ export default function CarouselWithPagination(): React.JSX.Element {
   );
 }
 
-function CarouselItemData({
+function CarouselItemContent({
   item,
-  formattedReserves,
-  isFormattedReservesLoading,
+  tokenPrices,
 }: {
   item: CarouselItemData;
-  formattedReserves?: FormatReserveUSDResponse[];
-  isFormattedReservesLoading: boolean;
+  tokenPrices?: Record<string, number>;
 }): React.JSX.Element {
-  const { data: tokenPrice } = useTokenPrice(item.token);
-  const { apy } = useLiquidity([item.token], formattedReserves, isFormattedReservesLoading);
-
-  // Calculate fiat value
-  const fiatValue = useMemo((): string => {
-    if (!tokenPrice || Number(item.totalBalance) === 0) {
-      return '$0.00';
-    }
-    const usdValue = new BigNumber(item.totalBalance).multipliedBy(tokenPrice).toFixed(2);
-    return `$${Number(usdValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }, [item.totalBalance, tokenPrice]);
+  // Get token price from prices map
+  const priceKey = `${item.token.symbol}-${item.token.xChainId}`;
+  const tokenPrice = tokenPrices?.[priceKey] || 0;
 
   // Format balance with token symbol
   const formattedBalance = useMemo((): string => {
-    return `${formatBalance(item.totalBalance, tokenPrice || 0)} ${item.token.symbol}`;
+    return `${formatBalance(item.totalBalance, tokenPrice)} ${item.token.symbol}`;
   }, [item.totalBalance, item.token.symbol, tokenPrice]);
 
   return (
@@ -211,7 +128,7 @@ function CarouselItemData({
                   {formattedBalance}
                 </ItemTitle>
                 <ItemDescription className="text-clay text-(length:--body-comfortable) font-medium">
-                  {fiatValue}
+                  {item.fiatValue}
                 </ItemDescription>
                 <ItemDescription className="flex justify-between flex-row w-full">
                   <div className="flex gap-[2px] items-center -ml-[2px]">
@@ -230,7 +147,7 @@ function CarouselItemData({
                   </div>
                   <div className="flex">
                     <Badge className="h-4 min-w-[70px] mix-blend-multiply text-white bg-gradient-to-br from-cherry-bright to-cherry-brighter px-2">
-                      <span className="text-[10px] font-['InterBold'] mt-[1px]">{apy} APY</span>
+                      <span className="text-[10px] font-['InterBold'] mt-[1px]">{item.apy} APY</span>
                     </Badge>
                   </div>
                 </ItemDescription>
@@ -248,11 +165,11 @@ function NetworkBalanceTooltip({
   tokenPrice,
 }: {
   network: NetworkBalance;
-  tokenPrice: number | undefined;
+  tokenPrice: number;
 }): React.JSX.Element {
   // Format balance for display in tooltip
   const formattedBalance = useMemo((): string => {
-    const balance = formatBalance(network.balance, tokenPrice || 0);
+    const balance = formatBalance(network.balance, tokenPrice);
     return `${balance} ${network.token.symbol}`;
   }, [network.balance, network.token.symbol, tokenPrice]);
 
