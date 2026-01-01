@@ -18,7 +18,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import Providers from '@/providers/providers';
-import { ToastProvider } from '@/components/shared/toast-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const { isSwitchingPage } = useAppStore(state => state);
@@ -63,7 +63,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </div>
         <ModalStoreProvider>
           <Providers>
-            <ToastProvider>
               <div className="max-h-screen sm:max-h-none sm:min-h-screen w-[100%] overflow-hidden">
                 <motion.div
                   variants={headerVariants}
@@ -114,7 +113,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <WalletModal />
                 <TermsConfirmationModal />
               </div>
-            </ToastProvider>
+          <Toaster position={'bottom-right'} />
           </Providers>
         </ModalStoreProvider>
       </MigrationStoreProvider>

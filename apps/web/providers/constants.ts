@@ -55,7 +55,7 @@ export const sodaxConfig = {
 
 export const rpcConfig: RpcConfig = {
   // EVM chains
-  sonic: 'https://sonic.rpc.sudoblock.io/ECXNgwddIX',
+sonic: 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   '0xa86a.avax': 'https://avax-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   '0xa4b1.arbitrum': 'https://arb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   '0x2105.base': 'https://base-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',

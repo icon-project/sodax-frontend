@@ -18,7 +18,7 @@ import { useWalletProvider, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { ChainId } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { ChainSelectDropdown } from '@/components/shared/chain-select-dropdown';
-import { useToast } from '@/components/shared/toast-provider';
+import { toast } from 'sonner';
 
 interface SwapModalProps {
   isOpen: boolean;
@@ -44,8 +44,6 @@ export function SwapModal({ isOpen, onClose, asset, onSuccess }: SwapModalProps)
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(swapExecutionChain);
   const usdcAddressOnSameChain = spokeProvider?.chainConfig?.supportedTokens?.USDC?.address;
   const allowedChains = [asset.chainId]; // only allow swapping on asset's home chain
-
-  const { toast } = useToast();
 
   const handleSwap = async () => {
     if (!spokeProvider || !walletProvider) return;
@@ -74,18 +72,14 @@ export function SwapModal({ isOpen, onClose, asset, onSuccess }: SwapModalProps)
 
     const swapResult = await sodax.swaps.swap({ intentParams, spokeProvider });
     if (swapResult.ok) {
-      toast({
-        title: 'Swap was successful!',
-        description: `Swapped ${amount} ${asset.symbol} to USDC successfully.`,
-        variant: 'success',
+      toast.success('Success!',{
+        description: `Swapped ${amount}${asset.symbol} to USDC.`,
       });
       onSuccess?.(amount);
       onClose();
     } else {
-      toast({
-        title: 'Swap failed.',
+      toast.error('Swap failed.',{
         description: 'There was an issue executing your swap. Please try again.',
-        variant: 'error',
       });
     }
   };

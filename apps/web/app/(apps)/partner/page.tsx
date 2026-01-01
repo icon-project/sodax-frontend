@@ -2,13 +2,14 @@
 
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PartnerFeeBalancesCard } from './components/partner-fee-balance';
 import type { PartnerFeeBalance } from './components/partner-fee-balance';
 import { usePartnerFees } from './utils/usePartnersFee';
 import { SwapModal } from './components/swap-modal';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { toast } from 'sonner';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
