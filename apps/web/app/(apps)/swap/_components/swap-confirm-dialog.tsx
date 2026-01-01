@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIntentRelayChainId, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { getSwapTiming } from '@/lib/swap-timing';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -84,6 +85,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceSpokeProvider);
   const { data: status } = useStatus((dstTxHash || '0x') as `0x${string}`);
+
+  const swapTiming = getSwapTiming(inputToken.xChainId, outputToken.xChainId);
 
   useEffect(() => {
     const getFilledIntent = async () => {
@@ -234,19 +237,19 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   </div>
                 </div>
               </div>
-              <div className="w-16 h-9 inline-flex flex-col justify-between items-center">
+              <div className="w-16 inline-flex flex-col justify-center items-center gap-1">
                 {targetChainSolved ? (
                   <>
                     <ChevronsRight className="w-4 h-4 text-clay-light" />
-                    <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
+                    <div className="text-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-tight">
                       Done
                     </div>
                   </>
                 ) : (
                   <>
-                    <Timer className="w-4 h-4 text-clay" />
-                    <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
-                      ~30s
+                    <Timer className={swapTiming.iconClass} />
+                    <div className="text-center text-(length:--body-small) font-medium font-['InterRegular'] leading-tight">
+                      <span className={swapTiming.textClass}>{swapTiming.shortLabel}</span>
                     </div>
                   </>
                 )}
