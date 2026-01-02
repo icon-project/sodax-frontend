@@ -266,6 +266,7 @@ describe('MoneyMarketService', () => {
         sonicSpokeProvider.chainConfig.chain.id,
         moneyMarket.data,
         moneyMarket.configService,
+        moneyMarket.config,
       );
       expect(SonicSpokeService.isBorrowApproved).toHaveBeenCalledWith(
         '0x8888888888888888888888888888888888888888',

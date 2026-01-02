@@ -1,3 +1,4 @@
+// apps/demo/src/hooks/useReserveMetrics.ts
 import { formatUnits } from 'viem';
 
 import { hubAssets, type XToken } from '@sodax/types';
@@ -48,6 +49,8 @@ interface ReserveMetricsResult {
   totalBorrow: string;
   totalLiquidityUSD: string;
   totalBorrowsUSD: string;
+  supplyBalanceUSD: string;
+  liquidationThreshold: string;
 }
 
 export function useReserveMetrics({
@@ -55,9 +58,74 @@ export function useReserveMetrics({
   formattedReserves,
   userReserves,
 }: UseReserveMetricsProps): ReserveMetricsResult {
-  const asset = hubAssets[token.xChainId]?.[token.address];
+  try {
+    const vault = hubAssets[token.xChainId][token.address].vault;
+    const userReserve = userReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+    const formattedReserve = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+    // Default metrics
+    let supplyAPR = '-';
+    let borrowAPR = '-';
+    let supplyAPY = '-';
+    let borrowAPY = '-';
+    let totalSupply = '-';
+    let totalBorrow = '-';
+    let totalLiquidityUSD = '-';
+    let totalBorrowsUSD = '-';
+    let supplyBalanceUSD = '-';
+    let liquidationThreshold = '-';
 
-  if (!asset) {
+    if (formattedReserve) {
+      const liquidityRate = Number(formattedReserve.liquidityRate) / 1e27;
+      const variableBorrowRate = Number(formattedReserve.variableBorrowRate) / 1e27;
+
+      supplyAPR = `${(liquidityRate * 100).toFixed(4)}%`;
+      borrowAPR = `${(variableBorrowRate * 100).toFixed(4)}%`;
+      supplyAPY = `${getCompoundedRate(liquidityRate).toFixed(4)}%`;
+      borrowAPY = `${getCompoundedRate(variableBorrowRate).toFixed(4)}%`;
+
+      const availableLiquidity = Number(formatUnits(BigInt(formattedReserve.availableLiquidity), 18));
+      const totalVariableDebt = Number(formattedReserve.totalScaledVariableDebt);
+      const total = availableLiquidity + totalVariableDebt;
+      totalSupply = formatCompactNumber(Number(total));
+      totalBorrow = formatCompactNumber(Number(totalVariableDebt));
+
+      if (formattedReserve) {
+        totalLiquidityUSD = `$${Number(formattedReserve.totalLiquidityUSD ?? 0).toFixed(2)}`;
+        totalBorrowsUSD = `$${Number(formattedReserve.totalDebtUSD ?? 0).toFixed(2)}`;
+      }
+
+      const ltValue = Number(formattedReserve.formattedReserveLiquidationThreshold);
+      if (Number.isFinite(ltValue) && ltValue > 0) {
+        liquidationThreshold = `${(ltValue * 100).toFixed(2)}%`;
+      }
+
+      if (userReserve) {
+        const decimals = Number(formattedReserve.decimals ?? 18);
+        const priceInUsd = Number(formattedReserve.priceInUSD);
+        const suppliedTokens = Number(formatUnits(BigInt(userReserve.scaledATokenBalance), decimals));
+        const suppliedUsd = suppliedTokens * priceInUsd;
+        if (Number.isFinite(suppliedUsd) && suppliedUsd > 0) {
+          supplyBalanceUSD = `$${suppliedUsd.toFixed(2)}`;
+        }
+      }
+    }
+
+    return {
+      userReserve,
+      formattedReserve,
+      supplyAPR,
+      borrowAPR,
+      supplyAPY,
+      borrowAPY,
+      totalSupply,
+      totalBorrow,
+      totalLiquidityUSD,
+      totalBorrowsUSD,
+      supplyBalanceUSD,
+      liquidationThreshold,
+    };
+  } catch (error) {
+    console.error(`Error in useReserveMetrics for ${token.symbol} (${token.address}):`, error);
     return {
       userReserve: undefined,
       formattedReserve: undefined,
@@ -69,53 +137,8 @@ export function useReserveMetrics({
       totalBorrow: '-',
       totalLiquidityUSD: '-',
       totalBorrowsUSD: '-',
+      supplyBalanceUSD: '-',
+      liquidationThreshold: '-',
     };
   }
-
-  const vault = asset.vault.toLowerCase();
-
-  const userReserve = userReserves.find(r => r.underlyingAsset.toLowerCase() === vault);
-
-  const formattedReserve = formattedReserves.find(r => r.underlyingAsset.toLowerCase() === vault);
-
-  let supplyAPR = '-';
-  let borrowAPR = '-';
-  let supplyAPY = '-';
-  let borrowAPY = '-';
-  let totalSupply = '-';
-  let totalBorrow = '-';
-  let totalLiquidityUSD = '-';
-  let totalBorrowsUSD = '-';
-
-  if (formattedReserve) {
-    const liquidityRate = Number(formattedReserve.liquidityRate) / 1e27;
-    const variableBorrowRate = Number(formattedReserve.variableBorrowRate) / 1e27;
-
-    supplyAPR = `${(liquidityRate * 100).toFixed(4)}%`;
-    borrowAPR = `${(variableBorrowRate * 100).toFixed(4)}%`;
-    supplyAPY = `${getCompoundedRate(liquidityRate).toFixed(4)}%`;
-    borrowAPY = `${getCompoundedRate(variableBorrowRate).toFixed(4)}%`;
-
-    const availableLiquidity = Number(formatUnits(BigInt(formattedReserve.availableLiquidity), 18));
-    const totalVariableDebt = Number(formattedReserve.totalScaledVariableDebt);
-
-    totalSupply = formatCompactNumber(availableLiquidity + totalVariableDebt);
-    totalBorrow = formatCompactNumber(totalVariableDebt);
-
-    totalLiquidityUSD = `$${Number(formattedReserve.totalLiquidityUSD ?? 0).toFixed(2)}`;
-    totalBorrowsUSD = `$${Number(formattedReserve.totalDebtUSD ?? 0).toFixed(2)}`;
-  }
-
-  return {
-    userReserve,
-    formattedReserve,
-    supplyAPR,
-    borrowAPR,
-    supplyAPY,
-    borrowAPY,
-    totalSupply,
-    totalBorrow,
-    totalLiquidityUSD,
-    totalBorrowsUSD,
-  };
 }

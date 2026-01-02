@@ -1,5 +1,6 @@
-import React from 'react';
-import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
+// apps/demo/src/components/mm/lists/SupplyAssetsList.tsx
+import React, { type ReactElement } from 'react';
+import { useReservesUsdFormat, useSpokeProvider, useUserFormattedSummary, useUserReservesData } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
@@ -7,12 +8,12 @@ import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens } from '@sodax/sdk';
-import { useReservesUsdFormat } from '@sodax/dapp-kit';
 
 const TABLE_HEADERS = [
   'Asset',
   'Wallet Balance',
   'Supplied',
+  'Liq. Threshold',
   'Total Supply',
   'Supply APY',
   'Supply APR',
@@ -24,7 +25,7 @@ const TABLE_HEADERS = [
   'Action',
 ] as const;
 
-export function SupplyAssetsList() {
+export function SupplyAssetsList(): ReactElement {
   const { selectedChainId } = useAppStore();
 
   const tokens = moneyMarketSupportedTokens[selectedChainId];
@@ -41,10 +42,21 @@ export function SupplyAssetsList() {
 
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
+  const { data: userSummary } = useUserFormattedSummary(spokeProvider, address);
+  const healthFactor = userSummary?.healthFactor ? Number.parseFloat(userSummary.healthFactor).toFixed(2) : undefined;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Markets</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Markets</CardTitle>
+          <div className="text-sm text-muted-foreground">
+            HF:{' '}
+            <span className="font-semibold text-foreground">
+              {healthFactor && Number.isFinite(Number(healthFactor)) ? healthFactor : '-'}
+            </span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {isIcon ? (
@@ -68,7 +80,7 @@ export function SupplyAssetsList() {
               <TableBody>
                 {isUserReservesLoading || isFormattedReservesLoading || !userReserves || !formattedReserves ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center">
+                    <TableCell colSpan={16} className="text-center">
                       Loading...
                     </TableCell>
                   </TableRow>

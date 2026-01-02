@@ -9,6 +9,7 @@ import type { ChainType } from '@sodax/types';
 import { EVM_CHAIN_ICONS } from '@/constants/chains';
 
 export type EVMChainItemProps = {
+  selectedChainIcon?: string;
   handleConnect: () => void;
   handleDisconnect: () => void;
   isPending: boolean;
@@ -17,6 +18,7 @@ export type EVMChainItemProps = {
 };
 
 export const EVMChainItem: React.FC<EVMChainItemProps> = ({
+  selectedChainIcon,
   handleConnect,
   handleDisconnect,
   isPending,
@@ -26,6 +28,10 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
   const { address } = useXAccount('EVM');
   const [showCopied, setShowCopied] = useState(false);
   const [copiedFadingOut, setCopiedFadingOut] = useState(false);
+
+  const allIcons = EVM_CHAIN_ICONS;
+
+  const remainingIcons = selectedChainIcon ? allIcons.filter(icon => icon !== selectedChainIcon) : allIcons;
 
   const onCopyAddress = () => {
     if (!address) return;
@@ -61,7 +67,7 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
     >
       <div className="flex flex-col gap-2 w-full">
         <div className="flex justify-between items-center">
-          {address ? (
+          {address && (
             <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex gap-1 items-center">
               {!showCopied && address ? shortenAddress(address, 4) : 'EVM'}
               {address && (
@@ -84,17 +90,45 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
                 </div>
               )}
             </div>
-          ) : (
-            <div className="flex">
-              <div className="justify-center text-espresso text-xs font-medium font-['InterRegular'] leading-tight">
-                EVM multi-connect
-              </div>
-            </div>
           )}
+        </div>
+        <div className="inline-flex justify-start items-center gap-4">
+          <div className="flex items-center w-full">
+            {/* ICON STACK + GREEN DOT */}
+            <div className="flex items-center relative">
+              {/* SELECTED CHAIN */}
+              {selectedChainIcon && (
+                <div className="rounded-[6px] outline outline-4 outline-white shadow-[-4px_0px_4px_rgba(175,145,145)]">
+                  <Image src={selectedChainIcon} alt="Selected chain" width={24} height={24} />
+                </div>
+              )}
 
-          <div className="flex flex-wrap justify-end gap-2 grow">
-            <div className="flex gap-1">
+              {/* PLUS */}
+              {selectedChainIcon && <span className="text-clay-light text-sm font-medium mx-2">+</span>}
+
+              {/* OTHER CHAINS */}
+              {remainingIcons.map((icon, index) => (
+                <div
+                  key={index}
+                  className="rounded-[6px] outline outline-4 outline-white shadow-[-4px_0px_4px_rgba(175,145,145)]"
+                >
+                  <Image src={icon} alt={`Chain ${index}`} width={24} height={24} />
+                </div>
+              ))}
+
               {address && (
+                <div className="absolute -bottom-1 -right-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <title>Connected</title>
+                    <circle cx="7" cy="7" r="5.5" fill="#00A778" stroke="white" strokeWidth="3" />
+                  </svg>
+                </div>
+              )}
+            </div>
+
+            {/* ACTION BUTTON */}
+            <div className="ml-auto">
+              {address ? (
                 <Button
                   variant="default"
                   size="sm"
@@ -103,8 +137,7 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
                 >
                   <MinusIcon className="w-4 h-4" />
                 </Button>
-              )}
-              {!address && (
+              ) : (
                 <Button
                   variant="default"
                   size="sm"
@@ -116,33 +149,6 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
                 </Button>
               )}
             </div>
-          </div>
-        </div>
-        <div className="inline-flex justify-start items-center gap-4">
-          <div className="self-stretch inline-flex justify-start items-center flex-wrap content-center relative">
-            {EVM_CHAIN_ICONS.map((evmIcon, index) => (
-              <div
-                key={index}
-                className="rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145)] outline outline-4 outline-white inline-flex flex-col justify-center items-center overflow-hidden"
-              >
-                <Image
-                  key={index}
-                  src={evmIcon}
-                  alt={`EVM Chain ${index + 1}`}
-                  width={24}
-                  height={24}
-                  className="rounded-sm shadow-[0px_6px_12px_0px_rgba(185,172,171,0.10)]"
-                />
-              </div>
-            ))}
-            {address && (
-              <div className="absolute -bottom-1 -right-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <title>Connected</title>
-                  <circle cx="7" cy="7" r="5.5" fill="#00A778" stroke="white" strokeWidth="3" />
-                </svg>
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import type {
   EvmContractCall,
   EvmReturnType,
   GetAddressType,
+  MoneyMarketServiceConfig,
   PartnerFee,
   Result,
   SonicSpokeProviderType,
@@ -30,6 +31,7 @@ import { encodeAddress, randomUint256 } from '../../utils/shared-utils.js';
 import { Erc20Service } from '../erc-20/Erc20Service.js';
 import type { ConfigService } from '../../config/ConfigService.js';
 import { isSonicRawSpokeProvider, isSonicSpokeProviderType } from '../../guards.js';
+import { EvmVaultTokenService } from '../hub/EvmVaultTokenService.js';
 
 export type SonicSpokeDepositParams = {
   from: Address; // The address of the user on the spoke chain
@@ -362,7 +364,7 @@ export class SonicSpokeService {
 
     return {
       aTokenAddress,
-      aTokenAmount: amount,
+      aTokenAmount: EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, amount),
       token,
     };
   }
@@ -382,6 +384,7 @@ export class SonicSpokeService {
     chainId: SpokeChainId,
     dataService: MoneyMarketDataService,
     configService: ConfigService,
+    moneyMarketConfig: MoneyMarketServiceConfig,
   ): Promise<BorrowInfo> {
     const assetConfig = configService.getHubAssetInfo(chainId, token);
 
@@ -389,7 +392,13 @@ export class SonicSpokeService {
       throw new Error('[SonicSpokeService.getBorrowInfo] Hub asset not found');
     }
 
-    const vaultAddress = assetConfig.vault;
+    let vaultAddress = assetConfig.vault;
+
+    if (moneyMarketConfig.bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
+      // when borrowing bnUSD using vault token, bnUSD debt token gets borrowed
+      vaultAddress = moneyMarketConfig.bnUSD;
+    }
+
     const reserveData = await dataService.getReserveData(vaultAddress);
     const variableDebtTokenAddress = reserveData.variableDebtTokenAddress;
 
