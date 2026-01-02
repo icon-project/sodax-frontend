@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useMMAllowance, useSupply, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 
 export function SupplyButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
@@ -19,12 +20,26 @@ export function SupplyButton({ token }: { token: XToken }) {
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleSupply = async () => {
-    try {
-      await supply(amount);
-      setOpen(false);
-    } catch (err) {
-      console.error('Error in handleSupply:', err);
-    }
+    if (!amount) return;
+    if (!spokeProvider) return;
+
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
+    await supply({
+      token: token.address,
+      action: 'supply',
+      amount: parseUnits(amount, token.decimals),
+      toChainId: token.xChainId,
+      toAddress: walletAddress,
+    });
+    setOpen(false);
+    console.log('[SUPPLY]');
+    console.log('token:', token.symbol);
+    console.log('execution chain (wallet):', token.xChainId);
+    console.log('toChainId:', token.xChainId);
+    console.log('toAddress:', walletAddress);
+    console.log('amount (raw):', amount);
+    console.log('amount (parsed):', parseUnits(amount, token.decimals));
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -43,7 +58,8 @@ export function SupplyButton({ token }: { token: XToken }) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
+          variant="cherry"
+          size="sm"
           onClick={() => {
             resetError?.();
             setOpen(true);

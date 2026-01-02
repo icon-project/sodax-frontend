@@ -1,5 +1,5 @@
-import type { SpokeProvider } from '@sodax/sdk';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import type { MoneyMarketRepayParams, SpokeProvider } from '@sodax/sdk';
+import type { XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import { useSodaxContext } from '../shared/useSodaxContext';
@@ -9,6 +9,7 @@ interface RepayResponse {
   value: [string, string];
 }
 
+type RepayParams = string | MoneyMarketRepayParams;
 /**
  * Hook for repaying borrowed tokens to the Sodax money market.
  *
@@ -37,23 +38,21 @@ interface RepayResponse {
 export function useRepay(
   spokeToken: XToken,
   spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<RepayResponse, Error, string> {
+): UseMutationResult<RepayResponse, Error, RepayParams> {
   const { sodax } = useSodaxContext();
 
-  return useMutation<RepayResponse, Error, string>({
-    mutationFn: async (amount: string, toChainId?: SpokeChainId, toAddress?: string) => {
+  return useMutation<RepayResponse, Error, RepayParams>({
+    mutationFn: async (param: RepayParams) => {
       if (!spokeProvider) {
         throw new Error('spokeProvider is not found');
       }
 
       const response = await sodax.moneyMarket.repay(
-        {
+        typeof param === 'string' ? {
           token: spokeToken.address,
-          amount: parseUnits(amount, spokeToken.decimals),
+          amount: parseUnits(param, spokeToken.decimals),
           action: 'repay',
-          toChainId: toChainId,
-          toAddress: toAddress,
-        },
+        } : param,
         spokeProvider,
       );
 
