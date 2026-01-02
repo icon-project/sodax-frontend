@@ -57,6 +57,7 @@ All swap methods are accessible through `sodax.swaps`:
 ### Intent Creation & Execution
 
 - `swap(params)` - Complete swap operation (recommended, handles all steps automatically)
+- `createLimitOrder(params)` - Create a limit order intent (no deadline, must be cancelled manually)
 - `createAndSubmitIntent(params)` - Create and submit intent (alternative to swap)
 - `createIntent(params)` - Create intent only (for custom handling)
 - `submitIntent(payload)` - Submit intent to relay API (for custom handling)
@@ -71,6 +72,7 @@ All swap methods are accessible through `sodax.swaps`:
 - `getIntentHash(intent)` - Get keccak256 hash of an intent
 - `getStatus(request)` - Get intent status from Solver API
 - `cancelIntent(intent, spokeProvider, raw?)` - Cancel an active intent
+- `cancelLimitOrder(intent, spokeProvider, raw?)` - Cancel a limit order intent (wrapper around cancelIntent)
 
 ### Token Approval
 
@@ -438,6 +440,85 @@ if (!swapResult.ok) {
 
 // solverExecutionResponse, created Intent data, and intent delivery info
 const [solverExecutionResponse, intent, intentDeliveryInfo] = swapResult.value;
+```
+
+#### Create Limit Order
+
+Limit orders are similar to regular swaps but have no deadline (deadline is automatically set to `0n`). They remain active until manually cancelled by the user. Limit orders are useful when you want to place an order that should remain open indefinitely until filled or cancelled.
+
+**Key differences from regular swaps:**
+- No deadline (automatically set to `0n`)
+- Uses the same approval flow as regular swaps
+- Must be cancelled manually using `cancelIntent`
+
+```typescript
+import type { CreateLimitOrderParams } from '@sodax/sdk';
+
+// Create limit order params (note: deadline is omitted, it will be set to 0n automatically)
+const limitOrderParams = {
+  inputToken: '0x..',  // The address of the input token on spoke chain
+  outputToken: '0x..',  // The address of the output token on spoke chain
+  inputAmount: BigInt(1000000), // The amount of input tokens
+  minOutputAmount: BigInt(900000), // min amount you are expecting to receive
+  // deadline is omitted - will be automatically set to 0n
+  allowPartialFill: false, // Whether the intent can be partially filled
+  srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
+  dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+  srcAddress: '0x..', // Source address (original address on spoke chain)
+  dstAddress: '0x..', // Destination address (original address on spoke chain)
+  solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
+  data: '0x', // Additional arbitrary data
+} satisfies CreateLimitOrderParams;
+
+// Create the limit order
+const createLimitOrderResult = await sodax.swaps.createLimitOrder({
+  intentParams: limitOrderParams,
+  spokeProvider: bscSpokeProvider,
+  fee, // optional - uses configured partner fee if not provided
+  timeout, // optional - timeout in milliseconds (default: 60 seconds)
+});
+
+if (!createLimitOrderResult.ok) {
+  // handle error
+}
+
+const [solverExecutionResponse, intent, intentDeliveryInfo] = createLimitOrderResult.value;
+
+// Get intent hash for tracking
+const intentHash = sodax.swaps.getIntentHash(intent);
+console.log('Limit order created with intent hash:', intentHash);
+```
+
+**Important Notes:**
+- Limit orders use the same approval flow as regular swaps - use `isAllowanceValid` and `approve` methods
+- Limit orders remain active indefinitely until cancelled or filled
+- The fee is automatically deducted from the `inputAmount` just like regular swaps
+- Limit orders go through the same flow as swaps (create, submit to relay, wait for execution, post to Solver API)
+
+#### Cancel Limit Order
+
+Cancel a limit order intent. This is a wrapper around `cancelIntent` since cancelling a limit order is the same as cancelling any intent.
+
+**Note**: You can also use `cancelIntent` directly - both methods work identically. `cancelLimitOrder` is provided for semantic clarity when working with limit orders.
+
+```typescript
+import type { Intent } from "@sodax/sdk";
+
+// Get intent first (or use intent from createLimitOrder response)
+const intent: Intent = await sodax.swaps.getIntent(txHash);
+
+// Cancel the limit order
+const cancelResult = await sodax.swaps.cancelLimitOrder(
+  intent,
+  bscSpokeProvider,
+);
+
+if (cancelResult.ok) {
+  console.log('[cancelLimitOrder] txHash:', cancelResult.value);
+} else {
+  // handle error
+  console.error('[cancelLimitOrder] error:', cancelResult.error);
+}
 ```
 
 #### Create And Submit Intent (Alternative Method - Equal to Swap)

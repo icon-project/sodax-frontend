@@ -1,17 +1,17 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateIntentParams, SpokeProvider } from '@sodax/sdk';
+import type { CreateIntentParams, CreateLimitOrderParams, SpokeProvider } from '@sodax/sdk';
 
 interface UseApproveReturn {
-  approve: ({ params }: { params: CreateIntentParams }) => Promise<boolean>;
+  approve: ({ params }: { params: CreateIntentParams | CreateLimitOrderParams }) => Promise<boolean>;
   isLoading: boolean;
   error: Error | null;
   resetError: () => void;
 }
 
 /**
- * Hook for approving token spending for money market actions
- * @param token The token to approve spending for
+ * Hook for approving token spending for swap actions
+ * @param params The parameters for the intent to approve spending for
  * @param spokeProvider The spoke provider instance for the chain
  * @returns Object containing approve function, loading state, error state and reset function
  * @example
@@ -24,7 +24,7 @@ interface UseApproveReturn {
  */
 
 export function useSwapApprove(
-  params: CreateIntentParams | undefined,
+  params: CreateIntentParams | CreateLimitOrderParams | undefined,
   spokeProvider: SpokeProvider | undefined,
 ): UseApproveReturn {
   const { sodax } = useSodaxContext();
@@ -36,7 +36,7 @@ export function useSwapApprove(
     error,
     reset: resetError,
   } = useMutation({
-    mutationFn: async ({ params }: { params: CreateIntentParams | undefined }) => {
+    mutationFn: async ({ params }: { params: CreateIntentParams | CreateLimitOrderParams | undefined }) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
