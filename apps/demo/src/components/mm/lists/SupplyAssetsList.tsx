@@ -8,12 +8,14 @@ import { formatUnits } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens } from '@sodax/sdk';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
 
 const TABLE_HEADERS = [
   'Asset',
   'Wallet Balance',
   'Supplied',
-  'Liq. Threshold',
+  'LT %',
   'Total Supply',
   'Supply APY',
   'Supply APR',
@@ -45,13 +47,31 @@ export function SupplyAssetsList(): ReactElement {
   const { data: userSummary } = useUserFormattedSummary(spokeProvider, address);
   const healthFactor = userSummary?.healthFactor ? Number.parseFloat(userSummary.healthFactor).toFixed(2) : undefined;
 
+  console.log('userSummary:', userSummary);
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Markets</CardTitle>
-          <div className="text-sm text-muted-foreground">
-            HF:{' '}
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Health Factor info"
+                  className="inline-flex items-center text-clay hover:text-cherry-dark"
+                >
+                  <Info className="w-4 h-4 text-cherry-soda" />
+                </button>
+              </TooltipTrigger>
+
+              <TooltipContent>
+                <strong>Health Factor</strong> indicates how close your account is to liquidation. Values below{' '}
+                <strong>1</strong> are unsafe.
+              </TooltipContent>
+            </Tooltip>
+            <span className="text-cherry-soda">Health Factor:</span>
             <span className="font-semibold text-foreground">
               {healthFactor && Number.isFinite(Number(healthFactor)) ? healthFactor : '-'}
             </span>
@@ -70,11 +90,39 @@ export function SupplyAssetsList(): ReactElement {
             <Table>
               <TableHeader className="sticky top-0 bg-cream z-20">
                 <TableRow className="border-b border-cherry-grey/20">
-                  {TABLE_HEADERS.map((header, index) => (
-                    <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
-                      {header}
-                    </TableHead>
-                  ))}
+                  {TABLE_HEADERS.map((header, index) => {
+                    if (header === 'LT %') {
+                      return (
+                        <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
+                          <div className="flex items-center gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label="Liquidity Threshold info"
+                                  className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
+                                >
+                                  <Info className="w-3 h-3 mb-0.5 text-cherry-soda" />
+                                </button>
+                              </TooltipTrigger>
+
+                              <TooltipContent>
+                                <strong>Liquidity Threshold</strong> is the percentage of supplied value that counts
+                                toward liquidation calculations.
+                              </TooltipContent>
+                            </Tooltip>
+                            <span>{header}</span>
+                          </div>
+                        </TableHead>
+                      );
+                    }
+
+                    return (
+                      <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
+                        {header}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               </TableHeader>
               <TableBody>

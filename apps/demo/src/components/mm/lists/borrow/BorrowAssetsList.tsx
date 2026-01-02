@@ -60,8 +60,17 @@ export function BorrowAssetsList() {
   // Fetch user reserves to check if they have collateral
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
 
+  //TODO remove after testing
+  if (userReserves?.[0]) {
+    const supplied = userReserves[0].find(r => r.scaledATokenBalance > 0n);
+
+    console.log('Supplied reserve:', supplied);
+  }
+
   // Fetch backend money market assets
   const { data: allMoneyMarketAssets, isLoading: isAssetsLoading } = useBackendAllMoneyMarketAssets();
+
+  console.log('Tokens supported on selected chain:', moneyMarketSupportedTokens[selectedChainId]);
 
   // Check if user has any collateral supplied
   const hasCollateral = useMemo(() => {
