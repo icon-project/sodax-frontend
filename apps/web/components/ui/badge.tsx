@@ -17,6 +17,8 @@ const badgeVariants = cva(
         desktop:
           'text-clay bg-cream-white text-[10px] text-align: center; text-transform: uppercase; mix-blend-multiply rounded-lg h-4',
         mobile: 'text-clay-light bg-transparent text-[11px] mix-blend-multiply',
+        vibrant:
+          'border-transparent bg-vibrant-white rounded-full mix-blend-multiply text-clay-light w-[22px] h-[22px] font-[9px] font-["InterRegular"] font-normal',
       },
     },
     defaultVariants: {

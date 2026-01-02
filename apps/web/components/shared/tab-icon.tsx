@@ -2,7 +2,7 @@
 import type React from 'react';
 import { SwapIcon, SavingsIcon, LoansIcon, MigrateIcon } from '@/components/icons';
 
-export type TabIconType = 'swap' | 'savings' | 'loans' | 'migrate';
+export type TabIconType = 'swap' | 'save' | 'loans' | 'migrate';
 
 interface TabIconProps {
   type: TabIconType;
@@ -14,7 +14,7 @@ interface TabIconProps {
 const TabIcon: React.FC<TabIconProps> = ({ type, isActive, isMobile = false, className = '' }) => {
   const iconComponents: Record<TabIconType, React.ReactNode> = {
     swap: <SwapIcon isActive={isActive} isMobile={isMobile} className={className} />,
-    savings: <SavingsIcon isActive={isActive} isMobile={isMobile} className={className} />,
+    save: <SavingsIcon isActive={isActive} isMobile={isMobile} className={className} />,
     loans: <LoansIcon isActive={isActive} isMobile={isMobile} className={className} />,
     migrate: <MigrateIcon isActive={isActive} isMobile={isMobile} className={className} />,
   };
