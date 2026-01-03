@@ -47,8 +47,7 @@ export function useWithdraw(
       const response = await sodax.moneyMarket.withdraw(
         {
           token: spokeToken.address,
-          // vault token on hub chain decimals is 18
-          amount: parseUnits(amount, 18),
+          amount: parseUnits(amount, spokeToken.decimals),
           action: 'withdraw',
           toChainId: toChainId,
           toAddress: toAddress,
