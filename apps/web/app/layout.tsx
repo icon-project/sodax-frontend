@@ -5,6 +5,8 @@ import Providers from '../providers/providers';
 import AppSidebar from '@/components/landing/sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppStoreProvider } from '@/stores/app-store-provider';
+import Script from 'next/script';
+
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
   variable: '--font-geist-sans',
@@ -27,7 +29,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
+      <head>
+        {/* Google Tag Manager */}
+        <Script id="gtm" strategy="beforeInteractive" src="https://www.googletagmanager.com/gtm.js?id=GTM-W355PCS6" />
+      </head>
+
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            title="Google Tag Manager"
+            src="https://www.googletagmanager.com/ns.html?id=GTM-W355PCS6"
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
+
         <SidebarProvider>
           <AppSidebar />
           <Providers>
