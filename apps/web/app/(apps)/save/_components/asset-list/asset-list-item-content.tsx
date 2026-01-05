@@ -38,9 +38,12 @@ export default function AssetListItemContent({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Element;
+      const isContinueButton = target.closest('button')?.textContent?.includes('Continue');
       if (!tokenAssetRef.current?.contains(target)) {
         setSelectedAsset(null);
-        setSelectedToken(null);
+        if (!isContinueButton) {
+          setSelectedToken(null);
+        }
         setHoveredAsset(null);
         setOutsideClick(true);
         setTimeout(() => {
