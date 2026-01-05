@@ -8,11 +8,10 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '
 import { useXAccount, getXChainType } from '@sodax/wallet-sdk-react';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { formatBalance } from '@/lib/utils';
-import BigNumber from 'bignumber.js';
 import { formatUnits } from 'viem';
 import { chainIdToChainName } from '@/providers/constants';
 import { cn } from '@/lib/utils';
-import { useSaveActions } from '../../_stores/save-store-provider';
+import { useSaveActions, useSaveState } from '../../_stores/save-store-provider';
 import { Button } from '@/components/ui/button';
 import { AlertCircleIcon, ArrowLeft } from 'lucide-react';
 import { useModalStore } from '@/stores/modal-store-provider';
@@ -29,6 +28,7 @@ interface DepositInputAmountProps {
 export default function DepositInputAmount({ selectedToken, tokens, onBack }: DepositInputAmountProps) {
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
   const { setDepositValue } = useSaveActions();
+  const { depositValue } = useSaveState();
   const [progress, setProgress] = useState([0]);
   const previousTokenAddressRef = useRef<string | undefined>(selectedToken?.address);
   const openModal = useModalStore(state => state.openModal);
@@ -40,11 +40,6 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
     : 0n;
 
   const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
-  const usdValue = useMemo(() => {
-    return balance
-      ? new BigNumber(formatUnits(balance, selectedToken?.decimals ?? 0)).multipliedBy(tokenPrice ?? 0).toFixed(2)
-      : '0.00';
-  }, [balance, selectedToken, tokenPrice]);
 
   const maxValue = useMemo(() => {
     return Number(formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0));
@@ -114,7 +109,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
         ) : balance > 0n ? (
           <>
             <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso font-bold">
-              ${usdValue}
+              ${formatBalance(depositValue.toString(), tokenPrice ?? 0)}
             </div>
             <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">
               worth of {selectedToken?.symbol}

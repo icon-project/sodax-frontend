@@ -45,7 +45,7 @@ export default function DepositDialog({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className="w-full md:!max-w-[480px] p-8 md:p-12 md:pb-8 gap-0 sm:h-86 bg-vibrant-white"
+        className="w-full md:!max-w-[480px] p-8 md:p-12 md:pb-8 gap-0 sm:h-86 bg-vibrant-white block"
         hideCloseButton
         enableMotion={true}
         shake={isShaking}
@@ -57,7 +57,7 @@ export default function DepositDialog({
           />
         </DialogTitle>
 
-        {currentStep === 1 && <DepositInfoStep apy={apy} />}
+        {currentStep === 1 && <DepositInfoStep apy={apy} selectedToken={selectedToken as XToken} />}
         {currentStep >= 2 && <DepositConfirmationStep selectedToken={selectedToken as XToken} apy={apy} />}
         <DepositDialogFooter selectedToken={selectedToken} onPendingChange={setIsSupplyPending} onClose={handleClose} />
       </DialogContent>

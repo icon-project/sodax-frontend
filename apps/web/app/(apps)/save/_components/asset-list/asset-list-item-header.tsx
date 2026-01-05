@@ -93,7 +93,6 @@ export default function AssetListItemHeader({
 
   const { depositValue } = useSaveState();
 
-  // Calculate displayed balance: totalSupplyBalance minus depositValue (live update)
   const displayedBalance = Math.max(0, totalWalletBalance - depositValue);
   const { data: tokenPrice } = useTokenPrice(tokens[0] as XToken);
   const isLive = depositValue > 0;

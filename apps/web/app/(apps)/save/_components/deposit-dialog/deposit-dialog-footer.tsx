@@ -83,7 +83,7 @@ export default function DepositDialogFooter({
   };
 
   return (
-    <DialogFooter className="flex justify-between gap-2 mt-7 overflow-hidden">
+    <DialogFooter className="flex justify-between gap-2 overflow-hidden absolute bottom-8 md:inset-x-12 inset-x-8">
       <Button
         variant="cherry"
         className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${

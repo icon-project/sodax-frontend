@@ -1,11 +1,15 @@
 import type React from 'react';
+import type { XToken } from '@sodax/types';
 
-export default function DepositInfoStep({ apy }: { apy: string }): React.JSX.Element {
+export default function DepositInfoStep({
+  apy,
+  selectedToken,
+}: { apy: string; selectedToken: XToken }): React.JSX.Element {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
-          What happens when I supply WBTC?
+          What happens when I supply {selectedToken?.symbol}?
         </div>
         <div className="self-stretch text-clay text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4]">
           Your funds will move to SODAX to start earning. You can manage or withdraw anytime.
