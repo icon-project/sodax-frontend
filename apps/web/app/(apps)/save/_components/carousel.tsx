@@ -56,7 +56,6 @@ export default function CarouselWithPagination({
         className="w-full"
         opts={{
           align: 'start',
-          loop: carouselItems.length > 1,
         }}
       >
         <CarouselContent className="mix-blend-multiply">
