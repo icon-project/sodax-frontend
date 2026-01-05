@@ -22,7 +22,7 @@ export default function DepositDialogFooter({
   onClose,
 }: DepositDialogFooterProps): React.JSX.Element {
   const { currentStep, depositValue } = useSaveState();
-  const { setCurrentStep, setIsSwitchingChain, setIsShowCarousel } = useSaveActions();
+  const { setCurrentStep, setIsSwitchingChain } = useSaveActions();
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const { approve, isLoading: isApproving } = useMMApprove(selectedToken as XToken, spokeProvider);
@@ -62,7 +62,6 @@ export default function DepositDialogFooter({
   const handleDeposit = async (): Promise<void> => {
     const response = await supply(depositValue.toString());
     if (response.ok) {
-      setIsShowCarousel(true);
       setIsCompleted(true);
     }
   };

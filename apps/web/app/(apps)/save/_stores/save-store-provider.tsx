@@ -38,7 +38,6 @@ export const useSaveState = () => {
   const currentStep = useSaveStore(state => state.currentStep);
   const tokenCount = useSaveStore(state => state.tokenCount);
   const isSwitchingChain = useSaveStore(state => state.isSwitchingChain);
-  const isShowCarousel = useSaveStore(state => state.isShowCarousel);
   const openAsset = useSaveStore(state => state.openAsset);
 
   return {
@@ -46,7 +45,6 @@ export const useSaveState = () => {
     currentStep,
     tokenCount,
     isSwitchingChain,
-    isShowCarousel,
     openAsset,
   };
 };
@@ -56,7 +54,6 @@ export const useSaveActions = () => {
   const setCurrentStep = useSaveStore(state => state.setCurrentStep);
   const setTokenCount = useSaveStore(state => state.setTokenCount);
   const setIsSwitchingChain = useSaveStore(state => state.setIsSwitchingChain);
-  const setIsShowCarousel = useSaveStore(state => state.setIsShowCarousel);
   const setOpenAsset = useSaveStore(state => state.setOpenAsset);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
 
@@ -65,7 +62,6 @@ export const useSaveActions = () => {
     setCurrentStep,
     setTokenCount,
     setIsSwitchingChain,
-    setIsShowCarousel,
     setOpenAsset,
     resetSaveState,
   };

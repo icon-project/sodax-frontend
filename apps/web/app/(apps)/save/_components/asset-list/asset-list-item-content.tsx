@@ -2,7 +2,7 @@
 import { motion } from 'motion/react';
 import { accordionVariants } from '@/constants/animation';
 import type { XToken } from '@sodax/types';
-import type { FormatReserveUSDResponse } from '@sodax/sdk';
+import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useTokenWalletBalances } from '@/hooks/useTokenWalletBalances';
 import { useState, useRef, useEffect } from 'react';
@@ -20,13 +20,10 @@ export type DisplayItem = {
 
 export default function AssetListItemContent({
   tokens,
-  formattedReserves,
-  isFormattedReservesLoading,
 }: {
   tokens: XToken[];
-  formattedReserves?: FormatReserveUSDResponse[];
-  isFormattedReservesLoading: boolean;
 }) {
+  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
   const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
   const [hoveredAsset, setHoveredAsset] = useState<number | null>(null);
@@ -133,13 +130,7 @@ export default function AssetListItemContent({
       className="pl-0 md:pl-18 flex flex-col gap-4"
     >
       {isShowDeposits ? (
-        <DepositInputAmount
-          selectedToken={selectedToken}
-          tokens={tokens}
-          formattedReserves={formattedReserves}
-          isFormattedReservesLoading={isFormattedReservesLoading}
-          onBack={() => setIsShowDeposits(false)}
-        />
+        <DepositInputAmount selectedToken={selectedToken} tokens={tokens} onBack={() => setIsShowDeposits(false)} />
       ) : (
         <DepositTokenSelect
           displayItems={displayItems}

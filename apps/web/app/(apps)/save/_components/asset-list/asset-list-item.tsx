@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
 import { useEffect, useRef, useMemo } from 'react';
-import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import { useTokenWalletBalances } from '@/hooks/useTokenWalletBalances';
 import AssetListItemContent from './asset-list-item-content';
 import AssetListItemHeader from './asset-list-item-header';
@@ -13,13 +12,9 @@ import { useSaveState } from '../../_stores/save-store-provider';
 export default function AssetListItem({
   group,
   isExpanded,
-  formattedReserves,
-  isFormattedReservesLoading,
 }: {
   group: { symbol: string; tokens: XToken[] };
   isExpanded: boolean;
-  formattedReserves?: FormatReserveUSDResponse[];
-  isFormattedReservesLoading: boolean;
 }) {
   const { openAsset } = useSaveState();
   const ref = useRef<HTMLDivElement>(null);
@@ -27,7 +22,7 @@ export default function AssetListItem({
 
   // Calculate total wallet balance for all tokens in the group
   const tokensWithBalances = useTokenWalletBalances(tokens);
-  const totalSupplyBalance = useMemo(() => {
+  const totalWalletBalance = useMemo(() => {
     const total = tokensWithBalances.reduce((sum, token) => {
       return sum + Number(token.supplyBalance || '0');
     }, 0);
@@ -83,22 +78,14 @@ export default function AssetListItem({
               symbol={symbol}
               tokens={tokens}
               isExpanded={isExpanded}
-              totalSupplyBalance={totalSupplyBalance}
-              formattedReserves={formattedReserves}
-              isFormattedReservesLoading={isFormattedReservesLoading}
+              totalWalletBalance={totalWalletBalance}
             />
           </AccordionTriggerWithButton>
         </motion.div>
 
         <AccordionContent forceMount className="relative">
           <AnimatePresence initial={false} mode="wait">
-            {isExpanded && (
-              <AssetListItemContent
-                tokens={tokens}
-                formattedReserves={formattedReserves}
-                isFormattedReservesLoading={isFormattedReservesLoading}
-              />
-            )}
+            {isExpanded && <AssetListItemContent tokens={tokens} />}
           </AnimatePresence>
         </AccordionContent>
       </motion.div>

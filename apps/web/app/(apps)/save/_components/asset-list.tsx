@@ -3,7 +3,6 @@ import { Accordion } from '@/components/ui/accordion';
 import { useMemo } from 'react';
 import { getUniqueTokenSymbols, sortStablecoinsFirst, flattenTokens, hasFunds } from '@/lib/utils';
 import AssetListItem from './asset-list/asset-list-item';
-import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useSaveState, useSaveActions } from '../_stores/save-store-provider';
 
@@ -22,8 +21,6 @@ export default function AssetList({
         .sort(sortStablecoinsFirst),
     [allTokens, searchQuery],
   );
-
-  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
 
   const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
 
@@ -65,13 +62,7 @@ export default function AssetList({
             Ready to earn
           </div>
           {readyToEarn.map(group => (
-            <AssetListItem
-              key={group.symbol}
-              group={group}
-              isExpanded={openAsset === group.symbol}
-              formattedReserves={formattedReserves}
-              isFormattedReservesLoading={isFormattedReservesLoading}
-            />
+            <AssetListItem key={group.symbol} group={group} isExpanded={openAsset === group.symbol} />
           ))}
 
           {availableToDeposit.length > 0 && (
@@ -80,26 +71,14 @@ export default function AssetList({
                 Available to deposit
               </div>
               {availableToDeposit.map(group => (
-                <AssetListItem
-                  key={group.symbol}
-                  group={group}
-                  isExpanded={openAsset === group.symbol}
-                  formattedReserves={formattedReserves}
-                  isFormattedReservesLoading={isFormattedReservesLoading}
-                />
+                <AssetListItem key={group.symbol} group={group} isExpanded={openAsset === group.symbol} />
               ))}
             </>
           )}
         </>
       ) : (
         groupedTokens.map(group => (
-          <AssetListItem
-            key={group.symbol}
-            group={group}
-            isExpanded={openAsset === group.symbol}
-            formattedReserves={formattedReserves}
-            isFormattedReservesLoading={isFormattedReservesLoading}
-          />
+          <AssetListItem key={group.symbol} group={group} isExpanded={openAsset === group.symbol} />
         ))
       )}
     </Accordion>

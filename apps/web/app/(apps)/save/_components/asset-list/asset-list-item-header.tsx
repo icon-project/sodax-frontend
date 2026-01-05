@@ -2,13 +2,14 @@
 import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { AnimatePresence, motion } from 'motion/react';
-import { cn } from '@/lib/utils';
+import { cn, formatBalance } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
-import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import { getUniqueByChain } from '@/lib/utils';
 import NetworkIcon from '@/components/shared/network-icon';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useSaveState } from '../../_stores/save-store-provider';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { useReservesUsdFormat } from '@sodax/dapp-kit';
 
 function UserInfo({ isVisible }: { isVisible: boolean }) {
   return (
@@ -78,24 +79,23 @@ interface AssetListItemHeaderProps {
   symbol: string;
   tokens: XToken[];
   isExpanded: boolean;
-  totalSupplyBalance: number;
-  formattedReserves?: FormatReserveUSDResponse[];
-  isFormattedReservesLoading: boolean;
+  totalWalletBalance: number;
 }
 
 export default function AssetListItemHeader({
   symbol,
   tokens,
   isExpanded,
-  totalSupplyBalance,
-  formattedReserves,
-  isFormattedReservesLoading,
+  totalWalletBalance,
 }: AssetListItemHeaderProps) {
+  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { apy } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
+
   const { depositValue } = useSaveState();
 
   // Calculate displayed balance: totalSupplyBalance minus depositValue (live update)
-  const displayedBalance = Math.max(0, totalSupplyBalance - depositValue);
+  const displayedBalance = Math.max(0, totalWalletBalance - depositValue);
+  const { data: tokenPrice } = useTokenPrice(tokens[0] as XToken);
   const isLive = depositValue > 0;
   return (
     <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal) border-none">
@@ -151,9 +151,9 @@ export default function AssetListItemHeader({
               style={{ willChange: 'transform', backfaceVisibility: 'hidden' }}
             >
               {symbol}
-              {!isExpanded && totalSupplyBalance > 0 ? (
+              {!isExpanded && totalWalletBalance > 0 ? (
                 <span className='text-clay-light text-(length:--body-comfortable) font-medium font-["InterRegular"]'>
-                  {totalSupplyBalance}
+                  {formatBalance(totalWalletBalance.toString(), tokenPrice ?? 0)}
                 </span>
               ) : (
                 displayedBalance > 0 && (
@@ -163,7 +163,7 @@ export default function AssetListItemHeader({
                       isLive ? 'text-cherry-bright' : 'text-clay-light',
                     )}
                   >
-                    {displayedBalance}
+                    {formatBalance(displayedBalance.toString(), tokenPrice ?? 0)}
                   </span>
                 )
               )}

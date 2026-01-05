@@ -18,24 +18,15 @@ import { AlertCircleIcon, ArrowLeft } from 'lucide-react';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import DepositDialog from '../deposit-dialog/deposit-dialog';
-import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 
 interface DepositInputAmountProps {
   selectedToken: XToken | null;
   tokens: XToken[];
-  formattedReserves?: FormatReserveUSDResponse[];
-  isFormattedReservesLoading?: boolean;
   onBack?: () => void;
 }
 
-export default function DepositInputAmount({
-  selectedToken,
-  tokens,
-  formattedReserves,
-  isFormattedReservesLoading,
-  onBack,
-}: DepositInputAmountProps) {
+export default function DepositInputAmount({ selectedToken, tokens, onBack }: DepositInputAmountProps) {
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
   const { setDepositValue } = useSaveActions();
   const [progress, setProgress] = useState([0]);
@@ -237,8 +228,6 @@ export default function DepositInputAmount({
                 onOpenChange={setIsDepositDialogOpen}
                 selectedToken={selectedToken}
                 tokens={tokens}
-                formattedReserves={formattedReserves}
-                isFormattedReservesLoading={isFormattedReservesLoading}
               />
             </>
           )}
