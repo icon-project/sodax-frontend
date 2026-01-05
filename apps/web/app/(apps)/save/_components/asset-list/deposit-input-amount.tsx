@@ -103,7 +103,9 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
       <div className="flex gap-2 items-center h-12">
         {!sourceAddress ? (
           <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso">
-            Choose an amount to simulate yield.
+            {depositValue > 0
+              ? `${depositValue} worth of ${selectedToken?.symbol}`
+              : 'Choose an amount to simulate yield.'}
           </div>
         ) : balance > 0n ? (
           <>
@@ -123,12 +125,12 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
       <div
         className={cn(
           'flex items-center gap-2 -mt-2',
-          balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-[2px] pl-4 sm:pl-3 pointer-events-none' : 'pl-4 sm:pl-3',
+          balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-[2px] pl-4 sm:pl-3 pointer-events-none' : '',
         )}
       >
         <CustomSlider
           defaultValue={[0]}
-          max={maxValue}
+          max={sourceAddress ? maxValue : 10000}
           step={0.001}
           value={progress}
           onValueChange={value => {
