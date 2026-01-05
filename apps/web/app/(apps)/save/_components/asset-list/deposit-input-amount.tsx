@@ -143,8 +143,12 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
           }}
           className="h-10"
           trackClassName="bg-cream-white"
-          rangeClassName="bg-[linear-gradient(135deg,#EDE6E6_25%,#E3BEBB_25%,#E3BEBB_50%,#EDE6E6_50%,#EDE6E6_75%,#E3BEBB_75%,#E3BEBB_100%)] 
-     [background-size:20px_20px]"
+          rangeClassName={cn(
+            '[background-size:20px_20px]',
+            !sourceAddress
+              ? 'bg-[linear-gradient(135deg,#EDE6E6_25%,#E3BEBB_25%,#E3BEBB_50%,#EDE6E6_50%,#EDE6E6_75%,#E3BEBB_75%,#E3BEBB_100%)]'
+              : 'bg-cherry-bright',
+          )}
           thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
         />
         <div className="max-w-40">
