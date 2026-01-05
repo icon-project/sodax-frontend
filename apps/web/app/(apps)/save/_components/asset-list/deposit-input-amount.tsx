@@ -107,7 +107,6 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
   return (
     <>
       <div className="flex gap-2 items-center h-12 pl-1">
-        <NetworkIcon id={selectedToken?.xChainId || ''} className="scale-150" />
         {!sourceAddress ? (
           <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
             Choose an amount to simulate yield.
@@ -130,7 +129,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
       <div
         className={cn(
           'flex items-center gap-2 -mt-2',
-          balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-sm pl-4 sm:pl-3' : 'pl-4 sm:pl-3',
+          balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-[2px] pl-4 sm:pl-3' : 'pl-4 sm:pl-3',
         )}
       >
         <CustomSlider
