@@ -76,7 +76,7 @@ export default function TotalSaveTokens(): React.JSX.Element {
 
   return (
     <div className="w-full flex gap-2 justify-start">
-      <div className="text-(length:--body-super-comfortable) font-['InterRegular'] text-clay">Total Save Tokens</div>
+      <div className="text-(length:--body-super-comfortable) font-['InterRegular'] text-clay">Total saved</div>
       <div className="flex items-center -space-x-1">
         {tokensWithBalance.length > 0 ? (
           tokensWithBalance.map((token, index) => (

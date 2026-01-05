@@ -106,14 +106,14 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
 
   return (
     <>
-      <div className="flex gap-2 items-center h-12 pl-1">
+      <div className="flex gap-2 items-center h-12">
         {!sourceAddress ? (
-          <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
+          <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso">
             Choose an amount to simulate yield.
           </div>
         ) : balance > 0n ? (
           <>
-            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1 font-bold">
+            <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso font-bold">
               ${usdValue}
             </div>
             <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">
@@ -121,7 +121,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
             </div>
           </>
         ) : (
-          <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso ml-1">
+          <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso">
             No {selectedToken?.symbol} detected on {chainIdToChainName(selectedToken?.xChainId as ChainId)}.
           </div>
         )}
@@ -182,7 +182,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
       </div>
       <div className="flex gap-2 items-center -mt-2 mb-7">
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
-          Sample available:
+          {!sourceAddress ? 'Sample available:' : 'Available'}
         </div>
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">
           {formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0)} {selectedToken?.symbol}
