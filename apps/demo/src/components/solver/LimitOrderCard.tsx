@@ -13,7 +13,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { calculateExchangeRate } from '@/lib/utils';
 import { parseUnits, formatUnits } from 'viem';
 import {
   type CreateLimitOrderParams,
@@ -25,7 +24,6 @@ import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import {
-  useQuote,
   useSpokeProvider,
   useSwapAllowance,
   useSwapApprove,
@@ -105,42 +103,6 @@ export default function LimitOrderCard() {
     setDestToken(getSupportedSolverTokens(chainId)[0]);
   };
 
-  const payload = useMemo(() => {
-    if (!sourceToken || !destToken) {
-      return undefined;
-    }
-
-    if (Number(sourceAmount) <= 0) {
-      return undefined;
-    }
-
-    return {
-      token_src: sourceToken.address,
-      token_src_blockchain_id: sourceChain,
-      token_dst: destToken.address,
-      token_dst_blockchain_id: destChain,
-      amount: parseUnits(sourceAmount, sourceToken.decimals),
-      quote_type: 'exact_input',
-    } satisfies SolverIntentQuoteRequest;
-  }, [sourceToken, destToken, sourceChain, destChain, sourceAmount]);
-
-  const quoteQuery = useQuote(payload);
-
-  const quote = useMemo(() => {
-    if (quoteQuery.data?.ok) {
-      return quoteQuery.data.value;
-    }
-
-    return undefined;
-  }, [quoteQuery]);
-
-  const exchangeRate = useMemo(() => {
-    return calculateExchangeRate(
-      new BigNumber(sourceAmount),
-      new BigNumber(formatUnits(quote?.quoted_amount ?? 0n, destToken?.decimals ?? 0)),
-    );
-  }, [quote, sourceAmount, destToken]);
-
   const [limitOrderPrice, setLimitOrderPrice] = useState<string>('0');
 
   const minOutputAmount = useMemo(() => {
@@ -163,11 +125,6 @@ export default function LimitOrderCard() {
   };
 
   const createLimitOrderPayload = async () => {
-    if (!quote) {
-      console.error('Quote undefined');
-      return;
-    }
-
     if (!sourceToken || !destToken) {
       console.error('sourceToken or destToken undefined');
       return;
@@ -384,43 +341,6 @@ export default function LimitOrderCard() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          <div className="w-full text-sm text-muted-foreground">
-            {/* Show a skeleton loader while the quote is loading */}
-            {quoteQuery.isLoading ? (
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="bg-muted rounded w-32 h-4 animate-pulse" />
-                  <span className="bg-muted rounded w-20 h-4 animate-pulse" />
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="bg-muted rounded w-40 h-4 animate-pulse" />
-                  <span className="bg-muted rounded w-24 h-4 animate-pulse" />
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="flex justify-between items-center">
-                  <span>Current Exchange Rate</span>
-                  <span>
-                    1 {sourceToken?.symbol} ≈ {exchangeRate.toFixed(8)} {destToken?.symbol}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Current Output Amount</span>
-                  <span>
-                    {formatUnits(quote?.quoted_amount ?? 0n, destToken?.decimals ?? 0)} {destToken?.symbol}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="">
-            {quoteQuery.data?.ok === false && (
-              <div className="text-red-500">{quoteQuery.data.error.detail.message}</div>
-            )}
-          </div>
-
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" onClick={() => createLimitOrderPayload()}>

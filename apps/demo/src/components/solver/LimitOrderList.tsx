@@ -31,11 +31,15 @@ export default function LimitOrderList({ spokeChainId }: { spokeChainId: SpokeCh
       () =>
         userHubAddress
           ? {
-              userAddress: userHubAddress,
-              limit: '100',
-              offset: '0',
+              params: {
+                userAddress: userHubAddress,
+                limit: '100',
+                offset: '0',
+              },
             }
-          : undefined,
+          : {
+              params: undefined,
+            },
       [userHubAddress],
     ),
   );
