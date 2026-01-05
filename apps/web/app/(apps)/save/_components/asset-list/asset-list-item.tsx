@@ -8,6 +8,7 @@ import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import { useTokenWalletBalances } from '@/hooks/useTokenWalletBalances';
 import AssetListItemContent from './asset-list-item-content';
 import AssetListItemHeader from './asset-list-item-header';
+import { useSaveState } from '../../_stores/save-store-provider';
 
 export default function AssetListItem({
   group,
@@ -20,6 +21,7 @@ export default function AssetListItem({
   formattedReserves?: FormatReserveUSDResponse[];
   isFormattedReservesLoading: boolean;
 }) {
+  const { openAsset } = useSaveState();
   const ref = useRef<HTMLDivElement>(null);
   const { symbol, tokens } = group;
 
@@ -58,7 +60,13 @@ export default function AssetListItem({
   }, [isExpanded]);
 
   return (
-    <AccordionItem value={symbol} className={cn('border-none money-market', isExpanded ? 'opacity-100' : 'opacity-60')}>
+    <AccordionItem
+      value={symbol}
+      className={cn(
+        'border-none money-market',
+        openAsset === '' ? 'opacity-100' : isExpanded ? 'opacity-100' : 'opacity-60',
+      )}
+    >
       <motion.div ref={ref} layout="size">
         <Separator className="h-[1px] bg-clay opacity-30" />
         <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30" />

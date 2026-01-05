@@ -10,7 +10,7 @@ import AssetList from './_components/asset-list';
 import { delay, flattenTokens, getUniqueTokenSymbols, calculateAPY } from '@/lib/utils';
 import CarouselWithPagination from './_components/carousel';
 import TotalSaveTokens from './_components/total-save-tokens';
-import { useSaveActions } from './_stores/save-store-provider';
+import { useSaveActions, useSaveState } from './_stores/save-store-provider';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
@@ -32,8 +32,8 @@ export interface CarouselItemData {
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
-  const [openValue, setOpenValue] = useState('');
   const { setDepositValue, setTokenCount } = useSaveActions();
+  const { openAsset } = useSaveState();
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const allTokens = useMemo(() => flattenTokens(), []);
@@ -115,10 +115,10 @@ export default function SavingsPage() {
   }, []);
 
   useEffect(() => {
-    if (openValue !== '') {
+    if (openAsset !== '') {
       setDepositValue(0);
     }
-  }, [openValue, setDepositValue]);
+  }, [openAsset, setDepositValue]);
 
   return (
     <motion.div
@@ -155,7 +155,7 @@ export default function SavingsPage() {
       )}
 
       <motion.div className="w-full flex-grow-1" variants={itemVariants}>
-        <AssetList searchQuery={''} openValue={openValue} setOpenValue={setOpenValue} />
+        <AssetList searchQuery={''} />
       </motion.div>
     </motion.div>
   );

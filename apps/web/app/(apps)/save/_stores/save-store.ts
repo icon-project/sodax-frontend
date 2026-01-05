@@ -8,6 +8,7 @@ export type SaveState = {
   tokenCount: number;
   isSwitchingChain: boolean;
   isShowCarousel: boolean;
+  openAsset: string;
 };
 
 export type SaveActions = {
@@ -16,6 +17,7 @@ export type SaveActions = {
   setTokenCount: (count: number) => void;
   setIsSwitchingChain: (isSwitching: boolean) => void;
   setIsShowCarousel: (isShowCarousel: boolean) => void;
+  setOpenAsset: (value: string) => void;
   resetSaveState: () => void;
 };
 
@@ -27,6 +29,7 @@ export const defaultSaveState: SaveState = {
   tokenCount: 0,
   isSwitchingChain: false,
   isShowCarousel: false,
+  openAsset: '',
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -39,6 +42,7 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         setTokenCount: (count: number) => set({ tokenCount: count }),
         setIsSwitchingChain: (isSwitching: boolean) => set({ isSwitchingChain: isSwitching }),
         setIsShowCarousel: (isShowCarousel: boolean) => set({ isShowCarousel }),
+        setOpenAsset: (value: string) => set({ openAsset: value }),
         resetSaveState: () => {
           const currentState = get();
           set({
@@ -51,6 +55,7 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         name: 'sodax-save-store',
         partialize: state => ({
           depositValue: state.depositValue,
+          openAsset: state.openAsset,
         }),
         merge: (persistedState, currentState) => {
           const persisted = persistedState as Partial<SaveState> | null;

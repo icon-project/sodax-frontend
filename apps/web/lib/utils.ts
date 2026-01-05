@@ -127,6 +127,20 @@ export function hasTokenBalance(balances: Record<string, ChainBalanceEntry[]>, t
   return balances[token.address]?.some(e => e.chainId === token.xChainId) ?? false;
 }
 
+/**
+ * Checks if a token group has any tokens with a balance greater than zero.
+ * @param group - Token group with symbol and tokens array
+ * @param balanceMap - Map of balance keys (format: "chainId-address") to balance strings
+ * @returns true if any token in the group has a balance > 0
+ */
+export function hasFunds(group: { symbol: string; tokens: XToken[] }, balanceMap: Map<string, string>): boolean {
+  return group.tokens.some(token => {
+    const key = `${token.xChainId}-${token.address}`;
+    const balance = balanceMap.get(key);
+    return balance ? Number(balance) > 0 : false;
+  });
+}
+
 export const calculateMaxAvailableAmount = (
   balance: bigint,
   tokenDecimals: number,
