@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { XToken, ChainId } from '@sodax/types';
 import { CustomSlider } from '@/components/ui/customer-slider';
-import NetworkIcon from '@/components/shared/network-icon';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { useXAccount, getXChainType } from '@sodax/wallet-sdk-react';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
