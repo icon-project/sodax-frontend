@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/save/_components/asset-list/deposit-token-select.tsx
 import { motion } from 'motion/react';
 import { TokenAsset } from '@/components/shared/token-asset';
 import { Button } from '@/components/ui/button';
@@ -16,13 +15,11 @@ type DepositTokenSelectItemProps = {
   selectedAsset: number | null;
   isHovered: boolean;
   isHoverDimmed: boolean;
-  handleAssetClick: (index: number) => void;
+  handleAssetClick: (index: number | null) => void;
   setSelectedToken: (token: XToken | null) => void;
-  setSelectedAsset: (asset: number | null) => void;
   tokenAssetRef?: React.RefObject<HTMLDivElement | null>;
 };
 
-// Internal component for rendering a single token select item
 function DepositTokenSelectItem({
   item,
   idx,
@@ -34,7 +31,6 @@ function DepositTokenSelectItem({
   isHoverDimmed,
   handleAssetClick,
   setSelectedToken,
-  setSelectedAsset,
   tokenAssetRef,
 }: DepositTokenSelectItemProps) {
   const shared = {
@@ -104,7 +100,7 @@ function DepositTokenSelectItem({
           isGroup={false}
           onClick={() => {
             setSelectedToken(null);
-            setSelectedAsset(null);
+            handleAssetClick(null);
           }}
         />
       </div>
@@ -115,7 +111,7 @@ function DepositTokenSelectItem({
   if (!item.isGroup) content = renderNormal();
   else if (selectedToken && isSelected) content = renderGroupExpanded();
   else content = renderGroupCollapsed();
-  return <>{content}</>;
+  return <div ref={isSelected ? tokenAssetRef : undefined}>{content}</div>;
 }
 
 type Props = {
@@ -124,13 +120,11 @@ type Props = {
   hoveredAsset: number | null;
   isAnyNonActiveHovered: boolean;
   selectedToken: XToken | null;
-  handleAssetClick: (index: number) => void;
+  handleAssetClick: (index: number | null) => void;
   handleAssetMouseEnter: (index: number) => void;
   handleAssetMouseLeave: (index: number) => void;
   setSelectedToken: (token: XToken | null) => void;
-  setSelectedAsset: (asset: number | null) => void;
   onContinue?: () => void;
-  containerRef?: React.RefObject<HTMLDivElement | null>;
   tokenAssetRef?: React.RefObject<HTMLDivElement | null>;
   apy: string;
   deposits: string;
@@ -146,9 +140,7 @@ export function DepositTokenSelect({
   handleAssetMouseEnter,
   handleAssetMouseLeave,
   setSelectedToken,
-  setSelectedAsset,
   onContinue,
-  containerRef,
   tokenAssetRef,
   apy,
   deposits,
@@ -156,7 +148,7 @@ export function DepositTokenSelect({
   return (
     <>
       <AssetMetrics apy={apy} deposits={deposits} />
-      <div className="flex flex-wrap -ml-3 -my-[1px]" ref={containerRef}>
+      <div className="flex flex-wrap -ml-3 -my-[1px]">
         {displayItems.map((item, idx) => {
           const isSelected = selectedAsset === idx;
           const isHovered = selectedAsset === null && hoveredAsset === idx;
@@ -167,7 +159,6 @@ export function DepositTokenSelect({
           return (
             <motion.div
               key={`${item.token.xChainId || 'group'}-${idx}`}
-              ref={item.isGroup ? tokenAssetRef : undefined}
               onMouseEnter={() => handleAssetMouseEnter(idx)}
               onMouseLeave={() => handleAssetMouseLeave(idx)}
               style={{ filter: `blur(${blurAmount}px)` }}
@@ -184,7 +175,6 @@ export function DepositTokenSelect({
                 isHoverDimmed={shouldDim}
                 handleAssetClick={handleAssetClick}
                 setSelectedToken={setSelectedToken}
-                setSelectedAsset={setSelectedAsset}
                 tokenAssetRef={tokenAssetRef}
               />
             </motion.div>

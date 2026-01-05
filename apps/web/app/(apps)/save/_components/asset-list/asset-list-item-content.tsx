@@ -30,7 +30,6 @@ export default function AssetListItemContent({
   const [isAnyNonActiveHovered, setIsAnyNonActiveHovered] = useState(false);
   const [isShowDeposits, setIsShowDeposits] = useState(false);
   const tokenAssetRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const [selectedToken, setSelectedToken] = useState<XToken | null>(null);
 
   useEffect(() => {
@@ -39,22 +38,10 @@ export default function AssetListItemContent({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Element;
-
-      const networkIcons = document.querySelectorAll('.data-network-icon');
-      const isClickInsideAsset = tokenAssetRef.current?.contains(target as Node);
-
-      if (networkIcons.length > 0) {
-        if (!isClickInsideAsset) {
-          setSelectedAsset(null);
-          setSelectedToken(null);
-          setHoveredAsset(null);
-        }
-      } else {
-        if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-          setSelectedAsset(null);
-          setSelectedToken(null);
-          setHoveredAsset(null);
-        }
+      if (!tokenAssetRef.current?.contains(target)) {
+        setSelectedAsset(null);
+        setSelectedToken(null);
+        setHoveredAsset(null);
       }
     };
 
@@ -100,7 +87,7 @@ export default function AssetListItemContent({
       });
   }
 
-  const handleAssetClick = (index: number) => {
+  const handleAssetClick = (index: number | null) => {
     setSelectedAsset(prev => (prev === index ? null : index));
     setHoveredAsset(null);
   };
@@ -142,9 +129,7 @@ export default function AssetListItemContent({
           handleAssetMouseEnter={handleAssetMouseEnter}
           handleAssetMouseLeave={handleAssetMouseLeave}
           setSelectedToken={setSelectedToken}
-          setSelectedAsset={setSelectedAsset}
           onContinue={!isShowDeposits ? () => setIsShowDeposits(true) : undefined}
-          containerRef={containerRef}
           tokenAssetRef={tokenAssetRef}
           apy={apy}
           deposits={deposits}

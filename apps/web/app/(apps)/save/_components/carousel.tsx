@@ -8,7 +8,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/com
 import { cn, formatBalance } from '@/lib/utils';
 import { CircleMinusIcon, CirclePlusIcon, Settings2, HistoryIcon } from 'lucide-react';
 import CanLogo from '@/components/shared/can-logo';
-import { Item, ItemContent, ItemMedia, ItemTitle, ItemDescription, ItemFooter } from '@/components/ui/item';
+import { Item, ItemContent, ItemMedia, ItemTitle, ItemDescription } from '@/components/ui/item';
 import type { SpokeChainId } from '@sodax/types';
 import NetworkIcon from '@/components/shared/network-icon';
 import { Badge } from '@/components/ui/badge';
