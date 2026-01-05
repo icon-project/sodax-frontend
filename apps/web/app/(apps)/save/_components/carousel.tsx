@@ -61,7 +61,7 @@ export default function CarouselWithPagination({
           loop: carouselItems.length > 1,
         }}
       >
-        <CarouselContent>
+        <CarouselContent className="mix-blend-multiply">
           {carouselItems.length > 0 ? (
             carouselItems.map((item, index) => (
               <CarouselItemContent key={`${item.token.symbol}-${index}`} item={item} tokenPrices={tokenPrices} />
@@ -113,7 +113,7 @@ function CarouselItemContent({
 
   return (
     <CarouselItem className="basis-1/1.5">
-      <Card className="bg-[#eee7e7] w-80 h-42 px-6 py-8 border-none !shadow-none">
+      <Card className="bg-almost-white w-80 h-42 px-6 py-8 border-none !shadow-none">
         <CardContent className="flex flex-col p-0 border-none">
           <div className="flex justify-end w-full">
             <Settings2 className="w-4 h-4 text-clay-light cursor-pointer" />
