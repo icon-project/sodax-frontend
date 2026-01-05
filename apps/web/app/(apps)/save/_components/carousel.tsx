@@ -110,7 +110,7 @@ function CarouselItemContent({
 
   return (
     <CarouselItem className="basis-1/1.5">
-      <Card className="group bg-almost-white w-80 h-42 px-6 py-8 border-none !shadow-none">
+      <Card className="group bg-almost-white w-80 h-42 px-6 py-8 border-none !shadow-none select-none">
         <CardContent className="flex flex-col p-0 border-none">
           <div className="flex justify-end w-full transition-opacity duration-200 group-hover:opacity-0">
             <Settings2 className="w-4 h-4 text-clay-light cursor-pointer" />
