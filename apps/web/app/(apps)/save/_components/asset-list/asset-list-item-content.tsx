@@ -31,7 +31,7 @@ export default function AssetListItemContent({
   const [isShowDeposits, setIsShowDeposits] = useState(false);
   const tokenAssetRef = useRef<HTMLDivElement>(null);
   const [selectedToken, setSelectedToken] = useState<XToken | null>(null);
-
+  const [outsideClick, setOutsideClick] = useState(false);
   useEffect(() => {
     if (tokens.length === 1) setSelectedToken(tokens[0] as XToken);
   }, [tokens]);
@@ -42,6 +42,10 @@ export default function AssetListItemContent({
         setSelectedAsset(null);
         setSelectedToken(null);
         setHoveredAsset(null);
+        setOutsideClick(true);
+        setTimeout(() => {
+          setOutsideClick(false);
+        }, 100);
       }
     };
 
@@ -88,6 +92,7 @@ export default function AssetListItemContent({
   }
 
   const handleAssetClick = (index: number | null) => {
+    if (outsideClick) return;
     setSelectedAsset(prev => (prev === index ? null : index));
     setHoveredAsset(null);
   };

@@ -123,7 +123,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
       <div
         className={cn(
           'flex items-center gap-2 -mt-2',
-          balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-[2px] pl-4 sm:pl-3' : 'pl-4 sm:pl-3',
+          balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-[2px] pl-4 sm:pl-3 pointer-events-none' : 'pl-4 sm:pl-3',
         )}
       >
         <CustomSlider
