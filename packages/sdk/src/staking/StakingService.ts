@@ -44,7 +44,7 @@ export type StakeParams = {
 };
 
 export type UnstakeParams = {
-  amount: bigint;
+  amount: bigint; // amount of xSoda to unstake
   account: Address;
   action: 'unstake';
 };
@@ -592,7 +592,13 @@ export class StakingService {
         this.hubProvider,
       );
 
-      const data: Hex = this.buildUnstakeData(hubWallet, params);
+      const xSoda = this.hubProvider.chainConfig.addresses.xSoda;
+      const underlyingSodaAmount = await StakingLogic.convertXSodaSharesToSoda(
+        xSoda,
+        params.amount,
+        this.hubProvider.publicClient,
+      );
+      const data: Hex = this.buildUnstakeData(hubWallet, params, xSoda, underlyingSodaAmount);
 
       let txResult: Promise<TxReturnType<S, R>> | TxReturnType<S, R>;
       if (isHub) {
@@ -638,13 +644,12 @@ export class StakingService {
    * @param params - The unstake parameters
    * @returns The encoded contract call data
    */
-  public buildUnstakeData(hubWallet: Address, params: UnstakeParams): Hex {
+  public buildUnstakeData(hubWallet: Address, params: UnstakeParams, xSoda: Address, underlyingSodaAmount: bigint): Hex {
     const hubConfig = getHubChainConfig();
     const stakedSoda = hubConfig.addresses.stakedSoda;
-    const xSoda = hubConfig.addresses.xSoda;
     const calls: EvmContractCall[] = [];
     calls.push(StakingLogic.encodeXSodaRedeem(xSoda, params.amount, hubWallet, hubWallet));
-    calls.push(StakingLogic.encodeUnstake(stakedSoda, hubWallet, params.amount));
+    calls.push(StakingLogic.encodeUnstake(stakedSoda, hubWallet, underlyingSodaAmount));
     return encodeContractCalls(calls);
   }
 
