@@ -99,7 +99,7 @@ export function SupplyAssetsList(): ReactElement {
                               <TooltipTrigger asChild>
                                 <button
                                   type="button"
-                                  aria-label="Liquidity Threshold info"
+                                  aria-label="Liquidation Threshold info"
                                   className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
                                 >
                                   <Info className="w-3 h-3 mb-0.5 text-cherry-soda" />
@@ -107,7 +107,7 @@ export function SupplyAssetsList(): ReactElement {
                               </TooltipTrigger>
 
                               <TooltipContent>
-                                <strong>Liquidity Threshold</strong> is the percentage of supplied value that counts
+                                <strong>Liquidation Threshold</strong> is the percentage of supplied value that counts
                                 toward liquidation calculations.
                               </TooltipContent>
                             </Tooltip>
