@@ -125,7 +125,14 @@ export default function AssetListItemContent({
       className="pl-0 md:pl-18 flex flex-col gap-4"
     >
       {isShowDeposits ? (
-        <DepositInputAmount selectedToken={selectedToken} tokens={tokens} onBack={() => setIsShowDeposits(false)} />
+        <DepositInputAmount
+          selectedToken={selectedToken}
+          tokens={tokens}
+          onBack={() => {
+            setIsShowDeposits(false);
+            setSelectedToken(null);
+          }}
+        />
       ) : (
         <DepositTokenSelect
           displayItems={displayItems}
