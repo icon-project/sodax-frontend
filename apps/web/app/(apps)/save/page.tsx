@@ -7,7 +7,7 @@ import { useEffect, useState, useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import AnimatedNumber from '@/components/shared/animated-number';
 import AssetList from './_components/asset-list';
-import { delay, flattenTokens, getUniqueTokenSymbols, calculateAPY } from '@/lib/utils';
+import { delay, flattenTokens, getUniqueTokenSymbols, calculateAPY, formatBalance } from '@/lib/utils';
 import CarouselWithPagination from './_components/carousel';
 import TotalSaveTokens from './_components/total-save-tokens';
 import { useSaveActions, useSaveState } from './_stores/save-store-provider';
@@ -82,8 +82,8 @@ export default function SavingsPage() {
       if (tokenPrices && Number(totalBalanceStr) > 0) {
         const priceKey = `${firstToken.symbol}-${firstToken.xChainId}`;
         const tokenPrice = tokenPrices[priceKey] || 0;
-        const usdValue = new BigNumber(totalBalanceStr).multipliedBy(tokenPrice).toFixed(2);
-        fiatValue = `$${Number(usdValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const usdValue = new BigNumber(totalBalanceStr).multipliedBy(tokenPrice).toString();
+        fiatValue = `$${formatBalance(usdValue, tokenPrice)}`;
       }
 
       // Calculate APY

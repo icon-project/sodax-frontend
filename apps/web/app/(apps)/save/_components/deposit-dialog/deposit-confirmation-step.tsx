@@ -1,7 +1,10 @@
 import type React from 'react';
 import type { XToken } from '@sodax/types';
-import { TokenAsset } from '@/components/shared/token-asset';
 import { useSaveState } from '../../_stores/save-store-provider';
+import CurrencyLogo from '@/components/shared/currency-logo';
+import { formatBalance } from '@/lib/utils';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
+import BigNumber from 'bignumber.js';
 
 interface DepositConfirmationStepProps {
   selectedToken: XToken;
@@ -13,7 +16,7 @@ export default function DepositConfirmationStep({
   apy,
 }: DepositConfirmationStepProps): React.JSX.Element {
   const { depositValue } = useSaveState();
-
+  const { data: usdPrice } = useTokenPrice(selectedToken);
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col text-center">
@@ -25,20 +28,17 @@ export default function DepositConfirmationStep({
         </div>
       </div>
 
-      <div className="flex justify-center">
-        <TokenAsset
-          name={selectedToken.symbol || ''}
-          token={selectedToken}
-          isHoldToken
-          formattedBalance={depositValue.toString()}
-          isGroup={false}
-          isClickBlurred={false}
-          isHoverDimmed={false}
-          isHovered={false}
-          onMouseEnter={() => {}}
-          onMouseLeave={() => {}}
-          onClick={() => {}}
-        />
+      <div className="flex flex-col items-center justify-center">
+        <CurrencyLogo currency={selectedToken} />
+        <div className="mt-2">
+          <div className="text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4] gap-1 flex">
+            <span className="text-espresso">{depositValue}</span>
+            <span className="text-clay-light">{selectedToken.symbol}</span>
+          </div>
+          <div className="text-clay-light font-['InterRegular'] text-(length:--body-small) leading-[1.4] text-center">
+            ${formatBalance(new BigNumber(depositValue).multipliedBy(usdPrice ?? 0).toString(), usdPrice ?? 0)}
+          </div>
+        </div>
       </div>
     </div>
   );
