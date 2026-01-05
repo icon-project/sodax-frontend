@@ -3,20 +3,18 @@
 
 import * as React from 'react';
 import { useMemo } from 'react';
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { cn, formatBalance } from '@/lib/utils';
-import { Settings2 } from 'lucide-react';
+import { CircleMinusIcon, CirclePlusIcon, Settings2, HistoryIcon } from 'lucide-react';
 import CanLogo from '@/components/shared/can-logo';
-import { Item, ItemContent, ItemMedia, ItemTitle, ItemDescription } from '@/components/ui/item';
+import { Item, ItemContent, ItemMedia, ItemTitle, ItemDescription, ItemFooter } from '@/components/ui/item';
 import type { SpokeChainId } from '@sodax/types';
 import NetworkIcon from '@/components/shared/network-icon';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { chainIdToChainName } from '@/providers/constants';
 import type { CarouselItemData, NetworkBalance } from '../page';
-
 interface CarouselWithPaginationProps {
   carouselItems: CarouselItemData[];
   tokenPrices?: Record<string, number>;
@@ -113,13 +111,13 @@ function CarouselItemContent({
 
   return (
     <CarouselItem className="basis-1/1.5">
-      <Card className="bg-almost-white w-80 h-42 px-6 py-8 border-none !shadow-none">
+      <Card className="group bg-almost-white w-80 h-42 px-6 py-8 border-none !shadow-none">
         <CardContent className="flex flex-col p-0 border-none">
-          <div className="flex justify-end w-full">
+          <div className="flex justify-end w-full transition-opacity duration-200 group-hover:opacity-0">
             <Settings2 className="w-4 h-4 text-clay-light cursor-pointer" />
           </div>
-          <div className="flex w-full mt-8">
-            <Item className="p-0 w-full">
+          <div className="flex w-full mt-8 group-hover:-mt-2">
+            <Item className="p-0 w-full gap-2">
               <ItemMedia className="w-14 h-14">
                 <CanLogo currency={item.token} hideNetworkIcon={true} />
               </ItemMedia>
@@ -145,10 +143,24 @@ function CarouselItemContent({
                       </span>
                     )}
                   </div>
-                  <div className="flex">
+                  <div className="flex transition-opacity duration-200 group-hover:opacity-0">
                     <Badge className="h-4 min-w-[70px] mix-blend-multiply text-white bg-gradient-to-br from-cherry-bright to-cherry-brighter px-2">
                       <span className="text-[10px] font-['InterBold'] mt-[1px]">{item.apy} APY</span>
                     </Badge>
+                  </div>
+                </ItemDescription>
+                <ItemDescription className="flex gap-4 opacity-0 transition-opacity duration-200 !mt-6 group-hover:opacity-100">
+                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer">
+                    <CirclePlusIcon className="w-4 h-4 text-espresso" />
+                    Add
+                  </div>
+                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer">
+                    <CircleMinusIcon className="w-4 h-4 text-espresso" />
+                    Withdraw
+                  </div>
+                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer">
+                    <HistoryIcon className="w-4 h-4 text-espresso" />
+                    History
                   </div>
                 </ItemDescription>
               </ItemContent>
