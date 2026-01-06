@@ -1,4 +1,4 @@
-name: Website Release
+name: Publish @sodax/web
 
 on:
   push:
