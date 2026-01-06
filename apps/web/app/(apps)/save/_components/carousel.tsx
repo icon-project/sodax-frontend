@@ -75,6 +75,7 @@ export default function CarouselWithPagination({
             </CarouselItem>
           )}
         </CarouselContent>
+        <div className="w-32 h-42 right-0 top-0 absolute bg-gradient-to-l from-[#F5F2F2] to-[rgba(245, 242, 242, 0)]" />
       </Carousel>
       <div className="mt-4 flex items-center justify-start gap-2">
         {Array.from({ length: Math.max(count, carouselItems.length) }).map((_, index) => (
