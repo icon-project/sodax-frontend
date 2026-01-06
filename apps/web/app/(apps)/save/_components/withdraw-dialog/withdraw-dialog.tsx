@@ -5,7 +5,7 @@ import type React from 'react';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import type { XToken } from '@sodax/types';
-import { XIcon } from 'lucide-react';
+import { ArrowLeft, XIcon } from 'lucide-react';
 import { formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import AmountInputSlider from '../amount-input-slider';
@@ -75,10 +75,14 @@ export default function WithdrawDialog({ open, onOpenChange, selectedToken }: Wi
             0.249087 {selectedToken?.symbol}
           </div>
         </div>
-        <DialogFooter className="flex justify-between gap-2 overflow-hidden absolute bottom-8 md:inset-x-12 inset-x-8">
+        <DialogFooter className="flex gap-2 overflow-hidden absolute bottom-8 md:inset-x-12 inset-x-8 !justify-start flex-row">
+          <Button variant="cream" className="w-10 h-10" onMouseDown={() => {}}>
+            <ArrowLeft />
+          </Button>
           <Button
             variant="cherry"
-            className="text-white font-['InterRegular'] transition-all duration-300 ease-in-out flex-1"
+            className="text-white font-['InterRegular'] transition-all duration-300 ease-in-out w-[105px]"
+            onClick={() => setIsWithdrawPending(true)}
           >
             Continue
           </Button>
