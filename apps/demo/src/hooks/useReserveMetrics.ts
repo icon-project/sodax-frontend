@@ -1,3 +1,4 @@
+// apps/demo/src/hooks/useReserveMetrics.ts
 import { formatUnits } from 'viem';
 
 import { hubAssets, type XToken } from '@sodax/types';
@@ -48,6 +49,8 @@ interface ReserveMetricsResult {
   totalBorrow: string;
   totalLiquidityUSD: string;
   totalBorrowsUSD: string;
+  supplyBalanceUSD: string;
+  liquidationThreshold: string;
 }
 
 export function useReserveMetrics({
@@ -68,6 +71,8 @@ export function useReserveMetrics({
     let totalBorrow = '-';
     let totalLiquidityUSD = '-';
     let totalBorrowsUSD = '-';
+    let supplyBalanceUSD = '-';
+    let liquidationThreshold = '-';
 
     if (formattedReserve) {
       const liquidityRate = Number(formattedReserve.liquidityRate) / 1e27;
@@ -88,6 +93,21 @@ export function useReserveMetrics({
         totalLiquidityUSD = `$${Number(formattedReserve.totalLiquidityUSD ?? 0).toFixed(2)}`;
         totalBorrowsUSD = `$${Number(formattedReserve.totalDebtUSD ?? 0).toFixed(2)}`;
       }
+
+      const ltValue = Number(formattedReserve.formattedReserveLiquidationThreshold);
+      if (Number.isFinite(ltValue) && ltValue > 0) {
+        liquidationThreshold = `${(ltValue * 100).toFixed(2)}%`;
+      }
+
+      if (userReserve) {
+        const decimals = Number(formattedReserve.decimals ?? 18);
+        const priceInUsd = Number(formattedReserve.priceInUSD);
+        const suppliedTokens = Number(formatUnits(BigInt(userReserve.scaledATokenBalance), decimals));
+        const suppliedUsd = suppliedTokens * priceInUsd;
+        if (Number.isFinite(suppliedUsd) && suppliedUsd > 0) {
+          supplyBalanceUSD = `$${suppliedUsd.toFixed(2)}`;
+        }
+      }
     }
 
     return {
@@ -101,6 +121,8 @@ export function useReserveMetrics({
       totalBorrow,
       totalLiquidityUSD,
       totalBorrowsUSD,
+      supplyBalanceUSD,
+      liquidationThreshold,
     };
   } catch (error) {
     console.error(`Error in useReserveMetrics for ${token.symbol} (${token.address}):`, error);
@@ -115,6 +137,8 @@ export function useReserveMetrics({
       totalBorrow: '-',
       totalLiquidityUSD: '-',
       totalBorrowsUSD: '-',
+      supplyBalanceUSD: '-',
+      liquidationThreshold: '-',
     };
   }
 }
