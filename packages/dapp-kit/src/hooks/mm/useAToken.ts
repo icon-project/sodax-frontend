@@ -1,37 +1,55 @@
-import type { Address, XToken } from '@sodax/sdk';
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { isAddress } from 'viem';
+import type { XToken } from '@sodax/sdk';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
+export type UseATokenParams = {
+  aToken: string;
+  queryOptions?: UseQueryOptions<XToken, Error>;
+};
+
 /**
- * React hook for fetching an AToken's ERC20 metadata from the Sodax money market.
+ * React hook to fetch and cache metadata for a given aToken address.
  *
- * Fetches and caches the metadata (name, symbol, decimals, address) for a given aToken address and chain using React Query.
- * This metadata is typically required for rendering balances and labels in UI components.
+ * Accepts an aToken address and React Query options to control query behavior.
+ * Returns the aToken's ERC20-style metadata from the Sodax money market, with querying/caching
+ * powered by React Query.
  *
- * @param {Address | undefined} aToken - The aToken contract address to look up. Should be an EVM address.
- * @param {ChainId | undefined} chainId - The EVM chain ID for the aToken.
+ * @param {UseATokenParams} params - Required params object:
+ *   @property {Address} aToken - The aToken contract address to query.
+ *   @property {UseQueryOptions<XToken, Error>} queryOptions - React Query options to control query (e.g., staleTime, refetch, etc.).
+ *
+ * @returns {UseQueryResult<XToken, Error>} React Query result object:
+ *   - data: XToken metadata, if available
+ *   - isLoading: Boolean loading state
+ *   - error: Error, if API call fails
  *
  * @example
- * ```typescript
- * const { data: aToken, isLoading, error } = useAToken(aTokenAddress, chainId);
- * if (aToken) {
- *   console.log(aToken.symbol); // 'aETH'
+ * const { data: xToken, isLoading, error } = useAToken({ aToken: aTokenAddress, queryOptions: {} });
+ * if (xToken) {
+ *   console.log(xToken.symbol);
  * }
- * ```
- *
- * @returns {UseQueryResult<Erc20Token, Error>} A React Query result object containing:
- *   - data: The aToken ERC20 metadata when available.
- *   - isLoading: Loading state indicator.
- *   - error: Any error that occurred during data fetching.
  */
-export function useAToken(aToken: Address | undefined): UseQueryResult<XToken, Error> {
+export function useAToken({ aToken, queryOptions }: UseATokenParams): UseQueryResult<XToken, Error> {
   const { sodax } = useSodaxContext();
+  const defaultQueryOptions = {
+    queryKey: ['mm', 'aToken', aToken],
+    enabled: !!aToken,
+  };
+  queryOptions = {
+    ...defaultQueryOptions,
+    ...queryOptions, // override default query options if provided
+  };
 
   return useQuery({
-    queryKey: ['aToken', sodax.hubProvider.chainConfig.chain.id, aToken],
+    ...queryOptions,
     queryFn: async () => {
       if (!aToken) {
         throw new Error('aToken address or hub provider is not defined');
+      }
+
+      if (!isAddress(aToken)) {
+        throw new Error('aToken address is not a valid address');
       }
 
       const aTokenData = await sodax.moneyMarket.data.getATokenData(aToken);
@@ -40,6 +58,5 @@ export function useAToken(aToken: Address | undefined): UseQueryResult<XToken, E
         xChainId: sodax.hubProvider.chainConfig.chain.id,
       };
     },
-    enabled: !!aToken,
   });
 }
