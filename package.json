@@ -14,14 +14,20 @@
     "checkTs": "turbo run checkTs",
     "test": "turbo run test",
     "clean": "turbo clean && rm -rf node_modules dist .turbo && rm -rf apps/*/node_modules apps/*/dist apps/*/.turbo && rm -rf packages/*/node_modules packages/*/dist packages/*/.turbo",
-    "prepare": "husky"
+    "prepare": "husky",
+    "release": "semantic-release",
+    "release:setup": "git tag sodax-website@0.8.0 && git push origin sodax-website@0.8.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@commitlint/cli": "^19.7.1",
     "@commitlint/config-conventional": "^19.7.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.1.0",
+    "@semantic-release/github": "^9.2.6",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3",
+    "semantic-release": "^23.0.2",
     "turbo": "^2.4.0"
   },
   "commitlint": {
