@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/save/_components/carousel.tsx
 'use client';
 
 import * as React from 'react';
@@ -9,7 +8,7 @@ import { cn, formatBalance } from '@/lib/utils';
 import { CircleMinusIcon, CirclePlusIcon, Settings2, HistoryIcon } from 'lucide-react';
 import CanLogo from '@/components/shared/can-logo';
 import { Item, ItemContent, ItemMedia, ItemTitle, ItemDescription } from '@/components/ui/item';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import type { SpokeChainId } from '@sodax/types';
 import NetworkIcon from '@/components/shared/network-icon';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -29,7 +28,7 @@ export default function CarouselWithPagination({
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
-  const [selectedWithdrawToken, setSelectedWithdrawToken] = React.useState<XToken | null>(null);
+  const [selectedWithdrawItem, setSelectedWithdrawItem] = React.useState<CarouselItemData | null>(null);
 
   React.useEffect(() => {
     if (!api) {
@@ -69,7 +68,7 @@ export default function CarouselWithPagination({
                 item={item}
                 tokenPrices={tokenPrices}
                 onWithdrawClick={() => {
-                  setSelectedWithdrawToken(item.token);
+                  setSelectedWithdrawItem(item);
                   setIsWithdrawDialogOpen(true);
                 }}
               />
@@ -103,7 +102,7 @@ export default function CarouselWithPagination({
       <WithdrawDialog
         open={isWithdrawDialogOpen}
         onOpenChange={setIsWithdrawDialogOpen}
-        selectedToken={selectedWithdrawToken}
+        selectedItem={selectedWithdrawItem}
       />
     </div>
   );

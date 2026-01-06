@@ -37,8 +37,8 @@ const CanLogo: React.FC<CanLogoProps> = ({
             <Image
               data-property-1="Sonic"
               className="w-4 h-4"
-              src="/chain/sonic.png"
-              alt="Sonic"
+              src={`/chain/${currency.xChainId}.png`}
+              alt={currency.xChainId}
               width={16}
               height={16}
             />
