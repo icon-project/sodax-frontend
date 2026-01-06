@@ -1,9 +1,6 @@
 // apps/web/app/(apps)/save/_components/asset-list/deposit-input-amount.tsx
-import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { XToken, ChainId } from '@sodax/types';
-import { CustomSlider } from '@/components/ui/customer-slider';
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
 import { useXAccount, getXChainType } from '@sodax/wallet-sdk-react';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { formatBalance } from '@/lib/utils';
@@ -17,6 +14,7 @@ import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import DepositDialog from '../deposit-dialog/deposit-dialog';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
+import AmountInputSlider from '../amount-input-slider';
 
 interface DepositInputAmountProps {
   selectedToken: XToken | null;
@@ -104,13 +102,13 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
         {!sourceAddress ? (
           <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso">
             {depositValue > 0
-              ? `${depositValue} worth of ${selectedToken?.symbol}`
+              ? `$${formatBalance((depositValue * (tokenPrice ?? 0)).toString(), tokenPrice ?? 0)} worth of ${selectedToken?.symbol}`
               : 'Choose an amount to simulate yield.'}
           </div>
         ) : balance > 0n ? (
           <>
             <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso font-bold">
-              ${formatBalance(depositValue.toString(), tokenPrice ?? 0)}
+              ${formatBalance((depositValue * (tokenPrice ?? 0)).toString(), tokenPrice ?? 0)}
             </div>
             <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">
               worth of {selectedToken?.symbol}
@@ -122,64 +120,20 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
           </div>
         )}
       </div>
-      <div
+      <AmountInputSlider
+        value={progress}
+        onValueChange={value => {
+          setProgress(value);
+          setDepositValue(value[0] ?? 0);
+        }}
+        maxValue={maxValue}
+        sourceAddress={sourceAddress}
+        tokenSymbol={tokens[0]?.symbol || selectedToken?.symbol || ''}
+        onInputChange={handleInputChange}
         className={cn(
-          'flex items-center gap-2 -mt-2',
           balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-[2px] pl-4 sm:pl-3 pointer-events-none' : '',
         )}
-      >
-        <CustomSlider
-          defaultValue={[0]}
-          max={sourceAddress ? maxValue : 10000}
-          step={0.001}
-          value={progress}
-          onValueChange={value => {
-            setProgress(value);
-            setDepositValue(value[0] ?? 0);
-          }}
-          className="h-10"
-          trackClassName="bg-cream-white"
-          rangeClassName={cn(
-            '[background-size:20px_20px]',
-            !sourceAddress
-              ? 'bg-[linear-gradient(135deg,#EDE6E6_25%,#E3BEBB_25%,#E3BEBB_50%,#EDE6E6_50%,#EDE6E6_75%,#E3BEBB_75%,#E3BEBB_100%)]'
-              : 'bg-cherry-bright',
-          )}
-          thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
-        />
-        <div className="max-w-40">
-          <InputGroup className="[--radius:9999px] border-4 border-cream-white w-40 h-10 pr-1">
-            <InputGroupAddon className="text-muted-foreground pl-1.5">
-              <Image
-                className="w-6 h-6 rounded-[256px]"
-                src={`/coin/${tokens[0]?.symbol.toLowerCase()}.png`}
-                alt={tokens[0]?.symbol || ''}
-                width={24}
-                height={24}
-                priority
-              />
-            </InputGroupAddon>
-            <InputGroupInput
-              id="input-secure-19"
-              type="number"
-              min={0}
-              max={maxValue}
-              step={0.001}
-              value={progress[0]?.toString() || '0'}
-              onChange={handleInputChange}
-              className="!text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular']"
-            />
-            <InputGroupAddon align="inline-end">
-              <InputGroupButton
-                size="icon-xs"
-                className="text-clay text-[9px] font-['InterRegular'] font-normal !border-none !outline-none leading-0"
-              >
-                MAX
-              </InputGroupButton>
-            </InputGroupAddon>
-          </InputGroup>
-        </div>
-      </div>
+      />
       <div className="flex gap-2 items-center -mt-2 mb-7">
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
           {!sourceAddress ? 'Sample available:' : 'Available'}

@@ -9,12 +9,13 @@ import { cn, formatBalance } from '@/lib/utils';
 import { CircleMinusIcon, CirclePlusIcon, Settings2, HistoryIcon } from 'lucide-react';
 import CanLogo from '@/components/shared/can-logo';
 import { Item, ItemContent, ItemMedia, ItemTitle, ItemDescription } from '@/components/ui/item';
-import type { SpokeChainId } from '@sodax/types';
+import type { SpokeChainId, XToken } from '@sodax/types';
 import NetworkIcon from '@/components/shared/network-icon';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { chainIdToChainName } from '@/providers/constants';
 import type { CarouselItemData, NetworkBalance } from '../page';
+import WithdrawDialog from './withdraw-dialog/withdraw-dialog';
 interface CarouselWithPaginationProps {
   carouselItems: CarouselItemData[];
   tokenPrices?: Record<string, number>;
@@ -27,6 +28,8 @@ export default function CarouselWithPagination({
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
+  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
+  const [selectedWithdrawToken, setSelectedWithdrawToken] = React.useState<XToken | null>(null);
 
   React.useEffect(() => {
     if (!api) {
@@ -61,7 +64,15 @@ export default function CarouselWithPagination({
         <CarouselContent className="mix-blend-multiply">
           {carouselItems.length > 0 ? (
             carouselItems.map((item, index) => (
-              <CarouselItemContent key={`${item.token.symbol}-${index}`} item={item} tokenPrices={tokenPrices} />
+              <CarouselItemContent
+                key={`${item.token.symbol}-${index}`}
+                item={item}
+                tokenPrices={tokenPrices}
+                onWithdrawClick={() => {
+                  setSelectedWithdrawToken(item.token);
+                  setIsWithdrawDialogOpen(true);
+                }}
+              />
             ))
           ) : (
             <CarouselItem className="box-shadow-none mix-blend-multiply basis-1/1.5">
@@ -75,7 +86,7 @@ export default function CarouselWithPagination({
             </CarouselItem>
           )}
         </CarouselContent>
-        <div className="w-32 h-42 right-0 top-0 absolute bg-gradient-to-l from-[#F5F2F2] to-[rgba(245, 242, 242, 0)]" />
+        <div className="w-32 h-42 right-0 top-0 absolute bg-gradient-to-l from-[#F5F2F2] to-[rgba(245, 242, 242, 0)] pointer-events-none" />
       </Carousel>
       <div className="mt-4 flex items-center justify-start gap-2">
         {Array.from({ length: Math.max(count, carouselItems.length) }).map((_, index) => (
@@ -89,6 +100,11 @@ export default function CarouselWithPagination({
           />
         ))}
       </div>
+      <WithdrawDialog
+        open={isWithdrawDialogOpen}
+        onOpenChange={setIsWithdrawDialogOpen}
+        selectedToken={selectedWithdrawToken}
+      />
     </div>
   );
 }
@@ -96,9 +112,11 @@ export default function CarouselWithPagination({
 function CarouselItemContent({
   item,
   tokenPrices,
+  onWithdrawClick,
 }: {
   item: CarouselItemData;
   tokenPrices?: Record<string, number>;
+  onWithdrawClick: () => void;
 }): React.JSX.Element {
   // Get token price from prices map
   const priceKey = `${item.token.symbol}-${item.token.xChainId}`;
@@ -135,6 +153,7 @@ function CarouselItemContent({
                         key={`${network.networkId}-${idx}`}
                         network={network}
                         tokenPrice={tokenPrice}
+                        count={item.networksWithFunds.length}
                       />
                     ))}
                     {item.networksWithFunds.length === 1 && (
@@ -149,17 +168,20 @@ function CarouselItemContent({
                     </Badge>
                   </div>
                 </ItemDescription>
-                <ItemDescription className="flex gap-4 opacity-0 transition-opacity duration-200 !mt-6 group-hover:opacity-100">
-                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer">
-                    <CirclePlusIcon className="w-4 h-4 text-espresso" />
+                <ItemDescription className="flex gap-4 opacity-0 transition-opacity duration-200 !mt-6 group-hover:opacity-100 group/button-group has-[:hover]:[&>*:not(:hover)]:opacity-40">
+                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso">
+                    <CirclePlusIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
                     Add
                   </div>
-                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer">
-                    <CircleMinusIcon className="w-4 h-4 text-espresso" />
+                  <div
+                    className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso"
+                    onClick={onWithdrawClick}
+                  >
+                    <CircleMinusIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
                     Withdraw
                   </div>
-                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer">
-                    <HistoryIcon className="w-4 h-4 text-espresso" />
+                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso">
+                    <HistoryIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
                     History
                   </div>
                 </ItemDescription>
@@ -175,9 +197,11 @@ function CarouselItemContent({
 function NetworkBalanceTooltip({
   network,
   tokenPrice,
+  count,
 }: {
   network: NetworkBalance;
   tokenPrice: number;
+  count: number;
 }): React.JSX.Element {
   // Format balance for display in tooltip
   const formattedBalance = useMemo((): string => {
@@ -195,6 +219,7 @@ function NetworkBalanceTooltip({
       <TooltipContent
         side="top"
         sideOffset={10}
+        hidden={count === 1}
         className="bg-white px-8 py-4 items-center gap-2 text-espresso rounded-full h-[54px] text-(length:--body-comfortable)"
       >
         <div className="flex gap-1">

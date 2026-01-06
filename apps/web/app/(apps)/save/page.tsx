@@ -41,7 +41,6 @@ export default function SavingsPage() {
   const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
   const tokensWithSupplyBalances = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
   const { data: tokenPrices } = useAllTokenPrices(allGroupTokens);
-
   // Filter and prepare carousel items with balances > 0
   const carouselItems = useMemo((): CarouselItemData[] => {
     const items: CarouselItemData[] = [];
