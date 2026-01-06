@@ -16,7 +16,7 @@
     "clean": "turbo clean && rm -rf node_modules dist .turbo && rm -rf apps/*/node_modules apps/*/dist apps/*/.turbo && rm -rf packages/*/node_modules packages/*/dist packages/*/.turbo",
     "prepare": "husky",
     "release": "semantic-release",
-    "release:setup": "git tag sodax-website@0.8.0 && git push origin sodax-website@0.8.0"
+    "release:setup": "git tag @sodax/web@0.8.0 && git push origin @sodax/web@0.8.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
