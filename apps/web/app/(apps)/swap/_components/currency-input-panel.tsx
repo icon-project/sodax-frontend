@@ -166,7 +166,6 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         <div className="h-12 pr-0 sm:pr-6 inline-flex flex-col justify-center items-end gap-1">
           <div className="text-right justify-center text-espresso font-normal font-['InterRegular'] leading-relaxed">
             <Input
-              autoFocus={type === CurrencyInputPanelType.INPUT && !isMobile}
               type="number"
               ref={inputRef}
               value={type === CurrencyInputPanelType.OUTPUT ? formatBalance(inputValue, usdPrice) : inputValue}
