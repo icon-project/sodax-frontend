@@ -90,6 +90,24 @@ export type CreateIntentParams = {
   data: Hex; // Additional arbitrary data
 };
 
+/**
+ * Parameters for creating a limit order intent.
+ * Similar to CreateIntentParams but without the deadline field (deadline is automatically set to 0n for limit orders).
+ *
+ * @property inputToken - The address of the input token on the spoke chain.
+ * @property outputToken - The address of the output token on the spoke chain.
+ * @property inputAmount - The amount of input tokens to provide, denominated in the input token's decimals.
+ * @property minOutputAmount - The minimum amount of output tokens to accept, denominated in the output token's decimals.
+ * @property allowPartialFill - Whether the intent can be partially filled.
+ * @property srcChain - Chain ID where input tokens originate.
+ * @property dstChain - Chain ID where output tokens should be delivered.
+ * @property srcAddress - Sender address on source chain.
+ * @property dstAddress - Receiver address on destination chain.
+ * @property solver - Optional specific solver address (use address(0) for any solver).
+ * @property data - Additional arbitrary data (opaque, for advanced integrations/fees etc).
+ */
+export type CreateLimitOrderParams = Omit<CreateIntentParams, 'deadline'>;
+
 export type Intent = {
   intentId: bigint; // Unique identifier for the intent
   creator: Address; // Address that created the intent (Wallet abstraction address on hub chain)
@@ -149,7 +167,18 @@ export type IntentPostExecutionFailedErrorData = SolverErrorResponse & {
   intentDeliveryInfo: IntentDeliveryInfo;
 };
 
-export type IntentErrorCode = RelayErrorCode | 'UNKNOWN' | 'CREATION_FAILED' | 'POST_EXECUTION_FAILED';
+export type IntentCancelFailedErrorData = {
+  payload: Intent;
+  error: unknown;
+};
+
+export type IntentErrorCode =
+  | RelayErrorCode
+  | 'UNKNOWN'
+  | 'CREATION_FAILED'
+  | 'POST_EXECUTION_FAILED'
+  | 'CANCEL_FAILED';
+
 export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOUT'
   ? IntentWaitUntilIntentExecutedFailedErrorData
   : T extends 'CREATION_FAILED'
@@ -160,7 +189,9 @@ export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOU
         ? IntentPostExecutionFailedErrorData
         : T extends 'UNKNOWN'
           ? IntentCreationFailedErrorData
-          : never;
+          : T extends 'CANCEL_FAILED'
+            ? IntentCancelFailedErrorData
+            : never;
 
 export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   code: T;
@@ -170,6 +201,14 @@ export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
 export type SwapParams<S extends SpokeProviderType> = Prettify<
   {
     intentParams: CreateIntentParams;
+    spokeProvider: S;
+    skipSimulation?: boolean;
+  } & OptionalFee
+>;
+
+export type LimitOrderParams<S extends SpokeProviderType> = Prettify<
+  {
+    intentParams: CreateLimitOrderParams;
     spokeProvider: S;
     skipSimulation?: boolean;
   } & OptionalFee
@@ -692,7 +731,7 @@ export class SwapService {
   public async isAllowanceValid<S extends SpokeProviderType>({
     intentParams: params,
     spokeProvider,
-  }: SwapParams<S>): Promise<Result<boolean>> {
+  }: SwapParams<S> | LimitOrderParams<S>): Promise<Result<boolean>> {
     // apply fee to input amount without changing original params
     try {
       if (isEvmSpokeProviderType(spokeProvider)) {
@@ -778,7 +817,7 @@ export class SwapService {
     intentParams: params,
     spokeProvider,
     raw,
-  }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>>> {
+  }: Prettify<(SwapParams<S> | LimitOrderParams<S>) & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>>> {
     try {
       if (isEvmSpokeProviderType(spokeProvider)) {
         const result = await Erc20Service.approve(
@@ -883,6 +922,7 @@ export class SwapService {
     spokeProvider,
     fee = this.config.partnerFee,
     raw,
+    skipSimulation = false,
   }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<
     Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>
   > {
@@ -967,6 +1007,7 @@ export class SwapService {
           spokeProvider satisfies S,
           this.hubProvider,
           raw,
+          skipSimulation,
         )) satisfies TxReturnType<S, R>;
 
         return {
@@ -989,6 +1030,194 @@ export class SwapService {
   }
 
   /**
+   * Creates a limit order intent (no deadline, must be cancelled manually by user).
+   * Similar to swap but enforces deadline=0n (no deadline).
+   * Limit orders remain active until manually cancelled by the user.
+   *
+   * @param {Prettify<LimitOrderParams<S> & OptionalTimeout>} params - Object containing:
+   *   - intentParams: The parameters for creating the limit order (deadline is automatically set to 0n, deadline field should be omitted).
+   *   - spokeProvider: The spoke provider instance.
+   *   - fee: (Optional) Partner fee configuration.
+   *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
+   *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
+   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>} A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info, or an IntentError if the operation fails.
+   *
+   * @example
+   * const payload = {
+   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
+   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
+   *     "inputAmount": 1000000000000000n, // The amount of input tokens
+   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
+   *     // deadline is omitted - will be automatically set to 0n
+   *     "allowPartialFill": false, // Whether the intent can be partially filled
+   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
+   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
+   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
+   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
+   *     "data": "0x..", // Additional arbitrary data
+   * } satisfies CreateLimitOrderParams;
+   *
+   * const createLimitOrderResult = await swapService.createLimitOrder({
+   *   intentParams: payload,
+   *   spokeProvider,
+   *   fee, // optional
+   *   timeout, // optional
+   * });
+   *
+   * if (createLimitOrderResult.ok) {
+   *   const [solverExecutionResponse, intent, intentDeliveryInfo] = createLimitOrderResult.value;
+   *   console.log('Intent execution response:', solverExecutionResponse);
+   *   console.log('Intent:', intent);
+   *   console.log('Intent delivery info:', intentDeliveryInfo);
+   *   // Limit order is now active and will remain until cancelled manually
+   * } else {
+   *   // handle error
+   * }
+   */
+  public async createLimitOrder<S extends SpokeProvider>({
+    intentParams: params,
+    spokeProvider,
+    fee = this.config.partnerFee,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+    skipSimulation = false,
+  }: Prettify<LimitOrderParams<S> & OptionalTimeout>): Promise<
+    Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
+  > {
+    // Force deadline to 0n (no deadline) for limit orders
+    const limitOrderParams: CreateIntentParams = {
+      ...params,
+      deadline: 0n,
+    };
+
+    return this.createAndSubmitIntent({
+      intentParams: limitOrderParams,
+      spokeProvider,
+      fee,
+      timeout,
+      skipSimulation,
+    });
+  }
+
+  /**
+   * Creates a limit order intent (no deadline, must be cancelled manually by user).
+   * Similar to createIntent but enforces deadline=0n (no deadline) and uses LimitOrderParams.
+   * Limit orders remain active until manually cancelled by the user.
+   * NOTE: This method does not submit the intent to the Solver API
+   *
+   * @param {Prettify<LimitOrderParams<S> & OptionalRaw<R>>} params - Object containing:
+   *   - intentParams: The parameters for creating the limit order (deadline is automatically set to 0n, deadline field should be omitted).
+   *   - spokeProvider: The spoke provider instance.
+   *   - fee: (Optional) Partner fee configuration.
+   *   - raw: (Optional) Whether to return the raw transaction data instead of executing it
+   *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
+   * @returns {Promise<Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>>} The encoded contract call or raw transaction data, Intent and intent data as hex
+   *
+   * @example
+   * const payload = {
+   *     "inputToken": "0x2170Ed0880ac9A755fd29B2688956BD959F933F8", // BSC ETH token address
+   *     "outputToken": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f", // ARB WBTC token address
+   *     "inputAmount": 1000000000000000n, // The amount of input tokens
+   *     "minOutputAmount": 900000000000000n, // min amount you are expecting to receive
+   *     // deadline is omitted - will be automatically set to 0n
+   *     "allowPartialFill": false, // Whether the intent can be partially filled
+   *     "srcChain": "0x38.bsc", // Chain ID where input tokens originate
+   *     "dstChain": "0xa4b1.arbitrum", // Chain ID where output tokens should be delivered
+   *     "srcAddress": "0x..", // Source address (original address on spoke chain)
+   *     "dstAddress": "0x...", // Destination address (original address on spoke chain)
+   *     "solver": "0x..", // Optional specific solver address (address(0) = any solver)
+   *     "data": "0x..", // Additional arbitrary data
+   * } satisfies CreateLimitOrderParams;
+   *
+   * const createLimitOrderIntentResult = await swapService.createLimitOrderIntent({
+   *   intentParams: payload,
+   *   spokeProvider,
+   *   fee, // optional
+   *   raw, // optional
+   * });
+   *
+   * if (createLimitOrderIntentResult.ok) {
+   *   const [txResult, intent, intentData] = createLimitOrderIntentResult.value;
+   *   console.log('Transaction result:', txResult);
+   *   console.log('Intent:', intent);
+   *   console.log('Intent data:', intentData);
+   * } else {
+   *   // handle error
+   * }
+   */
+  public async createLimitOrderIntent<S extends SpokeProviderType, R extends boolean = false>({
+    intentParams: params,
+    spokeProvider,
+    fee = this.config.partnerFee,
+    raw,
+    skipSimulation = false,
+  }: Prettify<LimitOrderParams<S> & OptionalRaw<R>>): Promise<
+    Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>
+  > {
+    // Force deadline to 0n (no deadline) for limit orders
+    const limitOrderParams: CreateIntentParams = {
+      ...params,
+      deadline: 0n,
+    };
+
+    return this.createIntent({
+      intentParams: limitOrderParams,
+      spokeProvider,
+      fee,
+      raw,
+      skipSimulation,
+    });
+  }
+
+  /**
+   * Syntactic sugar for cancelAndSubmitIntent: cancels a limit order intent and submits it to the Relayer API.
+   * Similar to swap function that wraps createAndSubmitIntent.
+   *
+   * @param params - Object containing:
+   * @param params.intent - The limit order intent to cancel.
+   * @param params.spokeProvider - The spoke provider instance.
+   * @param params.timeout - (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
+   * @returns
+   *   A promise resolving to a Result containing a tuple of cancel transaction hash and destination transaction hash,
+   *   or an IntentError if the operation fails.
+   *
+   * @example
+   * // Get intent first (or use intent from createLimitOrder response)
+   * const intent: Intent = await swapService.getIntent(txHash);
+   *
+   * // Cancel the limit order
+   * const result = await swapService.cancelLimitOrder({
+   *   intent,
+   *   spokeProvider,
+   *   timeout, // optional
+   * });
+   *
+   * if (result.ok) {
+   *   const [cancelTxHash, dstTxHash] = result.value;
+   *   console.log('Cancel transaction hash:', cancelTxHash);
+   *   console.log('Destination transaction hash:', dstTxHash);
+   * } else {
+   *   // handle error
+   *   console.error('[cancelLimitOrder] error:', result.error);
+   * }
+   */
+  public async cancelLimitOrder<S extends SpokeProvider>({
+    intent,
+    spokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  }: {
+    intent: Intent;
+    spokeProvider: S;
+    timeout?: number;
+  }): Promise<Result<[string, string], IntentError<IntentErrorCode>>> {
+    return this.cancelAndSubmitIntent({
+      intent,
+      spokeProvider,
+      timeout,
+    });
+  }
+
+  /**
    * Cancels an intent
    * @param {Intent} intent - The intent to cancel
    * @param {SpokeProviderType} spokeProvider - The spoke provider
@@ -999,7 +1228,7 @@ export class SwapService {
     intent: Intent,
     spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<S, R>>> {
+  ): Promise<Result<TxReturnType<S, R>, IntentError<'CANCEL_FAILED'>>> {
     try {
       invariant(
         this.configService.isValidIntentRelayChainId(intent.srcChain),
@@ -1037,7 +1266,118 @@ export class SwapService {
     } catch (error) {
       return {
         ok: false,
-        error: error,
+        error: {
+          code: 'CANCEL_FAILED',
+          data: {
+            payload: intent,
+            error,
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Cancels an intent on the spoke chain, submits the cancel intent to the relayer API,
+   * and waits until the intent cancel is executed (on the destination/hub chain).
+   * Follows a similar workflow to createAndSubmitIntent, but for cancelling.
+   *
+   * @param params - The parameters for canceling and submitting the intent.
+   * @param params.intent - The intent to be canceled.
+   * @param params.spokeProvider - The provider for the spoke chain.
+   * @param params.timeout - Optional timeout in milliseconds (default: 60 seconds).
+   * @returns
+   *   A Result containing the SolverExecutionResponse (cancel tx), intent, and relay info,
+   *   or an IntentError on failure.
+   */
+  public async cancelAndSubmitIntent<S extends SpokeProvider>({
+    intent,
+    spokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  }: {
+    intent: Intent;
+    spokeProvider: S;
+    timeout?: number;
+  }): Promise<Result<[string, string], IntentError<IntentErrorCode>>> {
+    try {
+      // 1. Cancel the intent on the spoke chain
+      const cancelResult = await this.cancelIntent(intent, spokeProvider, false);
+
+      if (!cancelResult.ok) {
+        return cancelResult;
+      }
+
+      const cancelTxHash = cancelResult.value;
+
+      // 2. Verify the cancel tx hash exists on chain
+      const verifyTxHashResult = await SpokeService.verifyTxHash(cancelTxHash, spokeProvider);
+
+      if (!verifyTxHashResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CANCEL_FAILED',
+            data: {
+              payload: intent,
+              error: verifyTxHashResult.error,
+            },
+          },
+        };
+      }
+
+      // then submit the deposit tx hash of spoke chain to the intent relay
+      let dstIntentTxHash: string;
+
+      // 3. Submit the cancel tx hash of spoke chain to the intent relay
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const intentRelayChainId = intent.srcChain.toString();
+        const submitPayload: IntentRelayRequest<'submit'> = {
+          action: 'submit',
+          params: {
+            chain_id: intentRelayChainId,
+            tx_hash: cancelTxHash,
+          },
+        };
+
+        const submitResult = await this.submitIntent(submitPayload);
+
+        if (!submitResult.ok) {
+          return submitResult;
+        }
+
+        // then wait until the intent is executed on the intent relay
+        const packet = await waitUntilIntentExecuted({
+          intentRelayChainId,
+          spokeTxHash: cancelTxHash,
+          timeout,
+          apiUrl: this.config.relayerApiEndpoint,
+        });
+
+        if (!packet.ok) {
+          return {
+            ok: false,
+            error: packet.error,
+          };
+        }
+        dstIntentTxHash = packet.value.dst_tx_hash;
+      } else {
+        dstIntentTxHash = cancelTxHash;
+      }
+
+      return {
+        ok: true,
+        value: [cancelTxHash, dstIntentTxHash],
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CANCEL_FAILED',
+          data: {
+            payload: intent,
+            error,
+          },
+        },
       };
     }
   }

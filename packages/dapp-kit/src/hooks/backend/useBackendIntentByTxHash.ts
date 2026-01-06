@@ -1,57 +1,69 @@
 // packages/dapp-kit/src/hooks/backend/useIntentByTxHash.ts
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { IntentResponse } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
+export type UseBackendIntentByTxHashParams = {
+  params: {
+    txHash: string | undefined;
+  };
+  queryOptions?: UseQueryOptions<IntentResponse | undefined, Error>;
+};
+
 /**
- * Hook for fetching intent details by intent created transaction hash from the backend API.
+ * React hook for fetching intent details from the backend API using a transaction hash.
  *
- * This hook provides access to intent data associated with the transaction hash from when
- * the intent was created on the hub chain, including intent details, events, and transaction
- * information. The data is automatically fetched and cached using React Query.
+ * @param {UseBackendIntentByTxHashParams | undefined} params - Parameters for the query:
+ *   - params: { txHash: string | undefined }
+ *       - `txHash`: Transaction hash used to retrieve the associated intent; query is disabled if undefined or empty.
+ *   - queryOptions (optional): React Query options to customize request behavior (e.g., caching, retry, refetchInterval, etc.).
  *
- * @param {string | undefined} txHash - The intent created transaction hash from the hub chain to fetch intent for. If undefined, the query will be disabled.
- *
- * @returns {UseQueryResult<IntentResponse | undefined>} A query result object containing:
- *   - data: The intent response data when available
- *   - isLoading: Boolean indicating if the request is in progress
- *   - error: Error object if the request failed
- *   - refetch: Function to manually trigger a data refresh
+ * @returns {UseQueryResult<IntentResponse | undefined, Error>} React Query result object, including:
+ *   - `data`: The intent response or undefined if unavailable,
+ *   - `isLoading`: Loading state,
+ *   - `error`: Error (if request failed),
+ *   - `refetch`: Function to refetch the data.
  *
  * @example
- * ```typescript
- * const { data: intent, isLoading, error } = useIntentByTxHash('0x123...');
+ * const { data: intent, isLoading, error } = useBackendIntentByTxHash({
+ *   params: { txHash: '0x123...' },
+ * });
  *
  * if (isLoading) return <div>Loading intent...</div>;
  * if (error) return <div>Error: {error.message}</div>;
  * if (intent) {
  *   console.log('Intent found:', intent.intentHash);
  * }
- * ```
  *
  * @remarks
- * - Intents are only created on the hub chain, so the transaction hash must be from the hub chain
- * - The query is disabled when txHash is undefined or empty
- * - Uses React Query for efficient caching and state management
- * - Automatically handles error states and loading indicators
+ * - Intents are only created on the hub chain, so `txHash` must originate from there.
+ * - Query is disabled if `params` is undefined, or if `params.params.txHash` is undefined or an empty string.
+ * - Default refetch interval is 1 second. Uses React Query for state management, caching, and retries.
  */
 export const useBackendIntentByTxHash = (
-  txHash: string | undefined,
-  refetchInterval = 1000,
-): UseQueryResult<IntentResponse | undefined> => {
+  params: UseBackendIntentByTxHashParams | undefined,
+): UseQueryResult<IntentResponse | undefined, Error> => {
   const { sodax } = useSodaxContext();
 
+  const defaultQueryOptions = {
+    queryKey: ['api', 'intent', 'txHash', params?.params?.txHash],
+    enabled: !!params?.params?.txHash && params?.params?.txHash.length > 0,
+    retry: 3,
+    refetchInterval: 1000,
+  };
+
+  const queryOptions = {
+    ...defaultQueryOptions,
+    ...params?.queryOptions,
+  };
+
   return useQuery({
-    queryKey: ['backend', 'intent', 'txHash', txHash],
+    ...queryOptions,
     queryFn: async (): Promise<IntentResponse | undefined> => {
-      if (!txHash) {
+      if (!params?.params?.txHash) {
         return undefined;
       }
-
-      return sodax.backendApi.getIntentByTxHash(txHash);
+      return sodax.backendApi.getIntentByTxHash(params.params.txHash);
     },
-    refetchInterval,
-    enabled: !!txHash && txHash.length > 0,
-    retry: 3,
   });
 };

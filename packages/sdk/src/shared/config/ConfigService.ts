@@ -119,7 +119,9 @@ export class ConfigService {
   }
 
   public getMoneyMarketToken(chainId: SpokeChainId, token: string): Token | undefined {
-    return this.sodaxConfig.supportedMoneyMarketTokens[chainId].find(t => t.address.toLowerCase() === token.toLowerCase());
+    return this.sodaxConfig.supportedMoneyMarketTokens[chainId].find(
+      t => t.address.toLowerCase() === token.toLowerCase(),
+    );
   }
 
   public getMoneyMarketReserveAssets(): GetMoneyMarketReserveAssetsApiResponse {

@@ -1,4 +1,5 @@
-import React from 'react';
+// apps/demo/src/components/mm/lists/SupplyAssetsListItem.tsx
+import React, { type ReactElement } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken } from '@sodax/types';
 import { SupplyButton } from './SupplyButton';
@@ -23,15 +24,15 @@ export function SupplyAssetsListItem({
   walletBalance,
   formattedReserves,
   userReserves,
-}: SupplyAssetsListItemProps) {
+}: SupplyAssetsListItemProps): ReactElement {
   const metrics = useReserveMetrics({
     token,
     formattedReserves: formattedReserves,
     userReserves: userReserves as UserReserveData[],
   });
-  const { data: aToken, isLoading: isATokenLoading } = useAToken(
-    metrics.formattedReserve?.aTokenAddress as `0x${string}`,
-  );
+  const { data: aToken, isLoading: isATokenLoading } = useAToken({
+    aToken: metrics.formattedReserve?.aTokenAddress as `0x${string}`,
+  });
 
   const formattedBalance = metrics.userReserve
     ? Number(formatUnits(metrics.userReserve.scaledATokenBalance, 18)).toFixed(4)
@@ -44,22 +45,7 @@ export function SupplyAssetsListItem({
   if (isATokenLoading || !aToken) {
     return (
       <TableRow>
-        <TableCell colSpan={10}>
-          <Skeleton className="h-4 w-full" />
-        </TableCell>
-        <TableCell colSpan={10}>
-          <Skeleton className="h-4 w-full" />
-        </TableCell>
-        <TableCell colSpan={10}>
-          <Skeleton className="h-4 w-full" />
-        </TableCell>
-        <TableCell colSpan={10}>
-          <Skeleton className="h-4 w-full" />
-        </TableCell>
-        <TableCell colSpan={10}>
-          <Skeleton className="h-4 w-full" />
-        </TableCell>
-        <TableCell colSpan={10}>
+        <TableCell colSpan={16}>
           <Skeleton className="h-4 w-full" />
         </TableCell>
       </TableRow>
@@ -80,7 +66,13 @@ export function SupplyAssetsListItem({
     <TableRow>
       <TableCell>{token.symbol}</TableCell>
       <TableCell>{walletBalance}</TableCell>
-      <TableCell>{formattedBalance}</TableCell>
+      <TableCell>
+        <div className="flex flex-col items-start">
+          {formattedBalance ?? '-'}{' '}
+          <span className="text-xs text-muted-foreground">{metrics.supplyBalanceUSD || '-'}</span>
+        </div>
+      </TableCell>
+      <TableCell>{metrics.liquidationThreshold || '-'}</TableCell>
       <TableCell>
         <div className="flex flex-col items-start">
           {metrics.totalSupply || '-'}{' '}
