@@ -142,6 +142,11 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 )}
               </div>
             )}
+            {!isChainConnected && type === CurrencyInputPanelType.INPUT && (
+              <div className="mix-blend-multiply text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex gap-1">
+                <span className="text-(length:--body-comfortable) whitespace-nowrap">Wallet not connected</span>
+              </div>
+            )}
 
             {type === CurrencyInputPanelType.OUTPUT && onSwapAndSendToggle && (
               <div className="inline-flex justify-start items-center gap-2 w-32 md:w-[150px]">

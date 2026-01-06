@@ -266,6 +266,7 @@ describe('MoneyMarketService', () => {
         sonicSpokeProvider.chainConfig.chain.id,
         moneyMarket.data,
         moneyMarket.configService,
+        moneyMarket.config,
       );
       expect(SonicSpokeService.isBorrowApproved).toHaveBeenCalledWith(
         '0x8888888888888888888888888888888888888888',
@@ -797,6 +798,8 @@ describe('MoneyMarketService', () => {
   describe('Core Money Market Actions', () => {
     it('should supply a token', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
+      vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
+
       vi.spyOn(moneyMarket, 'buildSupplyData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce('0x');
       vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
@@ -826,7 +829,10 @@ describe('MoneyMarketService', () => {
       } satisfies EvmRawTransaction;
 
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
+      vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
+
       vi.spyOn(moneyMarket, 'buildSupplyData').mockReturnValueOnce('0x');
+
       vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createSupplyIntent(

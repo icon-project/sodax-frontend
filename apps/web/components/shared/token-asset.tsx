@@ -11,8 +11,6 @@ import { useFloating, autoUpdate, offset, shift, limitShift } from '@floating-ui
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
-/* -------------------------------- NetworkPicker -------------------------------- */
-
 function NetworkPicker({
   isClicked,
   tokens,
@@ -119,9 +117,6 @@ function NetworkPicker({
     document.body,
   );
 }
-
-/* -------------------------------- TokenAsset -------------------------------- */
-
 interface TokenAssetProps {
   name: string;
   token?: XToken;
@@ -166,9 +161,7 @@ export function TokenAsset({
 
   return (
     <>
-      {/* 🔒 Stable reference wrapper */}
       <div ref={assetRef} className="relative shrink-0">
-        {/* 🎞️ Animated inner content */}
         <motion.div
           layout
           initial={{ opacity: 0, scale: 0.8 }}

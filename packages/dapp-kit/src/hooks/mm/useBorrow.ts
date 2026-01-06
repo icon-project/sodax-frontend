@@ -48,7 +48,7 @@ export function useBorrow(
       const response = await sodax.moneyMarket.borrow(
         {
           token: spokeToken.address,
-          amount: parseUnits(amount, 18),
+          amount: parseUnits(amount, spokeToken.decimals),
           action: 'borrow',
           toChainId: toChainId,
           toAddress: toAddress,
