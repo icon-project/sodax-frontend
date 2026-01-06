@@ -2,14 +2,13 @@
 
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PartnerFeeBalancesCard } from './components/partner-fee-balance';
 import type { PartnerFeeBalance } from './components/partner-fee-balance';
 import { usePartnerFees } from './utils/usePartnersFee';
 import { SwapModal } from './components/swap-modal';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import { toast } from 'sonner';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,11 +49,11 @@ export default function PartnerPage() {
           </div>
 
           {/* Subtitle row */}
-          <div className="flex justify-between items-center text-md text-clay-light w-full mt-1">
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-sm text-clay-light w-full mt-2">
             {address ? (
               <>
                 <span className="leading-snug">Manage your partner fee balances below.</span>
-                <span className="leading-snug text-right">
+                <span className="leading-snug sm:text-right break-all sm:break-normal">
                   <span className="text-clay-medium">Connected wallet: </span>
                   <span className="font-mono text-yellow-dark">
                     {address.slice(0, 6)}...{address.slice(-4)}

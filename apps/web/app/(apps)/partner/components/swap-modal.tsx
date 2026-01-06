@@ -72,13 +72,13 @@ export function SwapModal({ isOpen, onClose, asset, onSuccess }: SwapModalProps)
 
     const swapResult = await sodax.swaps.swap({ intentParams, spokeProvider });
     if (swapResult.ok) {
-      toast.success('Success!',{
+      toast.success('Success!', {
         description: `Swapped ${amount}${asset.symbol} to USDC.`,
       });
       onSuccess?.(amount);
       onClose();
     } else {
-      toast.error('Swap failed.',{
+      toast.error('Swap failed.', {
         description: 'There was an issue executing your swap. Please try again.',
       });
     }

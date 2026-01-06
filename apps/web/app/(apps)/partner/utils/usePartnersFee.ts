@@ -2,6 +2,7 @@
 
 import { getSupportedSolverTokens, SONIC_MAINNET_CHAIN_ID, type XToken } from '@sodax/types';
 import { useXBalances } from '@sodax/wallet-sdk-react';
+import { useMemo } from 'react';
 import { formatUnits } from 'viem';
 
 /**
@@ -23,24 +24,22 @@ type UsePartnerFeesResult = {
 
 export function usePartnerFees(address?: string | null): UsePartnerFeesResult {
   const xChainId = SONIC_MAINNET_CHAIN_ID;
-  const tokens = getSupportedSolverTokens(xChainId) as XToken[];
+  const tokens = useMemo(() => {
+    if (!address) return [];
+    return getSupportedSolverTokens(xChainId) as XToken[];
+  }, [address, xChainId]);
 
-  const query = useXBalances({
-    xChainId: xChainId,
+  //always call the hook to avoid conditional hooks
+  const {
+    data: rawBalances,
+    isLoading,
+    error,
+    refetch,
+  } = useXBalances({
+    xChainId,
     xTokens: tokens,
-    address: address || '',
+    address: address || undefined,
   });
-
-  if (!address) {
-    return {
-      balances: [],
-      isLoading: false,
-      refetch: async () => {},
-      error: 'Wallet not connected',
-    };
-  }
-
-  const { data: rawBalances, isLoading, error, refetch } = query;
 
   const safeRefetch = async () => {
     try {
@@ -50,19 +49,33 @@ export function usePartnerFees(address?: string | null): UsePartnerFeesResult {
     }
   };
 
-  //if data isn't ready yet, return empty array
-  if (!rawBalances) {
-    return { balances: [], isLoading, refetch: safeRefetch, error };
+  // Wallet not connected
+  if (!address) {
+    return {
+      balances: [],
+      isLoading: false,
+      refetch: safeRefetch,
+      error: 'Wallet not connected',
+    };
   }
 
-  const balances = tokens.map(token => {
-    const rawValue = rawBalances[token.address] || 0n;
+  // loading state
+  if (isLoading || !rawBalances) {
+    return {
+      balances: [],
+      isLoading: true,
+      refetch: safeRefetch,
+      error,
+    };
+  }
 
-    const formattedValue = formatUnits(rawValue, token.decimals);
+  // data is ready
+  const balances = tokens.map(token => {
+    const rawValue = rawBalances[token.address];
 
     return {
       currency: token,
-      balance: formattedValue,
+      balance: formatUnits(rawValue ?? 0n, token.decimals),
     };
   });
 

@@ -15,14 +15,12 @@ export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: Partn
   // IMPORTANT balance > 10 as partner must have sufficient funds to swap and pay fees
   const hasBalance = numericAmount > 4;
   const isThisSwapping = swappingSymbol === balance.currency.symbol;
+  const isUsdc = balance.currency.symbol === 'USDC';
 
   return (
-    <div
-      key={`${balance.currency.symbol}-${balance.currency.xChainId}`}
-      className="flex items-center justify-between rounded-xl bg-clay-dark/60 px-6 py-4"
-    >
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-clay-dark/60 px-4 sm:px-6 py-4">
       {/* Left section: logo + info */}
-      <div className="flex items-center gap-10">
+      <div className="flex items-center gap-4 sm:gap-10">
         <CurrencyLogo currency={balance.currency} hideChainIcon />
         {/* Asset name */}
         <div className="flex flex-col">
@@ -32,16 +30,19 @@ export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: Partn
         {/* Balance */}
         <div className="flex flex-col">
           <span className="text-sm text-clay-dark">Balance:</span>
-          <span className="text-md text-clay-light">{balance.balance}</span>
+          <span className="sm:text-md text-sm text-clay-light break-all sm:break-normal">{balance.balance}</span>
         </div>
       </div>
       <Button
         variant="cherry"
-        className="disabled:opacity-60 disabled:cursor-not-allowed"
-        onClick={() => onSwapToUsdc(balance)}
-        disabled={!hasBalance || isThisSwapping || balance.currency.symbol === 'USDC'} //TODO to be agreed what to do with the usdc case
+        className="w-full sm:w-auto h-11 disabled:opacity-60 disabled:cursor-not-allowed"
+        onClick={() => {
+          if (isUsdc) return;
+          onSwapToUsdc(balance);
+        }}
+        disabled={!hasBalance || isThisSwapping || isUsdc}
       >
-        {isThisSwapping ? 'Swapping…' : 'Swap to USDC'}
+        {isThisSwapping ? 'Swapping…' : isUsdc ? 'Already USDC' : 'Swap to USDC'}
       </Button>
     </div>
   );
