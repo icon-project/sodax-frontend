@@ -67,6 +67,8 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Element;
+      console.log(target);
+      console.log(tokenSelectRef.current);
       const isContinueButton = target.closest('button')?.textContent?.includes('Continue');
       if (
         currentStep === 0 &&
@@ -154,13 +156,12 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
         </DialogTitle>
 
         {currentStep === 0 && selectedItem && needsTokenSelection && (
-          <div ref={tokenSelectRef}>
-            <WithdrawTokenSelect
-              networksWithFunds={selectedItem.networksWithFunds}
-              selectedNetwork={selectedNetwork}
-              onSelectNetwork={handleSelectNetwork}
-            />
-          </div>
+          <WithdrawTokenSelect
+            networksWithFunds={selectedItem.networksWithFunds}
+            selectedNetwork={selectedNetwork}
+            onSelectNetwork={handleSelectNetwork}
+            tokenSelectRef={tokenSelectRef as React.RefObject<HTMLDivElement>}
+          />
         )}
 
         {currentStep === 1 && selectedToken && (

@@ -13,16 +13,18 @@ interface WithdrawTokenSelectProps {
   networksWithFunds: NetworkBalance[];
   selectedNetwork: NetworkBalance | null;
   onSelectNetwork: (network: NetworkBalance) => void;
+  tokenSelectRef: React.RefObject<HTMLDivElement>;
 }
 
 export default function WithdrawTokenSelect({
   networksWithFunds,
   selectedNetwork,
   onSelectNetwork,
+  tokenSelectRef,
 }: WithdrawTokenSelectProps): React.JSX.Element {
   const { data: tokenPrice } = useTokenPrice(networksWithFunds[0]?.token as XToken);
   const [hoveredNetwork, setHoveredNetwork] = useState<number | null>(null);
-  console.log(hoveredNetwork);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
@@ -35,42 +37,44 @@ export default function WithdrawTokenSelect({
           const formattedBalance = formatBalance(network.balance, tokenPrice ?? 0);
 
           return (
-            <motion.div
-              key={network.networkId}
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              onClick={() => onSelectNetwork(network)}
-              onMouseEnter={() => setHoveredNetwork(index)}
-              onMouseLeave={() => setHoveredNetwork(null)}
-              className={cn(
-                'flex items-center gap-3 cursor-pointer',
-                selectedNetwork !== null
-                  ? isSelected
-                    ? 'opacity-100'
-                    : 'blur-sm'
-                  : hoveredNetwork !== null
-                    ? hoveredNetwork === index
+            <div ref={isSelected ? tokenSelectRef : undefined} key={network.networkId}>
+              <motion.div
+                key={network.networkId}
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                onClick={() => onSelectNetwork(network)}
+                onMouseEnter={() => setHoveredNetwork(index)}
+                onMouseLeave={() => setHoveredNetwork(null)}
+                className={cn(
+                  'flex items-center gap-3 cursor-pointer',
+                  selectedNetwork !== null
+                    ? isSelected
                       ? 'opacity-100'
-                      : 'opacity-80'
-                    : 'opacity-100',
-              )}
-            >
-              <div className="flex items-center gap-2 flex-1">
-                <CanLogo currency={network.token as XToken} className="w-14 h-14" />
-                <div className="flex flex-col items-start flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-espresso text-(length:--body-comfortable) font-bold font-['InterRegular']">
-                      {formattedBalance} {network.token.symbol}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-clay-light text-(length:--body-small) font-medium font-['InterRegular']">
-                      {chainIdToChainName(network.networkId as SpokeChainId)}
-                    </span>
+                      : 'blur-[4px] opacity-40'
+                    : hoveredNetwork !== null
+                      ? hoveredNetwork === index
+                        ? 'opacity-100'
+                        : 'opacity-80'
+                      : 'opacity-100',
+                )}
+              >
+                <div className="flex items-center gap-2 flex-1">
+                  <CanLogo currency={network.token as XToken} className="w-14 h-14" />
+                  <div className="flex flex-col items-start flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-espresso text-(length:--body-comfortable) font-bold font-['InterRegular']">
+                        {formattedBalance} {network.token.symbol}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-clay-light text-(length:--body-small) font-medium font-['InterRegular']">
+                        {chainIdToChainName(network.networkId as SpokeChainId)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           );
         })}
       </div>
