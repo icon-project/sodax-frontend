@@ -24,7 +24,6 @@ const TABLE_HEADERS = [
   'Action',
   'Action',
   'Action',
-  'Action',
 ] as const;
 
 export function SupplyAssetsList(): ReactElement {
@@ -45,9 +44,21 @@ export function SupplyAssetsList(): ReactElement {
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { data: userSummary } = useUserFormattedSummary({ spokeProvider, address });
-  const healthFactor = userSummary?.healthFactor ? Number.parseFloat(userSummary.healthFactor).toFixed(2) : undefined;
+  const healthFactorRaw = userSummary?.healthFactor ? Number(userSummary.healthFactor) : undefined;
 
-  console.log('userSummary:', userSummary);
+  const healthFactorDisplay =
+    healthFactorRaw !== undefined && Number.isFinite(healthFactorRaw) ? healthFactorRaw.toFixed(2) : '-';
+
+  function getHealthFactorState(hf: number) {
+    if (hf < 1) {
+      return { label: 'At risk', className: 'text-negative' };
+    }
+    if (hf < 2) {
+      return { label: 'Caution', className: 'text-yellow-dark' };
+    }
+    return { label: 'Very safe', className: 'text-cherry-soda' };
+  }
+  const healthState = healthFactorRaw !== undefined ? getHealthFactorState(healthFactorRaw) : undefined;
 
   return (
     <Card>
@@ -72,9 +83,10 @@ export function SupplyAssetsList(): ReactElement {
               </TooltipContent>
             </Tooltip>
             <span className="text-cherry-soda">Health Factor:</span>
-            <span className="font-semibold text-foreground">
-              {healthFactor && Number.isFinite(Number(healthFactor)) ? healthFactor : '-'}
-            </span>
+            <span className="font-semibold text-foreground">{healthFactorDisplay}</span>
+            {healthState && (
+              <span className={`ml-2 text-xs font-medium ${healthState.className}`}>({healthState.label})</span>
+            )}
           </div>
         </div>
       </CardHeader>

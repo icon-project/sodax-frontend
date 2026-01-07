@@ -26,9 +26,7 @@ export interface BorrowableAssetWithData {
   address: string;
   chainId: ChainId;
   vault: string;
-  // Market data from backend
   availableLiquidity?: string;
-  borrowAPY?: string;
   token: XToken;
 }
 
@@ -79,7 +77,6 @@ export function getBorrowableAssetsWithMarketData(
         chainId: chainId as ChainId,
         vault: hubAsset.vault,
         availableLiquidity: market?.totalATokenBalance,
-        borrowAPY: market?.variableBorrowRate,
         token,
       });
     }

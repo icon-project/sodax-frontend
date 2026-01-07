@@ -4,7 +4,6 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken } from '@sodax/types';
 import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
-import { BorrowButton } from './BorrowButton';
 import { RepayButton } from './RepayButton';
 import { formatUnits } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
@@ -85,9 +84,6 @@ export function SupplyAssetsListItem({
       <TableCell>{availableToBorrow}</TableCell>
       <TableCell>
         <SupplyButton token={token} />
-      </TableCell>
-      <TableCell>
-        <BorrowButton token={token} />
       </TableCell>
       <TableCell>
         <WithdrawButton token={token} />

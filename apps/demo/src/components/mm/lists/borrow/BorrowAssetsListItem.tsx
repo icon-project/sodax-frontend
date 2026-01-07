@@ -6,6 +6,7 @@ import { BorrowButton } from '../BorrowButton';
 import { getChainLabel } from '@/lib/borrowUtils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
+import { useAToken } from '@sodax/dapp-kit';
 
 interface BorrowAssetsListItemProps {
   token: XToken;
@@ -16,8 +17,6 @@ interface BorrowAssetsListItemProps {
     address: string;
     chainId: ChainId;
     vault: string;
-    availableLiquidity?: string;
-    borrowAPY?: string;
   };
   disabled?: boolean;
   formattedReserves: FormatReserveUSDResponse[];
@@ -38,10 +37,22 @@ export function BorrowAssetsListItem({
     userReserves: userReserves as UserReserveData[],
   });
 
-  // Format the available liquidity
-  const availableLiquidity = asset.availableLiquidity
-    ? formatUnits(BigInt(asset.availableLiquidity), asset.decimals)
-    : '--';
+  const { data: aToken } = useAToken({
+    aToken: metrics.formattedReserve?.aTokenAddress as `0x${string}`,
+  });
+
+  let availableLiquidity: string | undefined;
+
+  if (metrics.formattedReserve && aToken) {
+    availableLiquidity =
+      metrics.formattedReserve.borrowCap === '0'
+        ? formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)
+        : Math.min(
+            Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)),
+            Number.parseInt(metrics.formattedReserve.borrowCap) -
+              Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
+          ).toFixed(6);
+  }
 
   return (
     <TableRow className={`hover:bg-cream/30 transition-colors ${disabled ? 'opacity-50' : ''}`}>
@@ -53,9 +64,7 @@ export function BorrowAssetsListItem({
         <span className="font-mono text-sm text-clay">{walletBalance}</span>
       </TableCell>
       <TableCell>
-        <span className="font-mono text-sm text-clay">
-          {availableLiquidity === '--' ? availableLiquidity : Number.parseFloat(availableLiquidity).toFixed(2)}
-        </span>
+        <span className="font-mono text-sm text-clay">{availableLiquidity ?? '--'}</span>
       </TableCell>
       <TableCell>
         <span className="font-mono text-sm text-clay">{metrics.borrowAPY}</span>

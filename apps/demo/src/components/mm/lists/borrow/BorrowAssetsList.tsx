@@ -1,25 +1,19 @@
-import React, { useMemo } from 'react';
-import {
-  useUserReservesData,
-  useSpokeProvider,
-  useBackendAllMoneyMarketAssets,
-  useReservesUsdFormat,
-} from '@sodax/dapp-kit';
+import React from 'react';
+import { useUserReservesData, useSpokeProvider, useReservesUsdFormat } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { BorrowAssetsListItem } from './BorrowAssetsListItem';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
-import { moneyMarketSupportedTokens, type Token, type XToken } from '@sodax/types';
+import { moneyMarketSupportedTokens } from '@sodax/sdk';
 import { formatUnits } from 'viem';
 
 const TABLE_HEADERS = [
   'Asset',
   'Wallet balance',
   'Available Liquidity',
-  ' Borrow APY',
+  'Borrow APY',
   'Borrow APR',
   'Total Borrow',
   'Action',
@@ -28,72 +22,32 @@ const TABLE_HEADERS = [
 export function BorrowAssetsList() {
   const { selectedChainId } = useAppStore();
 
-  // ALL tokens from ALL chains
-  const allTokens = useMemo(() => {
-    return Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
-      chainTokens.map(t => ({
-        ...t,
-        xChainId: chainId,
-      })),
-    ) as XToken[];
-  }, []);
+  const tokens = moneyMarketSupportedTokens[selectedChainId];
 
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
 
-  const tokensForSelectedChain = useMemo(
-    () =>
-      moneyMarketSupportedTokens[selectedChainId].map((t: Token) => ({
-        ...t,
-        xChainId: selectedChainId,
-      })),
-    [selectedChainId],
-  );
-
   const { data: balances } = useXBalances({
     xChainId: selectedChainId,
-    xTokens: tokensForSelectedChain,
+    xTokens: tokens,
     address,
   });
 
-  // Fetch user reserves to check if they have collateral
-  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
-
-  //TODO remove after testing
-  if (userReserves?.[0]) {
-    const supplied = userReserves[0].find(r => r.scaledATokenBalance > 0n);
-
-    console.log('Supplied reserve:', supplied);
-  }
-
-  // Fetch backend money market assets
-  const { data: allMoneyMarketAssets, isLoading: isAssetsLoading } = useBackendAllMoneyMarketAssets();
-
-  console.log('Tokens supported on selected chain:', moneyMarketSupportedTokens[selectedChainId]);
-
-  // Check if user has any collateral supplied
-  const hasCollateral = useMemo(() => {
-    if (!userReserves?.[0]) return false;
-    return userReserves[0].some(reserve => reserve.scaledATokenBalance > 0n);
-  }, [userReserves]);
-
-  // Get all borrowable assets with their market data
-  const borrowableAssets = useMemo(() => {
-    if (!allMoneyMarketAssets) return [];
-    return getBorrowableAssetsWithMarketData(allMoneyMarketAssets, allTokens);
-  }, [allMoneyMarketAssets, allTokens]);
+  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
 
-  // Update isLoading
-  const isLoading = isUserReservesLoading || isAssetsLoading || isFormattedReservesLoading;
+  const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
+
+  const isLoading = isUserReservesLoading || isFormattedReservesLoading;
 
   return (
     <Card className="mt-6">
       <CardHeader>
         <CardTitle>Assets to Borrow</CardTitle>
-        <p className="text-sm text-clay font-normal mt-2">All available assets across all chains</p>
+        <p className="text-sm text-clay font-normal mt-2">Borrow assets available on the selected chain</p>
+
         {!hasCollateral && !isLoading && (
           <div className="mt-4 p-3 bg-cherry-brighter/20 border border-cherry/30 rounded-lg flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-cherry-soda shrink-0 mt-0.5" />
@@ -121,7 +75,7 @@ export function BorrowAssetsList() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-12">
+                    <TableCell colSpan={7} className="text-center py-12">
                       <div className="flex items-center justify-center gap-2 text-clay">
                         <Loader2 className="w-5 h-5 animate-spin" />
                         <span>Loading borrowable assets...</span>
@@ -129,21 +83,36 @@ export function BorrowAssetsList() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  borrowableAssets.map(asset => (
-                    <BorrowAssetsListItem
-                      key={`${asset.chainId}-${asset.address}`}
-                      token={asset.token}
-                      asset={asset}
-                      disabled={!hasCollateral}
-                      walletBalance={
-                        asset.token && balances?.[asset.token.address]
-                          ? Number(formatUnits(balances[asset.token.address], asset.token.decimals)).toFixed(4)
-                          : '-'
-                      }
-                      formattedReserves={formattedReserves || []}
-                      userReserves={userReserves?.[0] || []}
-                    />
-                  ))
+                  tokens.map(token => {
+                    const reserve = formattedReserves?.find(
+                      r => r.underlyingAsset.toLowerCase() === token.address.toLowerCase(),
+                    );
+
+                    const asset = {
+                      symbol: token.symbol,
+                      decimals: token.decimals,
+                      address: token.address,
+                      chainId: token.xChainId,
+                      vault: token.address,
+                      availableLiquidity: reserve?.availableLiquidityUSD,
+                    };
+
+                    return (
+                      <BorrowAssetsListItem
+                        key={token.address}
+                        token={token}
+                        asset={asset}
+                        disabled={!hasCollateral}
+                        walletBalance={
+                          balances?.[token.address]
+                            ? Number(formatUnits(balances[token.address], token.decimals)).toFixed(4)
+                            : '-'
+                        }
+                        formattedReserves={formattedReserves || []}
+                        userReserves={userReserves?.[0] || []}
+                      />
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
