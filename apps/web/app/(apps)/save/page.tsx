@@ -3,7 +3,7 @@
 
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import BigNumber from 'bignumber.js';
 import AnimatedNumber from '@/components/shared/animated-number';
 import AssetList from './_components/asset-list';
@@ -15,6 +15,7 @@ import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import type { XToken } from '@sodax/types';
+import type { CarouselApi } from '@/components/ui/carousel';
 
 export interface NetworkBalance {
   networkId: string;
@@ -34,6 +35,7 @@ export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const { setDepositValue, setTokenCount } = useSaveActions();
   const { openAsset, isSwitchingChain } = useSaveState();
+  const carouselApiRef = useRef<CarouselApi | undefined>(undefined);
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const allTokens = useMemo(() => flattenTokens(), []);
@@ -133,6 +135,26 @@ export default function SavingsPage() {
     }
   }, [openAsset, setDepositValue]);
 
+  // Navigation function to scroll carousel to a specific token
+  const navigateToToken = useCallback(
+    (token: XToken): void => {
+      if (!carouselApiRef.current) {
+        return;
+      }
+
+      const tokenIndex = carouselItems.findIndex(item => item.token.symbol === token.symbol);
+      if (tokenIndex !== -1) {
+        carouselApiRef.current.scrollTo(tokenIndex);
+      }
+    },
+    [carouselItems],
+  );
+
+  // Callback to receive carousel API
+  const handleCarouselApiReady = useCallback((api: CarouselApi | undefined): void => {
+    carouselApiRef.current = api;
+  }, []);
+
   return (
     <motion.div
       className="w-full flex flex-col gap-(--layout-space-comfortable)"
@@ -142,8 +164,16 @@ export default function SavingsPage() {
     >
       {hasDeposits ? (
         <motion.div className="w-full flex flex-col gap-4" variants={itemVariants}>
-          <TotalSaveTokens />
-          <CarouselWithPagination carouselItems={carouselItems} tokenPrices={tokenPrices} />
+          <TotalSaveTokens
+            tokensWithSupplyBalances={tokensWithSupplyBalances}
+            carouselItems={carouselItems}
+            onTokenClick={navigateToToken}
+          />
+          <CarouselWithPagination
+            carouselItems={carouselItems}
+            tokenPrices={tokenPrices}
+            onApiReady={handleCarouselApiReady}
+          />
         </motion.div>
       ) : (
         <motion.div className="inline-flex flex-col justify-start items-start gap-4" variants={itemVariants}>

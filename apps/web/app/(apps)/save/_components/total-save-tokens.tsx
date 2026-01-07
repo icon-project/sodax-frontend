@@ -1,21 +1,26 @@
-// apps/web/app/(apps)/save/_components/total-save-tokens.tsx
 'use client';
 
 import { useMemo } from 'react';
 import Image from 'next/image';
 import BigNumber from 'bignumber.js';
-import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { flattenTokens, getUniqueTokenSymbols } from '@/lib/utils';
-import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import type { XToken } from '@sodax/types';
+import type { CarouselItemData } from '../page';
+import { motion } from 'motion/react';
 
-export default function TotalSaveTokens(): React.JSX.Element {
-  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
+export default function TotalSaveTokens({
+  tokensWithSupplyBalances,
+  carouselItems,
+  onTokenClick,
+}: {
+  tokensWithSupplyBalances: (XToken & { supplyBalance: string })[];
+  carouselItems: CarouselItemData[];
+  onTokenClick: (token: XToken) => void;
+}): React.JSX.Element {
   const allTokens = useMemo(() => flattenTokens(), []);
   const groupedTokens = useMemo(() => getUniqueTokenSymbols(allTokens), [allTokens]);
-  const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
-  const tokensWithSupplyBalance = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
+  const tokensWithSupplyBalance = tokensWithSupplyBalances;
 
   // Get unique token symbols with balances > 0
   const tokensWithBalance = useMemo(() => {
@@ -38,7 +43,7 @@ export default function TotalSaveTokens(): React.JSX.Element {
 
   // Calculate total USD value across all tokens
   const totalUsdValue = useMemo((): string => {
-    if (!tokenPrices || isFormattedReservesLoading) {
+    if (!tokenPrices) {
       return '$0.00';
     }
 
@@ -72,27 +77,39 @@ export default function TotalSaveTokens(): React.JSX.Element {
 
     const formatted = total.toFixed(2);
     return `$${Number(formatted).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }, [tokensWithSupplyBalance, groupedTokens, tokenPrices, isFormattedReservesLoading]);
+  }, [tokensWithSupplyBalance, groupedTokens, tokenPrices]);
 
   return (
     <div className="w-full flex gap-2 justify-start">
       <div className="text-(length:--body-super-comfortable) font-['InterRegular'] text-clay">Total saved</div>
-      <div className="flex items-center -space-x-1">
+      <motion.div
+        className="flex items-center"
+        initial={{ gap: '-0.25rem' }}
+        whileHover={{ gap: '0.25rem' }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
         {tokensWithBalance.length > 0 ? (
-          tokensWithBalance.map((token, index) => (
-            <Image
-              key={`${token.symbol}-${token.xChainId}-${index}`}
-              src={`/coin/${token.symbol === 'bnUSD (legacy)' ? 'bnusd' : token.symbol.toLowerCase()}.png`}
-              alt={token.symbol}
-              width={20}
-              height={20}
-              className="rounded-full outline-2 outline-white shrink-0 bg-white"
-            />
-          ))
+          tokensWithBalance.map((token, index) => {
+            // Check if this token exists in carousel items
+            const tokenExistsInCarousel = carouselItems.some(item => item.token.symbol === token.symbol);
+            return (
+              <Image
+                key={`${token.symbol}-${token.xChainId}-${index}`}
+                src={`/coin/${token.symbol === 'bnUSD (legacy)' ? 'bnusd' : token.symbol.toLowerCase()}.png`}
+                alt={token.symbol}
+                width={20}
+                height={20}
+                className={`rounded-full outline-2 outline-white shrink-0 bg-white ${
+                  tokenExistsInCarousel ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                }`}
+                onClick={tokenExistsInCarousel ? () => onTokenClick(token) : undefined}
+              />
+            );
+          })
         ) : (
           <div className="w-5 h-5 rounded-full bg-clay-light shrink-0" />
         )}
-      </div>
+      </motion.div>
       <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular']">
         {totalUsdValue}
       </div>

@@ -20,11 +20,13 @@ import { useSaveActions } from '../_stores/save-store-provider';
 interface CarouselWithPaginationProps {
   carouselItems: CarouselItemData[];
   tokenPrices?: Record<string, number>;
+  onApiReady?: (api: CarouselApi | undefined) => void;
 }
 
 export default function CarouselWithPagination({
   carouselItems,
   tokenPrices,
+  onApiReady,
 }: CarouselWithPaginationProps): React.JSX.Element {
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
@@ -52,6 +54,10 @@ export default function CarouselWithPagination({
     // Listen for reInit event which fires when items change
     api.on('reInit', updateCount);
   }, [api]);
+
+  React.useEffect(() => {
+    onApiReady?.(api);
+  }, [api, onApiReady]);
 
   return (
     <div className="mx-auto w-full">
