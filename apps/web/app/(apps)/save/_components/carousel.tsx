@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { cn, formatBalance } from '@/lib/utils';
@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { chainIdToChainName } from '@/providers/constants';
 import type { CarouselItemData, NetworkBalance } from '../page';
 import WithdrawDialog from './withdraw-dialog/withdraw-dialog';
+import { motion } from 'motion/react';
 interface CarouselWithPaginationProps {
   carouselItems: CarouselItemData[];
   tokenPrices?: Record<string, number>;
@@ -61,7 +62,7 @@ export default function CarouselWithPagination({
         }}
       >
         <CarouselContent className="mix-blend-multiply">
-          {carouselItems.length > 0 ? (
+          {carouselItems.length > 0 &&
             carouselItems.map((item, index) => (
               <CarouselItemContent
                 key={`${item.token.symbol}-${index}`}
@@ -72,18 +73,7 @@ export default function CarouselWithPagination({
                   setIsWithdrawDialogOpen(true);
                 }}
               />
-            ))
-          ) : (
-            <CarouselItem className="box-shadow-none mix-blend-multiply basis-1/1.5">
-              <Card className="bg-almost-white w-80 h-42 px-6 py-8">
-                <CardContent className="flex flex-col p-0">
-                  <div className="flex justify-center items-center h-full">
-                    <div className="text-clay-light text-(length:--body-comfortable)">No deposits found</div>
-                  </div>
-                </CardContent>
-              </Card>
-            </CarouselItem>
-          )}
+            ))}
         </CarouselContent>
         <div className="w-32 h-42 right-0 top-0 absolute bg-gradient-to-l from-[#F5F2F2] to-[rgba(245, 242, 242, 0)] pointer-events-none" />
       </Carousel>
@@ -117,34 +107,54 @@ function CarouselItemContent({
   tokenPrices?: Record<string, number>;
   onWithdrawClick: () => void;
 }): React.JSX.Element {
-  // Get token price from prices map
+  const [isHovered, setIsHovered] = useState(false);
   const priceKey = `${item.token.symbol}-${item.token.xChainId}`;
   const tokenPrice = tokenPrices?.[priceKey] || 0;
 
-  // Format balance with token symbol
   const formattedBalance = useMemo((): string => {
     return `${formatBalance(item.totalBalance, tokenPrice)} ${item.token.symbol}`;
   }, [item.totalBalance, item.token.symbol, tokenPrice]);
 
   return (
     <CarouselItem className="basis-1/1.5">
-      <Card className="group bg-almost-white w-80 h-42 px-6 py-8 border-none !shadow-none select-none">
+      <Card
+        className="group bg-almost-white w-80 h-42 px-6 py-8 border-none !shadow-none select-none"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         <CardContent className="flex flex-col p-0 border-none">
-          <div className="flex justify-end w-full transition-opacity duration-200 group-hover:opacity-0">
+          <motion.div
+            animate={{ opacity: isHovered ? 0 : 1 }}
+            className="flex justify-end w-full"
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+          >
             <Settings2 className="w-4 h-4 text-clay-light cursor-pointer" />
-          </div>
-          <div className="flex w-full mt-8 group-hover:-mt-2">
+          </motion.div>
+          <motion.div
+            className="content-stretch flex gap-[8px] items-center relative shrink-0 w-full"
+            data-name="Container"
+            animate={{ y: isHovered ? -20 : 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+          >
             <Item className="p-0 w-full gap-2">
               <ItemMedia className="w-14 h-14">
                 <CanLogo currency={item.token} hideNetworkIcon={true} />
               </ItemMedia>
               <ItemContent className="gap-0">
-                <ItemTitle className="font-bold text-espresso font-['InterRegular'] !text-(length:--body-super-comfortable)">
+                <motion.p
+                  className="font-['InterBold'] font-bold relative shrink-0 text-[16px] w-full"
+                  animate={{ color: isHovered ? 'var(--clay)' : 'var(--espresso)' }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                >
                   {formattedBalance}
-                </ItemTitle>
-                <ItemDescription className="text-clay text-(length:--body-comfortable) font-medium">
+                </motion.p>
+                <motion.p
+                  className="font-['InterRegular'] font-medium relative shrink-0 text-[14px] w-full"
+                  animate={{ color: isHovered ? 'var(--clay-light)' : 'var(--clay)' }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                >
                   {item.fiatValue}
-                </ItemDescription>
+                </motion.p>
                 <ItemDescription className="flex justify-between flex-row w-full">
                   <div className="flex gap-[2px] items-center -ml-[2px]">
                     {item.networksWithFunds.map((network, idx) => (
@@ -161,32 +171,46 @@ function CarouselItemContent({
                       </span>
                     )}
                   </div>
-                  <div className="flex transition-opacity duration-200 group-hover:opacity-0">
+                  <motion.div
+                    className="content-stretch flex gap-[4px] h-[16px] items-center justify-center mix-blend-multiply px-[8px] py-0 relative rounded-[256px] shrink-0"
+                    data-name="Badge"
+                    animate={{ opacity: isHovered ? 0 : 1 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  >
                     <Badge className="h-4 min-w-[70px] mix-blend-multiply text-white bg-gradient-to-br from-cherry-bright to-cherry-brighter px-2">
                       <span className="text-[10px] font-['InterBold'] mt-[1px]">{item.apy} APY</span>
                     </Badge>
-                  </div>
-                </ItemDescription>
-                <ItemDescription className="flex gap-4 opacity-0 transition-opacity duration-200 !mt-6 group-hover:opacity-100 group/button-group has-[:hover]:[&>*:not(:hover)]:opacity-40">
-                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso">
-                    <CirclePlusIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
-                    Add
-                  </div>
-                  <div
-                    className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso"
-                    onClick={onWithdrawClick}
-                  >
-                    <CircleMinusIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
-                    Withdraw
-                  </div>
-                  <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso">
-                    <HistoryIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
-                    History
-                  </div>
+                  </motion.div>
                 </ItemDescription>
               </ItemContent>
             </Item>
-          </div>
+          </motion.div>
+          <motion.div
+            className="content-stretch flex gap-[16px] items-center relative shrink-0 has-[:hover]:[&>*:not(:hover)]:opacity-40 pl-15"
+            data-name="Actions"
+            initial={{ y: 40, opacity: 0 }}
+            animate={{
+              y: isHovered ? 0 : 40,
+              opacity: isHovered ? 1 : 0,
+            }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso">
+              <CirclePlusIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
+              Add
+            </div>
+            <div
+              className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso"
+              onClick={onWithdrawClick}
+            >
+              <CircleMinusIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
+              Withdraw
+            </div>
+            <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso">
+              <HistoryIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
+              History
+            </div>
+          </motion.div>
         </CardContent>
       </Card>
     </CarouselItem>
