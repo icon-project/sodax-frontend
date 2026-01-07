@@ -15,7 +15,6 @@ import BigNumber from 'bignumber.js';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -59,7 +58,6 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
   const { outputToken } = useSwapState();
-  const isMobile = useIsMobile();
 
   const handleTokenSelect = (selectedToken: XToken): void => {
     if (onCurrencyChange) {
