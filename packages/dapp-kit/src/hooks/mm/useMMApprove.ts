@@ -1,68 +1,63 @@
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { XToken } from '@sodax/types';
-import { parseUnits } from 'viem';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
+import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
+import type { MoneyMarketParams, SpokeProvider } from '@sodax/sdk';
 
-interface UseApproveReturn {
-  approve: ({ amount, action }: { amount: string; action: MoneyMarketAction }) => Promise<boolean>;
-  isLoading: boolean;
-  error: Error | null;
-  resetError: () => void;
-}
+export type UseMMApproveParams = {
+  params: MoneyMarketParams;
+  spokeProvider: SpokeProvider | undefined;
+};
 
 /**
- * Hook for approving token spending for money market actions
- * @param token The token to approve spending for
- * @param spokeProvider The spoke provider instance for the chain
- * @returns Object containing approve function, loading state, error state and reset function
+ * Hook for approving ERC20 token spending for Sodax money market actions.
+ *
+ * This hook manages the approval transaction, allowing the user
+ * to grant the protocol permission to spend their tokens for specific money market actions
+ * (such as supply, borrow, or repay). Upon successful approval, it also invalidates and
+ * refetches the associated allowance status so the UI remains up-to-date.
+ *
+ * @returns {UseMutationResult<string, Error, UseMMApproveParams>} A React Query mutation result containing:
+ *   - mutateAsync: Function to trigger the approval (see below)
+ *   - isPending: Boolean indicating if approval transaction is in progress
+ *   - error: Error object if the last approval failed, null otherwise
+ *
  * @example
  * ```tsx
- * const { approve, isLoading, error } = useMMApprove(token, spokeProvider);
- *
- * // Approve tokens for supply action
- * await approve({ amount: "100", action: "supply" });
+ * const { mutateAsync: approve, isPending, error } = useMMApprove();
+ * await approve({ params: { token, amount: "100", action: "supply", ... }, spokeProvider });
  * ```
+ *
+ * @throws {Error} When:
+ *   - spokeProvider is undefined or invalid
+ *   - Approval transaction fails for any reason
  */
-
-export function useMMApprove(token: XToken, spokeProvider: SpokeProvider | undefined): UseApproveReturn {
+export function useMMApprove(): UseMutationResult<string, Error, UseMMApproveParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
-  const {
-    mutateAsync: approve,
-    isPending,
-    error,
-    reset: resetError,
-  } = useMutation({
-    mutationFn: async ({ amount, action }: { amount: string; action: MoneyMarketAction }) => {
+  return useMutation({
+    mutationFn: async ({ params, spokeProvider }: UseMMApproveParams) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider not found');
       }
-      const actionBasedDecimals = action === 'withdraw' || action === 'borrow' ? 18 : token.decimals; // withdraw and borrow actions are in aToken decimals
-      const allowance = await sodax.moneyMarket.approve(
-        {
-          token: token.address,
-          amount: parseUnits(amount, actionBasedDecimals),
-          action,
-        },
-        spokeProvider,
-      );
+      const allowance = await sodax.moneyMarket.approve(params, spokeProvider, false);
       if (!allowance.ok) {
-        throw new Error('Failed to approve tokens');
+        throw allowance.error;
       }
-      return allowance.ok;
+
+      return allowance.value;
     },
-    onSuccess: () => {
-      // Invalidate allowance query to refetch the new allowance
-      queryClient.invalidateQueries({ queryKey: ['allowance', token.address] });
+    onSuccess: (_, { params, spokeProvider }: UseMMApproveParams) => {
+      console.log('onSuccess invoked with queryKey:', [
+        'mm',
+        'allowance',
+        spokeProvider?.chainConfig.chain.id,
+        params.token,
+        params.action,
+      ]);
+      // Invalidate allowance query to refetch updated approval status
+      queryClient.invalidateQueries({
+        queryKey: ['mm', 'allowance', spokeProvider?.chainConfig.chain.id, params.token, params.action],
+      });
     },
   });
-
-  return {
-    approve,
-    isLoading: isPending,
-    error: error,
-    resetError,
-  };
 }
