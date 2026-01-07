@@ -37,8 +37,19 @@ export function BorrowAssetsListItem({
     userReserves: userReserves as UserReserveData[],
   });
 
+  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
+  const aTokenAddress =
+    metrics.formattedReserve?.aTokenAddress && metrics.formattedReserve.aTokenAddress !== ZERO_ADDRESS
+      ? (metrics.formattedReserve.aTokenAddress as `0x${string}`)
+      : undefined;
+
   const { data: aToken } = useAToken({
-    aToken: metrics.formattedReserve?.aTokenAddress as `0x${string}`,
+    aToken: aTokenAddress ?? ZERO_ADDRESS,
+    queryOptions: {
+      queryKey: ['aToken', aTokenAddress], // ✅ REQUIRED
+      enabled: !!aTokenAddress,
+    },
   });
 
   let availableLiquidity: string | undefined;
