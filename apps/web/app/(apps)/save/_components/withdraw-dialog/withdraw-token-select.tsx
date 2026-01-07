@@ -6,6 +6,8 @@ import { chainIdToChainName } from '@/providers/constants';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import CanLogo from '@/components/shared/can-logo';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 interface WithdrawTokenSelectProps {
   networksWithFunds: NetworkBalance[];
@@ -19,7 +21,8 @@ export default function WithdrawTokenSelect({
   onSelectNetwork,
 }: WithdrawTokenSelectProps): React.JSX.Element {
   const { data: tokenPrice } = useTokenPrice(networksWithFunds[0]?.token as XToken);
-
+  const [hoveredNetwork, setHoveredNetwork] = useState<number | null>(null);
+  console.log(hoveredNetwork);
   return (
     <div className="flex flex-col gap-4">
       <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
@@ -27,18 +30,29 @@ export default function WithdrawTokenSelect({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {networksWithFunds.map(network => {
+        {networksWithFunds.map((network, index) => {
           const isSelected = selectedNetwork?.networkId === network.networkId;
           const formattedBalance = formatBalance(network.balance, tokenPrice ?? 0);
 
           return (
-            <div
+            <motion.div
               key={network.networkId}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
               onClick={() => onSelectNetwork(network)}
+              onMouseEnter={() => setHoveredNetwork(index)}
+              onMouseLeave={() => setHoveredNetwork(null)}
               className={cn(
-                'flex items-center gap-3 transition-all duration-200 cursor-pointer',
-                'hover:opacity-100',
-                selectedNetwork === null ? 'opacity-100' : isSelected ? 'opacity-100' : 'blur-sm',
+                'flex items-center gap-3 cursor-pointer',
+                selectedNetwork !== null
+                  ? isSelected
+                    ? 'opacity-100'
+                    : 'blur-sm'
+                  : hoveredNetwork !== null
+                    ? hoveredNetwork === index
+                      ? 'opacity-100'
+                      : 'opacity-80'
+                    : 'opacity-100',
               )}
             >
               <div className="flex items-center gap-2 flex-1">
@@ -56,7 +70,7 @@ export default function WithdrawTokenSelect({
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>

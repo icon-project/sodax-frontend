@@ -5,6 +5,8 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import BigNumber from 'bignumber.js';
+import { ETHEREUM_MAINNET_CHAIN_ID } from '@sodax/types';
+import { TimerIcon } from 'lucide-react';
 
 interface DepositConfirmationStepProps {
   selectedToken: XToken;
@@ -23,8 +25,15 @@ export default function DepositConfirmationStep({
         <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
           Earn {apy} APY
         </div>
-        <div className="self-stretch text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-          Takes ~10 seconds
+        <div className="self-stretch text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
+          {selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? (
+            <div className="flex items-center gap-1 text-cherry-bright">
+              <TimerIcon className="w-4 h-4 text-cherry-bright" />
+              Takes longer (~1m)
+            </div>
+          ) : (
+            'Takes ~10 seconds'
+          )}
         </div>
       </div>
 
