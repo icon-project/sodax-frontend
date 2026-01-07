@@ -3,7 +3,7 @@
 
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import BigNumber from 'bignumber.js';
 import AnimatedNumber from '@/components/shared/animated-number';
 import AssetList from './_components/asset-list';
@@ -33,14 +33,28 @@ export interface CarouselItemData {
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const { setDepositValue, setTokenCount } = useSaveActions();
-  const { openAsset } = useSaveState();
+  const { openAsset, isSwitchingChain } = useSaveState();
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const allTokens = useMemo(() => flattenTokens(), []);
   const groupedTokens = useMemo(() => getUniqueTokenSymbols(allTokens), [allTokens]);
   const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
-  const tokensWithSupplyBalances = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
+  const originalTokensWithSupplyBalances = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
+
+  const cachedTokensWithSupplyBalancesRef = useRef<typeof originalTokensWithSupplyBalances>(
+    originalTokensWithSupplyBalances,
+  );
+
+  const tokensWithSupplyBalances = useMemo(() => {
+    if (isSwitchingChain) {
+      return cachedTokensWithSupplyBalancesRef.current;
+    }
+    cachedTokensWithSupplyBalancesRef.current = originalTokensWithSupplyBalances;
+    return originalTokensWithSupplyBalances;
+  }, [originalTokensWithSupplyBalances, isSwitchingChain]);
+
   const { data: tokenPrices } = useAllTokenPrices(allGroupTokens);
+
   // Filter and prepare carousel items with balances > 0
   const carouselItems = useMemo((): CarouselItemData[] => {
     const items: CarouselItemData[] = [];

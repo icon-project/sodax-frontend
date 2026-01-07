@@ -2,11 +2,10 @@
 
 import type React from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { XToken } from '@sodax/types';
-import { ArrowLeft, XIcon } from 'lucide-react';
+import { XIcon } from 'lucide-react';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
-import { Button } from '@/components/ui/button';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { useReservesUsdFormat, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import type { UserReserveData } from '@sodax/sdk';
@@ -14,6 +13,7 @@ import { formatUnits } from 'viem';
 import WithdrawAmountSelect from './withdraw-amount-select';
 import WithdrawConfirmationStep from './withdraw-confirmation-step';
 import WithdrawTokenSelect from './withdraw-token-select';
+import WithdrawDialogFooter from './withdraw-dialog-footer';
 import type { CarouselItemData, NetworkBalance } from '../../page';
 
 interface WithdrawDialogProps {
@@ -124,6 +124,14 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
     setSelectedNetwork(network);
   };
 
+  const handleWithdrawStart = (): void => {
+    setIsWithdrawPending(true);
+  };
+
+  const handleWithdrawSuccess = (): void => {
+    setIsWithdrawPending(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
@@ -164,44 +172,18 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
           <WithdrawConfirmationStep selectedToken={selectedToken} amount={withdrawValue.toString()} />
         )}
 
-        <DialogFooter className="flex gap-2 overflow-hidden absolute bottom-8 md:inset-x-12 inset-x-8 !justify-start flex-row">
-          {currentStep === 0 ? (
-            <div className="flex gap-4 items-center">
-              <Button
-                variant="cherry"
-                className="text-white font-['InterRegular'] transition-all duration-300 ease-in-out w-[105px]"
-                onClick={handleContinue}
-                disabled={!selectedNetwork}
-              >
-                Continue
-              </Button>
-              <div className="text-clay text-(length:--body-small) font-['InterRegular']">
-                {!selectedNetwork ? 'Select a source' : 'You’ll choose amount next'}
-              </div>
-            </div>
-          ) : currentStep === 1 ? (
-            <>
-              <Button variant="cream" className="w-10 h-10" onMouseDown={handleBack}>
-                <ArrowLeft />
-              </Button>
-              <Button
-                variant="cherry"
-                className="text-white font-['InterRegular'] transition-all duration-300 ease-in-out w-[105px]"
-                onClick={handleContinue}
-              >
-                Continue
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="cherry"
-              className="text-white font-['InterRegular'] transition-all duration-300 ease-in-out w-full"
-              onClick={() => setIsWithdrawPending(!isWithdrawPending)}
-            >
-              Withdraw to {selectedToken?.symbol}
-            </Button>
-          )}
-        </DialogFooter>
+        <WithdrawDialogFooter
+          currentStep={currentStep}
+          selectedNetwork={selectedNetwork}
+          selectedToken={selectedToken}
+          withdrawValue={withdrawValue}
+          open={open}
+          onContinue={handleContinue}
+          onBack={handleBack}
+          onWithdrawStart={handleWithdrawStart}
+          onWithdrawSuccess={handleWithdrawSuccess}
+          onClose={handleClose}
+        />
       </DialogContent>
     </Dialog>
   );
