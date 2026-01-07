@@ -15,6 +15,7 @@ import WithdrawConfirmationStep from './withdraw-confirmation-step';
 import WithdrawTokenSelect from './withdraw-token-select';
 import WithdrawDialogFooter from './withdraw-dialog-footer';
 import type { CarouselItemData, NetworkBalance } from '../../page';
+import { cn } from '@/lib/utils';
 
 interface WithdrawDialogProps {
   open: boolean;
@@ -132,10 +133,15 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
     setIsWithdrawPending(false);
   };
 
+  const isTokenSelection = needsTokenSelection && currentStep === 0;
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className="w-full md:!max-w-[480px] p-8 md:p-12 md:pb-8 gap-0 h-87 bg-vibrant-white block"
+        className={cn(
+          'w-full md:!max-w-[480px] p-8 md:p-12 md:pb-8 gap-0 bg-vibrant-white block',
+          isTokenSelection ? 'max-h-[90vh] min-h-82' : 'h-82',
+        )}
         hideCloseButton
         enableMotion={true}
         shake={isShaking}
@@ -183,6 +189,7 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
           onWithdrawStart={handleWithdrawStart}
           onWithdrawSuccess={handleWithdrawSuccess}
           onClose={handleClose}
+          isTokenSelection={isTokenSelection}
         />
       </DialogContent>
     </Dialog>

@@ -13,6 +13,7 @@ import { chainIdToChainName } from '@/providers/constants';
 import type { NetworkBalance } from '../../page';
 import { useSaveActions } from '../../_stores/save-store-provider';
 import { CheckIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface WithdrawDialogFooterProps {
   currentStep: number;
@@ -25,6 +26,7 @@ interface WithdrawDialogFooterProps {
   onWithdrawStart: () => void;
   onWithdrawSuccess: () => void;
   onClose: () => void;
+  isTokenSelection: boolean;
 }
 
 export default function WithdrawDialogFooter({
@@ -38,6 +40,7 @@ export default function WithdrawDialogFooter({
   onWithdrawStart,
   onWithdrawSuccess,
   onClose,
+  isTokenSelection,
 }: WithdrawDialogFooterProps): React.JSX.Element {
   const { setIsSwitchingChain } = useSaveActions();
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
@@ -98,7 +101,12 @@ export default function WithdrawDialogFooter({
   }, [open, resetApproveError, resetWithdrawError]);
 
   return (
-    <DialogFooter className="flex gap-2 overflow-hidden absolute bottom-8 md:inset-x-12 inset-x-8 !justify-start flex-row">
+    <DialogFooter
+      className={cn(
+        'flex gap-2 overflow-hidden md:inset-x-12 inset-x-8 !justify-start flex-row',
+        isTokenSelection ? 'mt-6' : 'absolute bottom-8',
+      )}
+    >
       {currentStep === 0 ? (
         <div className="flex gap-4 items-center">
           <Button
