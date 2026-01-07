@@ -16,6 +16,7 @@ import { chainIdToChainName } from '@/providers/constants';
 import type { CarouselItemData, NetworkBalance } from '../page';
 import WithdrawDialog from './withdraw-dialog/withdraw-dialog';
 import { motion } from 'motion/react';
+import { useSaveActions } from '../_stores/save-store-provider';
 interface CarouselWithPaginationProps {
   carouselItems: CarouselItemData[];
   tokenPrices?: Record<string, number>;
@@ -110,7 +111,7 @@ function CarouselItemContent({
   const [isHovered, setIsHovered] = useState(false);
   const priceKey = `${item.token.symbol}-${item.token.xChainId}`;
   const tokenPrice = tokenPrices?.[priceKey] || 0;
-
+  const { setOpenAsset } = useSaveActions();
   const formattedBalance = useMemo((): string => {
     return `${formatBalance(item.totalBalance, tokenPrice)} ${item.token.symbol}`;
   }, [item.totalBalance, item.token.symbol, tokenPrice]);
@@ -195,7 +196,12 @@ function CarouselItemContent({
             }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
-            <div className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso">
+            <div
+              className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso"
+              onClick={() => {
+                setOpenAsset(item.token.symbol);
+              }}
+            >
               <CirclePlusIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
               Add
             </div>
