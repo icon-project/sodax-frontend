@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { parseUnits } from 'viem';
+import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
 
 export function WithdrawButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
@@ -16,26 +17,44 @@ export function WithdrawButton({ token }: { token: XToken }) {
 
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
-  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(token, spokeProvider);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'withdraw', spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
+  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw();
 
-  const handleWithdraw = async () => {
-    if (!amount) return;
-    if (!spokeProvider) return;
-
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
-    await withdraw({
+  const params: MoneyMarketWithdrawParams | undefined = useMemo(() => {
+    if (!amount) return undefined;
+    return {
       token: token.address,
+      // vault token on hub chain decimals is 18
       amount: parseUnits(amount, token.decimals),
       action: 'withdraw',
-      toChainId: token.xChainId,
-      toAddress: walletAddress,
-    });
-    if (!error) {
+    };
+  }, [token.address, token.decimals, amount]);
+
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({ params, spokeProvider });
+  const {
+    mutateAsync: approve,
+    isPending: isApproving,
+    error: approveError,
+    reset: resetApproveError,
+  } = useMMApprove();
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
+
+  const handleWithdraw = async () => {
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
+    if (!params) {
+      console.error('params is not available');
+      return;
+    }
+    try {
+      await withdraw({
+        params,
+        spokeProvider,
+      });
       setOpen(false);
+    } catch (err) {
+      console.error('Error in handleWithdraw:', err);
     }
   };
 
@@ -44,11 +63,24 @@ export function WithdrawButton({ token }: { token: XToken }) {
     if (!newOpen) {
       setAmount('');
       resetError?.();
+      resetApproveError?.();
     }
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action: 'withdraw' });
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
+    if (!params) {
+      console.error('params is not available');
+      return;
+    }
+    try {
+      await approve({ params, spokeProvider });
+    } catch (err) {
+      console.error('Error in handleApprove:', err);
+    }
   };
 
   return (
@@ -59,6 +91,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
           size="sm"
           onClick={() => {
             resetError?.();
+            resetApproveError?.();
             setOpen(true);
           }}
         >
@@ -78,13 +111,15 @@ export function WithdrawButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
+        {error && <p className="text-red-500 text-sm mt-2">{error?.code}</p>}
+        {approveError && <p className="text-red-500 text-sm mt-2">{approveError?.message}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"
             type="button"
             variant="default"
             onClick={handleApprove}
-            disabled={isAllowanceLoading || hasAllowed || isApproving}
+            disabled={isAllowanceLoading || hasAllowed || isApproving || !params || !spokeProvider}
           >
             {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
           </Button>

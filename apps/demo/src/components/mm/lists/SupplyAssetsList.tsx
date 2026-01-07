@@ -42,9 +42,9 @@ export function SupplyAssetsList(): ReactElement {
     address,
   });
 
-  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData(spokeProvider, address);
+  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
-  const { data: userSummary } = useUserFormattedSummary(spokeProvider, address);
+  const { data: userSummary } = useUserFormattedSummary({ spokeProvider, address });
   const healthFactor = userSummary?.healthFactor ? Number.parseFloat(userSummary.healthFactor).toFixed(2) : undefined;
 
   console.log('userSummary:', userSummary);

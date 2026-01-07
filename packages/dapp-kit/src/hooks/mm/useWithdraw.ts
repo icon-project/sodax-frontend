@@ -1,8 +1,11 @@
-import type { MoneyMarketWithdrawParams, SpokeProvider } from '@sodax/sdk';
-import type { XToken } from '@sodax/types';
+import type { MoneyMarketError, MoneyMarketWithdrawParams, RelayErrorCode, SpokeProvider } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { parseUnits } from 'viem';
 import { useSodaxContext } from '../shared/useSodaxContext';
+
+export type UseWithdrawParams = {
+  params: MoneyMarketWithdrawParams;
+  spokeProvider: SpokeProvider;
+};
 
 interface WithdrawResponse {
   ok: true;
@@ -11,55 +14,52 @@ interface WithdrawResponse {
 
 type WithdrawParams = string | MoneyMarketWithdrawParams;
 /**
- * Hook for withdrawing supplied tokens from the Sodax money market.
+ * Hook for performing withdrawals from the Sodax money market.
  *
- * This hook provides functionality to withdraw previously supplied tokens from the money market protocol,
- * handling the entire withdrawal process including transaction creation, submission,
- * and cross-chain communication.
+ * This hook exposes a mutation that executes the complete withdrawal logic, including transaction
+ * creation and handling cross-chain communication. It leverages React Query's mutation API for
+ * easy asynchronous handling and status tracking within UI components.
  *
- * @param {XToken} spokeToken - The token to withdraw from the spoke chain. Must be an XToken with valid address and chain information.
- * @param {SpokeProvider} spokeProvider - The spoke provider to use for the withdraw transaction. Must be a valid SpokeProvider instance.
+ * @returns {UseMutationResult<WithdrawResponse, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED' | 'WITHDRAW_UNKNOWN_ERROR' | RelayErrorCode>, UseWithdrawParams>}
+ *   Mutation result object, with:
+ *   - mutateAsync: (params: UseWithdrawParams) => Promise<WithdrawResponse>
+ *       Initiates the withdrawal using the provided params.
+ *   - isPending: boolean indicating if a transaction is in progress.
+ *   - error: MoneyMarketError if an error occurred while withdrawing, otherwise undefined.
  *
- * @returns {UseMutationResult<WithdrawResponse, Error, string>} A mutation result object with the following properties:
- *   - mutateAsync: Function to execute the withdraw transaction
- *   - isPending: Boolean indicating if a transaction is in progress
  * @example
  * ```typescript
- * const { mutateAsync: withdraw, isPending, error } = useWithdraw(spokeToken);
- * await withdraw('100');
+ * const { mutateAsync: withdraw, isPending, error } = useWithdraw();
+ * await withdraw({ params: withdrawParams, spokeProvider });
  * ```
  *
  * @throws {Error} When:
- *   - spokeProvider is not available
- *   - Transaction execution fails
+ *   - spokeProvider is not provided or invalid.
+ *   - Underlying withdrawal logic fails.
  */
-export function useWithdraw(
-  spokeToken: XToken,
-  spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<WithdrawResponse, Error, WithdrawParams> {
+export function useWithdraw(): UseMutationResult<
+  WithdrawResponse,
+  MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED' | 'WITHDRAW_UNKNOWN_ERROR' | RelayErrorCode>,
+  UseWithdrawParams
+> {
   const { sodax } = useSodaxContext();
 
-  return useMutation<WithdrawResponse, Error, WithdrawParams>({
-    mutationFn: async (param: WithdrawParams) => {
+  return useMutation<
+    WithdrawResponse,
+    MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED' | 'WITHDRAW_UNKNOWN_ERROR' | RelayErrorCode>,
+    UseWithdrawParams
+  >({
+    mutationFn: async ({ params, spokeProvider }) => {
       if (!spokeProvider) {
         throw new Error('spokeProvider is not found');
       }
 
-      const response = await sodax.moneyMarket.withdraw(
-        typeof param === 'string' ? {
-          token: spokeToken.address,
-          // vault token on hub chain decimals is 18
-          amount: parseUnits(param, 18),
-          action: 'withdraw',
-        } : param,
-        spokeProvider,
-      );
+      const response = await sodax.moneyMarket.withdraw(params, spokeProvider);
 
       if (!response.ok) {
-        throw new Error('Failed to withdraw tokens');
+        throw response.error;
       }
 
-      console.log('Withdraw transaction submitted:', response);
       return response;
     },
   });

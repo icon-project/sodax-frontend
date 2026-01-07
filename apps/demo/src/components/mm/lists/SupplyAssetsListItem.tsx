@@ -30,9 +30,9 @@ export function SupplyAssetsListItem({
     formattedReserves: formattedReserves,
     userReserves: userReserves as UserReserveData[],
   });
-  const { data: aToken, isLoading: isATokenLoading } = useAToken(
-    metrics.formattedReserve?.aTokenAddress as `0x${string}`,
-  );
+  const { data: aToken, isLoading: isATokenLoading } = useAToken({
+    aToken: metrics.formattedReserve?.aTokenAddress as `0x${string}`,
+  });
 
   const formattedBalance = metrics.userReserve
     ? Number(formatUnits(metrics.userReserve.scaledATokenBalance, 18)).toFixed(4)

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax
 import type { XToken } from '@sodax/types';
 import { useState } from 'react';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import type { MoneyMarketRepayParams } from '@sodax/sdk';
 import { parseUnits } from 'viem';
 
 export function RepayButton({ token }: { token: XToken }) {
@@ -15,25 +16,44 @@ export function RepayButton({ token }: { token: XToken }) {
 
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
-  const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay(token, spokeProvider);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(token, amount, 'repay', spokeProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(token, spokeProvider);
+  const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay();
+
+  const params: MoneyMarketRepayParams | undefined = useMemo(() => {
+    if (!amount) return undefined;
+    return {
+      token: token.address,
+      amount: parseUnits(amount, token.decimals),
+      action: 'repay',
+    };
+  }, [token.address, token.decimals, amount]);
+
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({ params, spokeProvider });
+  const {
+    mutateAsync: approve,
+    isPending: isApproving,
+    error: approveError,
+    reset: resetApproveError,
+  } = useMMApprove();
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleRepay = async () => {
-    if (!amount) return;
-    if (!spokeProvider) return;
-
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
-    await repay({
-      token: token.address,
-      action: 'repay',
-      toChainId: token.xChainId,
-      amount: parseUnits(amount, token.decimals),
-      toAddress: walletAddress,
-    });
-    setOpen(false);
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
+    if (!params) {
+      console.error('params is not available');
+      return;
+    }
+    try {
+      await repay({
+        params,
+        spokeProvider,
+      });
+      setOpen(false);
+    } catch (err) {
+      console.error('Error in handleRepay:', err);
+    }
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -41,11 +61,24 @@ export function RepayButton({ token }: { token: XToken }) {
     if (!newOpen) {
       setAmount('');
       resetError?.();
+      resetApproveError?.();
     }
   };
 
   const handleApprove = async () => {
-    await approve({ amount, action: 'repay' });
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
+    if (!params) {
+      console.error('params is not available');
+      return;
+    }
+    try {
+      await approve({ params, spokeProvider });
+    } catch (err) {
+      console.error('Error in handleApprove:', err);
+    }
   };
 
   return (
@@ -56,6 +89,7 @@ export function RepayButton({ token }: { token: XToken }) {
           size="sm"
           onClick={() => {
             resetError?.();
+            resetApproveError?.();
             setOpen(true);
           }}
         >
@@ -75,14 +109,15 @@ export function RepayButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{error.message}</p>}
+        {error && <p className="text-red-500 text-sm mt-2">{error?.code}</p>}
+        {approveError && <p className="text-red-500 text-sm mt-2">{approveError?.message}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"
             type="button"
             variant="default"
             onClick={handleApprove}
-            disabled={isAllowanceLoading || hasAllowed || isApproving}
+            disabled={isAllowanceLoading || hasAllowed || isApproving || !params || !spokeProvider}
           >
             {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
           </Button>
