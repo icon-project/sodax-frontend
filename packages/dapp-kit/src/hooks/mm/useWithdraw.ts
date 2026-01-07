@@ -12,7 +12,6 @@ interface WithdrawResponse {
   value: [string, string];
 }
 
-type WithdrawParams = string | MoneyMarketWithdrawParams;
 /**
  * Hook for performing withdrawals from the Sodax money market.
  *
