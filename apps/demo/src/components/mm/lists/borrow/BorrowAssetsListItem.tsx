@@ -21,6 +21,7 @@ interface BorrowAssetsListItemProps {
   disabled?: boolean;
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
+  onBorrowClick: (token: XToken) => void;
 }
 
 export function BorrowAssetsListItem({
@@ -30,6 +31,7 @@ export function BorrowAssetsListItem({
   disabled = false,
   formattedReserves,
   userReserves,
+  onBorrowClick,
 }: BorrowAssetsListItemProps) {
   const metrics = useReserveMetrics({
     token,
@@ -47,7 +49,7 @@ export function BorrowAssetsListItem({
   const { data: aToken } = useAToken({
     aToken: aTokenAddress ?? ZERO_ADDRESS,
     queryOptions: {
-      queryKey: ['aToken', aTokenAddress], // ✅ REQUIRED
+      queryKey: ['aToken', aTokenAddress],
       enabled: !!aTokenAddress,
     },
   });
@@ -87,7 +89,13 @@ export function BorrowAssetsListItem({
         <span className="font-mono text-sm text-clay">{metrics.totalBorrow}</span>
       </TableCell>
       <TableCell>
-        <BorrowButton token={token} disabled={disabled} />
+        <BorrowButton
+          token={token}
+          disabled={disabled}
+          onClick={clickedToken => {
+            onBorrowClick(clickedToken);
+          }}
+        />
       </TableCell>
     </TableRow>
   );

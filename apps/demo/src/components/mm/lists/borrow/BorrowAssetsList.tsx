@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   useUserReservesData,
   useSpokeProvider,
@@ -11,9 +11,11 @@ import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-
 import { useAppStore } from '@/zustand/useAppStore';
 import { BorrowAssetsListItem } from './BorrowAssetsListItem';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { moneyMarketSupportedTokens, type XToken } from '@sodax/sdk';
 import { formatUnits } from 'viem';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
+import { BorrowModal } from './BorrowModal';
+import { SuccessModal } from '../SuccessModal';
+import { type XToken, type ChainId, moneyMarketSupportedTokens } from '@sodax/types';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -26,127 +28,55 @@ const TABLE_HEADERS = [
 ];
 
 export function BorrowAssetsList() {
-  /**
-   * The chain the user is currently connected to in their wallet.
-   * This is the SOURCE chain:
-   * - where the user supplies collateral
-   * - where we check wallet balances
-   */
   const { selectedChainId } = useAppStore();
+  const [open, setOpen] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successData, setSuccessData] = useState<{
+    amount: string;
+    token: XToken;
+    sourceChainId: ChainId;
+    destinationChainId: ChainId;
+  } | null>(null);
 
-  /**
-   * 1️⃣ BACKEND (GLOBAL, NOT USER-SPECIFIC)
-   *
-   * Fetches ALL money market assets from the backend.
-   * - All chains
-   * - All markets
-   * - No wallet needed
-   *
-   * This answers: "What assets exist and can theoretically be borrowed?"
-   */
   const { data: allMoneyMarketAssets, isLoading: isAssetsLoading } = useBackendAllMoneyMarketAssets({});
 
-  /**
-   * User wallet address on the SELECTED (source) chain.
-   * Needed to check balances and collateral.
-   */
   const { address } = useXAccount(selectedChainId);
 
-  /**
-   * Wallet provider for the selected chain (MetaMask, etc).
-   */
   const walletProvider = useWalletProvider(selectedChainId);
 
-  /**
-   * Spoke provider for the selected chain.
-   * Used for on-chain reads related to the user's position.
-   */
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
-
-  /**
-   * 2️⃣ TOKEN CATALOG (STATIC DATA)
-   *
-   * Build a flat list of ALL supported tokens on ALL chains.
-   * This does NOT care about the user's wallet.
-   *
-   * Purpose:
-   * - acts as a dictionary / lookup table
-   * - lets us attach metadata (symbol, decimals, chainId)
-   */
   const allTokens = useMemo(() => {
     return Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
       chainTokens.map(token => ({
         ...token,
-        xChainId: chainId, // this is the token's REAL chain
+        xChainId: chainId,
       })),
     ) as XToken[];
   }, []);
 
-  /**
-   * 3️⃣ BORROWABLE ASSETS (CORE LOGIC)
-   *
-   * Combine:
-   * - backend money market data (liquidity, rates, caps)
-   * - token metadata (symbol, decimals, chain)
-   *
-   * Result:
-   * - one row = one borrowable asset on one destination chain
-   * - THIS is what the table renders
-   */
+  const [selectedTokenForBorrow, setSelectedTokenForBorrow] = useState<XToken | null>(null);
+
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];
     return getBorrowableAssetsWithMarketData(allMoneyMarketAssets, allTokens);
   }, [allMoneyMarketAssets, allTokens]);
 
-  /**
-   * Tokens that live ONLY on the selected (source) chain.
-   * We use these ONLY to read wallet balances.
-   *
-   * Important:
-   * - balances are chain-specific
-   * - you cannot read balances for other chains from this wallet
-   */
   const tokensOnSelectedChain = useMemo(
     () => allTokens.filter(t => t.xChainId === selectedChainId),
     [allTokens, selectedChainId],
   );
-
-  /**
-   * Wallet balances on the selected chain.
-   *
-   * This answers:
-   * "How much of this token does the user currently hold on THIS chain?"
-   */
   const { data: balances } = useXBalances({
     xChainId: selectedChainId,
     xTokens: tokensOnSelectedChain,
     address,
   });
 
-  /**
-   * User reserves (supplied collateral, debt, etc)
-   * This is USER-SPECIFIC and CHAIN-SPECIFIC.
-   *
-   * Used to decide:
-   * - can the user borrow at all?
-   */
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
 
-  /**
-   * Formatted reserve data (rates, liquidity, caps).
-   * This is MARKET data, not wallet data.
-   */
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
 
-  /**
-   * Simple rule:
-   * If the user has supplied ANY collateral, borrowing is enabled.
-   */
   const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
 
-  /**
-   * Unified loading state for the whole screen.
-   */
   const isLoading = isUserReservesLoading || isFormattedReservesLoading || isAssetsLoading;
 
   return (
@@ -190,30 +120,56 @@ export function BorrowAssetsList() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  borrowableAssets.map(asset => (
-                    <BorrowAssetsListItem
-                      key={`${asset.chainId}-${asset.address}`}
-                      token={asset.token} /**
-                       * Token metadata for this borrowable asset.
-                       * This token lives on the DESTINATION chain.
-                       */
-                      asset={asset}
-                      disabled={!hasCollateral}
-                      walletBalance={
-                        asset.token?.xChainId === selectedChainId && balances?.[asset.token.address]
-                          ? Number(formatUnits(balances[asset.token.address], asset.token.decimals)).toFixed(4)
-                          : '-'
-                      }
-                      formattedReserves={formattedReserves || []}
-                      userReserves={userReserves?.[0] || []}
-                    />
-                  ))
+                  borrowableAssets.map((asset, index) => {
+                    const sourceToken = allTokens.find(
+                      t => t.symbol === asset.token.symbol && t.xChainId === selectedChainId,
+                    );
+                    // console.log("CURRENTLY SELECTED TOKEN:", selectedTokenForBorrow?.symbol);
+                    // console.log(`ROW CREATED: Row is ${asset.token.symbol}. When clicked, it will send ${asset.token.symbol} up.`);
+                    // console.log(`Row ${index} | Display Symbol: ${asset.symbol} | Button Token Symbol: ${asset.token.symbol}`);
+                    return (
+                      <BorrowAssetsListItem
+                        key={`${asset.chainId}-${asset.address}-${index}`}
+                        token={asset.token}
+                        asset={asset}
+                        disabled={!hasCollateral}
+                        walletBalance={
+                          asset.token?.xChainId === selectedChainId && balances?.[asset.token.address]
+                            ? Number(formatUnits(balances[asset.token.address], asset.token.decimals)).toFixed(6)
+                            : '-'
+                        }
+                        formattedReserves={formattedReserves || []}
+                        userReserves={userReserves?.[0] || []}
+                        onBorrowClick={token => setSelectedTokenForBorrow(token)}
+                      />
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
           </div>
         </div>
       </CardContent>
+      {selectedTokenForBorrow && (
+        <BorrowModal
+          key={selectedTokenForBorrow.address}
+          open={!!selectedTokenForBorrow}
+          token={selectedTokenForBorrow}
+          onOpenChange={open => {
+            if (!open) setSelectedTokenForBorrow(null);
+          }}
+          onSuccess={data => {
+            setSuccessData(data);
+            setSelectedTokenForBorrow(null);
+          }}
+        />
+      )}
+      <SuccessModal
+        open={!!successData}
+        onClose={() => setSuccessData(null)}
+        title="Borrow Successful"
+        data={successData}
+      />
     </Card>
   );
 }

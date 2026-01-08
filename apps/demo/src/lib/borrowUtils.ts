@@ -61,12 +61,14 @@ export function getBorrowableAssetsWithMarketData(
 
       if (!spokeTokenAddress) continue;
 
-      // Find the XToken that belongs to this vault on this chain
-      const token = tokens.find(t => t.address.toLowerCase() === spokeTokenAddress.toLowerCase());
+      const token = tokens.find(
+        t => t.address.toLowerCase() === spokeTokenAddress.toLowerCase() && t.xChainId === chainId,
+      );
 
       if (!token) continue;
 
-      const uniqueKey = hubAsset.vault.toLowerCase();
+      const uniqueKey = `${chainId}-${hubAsset.vault.toLowerCase()}`;
+
       if (seen.has(uniqueKey)) continue;
       seen.add(uniqueKey);
 

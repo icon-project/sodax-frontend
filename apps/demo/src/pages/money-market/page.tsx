@@ -7,7 +7,6 @@ import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { useDeriveUserWalletAddress } from '@sodax/dapp-kit';
 import { Wallet } from 'lucide-react';
-import type { SpokeProvider } from '@sodax/sdk';
 import { BorrowAssetsList } from '@/components/mm/lists/borrow/BorrowAssetsList';
 
 export default function MoneyMarketPage() {
