@@ -189,6 +189,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         <>
           <div className="inline-flex justify-start items-center gap-2 mt-2 w-full">
             <Input
+              autoFocus
               type="text"
               placeholder="Enter destination address"
               value={customDestinationAddress}
