@@ -32,7 +32,6 @@ import {
   HubService,
 } from '../index.js';
 import { Sodax } from '../shared/entities/Sodax.js';
-import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
 import { EvmSpokeProvider } from '../shared/entities/Providers.js';
 import { EvmHubProvider } from '../shared/entities/Providers.js';
 import { SonicSpokeProvider } from '../shared/entities/Providers.js';
