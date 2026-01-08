@@ -4,6 +4,7 @@ import { formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import AmountInputSlider from '../amount-input-slider';
 import { chainIdToChainName } from '@/providers/constants';
+import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 
 interface WithdrawAmountSelectProps {
   selectedToken: XToken | null;
@@ -23,7 +24,10 @@ export default function WithdrawAmountSelect({
   sourceAddress,
 }: WithdrawAmountSelectProps): React.JSX.Element {
   const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
-
+  const allChainBalances = useAllChainBalances();
+  const balance = selectedToken
+    ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
+    : 0n;
   return (
     <>
       <div className="flex gap-2 mb-4">
@@ -40,7 +44,7 @@ export default function WithdrawAmountSelect({
         maxValue={Number(supplyBalance) || 0}
         tokenSymbol={selectedToken?.symbol || ''}
         onInputChange={onInputChange}
-        sourceAddress={sourceAddress}
+        isSimulate={!(sourceAddress && balance > 0n)}
       />
       <div className="flex gap-2 mt-4">
         <div className="font-['InterRegular'] text-(length:--body-comfortable) text-clay-light">Withdrawable</div>

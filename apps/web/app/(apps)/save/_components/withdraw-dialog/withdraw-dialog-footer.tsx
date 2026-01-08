@@ -130,6 +130,7 @@ export default function WithdrawDialogFooter({
             variant="cherry"
             className="text-white font-['InterRegular'] transition-all duration-300 ease-in-out w-[105px]"
             onClick={onContinue}
+            disabled={withdrawValue === 0}
           >
             Continue
           </Button>

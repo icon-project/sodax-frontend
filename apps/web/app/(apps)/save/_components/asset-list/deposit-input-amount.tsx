@@ -1,12 +1,10 @@
-// apps/web/app/(apps)/save/_components/asset-list/deposit-input-amount.tsx
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { XToken, ChainId } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import { useXAccount, getXChainType } from '@sodax/wallet-sdk-react';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { formatBalance } from '@/lib/utils';
 import { formatUnits } from 'viem';
 import { chainIdToChainName } from '@/providers/constants';
-import { cn } from '@/lib/utils';
 import { useSaveActions, useSaveState } from '../../_stores/save-store-provider';
 import { Button } from '@/components/ui/button';
 import { AlertCircleIcon, ArrowLeft } from 'lucide-react';
