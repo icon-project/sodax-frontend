@@ -15,6 +15,7 @@ import BigNumber from 'bignumber.js';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -55,6 +56,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   usdPrice = 0,
 }: CurrencyInputPanelProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
   const { outputToken } = useSwapState();
@@ -90,6 +92,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   );
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    if (isMobile) return;
     const target = e.target as HTMLElement;
     if (target.tagName !== 'INPUT' && !target.closest('input')) {
       inputRef.current?.focus();
@@ -164,6 +167,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         <div className="h-12 pr-0 sm:pr-6 inline-flex flex-col justify-center items-end gap-1">
           <div className="text-right justify-center text-espresso font-normal font-['InterRegular'] leading-relaxed">
             <Input
+              autoFocus={type === CurrencyInputPanelType.INPUT && !isMobile}
               type="number"
               ref={inputRef}
               value={type === CurrencyInputPanelType.OUTPUT ? formatBalance(inputValue, usdPrice) : inputValue}
