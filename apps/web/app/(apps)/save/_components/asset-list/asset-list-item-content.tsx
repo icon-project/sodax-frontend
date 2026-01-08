@@ -128,6 +128,7 @@ export default function AssetListItemContent({
       {isShowDeposits ? (
         <DepositInputAmount
           selectedToken={selectedToken}
+          apy={apy}
           tokens={tokens}
           onBack={() => {
             setIsShowDeposits(false);

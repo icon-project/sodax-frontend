@@ -175,10 +175,11 @@ export const hasSufficientBalanceWithFee = (
 };
 
 export const formatBalance = (amount: string, price: number): string => {
-  if (!amount || new BigNumber(amount).isZero()) return '0';
+  if (!amount || new BigNumber(amount).isZero() || Number(amount) < 0) return '0';
   const decimals = price >= 10000 ? 6 : 4;
 
-  return new BigNumber(amount).decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed(decimals);
+  const value = new BigNumber(amount);
+  return value.isInteger() ? value.toFixed(0) : value.decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed();
 };
 
 export const getSwapErrorMessage = (errorCode: string): { title: string; message: string } => {

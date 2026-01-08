@@ -33,7 +33,7 @@ export default function AmountInputSlider({
       <CustomSlider
         defaultValue={[0]}
         max={!isSimulate ? maxValue : 10000}
-        step={0.001}
+        step={0.0001}
         value={value}
         onValueChange={onValueChange}
         className="h-10"
@@ -63,7 +63,6 @@ export default function AmountInputSlider({
             type="number"
             min={0}
             max={maxValue}
-            step={0.001}
             value={value[0]?.toString() || '0'}
             onChange={onInputChange}
             className="!text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular']"

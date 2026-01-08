@@ -3,7 +3,7 @@ import type { XToken } from '@sodax/types';
 import { useXAccount, getXChainType } from '@sodax/wallet-sdk-react';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { formatBalance } from '@/lib/utils';
-import { formatUnits } from 'viem';
+import { formatUnits, parseUnits } from 'viem';
 import { chainIdToChainName } from '@/providers/constants';
 import { useSaveActions, useSaveState } from '../../_stores/save-store-provider';
 import { Button } from '@/components/ui/button';
@@ -13,14 +13,14 @@ import { MODAL_ID } from '@/stores/modal-store';
 import DepositDialog from '../deposit-dialog/deposit-dialog';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import AmountInputSlider from '../amount-input-slider';
-
 interface DepositInputAmountProps {
   selectedToken: XToken | null;
   tokens: XToken[];
   onBack?: () => void;
+  apy: string;
 }
 
-export default function DepositInputAmount({ selectedToken, tokens, onBack }: DepositInputAmountProps) {
+export default function DepositInputAmount({ selectedToken, tokens, onBack, apy }: DepositInputAmountProps) {
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
   const { setDepositValue } = useSaveActions();
   const { depositValue } = useSaveState();
@@ -39,6 +39,16 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
     return Number(formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0));
   }, [balance, selectedToken, tokenPrice]);
 
+  const monthlyYield = useMemo(() => {
+    if (depositValue === 0 || !tokenPrice) {
+      return 0;
+    }
+
+    const depositValueUSD = depositValue * tokenPrice;
+    return (depositValueUSD * Number(apy.replace('%', ''))) / 100 / 12;
+  }, [depositValue, tokenPrice, apy]);
+
+  const isSimulate = !(sourceAddress && balance > 0n);
   // Reset progress to 0 when token changes
   useEffect(() => {
     const currentTokenAddress = selectedToken?.address;
@@ -85,7 +95,9 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
     return sourceAddress ? (
       <div className="flex gap-2">
         <span className="text-clay-light">Yield/mo:</span>
-        <span className="font-['InterRegular'] text-espresso font-medium">~$148.12</span>
+        <span className="font-['InterRegular'] text-espresso font-medium">
+          {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
+        </span>
         <AlertCircleIcon width={16} height={16} className="text-clay" />
       </div>
     ) : (
@@ -120,16 +132,27 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
           setDepositValue(value[0] ?? 0);
         }}
         maxValue={maxValue}
-        isSimulate={!(sourceAddress && balance > 0n)}
+        isSimulate={isSimulate}
         tokenSymbol={tokens[0]?.symbol || selectedToken?.symbol || ''}
         onInputChange={handleInputChange}
       />
       <div className="flex gap-2 items-center -mt-2 mb-7">
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
-          {!sourceAddress || balance === 0n ? 'Sample available:' : 'Available'}
+          {isSimulate ? 'Sample available:' : 'Available'}
         </div>
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">
-          {formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0)} {selectedToken?.symbol}
+          {formatBalance(
+            (
+              Number(
+                formatUnits(
+                  isSimulate ? parseUnits('10000', selectedToken?.decimals ?? 0) : balance,
+                  selectedToken?.decimals ?? 0,
+                ),
+              ) - depositValue
+            ).toString(),
+            tokenPrice ?? 0,
+          )}{' '}
+          {selectedToken?.symbol}
         </div>
       </div>
 
