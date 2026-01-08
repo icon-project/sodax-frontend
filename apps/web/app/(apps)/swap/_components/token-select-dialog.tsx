@@ -10,6 +10,7 @@ import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { getChainBalance, hasTokenBalance } from '@/lib/utils';
+import { isNativeToken } from '@sodax/wallet-sdk-react';
 
 export default function TokenSelectDialog({
   isOpen,
@@ -34,19 +35,39 @@ export default function TokenSelectDialog({
   }, [selectedChain, allTokens]);
 
   const filterBySearch = useCallback(
-    (tokens: XToken[]): XToken[] =>
-      tokens.filter(token => token.symbol.toLowerCase().includes(searchQuery.toLowerCase())),
+    (tokens: XToken[]) => tokens.filter(token => token.symbol.toLowerCase().includes(searchQuery.toLowerCase())),
     [searchQuery],
   );
 
-  const visibleTokens = useMemo(() => filterBySearch(chainFilteredTokens), [filterBySearch, chainFilteredTokens]);
+  const sortByRelevance = useCallback(
+    (tokens: XToken[]) => {
+      const query = searchQuery.toLowerCase();
+
+      return [...tokens].sort((a, b) => {
+        const aIsNative = isNativeToken(a);
+        const bIsNative = isNativeToken(b);
+
+        if (aIsNative && !bIsNative) return -1;
+        if (!aIsNative && bIsNative) return 1;
+
+        if (a.symbol.toLowerCase() === query) return -1;
+        if (b.symbol.toLowerCase() === query) return 1;
+
+        return 0;
+      });
+    },
+    [searchQuery],
+  );
+
+  const visibleTokens = useMemo(() => {
+    const filtered = filterBySearch(chainFilteredTokens);
+    return sortByRelevance(filtered);
+  }, [filterBySearch, chainFilteredTokens, sortByRelevance]);
 
   const allChainVisibleTokens = useMemo(() => {
-    if (selectedChain) {
-      return allTokens;
-    }
-    return filterBySearch(allTokens);
-  }, [allTokens, selectedChain, filterBySearch]);
+    const base = selectedChain ? allTokens : filterBySearch(allTokens);
+    return sortByRelevance(base);
+  }, [allTokens, selectedChain, filterBySearch, sortByRelevance]);
 
   const splitTokensByBalance = useCallback(
     (tokens: XToken[]) => {
