@@ -11,7 +11,7 @@ interface AmountInputSliderProps {
   value: number[];
   onValueChange: (value: number[]) => void;
   maxValue: number;
-  sourceAddress?: string;
+  isSimulate?: boolean;
   tokenSymbol: string;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
@@ -22,7 +22,7 @@ export default function AmountInputSlider({
   value,
   onValueChange,
   maxValue,
-  sourceAddress,
+  isSimulate,
   tokenSymbol,
   onInputChange,
   className,
@@ -32,7 +32,7 @@ export default function AmountInputSlider({
     <div className={cn('flex items-center gap-2 -mt-2', className)}>
       <CustomSlider
         defaultValue={[0]}
-        max={sourceAddress ? maxValue : 10000}
+        max={!isSimulate ? maxValue : 10000}
         step={0.001}
         value={value}
         onValueChange={onValueChange}
@@ -40,7 +40,7 @@ export default function AmountInputSlider({
         trackClassName="bg-cream-white"
         rangeClassName={cn(
           '[background-size:20px_20px]',
-          !sourceAddress
+          isSimulate
             ? 'bg-[linear-gradient(135deg,#EDE6E6_25%,#E3BEBB_25%,#E3BEBB_50%,#EDE6E6_50%,#EDE6E6_75%,#E3BEBB_75%,#E3BEBB_100%)]'
             : 'bg-cherry-bright',
         )}
@@ -72,6 +72,9 @@ export default function AmountInputSlider({
             <InputGroupButton
               size="icon-xs"
               className="text-clay text-[9px] font-['InterRegular'] font-normal !border-none !outline-none leading-0"
+              onClick={() => {
+                onValueChange([maxValue]);
+              }}
             >
               MAX
             </InputGroupButton>

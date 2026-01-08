@@ -30,7 +30,6 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
   const previousTokenAddressRef = useRef<string | undefined>(selectedToken?.address);
   const openModal = useModalStore(state => state.openModal);
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState<boolean>(false);
-
   const allChainBalances = useAllChainBalances();
   const balance = selectedToken
     ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
@@ -99,13 +98,13 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
   return (
     <>
       <div className="flex gap-2 items-center h-12">
-        {!sourceAddress ? (
+        {!sourceAddress || balance === 0n ? (
           <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso">
             {depositValue > 0
               ? `$${formatBalance((depositValue * (tokenPrice ?? 0)).toString(), tokenPrice ?? 0)} worth of ${selectedToken?.symbol}`
               : 'Choose an amount to simulate yield.'}
           </div>
-        ) : balance > 0n ? (
+        ) : (
           <>
             <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso font-bold">
               ${formatBalance((depositValue * (tokenPrice ?? 0)).toString(), tokenPrice ?? 0)}
@@ -114,10 +113,6 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
               worth of {selectedToken?.symbol}
             </div>
           </>
-        ) : (
-          <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso">
-            No {selectedToken?.symbol} detected on {chainIdToChainName(selectedToken?.xChainId as ChainId)}.
-          </div>
         )}
       </div>
       <AmountInputSlider
@@ -127,16 +122,13 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
           setDepositValue(value[0] ?? 0);
         }}
         maxValue={maxValue}
-        sourceAddress={sourceAddress}
+        isSimulate={!(sourceAddress && balance > 0n)}
         tokenSymbol={tokens[0]?.symbol || selectedToken?.symbol || ''}
         onInputChange={handleInputChange}
-        className={cn(
-          balance > 0n ? 'opacity-100' : sourceAddress ? 'blur-[2px] pl-4 sm:pl-3 pointer-events-none' : '',
-        )}
       />
       <div className="flex gap-2 items-center -mt-2 mb-7">
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
-          {!sourceAddress ? 'Sample available:' : 'Available'}
+          {!sourceAddress || balance === 0n ? 'Sample available:' : 'Available'}
         </div>
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">
           {formatBalance(formatUnits(balance, selectedToken?.decimals ?? 0), tokenPrice ?? 0)} {selectedToken?.symbol}
@@ -169,7 +161,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack }: De
               <Button
                 variant="cherry"
                 className="w-27 mix-blend-multiply shadow-none"
-                disabled={!selectedToken || BigInt(balance) === 0n}
+                disabled={!selectedToken || depositValue === 0 || !(sourceAddress && balance > 0n)}
                 onMouseDown={() => {
                   setIsDepositDialogOpen(true);
                 }}

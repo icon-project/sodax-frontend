@@ -38,10 +38,11 @@ export default function AssetListItemContent({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Element;
-      const isContinueButton = target.closest('button')?.textContent?.includes('Continue');
+      const buttonText = target.closest('button')?.textContent || '';
+      const isContinueOrSimulateButton = buttonText.includes('Continue') || buttonText.includes('Simulate');
       if (!tokenAssetRef.current?.contains(target)) {
         setSelectedAsset(null);
-        if (!isContinueButton) {
+        if (!isContinueOrSimulateButton) {
           setSelectedToken(null);
         }
         setHoveredAsset(null);
@@ -143,7 +144,14 @@ export default function AssetListItemContent({
           handleAssetClick={handleAssetClick}
           handleAssetMouseEnter={handleAssetMouseEnter}
           handleAssetMouseLeave={handleAssetMouseLeave}
-          setSelectedToken={setSelectedToken}
+          setSelectedToken={token => {
+            if (outsideClick) return;
+            if (selectedToken === token) {
+              setSelectedToken(null);
+              return;
+            }
+            setSelectedToken(token);
+          }}
           onContinue={!isShowDeposits ? () => setIsShowDeposits(true) : undefined}
           tokenAssetRef={tokenAssetRef}
           apy={apy}

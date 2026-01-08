@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
 import type { DisplayItem } from './asset-list-item-content';
 import AssetMetrics from './asset-metrics';
+import { useXAccount } from '@sodax/wallet-sdk-react';
+import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 
 type DepositTokenSelectItemProps = {
   item: DisplayItem;
@@ -145,6 +147,13 @@ export function DepositTokenSelect({
   apy,
   deposits,
 }: Props) {
+  const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
+  const allChainBalances = useAllChainBalances();
+  const balance = selectedToken
+    ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
+    : 0n;
+  const isSimulate = !(sourceAddress && balance > 0n);
+
   return (
     <>
       <AssetMetrics apy={apy} deposits={deposits} />
@@ -196,7 +205,7 @@ export function DepositTokenSelect({
               onContinue?.();
             }}
           >
-            Continue
+            {!selectedToken ? 'Continue' : isSimulate ? 'Simulate' : 'Continue'}
           </Button>
           <span className="text-clay text-(length:--body-small) font-['InterRegular']">
             {!selectedToken ? 'Select a source' : 'See your yield next'}
