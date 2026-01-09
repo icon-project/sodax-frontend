@@ -25,8 +25,7 @@ import {
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
 import type { Address, Erc20Token } from '@sodax/types';
-import { deriveUserWalletAddress } from '../shared/utils/shared-utils.js';
-import { Erc20Service } from '../shared/index.js';
+import { Erc20Service, HubService } from '../shared/index.js';
 import { erc20Abi } from 'viem';
 
 export class MoneyMarketDataService {
@@ -129,8 +128,8 @@ export class MoneyMarketDataService {
   ): Promise<readonly [readonly UserReserveData[], number]> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const spokeChainId = spokeProvider.chainConfig.chain.id;
-    // derive users hub wallet address
-    const hubWalletAddress = await deriveUserWalletAddress(this.hubProvider, spokeChainId, walletAddress);
+    const hubWalletAddress = await HubService.getUserHubWalletAddress(walletAddress, spokeChainId, this.hubProvider);
+
     return this.uiPoolDataProviderService.getUserReservesData(hubWalletAddress);
   }
 
@@ -169,8 +168,8 @@ export class MoneyMarketDataService {
   }> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const spokeChainId = spokeProvider.chainConfig.chain.id;
-    // derive users hub wallet address
-    const hubWalletAddress = await deriveUserWalletAddress(this.hubProvider, spokeChainId, walletAddress);
+    const hubWalletAddress = await HubService.getUserHubWalletAddress(walletAddress, spokeChainId, this.hubProvider);
+
     return this.uiPoolDataProviderService.getUserReservesHumanized(hubWalletAddress);
   }
 
