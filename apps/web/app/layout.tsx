@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <GoogleTagManager gtmId="GTM-53M85PX4" />
+        <GoogleTagManager gtmId="GTM-W355PCS6" />
         <SidebarProvider>
           <AppSidebar />
           <Providers>
