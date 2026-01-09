@@ -2,7 +2,7 @@ import { isLegacybnUSDChainId, isLegacybnUSDToken, isNewbnUSDChainId, isNewbnUSD
 import invariant from 'tiny-invariant';
 import {
   type EvmHubProvider,
-  IconSpokeProvider,
+  type IconSpokeProvider,
   IcxMigrationService,
   SpokeService,
   type IcxMigrateParams,
@@ -10,10 +10,11 @@ import {
   type TxReturnType,
   relayTxAndWaitPacket,
   DEFAULT_RELAY_TX_TIMEOUT,
-  SonicSpokeProvider,
+  type SonicSpokeProvider,
   SonicSpokeService,
   type IcxCreateRevertMigrationParams,
   type SpokeProvider,
+  type SpokeProviderType,
   Erc20Service,
   encodeAddress,
   type RelayError,
@@ -26,18 +27,24 @@ import {
   isIcxMigrateParams,
   isBalnMigrateParams,
   isUnifiedBnUSDMigrateParams,
-  EvmSpokeProvider,
   isIcxCreateRevertMigrationParams,
   type RelayExtraData,
   SolanaSpokeProvider,
   deriveUserWalletAddress,
   waitUntilIntentExecuted,
-  StellarSpokeProvider,
   type IconContractAddress,
   type EvmSpokeProviderType,
   type SonicSpokeProviderType,
   type StellarSpokeProviderType,
+  type IconSpokeProviderType,
+  type GetAddressType,
 } from '../index.js';
+import {
+  isEvmSpokeProviderType,
+  isSonicSpokeProviderType,
+  isStellarSpokeProviderType,
+  isIconSpokeProviderType,
+} from '../shared/guards.js';
 import {
   ICON_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
@@ -137,7 +144,7 @@ export class MigrationService {
    * );
    *
    */
-  public async isAllowanceValid<S extends SpokeProvider>(
+  public async isAllowanceValid<S extends SpokeProviderType>(
     params: MigrationParams | MigrationRevertParams,
     action: MigrationAction,
     spokeProvider: S,
@@ -151,7 +158,7 @@ export class MigrationService {
           'Invalid params',
         );
 
-        if (spokeProvider instanceof IconSpokeProvider && (isIcxMigrateParams(params) || isBalnMigrateParams(params))) {
+        if (isIconSpokeProviderType(spokeProvider) && (isIcxMigrateParams(params) || isBalnMigrateParams(params))) {
           // icx and baln migration does not require allowance check since they originate from icon, thus just return true
           return {
             ok: true,
@@ -160,20 +167,20 @@ export class MigrationService {
         }
 
         // bnUSD only requires allowance check for EVM spoke chains
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
-          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+        if (isUnifiedBnUSDMigrateParams(params) && isEvmSpokeProviderType(spokeProvider)) {
+          const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
           return await Erc20Service.isAllowanceValid(
             params.srcbnUSD as Address,
             params.amount,
-            await evmSpokeProvider.walletProvider.getWalletAddress(),
-            evmSpokeProvider instanceof EvmSpokeProvider
-              ? evmSpokeProvider.chainConfig.addresses.assetManager
-              : (evmSpokeProvider.chainConfig.bnUSD as Address),
-            evmSpokeProvider,
+            walletAddress as GetAddressType<EvmSpokeProviderType>,
+            isSonicSpokeProviderType(spokeProvider)
+              ? (spokeProvider.chainConfig.bnUSD as Address)
+              : spokeProvider.chainConfig.addresses.assetManager,
+            spokeProvider,
           );
         }
 
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+        if (isUnifiedBnUSDMigrateParams(params) && isStellarSpokeProviderType(spokeProvider)) {
           return {
             ok: true,
             value: await StellarSpokeService.hasSufficientTrustline(params.srcbnUSD, params.amount, spokeProvider),
@@ -190,56 +197,44 @@ export class MigrationService {
         invariant(params.to.length > 0, 'To address is required');
         invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
-          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+        if (isUnifiedBnUSDMigrateParams(params) && isEvmSpokeProviderType(spokeProvider)) {
           let spender: Address;
           const wallet = await spokeProvider.walletProvider.getWalletAddress();
-          if (spokeProvider instanceof SonicSpokeProvider) {
-            spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
+          if (isSonicSpokeProviderType(spokeProvider)) {
+            spender = await SonicSpokeService.getUserRouter(
+              wallet as GetAddressType<SonicSpokeProviderType>,
+              spokeProvider,
+            );
           } else {
-            spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
+            spender = spokeProvider.chainConfig.addresses.assetManager as Address;
           }
           return await Erc20Service.isAllowanceValid(
             params.srcbnUSD as Address,
             params.amount,
-            wallet as `0x${string}`,
+            wallet as GetAddressType<EvmSpokeProviderType>,
             spender,
-            evmSpokeProvider,
+            spokeProvider,
           );
         }
 
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
-          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
-          let spender: Address;
-          const wallet = await spokeProvider.walletProvider.getWalletAddress();
-          if (spokeProvider instanceof SonicSpokeProvider) {
-            spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
-          } else {
-            spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
-          }
-          return await Erc20Service.isAllowanceValid(
-            params.srcbnUSD as Address,
-            params.amount,
-            wallet as `0x${string}`,
-            spender,
-            evmSpokeProvider,
-          );
-        }
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+        if (isUnifiedBnUSDMigrateParams(params) && isStellarSpokeProviderType(spokeProvider)) {
           return {
             ok: true,
             value: await StellarSpokeService.hasSufficientTrustline(params.srcbnUSD, params.amount, spokeProvider),
           };
         }
 
-        if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
+        if (isSonicSpokeProviderType(spokeProvider) && isIcxCreateRevertMigrationParams(params)) {
           const wallet = await spokeProvider.walletProvider.getWalletAddress();
-          const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
+          const userRouter = await SonicSpokeService.getUserRouter(
+            wallet as GetAddressType<SonicSpokeProviderType>,
+            spokeProvider,
+          );
 
           return await Erc20Service.isAllowanceValid(
             this.hubProvider.chainConfig.addresses.sodaToken,
             params.amount,
-            wallet,
+            wallet as GetAddressType<SonicSpokeProviderType>,
             userRouter,
             spokeProvider,
           );
@@ -277,7 +272,7 @@ export class MigrationService {
    * );
    *
    */
-  public async approve<S extends SpokeProvider, R extends boolean = false>(
+  public async approve<S extends SpokeProviderType, R extends boolean = false>(
     params: IcxCreateRevertMigrationParams | UnifiedBnUSDMigrateParams,
     action: MigrationAction,
     spokeProvider: S,
@@ -289,15 +284,14 @@ export class MigrationService {
         invariant(params.to.length > 0, 'To address is required');
         invariant(isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
-          const evmSpokeProvider = spokeProvider as EvmSpokeProvider | SonicSpokeProvider;
+        if (isUnifiedBnUSDMigrateParams(params) && isEvmSpokeProviderType(spokeProvider)) {
           const result = await Erc20Service.approve(
             params.srcbnUSD as Address,
             params.amount,
-            evmSpokeProvider instanceof EvmSpokeProvider
-              ? evmSpokeProvider.chainConfig.addresses.assetManager
-              : (evmSpokeProvider.chainConfig.bnUSD as Address),
-            evmSpokeProvider,
+            isSonicSpokeProviderType(spokeProvider)
+              ? (spokeProvider.chainConfig.bnUSD as Address)
+              : spokeProvider.chainConfig.addresses.assetManager,
+            spokeProvider,
             raw,
           );
 
@@ -307,7 +301,7 @@ export class MigrationService {
           };
         }
 
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+        if (isUnifiedBnUSDMigrateParams(params) && isStellarSpokeProviderType(spokeProvider)) {
           const result = await StellarSpokeService.requestTrustline(params.srcbnUSD, params.amount, spokeProvider, raw);
           return {
             ok: true,
@@ -325,33 +319,32 @@ export class MigrationService {
         invariant(params.to.length > 0, 'To address is required');
         invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider.chainConfig.chain.type === 'EVM') {
-          const evmSpokeProvider = spokeProvider as EvmSpokeProviderType | SonicSpokeProviderType;
+        if (isUnifiedBnUSDMigrateParams(params) && isEvmSpokeProviderType(spokeProvider)) {
           let spender: Address;
           const wallet = await spokeProvider.walletProvider.getWalletAddress();
-          if (spokeProvider instanceof SonicSpokeProvider) {
-            spender = await SonicSpokeService.getUserRouter(wallet as `0x${string}`, spokeProvider);
+          if (isSonicSpokeProviderType(spokeProvider)) {
+            spender = await SonicSpokeService.getUserRouter(
+              wallet as GetAddressType<SonicSpokeProviderType>,
+              spokeProvider,
+            );
           } else {
-            spender = evmSpokeProvider.chainConfig.addresses.assetManager as Address;
+            spender = spokeProvider.chainConfig.addresses.assetManager as Address;
           }
           const result = await Erc20Service.approve(
             params.srcbnUSD as Address,
             params.amount,
             spender,
-            evmSpokeProvider,
+            spokeProvider,
             raw,
           );
 
           return {
             ok: true,
-            value: result satisfies TxReturnType<EvmSpokeProviderType | SonicSpokeProviderType, R> as TxReturnType<
-              S,
-              R
-            >,
+            value: result satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>,
           };
         }
 
-        if (isUnifiedBnUSDMigrateParams(params) && spokeProvider instanceof StellarSpokeProvider) {
+        if (isUnifiedBnUSDMigrateParams(params) && isStellarSpokeProviderType(spokeProvider)) {
           const result = await StellarSpokeService.requestTrustline(params.srcbnUSD, params.amount, spokeProvider, raw);
           return {
             ok: true,
@@ -359,9 +352,12 @@ export class MigrationService {
           };
         }
 
-        if (spokeProvider instanceof SonicSpokeProvider && isIcxCreateRevertMigrationParams(params)) {
+        if (isSonicSpokeProviderType(spokeProvider) && isIcxCreateRevertMigrationParams(params)) {
           const wallet = await spokeProvider.walletProvider.getWalletAddress();
-          const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
+          const userRouter = await SonicSpokeService.getUserRouter(
+            wallet as GetAddressType<SonicSpokeProviderType>,
+            spokeProvider,
+          );
 
           const result = await Erc20Service.approve(
             this.hubProvider.chainConfig.addresses.sodaToken,
@@ -449,7 +445,7 @@ export class MigrationService {
     >
   > {
     try {
-      const intentResult = await this.createMigratebnUSDIntent(params, spokeProvider, unchecked);
+      const intentResult = await this.createMigratebnUSDIntent(params, spokeProvider, unchecked, false as const);
 
       if (!intentResult.ok) {
         return {
@@ -767,11 +763,11 @@ export class MigrationService {
    * );
    *
    */
-  async createMigrateBalnIntent<R extends boolean = false>(
+  async createMigrateBalnIntent<S extends IconSpokeProviderType = IconSpokeProvider, R extends boolean = false>(
     params: BalnMigrateParams,
-    spokeProvider: IconSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<IconSpokeProvider, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+  ): Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
       const balnToken = this.configService.spokeChainConfig[ICON_MAINNET_CHAIN_ID]?.supportedTokens.BALN?.address;
       invariant(balnToken, 'BALN token not found');
@@ -784,7 +780,7 @@ export class MigrationService {
           token: balnToken,
           amount: params.amount,
           data: migrationData,
-        } as GetSpokeDepositParamsType<IconSpokeProvider>,
+        } as GetSpokeDepositParamsType<S>,
         spokeProvider,
         this.hubProvider,
         raw,
@@ -792,7 +788,7 @@ export class MigrationService {
 
       return {
         ok: true,
-        value: txResult as TxReturnType<IconSpokeProvider, R>,
+        value: txResult as TxReturnType<S, R>,
       };
     } catch (error) {
       return {
@@ -851,7 +847,7 @@ export class MigrationService {
    *   spokeProvider
    * );
    */
-  async createMigratebnUSDIntent<S extends SpokeProvider, R extends boolean = false>(
+  async createMigratebnUSDIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
     params: UnifiedBnUSDMigrateParams,
     spokeProvider: S,
     unchecked = false,
@@ -992,11 +988,14 @@ export class MigrationService {
    *   // Handle error
    * }
    */
-  async createMigrateIcxToSodaIntent<R extends boolean = false>(
+  async createMigrateIcxToSodaIntent<
+    S extends IconSpokeProviderType = IconSpokeProviderType,
+    R extends boolean = false,
+  >(
     params: IcxMigrateParams,
-    spokeProvider: IconSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<IconSpokeProvider, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+  ): Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
       invariant(params.amount > 0, 'Amount must be greater than 0');
       invariant(isAddress(params.to), 'Recipient address is required');
@@ -1005,7 +1004,7 @@ export class MigrationService {
           params.address.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase(),
         'Token must be wICX or native ICX token',
       );
-      invariant(spokeProvider instanceof IconSpokeProvider, 'Spoke provider must be an instance of IconSpokeProvider');
+      invariant(isIconSpokeProviderType(spokeProvider), 'Spoke provider must be an IconSpokeProviderType');
 
       // Get the available amount for migration
       const availableAmount = await this.icxMigration.getAvailableAmount();
@@ -1030,7 +1029,7 @@ export class MigrationService {
           token: params.address,
           amount: params.amount,
           data: migrationData,
-        },
+        } as GetSpokeDepositParamsType<S>,
         spokeProvider,
         this.hubProvider,
         raw,
@@ -1038,7 +1037,7 @@ export class MigrationService {
 
       return {
         ok: true,
-        value: txResult as TxReturnType<IconSpokeProvider, R>,
+        value: txResult as TxReturnType<S, R>,
       };
     } catch (error) {
       return {
@@ -1072,14 +1071,20 @@ export class MigrationService {
    *     action: 'revert',
    *   },
    */
-  async createRevertSodaToIcxMigrationIntent<R extends boolean = false>(
+  async createRevertSodaToIcxMigrationIntent<
+    S extends SonicSpokeProviderType = SonicSpokeProviderType,
+    R extends boolean = false,
+  >(
     params: Omit<IcxCreateRevertMigrationParams, 'wICX'>,
-    spokeProvider: SonicSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): Promise<Result<TxReturnType<SonicSpokeProvider, R>, MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'>>> {
+  ): Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'>>> {
     try {
       const wallet = await spokeProvider.walletProvider.getWalletAddress();
-      const userRouter = await SonicSpokeService.getUserRouter(wallet, spokeProvider);
+      const userRouter = await SonicSpokeService.getUserRouter(
+        wallet as GetAddressType<SonicSpokeProviderType>,
+        spokeProvider,
+      );
       const wICX = this.configService.spokeChainConfig[ICON_MAINNET_CHAIN_ID]?.addresses.wICX;
       invariant(wICX, 'wICX token not found');
       const data = this.icxMigration.revertMigration({
@@ -1091,7 +1096,7 @@ export class MigrationService {
 
       const txResult = await SonicSpokeService.deposit(
         {
-          from: wallet,
+          from: wallet as GetAddressType<SonicSpokeProviderType>,
           token: this.hubProvider.chainConfig.addresses.sodaToken,
           amount: params.amount,
           data,
@@ -1102,7 +1107,7 @@ export class MigrationService {
 
       return {
         ok: true,
-        value: txResult as TxReturnType<SonicSpokeProvider, R>,
+        value: txResult as TxReturnType<S, R>,
       };
     } catch (error) {
       return {
