@@ -53,6 +53,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleCurrencyAreaClick = (): void => {
+    if (isMobile) return;
     // Only show chain selector for bnUSD tokens
     if (isLegacybnUSDToken(currency) || isNewbnUSDToken(currency)) {
       setIsChainSelectorOpen(true);
@@ -128,6 +129,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold">
             <div className="relative">
               <Input
+                autoFocus
                 type="number"
                 ref={inputRef}
                 value={inputValue === '' ? '' : Number(inputValue)}

@@ -47,6 +47,7 @@ export function CurrencySearchPanel({
             )}
             <div className="flex justify-start items-center">
               <Input
+                autoFocus
                 type="text"
                 placeholder={isChainSelectorOpen ? 'Select a network' : 'Search assets...'}
                 value={searchQuery}
