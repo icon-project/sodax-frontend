@@ -26,9 +26,9 @@ const TABLE_HEADERS = [
   'Supply APR',
   'Borrowed',
   'Available',
-  'Action',
-  'Action',
-  'Action',
+  '',
+  '',
+  '',
 ] as const;
 
 export function SupplyAssetsList(): ReactElement {

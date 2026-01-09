@@ -8,6 +8,7 @@ import { RepayButton } from './RepayButton';
 import { formatUnits, isAddress } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
+import { OldBorrowButton } from './OldBorrowButton';
 
 interface SupplyAssetsListItemProps {
   token: XToken;
@@ -74,13 +75,10 @@ export function SupplyAssetsListItem({
       <TableCell>{metrics.supplyAPR || '-'}</TableCell>
       <TableCell>{formattedDebt}</TableCell>
       <TableCell>{availableToBorrow}</TableCell>
-      <TableCell>
+      <TableCell className="flex flex-row gap-2">
         <SupplyButton token={token} />
-      </TableCell>
-      <TableCell>
         <WithdrawButton token={token} />
-      </TableCell>
-      <TableCell>
+        <OldBorrowButton token={token} />
         <RepayButton token={token} />
       </TableCell>
     </TableRow>
