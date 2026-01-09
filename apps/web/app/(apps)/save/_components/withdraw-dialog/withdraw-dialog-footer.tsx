@@ -13,7 +13,8 @@ import { chainIdToChainName } from '@/providers/constants';
 import type { NetworkBalance } from '../../page';
 import { useSaveActions } from '../../_stores/save-store-provider';
 import { CheckIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatBalance } from '@/lib/utils';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 
 interface WithdrawDialogFooterProps {
   currentStep: number;
@@ -27,6 +28,8 @@ interface WithdrawDialogFooterProps {
   onWithdrawSuccess: () => void;
   onClose: () => void;
   isTokenSelection: boolean;
+  count: number;
+  totalBalance?: string;
 }
 
 export default function WithdrawDialogFooter({
@@ -41,6 +44,8 @@ export default function WithdrawDialogFooter({
   onWithdrawSuccess,
   onClose,
   isTokenSelection,
+  count,
+  totalBalance,
 }: WithdrawDialogFooterProps): React.JSX.Element {
   const { setIsSwitchingChain } = useSaveActions();
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
@@ -66,7 +71,7 @@ export default function WithdrawDialogFooter({
     reset: resetWithdrawError,
   } = useWithdraw(selectedToken as XToken, spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain((selectedToken?.xChainId || 'sonic') as ChainId);
-
+  const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
   const handleApprove = async (): Promise<void> => {
     if (!selectedToken || withdrawValue <= 0) return;
     try {
@@ -104,7 +109,7 @@ export default function WithdrawDialogFooter({
     <DialogFooter
       className={cn(
         'flex gap-2 overflow-hidden md:inset-x-12 inset-x-8 !justify-start flex-row',
-        isTokenSelection ? 'mt-6' : 'absolute bottom-8',
+        isTokenSelection && count > 2 ? 'mt-6' : 'absolute bottom-8',
       )}
     >
       {currentStep === 0 ? (
@@ -122,7 +127,7 @@ export default function WithdrawDialogFooter({
           </div>
         </div>
       ) : currentStep === 1 ? (
-        <>
+        <div className="flex gap-4 items-center">
           <Button variant="cream" className="w-10 h-10" onMouseDown={onBack}>
             <ArrowLeft />
           </Button>
@@ -134,7 +139,14 @@ export default function WithdrawDialogFooter({
           >
             Continue
           </Button>
-        </>
+          <div className="text-clay-light text-(length:--body-small) font-['InterRegular'] gap-2">
+            Total deposit:
+            <span className="text-espresso ml-2">
+              {formatBalance((Number(totalBalance) - withdrawValue).toString(), tokenPrice ?? 0)}{' '}
+              {selectedToken?.symbol}
+            </span>
+          </div>
+        </div>
       ) : (
         <>
           {isWrongChain ? (

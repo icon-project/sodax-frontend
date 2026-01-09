@@ -93,13 +93,19 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
 
   const getHelperText = () => {
     return sourceAddress ? (
-      <div className="flex gap-2">
-        <span className="text-clay-light">Yield/mo:</span>
-        <span className="font-['InterRegular'] text-espresso font-medium">
-          {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
-        </span>
-        <AlertCircleIcon width={16} height={16} className="text-clay" />
-      </div>
+      depositValue > 0 ? (
+        <>
+          <div className="flex gap-2">
+            <span className="text-clay-light">Yield/mo:</span>
+            <span className="font-['InterRegular'] text-espresso font-medium">
+              {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
+            </span>
+            <AlertCircleIcon width={16} height={16} className="text-clay" />
+          </div>
+        </>
+      ) : (
+        <></>
+      )
     ) : (
       'To show your funds'
     );

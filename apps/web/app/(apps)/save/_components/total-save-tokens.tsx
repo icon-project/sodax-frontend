@@ -81,7 +81,7 @@ export default function TotalSaveTokens({
 
   return (
     <div className="w-full flex gap-2 justify-start">
-      <div className="text-(length:--body-super-comfortable) font-['InterRegular'] text-clay">Total saved</div>
+      <div className="text-(length:--body-super-comfortable) font-['InterRegular'] text-clay">Total savings</div>
       <motion.div
         className="flex items-center"
         initial={{ gap: '-0.25rem' }}

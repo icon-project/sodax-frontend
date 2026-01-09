@@ -16,7 +16,7 @@ export default function AssetListItem({
   group: { symbol: string; tokens: XToken[] };
   isExpanded: boolean;
 }) {
-  const { openAsset } = useSaveState();
+  const { openAsset, scrollToCenter } = useSaveState();
   const ref = useRef<HTMLDivElement>(null);
   const { symbol, tokens } = group;
 
@@ -41,7 +41,7 @@ export default function AssetListItem({
       timeout = setTimeout(() => {
         el.scrollIntoView({
           behavior: 'smooth',
-          block: 'nearest',
+          block: scrollToCenter ? 'center' : 'nearest',
         });
       }, 120);
     });
@@ -52,7 +52,7 @@ export default function AssetListItem({
       observer.disconnect();
       clearTimeout(timeout);
     };
-  }, [isExpanded]);
+  }, [isExpanded, scrollToCenter]);
 
   return (
     <AccordionItem

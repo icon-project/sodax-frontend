@@ -39,7 +39,7 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const { data: userReserves } = useUserReservesData(spokeProvider, sourceAddress);
   const { data: formattedReserves } = useReservesUsdFormat();
-
+  const [outsideClick, setOutsideClick] = useState<boolean>(false);
   const metrics = useReserveMetrics({
     token: selectedToken as XToken,
     formattedReserves: formattedReserves || [],
@@ -67,8 +67,6 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Element;
-      console.log(target);
-      console.log(tokenSelectRef.current);
       const isContinueButton = target.closest('button')?.textContent?.includes('Continue');
       if (
         currentStep === 0 &&
@@ -78,6 +76,10 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
         !isContinueButton
       ) {
         setSelectedNetwork(null);
+        setOutsideClick(true);
+        setTimeout(() => {
+          setOutsideClick(false);
+        }, 100);
       }
     };
 
@@ -102,9 +104,13 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const inputValue = e.target.value;
+    const inputValue = e.target.value.trim();
+    if (inputValue === '' || inputValue === '-') {
+      setWithdrawValue(0);
+      return;
+    }
     const numericValue = Number.parseFloat(inputValue);
-    setWithdrawValue(numericValue);
+    setWithdrawValue(Number.isNaN(numericValue) ? 0 : numericValue);
   };
 
   const handleContinue = (): void => {
@@ -116,14 +122,13 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
   };
 
   const handleBack = (): void => {
-    if (currentStep === 1 && needsTokenSelection) {
-      setCurrentStep(0);
-    } else {
-      handleClose();
-    }
+    handleClose();
   };
 
   const handleSelectNetwork = (network: NetworkBalance): void => {
+    if (outsideClick) {
+      return;
+    }
     setSelectedNetwork(network);
   };
 
@@ -191,6 +196,8 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
           onWithdrawSuccess={handleWithdrawSuccess}
           onClose={handleClose}
           isTokenSelection={isTokenSelection}
+          count={selectedItem?.networksWithFunds.length ?? 0}
+          totalBalance={selectedItem?.totalBalance}
         />
       </DialogContent>
     </Dialog>

@@ -8,6 +8,7 @@ export type SaveState = {
   tokenCount: number;
   isSwitchingChain: boolean;
   openAsset: string;
+  scrollToCenter: boolean;
 };
 
 export type SaveActions = {
@@ -16,6 +17,7 @@ export type SaveActions = {
   setTokenCount: (count: number) => void;
   setIsSwitchingChain: (isSwitching: boolean) => void;
   setOpenAsset: (value: string) => void;
+  setScrollToCenter: (value: boolean) => void;
   resetSaveState: () => void;
 };
 
@@ -27,6 +29,7 @@ export const defaultSaveState: SaveState = {
   tokenCount: 0,
   isSwitchingChain: false,
   openAsset: '',
+  scrollToCenter: false,
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -39,10 +42,10 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         setTokenCount: (count: number) => set({ tokenCount: count }),
         setIsSwitchingChain: (isSwitching: boolean) => set({ isSwitchingChain: isSwitching }),
         setOpenAsset: (value: string) => set({ openAsset: value }),
+        setScrollToCenter: (value: boolean) => set({ scrollToCenter: value }),
         resetSaveState: () => {
           set({
             currentStep: 1,
-            tokenCount: 0,
             isSwitchingChain: false,
           });
         },

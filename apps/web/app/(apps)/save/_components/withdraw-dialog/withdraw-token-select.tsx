@@ -28,7 +28,7 @@ export default function WithdrawTokenSelect({
   return (
     <div className="flex flex-col gap-4">
       <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
-        Withdraw from a {networksWithFunds[0]?.token.symbol} deposit
+        Choose a network to withdraw from
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -67,7 +67,7 @@ export default function WithdrawTokenSelect({
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-clay-light text-(length:--body-small) font-medium font-['InterRegular']">
+                      <span className="text-clay text-(length:--body-small) font-medium font-['InterRegular']">
                         {chainIdToChainName(network.networkId as SpokeChainId)}
                       </span>
                     </div>

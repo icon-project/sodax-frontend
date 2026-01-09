@@ -9,7 +9,7 @@ import { useMMApprove, useMMAllowance, useSupply, useSpokeProvider } from '@soda
 import { useWalletProvider, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { useSaveState, useSaveActions } from '../../_stores/save-store-provider';
 import { CheckIcon, Loader2Icon } from 'lucide-react';
-
+import { useIsMobile } from '@/hooks/use-mobile';
 interface DepositDialogFooterProps {
   selectedToken: XToken | null;
   onPendingChange?: (isPending: boolean) => void;
@@ -29,6 +29,7 @@ export default function DepositDialogFooter({
   const { mutateAsync: supply, isPending } = useSupply(selectedToken as XToken, spokeProvider);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
+  const isMobile = useIsMobile();
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(
     selectedToken as XToken,
     depositValue.toString(),
@@ -83,70 +84,87 @@ export default function DepositDialogFooter({
   };
 
   return (
-    <DialogFooter className="flex justify-between gap-2 overflow-hidden absolute bottom-8 md:inset-x-12 inset-x-8">
-      <Button
-        variant="cherry"
-        className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
-          currentStep > 1 ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center' : 'flex flex-1'
-        }`}
-        onClick={handleContinue}
-        disabled={!isStep1}
-      >
-        {currentStep > 1 ? <Check className="w-5 h-5" /> : 'Continue'}
-      </Button>
-
-      {isStep2 && isWrongChain ? (
-        <Button className="flex-1" type="button" variant="cherry" onClick={handleSwitchChain}>
-          Switch Chain
-        </Button>
-      ) : (
+    <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
+      {/* Step 1: Continue button - show on mobile only if step 1, always on desktop */}
+      {(isMobile ? isStep1 : true) && (
         <Button
           variant="cherry"
           className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
-            isStep2 ? 'flex-1' : 'w-[40px]'
+            isMobile
+              ? 'w-full'
+              : currentStep > 1
+                ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center'
+                : 'flex flex-1'
           }`}
-          onClick={handleApprove}
-          disabled={!isStep2 || isApproving || isAllowanceLoading || isApproved}
+          onClick={handleContinue}
+          disabled={!isStep1}
         >
-          {isApproved ? (
-            <Check className="w-5 h-5" />
-          ) : isStep1 ? (
-            <FilePenLine />
-          ) : isApproving ? (
-            'Approving...'
-          ) : (
-            `Approve on ${chainIdToChainName(selectedToken?.xChainId as ChainId)}`
-          )}
+          {currentStep > 1 ? <Check className="w-5 h-5" /> : 'Continue'}
         </Button>
       )}
 
-      {isCompleted ? (
-        <Button
-          variant="cherry"
-          className="text-white font-['InterRegular'] rounded-full p-0 flex flex-1 items-center justify-center gap-1"
-          onClick={onClose}
-        >
-          Deposit complete
-          <CheckIcon className="w-4 h-4" />
-        </Button>
-      ) : (
-        <Button
-          variant="cherry"
-          className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
-            isStep3 || isApproved ? 'h-10 rounded-full p-0 flex flex-1 items-center justify-center' : 'w-[140px]'
-          }`}
-          onClick={handleDeposit}
-          disabled={!isStep3}
-        >
-          {isPending ? (
-            <>
-              Depositing <Loader2Icon className="w-4 h-4 animate-spin" />
-            </>
-          ) : (
-            'Deposit & Earn'
-          )}
-        </Button>
-      )}
+      {/* Step 2: Approve/Switch Chain button - show on mobile only if step 2, always on desktop */}
+      {(isMobile ? isStep2 : true) &&
+        (isStep2 && isWrongChain ? (
+          <Button className={isMobile ? 'w-full' : 'flex-1'} type="button" variant="cherry" onClick={handleSwitchChain}>
+            Switch Chain
+          </Button>
+        ) : (
+          <Button
+            variant="cherry"
+            className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+              isMobile ? 'w-full' : isStep2 ? 'flex-1' : 'w-[40px]'
+            }`}
+            onClick={handleApprove}
+            disabled={!isStep2 || isApproving || isAllowanceLoading || isApproved}
+          >
+            {isApproved ? (
+              <Check className="w-5 h-5" />
+            ) : isStep1 ? (
+              <FilePenLine />
+            ) : isApproving ? (
+              'Approving...'
+            ) : (
+              `Approve on ${chainIdToChainName(selectedToken?.xChainId as ChainId)}`
+            )}
+          </Button>
+        ))}
+
+      {/* Step 3: Deposit button - show on mobile only if step 3 or completed, always on desktop */}
+      {(isMobile ? isStep3 || isCompleted : true) &&
+        (isCompleted ? (
+          <Button
+            variant="cherry"
+            className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
+              isMobile ? 'w-full' : 'flex-1'
+            }`}
+            onClick={onClose}
+          >
+            Deposit complete
+            <CheckIcon className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button
+            variant="cherry"
+            className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+              isMobile
+                ? 'w-full'
+                : isStep3 || isApproved
+                  ? 'h-10 rounded-full p-0 flex flex-1 items-center justify-center'
+                  : 'w-[140px]'
+            }`}
+            onClick={handleDeposit}
+            disabled={!isStep3}
+          >
+            {isPending ? (
+              <>
+                Depositing <Loader2Icon className="w-4 h-4 animate-spin" />
+              </>
+            ) : (
+              'Deposit & Earn'
+            )}
+          </Button>
+        ))}
     </DialogFooter>
   );
 }

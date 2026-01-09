@@ -38,6 +38,7 @@ export default function DepositDialog({
       setTimeout(() => setIsShaking(false), 500);
       return;
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     onOpenChange(false);
     resetSaveState();
   };
@@ -45,7 +46,7 @@ export default function DepositDialog({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
-        className="w-full md:!max-w-[480px] p-8 md:p-12 md:pb-8 gap-0 sm:h-86 bg-vibrant-white block"
+        className="w-full md:!max-w-[480px] p-8 md:p-12 md:pb-8 gap-0 min-h-86 bg-vibrant-white block"
         hideCloseButton
         enableMotion={true}
         shake={isShaking}

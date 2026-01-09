@@ -28,6 +28,46 @@ export default function AmountInputSlider({
   className,
   inputId = 'input-secure-19',
 }: AmountInputSliderProps): React.JSX.Element {
+  // Handle input change with max value constraint
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const inputValue = e.target.value.trim();
+
+    // Convert empty input to 0
+    if (inputValue === '' || inputValue === '-') {
+      const zeroEvent = {
+        ...e,
+        target: {
+          ...e.target,
+          value: '0',
+        },
+      } as React.ChangeEvent<HTMLInputElement>;
+      onInputChange(zeroEvent);
+      return;
+    }
+
+    // Parse the input value
+    const numericValue = Number.parseFloat(inputValue);
+
+    // Check if it's a valid number
+    if (Number.isNaN(numericValue)) {
+      return;
+    }
+
+    // Clamp the value between 0 and maxValue
+    const clampedValue = Math.max(0, Math.min(numericValue, maxValue));
+
+    // Create a new event with the clamped value
+    const clampedEvent = {
+      ...e,
+      target: {
+        ...e.target,
+        value: clampedValue.toString(),
+      },
+    } as React.ChangeEvent<HTMLInputElement>;
+
+    onInputChange(clampedEvent);
+  };
+
   return (
     <div className={cn('flex items-center gap-2 -mt-2', className)}>
       <CustomSlider
@@ -63,8 +103,8 @@ export default function AmountInputSlider({
             type="number"
             min={0}
             max={maxValue}
-            value={value[0]?.toString() || '0'}
-            onChange={onInputChange}
+            value={Number.isNaN(value[0]) || value[0] === undefined || value[0] === null ? '0' : value[0].toString()}
+            onChange={handleInputChange}
             className="!text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular']"
           />
           <InputGroupAddon align="inline-end">

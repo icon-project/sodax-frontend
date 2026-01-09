@@ -12,13 +12,13 @@ export default function DepositInfoStep({
           What happens when I supply {selectedToken?.symbol}?
         </div>
         <div className="self-stretch text-clay text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4]">
-          Your funds will move to SODAX to start earning. You can manage or withdraw anytime.
+          Your funds will move to SODAX to start earning.
         </div>
       </div>
 
       <div className="self-stretch inline-flex justify-start items-start gap-4">
         <div className="flex-1 pl-4 border-l-2 border-cream-white inline-flex flex-col justify-center items-start gap-1">
-          <div className="md:w-40 h-4 justify-start text-espresso text-(length:--body-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
+          <div className="md:w-40 h-4 justify-start text-espresso text-(length:--body-comfortable) font-bold font-['InterRegular'] leading-[1.4] overflow-hidden">
             {apy} Variable APY
           </div>
           <div className="self-stretch justify-start text-clay text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4]">

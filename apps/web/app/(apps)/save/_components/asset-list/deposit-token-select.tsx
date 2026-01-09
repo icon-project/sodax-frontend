@@ -201,7 +201,7 @@ export function DepositTokenSelect({
           <Button
             variant="cherry"
             className="w-27 mix-blend-multiply shadow-none"
-            disabled={!selectedToken || isTooLow}
+            disabled={!selectedToken || (isTooLow && !isSimulate)}
             onMouseDown={() => {
               onContinue?.();
             }}
@@ -209,7 +209,11 @@ export function DepositTokenSelect({
             {!selectedToken ? 'Continue' : isSimulate ? 'Simulate' : 'Continue'}
           </Button>
           <span className="text-clay text-(length:--body-small) font-['InterRegular']">
-            {!selectedToken ? 'Select a source' : isTooLow ? 'Balance too low to continue' : 'See your yield next'}
+            {!selectedToken
+              ? 'Select a source'
+              : isTooLow && !isSimulate
+                ? 'Balance too low to continue'
+                : 'See your yield next'}
           </span>
         </div>
       </div>

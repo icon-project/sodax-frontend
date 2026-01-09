@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/save/page.tsx
 'use client';
 
 import { itemVariants, listVariants } from '@/constants/animation';

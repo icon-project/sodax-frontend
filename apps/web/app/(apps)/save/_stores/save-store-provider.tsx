@@ -39,13 +39,14 @@ export const useSaveState = () => {
   const tokenCount = useSaveStore(state => state.tokenCount);
   const isSwitchingChain = useSaveStore(state => state.isSwitchingChain);
   const openAsset = useSaveStore(state => state.openAsset);
-
+  const scrollToCenter = useSaveStore(state => state.scrollToCenter);
   return {
     depositValue,
     currentStep,
     tokenCount,
     isSwitchingChain,
     openAsset,
+    scrollToCenter,
   };
 };
 
@@ -55,6 +56,7 @@ export const useSaveActions = () => {
   const setTokenCount = useSaveStore(state => state.setTokenCount);
   const setIsSwitchingChain = useSaveStore(state => state.setIsSwitchingChain);
   const setOpenAsset = useSaveStore(state => state.setOpenAsset);
+  const setScrollToCenter = useSaveStore(state => state.setScrollToCenter);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
 
   return {
@@ -63,6 +65,7 @@ export const useSaveActions = () => {
     setTokenCount,
     setIsSwitchingChain,
     setOpenAsset,
+    setScrollToCenter,
     resetSaveState,
   };
 };

@@ -49,7 +49,7 @@ export default function WithdrawAmountSelect({
       <div className="flex gap-2 mt-4">
         <div className="font-['InterRegular'] text-(length:--body-comfortable) text-clay-light">Withdrawable</div>
         <div className="font-['InterRegular'] text-(length:--body-comfortable) text-clay">
-          {supplyBalance} {selectedToken?.symbol}
+          {formatBalance((Number(supplyBalance) - withdrawValue).toString(), tokenPrice ?? 0)} {selectedToken?.symbol}
         </div>
       </div>
     </>

@@ -30,7 +30,7 @@ export default function WithdrawConfirmationStep({
               Takes longer (~1m)
             </div>
           ) : (
-            'Takes ~10 seconds'
+            'Takes ~20 seconds'
           )}
         </div>
       </div>
