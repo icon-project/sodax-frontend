@@ -4,11 +4,11 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken, Address } from '@sodax/types';
 import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
-import { BorrowButton } from './BorrowButton';
 import { RepayButton } from './RepayButton';
 import { formatUnits, isAddress } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
+import { OldBorrowButton } from './OldBorrowButton';
 
 interface SupplyAssetsListItemProps {
   token: XToken;
@@ -52,11 +52,11 @@ export function SupplyAssetsListItem({
           Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), 18)),
           Number.parseInt(metrics.formattedReserve.borrowCap) -
             Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
-        );
+        ).toFixed(6);
 
   return (
     <TableRow>
-      <TableCell>{token.symbol}</TableCell>
+      <TableCell className="font-bold text-cherry-dark">{token.symbol}</TableCell>
       <TableCell>{walletBalance}</TableCell>
       <TableCell>
         <div className="flex flex-col items-start">
@@ -73,26 +73,12 @@ export function SupplyAssetsListItem({
       </TableCell>
       <TableCell>{metrics.supplyAPY || '-'}</TableCell>
       <TableCell>{metrics.supplyAPR || '-'}</TableCell>
-      <TableCell>
-        <div className="flex flex-col items-start">
-          {metrics.totalBorrow || '-'}{' '}
-          <span className="text-xs text-muted-foreground">{metrics.totalBorrowsUSD || '-'}</span>
-        </div>
-      </TableCell>
-      <TableCell>{metrics.borrowAPY || '-'}</TableCell>
-      <TableCell>{metrics.borrowAPR || '-'}</TableCell>
       <TableCell>{formattedDebt}</TableCell>
       <TableCell>{availableToBorrow}</TableCell>
-      <TableCell>
+      <TableCell className="flex flex-row gap-2">
         <SupplyButton token={token} />
-      </TableCell>
-      <TableCell>
         <WithdrawButton token={token} />
-      </TableCell>
-      <TableCell>
-        <BorrowButton token={token} />
-      </TableCell>
-      <TableCell>
+        <OldBorrowButton token={token} />
         <RepayButton token={token} />
       </TableCell>
     </TableRow>
