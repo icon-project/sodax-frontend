@@ -68,7 +68,9 @@ let [arbWalletAddress, sonicWalletAddress, suiWalletAddress, solanaWalletAddress
   solanaWallet.getWalletAddress(),
 ]);
 arbWalletAddress = '0xAa3Af4C13AfcdD87b5DF2BcaE21d0255b3f717F2';
-const iconWalletAddress = 'hx1234567890123456789012345678901234567890'; // Icon address placeholder
+suiWalletAddress = '0x04ca30474c7cef85ee6b665d242a917e044dec046f16101ed58a92533b5907aa';
+sonicWalletAddress = '0xAa3Af4C13AfcdD87b5DF2BcaE21d0255b3f717F2';
+const iconWalletAddress = 'hx14877826597bf7d7c69fa97b334002d377e1fa16'; // Icon address placeholder
 const suiRawSpokeProvider = new SuiRawSpokeProvider(spokeChainConfig[SUI_MAINNET_CHAIN_ID], suiWalletAddress);
 const arbRawSpokeProvider = new EvmRawSpokeProvider(arbWalletAddress, spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID]);
 const baseRawSpokeProvider = new EvmRawSpokeProvider(arbWalletAddress, spokeChainConfig[BASE_MAINNET_CHAIN_ID]);
@@ -298,16 +300,16 @@ async function createBridgeIntent() {
 async function createMigratebnUSDIntent() {
   // Test reverse migration: new bnUSD (Base) -> legacy bnUSD (Sui)
   const srcbnUSD = spokeChainConfig[BASE_MAINNET_CHAIN_ID].bnUSD; // New bnUSD on Base
-  const dstbnUSD = spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD.address; // Legacy bnUSD on Sui
+  const dstbnUSD = spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.bnUSD.address;
 
   const result = await sodax.migration.createMigratebnUSDIntent(
     {
       srcChainId: BASE_MAINNET_CHAIN_ID,
       srcbnUSD,
-      dstChainId: SUI_MAINNET_CHAIN_ID,
+      dstChainId: ICON_MAINNET_CHAIN_ID,
       dstbnUSD,
       amount: BigInt(1e13), // 0.00001 bnUSD
-      to: suiWalletAddress,
+      to: iconWalletAddress,
     },
     baseRawSpokeProvider,
     false, // unchecked
@@ -329,7 +331,7 @@ async function createRevertSodaToIcxMigrationIntent() {
   const result = await sodax.migration.createRevertSodaToIcxMigrationIntent(
     {
       amount: BigInt(1e13), // 0.00001 SODA
-      to: 'hx1234567890123456789012345678901234567890', // Icon address (placeholder)
+      to: iconWalletAddress, // Icon address (placeholder)
     },
     sonicRawSpokeProvider,
     true, // raw
@@ -347,11 +349,11 @@ async function createRevertSodaToIcxMigrationIntent() {
 
 async function createMigrateIcxToSodaIntent() {
   // Test migration: ICX/wICX (Icon) -> SODA (Sonic)
-  const wICXAddress = spokeChainConfig[ICON_MAINNET_CHAIN_ID].addresses.wICX;
+  const ICXAddress = spokeChainConfig[ICON_MAINNET_CHAIN_ID].nativeToken;
 
   const result = await sodax.migration.createMigrateIcxToSodaIntent(
     {
-      address: wICXAddress, // wICX token address
+      address: ICXAddress, // ICX token address
       amount: BigInt(1e13), // 0.00001 wICX
       to: sonicWalletAddress, // Recipient address on Sonic chain
     },
@@ -407,8 +409,8 @@ async function main() {
   console.log('\n--- Migration Tests ---\n');
   await createMigratebnUSDIntent();
   await createMigrateIcxToSodaIntent();
-  await createMigrateBalnIntent();
   await createRevertSodaToIcxMigrationIntent();
+  await createMigrateBalnIntent();
 }
 
 main();
