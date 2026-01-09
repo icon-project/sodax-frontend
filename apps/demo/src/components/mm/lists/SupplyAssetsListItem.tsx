@@ -1,15 +1,13 @@
 // apps/demo/src/components/mm/lists/SupplyAssetsListItem.tsx
 import React, { type ReactElement } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import type { XToken } from '@sodax/types';
+import type { XToken, Address } from '@sodax/types';
 import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
 import { BorrowButton } from './BorrowButton';
 import { RepayButton } from './RepayButton';
-import { formatUnits } from 'viem';
+import { formatUnits, isAddress } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
-import { useAToken } from '@sodax/dapp-kit';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 
 interface SupplyAssetsListItemProps {
@@ -17,6 +15,7 @@ interface SupplyAssetsListItemProps {
   walletBalance: string;
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
+  aTokenBalancesMap?: Map<Address, bigint>;
 }
 
 export function SupplyAssetsListItem({
@@ -24,40 +23,33 @@ export function SupplyAssetsListItem({
   walletBalance,
   formattedReserves,
   userReserves,
+  aTokenBalancesMap,
 }: SupplyAssetsListItemProps): ReactElement {
   const metrics = useReserveMetrics({
     token,
     formattedReserves: formattedReserves,
     userReserves: userReserves as UserReserveData[],
   });
-  const { data: aToken, isLoading: isATokenLoading } = useAToken({
-    aToken: metrics.formattedReserve?.aTokenAddress as `0x${string}`,
-  });
 
-  const formattedBalance = metrics.userReserve
-    ? Number(formatUnits(metrics.userReserve.scaledATokenBalance, 18)).toFixed(4)
-    : undefined;
+  // Get aToken balance from the pre-fetched map
+  const aTokenAddress = metrics.formattedReserve?.aTokenAddress;
+  const aTokenBalance =
+    aTokenAddress && isAddress(aTokenAddress) && aTokenBalancesMap
+      ? aTokenBalancesMap.get(aTokenAddress as Address)
+      : undefined;
+
+  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(4) : undefined;
 
   const formattedDebt = metrics.userReserve
     ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
     : undefined;
 
-  if (isATokenLoading || !aToken) {
-    return (
-      <TableRow>
-        <TableCell colSpan={16}>
-          <Skeleton className="h-4 w-full" />
-        </TableCell>
-      </TableRow>
-    );
-  }
-
   const availableToBorrow = !metrics.formattedReserve
     ? undefined
     : metrics.formattedReserve.borrowCap === '0'
-      ? formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)
+      ? formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), 18)
       : Math.min(
-          Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)),
+          Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), 18)),
           Number.parseInt(metrics.formattedReserve.borrowCap) -
             Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
         );
