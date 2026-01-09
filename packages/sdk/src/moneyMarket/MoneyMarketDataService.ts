@@ -26,6 +26,7 @@ import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
 import type { Address, Erc20Token } from '@sodax/types';
 import { Erc20Service, HubService } from '../shared/index.js';
+import { erc20Abi } from 'viem';
 
 export class MoneyMarketDataService {
   public readonly uiPoolDataProviderService: UiPoolDataProviderService;
@@ -40,6 +41,38 @@ export class MoneyMarketDataService {
 
   public async getATokenData(aToken: Address): Promise<Erc20Token> {
     return Erc20Service.getErc20Token(aToken, this.hubProvider.publicClient);
+  }
+
+  /**
+   * Fetches multiple aToken balances in a single multicall for better performance
+   * @param aTokens - Array of aToken addresses
+   * @param userAddress - User's hub wallet address to fetch balances for
+   * @returns Promise<Map<Address, bigint>> - Map of aToken address to balance
+   */
+  public async getATokensBalances(aTokens: readonly Address[], userAddress: Address): Promise<Map<Address, bigint>> {
+    const contracts = aTokens.map((aToken: Address) => ({
+      address: aToken,
+      abi: erc20Abi,
+      functionName: 'balanceOf' as const,
+      args: [userAddress] as const,
+    }));
+
+    const results = await this.hubProvider.publicClient.multicall({
+      contracts,
+      allowFailure: false,
+    });
+
+    const balanceMap = new Map<Address, bigint>();
+    let resultIndex = 0;
+    for (const aToken of aTokens) {
+      const result = results[resultIndex];
+      if (result !== undefined) {
+        balanceMap.set(aToken, result as bigint);
+      }
+      resultIndex++;
+    }
+
+    return balanceMap;
   }
 
   /**

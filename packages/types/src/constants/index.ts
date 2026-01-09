@@ -115,7 +115,7 @@ export const baseChainInfo = {
     chainId: 10,
   },
   [BSC_MAINNET_CHAIN_ID]: {
-    name: 'BSC',
+    name: 'BNB Chain',
     id: BSC_MAINNET_CHAIN_ID,
     type: 'EVM',
     chainId: 56,
