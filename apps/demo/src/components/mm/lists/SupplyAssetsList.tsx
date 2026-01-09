@@ -1,10 +1,16 @@
 // apps/demo/src/components/mm/lists/SupplyAssetsList.tsx
-import React, { type ReactElement } from 'react';
-import { useReservesUsdFormat, useSpokeProvider, useUserFormattedSummary, useUserReservesData } from '@sodax/dapp-kit';
+import React, { useMemo, type ReactElement } from 'react';
+import {
+  useReservesUsdFormat,
+  useSpokeProvider,
+  useUserFormattedSummary,
+  useUserReservesData,
+  useATokensBalances,
+} from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
-import { formatUnits } from 'viem';
+import { formatUnits, isAddress } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
 import { moneyMarketSupportedTokens } from '@sodax/sdk';
@@ -27,6 +33,21 @@ export function SupplyAssetsList(): ReactElement {
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { data: userSummary } = useUserFormattedSummary({ spokeProvider, address });
   const healthFactor = userSummary?.healthFactor ? Number.parseFloat(userSummary.healthFactor).toFixed(2) : undefined;
+
+  // Extract all aToken addresses from formattedReserves for batch fetching
+  const aTokenAddresses = useMemo(() => {
+    if (!formattedReserves) return [];
+    return formattedReserves
+      .map(reserve => reserve.aTokenAddress)
+      .filter((address): address is `0x${string}` => isAddress(address));
+  }, [formattedReserves]);
+
+  // Fetch all aToken balances in a single multicall
+  const { data: aTokenBalancesMap, isLoading: isATokensLoading } = useATokensBalances({
+    aTokens: aTokenAddresses,
+    spokeProvider,
+    userAddress: address,
+  });
 
   return (
     <Card>
@@ -64,7 +85,11 @@ export function SupplyAssetsList(): ReactElement {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isUserReservesLoading || isFormattedReservesLoading || !userReserves || !formattedReserves ? (
+            {isUserReservesLoading ||
+            isFormattedReservesLoading ||
+            isATokensLoading ||
+            !userReserves ||
+            !formattedReserves ? (
               <TableRow>
                 <TableCell colSpan={16} className="text-center">
                   Loading...
@@ -83,6 +108,7 @@ export function SupplyAssetsList(): ReactElement {
                   }
                   formattedReserves={formattedReserves}
                   userReserves={userReserves[0]}
+                  aTokenBalancesMap={aTokenBalancesMap}
                 />
               ))
             )}
