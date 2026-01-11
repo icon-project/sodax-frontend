@@ -152,6 +152,11 @@ export function TokenAsset({
   onChainClick,
   isClicked = false,
 }: TokenAssetProps): React.JSX.Element {
+  /**
+   * IMPORTANT:
+   * This wrapper NEVER scales.
+   * Floating UI uses this as reference.
+   */
   const assetRef = useRef<HTMLDivElement>(null);
 
   return (

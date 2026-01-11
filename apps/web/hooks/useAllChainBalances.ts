@@ -44,6 +44,9 @@ export function useAllChainBalances(): Record<string, ChainBalanceEntry[]> {
     });
   }, [xAccounts]);
 
+  // Check if any wallet is connected
+  const hasConnectedWallet = chainQueries.some(q => !!q.address);
+
   // Single query that fetches balances for all chains in parallel
   const { data: allBalances } = useQuery({
     queryKey: ['allChainBalances', chainQueries.map(q => ({ chainId: q.chainId, address: q.address }))],
@@ -102,10 +105,11 @@ export function useAllChainBalances(): Record<string, ChainBalanceEntry[]> {
 
       return balancesByAddress;
     },
-    enabled: chainQueries.some(q => !!q.address),
-    placeholderData: keepPreviousData,
+    enabled: hasConnectedWallet,
+    placeholderData: hasConnectedWallet ? keepPreviousData : undefined,
     refetchInterval: 5_000,
   });
 
-  return allBalances || {};
+  // Return empty object when no wallet is connected to prevent showing stale balances
+  return hasConnectedWallet ? allBalances || {} : {};
 }
