@@ -59,7 +59,29 @@ export function useReserveMetrics({
   userReserves,
 }: UseReserveMetricsProps): ReserveMetricsResult {
   try {
-    const vault = hubAssets[token.xChainId][token.address].vault;
+    const chainAssets = hubAssets[token.xChainId];
+    const hubAsset = chainAssets?.[token.address];
+
+    // This token does NOT exist on this chain’s hub
+    // (normal in cross-chain borrow lists)
+    if (!hubAsset) {
+      return {
+        userReserve: undefined,
+        formattedReserve: undefined,
+        supplyAPR: '-',
+        borrowAPR: '-',
+        supplyAPY: '-',
+        borrowAPY: '-',
+        totalSupply: '-',
+        totalBorrow: '-',
+        totalLiquidityUSD: '-',
+        totalBorrowsUSD: '-',
+        supplyBalanceUSD: '-',
+        liquidationThreshold: '-',
+      };
+    }
+
+    const vault = hubAsset.vault;
     const userReserve = userReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
     const formattedReserve = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
     // Default metrics

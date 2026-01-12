@@ -3,29 +3,25 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
+import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
-import { useAppStore } from '@/zustand/useAppStore';
 import { parseUnits } from 'viem';
-import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
+import type { MoneyMarketBorrowParams } from '@sodax/sdk';
 
-export function WithdrawButton({ token }: { token: XToken }) {
+export function OldBorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const { selectedChainId } = useAppStore();
-
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
-  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw();
+  const { mutateAsync: borrow, isPending, error, reset: resetError } = useBorrow();
 
-  const params: MoneyMarketWithdrawParams | undefined = useMemo(() => {
+  const params: MoneyMarketBorrowParams | undefined = useMemo(() => {
     if (!amount) return undefined;
     return {
       token: token.address,
-      // vault token on hub chain decimals is 18
       amount: parseUnits(amount, token.decimals),
-      action: 'withdraw',
+      action: 'borrow',
     };
   }, [token.address, token.decimals, amount]);
 
@@ -38,7 +34,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
   } = useMMApprove();
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
-  const handleWithdraw = async () => {
+  const handleBorrow = async () => {
     if (!spokeProvider) {
       console.error('spokeProvider is not available');
       return;
@@ -48,16 +44,15 @@ export function WithdrawButton({ token }: { token: XToken }) {
       return;
     }
     try {
-      await withdraw({
+      await borrow({
         params,
         spokeProvider,
       });
       setOpen(false);
     } catch (err) {
-      console.error('Error in handleWithdraw:', err);
+      console.error('Error in handleBorrow:', err);
     }
   };
-
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
     if (!newOpen) {
@@ -95,12 +90,12 @@ export function WithdrawButton({ token }: { token: XToken }) {
             setOpen(true);
           }}
         >
-          Withdraw
+          Borrow
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Withdraw {token.symbol}</DialogTitle>
+          <DialogTitle>Borrow {token.symbol}</DialogTitle>
         </DialogHeader>
         <div className="flex items-center space-x-2">
           <div className="grid w-full max-w-sm items-center gap-1.5">
@@ -129,8 +124,8 @@ export function WithdrawButton({ token }: { token: XToken }) {
             </Button>
           )}
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={!hasAllowed}>
-              {isPending ? 'Withdrawing...' : 'Withdraw'}
+            <Button className="w-full" type="button" variant="default" onClick={handleBorrow} disabled={!hasAllowed}>
+              {isPending ? 'Borrowing...' : 'Borrow'}
             </Button>
           )}
         </DialogFooter>

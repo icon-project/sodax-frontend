@@ -11,7 +11,7 @@ import {
   type RelayError,
   type ConfigService,
 } from '../index.js';
-import { isConfiguredMoneyMarketConfig, isSonicSpokeProviderType } from '../shared/guards.js';
+import { isConfiguredMoneyMarketConfig, isEvmSpokeProviderType, isSolanaSpokeProviderType, isSonicSpokeProviderType } from '../shared/guards.js';
 import type {
   EvmContractCall,
   EvmSpokeProviderType,
@@ -29,11 +29,11 @@ import type {
 } from '../shared/types.js';
 import {
   calculateFeeAmount,
-  deriveUserWalletAddress,
   encodeAddress,
   encodeContractCalls,
+  isHubSpokeProvider,
 } from '../shared/utils/index.js';
-import { EvmAssetManagerService, EvmVaultTokenService } from '../shared/services/hub/index.js';
+import { EvmAssetManagerService, EvmVaultTokenService, HubService } from '../shared/services/hub/index.js';
 import { Erc20Service } from '../shared/services/erc-20/index.js';
 import invariant from 'tiny-invariant';
 import {
@@ -49,8 +49,6 @@ import { wrappedSonicAbi } from '../shared/abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
-import { EvmSpokeProvider } from '../shared/entities/Providers.js';
-import { SonicSpokeProvider } from '../shared/entities/Providers.js';
 import { StellarSpokeProvider } from '../shared/entities/stellar/StellarSpokeProvider.js';
 
 export type MoneyMarketEncodeSupplyParams = {
@@ -118,11 +116,17 @@ export type MoneyMarketSupplyParams = {
  *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
  * @property toAddress - (Optional) Target address on the taret chain to receive the borrowed assets.
  *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
+ * @property fromChainId - (Optional) Source chain ID to borrow from.
+ *   Note: If omitted, borrowed assets are borrowed from the sender's default spoke account.
+ * @property fromAddress - (Optional) Source address on the source chain to borrow from.
+ *   Note: If omitted, borrowed assets are borrowed from the sender's default spoke account.
  */
 export type MoneyMarketBorrowParams = {
   token: string;
   amount: bigint;
   action: 'borrow';
+  fromChainId?: SpokeChainId;
+  fromAddress?: string;
   toChainId?: SpokeChainId;
   toAddress?: string;
 };
@@ -350,62 +354,18 @@ export class MoneyMarketService {
           value: await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider),
         };
       }
-      if (spokeProvider instanceof EvmSpokeProvider && (params.action === 'supply' || params.action === 'repay')) {
+      if ((isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) && (params.action === 'supply' || params.action === 'repay')) {
+        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider) ? await HubService.getUserRouter(
+          walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+          this.hubProvider,
+        ) : spokeProvider.chainConfig.addresses.assetManager;
         return await Erc20Service.isAllowanceValid(
-          params.token as GetAddressType<EvmSpokeProvider>,
+          params.token as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
           params.amount,
-          walletAddress as GetAddressType<EvmSpokeProvider>,
-          spokeProvider.chainConfig.addresses.assetManager,
+          walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+          spender as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
           spokeProvider,
         );
-      }
-      if (
-        spokeProvider instanceof SonicSpokeProvider &&
-        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id
-      ) {
-        if (params.action === 'withdraw') {
-          const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
-            params.token as GetAddressType<SonicSpokeProvider>,
-            params.amount,
-            params.toChainId ?? spokeProvider.chainConfig.chain.id,
-            this.data,
-            this.configService,
-          );
-          return await SonicSpokeService.isWithdrawApproved(
-            walletAddress as GetAddressType<SonicSpokeProvider>,
-            withdrawInfo,
-            spokeProvider,
-          );
-        }
-        if (params.action === 'borrow') {
-          const borrowInfo = await SonicSpokeService.getBorrowInfo(
-            params.token as GetAddressType<SonicSpokeProvider>,
-            params.amount,
-            params.toChainId ?? spokeProvider.chainConfig.chain.id,
-            this.data,
-            this.configService,
-            this.config,
-          );
-          return await SonicSpokeService.isBorrowApproved(
-            walletAddress as GetAddressType<SonicSpokeProvider>,
-            borrowInfo,
-            spokeProvider,
-          );
-        }
-        if (params.action === 'supply' || params.action === 'repay') {
-          const userRouter = await SonicSpokeService.getUserRouter(
-            walletAddress as GetAddressType<SonicSpokeProvider>,
-            spokeProvider,
-          );
-
-          return await Erc20Service.isAllowanceValid(
-            params.token as GetAddressType<SonicSpokeProvider>,
-            params.amount,
-            walletAddress as GetAddressType<SonicSpokeProvider>,
-            userRouter,
-            spokeProvider,
-          );
-        }
       }
 
       return {
@@ -483,17 +443,22 @@ export class MoneyMarketService {
         };
       }
 
-      if (spokeProvider instanceof EvmSpokeProvider) {
+      if (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) {
         invariant(
           params.action === 'supply' || params.action === 'repay',
           'Invalid action (only supply and repay are supported on evm)',
         );
         invariant(isAddress(params.token), 'Invalid token address');
 
+        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider) ? await HubService.getUserRouter(
+          walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+          this.hubProvider,
+        ) : spokeProvider.chainConfig.addresses.assetManager;
+
         const result = (await Erc20Service.approve(
           params.token,
           params.amount,
-          spokeProvider.chainConfig.addresses.assetManager,
+          spender as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
           spokeProvider,
           raw,
         )) satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>;
@@ -502,83 +467,6 @@ export class MoneyMarketService {
           ok: true,
           value: result,
         };
-      }
-
-      if (
-        spokeProvider instanceof SonicSpokeProvider &&
-        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id
-      ) {
-        invariant(
-          params.action === 'withdraw' ||
-            params.action === 'borrow' ||
-            params.action === 'supply' ||
-            params.action === 'repay',
-          'Invalid action (only withdraw, borrow, supply and repay are supported on sonic)',
-        );
-        invariant(isAddress(params.token), 'Invalid token address');
-
-        if (params.action === 'withdraw') {
-          const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
-            params.token,
-            params.amount,
-            params?.toChainId ?? spokeProvider.chainConfig.chain.id,
-            this.data,
-            this.configService,
-          );
-
-          const result = (await SonicSpokeService.approveWithdraw(
-            walletAddress as GetAddressType<SonicSpokeProvider>,
-            withdrawInfo,
-            spokeProvider,
-            raw,
-          )) satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>;
-
-          return {
-            ok: true,
-            value: result,
-          };
-        }
-        if (params.action === 'borrow') {
-          const borrowInfo = await SonicSpokeService.getBorrowInfo(
-            params.token,
-            params.amount,
-            params?.toChainId ?? spokeProvider.chainConfig.chain.id,
-            this.data,
-            this.configService,
-            this.config,
-          );
-
-          const result = (await SonicSpokeService.approveBorrow(
-            walletAddress as GetAddressType<SonicSpokeProvider>,
-            borrowInfo,
-            spokeProvider,
-            raw,
-          )) satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>;
-
-          return {
-            ok: true,
-            value: result,
-          };
-        }
-        if (params.action === 'supply' || params.action === 'repay') {
-          const userRouter = await SonicSpokeService.getUserRouter(
-            walletAddress as GetAddressType<SonicSpokeProvider>,
-            spokeProvider,
-          );
-
-          const result = (await Erc20Service.approve(
-            params.token,
-            params.amount,
-            userRouter,
-            spokeProvider,
-            raw,
-          )) satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>;
-
-          return {
-            ok: true,
-            value: result,
-          };
-        }
       }
 
       return {
@@ -654,7 +542,9 @@ export class MoneyMarketService {
       }
 
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
+        intentTxHash = txResult.value;
+      } else {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
@@ -677,8 +567,6 @@ export class MoneyMarketService {
         }
 
         intentTxHash = packetResult.value.dst_tx_hash;
-      } else {
-        intentTxHash = txResult.value;
       }
 
       return { ok: true, value: [txResult.value, intentTxHash] };
@@ -750,15 +638,17 @@ export class MoneyMarketService {
         `Unsupported spoke chain (${fromChainId}) token: ${params.token}`,
       );
 
-      const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
-      const toHubWallet = await deriveUserWalletAddress(this.hubProvider, toChainId, toAddress);
+      const [fromHubWallet, toHubWallet] = await Promise.all([
+        HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider),
+        HubService.getUserHubWalletAddress(toAddress, toChainId, this.hubProvider),
+      ]);
 
       const data: Hex = this.buildSupplyData(fromChainId, params.token, params.amount, toHubWallet);
 
       const txResult = await SpokeService.deposit(
         {
           from: fromAddress,
-          to: fromChainId === this.hubProvider.chainConfig.chain.id ? undefined : fromHubWallet,
+          to: fromHubWallet,
           token: params.token,
           amount: params.amount,
           data,
@@ -858,7 +748,7 @@ export class MoneyMarketService {
       ) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
           spokeProvider,
           this.config.relayerApiEndpoint,
           timeout,
@@ -938,8 +828,8 @@ export class MoneyMarketService {
     invariant(params.token.length > 0, 'Token is required');
     invariant(params.amount > 0n, 'Amount must be greater than 0');
 
-    const fromChainId = spokeProvider.chainConfig.chain.id;
-    const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const fromChainId = params.fromChainId ?? spokeProvider.chainConfig.chain.id;
+    const fromAddress = params.fromAddress ?? await spokeProvider.walletProvider.getWalletAddress();
     const toChainId = params.toChainId ?? fromChainId;
     const toAddress = params.toAddress ?? fromAddress;
     const dstToken = this.configService.getMoneyMarketToken(toChainId, params.token);
@@ -947,7 +837,7 @@ export class MoneyMarketService {
     invariant(dstToken, `Money market token not found for spoke chain (${toChainId}) token: ${params.token}`);
 
     const encodedToAddress = encodeAddress(toChainId, toAddress);
-    const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
+    const fromHubWallet = await HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider);
 
     const data: Hex = this.buildBorrowData(fromHubWallet, encodedToAddress, dstToken.address, params.amount, toChainId);
 
@@ -1131,33 +1021,12 @@ export class MoneyMarketService {
     );
 
     const encodedToAddress = encodeAddress(toChainId, toAddress);
-    const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
+    const fromHubWallet = await HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider);
 
-    let data: Hex;
-    if (spokeProvider instanceof SonicSpokeProvider) {
-      const withdrawInfo = await SonicSpokeService.getWithdrawInfo(
-        params.token as GetAddressType<SonicSpokeProvider>,
-        params.amount,
-        toChainId,
-        this.data,
-        this.configService,
-      );
-
-      data = await SonicSpokeService.buildWithdrawData(
-        fromAddress as GetAddressType<SonicSpokeProvider>,
-        withdrawInfo,
-        params.amount,
-        encodedToAddress,
-        toChainId,
-        spokeProvider,
-        this,
-      );
-    } else {
-      data = this.buildWithdrawData(fromHubWallet, encodedToAddress, params.token, params.amount, toChainId);
-    }
+    const data: Hex = this.buildWithdrawData(fromHubWallet, encodedToAddress, params.token, params.amount, toChainId);
 
     const txResult =
-      spokeProvider instanceof SonicSpokeProvider
+      isSonicSpokeProviderType(spokeProvider)
         ? await SonicSpokeService.callWallet(data, spokeProvider, raw)
         : await SpokeService.callWallet(fromHubWallet, data, spokeProvider, this.hubProvider, raw);
 
@@ -1329,15 +1198,17 @@ export class MoneyMarketService {
       `Unsupported spoke chain (${fromChainId}) token: ${params.token}`,
     );
 
-    const toHubWallet = await deriveUserWalletAddress(this.hubProvider, toChainId, toAddress);
-    const fromHubWallet = await deriveUserWalletAddress(this.hubProvider, fromChainId, fromAddress);
+    const [fromHubWallet, toHubWallet] = await Promise.all([
+      HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider),
+      HubService.getUserHubWalletAddress(toAddress, toChainId, this.hubProvider),
+    ]);
 
     const data: Hex = this.buildRepayData(fromChainId, params.token, params.amount, toHubWallet);
 
     const txResult = await SpokeService.deposit(
       {
         from: fromAddress,
-        to: fromChainId === this.hubProvider.chainConfig.chain.id ? undefined : fromHubWallet,
+        to: fromHubWallet,
         token: params.token,
         amount: params.amount,
         data,

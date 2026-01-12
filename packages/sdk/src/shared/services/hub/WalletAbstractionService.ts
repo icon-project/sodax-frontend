@@ -10,6 +10,8 @@ import { SonicSpokeService } from '../spoke/SonicSpokeService.js';
  */
 
 export class WalletAbstractionService {
+  private constructor() {}
+
   /**
    * Gets the hub wallet address for a user based on their spoke chain address.
    * @param address - The user's address on the spoke chain
