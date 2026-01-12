@@ -14,13 +14,13 @@ import WithdrawAmountSelect from './withdraw-amount-select';
 import WithdrawConfirmationStep from './withdraw-confirmation-step';
 import WithdrawTokenSelect from './withdraw-token-select';
 import WithdrawDialogFooter from './withdraw-dialog-footer';
-import type { CarouselItemData, NetworkBalance } from '../../page';
+import type { DepositItemData, NetworkBalance } from '../../page';
 import { cn } from '@/lib/utils';
 
 interface WithdrawDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedItem: CarouselItemData | null;
+  selectedItem: DepositItemData | null;
 }
 
 export default function WithdrawDialog({ open, onOpenChange, selectedItem }: WithdrawDialogProps): React.JSX.Element {
