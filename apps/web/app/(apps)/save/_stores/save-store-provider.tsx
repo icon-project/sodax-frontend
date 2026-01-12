@@ -40,6 +40,7 @@ export const useSaveState = () => {
   const isSwitchingChain = useSaveStore(state => state.isSwitchingChain);
   const openAsset = useSaveStore(state => state.openAsset);
   const scrollToCenter = useSaveStore(state => state.scrollToCenter);
+  const isNetworkPickerOpened = useSaveStore(state => state.isNetworkPickerOpened);
   return {
     depositValue,
     currentStep,
@@ -47,6 +48,7 @@ export const useSaveState = () => {
     isSwitchingChain,
     openAsset,
     scrollToCenter,
+    isNetworkPickerOpened,
   };
 };
 
@@ -57,6 +59,7 @@ export const useSaveActions = () => {
   const setIsSwitchingChain = useSaveStore(state => state.setIsSwitchingChain);
   const setOpenAsset = useSaveStore(state => state.setOpenAsset);
   const setScrollToCenter = useSaveStore(state => state.setScrollToCenter);
+  const setIsNetworkPickerOpened = useSaveStore(state => state.setIsNetworkPickerOpened);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
 
   return {
@@ -66,6 +69,7 @@ export const useSaveActions = () => {
     setIsSwitchingChain,
     setOpenAsset,
     setScrollToCenter,
+    setIsNetworkPickerOpened,
     resetSaveState,
   };
 };

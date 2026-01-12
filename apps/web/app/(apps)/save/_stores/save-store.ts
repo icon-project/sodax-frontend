@@ -9,6 +9,7 @@ export type SaveState = {
   isSwitchingChain: boolean;
   openAsset: string;
   scrollToCenter: boolean;
+  isNetworkPickerOpened: boolean;
 };
 
 export type SaveActions = {
@@ -18,6 +19,7 @@ export type SaveActions = {
   setIsSwitchingChain: (isSwitching: boolean) => void;
   setOpenAsset: (value: string) => void;
   setScrollToCenter: (value: boolean) => void;
+  setIsNetworkPickerOpened: (value: boolean) => void;
   resetSaveState: () => void;
 };
 
@@ -30,6 +32,7 @@ export const defaultSaveState: SaveState = {
   isSwitchingChain: false,
   openAsset: '',
   scrollToCenter: false,
+  isNetworkPickerOpened: false,
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -43,6 +46,7 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         setIsSwitchingChain: (isSwitching: boolean) => set({ isSwitchingChain: isSwitching }),
         setOpenAsset: (value: string) => set({ openAsset: value }),
         setScrollToCenter: (value: boolean) => set({ scrollToCenter: value }),
+        setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
         resetSaveState: () => {
           set({
             currentStep: 1,

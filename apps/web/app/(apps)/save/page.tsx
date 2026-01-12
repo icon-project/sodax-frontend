@@ -7,7 +7,7 @@ import BigNumber from 'bignumber.js';
 import AnimatedNumber from '@/components/shared/animated-number';
 import AssetList from './_components/asset-list';
 import { delay, flattenTokens, getUniqueTokenSymbols, calculateAPY, formatBalance } from '@/lib/utils';
-import CarouselWithPagination from './_components/carousel';
+import DepositOverview from './_components/deposit-overview';
 import TotalSaveTokens from './_components/total-save-tokens';
 import { useSaveActions, useSaveState } from './_stores/save-store-provider';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
@@ -22,7 +22,7 @@ export interface NetworkBalance {
   token: XToken;
 }
 
-export interface CarouselItemData {
+export interface DepositItemData {
   token: XToken;
   totalBalance: string;
   fiatValue: string;
@@ -57,8 +57,8 @@ export default function SavingsPage() {
   const { data: tokenPrices } = useAllTokenPrices(allGroupTokens);
 
   // Filter and prepare carousel items with balances > 0
-  const carouselItems = useMemo((): CarouselItemData[] => {
-    const items: CarouselItemData[] = [];
+  const depositItems = useMemo((): DepositItemData[] => {
+    const items: DepositItemData[] = [];
 
     groupedTokens.forEach(group => {
       const tokensWithBalance = tokensWithSupplyBalances.filter(
@@ -117,10 +117,10 @@ export default function SavingsPage() {
 
   // Update token count in store when carousel items change
   useEffect(() => {
-    setTokenCount(carouselItems.length);
-  }, [carouselItems.length, setTokenCount]);
+    setTokenCount(depositItems.length);
+  }, [depositItems.length, setTokenCount]);
 
-  const hasDeposits = carouselItems.length > 0;
+  const hasDeposits = depositItems.length > 0;
 
   useEffect(() => {
     delay(500).then(() => {
@@ -141,12 +141,12 @@ export default function SavingsPage() {
         return;
       }
 
-      const tokenIndex = carouselItems.findIndex(item => item.token.symbol === token.symbol);
+      const tokenIndex = depositItems.findIndex(item => item.token.symbol === token.symbol);
       if (tokenIndex !== -1) {
         carouselApiRef.current.scrollTo(tokenIndex);
       }
     },
-    [carouselItems],
+    [depositItems],
   );
 
   // Callback to receive carousel API
@@ -165,14 +165,10 @@ export default function SavingsPage() {
         <motion.div className="w-full flex flex-col gap-4" variants={itemVariants}>
           <TotalSaveTokens
             tokensWithSupplyBalances={tokensWithSupplyBalances}
-            carouselItems={carouselItems}
+            depositItems={depositItems}
             onTokenClick={navigateToToken}
           />
-          <CarouselWithPagination
-            carouselItems={carouselItems}
-            tokenPrices={tokenPrices}
-            onApiReady={handleCarouselApiReady}
-          />
+          <DepositOverview depositItems={depositItems} tokenPrices={tokenPrices} onApiReady={handleCarouselApiReady} />
         </motion.div>
       ) : (
         <motion.div className="inline-flex flex-col justify-start items-start gap-4" variants={itemVariants}>

@@ -6,16 +6,16 @@ import BigNumber from 'bignumber.js';
 import { flattenTokens, getUniqueTokenSymbols } from '@/lib/utils';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import type { XToken } from '@sodax/types';
-import type { CarouselItemData } from '../page';
+import type { DepositItemData } from '../page';
 import { motion } from 'motion/react';
 
 export default function TotalSaveTokens({
   tokensWithSupplyBalances,
-  carouselItems,
+  depositItems,
   onTokenClick,
 }: {
   tokensWithSupplyBalances: (XToken & { supplyBalance: string })[];
-  carouselItems: CarouselItemData[];
+  depositItems: DepositItemData[];
   onTokenClick: (token: XToken) => void;
 }): React.JSX.Element {
   const allTokens = useMemo(() => flattenTokens(), []);
@@ -90,8 +90,8 @@ export default function TotalSaveTokens({
       >
         {tokensWithBalance.length > 0 ? (
           tokensWithBalance.map((token, index) => {
-            // Check if this token exists in carousel items
-            const tokenExistsInCarousel = carouselItems.some(item => item.token.symbol === token.symbol);
+            // Check if this token exists in deposit items
+            const tokenExistsInDeposit = depositItems.some(item => item.token.symbol === token.symbol);
             return (
               <Image
                 key={`${token.symbol}-${token.xChainId}-${index}`}
@@ -100,9 +100,9 @@ export default function TotalSaveTokens({
                 width={20}
                 height={20}
                 className={`rounded-full outline-2 outline-white shrink-0 bg-white ${
-                  tokenExistsInCarousel ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
+                  tokenExistsInDeposit ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
                 }`}
-                onClick={tokenExistsInCarousel ? () => onTokenClick(token) : undefined}
+                onClick={tokenExistsInDeposit ? () => onTokenClick(token) : undefined}
               />
             );
           })

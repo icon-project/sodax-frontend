@@ -1,29 +1,28 @@
-// apps/web/app/(apps)/save/_components/carousel.tsx
 'use client';
 
 import * as React from 'react';
 import { Carousel, CarouselContent, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
 import { cn } from '@/lib/utils';
-import type { CarouselItemData } from '../page';
+import type { DepositItemData } from '../page';
 import WithdrawDialog from './withdraw-dialog/withdraw-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CarouselItemContent } from './carousel/carousel-item-content';
-interface CarouselWithPaginationProps {
-  carouselItems: CarouselItemData[];
+import { DepositItemContent } from './deposit-overview/deposit-item-content';
+interface DepositOverviewProps {
+  depositItems: DepositItemData[];
   tokenPrices?: Record<string, number>;
   onApiReady?: (api: CarouselApi | undefined) => void;
 }
 
-export default function CarouselWithPagination({
-  carouselItems,
+export default function DepositOverview({
+  depositItems,
   tokenPrices,
   onApiReady,
-}: CarouselWithPaginationProps): React.JSX.Element {
+}: DepositOverviewProps): React.JSX.Element {
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
-  const [selectedWithdrawItem, setSelectedWithdrawItem] = React.useState<CarouselItemData | null>(null);
+  const [selectedWithdrawItem, setSelectedWithdrawItem] = React.useState<DepositItemData | null>(null);
   const isMobile = useIsMobile();
   React.useEffect(() => {
     if (!api) {
@@ -61,9 +60,9 @@ export default function CarouselWithPagination({
         }}
       >
         <CarouselContent className="mix-blend-multiply">
-          {carouselItems.length > 0 &&
-            carouselItems.map((item, index) => (
-              <CarouselItemContent
+          {depositItems.length > 0 &&
+            depositItems.map((item, index) => (
+              <DepositItemContent
                 key={`${item.token.symbol}-${index}`}
                 item={item}
                 tokenPrices={tokenPrices}
@@ -85,7 +84,7 @@ export default function CarouselWithPagination({
         )}
       </Carousel>
       <div className="mt-4 flex items-center justify-start gap-2">
-        {Array.from({ length: Math.max(count, carouselItems.length) }).map((_, index) => (
+        {Array.from({ length: Math.max(count, depositItems.length) }).map((_, index) => (
           <button
             type="button"
             key={index}

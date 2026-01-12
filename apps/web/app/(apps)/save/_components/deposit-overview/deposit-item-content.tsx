@@ -12,13 +12,13 @@ import { Item, ItemContent, ItemMedia, ItemDescription } from '@/components/ui/i
 import type { SpokeChainId } from '@sodax/types';
 import { Badge } from '@/components/ui/badge';
 import { chainIdToChainName } from '@/providers/constants';
-import type { CarouselItemData } from '../../page';
+import type { DepositItemData } from '../../page';
 import { motion } from 'motion/react';
 import { useSaveActions } from '../../_stores/save-store-provider';
 import { NetworkBalanceTooltip } from './network-balance-tooltip';
 
-interface CarouselItemContentProps {
-  item: CarouselItemData;
+interface DepositItemContentProps {
+  item: DepositItemData;
   tokenPrices?: Record<string, number>;
   onWithdrawClick: () => void;
 }
@@ -27,11 +27,7 @@ interface CarouselItemContentProps {
  * Renders a single carousel item card with token information, balance, and action buttons.
  * Includes hover animations and network balance tooltips.
  */
-export function CarouselItemContent({
-  item,
-  tokenPrices,
-  onWithdrawClick,
-}: CarouselItemContentProps): React.JSX.Element {
+export function DepositItemContent({ item, tokenPrices, onWithdrawClick }: DepositItemContentProps): React.JSX.Element {
   const [isHovered, setIsHovered] = useState(false);
   const priceKey = `${item.token.symbol}-${item.token.xChainId}`;
   const tokenPrice = tokenPrices?.[priceKey] || 0;
