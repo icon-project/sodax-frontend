@@ -1,6 +1,6 @@
 import invariant from 'tiny-invariant';
 import { DEFAULT_MAX_RETRY, DEFAULT_RETRY_DELAY_MS, FEE_PERCENTAGE_SCALE } from '../constants.js';
-import type { EvmHubProvider } from '../entities/Providers.js';
+import type { EvmHubProvider, SpokeProviderType } from '../entities/Providers.js';
 import { isPartnerFeeAmount, isPartnerFeePercentage } from '../guards.js';
 import type { PartnerFee, QuoteType } from '../types.js';
 import type { SpokeChainId, Address, Hex } from '@sodax/types';
@@ -195,4 +195,8 @@ export function parseToStroops(amount: string): bigint {
 
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function isHubSpokeProvider(spokeProvider: SpokeProviderType, hubProvider: EvmHubProvider): boolean {
+  return spokeProvider.chainConfig.chain.id === hubProvider.chainConfig.chain.id;
 }

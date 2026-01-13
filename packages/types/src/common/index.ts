@@ -122,8 +122,8 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     stakedSoda: Address;
     xSoda: Address;
     stakingRouter: Address;
+    walletRouter: Address;
   };
-
   nativeToken: Address;
   wrappedNativeToken: Address;
 };
