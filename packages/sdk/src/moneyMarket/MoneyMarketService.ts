@@ -1,6 +1,6 @@
 import { type Hex, encodeFunctionData, isAddress } from 'viem';
 import { poolAbi } from '../shared/abis/pool.abi.js';
-import type { EvmHubProvider, SpokeProvider } from '../shared/entities/index.js';
+import type { EvmHubProvider, SpokeProvider, SpokeProviderType } from '../shared/entities/index.js';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
   SpokeService,
@@ -11,7 +11,13 @@ import {
   type RelayError,
   type ConfigService,
 } from '../index.js';
-import { isConfiguredMoneyMarketConfig, isEvmSpokeProviderType, isSolanaSpokeProviderType, isSonicSpokeProviderType } from '../shared/guards.js';
+import {
+  isConfiguredMoneyMarketConfig,
+  isEvmSpokeProviderType,
+  isStellarSpokeProviderType,
+  isSolanaSpokeProviderType,
+  isSonicSpokeProviderType,
+} from '../shared/guards.js';
 import type {
   EvmContractCall,
   EvmSpokeProviderType,
@@ -49,7 +55,6 @@ import { wrappedSonicAbi } from '../shared/abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
-import { StellarSpokeProvider } from '../shared/entities/stellar/StellarSpokeProvider.js';
 
 export type MoneyMarketEncodeSupplyParams = {
   asset: Address; // The address of the asset to supply.
@@ -297,7 +302,7 @@ export class MoneyMarketService {
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
    */
-  public static async estimateGas<T extends SpokeProvider = SpokeProvider>(
+  public static async estimateGas<T extends SpokeProviderType = SpokeProviderType>(
     params: TxReturnType<T, true>,
     spokeProvider: T,
   ): Promise<GetEstimateGasReturnType<T>> {
@@ -325,7 +330,7 @@ export class MoneyMarketService {
    *   // Need to approve
    * }
    */
-  public async isAllowanceValid<S extends SpokeProvider>(
+  public async isAllowanceValid<S extends SpokeProviderType>(
     params: MoneyMarketParams,
     spokeProvider: S,
   ): Promise<Result<boolean>> {
@@ -348,7 +353,7 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (spokeProvider instanceof StellarSpokeProvider && (params.action === 'supply' || params.action === 'repay')) {
+      if (isStellarSpokeProviderType(spokeProvider) && (params.action === 'supply' || params.action === 'repay')) {
         return {
           ok: true,
           value: await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider),
@@ -367,6 +372,7 @@ export class MoneyMarketService {
           spokeProvider,
         );
       }
+
 
       return {
         ok: true,
@@ -407,7 +413,7 @@ export class MoneyMarketService {
    *
    * const txReceipt = approveResult.value;
    */
-  public async approve<S extends SpokeProvider, R extends boolean = false>(
+  public async approve<S extends SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketParams,
     spokeProvider: S,
     raw?: R,
@@ -430,7 +436,7 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (spokeProvider instanceof StellarSpokeProvider) {
+      if (isStellarSpokeProviderType(spokeProvider)) {
         invariant(
           params.action === 'supply' || params.action === 'repay',
           'Invalid action (only supply and repay are supported on stellar)',
@@ -616,7 +622,7 @@ export class MoneyMarketService {
    *   console.error('Supply failed:', result.error);
    * }
    */
-  async createSupplyIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  async createSupplyIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketSupplyParams,
     spokeProvider: S,
     raw?: R,
@@ -817,7 +823,7 @@ export class MoneyMarketService {
    *   console.error('Borrow failed:', result.error);
    * }
    */
-  async createBorrowIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  async createBorrowIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketBorrowParams,
     spokeProvider: S,
     raw?: R,
@@ -999,7 +1005,7 @@ export class MoneyMarketService {
    *   console.error('Withdraw failed:', result.error);
    * }
    */
-  async createWithdrawIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  async createWithdrawIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketWithdrawParams,
     spokeProvider: S,
     raw?: R,
@@ -1177,7 +1183,7 @@ export class MoneyMarketService {
    *   console.error('Repay failed:', result.error);
    * }
    */
-  async createRepayIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  async createRepayIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketRepayParams,
     spokeProvider: S,
     raw?: R,
