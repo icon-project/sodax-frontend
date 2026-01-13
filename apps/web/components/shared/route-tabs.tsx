@@ -58,7 +58,8 @@ interface RouteTabsProps {
 export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.Element {
   const pathname = usePathname();
 
-  const usedTabs = tabs ?? tabConfigs;
+  const isPartnerRoute = pathname.startsWith('/partner');
+  const usedTabs = isPartnerRoute ? partnerTabConfigs : tabConfigs;
 
   const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
   const tabValues = usedTabs.map(t => t.value);
@@ -122,7 +123,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
       >
         <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
           {usedTabs.map(tab => {
-            const href = tab.href ?? `/${tab.value}`; // fallback old behavior
+            const href = tab.href ?? `/${tab.value}`;
 
             const active =
               pathname === href ||

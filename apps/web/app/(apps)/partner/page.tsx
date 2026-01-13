@@ -17,6 +17,7 @@ export default function PartnerPage() {
   const [swappingSymbol, setSwappingSymbol] = useState<string | null>(null);
 
   const { address } = useXAccount(SONIC_MAINNET_CHAIN_ID);
+
   const { balances, isLoading, refetch } = usePartnerFees(address);
 
   const handleSwapToUsdc = (balance: PartnerFeeBalance) => {

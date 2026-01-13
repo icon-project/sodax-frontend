@@ -8,6 +8,7 @@ import { SodaxIcon } from '../icons/sodax-icon';
 import { MainCtaButton } from '../landing/main-cta-button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppStore } from '@/stores/app-store-provider';
+import { usePathname } from 'next/navigation';
 
 export function Header(): React.JSX.Element {
   const openModal = useModalStore(state => state.openModal);
@@ -15,6 +16,8 @@ export function Header(): React.JSX.Element {
   const xAccounts = useXAccounts();
   const connectedChains = Object.entries(xAccounts).filter(([, account]) => account?.address);
   const connectedWalletsCount = connectedChains.length;
+  const pathname = usePathname();
+  const isPartner = pathname.startsWith('/partner');
   return (
     <div className="h-60 pt-10 relative inline-flex flex-col justify-start items-center gap-2 w-full">
       <div className="w-full h-60 left-0 top-0 absolute bg-gradient-to-r from-[#BB7B70] via-[#CC9C8A] to-[#B16967]" />
@@ -29,15 +32,23 @@ export function Header(): React.JSX.Element {
             <div className="hidden md:block md:ml-[11px]">
               <SodaxIcon width={84} height={18} fill="white" />
             </div>
-            <div className="mix-blend-screen justify-center text-[#f3d2ca] text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
-              BETA
+            {!isPartner && (
+              <div className="mix-blend-screen justify-center text-[#f3d2ca] text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
+                BETA
+              </div>
+            )}
+          </div>
+          {isPartner ? (
+            <div className="justify-center text-cream hidden lg:flex ml-8 gap-1">
+              <span className="text-xs font-bold font-[InterRegular] leading-none">PARTNER-NAME</span>
             </div>
-          </div>
-          <div className="justify-center text-cream hidden lg:flex ml-8 gap-1">
-            <span className="text-xs font-bold font-[InterRegular] leading-none">Money, as it</span>
-            <span className="text-xs font-normal font-[Shrikhand] leading-none mt-[1px]">should</span>
-            <span className="text-xs font-bold font-[InterRegular] leading-none">be</span>
-          </div>
+          ) : (
+            <div className="justify-center text-cream hidden lg:flex ml-8 gap-1">
+              <span className="text-xs font-bold font-[InterRegular] leading-none">Money, as it</span>
+              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-[1px]">should</span>
+              <span className="text-xs font-bold font-[InterRegular] leading-none">be</span>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-8">
