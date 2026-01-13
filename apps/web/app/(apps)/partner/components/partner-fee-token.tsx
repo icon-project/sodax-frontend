@@ -18,10 +18,10 @@ export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: Partn
   const isUsdc = balance.currency.symbol === 'USDC';
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-clay-dark/60 px-4 sm:px-6 py-4">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-clay-light/10 px-4 sm:px-6 py-4 mx-1">
       {/* Left section: logo + info */}
       <div className="flex items-center gap-4 sm:gap-10">
-        <CurrencyLogo currency={balance.currency} hideChainIcon />
+        <CurrencyLogo currency={balance.currency} hideNetwork />
         {/* Asset name */}
         <div className="flex flex-col">
           <span className="text-sm text-clay-dark">Asset:</span>
@@ -35,7 +35,7 @@ export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: Partn
       </div>
       <Button
         variant="cherry"
-        className="w-full sm:w-auto h-11 disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full sm:w-auto h-11 disabled:opacity-80 disabled:cursor-not-allowed"
         onClick={() => {
           if (isUsdc) return;
           onSwapToUsdc(balance);
