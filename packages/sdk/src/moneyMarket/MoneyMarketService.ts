@@ -13,7 +13,6 @@ import {
 } from '../index.js';
 import {
   isConfiguredMoneyMarketConfig,
-  isSonicSpokeProviderType,
   isEvmSpokeProviderType,
   isStellarSpokeProviderType,
   isSolanaSpokeProviderType,
@@ -56,7 +55,6 @@ import { wrappedSonicAbi } from '../shared/abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
-import { StellarSpokeProvider } from '../shared/entities/stellar/StellarSpokeProvider.js';
 
 export type MoneyMarketEncodeSupplyParams = {
   asset: Address; // The address of the asset to supply.
