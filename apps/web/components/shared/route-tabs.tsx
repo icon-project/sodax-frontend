@@ -1,4 +1,3 @@
-// apps/web/components/shared/route-tabs.tsx
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
@@ -87,8 +86,9 @@ export function RouteTabs(): React.JSX.Element {
     }
   }, [current]);
 
-  useEffect(() => 
-    updateArrows();, [updateArrows]);
+  useEffect(() => {
+    updateArrows();
+  }, [updateArrows]);
 
   useEffect(() => {
     const onResize = () => {
