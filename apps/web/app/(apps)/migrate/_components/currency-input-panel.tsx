@@ -129,7 +129,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
           <div className="text-right justify-center text-espresso font-['InterRegular'] font-bold">
             <div className="relative">
               <Input
-                autoFocus
+                autoFocus={type === CurrencyInputPanelType.INPUT && !isMobile}
                 type="number"
                 ref={inputRef}
                 value={inputValue === '' ? '' : Number(inputValue)}
