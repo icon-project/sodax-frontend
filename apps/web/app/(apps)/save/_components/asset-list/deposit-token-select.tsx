@@ -5,7 +5,7 @@ import AssetMetrics from './asset-metrics';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { parseUnits } from 'viem';
-import { DepositTokenSelectList } from './deposit-token-select-list';
+import { DepositTokenSelector } from './deposit-token-selector';
 import { useSaveState } from '../../_stores/save-store-provider';
 import { cn } from '@/lib/utils';
 
@@ -37,9 +37,9 @@ export function DepositTokenSelect({
   return (
     <>
       <AssetMetrics apy={apy} deposits={deposits} />
-      <DepositTokenSelectList
+      <DepositTokenSelector
         displayItems={displayItems}
-        onSelectionChange={(token: XToken | null) => {
+        onChange={(token: XToken | null) => {
           setSelectedToken(token);
         }}
       />

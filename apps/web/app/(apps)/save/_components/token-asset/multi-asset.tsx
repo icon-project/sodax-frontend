@@ -121,8 +121,8 @@ function NetworkPicker({
 
 export function MultiAsset({
   tokens,
-  handleTokenSelect,
-}: { tokens: XToken[]; handleTokenSelect: (token: XToken) => void }): React.JSX.Element {
+  setSelectNetworkToken,
+}: { tokens: XToken[]; setSelectNetworkToken: (network: XToken) => void }): React.JSX.Element {
   const token = tokens[0] || ({} as XToken);
   const { isNetworkPickerOpened } = useSaveState();
   const { setIsNetworkPickerOpened } = useSaveActions();
@@ -144,7 +144,7 @@ export function MultiAsset({
           tokenSymbol={token.symbol}
           onSelect={token => {
             setIsNetworkPickerOpened(false);
-            handleTokenSelect(token);
+            setSelectNetworkToken(token);
           }}
           reference={assetRef.current}
         />

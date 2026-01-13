@@ -55,38 +55,15 @@ export const sodaxConfig = {
 
 export const rpcConfig: RpcConfig = {
   // EVM chains
-  // sonic: 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0xa86a.avax': 'https://avax-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0xa4b1.arbitrum': 'https://arb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0x2105.base': 'https://base-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0x38.bsc': 'https://bnb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0xa.optimism': 'https://opt-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0x89.polygon': 'https://polygon-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // ethereum: 'https://eth-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-
-  // Other chains
-  '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
-  solana: 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  sui: 'https://fullnode.mainnet.sui.io',
-  'injective-1': 'https://sentry.tm.injective.network:26657',
-  stellar: {
-    horizonRpcUrl: 'https://horizon.stellar.org',
-    sorobanRpcUrl: 'https://magical-bitter-frost.stellar-mainnet.quiknode.pro/78709b736890cf5a9bcb36e118b9d18e8ecdb7ee',
-  },
-};
-
-export const developmentRpcConfig: RpcConfig = {
-  // EVM chains
-  // sonic: 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0xa86a.avax': 'https://avax-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0xa4b1.arbitrum': 'https://arb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0x2105.base': 'https://base-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0x38.bsc': 'https://bnb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0xa.optimism': 'https://opt-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // '0x89.polygon': 'https://polygon-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // ethereum: 'https://eth-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  // hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  sonic: 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  '0xa86a.avax': 'https://avax-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  '0xa4b1.arbitrum': 'https://arb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  '0x2105.base': 'https://base-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  '0x38.bsc': 'https://bnb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  '0xa.optimism': 'https://opt-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  '0x89.polygon': 'https://polygon-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  ethereum: 'https://eth-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
 
   // Other chains
   '0x1.icon': 'https://ctz.solidwallet.io/api/v3',

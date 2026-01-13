@@ -14,7 +14,7 @@ type DepositTokenSelectItemProps = {
   isHoverDimmed: boolean;
   handleAssetClick: (index: number | null) => void;
   handleTokenDeselect: () => void;
-  handleTokenSelect: (token: XToken) => void;
+  setSelectNetworkToken: (network: XToken) => void;
   outsideClick: boolean;
 };
 
@@ -27,13 +27,13 @@ function DepositTokenSelectItem({
   isHoverDimmed,
   handleAssetClick,
   handleTokenDeselect,
-  handleTokenSelect,
+  setSelectNetworkToken,
   outsideClick,
 }: DepositTokenSelectItemProps): React.JSX.Element {
   const shared = {
     isHoverDimmed,
     isHovered,
-    handleTokenSelect,
+    setSelectNetworkToken,
     outsideClick,
   };
 
@@ -79,15 +79,12 @@ function DepositTokenSelectItem({
   return <div ref={tokenAssetRef}>{content}</div>;
 }
 
-type DepositTokenSelectListProps = {
+type DepositTokenSelectorProps = {
   displayItems: DisplayItem[];
-  onSelectionChange: (token: XToken | null) => void;
+  onChange: (token: XToken | null) => void;
 };
 
-export function DepositTokenSelectList({
-  displayItems,
-  onSelectionChange,
-}: DepositTokenSelectListProps): React.JSX.Element {
+export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSelectorProps): React.JSX.Element {
   const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
   const [hoveredAsset, setHoveredAsset] = useState<number | null>(null);
   const [selectedToken, setSelectedToken] = useState<XToken | null>(null);
@@ -125,13 +122,13 @@ export function DepositTokenSelectList({
 
   const handleTokenSelect = (token: XToken): void => {
     setSelectedToken(token);
-    onSelectionChange(token);
+    onChange(token);
   };
 
   const handleTokenDeselect = (): void => {
     setSelectedToken(null);
     setSelectedAsset(null);
-    onSelectionChange(null);
+    onChange(null);
     setOutsideClick(true);
     setTimeout(() => {
       setOutsideClick(false);
@@ -165,7 +162,7 @@ export function DepositTokenSelectList({
               isHoverDimmed={shouldDim}
               handleAssetClick={handleAssetClick}
               handleTokenDeselect={handleTokenDeselect}
-              handleTokenSelect={handleTokenSelect}
+              setSelectNetworkToken={handleTokenSelect}
               outsideClick={outsideClick}
             />
           </motion.div>

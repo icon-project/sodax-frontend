@@ -4,14 +4,25 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn, formatBalance } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
+import { hubAssets } from '@sodax/types';
 import { getUniqueByChain } from '@/lib/utils';
 import NetworkIcon from '@/components/shared/network-icon';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useSaveState } from '../../_stores/save-store-provider';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
+import { useBackendMoneyMarketAssetSuppliers } from '@sodax/dapp-kit';
 
-function UserInfo({ isVisible }: { isVisible: boolean }) {
+function UserInfo({ isVisible, token }: { isVisible: boolean; token: XToken | undefined }) {
+  const vault = token ? hubAssets[token.xChainId]?.[token.address]?.vault : undefined;
+  const reserveAddress = vault || undefined;
+
+  const { data: suppliers } = useBackendMoneyMarketAssetSuppliers({
+    reserveAddress,
+    offset: '0',
+    limit: '1000000',
+  });
+
   return (
     <motion.div
       className="content-stretch flex flex-col items-center justify-center"
@@ -20,7 +31,7 @@ function UserInfo({ isVisible }: { isVisible: boolean }) {
       transition={{ duration: 0.3, delay: isVisible ? 0.15 : 0 }}
     >
       <p className="font-['InterRegular'] font-bold leading-[1.4] relative shrink-0 text-clay-dark !text-(length:--body-small)">
-        237
+        {suppliers?.suppliers.length}
       </p>
       <p className="font-['InterRegular'] font-medium leading-[1.2] relative shrink-0 text-clay-light !text-[9px]">
         USERS
@@ -127,7 +138,7 @@ export default function AssetListItemHeader({
               >
                 <CurrencyLogo currency={tokens[0] || ({} as XToken)} hideNetwork />
               </motion.div>
-              <UserInfo isVisible={isExpanded} />
+              {tokens[0] && <UserInfo isVisible={isExpanded} token={tokens[0]} />}
             </div>
           </motion.div>
         </motion.div>

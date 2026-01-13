@@ -13,7 +13,7 @@ interface TokenAssetProps {
   isHovered: boolean;
   onClick: (e?: React.MouseEvent) => void;
   tokens?: XToken[];
-  handleTokenSelect: (token: XToken) => void;
+  setSelectNetworkToken: (network: XToken) => void;
 }
 
 export function TokenAsset({
@@ -22,7 +22,7 @@ export function TokenAsset({
   tokens,
   isHovered,
   isHoverDimmed,
-  handleTokenSelect,
+  setSelectNetworkToken,
 }: TokenAssetProps): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
   return (
@@ -38,7 +38,7 @@ export function TokenAsset({
           onClick={onClick}
         >
           {tokens && tokens.length > 1 ? (
-            <MultiAsset tokens={tokens} handleTokenSelect={handleTokenSelect} />
+            <MultiAsset tokens={tokens} setSelectNetworkToken={setSelectNetworkToken} />
           ) : (
             <SingleAsset token={tokens?.[0] || ({} as XToken)} amount={formattedBalance || '0'} />
           )}
