@@ -445,7 +445,7 @@ export class MigrationService {
     >
   > {
     try {
-      const intentResult = await this.createMigratebnUSDIntent(params, spokeProvider, unchecked, false as const);
+      const intentResult = await this.createMigratebnUSDIntent(params, spokeProvider, unchecked, false);
 
       if (!intentResult.ok) {
         return {
@@ -551,7 +551,7 @@ export class MigrationService {
     >
   > {
     try {
-      const txResult = await this.createMigrateIcxToSodaIntent(params, spokeProvider);
+      const txResult = await this.createMigrateIcxToSodaIntent(params, spokeProvider, false);
 
       if (!txResult.ok) {
         return {
@@ -629,7 +629,7 @@ export class MigrationService {
     >
   > {
     try {
-      const txResult = await this.createRevertSodaToIcxMigrationIntent(params, spokeProvider);
+      const txResult = await this.createRevertSodaToIcxMigrationIntent(params, spokeProvider, false);
 
       if (!txResult.ok) {
         return txResult;
@@ -706,7 +706,7 @@ export class MigrationService {
     >
   > {
     try {
-      const txResult = await this.createMigrateBalnIntent(params, spokeProvider);
+      const txResult = await this.createMigrateBalnIntent(params, spokeProvider, false);
 
       if (!txResult.ok) {
         return {

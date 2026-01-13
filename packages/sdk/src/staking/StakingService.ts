@@ -515,7 +515,7 @@ export class StakingService {
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[string, string], StakingError<'UNSTAKE_FAILED'> | RelayError>> {
     try {
-      const txResult = await this.createUnstakeIntent({ params, spokeProvider, raw: false as const });
+      const txResult = await this.createUnstakeIntent({ params, spokeProvider, raw: false });
 
       if (!txResult.ok) {
         return {
@@ -673,7 +673,7 @@ export class StakingService {
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[string, string], StakingError<'INSTANT_UNSTAKE_FAILED'> | RelayError>> {
     try {
-      const txResult = await this.createInstantUnstakeIntent({ params, spokeProvider, raw: false as const });
+      const txResult = await this.createInstantUnstakeIntent({ params, spokeProvider, raw: false });
 
       if (!txResult.ok) {
         return {
@@ -847,7 +847,7 @@ export class StakingService {
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[string, string], StakingError<'CLAIM_FAILED'> | RelayError>> {
     try {
-      const txResult = await this.createClaimIntent({ params, spokeProvider, raw: false as const });
+      const txResult = await this.createClaimIntent({ params, spokeProvider, raw: false });
 
       if (!txResult.ok) {
         return {
@@ -1004,7 +1004,7 @@ export class StakingService {
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   ): Promise<Result<[string, string], StakingError<'CANCEL_UNSTAKE_FAILED'> | RelayError>> {
     try {
-      const txResult = await this.createCancelUnstakeIntent({ params, spokeProvider, raw: false as const });
+      const txResult = await this.createCancelUnstakeIntent({ params, spokeProvider, raw: false });
 
       if (!txResult.ok) {
         return {
@@ -1147,7 +1147,7 @@ export class StakingService {
    * @returns Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>>
    */
   public async getStakingInfoFromSpoke(
-    spokeProvider: SpokeProvider,
+    spokeProvider: SpokeProviderType,
   ): Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
@@ -1224,7 +1224,7 @@ export class StakingService {
    * @returns Promise<Result<UnstakingInfo, StakingError<'INFO_FETCH_FAILED'>>>
    */
   public async getUnstakingInfo(
-    param: SpokeProvider | Address,
+    param: SpokeProviderType | Address,
   ): Promise<Result<UnstakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
     try {
       let userAddress: Address;
@@ -1351,7 +1351,7 @@ export class StakingService {
    * @returns Promise<Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }, StakingError<'INFO_FETCH_FAILED'>>>
    */
   public async getUnstakingInfoWithPenalty(
-    param: SpokeProvider | Address,
+    param: SpokeProviderType | Address,
   ): Promise<
     Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }, StakingError<'INFO_FETCH_FAILED'>>
   > {
