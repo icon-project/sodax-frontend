@@ -4,13 +4,18 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
-import type { XToken } from '@sodax/types';
+import type { IEvmWalletProvider, XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { parseUnits } from 'viem';
-import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
+import { waitForTransactionReceipt, type MoneyMarketWithdrawParams } from '@sodax/sdk';
 
-export function WithdrawButton({ token }: { token: XToken }) {
+export interface WithdrawButtonProps {
+  token: XToken;
+  onSuccess?: () => void;
+}
+
+export function WithdrawButton({ token, onSuccess }: WithdrawButtonProps) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const { selectedChainId } = useAppStore();
@@ -39,22 +44,26 @@ export function WithdrawButton({ token }: { token: XToken }) {
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleWithdraw = async () => {
-    if (!spokeProvider) {
-      console.error('spokeProvider is not available');
-      return;
-    }
-    if (!params) {
-      console.error('params is not available');
-      return;
-    }
+    if (!spokeProvider || !params) return;
+
     try {
-      await withdraw({
-        params,
-        spokeProvider,
-      });
-      setOpen(false);
+      const result = await withdraw({ params, spokeProvider });
+
+      // Use a direct type assertion to the exact template format
+      const txHash = result.value[0] as `0x${string}`;
+
+      // 1. We check if walletProvider exists to remove 'undefined'
+      // 2. We check for a unique property to confirm it's an EVM provider
+      if (walletProvider && 'sendTransaction' in walletProvider) {
+        // Inside this block, TS knows walletProvider is IEvmWalletProvider
+        // We can pass it directly if the SDK types match, or cast it specifically
+        await waitForTransactionReceipt(txHash as `0x${string}`, walletProvider as IEvmWalletProvider);
+
+        onSuccess?.();
+        setOpen(false);
+      }
     } catch (err) {
-      console.error('Error in handleWithdraw:', err);
+      console.error('Mutation failed!', err);
     }
   };
 
@@ -68,6 +77,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
+    console.log('🔄 handle approve...');
     if (!spokeProvider) {
       console.error('spokeProvider is not available');
       return;
