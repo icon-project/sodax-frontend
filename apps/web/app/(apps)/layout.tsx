@@ -5,6 +5,7 @@ import { Header } from '@/components/shared/header';
 import { partnerTabConfigs, RouteTabs } from '@/components/shared/route-tabs';
 import { SwapStoreProvider } from './swap/_stores/swap-store-provider';
 import { MigrationStoreProvider } from './migrate/_stores/migration-store-provider';
+import { SaveStoreProvider } from './save/_stores/save-store-provider';
 import { WalletModal } from '@/components/shared/wallet-modal2/wallet-modal';
 import TermsConfirmationModal from '@/components/shared/wallet-modal2/terms-confirmation-modal';
 import { ModalStoreProvider } from '@/stores/modal-store-provider';

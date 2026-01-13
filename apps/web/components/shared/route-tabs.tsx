@@ -1,8 +1,10 @@
+// apps/web/components/shared/route-tabs.tsx
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import RouteTabItem from '@/components/shared/route-tab-item';
 import { ArrowRightIcon, ArrowUpIcon } from '@/components/icons';
+import { useSaveStore } from '@/app/(apps)/save/_stores/save-store-provider';
 
 import type { TabIconType } from './tab-icon';
 
@@ -24,11 +26,11 @@ export const tabConfigs: TabConfig[] = [
     enabled: true,
   },
   {
-    value: 'savings',
-    type: 'savings',
-    label: 'Savings',
-    content: 'a quick savings',
-    enabled: false,
+    value: 'save',
+    type: 'save',
+    label: 'Save',
+    content: 'a quick save',
+    enabled: true,
   },
   {
     value: 'loans',
@@ -67,6 +69,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
   const current = tabValues.includes(lastSegment)
     ? lastSegment // e.g. "swap", "migrate", "home"
     : (usedTabs[0]?.value ?? 'migrate'); // fallback = first tab (Home for partner)
+  const tokenCount = useSaveStore(state => state.tokenCount);
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
@@ -83,7 +86,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
     mobileTabRefs.current[value] = el;
   };
 
-  const updateArrows = () => {
+  const updateArrows = useCallback(() => {
     const container = tabsContainerRef.current;
     const activeDesktop = desktopTabRefs.current[current];
     if (container && activeDesktop) {
@@ -102,23 +105,23 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
       const tabWidth = tabRect.width;
       setMobileArrowPosition(relativeLeft + tabWidth / 2 - 40);
     }
-  };
+  }, [current]);
 
   useEffect(() => {
     updateArrows();
-  }, [current]);
+  }, [updateArrows]);
 
   useEffect(() => {
     const onResize = () => updateArrows();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [current]);
+  }, [updateArrows]);
 
   return (
     <>
       <div
         ref={tabsContainerRef}
-        className="hidden md:flex md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-tl-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0%,_#EAD6D3_14.42%,_#F4ECEA_43.27%,_#F5F1EE_100%)] relative lg:mt-4 min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)]"
+        className="hidden md:flex md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-tl-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0px,_#EAD6D3_120px,_#F4ECEA_360px,_#F5F1EE_1000px)] relative lg:mt-4 min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)]"
         style={{ height: '-webkit-fill-available' }}
       >
         <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
@@ -140,6 +143,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
                 isMobile={false}
                 setRef={setDesktopTabRef(tab.value)}
                 enabled={tab.enabled}
+                badgeCount={tab.value === 'save' ? tokenCount : undefined}
               />
             );
           })}
@@ -168,6 +172,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
                     isMobile
                     setRef={setMobileTabRef(tab.value)}
                     enabled={tab.enabled}
+                    badgeCount={tab.value === 'save' ? tokenCount : undefined}
                   />
                 );
               })}

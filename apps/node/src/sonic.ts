@@ -164,6 +164,7 @@ async function borrow(token: Address, amount: bigint) {
     spokeProvider.chainConfig.chain.id,
     sodax.moneyMarket.data,
     sodax.config,
+    sodax.moneyMarket.config,
   );
   const approveHash = await SonicSpokeService.approveBorrow(wallet, borrowInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);
@@ -488,6 +489,7 @@ async function borrowTo(token: Hex, amount: bigint, to: Hex, spokeChainId: Spoke
     spokeChainId,
     sodax.moneyMarket.data,
     sodax.config,
+    sodax.moneyMarket.config,
   );
   const approveHash = await SonicSpokeService.approveBorrow(wallet, borrowInfo, spokeProvider);
   console.log('[approve] txHash', approveHash);

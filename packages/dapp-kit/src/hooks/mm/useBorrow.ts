@@ -1,66 +1,66 @@
-import type { SpokeChainId, XToken } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { parseUnits } from 'viem';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import type { SpokeProvider } from '@sodax/sdk';
+import type { MoneyMarketBorrowParams, MoneyMarketError, RelayErrorCode, SpokeProvider } from '@sodax/sdk';
+
 interface BorrowResponse {
   ok: true;
   value: [string, string];
 }
 
+export type UseBorrowParams = {
+  params: MoneyMarketBorrowParams;
+  spokeProvider: SpokeProvider;
+};
+
 /**
- * Hook for borrowing tokens from the Sodax money market.
+ * React hook for borrowing tokens in the Sodax money market protocol.
  *
- * This hook provides functionality to borrow tokens from the money market protocol,
- * handling the entire borrow process including transaction creation, submission,
- * and cross-chain communication.
+ * Encapsulates the async process to initiate a borrow transaction via the money market,
+ * handling transaction creation, submission, and cross-chain logic.
  *
- * @param {XToken} spokeToken - The token to borrow from the spoke chain. Must be an XToken with valid address and chain information.
- * @param {SpokeProvider} spokeProvider - The spoke provider to use for the borrow transaction. Must be a valid SpokeProvider instance.
- *
- * @returns {UseMutationResult<BorrowResponse, Error, string>} A mutation result object with the following properties:
- *   - mutateAsync: Function to execute the borrow transaction
- *   - isPending: Boolean indicating if a transaction is in progress
- *   - error: Error object if the last transaction failed, null otherwise
+ * @returns {UseMutationResult<
+ *   BorrowResponse,
+ *   MoneyMarketError<'CREATE_BORROW_INTENT_FAILED' | 'BORROW_UNKNOWN_ERROR' | RelayErrorCode>,
+ *   UseBorrowParams
+ * >} A React Query mutation result object containing:
+ *   - mutateAsync: (params: UseBorrowParams) => Promise<BorrowResponse>
+ *     Triggers the borrow action. Expects an object with valid borrow params and a `SpokeProvider`.
+ *   - isPending: `boolean` if a borrow transaction is in progress.
+ *   - error: `MoneyMarketError` if the transaction fails, or `null`.
  *
  * @example
  * ```typescript
- * const { mutateAsync: borrow, isPending, error } = useBorrow(spokeToken);
- * await borrow('100');
+ * const { mutateAsync: borrow, isPending, error } = useBorrow();
+ * await borrow({ params: borrowParams, spokeProvider });
  * ```
  *
  * @throws {Error} When:
- *   - spokeProvider is not available
- *   - Transaction execution fails
+ *   - `spokeProvider` is missing or invalid.
+ *   - The underlying borrow transaction fails.
  */
-export function useBorrow(
-  spokeToken: XToken,
-  spokeProvider: SpokeProvider | undefined,
-): UseMutationResult<BorrowResponse, Error, string> {
+export function useBorrow(): UseMutationResult<
+  BorrowResponse,
+  MoneyMarketError<'CREATE_BORROW_INTENT_FAILED' | 'BORROW_UNKNOWN_ERROR' | RelayErrorCode>,
+  UseBorrowParams
+> {
   const { sodax } = useSodaxContext();
 
-  return useMutation<BorrowResponse, Error, string>({
-    mutationFn: async (amount: string, toChainId?: SpokeChainId, toAddress?: string) => {
+  return useMutation<
+    BorrowResponse,
+    MoneyMarketError<'CREATE_BORROW_INTENT_FAILED' | 'BORROW_UNKNOWN_ERROR' | RelayErrorCode>,
+    UseBorrowParams
+  >({
+    mutationFn: async ({ params, spokeProvider }: UseBorrowParams) => {
       if (!spokeProvider) {
         throw new Error('spokeProvider is not found');
       }
 
-      const response = await sodax.moneyMarket.borrow(
-        {
-          token: spokeToken.address,
-          amount: parseUnits(amount, 18),
-          action: 'borrow',
-          toChainId: toChainId,
-          toAddress: toAddress,
-        },
-        spokeProvider,
-      );
+      const response = await sodax.moneyMarket.borrow(params, spokeProvider);
 
       if (!response.ok) {
-        throw new Error('Failed to borrow tokens');
+        throw response.error;
       }
 
-      console.log('Borrow transaction submitted:', response);
       return response;
     },
   });
