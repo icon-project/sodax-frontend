@@ -355,7 +355,7 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (spokeProvider instanceof StellarSpokeProvider && (params.action === 'supply' || params.action === 'repay')) {
+      if (isStellarSpokeProviderType(spokeProvider) && (params.action === 'supply' || params.action === 'repay')) {
         return {
           ok: true,
           value: await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider),
