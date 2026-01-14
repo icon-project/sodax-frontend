@@ -1,7 +1,6 @@
 'use client';
 
-import { Toaster as Sonner, type ToasterProps } from 'sonner';
-
+import { Toaster as Sonner, type ToasterProps, toast } from 'sonner';
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
@@ -31,4 +30,4 @@ const Toaster = ({ ...props }: ToasterProps) => {
   );
 };
 
-export { Toaster };
+export { Toaster, toast };

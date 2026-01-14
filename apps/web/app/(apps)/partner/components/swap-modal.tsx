@@ -18,8 +18,7 @@ import { useWalletProvider, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { ChainId } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { ChainSelectDropdown } from '@/components/shared/chain-select-dropdown';
-import { toast } from 'sonner';
-
+import { toast } from '@/components/ui/sonner';
 interface SwapModalProps {
   isOpen: boolean;
   onClose: () => void;
