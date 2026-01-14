@@ -2,7 +2,7 @@
 // Hook to connect all supported chains using Hana wallet
 
 import { useCallback, useMemo } from 'react';
-import { useMutation, type UseMutationResult } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useXConnectors, useXConnect, type XConnector } from '@sodax/wallet-sdk-react';
 import type { ChainType } from '@sodax/types';
 

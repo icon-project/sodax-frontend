@@ -85,7 +85,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   const xConnectors = useXConnectors(activeXChainType);
   const xAccounts = useXAccounts();
   const { connectAll, isPending: isConnectingAll } = useConnectAllWithHana();
-  const { disconnectAll, isPending: isDisconnectingAll, isAllConnected } = useDisconnectAllWithHana();
+  const { disconnectAll, isPending: isDisconnectingAll } = useDisconnectAllWithHana();
 
   // Check if any chain is connected
   const isAnyChainConnected = useMemo(() => {
