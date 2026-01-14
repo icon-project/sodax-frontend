@@ -76,25 +76,13 @@ export default function DepositOverview({
         {!isMobile && (
           <div className="w-32 h-42 right-0 top-0 absolute bg-gradient-to-l from-[#F5F2F2] to-[rgba(245, 242, 242, 0)] pointer-events-none" />
         )}
-        {!isMobile && (
+        {!isMobile && depositItems.length > 1 && (
           <>
             <CarouselPrevious className="outline-none h-full border-none shadow-none text-clay hover:text-espresso" />
             <CarouselNext className="outline-none h-full border-none shadow-none text-clay hover:text-espresso" />
           </>
         )}
       </Carousel>
-      <div className="mt-4 flex items-center justify-start gap-2">
-        {Array.from({ length: Math.max(count, depositItems.length) }).map((_, index) => (
-          <button
-            type="button"
-            key={index}
-            onClick={() => api?.scrollTo(index)}
-            className={cn('h-2 w-2 rounded-full bg-cream-white', {
-              'bg-yellow-dark': current === index + 1,
-            })}
-          />
-        ))}
-      </div>
       <WithdrawDialog
         open={isWithdrawDialogOpen}
         onOpenChange={setIsWithdrawDialogOpen}

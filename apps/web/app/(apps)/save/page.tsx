@@ -163,12 +163,12 @@ export default function SavingsPage() {
     >
       {hasDeposits ? (
         <motion.div className="w-full flex flex-col gap-4" variants={itemVariants}>
+          <DepositOverview depositItems={depositItems} tokenPrices={tokenPrices} onApiReady={handleCarouselApiReady} />
           <TotalSaveTokens
             tokensWithSupplyBalances={tokensWithSupplyBalances}
             depositItems={depositItems}
             onTokenClick={navigateToToken}
           />
-          <DepositOverview depositItems={depositItems} tokenPrices={tokenPrices} onApiReady={handleCarouselApiReady} />
         </motion.div>
       ) : (
         <motion.div className="inline-flex flex-col justify-start items-start gap-4" variants={itemVariants}>

@@ -77,7 +77,7 @@ export function DepositItemContent({ item, tokenPrices, onWithdrawClick }: Depos
                   {item.fiatValue}
                 </motion.p>
                 <ItemDescription className="flex justify-between flex-row w-full">
-                  <div className="flex gap-[2px] items-center -ml-[2px]">
+                  <div className="flex gap-[2px] items-center -ml-[2px] flex-wrap">
                     {item.networksWithFunds.map((network, idx) => (
                       <NetworkBalanceTooltip
                         key={`${network.networkId}-${idx}`}

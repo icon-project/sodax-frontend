@@ -22,9 +22,6 @@ export default function AssetListItemContent({
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
   const [isShowDeposits, setIsShowDeposits] = useState(false);
   const [selectedToken, setSelectedToken] = useState<XToken | null>(null);
-  useEffect(() => {
-    if (tokens.length === 1) setSelectedToken(tokens[0] as XToken);
-  }, [tokens]);
 
   const tokensWithBalances = useTokenWalletBalances(tokens);
 
