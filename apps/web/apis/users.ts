@@ -3,7 +3,7 @@
 // const BASE_URL = 'https://register-api.sodax.com/api';
 const BASE_URL = 'https://canary-api.sodax.com/v1/be/register';
 
-const SUPPORTED_CHAINS = ['EVM', 'SUI', 'STELLAR', 'SOLANA', 'INJECTIVE'];
+const SIGN_SUPPORTED_CHAINS = ['EVM', 'SUI', 'STELLAR', 'SOLANA'];
 
 export const registerUser = async ({
   address,
@@ -12,7 +12,7 @@ export const registerUser = async ({
   message,
 }: { address: string; signature: string; chainType: string; message: string }) => {
   try {
-    if (SUPPORTED_CHAINS.includes(chainType)) {
+    if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
       await fetch(`${BASE_URL}/users/register`, {
         method: 'POST',
         headers: {
@@ -29,7 +29,7 @@ export const registerUser = async ({
 
 export const getUser = async ({ address, chainType }: { address: string; chainType: string }) => {
   try {
-    if (SUPPORTED_CHAINS.includes(chainType)) {
+    if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
       const response = await fetch(`${BASE_URL}/users/${address}/chain/${chainType}`, {
         method: 'GET',
         headers: {
@@ -51,8 +51,7 @@ export const getUser = async ({ address, chainType }: { address: string; chainTy
 
 export const isRegisteredUser = async ({ address, chainType }: { address: string; chainType: string }) => {
   const user = await getUser({ address, chainType });
-
-  if (SUPPORTED_CHAINS.includes(chainType)) {
+  if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
     if (user) {
       return address.toLowerCase() === user.address.toLowerCase() && chainType === user.chain;
       // const { message, signature, address } = user;
