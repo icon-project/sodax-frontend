@@ -4,7 +4,7 @@ import type { XToken } from '@sodax/types';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useTokenWalletBalances } from '@/hooks/useTokenWalletBalances';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import DepositInputAmount from './deposit-input-amount';
 import { DepositTokenSelect } from './deposit-token-select';
 

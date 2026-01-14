@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { Carousel, CarouselContent, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
-import { cn } from '@/lib/utils';
 import type { DepositItemData } from '../page';
 import WithdrawDialog from './withdraw-dialog/withdraw-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,8 +18,6 @@ export default function DepositOverview({
   onApiReady,
 }: DepositOverviewProps): React.JSX.Element {
   const [api, setApi] = React.useState<CarouselApi>();
-  const [current, setCurrent] = React.useState(0);
-  const [count, setCount] = React.useState(0);
   const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = React.useState(false);
   const [selectedWithdrawItem, setSelectedWithdrawItem] = React.useState<DepositItemData | null>(null);
   const isMobile = useIsMobile();
@@ -28,24 +25,6 @@ export default function DepositOverview({
     if (!api) {
       return;
     }
-
-    const updateCount = (): void => {
-      const snapListLength = api.scrollSnapList().length;
-      setCount(snapListLength);
-      setCurrent(api.selectedScrollSnap() + 1);
-    };
-
-    updateCount();
-
-    api.on('select', () => {
-      setCurrent(api.selectedScrollSnap() + 1);
-    });
-
-    // Listen for reInit event which fires when items change
-    api.on('reInit', updateCount);
-  }, [api]);
-
-  React.useEffect(() => {
     onApiReady?.(api);
   }, [api, onApiReady]);
 
