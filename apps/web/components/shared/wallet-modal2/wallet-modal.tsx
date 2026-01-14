@@ -8,11 +8,18 @@ import type { ChainId, ChainType } from '@sodax/types';
 import { Separator } from '@/components/ui/separator';
 import { XIcon } from 'lucide-react';
 import { ArrowLeftIcon } from 'lucide-react';
-import { useXConnectors } from '@sodax/wallet-sdk-react';
+import { useXConnectors, useXAccounts } from '@sodax/wallet-sdk-react';
 import { WalletItem } from './wallet-item';
 import { AllSupportItem } from './all-support-item';
 import { isRegisteredUser } from '@/apis/users';
 import { getChainIcon, getChainName } from '@/constants/chains';
+import { useIsHanaInstalled } from '@/hooks/useIsHanaInstalled';
+import { useConnectAllWithHana } from '@/hooks/useConnectAllWithHana';
+import { useDisconnectAllWithHana } from '@/hooks/useDisconnectAllWithHana';
+import { ConnectAllWithHana } from './hana/connect-all-with-hana';
+import { InstallHanaBanner } from './hana/install-hana-banner';
+import { GetHanaForChain } from './hana/get-hana-for-chain';
+import { DisconnectAll } from './hana/disconnect-all';
 
 type WalletModalProps = {
   modalId?: MODAL_ID;
@@ -74,7 +81,37 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [hoveredChainType, setHoveredChainType] = useState<ChainType | undefined>(undefined);
   const [hoveredWalletId, setHoveredWalletId] = useState<string | undefined>(undefined);
+  const isHanaInstalled = useIsHanaInstalled();
   const xConnectors = useXConnectors(activeXChainType);
+  const xAccounts = useXAccounts();
+  const { connectAll, isPending: isConnectingAll } = useConnectAllWithHana();
+  const { disconnectAll, isPending: isDisconnectingAll, isAllConnected } = useDisconnectAllWithHana();
+
+  // Check if any chain is connected
+  const isAnyChainConnected = useMemo(() => {
+    return Object.values(xAccounts).some(account => !!account?.address);
+  }, [xAccounts]);
+
+  const isAnyTwoChainsConnected = useMemo(() => {
+    return Object.values(xAccounts).filter(account => !!account?.address).length >= 2;
+  }, [xAccounts]);
+
+  // Show "Connect All with Hana" when Hana is installed and no chains are connected
+  const showConnectAllWithHana = isHanaInstalled && !isAnyChainConnected;
+
+  // Show "Disconnect All with Hana" when Hana is installed and all chains are connected
+  const showDisconnectAll = isAnyTwoChainsConnected;
+
+  const handleConnectAllWithHana = async (): Promise<void> => {
+    const result = await connectAll();
+    if (result.successful.length > 0) {
+      handleClose();
+    }
+  };
+
+  const handleDisconnectAll = async (): Promise<void> => {
+    await disconnectAll();
+  };
 
   const handleToggleExpanded = (expanded: boolean): void => {
     setIsExpanded(expanded);
@@ -107,6 +144,10 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     return xConnectors;
   }, [xConnectors]);
 
+  const isNoWalletFound = useMemo(() => {
+    return sortedXConnectors.length === 0 && activeXChainType;
+  }, [sortedXConnectors, activeXChainType]);
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
@@ -116,26 +157,38 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
         {activeXChainType ? (
           <>
             <DialogTitle>
-              <div className="flex flex-row justify-between items-center">
-                <div
-                  data-property-1="Left default"
-                  className="w-6 h-6 bg-cream-white hover:bg-cherry-bright hover:text-white rounded-[80px] inline-flex justify-center items-center cursor-pointer transition-colors duration-200"
-                  onClick={() => setActiveXChainType(undefined)}
-                >
-                  <ArrowLeftIcon className="w-3 h-3" />
-                </div>
-                <div className="flex flex-row justify-between items-center gap-4">
-                  <div className="text-right justify-end text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
-                    Connect your {activeXChainType} wallet
+              <div className="flex flex-row justify-between items-center gap-3">
+                {!isNoWalletFound && (
+                  <div
+                    data-property-1="Left default"
+                    className="w-6 h-6 bg-cream-white hover:bg-cherry-bright hover:text-white rounded-[80px] inline-flex justify-center items-center cursor-pointer transition-colors duration-200"
+                    onClick={() => setActiveXChainType(undefined)}
+                  >
+                    <ArrowLeftIcon className="w-3 h-3" />
                   </div>
+                )}
+                <div className="flex flex-row justify-between items-center gap-4 w-full">
+                  {!isNoWalletFound ? (
+                    <div className="text-right justify-end text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
+                      Connect your {activeXChainType} wallet
+                    </div>
+                  ) : (
+                    <span className="w-full"></span>
+                  )}
                   <DialogClose asChild>
                     <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
                   </DialogClose>
                 </div>
               </div>
             </DialogTitle>
+            {isNoWalletFound && (
+              <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] text-clay">
+                No {activeXChainType} wallet found
+              </div>
+            )}
             <div className="w-full flex flex-col">
               <Separator className="h-1 bg-clay opacity-30" />
+              {isNoWalletFound && <GetHanaForChain chainType={activeXChainType} />}
               {sortedXConnectors.map(xConnector => (
                 <React.Fragment key={xConnector.id}>
                   <WalletItem
@@ -185,6 +238,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
             <div className=" justify-start text-clay-light font-medium font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
               You will need to connect your wallet to proceed.
             </div>
+
             <div>
               <Separator className="h-1 bg-clay opacity-30" />
               <div className="w-full flex flex-col">
@@ -237,6 +291,13 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                 <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
               </DialogClose>
             </DialogTitle>
+            {/* Connect All with Hana */}
+            {showConnectAllWithHana && (
+              <ConnectAllWithHana onClick={handleConnectAllWithHana} isPending={isConnectingAll} />
+            )}
+
+            {/* Disconnect All */}
+            {showDisconnectAll && <DisconnectAll onClick={handleDisconnectAll} isPending={isDisconnectingAll} />}
             <div className="w-full flex flex-col -mt-4">
               {chainGroups.map((chainGroup, index) => (
                 <React.Fragment key={chainGroup.chainType}>
@@ -267,6 +328,9 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
             </div>
           </>
         )}
+
+        {/* Hana wallet installation banner */}
+        {isHanaInstalled === false && <InstallHanaBanner />}
       </DialogContent>
     </Dialog>
   );
