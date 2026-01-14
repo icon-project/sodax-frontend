@@ -1,4 +1,3 @@
-// apps/demo/src/hooks/useReserveMetrics.ts
 import { formatUnits } from 'viem';
 
 import { hubAssets, type XToken } from '@sodax/types';

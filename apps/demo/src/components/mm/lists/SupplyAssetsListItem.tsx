@@ -44,6 +44,7 @@ export function SupplyAssetsListItem({
   const formattedDebt = metrics.userReserve
     ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
     : undefined;
+  console.log('formattedDebt:', formattedDebt);
 
   const availableToBorrow = !metrics.formattedReserve
     ? undefined
