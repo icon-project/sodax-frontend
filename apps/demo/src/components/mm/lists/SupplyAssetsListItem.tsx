@@ -28,23 +28,35 @@ export function SupplyAssetsListItem({
 }: SupplyAssetsListItemProps): ReactElement {
   const metrics = useReserveMetrics({
     token,
-    formattedReserves: formattedReserves,
+    formattedReserves,
     userReserves: userReserves as UserReserveData[],
   });
 
-  // Get aToken balance from the pre-fetched map
+  // 1. GET THE ADDRESS
   const aTokenAddress = metrics.formattedReserve?.aTokenAddress;
+
+  // 2. GET THE RAW BIGINT FROM THE MAP
   const aTokenBalance =
     aTokenAddress && isAddress(aTokenAddress) && aTokenBalancesMap
       ? aTokenBalancesMap.get(aTokenAddress as Address)
       : undefined;
 
-  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(4) : undefined;
+  // 3. THE FIX: ALWAYS USE 18 DECIMALS FOR aTOKENS
+  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(4) : '-';
+
+  // 4. OPTIONAL: FORMAT WALLET BALANCE (uses token's native decimals)
+  const formattedWallet = walletBalance ? Number(walletBalance).toFixed(4) : '-';
+
+  // console.log(`--- Debug: ${token.symbol} ---`, {
+  //   aTokenBalance: aTokenBalance?.toString(),
+  //   underlyingBalanceFromMetrics: metrics.userReserve?.underlyingAsset,
+  //   supplyBalanceUSD: metrics.supplyBalanceUSD,
+  //   tokenDecimals: token.decimals,
+  // });
 
   const formattedDebt = metrics.userReserve
     ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
     : undefined;
-  console.log('formattedDebt:', formattedDebt);
 
   const availableToBorrow = !metrics.formattedReserve
     ? undefined

@@ -94,7 +94,6 @@ export function SupplyAssetsList(): ReactElement {
   });
 
   const handleRefresh = async () => {
-    console.log('2. Parent: handleRefresh triggered!');
     await Promise.all([
       refetchFormattedReserves(),
       refetchBalances(),

@@ -9,6 +9,7 @@ import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { parseUnits } from 'viem';
 import { waitForTransactionReceipt, type MoneyMarketWithdrawParams } from '@sodax/sdk';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface WithdrawButtonProps {
   token: XToken;
@@ -19,6 +20,7 @@ export function WithdrawButton({ token, onSuccess }: WithdrawButtonProps) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const { selectedChainId } = useAppStore();
+  const queryClient = useQueryClient();
 
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
@@ -44,24 +46,24 @@ export function WithdrawButton({ token, onSuccess }: WithdrawButtonProps) {
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleWithdraw = async () => {
-    if (!spokeProvider || !params) return;
+    if (!spokeProvider || !params || !walletProvider) return;
 
     try {
       const result = await withdraw({ params, spokeProvider });
-
-      // Use a direct type assertion to the exact template format
       const txHash = result.value[0] as `0x${string}`;
 
-      // 1. We check if walletProvider exists to remove 'undefined'
-      // 2. We check for a unique property to confirm it's an EVM provider
-      if (walletProvider && 'sendTransaction' in walletProvider) {
-        // Inside this block, TS knows walletProvider is IEvmWalletProvider
-        // We can pass it directly if the SDK types match, or cast it specifically
-        await waitForTransactionReceipt(txHash as `0x${string}`, walletProvider as IEvmWalletProvider);
+      await waitForTransactionReceipt(txHash, walletProvider as IEvmWalletProvider);
 
-        onSuccess?.();
-        setOpen(false);
-      }
+      // 1. Give the RPC node a moment to update its state
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 2. BROAD INVALIDATION: Force every Money Market hook to refetch
+      // This targets 'aTokensBalances', 'userSummary', 'reserves', etc.
+      // This will force every Sodax hook currently on screen to refetch
+      await queryClient.invalidateQueries();
+
+      onSuccess?.();
+      setOpen(false);
     } catch (err) {
       console.error('Mutation failed!', err);
     }
