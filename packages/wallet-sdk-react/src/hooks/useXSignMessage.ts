@@ -8,6 +8,7 @@ import { InjectiveXService } from '@/xchains/injective';
 import { useXAccount } from './useXAccount';
 import { getEthereumAddress } from '@injectivelabs/sdk-ts';
 import { Wallet } from '@injectivelabs/wallet-base';
+import bs58 from 'bs58';
 
 type SignMessageReturnType = `0x${string}` | Uint8Array | string | undefined;
 
@@ -42,7 +43,7 @@ export function useXSignMessage(): UseMutationResult<
           if (!signMessage) {
             throw new Error('Solana wallet not connected');
           }
-          signature = await signMessage(new TextEncoder().encode(message));
+          signature = bs58.encode(await signMessage(new TextEncoder().encode(message)));
           break;
         }
 
