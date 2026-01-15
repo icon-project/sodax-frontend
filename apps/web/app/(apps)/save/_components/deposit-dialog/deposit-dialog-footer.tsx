@@ -62,6 +62,7 @@ export default function DepositDialogFooter({
 
   const handleDeposit = async (): Promise<void> => {
     const response = await supply(depositValue.toString());
+    console.log('response', response);
     if (response.ok) {
       setIsCompleted(true);
     }
