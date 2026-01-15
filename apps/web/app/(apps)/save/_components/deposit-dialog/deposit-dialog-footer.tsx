@@ -7,6 +7,7 @@ import type { ChainId, XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
 import { useMMApprove, useMMAllowance, useSupply, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 import { useSaveState, useSaveActions } from '../../_stores/save-store-provider';
 import { CheckIcon, Loader2Icon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -32,7 +33,11 @@ export default function DepositDialogFooter({
   const [isApproved, setIsApproved] = useState(false);
   const isMobile = useIsMobile();
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
-    params: { token: selectedToken?.address as string, amount: BigInt(depositValue.toString()), action: 'supply' },
+    params: {
+      token: selectedToken?.address as string,
+      amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
+      action: 'supply',
+    },
     spokeProvider,
   });
 
@@ -61,7 +66,11 @@ export default function DepositDialogFooter({
 
   const handleDeposit = async (): Promise<void> => {
     const response = await supply({
-      params: { token: selectedToken?.address as string, amount: BigInt(depositValue.toString()), action: 'supply' },
+      params: {
+        token: selectedToken?.address as string,
+        amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
+        action: 'supply',
+      },
       spokeProvider: spokeProvider as SpokeProvider,
     });
     if (response.ok) {
@@ -79,7 +88,11 @@ export default function DepositDialogFooter({
 
   const handleApprove = async (): Promise<void> => {
     const response = await approve({
-      params: { token: selectedToken?.address as string, amount: BigInt(depositValue.toString()), action: 'supply' },
+      params: {
+        token: selectedToken?.address as string,
+        amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
+        action: 'supply',
+      },
       spokeProvider: spokeProvider as SpokeProvider,
     });
     if (response) {

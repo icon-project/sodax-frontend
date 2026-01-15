@@ -16,6 +16,7 @@ import { CheckIcon } from 'lucide-react';
 import { cn, formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import type { SpokeProvider } from '@sodax/sdk';
+import { parseUnits } from 'viem';
 
 interface WithdrawDialogFooterProps {
   currentStep: number;
@@ -56,7 +57,11 @@ export default function WithdrawDialogFooter({
   // Money market withdraw hooks
   const withdrawAmountString = withdrawValue > 0 ? withdrawValue.toString() : '0';
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
-    params: { token: selectedToken?.address as string, amount: BigInt(withdrawAmountString), action: 'withdraw' },
+    params: {
+      token: selectedToken?.address as string,
+      amount: parseUnits(withdrawAmountString, selectedToken?.decimals ?? 18),
+      action: 'withdraw',
+    },
     spokeProvider: spokeProvider as SpokeProvider,
   });
   const { mutateAsync: approve, isPending: isApproving } = useMMApprove();
@@ -67,7 +72,11 @@ export default function WithdrawDialogFooter({
     if (!selectedToken || withdrawValue <= 0) return;
     try {
       await approve({
-        params: { token: selectedToken?.address as string, amount: BigInt(withdrawAmountString), action: 'withdraw' },
+        params: {
+          token: selectedToken?.address as string,
+          amount: parseUnits(withdrawAmountString, selectedToken?.decimals ?? 18),
+          action: 'withdraw',
+        },
         spokeProvider: spokeProvider as SpokeProvider,
       });
       setIsApproved(true);
@@ -80,7 +89,11 @@ export default function WithdrawDialogFooter({
     try {
       onWithdrawStart();
       const response = await withdraw({
-        params: { token: selectedToken?.address as string, amount: BigInt(withdrawAmountString), action: 'withdraw' },
+        params: {
+          token: selectedToken?.address as string,
+          amount: parseUnits(withdrawAmountString, selectedToken?.decimals ?? 18),
+          action: 'withdraw',
+        },
         spokeProvider: spokeProvider as SpokeProvider,
       });
       if (response?.ok) {
