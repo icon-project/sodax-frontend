@@ -1,6 +1,5 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
 import type { XToken } from '@sodax/types';
 import { PartnerFeeToken } from './partner-fee-token';
 
