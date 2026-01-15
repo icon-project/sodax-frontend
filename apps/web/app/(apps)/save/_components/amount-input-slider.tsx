@@ -72,14 +72,14 @@ export default function AmountInputSlider({
     <div className={cn('flex items-center gap-2 -mt-2', className)}>
       <CustomSlider
         defaultValue={[0]}
-        max={!isSimulate ? maxValue : 10000}
+        max={maxValue}
         step={0.0001}
         value={value}
         onValueChange={onValueChange}
-        className="h-10"
-        trackClassName="bg-cream-white"
+        className="h-10 data-[orientation=horizontal]:h-1"
+        trackClassName="bg-cream-white data-[orientation=horizontal]:h-1"
         rangeClassName={cn(
-          '[background-size:20px_20px]',
+          '[background-size:20px_20px] ',
           isSimulate
             ? 'bg-[linear-gradient(135deg,#EDE6E6_25%,#E3BEBB_25%,#E3BEBB_50%,#EDE6E6_50%,#EDE6E6_75%,#E3BEBB_75%,#E3BEBB_100%)]'
             : 'bg-cherry-bright',

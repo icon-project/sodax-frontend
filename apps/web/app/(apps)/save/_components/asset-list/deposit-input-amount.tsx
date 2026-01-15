@@ -116,9 +116,18 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
       <div className="flex gap-2 items-center h-12">
         {!sourceAddress || balance === 0n ? (
           <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso">
-            {depositValue > 0
-              ? `$${formatBalance((depositValue * (tokenPrice ?? 0)).toString(), tokenPrice ?? 0)} worth of ${selectedToken?.symbol}`
-              : 'Choose an amount to simulate yield.'}
+            {depositValue > 0 ? (
+              <div className="flex gap-1">
+                <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso font-bold">
+                  ${formatBalance((depositValue * (tokenPrice ?? 0)).toString(), tokenPrice ?? 0)}
+                </div>
+                <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-clay">
+                  worth of {selectedToken?.symbol}
+                </div>
+              </div>
+            ) : (
+              'Choose an amount to simulate yield.'
+            )}
           </div>
         ) : (
           <>
@@ -137,7 +146,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
           setProgress(value);
           setDepositValue(value[0] ?? 0);
         }}
-        maxValue={maxValue}
+        maxValue={isSimulate ? 10000 / (tokenPrice ?? 1) : maxValue}
         isSimulate={isSimulate}
         tokenSymbol={tokens[0]?.symbol || selectedToken?.symbol || ''}
         onInputChange={handleInputChange}
@@ -151,7 +160,9 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
             (
               Number(
                 formatUnits(
-                  isSimulate ? parseUnits('10000', selectedToken?.decimals ?? 0) : balance,
+                  isSimulate
+                    ? parseUnits((10000 / (tokenPrice ?? 1)).toString(), selectedToken?.decimals ?? 0)
+                    : balance,
                   selectedToken?.decimals ?? 0,
                 ),
               ) - depositValue

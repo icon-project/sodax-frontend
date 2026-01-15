@@ -53,6 +53,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleCurrencyAreaClick = (): void => {
+    if (isMobile) return;
     // Only show chain selector for bnUSD tokens
     if (isLegacybnUSDToken(currency) || isNewbnUSDToken(currency)) {
       setIsChainSelectorOpen(true);
