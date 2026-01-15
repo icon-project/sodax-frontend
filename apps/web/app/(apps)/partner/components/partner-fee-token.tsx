@@ -11,39 +11,43 @@ type PartnerFeeTokenProps = {
 };
 
 export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: PartnerFeeTokenProps) {
-  const numericAmount = Number(balance.balance);
+  const rawAmount = Number(balance.balance);
+  const displayAmount = rawAmount.toFixed(4);
   // IMPORTANT balance > 10 as partner must have sufficient funds to swap and pay fees
-  const hasBalance = numericAmount > 4;
+  const hasBalance = rawAmount > 5;
+
   const isThisSwapping = swappingSymbol === balance.currency.symbol;
   const isUsdc = balance.currency.symbol === 'USDC';
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl bg-clay-light/10 px-4 sm:px-6 py-4 mx-1">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl px-4 sm:px-2 py-4">
       {/* Left section: logo + info */}
       <div className="flex items-center gap-4 sm:gap-10">
-        <CurrencyLogo currency={balance.currency} hideNetwork />
-        {/* Asset name */}
-        <div className="flex flex-col">
-          <span className="text-sm text-clay-dark">Asset:</span>
-          <span className="text-sm text-clay-light">{balance.currency.symbol}</span>
+        {/* Logo */}
+        <div className="w-10 flex justify-center">
+          <CurrencyLogo currency={balance.currency} />
         </div>
+        {/* Asset */}
+        <div className="w-20 text-sm text-espresso">{balance.currency.symbol}</div>
         {/* Balance */}
-        <div className="flex flex-col">
-          <span className="text-sm text-clay-dark">Balance:</span>
-          <span className="sm:text-md text-sm text-clay-light break-all sm:break-normal">{balance.balance}</span>
-        </div>
+        <div className="w-32 text-sm text-clay-light break-all sm:break-normal"> {displayAmount}</div>
       </div>
-      <Button
-        variant="cherry"
-        className="w-full sm:w-auto h-11 disabled:opacity-80 disabled:cursor-not-allowed"
-        onClick={() => {
-          if (isUsdc) return;
-          onSwapToUsdc(balance);
-        }}
-        disabled={!hasBalance || isThisSwapping || isUsdc}
-      >
-        {isThisSwapping ? 'Swapping…' : isUsdc ? 'Already USDC' : 'Swap to USDC'}
-      </Button>
+      <div className="w-full sm:w-[140px] flex justify-end">
+        {isUsdc ? (
+          <div className="mix-blend-multiply px-4 h-11 flex items-center justify-center rounded-full bg-cream text-clay text-sm w-full">
+            USDC balance
+          </div>
+        ) : (
+          <Button
+            variant="cherry"
+            className="mix-blend-multiply w-full h-11"
+            onClick={() => onSwapToUsdc(balance)}
+            disabled={!hasBalance || isThisSwapping}
+          >
+            {isThisSwapping ? 'Swapping…' : 'Swap to USDC'}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

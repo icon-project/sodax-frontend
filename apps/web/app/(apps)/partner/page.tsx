@@ -42,23 +42,25 @@ export default function PartnerPage() {
       <div className="flex flex-col gap-2 w-full">
         <motion.div variants={itemVariants} className="w-full">
           {/* Title */}
-          <div className="flex items-baseline gap-1">
-            <span className="text-yellow-dark font-bold font-['InterRegular'] !text-(size:--app-title)">SODAX</span>
-            <span className="text-yellow-dark font-normal font-['Shrikhand'] !text-(size:--app-title)">
-              Partners Portal
+          <div className="flex items-baseline gap-1 flex-wrap">
+            <span className="mix-blend-multiply text-yellow-dark font-bold font-['InterRegular'] !text-(size:--app-title)">
+              Partner
+            </span>
+            <span className="mix-blend-multiply text-yellow-dark font-normal font-['Shrikhand'] !text-(size:--app-title)">
+              dashboard{' '}
             </span>
           </div>
 
           {/* Subtitle row */}
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-sm text-clay-light w-full mt-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-sm text-clay-light w-full">
             {address ? (
               <>
-                <span className="leading-snug">Manage your partner fee balances below.</span>
+                <span className="leading-snug">Monitor and manage fees earned through your SODAX partnership.</span>
                 <span className="leading-snug sm:text-right break-all sm:break-normal">
                   <span className="text-clay-medium">Connected wallet: </span>
-                  <span className="font-mono text-yellow-dark">
+                  <span className="font-mono font-bold">
                     {address.slice(0, 6)}...{address.slice(-4)}
-                  </span>
+                  </span>{' '}
                 </span>
               </>
             ) : (
@@ -67,6 +69,7 @@ export default function PartnerPage() {
           </div>
         </motion.div>
       </div>
+      <div className="w-full h-px bg-clay-light/30 my-2" />
 
       {/* Main content */}
       <motion.div variants={itemVariants}>
@@ -79,8 +82,6 @@ export default function PartnerPage() {
           />
         )}
       </motion.div>
-
-      {/* Swap modal */}
       {selectedBalance && (
         <SwapModal
           isOpen={isSwapModalOpen}

@@ -7,6 +7,7 @@ import { ArrowRightIcon, ArrowUpIcon } from '@/components/icons';
 import { useSaveStore } from '@/app/(apps)/save/_stores/save-store-provider';
 
 import type { TabIconType } from './tab-icon';
+import { cn } from '@/lib/utils';
 
 export interface TabConfig {
   value: string;
@@ -15,6 +16,7 @@ export interface TabConfig {
   content: string;
   enabled: boolean;
   href?: string;
+  showIcon?: boolean;
 }
 
 export const tabConfigs: TabConfig[] = [
@@ -49,7 +51,7 @@ export const tabConfigs: TabConfig[] = [
 ];
 
 export const partnerTabConfigs: TabConfig[] = [
-  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, href: '/apps/partner' },
+  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, showIcon: false },
 ];
 
 interface RouteTabsProps {
@@ -121,13 +123,19 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
     <>
       <div
         ref={tabsContainerRef}
-        className="hidden md:flex md:w-[264px] lg:w-[304px] p-[120px_32px] lg:p-[120px_56px] flex flex-col items-start gap-[8px] rounded-tl-[2rem] bg-[linear-gradient(180deg,_#DCBAB5_0px,_#EAD6D3_120px,_#F4ECEA_360px,_#F5F1EE_1000px)] relative lg:mt-4 min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)]"
-        style={{ height: '-webkit-fill-available' }}
+        className={cn(
+          'hidden md:flex p-[120px_32px] lg:p-[120px_56px] flex-col items-start gap-[8px] rounded-tl-[2rem]',
+          'bg-[linear-gradient(180deg,_#DCBAB5_0px,_#EAD6D3_120px,_#F4ECEA_360px,_#F5F1EE_1000px)]',
+          'relative lg:mt-4 min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)]',
+          isPartnerRoute
+            ? 'md:w-[320px] lg:w-[260px]' // ✅ wider partner sidebar
+            : 'md:w-[264px] lg:w-[304px]', // existing apps unchanged
+        )}
       >
         <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
           {usedTabs.map(tab => {
             const href = tab.href ?? `/${tab.value}`;
-
+            const isLink = Boolean(tab.href);
             const active =
               pathname === href ||
               pathname.startsWith(`${href}/`) || // handles subpaths like /apps/partner/stats
@@ -135,7 +143,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
             return (
               <RouteTabItem
                 key={tab.value}
-                href={`/${tab.value}`}
+                href={isLink ? href : undefined}
                 value={tab.value}
                 type={tab.type}
                 label={tab.label}
@@ -144,6 +152,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
                 setRef={setDesktopTabRef(tab.value)}
                 enabled={tab.enabled}
                 badgeCount={tab.value === 'save' ? tokenCount : undefined}
+                showIcon={tab.showIcon !== false}
               />
             );
           })}
@@ -160,11 +169,13 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-[96px] flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
               {usedTabs.map(tab => {
+                const href = tab.href ?? `/${tab.value}`;
+                const isLink = Boolean(tab.href);
                 const active = current === tab.value;
                 return (
                   <RouteTabItem
                     key={tab.value}
-                    href={`/${tab.value}`}
+                    href={isLink ? href : undefined}
                     value={tab.value}
                     type={tab.type}
                     label={tab.label}
@@ -173,6 +184,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
                     setRef={setMobileTabRef(tab.value)}
                     enabled={tab.enabled}
                     badgeCount={tab.value === 'save' ? tokenCount : undefined}
+                    showIcon={tab.showIcon !== false}
                   />
                 );
               })}

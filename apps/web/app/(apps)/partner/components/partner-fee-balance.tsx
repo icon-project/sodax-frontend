@@ -18,12 +18,9 @@ export type PartnerFeeBalancesProps = {
 
 export function PartnerFeeBalancesCard({ balances, isLoading, swappingSymbol, onSwapToUsdc }: PartnerFeeBalancesProps) {
   return (
-    <Card>
+    <main>
       {/* Header */}
-      <div className="flex items-center justify-between mx-4">
-        <h2 className="text-xl font-bold text-yellow-dark mx-1">Fee balances</h2>
-      </div>
-
+      <div className="text-lg font-semibold text-clay mb-6">Your fee balances</div>
       {/* Content */}
       {isLoading ? (
         // Skeleton while loading
@@ -36,18 +33,28 @@ export function PartnerFeeBalancesCard({ balances, isLoading, swappingSymbol, on
       ) : balances.length === 0 ? (
         <p className="text-sm text-clay-light px-4">No fee tokens found for this address.</p>
       ) : (
-        // Token list
-        <div className="space-y-2">
-          {balances.map(balance => (
-            <PartnerFeeToken
-              key={`${balance.currency.symbol}-${balance.currency.xChainId}`}
-              balance={balance}
-              swappingSymbol={swappingSymbol}
-              onSwapToUsdc={onSwapToUsdc}
-            />
-          ))}
-        </div>
+        <>
+          {/* Table header (desktop only) */}
+          <div className="hidden sm:flex items-center justify-between px-4 sm:px-2 mb-2 text-sm text-clay font-bold">
+            <div className="flex items-center gap-4 sm:gap-10">
+              <div className="w-10" />
+              <div className="w-20">Asset</div>
+              <div className="w-32">Balance</div>
+            </div>
+            <div className="w-[140px]" />
+          </div>
+          <div className="space-y-1">
+            {balances.map(balance => (
+              <PartnerFeeToken
+                key={`${balance.currency.symbol}-${balance.currency.xChainId}`}
+                balance={balance}
+                swappingSymbol={swappingSymbol}
+                onSwapToUsdc={onSwapToUsdc}
+              />
+            ))}
+          </div>
+        </>
       )}
-    </Card>
+    </main>
   );
 }
