@@ -36,9 +36,9 @@ export function PartnerFeeBalancesCard({ balances, isLoading, swappingSymbol, on
           {/* Table header (desktop only) */}
           <div className="hidden sm:flex items-center justify-between px-4 sm:px-2 mb-2 text-sm text-clay font-bold">
             <div className="flex items-center gap-4 sm:gap-10">
-              <div className="w-10" />
-              <div className="w-20">Asset</div>
-              <div className="w-32">Balance</div>
+              <div className="w-4"></div>
+              <div className="w-10">Asset</div>
+              <div className="w-30">Balance</div>
             </div>
             <div className="w-[140px]" />
           </div>

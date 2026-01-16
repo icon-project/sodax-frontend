@@ -20,17 +20,17 @@ export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: Partn
   const isUsdc = balance.currency.symbol === 'USDC';
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl px-4 sm:px-2 py-4">
+    <div className="flex flex-col gap-4 rounded-xl px-4 py-4 sm:py-3 sm:px-2 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center">
       {/* Left section: logo + info */}
-      <div className="flex items-center gap-4 sm:gap-10">
+      <div className="flex items-center gap-4">
         {/* Logo */}
         <div className="w-10 flex justify-center">
           <CurrencyLogo currency={balance.currency} />
         </div>
         {/* Asset */}
-        <div className="w-20 text-sm text-espresso">{balance.currency.symbol}</div>
+        <div className="w-15 text-sm text-espresso">{balance.currency.symbol}</div>
         {/* Balance */}
-        <div className="w-32 text-sm text-clay-light break-all sm:break-normal"> {displayAmount}</div>
+        <div className="w-20 text-sm text-clay-light break-all sm:break-normal"> {displayAmount}</div>
       </div>
       <div className="w-full sm:w-[140px] flex justify-end">
         {isUsdc ? (
