@@ -4,16 +4,23 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
-import type { XToken } from '@sodax/types';
+import type { IEvmWalletProvider, XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { parseUnits } from 'viem';
-import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
+import { waitForTransactionReceipt, type MoneyMarketWithdrawParams } from '@sodax/sdk';
+import { useQueryClient } from '@tanstack/react-query';
 
-export function WithdrawButton({ token }: { token: XToken }) {
+export interface WithdrawButtonProps {
+  token: XToken;
+  onSuccess?: () => void;
+}
+
+export function WithdrawButton({ token, onSuccess }: WithdrawButtonProps) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const { selectedChainId } = useAppStore();
+  const queryClient = useQueryClient();
 
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
@@ -39,22 +46,26 @@ export function WithdrawButton({ token }: { token: XToken }) {
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleWithdraw = async () => {
-    if (!spokeProvider) {
-      console.error('spokeProvider is not available');
-      return;
-    }
-    if (!params) {
-      console.error('params is not available');
-      return;
-    }
+    if (!spokeProvider || !params || !walletProvider) return;
+
     try {
-      await withdraw({
-        params,
-        spokeProvider,
-      });
+      const result = await withdraw({ params, spokeProvider });
+      const txHash = result.value[0] as `0x${string}`;
+
+      await waitForTransactionReceipt(txHash, walletProvider as IEvmWalletProvider);
+
+      // 1. Give the RPC node a moment to update its state
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // 2. BROAD INVALIDATION: Force every Money Market hook to refetch
+      // This targets 'aTokensBalances', 'userSummary', 'reserves', etc.
+      // This will force every Sodax hook currently on screen to refetch
+      await queryClient.invalidateQueries();
+
+      onSuccess?.();
       setOpen(false);
     } catch (err) {
-      console.error('Error in handleWithdraw:', err);
+      console.error('Mutation failed!', err);
     }
   };
 
@@ -68,6 +79,7 @@ export function WithdrawButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
+    console.log('🔄 handle approve...');
     if (!spokeProvider) {
       console.error('spokeProvider is not available');
       return;

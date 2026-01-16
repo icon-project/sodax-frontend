@@ -15,7 +15,7 @@ type AppStore = {
 
 export const useAppStore = create<AppStore>()(
   immer((set, get) => ({
-    selectedChainId: 'injective-1',
+    selectedChainId: '0xa4b1.arbitrum',
     selectChainId: (chainId: ChainId) => set({ selectedChainId: chainId }),
     isWalletModalOpen: false,
     openWalletModal: () => set({ isWalletModalOpen: true }),
