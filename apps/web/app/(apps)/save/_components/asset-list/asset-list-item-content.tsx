@@ -4,7 +4,7 @@ import type { XToken } from '@sodax/types';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useTokenWalletBalances } from '@/hooks/useTokenWalletBalances';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DepositInputAmount from './deposit-input-amount';
 import { DepositTokenSelect } from './deposit-token-select';
 
@@ -22,6 +22,12 @@ export default function AssetListItemContent({
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
   const [isShowDeposits, setIsShowDeposits] = useState(false);
   const [selectedToken, setSelectedToken] = useState<XToken | null>(null);
+
+  useEffect(() => {
+    if (tokens.length === 1) {
+      setSelectedToken(tokens[0] || null);
+    }
+  }, [tokens]);
 
   const tokensWithBalances = useTokenWalletBalances(tokens);
 
