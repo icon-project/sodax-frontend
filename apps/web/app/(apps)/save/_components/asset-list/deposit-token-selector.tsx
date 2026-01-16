@@ -57,7 +57,13 @@ function DepositTokenSelectItem({
   const renderGroupExpanded = (): React.JSX.Element => (
     <div className="flex -ml-5">
       <div className="blur-sm">
-        <TokenAsset {...shared} key={item.tokens?.[0]?.xChainId} tokens={item.tokens} onClick={() => {}} />
+        <TokenAsset
+          {...shared}
+          key={item.tokens?.[0]?.xChainId}
+          tokens={item.tokens}
+          onClick={() => {}}
+          className="pointer-events-none"
+        />
       </div>
 
       <div className="-ml-13">

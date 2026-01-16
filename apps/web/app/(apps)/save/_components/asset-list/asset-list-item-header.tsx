@@ -18,9 +18,13 @@ function UserInfo({ isVisible, token }: { isVisible: boolean; token: XToken | un
   const reserveAddress = vault || undefined;
 
   const { data: suppliers } = useBackendMoneyMarketAssetSuppliers({
-    reserveAddress,
-    offset: '0',
-    limit: '1000000',
+    params: {
+      reserveAddress,
+    },
+    pagination: {
+      offset: '0',
+      limit: '1000000',
+    },
   });
 
   return (

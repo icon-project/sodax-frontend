@@ -24,7 +24,7 @@ export function useTokenSupplyBalances(
     const { address } = useXAccount(t.xChainId);
     const walletProvider = useWalletProvider(t.xChainId);
     const spokeProvider = useSpokeProvider(t.xChainId, walletProvider);
-    const { data: userReserves } = useUserReservesData(spokeProvider, address);
+    const { data: userReserves } = useUserReservesData({ spokeProvider, address });
 
     const metrics = useReserveMetrics({
       token: t,

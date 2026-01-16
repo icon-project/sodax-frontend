@@ -1,4 +1,3 @@
-// apps/web/components/shared/route-tabs.tsx
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
@@ -70,21 +69,20 @@ export function RouteTabs(): React.JSX.Element {
   const updateArrows = useCallback(() => {
     const container = tabsContainerRef.current;
     const activeDesktop = desktopTabRefs.current[current];
+
     if (container && activeDesktop) {
       const containerRect = container.getBoundingClientRect();
       const tabRect = activeDesktop.getBoundingClientRect();
-      const relativeTop = tabRect.top - containerRect.top;
-      setArrowPosition(relativeTop - 30);
+      setArrowPosition(tabRect.top - containerRect.top - 30);
     }
 
     const mContainer = mobileTabsContainerRef.current;
     const activeMobile = mobileTabRefs.current[current];
+
     if (mContainer && activeMobile) {
       const mobileRect = mContainer.getBoundingClientRect();
       const tabRect = activeMobile.getBoundingClientRect();
-      const relativeLeft = tabRect.left - mobileRect.left;
-      const tabWidth = tabRect.width;
-      setMobileArrowPosition(relativeLeft + tabWidth / 2 - 40);
+      setMobileArrowPosition(tabRect.left - mobileRect.left + tabRect.width / 2 - 40);
     }
   }, [current]);
 
@@ -93,7 +91,26 @@ export function RouteTabs(): React.JSX.Element {
   }, [updateArrows]);
 
   useEffect(() => {
-    const onResize = () => updateArrows();
+    const onResize = () => {
+      const container = tabsContainerRef.current;
+      const activeDesktop = desktopTabRefs.current[current];
+
+      if (container && activeDesktop) {
+        const containerRect = container.getBoundingClientRect();
+        const tabRect = activeDesktop.getBoundingClientRect();
+        setArrowPosition(tabRect.top - containerRect.top - 30);
+      }
+
+      const mContainer = mobileTabsContainerRef.current;
+      const activeMobile = mobileTabRefs.current[current];
+
+      if (mContainer && activeMobile) {
+        const mobileRect = mContainer.getBoundingClientRect();
+        const tabRect = activeMobile.getBoundingClientRect();
+        setMobileArrowPosition(tabRect.left - mobileRect.left + tabRect.width / 2 - 40);
+      }
+    };
+
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, [updateArrows]);
@@ -131,9 +148,9 @@ export function RouteTabs(): React.JSX.Element {
         />
       </div>
 
-      <div className="md:hidden fixed -bottom-24 left-0 right-0 z-50 h-[96px]">
+      <div className="md:hidden fixed -bottom-24 left-0 right-0 z-50 h-24">
         <div className="relative">
-          <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-[96px] flex">
+          <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-24 flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
               {tabConfigs.map(tab => {
                 const active = current === tab.value;
