@@ -1,5 +1,5 @@
 import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
-import { SwapService, MigrationService, BackendApiService, BridgeService, StakingService } from '../../index.js';
+import { SwapService, MigrationService, BackendApiService, BridgeService, StakingService, PartnerFeeClaimService } from '../../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
 import type { HttpUrl } from '@sodax/types';
 import type {
@@ -37,6 +37,7 @@ export class Sodax {
   public readonly backendApi: BackendApiService; // backend API service enabling backend API endpoints
   public readonly bridge: BridgeService; // Bridge service enabling cross-chain transfers
   public readonly staking: StakingService; // Staking service enabling SODA staking operations
+  public readonly partnerFeeClaim: PartnerFeeClaimService; // Partner Fee Claim service for partner fee operations
   public readonly config: ConfigService; // Config service enabling configuration data fetching from the backend API or fallbacking to default values
 
   public readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
@@ -115,6 +116,11 @@ export class Sodax {
       hubProvider: this.hubProvider,
       relayerApiEndpoint: this.relayerApiEndpoint,
       configService: this.config,
+    });
+    this.partnerFeeClaim = new PartnerFeeClaimService({
+      config: config?.swaps,
+      configService: this.config,
+      hubProvider: this.hubProvider,
     });
   }
 
