@@ -171,7 +171,7 @@ export class PartnerFeeClaimService {
         // When allowFailure: true, results have status and result properties
         let balance: bigint;
         if (balanceResult?.status === 'success' && balanceResult.result !== undefined) {
-          balance = balanceResult.result;
+          balance = balanceResult.result as bigint;
         } else if (balanceResult?.status === 'failure') {
           console.warn(
             `[PartnerFeeClaimService] Balance query failed for ${entry.hubAsset.symbol} (${entry.assetAddress}):`,
@@ -392,17 +392,18 @@ export class PartnerFeeClaimService {
       // Call createIntentAutoSwap
       const rawTx = {
         from: walletAddress as Address,
+
         to: this.config.protocolIntentsContract,
         value: 0n,
         data: encodeFunctionData({
           abi: ProtocolIntentsAbi,
           functionName: 'createIntentAutoSwap',
-          args: [walletAddress, params.fromToken, params.amount, minOutputAmount],
+          args: [walletAddress as Address, params.fromToken, params.amount, minOutputAmount],
         }),
       };
-
-      const txHash = await spokeProvider.walletProvider.sendTransaction(rawTx);
-
+      //TODO make it type safe, remove any
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      const txHash = await (spokeProvider.walletProvider as any).sendTransaction(rawTx);
       // Wait for transaction receipt
       const receipt = await spokeProvider.publicClient.waitForTransactionReceipt({
         hash: txHash as `0x${string}`,
