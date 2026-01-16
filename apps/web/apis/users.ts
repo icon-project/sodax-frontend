@@ -1,7 +1,7 @@
 // import { recoverMessageAddress } from 'viem';
-
-// const BASE_URL = 'https://register-api.sodax.com/api';
-const BASE_URL = 'https://canary-api.sodax.com/v1/be/register';
+import bs58 from 'bs58';
+const BASE_URL = 'https://register-api.sodax.com/api';
+// const BASE_URL = 'https://canary-api.sodax.com/v1/be/register';
 
 const SIGN_SUPPORTED_CHAINS = ['EVM', 'SUI', 'STELLAR', 'SOLANA'];
 
@@ -18,7 +18,12 @@ export const registerUser = async ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address, signature, message, chain: chainType }),
+        body: JSON.stringify({
+          address,
+          signature: chainType === 'SOLANA' ? bs58.encode(new TextEncoder().encode(signature)) : signature,
+          message,
+          chain: chainType,
+        }),
       });
       // return await response.json();
     } else {
