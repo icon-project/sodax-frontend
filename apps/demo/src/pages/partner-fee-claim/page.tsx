@@ -71,7 +71,8 @@ export default function PartnerFeeClaimPage() {
       }
 
       console.log('[PartnerFeeClaimPage] Fetching balances for address:', queryAddress);
-      const result = await sodax.partnerFeeClaim.fetchAssetsBalances(spokeProvider, queryAddress as Address);
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
+      const result = await sodax.partnerFeeClaim.fetchAssetsBalances(spokeProvider as any, queryAddress as Address);
 
       if (!result.ok) {
         console.error('[PartnerFeeClaimPage] Error fetching balances:', result.error);
@@ -83,7 +84,10 @@ export default function PartnerFeeClaimPage() {
       console.log('[PartnerFeeClaimPage] Balances result:', result.value);
       console.log('[PartnerFeeClaimPage] Balances map size:', result.value.size);
       console.log('[PartnerFeeClaimPage] Balances array length:', Array.from(result.value.values()).length);
-      console.log('[PartnerFeeClaimPage] Non-zero balances:', Array.from(result.value.values()).filter(a => a.balance > 0n).length);
+      console.log(
+        '[PartnerFeeClaimPage] Non-zero balances:',
+        Array.from(result.value.values()).filter(a => a.balance > 0n).length,
+      );
 
       setBalances(result.value);
     } catch (err) {
@@ -111,10 +115,10 @@ export default function PartnerFeeClaimPage() {
         setApproveError('PartnerFeeClaimService not initialized');
         return;
       }
-
       const result = await sodax.partnerFeeClaim.isTokenApproved(
         approveTokenAddress.trim() as Address,
-        spokeProvider,
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
+        spokeProvider as any,
       );
 
       if (!result.ok) {
@@ -148,7 +152,8 @@ export default function PartnerFeeClaimPage() {
 
       const result = await sodax.partnerFeeClaim.approveToken(
         approveTokenAddress.trim() as Address,
-        spokeProvider,
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
+        spokeProvider as any,
       );
 
       if (!result.ok) {
@@ -190,7 +195,8 @@ export default function PartnerFeeClaimPage() {
           dstChain,
           dstAddress: dstAddress.trim(),
         },
-        spokeProvider,
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
+        spokeProvider as any,
       );
 
       if (!result.ok) {
@@ -237,7 +243,8 @@ export default function PartnerFeeClaimPage() {
           fromToken: swapFromToken.trim() as Address,
           amount,
         },
-        spokeProvider,
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
+        spokeProvider as any,
       );
 
       if (!result.ok) {
@@ -245,7 +252,7 @@ export default function PartnerFeeClaimPage() {
         return;
       }
 
-      setSwapSuccess(`Swap executed successfully! Intent: ${result.value.intent_id || 'N/A'}`);
+      setSwapSuccess(`Swap executed successfully! Intent: ${result.value.intent_hash || 'N/A'}`);
     } catch (err) {
       setSwapError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
@@ -289,14 +296,10 @@ export default function PartnerFeeClaimPage() {
               {loading ? 'Loading...' : 'Fetch Balances'}
             </Button>
 
-            {error && (
-              <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
-                {error}
-              </div>
-            )}
+            {error && <div className="p-3 bg-negative border border-red rounded-lg text-black text-sm">{error}</div>}
 
             {!spokeProvider && (
-              <div className="p-3 bg-yellow-500/20 border border-yellow-500/50 rounded-lg text-yellow-200 text-sm">
+              <div className="p-3 bg-negative border border-negative rounded-lg text-black text-sm">
                 Please connect your Sonic wallet to use this feature
               </div>
             )}
@@ -390,18 +393,21 @@ export default function PartnerFeeClaimPage() {
                 </select>
               )}
               {isApproved !== null && (
-                <p className={`text-sm ${isApproved ? 'text-green-500' : 'text-yellow-500'}`}>
+                <p className={`text-sm ${isApproved ? 'text-green-500' : 'text-negative'}`}>
                   {isApproved ? '✓ Token is already approved' : 'Token is not approved'}
                 </p>
               )}
             </div>
 
-            <Button onClick={handleApproveToken} disabled={approveLoading || !spokeProvider || !approveTokenAddress.trim()}>
+            <Button
+              onClick={handleApproveToken}
+              disabled={approveLoading || !spokeProvider || !approveTokenAddress.trim()}
+            >
               {approveLoading ? 'Approving...' : 'Approve Token'}
             </Button>
 
             {approveError && (
-              <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+              <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-black text-sm break-all">
                 {approveError}
               </div>
             )}
@@ -464,7 +470,7 @@ export default function PartnerFeeClaimPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setDstAddress(sonicAccount.address)}
+                  onClick={() => setDstAddress(sonicAccount.address ?? '')}
                   className="text-xs"
                 >
                   Use Connected Wallet
@@ -486,7 +492,7 @@ export default function PartnerFeeClaimPage() {
             )}
 
             {setPreferenceSuccess && (
-              <div className="p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm">
+              <div className="p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-black text-sm">
                 {setPreferenceSuccess}
               </div>
             )}
@@ -527,7 +533,8 @@ export default function PartnerFeeClaimPage() {
                   <option value="">Select from balances...</option>
                   {balancesArray.map(asset => (
                     <option key={asset.address} value={asset.address}>
-                      {asset.symbol} - Balance: {formatUnits(asset.balance, asset.decimal)} ({asset.address.slice(0, 10)}...{asset.address.slice(-8)})
+                      {asset.symbol} - Balance: {formatUnits(asset.balance, asset.decimal)} (
+                      {asset.address.slice(0, 10)}...{asset.address.slice(-8)})
                     </option>
                   ))}
                 </select>
@@ -544,7 +551,8 @@ export default function PartnerFeeClaimPage() {
                 onChange={e => setSwapAmount(e.target.value)}
                 step="any"
               />
-              {swapFromToken && balancesArray.length > 0 && (
+              {swapFromToken &&
+                balancesArray.length > 0 &&
                 (() => {
                   const token = balancesArray.find(a => a.address.toLowerCase() === swapFromToken.toLowerCase());
                   if (token) {
@@ -563,8 +571,7 @@ export default function PartnerFeeClaimPage() {
                     );
                   }
                   return null;
-                })()
-              )}
+                })()}
             </div>
 
             <Button
@@ -581,7 +588,7 @@ export default function PartnerFeeClaimPage() {
             )}
 
             {swapSuccess && (
-              <div className="p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm">
+              <div className="p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-black text-sm">
                 {swapSuccess}
               </div>
             )}
@@ -591,4 +598,3 @@ export default function PartnerFeeClaimPage() {
     </main>
   );
 }
-
