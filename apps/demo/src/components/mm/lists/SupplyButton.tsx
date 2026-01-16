@@ -35,6 +35,7 @@ export function SupplyButton({ token }: { token: XToken }) {
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleSupply = async () => {
+    console.log('handlesupply called with params:', params);
     if (!spokeProvider) {
       console.error('spokeProvider is not available');
       return;
@@ -83,7 +84,8 @@ export function SupplyButton({ token }: { token: XToken }) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
+          variant="cherry"
+          size="sm"
           onClick={() => {
             resetError?.();
             resetApproveError?.();

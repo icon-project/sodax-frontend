@@ -12,6 +12,8 @@ import type {
   GetAddressType,
   Result,
   StellarSpokeProviderType,
+  EvmSpokeProviderType,
+  SonicSpokeProviderType,
 } from '../shared/types.js';
 import {
   encodeContractCalls,
@@ -23,15 +25,15 @@ import {
   WalletAbstractionService,
   SonicSpokeService,
   SonicSpokeProvider,
-  EvmSpokeProvider,
   type EvmHubProvider,
   type SpokeProvider,
+  type SpokeProviderType,
   encodeAddress,
   EvmAssetManagerService,
-  StellarSpokeProvider,
   StellarSpokeService,
   type RelayError,
 } from '../index.js';
+import { isEvmSpokeProviderType, isSonicSpokeProviderType, isStellarSpokeProviderType } from '../shared/guards.js';
 import { DEFAULT_RELAY_TX_TIMEOUT } from '../shared/constants.js';
 import { type HttpUrl, type XToken, type SpokeChainId, getIntentRelayChainId, type HubAssetInfo } from '@sodax/types';
 import { getHubChainConfig, type ConfigService } from '../shared/config/ConfigService.js';
@@ -138,7 +140,7 @@ export class StakingService {
    * @param spokeProvider - The spoke provider
    * @returns {Promise<Result<boolean, StakingError<'ALLOWANCE_CHECK_FAILED'>>>}
    */
-  public async isAllowanceValid<S extends SpokeProvider>({
+  public async isAllowanceValid<S extends SpokeProviderType>({
     params,
     spokeProvider,
   }: Prettify<{ params: StakingParams; spokeProvider: S }>): Promise<
@@ -156,11 +158,11 @@ export class StakingService {
         invariant(targetToken, 'Target token not found');
 
         // For regular EVM chains (non-Sonic), check ERC20 allowance against assetManager
-        if (spokeProvider instanceof EvmSpokeProvider) {
+        if (isEvmSpokeProviderType(spokeProvider)) {
           const allowanceResult = await Erc20Service.isAllowanceValid(
             targetToken,
             params.amount,
-            walletAddress as GetAddressType<EvmSpokeProvider>,
+            walletAddress as GetAddressType<EvmSpokeProviderType>,
             spokeProvider.chainConfig.addresses.assetManager,
             spokeProvider,
           );
@@ -182,13 +184,13 @@ export class StakingService {
         }
 
         // For Sonic chain, check ERC20 allowance against userRouter
-        if (spokeProvider instanceof SonicSpokeProvider) {
+        if (isSonicSpokeProviderType(spokeProvider)) {
           const userRouter = await SonicSpokeService.getUserRouter(walletAddress as Address, spokeProvider);
 
           const allowanceResult = await Erc20Service.isAllowanceValid(
             targetToken,
             params.amount,
-            walletAddress as GetAddressType<SonicSpokeProvider>,
+            walletAddress as GetAddressType<SonicSpokeProviderType>,
             userRouter,
             spokeProvider,
           );
@@ -209,7 +211,7 @@ export class StakingService {
           };
         }
 
-        if (spokeProvider instanceof StellarSpokeProvider) {
+        if (isStellarSpokeProviderType(spokeProvider)) {
           return {
             ok: true,
             value: await StellarSpokeService.hasSufficientTrustline(targetToken, params.amount, spokeProvider),
@@ -249,7 +251,7 @@ export class StakingService {
    * @param raw - Whether to return raw transaction data
    * @returns Promise<Result<TxReturnType<S, R>, StakingError<'APPROVAL_FAILED'>>>
    */
-  public async approve<S extends SpokeProvider, R extends boolean = false>({
+  public async approve<S extends SpokeProviderType, R extends boolean = false>({
     params,
     spokeProvider,
     raw,
@@ -268,7 +270,7 @@ export class StakingService {
         invariant(targetToken, 'Target token not found');
 
         // For regular EVM chains (non-Sonic), approve against assetManager
-        if (spokeProvider instanceof EvmSpokeProvider) {
+        if (isEvmSpokeProviderType(spokeProvider)) {
           const result = await Erc20Service.approve(
             targetToken,
             params.amount,
@@ -284,9 +286,9 @@ export class StakingService {
         }
 
         // For Sonic chain, approve against userRouter
-        if (spokeProvider instanceof SonicSpokeProvider) {
+        if (isSonicSpokeProviderType(spokeProvider)) {
           const userRouter = await SonicSpokeService.getUserRouter(
-            walletAddress as GetAddressType<SonicSpokeProvider>,
+            walletAddress as GetAddressType<SonicSpokeProviderType>,
             spokeProvider,
           );
 
@@ -298,7 +300,7 @@ export class StakingService {
           };
         }
 
-        if (spokeProvider instanceof StellarSpokeProvider) {
+        if (isStellarSpokeProviderType(spokeProvider)) {
           const result = await StellarSpokeService.requestTrustline(targetToken, params.amount, spokeProvider, raw);
           return {
             ok: true,
@@ -419,7 +421,7 @@ export class StakingService {
    * @param raw - Whether to return the raw transaction data (default: false)
    * @returns Promise<Result<TxReturnType<S, R>, StakingError<'STAKE_FAILED'>> & { data?: { address: string; payload: Hex } }>
    */
-  async createStakeIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
+  async createStakeIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>({
     params,
     spokeProvider,
     raw,
@@ -576,7 +578,7 @@ export class StakingService {
    * @param raw - Whether to return the raw transaction data (default: false)
    * @returns Promise<Result<TxReturnType<S, R>, StakingError<'UNSTAKE_FAILED'>> & { data?: { address: string; payload: Hex } }>
    */
-  async createUnstakeIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
+  async createUnstakeIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>({
     params,
     spokeProvider,
     raw,
@@ -644,7 +646,12 @@ export class StakingService {
    * @param params - The unstake parameters
    * @returns The encoded contract call data
    */
-  public buildUnstakeData(hubWallet: Address, params: UnstakeParams, xSoda: Address, underlyingSodaAmount: bigint): Hex {
+  public buildUnstakeData(
+    hubWallet: Address,
+    params: UnstakeParams,
+    xSoda: Address,
+    underlyingSodaAmount: bigint,
+  ): Hex {
     const hubConfig = getHubChainConfig();
     const stakedSoda = hubConfig.addresses.stakedSoda;
     const calls: EvmContractCall[] = [];
@@ -727,7 +734,7 @@ export class StakingService {
    * @param raw - Whether to return the raw transaction data (default: false)
    * @returns Promise<Result<TxReturnType<S, R>, StakingError<'INSTANT_UNSTAKE_FAILED'>> & { data?: { address: string; payload: Hex } }>
    */
-  async createInstantUnstakeIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
+  async createInstantUnstakeIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>({
     params,
     spokeProvider,
     raw,
@@ -901,7 +908,7 @@ export class StakingService {
    * @param raw - Whether to return the raw transaction data (default: false)
    * @returns Promise<Result<TxReturnType<S, R>, StakingError<'CLAIM_FAILED'>> & { data?: { address: string; payload: Hex } }>
    */
-  async createClaimIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
+  async createClaimIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>({
     params,
     spokeProvider,
     raw,
@@ -1058,7 +1065,7 @@ export class StakingService {
    * @param raw - Whether to return the raw transaction data (default: false)
    * @returns Promise<Result<TxReturnType<S, R>, StakingError<'CANCEL_UNSTAKE_FAILED'>> & { data?: { address: string; payload: Hex } }>
    */
-  async createCancelUnstakeIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
+  async createCancelUnstakeIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>({
     params,
     spokeProvider,
     raw,
@@ -1140,7 +1147,7 @@ export class StakingService {
    * @returns Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>>
    */
   public async getStakingInfoFromSpoke(
-    spokeProvider: SpokeProvider,
+    spokeProvider: SpokeProviderType,
   ): Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
@@ -1217,7 +1224,7 @@ export class StakingService {
    * @returns Promise<Result<UnstakingInfo, StakingError<'INFO_FETCH_FAILED'>>>
    */
   public async getUnstakingInfo(
-    param: SpokeProvider | Address,
+    param: SpokeProviderType | Address,
   ): Promise<Result<UnstakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
     try {
       let userAddress: Address;
@@ -1344,7 +1351,7 @@ export class StakingService {
    * @returns Promise<Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }, StakingError<'INFO_FETCH_FAILED'>>>
    */
   public async getUnstakingInfoWithPenalty(
-    param: SpokeProvider | Address,
+    param: SpokeProviderType | Address,
   ): Promise<
     Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }, StakingError<'INFO_FETCH_FAILED'>>
   > {

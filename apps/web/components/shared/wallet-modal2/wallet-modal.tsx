@@ -8,7 +8,7 @@ import type { ChainId, ChainType } from '@sodax/types';
 import { Separator } from '@/components/ui/separator';
 import { XIcon } from 'lucide-react';
 import { ArrowLeftIcon } from 'lucide-react';
-import { useXConnectors } from '@sodax/wallet-sdk-react';
+import { useXAccount, useXConnectors } from '@sodax/wallet-sdk-react';
 import { WalletItem } from './wallet-item';
 import { AllSupportItem } from './all-support-item';
 import { isRegisteredUser } from '@/apis/users';
@@ -76,6 +76,12 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   const [hoveredWalletId, setHoveredWalletId] = useState<string | undefined>(undefined);
   const xConnectors = useXConnectors(activeXChainType);
 
+  const modalData = useModalStore(state => state.modals[modalId]?.modalData) as
+    | { primaryChainType: ChainType; xChainId?: ChainId; isExpanded: boolean }
+    | undefined;
+  const xAccount = useXAccount(modalData?.primaryChainType);
+  const isConnected = Boolean(xAccount?.address);
+
   const handleToggleExpanded = (expanded: boolean): void => {
     setIsExpanded(expanded);
   };
@@ -86,13 +92,11 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     setActiveXChainType(undefined);
   };
 
-  const modalData = useModalStore(state => state.modals[modalId]?.modalData) as
-    | { primaryChainType: ChainType; xChainId?: ChainId; isExpanded: boolean }
-    | undefined;
+  const chainName = modalData?.xChainId ? getChainName(modalData.xChainId) : '';
+
+  const title = isConnected ? `${chainName} connected` : `Connect ${chainName}`;
 
   const selectedChainIcon = modalData?.xChainId ? getChainIcon(modalData.xChainId) : undefined;
-
-  const title = modalData?.xChainId && `Connect ${getChainName(modalData.xChainId)}`;
 
   const primaryChainGroups = useMemo(
     () => chainGroups.filter(chainGroup => chainGroup.chainType === (modalData?.primaryChainType || 'EVM')),
@@ -183,7 +187,9 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
               </DialogClose>
             </DialogTitle>
             <div className=" justify-start text-clay-light font-medium font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
-              You will need to connect your wallet to proceed.
+              {isConnected
+                ? "You're also auto-connected to other EVM networks."
+                : 'You will need to connect your wallet to proceed.'}
             </div>
             <div>
               <Separator className="h-1 bg-clay opacity-30" />
