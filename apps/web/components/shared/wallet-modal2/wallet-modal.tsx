@@ -148,9 +148,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                     setHoveredWalletId={setHoveredWalletId}
                     onSuccess={async (_xConnector, xAccount) => {
                       setActiveXChainType(undefined);
-                      if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
-                        return;
-                      }
                       if (!xAccount.address) {
                         return;
                       }
@@ -204,9 +201,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       hoveredChainType={hoveredChainType}
                       selectedChainIcon={selectedChainIcon}
                       onSuccess={async (_xConnector, xAccount) => {
-                        if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
-                          return;
-                        }
                         if (!xAccount.address) {
                           return;
                         }
@@ -252,9 +246,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                     setHoveredChainType={setHoveredChainType}
                     hoveredChainType={hoveredChainType}
                     onSuccess={async (_xConnector, xAccount) => {
-                      if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
-                        return;
-                      }
                       if (!xAccount.address) {
                         return;
                       }
