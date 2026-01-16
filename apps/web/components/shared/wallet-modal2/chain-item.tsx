@@ -46,7 +46,7 @@ export const ChainItem: React.FC<ChainItemProps> = ({
 
   const handleConnect = useCallback(async () => {
     if (xConnectors.length === 0) {
-      return;
+      setActiveXChainType(chainType);
     }
 
     if (xConnectors.length === 1) {
