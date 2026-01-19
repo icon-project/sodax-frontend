@@ -15,6 +15,9 @@ import {
   AVALANCHE_MAINNET_CHAIN_ID,
   type Address,
   SonicSpokeProvider,
+  SUI_MAINNET_CHAIN_ID,
+  SuiSpokeProvider,
+  SolanaSpokeProvider,
 } from '@sodax/sdk';
 import { EvmWalletProvider, SolanaWalletProvider, SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { Keypair } from '@solana/web3.js';
@@ -392,11 +395,113 @@ async function hubTest() {
   console.log(`Hub test for ${src} completed successfully`);
 }
 
+/**
+ * Runs an SUI to Solana test where the source and destination chain IDs
+ * are SUI and Solana chain IDs.
+ */
+async function suiToSolanaTest(): Promise<void> {
+  const src = SUI_MAINNET_CHAIN_ID;
+  const dst = SOLANA_MAINNET_CHAIN_ID;
+
+  if (!suiWalletMnemonics) {
+    throw new Error('SUI_MNEMONICS environment variable is required');
+  }
+
+  if (!solanaPrivateKey) {
+    throw new Error('SOLANA_PRIVATE_KEY environment variable is required');
+  }
+
+  console.log(`Running SUI to Solana test from ${src} to ${dst}`);
+  const srcSpokeProvider = new SuiSpokeProvider(
+    spokeChainConfig[src],
+    new SuiWalletProvider({
+      rpcUrl: 'https://fullnode.mainnet.sui.io',
+      mnemonics: suiWalletMnemonics,
+    }),
+  );
+  const dstSpokeProvider = new SolanaSpokeProvider(
+    new SolanaWalletProvider({
+      privateKey: Keypair.fromSecretKey(new Uint8Array(bs58.decode(solanaPrivateKey))).secretKey,
+      endpoint: process.env.SOLANA_RPC_URL || spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].rpcUrl,
+    }),
+    spokeChainConfig[dst],
+  );
+
+  const SUPPLY_AMOUNT = '0.0001';
+  const BORROW_AMOUNT = '0.00002';
+  const SRC_TOKEN = spokeChainConfig[src].supportedTokens.bnUSD;
+  const DST_TOKEN = spokeChainConfig[dst].supportedTokens.bnUSD;
+
+  const [srcWalletAddress, dstWalletAddress]: [string, string] = await Promise.all([
+    srcSpokeProvider.walletProvider.getWalletAddress(),
+    dstSpokeProvider.walletProvider.getWalletAddress(),
+  ]);
+
+  // supply SRC_TOKEN to the money market pool on the source chain
+  await supply(
+    {
+      token: SRC_TOKEN.address, // NOTE: token address must match the token address of the source chain token you are sending from
+      amount: parseUnits(SUPPLY_AMOUNT, SRC_TOKEN.decimals),
+      action: 'supply',
+      toChainId: dst, // leaving toChainId and toAddress empty will default to provided spoke provider's wallet address and chain id
+      toAddress: dstWalletAddress as Address,
+    },
+    srcSpokeProvider,
+  );
+
+  await new Promise(resolve => setTimeout(resolve, 10000)); // wait 10 seconds for the supply to be confirmed
+
+  // borrow SRC_TOKEN to the destination chain and wallet
+  await borrow(
+    {
+      token: SRC_TOKEN.address, // NOTE: token address must match the token address of the toChainId token you are receiving
+      amount: parseUnits(BORROW_AMOUNT, SRC_TOKEN.decimals),
+      action: 'borrow',
+      toChainId: src, // leaving toChainId and toAddress empty will default to provided spoke provider's wallet address and chain id
+      toAddress: srcWalletAddress as Address,
+    },
+    dstSpokeProvider,
+  );
+
+  await new Promise(resolve => setTimeout(resolve, 10000)); // wait 10 seconds for the supply to be confirmed
+
+  // repay the borrowed SRC_TOKEN on destination chain back to the source chain and wallet
+  await repay(
+    {
+      token: SRC_TOKEN.address, // NOTE: token address must match the token address of the source chain token you are sending from to repay
+      amount: parseUnits(BORROW_AMOUNT, SRC_TOKEN.decimals),
+      action: 'repay',
+      toChainId: dst, // leaving toChainId and toAddress empty will default to provided spoke provider's wallet address and chain id
+      toAddress: dstWalletAddress as Address,
+    },
+    srcSpokeProvider,
+  );
+
+  await new Promise(resolve => setTimeout(resolve, 10000)); // wait 10 seconds for the supply to be confirmed
+
+  // withdraw the supplied SRC_TOKEN from source to destination chain and wallet
+  await withdraw(
+    {
+      token: SRC_TOKEN.address, // NOTE: token address must match the token address of the toChainId chain token you are withdrawing to
+      amount: parseUnits(SUPPLY_AMOUNT, SRC_TOKEN.decimals),
+      action: 'withdraw',
+      toChainId: src, // leaving toChainId and toAddress empty will default to provided spoke provider's wallet address and chain id
+      toAddress: srcWalletAddress as Address,
+    },
+    dstSpokeProvider,
+  );
+
+  await new Promise(resolve => setTimeout(resolve, 10000)); // wait 10 seconds for the withdraw to be confirmed
+
+  console.log(`EVM to EVM test from ${src} to ${dst} completed successfully`);
+}
+
 async function main() {
-  await evmToEvmTest();
+  // await evmToEvmTest();
   // await evmToHubTest();
   // await hubToEvmTest();
   // await hubTest();
+  await suiToSolanaTest();
 }
 
 main().catch(console.error);
