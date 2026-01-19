@@ -7,9 +7,11 @@ import type { ChainId, XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
 import { useMMApprove, useMMAllowance, useSupply, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 import { useSaveState, useSaveActions } from '../../_stores/save-store-provider';
 import { CheckIcon, Loader2Icon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import type { SpokeProvider } from '@sodax/sdk';
 interface DepositDialogFooterProps {
   selectedToken: XToken | null;
   onPendingChange?: (isPending: boolean) => void;
@@ -25,17 +27,19 @@ export default function DepositDialogFooter({
   const { setCurrentStep, setIsSwitchingChain } = useSaveActions();
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
-  const { approve, isLoading: isApproving } = useMMApprove(selectedToken as XToken, spokeProvider);
-  const { mutateAsync: supply, isPending } = useSupply(selectedToken as XToken, spokeProvider);
+  const { mutateAsync: approve, isPending: isApproving } = useMMApprove();
+  const { mutateAsync: supply, isPending } = useSupply();
   const [isCompleted, setIsCompleted] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const isMobile = useIsMobile();
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(
-    selectedToken as XToken,
-    depositValue.toString(),
-    'supply',
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
+    params: {
+      token: selectedToken?.address as string,
+      amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
+      action: 'supply',
+    },
     spokeProvider,
-  );
+  });
 
   const { isWrongChain, handleSwitchChain: originalHandleSwitchChain } = useEvmSwitchChain(
     (selectedToken?.xChainId || 'sonic') as ChainId,
@@ -61,7 +65,14 @@ export default function DepositDialogFooter({
   }, [isPending, onPendingChange]);
 
   const handleDeposit = async (): Promise<void> => {
-    const response = await supply(depositValue.toString());
+    const response = await supply({
+      params: {
+        token: selectedToken?.address as string,
+        amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
+        action: 'supply',
+      },
+      spokeProvider: spokeProvider as SpokeProvider,
+    });
     if (response.ok) {
       setIsCompleted(true);
     }
@@ -76,7 +87,14 @@ export default function DepositDialogFooter({
   };
 
   const handleApprove = async (): Promise<void> => {
-    const response = await approve({ amount: depositValue.toString(), action: 'supply' });
+    const response = await approve({
+      params: {
+        token: selectedToken?.address as string,
+        amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
+        action: 'supply',
+      },
+      spokeProvider: spokeProvider as SpokeProvider,
+    });
     if (response) {
       setIsApproved(true);
       setCurrentStep(3);

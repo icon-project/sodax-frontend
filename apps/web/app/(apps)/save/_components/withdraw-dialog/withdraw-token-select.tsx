@@ -40,7 +40,7 @@ export default function WithdrawTokenSelect({
             <div ref={isSelected ? tokenSelectRef : undefined} key={network.networkId}>
               <motion.div
                 key={network.networkId}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: selectedNetwork !== null && !isSelected ? 1 : 1.05 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 onClick={() => onSelectNetwork(network)}
                 onMouseEnter={() => setHoveredNetwork(index)}
@@ -56,6 +56,7 @@ export default function WithdrawTokenSelect({
                         ? 'opacity-100'
                         : 'opacity-80'
                       : 'opacity-100',
+                  selectedNetwork !== null && !isSelected && '!pointer-events-none',
                 )}
               >
                 <div className="flex items-center gap-2 flex-1">

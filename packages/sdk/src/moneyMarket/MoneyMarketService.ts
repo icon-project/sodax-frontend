@@ -1494,8 +1494,8 @@ export class MoneyMarketService {
 
       if (assetAddress.toLowerCase() !== bnUSDVault.toLowerCase()) {
         // if asset address is not bnUSD vault, we need to approve and deposit the asset into the vault
-        calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, translatedAmountIn));
-        calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, translatedAmountIn));
+        calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
+        calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
       }
 
       // withdraw the bnUSD debt token from the vault
