@@ -4,14 +4,15 @@ import Image from 'next/image';
 import { useModalOpen, useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { ChainItem } from './chain-item';
-import type { ChainType } from '@sodax/types';
+import type { ChainId, ChainType } from '@sodax/types';
 import { Separator } from '@/components/ui/separator';
 import { XIcon } from 'lucide-react';
 import { ArrowLeftIcon } from 'lucide-react';
-import { useXConnectors } from '@sodax/wallet-sdk-react';
+import { useXAccount, useXConnectors } from '@sodax/wallet-sdk-react';
 import { WalletItem } from './wallet-item';
 import { AllSupportItem } from './all-support-item';
 import { isRegisteredUser } from '@/apis/users';
+import { getChainIcon, getChainName } from '@/constants/chains';
 
 type WalletModalProps = {
   modalId?: MODAL_ID;
@@ -75,6 +76,12 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   const [hoveredWalletId, setHoveredWalletId] = useState<string | undefined>(undefined);
   const xConnectors = useXConnectors(activeXChainType);
 
+  const modalData = useModalStore(state => state.modals[modalId]?.modalData) as
+    | { primaryChainType: ChainType; xChainId?: ChainId; isExpanded: boolean }
+    | undefined;
+  const xAccount = useXAccount(modalData?.primaryChainType);
+  const isConnected = Boolean(xAccount?.address);
+
   const handleToggleExpanded = (expanded: boolean): void => {
     setIsExpanded(expanded);
   };
@@ -85,9 +92,11 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     setActiveXChainType(undefined);
   };
 
-  const modalData = useModalStore(state => state.modals[modalId]?.modalData) as
-    | { primaryChainType: ChainType; isExpanded: boolean }
-    | undefined;
+  const chainName = modalData?.xChainId ? getChainName(modalData.xChainId) : '';
+
+  const title = isConnected ? `${chainName} connected` : `Connect ${chainName}`;
+
+  const selectedChainIcon = modalData?.xChainId ? getChainIcon(modalData.xChainId) : undefined;
 
   const primaryChainGroups = useMemo(
     () => chainGroups.filter(chainGroup => chainGroup.chainType === (modalData?.primaryChainType || 'EVM')),
@@ -139,9 +148,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                     setHoveredWalletId={setHoveredWalletId}
                     onSuccess={async (_xConnector, xAccount) => {
                       setActiveXChainType(undefined);
-                      if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
-                        return;
-                      }
                       if (!xAccount.address) {
                         return;
                       }
@@ -170,7 +176,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                   className="mix-blend-multiply"
                 />
                 <div className="flex-1 justify-center text-espresso text-base font-['InterBold'] leading-snug text-(length:--body-super-comfortable)">
-                  Connect wallets
+                  {title}
                 </div>
               </div>
               <DialogClose asChild>
@@ -178,7 +184,9 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
               </DialogClose>
             </DialogTitle>
             <div className=" justify-start text-clay-light font-medium font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
-              You will need to connect your wallet to proceed.
+              {isConnected
+                ? "You're also auto-connected to other EVM networks."
+                : 'You will need to connect your wallet to proceed.'}
             </div>
             <div>
               <Separator className="h-1 bg-clay opacity-30" />
@@ -191,10 +199,8 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       setActiveXChainType={setActiveXChainType}
                       setHoveredChainType={setHoveredChainType}
                       hoveredChainType={hoveredChainType}
+                      selectedChainIcon={selectedChainIcon}
                       onSuccess={async (_xConnector, xAccount) => {
-                        if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
-                          return;
-                        }
                         if (!xAccount.address) {
                           return;
                         }
@@ -240,9 +246,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                     setHoveredChainType={setHoveredChainType}
                     hoveredChainType={hoveredChainType}
                     onSuccess={async (_xConnector, xAccount) => {
-                      if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
-                        return;
-                      }
                       if (!xAccount.address) {
                         return;
                       }

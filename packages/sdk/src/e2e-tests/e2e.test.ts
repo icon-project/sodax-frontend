@@ -6,7 +6,6 @@ import {
   BSC_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
   INJECTIVE_MAINNET_CHAIN_ID,
-  NIBIRU_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   SOLANA_MAINNET_CHAIN_ID,
@@ -18,8 +17,7 @@ import {
   type Token,
   LIGHTLINK_MAINNET_CHAIN_ID,
   NEAR_MAINNET_CHAIN_ID,
-  SodaTokens,
-  hubVaults,
+  ETHEREUM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
 import { sonic } from 'viem/chains';
@@ -105,10 +103,10 @@ describe('e2e', () => {
       '0x514569c788b096595672e0f68ec72387a22ac67b', // trevinSUI
     ],
     [SONIC_MAINNET_CHAIN_ID]: [],
-    [NIBIRU_MAINNET_CHAIN_ID]: [],
     [HYPEREVM_MAINNET_CHAIN_ID]: [],
     [LIGHTLINK_MAINNET_CHAIN_ID]: [],
     [NEAR_MAINNET_CHAIN_ID]: [],
+    [ETHEREUM_MAINNET_CHAIN_ID]: [],
   };
 
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {
@@ -182,34 +180,4 @@ describe('e2e', () => {
       }
     }
   });
-
-  it('Query all reserve tokens of the SodaTokens vaults and verify they exist in the hubVaults', async () => {
-    for (const [tokenSymbol, sodaVaultToken] of Object.entries(SodaTokens)) {
-      console.log('************************************************');
-      console.log(`${tokenSymbol} ${sodaVaultToken.address}`);
-      console.log('--------------------------------');
-
-      const [sodaVaultTokenAssets] = await sonicPublicClient.readContract({
-        address: sodaVaultToken.address,
-        abi: vaultTokenAbi,
-        functionName: 'getAllTokenInfo',
-        args: [],
-      });
-
-      let missingAsset = false;
-      for (const asset of sodaVaultTokenAssets) {
-        // console.log(`Expecting ${asset} to be in ${tokenSymbol} ${sodaVaultToken.address} reserves`);
-        const isAssetInReserves = hubVaults[tokenSymbol as keyof typeof hubVaults].reserves
-          .map(reserve => reserve.toLowerCase())
-          .includes(asset.toLowerCase());
-
-        if (!isAssetInReserves) {
-          console.log(`${asset} not found in ${tokenSymbol} reserves`);
-          missingAsset = true;
-        }
-      }
-
-      expect(missingAsset).toBe(false);
-    }
-  }, 100000);
 });

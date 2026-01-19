@@ -43,6 +43,7 @@ import {
   useXAccount,
   useXDisconnect,
   useWalletProvider,
+  useXBalances,
 } from '@sodax/wallet-sdk-react';
 import {
   type ChainId,
@@ -52,6 +53,7 @@ import {
   type ChainType,
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
+  type XToken,
 } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 
@@ -63,6 +65,7 @@ export default function SwapCard({
   ) => void;
 }) {
   const { sodax } = useSodaxContext();
+  //chain and account states
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
   const sourceWalletProvider = useWalletProvider(sourceChain);
@@ -111,6 +114,22 @@ export default function SwapCard({
     setDestChain(chainId);
     setDestToken(getSupportedSolverTokens(chainId)[0]);
   };
+
+  // Balance fetching- Fetch source token balance for the connected wallet
+  const { data: sourceBalances } = useXBalances({
+    xChainId: sourceChain,
+    xTokens: sourceToken ? [sourceToken as XToken] : [],
+    address: sourceAccount.address,
+  });
+  const sourceTokenBalance = sourceBalances?.[sourceToken?.address ?? ''] ?? 0n;
+
+  // Fetch destination token balance for the connected wallet
+  const { data: destBalances } = useXBalances({
+    xChainId: destChain,
+    xTokens: destToken ? [destToken as XToken] : [],
+    address: destAccount.address,
+  });
+  const destTokenBalance = destBalances?.[destToken?.address ?? ''] ?? 0n;
 
   const payload = useMemo(() => {
     if (!sourceToken || !destToken) {
@@ -300,6 +319,12 @@ export default function SwapCard({
             </SelectContent>
           </Select>
         </div>
+        <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
+          <span className="hidden sm:inline">Balance:</span>
+          <span className="inline">
+            {Number(formatUnits(sourceTokenBalance, sourceToken?.decimals ?? 0)).toFixed(4)}
+          </span>
+        </div>
         <div className="grow">
           <Label htmlFor="fromAddress">Source address</Label>
           <div className="flex items-center gap-2">
@@ -350,6 +375,10 @@ export default function SwapCard({
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
+          <span className="hidden sm:inline">Balance:</span>
+          <span className="inline">{Number(formatUnits(destTokenBalance, destToken?.decimals ?? 0)).toFixed(4)}</span>
         </div>
         <div className="grow">
           <Label htmlFor="toAddress">Destination address</Label>

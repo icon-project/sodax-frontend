@@ -1,68 +1,31 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import type { XToken } from '@sodax/types';
+import { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import { CircularProgressIcon } from '@/components/icons';
 import type BigNumber from 'bignumber.js';
-import { Timer, XIcon, Check, ChevronsRight, ShieldAlertIcon, ExternalLinkIcon } from 'lucide-react';
-import Link from 'next/link';
+import { Timer, XIcon, ChevronsRight, ShieldAlertIcon, ExternalLinkIcon } from 'lucide-react';
+import SwapButton from './swap-button';
 import { shortenAddress } from '@/lib/utils';
-import { Separator } from '@radix-ui/react-separator';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
-import { useSwapApprove, useSpokeProvider, useSwapAllowance, useSwap, useStatus } from '@sodax/dapp-kit';
-import { type CreateIntentParams, SolverIntentStatusCode } from '@sodax/sdk';
+import { useSwapApprove, useSpokeProvider, useSwap, useStatus } from '@sodax/dapp-kit';
+import { type CreateIntentParams, type IntentState, SolverIntentStatusCode, waitUntilIntentExecuted } from '@sodax/sdk';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useSwapActions, useSwapState } from '../_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
 import type { SpokeChainId } from '@sodax/types';
 import { getSwapErrorMessage, formatBalance } from '@/lib/utils';
-import { useQueryClient } from '@tanstack/react-query';
-
-interface SwapStatusMonitorProps {
-  dstTxHash: string;
-  onSwapSuccessful: () => void;
-  onSwapFailed: () => void;
-  onUpdateSwapStatus: (statusCode: SolverIntentStatusCode) => void;
-}
-
-function SwapStatusMonitor({
-  dstTxHash,
-  onSwapSuccessful,
-  onSwapFailed,
-  onUpdateSwapStatus,
-}: SwapStatusMonitorProps): React.JSX.Element | null {
-  const { data: status } = useStatus(dstTxHash as `0x${string}`);
-  const hasCalledSuccess = useRef<boolean>(false);
-  const hasCalledFailed = useRef<boolean>(false);
-
-  useEffect(() => {
-    if (status?.ok && !hasCalledSuccess.current && !hasCalledFailed.current) {
-      const statusCode = status.value.status;
-      onUpdateSwapStatus(statusCode);
-      if (statusCode === SolverIntentStatusCode.SOLVED) {
-        hasCalledSuccess.current = true;
-        onSwapSuccessful();
-      } else if (statusCode === SolverIntentStatusCode.FAILED) {
-        hasCalledFailed.current = true;
-        onSwapFailed();
-      }
-    }
-  }, [status, onSwapSuccessful, onSwapFailed, onUpdateSwapStatus]);
-
-  return null;
-}
+import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
+import { useSodaxContext } from '@sodax/dapp-kit';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getIntentRelayChainId, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { getSwapTiming } from '@/lib/swap-timing';
 
 interface SwapConfirmDialogProps {
   open: boolean;
-  inputToken: XToken;
-  outputToken: XToken;
-  sourceAddress: string;
-  finalDestinationAddress: string;
   outputAmount: bigint | undefined;
   onClose?: () => void;
   swapFeesUsdValue?: {
@@ -76,36 +39,29 @@ interface SwapConfirmDialogProps {
 
 const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   open,
-  inputToken,
-  outputToken,
-  sourceAddress,
-  finalDestinationAddress,
   outputAmount,
   onClose,
   minOutputAmount,
   swapFeesUsdValue,
   usdPrice = 0,
 }: SwapConfirmDialogProps) => {
-  const queryClient = useQueryClient();
   const [approvalError, setApprovalError] = useState<string | null>(null);
-  const [allowanceConfirmed, setAllowanceConfirmed] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
-  const walletProvider = useWalletProvider(inputToken.xChainId);
-  const spokeProvider = useSpokeProvider(inputToken.xChainId, walletProvider);
-  const sourceXAccount = useXAccount(inputToken.xChainId);
-  const { inputAmount } = useSwapState();
+  const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, dstTxHash, swapError } =
+    useSwapState();
+  const { setInputAmount, setDstTxHash, setSwapError, setSwapStatus, setAllowanceConfirmed, resetSwapExecutionState } =
+    useSwapActions();
+  const { address: sourceAddress } = useXAccount(inputToken.xChainId);
+  const { address: destinationAddress } = useXAccount(outputToken.xChainId);
+  const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress || '';
   const sourceWalletProvider = useWalletProvider(inputToken.xChainId);
   const sourceSpokeProvider = useSpokeProvider(inputToken.xChainId, sourceWalletProvider);
-  const [dstTxHash, setDstTxHash] = useState<string>('');
+  const sourceXAccount = useXAccount(inputToken.xChainId);
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceSpokeProvider);
-  const { setInputAmount } = useSwapActions();
-  // const [swapResetCounter, setSwapResetCounter] = useState<number>(0);
-  const [isSwapSuccessful, setIsSwapSuccessful] = useState<boolean>(false);
-  const [isSwapFailed, setIsSwapFailed] = useState<boolean>(false);
-  const [swapError, setSwapError] = useState<{ title: string; message: string } | null>(null);
-  const [swapStatus, setSwapStatus] = useState<SolverIntentStatusCode>(SolverIntentStatusCode.NOT_FOUND);
-
+  const [filledIntent, setFilledIntent] = useState<IntentState | null>(null);
+  const { sodax } = useSodaxContext();
+  const [targetChainSolved, setTargetChainSolved] = useState(false);
   const intentOrderPayload = useMemo(() => {
     if (!inputToken || !outputToken || !minOutputAmount || !inputAmount || !sourceAddress || !finalDestinationAddress) {
       return undefined;
@@ -127,103 +83,69 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     } satisfies CreateIntentParams;
   }, [inputToken, outputToken, minOutputAmount, inputAmount, sourceAddress, finalDestinationAddress]);
 
-  const isWaitingForSolvedStatus = useMemo(() => {
-    return !!dstTxHash && !isSwapFailed;
-  }, [dstTxHash, isSwapFailed]);
+  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceSpokeProvider);
+  const { data: status } = useStatus((dstTxHash || '0x') as `0x${string}`);
 
-  const handleSwapSuccessful = useCallback(() => {
-    setIsSwapSuccessful(true);
-    setIsSwapFailed(false);
-  }, []);
-
-  const handleSwapFailed = useCallback(() => {
-    setIsSwapFailed(true);
-    setIsSwapSuccessful(false);
-    setSwapError({ title: 'Swap failed', message: 'Please try again.' });
-  }, []);
-
-  const paramsForApprove = intentOrderPayload
-    ? JSON.parse(
-        JSON.stringify(intentOrderPayload, (_, value) => (typeof value === 'bigint' ? value.toString() : value)),
-      )
-    : undefined;
-
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(
-    allowanceConfirmed ? undefined : paramsForApprove,
-    spokeProvider,
-  );
+  const swapTiming = getSwapTiming(inputToken.xChainId, outputToken.xChainId);
 
   useEffect(() => {
-    if (intentOrderPayload) {
-      queryClient.invalidateQueries({ queryKey: ['allowance', paramsForApprove] });
+    const getFilledIntent = async () => {
+      if (status?.ok) {
+        const filledIntent = await sodax.swaps.getFilledIntent(status.value.fill_tx_hash as `0x${string}`);
+        setFilledIntent(filledIntent);
+        if (outputToken.xChainId === SONIC_MAINNET_CHAIN_ID) {
+          setTargetChainSolved(true);
+          setDstTxHash('');
+        } else {
+          const packet = await waitUntilIntentExecuted({
+            intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
+            spokeTxHash: status.value.fill_tx_hash as `0x${string}`,
+            timeout: 300000, // 5 minutes
+            apiUrl: sodax.relayerApiEndpoint,
+          });
+          if (packet.ok) {
+            setTargetChainSolved(true);
+            setDstTxHash('');
+          }
+        }
+      }
+    };
+
+    if (dstTxHash && status?.ok) {
+      const statusCode = status.value.status;
+      setSwapStatus(statusCode);
+      if (statusCode === SolverIntentStatusCode.SOLVED) {
+        getFilledIntent();
+      }
+
+      if (statusCode === SolverIntentStatusCode.FAILED) {
+        setSwapError({ title: 'Swap failed', message: 'Please try again.' });
+      }
     }
-  }, [intentOrderPayload, queryClient, paramsForApprove]);
+  }, [dstTxHash, status, setSwapStatus, setSwapError, setDstTxHash, sodax, outputToken.xChainId]);
 
-  /* If failed previous swap by JSON rpc error, allowance is still valid. 
-  but after started next swap progress, allowance will become false. 
-  To avoid confusion of swaping progress, have to set allowanceConfirmed to true.
-  */
-  useEffect(() => {
-    if (hasAllowed) setAllowanceConfirmed(true);
-  }, [hasAllowed]);
-
-  useEffect(() => {
-    if (open) {
-      setAllowanceConfirmed(false);
-      setApprovalError(null);
+  const displayedOutputValue = useMemo(() => {
+    if (filledIntent) {
+      return formatBalance(formatUnits(filledIntent.receivedOutput, outputToken.decimals), usdPrice);
     }
-  }, [open]);
-
-  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, spokeProvider);
+    return formatBalance(outputAmount ? formatUnits(outputAmount, outputToken.decimals) : '0', usdPrice);
+  }, [filledIntent, outputAmount, outputToken.decimals, usdPrice]);
 
   const handleApprove = async (): Promise<void> => {
-    if (!intentOrderPayload) {
-      setApprovalError('Intent params not available for approval');
-      return;
-    }
-
     try {
-      setApprovalError(null);
-      const value = await approve({ params: intentOrderPayload });
+      const value = await approve({ params: intentOrderPayload as CreateIntentParams });
       if (value) {
         setAllowanceConfirmed(true);
       } else {
-        setApprovalError('Failed to approve tokens');
+        setApprovalError('Failed to approve tokens.');
       }
     } catch (error) {
       setApprovalError(error instanceof Error ? error.message : 'Approval failed. Please try again.');
     }
   };
 
-  const handleClose = (): void => {
-    setSwapError(null);
-    if (isSwapSuccessful) {
-      onClose?.();
-      setAllowanceConfirmed(false);
-      setSwapStatus(SolverIntentStatusCode.NOT_FOUND);
-      setDstTxHash('');
-      setIsSwapSuccessful(false);
-      setInputAmount('0');
-      return;
-    }
-
-    if (isWaitingForSolvedStatus || isSwapPending) {
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 500);
-      return;
-    }
-
-    onClose?.();
-    setIsShaking(false);
-  };
-
   const handleSwapConfirm = async (): Promise<void> => {
-    if (!intentOrderPayload) {
-      setSwapError({ title: 'Swap Error', message: 'Intent params not available' });
-      return;
-    }
-
-    const result = await executeSwap(intentOrderPayload);
+    const result = await executeSwap(intentOrderPayload as CreateIntentParams);
 
     if (!result.ok) {
       const errorMessage = getSwapErrorMessage(result.error?.code || 'UNKNOWN');
@@ -237,16 +159,28 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     setSwapStatus(SolverIntentStatusCode.NOT_STARTED_YET);
   };
 
+  const handleClose = (): void => {
+    const isWaitingForSolvedStatus = !!dstTxHash && !swapError;
+    if (isWaitingForSolvedStatus || isSwapPending) {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+      return;
+    }
+
+    if (targetChainSolved) {
+      setInputAmount('');
+    }
+
+    setIsShaking(false);
+    setApprovalError(null);
+    resetSwapExecutionState();
+    setFilledIntent(null);
+    setTargetChainSolved(false);
+    onClose?.();
+  };
+
   return (
     <>
-      {dstTxHash && (
-        <SwapStatusMonitor
-          dstTxHash={dstTxHash}
-          onSwapSuccessful={handleSwapSuccessful}
-          onSwapFailed={handleSwapFailed}
-          onUpdateSwapStatus={setSwapStatus}
-        />
-      )}
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent
           enableMotion={true}
@@ -276,7 +210,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
           <div className={`flex w-full justify-center ${swapError ? 'opacity-40' : ''}`}>
             <div className="w-60 pb-6 inline-flex justify-between items-center">
               <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
-                <div className={`${isSwapSuccessful ? 'grayscale opacity-50' : ''}`}>
+                <div className={`${targetChainSolved ? 'grayscale opacity-50' : ''}`}>
                   <CurrencyLogo currency={inputToken} />
                 </div>
                 <div className="flex flex-col justify-start items-center gap-2">
@@ -303,19 +237,19 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   </div>
                 </div>
               </div>
-              <div className="w-16 h-9 inline-flex flex-col justify-between items-center">
-                {isSwapSuccessful ? (
+              <div className="w-16 inline-flex flex-col justify-center items-center gap-1">
+                {targetChainSolved ? (
                   <>
                     <ChevronsRight className="w-4 h-4 text-clay-light" />
-                    <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
+                    <div className="text-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-tight">
                       Done
                     </div>
                   </>
                 ) : (
                   <>
-                    <Timer className="w-4 h-4 text-clay" />
-                    <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
-                      ~30s
+                    <Timer className={swapTiming.iconClass} />
+                    <div className="text-center text-(length:--body-small) font-medium font-['InterRegular'] leading-tight">
+                      <span className={swapTiming.textClass}>{swapTiming.shortLabel}</span>
                     </div>
                   </>
                 )}
@@ -324,9 +258,18 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                 <CurrencyLogo currency={outputToken} />
                 <div className="flex flex-col justify-start items-center gap-2">
                   <div className="inline-flex justify-start items-center gap-1">
-                    <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
-                      {formatBalance(outputAmount ? formatUnits(outputAmount, outputToken.decimals) : '0', usdPrice)}
-                    </div>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={displayedOutputValue}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="justify-start text-espresso text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight"
+                      >
+                        {displayedOutputValue}
+                      </motion.div>
+                    </AnimatePresence>
                     <div className="justify-start text-clay-light text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-tight">
                       {outputToken.symbol}
                     </div>
@@ -349,163 +292,77 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             </div>
           </div>
 
-          <div className="flex w-full">
-            {isSwapSuccessful ? (
-              <div className="flex w-full flex-col gap-4">
-                <Button
-                  variant="cherry"
-                  className="w-full text-white font-semibold font-['InterRegular']"
-                  onClick={() => {
-                    handleClose();
-                  }}
-                >
-                  <div className="flex items-center gap-2 text-white">
-                    <span>Swap complete</span>
-                    <Check className="w-4 h-4" />
+          <SwapButton
+            intentOrderPayload={intentOrderPayload}
+            spokeProvider={sourceSpokeProvider}
+            isSwapPending={isSwapPending}
+            onClose={handleClose}
+            onApprove={handleApprove}
+            onSwapConfirm={handleSwapConfirm}
+            isApproving={isApproving}
+            targetChainSolved={targetChainSolved}
+          />
+
+          {targetChainSolved ? (
+            <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
+              Enjoying SODAX?
+              <Link
+                href="https://x.com/gosodax"
+                target="_blank"
+                className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
+              >
+                Follow updates on X <ExternalLinkIcon className="w-4 h-4" />
+              </Link>
+            </div>
+          ) : swapError ? (
+            <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
+              Need help?
+              <Link
+                href="https://discord.gg/xM2Nh4S6vN"
+                target="_blank"
+                className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
+              >
+                Get support on Discord <ExternalLinkIcon className="w-4 h-4" />
+              </Link>
+            </div>
+          ) : (
+            <Accordion type="single" collapsible className="p-0 swap-accordion">
+              <AccordionItem value="item-1" className="!p-0">
+                <AccordionTrigger className="hover:no-underline !p-0 justify-center">
+                  <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
+                    Total fees: {swapFeesUsdValue?.total && ` $${swapFeesUsdValue?.total.toFixed(4)}`}
                   </div>
-                </Button>
-
-                <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
-                  Enjoying SODAX?
-                  <Link
-                    href="https://x.com/gosodax"
-                    target="_blank"
-                    className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
-                  >
-                    Follow updates on X <ExternalLinkIcon className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-            ) : swapError ? (
-              <div className="flex w-full flex-col gap-4">
-                <Button
-                  variant="cherry"
-                  className="w-full text-white font-semibold font-['InterRegular']"
-                  onClick={handleClose}
-                >
-                  Close
-                </Button>
-
-                <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
-                  Need help?
-                  <Link
-                    href="https://discord.gg/xM2Nh4S6vN"
-                    target="_blank"
-                    className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
-                  >
-                    Get support on Discord <ExternalLinkIcon className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <div className="flex w-full flex-col gap-4">
-                {!allowanceConfirmed && !hasAllowed && !isAllowanceLoading && (
-                  <div className="w-full">
-                    <Button
-                      variant="cherry"
-                      className="w-full text-white font-semibold font-['InterRegular']"
-                      onClick={handleApprove}
-                      disabled={isApproving}
-                    >
-                      {isApproving ? (
-                        <div className="flex items-center gap-2 text-white">
-                          <span>Approving...</span>
-                          <CircularProgressIcon
-                            width={16}
-                            height={16}
-                            stroke="white"
-                            progress={100}
-                            className="animate-spin"
-                          />
-                        </div>
-                      ) : (
-                        `Approve ${inputToken.symbol}`
-                      )}
-                    </Button>
-                  </div>
-                )}
-
-                {(allowanceConfirmed || hasAllowed) && (
-                  <Button
-                    variant="cherry"
-                    className="w-full text-white font-semibold font-['InterRegular'] disabled:bg-cherry-bright"
-                    disabled={isWaitingForSolvedStatus || isSwapPending}
-                    onClick={handleSwapConfirm}
-                  >
-                    {isWaitingForSolvedStatus || isSwapPending ? (
-                      <div className="flex items-center gap-2 text-white">
-                        <span>
-                          {isSwapPending
-                            ? 'Confirming Swap'
-                            : swapStatus === SolverIntentStatusCode.NOT_STARTED_YET
-                              ? 'Swap Created'
-                              : swapStatus === SolverIntentStatusCode.STARTED_NOT_FINISHED
-                                ? 'Swap in Progress'
-                                : 'Confirming Swap'}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="bg-transparent border-none">
+                    <Separator className="bg-clay-light h-[1px] mt-4 mb-4 opacity-30" />
+                    <div className="space-y-2 text-(length:--body-comfortable)">
+                      <div className="flex justify-between">
+                        <span className="text-clay-light">Receive at least</span>
+                        <span className="text-espresso font-medium">
+                          {formatBalance(
+                            minOutputAmount ? formatUnits(minOutputAmount, outputToken.decimals) : '0',
+                            usdPrice,
+                          )}{' '}
+                          {outputToken.symbol}
                         </span>
-                        <CircularProgressIcon
-                          width={16}
-                          height={16}
-                          stroke="white"
-                          progress={100}
-                          className="animate-spin"
-                        />
                       </div>
-                    ) : (
-                      `Swap to ${outputToken.symbol} on ${chainIdToChainName(outputToken.xChainId)}`
-                    )}
-                  </Button>
-                )}
-
-                {isAllowanceLoading && (
-                  <Button
-                    variant="cherry"
-                    className="w-full text-white font-semibold font-['InterRegular']"
-                    disabled={true}
-                  >
-                    Checking approval...
-                  </Button>
-                )}
-
-                <Accordion type="single" collapsible className="p-0 swap-accordion">
-                  <AccordionItem value="item-1" className="!p-0">
-                    <AccordionTrigger className="hover:no-underline !p-0 justify-center">
-                      <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight">
-                        Total fees: {swapFeesUsdValue?.total && ` $${swapFeesUsdValue?.total.toFixed(4)}`}
+                      <div className="flex justify-between">
+                        <span className="text-clay-light">Swap Fee (0.20%)</span>
+                        <span className="text-espresso font-medium">
+                          {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+                        </span>
                       </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="bg-transparent border-none">
-                        <Separator className="bg-clay-light h-[1px] mt-4 mb-4 opacity-30" />
-                        <div className="space-y-2 text-(length:--body-comfortable)">
-                          <div className="flex justify-between">
-                            <span className="text-clay-light">Receive at least</span>
-                            <span className="text-espresso font-medium">
-                              {formatBalance(
-                                minOutputAmount ? formatUnits(minOutputAmount, outputToken.decimals) : '0',
-                                usdPrice,
-                              )}{' '}
-                              {outputToken.symbol}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-clay-light">Swap Fee (0.20%)</span>
-                            <span className="text-espresso font-medium">
-                              {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-clay-light">Via</span>
-                            <span className="text-espresso font-medium">SODAX SDK</span>
-                          </div>
-                        </div>
+                      <div className="flex justify-between">
+                        <span className="text-clay-light">Via</span>
+                        <span className="text-espresso font-medium">SODAX SDK</span>
                       </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </div>
-            )}
-          </div>
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
         </DialogContent>
       </Dialog>
     </>

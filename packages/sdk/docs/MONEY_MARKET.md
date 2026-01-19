@@ -27,7 +27,7 @@ By default, configuration from the specific SDK version you are using is used.
 import { Sodax, type SpokeChainId, type Token, type Address } from "@sodax/sdk";
 
 const sodax = new Sodax();
-await sodax.initialize(); // Initialize for dynamic config (optional but recommended)
+await sodax.initialize(); // Initialize for dynamic config (optional)
 
 // All supported spoke chains (general config)
 const spokeChains: SpokeChainId[] = sodax.config.getSupportedSpokeChains();
@@ -49,7 +49,7 @@ const moneyMarketTokensFromConfig: readonly Token[] = sodax.config.getSupportedM
 const allMoneyMarketTokensFromConfig = sodax.config.getSupportedMoneyMarketTokens();
 ```
 
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for additional static constants and configurations.
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts) for additional static constants and configurations.
 
 ## Available Methods
 
@@ -193,34 +193,7 @@ The allowance and approval system supports different actions depending on the sp
 
 ### Stellar Trustline Requirements
 
-For Stellar-based money market operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain:
-
-```typescript
-import { StellarSpokeService } from "@sodax/sdk";
-
-// When Stellar is the destination chain, check and establish trustlines
-if (isStellarDestination) {
-  // Check if sufficient trustline exists for the destination token
-  const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
-    destinationTokenAddress,
-    amount,
-    stellarSpokeProvider
-  );
-
-  if (!hasTrustline) {
-    // Request trustline for the destination token
-    const trustlineResult = await StellarSpokeService.requestTrustline(
-      destinationTokenAddress,
-      amount,
-      stellarSpokeProvider,
-      false // false = execute transaction, true = return raw transaction
-    );
-    
-    // Wait for trustline transaction to be confirmed before proceeding
-    console.log('Trustline established:', trustlineResult);
-  }
-}
-```
+For Stellar-based money market operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain. See [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#money-market) for detailed information and code examples.
 
 ### Complete Example
 
@@ -875,7 +848,7 @@ The SDK provides powerful formatting capabilities to convert raw blockchain data
 #### Formatting User Data
 - `formatUserSummary()` - Format user portfolio summary with USD conversions
 
-**NOTE** if you need more customized formatting checkout [math-utils](../src/shared/services/moneyMarket/math-utils/).
+**NOTE** if you need more customized formatting checkout [math-utils](https://github.com/icon-project/sodax-frontend/tree/main/packages/sdk/src/moneyMarket/math-utils).
 
 ### Complete Example: Fetching and Formatting Data
 

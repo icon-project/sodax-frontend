@@ -1,4 +1,11 @@
-import type { SpokeChainId, Token, HubAsset, IntentRelayChainIdMap, SpokeChainConfigMap, HubVaultSymbol, VaultType, Address } from "../common/index.js";
+import type {
+  SpokeChainId,
+  Token,
+  HubAsset,
+  IntentRelayChainIdMap,
+  SpokeChainConfigMap,
+  Address,
+} from '../common/index.js';
 
 export type GetChainsApiResponse = readonly SpokeChainId[];
 export type GetSwapTokensApiResponse = Record<SpokeChainId, readonly Token[]>;
@@ -9,18 +16,17 @@ export type GetHubAssetsApiResponse = Record<SpokeChainId, Record<string, HubAss
 export type GetHubAssetsByChainIdApiResponse = Record<string, HubAsset>;
 export type GetRelayChainIdMapApiResponse = IntentRelayChainIdMap;
 export type GetSpokeChainConfigApiResponse = SpokeChainConfigMap;
-export type GetHubVaultsApiResponse = Record<HubVaultSymbol, VaultType>;
 export type GetMoneyMarketReserveAssetsApiResponse = readonly Address[];
 export type GetAllConfigApiResponse = {
+  version?: number;
   supportedChains: GetChainsApiResponse;
   supportedSwapTokens: GetSwapTokensApiResponse;
   supportedMoneyMarketTokens: GetMoneyMarketTokensApiResponse;
   supportedMoneyMarketReserveAssets: GetMoneyMarketReserveAssetsApiResponse;
   supportedHubAssets: GetHubAssetsApiResponse;
-  supportedHubVaults: GetHubVaultsApiResponse;
   relayChainIdMap: GetRelayChainIdMapApiResponse;
   spokeChainConfig: GetSpokeChainConfigApiResponse;
-}
+};
 
 export interface IConfigApi {
   getChains(): Promise<GetChainsApiResponse>;

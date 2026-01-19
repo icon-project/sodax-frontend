@@ -49,8 +49,8 @@ export class SolverApiService {
       'unsupported token_dst for dst chain',
     );
 
-    const tokenSrc = (configService.getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src))?.asset;
-    const tokenDst = (configService.getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst))?.asset;
+    const tokenSrc = configService.getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src)?.asset;
+    const tokenDst = configService.getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst)?.asset;
 
     invariant(tokenSrc, 'hub asset not found for token_src');
     invariant(tokenDst, 'hub asset not found for token_dst');

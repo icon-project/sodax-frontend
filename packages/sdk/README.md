@@ -1,18 +1,34 @@
 # Sodax SDK
 
-The Sodax SDK provides a comprehensive interface for interacting with the Sodax protocol, enabling cross-chain swaps and money market operations.
+The Sodax SDK provides a comprehensive interface for interacting with the Sodax protocol, enabling cross-chain swaps, money market, cross-chain bridging, migration and staking SODA token.
 
-## Features
+## Table of Contents
 
-### Swaps (Solver / Intents) [📖](./docs/SOLVER.md)
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM❌, Lightlink) ✅
+### Features
+
+- [Swaps (Solver / Intents)](./docs/SWAPS.md) - Cross-chain intent-based swaps
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
   - Sui ✅
   - Stellar ✅
   - ICON ✅
   - Solana ✅
   - Injective ✅
-
-### Lend and Borrow (Money Market) [📖](./docs/MONEY_MARKET.md)
+- [Money Market](./docs/MONEY_MARKET.md) - Cross-chain lending and borrowing
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
+  - Sui ✅
+  - Stellar ✅
+  - ICON ✅
+  - Solana ✅
+  - Injective ✅
+- [Bridge](./docs/BRIDGE.md) - Cross-chain token bridging
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
+  - Sui ✅
+  - Stellar ✅
+  - ICON ✅
+  - Solana ✅
+  - Injective ✅
+- [Migration](./docs/MIGRATION.md) - Token migration (ICX, bnUSD, BALN)
+- [Staking](./docs/STAKING.md) - SODA token staking
   - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
   - Sui ✅
   - Stellar ✅
@@ -20,29 +36,30 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
   - Solana ✅
   - Injective ✅
 
-### Cross-chain bridging (Bridge) [📖](./docs/BRIDGE.md)
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
-  - Sui ✅
-  - Stellar ✅
-  - ICON ✅
-  - Solana ✅
-  - Injective ✅
+### API Endpoints
 
-### Migration [📖](./docs/MIGRATION.md)
- - Legacy bnUSD <> New bnUSD:
- - ICX <> SODA
- - BALN <> SODA
+- [Intent Solver API Endpoints](./docs/SOLVER_API_ENDPOINTS.md) - Solver API endpoint documentation
+- [Relayer API Endpoints](./docs/RELAYER_API_ENDPOINTS.md) - Relayer API endpoint documentation
 
- ### Staking SODA [📖](./docs/STAKING.md)
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM❌, Lightlink) ✅
-  - Sui ✅
-  - Stellar ✅
-  - ICON ✅
-  - Solana ✅
-  - Injective ✅
+### Guides
 
-## Installation
- 
+- [Configure SDK](./docs/CONFIGURE_SDK.md) - Comprehensive guide for configuring the SDK
+- [Monetize SDK](./docs/MONETIZE_SDK.md) - Configure fees and monetize your SDK integration
+- [Make a Swap](./docs/HOW_TO_MAKE_A_SWAP.md) - Step by step guide on how to make a swap
+- [Create a Spoke Provider](./docs/HOW_TO_CREATE_A_SPOKE_PROVIDER.md) - Comprehensive guide for creating spoke providers
+- [Estimate Gas for Raw Transactions](./docs/ESTIMATE_GAS.md) - Estimate transaction gas for raw transaction payloads.
+- [Wallet Providers](./docs/WALLET_PROVIDERS.md) - Wallet provider interfaces and implementation guide
+- [Stellar Trustline Requirements](./docs/STELLAR_TRUSTLINE.md) - Guide for handling Stellar trustlines across all operations
+
+### Miscellaneous
+
+- [Intent Relay API](./docs/INTENT_RELAY_API.md) - Intent relay API internally used to relay cross-chain messages.
+- [Backend API](./docs/BACKEND_API.md) - Sodax Backend API offering access to Intent, Swap, and Money Market data.
+
+## Development
+
+### Installation
+
 ```bash
 # Using npm
 npm install @sodax/sdk
@@ -66,7 +83,7 @@ Package can be locally installed by following this steps:
    Instead of version define absolute path to your SDK repository `"file:<sdk-repository-path>"` (e.g. `"file:/Users/dev/.../operation-liquidity-layer/packages/sdk"`).
    Full example: `"@sodax/sdk": "file:/Users/dev/operation-liquidity-layer/sdk-new/packages/sdk"`.
 
-## Local Development
+### Local Development
 
 How to setup local development
 
@@ -77,357 +94,11 @@ How to setup local development
    1. Do not forget to export TS files in same folder `index.ts`.
    2. Always import files using `.js` postfix.
 
-## Intent Solver Endpoints
-
-Current Intent Solver API endpoints:
-- **Production (mainnet)**: "https://sodax-solver-staging.iconblockchain.xyz"
-- **Staging** (mainnet): "https://sodax-solver-staging.iconblockchain.xyz"
-
-**Note** Staging endpoint contains features to be potentially released and is subject to frequent change!
-
-## Relayer API Endpoints
-
-Current Relayer API endpoints:
-- **Production (mainnet)**: "https://xcall-relay.nw.iconblockchain.xyz"
-- **Staging** (mainnet): "https://testnet-xcall-relay.nw.iconblockchain.xyz"
-
-**Note** Staging endpoint contains features to be potentially released and is subject to frequent change!
-
-## Usage
-
-The Sodax SDK is initialized by creating a new `Sodax` instance with your desired configuration. The SDK supports both Swaps (for intent-based solver swaps) and Money Market (for cross-chain lending and borrowing) services.
-
-Both Swaps (Solver) and Money Market configuration and optional. You can always choose to use just a specific feature.
-
-### Basic Configuration
-
-```typescript
-import { Sodax } from '@sodax/sdk';
-
-// Initialize Sodax using default Sonic mainnet configurations (no fees)
-const sodax = new Sodax();
-
-// If you want dynamic (backend API based - contains latest tokens) configuration,
-// make sure to initialize the instance before usage!
-// By default, configuration from the specific SDK version you are using is used
-await sodax.initialize();
-
-// Use default config but put fee on swaps (solver intent swaps)
-const partnerFeePercentage = {
-  address: '0x0000000000000000000000000000000000000000', // address to receive fee
-  percentage: 100, // 100 = 1%, 10000 = 100%
-};
-
-const sodaxWithSwapFees = new Sodax({
-  swap: { partnerFee: partnerFeePercentage },
-});
-
-// Use default config with fee on money market (borrows)
-const sodaxWithMoneyMarketFees = new Sodax({
-  moneyMarket: { partnerFee: partnerFeePercentage },
-});
-
-// Or use default config with fees on both swaps and money market
-const sodaxWithFees = new Sodax({
-  swap: { partnerFee: partnerFeePercentage },
-  moneyMarket: { partnerFee: partnerFeePercentage },
-});
-```
-
-### Custom Configuration
-
-Sodax SDK can be customized for partner fee, swaps or money market configuration.
-
-```typescript
-import {
-  Sodax,
-  PartnerFee,
-  SolverConfigParams,
-  MoneyMarketConfigParams,
-  EvmHubProviderConfig,
-  getSolverConfig,
-  getMoneyMarketConfig,
-  getHubChainConfig,
-  SONIC_MAINNET_CHAIN_ID,
-} from '@sodax/sdk';
-
-// Partner fee can be defined as a percentage or a definite token amount.
-// Fee is optional, you can leave it empty/undefined.
-const partnerFeePercentage = {
-  address: '0x0000000000000000000000000000000000000000', // address to receive fee
-  percentage: 100, // 100 = 1%, 10000 = 100%
-} satisfies PartnerFee;
-
-const partnerFeeAmount = {
-  address: '0x0000000000000000000000000000000000000000', // address to receive fee
-  amount: 1000n, // definite amount denominated in token decimal precision
-} satisfies PartnerFee;
-
-// Solver config is optional and is required only if you want to use intent based swaps.
-// You can either use custom solver config or the default one (based on hub chain id - defaults to Sonic chain as hub)
-
-// Example of custom solver config
-const customSolverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: partnerFeePercentage, // or partnerFeeAmount
-} satisfies SolverConfigParams;
-
-// Pre-defined default solver config per hub chain id (Sonic hub is the default)
-const solverConfig: SolverConfigParams = getSolverConfig(SONIC_MAINNET_CHAIN_ID);
-
-// Example of custom money market config
-const customMoneyMarketConfig = {
-  lendingPool: '0x553434896D39F867761859D0FE7189d2Af70514E',
-  uiPoolDataProvider: '0xC04d746C38f1E51C8b3A3E2730250bbAC2F271bf',
-  poolAddressesProvider: '0x036aDe0aBAA4c82445Cb7597f2d6d6130C118c7b',
-  bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38',
-  bnUSDVault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
-} satisfies MoneyMarketConfigParams;
-
-// Pre-defined default money market config per hub chain id (Sonic hub is the default)
-const moneyMarketConfig = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID);
-
-// Example of custom hub config
-const hubConfig = {
-  hubRpcUrl: 'https://rpc.soniclabs.com',
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
-} satisfies EvmHubProviderConfig;
-
-// Initialize Sodax using custom/default configurations
-const sodax = new Sodax({
-  swap: solverConfig,
-  moneyMarket: moneyMarketConfig,
-  hubProviderConfig: hubConfig,
-});
-
-// Initialize with dynamic configuration (recommended for latest tokens/chains)
-await sodax.initialize();
-```
-
-### Using SDK Config and Constants
-
-SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume. All configurations are accessible through the `config` property of the Sodax instance (`sodax.config`), or through service-specific properties for convenience.
-
-**NOTE**: You should generally only use spoke chains configuration to retrieve all supported chains and then invoke per spoke chain based configurations. If you are using hub configurations you should know what you are doing.
-
-**IMPORTANT**: If you want dynamic (backend API based - contains latest tokens) configuration, make sure to initialize the instance before usage:
-```typescript
-await sodax.initialize();
-```
-By default, configuration from the specific SDK version you are using is used.
-
-#### General Configuration (sodax.config)
-
-```typescript
-import { Sodax, type SpokeChainId, type HubChainId } from "@sodax/sdk";
-
-const sodax = new Sodax();
-await sodax.initialize(); // Initialize for dynamic config (optional but recommended)
-
-// All supported hub chains (Sonic mainnet and testnet)
-const hubChains: HubChainId[] = sodax.config.getSupportedHubChains();
-
-// All supported spoke chains
-const spokeChains: SpokeChainId[] = sodax.config.getSupportedSpokeChains();
-
-// Get all chains configuration
-const chains = sodax.config.getChains();
-
-// Get hub assets configuration
-const hubAssets = sodax.config.getHubAssets();
-
-// Get hub vaults configuration
-const hubVaults = sodax.config.getHubVaults();
-
-// Get money market reserve assets
-const moneyMarketReserves = sodax.config.getMoneyMarketReserveAssets();
-
-// Check if a token is valid for a given chain
-const isValid = sodax.config.isValidOriginalAssetAddress(chainId, tokenAddress);
-
-// Get hub asset info for a given chain and original asset
-const hubAssetInfo = sodax.config.getHubAssetInfo(chainId, tokenAddress);
-```
-
-#### Swap Configuration (sodax.swap)
-
-```typescript
-import { Sodax, type SpokeChainId, type Token } from "@sodax/sdk";
-
-const sodax = new Sodax();
-await sodax.initialize(); // Initialize for dynamic config (optional but recommended)
-
-// Get supported swap tokens for a specific chain
-const supportedSwapTokens: readonly Token[] = sodax.swap.getSupportedSwapTokensByChainId(chainId);
-
-// Get all supported swap tokens per chain
-const allSwapTokens: Record<SpokeChainId, readonly Token[]> = sodax.swap.getSupportedSwapTokens();
-
-// Alternative: Access through config service
-const swapTokensFromConfig: readonly Token[] = sodax.config.getSupportedSwapTokensByChainId(chainId);
-const allSwapTokensFromConfig = sodax.config.getSupportedSwapTokens();
-```
-
-#### Money Market Configuration (sodax.moneyMarket)
-
-```typescript
-import { Sodax, type SpokeChainId, type Token, type Address } from "@sodax/sdk";
-
-const sodax = new Sodax();
-await sodax.initialize(); // Initialize for dynamic config (optional but recommended)
-
-// Get supported money market tokens for a specific chain
-const supportedMoneyMarketTokens: readonly Token[] = sodax.moneyMarket.getSupportedTokensByChainId(chainId);
-
-// Get all supported money market tokens
-const allMoneyMarketTokens = sodax.moneyMarket.getSupportedTokens();
-
-// Get supported money market reserves
-const reserves: readonly Address[] = sodax.moneyMarket.getSupportedReserves();
-
-// Alternative: Access through config service
-const moneyMarketTokensFromConfig: readonly Token[] = sodax.config.getSupportedMoneyMarketTokensByChainId(chainId);
-const allMoneyMarketTokensFromConfig = sodax.config.getSupportedMoneyMarketTokens();
-```
-
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for additional static constants and configurations.
-
-### Wallet Providers
-
-Sodax SDK does not force the usage of a specific wallet or library, but requires client to provide implementation of `IWalletProvider` interfaces (e.g. for EVM chains `IEvmWalletProvider` has to be implemented).
-
-As part of Sodax suite, Wallet SDK is also going to be provided as one example wallet provider implementation. You are free to choose between using our Wallet SDK or implementing your own wallet connectivity for each chain.
-
-- Supported Wallet Provider Interface (`IWalletProvider`)
-  - `IEvmWalletProvider`: EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon) ✅
-  - `ISuiWalletProvider`: Sui ✅
-  - `IIconWalletProvider`: ICON ✅
-  - `IStellarWalletProvider`: Stellar ✅
-  - `ISolanaWalletProvider`: Solana ✅
-  - `IInjectiveWalletProvider`: Injective ✅
-
-### Initialising Spoke Provider
-
-Spoke provider is a main instance used to interact with Sodax features because it contains all the relevant information we need to successfully execute features. You should generally establish SpokeProvider instances for each chain (e.g. evm, sui, etc..) user connects wallet to.
-
-Spoke is simply a chain you are connecting to and SpokeProvider is a container of relevant wallet provider and chain configuration.
-
-**IMPORTANT**: Sonic Spoke Provider must be instantiated as `SonicSpokeProvider` instance even though it is of `EVM` chain type. This is due to the fact that Sonic chain is a hub chain of Sodax and needs special handling under the hood.
-
-EVM Provider example:
-
-```typescript
-import { EvmProvider, EvmHubProvider, EvmSpokeProvider, AVALANCHE_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from "@sodax/sdk"
-
-const evmWalletProvider: IEvmWalletProvider = // injected by Wallet SDK or your own implementation
-
-// spoke provider represents connection to a specific chain, should be instantiated for each supported chain when user connects wallet
-const bscSpokeProvider: EvmSpokeProvider = new EvmSpokeProvider(
-  evmWalletProvider, // user connected wallet
-  spokeChainConfig[BSC_MAINNET_CHAIN_ID], // connected chain config
-);
-```
-
-### Estimate Gas for Raw Transactions
-
-The `estimateGas` function allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for all Sodax operations (swaps, money market operations, approvals) to provide users with accurate gas estimates.
-
-The function is available on all service classes:
-- `SwapService.estimateGas()` - for solver/intent operations (reachable through `sodax.swap`)
-- `MoneyMarketService.estimateGas()` - for money market operations (reachable through `sodax.moneyMarket`)
-- `SpokeService.estimateGas()` - for general spoke chain operations
-
-```typescript
-import { 
-  SwapService, 
-  MoneyMarketService, 
-  SpokeService,
-  MoneyMarketSupplyParams 
-} from "@sodax/sdk";
-
-// Example: Estimate gas for a solver swap transaction
-const createIntentResult = await sodax.swap.createIntent(
-  createIntentParams,
-  bscSpokeProvider,
-  partnerFeeAmount,
-  true, // true = get raw transaction
-);
-
-if (createIntentResult.ok) {
-  const [rawTx, intent] = createIntentResult.value;
-  
-  // Estimate gas for the raw transaction
-  const gasEstimate = await SwapService.estimateGas(rawTx, bscSpokeProvider);
-  
-  if (gasEstimate.ok) {
-    console.log('Estimated gas for swap:', gasEstimate.value);
-  } else {
-    console.error('Failed to estimate gas for swap:', gasEstimate.error);
-  }
-}
-
-// Example: Estimate gas for a money market supply transaction
-const supplyResult = await sodax.moneyMarket.createSupplyIntent(
-  supplyParams,
-  bscSpokeProvider,
-  true, // true = get raw transaction
-);
-
-if (supplyResult.ok) {
-  const rawTx = supplyResult.value;
-  
-  // Estimate gas for the raw transaction
-  const gasEstimate = await MoneyMarketService.estimateGas(rawTx, bscSpokeProvider);
-  
-  if (gasEstimate.ok) {
-    console.log('Estimated gas for supply:', gasEstimate.value);
-  } else {
-    console.error('Failed to estimate gas for supply:', gasEstimate.error);
-  }
-}
-
-// Example: Estimate gas for an approval transaction
-const approveResult = await sodax.swap.approve(
-  tokenAddress,
-  amount,
-  bscSpokeProvider,
-  true // true = get raw transaction
-);
-
-if (approveResult.ok) {
-  const rawTx = approveResult.value;
-  
-  // Estimate gas for the approval transaction
-  const gasEstimate = await SpokeService.estimateGas(rawTx, bscSpokeProvider);
-  
-  if (gasEstimate.ok) {
-    console.log('Estimated gas for approval:', gasEstimate.value);
-  } else {
-    console.error('Failed to estimate gas for approval:', gasEstimate.error);
-  }
-}
-```
-
-### Accessing Sodax Features
-
-Sodax feature set currently contain:
-- Swap (Solver): used for intent based swaps. Please find documentation for Swaps part of the SDK in [SWAPS.md](./docs/SWAPS.md)
-- Money Market: used for lending and borowing. Please find documentation for Money Market part of the SDK in [MONEY_MARKET.md](./docs/MONEY_MARKET.md)
-- Bridge: provides functionality to bridge tokens between different blockchain chains [BRIDGE.md](./docs/BRIDGE.md)
-- Staking: provides functionality to stake SODA tokens from different blockchain chains [STAKING.md](./docs/STAKING.md)
-
-## Intent Relay API
-
-Intent relay is internally used to relay transaction information from one chain to another.
-Sodax SDK abstracts the heavy lifting of using the relay, but you can find documentation for Intent Relay API in [INTENT_RELAY_API.md](./docs/INTENT_RELAY_API.md) in case you want to explore it.
-
-
 ## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-## Development
+## Development Commands
 
 ```bash
 # Install dependencies

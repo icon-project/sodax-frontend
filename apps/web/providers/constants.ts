@@ -24,7 +24,7 @@ export function chainIdToChainName(chainId: SpokeChainId): string {
 
 const testnet = process.env.NEXT_PUBLIC_TESTNET === 'YES';
 const hubChainId = SONIC_MAINNET_CHAIN_ID;
-const hubRpcUrl = 'https://rpc.soniclabs.com';
+const hubRpcUrl = 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg';
 
 const hubConfig = {
   hubRpcUrl,
@@ -47,7 +47,7 @@ export const mainnetSolverConfig = {
 export const sodaxConfig = {
   hubProviderConfig: hubConfig,
   moneyMarket: moneyMarketConfig,
-  swap: mainnetSolverConfig,
+  swaps: mainnetSolverConfig,
   relayerApiEndpoint: testnet
     ? 'https://testnet-xcall-relay.nw.iconblockchain.xyz'
     : 'https://xcall-relay.nw.iconblockchain.xyz',
@@ -62,6 +62,8 @@ export const rpcConfig: RpcConfig = {
   '0x38.bsc': 'https://bnb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   '0xa.optimism': 'https://opt-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   '0x89.polygon': 'https://polygon-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  ethereum: 'https://eth-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
 
   // Other chains
   '0x1.icon': 'https://ctz.solidwallet.io/api/v3',

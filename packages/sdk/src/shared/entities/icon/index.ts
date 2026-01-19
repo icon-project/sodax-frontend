@@ -1,3 +1,3 @@
-export { IconSpokeProvider } from './IconSpokeProvider.js';
-export { getIconAddressBytes } from './utils.js';
+export { IconSpokeProvider, IconRawSpokeProvider, IconBaseSpokeProvider } from './IconSpokeProvider.js';
+export * from './utils.js';
 export * from './HanaWalletConnector.js';

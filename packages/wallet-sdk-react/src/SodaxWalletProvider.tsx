@@ -33,7 +33,7 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
 
   return (
-    <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
+    <WagmiProvider config={wagmiConfig}>
       <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
         <SuiWalletProvider autoConnect={true}>
           <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? ''}>

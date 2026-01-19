@@ -13,6 +13,7 @@ import { SodaxIcon } from '../icons/sodax-icon';
 import { Separator } from '@radix-ui/react-separator';
 import { useRouter } from 'next/navigation';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useAppStore } from '@/stores/app-store-provider';
 
 const carouselItems = [
   { id: 1, src: '/coin/base.png', alt: 'BASE' },
@@ -33,6 +34,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
   const carouselRef = useRef(null);
   const [api, setApi] = useState<CarouselApi>();
   const router = useRouter();
+  const { setShouldTriggerAnimation } = useAppStore(state => state);
   useEffect(() => {
     if (!api) {
       return;
@@ -95,7 +97,14 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
               </li>
             </ul>
             <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton onClick={() => router.push('/swap')}>launch apps</MainCtaButton>
+              <MainCtaButton
+                onClick={() => {
+                  router.push('/swap');
+                  setShouldTriggerAnimation(true);
+                }}
+              >
+                launch apps
+              </MainCtaButton>
             </div>
           </div>
         </div>
@@ -199,7 +208,14 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
               <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
             </div>
             <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton onClick={() => router.push('/swap')}>launch apps</MainCtaButton>
+              <MainCtaButton
+                onClick={() => {
+                  router.push('/swap');
+                  setShouldTriggerAnimation(true);
+                }}
+              >
+                launch apps
+              </MainCtaButton>
             </div>
           </div>
         </div>

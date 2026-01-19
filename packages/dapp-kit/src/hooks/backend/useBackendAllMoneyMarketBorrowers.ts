@@ -1,7 +1,13 @@
 // packages/dapp-kit/src/hooks/backend/useAllMoneyMarketBorrowers.ts
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { MoneyMarketBorrowers } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
+import type { BackendPaginationParams } from './types';
+
+export type UseBackendAllMoneyMarketBorrowersParams = {
+  pagination: BackendPaginationParams;
+  queryOptions?: UseQueryOptions<MoneyMarketBorrowers | undefined, Error>;
+};
 
 /**
  * Hook for fetching all money market borrowers from the backend API.
@@ -42,20 +48,32 @@ import { useSodaxContext } from '../shared/useSodaxContext';
  * - Returns borrowers across all money market assets
  */
 export const useBackendAllMoneyMarketBorrowers = (
-  params: { offset: string; limit: string } | undefined,
+  params: UseBackendAllMoneyMarketBorrowersParams | undefined,
 ): UseQueryResult<MoneyMarketBorrowers | undefined> => {
   const { sodax } = useSodaxContext();
 
+  const defaultQueryOptions = {
+    queryKey: ['api', 'mm', 'borrowers', 'all', params],
+    enabled: !!params && !!params.pagination.offset && !!params.pagination.limit,
+    retry: 3,
+  };
+
+  const queryOptions = {
+    ...defaultQueryOptions,
+    ...params?.queryOptions,
+  };
+
   return useQuery({
-    queryKey: ['backend', 'moneymarket', 'borrowers', 'all', params],
+    ...queryOptions,
     queryFn: async (): Promise<MoneyMarketBorrowers | undefined> => {
-      if (!params || !params.offset || !params.limit) {
+      if (!params || !params.pagination.offset || !params.pagination.limit) {
         return undefined;
       }
 
-      return sodax.backendApi.getAllMoneyMarketBorrowers(params);
+      return sodax.backendApi.getAllMoneyMarketBorrowers({
+        offset: params.pagination.offset,
+        limit: params.pagination.limit,
+      });
     },
-    enabled: !!params && !!params.offset && !!params.limit,
-    retry: 3,
   });
 };

@@ -35,7 +35,14 @@ export type Token = {
   address: string;
 };
 
-export type XToken = Token & {
+export type Erc20Token = {
+  name: string;
+  symbol: string;
+  decimals: number;
+  address: Address;
+};
+
+export type XToken = (Token | Erc20Token) & {
   xChainId: ChainId;
 };
 
@@ -115,8 +122,8 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     stakedSoda: Address;
     xSoda: Address;
     stakingRouter: Address;
+    walletRouter: Address;
   };
-
   nativeToken: Address;
   wrappedNativeToken: Address;
 };
@@ -125,7 +132,7 @@ export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
 
 export type BaseSpokeChainConfig<T extends ChainType> = {
   chain: SpokeChainInfo<T>;
-  addresses: { [key: string]: string | Uint8Array };
+  addresses: { [key: string]: string };
   supportedTokens: Record<string, XToken>;
   nativeToken: string;
   bnUSD: string;
@@ -220,6 +227,7 @@ export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
     testToken?: string;
     intentFiller: string;
   };
+  rpcUrl: string;
 };
 
 export type IconAddress = `hx${string}` | `cx${string}`;
@@ -254,11 +262,7 @@ export type MoneyMarketConfig = {
   poolAddressesProvider: Address;
   bnUSD: Address;
   bnUSDVault: Address;
-};
-
-export type VaultType = {
-  address: Address; // vault address
-  reserves: Address[]; // hub asset addresses contained in the vault
+  bnUSDAToken: Address;
 };
 
 export type HubAsset = {

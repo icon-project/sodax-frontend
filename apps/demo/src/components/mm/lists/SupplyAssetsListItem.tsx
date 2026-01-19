@@ -1,47 +1,85 @@
-import React from 'react';
+// apps/demo/src/components/mm/lists/SupplyAssetsListItem.tsx
+import React, { type ReactElement } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import type { XToken } from '@sodax/types';
+import type { XToken, Address } from '@sodax/types';
 import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
-import { BorrowButton } from './BorrowButton';
 import { RepayButton } from './RepayButton';
-import type { AggregatedReserveData } from '@sodax/sdk';
+import { formatUnits, isAddress } from 'viem';
+import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
+import { useReserveMetrics } from '@/hooks/useReserveMetrics';
+import { OldBorrowButton } from './OldBorrowButton';
+
 interface SupplyAssetsListItemProps {
   token: XToken;
   walletBalance: string;
-  balance: string;
-  debt: string;
-  reserve: AggregatedReserveData;
+  formattedReserves: FormatReserveUSDResponse[];
+  userReserves: readonly UserReserveData[];
+  aTokenBalancesMap?: Map<Address, bigint>;
 }
 
-export function SupplyAssetsListItem({ token, balance, walletBalance, debt, reserve }: SupplyAssetsListItemProps) {
-  // TODO use ERC20 hook to get the aToken token info as XToken
-  // this is just quickfix
-  const aToken: XToken = {
-    address: reserve.aTokenAddress,
-    decimals: 18,
-    symbol: 'aToken-${token.symbol}',
-    name: 'aToken-${token.name}',
-    xChainId: token.xChainId,
-  };
+export function SupplyAssetsListItem({
+  token,
+  walletBalance,
+  formattedReserves,
+  userReserves,
+  aTokenBalancesMap,
+}: SupplyAssetsListItemProps): ReactElement {
+  const metrics = useReserveMetrics({
+    token,
+    formattedReserves: formattedReserves,
+    userReserves: userReserves as UserReserveData[],
+  });
+
+  // Get aToken balance from the pre-fetched map
+  const aTokenAddress = metrics.formattedReserve?.aTokenAddress;
+  const aTokenBalance =
+    aTokenAddress && isAddress(aTokenAddress) && aTokenBalancesMap
+      ? aTokenBalancesMap.get(aTokenAddress as Address)
+      : undefined;
+
+  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(4) : undefined;
+
+  const formattedDebt = metrics.userReserve
+    ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
+    : undefined;
+
+  const availableToBorrow = !metrics.formattedReserve
+    ? undefined
+    : metrics.formattedReserve.borrowCap === '0'
+      ? formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), 18)
+      : Math.min(
+          Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), 18)),
+          Number.parseInt(metrics.formattedReserve.borrowCap) -
+            Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
+        ).toFixed(6);
 
   return (
     <TableRow>
-      <TableCell>{token.symbol}</TableCell>
+      <TableCell className="font-bold text-cherry-dark">{token.symbol}</TableCell>
       <TableCell>{walletBalance}</TableCell>
-      <TableCell>{balance}</TableCell>
-      <TableCell>{debt}</TableCell>
       <TableCell>
-        <SupplyButton token={token} reserve={reserve} />
+        <div className="flex flex-col items-start">
+          {formattedBalance ?? '-'}{' '}
+          <span className="text-xs text-muted-foreground">{metrics.supplyBalanceUSD || '-'}</span>
+        </div>
       </TableCell>
+      <TableCell>{metrics.liquidationThreshold || '-'}</TableCell>
       <TableCell>
-        <WithdrawButton token={token} aToken={aToken} reserve={reserve} />
+        <div className="flex flex-col items-start">
+          {metrics.totalSupply || '-'}{' '}
+          <span className="text-xs text-muted-foreground">{metrics.totalLiquidityUSD || '-'}</span>
+        </div>
       </TableCell>
-      <TableCell>
-        <BorrowButton token={token} aToken={aToken} reserve={reserve} />
-      </TableCell>
-      <TableCell>
-        <RepayButton token={token} reserve={reserve} />
+      <TableCell>{metrics.supplyAPY || '-'}</TableCell>
+      <TableCell>{metrics.supplyAPR || '-'}</TableCell>
+      <TableCell>{formattedDebt}</TableCell>
+      <TableCell>{availableToBorrow}</TableCell>
+      <TableCell className="flex flex-row gap-2">
+        <SupplyButton token={token} />
+        <WithdrawButton token={token} />
+        <OldBorrowButton token={token} />
+        <RepayButton token={token} />
       </TableCell>
     </TableRow>
   );

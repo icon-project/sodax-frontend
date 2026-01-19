@@ -13,7 +13,6 @@ import {
   type SpokeChainId,
   type Token,
   type XToken,
-  type GetHubVaultsApiResponse,
   type EvmHubChainConfig,
   type GetAllConfigApiResponse,
   defaultSodaxConfig,
@@ -21,6 +20,7 @@ import {
   type GetMoneyMarketTokensApiResponse,
   type GetSwapTokensByChainIdApiResponse,
   type GetSwapTokensApiResponse,
+  CONFIG_VERSION,
 } from '@sodax/types';
 import type { BackendApiService } from '../../backendApi/BackendApiService.js';
 import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT } from '../constants.js';
@@ -54,7 +54,6 @@ export class ConfigService {
   private supportedSodaVaultAssetsSet!: Set<Address>;
   private intentRelayChainIdToSpokeChainIdMap!: Map<IntentRelayChainId, SpokeChainId>;
   private supportedTokensPerChain!: Map<SpokeChainId, readonly XToken[]>;
-  private hubVaultsAddressSet!: Set<Address>;
   private moneyMarketReserveAssetsSet!: Set<Address>;
   private spokeChainIdsSet!: Set<SpokeChainId>;
 
@@ -70,9 +69,18 @@ export class ConfigService {
 
   public async initialize(): Promise<Result<void>> {
     try {
-      this.sodaxConfig = await this.backendApiService.getAllConfig();
-      this.loadSodaxConfigDataStructures(this.sodaxConfig);
-      this.initialized = true;
+      const response = await this.backendApiService.getAllConfig();
+
+      // if the config version is not set or is less than the current version, log a warning and fall back to default config
+      if (!response.version || response.version < CONFIG_VERSION) {
+        console.warn(
+          `Dynamic config version is less than the current version, resorting to the default one. Current version: ${CONFIG_VERSION}, response version: ${response.version}`,
+        );
+      } else {
+        this.sodaxConfig = response;
+        this.loadSodaxConfigDataStructures(this.sodaxConfig);
+        this.initialized = true;
+      }
 
       return {
         ok: true,
@@ -102,16 +110,18 @@ export class ConfigService {
     return this.sodaxConfig.supportedHubAssets;
   }
 
-  public getHubVaults(): GetHubVaultsApiResponse {
-    return this.sodaxConfig.supportedHubVaults;
-  }
-
   public getRelayChainIdMap(): GetRelayChainIdMapApiResponse {
     return this.sodaxConfig.relayChainIdMap;
   }
 
   public getMoneyMarketTokens(): GetMoneyMarketTokensApiResponse {
     return this.sodaxConfig.supportedMoneyMarketTokens;
+  }
+
+  public getMoneyMarketToken(chainId: SpokeChainId, token: string): Token | undefined {
+    return this.sodaxConfig.supportedMoneyMarketTokens[chainId].find(
+      t => t.address.toLowerCase() === token.toLowerCase(),
+    );
   }
 
   public getMoneyMarketReserveAssets(): GetMoneyMarketReserveAssetsApiResponse {
@@ -126,23 +136,24 @@ export class ConfigService {
     return this.originalAssetTohubAssetMap.get(chainId)?.has(asset.toLowerCase()) ?? false;
   }
 
-  public getOriginalAssetAddress(
-    chainId: SpokeChainId,
-    hubAsset: Address,
-  ): OriginalAssetAddress | undefined {
+  public getOriginalAssetAddress(chainId: SpokeChainId, hubAsset: Address): OriginalAssetAddress | undefined {
     return this.hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
   }
 
-  public isValidHubAsset(hubAsset: Address): boolean{
+  public isValidHubAsset(hubAsset: Address): boolean {
     return this.supportedHubAssetsSet.has(hubAsset.toLowerCase() as Address);
   }
 
-  public isValidSodaVaultAsset(vault: Address): boolean{
+  public isValidSodaVaultAsset(vault: string): boolean {
     return this.supportedSodaVaultAssetsSet.has(vault.toLowerCase() as Address);
   }
 
-  public isValidVault(vault: Address): boolean{
-    return this.isValidSodaVaultAsset(vault);
+  public isValidVault(vault: string | Token): boolean {
+    if (typeof vault === 'string') {
+      return this.isValidSodaVaultAsset(vault);
+    }
+
+    return this.isValidSodaVaultAsset(vault.address);
   }
 
   public isValidChainHubAsset(chainId: SpokeChainId, hubAsset: Address): boolean {
@@ -229,7 +240,9 @@ export class ConfigService {
   }
 
   public isMoneyMarketSupportedToken(chainId: SpokeChainId, token: string): boolean {
-    return this.sodaxConfig.supportedMoneyMarketTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
+    return this.sodaxConfig.supportedMoneyMarketTokens[chainId].some(
+      t => t.address.toLowerCase() === token.toLowerCase(),
+    );
   }
 
   public isMoneyMarketReserveAsset(asset: Address): boolean {
@@ -240,13 +253,8 @@ export class ConfigService {
     return this.moneyMarketReserveAssetsSet.has(hubAsset.toLowerCase() as Address);
   }
 
-  public getHubVaultsAddressSet(): Set<Address> {
-    return this.hubVaultsAddressSet;
-  }
-
   private loadSodaxConfigDataStructures(sodaxConfig: GetAllConfigApiResponse): void {
     this.loadHubAssetDataStructures(sodaxConfig.supportedHubAssets);
-    this.loadHubVaultsDataStructures(sodaxConfig.supportedHubVaults);
     this.loadSpokeChainDataStructures(sodaxConfig.supportedChains);
     this.loadRelayChainIdMapDataStructures(sodaxConfig.relayChainIdMap);
     this.loadSpokeChainConfigDataStructures(sodaxConfig.spokeChainConfig);
@@ -286,10 +294,6 @@ export class ConfigService {
         Object.values(assets).map(info => info.vault.toLowerCase() as Address),
       ),
     );
-  }
-
-  private loadHubVaultsDataStructures(hubVaults: GetHubVaultsApiResponse): void {
-    this.hubVaultsAddressSet = new Set(Object.values(hubVaults).map(vault => vault.address.toLowerCase() as Address));
   }
 
   private loadSpokeChainDataStructures(chains: GetChainsApiResponse): void {

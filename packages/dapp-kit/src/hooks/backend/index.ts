@@ -10,6 +10,7 @@
 // Intent hooks
 export { useBackendIntentByTxHash } from './useBackendIntentByTxHash';
 export { useBackendIntentByHash } from './useBackendIntentByHash';
+export { useBackendUserIntents } from './useBackendUserIntents';
 
 // Solver hooks
 export { useBackendOrderbook } from './useBackendOrderbook';
@@ -21,3 +22,4 @@ export { useBackendMoneyMarketAsset } from './useBackendMoneyMarketAsset';
 export { useBackendMoneyMarketAssetBorrowers } from './useBackendMoneyMarketAssetBorrowers';
 export { useBackendMoneyMarketAssetSuppliers } from './useBackendMoneyMarketAssetSuppliers';
 export { useBackendAllMoneyMarketBorrowers } from './useBackendAllMoneyMarketBorrowers';
+export * from './types';

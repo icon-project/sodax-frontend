@@ -1,6 +1,7 @@
 import invariant from 'tiny-invariant';
 import {
   type SpokeProvider,
+  type SpokeProviderType,
   type Result,
   type TxReturnType,
   SpokeService,
@@ -8,8 +9,6 @@ import {
   Erc20Service,
   type GetSpokeDepositParamsType,
   SonicSpokeService,
-  SonicSpokeProvider,
-  EvmSpokeProvider,
   type EvmHubProvider,
   relayTxAndWaitPacket,
   SolanaSpokeProvider,
@@ -31,9 +30,12 @@ import {
   type OptionalTimeout,
   type GetAddressType,
   type BridgeServiceConfig,
-  StellarSpokeProvider,
   wrappedSonicAbi,
+  type StellarSpokeProviderType,
+  type EvmSpokeProviderType,
+  type SonicSpokeProviderType,
 } from '../index.js';
+import { isEvmSpokeProviderType, isSonicSpokeProviderType, isStellarSpokeProviderType } from '../shared/guards.js';
 import type { SpokeChainId, XToken, Hex, HttpUrl } from '@sodax/types';
 import { encodeFunctionData, isAddress } from 'viem';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
@@ -48,7 +50,7 @@ export type CreateBridgeIntentParams = {
   recipient: string; // non-encoded recipient address
 };
 
-export type BridgeParams<S extends SpokeProvider> = Prettify<
+export type BridgeParams<S extends SpokeProviderType> = Prettify<
   {
     params: CreateBridgeIntentParams;
     spokeProvider: S;
@@ -121,7 +123,7 @@ export class BridgeService {
    * @param spokeProvider - The spoke provider
    * @returns {Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>>}
    */
-  public async isAllowanceValid<S extends SpokeProvider>({
+  public async isAllowanceValid<S extends SpokeProviderType>({
     params,
     spokeProvider,
   }: BridgeParams<S>): Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>> {
@@ -132,13 +134,13 @@ export class BridgeService {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
       // For regular EVM chains (non-Sonic), check ERC20 allowance against assetManager
-      if (spokeProvider instanceof EvmSpokeProvider) {
+      if (isEvmSpokeProviderType(spokeProvider)) {
         invariant(isAddress(params.srcAsset), 'Invalid source asset address for EVM chain');
 
         const allowanceResult = await Erc20Service.isAllowanceValid(
           params.srcAsset,
           params.amount,
-          walletAddress as GetAddressType<EvmSpokeProvider>,
+          walletAddress as GetAddressType<EvmSpokeProviderType>,
           spokeProvider.chainConfig.addresses.assetManager,
           spokeProvider,
         );
@@ -159,7 +161,7 @@ export class BridgeService {
         };
       }
 
-      if (spokeProvider instanceof StellarSpokeProvider) {
+      if (isStellarSpokeProviderType(spokeProvider)) {
         const allowanceResult = await StellarSpokeService.hasSufficientTrustline(
           params.srcAsset,
           params.amount,
@@ -181,15 +183,18 @@ export class BridgeService {
       }
 
       // For Sonic chain, check ERC20 allowance against userRouter
-      if (spokeProvider instanceof SonicSpokeProvider) {
+      if (isSonicSpokeProviderType(spokeProvider)) {
         invariant(isAddress(params.srcAsset), 'Invalid source asset address for Sonic chain');
 
-        const userRouter = await SonicSpokeService.getUserRouter(walletAddress as `0x${string}`, spokeProvider);
+        const userRouter = await SonicSpokeService.getUserRouter(
+          walletAddress as GetAddressType<SonicSpokeProviderType>,
+          spokeProvider,
+        );
 
         const allowanceResult = await Erc20Service.isAllowanceValid(
           params.srcAsset,
           params.amount,
-          walletAddress as GetAddressType<SonicSpokeProvider>,
+          walletAddress as GetAddressType<SonicSpokeProviderType>,
           userRouter,
           spokeProvider,
         );
@@ -233,7 +238,7 @@ export class BridgeService {
    * @param raw - Whether to return raw transaction data
    * @returns Promise<Result<TxReturnType<S, R>, BridgeError<'APPROVAL_FAILED'>>>
    */
-  public async approve<S extends SpokeProvider, R extends boolean = false>({
+  public async approve<S extends SpokeProviderType, R extends boolean = false>({
     params,
     spokeProvider,
     raw,
@@ -245,7 +250,7 @@ export class BridgeService {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
       // For regular EVM chains (non-Sonic), approve against assetManager
-      if (spokeProvider instanceof EvmSpokeProvider) {
+      if (isEvmSpokeProviderType(spokeProvider)) {
         invariant(isAddress(params.srcAsset), 'Invalid source asset address for EVM chain');
 
         const result = await Erc20Service.approve(
@@ -258,24 +263,24 @@ export class BridgeService {
 
         return {
           ok: true,
-          value: result as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
-      if (spokeProvider instanceof StellarSpokeProvider) {
+      if (isStellarSpokeProviderType(spokeProvider)) {
         const result = await StellarSpokeService.requestTrustline(params.srcAsset, params.amount, spokeProvider, raw);
         return {
           ok: true,
-          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
       // For Sonic chain, approve against userRouter
-      if (spokeProvider instanceof SonicSpokeProvider) {
+      if (isSonicSpokeProviderType(spokeProvider)) {
         invariant(isAddress(params.srcAsset), 'Invalid source asset address for Sonic chain');
 
         const userRouter = await SonicSpokeService.getUserRouter(
-          walletAddress as GetAddressType<SonicSpokeProvider>,
+          walletAddress as GetAddressType<SonicSpokeProviderType>,
           spokeProvider,
         );
 
@@ -283,7 +288,7 @@ export class BridgeService {
 
         return {
           ok: true,
-          value: result as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
@@ -433,7 +438,7 @@ export class BridgeService {
    *   console.error('Bridge intent creation failed:', result.error);
    * }
    */
-  async createBridgeIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>({
+  async createBridgeIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>({
     params,
     spokeProvider,
     fee = this.config.partnerFee,

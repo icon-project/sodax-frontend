@@ -1,63 +1,63 @@
-// packages/dapp-kit/src/hooks/backend/useOrderbook.ts
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { OrderbookResponse } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
+import type { BackendPaginationParams } from './types';
+
+export type UseBackendOrderbookParams = {
+  queryOptions?: UseQueryOptions<OrderbookResponse | undefined, Error>;
+  pagination?: BackendPaginationParams;
+};
 
 /**
  * Hook for fetching the solver orderbook from the backend API.
  *
- * This hook provides access to the solver orderbook data, including intent states
- * and intent data for all available intents. The data is automatically fetched
- * and cached using React Query with pagination support.
+ * @param {UseBackendOrderbookParams | undefined} params - Optional parameters:
+ *   - `pagination`: Pagination configuration (see `BackendPaginationParams`), including
+ *      `offset` and `limit` (both required for fetch to be enabled).
+ *   - `queryOptions`: Optional React Query options to override default behavior.
  *
- * @param {Object} params - Pagination parameters for the orderbook
- * @param {string} params.offset - The offset for pagination (number as string)
- * @param {string} params.limit - The limit for pagination (number as string)
- *
- * @returns {UseQueryResult<OrderbookResponse | undefined>} A query result object containing:
- *   - data: The orderbook response data when available
- *   - isLoading: Boolean indicating if the request is in progress
- *   - error: Error object if the request failed
- *   - refetch: Function to manually trigger a data refresh
+ * @returns {UseQueryResult<OrderbookResponse | undefined, Error>} React Query result object:
+ *   - `data`: The orderbook response, or undefined if unavailable.
+ *   - `isLoading`: Loading state.
+ *   - `error`: Error instance if the query failed.
+ *   - `refetch`: Function to re-trigger the query.
  *
  * @example
- * ```typescript
- * const { data: orderbook, isLoading, error } = useOrderbook({
- *   offset: '0',
- *   limit: '10'
+ * const { data, isLoading, error } = useBackendOrderbook({
+ *   pagination: { offset: '0', limit: '10' },
+ *   queryOptions: { staleTime: 60000 },
  * });
  *
- * if (isLoading) return <div>Loading orderbook...</div>;
- * if (error) return <div>Error: {error.message}</div>;
- * if (orderbook) {
- *   console.log('Total intents:', orderbook.total);
- *   console.log('Intents:', orderbook.data);
- * }
- * ```
- *
  * @remarks
- * - The query is disabled when params are undefined or invalid
- * - Uses React Query for efficient caching and state management
- * - Automatically handles error states and loading indicators
- * - Stale time of 30 seconds for real-time orderbook data
- * - Supports pagination through offset and limit parameters
+ * - Query is disabled if `params?.pagination`, `offset`, or `limit` are missing/empty.
+ * - Caches and manages server state using React Query.
+ * - Default `staleTime` is 30 seconds to support near-real-time updates.
  */
 export const useBackendOrderbook = (
-  params: { offset: string; limit: string } | undefined,
+  params: UseBackendOrderbookParams | undefined,
 ): UseQueryResult<OrderbookResponse | undefined> => {
   const { sodax } = useSodaxContext();
 
+  const defaultQueryOptions = {
+    queryKey: ['api', 'solver', 'orderbook', params?.pagination?.offset, params?.pagination?.limit],
+    enabled: !!params?.pagination && !!params?.pagination.offset && !!params?.pagination.limit,
+    staleTime: 30 * 1000, // 30 seconds for real-time data
+    retry: 3,
+  };
+
+  const queryOptions = {
+    ...defaultQueryOptions,
+    ...params?.queryOptions, // override default query options if provided
+  };
+
   return useQuery({
-    queryKey: ['backend', 'solver', 'orderbook', params],
+    ...queryOptions,
     queryFn: async (): Promise<OrderbookResponse | undefined> => {
-      if (!params || !params.offset || !params.limit) {
+      if (!params?.pagination || !params?.pagination.offset || !params?.pagination.limit) {
         return undefined;
       }
 
-      return sodax.backendApi.getOrderbook(params);
+      return sodax.backendApi.getOrderbook(params.pagination);
     },
-    enabled: !!params && !!params.offset && !!params.limit,
-    staleTime: 30 * 1000, // 30 seconds for real-time data
-    retry: 3,
   });
 };

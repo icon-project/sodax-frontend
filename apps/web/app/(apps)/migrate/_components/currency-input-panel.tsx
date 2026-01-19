@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import CanLogo from './can-logo';
+import CanLogo from '@/components/shared/can-logo';
 import BnUSDChainSelector from './bnusd-chain-selector';
 import { isLegacybnUSDToken, isNewbnUSDToken, spokeChainConfig } from '@sodax/sdk';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
@@ -53,6 +53,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleCurrencyAreaClick = (): void => {
+    if (isMobile) return;
     // Only show chain selector for bnUSD tokens
     if (isLegacybnUSDToken(currency) || isNewbnUSDToken(currency)) {
       setIsChainSelectorOpen(true);

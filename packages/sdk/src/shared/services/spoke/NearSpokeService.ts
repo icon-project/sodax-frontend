@@ -1,7 +1,13 @@
 import { type Address, fromHex, type Hex, toHex } from 'viem';
 
 import type { EvmHubProvider } from '../../entities/index.js';
-import type { NearReturnType, PromiseNearTxReturnType } from '../../index.js';
+import {
+  isNearRawSpokeProvider,
+  type NearReturnType,
+  type NearSpokeProviderType,
+  type PromiseNearTxReturnType,
+  type TxReturnType,
+} from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import type { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
 import { getIntentRelayChainId, type HubAddress } from '@sodax/types';
@@ -34,7 +40,7 @@ export class NearSpokeService {
    */
   public static async deposit<R extends boolean = false>(
     params: NearSpokeDepositParams,
-    spokeProvider: NearSpokeProvider,
+    spokeProvider: NearSpokeProviderType,
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseNearTxReturnType<R> {
@@ -52,7 +58,7 @@ export class NearSpokeService {
       amount: params.amount.toString(),
       data: Array.from(fromHex(params.data, 'bytes')),
     });
-    if (raw) {
+    if (raw || isNearRawSpokeProvider(spokeProvider)) {
       return txn as NearReturnType<R>;
     }
     const hash = await spokeProvider.submit(txn);
@@ -65,7 +71,7 @@ export class NearSpokeService {
    * @param {CWSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static async getDeposit(token: string, spokeProvider: NearSpokeProvider): Promise<bigint> {
+  public static async getDeposit(token: string, spokeProvider: NearSpokeProviderType): Promise<bigint> {
     const bal = await spokeProvider.getBalance(token);
     return BigInt(bal as string);
   }
@@ -76,15 +82,15 @@ export class NearSpokeService {
    * @param {Hex} payload - The payload to send to the contract.
    * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {PromiseNearTxReturnType<R>} A promise that resolves to the transaction hash.
+   * @returns {Promise<TxReturnType<S, R>>} A promise that resolves to the transaction hash.
    */
-  public static async callWallet<R extends boolean = false>(
+  public static async callWallet<S extends NearSpokeProviderType, R extends boolean = false>(
     from: HubAddress,
     payload: Hex,
-    spokeProvider: NearSpokeProvider,
+    spokeProvider: S,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseNearTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return NearSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
@@ -95,25 +101,25 @@ export class NearSpokeService {
    * @param {Address} dstAddress - The address on the hub chain.
    * @param {Hex} payload - The payload to send.
    * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
-   * @returns {PromiseNearTxReturnType<R>} A promise that resolves to the transaction hash.
+   * @returns {Promise<TxReturnType<S, R>>} A promise that resolves to the transaction hash.
    */
-  private static async call<R extends boolean = false>(
+  private static async call<S extends NearSpokeProviderType, R extends boolean = false>(
     dstChainId: bigint,
     dstAddress: Hex,
     payload: Hex,
-    spokeProvider: NearSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseNearTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const txn = await spokeProvider.sendMessage({
       dst_address: Array.from(fromHex(dstAddress, 'bytes')),
       dst_chain_id: Number.parseInt(dstChainId.toString()),
       payload: Array.from(fromHex(payload, 'bytes')),
     });
-    if (raw) {
-      return txn as NearReturnType<R>;
+    if (raw || isNearRawSpokeProvider(spokeProvider)) {
+      return txn as TxReturnType<S, R>;
     }
     const hash = await spokeProvider.submit(txn);
-    return hash as NearReturnType<R>;
+    return hash as TxReturnType<S, R>;
   }
 
   /**

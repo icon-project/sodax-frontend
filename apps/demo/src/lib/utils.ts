@@ -1,8 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { type AggregatedReserveData, SolverIntentStatusCode, type SpokeChainId, type UserReserveData, type XToken } from '@sodax/sdk';
-import { getSpokeTokenAddressByVault } from '@sodax/dapp-kit';
+import { hubAssets, SolverIntentStatusCode, type SpokeChainId } from '@sodax/sdk';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -84,24 +83,40 @@ export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): st
   return `${minutes}m remaining`;
 }
 
-export function findReserveByUnderlyingAsset(
-  underlyingAsset: string,
-  reserves: readonly AggregatedReserveData[],
-): AggregatedReserveData {
-  const reserve = reserves.find(reserve => reserve.underlyingAsset.toLowerCase() === underlyingAsset.toLowerCase());
-  if (!reserve) {
-    throw new Error(`Reserve not found for underlying asset: ${underlyingAsset}`);
-  }
-  return reserve;
+export function BigIntMin(a: bigint, b: bigint): bigint {
+  return a < b ? a : b;
 }
 
-export  function findUserReserveBySpokeTokenAddress(userReserves: readonly UserReserveData[], selectedChainId: SpokeChainId, token: XToken): UserReserveData {
-  const result = userReserves.find(
-    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase()
-  );
+/**
+ * Formats a large number into a compact, human-readable form.
+ * Examples:
+ *  - 2450000 → "2.45M"
+ *  - 1180 → "1.18K"
+ *  - 9520000000 → "9.52B"
+ */
+export function formatCompactNumber(value: string | number | bigint): string {
+  const num = typeof value === 'bigint' ? Number(value) : typeof value === 'string' ? Number.parseFloat(value) : value;
 
-  if (!result) {
-    throw new Error(`User reserve not found for spoke token address: ${token.address}`);
+  if (!Number.isFinite(num)) return '-';
+
+  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(4).replace(/\.?0+$/, '')}B`;
+
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(4).replace(/\.?0+$/, '')}M`;
+
+  if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
+
+  return num.toFixed(4);
+}
+
+export function getSpokeTokenAddressByVault(chainId: SpokeChainId, vaultAddress: string): string | undefined {
+  const chainAssets = hubAssets[chainId];
+  if (!chainAssets) return undefined;
+
+  // The KEY in hubAssets is the spoke token address!
+  for (const [spokeTokenAddress, info] of Object.entries(chainAssets)) {
+    if (info.vault.toLowerCase() === vaultAddress.toLowerCase()) {
+      return spokeTokenAddress;
+    }
   }
-  return result;
+  return undefined;
 }

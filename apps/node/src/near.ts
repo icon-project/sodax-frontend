@@ -76,7 +76,7 @@ const solverConfig = {
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const sodax = new Sodax({
-  swap: solverConfig,
+  swaps: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
@@ -123,7 +123,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
   );
   //const data="0x";
   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-  const txHash: Hash = await SpokeService.deposit(
+  const txHash = await SpokeService.deposit(
     {
       from: walletAddress,
       token,
@@ -158,7 +158,7 @@ async function withdrawAsset(
     evmHubProvider,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
+  const txHash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -197,7 +197,7 @@ async function createIntent(amount: bigint, inputToken: string, outputToken: str
     data: '0x',
   } satisfies CreateIntentParams;
 
-  const txHash = await sodax.swap.createIntent({
+  const txHash = await sodax.swaps.createIntent({
     intentParams: intent,
     spokeProvider,
   });
