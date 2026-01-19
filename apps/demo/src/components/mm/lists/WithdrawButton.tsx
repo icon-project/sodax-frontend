@@ -54,13 +54,14 @@ export function WithdrawButton({ token, onSuccess }: WithdrawButtonProps) {
 
       await waitForTransactionReceipt(txHash, walletProvider as IEvmWalletProvider);
 
-      // 1. Give the RPC node a moment to update its state
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // 2. BROAD INVALIDATION: Force every Money Market hook to refetch
-      // This targets 'aTokensBalances', 'userSummary', 'reserves', etc.
-      // This will force every Sodax hook currently on screen to refetch
-      await queryClient.invalidateQueries();
+      // After the withdraw transaction is confirmed, we explicitly refetch
+      // balances and reserve data so the UI updates immediately.
+      // Without this, values could appear outdated until the user navigates
+      // away or the data refreshes on its own.
+      await queryClient.refetchQueries({
+        predicate: query =>
+          query.queryKey.some(key => typeof key === 'string' && (key.includes('reserve') || key.includes('balance'))),
+      });
 
       onSuccess?.();
       setOpen(false);

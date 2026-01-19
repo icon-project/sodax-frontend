@@ -32,7 +32,6 @@ export function SupplyAssetsListItem({
     userReserves: userReserves as UserReserveData[],
   });
 
-  // 1. GET THE ADDRESS
   const aTokenAddress = metrics.formattedReserve?.aTokenAddress;
 
   // 2. GET THE RAW BIGINT FROM THE MAP
@@ -41,18 +40,11 @@ export function SupplyAssetsListItem({
       ? aTokenBalancesMap.get(aTokenAddress as Address)
       : undefined;
 
-  // 3. THE FIX: ALWAYS USE 18 DECIMALS FOR aTOKENS
-  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(4) : '-';
+  // ALWAYS USE 18 DECIMALS FOR aTOKENS
+  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(5) : '-';
 
-  // 4. OPTIONAL: FORMAT WALLET BALANCE (uses token's native decimals)
+  // OPTIONAL: FORMAT WALLET BALANCE (uses token's native decimals)
   const formattedWallet = walletBalance ? Number(walletBalance).toFixed(4) : '-';
-
-  // console.log(`--- Debug: ${token.symbol} ---`, {
-  //   aTokenBalance: aTokenBalance?.toString(),
-  //   underlyingBalanceFromMetrics: metrics.userReserve?.underlyingAsset,
-  //   supplyBalanceUSD: metrics.supplyBalanceUSD,
-  //   tokenDecimals: token.decimals,
-  // });
 
   const formattedDebt = metrics.userReserve
     ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
