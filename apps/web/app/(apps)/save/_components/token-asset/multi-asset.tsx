@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/save/_components/token-asset/multi-asset.tsx
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import type { XToken } from '@sodax/types';

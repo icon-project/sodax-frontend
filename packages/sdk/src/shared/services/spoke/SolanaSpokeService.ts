@@ -334,7 +334,7 @@ export class SolanaSpokeService {
     spokeProvider: SolanaSpokeProvider,
     signature: string,
     commitment: Finality = 'finalized',
-    timeoutMs = 120_000, // total time to wait
+    timeoutMs = 60_000, // total time to wait
   ): Promise<Result<boolean>> {
     try {
       const connection = new Connection(spokeProvider.chainConfig.rpcUrl, commitment);
