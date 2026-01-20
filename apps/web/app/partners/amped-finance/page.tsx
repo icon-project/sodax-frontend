@@ -3,6 +3,13 @@ import { PartnerPageLayout, generatePartnerMetadata } from '@/components/partner
 import type { Metadata } from 'next';
 import { Globe, BookOpen } from 'lucide-react';
 import { ShareButton } from '@/components/partners/share-button';
+import { 
+  AnimatedSection, 
+  AnimatedScrollSection, 
+  AnimatedStaggerContainer,
+  AnimatedStaggerChild,
+  AnimatedFadeIn 
+} from '@/components/partners/animated-section';
 
 // Local asset paths
 const imgLogo = '/partners/amped-finance/logo.svg';
@@ -26,7 +33,7 @@ export default function AmpedFinancePage() {
   return (
     <PartnerPageLayout metadata={partnerMetadata}>
       {/* Title */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 w-full">
+      <AnimatedSection className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 w-full">
         <div className="flex gap-3 md:gap-4 items-center">
           <div className="relative shrink-0 w-16 h-16 md:w-20 md:h-20">
             <Image alt="Amped Finance Logo" className="object-contain" src={imgLogo} width={80} height={80} />
@@ -51,14 +58,14 @@ export default function AmpedFinancePage() {
           </a>
           <ShareButton title="Amped Finance Case Study | SODAX Partners" />
         </div>
-      </div>
+      </AnimatedSection>
 
       {/* Section */}
       <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
         {/* Main Content */}
-        <div className="flex-1 flex flex-col gap-6 items-start min-w-0 w-full lg:w-auto">
+        <AnimatedStaggerContainer className="flex-1 flex flex-col gap-6 items-start min-w-0 w-full lg:w-auto">
           {/* Subtitle Box */}
-          <div className="flex flex-col items-start w-full">
+          <AnimatedFadeIn className="flex flex-col items-start w-full">
             <div className="bg-[var(--almost-white)] flex items-center p-3 md:p-4 rounded-lg w-full relative">
               <p className="flex-1 font-['InterRegular'] text-sm md:text-base text-[var(--espresso)] leading-relaxed">
                 For derivatives DEXs that want to offer cross-network asset exposure without building bridges or
@@ -70,10 +77,10 @@ export default function AmpedFinancePage() {
                 <path fillRule="evenodd" clipRule="evenodd" d="M40 8C39.0625 8 38.5871 7.52943 38.3333 7.05882C35.8368 2.42816 29.0165 1.56476e-06 20 2.0664e-06L60 -1.59051e-07C50.9835 3.42592e-07 44.1632 2.42816 41.6667 7.05882C41.4129 7.52943 40.9375 8 40 8Z" fill="var(--almost-white)"/>
               </svg>
             </div>
-          </div>
+          </AnimatedFadeIn>
 
           {/* The Partner */}
-          <div className="flex items-start w-full">
+          <AnimatedStaggerChild className="flex items-start w-full">
             <div className="flex-1 flex flex-col gap-2 items-start leading-normal">
               <p className="font-['InterBold'] text-lg text-[var(--espresso)] w-full">The Partner</p>
               <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full">
@@ -83,10 +90,10 @@ export default function AmpedFinancePage() {
                 forcing users to leave the network.
               </p>
             </div>
-          </div>
+          </AnimatedStaggerChild>
 
           {/* The Challenge */}
-          <div className="flex items-start w-full">
+          <AnimatedStaggerChild className="flex items-start w-full">
             <div className="flex-1 flex flex-col gap-2 items-start">
               <p className="font-['InterBold'] text-lg text-[var(--espresso)] w-full leading-normal">The Challenge</p>
               <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-normal">
@@ -111,10 +118,10 @@ export default function AmpedFinancePage() {
                 </div>
               </div>
             </div>
-          </div>
+          </AnimatedStaggerChild>
 
           {/* The Solution */}
-          <div className="flex flex-col gap-2 items-start w-full">
+          <AnimatedStaggerChild className="flex flex-col gap-2 items-start w-full">
             <p className="font-['InterBold'] text-lg text-[var(--espresso)] w-full leading-normal">The Solution</p>
             <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-normal">
               SODAX's SDK gave Amped capabilities that would have taken months to build independently:
@@ -169,11 +176,11 @@ export default function AmpedFinancePage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </AnimatedStaggerChild>
+        </AnimatedStaggerContainer>
 
         {/* Side panel */}
-        <div className="bg-[var(--almost-white)] flex flex-col gap-2 items-start p-4 rounded-lg shrink-0 w-full lg:w-[280px]">
+        <AnimatedScrollSection className="bg-[var(--almost-white)] flex flex-col gap-2 items-start p-4 rounded-lg shrink-0 w-full lg:w-[280px]">
           <div className="flex-1 flex flex-col gap-4 items-start w-full">
             {/* At a glance */}
             <div className="flex flex-col gap-2 items-start w-full">
@@ -266,13 +273,13 @@ export default function AmpedFinancePage() {
               </a>
             </div>
           </div>
-        </div>
+        </AnimatedScrollSection>
       </div>
 
       {/* Bottom Section */}
-      <div className="bg-[var(--almost-white)] flex flex-col lg:flex-row gap-6 md:gap-4 items-start p-3 md:p-6 lg:p-8 w-full rounded-lg">
+      <AnimatedStaggerContainer className="bg-[var(--almost-white)] flex flex-col lg:flex-row gap-6 md:gap-4 items-start p-3 md:p-6 lg:p-8 w-full rounded-lg">
         {/* Amped Results */}
-        <div className="flex-1 flex flex-col gap-2 items-start min-w-0 w-full lg:w-auto">
+        <AnimatedFadeIn className="flex-1 flex flex-col gap-2 items-start min-w-0 w-full lg:w-auto">
           <div className="flex gap-1 items-center w-full">
             <div className="relative shrink-0 w-4 h-4">
               <Image alt="Logo" className="object-contain" src={imgLogo1} width={16} height={16} />
@@ -320,10 +327,10 @@ export default function AmpedFinancePage() {
               </p>
             </div>
           </div>
-        </div>
+        </AnimatedFadeIn>
 
         {/* SODAX Integration & Get started */}
-        <div className="flex flex-col items-start justify-start gap-6 shrink-0 w-full lg:w-auto">
+        <AnimatedStaggerChild className="flex flex-col items-start justify-start gap-6 shrink-0 w-full lg:w-auto">
           {/* SODAX Integration */}
           <div className="flex flex-col gap-2 items-start rounded-lg shrink-0 w-full lg:w-[280px]">
             <div className="flex gap-1 items-center w-full">
@@ -400,8 +407,8 @@ export default function AmpedFinancePage() {
               </p>
             </div>
           </div>
-        </div>
-      </div>
+        </AnimatedStaggerChild>
+      </AnimatedStaggerContainer>
     </PartnerPageLayout>
   );
 }

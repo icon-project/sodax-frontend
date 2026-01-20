@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { PartnerPageHeader } from './partner-page-header';
 import { PartnerSimpleFooter } from './partner-simple-footer';
-import { PartnerFooter } from './partner-footer';
 
 export interface PartnerMetadata {
   partnerName: string;
