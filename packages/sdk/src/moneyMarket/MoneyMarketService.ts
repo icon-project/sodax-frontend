@@ -668,7 +668,7 @@ export class MoneyMarketService {
         ok: true,
         value: txResult as TxReturnType<S, R>,
         data: {
-          address: toHubWallet,
+          address: fromHubWallet,
           payload: data,
         },
       };
@@ -754,7 +754,7 @@ export class MoneyMarketService {
       ) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
           spokeProvider,
           this.config.relayerApiEndpoint,
           timeout,
@@ -1112,7 +1112,7 @@ export class MoneyMarketService {
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
           spokeProvider,
           this.config.relayerApiEndpoint,
           timeout,
@@ -1228,7 +1228,7 @@ export class MoneyMarketService {
       ok: true,
       value: txResult as TxReturnType<S, R>,
       data: {
-        address: toHubWallet,
+        address: fromHubWallet,
         payload: data,
       },
     };
