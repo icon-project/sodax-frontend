@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { PartnerPageLayout, generatePartnerMetadata } from '@/components/partners/partner-page-layout';
 import type { Metadata } from 'next';
 import { Globe } from 'lucide-react';
+import { ShareButton } from '@/components/partners/share-button';
 
 // Local asset paths
 const imgLogo = '/images/partners/amped-finance/logo.svg';
@@ -25,17 +26,20 @@ export default function AmpedFinancePage() {
   return (
     <PartnerPageLayout metadata={partnerMetadata}>
       {/* Title */}
-      <div className="flex gap-4 items-center w-full">
-        <div className="relative shrink-0 w-14 h-14">
-          <Image alt="Amped Finance Logo" className="object-contain" src={imgLogo} width={56} height={56} />
+      <div className="flex justify-between items-start gap-4 w-full">
+        <div className="flex gap-4 items-center">
+          <div className="relative shrink-0 w-14 h-14">
+            <Image alt="Amped Finance Logo" className="object-contain" src={imgLogo} width={56} height={56} />
+          </div>
+          <div className="flex flex-col items-start justify-center">
+            <p className="font-['InterMedium'] text-sm text-[var(--clay-light)] uppercase leading-tight tracking-wider">CASE STUDY</p>
+            <p className="font-['InterBold'] text-4xl text-[var(--espresso)] leading-tight">Amped Finance</p>
+            <p className="font-['InterBold'] text-lg text-[var(--clay)] leading-normal">
+              Derivatives DEX on LightLink & Sonic
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col items-start justify-center">
-          <p className="font-['InterMedium'] text-sm text-[var(--clay-light)] uppercase leading-tight tracking-wider">CASE STUDY</p>
-          <p className="font-['InterBold'] text-4xl text-[var(--espresso)] leading-tight">Amped Finance</p>
-          <p className="font-['InterBold'] text-lg text-[var(--clay)] leading-normal">
-            Derivatives DEX on LightLink & Sonic
-          </p>
-        </div>
+        <ShareButton title="Amped Finance Case Study | SODAX Partners" />
       </div>
 
       {/* Section */}
