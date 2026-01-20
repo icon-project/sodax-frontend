@@ -228,7 +228,7 @@ export function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string 
   return 0;
 }
 
-export function flattenTokens(): XToken[] {
+export function getMoneymarketTokens(): XToken[] {
   return Object.entries(moneyMarketSupportedTokens)
     .flatMap(([chainId, items]) =>
       items.map((t: Token) =>
@@ -279,12 +279,8 @@ export function formatCompactNumber(value: string | number | bigint): string {
  * @param token - The token to calculate APY for
  * @returns Formatted APY string (e.g., "5.25%") or "-" if unavailable
  */
-export function calculateAPY(
-  formattedReserves: FormatReserveUSDResponse[] | undefined,
-  isFormattedReservesLoading: boolean,
-  token: XToken,
-): string {
-  if (isFormattedReservesLoading || !formattedReserves || formattedReserves.length === 0) {
+export function calculateAPY(formattedReserves: FormatReserveUSDResponse[] | undefined, token: XToken): string {
+  if (!formattedReserves || formattedReserves.length === 0) {
     return '-';
   }
 

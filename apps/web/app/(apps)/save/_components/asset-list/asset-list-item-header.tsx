@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/save/_components/asset-list/asset-list-item-header.tsx
 import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { AnimatePresence, motion } from 'motion/react';
