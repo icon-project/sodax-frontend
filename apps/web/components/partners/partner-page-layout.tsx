@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { PartnerPageHeader } from './partner-page-header';
+import { PartnerSimpleFooter } from './partner-simple-footer';
+import { PartnerFooter } from './partner-footer';
 
 export interface PartnerMetadata {
   partnerName: string;
@@ -68,6 +70,9 @@ export function PartnerPageLayout({
             {children}
           </div>
         </div>
+
+        {/* Footer */}
+        <PartnerSimpleFooter />
 
         {/* Structured Data */}
         <script
