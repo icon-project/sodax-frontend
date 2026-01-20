@@ -7,13 +7,13 @@ import WithdrawDialog from './withdraw-dialog/withdraw-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DepositItemContent } from './deposit-overview/deposit-item-content';
 interface DepositOverviewProps {
-  suppliedAssets: DepositItemData[];
+  depositItems: DepositItemData[];
   tokenPrices?: Record<string, number>;
   onApiReady?: (api: CarouselApi | undefined) => void;
 }
 
 export default function DepositOverview({
-  suppliedAssets,
+  depositItems,
   tokenPrices,
   onApiReady,
 }: DepositOverviewProps): React.JSX.Element {
@@ -39,10 +39,10 @@ export default function DepositOverview({
         }}
       >
         <CarouselContent className="mix-blend-multiply">
-          {suppliedAssets.length > 0 &&
-            suppliedAssets.map((item, index) => (
+          {depositItems.length > 0 &&
+            depositItems.map((item, index) => (
               <DepositItemContent
-                key={`${item.asset.symbol}-${index}`}
+                key={`${item.token.symbol}-${index}`}
                 item={item}
                 tokenPrices={tokenPrices}
                 onWithdrawClick={() => {
@@ -55,7 +55,7 @@ export default function DepositOverview({
         {!isMobile && (
           <div className="w-32 h-42 right-0 top-0 absolute bg-gradient-to-l from-[#F5F2F2] to-[rgba(245, 242, 242, 0)] pointer-events-none" />
         )}
-        {!isMobile && suppliedAssets.length > 1 && (
+        {!isMobile && depositItems.length > 1 && (
           <>
             <CarouselPrevious className="outline-none h-full border-none shadow-none text-clay hover:text-espresso" />
             <CarouselNext className="outline-none h-full border-none shadow-none text-clay hover:text-espresso" />

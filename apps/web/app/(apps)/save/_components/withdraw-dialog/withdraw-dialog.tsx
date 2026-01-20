@@ -32,7 +32,7 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
   const tokenSelectRef = useRef<HTMLDivElement>(null);
 
   const needsTokenSelection = (selectedItem?.networksWithFunds.length ?? 0) > 1;
-  const selectedToken = selectedNetwork?.token ?? selectedItem?.asset;
+  const selectedToken = selectedNetwork?.token ?? selectedItem?.token;
 
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
   const walletProvider = useWalletProvider(selectedToken?.xChainId);

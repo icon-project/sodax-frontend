@@ -1,3 +1,5 @@
+// apps/web/app/(apps)/save/_components/token-asset/network-picker.tsx
+// NetworkPicker component for selecting a network from available tokens
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';

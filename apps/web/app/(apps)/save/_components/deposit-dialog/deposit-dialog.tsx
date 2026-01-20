@@ -11,7 +11,6 @@ import DepositInfoStep from './deposit-info-step';
 import DepositConfirmationStep from './deposit-confirmation-step';
 import DepositDialogFooter from './deposit-dialog-footer';
 import { useSaveState, useSaveActions } from '../../_stores/save-store-provider';
-import { DEPOSIT_STEP } from '../../_stores/save-store';
 
 interface DepositDialogProps {
   open: boolean;
@@ -26,7 +25,7 @@ export default function DepositDialog({
   selectedToken,
   tokens,
 }: DepositDialogProps): React.JSX.Element {
-  const { currentDepositStep } = useSaveState();
+  const { currentStep } = useSaveState();
   const { resetSaveState } = useSaveActions();
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { apy } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
@@ -59,12 +58,8 @@ export default function DepositDialog({
           />
         </DialogTitle>
 
-        {currentDepositStep === DEPOSIT_STEP.TERMS && (
-          <DepositInfoStep apy={apy} selectedToken={selectedToken as XToken} />
-        )}
-        {currentDepositStep !== DEPOSIT_STEP.TERMS && (
-          <DepositConfirmationStep selectedToken={selectedToken as XToken} apy={apy} />
-        )}
+        {currentStep === 1 && <DepositInfoStep apy={apy} selectedToken={selectedToken as XToken} />}
+        {currentStep >= 2 && <DepositConfirmationStep selectedToken={selectedToken as XToken} apy={apy} />}
         <DepositDialogFooter selectedToken={selectedToken} onPendingChange={setIsSupplyPending} onClose={handleClose} />
       </DialogContent>
     </Dialog>

@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/save/_components/carousel/carousel-item-content.tsx
 'use client';
 
 import type * as React from 'react';
@@ -28,12 +29,12 @@ interface DepositItemContentProps {
  */
 export function DepositItemContent({ item, tokenPrices, onWithdrawClick }: DepositItemContentProps): React.JSX.Element {
   const [isHovered, setIsHovered] = useState(false);
-  const priceKey = `${item.asset.symbol}-${item.asset.xChainId}`;
+  const priceKey = `${item.token.symbol}-${item.token.xChainId}`;
   const tokenPrice = tokenPrices?.[priceKey] || 0;
-  const { setActiveAsset, setScrollToCenter } = useSaveActions();
+  const { setOpenAsset, setScrollToCenter } = useSaveActions();
   const formattedBalance = useMemo((): string => {
-    return `${formatBalance(item.totalBalance, tokenPrice)} ${item.asset.symbol}`;
-  }, [item.totalBalance, item.asset.symbol, tokenPrice]);
+    return `${formatBalance(item.totalBalance, tokenPrice)} ${item.token.symbol}`;
+  }, [item.totalBalance, item.token.symbol, tokenPrice]);
 
   return (
     <CarouselItem className="basis-1/1.5">
@@ -58,7 +59,7 @@ export function DepositItemContent({ item, tokenPrices, onWithdrawClick }: Depos
           >
             <Item className="p-0 w-full gap-2">
               <ItemMedia className="w-14 h-14">
-                <CanLogo currency={item.asset} hideNetworkIcon={true} />
+                <CanLogo currency={item.token} hideNetworkIcon={true} />
               </ItemMedia>
               <ItemContent className="gap-0">
                 <motion.p
@@ -118,7 +119,7 @@ export function DepositItemContent({ item, tokenPrices, onWithdrawClick }: Depos
             <div
               className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:!opacity-100 hover:!text-espresso"
               onClick={() => {
-                setActiveAsset(item.asset.symbol);
+                setOpenAsset(item.token.symbol);
                 setScrollToCenter(true);
                 setTimeout(() => {
                   setScrollToCenter(false);

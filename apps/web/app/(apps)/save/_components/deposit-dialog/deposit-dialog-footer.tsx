@@ -9,7 +9,6 @@ import { useMMApprove, useMMAllowance, useSupply, useSpokeProvider } from '@soda
 import { useWalletProvider, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
 import { useSaveState, useSaveActions } from '../../_stores/save-store-provider';
-import { DEPOSIT_STEP } from '../../_stores/save-store';
 import { CheckIcon, Loader2Icon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { SpokeProvider } from '@sodax/sdk';
@@ -24,8 +23,8 @@ export default function DepositDialogFooter({
   onPendingChange,
   onClose,
 }: DepositDialogFooterProps): React.JSX.Element {
-  const { currentDepositStep, depositValue } = useSaveState();
-  const { setCurrentDepositStep, setIsSwitchingChain } = useSaveActions();
+  const { currentStep, depositValue } = useSaveState();
+  const { setCurrentStep, setIsSwitchingChain } = useSaveActions();
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const { mutateAsync: approve, isPending: isApproving } = useMMApprove();
@@ -55,11 +54,11 @@ export default function DepositDialogFooter({
   };
 
   useEffect(() => {
-    if (hasAllowed && !isWrongChain && currentDepositStep === DEPOSIT_STEP.APPROVE) {
-      setCurrentDepositStep(DEPOSIT_STEP.CONFIRM);
+    if (hasAllowed && !isWrongChain) {
+      setCurrentStep(3);
       setIsApproved(true);
     }
-  }, [hasAllowed, setCurrentDepositStep, isWrongChain, currentDepositStep]);
+  }, [hasAllowed, setCurrentStep, isWrongChain]);
 
   useEffect(() => {
     onPendingChange?.(isPending);
@@ -79,26 +78,12 @@ export default function DepositDialogFooter({
     }
   };
 
-  const isStep1 = currentDepositStep === DEPOSIT_STEP.TERMS;
-  const isStep2 = currentDepositStep === DEPOSIT_STEP.APPROVE;
-  const isStep3 = currentDepositStep === DEPOSIT_STEP.CONFIRM;
-
-  const getNextStep = (step: DEPOSIT_STEP): DEPOSIT_STEP | null => {
-    switch (step) {
-      case DEPOSIT_STEP.TERMS:
-        return DEPOSIT_STEP.APPROVE;
-      case DEPOSIT_STEP.APPROVE:
-        return DEPOSIT_STEP.CONFIRM;
-      case DEPOSIT_STEP.CONFIRM:
-        return null;
-      default:
-        return null;
-    }
-  };
+  const isStep1 = currentStep === 1;
+  const isStep2 = currentStep === 2;
+  const isStep3 = currentStep === 3;
 
   const handleContinue = (): void => {
-    const nextStep = getNextStep(currentDepositStep);
-    if (nextStep) setCurrentDepositStep(nextStep);
+    if (currentStep < 3) setCurrentStep(currentStep + 1);
   };
 
   const handleApprove = async (): Promise<void> => {
@@ -112,7 +97,7 @@ export default function DepositDialogFooter({
     });
     if (response) {
       setIsApproved(true);
-      setCurrentDepositStep(DEPOSIT_STEP.CONFIRM);
+      setCurrentStep(3);
     }
   };
 
@@ -125,14 +110,14 @@ export default function DepositDialogFooter({
           className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
             isMobile
               ? 'w-full'
-              : currentDepositStep !== DEPOSIT_STEP.TERMS
+              : currentStep > 1
                 ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center'
                 : 'flex flex-1'
           }`}
           onClick={handleContinue}
           disabled={!isStep1}
         >
-          {currentDepositStep !== DEPOSIT_STEP.TERMS ? <Check className="w-5 h-5" /> : 'Continue'}
+          {currentStep > 1 ? <Check className="w-5 h-5" /> : 'Continue'}
         </Button>
       )}
 

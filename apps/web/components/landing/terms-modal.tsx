@@ -2,7 +2,7 @@ import type React from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { TermsContent } from '@/components/shared/wallet-modal/terms-content';
+import { TermsContent } from '@/components/shared/wallet-modal2/terms-content';
 
 interface TermsModalProps {
   open: boolean;

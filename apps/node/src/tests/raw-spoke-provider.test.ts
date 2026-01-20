@@ -54,6 +54,7 @@ const suiWalletProvider = new SuiWalletProvider({
   mnemonics: suiWalletMnemonics,
 });
 
+// used test solana wallet address due to Solana private key not working
 const keypair = Keypair.fromSecretKey(new Uint8Array(bs58.decode(solanaPrivateKey)));
 const solanaWallet = new SolanaWalletProvider({
   privateKey: keypair.secretKey,
