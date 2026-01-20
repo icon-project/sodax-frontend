@@ -4,6 +4,7 @@ import { getUniqueTokenSymbols, sortStablecoinsFirst, getMoneymarketTokens, hasF
 import AssetListItem from './asset-list/asset-list-item';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useSaveState, useSaveActions } from '../_stores/save-store-provider';
+import NoResults from './asset-list/no-results';
 
 export default function AssetList({
   searchQuery,
@@ -78,6 +79,7 @@ export default function AssetList({
               ))}
             </>
           )}
+          <NoResults />
         </>
       ) : (
         allAssets.map(asset => (

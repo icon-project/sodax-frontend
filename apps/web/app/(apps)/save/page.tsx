@@ -15,6 +15,7 @@ import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import type { XToken } from '@sodax/types';
 import type { CarouselApi } from '@/components/ui/carousel';
+import CurrencySearchPanel from './_components/currency-search-panel';
 
 export interface NetworkBalance {
   networkId: string;
@@ -35,7 +36,7 @@ export default function SavingsPage() {
   const { setDepositValue, setSuppliedAssetCount } = useSaveActions();
   const { activeAsset, isSwitchingChain } = useSaveState();
   const carouselApiRef = useRef<CarouselApi | undefined>(undefined);
-
+  const [searchQuery, setSearchQuery] = useState('');
   const { data: formattedReserves } = useReservesUsdFormat();
   const allTokens = useMemo(() => getMoneymarketTokens(), []);
   const allAssets = useMemo(() => getUniqueTokenSymbols(allTokens), [allTokens]);
@@ -181,7 +182,11 @@ export default function SavingsPage() {
       )}
 
       <motion.div className="w-full flex-grow-1" variants={itemVariants}>
-        <AssetList searchQuery={''} />
+        <CurrencySearchPanel searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      </motion.div>
+
+      <motion.div className="w-full flex-grow-1" variants={itemVariants}>
+        <AssetList searchQuery={searchQuery} />
       </motion.div>
     </motion.div>
   );
