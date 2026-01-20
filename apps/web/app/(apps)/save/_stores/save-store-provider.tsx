@@ -35,18 +35,18 @@ export const useSaveStore = <T,>(selector: (store: SaveStore) => T): T => {
 
 export const useSaveState = () => {
   const depositValue = useSaveStore(state => state.depositValue);
-  const currentStep = useSaveStore(state => state.currentStep);
-  const tokenCount = useSaveStore(state => state.tokenCount);
+  const currentDepositStep = useSaveStore(state => state.currentDepositStep);
+  const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
   const isSwitchingChain = useSaveStore(state => state.isSwitchingChain);
-  const openAsset = useSaveStore(state => state.openAsset);
+  const activeAsset = useSaveStore(state => state.activeAsset);
   const scrollToCenter = useSaveStore(state => state.scrollToCenter);
   const isNetworkPickerOpened = useSaveStore(state => state.isNetworkPickerOpened);
   return {
     depositValue,
-    currentStep,
-    tokenCount,
+    currentDepositStep,
+    suppliedAssetCount,
     isSwitchingChain,
-    openAsset,
+    activeAsset,
     scrollToCenter,
     isNetworkPickerOpened,
   };
@@ -54,20 +54,20 @@ export const useSaveState = () => {
 
 export const useSaveActions = () => {
   const setDepositValue = useSaveStore(state => state.setDepositValue);
-  const setCurrentStep = useSaveStore(state => state.setCurrentStep);
-  const setTokenCount = useSaveStore(state => state.setTokenCount);
+  const setCurrentDepositStep = useSaveStore(state => state.setCurrentDepositStep);
+  const setSuppliedAssetCount = useSaveStore(state => state.setSuppliedAssetCount);
   const setIsSwitchingChain = useSaveStore(state => state.setIsSwitchingChain);
-  const setOpenAsset = useSaveStore(state => state.setOpenAsset);
+  const setActiveAsset = useSaveStore(state => state.setActiveAsset);
   const setScrollToCenter = useSaveStore(state => state.setScrollToCenter);
   const setIsNetworkPickerOpened = useSaveStore(state => state.setIsNetworkPickerOpened);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
 
   return {
     setDepositValue,
-    setCurrentStep,
-    setTokenCount,
+    setCurrentDepositStep,
+    setSuppliedAssetCount,
     setIsSwitchingChain,
-    setOpenAsset,
+    setActiveAsset,
     setScrollToCenter,
     setIsNetworkPickerOpened,
     resetSaveState,

@@ -169,8 +169,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
       <DialogContent
         className={cn(
           'max-w-full w-full md:max-w-[480px] p-0 w-[90%] shadow-none bg-vibrant-white overflow-hidden',
-          // !modalData?.primaryChainType && !isHanaInstalled && 'min-h-131',
-          // !modalData?.primaryChainType && isHanaInstalled && 'min-h-126',
           !isHanaInstalled && 'min-h-131',
           isHanaInstalled && 'min-h-126',
         )}
@@ -216,9 +214,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       setHoveredWalletId={setHoveredWalletId}
                       onSuccess={async (_xConnector, xAccount) => {
                         setActiveXChainType(undefined);
-                        if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
-                          return;
-                        }
                         if (!xAccount.address) {
                           return;
                         }
@@ -273,9 +268,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                         hoveredChainType={hoveredChainType}
                         selectedChainIcon={selectedChainIcon}
                         onSuccess={async (_xConnector, xAccount) => {
-                          if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
-                            return;
-                          }
                           if (!xAccount.address) {
                             return;
                           }
@@ -340,9 +332,6 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
                       setHoveredChainType={setHoveredChainType}
                       hoveredChainType={hoveredChainType}
                       onSuccess={async (_xConnector, xAccount) => {
-                        if (xAccount.xChainType === 'STELLAR' || xAccount.xChainType === 'ICON') {
-                          return;
-                        }
                         if (!xAccount.address) {
                           return;
                         }

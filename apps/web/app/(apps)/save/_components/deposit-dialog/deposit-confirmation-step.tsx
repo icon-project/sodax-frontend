@@ -27,10 +27,10 @@ export default function DepositConfirmationStep({
         </div>
         <div className="self-stretch text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
           {selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? (
-            <div className="flex items-center gap-1 text-cherry-bright">
+            <span className="flex items-center gap-1 text-cherry-bright w-full justify-center">
               <TimerIcon className="w-4 h-4 text-cherry-bright" />
               Takes longer (~1m)
-            </div>
+            </span>
           ) : (
             'Takes ~20 seconds'
           )}

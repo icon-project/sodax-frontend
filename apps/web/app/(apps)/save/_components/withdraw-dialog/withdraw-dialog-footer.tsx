@@ -15,6 +15,8 @@ import { useSaveActions } from '../../_stores/save-store-provider';
 import { CheckIcon } from 'lucide-react';
 import { cn, formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
+import type { SpokeProvider } from '@sodax/sdk';
+import { parseUnits } from 'viem';
 
 interface WithdrawDialogFooterProps {
   currentStep: number;
@@ -54,28 +56,29 @@ export default function WithdrawDialogFooter({
   const [isCompleted, setIsCompleted] = useState(false);
   // Money market withdraw hooks
   const withdrawAmountString = withdrawValue > 0 ? withdrawValue.toString() : '0';
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance(
-    selectedToken as XToken,
-    withdrawAmountString,
-    'withdraw',
-    spokeProvider,
-  );
-  const {
-    approve,
-    isLoading: isApproving,
-    resetError: resetApproveError,
-  } = useMMApprove(selectedToken as XToken, spokeProvider);
-  const {
-    mutateAsync: withdraw,
-    isPending: isWithdrawing,
-    reset: resetWithdrawError,
-  } = useWithdraw(selectedToken as XToken, spokeProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
+    params: {
+      token: selectedToken?.address as string,
+      amount: parseUnits(withdrawAmountString, selectedToken?.decimals ?? 18),
+      action: 'withdraw',
+    },
+    spokeProvider: spokeProvider as SpokeProvider,
+  });
+  const { mutateAsync: approve, isPending: isApproving } = useMMApprove();
+  const { mutateAsync: withdraw, isPending: isWithdrawing } = useWithdraw();
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain((selectedToken?.xChainId || 'sonic') as ChainId);
   const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
   const handleApprove = async (): Promise<void> => {
     if (!selectedToken || withdrawValue <= 0) return;
     try {
-      await approve({ amount: withdrawAmountString, action: 'withdraw' });
+      await approve({
+        params: {
+          token: selectedToken?.address as string,
+          amount: parseUnits(withdrawAmountString, selectedToken?.decimals ?? 18),
+          action: 'withdraw',
+        },
+        spokeProvider: spokeProvider as SpokeProvider,
+      });
       setIsApproved(true);
     } catch (error) {
       console.error('Error approving withdraw:', error);
@@ -85,7 +88,14 @@ export default function WithdrawDialogFooter({
   const handleWithdraw = async (): Promise<void> => {
     try {
       onWithdrawStart();
-      const response = await withdraw(withdrawAmountString);
+      const response = await withdraw({
+        params: {
+          token: selectedToken?.address as string,
+          amount: parseUnits(withdrawAmountString, selectedToken?.decimals ?? 18),
+          action: 'withdraw',
+        },
+        spokeProvider: spokeProvider as SpokeProvider,
+      });
       if (response?.ok) {
         onWithdrawSuccess();
         setIsCompleted(true);
@@ -98,12 +108,10 @@ export default function WithdrawDialogFooter({
 
   useEffect(() => {
     if (!open) {
-      resetApproveError?.();
-      resetWithdrawError?.();
       setIsApproved(false);
       setIsCompleted(false);
     }
-  }, [open, resetApproveError, resetWithdrawError]);
+  }, [open]);
 
   return (
     <DialogFooter
