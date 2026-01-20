@@ -5,7 +5,10 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['storage.herewallet.app'],
+    domains: ['storage.herewallet.app', 'www.figma.com'],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
