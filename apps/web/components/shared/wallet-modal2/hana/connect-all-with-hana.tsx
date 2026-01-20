@@ -1,15 +1,17 @@
-// apps/web/components/shared/wallet-modal2/hana/connect-all-with-hana.tsx
-// UI component for connecting all networks with Hana wallet
-
 import Image from 'next/image';
 import { Loader2Icon, PlusIcon } from 'lucide-react';
 
 type ConnectAllWithHanaProps = {
   onClick: () => void;
   isPending: boolean;
+  isPossibleToConnectRest: boolean;
 };
 
-export function ConnectAllWithHana({ onClick, isPending }: ConnectAllWithHanaProps): React.ReactElement {
+export function ConnectAllWithHana({
+  onClick,
+  isPending,
+  isPossibleToConnectRest,
+}: ConnectAllWithHanaProps): React.ReactElement {
   return (
     <div
       data-property-1="Installed"
@@ -24,7 +26,7 @@ export function ConnectAllWithHana({ onClick, isPending }: ConnectAllWithHanaPro
         height={74}
       />
       <div className="left-[78px] top-[14px] absolute justify-center text-[#8B7493] text-(length:--body-comfortable) font-['InterRegular'] leading-5">
-        Connect all with Hana
+        {isPossibleToConnectRest ? 'Connect the rest with Hana' : 'Connect all with Hana'}
       </div>
       <div
         data-property-1="Download Hana default"

@@ -1,6 +1,3 @@
-// apps/web/components/shared/wallet-modal2/hana/disconnect-all-with-hana.tsx
-// UI component for disconnecting all networks with Hana wallet
-
 import { Loader2Icon, MinusIcon } from 'lucide-react';
 
 type DisconnectAllProps = {

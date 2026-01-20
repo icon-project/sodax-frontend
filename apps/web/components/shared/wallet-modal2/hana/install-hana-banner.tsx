@@ -1,6 +1,3 @@
-// apps/web/components/shared/wallet-modal2/hana/install-hana-banner.tsx
-// UI component for Hana wallet installation banner
-
 import Image from 'next/image';
 
 const HANA_CHROME_STORE_URL = 'https://chromewebstore.google.com/detail/hana-wallet/jfdlamikmbghhapbgfoogdffldioobgl';
@@ -9,7 +6,7 @@ export function InstallHanaBanner(): React.ReactElement {
   return (
     <a
       data-property-1="Not installed"
-      className="self-stretch h-22 relative rounded-2xl overflow-hidden bg-[#F4ECF7]"
+      className="self-stretch h-22 relative rounded-2xl overflow-hidden bg-[#F4ECF7] block"
       href={HANA_CHROME_STORE_URL}
       target="_blank"
       rel="noopener noreferrer"
@@ -20,7 +17,7 @@ export function InstallHanaBanner(): React.ReactElement {
   bg-clip-text
   text-transparent text-xs font-bold font-['InterRegular'] leading-4"
       >
-        Get Hana. Unlock all networks.
+        Get Hana Wallet. Unlock all networks.
       </div>
       <Image
         className="left-[16px] top-[38px] absolute mix-blend-multiply"
