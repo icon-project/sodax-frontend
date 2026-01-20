@@ -11,7 +11,7 @@ import BigNumber from 'bignumber.js';
 import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId } from '@sodax/types';
-import { INJECTIVE_MAINNET_CHAIN_ID, hubAssets } from '@sodax/types';
+import { INJECTIVE_MAINNET_CHAIN_ID, LIGHTLINK_MAINNET_CHAIN_ID, hubAssets } from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
@@ -232,7 +232,7 @@ export function getMoneymarketTokens(): XToken[] {
   return Object.entries(moneyMarketSupportedTokens)
     .flatMap(([chainId, items]) =>
       items.map((t: Token) =>
-        chainId !== INJECTIVE_MAINNET_CHAIN_ID
+        chainId !== INJECTIVE_MAINNET_CHAIN_ID && chainId !== LIGHTLINK_MAINNET_CHAIN_ID
           ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
           : undefined,
       ),
