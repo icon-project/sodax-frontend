@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { PartnerPageLayout, generatePartnerMetadata } from '@/components/partners/partner-page-layout';
 import type { Metadata } from 'next';
-import { Globe } from 'lucide-react';
+import { Globe, BookOpen } from 'lucide-react';
 import { ShareButton } from '@/components/partners/share-button';
 
 // Local asset paths
@@ -26,30 +26,41 @@ export default function AmpedFinancePage() {
   return (
     <PartnerPageLayout metadata={partnerMetadata}>
       {/* Title */}
-      <div className="flex justify-between items-start gap-4 w-full">
-        <div className="flex gap-4 items-center">
-          <div className="relative shrink-0 w-14 h-14">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 w-full">
+        <div className="flex gap-3 md:gap-4 items-center">
+          <div className="relative shrink-0 w-12 h-12 md:w-14 md:h-14">
             <Image alt="Amped Finance Logo" className="object-contain" src={imgLogo} width={56} height={56} />
           </div>
           <div className="flex flex-col items-start justify-center">
-            <p className="font-['InterMedium'] text-sm text-[var(--clay-light)] uppercase leading-tight tracking-wider">CASE STUDY</p>
-            <p className="font-['InterBold'] text-4xl text-[var(--espresso)] leading-tight">Amped Finance</p>
-            <p className="font-['InterBold'] text-lg text-[var(--clay)] leading-normal">
+            <p className="font-['InterMedium'] text-xs md:text-sm text-[var(--clay-light)] uppercase leading-tight tracking-wider">CASE STUDY</p>
+            <p className="font-['InterBold'] text-2xl md:text-3xl lg:text-4xl text-[var(--espresso)] leading-tight">Amped Finance</p>
+            <p className="font-['InterBold'] text-sm md:text-base lg:text-lg text-[var(--clay)] leading-normal">
               Derivatives DEX on LightLink & Sonic
             </p>
           </div>
         </div>
-        <ShareButton title="Amped Finance Case Study | SODAX Partners" />
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full sm:w-auto">
+          <a
+            href="https://docs.sodax.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[var(--espresso)] hover:bg-[var(--clay-dark)] text-white rounded-lg transition-colors shrink-0 text-center"
+          >
+            <BookOpen size={16} />
+            <span className="font-['InterMedium'] text-sm">SODAX SDK</span>
+          </a>
+          <ShareButton title="Amped Finance Case Study | SODAX Partners" />
+        </div>
       </div>
 
       {/* Section */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start w-full">
+      <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
         {/* Main Content */}
-        <div className="flex-1 flex flex-col gap-4 items-start min-w-0 w-full lg:w-auto">
+        <div className="flex-1 flex flex-col gap-6 items-start min-w-0 w-full lg:w-auto">
           {/* Subtitle Box */}
           <div className="flex flex-col items-start w-full">
-            <div className="bg-[var(--almost-white)] flex items-center p-4 rounded-lg w-full">
-              <p className="flex-1 font-['InterRegular'] text-base text-[var(--espresso)] leading-relaxed">
+            <div className="bg-[var(--almost-white)] flex items-center p-3 md:p-4 rounded-lg w-full">
+              <p className="flex-1 font-['InterRegular'] text-sm md:text-base text-[var(--espresso)] leading-relaxed">
                 For derivatives DEXs that want to offer cross-network asset exposure without building bridges or
                 managing per-network liquidity.
               </p>
@@ -76,19 +87,19 @@ export default function AmpedFinancePage() {
               <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-normal">
                 LightLink tried cross-network access before, but failed:
               </p>
-              <div className="flex flex-col md:flex-row gap-4 items-start w-full">
-                <div className="flex-1 flex flex-col items-center justify-center pt-2 border-t border-[var(--cream-white)] min-w-0">
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start w-full">
+                <div className="flex-1 flex flex-col items-center justify-center pt-2 border-t border-[var(--cream-white)] min-w-0 w-full">
                   <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-normal">
                     Bridged wBTC, ARB, and UNI from Ethereum, but users often had to wait up to 24 hours to bridge
                     back
                   </p>
                 </div>
-                <div className="flex-1 flex flex-col items-center justify-center pt-2 border-t border-[var(--cream-white)] min-w-0">
+                <div className="flex-1 flex flex-col items-center justify-center pt-2 border-t border-[var(--cream-white)] min-w-0 w-full">
                   <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-normal">
                     Required manual liquidity provisioning on DEXs, which still resulted in insufficient depth
                   </p>
                 </div>
-                <div className="flex-1 flex flex-col items-center justify-center pt-2 border-t border-[var(--cream-white)] min-w-0">
+                <div className="flex-1 flex flex-col items-center justify-center pt-2 border-t border-[var(--cream-white)] min-w-0 w-full">
                   <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-normal">
                     Slippage issues forced users to bridge assets across networks to complete trades
                   </p>
@@ -254,23 +265,23 @@ export default function AmpedFinancePage() {
       </div>
 
       {/* Bottom Section */}
-      <div className="bg-[var(--almost-white)] flex flex-col lg:flex-row gap-4 items-start p-4 md:p-8 w-full rounded-lg">
+      <div className="bg-[var(--almost-white)] flex flex-col lg:flex-row gap-6 md:gap-4 items-start p-3 md:p-6 lg:p-8 w-full rounded-lg">
         {/* Amped Results */}
         <div className="flex-1 flex flex-col gap-2 items-start min-w-0 w-full lg:w-auto">
           <div className="flex gap-1 items-center w-full">
             <div className="relative shrink-0 w-3 h-3">
               <Image alt="Logo" className="object-contain" src={imgLogo1} width={12} height={12} />
             </div>
-            <p className="font-['InterBold'] text-lg text-[var(--espresso)] leading-normal">Amped Results</p>
+            <p className="font-['InterBold'] text-base md:text-lg text-[var(--espresso)] leading-normal">Amped Results</p>
           </div>
-          <div className="flex flex-wrap gap-2 items-start pb-2 w-full">
-            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full sm:w-[170px]">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:flex-wrap gap-3 md:gap-2 items-start pb-2 w-full">
+            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full lg:w-[170px]">
               <p className="font-['InterBold'] text-sm text-[var(--espresso)] w-full leading-normal">2-4 day launch</p>
               <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-normal">
                 From initial exploration to live money market launch using the SDK
               </p>
             </div>
-            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full sm:w-[170px]">
+            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full lg:w-[170px]">
               <p className="font-['InterBold'] text-sm text-[var(--espresso)] w-full leading-normal">
                 Zero extra dev work
               </p>
@@ -278,7 +289,7 @@ export default function AmpedFinancePage() {
                 "The SDK is quite thorough. We haven't felt the need to do extra developmental work."
               </p>
             </div>
-            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full sm:w-[170px]">
+            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full lg:w-[170px]">
               <p className="font-['InterBold'] text-sm text-[var(--espresso)] w-full leading-normal">
                 Intent-based swaps live
               </p>
@@ -286,7 +297,7 @@ export default function AmpedFinancePage() {
                 Cross-network trading now available to Amped users via SODAX's solver network
               </p>
             </div>
-            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full sm:w-[170px]">
+            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full lg:w-[170px]">
               <p className="font-['InterBold'] text-sm text-[var(--espresso)] w-full leading-normal">
                 LightLink's primary bridge
               </p>
@@ -294,7 +305,7 @@ export default function AmpedFinancePage() {
                 Amped provides the LightLink Network's primary interface for cross-network asset movement
               </p>
             </div>
-            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full sm:w-[170px]">
+            <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full lg:w-[170px]">
               <p className="font-['InterBold'] text-sm text-[var(--espresso)] w-full leading-normal">
                 New products unlocked
               </p>
@@ -307,7 +318,7 @@ export default function AmpedFinancePage() {
         </div>
 
         {/* SODAX Integration & Get started */}
-        <div className="flex flex-col h-full items-start justify-between shrink-0 w-full lg:w-auto">
+        <div className="flex flex-col items-start justify-start gap-6 shrink-0 w-full lg:w-auto">
           {/* SODAX Integration */}
           <div className="flex flex-col gap-2 items-start rounded-lg shrink-0 w-full lg:w-[280px]">
             <div className="flex gap-1 items-center w-full">
@@ -319,7 +330,7 @@ export default function AmpedFinancePage() {
               </p>
             </div>
             <div className="flex flex-col items-start w-full">
-              <div className="flex items-center justify-center w-[72px] h-2">
+              <div className="flex items-center justify-center w-[72px] h-2 hidden lg:flex">
                 <div className="rotate-90">
                   <svg width="40" height="8" viewBox="0 0 40 8" fill="none">
                     <path
@@ -329,13 +340,13 @@ export default function AmpedFinancePage() {
                   </svg>
                 </div>
               </div>
-              <div className="flex flex-col gap-1 items-start w-full">
+              <div className="flex flex-col gap-3 items-start w-full">
                 <div className="bg-[var(--cream-white)] flex flex-col gap-1 items-start justify-center p-2 rounded-lg shrink-0 w-full lg:w-[280px]">
                   <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] leading-normal">
                     Foundation Layer
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
-                    <p className="font-['InterBold'] text-[var(--espresso)] w-full">@SODAX/SDK</p>
+                    <a href="https://docs.sodax.com/developers/packages/sdk" target="_blank" rel="noopener noreferrer" className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline">@SODAX/SDK</a>
                     <p className="font-['InterRegular'] text-[var(--clay-dark)] w-full">
                       This is the core logic that powers the entire ecosystem. It provides the raw functional modules
                       required to build with SODAX programmatically.
@@ -347,7 +358,7 @@ export default function AmpedFinancePage() {
                     Connection Layer
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
-                    <p className="font-['InterBold'] text-[var(--espresso)] w-full">@SODAX/WALLET-SDK-REACT</p>
+                    <a href="https://docs.sodax.com/developers/packages/wallet-sdk-react" target="_blank" rel="noopener noreferrer" className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline">@SODAX/WALLET-SDK-REACT</a>
                     <p className="font-['InterRegular'] text-[var(--clay-dark)] w-full">
                       An opinionated wrapper optimized for React applications, providing pre-built context providers and
                       state management for wallet connections.
@@ -359,7 +370,7 @@ export default function AmpedFinancePage() {
                     Experience Layer
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
-                    <p className="font-['InterBold'] text-[var(--espresso)] w-full">@SODAX/DAPP-KIT</p>
+                    <a href="https://docs.sodax.com/developers/packages/dapp-kit" target="_blank" rel="noopener noreferrer" className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline">@SODAX/DAPP-KIT</a>
                     <p className="font-['InterRegular'] text-[var(--clay-dark)] w-full">
                       The fastest way to build with SODAX. This is an opinionated collection of UI components, hooks,
                       and utilities that leverages the layers below it.
@@ -371,7 +382,7 @@ export default function AmpedFinancePage() {
           </div>
 
           {/* Get started */}
-          <div className="flex flex-col gap-2 items-start pt-6 w-full lg:w-auto">
+          <div className="flex flex-col gap-2 items-start w-full lg:w-auto border-t border-[var(--cream-white)] pt-4 lg:border-0 lg:pt-0">
             <div className="flex gap-1 items-center w-full">
               <div className="relative shrink-0 w-3 h-3">
                 <Image alt="SODAX symbol" className="object-contain mix-blend-multiply" src={img} width={12} height={12} />
@@ -381,15 +392,12 @@ export default function AmpedFinancePage() {
               </p>
             </div>
             <div className="flex flex-col gap-2 items-start shrink-0 w-full lg:w-[280px]">
-              <div className="font-['InterRegular'] text-[var(--clay)] leading-tight">
-                <p className="font-['InterRegular'] text-[var(--clay)] leading-tight">
-                  Partnerships Manager{' '}
-                  <a className="underline" href="mailto:arosh@sodax.com">
-                    arosh@sodax.com
-                  </a>
-                </p>
-              </div>
-              
+              <p className="font-['InterRegular'] text-sm text-[var(--clay)] leading-tight break-all">
+                Partnerships Manager{' '}
+                <a className="underline hover:text-[var(--espresso)] transition-colors" href="mailto:arosh@sodax.com">
+                  arosh@sodax.com
+                </a>
+              </p>
             </div>
           </div>
         </div>

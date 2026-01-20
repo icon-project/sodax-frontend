@@ -30,11 +30,12 @@ export function ShareButton({ title, url }: ShareButtonProps) {
   return (
     <button
       onClick={handleShare}
-      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-[var(--cream-white)] rounded-lg transition-colors shrink-0"
+      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-[var(--cream-white)] rounded-lg transition-colors shrink-0 w-full sm:w-auto"
       aria-label="Share page"
     >
       <Share2 size={16} className="text-[var(--espresso)]" />
-      <span className="font-['InterMedium'] text-sm text-[var(--espresso)] hidden sm:inline">Share this page</span>
+      <span className="font-['InterMedium'] text-sm text-[var(--espresso)] sm:hidden md:inline">Share this page</span>
+      <span className="font-['InterMedium'] text-sm text-[var(--espresso)] hidden sm:inline md:hidden">Share</span>
     </button>
   );
 }
