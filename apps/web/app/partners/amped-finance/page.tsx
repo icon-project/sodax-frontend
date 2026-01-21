@@ -67,7 +67,15 @@ export default function AmpedFinancePage() {
               </p>
             </div>
             <div className="flex justify-start w-full -mt-[1px]">
-              <svg width="80" height="8" viewBox="0 0 80 8" fill="none" className="ml-4">
+              <svg 
+                width="80" 
+                height="8" 
+                viewBox="0 0 80 8" 
+                fill="none" 
+                className="ml-4"
+                aria-hidden="true"
+                focusable="false"
+              >
                 <path fillRule="evenodd" clipRule="evenodd" d="M40 8C39.0625 8 38.5871 7.52943 38.3333 7.05882C35.8368 2.42816 29.0165 1.56476e-06 20 2.0664e-06L60 -1.59051e-07C50.9835 3.42592e-07 44.1632 2.42816 41.6667 7.05882C41.4129 7.52943 40.9375 8 40 8Z" fill="var(--almost-white)"/>
               </svg>
             </div>
@@ -260,8 +268,17 @@ export default function AmpedFinancePage() {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-flex items-center h-9 justify-center px-3 py-1.5 min-w-[110px] bg-white hover:bg-gray-50 border border-[var(--cream-white)] rounded-lg transition-colors"
+                aria-label="Visit Amped Finance on X (Twitter)"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-[var(--espresso)]">
+                <svg 
+                  width="14" 
+                  height="14" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  className="text-[var(--espresso)]"
+                  aria-hidden="true"
+                  focusable="false"
+                >
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="currentColor"/>
                 </svg>
               </a>
@@ -338,7 +355,15 @@ export default function AmpedFinancePage() {
             <div className="flex flex-col items-start w-full">
               <div className="flex flex-col gap-3 items-start w-full">
                 <div className="flex justify-start w-full mb-[-12px]">
-                  <svg width="80" height="8" viewBox="0 0 80 8" fill="none" className="ml-2 rotate-180">
+                  <svg 
+                    width="80" 
+                    height="8" 
+                    viewBox="0 0 80 8" 
+                    fill="none" 
+                    className="ml-2 rotate-180"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
                     <path fillRule="evenodd" clipRule="evenodd" d="M40 8C39.0625 8 38.5871 7.52943 38.3333 7.05882C35.8368 2.42816 29.0165 1.56476e-06 20 2.0664e-06L60 -1.59051e-07C50.9835 3.42592e-07 44.1632 2.42816 41.6667 7.05882C41.4129 7.52943 40.9375 8 40 8Z" fill="var(--cream-white)"/>
                   </svg>
                 </div>

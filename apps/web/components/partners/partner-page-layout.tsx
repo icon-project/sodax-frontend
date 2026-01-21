@@ -36,7 +36,7 @@ export function generatePartnerMetadata(metadata: PartnerMetadata): Metadata {
       type: 'article',
       url: pageUrl,
       images: [{
-        url: `https://sodax.com${logoUrl}`,
+        url: `https://sodax.com${logoUrl.replace('.svg', '.png')}`,
         width: 1200,
         height: 630,
         alt: `${partnerName} Case Study`
@@ -46,7 +46,7 @@ export function generatePartnerMetadata(metadata: PartnerMetadata): Metadata {
       card: 'summary_large_image',
       title: fullTitle,
       description: description,
-      images: [`https://sodax.com${logoUrl}`]
+      images: [`https://sodax.com${logoUrl.replace('.svg', '.png')}`]
     }
   };
 }

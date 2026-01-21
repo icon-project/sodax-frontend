@@ -1,6 +1,7 @@
 'use client';
 
 import { FileDown } from 'lucide-react';
+import { downloadFile } from '@/lib/download-utils';
 
 interface PdfDownloadButtonProps {
   title?: string;
@@ -10,13 +11,7 @@ interface PdfDownloadButtonProps {
 export function PdfDownloadButton({ title = 'Case Study', pdfUrl }: PdfDownloadButtonProps) {
   const handleDownload = () => {
     if (pdfUrl) {
-      // Download the PDF file
-      const link = document.createElement('a');
-      link.href = pdfUrl;
-      link.download = `${title}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      downloadFile(pdfUrl, `${title}.pdf`);
     } else {
       // Fallback to print dialog
       window.print();
