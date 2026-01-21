@@ -250,7 +250,7 @@ export function TokenList({
           <motion.div
             ref={assetsRef}
             className={`h-[calc(80vh-176px)] md:h-126 pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 ${
-              isChainSelectorOpen ? 'blur filter opacity-30' : ''
+              isChainSelectorOpen ? 'blur filter opacity-20' : ''
             } ${isFiltered ? 'px-10' : 'px-0'}`}
             data-name="Assets"
             layout
