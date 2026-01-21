@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { SONIC_MAINNET_CHAIN_ID, type Address, type SpokeChainId } from '@sodax/types';
-import { formatUnits, parseUnits } from 'viem';
-import type { AssetBalance } from '@sodax/sdk';
+import { formatUnits, isAddress, parseUnits } from 'viem';
+import type { AssetBalance, SonicSpokeProvider } from '@sodax/sdk';
 import { chainIdToChainName } from '@/constants';
 import { SelectChain } from '@/components/solver/SelectChain';
 
@@ -16,7 +16,7 @@ export default function PartnerFeeClaimPage() {
   const { sodax } = useSodaxContext();
   const sonicAccount = useXAccount(SONIC_MAINNET_CHAIN_ID);
   const walletProvider = useWalletProvider(SONIC_MAINNET_CHAIN_ID);
-  const spokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID, walletProvider);
+  const spokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID, walletProvider) as SonicSpokeProvider | undefined;
   const [address, setAddress] = useState<string>('');
   const [balances, setBalances] = useState<Map<string, AssetBalance> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -58,21 +58,20 @@ export default function PartnerFeeClaimPage() {
 
     try {
       const queryAddress = address.trim() || sonicAccount?.address;
-      if (!queryAddress) {
+      if (!queryAddress || !isAddress(queryAddress)) {
         setError('No address provided and wallet not connected');
         setLoading(false);
         return;
       }
 
-      if (!sodax.partnerFeeClaim) {
+      if (!sodax.partners.feeClaim) {
         setError('PartnerFeeClaimService not initialized');
         setLoading(false);
         return;
       }
 
       console.log('[PartnerFeeClaimPage] Fetching balances for address:', queryAddress);
-      // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
-      const result = await sodax.partnerFeeClaim.fetchAssetsBalances(spokeProvider as any, queryAddress as Address);
+      const result = await sodax.partners.feeClaim.fetchAssetsBalances({ address: queryAddress });
 
       if (!result.ok) {
         console.error('[PartnerFeeClaimPage] Error fetching balances:', result.error);
@@ -111,15 +110,14 @@ export default function PartnerFeeClaimPage() {
     setIsApproved(null);
 
     try {
-      if (!sodax.partnerFeeClaim) {
+      if (!sodax.partners.feeClaim) {
         setApproveError('PartnerFeeClaimService not initialized');
         return;
       }
-      const result = await sodax.partnerFeeClaim.isTokenApproved(
-        approveTokenAddress.trim() as Address,
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
-        spokeProvider as any,
-      );
+      const result = await sodax.partners.feeClaim.isTokenApproved({
+        token: approveTokenAddress.trim() as Address,
+        spokeProvider,
+      });
 
       if (!result.ok) {
         setApproveError(result.error.message || 'Failed to check approval');
@@ -145,16 +143,15 @@ export default function PartnerFeeClaimPage() {
     setApproveError(null);
 
     try {
-      if (!sodax.partnerFeeClaim) {
+      if (!sodax.partners.feeClaim) {
         setApproveError('PartnerFeeClaimService not initialized');
         return;
       }
 
-      const result = await sodax.partnerFeeClaim.approveToken(
-        approveTokenAddress.trim() as Address,
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
-        spokeProvider as any,
-      );
+      const result = await sodax.partners.feeClaim.approveToken({
+        token: approveTokenAddress.trim() as Address,
+        spokeProvider,
+      });
 
       if (!result.ok) {
         setApproveError(result.error.message || 'Failed to approve token');
@@ -184,23 +181,22 @@ export default function PartnerFeeClaimPage() {
     setSetPreferenceSuccess(null);
 
     try {
-      if (!sodax.partnerFeeClaim) {
+      if (!sodax.partners.feeClaim) {
         setSetPreferenceError('PartnerFeeClaimService not initialized');
         return;
       }
 
-      const result = await sodax.partnerFeeClaim.setSwapPreference(
-        {
+      const result = await sodax.partners.feeClaim.setSwapPreference({
+        params: {
           outputToken: outputToken.trim() as Address,
           dstChain,
           dstAddress: dstAddress.trim(),
         },
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
-        spokeProvider as any,
-      );
+        spokeProvider,
+      });
 
       if (!result.ok) {
-        setSetPreferenceError(result.error.message || 'Failed to set swap preference');
+        setSetPreferenceError(JSON.stringify(result.error.data.error) || 'Failed to set swap preference');
         return;
       }
 
@@ -231,24 +227,23 @@ export default function PartnerFeeClaimPage() {
     setSwapSuccess(null);
 
     try {
-      if (!sodax.partnerFeeClaim) {
+      if (!sodax.partners.feeClaim) {
         setSwapError('PartnerFeeClaimService not initialized');
         return;
       }
 
       const amount = parseUnits(swapAmount, token.decimal);
 
-      const result = await sodax.partnerFeeClaim.swap(
-        {
+      const result = await sodax.partners.feeClaim.swap({
+        params: {
           fromToken: swapFromToken.trim() as Address,
           amount,
         },
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation> //TODO make it type safe
-        spokeProvider as any,
-      );
+        spokeProvider,
+      });
 
       if (!result.ok) {
-        setSwapError(result.error.code || 'Failed to execute swap');
+        setSwapError(JSON.stringify(result.error) || 'Failed to execute swap');
         return;
       }
 
