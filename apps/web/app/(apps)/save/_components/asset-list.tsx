@@ -29,14 +29,14 @@ export default function AssetList({
   const { activeAsset } = useSaveState();
   const { setActiveAsset } = useSaveActions();
   const allTokens = useMemo(() => getMoneymarketTokens(), []);
+  const filteredTokens = useMemo(
+    () => allTokens.filter(t => (selectedChain ? t.xChainId === selectedChain : true)),
+    [allTokens, selectedChain],
+  );
   const allAssets = useMemo(() => {
-    let filtered = getUniqueTokenSymbols(allTokens).filter(t =>
+    let filtered = getUniqueTokenSymbols(filteredTokens).filter(t =>
       t.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-
-    if (selectedChain) {
-      filtered = filtered.filter(t => t.tokens.some(token => token.xChainId === selectedChain));
-    }
 
     if (activeTab === CURRENCY_TABS.STABLECOINS) {
       filtered = filtered.filter(t => STABLECOINS.includes(t.symbol));
@@ -60,7 +60,7 @@ export default function AssetList({
     }
 
     return filtered;
-  }, [allTokens, searchQuery, activeTab, formattedReserves, selectedChain]);
+  }, [filteredTokens, searchQuery, activeTab, formattedReserves]);
 
   const allChainBalances = useAllChainBalances();
   const balanceMap = useMemo(() => {

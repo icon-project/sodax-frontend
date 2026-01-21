@@ -30,7 +30,7 @@ interface CurrencySearchPanelProps {
   activeTab: string;
   onTabChange: (value: string) => void;
   selectedChain: string | null;
-  setSelectedChain: (chainId: string) => void;
+  setSelectedChain: (chainId: string | null) => void;
 }
 
 export default function CurrencySearchPanel({
@@ -51,10 +51,11 @@ export default function CurrencySearchPanel({
       chain.id !== ICON_MAINNET_CHAIN_ID,
   );
   const [hoveredChain, setHoveredChain] = useState<string | null>(null);
-  const handleChainSelect = (chainId: string) => {
+  const handleChainSelect = (chainId: string | null) => {
     setSelectedChain(chainId);
     setOpenDialog(false);
   };
+
   return (
     <>
       <motion.div
@@ -183,7 +184,7 @@ export default function CurrencySearchPanel({
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-3">
             <div
               className={`group inline-flex justify-start items-center gap-4 py-2 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
-              onClick={() => handleChainSelect('all')}
+              onClick={() => handleChainSelect(null)}
               onMouseEnter={() => setHoveredChain('all')}
               onMouseLeave={() => setHoveredChain(null)}
             >
