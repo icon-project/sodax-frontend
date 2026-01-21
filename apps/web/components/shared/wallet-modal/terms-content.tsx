@@ -2,7 +2,7 @@ import './terms-content.css';
 
 export const TermsContent = () => {
   return (
-    <div>
+    <div className="terms-content">
       <p className="c7 title" id="h.5gal13r7f6uz">
         <span className="c1">SODAX Terms of Use</span>
       </p>
