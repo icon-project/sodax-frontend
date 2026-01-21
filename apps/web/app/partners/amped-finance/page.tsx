@@ -3,12 +3,12 @@ import { PartnerPageLayout, generatePartnerMetadata } from '@/components/partner
 import type { Metadata } from 'next';
 import { Globe } from 'lucide-react';
 import { PageActions } from '@/components/partners/page-actions';
-import { 
-  AnimatedSection, 
-  AnimatedScrollSection, 
+import {
+  AnimatedSection,
+  AnimatedScrollSection,
   AnimatedStaggerContainer,
   AnimatedStaggerChild,
-  AnimatedFadeIn 
+  AnimatedFadeIn,
 } from '@/components/partners/animated-section';
 
 // Local asset paths
@@ -20,12 +20,13 @@ const pdfDeck = '/partners/amped-finance/SODAX - Amped Finance.pdf';
 const partnerMetadata = {
   partnerName: 'Amped Finance',
   tagline: 'Derivatives DEX on LightLink & Sonic',
-  description: 'How Amped Finance, a derivatives DEX on LightLink & Sonic, launched their multi-chain money market in 2-4 days using SODAX SDK. Intent-based swaps, deep liquidity from day one, and 14+ networks accessible.',
+  description:
+    'How Amped Finance, a derivatives DEX on LightLink & Sonic, launched their multi-chain money market in 2-4 days using SODAX SDK. Intent-based swaps, deep liquidity from day one, and 14+ networks accessible.',
   logoUrl: imgLogo,
   metrics: {
     volume: '$4.4M',
-    revenue: '$1M+'
-  }
+    revenue: '$1M+',
+  },
 };
 
 export const metadata: Metadata = generatePartnerMetadata(partnerMetadata);
@@ -40,8 +41,12 @@ export default function AmpedFinancePage() {
             <Image alt="Amped Finance Logo" className="object-contain" src={imgLogo} width={80} height={80} />
           </div>
           <div className="flex flex-col items-start justify-center">
-            <p className="font-['InterMedium'] text-xs md:text-sm text-[var(--clay-light)] uppercase leading-tight tracking-wider">CASE STUDY</p>
-            <p className="font-['InterBold'] text-2xl md:text-3xl lg:text-4xl text-[var(--espresso)] leading-tight">Amped Finance</p>
+            <p className="font-['InterMedium'] text-xs md:text-sm text-[var(--clay-light)] uppercase leading-tight tracking-wider">
+              CASE STUDY
+            </p>
+            <p className="font-['InterBold'] text-2xl md:text-3xl lg:text-4xl text-[var(--espresso)] leading-tight">
+              Amped Finance
+            </p>
             <p className="font-['InterBold'] text-sm md:text-base lg:text-lg text-[var(--clay)] leading-normal">
               Derivatives DEX on LightLink & Sonic
             </p>
@@ -67,16 +72,21 @@ export default function AmpedFinancePage() {
               </p>
             </div>
             <div className="flex justify-start w-full -mt-[1px]">
-              <svg 
-                width="80" 
-                height="8" 
-                viewBox="0 0 80 8" 
-                fill="none" 
+              <svg
+                width="80"
+                height="8"
+                viewBox="0 0 80 8"
+                fill="none"
                 className="ml-4"
                 aria-hidden="true"
                 focusable="false"
               >
-                <path fillRule="evenodd" clipRule="evenodd" d="M40 8C39.0625 8 38.5871 7.52943 38.3333 7.05882C35.8368 2.42816 29.0165 1.56476e-06 20 2.0664e-06L60 -1.59051e-07C50.9835 3.42592e-07 44.1632 2.42816 41.6667 7.05882C41.4129 7.52943 40.9375 8 40 8Z" fill="var(--almost-white)"/>
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M40 8C39.0625 8 38.5871 7.52943 38.3333 7.05882C35.8368 2.42816 29.0165 1.56476e-06 20 2.0664e-06L60 -1.59051e-07C50.9835 3.42592e-07 44.1632 2.42816 41.6667 7.05882C41.4129 7.52943 40.9375 8 40 8Z"
+                  fill="var(--almost-white)"
+                />
               </svg>
             </div>
           </AnimatedFadeIn>
@@ -86,8 +96,8 @@ export default function AmpedFinancePage() {
             <div className="flex-1 flex flex-col gap-2 items-start leading-normal">
               <p className="font-['InterBold'] text-lg text-[var(--espresso)] w-full">The Partner</p>
               <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full">
-                Amped Finance is a derivatives DEX on LightLink and Sonic, founded by Daniel Enright, who also serves
-                as Ecosystem Lead at LightLink. At the time, the LightLink ecosystem supported a limited set of assets,
+                Amped Finance is a derivatives DEX on LightLink and Sonic, founded by Daniel Enright, who also serves as
+                Ecosystem Lead at LightLink. At the time, the LightLink ecosystem supported a limited set of assets,
                 primarily ETH, LL, and stablecoins. Amped wanted to offer traders exposure to BTC, SOL, and AVAX without
                 forcing users to leave the network.
               </p>
@@ -104,8 +114,7 @@ export default function AmpedFinancePage() {
               <div className="flex flex-col sm:flex-row gap-3 md:gap-4 items-start w-full">
                 <div className="flex-1 flex flex-col items-center justify-center pt-2 border-t border-[var(--cream-white)] min-w-0 w-full">
                   <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-normal">
-                    Bridged wBTC, ARB, and UNI from Ethereum, but users often had to wait up to 24 hours to bridge
-                    back
+                    Bridged wBTC, ARB, and UNI from Ethereum, but users often had to wait up to 24 hours to bridge back
                   </p>
                 </div>
                 <div className="flex-1 flex flex-col items-center justify-center pt-2 border-t border-[var(--cream-white)] min-w-0 w-full">
@@ -186,7 +195,9 @@ export default function AmpedFinancePage() {
           <div className="flex-1 flex flex-col gap-4 items-start w-full">
             {/* At a glance */}
             <div className="flex flex-col gap-2 items-start w-full">
-              <p className="font-['InterBold'] text-lg text-[var(--cherry-bright)] w-full leading-normal">At a glance</p>
+              <p className="font-['InterBold'] text-lg text-[var(--cherry-bright)] w-full leading-normal">
+                At a glance
+              </p>
               <ul className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full list-disc ml-4 space-y-1">
                 <li>
                   <span className="font-['InterBold']">2 weeks</span> to integrate
@@ -198,7 +209,8 @@ export default function AmpedFinancePage() {
                   <span className="font-['InterBold']">14+</span> networks now accessible
                 </li>
                 <li>
-                  <span className="font-['InterBold']">No</span> custom smart contract or liquidity bootstrapping required
+                  <span className="font-['InterBold']">No</span> custom smart contract or liquidity bootstrapping
+                  required
                 </li>
                 <li>Primary cross-network execution interface for LightLink</li>
               </ul>
@@ -208,7 +220,9 @@ export default function AmpedFinancePage() {
 
             {/* About Amped */}
             <div className="flex flex-col gap-2 items-start w-full">
-              <p className="font-['InterBold'] text-lg text-[var(--cherry-bright)] w-full leading-normal">About Amped</p>
+              <p className="font-['InterBold'] text-lg text-[var(--cherry-bright)] w-full leading-normal">
+                About Amped
+              </p>
               <div className="flex gap-2 items-start w-full">
                 <div className="flex flex-col gap-1 items-start shrink-0">
                   <div className="bg-[var(--cream-white)] flex flex-col h-6 items-center justify-center px-2 rounded shrink-0 w-full">
@@ -254,33 +268,36 @@ export default function AmpedFinancePage() {
           <div className="flex flex-col gap-2 items-start pt-2 border-t border-[var(--cream-white)] w-full">
             <p className="font-['InterRegular'] text-sm text-[var(--clay)] leading-normal">References</p>
             <div className="flex gap-2 items-center">
-              <a 
-                href="https://www.amped.finance/" 
-                target="_blank" 
+              <a
+                href="https://www.amped.finance/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex h-9 items-center justify-center gap-1.5 px-3 py-1.5 min-w-[110px] bg-white hover:bg-gray-50 border border-[var(--cream-white)] rounded-lg transition-colors"
               >
                 <Globe size={14} className="text-[var(--espresso)]" />
                 <span className="font-['InterMedium'] text-sm text-[var(--espresso)]">Website</span>
               </a>
-              <a 
-                href="https://x.com/AmpedFinance" 
-                target="_blank" 
+              <a
+                href="https://x.com/AmpedFinance"
+                target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center h-9 justify-center px-3 py-1.5 min-w-[110px] bg-white hover:bg-gray-50 border border-[var(--cream-white)] rounded-lg transition-colors"
-                aria-label="Visit Amped Finance on X (Twitter)"
+                className="inline-flex items-center h-9 justify-center gap-1.5 px-3 py-1.5 min-w-[110px] bg-white hover:bg-gray-50 border border-[var(--cream-white)] rounded-lg transition-colors"
               >
-                <svg 
-                  width="14" 
-                  height="14" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
                   className="text-[var(--espresso)]"
                   aria-hidden="true"
                   focusable="false"
                 >
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="currentColor"/>
+                  <path
+                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                    fill="currentColor"
+                  />
                 </svg>
+                <span className="font-['InterMedium'] text-sm text-[var(--espresso)]">X</span>
               </a>
             </div>
           </div>
@@ -295,7 +312,9 @@ export default function AmpedFinancePage() {
             <div className="relative shrink-0 w-4 h-4">
               <Image alt="Logo" className="object-contain" src={imgLogo1} width={16} height={16} />
             </div>
-            <p className="font-['InterBold'] text-base md:text-lg text-[var(--espresso)] leading-normal">Amped Results</p>
+            <p className="font-['InterBold'] text-base md:text-lg text-[var(--espresso)] leading-normal">
+              Amped Results
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:flex lg:flex-wrap gap-3 md:gap-2 items-start pb-2 w-full">
             <div className="flex flex-col gap-1 items-center justify-center pl-4 py-2 border-l border-[var(--cream-white)] w-full lg:w-[170px]">
@@ -333,8 +352,8 @@ export default function AmpedFinancePage() {
                 New products unlocked
               </p>
               <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-normal">
-                Enabled cross-network token index pools, allowing users to access diversified exposure across
-                ecosystems in a single transaction
+                Enabled cross-network token index pools, allowing users to access diversified exposure across ecosystems
+                in a single transaction
               </p>
             </div>
           </div>
@@ -346,7 +365,13 @@ export default function AmpedFinancePage() {
           <div className="flex flex-col gap-2 items-start rounded-lg shrink-0 w-full lg:w-[280px]">
             <div className="flex gap-1 items-center w-full">
               <div className="relative shrink-0 w-4 h-4">
-                <Image alt="SODAX symbol" className="object-contain mix-blend-multiply" src={img} width={16} height={16} />
+                <Image
+                  alt="SODAX symbol"
+                  className="object-contain mix-blend-multiply"
+                  src={img}
+                  width={16}
+                  height={16}
+                />
               </div>
               <p className="flex-1 font-['InterBold'] text-sm text-[var(--espresso)] leading-normal min-w-0">
                 SODAX Integration
@@ -355,16 +380,21 @@ export default function AmpedFinancePage() {
             <div className="flex flex-col items-start w-full">
               <div className="flex flex-col gap-3 items-start w-full">
                 <div className="flex justify-start w-full mb-[-12px]">
-                  <svg 
-                    width="80" 
-                    height="8" 
-                    viewBox="0 0 80 8" 
-                    fill="none" 
+                  <svg
+                    width="80"
+                    height="8"
+                    viewBox="0 0 80 8"
+                    fill="none"
                     className="ml-2 rotate-180"
                     aria-hidden="true"
                     focusable="false"
                   >
-                    <path fillRule="evenodd" clipRule="evenodd" d="M40 8C39.0625 8 38.5871 7.52943 38.3333 7.05882C35.8368 2.42816 29.0165 1.56476e-06 20 2.0664e-06L60 -1.59051e-07C50.9835 3.42592e-07 44.1632 2.42816 41.6667 7.05882C41.4129 7.52943 40.9375 8 40 8Z" fill="var(--cream-white)"/>
+                    <path
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M40 8C39.0625 8 38.5871 7.52943 38.3333 7.05882C35.8368 2.42816 29.0165 1.56476e-06 20 2.0664e-06L60 -1.59051e-07C50.9835 3.42592e-07 44.1632 2.42816 41.6667 7.05882C41.4129 7.52943 40.9375 8 40 8Z"
+                      fill="var(--cream-white)"
+                    />
                   </svg>
                 </div>
                 <div className="bg-[var(--cream-white)] flex flex-col gap-1 items-start justify-center p-2 rounded-lg shrink-0 w-full lg:w-[280px]">
@@ -372,7 +402,14 @@ export default function AmpedFinancePage() {
                     Foundation Layer
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
-                    <a href="https://docs.sodax.com/developers/packages/sdk" target="_blank" rel="noopener noreferrer" className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline">@SODAX/SDK</a>
+                    <a
+                      href="https://docs.sodax.com/developers/packages/sdk"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline"
+                    >
+                      @SODAX/SDK
+                    </a>
                     <p className="font-['InterRegular'] text-[var(--clay-dark)] w-full">
                       This is the core logic that powers the entire ecosystem. It provides the raw functional modules
                       required to build with SODAX programmatically.
@@ -384,7 +421,14 @@ export default function AmpedFinancePage() {
                     Connection Layer
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
-                    <a href="https://docs.sodax.com/developers/packages/wallet-sdk-react" target="_blank" rel="noopener noreferrer" className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline">@SODAX/WALLET-SDK-REACT</a>
+                    <a
+                      href="https://docs.sodax.com/developers/packages/wallet-sdk-react"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline"
+                    >
+                      @SODAX/WALLET-SDK-REACT
+                    </a>
                     <p className="font-['InterRegular'] text-[var(--clay-dark)] w-full">
                       An opinionated wrapper optimized for React applications, providing pre-built context providers and
                       state management for wallet connections.
@@ -396,7 +440,14 @@ export default function AmpedFinancePage() {
                     Experience Layer
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
-                    <a href="https://docs.sodax.com/developers/packages/dapp-kit" target="_blank" rel="noopener noreferrer" className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline">@SODAX/DAPP-KIT</a>
+                    <a
+                      href="https://docs.sodax.com/developers/packages/dapp-kit"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline"
+                    >
+                      @SODAX/DAPP-KIT
+                    </a>
                     <p className="font-['InterRegular'] text-[var(--clay-dark)] w-full">
                       The fastest way to build with SODAX. This is an opinionated collection of UI components, hooks,
                       and utilities that leverages the layers below it.
@@ -411,7 +462,13 @@ export default function AmpedFinancePage() {
           <div className="flex flex-col gap-2 items-start w-full lg:w-auto border-t border-[var(--cream-white)] pt-4 lg:border-0 lg:pt-0">
             <div className="flex gap-1 items-center w-full">
               <div className="relative shrink-0 w-4 h-4">
-                <Image alt="SODAX symbol" className="object-contain mix-blend-multiply" src={img} width={16} height={16} />
+                <Image
+                  alt="SODAX symbol"
+                  className="object-contain mix-blend-multiply"
+                  src={img}
+                  width={16}
+                  height={16}
+                />
               </div>
               <p className="flex-1 font-['InterBold'] text-sm text-[var(--espresso)] leading-normal min-w-0">
                 Get started
@@ -431,4 +488,3 @@ export default function AmpedFinancePage() {
     </PartnerPageLayout>
   );
 }
-
