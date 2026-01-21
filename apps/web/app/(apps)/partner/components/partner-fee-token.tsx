@@ -6,17 +6,16 @@ import type { PartnerFeeBalance } from './partner-fee-balance';
 
 type PartnerFeeTokenProps = {
   balance: PartnerFeeBalance;
-  swappingSymbol: string | null;
-  onSwapToUsdc: (balance: PartnerFeeBalance) => void;
+  claimingSymbol: string | null;
+  canClaim: boolean;
+  onClaimToUsdc: (balance: PartnerFeeBalance) => void;
 };
 
-export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: PartnerFeeTokenProps) {
+export function PartnerFeeToken({ balance, claimingSymbol, onClaimToUsdc, canClaim }: PartnerFeeTokenProps) {
   const rawAmount = Number(balance.balance);
   const displayAmount = rawAmount.toFixed(4);
-  // IMPORTANT balance > 10 as partner must have sufficient funds to swap and pay fees
-  const hasBalance = rawAmount > 5;
 
-  const isThisSwapping = swappingSymbol === balance.currency.symbol;
+  const isThisClaiming = claimingSymbol === balance.currency.symbol;
   const isUsdc = balance.currency.symbol === 'USDC';
 
   return (
@@ -41,10 +40,10 @@ export function PartnerFeeToken({ balance, swappingSymbol, onSwapToUsdc }: Partn
           <Button
             variant="cherry"
             className="mix-blend-multiply w-full h-11"
-            onClick={() => onSwapToUsdc(balance)}
-            disabled={!hasBalance || isThisSwapping}
+            onClick={() => onClaimToUsdc(balance)}
+            disabled={!canClaim || isThisClaiming}
           >
-            {isThisSwapping ? 'Swapping…' : 'Swap to USDC'}
+            {isThisClaiming ? 'Processing...' : 'Claim to USDC'}
           </Button>
         )}
       </div>

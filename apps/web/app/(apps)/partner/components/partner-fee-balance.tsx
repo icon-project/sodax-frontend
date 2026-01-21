@@ -11,11 +11,18 @@ export type PartnerFeeBalance = {
 export type PartnerFeeBalancesProps = {
   balances: PartnerFeeBalance[];
   isLoading: boolean;
-  swappingSymbol: string | null;
-  onSwapToUsdc: (balance: PartnerFeeBalance) => void;
+  canClaim: (balance: PartnerFeeBalance) => boolean;
+  claimingSymbol: string | null;
+  onClaimToUsdc: (balance: PartnerFeeBalance) => void;
 };
 
-export function PartnerFeeBalancesCard({ balances, isLoading, swappingSymbol, onSwapToUsdc }: PartnerFeeBalancesProps) {
+export function PartnerFeeBalancesCard({
+  balances,
+  isLoading,
+  canClaim,
+  claimingSymbol,
+  onClaimToUsdc,
+}: PartnerFeeBalancesProps) {
   return (
     <main>
       {/* Header */}
@@ -47,8 +54,9 @@ export function PartnerFeeBalancesCard({ balances, isLoading, swappingSymbol, on
               <PartnerFeeToken
                 key={`${balance.currency.symbol}-${balance.currency.xChainId}`}
                 balance={balance}
-                swappingSymbol={swappingSymbol}
-                onSwapToUsdc={onSwapToUsdc}
+                claimingSymbol={claimingSymbol}
+                canClaim={canClaim(balance)}
+                onClaimToUsdc={onClaimToUsdc}
               />
             ))}
           </div>

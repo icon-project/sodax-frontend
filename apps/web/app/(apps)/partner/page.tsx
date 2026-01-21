@@ -6,24 +6,32 @@ import { useEffect, useState } from 'react';
 import { PartnerFeeBalancesCard } from './components/partner-fee-balance';
 import type { PartnerFeeBalance } from './components/partner-fee-balance';
 import { usePartnerFees } from './utils/usePartnersFee';
-import { SwapModal } from './components/swap-modal';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { ClaimModal } from './components/claim-modal';
+import { MIN_PARTNER_CLAIM_AMOUNT } from '@/constants/partner-claim';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isSwapModalOpen, setSwapModalModalOpen] = useState(false);
+  const [isClaimModalOpen, setClaimModalOpen] = useState(false);
   const [selectedBalance, setSelectedBalance] = useState<PartnerFeeBalance | null>(null);
-  const [swappingSymbol, setSwappingSymbol] = useState<string | null>(null);
+  const [claimingSymbol, setClaimingSymbol] = useState<string | null>(null);
 
-  const { address } = useXAccount(SONIC_MAINNET_CHAIN_ID);
+  const { address: connectedAddress } = useXAccount(SONIC_MAINNET_CHAIN_ID);
 
-  const { balances, isLoading, refetch } = usePartnerFees(address);
+  const devPartnerAddress =
+    process.env.NODE_ENV === 'development' ? process.env.NEXT_PUBLIC_DEV_PARTNER_ADDRESS : undefined;
 
-  const handleSwapToUsdc = (balance: PartnerFeeBalance) => {
+  const effectiveAddress = devPartnerAddress ?? connectedAddress;
+
+  const { balances, isLoading, refetch } = usePartnerFees(effectiveAddress);
+  // TODO IMPORTANT balance > 10 as partner must have sufficient funds to swap and pay fees
+  const canClaim = (balance: PartnerFeeBalance) => Number(balance.balance) >= MIN_PARTNER_CLAIM_AMOUNT;
+
+  const handleClaimToUsdc = (balance: PartnerFeeBalance) => {
     setSelectedBalance(balance);
-    setSwappingSymbol(balance.currency.symbol);
-    setSwapModalModalOpen(true);
+    setClaimingSymbol(balance.currency.symbol);
+    setClaimModalOpen(true);
   };
 
   useEffect(() => {
@@ -53,13 +61,13 @@ export default function PartnerPage() {
 
           {/* Subtitle row */}
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-sm text-clay-light w-full">
-            {address ? (
+            {effectiveAddress ? (
               <>
                 <span className="leading-snug">Monitor and manage fees earned through your SODAX partnership.</span>
                 <span className="leading-snug sm:text-right break-all sm:break-normal">
                   <span className="text-clay-medium">Connected wallet: </span>
                   <span className="font-mono font-bold">
-                    {address.slice(0, 6)}...{address.slice(-4)}
+                    {effectiveAddress.slice(0, 6)}...{effectiveAddress.slice(-4)}
                   </span>{' '}
                 </span>
               </>
@@ -73,31 +81,32 @@ export default function PartnerPage() {
 
       {/* Main content */}
       <motion.div variants={itemVariants}>
-        {address && (
+        {balances && (
           <PartnerFeeBalancesCard
             balances={balances}
             isLoading={isLoading}
-            swappingSymbol={swappingSymbol}
-            onSwapToUsdc={handleSwapToUsdc}
+            claimingSymbol={claimingSymbol}
+            canClaim={canClaim}
+            onClaimToUsdc={handleClaimToUsdc}
           />
         )}
       </motion.div>
       {selectedBalance && (
-        <SwapModal
-          isOpen={isSwapModalOpen}
+        <ClaimModal
+          isOpen={isClaimModalOpen}
           onClose={() => {
-            setSwapModalModalOpen(false);
-            setSwappingSymbol(null);
+            setClaimModalOpen(false);
+            setClaimingSymbol(null);
             setSelectedBalance(null);
           }}
           asset={{
             symbol: selectedBalance.currency.symbol,
             decimals: selectedBalance.currency.decimals,
             address: selectedBalance.currency.address,
-            chainId: selectedBalance.currency.xChainId,
           }}
+          maxAmountToClaim={selectedBalance.balance}
           onSuccess={() => {
-            setSwappingSymbol(null);
+            setClaimingSymbol(null);
             setSelectedBalance(null);
             refetch();
           }}

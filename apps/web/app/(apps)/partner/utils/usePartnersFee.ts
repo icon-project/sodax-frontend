@@ -25,7 +25,9 @@ type UsePartnerFeesResult = {
 export function usePartnerFees(address?: string | null): UsePartnerFeesResult {
   const xChainId = SONIC_MAINNET_CHAIN_ID;
   const tokens = useMemo(() => {
-    return getSupportedSolverTokens(xChainId) as XToken[];
+    const result = getSupportedSolverTokens(xChainId) as XToken[];
+    console.log('[PartnerFees] supported solver tokens:', result);
+    return result;
   }, [xChainId]);
 
   //always call the hook to avoid conditional hooks
@@ -47,6 +49,10 @@ export function usePartnerFees(address?: string | null): UsePartnerFeesResult {
       console.error('Failed to refetch balances:', err);
     }
   };
+
+  console.log('[PartnerFees] address used:', address);
+  console.log('[PartnerFees] isLoading:', isLoading);
+  console.log('[PartnerFees] rawBalances:', rawBalances);
 
   // loading state
   if (isLoading || !rawBalances) {
