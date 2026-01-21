@@ -1324,7 +1324,7 @@ export const spokeChainConfig = {
   [NEAR_MAINNET_CHAIN_ID]: {
     rpcUrl: 'https://1rpc.io/near',
     chain: baseChainInfo[NEAR_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'NEAR'>,
-    nativeToken: '',
+    nativeToken: '0x',
     addresses: {
       assetManager: 'asset-manager.sodax.near',
       connection: 'connection.sodax.near',
