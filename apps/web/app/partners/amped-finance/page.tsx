@@ -1,8 +1,8 @@
 import Image from 'next/image';
 import { PartnerPageLayout, generatePartnerMetadata } from '@/components/partners/partner-page-layout';
 import type { Metadata } from 'next';
-import { Globe, BookOpen } from 'lucide-react';
-import { ShareButton } from '@/components/partners/share-button';
+import { Globe } from 'lucide-react';
+import { PageActions } from '@/components/partners/page-actions';
 import { 
   AnimatedSection, 
   AnimatedScrollSection, 
@@ -15,6 +15,7 @@ import {
 const imgLogo = '/partners/amped-finance/logo.svg';
 const imgLogo1 = '/partners/amped-finance/logo-small.svg';
 const img = '/partners/sodax-symbol.svg';
+const pdfDeck = '/partners/amped-finance/SODAX - Amped Finance.pdf';
 
 const partnerMetadata = {
   partnerName: 'Amped Finance',
@@ -46,18 +47,11 @@ export default function AmpedFinancePage() {
             </p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full sm:w-auto">
-          <a
-            href="https://docs.sodax.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[var(--espresso)] hover:bg-[var(--clay-dark)] text-white rounded-lg transition-colors shrink-0 text-center"
-          >
-            <BookOpen size={16} />
-            <span className="font-['InterMedium'] text-sm">SODAX SDK</span>
-          </a>
-          <ShareButton title="Amped Finance Case Study | SODAX Partners" />
-        </div>
+        <PageActions
+          pdfUrl={pdfDeck}
+          pdfTitle="SODAX - Amped Finance Case Study"
+          shareTitle="Amped Finance Case Study | SODAX Partners"
+        />
       </AnimatedSection>
 
       {/* Section */}
@@ -66,7 +60,7 @@ export default function AmpedFinancePage() {
         <AnimatedStaggerContainer className="flex-1 flex flex-col gap-6 items-start min-w-0 w-full lg:w-auto">
           {/* Subtitle Box */}
           <AnimatedFadeIn className="flex flex-col items-start w-full">
-            <div className="bg-[var(--almost-white)] flex items-center p-3 md:p-4 rounded-lg w-full relative">
+            <div className="bg-[var(--almost-white)] flex items-center px-3 py-4 md:px-4 md:py-6 rounded-lg w-full relative">
               <p className="flex-1 font-['InterRegular'] text-sm md:text-base text-[var(--espresso)] leading-relaxed">
                 For derivatives DEXs that want to offer cross-network asset exposure without building bridges or
                 managing per-network liquidity.
@@ -128,7 +122,7 @@ export default function AmpedFinancePage() {
             </p>
             <div className="flex flex-col gap-2 items-start w-full">
               {/* Bullet 1 */}
-              <div className="flex gap-2 items-start pt-2 border-t border-[var(--cream-white)] w-full">
+              <div className="flex gap-2 items-start py-4 border-t border-[var(--cream-white)] w-full">
                 <div className="bg-[var(--cherry-brighter)] flex flex-col items-center justify-center rounded-full shrink-0 w-4 h-4">
                   <p className="font-['InterBold'] text-[8px] text-white leading-normal">1</p>
                 </div>
@@ -145,7 +139,7 @@ export default function AmpedFinancePage() {
               </div>
 
               {/* Bullet 2 */}
-              <div className="flex gap-2 items-start pt-2 border-t border-[var(--cream-white)] w-full">
+              <div className="flex gap-2 items-start py-4 border-t border-[var(--cream-white)] w-full">
                 <div className="bg-[var(--cherry-brighter)] flex flex-col items-center justify-center rounded-full shrink-0 w-4 h-4">
                   <p className="font-['InterBold'] text-[8px] text-white leading-normal">2</p>
                 </div>
@@ -161,7 +155,7 @@ export default function AmpedFinancePage() {
               </div>
 
               {/* Bullet 3 */}
-              <div className="flex gap-2 items-start pt-2 border-t border-[var(--cream-white)] w-full">
+              <div className="flex gap-2 items-start py-4 border-t border-[var(--cream-white)] w-full">
                 <div className="bg-[var(--cherry-brighter)] flex flex-col items-center justify-center rounded-full shrink-0 w-4 h-4">
                   <p className="font-['InterBold'] text-[8px] text-white leading-normal">3</p>
                 </div>
@@ -180,7 +174,7 @@ export default function AmpedFinancePage() {
         </AnimatedStaggerContainer>
 
         {/* Side panel */}
-        <AnimatedScrollSection className="bg-[var(--almost-white)] flex flex-col gap-2 items-start p-4 rounded-lg shrink-0 w-full lg:w-[280px]">
+        <AnimatedScrollSection className="bg-[var(--almost-white)] flex flex-col gap-2 items-start px-4 py-6 rounded-lg shrink-0 w-full lg:w-[280px]">
           <div className="flex-1 flex flex-col gap-4 items-start w-full">
             {/* At a glance */}
             <div className="flex flex-col gap-2 items-start w-full">
