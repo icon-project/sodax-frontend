@@ -3,6 +3,7 @@ import type {
   IEvmWalletProvider,
   IIconWalletProvider,
   IInjectiveWalletProvider,
+  INearWalletProvider,
   ISolanaWalletProvider,
   IStellarWalletProvider,
   ISuiWalletProvider,
@@ -15,6 +16,7 @@ import {
   InjectiveWalletProvider,
   StellarWalletProvider,
   SolanaWalletProvider,
+  NearWalletProvider,
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
 import { usePublicClient, useWalletClient } from 'wagmi';
@@ -22,10 +24,11 @@ import { type SolanaXService, type StellarXService, useXAccount, useXService } f
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
+import type { NearXService } from '../xchains/near/NearXService';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
- * Supports EVM, SUI, ICON and INJECTIVE chains.
+ * Supports EVM, SUI, ICON, INJECTIVE, STELLAR, SOLANA and NEAR chains.
  *
  * @param {ChainId | undefined} spokeChainId - The chain ID to get the wallet provider for. Can be any valid ChainId value.
  * @returns {EvmWalletProvider | SuiWalletProvider | IconWalletProvider | InjectiveWalletProvider | undefined}
@@ -49,6 +52,7 @@ export function useWalletProvider(
   | IInjectiveWalletProvider
   | IStellarWalletProvider
   | ISolanaWalletProvider
+  | INearWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
@@ -139,6 +143,15 @@ export function useWalletProvider(
           wallet: solanaXService.wallet,
           connection: solanaXService.connection,
         });
+      }
+
+      case 'NEAR': {
+        const nearXService = xService as NearXService;
+        if (!nearXService.walletSelector) {
+          return undefined;
+        }
+
+        return new NearWalletProvider({ wallet: nearXService.walletSelector });
       }
 
       default:

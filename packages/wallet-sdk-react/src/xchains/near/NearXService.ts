@@ -9,7 +9,7 @@ export class NearXService extends XService {
   public walletSelector: NearConnector;
 
   private constructor() {
-    super('STELLAR');
+    super('NEAR');
 
     this.walletSelector = new NearConnector({
       network: 'mainnet',

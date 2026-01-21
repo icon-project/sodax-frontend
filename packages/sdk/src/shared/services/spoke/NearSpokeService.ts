@@ -2,7 +2,9 @@ import { type Address, fromHex, type Hex, toHex } from 'viem';
 
 import type { EvmHubProvider } from '../../entities/index.js';
 import {
+  encodeAddress,
   isNearRawSpokeProvider,
+  type DepositSimulationParams,
   type NearReturnType,
   type NearSpokeProviderType,
   type PromiseNearTxReturnType,
@@ -74,6 +76,37 @@ export class NearSpokeService {
   public static async getDeposit(token: string, spokeProvider: NearSpokeProviderType): Promise<bigint> {
     const bal = await spokeProvider.getBalance(token);
     return BigInt(bal as string);
+  }
+
+  /**
+   * Generate simulation parameters for deposit from NearSpokeDepositParams.
+   * @param {NearSpokeDepositParams} params - The deposit parameters.
+   * @param {NearSpokeProviderType} spokeProvider - The provider for the spoke chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
+   */
+  public static async getSimulateDepositParams(
+    params: NearSpokeDepositParams,
+    spokeProvider: NearSpokeProviderType,
+    hubProvider: EvmHubProvider,
+  ): Promise<DepositSimulationParams> {
+    const to =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+        hubProvider,
+      ));
+
+    return {
+      spokeChainID: spokeProvider.chainConfig.chain.id,
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+      to,
+      amount: params.amount,
+      data: params.data,
+      srcAddress: encodeAddress(spokeProvider.chainConfig.chain.id, spokeProvider.chainConfig.addresses.assetManager),
+    };
   }
 
   /**

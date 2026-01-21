@@ -353,6 +353,13 @@ export class SpokeService {
         hubProvider,
       );
     }
+    if (isNearSpokeProviderType(spokeProvider)) {
+      return NearSpokeService.getSimulateDepositParams(
+        params as GetSpokeDepositParamsType<NearSpokeProviderType>,
+        spokeProvider,
+        hubProvider,
+      );
+    }
 
     throw new Error('[getSimulateDepositParams] Invalid spoke provider');
   }
