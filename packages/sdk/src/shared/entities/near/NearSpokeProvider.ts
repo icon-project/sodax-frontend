@@ -4,95 +4,21 @@ import { KeyPairSigner } from '@near-js/signers';
 import type { KeyPairString } from '@near-js/crypto';
 import { fromHex, toHex, type Hex } from 'viem';
 import { actionCreators } from '@near-js/transactions';
-import type { NearRawTransaction, RateLimitConfig } from '../../types.js';
-import type { NearSpokeChainConfig, WalletAddressProvider } from '@sodax/types';
+import type { RateLimitConfig } from '../../types.js';
+import type {
+  CallContractParams,
+  FillData,
+  FillIntent,
+  INearWalletProvider,
+  NearRawTransaction,
+  NearSpokeChainConfig,
+  SendMsgArgs,
+  TransferArgs,
+  WalletAddressProvider,
+} from '@sodax/types';
 import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
-import type { FinalExecutionOutcome } from '@near-js/types';
 export type QueryResponse = string | number | boolean | object | undefined;
 export type CallResponse = string | number | object | bigint | boolean;
-
-export interface TransferArgs {
-  token: string;
-  to: Array<Number>;
-  amount: string;
-  data: Array<Number>;
-}
-
-export interface SendMsgArgs {
-  dst_chain_id: number;
-  dst_address: Array<Number>;
-  payload: Array<Number>;
-}
-
-export interface FillData {
-  token: string;
-  fill_id: bigint;
-  intent_hash: Hex;
-  solver: Hex;
-  receiver: string;
-  amount: bigint;
-}
-
-export interface FillIntent {
-  token: Array<Number>;
-  fill_id: string;
-  intent_hash: Array<Number>;
-  solver: Array<Number>;
-  receiver: Array<Number>;
-  amount: string;
-}
-
-export interface FillIntentArgs {
-  fill: FillIntent;
-}
-
-export interface FTTransferCallArgs {
-  receiver_id: string;
-  amount: string;
-  memo?: string;
-  msg?: string;
-}
-
-export interface NearTransferArgs {
-  to: Array<Number>;
-  amount: string;
-  data: Array<Number>;
-}
-
-export interface InitArgs {
-  connection: string;
-  rate_limit: string;
-  hub_chain_id: number;
-  hub_asset_manager: number[];
-}
-export interface SetHubConfig {
-  hub_chain_id: number;
-  hub_asset_manager: number[];
-}
-
-export type ContractArgs =
-  | TransferArgs
-  | InitArgs
-  | SetHubConfig
-  | FTTransferCallArgs
-  | NearTransferArgs
-  | SendMsgArgs
-  | FillIntentArgs;
-
-export interface CallContractParams {
-  contractId: string;
-  method: string;
-  args: ContractArgs;
-  gas?: bigint;
-  deposit?: bigint;
-}
-
-export interface INearWalletProvider extends WalletAddressProvider {
-  getWalletAddress: () => Promise<string>;
-  getWalletAddressBytes: () => Promise<Hex>;
-  getRawTransaction(params: CallContractParams): Promise<NearRawTransaction>;
-  signAndSubmitTxn(tx: NearRawTransaction): Promise<FinalExecutionOutcome>;
-}
 
 export class LocalWalletProvider implements INearWalletProvider {
   account: Account;
@@ -117,19 +43,32 @@ export class LocalWalletProvider implements INearWalletProvider {
   async getRawTransaction(params: CallContractParams): Promise<NearRawTransaction> {
     return {
       signerId: this.account.accountId,
-      receiverId: params.contractId,
-      actions: [actionCreators.functionCall(params.method, params.args, params.gas, params.deposit)],
+      params: params,
     } satisfies NearRawTransaction;
   }
 
   async signAndSubmitTxn(transaction: NearRawTransaction) {
+    const publicKey = await this.account.getSigner()?.getPublicKey();
+
+    if (!publicKey) {
+      throw new Error('Signer not found');
+    }
+
     const nearTx = await this.account.createTransaction(
-      transaction.receiverId,
-      transaction.actions,
-      transaction.signerId,
+      transaction.params.contractId,
+      [
+        actionCreators.functionCall(
+          transaction.params.method,
+          transaction.params.args,
+          transaction.params.gas,
+          transaction.params.deposit,
+        ),
+      ],
+      publicKey,
     );
 
-    return this.account.signAndSendTransaction({ ...nearTx, throwOnFailure: true, waitUntil: 'FINAL' });
+    const res = await this.account.signAndSendTransaction({ ...nearTx, throwOnFailure: true, waitUntil: 'FINAL' });
+    return res.transaction_outcome.id as Hex;
   }
   async deployContract(buff: Uint8Array) {
     const res = await this.account.deployContract(buff);
@@ -276,16 +215,14 @@ export class NearSpokeProvider extends NearBaseSpokeProvider implements ISpokePr
     this.walletProvider = walletProvider;
   }
 
-  async submit(transaction: NearRawTransaction): Promise<Hex> {
-    const res = await this.walletProvider.signAndSubmitTxn(transaction);
-    return res.transaction_outcome.id as Hex;
+  async submit(transaction: NearRawTransaction): Promise<string> {
+    return await this.walletProvider.signAndSubmitTxn(transaction);
   }
 
   override async getRawTransaction(params: CallContractParams): Promise<NearRawTransaction> {
     return {
       signerId: await this.walletProvider.getWalletAddress(),
-      receiverId: params.contractId,
-      actions: [actionCreators.functionCall(params.method, params.args, params.gas, params.deposit)],
+      params: params,
     } satisfies NearRawTransaction;
   }
 }
@@ -304,8 +241,7 @@ export class NearRawSpokeProvider extends NearBaseSpokeProvider implements IRawS
   override async getRawTransaction(params: CallContractParams): Promise<NearRawTransaction> {
     return {
       signerId: await this.walletProvider.getWalletAddress(),
-      receiverId: params.contractId,
-      actions: [actionCreators.functionCall(params.method, params.args, params.gas, params.deposit)],
+      params: params,
     } satisfies NearRawTransaction;
   }
 }

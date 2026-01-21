@@ -12,7 +12,7 @@ export class NearXService extends XService {
     super('STELLAR');
 
     this.walletSelector = new NearConnector({
-      network: 'testnet',
+      network: 'mainnet',
       logger: console,
       autoConnect: true,
     });
@@ -26,7 +26,7 @@ export class NearXService extends XService {
   }
 
   async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
-    const url = 'https://rpc.testnet.near.org';
+    const url = 'https://1rpc.io/near';
     // reference: https://near.github.io/near-api-js/classes/_near-js_providers.json-rpc-provider.JsonRpcProvider.html
     const provider = new JsonRpcProvider({ url });
 

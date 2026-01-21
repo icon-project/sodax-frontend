@@ -46,11 +46,11 @@ import type {
   SuiSpokeChainConfig,
   SolanaChainConfig,
   BaseSpokeChainConfig,
+  NearRawTransaction,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 import type { NearRawSpokeProvider, NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
 import type { NearSpokeDepositParams } from './services/spoke/NearSpokeService.js';
-import type { Action } from '@near-js/transactions';
 export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
 export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
 export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
@@ -357,12 +357,6 @@ export type SuiRawTransaction = {
   to: string;
   value: bigint;
   data: Base64String;
-};
-
-export type NearRawTransaction = {
-  signerId: string;
-  receiverId: string;
-  actions: Action[];
 };
 
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
