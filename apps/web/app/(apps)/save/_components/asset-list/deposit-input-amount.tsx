@@ -13,6 +13,7 @@ import { MODAL_ID } from '@/stores/modal-store';
 import DepositDialog from '../deposit-dialog/deposit-dialog';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import AmountInputSlider from '../amount-input-slider';
+import { useRouter } from 'next/navigation';
 interface DepositInputAmountProps {
   selectedToken: XToken | null;
   tokens: XToken[];
@@ -21,6 +22,7 @@ interface DepositInputAmountProps {
 }
 
 export default function DepositInputAmount({ selectedToken, tokens, onBack, apy }: DepositInputAmountProps) {
+  const router = useRouter();
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
   const { setDepositValue } = useSaveActions();
   const { depositValue } = useSaveState();
@@ -77,8 +79,11 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
       return;
     }
 
+    // Use the correct max value based on simulation mode
+    const effectiveMaxValue = isSimulate ? 10000 / (tokenPrice ?? 1) : maxValue;
+
     // Clamp the value between 0 and max
-    const clampedValue = Math.max(0, Math.min(numericValue, maxValue));
+    const clampedValue = Math.max(0, Math.min(numericValue, effectiveMaxValue));
     setProgress([clampedValue]);
     setDepositValue(clampedValue);
   };
@@ -92,22 +97,22 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
   };
 
   const getHelperText = () => {
-    return sourceAddress ? (
-      depositValue > 0 ? (
-        <>
-          <div className="flex gap-2">
-            <span className="text-clay-light">Yield/mo:</span>
-            <span className="font-['InterRegular'] text-espresso font-medium">
-              {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
-            </span>
-            <AlertCircleIcon width={16} height={16} className="text-clay" />
-          </div>
-        </>
-      ) : (
-        <></>
-      )
-    ) : (
-      'To show your funds'
+    return (
+      <>
+        {depositValue > 0 ? (
+          <>
+            <div className="flex gap-2">
+              <span className="text-clay-light">Yield/mo:</span>
+              <span className="font-['InterRegular'] text-espresso font-medium">
+                {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
+              </span>
+              <AlertCircleIcon width={16} height={16} className="text-clay" />
+            </div>
+          </>
+        ) : (
+          'To show your funds'
+        )}
+      </>
     );
   };
 
@@ -153,23 +158,35 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
       />
       <div className="flex gap-2 items-center -mt-2 mb-7">
         <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
-          {isSimulate ? 'Sample available:' : 'Available'}
-        </div>
-        <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">
-          {formatBalance(
-            (
-              Number(
-                formatUnits(
-                  isSimulate
-                    ? parseUnits((10000 / (tokenPrice ?? 1)).toString(), selectedToken?.decimals ?? 0)
-                    : balance,
-                  selectedToken?.decimals ?? 0,
-                ),
-              ) - depositValue
-            ).toString(),
-            tokenPrice ?? 0,
-          )}{' '}
-          {selectedToken?.symbol}
+          {isSimulate ? (
+            sourceAddress ? (
+              `Add ${selectedToken?.symbol} to your ${chainIdToChainName(selectedToken?.xChainId || 'sonic')} wallet or swap via SODAX.`
+            ) : (
+              `Connect your ${chainIdToChainName(selectedToken?.xChainId || 'sonic')} wallet to continue.`
+            )
+          ) : (
+            <div className="flex gap-2">
+              <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
+                Available:
+              </div>
+              <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">
+                {formatBalance(
+                  (
+                    Number(
+                      formatUnits(
+                        isSimulate
+                          ? parseUnits((10000 / (tokenPrice ?? 1)).toString(), selectedToken?.decimals ?? 0)
+                          : balance,
+                        selectedToken?.decimals ?? 0,
+                      ),
+                    ) - depositValue
+                  ).toString(),
+                  tokenPrice ?? 0,
+                )}{' '}
+                {selectedToken?.symbol}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -196,16 +213,27 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
 
           {sourceAddress && (
             <>
-              <Button
-                variant="cherry"
-                className="w-27 mix-blend-multiply shadow-none"
-                disabled={!selectedToken || depositValue === 0 || !(sourceAddress && balance > 0n)}
-                onMouseDown={() => {
-                  setIsDepositDialogOpen(true);
-                }}
-              >
-                Continue
-              </Button>
+              {balance === 0n && (
+                <Button
+                  variant="cherry"
+                  className="w-27 mix-blend-multiply shadow-none"
+                  onMouseDown={() => router.push('/swap')}
+                >
+                  Get {selectedToken?.symbol}
+                </Button>
+              )}
+              {balance > 0n && (
+                <Button
+                  variant="cherry"
+                  className="w-27 mix-blend-multiply shadow-none"
+                  disabled={!selectedToken || depositValue === 0 || !(sourceAddress && balance > 0n)}
+                  onMouseDown={() => {
+                    setIsDepositDialogOpen(true);
+                  }}
+                >
+                  Continue
+                </Button>
+              )}
               <DepositDialog
                 open={isDepositDialogOpen}
                 onOpenChange={setIsDepositDialogOpen}

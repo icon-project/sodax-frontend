@@ -10,15 +10,15 @@ import AssetListItemHeader from './asset-list-item-header';
 import { useSaveState } from '../../_stores/save-store-provider';
 
 export default function AssetListItem({
-  group,
+  data,
   isExpanded,
 }: {
-  group: { symbol: string; tokens: XToken[] };
+  data: { symbol: string; tokens: XToken[] };
   isExpanded: boolean;
 }) {
-  const { openAsset, scrollToCenter } = useSaveState();
+  const { activeAsset, scrollToCenter } = useSaveState();
   const ref = useRef<HTMLDivElement>(null);
-  const { symbol, tokens } = group;
+  const { symbol, tokens } = data;
 
   // Calculate total wallet balance for all tokens in the group
   const tokensWithBalances = useTokenWalletBalances(tokens);
@@ -59,7 +59,7 @@ export default function AssetListItem({
       value={symbol}
       className={cn(
         'border-none money-market',
-        openAsset === '' ? 'opacity-100' : isExpanded ? 'opacity-100' : 'opacity-60',
+        activeAsset === '' ? 'opacity-100' : isExpanded ? 'opacity-100' : 'opacity-60',
       )}
     >
       <motion.div ref={ref} layout="size">

@@ -11,7 +11,7 @@ import BigNumber from 'bignumber.js';
 import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId } from '@sodax/types';
-import { INJECTIVE_MAINNET_CHAIN_ID, hubAssets } from '@sodax/types';
+import { INJECTIVE_MAINNET_CHAIN_ID, LIGHTLINK_MAINNET_CHAIN_ID, hubAssets } from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
@@ -228,11 +228,11 @@ export function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string 
   return 0;
 }
 
-export function flattenTokens(): XToken[] {
+export function getMoneymarketTokens(): XToken[] {
   return Object.entries(moneyMarketSupportedTokens)
     .flatMap(([chainId, items]) =>
       items.map((t: Token) =>
-        chainId !== INJECTIVE_MAINNET_CHAIN_ID
+        chainId !== INJECTIVE_MAINNET_CHAIN_ID && chainId !== LIGHTLINK_MAINNET_CHAIN_ID
           ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
           : undefined,
       ),
@@ -279,12 +279,8 @@ export function formatCompactNumber(value: string | number | bigint): string {
  * @param token - The token to calculate APY for
  * @returns Formatted APY string (e.g., "5.25%") or "-" if unavailable
  */
-export function calculateAPY(
-  formattedReserves: FormatReserveUSDResponse[] | undefined,
-  isFormattedReservesLoading: boolean,
-  token: XToken,
-): string {
-  if (isFormattedReservesLoading || !formattedReserves || formattedReserves.length === 0) {
+export function calculateAPY(formattedReserves: FormatReserveUSDResponse[] | undefined, token: XToken): string {
+  if (!formattedReserves || formattedReserves.length === 0) {
     return '-';
   }
 

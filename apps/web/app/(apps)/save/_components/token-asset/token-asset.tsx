@@ -14,6 +14,7 @@ interface TokenAssetProps {
   onClick: (e?: React.MouseEvent) => void;
   tokens?: XToken[];
   setSelectNetworkToken: (network: XToken) => void;
+  className?: string;
 }
 
 export function TokenAsset({
@@ -23,11 +24,12 @@ export function TokenAsset({
   isHovered,
   isHoverDimmed,
   setSelectNetworkToken,
+  className,
 }: TokenAssetProps): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
   return (
     <>
-      <div ref={assetRef} className="relative shrink-0">
+      <div ref={assetRef} className={cn('relative shrink-0', className)}>
         <motion.div
           // layout
           initial={{ opacity: 1, scale: 1 }}
