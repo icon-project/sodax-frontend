@@ -1,6 +1,6 @@
 import { createStore } from 'zustand/vanilla';
 import { ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID, type XToken, type SpokeChainId } from '@sodax/types';
-import { spokeChainConfig } from '@sodax/sdk';
+import { spokeChainConfig } from '@sodax/types';
 
 export const MIGRATION_MODE_ICX_SODA = 'icxsoda';
 export const MIGRATION_MODE_BNUSD = 'bnusd';

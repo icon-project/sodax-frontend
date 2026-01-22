@@ -2,13 +2,15 @@
 
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useXAccount } from '@sodax/wallet-sdk-react';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { type Address, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { MIN_PARTNER_CLAIM_AMOUNT } from '@/constants/partner-claim';
 import { type PartnerFeeBalance, PartnerFeeBalancesCard } from './components/partner-fee-balance';
-import { usePartnerFees } from './utils/usePartnerFee';
 import { ClaimModal } from './components/claim-modal';
+import { useFeeClaimBalances } from './utils/useFeeClaimBalances';
+import { formatUnits } from 'viem';
+import { useFeeClaimPreferences } from './utils/useFeeClaimPreferences';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,12 +18,47 @@ export default function PartnerPage() {
   const [selectedBalance, setSelectedBalance] = useState<PartnerFeeBalance | null>(null);
   const [claimingSymbol, setClaimingSymbol] = useState<string | null>(null);
 
-  const { address } = useXAccount(SONIC_MAINNET_CHAIN_ID);
-  const { balances, isLoading, refetch } = usePartnerFees(address);
+  const { address: connectedAddress } = useXAccount(SONIC_MAINNET_CHAIN_ID);
+
+  // START: DEV TESTING LOGIC (Delete this block before PR)
+  // =========================================================
+  const effectiveAddress = useMemo(() => {
+    const devAddress = process.env.NEXT_PUBLIC_DEV_PARTNER_ADDRESS;
+    const isDev = process.env.NODE_ENV === 'development';
+
+    if (isDev && devAddress) {
+      console.log('🛠️ Dev Mode: Using partner address from .env.local:', devAddress);
+      return devAddress as Address;
+    }
+    return connectedAddress as Address;
+  }, [connectedAddress]);
+  // =========================================================
+  // END: DEV TESTING LOGIC
+
+  // 1. Fetch official partner balances
+  const { data: rawBalancesMap, isLoading, refetch } = useFeeClaimBalances(effectiveAddress as Address);
+
+  // 2. Fetch current auto-swap preferences to show in UI
+  const { data: preferences } = useFeeClaimPreferences(effectiveAddress as Address);
+
+  // Transform Map to Array for the UI card
+  const balances = useMemo(() => {
+    if (!rawBalancesMap) return [];
+    return Array.from(rawBalancesMap.values()).map(asset => ({
+      currency: {
+        symbol: asset.symbol,
+        decimals: asset.decimal,
+        address: asset.address,
+        name: asset.name,
+      },
+      balance: formatUnits(asset.balance, asset.decimal),
+    })) as PartnerFeeBalance[];
+  }, [rawBalancesMap]);
 
   console.log('PartnerPage balances:', balances);
-  console.log('partner address:', address);
-  // TODO IMPORTANT balance > 10 as partner must have sufficient funds to swap and pay fees
+  console.log('partner address:', effectiveAddress);
+  // TODO IMPORTANT change to balance > 10 as partner must have sufficient funds to swap and pay fees
+  // Requirement: check sufficient funds to swap and pay fees
   const canClaim = (balance: PartnerFeeBalance) => Number(balance.balance) >= MIN_PARTNER_CLAIM_AMOUNT;
 
   const handleClaimToUsdc = (balance: PartnerFeeBalance) => {
@@ -45,6 +82,11 @@ export default function PartnerPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 w-full">
         <motion.div variants={itemVariants} className="w-full">
+          {process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEV_PARTNER_ADDRESS && (
+            <div className="bg-yellow-500/10 text-yellow-600 text-[10px] p-1 text-center rounded">
+              ⚠️ VIEWING DEV PARTNER DATA
+            </div>
+          )}
           {/* Title */}
           <div className="flex items-baseline gap-1 flex-wrap">
             <span className="mix-blend-multiply text-yellow-dark font-bold font-['InterRegular'] !text-(size:--app-title)">
@@ -57,13 +99,21 @@ export default function PartnerPage() {
 
           {/* Subtitle row */}
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-sm text-clay-light w-full">
-            {address ? (
+            {effectiveAddress ? (
               <>
-                <span className="leading-snug">Monitor and manage fees earned through your SODAX partnership.</span>
+                <div className="flex flex-col">
+                  <span className="leading-snug">Monitor and manage fees earned through your SODAX partnership.</span>
+                  {/* Show current preferences as suggested by Robi */}
+                  {preferences && (
+                    <span className="text-xs text-cherry-soda mt-1">
+                      Current Auto-Swap: {preferences.dstAddress.slice(0, 6)}... on {preferences.dstChain}
+                    </span>
+                  )}
+                </div>
                 <span className="leading-snug sm:text-right break-all sm:break-normal">
                   <span className="text-clay-medium">Connected wallet: </span>
                   <span className="font-mono font-bold">
-                    {address.slice(0, 6)}...{address.slice(-4)}
+                    {effectiveAddress.slice(0, 6)}...{effectiveAddress.slice(-4)}
                   </span>{' '}
                 </span>
               </>
@@ -77,7 +127,7 @@ export default function PartnerPage() {
 
       {/* Main content */}
       <motion.div variants={itemVariants}>
-        {balances && address && (
+        {balances && effectiveAddress && (
           <PartnerFeeBalancesCard
             balances={balances}
             isLoading={isLoading}
@@ -104,7 +154,7 @@ export default function PartnerPage() {
           onSuccess={() => {
             setClaimingSymbol(null);
             setSelectedBalance(null);
-            refetch();
+            refetch(); // Refetch using the new hook's method
           }}
         />
       )}

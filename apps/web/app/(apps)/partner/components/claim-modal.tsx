@@ -12,13 +12,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { useSodaxContext } from '@sodax/dapp-kit';
-import { useWalletProvider } from '@sodax/wallet-sdk-react';
-import { type IEvmWalletProvider, SONIC_MAINNET_CHAIN_ID, spokeChainConfig, type ChainId } from '@sodax/types';
+import { useXAccount } from '@sodax/wallet-sdk-react';
+import { SONIC_MAINNET_CHAIN_ID, spokeChainConfig, type ChainId, type Address } from '@sodax/types';
 import { parseUnits } from 'viem';
 import { ChainSelectDropdown } from '@/components/shared/chain-select-dropdown';
 import { toast } from '@/components/ui/sonner';
-import { SonicSpokeProvider } from '@sodax/sdk';
+
+import { useFeeClaimApproval } from '../utils/useFeeClaimApproval';
+import { useFeeClaimExecute } from '../utils/useFeeClaimExecute';
+import { useFeeClaimPreferences } from '../utils/useFeeClaimPreferences';
+
 interface ClaimModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -33,30 +36,11 @@ interface ClaimModalProps {
 
 export function ClaimModal({ isOpen, onClose, asset, maxAmountToClaim, onSuccess }: ClaimModalProps) {
   const [amount, setAmount] = useState('');
+  const { address } = useXAccount(SONIC_MAINNET_CHAIN_ID);
 
+  // --- RESTORED UI STATE ---
   const sonicConfig = spokeChainConfig[SONIC_MAINNET_CHAIN_ID];
-
-  // destination chain (default = Sonic)
   const [destinationChain, setDestinationChain] = useState<ChainId>(sonicConfig.chain.id);
-
-  const { sodax } = useSodaxContext();
-
-  const walletProvider = useWalletProvider(SONIC_MAINNET_CHAIN_ID) as IEvmWalletProvider | null;
-
-  const provider = useMemo(() => {
-    if (!walletProvider) return null;
-    return new SonicSpokeProvider(walletProvider, sonicConfig);
-  }, [walletProvider, sonicConfig]);
-
-  const usdcHubToken = useMemo(() => {
-    const token = Object.values(sonicConfig.supportedTokens).find(t => t.symbol === 'USDC');
-
-    if (!token) {
-      throw new Error('USDC not supported on Sonic');
-    }
-
-    return token;
-  }, [sonicConfig]);
 
   const allowedChains = useMemo<ChainId[]>(() => {
     return Object.values(spokeChainConfig)
@@ -64,52 +48,26 @@ export function ClaimModal({ isOpen, onClose, asset, maxAmountToClaim, onSuccess
       .map(config => config.chain.id);
   }, []);
 
-  const handleClaim = async () => {
-    if (!provider || !walletProvider) return;
+  // --- PRODUCTION HOOKS INTEGRATION ---
+  const { data: prefs } = useFeeClaimPreferences();
+  const { isApproved, approve, isLoading: isApprovalLoading } = useFeeClaimApproval(asset.address as Address);
+  const executeClaim = useFeeClaimExecute();
 
+  const handleClaim = async () => {
+    if (!amount) return;
     const amountScaled = BigInt(parseUnits(amount, asset.decimals));
 
-    const intentParams = {
-      inputToken: asset.address,
-      outputToken: usdcHubToken.address,
-      inputAmount: amountScaled,
-      minOutputAmount: BigInt(0),
-      deadline: BigInt(0),
-      allowPartialFill: false,
-      srcChain: sonicConfig.chain.id,
-      dstChain: destinationChain,
-      srcAddress: await walletProvider.getWalletAddress(),
-      dstAddress: await walletProvider.getWalletAddress(),
-      solver: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-      data: '0x' as `0x${string}`,
-    };
-
-    const allowance = await sodax.swaps.isAllowanceValid({
-      intentParams,
-      spokeProvider: provider,
-    });
-
-    if (allowance.ok && !allowance.value) {
-      await sodax.swaps.approve({
-        intentParams,
-        spokeProvider: provider,
-      });
-    }
-
-    const result = await sodax.swaps.createIntent({
-      intentParams,
-      spokeProvider: provider,
-    });
-
-    if (result.ok) {
-      toast.success('Claim submitted', {
-        description: 'USDC will arrive on the selected chain.',
-      });
-      onSuccess?.(amount);
-      onClose();
-    } else {
-      toast.error('Claim failed');
-    }
+    executeClaim.mutate(
+      { fromToken: asset.address, amount: amountScaled },
+      {
+        onSuccess: result => {
+          toast.success('Claim successful', { description: `Intent: ${result.intent_hash}` });
+          onSuccess?.(amount);
+          onClose();
+        },
+        onError: err => toast.error('Claim failed', { description: err.message }),
+      },
+    );
   };
 
   useEffect(() => {
@@ -127,41 +85,66 @@ export function ClaimModal({ isOpen, onClose, asset, maxAmountToClaim, onSuccess
             Choose how much of your earned fees to claim and where to receive them.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2">
+
+        <div className="space-y-4">
           {/* Destination chain */}
-          <Label className="text-clay">Receive on chain</Label>
-          <ChainSelectDropdown
-            selectedChainId={destinationChain}
-            selectChainId={setDestinationChain}
-            allowedChains={allowedChains}
-          />
-
-          {/* Amount */}
-          <div className="flex justify-between items-center">
-            <Label className="text-clay">Amount</Label>
-
-            <button
-              type="button"
-              className="text-xs text-cherry hover:underline"
-              onClick={() => setAmount(maxAmountToClaim)}
-            >
-              Available: {maxAmountToClaim} {asset.symbol}
-            </button>
+          <div className="space-y-2">
+            <Label className="text-clay">Receive on chain</Label>
+            <ChainSelectDropdown
+              selectedChainId={destinationChain}
+              selectChainId={setDestinationChain}
+              allowedChains={allowedChains}
+            />
+            {prefs && (
+              <p className="text-[10px] text-clay-medium italic">
+                Current preference: {prefs.dstAddress.slice(0, 6)}... on chain {prefs.dstChain}
+              </p>
+            )}
           </div>
 
-          <Input
-            type="number"
-            inputMode="decimal"
-            placeholder="0.00"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-          />
+          {/* Amount Section */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label className="text-clay">Amount</Label>
+              <button
+                type="button"
+                className="text-xs text-cherry hover:underline"
+                onClick={() => setAmount(maxAmountToClaim)}
+              >
+                Available: {maxAmountToClaim} {asset.symbol}
+              </button>
+            </div>
+            <Input
+              type="number"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+            />
+          </div>
         </div>
 
-        <DialogFooter>
-          <Button className="w-full" variant="cherry" onClick={handleClaim} disabled={!provider || !amount}>
-            Confirm claim
-          </Button>
+        <DialogFooter className="mt-4">
+          {/* DYNAMIC BUTTON LOGIC: Approval vs Claim */}
+          {!isApproved ? (
+            <Button
+              className="w-full"
+              variant="cherry"
+              onClick={() => approve.mutate()}
+              disabled={isApprovalLoading || !amount}
+            >
+              {isApprovalLoading ? 'Checking Allowance...' : `Approve ${asset.symbol}`}
+            </Button>
+          ) : (
+            <Button
+              className="w-full"
+              variant="cherry"
+              onClick={handleClaim}
+              disabled={executeClaim.isPending || !amount}
+            >
+              {executeClaim.isPending ? 'Processing...' : 'Confirm claim'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
