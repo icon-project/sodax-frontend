@@ -349,17 +349,27 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (params.toChainId === STELLAR_MAINNET_CHAIN_ID) {
+      if (params.toChainId === STELLAR_MAINNET_CHAIN_ID && params.toAddress) {
+        // if target chain is stellar, check if the target wallet has sufficient trustline
+        const targetHasTrustline = await StellarSpokeService.walletHasSufficientTrustline(
+          params.token,
+          params.amount,
+          params.toAddress,
+          this.configService.sharedConfig[STELLAR_MAINNET_CHAIN_ID].horizonRpcUrl,
+        );
+
+        // if source chain is stellar, check if the source wallet has sufficient trustline as well
+        let srcHasTrustline = true;
+        if (isStellarSpokeProviderType(spokeProvider)) {
+          srcHasTrustline = await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider);
+        }
+
         return {
           ok: true,
-          value: await StellarSpokeService.walletHasSufficientTrustline(
-            params.token,
-            params.amount,
-            walletAddress,
-            this.configService.sharedConfig[STELLAR_MAINNET_CHAIN_ID].horizonRpcUrl,
-          ),
+          value: targetHasTrustline && srcHasTrustline,
         };
       }
+
       if (isStellarSpokeProviderType(spokeProvider)) {
         return {
           ok: true,
