@@ -32,7 +32,7 @@ export function DepositTokenSelect({
     ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
     : 0n;
   const isSimulate = !(sourceAddress && balance > 0n);
-  const isTooLow = balance < parseUnits('0.001', selectedToken?.decimals ?? 0);
+  const isTooLow = sourceAddress && balance > 0n && balance < parseUnits('0.001', selectedToken?.decimals ?? 0);
   const { isNetworkPickerOpened } = useSaveState();
   return (
     <>
@@ -53,7 +53,7 @@ export function DepositTokenSelect({
           <Button
             variant="cherry"
             className="w-27 mix-blend-multiply shadow-none"
-            disabled={!selectedToken}
+            disabled={!selectedToken || (isTooLow as boolean)}
             onMouseDown={() => {
               onContinue?.();
             }}
@@ -63,9 +63,11 @@ export function DepositTokenSelect({
           <span className="text-clay text-(length:--body-small) font-['InterRegular']">
             {!selectedToken
               ? 'Select a source'
-              : isTooLow && !isSimulate
-                ? 'Balance too low to continue'
-                : 'See your yield next'}
+              : isSimulate
+                ? 'You’ll simulate yield next'
+                : isTooLow
+                  ? 'Balance too low to continue'
+                  : 'See your yield next'}
           </span>
         </div>
       </div>

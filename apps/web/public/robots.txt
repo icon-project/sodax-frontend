@@ -1,0 +1,12 @@
+# https://sodax.com robots.txt
+# Allow search x to crawl and index
+
+User-agent: *
+Allow: /
+
+# Disallow bot spam and unnecessary paths
+Disallow: /_next/
+Disallow: /*.json
+
+# Reference to sitemap
+Sitemap: https://sodax.com/sitemap.xml

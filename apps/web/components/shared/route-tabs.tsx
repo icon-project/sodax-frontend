@@ -72,6 +72,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
     : (usedTabs[0]?.value ?? 'migrate'); // fallback = first tab (Home for partner)
 
   const tokenCount = useSaveStore(state => state.tokenCount);
+  const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
@@ -169,8 +170,8 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
                 isMobile={false}
                 setRef={setDesktopTabRef(tab.value)}
                 enabled={tab.enabled}
-                badgeCount={tab.value === 'save' ? tokenCount : undefined}
                 showIcon={tab.showIcon !== false}
+                badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
               />
             );
           })}
@@ -201,8 +202,8 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
                     isMobile
                     setRef={setMobileTabRef(tab.value)}
                     enabled={tab.enabled}
-                    badgeCount={tab.value === 'save' ? tokenCount : undefined}
                     showIcon={tab.showIcon !== false}
+                    badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
                   />
                 );
               })}

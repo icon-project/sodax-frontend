@@ -1,4 +1,3 @@
-// apps/demo/src/hooks/useReserveMetrics.ts
 import { formatUnits } from 'viem';
 
 import { hubAssets, type XToken } from '@sodax/types';
@@ -124,10 +123,15 @@ export function useReserveMetrics({
       if (userReserve) {
         const decimals = Number(formattedReserve.decimals ?? 18);
         const priceInUsd = Number(formattedReserve.priceInUSD);
-        const suppliedTokens = Number(formatUnits(BigInt(userReserve.scaledATokenBalance), decimals));
+        // The stored supplied balance does not grow by itself.
+        // We apply the current liquidity index to get the real,interest-adjusted amount the user has supplied.
+        const liquidityIndex = BigInt(formattedReserve.liquidityIndex);
+        const scaledBalance = BigInt(userReserve.scaledATokenBalance);
+        const balanceRaw = (scaledBalance * liquidityIndex) / BigInt(1e27);
+        const suppliedTokens = Number(formatUnits(balanceRaw, decimals));
         const suppliedUsd = suppliedTokens * priceInUsd;
         if (Number.isFinite(suppliedUsd) && suppliedUsd > 0) {
-          supplyBalanceUSD = `$${suppliedUsd.toFixed(2)}`;
+          supplyBalanceUSD = `$${suppliedUsd.toFixed(3)}`;
         }
       }
     }
