@@ -1,4 +1,4 @@
-import type React from 'react';
+import React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { SelectChain } from '@/components/solver/SelectChain';
