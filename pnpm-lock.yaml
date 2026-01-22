@@ -165,8 +165,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/wallet-sdk-react
       '@tanstack/react-query':
-        specifier: 5.87.4
-        version: 5.87.4(react@19.1.4)
+        specifier: 5.66.9
+        version: 5.66.9(react@19.1.4)
       '@types/node':
         specifier: 'catalog:'
         version: 22.18.1
