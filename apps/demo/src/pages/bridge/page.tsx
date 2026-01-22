@@ -1,5 +1,5 @@
-import React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+// biome-ignore lint/style/useImportType:
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { SelectChain } from '@/components/solver/SelectChain';
 import { Input } from '@/components/ui/input';
