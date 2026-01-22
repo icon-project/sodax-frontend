@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SwapCard from '@/components/solver/SwapCard';
 import LimitOrderCard from '@/components/solver/LimitOrderCard';
-import type { Hex, Intent, IntentDeliveryInfo } from '@sodax/sdk';
+import type { Hex, Intent, IntentDeliveryInfo } from '@sodax/dapp-kit';
 import OrderStatus from '@/components/solver/OrderStatus';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAppStore } from '@/zustand/useAppStore';

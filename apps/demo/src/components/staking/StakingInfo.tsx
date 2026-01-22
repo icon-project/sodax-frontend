@@ -1,8 +1,7 @@
 import React from 'react';
-import { useStakingInfo } from '@sodax/dapp-kit';
+import { useStakingInfo, type SpokeProvider } from '@sodax/dapp-kit';
 import { Skeleton } from '../ui/skeleton';
 import { formatTokenAmount } from '@/lib/utils';
-import type { SpokeProvider } from '@sodax/sdk';
 
 export function StakingInfo({ spokeProvider }: Readonly<{ spokeProvider: SpokeProvider }>) {
   const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);

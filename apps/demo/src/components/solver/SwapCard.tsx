@@ -15,15 +15,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { calculateExchangeRate } from '@/lib/utils';
 import { parseUnits, formatUnits } from 'viem';
-import {
-  type CreateIntentParams,
-  getSupportedSolverTokens,
-  type Hex,
-  type Intent,
-  type IntentDeliveryInfo,
-  type SolverIntentQuoteRequest,
-  StellarSpokeProvider,
-} from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
@@ -36,16 +27,19 @@ import {
   useStellarTrustlineCheck,
   useRequestTrustline,
   useSodaxContext,
-} from '@sodax/dapp-kit';
-import {
+  type CreateIntentParams,
+  getSupportedSolverTokens,
+  type Hex,
+  type Intent,
+  type IntentDeliveryInfo,
+  type SolverIntentQuoteRequest,
+  StellarSpokeProvider,
   getXChainType,
   useEvmSwitchChain,
   useXAccount,
   useXDisconnect,
   useWalletProvider,
   useXBalances,
-} from '@sodax/wallet-sdk-react';
-import {
   type ChainId,
   POLYGON_MAINNET_CHAIN_ID,
   type Token,
@@ -54,7 +48,7 @@ import {
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
   type XToken,
-} from '@sodax/types';
+} from '@sodax/dapp-kit';
 import { useAppStore } from '@/zustand/useAppStore';
 
 export default function SwapCard({

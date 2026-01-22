@@ -4,10 +4,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMMAllowance, useSupply, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
-import type { XToken } from '@sodax/types';
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
-import type { MoneyMarketSupplyParams } from '@sodax/sdk';
+import { type MoneyMarketSupplyParams, type XToken, useEvmSwitchChain, useWalletProvider } from '@sodax/dapp-kit';
 import { getReadableTxError } from '@/lib/utils';
 
 export function SupplyButton({ token }: { token: XToken }) {

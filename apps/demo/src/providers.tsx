@@ -1,11 +1,8 @@
 import React, { useMemo, type ReactNode } from 'react';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SodaxWalletProvider } from '@sodax/wallet-sdk-react';
-import type { RpcConfig } from '@sodax/types';
-import { SodaxProvider } from '@sodax/dapp-kit';
 import { productionSolverConfig, stagingSolverConfig } from './constants';
-import type { SodaxConfig } from '@sodax/sdk';
+import { type SodaxConfig, type RpcConfig, SodaxWalletProvider, SodaxProvider } from '@sodax/dapp-kit';
 import { useAppStore } from './zustand/useAppStore';
 
 const queryClient = new QueryClient();

@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import type { XToken } from '@sodax/types';
+import type { XToken } from '@sodax/dapp-kit';
 
 interface BorrowButtonProps {
   token: XToken;

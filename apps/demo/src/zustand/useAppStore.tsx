@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import type { StateCreator } from 'zustand';
-import type { ChainId } from '@sodax/types';
+import type { ChainId } from '@sodax/dapp-kit';
 
 type AppStore = {
   selectedChainId: ChainId;

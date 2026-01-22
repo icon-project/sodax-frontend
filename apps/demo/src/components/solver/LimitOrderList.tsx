@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useBackendUserIntents, useDeriveUserWalletAddress } from '@sodax/dapp-kit';
-import { useXAccount } from '@sodax/wallet-sdk-react';
-import type { SpokeChainId } from '@sodax/types';
+import { useBackendUserIntents, useDeriveUserWalletAddress, useXAccount, type SpokeChainId } from '@sodax/dapp-kit';
 import LimitOrderItem from './LimitOrderItem';
 import { Card } from '@/components/ui/card';
 
