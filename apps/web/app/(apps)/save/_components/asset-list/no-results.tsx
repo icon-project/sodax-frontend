@@ -14,18 +14,19 @@ export default function NoResults() {
 
   return (
     <AccordionItem value="no-results" className={cn('border-none money-market')}>
-      <motion.div
-        ref={ref}
-        layout="size"
-        whileHover={{
-          scale: 1.05,
-        }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-      >
+      <motion.div ref={ref} layout="size">
         <Separator className="h-[1px] bg-clay opacity-30" />
         <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30" />
-
-        <motion.div transition={{ duration: 0.3, ease: 'easeOut' }} className="w-full group pb-0">
+        <motion.div
+          className="w-full group pb-0"
+          whileHover={{
+            scale: 1.05,
+          }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          onClick={() => {
+            window.open('https://x.com/gosodax', '_blank');
+          }}
+        >
           <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal) border-none">
             <ItemMedia>
               <motion.div
@@ -68,7 +69,7 @@ export default function NoResults() {
                       `content-stretch flex leading-[1.4] text-espresso text-(length:--body-comfortable) font-['InterRegular'] group-hover:font-bold`,
                     )}
                   >
-                    Didn’t find what you need?
+                    Not here yet?
                   </motion.div>
                 </ItemTitle>
                 <ItemTitle className="justify-between flex w-full">
@@ -77,7 +78,7 @@ export default function NoResults() {
                       `content-stretch flex leading-[1.4] text-clay text-(length:--body-small) font-['InterRegular'] group-hover:font-bold`,
                     )}
                   >
-                    Tag @gosodax on X ↗︎, we’re listening.
+                    Follow @gosodax for updates
                   </motion.div>
                 </ItemTitle>
               </motion.div>

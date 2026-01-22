@@ -1,29 +1,17 @@
 import { Accordion } from '@/components/ui/accordion';
 import { useMemo } from 'react';
-import {
-  getUniqueTokenSymbols,
-  sortStablecoinsFirst,
-  getMoneymarketTokens,
-  hasFunds,
-  STABLECOINS,
-  calculateAPY,
-} from '@/lib/utils';
-import type { FormatReserveUSDResponse } from '@sodax/sdk';
+import { getUniqueTokenSymbols, getMoneymarketTokens, hasFunds } from '@/lib/utils';
 import AssetListItem from './asset-list/asset-list-item';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useSaveState, useSaveActions } from '../_stores/save-store-provider';
 import NoResults from './asset-list/no-results';
-import { CURRENCY_TABS } from './currency-search-panel';
+import { sortStablecoinsFirst } from '@/lib/utils';
 
 export default function AssetList({
   searchQuery,
-  activeTab,
-  formattedReserves,
   selectedChain,
 }: {
   searchQuery: string;
-  activeTab: string;
-  formattedReserves?: FormatReserveUSDResponse[];
   selectedChain: string | null;
 }) {
   const { activeAsset } = useSaveState();
@@ -34,33 +22,11 @@ export default function AssetList({
     [allTokens, selectedChain],
   );
   const allAssets = useMemo(() => {
-    let filtered = getUniqueTokenSymbols(filteredTokens).filter(t =>
-      t.symbol.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-
-    if (activeTab === CURRENCY_TABS.STABLECOINS) {
-      filtered = filtered.filter(t => STABLECOINS.includes(t.symbol));
-    } else if (activeTab === CURRENCY_TABS.ASSETS) {
-      filtered = filtered.filter(t => !STABLECOINS.includes(t.symbol));
-    }
-
-    if (activeTab === CURRENCY_TABS.TOP_APY) {
-      filtered = filtered.sort((a, b) => {
-        const tokenA = a.tokens[0];
-        const tokenB = b.tokens[0];
-        if (!tokenA || !tokenB) return 0;
-        const apyA = calculateAPY(formattedReserves, tokenA);
-        const apyB = calculateAPY(formattedReserves, tokenB);
-        const numA = apyA === '-' ? -1 : Number.parseFloat(apyA.replace('%', ''));
-        const numB = apyB === '-' ? -1 : Number.parseFloat(apyB.replace('%', ''));
-        return numB - numA;
-      });
-    } else {
-      filtered = filtered.sort(sortStablecoinsFirst);
-    }
-
+    const filtered = getUniqueTokenSymbols(filteredTokens)
+      .filter(t => t.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort(sortStablecoinsFirst);
     return filtered;
-  }, [filteredTokens, searchQuery, activeTab, formattedReserves]);
+  }, [filteredTokens, searchQuery]);
 
   const allChainBalances = useAllChainBalances();
   const balanceMap = useMemo(() => {
@@ -122,9 +88,12 @@ export default function AssetList({
           <NoResults />
         </>
       ) : (
-        allAssets.map(asset => (
-          <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
-        ))
+        <>
+          {allAssets.map(asset => (
+            <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+          ))}
+          <NoResults />
+        </>
       )}
     </Accordion>
   );

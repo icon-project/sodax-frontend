@@ -1,34 +1,16 @@
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
-  InputGroupInput,
-  InputGroupButton,
-} from '@/components/ui/input-group';
-import { ChevronDownIcon, SearchIcon } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from '@/components/ui/input-group';
+import { SearchIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { XIcon } from 'lucide-react';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { DialogContent, Dialog, DialogTitle } from '@/components/ui/dialog';
-import { AllNetworkIcon } from '@/components/shared/all-network-icon';
-import { availableChains as allAvailableChains, getChainIcon } from '@/constants/chains';
-import Image from 'next/image';
+import { availableChains as allAvailableChains } from '@/constants/chains';
 import { ICON_MAINNET_CHAIN_ID, INJECTIVE_MAINNET_CHAIN_ID, LIGHTLINK_MAINNET_CHAIN_ID } from '@sodax/sdk';
-
-export const CURRENCY_TABS = {
-  STABLECOINS: 'stablecoins',
-  ASSETS: 'assets',
-  TOP_APY: 'top-apy',
-} as const;
-
+import NetworkTransparentIcon from '@/components/shared/network-transparent-icon';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 interface CurrencySearchPanelProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  activeTab: string;
-  onTabChange: (value: string) => void;
   selectedChain: string | null;
   setSelectedChain: (chainId: string | null) => void;
 }
@@ -36,14 +18,11 @@ interface CurrencySearchPanelProps {
 export default function CurrencySearchPanel({
   searchQuery,
   onSearchChange,
-  activeTab,
-  onTabChange,
   selectedChain,
   setSelectedChain,
 }: CurrencySearchPanelProps) {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false);
   const availableChains = allAvailableChains.filter(
     chain =>
       chain.id !== INJECTIVE_MAINNET_CHAIN_ID &&
@@ -53,7 +32,6 @@ export default function CurrencySearchPanel({
   const [hoveredChain, setHoveredChain] = useState<string | null>(null);
   const handleChainSelect = (chainId: string | null) => {
     setSelectedChain(chainId);
-    setOpenDialog(false);
   };
 
   return (
@@ -88,138 +66,48 @@ export default function CurrencySearchPanel({
             onBlur={() => setIsInputFocused(false)}
             value={searchQuery}
           />
-          <InputGroupAddon align="inline-end">
-            <InputGroupButton className="outline-none gap-1" onClick={() => setOpenDialog(true)}>
-              {selectedChain ? (
-                <Image
-                  src={getChainIcon(selectedChain) || '/chain/0x2105.base.png'}
-                  className="rounded-[6px] ring-4 ring-white shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)]"
-                  alt={selectedChain}
-                  width={24}
-                  height={24}
-                />
-              ) : (
-                <div className="w-6 h-6 grid grid-cols-2 gap-1 p-[2px]">
-                  <AllNetworkIcon />
-                </div>
-              )}
-              <ChevronDownIcon
-                className={cn(
-                  'w-4 h-4 text-clay-light',
-                  isInputFocused ? 'text-espresso' : isHovered ? 'text-clay' : 'text-clay-light',
-                )}
-              />
-            </InputGroupButton>
-          </InputGroupAddon>
         </InputGroup>
-
-        <Tabs value={activeTab} className="hidden md:block ">
-          <TabsList className="bg-transparent text-clay-light text-(length:--body-comfortable) p-0 gap-(--layout-space-small)">
-            <TabsTrigger
-              value={CURRENCY_TABS.STABLECOINS}
-              className="data-[state=active]:bg-cherry data-[state=active]:shadow-none cursor-pointer p-0"
-              onClick={() => onTabChange(CURRENCY_TABS.STABLECOINS)}
-            >
-              <Badge
-                variant="vibrant"
-                className={cn(
-                  'mix-blend-multiply text-[9px]',
-                  isInputFocused || isHovered ? 'bg-cream-white text-espresso font-bold' : 'bg-vibrant-white',
-                  activeTab === CURRENCY_TABS.STABLECOINS ? 'bg-cherry-bright' : '',
-                )}
-              >
-                {activeTab === CURRENCY_TABS.STABLECOINS ? <XIcon className="w-3 h-3 text-white" /> : 2}
-              </Badge>
-              Stablecoins
-            </TabsTrigger>
-            <TabsTrigger
-              value={CURRENCY_TABS.ASSETS}
-              className="data-[state=active]:bg-cherry data-[state=active]:shadow-none cursor-pointer p-0"
-              onClick={() => onTabChange(CURRENCY_TABS.ASSETS)}
-            >
-              <Badge
-                variant="vibrant"
-                className={cn(
-                  'mix-blend-multiply text-[9px]',
-                  isInputFocused || isHovered ? 'bg-cream-white text-espresso font-bold' : 'bg-vibrant-white',
-                  activeTab === CURRENCY_TABS.ASSETS ? 'bg-cherry-bright text-white' : '',
-                )}
-              >
-                {activeTab === CURRENCY_TABS.ASSETS ? <XIcon className="w-3 h-3 text-white" /> : 2}
-              </Badge>
-              Assets
-            </TabsTrigger>
-            <TabsTrigger
-              value={CURRENCY_TABS.TOP_APY}
-              className="data-[state=active]:bg-cherry data-[state=active]:shadow-none cursor-pointer p-0"
-              onClick={() => onTabChange(CURRENCY_TABS.TOP_APY)}
-            >
-              <Badge
-                variant="vibrant"
-                className={cn(
-                  'mix-blend-multiply text-[9px]',
-                  isInputFocused || isHovered ? 'bg-cream-white text-espresso font-bold' : 'bg-vibrant-white',
-                  activeTab === CURRENCY_TABS.TOP_APY ? 'bg-cherry-bright' : '',
-                )}
-              >
-                {activeTab === CURRENCY_TABS.TOP_APY ? <XIcon className="w-3 h-3 text-white" /> : 2}
-              </Badge>
-              Top APY
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </motion.div>
-      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent
-          className="w-full md:!max-w-[480px] p-8 md:p-12 md:pb-8 gap-0 bg-vibrant-white block"
-          hideCloseButton
-        >
-          <DialogTitle className="flex w-full justify-between p-0 text-espresso !text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4] !font-medium">
-            <span className="">Filter by network</span>
-            <XIcon
-              className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay"
-              onClick={() => setOpenDialog(false)}
-            />
-          </DialogTitle>
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-3">
-            <div
-              className={`group inline-flex justify-start items-center gap-4 py-2 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
-              onClick={() => handleChainSelect(null)}
-              onMouseEnter={() => setHoveredChain('all')}
-              onMouseLeave={() => setHoveredChain(null)}
-            >
-              <div className="w-6 h-6  flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden">
-                <AllNetworkIcon />
-              </div>
-              <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
-                All
-              </div>
-            </div>
-
-            {availableChains.map(chain => (
-              <div
-                key={chain.id}
-                className={`group inline-flex justify-start items-center gap-4 py-2 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
-                onClick={() => handleChainSelect(chain.id)}
-                onMouseEnter={() => setHoveredChain(chain.id)}
-                onMouseLeave={() => setHoveredChain(null)}
-              >
-                <Image
-                  src={chain.icon}
-                  alt={chain.name}
-                  width={24}
-                  height={24}
-                  className="rounded-[6px] ring-4 ring-white shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)]"
-                  priority
-                />
-                <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
-                  {chain.name}
-                </div>
-              </div>
-            ))}
+        <div className="flex flex-wrap items-center">
+          <div
+            className={cn(
+              "group text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-tight group-hover:font-bold py-1 px-3 cursor-pointer",
+              hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60'),
+              selectedChain === null && 'ring-2 ring-cream-white rounded-full',
+            )}
+            onClick={() => handleChainSelect(null)}
+            onMouseEnter={() => setHoveredChain('all')}
+            onMouseLeave={() => setHoveredChain(null)}
+          >
+            All
           </div>
-        </DialogContent>
-      </Dialog>
+          {availableChains.map(chain => (
+            <Tooltip key={chain.id}>
+              <TooltipTrigger asChild>
+                <div
+                  key={chain.id}
+                  className={cn(
+                    'group cursor-pointer w-6 h-6 justify-center items-center flex',
+                    hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60'),
+                    selectedChain === chain.id && 'ring-2 ring-clay-light rounded-full',
+                  )}
+                  onClick={() => handleChainSelect(chain.id)}
+                  onMouseEnter={() => setHoveredChain(chain.id)}
+                  onMouseLeave={() => setHoveredChain(null)}
+                >
+                  <NetworkTransparentIcon id={chain.id} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={20}
+                className="bg-white px-8 py-4 items-center gap-2 text-espresso rounded-full h-[54px] text-(length:--body-comfortable)"
+              >
+                {chain.name}
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </motion.div>
     </>
   );
 }

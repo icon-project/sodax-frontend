@@ -37,7 +37,6 @@ export default function SavingsPage() {
   const { activeAsset, isSwitchingChain } = useSaveState();
   const carouselApiRef = useRef<CarouselApi | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<string>('');
   const { data: formattedReserves } = useReservesUsdFormat();
   const allTokens = useMemo(() => getMoneymarketTokens(), []);
   const allAssets = useMemo(() => getUniqueTokenSymbols(allTokens), [allTokens]);
@@ -206,26 +205,13 @@ export default function SavingsPage() {
         <CurrencySearchPanel
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          activeTab={activeTab}
-          onTabChange={(value: string) => {
-            if (activeTab === value) {
-              setActiveTab('');
-            } else {
-              setActiveTab(value);
-            }
-          }}
           selectedChain={selectedChain}
           setSelectedChain={setSelectedChain}
         />
       </motion.div>
 
       <motion.div className="w-full flex-grow-1" variants={itemVariants}>
-        <AssetList
-          searchQuery={searchQuery}
-          activeTab={activeTab}
-          formattedReserves={formattedReserves}
-          selectedChain={selectedChain}
-        />
+        <AssetList searchQuery={searchQuery} selectedChain={selectedChain} />
       </motion.div>
     </motion.div>
   );
