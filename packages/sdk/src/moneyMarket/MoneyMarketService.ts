@@ -33,12 +33,7 @@ import type {
   StellarSpokeProviderType,
   TxReturnType,
 } from '../shared/types.js';
-import {
-  calculateFeeAmount,
-  encodeAddress,
-  encodeContractCalls,
-  isHubSpokeProvider,
-} from '../shared/utils/index.js';
+import { calculateFeeAmount, encodeAddress, encodeContractCalls, isHubSpokeProvider } from '../shared/utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService, HubService } from '../shared/services/hub/index.js';
 import { Erc20Service } from '../shared/services/erc-20/index.js';
 import invariant from 'tiny-invariant';
@@ -50,6 +45,7 @@ import {
   type HttpUrl,
   getMoneyMarketConfig,
   type GetMoneyMarketTokensApiResponse,
+  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { wrappedSonicAbi } from '../shared/abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
@@ -353,17 +349,33 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (isStellarSpokeProviderType(spokeProvider) && (params.action === 'supply' || params.action === 'repay')) {
+      if (params.toChainId === STELLAR_MAINNET_CHAIN_ID) {
+        return {
+          ok: true,
+          value: await StellarSpokeService.walletHasSufficientTrustline(
+            params.token,
+            params.amount,
+            walletAddress,
+            this.configService.sharedConfig[STELLAR_MAINNET_CHAIN_ID].horizonRpcUrl,
+          ),
+        };
+      }
+      if (isStellarSpokeProviderType(spokeProvider)) {
         return {
           ok: true,
           value: await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider),
         };
       }
-      if ((isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) && (params.action === 'supply' || params.action === 'repay')) {
-        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider) ? await HubService.getUserRouter(
-          walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-          this.hubProvider,
-        ) : spokeProvider.chainConfig.addresses.assetManager;
+      if (
+        (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) &&
+        (params.action === 'supply' || params.action === 'repay')
+      ) {
+        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+          ? await HubService.getUserRouter(
+              walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+              this.hubProvider,
+            )
+          : spokeProvider.chainConfig.addresses.assetManager;
         return await Erc20Service.isAllowanceValid(
           params.token as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
           params.amount,
@@ -372,7 +384,6 @@ export class MoneyMarketService {
           spokeProvider,
         );
       }
-
 
       return {
         ok: true,
@@ -390,6 +401,9 @@ export class MoneyMarketService {
    * Approve amount spending if isAllowanceValid returns false.
    * For evm spoke chains, the spender is the asset manager contract while
    * for sonic spoke (hub) chain, the spender is the user router contract.
+   * NOTE: Stellar requires trustline when being either sender or receiver. Thus
+   * you should make sure that both src and destination wallets have sufficient trustlines.
+   * Make sure to invoke this method using wallet address which is about to receive the tokens!
    * @param token - ERC20 token address
    * @param amount - Amount to approve
    * @param spender - Spender address
@@ -437,12 +451,8 @@ export class MoneyMarketService {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
       if (isStellarSpokeProviderType(spokeProvider)) {
-        invariant(
-          params.action === 'supply' || params.action === 'repay',
-          'Invalid action (only supply and repay are supported on stellar)',
-        );
-
         const result = await StellarSpokeService.requestTrustline(params.token, params.amount, spokeProvider, raw);
+
         return {
           ok: true,
           value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
@@ -456,10 +466,12 @@ export class MoneyMarketService {
         );
         invariant(isAddress(params.token), 'Invalid token address');
 
-        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider) ? await HubService.getUserRouter(
-          walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-          this.hubProvider,
-        ) : spokeProvider.chainConfig.addresses.assetManager;
+        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+          ? await HubService.getUserRouter(
+              walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+              this.hubProvider,
+            )
+          : spokeProvider.chainConfig.addresses.assetManager;
 
         const result = (await Erc20Service.approve(
           params.token,
@@ -835,7 +847,7 @@ export class MoneyMarketService {
     invariant(params.amount > 0n, 'Amount must be greater than 0');
 
     const fromChainId = params.fromChainId ?? spokeProvider.chainConfig.chain.id;
-    const fromAddress = params.fromAddress ?? await spokeProvider.walletProvider.getWalletAddress();
+    const fromAddress = params.fromAddress ?? (await spokeProvider.walletProvider.getWalletAddress());
     const toChainId = params.toChainId ?? fromChainId;
     const toAddress = params.toAddress ?? fromAddress;
     const dstToken = this.configService.getMoneyMarketToken(toChainId, params.token);
@@ -1031,10 +1043,9 @@ export class MoneyMarketService {
 
     const data: Hex = this.buildWithdrawData(fromHubWallet, encodedToAddress, params.token, params.amount, toChainId);
 
-    const txResult =
-      isSonicSpokeProviderType(spokeProvider)
-        ? await SonicSpokeService.callWallet(data, spokeProvider, raw)
-        : await SpokeService.callWallet(fromHubWallet, data, spokeProvider, this.hubProvider, raw);
+    const txResult = isSonicSpokeProviderType(spokeProvider)
+      ? await SonicSpokeService.callWallet(data, spokeProvider, raw)
+      : await SpokeService.callWallet(fromHubWallet, data, spokeProvider, this.hubProvider, raw);
 
     return {
       ok: true,

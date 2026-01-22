@@ -94,6 +94,10 @@ const customSolverConfig: SolverConfigParams = {
 
 // Pre-defined default solver config
 const solverConfig = getSolverConfig(SONIC_MAINNET_CHAIN_ID);
+
+const sodax = new Sodax({
+  swap: customSolverConfig
+});
 ```
 
 ### Money Market Configuration
@@ -119,6 +123,10 @@ const customMoneyMarketConfig: MoneyMarketConfigParams = {
 
 // Pre-defined default money market config
 const moneyMarketConfig = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID);
+
+const sodax = new Sodax({
+  moneyMarket: customMoneyMarketConfig
+});
 ```
 
 ### Hub Provider Configuration
@@ -127,16 +135,37 @@ Configure the hub chain provider for cross-chain operations:
 
 ```typescript
 import {
-  Sodax,
   EvmHubProviderConfig,
   getHubChainConfig,
   SONIC_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
 
-const hubConfig: EvmHubProviderConfig = {
-  hubRpcUrl: 'https://rpc.soniclabs.com',
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
-};
+const sodax = new Sodax({
+  hubProviderConfig: {
+    hubRpcUrl: 'https://rpc.soniclabs.com',
+    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  }
+});
+```
+
+### Shared Configuration
+
+Configure SDK to use provided configuration when internally invoking things like reading from blockchain etc..
+
+```typescript
+import {
+  STELLAR_MAINNET_CHAIN_ID,
+} from '@sodax/sdk';
+
+const sodax = new Sodax({
+  sharedConfig: { // config used by internal services
+    [STELLAR_MAINNET_CHAIN_ID]: {
+      horizonRpcUrl: 'https://horizon.stellar.org',
+      sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
+    }
+  }
+});
+
 ```
 
 ### Complete Custom Configuration
@@ -155,10 +184,17 @@ import {
 const sodax = new Sodax({
   swap: getSolverConfig(SONIC_MAINNET_CHAIN_ID),
   moneyMarket: getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID),
+  ...,
   hubProviderConfig: {
     hubRpcUrl: 'https://rpc.soniclabs.com',
     chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
   },
+  sharedConfig: { // config used by internal services
+    [STELLAR_MAINNET_CHAIN_ID]: {
+      horizonRpcUrl: 'https://horizon.stellar.org',
+      sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
+    }
+  }
 });
 
 // Optional: initialize for latest tokens/chains
