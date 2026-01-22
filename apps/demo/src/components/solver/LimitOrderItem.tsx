@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { formatUnits } from 'viem';
-import type { IntentResponse, Intent, IntentRelayChainId } from '@sodax/sdk';
-import { useMemo } from 'react';
-import type { SpokeChainId } from '@sodax/types';
-import { useCancelLimitOrder, useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
-import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import {
+  useCancelLimitOrder,
+  useSodaxContext,
+  useSpokeProvider,
+  useWalletProvider,
+  type SpokeChainId,
+  type IntentResponse,
+  type Intent,
+  type IntentRelayChainId,
+} from '@sodax/dapp-kit';
 import { useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 

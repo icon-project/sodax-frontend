@@ -14,12 +14,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { parseUnits, formatUnits } from 'viem';
-import {
-  type CreateLimitOrderParams,
-  getSupportedSolverTokens,
-  type SolverIntentQuoteRequest,
-  StellarSpokeProvider,
-} from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
@@ -31,15 +25,14 @@ import {
   useStellarTrustlineCheck,
   useRequestTrustline,
   useSodaxContext,
-} from '@sodax/dapp-kit';
-import {
+  type CreateLimitOrderParams,
+  getSupportedSolverTokens,
+  StellarSpokeProvider,
   getXChainType,
   useEvmSwitchChain,
   useXAccount,
   useXDisconnect,
   useWalletProvider,
-} from '@sodax/wallet-sdk-react';
-import {
   type ChainId,
   POLYGON_MAINNET_CHAIN_ID,
   type Token,
@@ -47,7 +40,7 @@ import {
   type ChainType,
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
-} from '@sodax/types';
+} from '@sodax/dapp-kit';
 import { useAppStore } from '@/zustand/useAppStore';
 import LimitOrderList from './LimitOrderList';
 import { useQueryClient } from '@tanstack/react-query';

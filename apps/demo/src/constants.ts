@@ -1,5 +1,4 @@
-import { type CustomProvider, type SolverConfigParams, spokeChainConfig } from '@sodax/sdk';
-import type { SpokeChainId } from '@sodax/types';
+import { type CustomProvider, type SolverConfigParams, spokeChainConfig, type SpokeChainId } from '@sodax/dapp-kit';
 
 declare global {
   interface Window {

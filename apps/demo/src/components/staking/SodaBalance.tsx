@@ -3,8 +3,7 @@ import { Skeleton } from '../ui/skeleton';
 import { useSodaBalance } from '@/hooks/useSodaBalance';
 import { Label } from '../ui/label';
 import { formatTokenAmount } from '@/lib/utils';
-import type { SpokeChainId, SpokeProvider, XToken } from '@sodax/sdk';
-import type { XAccount } from '@sodax/wallet-sdk-react';
+import type { SpokeChainId, SpokeProvider, XToken, XAccount } from '@sodax/dapp-kit';
 
 export function SodaBalance({
   selectedChainId,

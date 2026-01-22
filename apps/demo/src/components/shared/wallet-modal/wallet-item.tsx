@@ -1,9 +1,14 @@
 import { XIcon, Loader2 } from 'lucide-react';
 import React, { useCallback, useMemo, useState } from 'react';
-
-import type { ChainType } from '@sodax/types';
-import type { XConnector } from '@sodax/wallet-sdk-react';
-import { useXAccount, useXConnect, useXConnection, useXConnectors, useXDisconnect } from '@sodax/wallet-sdk-react';
+import {
+  useXAccount,
+  useXConnect,
+  useXConnection,
+  useXConnectors,
+  useXDisconnect,
+  type XConnector,
+  type ChainType,
+} from '@sodax/dapp-kit';
 import { Button } from '@/components/ui/button';
 
 export type WalletItemProps = {

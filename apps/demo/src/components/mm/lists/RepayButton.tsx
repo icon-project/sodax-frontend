@@ -3,11 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
-import type { XToken } from '@sodax/types';
+import {
+  type XToken,
+  type MoneyMarketRepayParams,
+  useEvmSwitchChain,
+  useWalletProvider,
+  useMMAllowance,
+  useMMApprove,
+  useRepay,
+  useSpokeProvider,
+} from '@sodax/dapp-kit';
 import { useState } from 'react';
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
-import type { MoneyMarketRepayParams } from '@sodax/sdk';
 import { parseUnits } from 'viem';
 
 export function RepayButton({ token }: { token: XToken }) {

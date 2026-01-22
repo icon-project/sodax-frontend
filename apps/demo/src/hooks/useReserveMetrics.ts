@@ -1,7 +1,6 @@
 import { formatUnits } from 'viem';
 
-import { hubAssets, type XToken } from '@sodax/types';
-import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
+import { type FormatReserveUSDResponse, type UserReserveData, hubAssets, type XToken } from '@sodax/dapp-kit';
 import { formatCompactNumber } from '@/lib/utils';
 
 /**

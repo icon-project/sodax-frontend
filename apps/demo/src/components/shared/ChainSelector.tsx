@@ -1,6 +1,6 @@
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { baseChainInfo, type ChainId } from '@sodax/types';
+import { baseChainInfo, type ChainId } from '@sodax/dapp-kit';
 
 interface ChainSelectorProps {
   selectedChainId: ChainId;

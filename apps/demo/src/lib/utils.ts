@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { hubAssets, SolverIntentStatusCode, type SpokeChainId } from '@sodax/sdk';
+import { hubAssets, SolverIntentStatusCode, type SpokeChainId } from '@sodax/dapp-kit';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -126,7 +126,7 @@ export function getReadableTxError(error: unknown): string {
     return 'Something went wrong. Please try again.';
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  // biome-ignore lint/suspicious/noExplicitAny: any is used for property access check
   const message = (error as any)?.shortMessage || (error as any)?.message || '';
 
   if (message.includes('gas price below minimum')) {

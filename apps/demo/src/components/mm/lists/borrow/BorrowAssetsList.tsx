@@ -1,13 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import {
-  useUserReservesData,
-  useSpokeProvider,
-  useReservesUsdFormat,
-  useBackendAllMoneyMarketAssets,
-} from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { BorrowAssetsListItem } from './BorrowAssetsListItem';
 import { AlertCircle, Loader2 } from 'lucide-react';
@@ -15,7 +8,18 @@ import { formatUnits } from 'viem';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
 import { BorrowModal } from './BorrowModal';
 import { SuccessModal } from '../SuccessModal';
-import { type XToken, type ChainId, moneyMarketSupportedTokens } from '@sodax/types';
+import {
+  useUserReservesData,
+  useSpokeProvider,
+  useReservesUsdFormat,
+  useBackendAllMoneyMarketAssets,
+  type XToken,
+  type ChainId,
+  moneyMarketSupportedTokens,
+  useWalletProvider,
+  useXAccount,
+  useXBalances,
+} from '@sodax/dapp-kit';
 
 const TABLE_HEADERS = [
   'Asset',

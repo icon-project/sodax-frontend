@@ -1,6 +1,5 @@
 import React from 'react';
-import type { Hex, Intent, IntentDeliveryInfo } from '@sodax/sdk';
-import { useStatus } from '@sodax/dapp-kit';
+import { useStatus, type Hex, type Intent, type IntentDeliveryInfo } from '@sodax/dapp-kit';
 import { statusCodeToMessage } from '@/lib/utils';
 
 export default function OrderStatus({

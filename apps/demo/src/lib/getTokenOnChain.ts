@@ -1,5 +1,4 @@
-import type { ChainId, XToken } from '@sodax/types';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import { type ChainId, type XToken, useSodaxContext } from '@sodax/dapp-kit';
 
 /**
  * Resolve a token *by symbol* on the selected chain, using Sodax SDK config.

@@ -3,9 +3,8 @@ import React from 'react';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
 import { Button } from '@/components/ui/button';
-import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
-import { useDeriveUserWalletAddress } from '@sodax/dapp-kit';
+import { useDeriveUserWalletAddress, useXAccount } from '@sodax/dapp-kit';
 import { Wallet } from 'lucide-react';
 import { BorrowAssetsList } from '@/components/mm/lists/borrow/BorrowAssetsList';
 

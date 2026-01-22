@@ -1,9 +1,13 @@
 // apps/demo/src/hooks/useSodaBalance.ts
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { erc20Abi } from 'viem';
-import type { SpokeChainId } from '@sodax/types';
-import { EvmSpokeProvider, SonicSpokeProvider, type SpokeProvider } from '@sodax/sdk';
-import { useSodaxContext } from '@sodax/dapp-kit';
+import {
+  type SpokeChainId,
+  EvmSpokeProvider,
+  SonicSpokeProvider,
+  type SpokeProvider,
+  useSodaxContext,
+} from '@sodax/dapp-kit';
 
 /**
  * Hook for getting the SODA token balance of the connected wallet on a specific chain.

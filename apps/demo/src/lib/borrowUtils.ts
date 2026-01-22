@@ -1,6 +1,12 @@
-import { hubAssets, baseChainInfo, SodaTokens } from '@sodax/sdk';
-import type { MoneyMarketAsset } from '@sodax/sdk';
-import type { ChainId, SpokeChainId, XToken } from '@sodax/types';
+import {
+  hubAssets,
+  baseChainInfo,
+  SodaTokens,
+  type ChainId,
+  type SpokeChainId,
+  type XToken,
+  type MoneyMarketAsset,
+} from '@sodax/dapp-kit';
 import { getSpokeTokenAddressByVault } from './utils';
 
 /**

@@ -1,11 +1,10 @@
 import React, { type ReactElement } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
-import type { XToken, Address } from '@sodax/types';
 import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
 import { RepayButton } from './RepayButton';
 import { formatUnits, isAddress } from 'viem';
-import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
+import type { FormatReserveUSDResponse, UserReserveData, XToken, Address } from '@sodax/dapp-kit';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { OldBorrowButton } from './OldBorrowButton';
 

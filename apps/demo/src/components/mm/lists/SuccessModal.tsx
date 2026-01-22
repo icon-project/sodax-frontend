@@ -1,8 +1,7 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2 } from 'lucide-react';
-import type { ChainId, XToken } from '@sodax/types';
+import type { ChainId, XToken } from '@sodax/dapp-kit';
 import { chainIdToChainName } from '@/constants';
 
 export type ActionType = 'supply' | 'withdraw' | 'borrow' | 'repay';

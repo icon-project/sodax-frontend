@@ -3,11 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
-import type { XToken } from '@sodax/types';
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
-import type { MoneyMarketBorrowParams } from '@sodax/sdk';
+import {
+  useBorrow,
+  useMMAllowance,
+  useMMApprove,
+  useSpokeProvider,
+  type MoneyMarketBorrowParams,
+  type XToken,
+  useEvmSwitchChain,
+  useWalletProvider,
+} from '@sodax/dapp-kit';
 
 export function OldBorrowButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');

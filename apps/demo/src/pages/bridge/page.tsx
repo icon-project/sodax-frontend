@@ -14,22 +14,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  BASE_MAINNET_CHAIN_ID,
-  type CreateBridgeIntentParams,
-  POLYGON_MAINNET_CHAIN_ID,
-  spokeChainConfig,
-  STELLAR_MAINNET_CHAIN_ID,
-  StellarSpokeProvider,
-} from '@sodax/sdk';
-import type { ChainType, SpokeChainId, XToken } from '@sodax/types';
-import {
-  getXChainType,
-  useEvmSwitchChain,
-  useWalletProvider,
-  useXAccount,
-  useXDisconnect,
-} from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import { parseUnits, formatUnits } from 'viem';
@@ -43,6 +27,20 @@ import {
   useSodaxContext,
   useStellarTrustlineCheck,
   useRequestTrustline,
+  BASE_MAINNET_CHAIN_ID,
+  type CreateBridgeIntentParams,
+  POLYGON_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+  STELLAR_MAINNET_CHAIN_ID,
+  StellarSpokeProvider,
+  type ChainType,
+  type SpokeChainId,
+  type XToken,
+  getXChainType,
+  useEvmSwitchChain,
+  useWalletProvider,
+  useXAccount,
+  useXDisconnect,
 } from '@sodax/dapp-kit';
 import { Skeleton } from '@/components/ui/skeleton';
 

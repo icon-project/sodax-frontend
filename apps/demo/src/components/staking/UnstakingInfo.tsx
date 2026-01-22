@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { useCancelUnstake, useClaim, useStakingConfig, useUnstakingInfoWithPenalty } from '@sodax/dapp-kit';
+import {
+  useCancelUnstake,
+  useClaim,
+  useStakingConfig,
+  useUnstakingInfoWithPenalty,
+  type SpokeProvider,
+} from '@sodax/dapp-kit';
 import { Skeleton } from '../ui/skeleton';
 import { formatTokenAmount, getTimeRemaining } from '@/lib/utils';
-import type { SpokeProvider } from '@sodax/sdk';
 import { Button } from '../ui/button';
 import {
   Dialog,

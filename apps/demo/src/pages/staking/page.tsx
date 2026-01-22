@@ -12,19 +12,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { spokeChainConfig } from '@sodax/sdk';
-import type { XToken } from '@sodax/types';
-import {
-  getXChainType,
-  useEvmSwitchChain,
-  useWalletProvider,
-  useXAccount,
-  useXDisconnect,
-} from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight, Coins, TrendingUp } from 'lucide-react';
 import { scaleTokenAmount, formatTokenAmount } from '@/lib/utils';
 import {
+  type XToken,
+  spokeChainConfig,
   useSpokeProvider,
   useStake,
   useStakeApprove,
@@ -39,6 +32,11 @@ import {
   useInstantUnstakeApprove,
   useInstantUnstakeAllowance,
   useSodaxContext,
+  getXChainType,
+  useEvmSwitchChain,
+  useWalletProvider,
+  useXAccount,
+  useXDisconnect,
 } from '@sodax/dapp-kit';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

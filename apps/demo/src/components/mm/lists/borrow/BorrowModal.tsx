@@ -11,11 +11,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
-import type { MoneyMarketBorrowParams } from '@sodax/sdk';
-import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
-import type { ChainId, XToken } from '@sodax/types';
+import {
+  useBorrow,
+  useMMAllowance,
+  useMMApprove,
+  useSpokeProvider,
+  type MoneyMarketBorrowParams,
+  useEvmSwitchChain,
+  useWalletProvider,
+  type ChainId,
+  type XToken,
+} from '@sodax/dapp-kit';
 import { useAppStore } from '@/zustand/useAppStore';
 
 interface BorrowModalProps {

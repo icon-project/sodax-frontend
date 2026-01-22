@@ -5,14 +5,17 @@ import {
   useUserFormattedSummary,
   useUserReservesData,
   useATokensBalances,
+  useWalletProvider,
+  useXAccount,
+  useXBalances,
+  ICON_MAINNET_CHAIN_ID,
+  moneyMarketSupportedTokens,
 } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { formatUnits, isAddress } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens } from '@sodax/sdk';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
 

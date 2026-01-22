@@ -1,12 +1,16 @@
 import React from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { formatUnits } from 'viem';
-import type { ChainId, XToken } from '@sodax/types';
 import { BorrowButton } from '../BorrowButton';
 import { getChainLabel } from '@/lib/borrowUtils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
-import { useAToken } from '@sodax/dapp-kit';
+import {
+  useAToken,
+  type ChainId,
+  type XToken,
+  type FormatReserveUSDResponse,
+  type UserReserveData,
+} from '@sodax/dapp-kit';
 
 interface BorrowAssetsListItemProps {
   token: XToken;
