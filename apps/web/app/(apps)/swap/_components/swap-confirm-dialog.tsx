@@ -102,7 +102,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
           // Track successful swap completion
           if (inputAmount && inputTokenPrice) {
-            const inputAmountUsd = Number.parseFloat(inputAmount) * (inputTokenPrice || 0);
+            const inputAmountUsd = Number.parseFloat(inputAmount) * inputTokenPrice;
             trackSwapCompleted({
               input_token_symbol: inputToken.symbol,
               output_token_symbol: outputToken.symbol,
@@ -125,7 +125,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
             // Track successful swap completion
             if (inputAmount && inputTokenPrice) {
-              const inputAmountUsd = Number.parseFloat(inputAmount) * (inputTokenPrice || 0);
+              const inputAmountUsd = Number.parseFloat(inputAmount) * inputTokenPrice;
               trackSwapCompleted({
                 input_token_symbol: inputToken.symbol,
                 output_token_symbol: outputToken.symbol,

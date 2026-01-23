@@ -39,7 +39,10 @@ function pushToDataLayer(eventData: Record<string, unknown>): void {
   }
 
   window.dataLayer.push(eventData);
-  console.log('[Analytics] Event tracked:', eventData);
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Analytics] Event tracked:', eventData);
+  }
 }
 
 /**
