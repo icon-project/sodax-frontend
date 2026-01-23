@@ -3,7 +3,7 @@ import { isAddress, type Address } from 'viem';
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 import type { SpokeProvider } from '@sodax/sdk';
-import { deriveUserWalletAddress } from '@sodax/sdk';
+import { HubService } from '@sodax/sdk';
 
 export type UseATokensBalancesParams = {
   aTokens: readonly Address[];
@@ -74,12 +74,7 @@ export function useATokensBalances({
         }
       }
 
-      // Derive user's hub wallet address
-      const hubWalletAddress = await deriveUserWalletAddress(
-        sodax.hubProvider,
-        spokeProvider.chainConfig.chain.id,
-        userAddress,
-      );
+      const hubWalletAddress = await HubService.getUserHubWalletAddress(userAddress, spokeProvider.chainConfig.chain.id, sodax.hubProvider);
 
       return await sodax.moneyMarket.data.getATokensBalances(aTokens, hubWalletAddress);
     },
