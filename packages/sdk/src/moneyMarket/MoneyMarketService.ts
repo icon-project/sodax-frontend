@@ -1,6 +1,6 @@
 import { type Hex, encodeFunctionData, isAddress } from 'viem';
 import { poolAbi } from '../shared/abis/pool.abi.js';
-import type { EvmHubProvider, SpokeProvider } from '../shared/entities/index.js';
+import type { EvmHubProvider, SpokeProvider, SpokeProviderType } from '../shared/entities/index.js';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
   SpokeService,
@@ -11,7 +11,13 @@ import {
   type RelayError,
   type ConfigService,
 } from '../index.js';
-import { isConfiguredMoneyMarketConfig, isEvmSpokeProviderType, isSolanaSpokeProviderType, isSonicSpokeProviderType } from '../shared/guards.js';
+import {
+  isConfiguredMoneyMarketConfig,
+  isEvmSpokeProviderType,
+  isStellarSpokeProviderType,
+  isSolanaSpokeProviderType,
+  isSonicSpokeProviderType,
+} from '../shared/guards.js';
 import type {
   EvmContractCall,
   EvmSpokeProviderType,
@@ -27,12 +33,7 @@ import type {
   StellarSpokeProviderType,
   TxReturnType,
 } from '../shared/types.js';
-import {
-  calculateFeeAmount,
-  encodeAddress,
-  encodeContractCalls,
-  isHubSpokeProvider,
-} from '../shared/utils/index.js';
+import { calculateFeeAmount, encodeAddress, encodeContractCalls, isHubSpokeProvider } from '../shared/utils/index.js';
 import { EvmAssetManagerService, EvmVaultTokenService, HubService } from '../shared/services/hub/index.js';
 import { Erc20Service } from '../shared/services/erc-20/index.js';
 import invariant from 'tiny-invariant';
@@ -44,12 +45,12 @@ import {
   type HttpUrl,
   getMoneyMarketConfig,
   type GetMoneyMarketTokensApiResponse,
+  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { wrappedSonicAbi } from '../shared/abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
-import { StellarSpokeProvider } from '../shared/entities/stellar/StellarSpokeProvider.js';
 
 export type MoneyMarketEncodeSupplyParams = {
   asset: Address; // The address of the asset to supply.
@@ -297,7 +298,7 @@ export class MoneyMarketService {
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
    */
-  public static async estimateGas<T extends SpokeProvider = SpokeProvider>(
+  public static async estimateGas<T extends SpokeProviderType = SpokeProviderType>(
     params: TxReturnType<T, true>,
     spokeProvider: T,
   ): Promise<GetEstimateGasReturnType<T>> {
@@ -325,7 +326,7 @@ export class MoneyMarketService {
    *   // Need to approve
    * }
    */
-  public async isAllowanceValid<S extends SpokeProvider>(
+  public async isAllowanceValid<S extends SpokeProviderType>(
     params: MoneyMarketParams,
     spokeProvider: S,
   ): Promise<Result<boolean>> {
@@ -348,17 +349,43 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (spokeProvider instanceof StellarSpokeProvider && (params.action === 'supply' || params.action === 'repay')) {
+      if (params.toChainId === STELLAR_MAINNET_CHAIN_ID && params.toAddress) {
+        // if target chain is stellar, check if the target wallet has sufficient trustline
+        const targetHasTrustline = await StellarSpokeService.walletHasSufficientTrustline(
+          params.token,
+          params.amount,
+          params.toAddress,
+          this.configService.sharedConfig[STELLAR_MAINNET_CHAIN_ID].horizonRpcUrl,
+        );
+
+        // if source chain is stellar, check if the source wallet has sufficient trustline as well
+        let srcHasTrustline = true;
+        if (isStellarSpokeProviderType(spokeProvider)) {
+          srcHasTrustline = await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider);
+        }
+
+        return {
+          ok: true,
+          value: targetHasTrustline && srcHasTrustline,
+        };
+      }
+
+      if (isStellarSpokeProviderType(spokeProvider)) {
         return {
           ok: true,
           value: await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider),
         };
       }
-      if ((isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) && (params.action === 'supply' || params.action === 'repay')) {
-        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider) ? await HubService.getUserRouter(
-          walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-          this.hubProvider,
-        ) : spokeProvider.chainConfig.addresses.assetManager;
+      if (
+        (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) &&
+        (params.action === 'supply' || params.action === 'repay')
+      ) {
+        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+          ? await HubService.getUserRouter(
+              walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+              this.hubProvider,
+            )
+          : spokeProvider.chainConfig.addresses.assetManager;
         return await Erc20Service.isAllowanceValid(
           params.token as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
           params.amount,
@@ -384,6 +411,9 @@ export class MoneyMarketService {
    * Approve amount spending if isAllowanceValid returns false.
    * For evm spoke chains, the spender is the asset manager contract while
    * for sonic spoke (hub) chain, the spender is the user router contract.
+   * NOTE: Stellar requires trustline when being either sender or receiver. Thus
+   * you should make sure that both src and destination wallets have sufficient trustlines.
+   * Make sure to invoke this method using wallet address which is about to receive the tokens!
    * @param token - ERC20 token address
    * @param amount - Amount to approve
    * @param spender - Spender address
@@ -407,7 +437,7 @@ export class MoneyMarketService {
    *
    * const txReceipt = approveResult.value;
    */
-  public async approve<S extends SpokeProvider, R extends boolean = false>(
+  public async approve<S extends SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketParams,
     spokeProvider: S,
     raw?: R,
@@ -430,13 +460,9 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (spokeProvider instanceof StellarSpokeProvider) {
-        invariant(
-          params.action === 'supply' || params.action === 'repay',
-          'Invalid action (only supply and repay are supported on stellar)',
-        );
-
+      if (isStellarSpokeProviderType(spokeProvider)) {
         const result = await StellarSpokeService.requestTrustline(params.token, params.amount, spokeProvider, raw);
+
         return {
           ok: true,
           value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
@@ -450,10 +476,12 @@ export class MoneyMarketService {
         );
         invariant(isAddress(params.token), 'Invalid token address');
 
-        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider) ? await HubService.getUserRouter(
-          walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-          this.hubProvider,
-        ) : spokeProvider.chainConfig.addresses.assetManager;
+        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+          ? await HubService.getUserRouter(
+              walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+              this.hubProvider,
+            )
+          : spokeProvider.chainConfig.addresses.assetManager;
 
         const result = (await Erc20Service.approve(
           params.token,
@@ -616,7 +644,7 @@ export class MoneyMarketService {
    *   console.error('Supply failed:', result.error);
    * }
    */
-  async createSupplyIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  async createSupplyIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketSupplyParams,
     spokeProvider: S,
     raw?: R,
@@ -662,7 +690,7 @@ export class MoneyMarketService {
         ok: true,
         value: txResult as TxReturnType<S, R>,
         data: {
-          address: toHubWallet,
+          address: fromHubWallet,
           payload: data,
         },
       };
@@ -748,7 +776,7 @@ export class MoneyMarketService {
       ) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
           spokeProvider,
           this.config.relayerApiEndpoint,
           timeout,
@@ -817,7 +845,7 @@ export class MoneyMarketService {
    *   console.error('Borrow failed:', result.error);
    * }
    */
-  async createBorrowIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  async createBorrowIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketBorrowParams,
     spokeProvider: S,
     raw?: R,
@@ -829,7 +857,7 @@ export class MoneyMarketService {
     invariant(params.amount > 0n, 'Amount must be greater than 0');
 
     const fromChainId = params.fromChainId ?? spokeProvider.chainConfig.chain.id;
-    const fromAddress = params.fromAddress ?? await spokeProvider.walletProvider.getWalletAddress();
+    const fromAddress = params.fromAddress ?? (await spokeProvider.walletProvider.getWalletAddress());
     const toChainId = params.toChainId ?? fromChainId;
     const toAddress = params.toAddress ?? fromAddress;
     const dstToken = this.configService.getMoneyMarketToken(toChainId, params.token);
@@ -999,7 +1027,7 @@ export class MoneyMarketService {
    *   console.error('Withdraw failed:', result.error);
    * }
    */
-  async createWithdrawIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  async createWithdrawIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketWithdrawParams,
     spokeProvider: S,
     raw?: R,
@@ -1025,10 +1053,9 @@ export class MoneyMarketService {
 
     const data: Hex = this.buildWithdrawData(fromHubWallet, encodedToAddress, params.token, params.amount, toChainId);
 
-    const txResult =
-      isSonicSpokeProviderType(spokeProvider)
-        ? await SonicSpokeService.callWallet(data, spokeProvider, raw)
-        : await SpokeService.callWallet(fromHubWallet, data, spokeProvider, this.hubProvider, raw);
+    const txResult = isSonicSpokeProviderType(spokeProvider)
+      ? await SonicSpokeService.callWallet(data, spokeProvider, raw)
+      : await SpokeService.callWallet(fromHubWallet, data, spokeProvider, this.hubProvider, raw);
 
     return {
       ok: true,
@@ -1106,7 +1133,7 @@ export class MoneyMarketService {
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
           spokeProvider,
           this.config.relayerApiEndpoint,
           timeout,
@@ -1177,7 +1204,7 @@ export class MoneyMarketService {
    *   console.error('Repay failed:', result.error);
    * }
    */
-  async createRepayIntent<S extends SpokeProvider = SpokeProvider, R extends boolean = false>(
+  async createRepayIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
     params: MoneyMarketRepayParams,
     spokeProvider: S,
     raw?: R,
@@ -1222,7 +1249,7 @@ export class MoneyMarketService {
       ok: true,
       value: txResult as TxReturnType<S, R>,
       data: {
-        address: toHubWallet,
+        address: fromHubWallet,
         payload: data,
       },
     };
@@ -1488,8 +1515,8 @@ export class MoneyMarketService {
 
       if (assetAddress.toLowerCase() !== bnUSDVault.toLowerCase()) {
         // if asset address is not bnUSD vault, we need to approve and deposit the asset into the vault
-        calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, translatedAmountIn));
-        calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, translatedAmountIn));
+        calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
+        calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
       }
 
       // withdraw the bnUSD debt token from the vault

@@ -56,10 +56,10 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   usdPrice = 0,
 }: CurrencyInputPanelProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
   const { outputToken } = useSwapState();
-  const isMobile = useIsMobile();
 
   const handleTokenSelect = (selectedToken: XToken): void => {
     if (onCurrencyChange) {
@@ -92,6 +92,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   );
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    if (isMobile) return;
     const target = e.target as HTMLElement;
     if (target.tagName !== 'INPUT' && !target.closest('input')) {
       inputRef.current?.focus();
@@ -188,6 +189,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         <>
           <div className="inline-flex justify-start items-center gap-2 mt-2 w-full">
             <Input
+              autoFocus
               type="text"
               placeholder="Enter destination address"
               value={customDestinationAddress}

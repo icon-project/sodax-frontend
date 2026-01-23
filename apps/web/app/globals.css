@@ -62,6 +62,7 @@
   --vibrant-white: #f9f7f5;
   --clay-light: #b9acab;
   --clay: #8e7e7d;
+  --clay-dark: #6b5c5b;
   --negative: #f37274;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
@@ -95,8 +96,8 @@
   --layout-space-big-tablet: 32px;
   --layout-space-big-desktop: 40px;
   --layout-space-big: var(--layout-space-big-mobile);
-  --layout-space-normal-mobile: 8px;
-  --layout-space-normal-tablet: 16px;
+  --layout-space-normal-mobile: 16px;
+  --layout-space-normal-tablet: 20px;
   --layout-space-normal-desktop: 24px;
   --layout-space-normal: var(--layout-space-normal-mobile);
   --layout-space-small-mobile: 8px;
@@ -169,6 +170,7 @@
   --clay-light: #b9acab;
   --vibrant-white: #f9f7f5;
   --clay: #8e7e7d;
+  --clay-dark: #6b5c5b;
   --negative: #f37274;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
@@ -191,8 +193,8 @@
   --layout-space-big-mobile: 24px;
   --layout-space-big-tablet: 32px;
   --layout-space-big-desktop: 40px;
-  --layout-space-normal-mobile: 8px;
-  --layout-space-normal-tablet: 16px;
+  --layout-space-normal-mobile: 16px;
+  --layout-space-normal-tablet: 20px;
   --layout-space-normal-desktop: 24px;
   --main-title-mobile: 24px;
   --main-title-tablet: 32px;
@@ -258,6 +260,7 @@
   --color-vibrant-white: var(--vibrant-white);
   --color-clay: var(--clay);
   --color-clay-light: var(--clay-light);
+  --color-clay-dark: var(--clay-dark);
   --color-cherry-brighter: var(--cherry-brighter);
   --color-negative: var(--negative);
   --text-app-title: var(--app-title-mobile);
@@ -420,4 +423,12 @@ textarea[readonly] {
 
 [role="dialog"] {
   box-shadow: 0px 20px 160px 0px rgba(185, 172, 171, 0.4) !important;
+}
+
+.network-accordion h3 {
+  padding-top: 0px !important;
+}
+
+.money-market h3 {
+  padding-bottom: 0px !important;
 }

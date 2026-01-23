@@ -75,3 +75,16 @@ export const listVariants = {
     transition: { delayChildren: stagger(0.05, { from: 'last' }) },
   },
 };
+
+export const accordionVariants = {
+  closed: {
+    height: 0,
+    opacity: 0,
+    transition: { duration: 0.25, ease: 'easeIn' as const },
+  },
+  open: {
+    height: 'auto',
+    opacity: 1,
+    transition: { duration: 0.25, ease: 'easeOut' as const },
+  },
+};
