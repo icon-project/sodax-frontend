@@ -18,6 +18,7 @@ import {
   Check,
 } from 'lucide-react';
 import { Navbar } from '@/components/shared/navbar';
+import { Separator } from '@/components/ui/separator';
 import Footer from '@/components/landing/footer';
 
 // API fetcher with proper error handling
@@ -263,7 +264,7 @@ export default function SodaTokenPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className="bg-cream border border-cherry-grey/20 hover:border-clay/30 rounded-lg p-4 transition-colors"
+                className="bg-cream-white border border-cherry-grey/20 hover:border-clay/30 rounded-lg p-4 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-clay text-xs font-medium font-['InterRegular'] uppercase tracking-wide">
@@ -285,7 +286,7 @@ export default function SodaTokenPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className="bg-cream border border-cherry-grey/20 hover:border-clay/30 rounded-lg p-4 transition-colors"
+                className="bg-cream-white border border-cherry-grey/20 hover:border-clay/30 rounded-lg p-4 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-clay text-xs font-medium font-['InterRegular'] uppercase tracking-wide">
@@ -312,7 +313,7 @@ export default function SodaTokenPage() {
                     Official SODA Token Contract (Sonic)
                   </h3>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <code className="text-clay text-xs font-mono bg-white/60 px-2 py-1 rounded">
+                    <code className="text-clay text-xs font-mono bg-cream-white px-2 py-1 rounded">
                       0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963
                     </code>
                     <CopyButton text="0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963" />
@@ -331,6 +332,10 @@ export default function SodaTokenPage() {
             </div>
           </>
         )}
+
+        {/* Divider */}
+        <Separator className="h-[1px] bg-clay opacity-30" />
+        <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30 mb-8" />
 
         {/* TL;DR Section */}
         <Section delay={0}>
@@ -379,6 +384,10 @@ export default function SodaTokenPage() {
           </div>
         </Section>
 
+        {/* Divider */}
+        <Separator className="h-[1px] bg-clay opacity-30" />
+        <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30 mb-8" />
+
         {/* What is SODA */}
         <Section delay={0}>
           <div className="mb-8">
@@ -397,6 +406,10 @@ export default function SodaTokenPage() {
             </p>
           </div>
         </Section>
+
+        {/* Divider */}
+        <Separator className="h-[1px] bg-clay opacity-30" />
+        <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30 mb-8" />
 
         {/* Token Economics */}
         <Section delay={0}>
@@ -453,6 +466,10 @@ export default function SodaTokenPage() {
           </div>
         </Section>
 
+        {/* Divider */}
+        <Separator className="h-[1px] bg-clay opacity-30" />
+        <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30 mb-8" />
+
         {/* Network Deployments */}
         <Section delay={0}>
           <div className="mb-8">
@@ -476,7 +493,7 @@ export default function SodaTokenPage() {
                       <p className="text-clay text-xs font-['InterRegular']">{network.role}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <code className="text-clay text-xs font-mono bg-cream/30 px-2 py-1 rounded truncate max-w-[140px]">
+                      <code className="text-clay text-xs font-mono bg-cream-white px-2 py-1 rounded truncate max-w-[140px]">
                         {network.address.slice(0, 6)}...{network.address.slice(-4)}
                       </code>
                       <CopyButton text={network.address} />
@@ -487,6 +504,10 @@ export default function SodaTokenPage() {
             </div>
           </div>
         </Section>
+
+        {/* Divider */}
+        <Separator className="h-[1px] bg-clay opacity-30" />
+        <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30 mb-8" />
 
         {/* FAQ Section */}
         <Section delay={0}>
@@ -501,6 +522,10 @@ export default function SodaTokenPage() {
             </div>
           </div>
         </Section>
+
+        {/* Divider */}
+        <Separator className="h-[1px] bg-clay opacity-30" />
+        <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30 mb-8" />
 
         {/* CTA Section */}
         <Section delay={0}>
