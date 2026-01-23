@@ -19,6 +19,7 @@ import {
   SonicSpokeProvider,
   type SonicSpokeChainConfig,
   NearSpokeProvider,
+  type NearSpokeChainConfig,
 } from '@sodax/sdk';
 import type {
   IEvmWalletProvider,
@@ -28,7 +29,6 @@ import type {
   IInjectiveWalletProvider,
   IStellarWalletProvider,
   ISolanaWalletProvider,
-  NearSpokeChainConfig,
   INearWalletProvider,
 } from '@sodax/types';
 import { useMemo } from 'react';
