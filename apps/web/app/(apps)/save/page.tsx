@@ -210,7 +210,7 @@ export default function SavingsPage() {
         />
       </motion.div>
 
-      <motion.div className="w-full flex-grow-1" variants={itemVariants}>
+      <motion.div className="w-full flex-grow-1 relative" variants={itemVariants}>
         <AssetList searchQuery={searchQuery} selectedChain={selectedChain} />
       </motion.div>
     </motion.div>
