@@ -24,7 +24,7 @@ export function useLiquidity(tokens: XToken[], formattedReserves?: FormatReserve
 
       return {
         apy: `${apy.toFixed(4)}%`,
-        deposits: deposits >= 1000 ? `$${(deposits / 1000).toFixed(1)}k` : `$${deposits.toFixed(2)}`,
+        deposits: deposits,
       };
     } catch {
       return { apy: '-', deposits: '-' };
