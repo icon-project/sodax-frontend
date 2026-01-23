@@ -180,7 +180,6 @@ export default function SodaTokenPage() {
 
   const isLoading = circulatingQuery.isLoading || totalQuery.isLoading;
   const hasError = circulatingQuery.isError || totalQuery.isError;
-  const percentage = calculatePercentage(circulatingQuery.data, totalQuery.data);
 
   const networks = [
     { name: 'Sonic', address: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963', role: 'Main Token' },
