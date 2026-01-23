@@ -70,12 +70,6 @@ function formatNumber(num: number | undefined): string {
   }).format(num);
 }
 
-// Calculate percentage
-function calculatePercentage(circulating: number | undefined, total: number | undefined): string {
-  if (!circulating || !total || total === 0) return '-';
-  return ((circulating / total) * 100).toFixed(2);
-}
-
 // Animated counter component
 function AnimatedValue({ value, className }: { value: string; className?: string }) {
   const ref = useRef(null);
