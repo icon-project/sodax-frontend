@@ -1,9 +1,5 @@
-import { Account } from '@near-js/accounts';
 import { JsonRpcProvider } from '@near-js/providers';
-import { KeyPairSigner } from '@near-js/signers';
-import type { KeyPairString } from '@near-js/crypto';
-import { fromHex, toHex, type Hex } from 'viem';
-import { actionCreators } from '@near-js/transactions';
+import { fromHex } from 'viem';
 import type { RateLimitConfig } from '../../types.js';
 import type {
   CallContractParams,
@@ -19,62 +15,6 @@ import type {
 import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
 export type QueryResponse = string | number | boolean | object | undefined;
 export type CallResponse = string | number | object | bigint | boolean;
-
-export class LocalWalletProvider implements INearWalletProvider {
-  account: Account;
-  rpcProvider: JsonRpcProvider;
-
-  constructor(rpc: string, accountId: string, secret: string) {
-    this.rpcProvider = new JsonRpcProvider({ url: rpc });
-    const signer = KeyPairSigner.fromSecretKey(secret as KeyPairString);
-    this.account = new Account(accountId, this.rpcProvider, signer);
-  }
-  async getWalletAddress(): Promise<string> {
-    return this.account.accountId;
-  }
-  async getWalletAddressBytes(): Promise<Hex> {
-    return toHex(Buffer.from(this.account.accountId, 'utf-8'));
-  }
-
-  queryContract(contractId: string, method: string, args: {}): Promise<QueryResponse> {
-    return this.rpcProvider.callFunction(contractId, method, args);
-  }
-
-  async getRawTransaction(params: CallContractParams): Promise<NearRawTransaction> {
-    return {
-      signerId: this.account.accountId,
-      params: params,
-    } satisfies NearRawTransaction;
-  }
-
-  async signAndSubmitTxn(transaction: NearRawTransaction) {
-    const publicKey = await this.account.getSigner()?.getPublicKey();
-
-    if (!publicKey) {
-      throw new Error('Signer not found');
-    }
-
-    const nearTx = await this.account.createTransaction(
-      transaction.params.contractId,
-      [
-        actionCreators.functionCall(
-          transaction.params.method,
-          transaction.params.args,
-          transaction.params.gas,
-          transaction.params.deposit,
-        ),
-      ],
-      publicKey,
-    );
-
-    const res = await this.account.signAndSendTransaction({ ...nearTx, throwOnFailure: true, waitUntil: 'FINAL' });
-    return res.transaction_outcome.id as Hex;
-  }
-  async deployContract(buff: Uint8Array) {
-    const res = await this.account.deployContract(buff);
-    return res;
-  }
-}
 
 export class NearBaseSpokeProvider {
   public readonly chainConfig: NearSpokeChainConfig;

@@ -12,10 +12,8 @@ import {
   getMoneyMarketConfig,
   spokeChainConfig,
   NearSpokeProvider,
-  LocalWalletProvider,
   type CreateIntentParams,
   IntentsAbi,
-  hubAssets,
   type FillData,
   waitForTransactionReceipt,
   type EvmSpokeChainConfig,
@@ -24,15 +22,9 @@ import {
 } from '@sodax/sdk';
 
 import { type Address, encodeFunctionData, type Hash, type Hex, toHex } from 'viem';
-import {
-  SONIC_MAINNET_CHAIN_ID,
-  type SpokeChainId,
-  INJECTIVE_MAINNET_CHAIN_ID,
-  NEAR_MAINNET_CHAIN_ID,
-  type EvmRawTransaction,
-} from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, NEAR_MAINNET_CHAIN_ID, type EvmRawTransaction } from '@sodax/types';
 import dotenv from 'dotenv';
-import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
+import { EvmWalletProvider, NearWalletProvider } from '@sodax/wallet-sdk-core';
 dotenv.config();
 
 // load PK from .env
@@ -58,7 +50,7 @@ if (!accountId) {
 
 const spokeConfig = spokeChainConfig[SPOKE_CHAIN_ID] as NearSpokeChainConfig;
 
-const walletProvider = new LocalWalletProvider(SPOKE_RPC_URL, accountId, privateKey);
+const walletProvider = new NearWalletProvider({ rpcUrl: SPOKE_RPC_URL, accountId, privateKey });
 
 const spokeProvider = new NearSpokeProvider(walletProvider, spokeConfig);
 

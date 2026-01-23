@@ -2553,7 +2553,6 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDT,
-    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.wNEAR,
   ] as const satisfies XToken[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
