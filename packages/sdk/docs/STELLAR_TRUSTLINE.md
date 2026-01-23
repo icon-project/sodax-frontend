@@ -16,7 +16,7 @@ The SDK handles trustlines differently depending on whether Stellar is used as t
 
 ## StellarSpokeService Methods
 
-The SDK provides two methods for managing Stellar trustlines:
+The SDK provides three methods for managing Stellar trustlines:
 
 ### hasSufficientTrustline
 
@@ -29,6 +29,23 @@ const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
   tokenAddress,    // The Stellar token address
   amount,          // The amount you need to receive
   stellarSpokeProvider
+);
+```
+
+**Returns:** `Promise<boolean>` - `true` if trustline exists and has sufficient limit, `false` otherwise
+
+### walletHasSufficientTrustline
+
+Checks if a specific Stellar wallet has a sufficient trustline for a given token and amount without requiring a `StellarSpokeProvider`.
+
+```typescript
+import { StellarSpokeService } from "@sodax/sdk";
+
+const hasTrustline = await StellarSpokeService.walletHasSufficientTrustline(
+  tokenAddress,    // The Stellar token address
+  amount,          // The amount you need to receive
+  walletAddress,   // The Stellar wallet address to check
+  horizonRpcUrl    // Horizon RPC URL to query account balances
 );
 ```
 
