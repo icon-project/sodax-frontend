@@ -2,50 +2,64 @@
 
 import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import type { PartnerFeeBalance } from './partner-fee-balance';
+import type { FeeClaimAsset } from '../utils/useFeeClaimAssets';
+import { useFeeClaimApproval } from '../utils/useFeeClaimApproval';
+import type { Address } from '@sodax/types';
+import { toast } from 'sonner';
 
 type PartnerFeeTokenProps = {
-  balance: PartnerFeeBalance;
-  claimingSymbol: string | null;
-  canClaim: boolean;
-  onClaimToUsdc: (balance: PartnerFeeBalance) => void;
+  asset: FeeClaimAsset;
+  onClaim: (asset: FeeClaimAsset) => void;
+  hasPreferences: boolean;
 };
 
-export function PartnerFeeToken({ balance, claimingSymbol, onClaimToUsdc, canClaim }: PartnerFeeTokenProps) {
-  const rawAmount = Number(balance.balance);
-  const displayAmount = rawAmount.toFixed(4);
+export function PartnerFeeToken({ asset, onClaim, hasPreferences }: PartnerFeeTokenProps) {
+  // hook lives here (stable: 1 component = 1 hook)
+  const { isApproved, isLoading, approve } = useFeeClaimApproval(asset.currency.address as Address);
 
-  const isThisClaiming = claimingSymbol === balance.currency.symbol;
-  const isUsdc = balance.currency.symbol === 'USDC';
+  const isUSDC = asset.currency.symbol === 'USDC';
+
+  const handleAction = () => {
+    if (isApproved) {
+      onClaim(asset);
+    } else {
+      // Pass the onClaim callback to the mutation to run after success
+      approve.mutate(undefined, {
+        onSuccess: () => {
+          toast.success(`${asset.currency.symbol} approved!`);
+          onClaim(asset);
+        },
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 rounded-xl px-4 py-4 sm:py-3 sm:px-2 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center">
-      {/* Left section: logo + info */}
       <div className="flex items-center gap-4">
-        {/* Logo */}
         <div className="w-10 flex justify-center">
-          <CurrencyLogo currency={balance.currency} />
+          <CurrencyLogo currency={asset.currency} />
         </div>
-        {/* Asset */}
-        <div className="w-15 text-sm text-espresso">{balance.currency.symbol}</div>
-        {/* Balance */}
-        <div className="w-20 text-sm text-clay-light break-all sm:break-normal"> {displayAmount}</div>
+
+        <div className="w-15 text-sm text-espresso">{asset.currency.symbol}</div>
+
+        <div className="w-20 text-sm text-clay-light">{asset.displayBalance}</div>
       </div>
-      <div className="w-full sm:w-35 flex justify-end">
-        {isUsdc ? (
-          <div className="mix-blend-multiply px-4 h-11 flex items-center justify-center rounded-full bg-cream text-clay text-sm w-full">
-            USDC balance
-          </div>
-        ) : (
-          <Button
-            variant="cherry"
-            className="mix-blend-multiply w-full h-11"
-            onClick={() => onClaimToUsdc(balance)}
-            disabled={!canClaim || isThisClaiming}
-          >
-            {isThisClaiming ? 'Processing...' : 'Claim to USDC'}
-          </Button>
-        )}
+
+      <div className="w-full flex justify-end">
+        <Button
+          variant="cherry"
+          // USDC on its own might not need "hasPreferences" if we were doing a direct withdraw,
+          // but the current SDK 'swap' method creates an intent based on those prefs.
+          disabled={(!isUSDC && !hasPreferences) || !asset.canClaim || isLoading || approve.isPending}
+          onClick={handleAction}
+        >
+          {(() => {
+            if (approve.isPending) return 'Approving...';
+            if (!isUSDC && !hasPreferences) return 'Set Preferences First';
+            if (!asset.canClaim) return 'Below Minimum';
+            return isApproved ? (isUSDC ? 'Claim USDC' : 'Claim & Swap') : 'Approve';
+          })()}
+        </Button>
       </div>
     </div>
   );

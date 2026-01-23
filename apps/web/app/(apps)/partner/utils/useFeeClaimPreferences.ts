@@ -2,7 +2,7 @@ import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import { SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { SetSwapPreferenceParams } from '../../../../../../packages/sdk/dist';
+import type { SetSwapPreferenceParams, SonicSpokeProvider } from '../../../../../../packages/sdk/dist';
 
 export function useFeeClaimPreferences(address?: Address) {
   const { sodax } = useSodaxContext();
@@ -28,9 +28,7 @@ export function useFeeClaimPreferences(address?: Address) {
       if (!sodax || !spokeProvider) throw new Error('SDK or Provider not ready');
       const result = await sodax.partners.feeClaim.setSwapPreference({
         params,
-        //TODO
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        spokeProvider: spokeProvider as any,
+        spokeProvider: spokeProvider as SonicSpokeProvider,
       });
       if (!result.ok) throw result.error;
       return result.value;

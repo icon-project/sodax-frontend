@@ -2,6 +2,7 @@ import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useMutation } from '@tanstack/react-query';
+import type { Address, SonicSpokeProvider } from '@sodax/sdk';
 
 export function useFeeClaimExecute() {
   const { sodax } = useSodaxContext();
@@ -15,14 +16,10 @@ export function useFeeClaimExecute() {
       // Uses the 'swap' method Robi added for executing the claim
       const result = await sodax.partners.feeClaim.swap({
         params: {
-          //TODO
-          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-          fromToken: fromToken as any,
+          fromToken: fromToken as Address,
           amount,
         },
-        //TODO
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        spokeProvider: spokeProvider as any,
+        spokeProvider: spokeProvider as SonicSpokeProvider,
       });
 
       if (!result.ok) throw result.error;

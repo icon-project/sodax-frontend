@@ -1,149 +1,77 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
-// import { useXAccount } from '@sodax/wallet-sdk-react';
-import { SONIC_MAINNET_CHAIN_ID, spokeChainConfig, type ChainId, type Address } from '@sodax/types';
-import { parseUnits } from 'viem';
-import { useFeeClaimPreferences } from '../utils/useFeeClaimPreferences';
-import { useFeeClaimApproval } from '../utils/useFeeClaimApproval';
-import { useFeeClaimExecute } from '../utils/useFeeClaimExecute';
-import { ChainSelectDropdown } from '@/components/shared/chain-select-dropdown';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import type { FeeClaimAsset } from '../utils/useFeeClaimAssets';
+import { useFeeClaimExecute } from '../utils/useFeeClaimExecute';
+import { useFeeClaimPreferences } from '../utils/useFeeClaimPreferences';
 
 interface ClaimModalProps {
   isOpen: boolean;
   onClose: () => void;
-  asset: {
-    symbol: string;
-    decimals: number;
-    address: string; // Hub asset address (on Sonic)
-  };
-  maxAmountToClaim: string;
-  onSuccess?: (amount: string) => void;
+  asset: FeeClaimAsset;
+  onSuccess?: () => void;
 }
 
-export function ClaimModal({ isOpen, onClose, asset, maxAmountToClaim, onSuccess }: ClaimModalProps) {
-  const [amount, setAmount] = useState('');
-  //   const { address } = useXAccount(SONIC_MAINNET_CHAIN_ID);
-
-  // --- RESTORED UI STATE ---
-  const sonicConfig = spokeChainConfig[SONIC_MAINNET_CHAIN_ID];
-  const [destinationChain, setDestinationChain] = useState<ChainId>(sonicConfig.chain.id);
-
-  const allowedChains = useMemo<ChainId[]>(() => {
-    return Object.values(spokeChainConfig)
-      .filter(config => Object.values(config.supportedTokens).some(t => t.symbol === 'USDC'))
-      .map(config => config.chain.id);
-  }, []);
-
-  // --- PRODUCTION HOOKS INTEGRATION ---
-  const { data: prefs } = useFeeClaimPreferences();
-  const { isApproved, approve, isLoading: isApprovalLoading } = useFeeClaimApproval(asset.address as Address);
+export function ClaimModal({ isOpen, onClose, asset, onSuccess }: ClaimModalProps) {
+  const { data: preferences } = useFeeClaimPreferences(); // Fetch current state
   const executeClaim = useFeeClaimExecute();
 
-  const handleClaim = async () => {
-    if (!amount) return;
-    const amountScaled = BigInt(parseUnits(amount, asset.decimals));
-
+  const handleClaim = () => {
     executeClaim.mutate(
-      { fromToken: asset.address, amount: amountScaled },
       {
-        onSuccess: result => {
-          toast.success('Claim successful', { description: `Intent: ${result.intent_hash}` });
-          onSuccess?.(amount);
+        fromToken: asset.sdkAsset.address,
+        amount: asset.balance,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Claim and Swap intent submitted!');
+          onSuccess?.(); // This triggers the refetch in PartnerPage
           onClose();
         },
-        onError: err => toast.error('Claim failed', { description: err.message }),
+        onError: err => {
+          toast.error('Claim failed', { description: err.message });
+        },
       },
     );
   };
 
-  useEffect(() => {
-    if (isOpen) {
-      setAmount(maxAmountToClaim);
-    }
-  }, [isOpen, maxAmountToClaim]);
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md border-cherry-grey/20">
-        <DialogHeader className="items-center">
-          <DialogTitle className="text-center text-cherry-dark">Claim USDC</DialogTitle>
-          <DialogDescription className="text-center">
-            Choose how much of your earned fees to claim and where to receive them.
-          </DialogDescription>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirm Fee Claim</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Destination chain */}
-          <div className="space-y-2">
-            <Label className="text-clay">Receive on chain</Label>
-            <ChainSelectDropdown
-              selectedChainId={destinationChain}
-              selectChainId={setDestinationChain}
-              allowedChains={allowedChains}
-            />
-            {prefs && (
-              <p className="text-[10px] text-clay-medium italic">
-                Current preference: {prefs.dstAddress.slice(0, 6)}... on chain {prefs.dstChain}
+        <div className="space-y-4 py-4">
+          <div className="flex justify-between items-center bg-cream-white p-3 rounded-lg border border-cherry-grey">
+            <div>
+              <p className="text-xs text-clay-light">You Claim</p>
+              <p className="font-bold">
+                {asset.displayBalance} {asset.currency.symbol}
               </p>
-            )}
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-clay-light">You Receive (Est.)</p>
+              <p className="font-bold text-cherry">USDC</p>
+            </div>
           </div>
 
-          {/* Amount Section */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label className="text-clay">Amount</Label>
-              <button
-                type="button"
-                className="text-xs text-cherry hover:underline"
-                onClick={() => setAmount(maxAmountToClaim)}
-              >
-                Available: {maxAmountToClaim} {asset.symbol}
-              </button>
-            </div>
-            <Input
-              type="number"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-            />
+          {/* Show the destination chain from preferences */}
+          <div className="text-sm border-l-2 border-cherry pl-3">
+            <p className="text-clay-medium font-medium">Destination Details:</p>
+            <p className="text-clay">
+              Network: <strong>{preferences?.dstChain}</strong>
+            </p>
+            <p className="text-clay text-xs font-mono">Address: {preferences?.dstAddress}</p>
           </div>
         </div>
 
-        <DialogFooter className="mt-4">
-          {/* DYNAMIC BUTTON LOGIC: Approval vs Claim */}
-          {!isApproved ? (
-            <Button
-              className="w-full"
-              variant="cherry"
-              onClick={() => approve.mutate()}
-              disabled={isApprovalLoading || !amount}
-            >
-              {isApprovalLoading ? 'Checking Allowance...' : `Approve ${asset.symbol}`}
-            </Button>
-          ) : (
-            <Button
-              className="w-full"
-              variant="cherry"
-              onClick={handleClaim}
-              disabled={executeClaim.isPending || !amount}
-            >
-              {executeClaim.isPending ? 'Processing...' : 'Confirm claim'}
-            </Button>
-          )}
+        <DialogFooter>
+          <Button className="w-full" onClick={handleClaim} disabled={executeClaim.isPending}>
+            {executeClaim.isPending ? 'Processing Intent (Waiting for Solver)...' : 'Execute Swap & Claim'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -3,70 +3,47 @@
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
-import { useXAccount } from '@sodax/wallet-sdk-react';
 import { type Address, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import { MIN_PARTNER_CLAIM_AMOUNT } from '@/constants/partner-claim';
-import { type PartnerFeeBalance, PartnerFeeBalancesCard } from './components/partner-fee-balance';
 import { ClaimModal } from './components/claim-modal';
-import { formatUnits } from 'viem';
-import { useFeeClaimBalances } from './utils/useFeeClaimBalances';
-import { useFeeClaimPreferences } from './utils/useFeeClaimPreferences';
 import { PartnerPreferencesCard } from './components/partner-preference-card';
+import { useXAccount } from '@sodax/wallet-sdk-react';
+import { useFeeClaimAssets, type FeeClaimAsset } from './utils/useFeeClaimAssets';
+import { useFeeClaimPreferences } from './utils/useFeeClaimPreferences';
+import { PartnerFeeBalances } from './components/partner-fee-balances';
+import { BackToTop } from '@/components/shared/back-to-top';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [isClaimModalOpen, setClaimModalOpen] = useState(false);
-  const [selectedBalance, setSelectedBalance] = useState<PartnerFeeBalance | null>(null);
-  const [claimingSymbol, setClaimingSymbol] = useState<string | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<FeeClaimAsset | null>(null);
 
   const { address: connectedAddress } = useXAccount(SONIC_MAINNET_CHAIN_ID);
 
-  // START: DEV TESTING LOGIC (Delete this block before PR)
+  // TODO START: DEV TESTING LOGIC (Delete this block before PR)
   // =========================================================
   const effectiveAddress = useMemo(() => {
     const devAddress = process.env.NEXT_PUBLIC_DEV_PARTNER_ADDRESS;
     const isDev = process.env.NODE_ENV === 'development';
-    console.log('Final Effective Address:', effectiveAddress);
     if (isDev && devAddress) {
       console.log('🛠️ Dev Mode: Using partner address from .env.local:', devAddress);
       return devAddress as Address;
     }
     return connectedAddress as Address;
   }, [connectedAddress]);
+  // console.log('Final Effective Address:', effectiveAddress);
+
   // =========================================================
   // END: DEV TESTING LOGIC
 
-  // 1. Fetch official partner balances
-  const { data: rawBalancesMap, isLoading, refetch } = useFeeClaimBalances(effectiveAddress as Address);
-
   // 2. Fetch current auto-swap preferences to show in UI
+  const { assets, isLoading, refetch, hasPreferences } = useFeeClaimAssets(effectiveAddress);
   const { data: preferences } = useFeeClaimPreferences(effectiveAddress as Address);
 
-  // Transform Map to Array for the UI card
-  const balances = useMemo(() => {
-    if (!rawBalancesMap) return [];
-    // TODO
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    return Array.from(rawBalancesMap.values()).map((asset: any) => ({
-      currency: {
-        symbol: asset.symbol,
-        decimals: asset.decimal,
-        address: asset.address,
-        name: asset.name,
-      },
-      balance: formatUnits(asset.balance, asset.decimal),
-    })) as PartnerFeeBalance[];
-  }, [rawBalancesMap]);
+  // console.log('PartnerPage balances:', assets);
+  // console.log('partner address:', effectiveAddress);
 
-  console.log('PartnerPage balances:', balances);
-  console.log('partner address:', effectiveAddress);
-  // TODO IMPORTANT change to balance > 10 as partner must have sufficient funds to swap and pay fees
-  // Requirement: check sufficient funds to swap and pay fees
-  const canClaim = (balance: PartnerFeeBalance) => Number(balance.balance) >= MIN_PARTNER_CLAIM_AMOUNT;
-
-  const handleClaimToUsdc = (balance: PartnerFeeBalance) => {
-    setSelectedBalance(balance);
-    setClaimingSymbol(balance.currency.symbol);
+  const handleClaim = (asset: FeeClaimAsset) => {
+    setSelectedAsset(asset);
     setClaimModalOpen(true);
   };
 
@@ -86,20 +63,19 @@ export default function PartnerPage() {
       <div className="flex flex-col gap-2 w-full">
         <motion.div variants={itemVariants} className="w-full">
           {process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEV_PARTNER_ADDRESS && (
-            <div className="bg-yellow-500/10 text-yellow-600 text-[10px] p-1 text-center rounded">
-              ⚠️ VIEWING DEV PARTNER DATA
+            <div className="bg-cherry text-negative text-[12px] p-1 text-center rounded font-bold">
+              VIEWING DEV PARTNER DATA!
             </div>
           )}
           {/* Title */}
           <div className="flex items-baseline gap-1 flex-wrap">
-            <span className="mix-blend-multiply text-yellow-dark font-bold font-['InterRegular'] !text-(size:--app-title)">
+            <span className="mix-blend-multiply text-yellow-dark font-bold font-['InterRegular'] text-(size:--app-title)!">
               Partner
             </span>
-            <span className="mix-blend-multiply text-yellow-dark font-normal font-['Shrikhand'] !text-(size:--app-title)">
+            <span className="mix-blend-multiply text-yellow-dark font-normal font-['Shrikhand'] text-(size:--app-title)!">
               dashboard{' '}
             </span>
           </div>
-
           {/* Subtitle row */}
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-sm text-clay-light w-full">
             {effectiveAddress ? (
@@ -108,8 +84,8 @@ export default function PartnerPage() {
                   <span className="leading-snug">Monitor and manage fees earned through your SODAX partnership.</span>
                   {/* Show current preferences as suggested by Robi */}
                   {preferences && (
-                    <span className="text-xs text-cherry-soda mt-1">
-                      Current Auto-Swap: {preferences.dstAddress.slice(0, 6)}... on {preferences.dstChain}
+                    <span className="text-xs text-clay mt-1">
+                      Auto-swap destination set: {preferences.dstAddress.slice(0, 6)}... on {preferences.dstChain}
                     </span>
                   )}
                 </div>
@@ -127,41 +103,46 @@ export default function PartnerPage() {
         </motion.div>
       </div>
       <div className="w-full h-px bg-clay-light/30 my-2" />
-      {/* 2. Preferences Card (The "New" Global Setting) */}
+      <div className="w-1/2 rounded-lg   bg-cream-white   border border-cherry-grey   px-4 py-3   text-sm   text-clay ">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-clay-dark font-bold">How fee claiming works</span>
+        </div>
+        <div className="h-px bg-cherry-grey/60 my-2" />
+        <ul className="list-disc pl-5 space-y-1 text-clay-light">
+          <li>Fees are automatically swapped to USDC</li>
+          <li>Destination is configured once</li>
+          <li>First claim requires a one-time approval</li>
+          <li>
+            Minimum claim amount is <span className="text-clay font-medium">3 USDC</span>
+          </li>
+        </ul>
+      </div>
+      {/* 2. Preferences Card*/}
       {effectiveAddress && <PartnerPreferencesCard address={effectiveAddress as Address} />}
+      <div className="w-1/2 h-px bg-clay-light/30 my-2" />
       {/* Main content */}
       <motion.div variants={itemVariants}>
-        {balances && effectiveAddress && (
-          <PartnerFeeBalancesCard
-            balances={balances}
+        {effectiveAddress && (
+          <PartnerFeeBalances
+            assets={assets}
             isLoading={isLoading}
-            claimingSymbol={claimingSymbol}
-            canClaim={canClaim}
-            onClaimToUsdc={handleClaimToUsdc}
+            onClaim={handleClaim}
+            hasPreferences={hasPreferences}
           />
         )}
       </motion.div>
-      {selectedBalance && (
+      {selectedAsset && (
         <ClaimModal
           isOpen={isClaimModalOpen}
-          onClose={() => {
-            setClaimModalOpen(false);
-            setClaimingSymbol(null);
-            setSelectedBalance(null);
-          }}
-          asset={{
-            symbol: selectedBalance.currency.symbol,
-            decimals: selectedBalance.currency.decimals,
-            address: selectedBalance.currency.address,
-          }}
-          maxAmountToClaim={selectedBalance.balance}
+          onClose={() => setClaimModalOpen(false)}
+          asset={selectedAsset}
           onSuccess={() => {
-            setClaimingSymbol(null);
-            setSelectedBalance(null);
-            refetch(); // Refetch using the new hook's method
+            setSelectedAsset(null);
+            refetch();
           }}
         />
       )}
+      <BackToTop />
     </motion.div>
   );
 }

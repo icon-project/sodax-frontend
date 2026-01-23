@@ -18,6 +18,7 @@ import { useRef, useState, useLayoutEffect, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { Toaster } from '@/components/ui/sonner';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const { isSwitchingPage } = useAppStore(state => state);
@@ -119,6 +120,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </motion.div>
               <WalletModal />
               <TermsConfirmationModal />
+              <Toaster />
             </div>
           </ModalStoreProvider>
         </SaveStoreProvider>

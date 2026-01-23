@@ -6,16 +6,20 @@ export function ChainSelectDropdown({
   selectedChainId,
   selectChainId,
   allowedChains,
+  disabled = false,
 }: {
   selectedChainId: ChainId;
   selectChainId: (id: ChainId) => void;
   allowedChains: ChainId[];
+  disabled?: boolean;
 }) {
-  const chains = availableChains.filter(c => allowedChains.includes(c.id as ChainId));
+  const chains = availableChains
+    .filter(c => allowedChains.includes(c.id as ChainId))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <Select value={selectedChainId} onValueChange={selectChainId}>
-      <SelectTrigger className="w-full">
+    <Select value={selectedChainId} onValueChange={selectChainId} disabled={disabled}>
+      <SelectTrigger className="w-full" disabled={disabled}>
         <SelectValue placeholder="Select chain" />
       </SelectTrigger>
       <SelectContent>
