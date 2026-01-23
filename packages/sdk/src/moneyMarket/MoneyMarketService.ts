@@ -45,6 +45,7 @@ import {
   type HttpUrl,
   getMoneyMarketConfig,
   type GetMoneyMarketTokensApiResponse,
+  STELLAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { wrappedSonicAbi } from '../shared/abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
@@ -348,7 +349,28 @@ export class MoneyMarketService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (isStellarSpokeProviderType(spokeProvider) && (params.action === 'supply' || params.action === 'repay')) {
+      if (params.toChainId === STELLAR_MAINNET_CHAIN_ID && params.toAddress) {
+        // if target chain is stellar, check if the target wallet has sufficient trustline
+        const targetHasTrustline = await StellarSpokeService.walletHasSufficientTrustline(
+          params.token,
+          params.amount,
+          params.toAddress,
+          this.configService.sharedConfig[STELLAR_MAINNET_CHAIN_ID].horizonRpcUrl,
+        );
+
+        // if source chain is stellar, check if the source wallet has sufficient trustline as well
+        let srcHasTrustline = true;
+        if (isStellarSpokeProviderType(spokeProvider)) {
+          srcHasTrustline = await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider);
+        }
+
+        return {
+          ok: true,
+          value: targetHasTrustline && srcHasTrustline,
+        };
+      }
+
+      if (isStellarSpokeProviderType(spokeProvider)) {
         return {
           ok: true,
           value: await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider),
@@ -389,6 +411,9 @@ export class MoneyMarketService {
    * Approve amount spending if isAllowanceValid returns false.
    * For evm spoke chains, the spender is the asset manager contract while
    * for sonic spoke (hub) chain, the spender is the user router contract.
+   * NOTE: Stellar requires trustline when being either sender or receiver. Thus
+   * you should make sure that both src and destination wallets have sufficient trustlines.
+   * Make sure to invoke this method using wallet address which is about to receive the tokens!
    * @param token - ERC20 token address
    * @param amount - Amount to approve
    * @param spender - Spender address
@@ -436,12 +461,8 @@ export class MoneyMarketService {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
       if (isStellarSpokeProviderType(spokeProvider)) {
-        invariant(
-          params.action === 'supply' || params.action === 'repay',
-          'Invalid action (only supply and repay are supported on stellar)',
-        );
-
         const result = await StellarSpokeService.requestTrustline(params.token, params.amount, spokeProvider, raw);
+
         return {
           ok: true,
           value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,

@@ -2596,3 +2596,10 @@ export const defaultSodaxConfig = {
 } satisfies GetAllConfigApiResponse;
 
 export const supportedSpokeChains: SpokeChainId[] = Object.keys(spokeChainConfig) as SpokeChainId[];
+
+export const defaultSharedConfig = {
+  [STELLAR_MAINNET_CHAIN_ID]: {
+    horizonRpcUrl: 'https://horizon.stellar.org',
+    sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
+  },
+} as const;
