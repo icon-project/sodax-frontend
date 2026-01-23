@@ -32,9 +32,9 @@ async function fetchSupplyData(endpoint: string): Promise<number> {
   }
 
   const text = await response.text();
-  const value = parseFloat(text);
+  const value = Number.parseFloat(text);
 
-  if (isNaN(value)) {
+  if (Number.isNaN(value)) {
     throw new Error(`Invalid data received from ${endpoint}`);
   }
 
@@ -118,6 +118,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
   return (
     <div className="border-b border-cherry-grey/20 last:border-0">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="w-full py-3 px-4 flex items-start justify-between gap-4 text-left hover:bg-cream/20 transition-colors"
       >
@@ -159,6 +160,7 @@ function CopyButton({ text }: { text: string }) {
 
   return (
     <button
+      type="button"
       onClick={handleCopy}
       className="p-1.5 hover:bg-clay/10 rounded transition-colors"
       title="Copy address"
@@ -211,8 +213,8 @@ export default function SodaTokenPage() {
       answer: 'Yes, but a penalty is applied and redistributed to other stakers who remain committed.',
     },
     {
-      question: 'What chains are supported?',
-      answer: '12+ networks including Sonic, Ethereum, Arbitrum, Avalanche, Solana, Sui, Stellar, and more.',
+      question: 'What networks are supported?',
+      answer: '16+ networks including Sonic, Ethereum, Arbitrum, Avalanche, Solana, Sui, Stellar, and more.',
     },
   ];
 
@@ -465,7 +467,7 @@ export default function SodaTokenPage() {
               Network Deployments
             </h2>
             <p className="text-clay text-sm font-['InterRegular'] leading-relaxed mb-3">
-              SODA is deployed across multiple networks to enable seamless cross-chain coordination:
+              SODA is natively deployed across multiple networks:
             </p>
             <div className="space-y-2">
               {networks.map((network, index) => (
