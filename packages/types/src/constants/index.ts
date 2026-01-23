@@ -1324,7 +1324,7 @@ export const spokeChainConfig = {
   [NEAR_MAINNET_CHAIN_ID]: {
     rpcUrl: 'https://1rpc.io/near',
     chain: baseChainInfo[NEAR_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'NEAR'>,
-    nativeToken: '0x',
+    nativeToken: 'NEAR',
     addresses: {
       assetManager: 'asset-manager.sodax.near',
       connection: 'connection.sodax.near',
@@ -1337,7 +1337,7 @@ export const spokeChainConfig = {
         symbol: 'NEAR',
         name: 'NEAR',
         decimals: 24,
-        address: '0x',
+        address: 'NEAR',
         xChainId: NEAR_MAINNET_CHAIN_ID,
       },
       bnUSD: {
@@ -2226,13 +2226,6 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'USDT',
       name: 'Tether USD',
       vault: SodaTokens.sodaUSDT.address,
-    },
-    [spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.wNEAR.address]: {
-      asset: '0x2ec38a4ddfb76e1aae04f392b55a28f0d659bcd4',
-      decimal: 24,
-      symbol: 'wNEAR',
-      name: 'Wrapped NEAR fungible token',
-      vault: SodaTokens.sodaNEAR.address,
     },
   } as const,
   [ETHEREUM_MAINNET_CHAIN_ID]: {
