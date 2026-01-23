@@ -1,5 +1,5 @@
 import type React from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { TermsContent } from '@/components/shared/wallet-modal/terms-content';
@@ -13,7 +13,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ open, onOpenChange }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="h-[80vh] w-[90%] lg:max-w-[952px] shadow-none">
-        <div className="flex items-start mb-6 mt-4">
+        <DialogTitle className="flex items-start mb-6 mt-4">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
@@ -21,7 +21,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ open, onOpenChange }) => {
           ></button>
           <Image src="/symbol.png" alt="SODAX Symbol" width={24} height={24} className="mr-2" />
           <div className="text-center text-black text-lg font-['InterBold'] leading-snug">Terms and conditions</div>
-        </div>
+        </DialogTitle>
 
         <div className="flex shadow-none">
           <ScrollArea className="bg-white text-black max-h-[60vh]">

@@ -37,6 +37,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${SITE_URL}/community/soda-token`,
+      lastModified: new Date('2026-01-23'),
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
       url: `${SITE_URL}/discord`,
       lastModified: LAST_MODIFIED,
       changeFrequency: 'monthly',

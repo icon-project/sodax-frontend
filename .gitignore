@@ -13,3 +13,8 @@ public/dist
 .idea
 **/build/**
 
+# Agent skills (local to VSCode)
+.agents/
+.github/skills/
+
+
