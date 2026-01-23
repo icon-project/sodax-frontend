@@ -1,22 +1,8 @@
-'use client';
-
 import { Label } from '@/components/ui/label';
 import { FooterLink } from '@/components/landing/footer-link';
 import Image from 'next/image';
-import { useState } from 'react';
-import TermsModal from '@/components/landing/terms-modal';
 
-interface FooterProps {
-  onTermsClick?: () => void;
-}
-
-const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
-  const [isTermsModalOpen, setIsTermsModalOpen] = useState<boolean>(false);
-
-  const handleTermsClick = () => {
-    setIsTermsModalOpen(true);
-    onTermsClick?.();
-  };
+export function PartnerSimpleFooter() {
   return (
     <div className="h-[560px] flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center mt-4 bg-almost-white footer pt-[80px]">
       <div className="p-4 pl-0 min-w-[200px] ml-[32px]">
@@ -74,25 +60,11 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <FooterLink
             href="/SODAX.logos.and.token.zip"
             showArrowDown={true}
-            onClick={() => {
-              const link = document.createElement('a');
-              link.href = '/SODAX.logos.and.token.zip';
-              link.download = 'SODAX.logos.and.token.zip';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }}
           >
             Brand Kit
           </FooterLink>
-          <FooterLink href="#" onClick={handleTermsClick}>
-            Terms
-          </FooterLink>
         </div>
       </div>
-      <TermsModal open={isTermsModalOpen} onOpenChange={setIsTermsModalOpen} />
     </div>
   );
-};
-
-export default Footer;
+}
