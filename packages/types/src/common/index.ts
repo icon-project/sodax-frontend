@@ -267,3 +267,9 @@ export type TokenInfo = {
   maxDeposit: bigint;
   isSupported: boolean;
 };
+
+export type BridgeLimit = {
+  amount: bigint;
+  decimals: number;
+  type : 'DEPOSIT_LIMIT' | 'WITHDRAWAL_LIMIT';
+}
