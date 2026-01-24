@@ -17,6 +17,7 @@ import { cn, formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import type { SpokeProvider } from '@sodax/sdk';
 import { parseUnits } from 'viem';
+import { getChainName } from '@/constants/chains';
 
 interface WithdrawDialogFooterProps {
   currentStep: number;
@@ -204,7 +205,7 @@ export default function WithdrawDialogFooter({
                   <CheckIcon className="w-4 h-4 ml-1" />
                 </>
               ) : (
-                `Withdraw to ${selectedToken?.symbol}`
+                `Withdraw to ${getChainName(selectedToken?.xChainId as ChainId)}`
               )}
             </Button>
           )}

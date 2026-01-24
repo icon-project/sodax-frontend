@@ -120,3 +120,22 @@ export function getSpokeTokenAddressByVault(chainId: SpokeChainId, vaultAddress:
   }
   return undefined;
 }
+
+export function getReadableTxError(error: unknown): string {
+  if (!error || typeof error !== 'object') {
+    return 'Something went wrong. Please try again.';
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  const message = (error as any)?.shortMessage || (error as any)?.message || '';
+
+  if (message.includes('gas price below minimum')) {
+    return 'Network gas fee is too low. Please try again in a moment.';
+  }
+
+  if (message.includes('User rejected')) {
+    return 'Transaction was rejected in your wallet.';
+  }
+
+  return 'Transaction failed. Please try again.';
+}
