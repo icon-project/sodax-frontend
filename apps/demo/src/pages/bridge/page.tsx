@@ -92,8 +92,7 @@ export default function BridgePage() {
   const [toToken, setToToken] = useState<XToken | undefined>(bridgeableTokens?.[0] ?? undefined);
   console.log('toToken', toToken);
 
-  const { data: spokeAssetManagerTokenBalance, isLoading: isLoadingSpokeAssetManagerTokenBalance } =
-    useGetBridgeableAmount(fromToken, toToken);
+  const { data: bridgeableAmount, isLoading: isLoadingBridgeableAmount } = useGetBridgeableAmount(fromToken, toToken);
 
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFromAmount(e.target.value);
@@ -332,12 +331,14 @@ export default function BridgePage() {
           {isBridgeable ? (
             <div className="flex items-center gap-2">
               Maximum Bridgeable Amount:{' '}
-              {isLoadingSpokeAssetManagerTokenBalance ? (
+              {isLoadingBridgeableAmount ? (
                 <Skeleton className="w-16 h-6 inline-block" />
               ) : (
-                formatUnits(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)
+                Number.parseFloat(
+                  formatUnits(bridgeableAmount?.amount ?? 0n, bridgeableAmount?.decimals ?? 0),
+                ).toLocaleString('en-US')
               )}{' '}
-              {toToken?.symbol}
+              {toToken?.symbol} ({bridgeableAmount?.type === 'DEPOSIT_LIMIT' ? 'deposit' : 'withdraw'} limit)
             </div>
           ) : (
             <div className="flex items-center gap-2">
