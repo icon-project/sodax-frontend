@@ -92,12 +92,16 @@ function DepositTokenSelectItem({
 type DepositTokenSelectorProps = {
   displayItems: DisplayItem[];
   onChange: (token: XToken | null) => void;
+  selectedToken: XToken | null;
 };
 
-export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSelectorProps): React.JSX.Element {
+export function DepositTokenSelector({
+  displayItems,
+  onChange,
+  selectedToken,
+}: DepositTokenSelectorProps): React.JSX.Element {
   const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
   const [hoveredAsset, setHoveredAsset] = useState<number | null>(null);
-  const [selectedToken, setSelectedToken] = useState<XToken | null>(null);
   const [isAnyNonActiveHovered, setIsAnyNonActiveHovered] = useState<boolean>(false);
   const [outsideClick, setOutsideClick] = useState<boolean>(false);
 
@@ -131,17 +135,10 @@ export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSel
   };
 
   const handleTokenSelect = (token: XToken): void => {
-    setSelectedToken(token);
     onChange(token);
   };
 
   const handleTokenDeselect = (): void => {
-    // If there is only on item, don't deselect
-    if (displayItems.length === 1) {
-      return;
-    }
-
-    setSelectedToken(null);
     setSelectedAsset(null);
     onChange(null);
     setOutsideClick(true);
