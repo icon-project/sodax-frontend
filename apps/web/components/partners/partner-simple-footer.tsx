@@ -52,7 +52,7 @@ export function PartnerSimpleFooter() {
             Documentation
           </FooterLink>
           <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
-            Github
+            GitHub
           </FooterLink>
           <FooterLink href="https://sodaxscan.com/" showArrow>
             SODAX Scan
