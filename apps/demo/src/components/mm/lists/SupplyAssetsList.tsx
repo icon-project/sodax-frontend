@@ -40,24 +40,15 @@ export function SupplyAssetsList(): ReactElement {
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
-  const { data: balances, refetch: refetchWalletBalances } = useXBalances({
+  const { data: balances } = useXBalances({
     xChainId: selectedChainId,
     xTokens: tokens,
     address,
   });
 
-  const {
-    data: userReservesData,
-    isLoading: isUserReservesLoading,
-    refetch: refetchReserves,
-  } = useUserReservesData({ spokeProvider, address });
-  const userReserves = userReservesData?.[0] || [];
-  const {
-    data: formattedReserves,
-    isLoading: isFormattedReservesLoading,
-    refetch: refetchFormattedReserves,
-  } = useReservesUsdFormat();
-  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({ spokeProvider, address });
+  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
+  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
+  const { data: userSummary } = useUserFormattedSummary({ spokeProvider, address });
   const healthFactorRaw = userSummary?.healthFactor ? Number(userSummary.healthFactor) : undefined;
 
   const healthFactorDisplay =
@@ -83,25 +74,12 @@ export function SupplyAssetsList(): ReactElement {
   }, [formattedReserves]);
 
   // Fetch all aToken balances in a single multicall
-  const {
-    data: aTokenBalancesMap,
-    isLoading: isATokensLoading,
-    refetch: refetchBalances,
-  } = useATokensBalances({
+  const { data: aTokenBalancesMap, isLoading: isATokensLoading } = useATokensBalances({
     aTokens: aTokenAddresses,
     spokeProvider,
     userAddress: address,
   });
 
-  const handleRefresh = async () => {
-    await Promise.all([
-      refetchFormattedReserves(),
-      refetchBalances(),
-      refetchReserves(),
-      refetchSummary(),
-      refetchWalletBalances(),
-    ]);
-  };
   return (
     <Card>
       <CardHeader>
@@ -202,9 +180,8 @@ export function SupplyAssetsList(): ReactElement {
                           : '-'
                       }
                       formattedReserves={formattedReserves}
-                      userReserves={userReserves}
+                      userReserves={userReserves[0]}
                       aTokenBalancesMap={aTokenBalancesMap}
-                      onRefreshReserves={handleRefresh}
                     />
                   ))
                 )}
