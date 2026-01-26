@@ -43,6 +43,7 @@
     "@stellar/stellar-sdk": "catalog:",
     "@tailwindcss/postcss": "^4.0.8",
     "@tanstack/react-query": "catalog:",
+    "@web3icons/react": "^4.1.14",
     "bech32": "^2.0.0",
     "bignumber.js": "^9.1.2",
     "bs58": "^6.0.0",
