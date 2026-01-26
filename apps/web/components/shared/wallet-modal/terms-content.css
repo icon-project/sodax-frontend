@@ -1,10 +1,10 @@
-ol {
+.terms-content-wrapper ol {
   margin: 0;
   padding: 0;
 }
 
-table td,
-table th {
+.terms-content-wrapper table td,
+.terms-content-wrapper table th {
   padding: 0;
 }
 
@@ -106,20 +106,20 @@ table th {
   text-align: left;
 }
 
-li {
+.terms-content-wrapper li {
   /* color: #000000; */
   font-size: 11pt;
   font-family: "Arial";
 }
 
-p {
+.terms-content-wrapper p {
   margin: 0;
   /* color: #000000; */
   font-size: 11pt;
   font-family: "Arial";
 }
 
-h1 {
+.terms-content-wrapper h1 {
   padding-top: 20pt;
   /* color: #000000; */
   font-size: 20pt;
@@ -132,7 +132,7 @@ h1 {
   text-align: left;
 }
 
-h2 {
+.terms-content-wrapper h2 {
   padding-top: 18pt;
   /* color: #000000; */
   font-size: 16pt;
@@ -145,7 +145,7 @@ h2 {
   text-align: left;
 }
 
-h3 {
+.terms-content-wrapper h3 {
   padding-top: 16pt;
   color: #434343;
   font-size: 14pt;
@@ -158,7 +158,7 @@ h3 {
   text-align: left;
 }
 
-h4 {
+.terms-content-wrapper h4 {
   padding-top: 14pt;
   color: #666666;
   font-size: 12pt;
@@ -171,7 +171,7 @@ h4 {
   text-align: left;
 }
 
-h5 {
+.terms-content-wrapper h5 {
   padding-top: 12pt;
   color: #666666;
   font-size: 11pt;
@@ -184,7 +184,7 @@ h5 {
   text-align: left;
 }
 
-h6 {
+.terms-content-wrapper h6 {
   padding-top: 12pt;
   color: #666666;
   font-size: 11pt;

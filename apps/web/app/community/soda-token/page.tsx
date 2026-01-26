@@ -177,12 +177,12 @@ export default function SodaTokenPage() {
   const hasError = circulatingQuery.isError || totalQuery.isError;
 
   const networks = [
-    { name: 'Sonic', address: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963', role: 'Main Token' },
-    { name: 'Ethereum', address: '0x12affee59ceb8be6788a25f9b36149a717795a51', role: 'Spoke' },
-    { name: 'Avalanche', address: '0xf51d7082375cdca8c19c74e1a0c77da482afda4e', role: 'Spoke' },
-    { name: 'Base', address: '0x17ff8ad5ebe6ca8b15751067cd0c89f0e580cd17', role: 'Spoke' },
-    { name: 'Optimism', address: '0x0ed0d274dc77ef460dc96b9fbaff3edb074e0471', role: 'Spoke' },
-    { name: 'Arbitrum', address: '0x93a367e5b37a1b9e8d04ef25a6af40d181a3dfff', role: 'Spoke' },
+    { name: 'Sonic', address: '0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963', role: 'Native Hub Token' },
+    { name: 'Ethereum', address: '0x12affee59ceb8be6788a25f9b36149a717795a51', role: 'Native Spoke Token' },
+    { name: 'Avalanche', address: '0xf51d7082375cdca8c19c74e1a0c77da482afda4e', role: 'Native Spoke Token' },
+    { name: 'Base', address: '0x17ff8ad5ebe6ca8b15751067cd0c89f0e580cd17', role: 'Native Spoke Token' },
+    { name: 'Optimism', address: '0x0ed0d274dc77ef460dc96b9fbaff3edb074e0471', role: 'Native Spoke Token' },
+    { name: 'Arbitrum', address: '0x93a367e5b37a1b9e8d04ef25a6af40d181a3dfff', role: 'Native Spoke Token' },
   ];
 
   const faqs = [
