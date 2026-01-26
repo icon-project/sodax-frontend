@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Footer from '@/components/landing/footer';
+import { MarketingHeader } from '@/components/shared/marketing-header';
 
 // API fetcher with proper error handling
 async function fetchSupplyData(endpoint: string): Promise<number> {
@@ -114,7 +115,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full py-3 px-4 flex items-start justify-between gap-4 text-left hover:bg-cream/20 transition-colors"
+        className="w-full py-2.5 sm:py-3 px-3 sm:px-4 flex items-start justify-between gap-3 sm:gap-4 text-left hover:bg-cream/20 transition-colors"
       >
         <span className="text-espresso text-sm font-medium font-['InterRegular'] flex-1">
           {question}
@@ -133,7 +134,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
           transition={{ duration: 0.3 }}
           className="overflow-hidden"
         >
-          <div className="px-4 pb-3 text-clay text-sm font-['InterRegular'] leading-relaxed">
+          <div className="px-3 sm:px-4 pb-2.5 sm:pb-3 text-clay text-sm font-['InterRegular'] leading-relaxed">
             {answer}
           </div>
         </motion.div>
@@ -217,14 +218,8 @@ export default function SodaTokenPage() {
 
   return (
     <div className="min-h-screen bg-almost-white w-full">
-      {/* Placeholder Header */}
-      <header className="bg-white border-b border-cherry-grey/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link href="/" className="text-espresso font-bold text-xl hover:opacity-80 transition-opacity">
-            SODAX
-          </Link>
-        </div>
-      </header>
+      {/* Header */}
+      <MarketingHeader />
       
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
@@ -233,12 +228,12 @@ export default function SodaTokenPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mb-8 sm:mb-10"
+          className="mb-6 sm:mb-8 md:mb-10"
         >
-          <h1 className="text-3xl sm:text-4xl font-['InterRegular'] text-espresso mb-3">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-['InterRegular'] text-espresso">
             SODA Token
           </h1>
-          <p className="text-base sm:text-lg text-clay font-['InterRegular'] leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg text-clay font-['InterRegular'] leading-relaxed">
             Participation and coordination inside the SODAX execution system
           </p>
         </motion.div>
@@ -271,17 +266,17 @@ export default function SodaTokenPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className="bg-cream-white border border-cherry-grey/20 hover:border-clay/30 rounded-lg p-4 transition-colors"
+                className="bg-cream-white border border-cherry-grey/20 hover:border-clay/30 rounded-lg p-3 sm:p-4 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-clay text-xs font-medium font-['InterRegular'] uppercase tracking-wide">
+                  <div className="text-clay text-xs sm:text-xs font-medium font-['InterRegular'] uppercase tracking-wide">
                     Circulating Supply
-                  </h2>
+                  </div>
                   <div className="w-2 h-2 rounded-full bg-espresso animate-pulse" />
                 </div>
                 <AnimatedValue
                   value={formatNumber(circulatingQuery.data)}
-                  className="text-3xl font-bold font-['InterRegular'] text-espresso block mb-1"
+                  className="text-2xl sm:text-3xl font-bold font-['InterRegular'] text-espresso block mb-1"
                 />
                 <p className="text-clay text-sm font-['InterRegular']">
                   SODA in circulation
@@ -293,17 +288,17 @@ export default function SodaTokenPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4 }}
-                className="bg-cream-white border border-cherry-grey/20 hover:border-clay/30 rounded-lg p-4 transition-colors"
+                className="bg-cream-white border border-cherry-grey/20 hover:border-clay/30 rounded-lg p-3 sm:p-4 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-clay text-xs font-medium font-['InterRegular'] uppercase tracking-wide">
+                  <div className="text-clay text-xs sm:text-xs font-medium font-['InterRegular'] uppercase tracking-wide">
                     Total Supply
-                  </h2>
+                  </div>
                   <div className="w-2 h-2 rounded-full bg-espresso" />
                 </div>
                 <AnimatedValue
                   value={formatNumber(totalQuery.data)}
-                  className="text-3xl font-bold font-['InterRegular'] text-espresso block mb-1"
+                  className="text-2xl sm:text-3xl font-bold font-['InterRegular'] text-espresso block mb-1"
                 />
                 <p className="text-clay text-sm font-['InterRegular']">
                   Fixed maximum
@@ -312,15 +307,15 @@ export default function SodaTokenPage() {
             </div>
 
             {/* Official Contract */}
-            <div className="bg-gradient-to-r from-yellow-dark/10 to-cherry-dark/10 border-l-4 border-yellow-dark rounded-lg p-4 mb-8">
-              <div className="flex items-start gap-3">
-                <Shield className="w-5 h-5 text-yellow-dark flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="text-espresso text-sm font-bold font-['InterRegular'] mb-1">
+            <div className="bg-gradient-to-r from-yellow-dark/10 to-cherry-dark/10 border-l-4 border-yellow-dark rounded-lg p-3 sm:p-4 mb-8">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-dark flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-espresso text-xs sm:text-sm font-bold font-['InterRegular'] mb-2">
                     Official SODA Token Contract (Sonic)
-                  </h3>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <code className="text-clay text-xs font-mono bg-cream-white px-2 py-1 rounded">
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 sm:flex-wrap">
+                    <code className="text-clay text-xs font-mono bg-cream-white px-2 py-1 rounded break-all">
                       0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963
                     </code>
                     <CopyButton text="0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963" />
@@ -346,17 +341,17 @@ export default function SodaTokenPage() {
 
         {/* TL;DR Section */}
         <Section delay={0}>
-          <div className="mb-8">
-            <h2 className="text-xl font-bold font-['InterRegular'] text-espresso mb-4">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3 sm:mb-4">
               Key Points
             </h2>
             <div className="space-y-4">
               <div className="flex gap-3 items-start">
                 <Lock className="w-4 h-4 text-clay flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-espresso text-sm font-bold font-['InterRegular'] mb-1">
+                  <div className="text-espresso text-sm font-bold font-['InterRegular'] mb-1">
                     Protocol Participation Token
-                  </h3>
+                  </div>
                   <p className="text-clay text-sm font-['InterRegular'] leading-relaxed">
                     SODA aligns liquidity participation, execution incentives, and protocol governance across the
                     SODAX network.
@@ -366,9 +361,9 @@ export default function SodaTokenPage() {
               <div className="flex gap-3 items-start">
                 <Flame className="w-4 h-4 text-clay flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-espresso text-sm font-bold font-['InterRegular'] mb-1">
+                  <div className="text-espresso text-sm font-bold font-['InterRegular'] mb-1">
                     Fixed Supply with Protocol-Driven Burns
-                  </h3>
+                  </div>
                   <p className="text-clay text-sm font-['InterRegular'] leading-relaxed">
                     SODA has a hard cap of 1.5 billion tokens. Protocol revenue is used to market-buy and permanently
                     burn SODA, linking supply reduction to system usage.
@@ -378,9 +373,9 @@ export default function SodaTokenPage() {
               <div className="flex gap-3 items-start">
                 <Network className="w-4 h-4 text-clay flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="text-espresso text-sm font-bold font-['InterRegular'] mb-1">
+                  <div className="text-espresso text-sm font-bold font-['InterRegular'] mb-1">
                     Execution-Native by Design
-                  </h3>
+                  </div>
                   <p className="text-clay text-sm font-['InterRegular'] leading-relaxed">
                     SODA underpins how liquidity, solvers, and governance interact inside SODAX's hub-and-spoke
                     architecture, supporting predictable cross-network execution.
@@ -397,8 +392,8 @@ export default function SodaTokenPage() {
 
         {/* What is SODA */}
         <Section delay={0}>
-          <div className="mb-8">
-            <h2 className="text-xl font-bold font-['InterRegular'] text-espresso mb-3">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3">
               What is SODA?
             </h2>
             <p className="text-clay text-sm font-['InterRegular'] leading-relaxed mb-3">
@@ -420,17 +415,17 @@ export default function SodaTokenPage() {
 
         {/* Token Economics */}
         <Section delay={0}>
-          <div className="mb-8">
-            <h2 className="text-xl font-bold font-['InterRegular'] text-espresso mb-3">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3">
               Token Economics
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="border border-cherry-grey/20 rounded p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingDown className="w-4 h-4 text-clay" />
-                  <h3 className="text-espresso text-sm font-bold font-['InterRegular']">
+                  <div className="text-espresso text-sm font-bold font-['InterRegular']">
                     20% Protocol Burn
-                  </h3>
+                  </div>
                 </div>
                 <p className="text-clay text-xs font-['InterRegular'] leading-relaxed">
                   Revenue used to market-buy SODA, then permanently removed from circulation
@@ -439,9 +434,9 @@ export default function SodaTokenPage() {
               <div className="border border-cherry-grey/20 rounded p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Coins className="w-4 h-4 text-clay" />
-                  <h3 className="text-espresso text-sm font-bold font-['InterRegular']">
+                  <div className="text-espresso text-sm font-bold font-['InterRegular']">
                     50% POL Reinvestment
-                  </h3>
+                  </div>
                 </div>
                 <p className="text-clay text-xs font-['InterRegular'] leading-relaxed">
                   Reinvested into protocol-managed liquidity to support execution reliability and solver inventory
@@ -450,9 +445,9 @@ export default function SodaTokenPage() {
               <div className="border border-cherry-grey/20 rounded p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="w-4 h-4 text-clay" />
-                  <h3 className="text-espresso text-sm font-bold font-['InterRegular']">
+                  <div className="text-espresso text-sm font-bold font-['InterRegular']">
                     20% Staking Rewards
-                  </h3>
+                  </div>
                 </div>
                 <p className="text-clay text-xs font-['InterRegular'] leading-relaxed">
                   Distributed to xSODA holders to reward long-term participation
@@ -461,9 +456,9 @@ export default function SodaTokenPage() {
               <div className="border border-cherry-grey/20 rounded p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Shield className="w-4 h-4 text-clay" />
-                  <h3 className="text-espresso text-sm font-bold font-['InterRegular']">
+                  <div className="text-espresso text-sm font-bold font-['InterRegular']">
                     10% DAO / Incentives
-                  </h3>
+                  </div>
                 </div>
                 <p className="text-clay text-xs font-['InterRegular'] leading-relaxed">
                   Allocated for ecosystem expansion and strategic partnerships
@@ -479,8 +474,8 @@ export default function SodaTokenPage() {
 
         {/* Network Deployments */}
         <Section delay={0}>
-          <div className="mb-8">
-            <h2 className="text-xl font-bold font-['InterRegular'] text-espresso mb-3">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3">
               Network Deployments
             </h2>
             <p className="text-clay text-sm font-['InterRegular'] leading-relaxed mb-3">
@@ -490,13 +485,13 @@ export default function SodaTokenPage() {
               {networks.map((network, index) => (
                 <div
                   key={index}
-                  className="border border-cherry-grey/20 hover:border-clay/30 rounded p-3 transition-colors"
+                  className="border border-cherry-grey/20 hover:border-clay/30 rounded p-2.5 sm:p-3 transition-colors"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <h4 className="text-espresso text-sm font-bold font-['InterRegular']">
+                      <div className="text-espresso text-sm font-bold font-['InterRegular']">
                         {network.name}
-                      </h4>
+                      </div>
                       <p className="text-clay text-xs font-['InterRegular']">{network.role}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -518,8 +513,8 @@ export default function SodaTokenPage() {
 
         {/* FAQ Section */}
         <Section delay={0}>
-          <div className="mb-8">
-            <h2 className="text-xl font-bold font-['InterRegular'] text-espresso mb-4">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3 sm:mb-4">
               FAQ
             </h2>
             <div className="divide-y divide-cherry-grey/20">
@@ -536,8 +531,8 @@ export default function SodaTokenPage() {
 
         {/* CTA Section */}
         <Section delay={0}>
-          <div className="bg-espresso rounded-lg p-5 text-center">
-            <h2 className="text-xl font-bold font-['InterRegular'] text-white mb-2">
+          <div className="bg-espresso rounded-lg p-4 sm:p-5 text-center">
+            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-white mb-2">
               Ready to get started?
             </h2>
             <p className="text-white/80 text-sm font-['InterRegular'] mb-4">
