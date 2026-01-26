@@ -14,7 +14,7 @@ type DepositTokenSelectItemProps = {
   isHoverDimmed: boolean;
   handleAssetClick: (index: number | null) => void;
   handleTokenDeselect: () => void;
-  setSelectNetworkToken: (network: XToken) => void;
+  handleTokenSelect: (token: XToken) => void;
   outsideClick: boolean;
 };
 
@@ -27,13 +27,13 @@ function DepositTokenSelectItem({
   isHoverDimmed,
   handleAssetClick,
   handleTokenDeselect,
-  setSelectNetworkToken,
+  handleTokenSelect,
   outsideClick,
 }: DepositTokenSelectItemProps): React.JSX.Element {
   const shared = {
     isHoverDimmed,
     isHovered,
-    setSelectNetworkToken,
+    handleTokenSelect,
     outsideClick,
   };
 
@@ -49,6 +49,10 @@ function DepositTokenSelectItem({
       tokens={item.tokens}
       formattedBalance={item.supplyBalance}
       onClick={() => {
+        if (item.tokens?.length === 1) {
+          handleTokenSelect(item.tokens?.[0] as XToken);
+        }
+
         handleAssetClick(idx);
       }}
     />
@@ -173,7 +177,7 @@ export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSel
               isHoverDimmed={shouldDim}
               handleAssetClick={handleAssetClick}
               handleTokenDeselect={handleTokenDeselect}
-              setSelectNetworkToken={handleTokenSelect}
+              handleTokenSelect={handleTokenSelect}
               outsideClick={outsideClick}
             />
           </motion.div>
