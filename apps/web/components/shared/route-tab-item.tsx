@@ -4,7 +4,7 @@ import type React from 'react';
 import Link from 'next/link';
 import TabIcon, { type TabIconType } from './tab-icon';
 import { Badge } from '@/components/ui/badge';
-import numeral from 'numeral';
+import { formatCurrencyCompact } from '@/lib/utils';
 
 interface RouteTabItemProps {
   href: string;
@@ -70,14 +70,14 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
         )}
         {isMobile && enabled && totalDepositedUsdValue !== undefined && totalDepositedUsdValue > 0 && (
           <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px] ml-2">
-            ${numeral(totalDepositedUsdValue).format('0.0a')}
+            {formatCurrencyCompact(totalDepositedUsdValue)}
           </Badge>
         )}
       </div>
       {!isMobile && !enabled && <Badge variant="desktop">SOON</Badge>}
       {!isMobile && enabled && totalDepositedUsdValue !== undefined && totalDepositedUsdValue > 0 && (
         <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px] ml-3">
-          ${numeral(totalDepositedUsdValue).format('0.0a')}
+          {formatCurrencyCompact(totalDepositedUsdValue)}
         </Badge>
       )}
     </div>
