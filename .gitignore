@@ -12,4 +12,6 @@ public/dist
 .history
 .idea
 **/build/**
+.github
+.agents
 
