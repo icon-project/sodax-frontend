@@ -5,7 +5,7 @@ import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
 import { Button } from '@/components/ui/button';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
-import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
+import { useDeriveUserWalletAddress } from '@sodax/dapp-kit';
 import { Wallet } from 'lucide-react';
 import { BorrowAssetsList } from '@/components/mm/lists/borrow/BorrowAssetsList';
 
@@ -13,7 +13,7 @@ export default function MoneyMarketPage() {
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
   const xAccount = useXAccount(selectedChainId);
 
-  const { data: walletAddressOnHub } = useGetUserHubWalletAddress(selectedChainId, xAccount?.address);
+  const { data: walletAddressOnHub } = useDeriveUserWalletAddress(selectedChainId, xAccount?.address);
 
   return (
     <main className="min-h-screen bg-linear-to-br from-almost-white via-cream-white to-vibrant-white">
