@@ -4,6 +4,7 @@ import type React from 'react';
 import Link from 'next/link';
 import TabIcon, { type TabIconType } from './tab-icon';
 import { Badge } from '@/components/ui/badge';
+import numeral from 'numeral';
 
 interface RouteTabItemProps {
   href: string;
@@ -15,7 +16,7 @@ interface RouteTabItemProps {
   setRef?: (el: HTMLAnchorElement | null) => void;
   className?: string;
   enabled: boolean;
-  badgeCount?: number;
+  totalDepositedUsdValue?: number;
 }
 
 const RouteTabItem: React.FC<RouteTabItemProps> = ({
@@ -28,7 +29,7 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
   setRef,
   className = '',
   enabled,
-  badgeCount,
+  totalDepositedUsdValue,
 }) => {
   const getTextClassName = (): string => {
     if (isMobile) {
@@ -67,22 +68,16 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
             (SOON)
           </span>
         )}
-        {isMobile && enabled && badgeCount !== undefined && badgeCount > 0 && (
-          <Badge
-            variant="vibrant"
-            className="text-clay font-bold font-['InterRegular'] text-[9px] w-[21px] h-[16px] ml-2"
-          >
-            {badgeCount}
+        {isMobile && enabled && totalDepositedUsdValue !== undefined && totalDepositedUsdValue > 0 && (
+          <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px] ml-2">
+            ${numeral(totalDepositedUsdValue).format('0.0a')}
           </Badge>
         )}
       </div>
       {!isMobile && !enabled && <Badge variant="desktop">SOON</Badge>}
-      {!isMobile && enabled && badgeCount !== undefined && badgeCount > 0 && (
-        <Badge
-          variant="vibrant"
-          className="text-clay font-bold font-['InterRegular'] text-[9px] w-[21px] h-[16px] ml-3"
-        >
-          {badgeCount}
+      {!isMobile && enabled && totalDepositedUsdValue !== undefined && totalDepositedUsdValue > 0 && (
+        <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px] ml-3">
+          ${numeral(totalDepositedUsdValue).format('0.0a')}
         </Badge>
       )}
     </div>
