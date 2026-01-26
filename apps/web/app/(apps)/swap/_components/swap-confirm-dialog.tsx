@@ -23,6 +23,8 @@ import { useSodaxContext } from '@sodax/dapp-kit';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getIntentRelayChainId, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { getSwapTiming } from '@/lib/swap-timing';
+import { trackSwapCompleted } from '@/lib/analytics';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -62,6 +64,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [filledIntent, setFilledIntent] = useState<IntentState | null>(null);
   const { sodax } = useSodaxContext();
   const [targetChainSolved, setTargetChainSolved] = useState(false);
+  const { data: inputTokenPrice } = useTokenPrice(inputToken);
   const intentOrderPayload = useMemo(() => {
     if (!inputToken || !outputToken || !minOutputAmount || !inputAmount || !sourceAddress || !finalDestinationAddress) {
       return undefined;
@@ -96,6 +99,19 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
         if (outputToken.xChainId === SONIC_MAINNET_CHAIN_ID) {
           setTargetChainSolved(true);
           setDstTxHash('');
+
+          // Track successful swap completion
+          if (inputAmount && inputTokenPrice) {
+            const inputAmountUsd = Number.parseFloat(inputAmount) * inputTokenPrice;
+            trackSwapCompleted({
+              input_token_symbol: inputToken.symbol,
+              output_token_symbol: outputToken.symbol,
+              input_amount_usd: inputAmountUsd,
+              source_chain: chainIdToChainName(inputToken.xChainId),
+              destination_chain: chainIdToChainName(outputToken.xChainId),
+              transaction_hash: status.value.fill_tx_hash || dstTxHash || '',
+            });
+          }
         } else {
           const packet = await waitUntilIntentExecuted({
             intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
@@ -106,6 +122,19 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
           if (packet.ok) {
             setTargetChainSolved(true);
             setDstTxHash('');
+
+            // Track successful swap completion
+            if (inputAmount && inputTokenPrice) {
+              const inputAmountUsd = Number.parseFloat(inputAmount) * inputTokenPrice;
+              trackSwapCompleted({
+                input_token_symbol: inputToken.symbol,
+                output_token_symbol: outputToken.symbol,
+                input_amount_usd: inputAmountUsd,
+                source_chain: chainIdToChainName(inputToken.xChainId),
+                destination_chain: chainIdToChainName(outputToken.xChainId),
+                transaction_hash: status.value.fill_tx_hash || '',
+              });
+            }
           }
         }
       }
@@ -122,7 +151,20 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
         setSwapError({ title: 'Swap failed', message: 'Please try again.' });
       }
     }
-  }, [dstTxHash, status, setSwapStatus, setSwapError, setDstTxHash, sodax, outputToken.xChainId]);
+  }, [
+    dstTxHash,
+    status,
+    setSwapStatus,
+    setSwapError,
+    setDstTxHash,
+    sodax,
+    outputToken.xChainId,
+    outputToken.symbol,
+    inputToken.symbol,
+    inputToken.xChainId,
+    inputAmount,
+    inputTokenPrice,
+  ]);
 
   const displayedOutputValue = useMemo(() => {
     if (filledIntent) {
