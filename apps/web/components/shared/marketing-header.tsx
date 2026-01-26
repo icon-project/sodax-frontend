@@ -18,7 +18,6 @@ export function MarketingHeader({
   const pathname = usePathname();
   
   // Auto-detect section based on URL path if not explicitly provided
-  const isPartnerPage = pathname?.startsWith('/partners');
   const isCommunityPage = pathname?.startsWith('/community');
   
   // Set defaults based on current path
