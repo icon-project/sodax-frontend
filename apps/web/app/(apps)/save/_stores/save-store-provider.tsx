@@ -41,6 +41,7 @@ export const useSaveState = () => {
   const activeAsset = useSaveStore(state => state.activeAsset);
   const scrollToCenter = useSaveStore(state => state.scrollToCenter);
   const isNetworkPickerOpened = useSaveStore(state => state.isNetworkPickerOpened);
+  const isAssetListBlurred = useSaveStore(state => state.isAssetListBlurred);
   return {
     depositValue,
     currentDepositStep,
@@ -49,6 +50,7 @@ export const useSaveState = () => {
     activeAsset,
     scrollToCenter,
     isNetworkPickerOpened,
+    isAssetListBlurred,
   };
 };
 
@@ -60,6 +62,7 @@ export const useSaveActions = () => {
   const setActiveAsset = useSaveStore(state => state.setActiveAsset);
   const setScrollToCenter = useSaveStore(state => state.setScrollToCenter);
   const setIsNetworkPickerOpened = useSaveStore(state => state.setIsNetworkPickerOpened);
+  const setIsAssetListBlurred = useSaveStore(state => state.setIsAssetListBlurred);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
 
   return {
@@ -70,6 +73,7 @@ export const useSaveActions = () => {
     setActiveAsset,
     setScrollToCenter,
     setIsNetworkPickerOpened,
+    setIsAssetListBlurred,
     resetSaveState,
   };
 };

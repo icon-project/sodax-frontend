@@ -2,12 +2,15 @@ import { InputGroup, InputGroupAddon, InputGroupText, InputGroupInput } from '@/
 import { SearchIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { XIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { availableChains as allAvailableChains } from '@/constants/chains';
+import { availableChains as allAvailableChains, type ChainUI } from '@/constants/chains';
 import { ICON_MAINNET_CHAIN_ID, INJECTIVE_MAINNET_CHAIN_ID, LIGHTLINK_MAINNET_CHAIN_ID } from '@sodax/sdk';
 import NetworkTransparentIcon from '@/components/shared/network-transparent-icon';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { NetworkPicker } from './currency-search-panel/network-picker';
+import { useClickAway } from 'react-use';
+import { useSaveActions, useSaveState } from '../_stores/save-store-provider';
 interface CurrencySearchPanelProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -23,16 +26,38 @@ export default function CurrencySearchPanel({
 }: CurrencySearchPanelProps) {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const availableChains = allAvailableChains.filter(
-    chain =>
-      chain.id !== INJECTIVE_MAINNET_CHAIN_ID &&
-      chain.id !== LIGHTLINK_MAINNET_CHAIN_ID &&
-      chain.id !== ICON_MAINNET_CHAIN_ID,
+  const networkPickerReference = useRef<HTMLDivElement>(null);
+  const [availableChains, setAvailableChains] = useState<ChainUI[]>(
+    allAvailableChains.filter(
+      chain =>
+        chain.id !== INJECTIVE_MAINNET_CHAIN_ID &&
+        chain.id !== LIGHTLINK_MAINNET_CHAIN_ID &&
+        chain.id !== ICON_MAINNET_CHAIN_ID,
+    ),
   );
+
   const [hoveredChain, setHoveredChain] = useState<string | null>(null);
-  const handleChainSelect = (chainId: string | null) => {
+  const { setIsAssetListBlurred } = useSaveActions();
+  const { isAssetListBlurred } = useSaveState();
+  const MAX_DISPLAYED = 7;
+
+  const displayedChains = availableChains.slice(0, MAX_DISPLAYED);
+  const remainingChains = availableChains.slice(MAX_DISPLAYED);
+
+  const handleChainSelect = (chainId: string | null, source: 'inline' | 'picker') => {
     setSelectedChain(chainId);
+    setIsAssetListBlurred(false);
+    if (source === 'picker' && chainId) {
+      const selectedChain = availableChains.find(c => c.id === chainId);
+      const rest = availableChains.filter(c => c.id !== chainId);
+
+      if (selectedChain) {
+        setAvailableChains([selectedChain, ...rest]);
+      }
+    }
   };
+
+  useClickAway(networkPickerReference, () => setIsAssetListBlurred(false));
 
   return (
     <>
@@ -74,13 +99,13 @@ export default function CurrencySearchPanel({
               hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60'),
               selectedChain === null && 'ring-2 ring-cream-white rounded-full',
             )}
-            onClick={() => handleChainSelect(null)}
+            onClick={() => handleChainSelect(null, 'inline')}
             onMouseEnter={() => setHoveredChain('all')}
             onMouseLeave={() => setHoveredChain(null)}
           >
             All
           </div>
-          {availableChains.map(chain => (
+          {displayedChains.map(chain => (
             <Tooltip key={chain.id}>
               <TooltipTrigger asChild>
                 <div
@@ -90,7 +115,7 @@ export default function CurrencySearchPanel({
                     hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60'),
                     selectedChain === chain.id && 'ring-2 ring-clay-light rounded-full',
                   )}
-                  onClick={() => handleChainSelect(chain.id)}
+                  onClick={() => handleChainSelect(chain.id, 'inline')}
                   onMouseEnter={() => setHoveredChain(chain.id)}
                   onMouseLeave={() => setHoveredChain(null)}
                 >
@@ -106,6 +131,26 @@ export default function CurrencySearchPanel({
               </TooltipContent>
             </Tooltip>
           ))}
+          <div
+            className="ml-2 w-4 h-4 bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.10)] outline-2 outline-white inline-flex flex-col justify-center items-center relative cursor-pointer"
+            ref={networkPickerReference}
+            onClick={() => {
+              setIsAssetListBlurred(true);
+            }}
+          >
+            <div className="w-3 h-4 left-[4px] top-0 absolute mix-blend-multiply bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.10)] outline-2 outline-white" />
+            <div className="left-[4.50px] top-[3px] absolute inline-flex justify-start items-center">
+              <div className="justify-start text-espresso text-[8px] font-medium font-['InterRegular'] leading-[9.60px]">
+                +{remainingChains.length}
+              </div>
+            </div>
+            <NetworkPicker
+              isClicked={isAssetListBlurred}
+              chains={remainingChains}
+              onSelect={chainId => handleChainSelect(chainId, 'picker')}
+              reference={networkPickerReference.current}
+            />
+          </div>
         </div>
       </motion.div>
     </>

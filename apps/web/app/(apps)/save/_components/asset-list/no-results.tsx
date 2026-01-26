@@ -8,12 +8,16 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import type { XToken } from '@sodax/types';
 import { Twitter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSaveState } from '../../_stores/save-store-provider';
 
 export default function NoResults() {
   const ref = useRef<HTMLDivElement>(null);
-
+  const { isAssetListBlurred } = useSaveState();
   return (
-    <AccordionItem value="no-results" className={cn('border-none money-market')}>
+    <AccordionItem
+      value="no-results"
+      className={cn('border-none money-market', isAssetListBlurred && 'blur-md opacity-40 pointer-events-none')}
+    >
       <motion.div ref={ref} layout="size">
         <Separator className="h-[1px] bg-clay opacity-30" />
         <Separator className="data-[orientation=horizontal]:!h-[3px] bg-white opacity-30" />

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import type { XToken } from '@sodax/types';
 import type { DisplayItem } from './asset-list-item-content';
@@ -102,13 +102,13 @@ export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSel
     setSelectedAsset(index);
     setHoveredAsset(null);
     setIsAnyNonActiveHovered(false);
-    if (index !== null) {
-      const item = displayItems[index];
-      if (item?.tokens?.[0] && item.tokens.length === 1) {
-        handleTokenSelect(item.tokens[0]);
-      }
-    }
   };
+
+  useEffect(() => {
+    if (displayItems.length === 1 && displayItems[0]?.tokens?.length === 1) {
+      handleTokenSelect(displayItems[0]?.tokens?.[0] as XToken);
+    }
+  }, [displayItems]);
 
   const handleAssetMouseEnter = (index: number): void => {
     if (selectedAsset === null) {
@@ -132,6 +132,11 @@ export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSel
   };
 
   const handleTokenDeselect = (): void => {
+    // If there is only on item, don't deselect
+    if (displayItems.length === 1) {
+      return;
+    }
+
     setSelectedToken(null);
     setSelectedAsset(null);
     onChange(null);
