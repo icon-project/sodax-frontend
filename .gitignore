@@ -15,3 +15,7 @@ public/dist
 **/*.testnet.ts
 **/artifacts/**
 
+# Agent skills (local to VSCode)
+.agents/
+.github/skills/
+

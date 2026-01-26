@@ -39,6 +39,7 @@ export function DepositTokenSelect({
       <AssetMetrics apy={apy} deposits={deposits} />
       <DepositTokenSelector
         displayItems={displayItems}
+        selectedToken={selectedToken}
         onChange={(token: XToken | null) => {
           setSelectedToken(token);
         }}

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import type { XToken } from '@sodax/types';
 import type { DisplayItem } from './asset-list-item-content';
@@ -14,7 +14,7 @@ type DepositTokenSelectItemProps = {
   isHoverDimmed: boolean;
   handleAssetClick: (index: number | null) => void;
   handleTokenDeselect: () => void;
-  setSelectNetworkToken: (network: XToken) => void;
+  handleTokenSelect: (token: XToken) => void;
   outsideClick: boolean;
 };
 
@@ -27,13 +27,13 @@ function DepositTokenSelectItem({
   isHoverDimmed,
   handleAssetClick,
   handleTokenDeselect,
-  setSelectNetworkToken,
+  handleTokenSelect,
   outsideClick,
 }: DepositTokenSelectItemProps): React.JSX.Element {
   const shared = {
     isHoverDimmed,
     isHovered,
-    setSelectNetworkToken,
+    handleTokenSelect,
     outsideClick,
   };
 
@@ -49,6 +49,10 @@ function DepositTokenSelectItem({
       tokens={item.tokens}
       formattedBalance={item.supplyBalance}
       onClick={() => {
+        if (item.tokens?.length === 1) {
+          handleTokenSelect(item.tokens?.[0] as XToken);
+        }
+
         handleAssetClick(idx);
       }}
     />
@@ -88,12 +92,16 @@ function DepositTokenSelectItem({
 type DepositTokenSelectorProps = {
   displayItems: DisplayItem[];
   onChange: (token: XToken | null) => void;
+  selectedToken: XToken | null;
 };
 
-export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSelectorProps): React.JSX.Element {
+export function DepositTokenSelector({
+  displayItems,
+  onChange,
+  selectedToken,
+}: DepositTokenSelectorProps): React.JSX.Element {
   const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
   const [hoveredAsset, setHoveredAsset] = useState<number | null>(null);
-  const [selectedToken, setSelectedToken] = useState<XToken | null>(null);
   const [isAnyNonActiveHovered, setIsAnyNonActiveHovered] = useState<boolean>(false);
   const [outsideClick, setOutsideClick] = useState<boolean>(false);
 
@@ -102,13 +110,13 @@ export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSel
     setSelectedAsset(index);
     setHoveredAsset(null);
     setIsAnyNonActiveHovered(false);
-    if (index !== null) {
-      const item = displayItems[index];
-      if (item?.tokens?.[0] && item.tokens.length === 1) {
-        handleTokenSelect(item.tokens[0]);
-      }
-    }
   };
+
+  useEffect(() => {
+    if (displayItems.length === 1 && displayItems[0]?.tokens?.length === 1) {
+      handleTokenSelect(displayItems[0]?.tokens?.[0] as XToken);
+    }
+  }, [displayItems]);
 
   const handleAssetMouseEnter = (index: number): void => {
     if (selectedAsset === null) {
@@ -127,12 +135,10 @@ export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSel
   };
 
   const handleTokenSelect = (token: XToken): void => {
-    setSelectedToken(token);
     onChange(token);
   };
 
   const handleTokenDeselect = (): void => {
-    setSelectedToken(null);
     setSelectedAsset(null);
     onChange(null);
     setOutsideClick(true);
@@ -168,7 +174,7 @@ export function DepositTokenSelector({ displayItems, onChange }: DepositTokenSel
               isHoverDimmed={shouldDim}
               handleAssetClick={handleAssetClick}
               handleTokenDeselect={handleTokenDeselect}
-              setSelectNetworkToken={handleTokenSelect}
+              handleTokenSelect={handleTokenSelect}
               outsideClick={outsideClick}
             />
           </motion.div>
