@@ -28,7 +28,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'save',
     label: 'Save',
     content: 'a quick save',
-    enabled: true,
+    enabled: false,
   },
   {
     value: 'loans',
@@ -136,7 +136,7 @@ export function RouteTabs(): React.JSX.Element {
                 isMobile={false}
                 setRef={setDesktopTabRef(tab.value)}
                 enabled={tab.enabled}
-                badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
+                // badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
               />
             );
           })}
@@ -165,7 +165,7 @@ export function RouteTabs(): React.JSX.Element {
                     isMobile
                     setRef={setMobileTabRef(tab.value)}
                     enabled={tab.enabled}
-                    badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
+                    // badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
                   />
                 );
               })}
