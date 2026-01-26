@@ -191,6 +191,10 @@ export default function SodaTokenPage() {
       answer: 'The total supply is fixed at 1.5 billion tokens. No more can be minted.',
     },
     {
+      question: 'What is the vesting schedule for locked supply?',
+      answer: 'Locked SODA follows a 5-year vesting schedule with a 1-year cliff. This ensures long-term alignment and gradual token distribution.',
+    },
+    {
       question: 'How is SODA deflationary?',
       answer: '20% of protocol revenue is used to buy SODA from the market and burn it permanently, linking supply reduction to system usage.',
     },
