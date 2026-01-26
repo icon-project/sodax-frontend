@@ -15,6 +15,7 @@ import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import type { XToken } from '@sodax/types';
 import type { CarouselApi } from '@/components/ui/carousel';
+import CurrencySearchPanel from './_components/currency-search-panel';
 
 export interface NetworkBalance {
   networkId: string;
@@ -35,12 +36,12 @@ export default function SavingsPage() {
   const { setDepositValue, setSuppliedAssetCount } = useSaveActions();
   const { activeAsset, isSwitchingChain } = useSaveState();
   const carouselApiRef = useRef<CarouselApi | undefined>(undefined);
-
+  const [searchQuery, setSearchQuery] = useState('');
   const { data: formattedReserves } = useReservesUsdFormat();
   const allTokens = useMemo(() => getMoneymarketTokens(), []);
   const allAssets = useMemo(() => getUniqueTokenSymbols(allTokens), [allTokens]);
   const originalTokensWithSupplyBalances = useTokenSupplyBalances(allTokens, formattedReserves || []);
-
+  const [selectedChain, setSelectedChain] = useState<string | null>(null);
   const cachedTokensWithSupplyBalancesRef = useRef<typeof originalTokensWithSupplyBalances>(
     originalTokensWithSupplyBalances,
   );
@@ -54,6 +55,26 @@ export default function SavingsPage() {
   }, [originalTokensWithSupplyBalances, isSwitchingChain]);
 
   const { data: tokenPrices } = useAllTokenPrices(allTokens);
+
+  const highestAPY = useMemo((): number => {
+    if (!formattedReserves || allTokens.length === 0) {
+      return 0;
+    }
+
+    let maxAPY = 0;
+
+    allTokens.forEach(token => {
+      const apyString = calculateAPY(formattedReserves, token);
+      if (apyString !== '-') {
+        const apyValue = Number.parseFloat(apyString.replace('%', ''));
+        if (!Number.isNaN(apyValue) && apyValue > maxAPY) {
+          maxAPY = apyValue;
+        }
+      }
+    });
+
+    return maxAPY;
+  }, [allTokens, formattedReserves]);
 
   const suppliedAssets = useMemo((): DepositItemData[] => {
     const items: DepositItemData[] = [];
@@ -171,7 +192,7 @@ export default function SavingsPage() {
           <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex">
             Up to
             <AnimatedNumber
-              to={9.81}
+              to={highestAPY}
               decimalPlaces={2}
               className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-6 ml-1"
             />
@@ -181,7 +202,16 @@ export default function SavingsPage() {
       )}
 
       <motion.div className="w-full flex-grow-1" variants={itemVariants}>
-        <AssetList searchQuery={''} />
+        <CurrencySearchPanel
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedChain={selectedChain}
+          setSelectedChain={setSelectedChain}
+        />
+      </motion.div>
+
+      <motion.div className="w-full flex-grow-1 relative" variants={itemVariants}>
+        <AssetList searchQuery={searchQuery} selectedChain={selectedChain} />
       </motion.div>
     </motion.div>
   );

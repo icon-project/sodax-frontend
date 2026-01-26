@@ -41,7 +41,7 @@ export default function AssetListItemContent({
 
   const displayItems: DisplayItem[] = [...holdTokens.map(t => ({ tokens: [t], supplyBalance: t.supplyBalance }))];
 
-  if (platformTokens.length > 0) {
+  if (holdTokens.length === 0 && platformTokens.length > 0) {
     displayItems.push({
       tokens: platformTokens,
       supplyBalance: '0',
@@ -73,7 +73,7 @@ export default function AssetListItemContent({
           setSelectedToken={setSelectedToken}
           onContinue={!isShowDeposits ? () => setIsShowDeposits(true) : undefined}
           apy={apy}
-          deposits={deposits}
+          deposits={deposits.toString()}
         />
       )}
     </motion.div>
