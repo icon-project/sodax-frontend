@@ -16,6 +16,7 @@ export type SaveState = {
   activeAsset: string;
   scrollToCenter: boolean;
   isNetworkPickerOpened: boolean;
+  isAssetListBlurred: boolean;
 };
 
 export type SaveActions = {
@@ -26,6 +27,7 @@ export type SaveActions = {
   setActiveAsset: (value: string) => void;
   setScrollToCenter: (value: boolean) => void;
   setIsNetworkPickerOpened: (value: boolean) => void;
+  setIsAssetListBlurred: (value: boolean) => void;
   resetSaveState: () => void;
 };
 
@@ -39,6 +41,7 @@ export const defaultSaveState: SaveState = {
   activeAsset: '',
   scrollToCenter: false,
   isNetworkPickerOpened: false,
+  isAssetListBlurred: false,
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -53,6 +56,7 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         setActiveAsset: (value: string) => set({ activeAsset: value }),
         setScrollToCenter: (value: boolean) => set({ scrollToCenter: value }),
         setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
+        setIsAssetListBlurred: (value: boolean) => set({ isAssetListBlurred: value }),
         resetSaveState: () => {
           set({
             currentDepositStep: DEPOSIT_STEP.TERMS,
