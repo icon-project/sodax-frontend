@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import RouteTabItem from '@/components/shared/route-tab-item';
 import { ArrowRightIcon, ArrowUpIcon } from '@/components/icons';
-// import { useSaveStore } from '@/app/(apps)/save/_stores/save-store-provider';
+import { useSaveStore } from '@/app/(apps)/save/_stores/save-store-provider';
 
 import type { TabIconType } from './tab-icon';
 
@@ -49,7 +49,7 @@ export const tabConfigs: TabConfig[] = [
 export function RouteTabs(): React.JSX.Element {
   const pathname = usePathname();
   const current = pathname.split('/').pop() || 'migrate';
-  // const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
+  const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
