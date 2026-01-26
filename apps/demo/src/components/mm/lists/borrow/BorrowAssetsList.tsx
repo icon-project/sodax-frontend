@@ -164,7 +164,12 @@ export function BorrowAssetsList() {
           }}
         />
       )}
-      <SuccessModal open={!!successData} onClose={() => setSuccessData(null)} data={successData} action="borrow" />
+      <SuccessModal
+        open={!!successData}
+        onClose={() => setSuccessData(null)}
+        title="Borrow Successful"
+        data={successData}
+      />
     </Card>
   );
 }
