@@ -17,7 +17,6 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
-import { Navbar } from '@/components/shared/navbar';
 import { Separator } from '@/components/ui/separator';
 import Footer from '@/components/landing/footer';
 
@@ -218,10 +217,14 @@ export default function SodaTokenPage() {
 
   return (
     <div className="min-h-screen bg-almost-white w-full">
-      {/* Navbar */}
-      <div className="bg-cherry-soda pb-8">
-        <Navbar />
-      </div>
+      {/* Placeholder Header */}
+      <header className="bg-white border-b border-cherry-grey/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Link href="/" className="text-espresso font-bold text-xl hover:opacity-80 transition-opacity">
+            SODAX
+          </Link>
+        </div>
+      </header>
       
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
