@@ -53,6 +53,7 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         setActiveAsset: (value: string) => set({ activeAsset: value }),
         setScrollToCenter: (value: boolean) => set({ scrollToCenter: value }),
         setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
+        setIsAssetListBlurred: (value: boolean) => set({ isAssetListBlurred: value }),
         resetSaveState: () => {
           set({
             currentDepositStep: DEPOSIT_STEP.TERMS,
