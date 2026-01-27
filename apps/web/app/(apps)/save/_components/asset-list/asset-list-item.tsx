@@ -18,7 +18,7 @@ export default function AssetListItem({
   isExpanded: boolean;
   isReadyToEarn: boolean;
 }) {
-  const { activeAsset, scrollToCenter } = useSaveState();
+  const { scrollToCenter } = useSaveState();
   const ref = useRef<HTMLDivElement>(null);
   const { symbol, tokens } = data;
 
