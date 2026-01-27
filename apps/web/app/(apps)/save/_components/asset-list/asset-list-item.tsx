@@ -12,9 +12,11 @@ import { useSaveState } from '../../_stores/save-store-provider';
 export default function AssetListItem({
   data,
   isExpanded,
+  isReadyToEarn,
 }: {
   data: { symbol: string; tokens: XToken[] };
   isExpanded: boolean;
+  isReadyToEarn: boolean;
 }) {
   const { activeAsset, scrollToCenter } = useSaveState();
   const ref = useRef<HTMLDivElement>(null);
@@ -87,7 +89,7 @@ export default function AssetListItem({
 
         <AccordionContent forceMount className="relative">
           <AnimatePresence initial={false} mode="wait">
-            {isExpanded && <AssetListItemContent tokens={tokens} />}
+            {isExpanded && <AssetListItemContent tokens={tokens} isReadyToEarn={isReadyToEarn} />}
           </AnimatePresence>
         </AccordionContent>
       </motion.div>
