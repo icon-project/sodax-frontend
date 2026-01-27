@@ -16,7 +16,6 @@ import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import type { XToken } from '@sodax/types';
 import type { CarouselApi } from '@/components/ui/carousel';
 import CurrencySearchPanel from './_components/currency-search-panel';
-import numeral from 'numeral';
 
 export interface NetworkBalance {
   networkId: string;
