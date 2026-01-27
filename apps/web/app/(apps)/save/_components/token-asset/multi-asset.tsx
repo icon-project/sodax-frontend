@@ -14,9 +14,15 @@ export function MultiAsset({
   const { isNetworkPickerOpened } = useSaveState();
   const { setIsNetworkPickerOpened } = useSaveActions();
   const assetRef = useRef<HTMLDivElement>(null);
-  useClickAway(assetRef, () => setIsNetworkPickerOpened(false));
+  useClickAway(assetRef, event => {
+    const target = event.target as HTMLElement;
+    const isInNetworkPicker = target.closest('.network-picker-container') !== null;
+    if (!isInNetworkPicker) {
+      setIsNetworkPickerOpened(false);
+    }
+  });
   return (
-    <div onClick={() => setIsNetworkPickerOpened(true)} className="relative" ref={assetRef}>
+    <div onClick={() => setIsNetworkPickerOpened(!isNetworkPickerOpened)} className="relative" ref={assetRef}>
       <CurrencyLogo currency={token} isGroup={true} tokenCount={tokens.length} />
       {!isNetworkPickerOpened && (
         <div className="font-['InterRegular'] flex items-center justify-center text-(length:--body-small) mt-2 transition-all h-[18px] text-clay">

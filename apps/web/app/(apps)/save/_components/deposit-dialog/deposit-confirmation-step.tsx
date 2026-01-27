@@ -40,7 +40,7 @@ export default function DepositConfirmationStep({
       <div className="flex flex-col items-center justify-center">
         <CurrencyLogo currency={selectedToken} />
         <div className="mt-2">
-          <div className="text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4] gap-1 flex">
+          <div className="text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4] gap-1 flex justify-center">
             <span className="text-espresso">{depositValue}</span>
             <span className="text-clay-light">{selectedToken.symbol}</span>
           </div>

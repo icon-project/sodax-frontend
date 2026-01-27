@@ -33,7 +33,7 @@ export interface DepositItemData {
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
-  const { setDepositValue, setSuppliedAssetCount } = useSaveActions();
+  const { setDepositValue, setTotalDepositedUsdValue } = useSaveActions();
   const { activeAsset, isSwitchingChain } = useSaveState();
   const carouselApiRef = useRef<CarouselApi | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
@@ -127,9 +127,23 @@ export default function SavingsPage() {
     return items;
   }, [allAssets, tokensWithSupplyBalances, tokenPrices, formattedReserves]);
 
-  useEffect(() => {
-    setSuppliedAssetCount(suppliedAssets.length);
-  }, [suppliedAssets.length, setSuppliedAssetCount]);
+  const totalUsdValue = useMemo((): string => {
+    if (suppliedAssets.length === 0) {
+      return '$0.00';
+    }
+
+    let total = new BigNumber(0);
+
+    suppliedAssets.forEach(item => {
+      const numericValue = item.fiatValue.replace(/[$,]/g, '');
+      const value = Number(numericValue);
+      if (!Number.isNaN(value) && value > 0) {
+        total = total.plus(value);
+      }
+    });
+    setTotalDepositedUsdValue(Number(total.toString()));
+    return formatBalance(total.toString(), 0);
+  }, [suppliedAssets, setTotalDepositedUsdValue]);
 
   const hasDeposits = suppliedAssets.length > 0;
 
@@ -177,7 +191,11 @@ export default function SavingsPage() {
             tokenPrices={tokenPrices}
             onApiReady={handleCarouselApiReady}
           />
-          <TotalSaveAssets suppliedAssets={suppliedAssets} onAssetClick={navigateToAsset} />
+          <TotalSaveAssets
+            suppliedAssets={suppliedAssets}
+            onAssetClick={navigateToAsset}
+            totalUsdValue={totalUsdValue}
+          />
         </motion.div>
       ) : (
         <motion.div className="inline-flex flex-col justify-start items-start gap-4" variants={itemVariants}>

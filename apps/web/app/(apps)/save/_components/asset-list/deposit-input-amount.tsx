@@ -14,14 +14,16 @@ import DepositDialog from '../deposit-dialog/deposit-dialog';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import AmountInputSlider from '../amount-input-slider';
 import { useRouter } from 'next/navigation';
+import AssetMetrics from './asset-metrics';
 interface DepositInputAmountProps {
   selectedToken: XToken | null;
   tokens: XToken[];
   onBack?: () => void;
   apy: string;
+  deposits: number;
 }
 
-export default function DepositInputAmount({ selectedToken, tokens, onBack, apy }: DepositInputAmountProps) {
+export default function DepositInputAmount({ selectedToken, tokens, onBack, apy, deposits }: DepositInputAmountProps) {
   const router = useRouter();
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
   const { setDepositValue } = useSaveActions();
@@ -118,7 +120,8 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
 
   return (
     <>
-      <div className="flex gap-2 items-center h-12">
+      <AssetMetrics apy={apy} deposits={deposits} />
+      <div className="flex gap-2 items-center">
         {!sourceAddress || balance === 0n ? (
           <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso">
             {depositValue > 0 ? (
@@ -145,51 +148,52 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy 
           </>
         )}
       </div>
-      <AmountInputSlider
-        value={progress}
-        onValueChange={value => {
-          setProgress(value);
-          setDepositValue(value[0] ?? 0);
-        }}
-        maxValue={isSimulate ? 10000 / (tokenPrice ?? 1) : maxValue}
-        isSimulate={isSimulate}
-        tokenSymbol={tokens[0]?.symbol || selectedToken?.symbol || ''}
-        onInputChange={handleInputChange}
-      />
-      <div className="flex gap-2 items-center -mt-2 mb-7">
-        <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
-          {isSimulate ? (
-            sourceAddress ? (
-              `Add ${selectedToken?.symbol} to your ${chainIdToChainName(selectedToken?.xChainId || 'sonic')} wallet or swap via SODAX.`
+      <div className="h-21.5">
+        <AmountInputSlider
+          value={progress}
+          onValueChange={value => {
+            setProgress(value);
+            setDepositValue(value[0] ?? 0);
+          }}
+          maxValue={isSimulate ? 10000 / (tokenPrice ?? 1) : maxValue}
+          isSimulate={isSimulate}
+          tokenSymbol={tokens[0]?.symbol || selectedToken?.symbol || ''}
+          onInputChange={handleInputChange}
+        />
+        <div className="flex gap-2 items-center -mt-2 mb-7">
+          <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
+            {isSimulate ? (
+              sourceAddress ? (
+                `Add ${selectedToken?.symbol} to your ${chainIdToChainName(selectedToken?.xChainId || 'sonic')} wallet or swap via SODAX.`
+              ) : (
+                `Connect your ${chainIdToChainName(selectedToken?.xChainId || 'sonic')} wallet to continue.`
+              )
             ) : (
-              `Connect your ${chainIdToChainName(selectedToken?.xChainId || 'sonic')} wallet to continue.`
-            )
-          ) : (
-            <div className="flex gap-2">
-              <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
-                Available:
+              <div className="flex gap-2">
+                <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
+                  Available:
+                </div>
+                <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">
+                  {formatBalance(
+                    (
+                      Number(
+                        formatUnits(
+                          isSimulate
+                            ? parseUnits((10000 / (tokenPrice ?? 1)).toString(), selectedToken?.decimals ?? 0)
+                            : balance,
+                          selectedToken?.decimals ?? 0,
+                        ),
+                      ) - depositValue
+                    ).toString(),
+                    tokenPrice ?? 0,
+                  )}{' '}
+                  {selectedToken?.symbol}
+                </div>
               </div>
-              <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay">
-                {formatBalance(
-                  (
-                    Number(
-                      formatUnits(
-                        isSimulate
-                          ? parseUnits((10000 / (tokenPrice ?? 1)).toString(), selectedToken?.decimals ?? 0)
-                          : balance,
-                        selectedToken?.decimals ?? 0,
-                      ),
-                    ) - depositValue
-                  ).toString(),
-                  tokenPrice ?? 0,
-                )}{' '}
-                {selectedToken?.symbol}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-
       <div className="flex gap-4 items-center mb-8 transition-all duration-300">
         <div className="flex gap-(--layout-space-small)">
           {onBack && (

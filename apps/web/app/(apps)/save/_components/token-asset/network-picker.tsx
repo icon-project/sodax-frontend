@@ -88,7 +88,12 @@ export function NetworkPicker({
         )}
       </div>
 
-      <div className={cn('flex flex-wrap justify-center w-[140px]', isMobile && isSingle && 'ml-4')}>
+      <div
+        className={cn(
+          'flex flex-wrap justify-center w-[140px] network-picker-container',
+          isMobile && isSingle && 'ml-4',
+        )}
+      >
         {tokens.map((token, index) => (
           <motion.div
             key={token.xChainId}

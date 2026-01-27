@@ -1,8 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
 import Image from 'next/image';
-import BigNumber from 'bignumber.js';
 import type { XToken } from '@sodax/types';
 import type { DepositItemData } from '../page';
 import { motion } from 'motion/react';
@@ -10,29 +8,12 @@ import { motion } from 'motion/react';
 export default function TotalSaveAssets({
   suppliedAssets,
   onAssetClick,
+  totalUsdValue,
 }: {
   suppliedAssets: DepositItemData[];
   onAssetClick: (asset: XToken) => void;
+  totalUsdValue: string;
 }): React.JSX.Element {
-  const totalUsdValue = useMemo((): string => {
-    if (suppliedAssets.length === 0) {
-      return '$0.00';
-    }
-
-    let total = new BigNumber(0);
-
-    suppliedAssets.forEach(item => {
-      const numericValue = item.fiatValue.replace(/[$,]/g, '');
-      const value = Number(numericValue);
-      if (!Number.isNaN(value) && value > 0) {
-        total = total.plus(value);
-      }
-    });
-
-    const formatted = total.toFixed(2);
-    return `$${Number(formatted).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  }, [suppliedAssets]);
-
   return (
     <div className="w-full flex gap-2 justify-start">
       <div className="text-(length:--body-super-comfortable) font-['InterRegular'] text-clay">Total savings</div>
@@ -61,7 +42,7 @@ export default function TotalSaveAssets({
         )}
       </motion.div>
       <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular']">
-        {totalUsdValue}
+        ${totalUsdValue}
       </div>
     </div>
   );

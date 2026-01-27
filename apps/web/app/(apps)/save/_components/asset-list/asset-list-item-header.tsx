@@ -104,7 +104,7 @@ function AccordionCollapsedInfo({ tokens, apy }: { tokens: XToken[]; apy: string
       <div className="hidden md:flex gap-1 shrink-0">
         <span className="text-clay-light text-(length:--body-small)">Avg./mo:</span>
         <span className="text-clay-light text-(length:--body-small) font-['InterBold']">
-          {(((1 + Number(apy.replace('%', '')) / 100) ** (1 / 12) - 1) * 100).toFixed(4)}%
+          {(((1 + Number(apy.replace('%', '')) / 100) ** (1 / 12) - 1) * 100).toFixed(2)}%
         </span>
       </div>
     </motion.div>

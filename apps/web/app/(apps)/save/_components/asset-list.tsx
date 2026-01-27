@@ -77,7 +77,12 @@ export default function AssetList({
             Ready to earn
           </div>
           {readyToEarn.map(asset => (
-            <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+            <AssetListItem
+              key={asset.symbol}
+              data={asset}
+              isExpanded={activeAsset === asset.symbol}
+              isReadyToEarn={true}
+            />
           ))}
 
           {availableToDeposit.length > 0 && (
@@ -91,18 +96,28 @@ export default function AssetList({
                 Available to deposit
               </div>
               {availableToDeposit.map(asset => (
-                <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+                <AssetListItem
+                  key={asset.symbol}
+                  data={asset}
+                  isExpanded={activeAsset === asset.symbol}
+                  isReadyToEarn={false}
+                />
               ))}
             </>
           )}
-          <NoResults />
+          {(searchQuery || selectedChain) && <NoResults />}
         </>
       ) : (
         <>
           {allAssets.map(asset => (
-            <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+            <AssetListItem
+              key={asset.symbol}
+              data={asset}
+              isExpanded={activeAsset === asset.symbol}
+              isReadyToEarn={false}
+            />
           ))}
-          <NoResults />
+          {(searchQuery || selectedChain) && <NoResults />}
         </>
       )}
     </Accordion>

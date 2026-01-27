@@ -16,6 +16,7 @@ type DepositTokenSelectItemProps = {
   handleTokenDeselect: () => void;
   handleTokenSelect: (token: XToken) => void;
   outsideClick: boolean;
+  excludeRefs?: React.RefObject<HTMLElement>[];
 };
 
 function DepositTokenSelectItem({
@@ -29,6 +30,7 @@ function DepositTokenSelectItem({
   handleTokenDeselect,
   handleTokenSelect,
   outsideClick,
+  excludeRefs,
 }: DepositTokenSelectItemProps): React.JSX.Element {
   const shared = {
     isHoverDimmed,
@@ -38,8 +40,20 @@ function DepositTokenSelectItem({
   };
 
   const tokenAssetRef = useRef<HTMLDivElement>(null);
-  useClickAway(tokenAssetRef, () => {
-    if (isSelected) handleTokenDeselect();
+  useClickAway(tokenAssetRef, event => {
+    // Check if the click target is inside any excluded refs
+    const isExcluded = excludeRefs?.some(ref => {
+      const element = ref.current;
+      return element && (element.contains(event.target as Node) || element === event.target);
+    });
+
+    // Check if the click target is inside .network-picker-container
+    const target = event.target as HTMLElement;
+    const isInNetworkPicker = target.closest('.network-picker-container') !== null;
+
+    if (isSelected && !isExcluded && !isInNetworkPicker) {
+      handleTokenDeselect();
+    }
   });
 
   const renderNormal = (): React.JSX.Element => (
@@ -93,12 +107,14 @@ type DepositTokenSelectorProps = {
   displayItems: DisplayItem[];
   onChange: (token: XToken | null) => void;
   selectedToken: XToken | null;
+  excludeRefs?: React.RefObject<HTMLElement>[];
 };
 
 export function DepositTokenSelector({
   displayItems,
   onChange,
   selectedToken,
+  excludeRefs,
 }: DepositTokenSelectorProps): React.JSX.Element {
   const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
   const [hoveredAsset, setHoveredAsset] = useState<number | null>(null);
@@ -161,7 +177,7 @@ export function DepositTokenSelector({
             key={`${item.tokens?.[0]?.xChainId}-${idx}`}
             onMouseEnter={() => handleAssetMouseEnter(idx)}
             onMouseLeave={() => handleAssetMouseLeave(idx)}
-            style={{ filter: `blur(${blurAmount}px)` }}
+            animate={{ filter: `blur(${blurAmount}px)` }}
             transition={{ duration: 0.18, ease: 'easeInOut' }}
             className={outsideClick ? 'group pointer-events-none' : 'group'}
           >
@@ -176,6 +192,7 @@ export function DepositTokenSelector({
               handleTokenDeselect={handleTokenDeselect}
               handleTokenSelect={handleTokenSelect}
               outsideClick={outsideClick}
+              excludeRefs={excludeRefs}
             />
           </motion.div>
         );
