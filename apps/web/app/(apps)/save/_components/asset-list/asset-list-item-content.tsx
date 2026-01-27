@@ -15,8 +15,10 @@ export type DisplayItem = {
 
 export default function AssetListItemContent({
   tokens,
+  isReadyToEarn,
 }: {
   tokens: XToken[];
+  isReadyToEarn: boolean;
 }) {
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
@@ -59,12 +61,13 @@ export default function AssetListItemContent({
       {isShowDeposits ? (
         <DepositInputAmount
           selectedToken={selectedToken}
-          apy={apy}
           tokens={tokens}
           onBack={() => {
             setIsShowDeposits(false);
             setSelectedToken(null);
           }}
+          apy={apy}
+          deposits={Number(deposits)}
         />
       ) : (
         <DepositTokenSelect
@@ -73,7 +76,8 @@ export default function AssetListItemContent({
           setSelectedToken={setSelectedToken}
           onContinue={!isShowDeposits ? () => setIsShowDeposits(true) : undefined}
           apy={apy}
-          deposits={deposits.toString()}
+          deposits={Number(deposits)}
+          isReadyToEarn={isReadyToEarn}
         />
       )}
     </motion.div>

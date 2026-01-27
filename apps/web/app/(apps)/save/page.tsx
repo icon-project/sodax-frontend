@@ -143,7 +143,7 @@ export default function SavingsPage() {
       }
     });
     setTotalDepositedUsdValue(Number(total.toString()));
-    return `$${numeral(total.toString()).format('0.0a')}`;
+    return formatBalance(total.toString(), 0);
   }, [suppliedAssets, setTotalDepositedUsdValue]);
 
   const hasDeposits = suppliedAssets.length > 0;

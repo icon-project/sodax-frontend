@@ -42,7 +42,7 @@ export default function TotalSaveAssets({
         )}
       </motion.div>
       <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular']">
-        {totalUsdValue}
+        ${totalUsdValue}
       </div>
     </div>
   );
