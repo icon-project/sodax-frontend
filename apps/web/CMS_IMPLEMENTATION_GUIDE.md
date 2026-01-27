@@ -1,4 +1,503 @@
-# Custom CMS Implementation Guide
+# SODAX CMS Implementation Guide
+
+**Status: ✅ Backend Complete | ✅ Admin UI Complete | ⏳ Public Pages Pending**
+
+This guide documents the custom CMS implementation for SODAX using Better Auth, MongoDB, and Next.js 15.
+
+---
+
+## ✅ **COMPLETED: Backend & Authentication**
+
+### **Authentication System (Better Auth + MongoDB)**
+
+**Implementation:**
+- ✅ Better Auth with Google OAuth (`lib/auth.ts`)
+- ✅ MongoDB adapter with native driver (not Prisma)
+- ✅ Role-based access control (admin role in user model)
+- ✅ Server-side auth utilities (`lib/auth-utils.ts`)
+- ✅ Session management (7-day sessions)
+
+**Auth Routes:**
+- ✅ `/api/auth/[...all]/route.ts` - Better Auth handler
+
+**Middleware:**
+- ✅ `requireAuth()` - Validates @sodax.com email
+- ✅ `requireAdmin()` - Validates admin role
+
+**Environment Variables:**
+```env
+BETTER_AUTH_SECRET=<secret>
+BETTER_AUTH_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=<your-google-client-id>
+GOOGLE_CLIENT_SECRET=<your-google-client-secret>
+DATABASE_URI=mongodb+srv://...
+BLOB_READ_WRITE_TOKEN=<vercel-blob-token>
+ALLOW_ADMIN_CREATION=true
+```
+
+---
+
+## ✅ **COMPLETED: CMS API Routes**
+
+### **Content Types:**
+- ✅ NewsArticle - Breaking news and announcements
+- ✅ Article - Long-form content and tutorials
+- ✅ GlossaryTerm - Terminology definitions
+
+### **API Endpoints:**
+
+**Image Upload:**
+- ✅ `POST /api/cms/upload` - Upload images to Vercel Blob (5MB limit)
+
+**News Management:**
+- ✅ `GET /api/cms/news` - List all news (with pagination)
+- ✅ `POST /api/cms/news` - Create news article
+- ✅ `GET /api/cms/news/[id]` - Get single news article
+- ✅ `PATCH /api/cms/news/[id]` - Update news article
+- ✅ `DELETE /api/cms/news/[id]` - Delete news article
+
+**Articles Management:**
+- ✅ `GET /api/cms/articles` - List all articles (with pagination)
+- ✅ `POST /api/cms/articles` - Create article
+- ✅ `GET /api/cms/articles/[id]` - Get single article
+- ✅ `PATCH /api/cms/articles/[id]` - Update article
+- ✅ `DELETE /api/cms/articles/[id]` - Delete article
+
+**Glossary Management:**
+- ✅ `GET /api/cms/glossary` - List all terms (alphabetical)
+- ✅ `POST /api/cms/glossary` - Create glossary term
+- ✅ `GET /api/cms/glossary/[id]` - Get single term
+- ✅ `PATCH /api/cms/glossary/[id]` - Update term
+- ✅ `DELETE /api/cms/glossary/[id]` - Delete term
+
+**Features:**
+- ✅ Automatic slug generation from title/term
+- ✅ Duplicate slug prevention
+- ✅ Published/unpublished states with `publishedAt` tracking
+- ✅ Author tracking (ID and name from session)
+- ✅ Tags and categories support
+- ✅ SEO metadata fields (metaTitle, metaDescription)
+- ✅ Pagination support (page, limit parameters)
+- ✅ Filter by published status
+
+---
+
+## ✅ **COMPLETED: Admin Dashboard UI**
+
+### **Authentication Pages:**
+- ✅ `/cms` - Redirects to login or dashboard
+- ✅ `/cms/login` - Google OAuth login page
+- ✅ `/cms/dashboard` - Main admin dashboard
+
+### **Content Management Pages:**
+
+**News (Cherry/Red Theme):**
+- ✅ `/cms/news` - List all news articles
+- ✅ `/cms/news/new` - Create new article
+- ✅ `/cms/news/[id]` - Edit existing article
+
+**Articles (Yellow Theme):**
+- ✅ `/cms/articles` - List all articles
+- ✅ `/cms/articles/new` - Create new article
+- ✅ `/cms/articles/[id]` - Edit existing article
+
+**Glossary (Orange Theme):**
+- ✅ `/cms/glossary` - List all terms
+- ✅ `/cms/glossary/new` - Create new term
+- ✅ `/cms/glossary/[id]` - Edit existing term
+
+### **Components:**
+
+**Core Components:**
+- ✅ `components/cms/cms-dashboard.tsx` - Dashboard with content type cards
+- ✅ `components/cms/tiptap-editor.tsx` - Rich text WYSIWYG editor
+
+**News Components:**
+- ✅ `components/cms/news-list-view.tsx` - Table with actions
+- ✅ `components/cms/news-form.tsx` - Full CRUD form
+
+**Article Components:**
+- ✅ `components/cms/articles-list-view.tsx` - Table with actions
+- ✅ `components/cms/article-form.tsx` - Full CRUD form
+
+**Glossary Components:**
+- ✅ `components/cms/glossary-list-view.tsx` - Table with actions
+- ✅ `components/cms/glossary-form.tsx` - Simplified form for terms
+
+### **Tiptap Editor Features:**
+- ✅ Text formatting (bold, italic)
+- ✅ Headings (H1, H2, H3)
+- ✅ Lists (bullet, numbered)
+- ✅ Blockquotes and code blocks
+- ✅ Link insertion
+- ✅ Image upload with preview
+- ✅ Undo/redo
+- ✅ Custom toolbar with visual feedback
+
+### **UI/UX Features:**
+- ✅ Color-coded sections (news=red, articles=yellow, glossary=orange)
+- ✅ Loading states with spinners
+- ✅ Published/draft status badges
+- ✅ Confirmation dialogs for deletions
+- ✅ Image upload with 5MB validation
+- ✅ Auto-generated slugs (optional manual override)
+- ✅ SEO metadata forms
+- ✅ Tags and categories inputs
+- ✅ Responsive layouts
+- ✅ Custom SODAX design system (cherry, cream, espresso colors)
+- ✅ Gradient backgrounds and buttons
+- ✅ Smooth transitions and hover effects
+
+---
+
+## ⏳ **REMAINING: Public Content Pages**
+
+### **What Needs to Be Built:**
+
+#### **1. Public News Pages**
+```typescript
+// app/news/page.tsx
+// - List all published news articles
+// - Pagination or infinite scroll
+// - Filter by category/tags
+// - SEO-optimized listing
+
+// app/news/[slug]/page.tsx
+// - Display single news article
+// - Generated at build time (Static Site Generation)
+// - generateMetadata() for SEO
+// - generateStaticParams() for static generation
+// - Implement ISR (Incremental Static Regeneration)
+// - Related articles section
+// - Share buttons
+```
+
+#### **2. Public Article Pages**
+```typescript
+// app/articles/page.tsx
+// - List all published articles
+// - Category filter
+// - Search functionality
+// - Featured articles section
+
+// app/articles/[slug]/page.tsx
+// - Display single article
+// - Table of contents from headings
+// - Reading time estimate
+// - Author information
+// - generateMetadata() for SEO
+// - generateStaticParams() for static generation
+// - ISR configuration
+```
+
+#### **3. Public Glossary Pages**
+```typescript
+// app/glossary/page.tsx
+// - Alphabetical listing of terms
+// - Search/filter by letter
+// - Quick navigation (A-Z jumps)
+
+// app/glossary/[term]/page.tsx
+// - Display term definition
+// - Related terms links
+// - generateMetadata() for SEO
+// - generateStaticParams() for static generation
+```
+
+### **SEO Implementation Pattern:**
+
+```typescript
+// Example: app/news/[slug]/page.tsx
+import { db } from "@/lib/db";
+import type { NewsArticle } from "@/lib/mongodb-types";
+import type { Metadata } from "next";
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> 
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await db.collection<NewsArticle>("news")
+    .findOne({ slug, published: true });
+
+  if (!article) {
+    return { title: "Article Not Found" };
+  }
+
+  return {
+    title: article.metaTitle || article.title,
+    description: article.metaDescription || article.excerpt,
+    openGraph: {
+      title: article.metaTitle || article.title,
+      description: article.metaDescription || article.excerpt,
+      images: article.image ? [article.image] : [],
+      type: "article",
+      publishedTime: article.publishedAt?.toISOString(),
+      authors: [article.authorName],
+      tags: article.tags,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.metaTitle || article.title,
+      description: article.metaDescription || article.excerpt,
+      images: article.image ? [article.image] : [],
+    },
+  };
+}
+
+export async function generateStaticParams() {
+  const articles = await db.collection<NewsArticle>("news")
+    .find({ published: true })
+    .project({ slug: 1 })
+    .toArray();
+
+  return articles.map(article => ({
+    slug: article.slug,
+  }));
+}
+
+export const revalidate = 3600; // ISR: Revalidate every hour
+
+export default async function NewsArticlePage({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> 
+}) {
+  const { slug } = await params;
+  const article = await db.collection<NewsArticle>("news")
+    .findOne({ slug, published: true });
+
+  if (!article) {
+    notFound();
+  }
+
+  return (
+    <article className="max-w-4xl mx-auto px-6 py-12">
+      {/* Article content */}
+    </article>
+  );
+}
+```
+
+### **ISR Configuration:**
+```typescript
+// Add to each public page
+export const revalidate = 3600; // Revalidate every hour
+// Or use on-demand revalidation:
+// import { revalidatePath } from 'next/cache';
+// revalidatePath('/news/[slug]', 'page');
+```
+
+### **Sitemap Generation:**
+Update `app/sitemap.ts` to include dynamic CMS content:
+```typescript
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [news, articles, glossary] = await Promise.all([
+    db.collection("news").find({ published: true }).toArray(),
+    db.collection("articles").find({ published: true }).toArray(),
+    db.collection("glossary").find({ published: true }).toArray(),
+  ]);
+
+  return [
+    ...staticRoutes,
+    ...news.map(article => ({
+      url: `${SITE_URL}/news/${article.slug}`,
+      lastModified: article.updatedAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    })),
+    // ... articles and glossary
+  ];
+}
+```
+
+---
+
+## ⏳ **REMAINING: User Management (Optional)**
+
+### **User Administration Page:**
+```typescript
+// app/cms/users/page.tsx
+// - List all users from Better Auth database
+// - Show email, role, last login
+// - Add/remove admin role
+// - View user activity logs
+```
+
+Currently marked as "Coming soon" in the dashboard.
+
+---
+
+## 🧪 **Testing Checklist**
+
+### **Admin Dashboard Testing:**
+- ✅ Login with Google OAuth (@sodax.com email)
+- ✅ Access dashboard after successful login
+- ✅ Navigate to News/Articles/Glossary sections
+- ✅ Create new content with Tiptap editor
+- ✅ Upload images (verify 5MB limit)
+- ✅ Edit existing content
+- ✅ Delete content (with confirmation)
+- ✅ Toggle published status
+- ✅ View published vs draft items
+- ✅ Test pagination on list views
+- ✅ Logout functionality
+
+### **Public Pages Testing (TODO):**
+- ⏳ View published content as anonymous user
+- ⏳ Verify unpublished content is hidden
+- ⏳ Test SEO metadata in browser/crawlers
+- ⏳ Verify static generation at build time
+- ⏳ Test ISR revalidation
+- ⏳ Check sitemap includes all published content
+- ⏳ Verify Open Graph and Twitter cards
+- ⏳ Test on mobile devices
+- ⏳ Check accessibility (WCAG)
+- ⏳ Verify performance (Lighthouse score)
+
+---
+
+## 📦 **Database Collections**
+
+Better Auth will auto-create these collections:
+- `user` - User accounts
+- `session` - Active sessions
+- `account` - OAuth account links
+- `verification` - Email verification tokens
+
+CMS collections (created on first write):
+- `news` - NewsArticle documents
+- `articles` - Article documents
+- `glossary` - GlossaryTerm documents
+
+---
+
+## 🚀 **Deployment Checklist**
+
+### **Before Deploying:**
+1. ✅ Update `.env.local` with production values
+2. ✅ Set `BETTER_AUTH_URL` to production domain
+3. ✅ Configure Google OAuth redirect URLs for production
+4. ✅ Verify MongoDB Atlas network access allows Vercel IPs
+5. ✅ Test build locally: `pnpm build --filter=web`
+6. ✅ Test lint locally: `pnpm lint --filter=web`
+7. ⏳ Create first admin user (set `ALLOW_ADMIN_CREATION=true`)
+8. ⏳ Test admin dashboard in production
+9. ⏳ Create sample content
+10. ⏳ Verify public pages render correctly
+11. ⏳ Check SEO metadata in production
+12. ⏳ Test image uploads to Vercel Blob
+13. ⏳ Monitor MongoDB Atlas performance
+14. ⏳ Set up error monitoring (Sentry/etc)
+
+### **Post-Deployment:**
+1. ⏳ Set `ALLOW_ADMIN_CREATION=false` after creating admin
+2. ⏳ Add remaining team members via user management
+3. ⏳ Set up automated backups for MongoDB
+4. ⏳ Configure monitoring and alerts
+5. ⏳ Test ISR revalidation in production
+
+---
+
+## 📝 **Development Commands**
+
+```bash
+# Install dependencies
+pnpm install
+
+# Development server
+pnpm dev --filter=web
+
+# Build for production
+pnpm build --filter=web
+
+# Run linter
+pnpm lint --filter=web
+
+# Type checking
+pnpm type-check --filter=web
+
+# Database operations (via MongoDB Compass or Atlas UI)
+# - View collections
+# - Query documents
+# - Create indexes (optional for performance)
+```
+
+---
+
+## 🔑 **Key Files Reference**
+
+### **Authentication:**
+- `lib/auth.ts` - Better Auth configuration
+- `lib/auth-client.ts` - Client-side auth utilities
+- `lib/auth-utils.ts` - Server-side middleware
+- `lib/db.ts` - MongoDB connection export
+
+### **Types:**
+- `lib/mongodb-types.ts` - TypeScript interfaces for all content types
+
+### **API Routes:**
+- `app/api/auth/[...all]/route.ts` - Auth handler
+- `app/api/cms/upload/route.ts` - Image upload
+- `app/api/cms/news/*` - News CRUD
+- `app/api/cms/articles/*` - Articles CRUD
+- `app/api/cms/glossary/*` - Glossary CRUD
+
+### **Admin Pages:**
+- `app/cms/login/page.tsx` - Login
+- `app/cms/dashboard/page.tsx` - Dashboard
+- `app/cms/news/*` - News management
+- `app/cms/articles/*` - Articles management
+- `app/cms/glossary/*` - Glossary management
+
+### **Components:**
+- `components/cms/tiptap-editor.tsx` - Rich text editor
+- `components/cms/*-list-view.tsx` - Content listing tables
+- `components/cms/*-form.tsx` - Content creation/edit forms
+
+---
+
+## 🎯 **Next Session Tasks**
+
+**Priority 1: Public Content Pages**
+1. Create `/news/[slug]/page.tsx` with SEO optimization
+2. Create `/articles/[slug]/page.tsx` with SEO optimization
+3. Create `/glossary/[term]/page.tsx` with SEO optimization
+4. Implement `generateStaticParams()` for all public pages
+5. Add ISR configuration (`revalidate` export)
+6. Update sitemap to include dynamic content
+
+**Priority 2: Content Listing Pages**
+7. Create `/news/page.tsx` - List all published news
+8. Create `/articles/page.tsx` - List all published articles
+9. Create `/glossary/page.tsx` - Alphabetical glossary index
+
+**Priority 3: Enhancements**
+10. Add search functionality
+11. Add category/tag filtering
+12. Add related content sections
+13. Implement user management UI
+14. Add activity logs/audit trail
+
+---
+
+## 💡 **Notes**
+
+- All admin routes require authentication via Better Auth
+- Only @sodax.com emails can access the CMS
+- Admin role must be manually set in MongoDB for first user
+- Images are stored in Vercel Blob (5MB limit)
+- Rich text content is stored as HTML from Tiptap
+- Slugs are auto-generated but can be manually overridden
+- Build is passing with no errors (37+ files)
+- Lint is passing with no warnings
+- MongoDB collections will be created automatically on first write
+
+---
+
+**Last Updated:** January 27, 2026
+**Status:** Backend ✅ | Admin UI ✅ | Public Pages ⏳
 
 This guide explains how to implement a custom, lightweight CMS in your Next.js project, based on the proven architecture used in the Hana Wallet project. This CMS is designed for managing SEO-optimized content with minimal dependencies.
 
