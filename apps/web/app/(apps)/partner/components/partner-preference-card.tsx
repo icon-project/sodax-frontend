@@ -21,15 +21,13 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
   const { data: prefs, updateMutation } = useFeeClaimPreferences(address);
 
   const [dstChain, setDstChain] = useState<ChainId>(SONIC_MAINNET_CHAIN_ID);
-  const [dstToken, setDstToken] = useState<'' | Address>('');
-  const SONIC_USDC_ADDRESS = '0x2921986d3d17411b2d993021ec95029e92383769';
+  const [dstToken, setDstToken] = useState<Address | null>(null);
+  const SonicUsdcToken = spokeChainConfig[SONIC_MAINNET_CHAIN_ID]?.supportedTokens?.USDC;
 
   // Using isFetching ensures the button stays disabled while the data is reloading
   const isRefetching = queryClient.isFetching({ queryKey: ['feeClaimPrefs', address] }) > 0;
 
-  const hasChanged = prefs
-    ? prefs.outputToken.toLowerCase() !== dstToken.toLowerCase() || prefs.dstChain !== dstChain
-    : true;
+  const hasChanged = prefs ? prefs.dstChain !== dstChain || prefs.outputToken !== dstToken : true;
 
   // Update the disabled condition
   const isButtonDisabled = updateMutation.isPending || isRefetching || !hasChanged || !dstToken;
@@ -45,6 +43,8 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
   }, [prefs]);
 
   const handleSave = () => {
+    if (!dstToken) return;
+
     // Safety check for the contract address we found in the logs
     const contractAddress = sodax?.partners?.feeClaim?.config?.protocolIntentsContract;
 
@@ -107,7 +107,7 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
               onSelectToken={token => setDstToken(token)}
               tokens={[
                 {
-                  address: SONIC_USDC_ADDRESS,
+                  address: SonicUsdcToken?.address || '',
                   symbol: 'USDC',
                 },
               ]}

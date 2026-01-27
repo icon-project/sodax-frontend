@@ -40,6 +40,10 @@ export function useFeeClaimExecute() {
         params: { fromToken: fromToken as Address, amount },
         spokeProvider: spokeProvider as SonicSpokeProvider,
       });
+      console.log('CLAIM SUBMIT', {
+        fromToken,
+        amount: amount.toString(),
+      });
 
       if (!result.ok) throw result.error;
       return result.value;

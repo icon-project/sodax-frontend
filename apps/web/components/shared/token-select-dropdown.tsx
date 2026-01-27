@@ -14,13 +14,13 @@ export function TokenSelectDropdown({
   tokens,
   disabled = false,
 }: {
-  selectedToken: Address | '';
+  selectedToken: Address | null;
   onSelectToken: (token: Address) => void;
   tokens: Token[];
   disabled?: boolean;
 }) {
   return (
-    <Select value={selectedToken} onValueChange={onSelectToken} disabled={disabled}>
+    <Select value={selectedToken ?? undefined} onValueChange={onSelectToken} disabled={disabled}>
       <SelectTrigger className="w-full" disabled={disabled}>
         <SelectValue placeholder="Select token" />
       </SelectTrigger>

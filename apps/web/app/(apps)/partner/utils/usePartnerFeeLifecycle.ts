@@ -1,6 +1,7 @@
 import type { Address } from '@sodax/types';
 import { useFeeClaimPreferences } from './useFeeClaimPreferences';
 import { useFeeClaimAssets } from './useFeeClaimAssets';
+import { useMemo, useRef } from 'react';
 
 /**
  * High-level lifecycle hook for the Partner Fee Dashboard.
@@ -17,13 +18,14 @@ import { useFeeClaimAssets } from './useFeeClaimAssets';
  * "Everything the Partner Dashboard page needs."
  */
 export function usePartnerFeeLifecycle(partnerAddress?: Address) {
+  const hasLoadedOnce = useRef(false);
+
   // 1. Fetch Auto-Swap Settings (Destination Chain/Token)
   const {
     data: activePreferences,
     isFetching: isPrefsSyncing,
     updateMutation,
   } = useFeeClaimPreferences(partnerAddress);
-
   // 2. Fetch Claimable Balances
   // We don't need 'hasPreferences' here because we derive 'hasSetupDestination' below
   const {
@@ -32,14 +34,18 @@ export function usePartnerFeeLifecycle(partnerAddress?: Address) {
     refetch: refreshBalances,
   } = useFeeClaimAssets(partnerAddress);
 
-  // 3. Derive Simple UI States
-  // Consider destination "set" if we have prefs OR if update just succeeded
-  const hasSetupDestination = !!activePreferences || updateMutation.isSuccess;
+  if (!isAssetsLoading) {
+    hasLoadedOnce.current = true;
+  }
+  // mark first successful load
+  if (!isAssetsLoading) {
+    hasLoadedOnce.current = true;
+  }
+  const hasSetupDestination = updateMutation.isSuccess || !!activePreferences;
 
-  // Only show the big loading spinner on the very first load
-  const isInitialLoading = isAssetsLoading && !activePreferences;
+  // skeleton ONLY on first load
+  const isInitialLoading = !hasLoadedOnce.current && isAssetsLoading;
 
-  // Show "Updating..." or "Syncing..." during any background activity
   const isRefreshing = isPrefsSyncing || updateMutation.isPending;
 
   return {

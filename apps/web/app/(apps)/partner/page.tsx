@@ -39,8 +39,9 @@ export default function PartnerPage() {
   // const { assets, isLoading, refetch, hasPreferences } = useFeeClaimAssets(effectiveAddress);
   // const { data: preferences } = useFeeClaimPreferences(effectiveAddress as Address);
 
-  const { activePreferences, claimableFees, hasSetupDestination, isInitialLoading, refreshBalances } =
-    usePartnerFeeLifecycle(connectedAddress as Address);
+  const { activePreferences, claimableFees, isInitialLoading, refreshBalances } = usePartnerFeeLifecycle(
+    connectedAddress as Address,
+  );
 
   const handleClaim = (asset: FeeClaimAsset) => {
     setSelectedAsset(asset);
@@ -133,7 +134,6 @@ export default function PartnerPage() {
             assets={claimableFees}
             isLoading={isInitialLoading}
             onClaim={handleClaim}
-            hasSetupDestination={hasSetupDestination}
             prefs={activePreferences}
           />
         )}
@@ -147,6 +147,7 @@ export default function PartnerPage() {
             setSelectedAsset(null);
             refreshBalances(); // Use the unified refresh function
           }}
+          partnerAddress={connectedAddress as Address}
         />
       )}
       <BackToTop />

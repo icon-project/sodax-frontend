@@ -29,7 +29,6 @@ export function PartnerFeeToken({ asset, onClaim }: PartnerFeeTokenProps) {
       approve.mutate(undefined, {
         onSuccess: () => {
           toast.success(`${asset.currency.symbol} approved!`);
-          onClaim(asset);
         },
       });
     }

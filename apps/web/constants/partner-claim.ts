@@ -1,1 +1,1 @@
-export const MIN_PARTNER_CLAIM_AMOUNT = 3;
+export const MIN_PARTNER_CLAIM_AMOUNT = 1;

@@ -38,5 +38,8 @@ export function useFeeClaimBalances(address?: Address) {
       return result.value;
     },
     enabled: !!sodax && !!address,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 60_000,
   });
 }

@@ -34,6 +34,8 @@ export function useFeeClaimPreferences(address?: Address) {
       return result.value;
     },
     enabled: !!sodax && !!address,
+    refetchOnWindowFocus: false,
+    staleTime: Number.POSITIVE_INFINITY, // preferences basically never change unless user does it
   });
 
   // UPDATE preferences
@@ -47,9 +49,12 @@ export function useFeeClaimPreferences(address?: Address) {
       if (!result.ok) throw result.error;
       return result.value;
     },
-    onSuccess: () => {
-      // Re-fetch preferences after update
-      queryClient.invalidateQueries({ queryKey: ['feeClaimPrefs', address] });
+    onSuccess: (_, variables) => {
+      queryClient.setQueryData(['feeClaimPrefs', address], {
+        outputToken: variables.outputToken,
+        dstChain: variables.dstChain,
+        dstAddress: address,
+      });
     },
   });
 
