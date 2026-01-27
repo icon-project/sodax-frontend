@@ -13,7 +13,7 @@ public/dist
 .idea
 **/build/**
 
-# Agent skills (local to VSCode)
-.agents/
-.github/skills/
+# CMS agent folders in web app only
+apps/web/.agents
+apps/web/.github
 
