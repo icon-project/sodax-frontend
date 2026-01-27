@@ -2,15 +2,15 @@
 
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { type Address, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { ClaimModal } from './components/claim-modal';
 import { PartnerPreferencesCard } from './components/partner-preference-card';
 import { useXAccount } from '@sodax/wallet-sdk-react';
-import { useFeeClaimAssets, type FeeClaimAsset } from './utils/useFeeClaimAssets';
-import { useFeeClaimPreferences } from './utils/useFeeClaimPreferences';
 import { PartnerFeeBalances } from './components/partner-fee-balances';
 import { BackToTop } from '@/components/shared/back-to-top';
+import { usePartnerFeeLifecycle } from './utils/usePartnerFeeLifecycle';
+import type { FeeClaimAsset } from './utils/useFeeClaimAssets';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,26 +21,26 @@ export default function PartnerPage() {
 
   // TODO START: DEV TESTING LOGIC (Delete this block before PR)
   // =========================================================
-  const effectiveAddress = useMemo(() => {
-    const devAddress = process.env.NEXT_PUBLIC_DEV_PARTNER_ADDRESS;
-    const isDev = process.env.NODE_ENV === 'development';
-    if (isDev && devAddress) {
-      console.log('🛠️ Dev Mode: Using partner address from .env.local:', devAddress);
-      return devAddress as Address;
-    }
-    return connectedAddress as Address;
-  }, [connectedAddress]);
+  // const effectiveAddress = useMemo(() => {
+  //   const devAddress = process.env.NEXT_PUBLIC_DEV_PARTNER_ADDRESS;
+  //   const isDev = process.env.NODE_ENV === 'development';
+  //   if (isDev && devAddress) {
+  //     // console.log('Dev Mode: Using partner address from .env.local:', devAddress);
+  //     return devAddress as Address;
+  //   }
+  //   return connectedAddress as Address;
+  // }, [connectedAddress]);
   // console.log('Final Effective Address:', effectiveAddress);
 
   // =========================================================
   // END: DEV TESTING LOGIC
 
   // 2. Fetch current auto-swap preferences to show in UI
-  const { assets, isLoading, refetch, hasPreferences } = useFeeClaimAssets(effectiveAddress);
-  const { data: preferences } = useFeeClaimPreferences(effectiveAddress as Address);
+  // const { assets, isLoading, refetch, hasPreferences } = useFeeClaimAssets(effectiveAddress);
+  // const { data: preferences } = useFeeClaimPreferences(effectiveAddress as Address);
 
-  // console.log('PartnerPage balances:', assets);
-  // console.log('partner address:', effectiveAddress);
+  const { activePreferences, claimableFees, hasSetupDestination, isInitialLoading, refreshBalances } =
+    usePartnerFeeLifecycle(connectedAddress as Address);
 
   const handleClaim = (asset: FeeClaimAsset) => {
     setSelectedAsset(asset);
@@ -78,21 +78,22 @@ export default function PartnerPage() {
           </div>
           {/* Subtitle row */}
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-sm text-clay-light w-full">
-            {effectiveAddress ? (
+            {connectedAddress ? (
               <>
                 <div className="flex flex-col">
                   <span className="leading-snug">Monitor and manage fees earned through your SODAX partnership.</span>
                   {/* Show current preferences as suggested by Robi */}
-                  {preferences && (
+                  {activePreferences && (
                     <span className="text-xs text-clay mt-1">
-                      Auto-swap destination set: {preferences.dstAddress.slice(0, 6)}... on {preferences.dstChain}
+                      Auto-swap destination set: {activePreferences.dstAddress.slice(0, 6)}... on{' '}
+                      {activePreferences.dstChain}
                     </span>
                   )}
                 </div>
                 <span className="leading-snug sm:text-right break-all sm:break-normal">
                   <span className="text-clay-medium">Connected wallet: </span>
                   <span className="font-mono font-bold">
-                    {effectiveAddress.slice(0, 6)}...{effectiveAddress.slice(-4)}
+                    {connectedAddress.slice(0, 6)}...{connectedAddress.slice(-4)}
                   </span>{' '}
                 </span>
               </>
@@ -102,32 +103,38 @@ export default function PartnerPage() {
           </div>
         </motion.div>
       </div>
-      <div className="w-full h-px bg-clay-light/30 my-2" />
-      <div className="w-1/2 rounded-lg   bg-cream-white   border border-cherry-grey   px-4 py-3   text-sm   text-clay ">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-clay-dark font-bold">How fee claiming works</span>
-        </div>
-        <div className="h-px bg-cherry-grey/60 my-2" />
-        <ul className="list-disc pl-5 space-y-1 text-clay-light">
-          <li>Fees are automatically swapped to USDC</li>
-          <li>Destination is configured once</li>
-          <li>First claim requires a one-time approval</li>
-          <li>
-            Minimum claim amount is <span className="text-clay font-medium">3 USDC</span>
-          </li>
-        </ul>
-      </div>
+      {connectedAddress && (
+        <>
+          <div className="w-full h-px bg-clay-light/30 my-2" />
+          <div className="w-1/2 rounded-lg   bg-cream-white   border border-cherry-grey   px-4 py-3   text-sm   text-clay ">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-clay-dark font-bold">How fee claiming works</span>
+            </div>
+            <div className="h-px bg-cherry-grey/60 my-2" />
+            <ul className="list-disc pl-5 space-y-1 text-clay-light">
+              <li>Fees are automatically swapped to USDC</li>
+              <li>Destination is configured once</li>
+              <li>First claim requires a one-time approval</li>
+              <li>
+                Minimum claim amount is <span className="text-clay font-medium">3 USDC</span>
+              </li>
+              <li>Only assets with a positive balance are displayed</li>
+            </ul>
+          </div>
+        </>
+      )}
       {/* 2. Preferences Card*/}
-      {effectiveAddress && <PartnerPreferencesCard address={effectiveAddress as Address} />}
+      {connectedAddress && <PartnerPreferencesCard address={connectedAddress as Address} />}
       <div className="w-1/2 h-px bg-clay-light/30 my-2" />
       {/* Main content */}
       <motion.div variants={itemVariants}>
-        {effectiveAddress && (
+        {connectedAddress && (
           <PartnerFeeBalances
-            assets={assets}
-            isLoading={isLoading}
+            assets={claimableFees}
+            isLoading={isInitialLoading}
             onClaim={handleClaim}
-            hasPreferences={hasPreferences}
+            hasSetupDestination={hasSetupDestination}
+            prefs={activePreferences}
           />
         )}
       </motion.div>
@@ -138,7 +145,7 @@ export default function PartnerPage() {
           asset={selectedAsset}
           onSuccess={() => {
             setSelectedAsset(null);
-            refetch();
+            refreshBalances(); // Use the unified refresh function
           }}
         />
       )}

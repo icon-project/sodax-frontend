@@ -5,6 +5,20 @@ import { SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
+/**
+ * Handles ERC20 approval for partner fee claiming.
+ *
+ * WHAT IT DOES:
+ * - Checks if a token is already approved for claiming
+ * - Allows approving the token if needed
+ *
+ * SPECIAL CASE:
+ * - Native tokens (e.g. Sonic) are always considered approved
+ *
+ * WHAT IT DOES NOT DO:
+ * - Does not decide if a claim is allowed
+ * - Does not execute the claim
+ */
 export function useFeeClaimApproval(token?: Address) {
   const { sodax } = useSodaxContext();
   const walletProvider = useWalletProvider(SONIC_MAINNET_CHAIN_ID);

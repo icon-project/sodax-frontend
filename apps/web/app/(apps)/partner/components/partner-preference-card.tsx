@@ -10,14 +10,31 @@ import { toast } from '@/components/ui/sonner';
 import { Settings2 } from 'lucide-react';
 import { useFeeClaimPreferences } from '../utils/useFeeClaimPreferences';
 import { TokenSelectDropdown } from '@/components/shared/token-select-dropdown';
+import { useSodaxContext } from '@sodax/dapp-kit';
+import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
+import { getChainName } from '@/constants/chains';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function PartnerPreferencesCard({ address }: { address: Address }) {
-  const { data: prefs, updateMutation } = useFeeClaimPreferences(address);
-  const [isLocked, setIsLocked] = useState(false);
+  const { sodax } = useSodaxContext();
+  const queryClient = useQueryClient();
+  const { data: prefs, updateMutation, isFetching } = useFeeClaimPreferences(address);
 
   const [dstChain, setDstChain] = useState<ChainId>(SONIC_MAINNET_CHAIN_ID);
   const [dstToken, setDstToken] = useState<'' | Address>('');
   const SONIC_USDC_ADDRESS = '0x2921986d3d17411b2d993021ec95029e92383769';
+
+  // Using isFetching ensures the button stays disabled while the data is reloading
+  const isRefetching = queryClient.isFetching({ queryKey: ['feeClaimPrefs', address] }) > 0;
+
+  const hasChanged = prefs
+    ? prefs.outputToken.toLowerCase() !== dstToken.toLowerCase() || prefs.dstChain !== dstChain
+    : true;
+
+  // Update the disabled condition
+  const isButtonDisabled = updateMutation.isPending || isRefetching || !hasChanged || !dstToken;
+
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(SONIC_MAINNET_CHAIN_ID);
 
   // Sync local state when preferences load
   useEffect(() => {
@@ -28,26 +45,40 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
   }, [prefs]);
 
   const handleSave = () => {
+    // Safety check for the contract address we found in the logs
+    const contractAddress = sodax?.partners?.feeClaim?.config?.protocolIntentsContract;
+
+    if (!contractAddress) {
+      toast.error('SDK Error: Protocol Intents Contract missing');
+      return;
+    }
+
     updateMutation.mutate(
       {
         outputToken: dstToken as Address,
         dstChain: dstChain,
-        dstAddress: address, // Usually sending to the same wallet
+        dstAddress: address,
       },
       {
         onSuccess: () => {
-          setIsLocked(true);
-          toast.success('Auto-swap destination set', {
-            description: `Fees will be sent to USDC on ${dstChain}`,
+          // Use 'feeClaimPrefs' to match the hook exactly
+          queryClient.invalidateQueries({
+            queryKey: ['feeClaimPrefs', address],
           });
+          toast.success('Destination updated!');
+        }, // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+        onError: (err: any) => {
+          // Use the robust error message logic to avoid "undefined"
+          const msg = err?.shortMessage || err?.message || 'Update failed';
+          toast.error(`Update failed: ${msg}`);
         },
-        onError: err => toast.error(`Failed to update: ${err.message}`),
       },
     );
   };
 
   return (
-    <main className="bg-transparent w-1/2">
+    <main id="preferences-card" className="bg-transparent w-1/2 scroll-mt-24">
+      {' '}
       <CardHeader className="pb-3">
         <CardTitle className="text-md font-bold flex items-center gap-2 text-clay">
           <Settings2 className="w-4 h-4 text-cherry" />
@@ -65,7 +96,7 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
               selectedChainId={dstChain}
               selectChainId={id => setDstChain(id as ChainId)}
               allowedChains={Object.values(spokeChainConfig).map(c => c.chain.id)}
-              disabled={isLocked}
+              disabled={updateMutation.isPending}
             />
           </div>
 
@@ -80,21 +111,27 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
                   symbol: 'USDC',
                 },
               ]}
-              disabled={isLocked}
+              disabled={updateMutation.isPending}
             />
           </div>
         </div>
 
         <div className="flex justify-center">
-          <Button
-            variant="cherry"
-            className="px-8 py-5"
-            size="sm"
-            onClick={handleSave}
-            disabled={isLocked || updateMutation.isPending || !dstToken}
-          >
-            {updateMutation.isPending ? 'Setting destination…' : isLocked ? 'Destination Set ✓' : 'Confirm'}
-          </Button>
+          {isWrongChain ? (
+            /* Force network switch if on the wrong chain */
+            <Button variant="cherry" className="px-8 py-5" onClick={handleSwitchChain}>
+              Switch to {getChainName(SONIC_MAINNET_CHAIN_ID)}
+            </Button>
+          ) : (
+            /* The button is DISABLED if:
+       1. A mutation is currently in flight (isPending)
+       2. OR the current local state matches the saved preferences (!hasChanged)
+       3. OR no destination token has been selected (!dstToken)
+    */
+            <Button variant="cherry" className="px-8 py-5" size="sm" onClick={handleSave} disabled={isButtonDisabled}>
+              {updateMutation.isPending ? 'Updating...' : !hasChanged ? 'Destination Set ✓' : 'Update Destination'}
+            </Button>
+          )}
         </div>
       </CardContent>
     </main>

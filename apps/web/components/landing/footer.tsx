@@ -40,7 +40,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <FooterLink href="https://app.balanced.network/" showArrow>
             Balanced DeFi
           </FooterLink>
-          <FooterLink href="/partner">
+          <FooterLink href="/partner" showArrow>
             <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
               partner portal
             </div>
