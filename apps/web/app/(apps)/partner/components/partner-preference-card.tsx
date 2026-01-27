@@ -18,7 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 export function PartnerPreferencesCard({ address }: { address: Address }) {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
-  const { data: prefs, updateMutation, isFetching } = useFeeClaimPreferences(address);
+  const { data: prefs, updateMutation } = useFeeClaimPreferences(address);
 
   const [dstChain, setDstChain] = useState<ChainId>(SONIC_MAINNET_CHAIN_ID);
   const [dstToken, setDstToken] = useState<'' | Address>('');
