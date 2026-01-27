@@ -79,7 +79,7 @@ function AccordionCollapsedInfo({ tokens, apy }: { tokens: XToken[]; apy: string
         {unique.length > 9 && (
           <div className="ring-2 ring-white bg-white rounded w-4 h-4 flex items-center justify-center">
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <span className="text-espresso text-[8px] flex">+{unique.length - 9}</span>
               </TooltipTrigger>
               <TooltipContent
