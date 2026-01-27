@@ -79,7 +79,7 @@ function AccordionCollapsedInfo({ tokens, apy }: { tokens: XToken[]; apy: string
         {unique.length > 9 && (
           <div className="ring-2 ring-white bg-white rounded w-4 h-4 flex items-center justify-center">
             <Tooltip>
-              <TooltipTrigger>
+              <TooltipTrigger asChild>
                 <span className="text-espresso text-[8px] flex">+{unique.length - 9}</span>
               </TooltipTrigger>
               <TooltipContent
@@ -129,7 +129,8 @@ export default function AssetListItemHeader({
 
   const { depositValue } = useSaveState();
 
-  const displayedBalance = Math.max(0, totalWalletBalance - depositValue);
+  // const displayedBalance = Math.max(0, totalWalletBalance - depositValue);
+  const displayedBalance = 0;
   const { data: tokenPrice } = useTokenPrice(tokens[0] as XToken);
   const isLive = depositValue > 0;
   return (
