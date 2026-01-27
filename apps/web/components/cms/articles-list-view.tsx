@@ -61,7 +61,7 @@ export function ArticlesListView() {
             <Button
               variant="ghost"
               onClick={() => router.push("/cms/dashboard")}
-              className="hover:bg-[var(--cream)]"
+              className="text-[var(--clay)] hover:text-[var(--espresso)] hover:bg-transparent px-2 !outline-0 !border-0"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back

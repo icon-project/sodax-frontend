@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth-utils";
+import { requirePermission } from "@/lib/auth-utils";
 import { GlossaryForm } from "@/components/cms/glossary-form";
 import { db } from "@/lib/db";
 import { ObjectId } from "mongodb";
@@ -11,7 +11,7 @@ interface PageProps {
 
 export default async function EditGlossaryPage({ params }: PageProps) {
   try {
-    await requireAdmin();
+    await requirePermission("glossary");
     const { id } = await params;
     
     const collection = db.collection<GlossaryTerm>("glossary");

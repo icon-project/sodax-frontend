@@ -25,8 +25,8 @@ export default function CMSLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--cream)] via-[var(--vibrant-white)] to-[var(--almost-white)]">
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-[var(--cream)] via-[var(--vibrant-white)] to-[var(--almost-white)]">
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" />
       
       <Card className="w-full max-w-md mx-4 shadow-2xl border-[var(--cherry-grey)] relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--cherry-dark)] via-[var(--cherry-soda)] to-[var(--cherry-bright)]" />
