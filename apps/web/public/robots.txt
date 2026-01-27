@@ -7,6 +7,8 @@ Allow: /
 # Disallow bot spam and unnecessary paths
 Disallow: /_next/
 Disallow: /*.json
+Disallow: /cms/
+Disallow: /api/cms/
 
 # Reference to sitemap
 Sitemap: https://sodax.com/sitemap.xml

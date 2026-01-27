@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth-utils";
+import { requirePermission } from "@/lib/auth-utils";
 import { NewsForm } from "@/components/cms/news-form";
 import { db } from "@/lib/db";
 import { ObjectId } from "mongodb";
@@ -11,7 +11,7 @@ interface PageProps {
 
 export default async function EditNewsPage({ params }: PageProps) {
   try {
-    await requireAdmin();
+    await requirePermission("news");
     const { id } = await params;
     
     const collection = db.collection<NewsArticle>("news");

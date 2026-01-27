@@ -90,7 +90,8 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@types/react-scroll": "^1.8.10",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.6.1",
+    "tsx": "^4.19.4",
     "typescript": "catalog:"
   }
 }

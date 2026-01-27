@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-utils";
+import { requirePermission } from "@/lib/auth-utils";
 import { generateSlug, type GlossaryTerm } from "@/lib/mongodb-types";
 import { ObjectId } from "mongodb";
 
@@ -8,13 +8,13 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-// GET /api/cms/glossary/[id]
+// GET /api/cms/glossary/[id] - Get single glossary term
 export async function GET(
   request: NextRequest,
   context: RouteContext
 ) {
   try {
-    await requireAdmin();
+    await requirePermission("glossary");
 
     const { id } = await context.params;
     const collection = db.collection<GlossaryTerm>("glossary");
@@ -40,7 +40,7 @@ export async function PATCH(
   context: RouteContext
 ) {
   try {
-    await requireAdmin();
+    await requirePermission("glossary");
 
     const { id } = await context.params;
     const body = await request.json();
@@ -98,7 +98,7 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
-    await requireAdmin();
+    await requirePermission("glossary");
 
     const { id } = await context.params;
     const collection = db.collection<GlossaryTerm>("glossary");

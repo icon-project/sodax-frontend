@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-utils";
+import { requirePermission, requireAdmin } from "@/lib/auth-utils";
 import { generateSlug, type NewsArticle } from "@/lib/mongodb-types";
 import { ObjectId } from "mongodb";
 
@@ -14,7 +14,7 @@ export async function GET(
   context: RouteContext
 ) {
   try {
-    await requireAdmin();
+    await requirePermission("news");
 
     const { id } = await context.params;
     const collection = db.collection<NewsArticle>("news");
@@ -100,7 +100,7 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
-    await requireAdmin();
+    await requirePermission("news");
 
     const { id } = await context.params;
     const collection = db.collection<NewsArticle>("news");

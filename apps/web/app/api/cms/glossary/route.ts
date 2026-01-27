@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-utils";
+import { requirePermission } from "@/lib/auth-utils";
 import { generateSlug, type GlossaryTerm } from "@/lib/mongodb-types";
 
 // GET /api/cms/glossary - List all glossary terms
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin();
+    await requirePermission("glossary");
 
     const { searchParams } = new URL(request.url);
     const published = searchParams.get("published");
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 // POST /api/cms/glossary - Create new glossary term
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAdmin();
+    const session = await requirePermission("glossary");
 
     const body = await request.json();
     const {

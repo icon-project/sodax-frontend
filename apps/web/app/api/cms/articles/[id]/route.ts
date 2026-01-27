@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireAdmin } from "@/lib/auth-utils";
+import { requirePermission, requireAdmin } from "@/lib/auth-utils";
 import { generateSlug, type Article } from "@/lib/mongodb-types";
 import { ObjectId } from "mongodb";
 
@@ -8,13 +8,13 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-// GET /api/cms/articles/[id]
+// GET /api/cms/articles/[id] - Get single article
 export async function GET(
   request: NextRequest,
   context: RouteContext
 ) {
   try {
-    await requireAdmin();
+    await requirePermission("articles");
 
     const { id } = await context.params;
     const collection = db.collection<Article>("articles");
@@ -98,7 +98,7 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
-    await requireAdmin();
+    await requirePermission("articles");
 
     const { id } = await context.params;
     const collection = db.collection<Article>("articles");
