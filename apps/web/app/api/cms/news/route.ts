@@ -1,24 +1,24 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { requirePermission } from "@/lib/auth-utils";
-import { generateSlug, type NewsArticle } from "@/lib/mongodb-types";
+import { type NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { requirePermission } from '@/lib/auth-utils';
+import { generateSlug, type NewsArticle } from '@/lib/mongodb-types';
 
 // GET /api/cms/news - List all news (with optional filters)
 export async function GET(request: NextRequest) {
   try {
-    await requirePermission("news");
+    await requirePermission('news');
 
     const { searchParams } = new URL(request.url);
-    const published = searchParams.get("published");
-    const page = Number.parseInt(searchParams.get("page") || "1", 10);
-    const limit = Number.parseInt(searchParams.get("limit") || "20", 10);
+    const published = searchParams.get('published');
+    const page = Number.parseInt(searchParams.get('page') || '1', 10);
+    const limit = Number.parseInt(searchParams.get('limit') || '20', 10);
 
     const filter: Record<string, unknown> = {};
     if (published !== null) {
-      filter.published = published === "true";
+      filter.published = published === 'true';
     }
 
-    const collection = db.collection<NewsArticle>("news");
+    const collection = db.collection<NewsArticle>('news');
 
     // Parallel fetching for data and count
     const [news, total] = await Promise.all([
@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("GET /api/cms/news error:", error);
+    console.error('GET /api/cms/news error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to fetch news" },
-      { status: error instanceof Error && error.message.includes("Forbidden") ? 403 : 500 }
+      { error: error instanceof Error ? error.message : 'Failed to fetch news' },
+      { status: error instanceof Error && error.message.includes('Forbidden') ? 403 : 500 },
     );
   }
 }
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 // POST /api/cms/news - Create new news article
 export async function POST(request: NextRequest) {
   try {
-    const session = await requirePermission("news");
+    const session = await requirePermission('news');
 
     const body = await request.json();
     const {
@@ -64,26 +64,20 @@ export async function POST(request: NextRequest) {
       metaDescription,
       published = false,
       tags = [],
-      category,
+      categories = [],
     } = body;
 
     if (!title || !content) {
-      return NextResponse.json(
-        { error: "Title and content are required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
     }
 
     const slug = generateSlug(title);
-    const collection = db.collection<NewsArticle>("news");
+    const collection = db.collection<NewsArticle>('news');
 
     // Check if slug already exists
     const existing = await collection.findOne({ slug });
     if (existing) {
-      return NextResponse.json(
-        { error: "A news article with this title already exists" },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: 'A news article with this title already exists' }, { status: 409 });
     }
 
     const now = new Date();
@@ -91,7 +85,7 @@ export async function POST(request: NextRequest) {
       title,
       slug,
       content,
-      excerpt: excerpt || content.substring(0, 200).replace(/<[^>]*>/g, ""),
+      excerpt: excerpt || content.substring(0, 200).replace(/<[^>]*>/g, ''),
       image,
       metaTitle: metaTitle || title,
       metaDescription: metaDescription || excerpt,
@@ -100,22 +94,19 @@ export async function POST(request: NextRequest) {
       authorId: session.user.id,
       authorName: session.user.name,
       tags,
-      category,
+      categories,
       createdAt: now,
       updatedAt: now,
     };
 
     const result = await collection.insertOne(article);
 
-    return NextResponse.json(
-      { ...article, _id: result.insertedId },
-      { status: 201 }
-    );
+    return NextResponse.json({ ...article, _id: result.insertedId }, { status: 201 });
   } catch (error) {
-    console.error("POST /api/cms/news error:", error);
+    console.error('POST /api/cms/news error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to create news" },
-      { status: error instanceof Error && error.message.includes("Forbidden") ? 403 : 500 }
+      { error: error instanceof Error ? error.message : 'Failed to create news' },
+      { status: error instanceof Error && error.message.includes('Forbidden') ? 403 : 500 },
     );
   }
 }
