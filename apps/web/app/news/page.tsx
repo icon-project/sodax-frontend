@@ -292,7 +292,7 @@ export default async function NewsPage(props: {
                 >
                   Technical
                 </Link>
-                <div className="ml-auto pl-6 border-l border-[var(--clay-light)]">
+                <div className="hidden md:flex ml-auto pl-6 border-l border-[var(--clay-light)]">
                   <span className="text-xs text-[var(--clay)] font-medium">
                     {filteredArticles.length} {filteredArticles.length === 1 ? 'Article' : 'Articles'}
                   </span>

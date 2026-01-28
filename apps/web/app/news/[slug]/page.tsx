@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
+import { ShareButton } from '@/components/news/share-button';
 
 interface NewsArticle {
   _id: string;
@@ -270,6 +271,9 @@ export default async function NewsArticlePage({
                     {formatDate(article.publishedAt || article.createdAt)}
                   </time>
                   {modifiedTime && <meta itemProp="dateModified" content={modifiedTime} />}
+                  <div className="ml-auto">
+                    <ShareButton title={article.title} url={`https://sodax.com/news/${article.slug}`} />
+                  </div>
                 </div>
               </header>
 
