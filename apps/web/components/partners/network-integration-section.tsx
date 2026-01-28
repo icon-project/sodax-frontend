@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, Clock, CurrencyDollar } from '@phosphor-icons/react/dist/csr';
+import { CheckCircleIcon, ClockIcon, CurrencyDollarIcon } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 
 const integrationPackages = [
@@ -103,7 +103,7 @@ export default function NetworkIntegrationSection() {
                   <span className="text-2xl font-['InterBold'] text-white">{pkg.price}</span>
                 </div>
                 <div className="flex items-center gap-2 text-cream/70">
-                  <Clock weight="duotone" className="w-4 h-4" />
+                  <ClockIcon weight="duotone" className="w-4 h-4" />
                   <span className="text-sm font-['InterMedium']">{pkg.timeline} deployment</span>
                 </div>
               </div>
@@ -111,7 +111,7 @@ export default function NetworkIntegrationSection() {
               <div className="space-y-3 mb-8">
                 {pkg.features.map(feature => (
                   <div key={feature} className="flex items-start gap-3">
-                    <CheckCircle weight="duotone" className="w-5 h-5 text-yellow-soda shrink-0 mt-0.5" />
+                    <CheckCircleIcon weight="duotone" className="w-5 h-5 text-yellow-soda shrink-0 mt-0.5" />
                     <span className="text-sm text-cream font-['InterRegular']">{feature}</span>
                   </div>
                 ))}

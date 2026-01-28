@@ -1,32 +1,32 @@
 'use client';
 
-import { EyeSlash, Graph, CurrencyDollar, Package } from '@phosphor-icons/react/dist/ssr';
+import { EyeSlashIcon, GraphIcon, CurrencyDollarIcon, PackageIcon } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 
 const advantages = [
   {
-    icon: Graph,
+    icon: GraphIcon,
     title: 'Execution Coordination',
     description:
       'SODAX coordinates liquidity, timing, and failure modes so you can focus on your application logic. Handles routing paths and recovery without exposing users to intermediate steps.',
     highlight: 'Asynchronous execution handled',
   },
   {
-    icon: Package,
+    icon: PackageIcon,
     title: 'EVM and Non-EVM Support',
     description:
       'Connect to Ethereum, Solana, Sui, Stellar, and other environments through a single integration surface. SODAX manages network-specific adapters.',
     highlight: '14+ networks supported',
   },
   {
-    icon: CurrencyDollar,
+    icon: CurrencyDollarIcon,
     title: 'Aligned Economics',
     description:
       'Revenue sharing on protocol fees for volume you route through the system. Transparent fee structure with no hidden costs.',
     highlight: 'Volume-based revenue share',
   },
   {
-    icon: EyeSlash,
+    icon: EyeSlashIcon,
     title: 'Modular Integration',
     description:
       'Use only the components you need. Integrate swaps, lending, or wallet connections independently through composable SDKs.',

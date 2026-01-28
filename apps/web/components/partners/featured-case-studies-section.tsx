@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { ArrowRight } from '@phosphor-icons/react/dist/csr';
+import { ArrowRightIcon } from '@phosphor-icons/react';
 
 const caseStudies = [
   {
@@ -118,7 +118,7 @@ export default function FeaturedCaseStudiesSection() {
                       <span className="text-sm font-['InterMedium'] text-cherry-soda group-hover:text-cherry-bright transition-colors">
                         Read Case Study
                       </span>
-                      <ArrowRight className="w-5 h-5 text-cherry-soda group-hover:translate-x-1 transition-transform" />
+                      <ArrowRightIcon className="w-5 h-5 text-cherry-soda group-hover:translate-x-1 transition-transform" />
                     </div>
                   )}
                   {study.href === '#' && (

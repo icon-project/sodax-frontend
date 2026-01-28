@@ -1,38 +1,38 @@
 'use client';
 
-import { Wallet, ArrowsLeftRight, Vault, TrendUp, Globe } from '@phosphor-icons/react/dist/csr';
+import { WalletIcon, ArrowsLeftRightIcon, VaultIcon, TrendUpIcon, GlobeIcon } from '@phosphor-icons/react';
 
 const categories = [
   {
-    icon: Wallet,
+    icon: WalletIcon,
     title: 'Wallets',
     description: 'Let users swap and spend across networks without managing bridges or tracking asset locations.',
     examples: ['Hana Wallet', 'MetaMask', 'Trust Wallet'],
     gradient: 'from-cherry-soda to-cherry-bright',
   },
   {
-    icon: ArrowsLeftRight,
+    icon: ArrowsLeftRightIcon,
     title: 'DEXs & Aggregators',
     description: 'Extend routing to include cross-network paths. SODAX handles execution coordination and liquidity.',
     examples: ['1inch', 'Balanced', 'Uniswap'],
     gradient: 'from-yellow-soda to-yellow-soda/80',
   },
   {
-    icon: Vault,
+    icon: VaultIcon,
     title: 'Lending Protocols',
     description: 'Accept collateral from other networks. Users supply on one network and borrow on another.',
     examples: ['Aave', 'Compound', 'Venus'],
     gradient: 'from-cherry-bright to-cherry-soda',
   },
   {
-    icon: TrendUp,
+    icon: TrendUpIcon,
     title: 'Perp DEXs & Yield Apps',
     description: 'Accept deposits from any supported network. Coordinate settlement into your native assets.',
     examples: ['Amped Finance', 'GMX', 'dYdX'],
     gradient: 'from-clay to-clay-dark',
   },
   {
-    icon: Globe,
+    icon: GlobeIcon,
     title: 'New Networks',
     description: 'Access shared liquidity from launch. Offer asset variants backed by system-level inventory.',
     examples: ['LightLink', 'Sonic', 'New L2s'],

@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowRightIcon, FileTextIcon, GithubLogoIcon, ChatCircleIcon } from '@phosphor-icons/react/dist/csr';
+import { ArrowRightIcon, FileTextIcon, GithubLogoIcon, ChatCircleIcon } from '@phosphor-icons/react';
 
 export default function PartnersCtaSection() {
   return (
