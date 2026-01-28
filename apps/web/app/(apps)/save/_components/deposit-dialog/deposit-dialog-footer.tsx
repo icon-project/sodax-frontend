@@ -13,6 +13,7 @@ import { DEPOSIT_STEP } from '../../_stores/save-store';
 import { CheckIcon, Loader2Icon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { SpokeProvider } from '@sodax/sdk';
+import { useQueryClient } from '@tanstack/react-query';
 interface DepositDialogFooterProps {
   selectedToken: XToken | null;
   onPendingChange?: (isPending: boolean) => void;
@@ -33,6 +34,7 @@ export default function DepositDialogFooter({
   const [isCompleted, setIsCompleted] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
     params: {
       token: selectedToken?.address as string,
@@ -76,6 +78,10 @@ export default function DepositDialogFooter({
     });
     if (response.ok) {
       setIsCompleted(true);
+      // Refetch supply balances and reserves data after successful deposit
+      await queryClient.invalidateQueries({ queryKey: ['mm', 'aTokensBalances'] });
+      await queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData'] });
+      await queryClient.invalidateQueries({ queryKey: ['mm', 'reservesUsdFormat'] });
     }
   };
 

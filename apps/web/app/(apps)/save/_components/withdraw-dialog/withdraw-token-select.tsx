@@ -45,12 +45,15 @@ export default function WithdrawTokenSelect({
                 onClick={() => onSelectNetwork(network)}
                 onMouseEnter={() => setHoveredNetwork(index)}
                 onMouseLeave={() => setHoveredNetwork(null)}
+                animate={{
+                  filter: selectedNetwork !== null && !isSelected ? 'blur(4px) opacity(0.4)' : 'none',
+                }}
                 className={cn(
                   'flex items-center gap-3 cursor-pointer',
                   selectedNetwork !== null
                     ? isSelected
                       ? 'opacity-100'
-                      : 'blur-[4px] opacity-40'
+                      : ''
                     : hoveredNetwork !== null
                       ? hoveredNetwork === index
                         ? 'opacity-100'

@@ -77,26 +77,30 @@ function AccordionCollapsedInfo({ tokens, apy }: { tokens: XToken[]; apy: string
         ))}
 
         {unique.length > 9 && (
-          <div className="ring-2 ring-white bg-white rounded w-4 h-4 flex items-center justify-center">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="text-espresso text-[8px] flex">+{unique.length - 9}</span>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                sideOffset={20}
-                className="bg-white px-8 py-4 items-center gap-2 text-espresso rounded-full h-[54px] text-(length:--body-comfortable) flex"
-              >
-                Also on
-                <div className="flex flex-wrap -gap-1">
-                  {unique.slice(9).map(t => (
-                    <div key={t.xChainId} className="-mr-[2px] group-hover:mr-0 transition-all duration-200">
-                      <NetworkIcon id={t.xChainId} />
-                    </div>
-                  ))}
-                </div>
-              </TooltipContent>
-            </Tooltip>
+          <div className="w-4 h-4 relative bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden">
+            <div className="left-[3px] top-[3px] absolute inline-flex justify-start items-center">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="justify-start text-espresso text-[8px] font-medium font-['InterRegular'] leading-[9.60px]">
+                    +{unique.length - 9}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  sideOffset={20}
+                  className="bg-white px-8 py-4 items-center gap-2 text-espresso rounded-full h-[54px] text-(length:--body-comfortable) flex"
+                >
+                  Also on
+                  <div className="flex flex-wrap -gap-1">
+                    {unique.slice(9).map(t => (
+                      <div key={t.xChainId} className="-mr-[2px] group-hover:mr-0 transition-all duration-200">
+                        <NetworkIcon id={t.xChainId} />
+                      </div>
+                    ))}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         )}
       </div>
