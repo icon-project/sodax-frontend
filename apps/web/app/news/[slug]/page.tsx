@@ -290,15 +290,16 @@ export default async function NewsArticlePage({
 
               {/* Content */}
               <div
-                className="prose prose-lg max-w-none
+                className="tiptap prose prose-lg max-w-none
                   prose-headings:font-black prose-headings:text-[var(--espresso)]
                   prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4
                   prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3
                   prose-p:text-[var(--clay)] prose-p:leading-relaxed prose-p:mb-6
                   prose-a:text-[var(--cherry-soda)] prose-a:font-medium prose-a:no-underline hover:prose-a:underline
                 prose-strong:text-[var(--espresso)] prose-strong:font-bold
-                prose-ul:my-6 prose-li:text-[var(--clay)] prose-li:mb-2
-                prose-ol:my-6
+                prose-ul:list-disc prose-ul:pl-6 prose-ul:my-6
+                prose-ol:list-decimal prose-ol:pl-6 prose-ol:my-6
+                prose-li:text-[var(--clay)] prose-li:mb-2 prose-li:leading-relaxed
                 prose-blockquote:border-l-4 prose-blockquote:border-[var(--cherry-soda)] 
                 prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-[var(--clay)]
                 prose-code:text-[var(--cherry-soda)] prose-code:bg-[var(--cream)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
