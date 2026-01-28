@@ -45,40 +45,16 @@ export function ClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="border-cherry-grey/20">
         <DialogHeader>
-          <DialogTitle className="text-center text-cherry-dark">Confirm Fee Claim</DialogTitle>
+          <DialogTitle className="text-center text-cherry-dark">Confirm Full Balance Claim</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="bg-cream-white p-3 rounded-lg border border-cherry-grey">
-            <div className="space-y-1">
+            <div className="space-y-1 text-center">
               <p className="text-xs text-clay-light">You claim</p>
 
-              <div className="relative max-w-sm">
-                <input
-                  type="text"
-                  value={amount}
-                  onChange={e => setAmount(e.target.value)}
-                  className="
-      w-full
-      rounded-md
-      border
-      border-clay-light/20
-      bg-cream-white
-      px-3
-      py-2
-      pr-24
-      text-sm
-      font-medium
-      text-espresso
-      focus:outline-none
-      focus:ring-1
-      focus:ring-cherry
-    "
-                />
-              </div>
-
-              <p className="text-[11px] text-clay-light">
-                Available: {asset.displayBalance} {asset.currency.symbol}
+              <p className="text-lg font-semibold text-espresso">
+                {asset.displayBalance} {asset.currency.symbol}
               </p>
             </div>
           </div>
@@ -91,11 +67,12 @@ export function ClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }
             </p>
             <p className="text-clay text-xs">Address: {preferences?.dstAddress}</p>
           </div>
+          <p className="text-xs text-clay-light">Processing may take a few moments after confirmation.</p>
         </div>
 
         <DialogFooter>
           <Button className="w-full" variant="cherry" onClick={handleClaim} disabled={executeClaim.isPending}>
-            {executeClaim.isPending ? 'Processing Intent (Waiting for Solver)...' : 'Confirm Claim'}
+            {executeClaim.isPending ? 'Processing Intent (Waiting for Solver)...' : 'Confirm Claim Request'}
           </Button>
         </DialogFooter>
       </DialogContent>
