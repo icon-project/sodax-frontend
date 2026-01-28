@@ -54,7 +54,7 @@ export default function FeaturedCaseStudiesSection() {
   const router = useRouter();
 
   return (
-    <section className="py-20 px-8 bg-cream">
+    <section className="py-20 px-8 bg-cream" aria-label="Featured Case Studies">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-espresso mb-6">
@@ -93,10 +93,11 @@ export default function FeaturedCaseStudiesSection() {
                     <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-white p-1 flex items-center justify-center">
                       <Image
                         src={study.logo}
-                        alt={`${study.name} logo`}
+                        alt={`${study.name} - ${study.tagline} partner logo`}
                         width={40}
                         height={40}
-                        className="object-contain"
+                        className=\"object-contain\"
+                        loading=\"lazy\"
                       />
                     </div>
                     <div>

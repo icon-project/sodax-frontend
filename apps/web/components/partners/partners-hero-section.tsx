@@ -5,7 +5,10 @@ import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react/dist/ssr';
 
 export default function PartnersHeroSection() {
   return (
-    <section className="relative min-h-[90vh] flex flex-col items-center justify-center bg-cherry-soda overflow-hidden">
+    <section
+      className="relative min-h-[90vh] flex flex-col items-center justify-center bg-cherry-soda overflow-hidden"
+      aria-label="Partner Network Hero"
+    >
       {/* Background Grid Pattern */}
       <div
         className="absolute inset-0 opacity-10"
@@ -29,8 +32,7 @@ export default function PartnersHeroSection() {
         </div>
 
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-white mb-4 leading-tight">
-          Coordinate Execution.
-          <br />
+          Cross-Chain Partner Network: Coordinate Execution.{' '}
           <span className="font-['Shrikhand'] lowercase text-yellow-soda">deliver</span> Outcomes.
         </h1>
 

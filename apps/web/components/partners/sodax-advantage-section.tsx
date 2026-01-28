@@ -33,7 +33,7 @@ const advantages = [
 
 export default function SodaxAdvantageSection() {
   return (
-    <section className="py-20 px-8 bg-almost-white">
+    <section className="py-20 px-8 bg-almost-white" aria-label="SODAX Advantages">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-espresso mb-6">

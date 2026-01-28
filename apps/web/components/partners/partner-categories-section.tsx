@@ -42,7 +42,7 @@ const categories = [
 
 export default function PartnerCategoriesSection() {
   return (
-    <section className="py-20 px-8 bg-cream">
+    <section className="py-20 px-8 bg-cream" aria-label="Partner Categories">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-espresso mb-6">

@@ -5,7 +5,7 @@ import { ArrowRight, FileText, GithubLogo, ChatCircle } from '@phosphor-icons/re
 
 export default function PartnersCtaSection() {
   return (
-    <section className="py-20 px-8 bg-cream">
+    <section className="py-20 px-8 bg-cream" aria-label="Partner Call to Action">
       <div className="max-w-5xl mx-auto">
         {/* Main CTA */}
         <div className="bg-gradient-to-br from-cherry-soda to-cherry-bright rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
