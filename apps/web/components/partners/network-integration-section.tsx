@@ -137,21 +137,21 @@ export default function NetworkIntegrationSection() {
         <div className="mt-16 bg-clay-dark/30 rounded-2xl p-8 border border-cream/10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
-              <CurrencyDollar weight="duotone" className="w-8 h-8 text-yellow-soda mx-auto mb-3" />
+              <CurrencyDollarIcon weight="duotone" className="w-8 h-8 text-yellow-soda mx-auto mb-3" />
               <h4 className="font-['InterBold'] text-white mb-2">Empower your network apps</h4>
               <p className="text-sm text-cream/70 font-['InterRegular']">
                 Give your builders the opportunity to attract new audiences
               </p>
             </div>
             <div>
-              <CheckCircle weight="duotone" className="w-8 h-8 text-yellow-soda mx-auto mb-3" />
+              <CheckCircleIcon weight="duotone" className="w-8 h-8 text-yellow-soda mx-auto mb-3" />
               <h4 className="font-['InterBold'] text-white mb-2">Day One Liquidity</h4>
               <p className="text-sm text-cream/70 font-['InterRegular']">
                 Access to SODAX' unified liquidity inventory from launch
               </p>
             </div>
             <div>
-              <Clock weight="duotone" className="w-8 h-8 text-yellow-soda mx-auto mb-3" />
+              <ClockIcon weight="duotone" className="w-8 h-8 text-yellow-soda mx-auto mb-3" />
               <h4 className="font-['InterBold'] text-white mb-2">Ongoing Support</h4>
               <p className="text-sm text-cream/70 font-['InterRegular']">
                 Dedicated technical support and infrastructure maintenance
