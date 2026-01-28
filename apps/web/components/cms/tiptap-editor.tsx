@@ -38,17 +38,55 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start writing..
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3],
+          HTMLAttributes: {
+            class: 'font-bold text-[var(--espresso)]',
+          },
+        },
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+          HTMLAttributes: {
+            class: 'list-disc pl-6 my-4 space-y-2',
+          },
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+          HTMLAttributes: {
+            class: 'list-decimal pl-6 my-4 space-y-2',
+          },
+        },
+        listItem: {
+          HTMLAttributes: {
+            class: 'leading-relaxed',
+          },
+        },
+        paragraph: {
+          HTMLAttributes: {
+            class: 'leading-relaxed mb-4',
+          },
+        },
+        blockquote: {
+          HTMLAttributes: {
+            class: 'border-l-4 border-[var(--cherry-soda)] pl-6 italic my-4',
+          },
+        },
+        codeBlock: {
+          HTMLAttributes: {
+            class:
+              'bg-[var(--espresso)] text-[var(--cream-white)] rounded-lg p-4 my-4 font-mono text-sm overflow-x-auto',
+          },
         },
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto',
+          class: 'rounded-lg max-w-full h-auto my-4',
         },
       }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-[var(--cherry-soda)] underline hover:text-[var(--cherry-dark)] transition-colors',
+          class: 'text-[var(--cherry-soda)] underline hover:text-[var(--cherry-dark)] transition-colors font-medium',
         },
       }),
       Placeholder.configure({
@@ -130,13 +168,13 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start writing..
     <Button
       type="button"
       size="sm"
-      variant="ghost"
+      variant="outline"
       onClick={onClick}
       disabled={disabled}
-      className={`h-8 w-8 p-0 transition-colors ${
+      className={`h-8 w-8 p-0 transition-colors border ${
         active
-          ? 'bg-[var(--cherry-soda)] text-white hover:bg-[var(--cherry-dark)] hover:text-white'
-          : 'hover:bg-[var(--cream)]'
+          ? 'bg-[var(--cherry-soda)] text-white border-[var(--cherry-soda)] hover:bg-[var(--cherry-dark)] hover:border-[var(--cherry-dark)] hover:text-white'
+          : 'bg-white text-[var(--espresso)] border-[var(--cherry-grey)] hover:bg-[var(--cream-white)] hover:border-[var(--cherry-soda)]'
       }`}
     >
       {children}
@@ -230,7 +268,9 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start writing..
       </div>
 
       {/* Editor */}
-      <EditorContent editor={editor} />
+      <div className="tiptap">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }
