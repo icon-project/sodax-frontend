@@ -9,8 +9,8 @@ import { PartnerPreferencesCard } from './components/partner-preference-card';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { PartnerFeeBalances } from './components/partner-fee-balances';
 import { BackToTop } from '@/components/shared/back-to-top';
-import { usePartnerFeeLifecycle } from './utils/usePartnerFeeLifecycle';
-import type { FeeClaimAsset } from './utils/useFeeClaimAssets';
+import { usePartnerFeeLifecycle } from './hooks/usePartnerFeeLifecycle';
+import type { FeeClaimAsset } from './hooks/useFeeClaimAssets';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);

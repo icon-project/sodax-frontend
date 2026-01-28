@@ -1,9 +1,10 @@
 import { Button } from '@/components/ui/button';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import { FeeClaimAssetStatus, type FeeClaimAsset } from '../utils/useFeeClaimAssets';
-import { useFeeClaimApproval } from '../utils/useFeeClaimApproval';
+import type { FeeClaimAsset } from '../hooks/useFeeClaimAssets';
+import { useFeeClaimApproval } from '../hooks/useFeeClaimApproval';
 import type { Address } from '@sodax/types';
 import { toast } from 'sonner';
+import { FeeClaimAssetStatus } from '../utils/fee-claim';
 
 type PartnerFeeTokenProps = {
   asset: FeeClaimAsset;

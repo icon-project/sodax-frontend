@@ -1,7 +1,7 @@
 import type { Address } from '@sodax/types';
 import { useFeeClaimPreferences } from './useFeeClaimPreferences';
 import { useFeeClaimAssets } from './useFeeClaimAssets';
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 
 /**
  * High-level lifecycle hook for the Partner Fee Dashboard.

@@ -4,9 +4,9 @@ import { useMemo } from 'react';
 import { ChainGroup } from '@/components/shared/wallet-modal/chain-group';
 import { availableChains, getChainName } from '@/constants/chains';
 import { PartnerFeeToken } from './partner-fee-token';
-import type { FeeClaimAsset } from '../utils/useFeeClaimAssets';
 import type { SetSwapPreferenceParams } from '@sodax/sdk';
 import { ChainGroupSkeleton } from './chain-group-skeleton';
+import type { FeeClaimAsset } from '../hooks/useFeeClaimAssets';
 
 type PartnerFeeBalancesProps = {
   assets: FeeClaimAsset[];

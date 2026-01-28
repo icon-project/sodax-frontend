@@ -8,7 +8,7 @@ import { ChainSelectDropdown } from '@/components/shared/chain-select-dropdown';
 import { SONIC_MAINNET_CHAIN_ID, spokeChainConfig, type ChainId, type Address } from '@sodax/types';
 import { toast } from '@/components/ui/sonner';
 import { Settings2 } from 'lucide-react';
-import { useFeeClaimPreferences } from '../utils/useFeeClaimPreferences';
+import { useFeeClaimPreferences } from '../hooks/useFeeClaimPreferences';
 import { TokenSelectDropdown } from '@/components/shared/token-select-dropdown';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';

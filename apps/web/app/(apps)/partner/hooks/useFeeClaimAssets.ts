@@ -7,12 +7,7 @@ import { useFeeClaimPreferences } from './useFeeClaimPreferences';
 import type { Address, XToken } from '@sodax/types';
 import type { AssetBalance } from '@sodax/sdk';
 import { MIN_PARTNER_CLAIM_AMOUNT } from '@/constants/partner-claim';
-
-export enum FeeClaimAssetStatus {
-  NO_PREFS = 'NO_PREFS',
-  BELOW_MIN = 'BELOW_MIN',
-  READY = 'READY',
-}
+import { FeeClaimAssetStatus } from '../utils/fee-claim';
 
 export type FeeClaimAsset = {
   sdkAsset: AssetBalance;
