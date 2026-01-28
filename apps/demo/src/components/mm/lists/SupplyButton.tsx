@@ -8,7 +8,6 @@ import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
 import type { MoneyMarketSupplyParams } from '@sodax/sdk';
-import { getReadableTxError } from '@/lib/utils';
 
 export function SupplyButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
@@ -109,10 +108,8 @@ export function SupplyButton({ token }: { token: XToken }) {
             </div>
           </div>
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{getReadableTxError(error)}</p>}
-
-        {approveError && <p className="text-red-500 text-sm mt-2">{getReadableTxError(approveError)}</p>}
-
+        {error && <p className="text-red-500 text-sm mt-2">{error?.code}</p>}
+        {approveError && <p className="text-red-500 text-sm mt-2">{approveError?.message}</p>}
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"

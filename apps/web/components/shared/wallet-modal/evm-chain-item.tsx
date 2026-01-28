@@ -67,7 +67,7 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
     >
       <div className="flex flex-col gap-2 w-full">
         <div className="flex justify-between items-center">
-          {address ? (
+          {address && (
             <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex gap-1 items-center">
               {!showCopied && address ? shortenAddress(address, 4) : 'EVM'}
               {address && (
@@ -90,30 +90,6 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
                 </div>
               )}
             </div>
-          ) : (
-            <div className="justify-between text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex items-center w-full">
-              EVM multi-connect
-            </div>
-          )}
-          {address ? (
-            <Button
-              variant="default"
-              size="sm"
-              className="w-6 h-6 p-0 rounded-full bg-cream text-espresso bg-cherry-brighter hover:bg-cherry-bright hover:text-white cursor-pointer"
-              onClick={handleDisconnect}
-            >
-              <MinusIcon className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              variant="default"
-              size="sm"
-              className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
-              onClick={handleConnect}
-              disabled={isPending}
-            >
-              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlusIcon className="w-4 h-4" />}
-            </Button>
           )}
         </div>
         <div className="inline-flex justify-start items-center gap-4">
@@ -147,6 +123,30 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
                     <circle cx="7" cy="7" r="5.5" fill="#00A778" stroke="white" strokeWidth="3" />
                   </svg>
                 </div>
+              )}
+            </div>
+
+            {/* ACTION BUTTON */}
+            <div className="ml-auto">
+              {address ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="w-6 h-6 p-0 rounded-full bg-cream text-espresso bg-cherry-brighter hover:bg-cherry-bright hover:text-white cursor-pointer"
+                  onClick={handleDisconnect}
+                >
+                  <MinusIcon className="w-4 h-4" />
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="w-6 h-6 p-0 rounded-full bg-cream text-espresso hover:bg-cherry-bright hover:text-white cursor-pointer"
+                  onClick={handleConnect}
+                  disabled={isPending}
+                >
+                  {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlusIcon className="w-4 h-4" />}
+                </Button>
               )}
             </div>
           </div>

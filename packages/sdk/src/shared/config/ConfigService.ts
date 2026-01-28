@@ -21,7 +21,6 @@ import {
   type GetSwapTokensByChainIdApiResponse,
   type GetSwapTokensApiResponse,
   CONFIG_VERSION,
-  defaultSharedConfig,
 } from '@sodax/types';
 import type { BackendApiService } from '../../backendApi/BackendApiService.js';
 import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT } from '../constants.js';
@@ -35,7 +34,6 @@ export type ConfigServiceConfig = {
 export type ConfigServiceConstructorParams = {
   backendApiService: BackendApiService;
   config?: ConfigServiceConfig;
-  sharedConfig?: typeof defaultSharedConfig;
 };
 
 /**
@@ -44,7 +42,6 @@ export type ConfigServiceConstructorParams = {
 export class ConfigService {
   readonly serviceConfig: ConfigServiceConfig;
   readonly backendApiService: BackendApiService;
-  readonly sharedConfig: typeof defaultSharedConfig;
   private initialized = false;
 
   private sodaxConfig: GetAllConfigApiResponse;
@@ -60,7 +57,7 @@ export class ConfigService {
   private moneyMarketReserveAssetsSet!: Set<Address>;
   private spokeChainIdsSet!: Set<SpokeChainId>;
 
-  constructor({ backendApiService, config, sharedConfig }: ConfigServiceConstructorParams) {
+  constructor({ backendApiService, config }: ConfigServiceConstructorParams) {
     this.serviceConfig = {
       backendApiUrl: config?.backendApiUrl ?? DEFAULT_BACKEND_API_ENDPOINT,
       timeout: config?.timeout ?? DEFAULT_BACKEND_API_TIMEOUT,
@@ -68,10 +65,6 @@ export class ConfigService {
     this.backendApiService = backendApiService;
     this.sodaxConfig = defaultSodaxConfig;
     this.loadSodaxConfigDataStructures(this.sodaxConfig);
-    this.sharedConfig = {
-      ...defaultSharedConfig,
-      ...sharedConfig,
-    }
   }
 
   public async initialize(): Promise<Result<void>> {

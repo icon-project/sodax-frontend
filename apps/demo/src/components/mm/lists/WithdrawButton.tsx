@@ -4,23 +4,16 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
-import type { IEvmWalletProvider, XToken } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { parseUnits } from 'viem';
-import { waitForTransactionReceipt, type MoneyMarketWithdrawParams } from '@sodax/sdk';
-import { useQueryClient } from '@tanstack/react-query';
+import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
 
-export interface WithdrawButtonProps {
-  token: XToken;
-  onSuccess?: () => void;
-}
-
-export function WithdrawButton({ token, onSuccess }: WithdrawButtonProps) {
+export function WithdrawButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
   const { selectedChainId } = useAppStore();
-  const queryClient = useQueryClient();
 
   const walletProvider = useWalletProvider(token.xChainId);
   const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
@@ -46,27 +39,22 @@ export function WithdrawButton({ token, onSuccess }: WithdrawButtonProps) {
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(token.xChainId);
 
   const handleWithdraw = async () => {
-    if (!spokeProvider || !params || !walletProvider) return;
-
+    if (!spokeProvider) {
+      console.error('spokeProvider is not available');
+      return;
+    }
+    if (!params) {
+      console.error('params is not available');
+      return;
+    }
     try {
-      const result = await withdraw({ params, spokeProvider });
-      const txHash = result.value[0] as `0x${string}`;
-
-      await waitForTransactionReceipt(txHash, walletProvider as IEvmWalletProvider);
-
-      // After the withdraw transaction is confirmed, we explicitly refetch
-      // balances and reserve data so the UI updates immediately.
-      // Without this, values could appear outdated until the user navigates
-      // away or the data refreshes on its own.
-      await queryClient.refetchQueries({
-        predicate: query =>
-          query.queryKey.some(key => typeof key === 'string' && (key.includes('reserve') || key.includes('balance'))),
+      await withdraw({
+        params,
+        spokeProvider,
       });
-
-      onSuccess?.();
       setOpen(false);
     } catch (err) {
-      console.error('Mutation failed!', err);
+      console.error('Error in handleWithdraw:', err);
     }
   };
 
@@ -80,7 +68,6 @@ export function WithdrawButton({ token, onSuccess }: WithdrawButtonProps) {
   };
 
   const handleApprove = async () => {
-    console.log('🔄 handle approve...');
     if (!spokeProvider) {
       console.error('spokeProvider is not available');
       return;
