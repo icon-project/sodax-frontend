@@ -83,7 +83,7 @@ export function ClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="border-cherry-grey/20">
         <DialogHeader>
-          <DialogTitle className="text-center text-cherry-dark">Confirm full claim</DialogTitle>
+          <DialogTitle className="text-center text-cherry-dark">Confirm Full Balance Claim</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4 text-center">
           <div className="bg-cream-white p-3 rounded-lg border border-cherry-grey">
@@ -105,6 +105,7 @@ export function ClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }
             </p>
             <p className="text-clay text-xs">Address: {preferences?.dstAddress}</p>
           </div>
+          <p className="text-xs text-clay-light">Processing may take a few moments after confirmation.</p>
         </div>
         <DialogFooter>{renderActionButton()}</DialogFooter>
         <p className="text-xs text-clay-light text-center">
