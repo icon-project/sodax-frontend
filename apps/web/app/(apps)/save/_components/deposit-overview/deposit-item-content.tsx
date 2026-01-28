@@ -11,7 +11,7 @@ import { Item, ItemContent, ItemMedia, ItemDescription } from '@/components/ui/i
 import type { SpokeChainId } from '@sodax/types';
 import { Badge } from '@/components/ui/badge';
 import { chainIdToChainName } from '@/providers/constants';
-import type { DepositItemData } from '../../page';
+import type { DepositItemData } from '@/constants/save';
 import { motion } from 'motion/react';
 import { useSaveActions } from '../../_stores/save-store-provider';
 import { NetworkBalanceTooltip } from './network-balance-tooltip';

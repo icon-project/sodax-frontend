@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Carousel, CarouselContent, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
-import type { DepositItemData } from '../page';
+import type { DepositItemData } from '@/constants/save';
 import WithdrawDialog from './withdraw-dialog/withdraw-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DepositItemContent } from './deposit-overview/deposit-item-content';

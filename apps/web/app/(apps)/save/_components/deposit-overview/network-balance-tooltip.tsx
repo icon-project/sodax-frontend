@@ -7,7 +7,7 @@ import NetworkIcon from '@/components/shared/network-icon';
 import { chainIdToChainName } from '@/providers/constants';
 import { formatBalance } from '@/lib/utils';
 import type { SpokeChainId } from '@sodax/types';
-import type { NetworkBalance } from '../../page';
+import type { NetworkBalance } from '@/constants/save';
 
 interface NetworkBalanceTooltipProps {
   network: NetworkBalance;

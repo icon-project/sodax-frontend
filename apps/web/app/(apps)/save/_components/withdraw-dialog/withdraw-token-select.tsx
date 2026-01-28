@@ -1,5 +1,5 @@
 import type React from 'react';
-import type { NetworkBalance } from '../../page';
+import type { NetworkBalance } from '@/constants/save';
 import { formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { chainIdToChainName } from '@/providers/constants';

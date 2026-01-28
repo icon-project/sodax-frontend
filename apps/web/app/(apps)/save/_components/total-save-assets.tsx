@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import type { XToken } from '@sodax/types';
-import type { DepositItemData } from '../page';
+import type { DepositItemData } from '@/constants/save';
 import { motion } from 'motion/react';
 
 export default function TotalSaveAssets({

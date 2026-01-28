@@ -10,7 +10,7 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@so
 import type { XToken } from '@sodax/types';
 import type { ChainId } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
-import type { NetworkBalance } from '../../page';
+import type { NetworkBalance } from '@/constants/save';
 import { useSaveActions } from '../../_stores/save-store-provider';
 import { CheckIcon } from 'lucide-react';
 import { cn, formatBalance } from '@/lib/utils';
