@@ -1,8 +1,46 @@
 # SODAX CMS Implementation Guide
 
-**Status: ✅ Backend Complete | ✅ Admin UI Complete | ⏳ Public Pages Pending**
+**Status: ✅ Backend Complete | ✅ Admin UI Complete | ✅ User Management Complete | ⏳ Content Migration | ⏳ Public Pages Pending**
 
 This guide documents the custom CMS implementation for SODAX using Better Auth, MongoDB, and Next.js 15.
+
+---
+
+## 🔄 **IN PROGRESS: Content Migration from Payload CMS**
+
+### **Migration Script:**
+- ✅ `scripts/migrate-news.ts` - Automated migration script
+- ✅ `scripts/MIGRATION_GUIDE.md` - Detailed migration instructions
+
+### **What Gets Migrated:**
+- 📰 20 news articles from old Payload CMS
+- 📅 Publication dates and timestamps
+- 🖼️ Image references (requires manual image upload to Vercel Blob)
+- 📝 Content (Lexical JSON → HTML conversion)
+- 🏷️ Meta descriptions and SEO fields
+
+### **Migration Process:**
+1. ✅ Script created (`migrate-news.ts`)
+2. ⏳ Review and test migration (dry run)
+3. ⏳ Handle image migration (upload to Vercel Blob or configure old CDN)
+4. ⏳ Run migration to populate new database
+5. ⏳ Verify content in CMS admin
+6. ⏳ Add categories/tags and update authors
+
+### **Old System (Payload CMS):**
+- Database: `mongodb+srv://davidpayload:...@payload.../test`
+- Collections: `posts` (20 articles), `media` (images)
+- Editor: Payload's Lexical editor
+- Authors/Categories: MongoDB ObjectId references
+
+### **New System (SODAX Custom CMS):**
+- Database: `mongodb+srv://David:...@sodaxcluster0.../sodax-cms`
+- Collection: `news`
+- Editor: Tiptap (HTML-based)
+- Authors: String fields (authorId, authorName)
+- Categories: String arrays
+
+**See:** `scripts/MIGRATION_GUIDE.md` for detailed migration instructions.
 
 ---
 
@@ -147,6 +185,25 @@ ALLOW_ADMIN_CREATION=true
 - ✅ Custom SODAX design system (cherry, cream, espresso colors)
 - ✅ Gradient backgrounds and buttons
 - ✅ Smooth transitions and hover effects
+
+---
+
+## ✅ **COMPLETED: User Management**
+
+### **User Administration:**
+- ✅ `/cms/users` - User management dashboard
+- ✅ `components/cms/user-management.tsx` - Full user management interface
+- ✅ `api/cms/users` - API endpoints for user operations
+
+### **Features:**
+- ✅ List all users with role and permissions
+- ✅ Add new users to whitelist (must sign in to activate)
+- ✅ Assign admin or user roles
+- ✅ Granular CMS permissions (news, articles, glossary)
+- ✅ Edit user permissions
+- ✅ Remove user access
+- ✅ Admins get full access to all content types automatically
+- ✅ Regular users can be assigned specific permissions
 
 ---
 
@@ -314,21 +371,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 ---
 
-## ⏳ **REMAINING: User Management (Optional)**
-
-### **User Administration Page:**
-```typescript
-// app/cms/users/page.tsx
-// - List all users from Better Auth database
-// - Show email, role, last login
-// - Add/remove admin role
-// - View user activity logs
-```
-
-Currently marked as "Coming soon" in the dashboard.
-
----
-
 ## 🧪 **Testing Checklist**
 
 ### **Admin Dashboard Testing:**
@@ -343,6 +385,8 @@ Currently marked as "Coming soon" in the dashboard.
 - ✅ View published vs draft items
 - ✅ Test pagination on list views
 - ✅ Logout functionality
+- ✅ User management (add, edit, remove users)
+- ✅ Permission assignment (granular CMS permissions)
 
 ### **Public Pages Testing (TODO):**
 - ⏳ View published content as anonymous user
