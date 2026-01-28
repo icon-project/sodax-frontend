@@ -5,7 +5,13 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
-import { ArrowUpRightIcon, BookOpenIcon, SparkleIcon, ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr';
+import {
+  ArrowUpRightIcon,
+  BookOpenIcon,
+  SparkleIcon,
+  ChatsCircleIcon,
+  RssSimpleIcon,
+} from '@phosphor-icons/react/dist/ssr';
 import { LatestUpdatesSection } from './latest-updates-section';
 import { formatDate } from './utils';
 
@@ -47,6 +53,14 @@ export async function generateMetadata(props: {
     ].filter(Boolean) as string[],
     alternates: {
       canonical: canonicalUrl,
+      types: {
+        'application/rss+xml': [
+          {
+            url: 'https://sodax.com/news/feed.xml',
+            title: 'SODAX News RSS Feed',
+          },
+        ],
+      },
     },
     openGraph: {
       title,
@@ -476,6 +490,36 @@ export default async function NewsPage(props: {
                         </svg>
                       </div>
                       <span className="font-semibold text-sm text-[var(--espresso)]">Watch on YouTube</span>
+                      <ArrowUpRightIcon className="w-4 h-4 ml-auto text-[var(--clay)] group-hover:text-[var(--cherry-soda)] transition-colors" />
+                    </Link>
+                  </div>
+                </div>
+
+                {/* RSS Feed Block */}
+                <div className="bg-white rounded-xl p-6 border border-[var(--clay-light)] shadow-md hover:shadow-lg transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2.5 bg-gradient-to-br from-[var(--cherry-soda)] to-[var(--cherry-dark)] rounded-lg">
+                      <RssSimpleIcon className="w-5 h-5 text-white" weight="bold" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-[var(--espresso)]">RSS Feed</h3>
+                      <p className="text-xs text-[var(--clay)]">Subscribe to updates</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-[var(--clay)] mb-5 leading-relaxed">
+                    Get SODAX news delivered directly to your RSS reader. Stay informed with automatic updates.
+                  </p>
+                  <div className="space-y-2.5">
+                    <Link
+                      href="/news/feed.xml"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 bg-[var(--cream)]/50 rounded-lg border border-transparent hover:border-[var(--cherry-soda)] hover:bg-[var(--cream)] transition-all duration-200 cursor-pointer group"
+                    >
+                      <div className="p-1.5 bg-[#FF6600] rounded-md">
+                        <RssSimpleIcon className="w-4 h-4 shrink-0 text-white" weight="bold" />
+                      </div>
+                      <span className="font-semibold text-sm text-[var(--espresso)]">Subscribe via RSS</span>
                       <ArrowUpRightIcon className="w-4 h-4 ml-auto text-[var(--clay)] group-hover:text-[var(--cherry-soda)] transition-colors" />
                     </Link>
                   </div>
