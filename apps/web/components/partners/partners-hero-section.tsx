@@ -65,18 +65,21 @@ export default function PartnersHeroSection() {
         <div className="mt-12 flex flex-wrap gap-3 justify-center items-center">
           <span className="text-cream/70 text-sm font-['InterMedium']">Jump to:</span>
           <button
+            type="button"
             className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-cream hover:bg-white/20 text-sm font-['InterMedium'] transition-all"
             onClick={() => document.getElementById('case-studies')?.scrollIntoView({ behavior: 'smooth' })}
           >
             Case Studies
           </button>
           <button
+            type="button"
             className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-cream hover:bg-white/20 text-sm font-['InterMedium'] transition-all"
             onClick={() => document.getElementById('sodax-advantages')?.scrollIntoView({ behavior: 'smooth' })}
           >
             SODAX Advantages
           </button>
           <button
+            type="button"
             className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-cream hover:bg-white/20 text-sm font-['InterMedium'] transition-all"
             onClick={() => document.getElementById('integration-options')?.scrollIntoView({ behavior: 'smooth' })}
           >
