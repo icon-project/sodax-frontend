@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react/dist/ssr';
+import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react/dist/csr';
 
 export default function PartnersHeroSection() {
   return (

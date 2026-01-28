@@ -1,6 +1,6 @@
 'use client';
 
-import { Wallet, ArrowsLeftRight, Vault, TrendUp, Globe } from '@phosphor-icons/react/dist/ssr';
+import { Wallet, ArrowsLeftRight, Vault, TrendUp, Globe } from '@phosphor-icons/react/dist/csr';
 
 const categories = [
   {

@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, Clock, CurrencyDollar } from '@phosphor-icons/react/dist/ssr';
+import { CheckCircle, Clock, CurrencyDollar } from '@phosphor-icons/react/dist/csr';
 import { Button } from '@/components/ui/button';
 
 const integrationPackages = [
