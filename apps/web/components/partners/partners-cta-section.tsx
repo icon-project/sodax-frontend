@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, GithubLogo, ChatCircle } from '@phosphor-icons/react/dist/ssr';
+import { ArrowRightIcon, FileTextIcon, GithubLogoIcon, ChatCircleIcon } from '@phosphor-icons/react/dist/ssr';
 
 export default function PartnersCtaSection() {
   return (
@@ -13,20 +13,20 @@ export default function PartnersCtaSection() {
           <div
             className="absolute inset-0 opacity-10"
             style={{
-              backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
+              backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
               backgroundSize: '30px 30px',
             }}
           />
 
           <div className="relative z-10">
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-['InterBold'] text-white mb-6 leading-tight">
-              Build <span className="font-['Shrikhand'] lowercase text-yellow-soda">faster</span>
-              <br />
-              without becoming a<br className="hidden md:block" /> cross-network infrastructure team.
+              Deliver cross-network outcomes.{' '}
+              <span className="font-['Shrikhand'] lowercase text-yellow-soda tracking-wide">skip</span> the
+              infrastructure work.
             </h2>
 
             <p className="text-xl md:text-2xl text-cream/90 font-['InterRegular'] mb-10 max-w-3xl mx-auto">
-              Join wallets, DEXs, and protocols integrating SODAX to abstract away execution complexity.
+              SODAX coordinates execution so you can focus on building your application.
             </p>
 
             <Button
@@ -37,7 +37,7 @@ export default function PartnersCtaSection() {
               }}
             >
               Start the Conversation
-              <ArrowRight weight="duotone" className="ml-2 group-hover:translate-x-1 transition-transform" />
+              <ArrowRightIcon weight="duotone" className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
 
             <p className="mt-6 text-cream/70 text-sm font-['InterRegular']">
@@ -61,7 +61,7 @@ export default function PartnersCtaSection() {
             className="group bg-almost-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-clay-light/20"
           >
             <div className="w-12 h-12 rounded-lg bg-cherry-soda/10 flex items-center justify-center mb-4 group-hover:bg-cherry-soda/20 transition-colors">
-              <FileText weight="duotone" className="w-6 h-6 text-cherry-soda" />
+              <FileTextIcon weight="duotone" className="w-6 h-6 text-cherry-soda" />
             </div>
             <h3 className="font-['InterBold'] text-espresso text-lg mb-2">Documentation</h3>
             <p className="text-sm text-clay-dark font-['InterRegular'] mb-3">
@@ -69,7 +69,10 @@ export default function PartnersCtaSection() {
             </p>
             <span className="text-sm font-['InterMedium'] text-cherry-soda group-hover:text-cherry-bright flex items-center">
               Explore Docs
-              <ArrowRight weight="duotone" className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRightIcon
+                weight="duotone"
+                className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
+              />
             </span>
           </a>
 
@@ -80,7 +83,7 @@ export default function PartnersCtaSection() {
             className="group bg-almost-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-clay-light/20"
           >
             <div className="w-12 h-12 rounded-lg bg-clay/10 flex items-center justify-center mb-4 group-hover:bg-clay/20 transition-colors">
-              <GithubLogo weight="duotone" className="w-6 h-6 text-clay" />
+              <GithubLogoIcon weight="duotone" className="w-6 h-6 text-clay" />
             </div>
             <h3 className="font-['InterBold'] text-espresso text-lg mb-2">GitHub</h3>
             <p className="text-sm text-clay-dark font-['InterRegular'] mb-3">
@@ -88,7 +91,10 @@ export default function PartnersCtaSection() {
             </p>
             <span className="text-sm font-['InterMedium'] text-clay group-hover:text-clay-dark flex items-center">
               View Repositories
-              <ArrowRight weight="duotone" className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRightIcon
+                weight="duotone"
+                className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
+              />
             </span>
           </a>
 
@@ -99,7 +105,7 @@ export default function PartnersCtaSection() {
             className="group bg-almost-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-clay-light/20"
           >
             <div className="w-12 h-12 rounded-lg bg-yellow-soda/20 flex items-center justify-center mb-4 group-hover:bg-yellow-soda/30 transition-colors">
-              <ChatCircle weight="duotone" className="w-6 h-6 text-clay-dark" />
+              <ChatCircleIcon weight="duotone" className="w-6 h-6 text-clay-dark" />
             </div>
             <h3 className="font-['InterBold'] text-espresso text-lg mb-2">Discord Community</h3>
             <p className="text-sm text-clay-dark font-['InterRegular'] mb-3">
@@ -107,7 +113,10 @@ export default function PartnersCtaSection() {
             </p>
             <span className="text-sm font-['InterMedium'] text-clay-dark group-hover:text-espresso flex items-center">
               Join Discord
-              <ArrowRight weight="duotone" className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRightIcon
+                weight="duotone"
+                className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
+              />
             </span>
           </a>
         </div>

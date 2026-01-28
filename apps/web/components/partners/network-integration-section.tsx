@@ -8,7 +8,7 @@ const integrationPackages = [
     title: 'EVM Compatible',
     description: 'Standard deployment for Ethereum-based networks',
     timeline: '4-6 weeks',
-    price: '$40,000',
+    price: 'Contact for pricing',
     features: [
       'Asset management contracts',
       'Relay network integration',
@@ -19,10 +19,27 @@ const integrationPackages = [
     popular: false,
   },
   {
+    title: 'Custom / Non-Standard',
+    description: 'Bespoke integration for unique architectures',
+    timeline: '8-12 weeks',
+    price: 'Contact for pricing',
+    features: [
+      'Custom protocol adapters',
+      'Full infrastructure deployment',
+      'Advanced relay configuration',
+      'Priority solver liquidity',
+      'Comprehensive SDK',
+      'Ongoing technical support',
+      'Marketing coordination',
+    ],
+    popular: true,
+    badge: 'Unique Networks',
+  },
+  {
     title: 'Cosmos SDK',
-    description: 'Custom integration for Cosmos-based chains',
+    description: 'Custom integration for Cosmos-based networks',
     timeline: '6-8 weeks',
-    price: '$80,000',
+    price: 'Contact for pricing',
     features: [
       'Custom IBC bridge setup',
       'CosmWasm smart contracts',
@@ -31,40 +48,29 @@ const integrationPackages = [
       'SDK documentation',
       'Dedicated technical support',
     ],
-    popular: true,
-  },
-  {
-    title: 'Custom / Non-standard',
-    description: 'Bespoke integration for unique architectures',
-    timeline: '8-12 weeks',
-    price: '$150,000',
-    features: [
-      'Custom protocol adapters',
-      'Full infrastructure deployment',
-      'Advanced relay configuration',
-      'Priority solver liquidity',
-      'Comprehensive SDK',
-      '24/7 technical support',
-      'Marketing co-launch',
-    ],
     popular: false,
   },
 ];
 
 export default function NetworkIntegrationSection() {
   return (
-    <section className="py-20 px-8 bg-espresso text-cream" aria-label="Network Integration Packages">
+    <section
+      id="integration-options"
+      className="py-20 px-8 bg-espresso text-cream"
+      aria-label="Network Integration Packages"
+    >
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <div className="inline-block px-4 py-2 rounded-full bg-yellow-soda/20 text-yellow-soda text-sm font-['InterMedium'] mb-6">
             FOR L1/L2 TEAMS
           </div>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-white mb-6">
-            Network Integration <span className="font-['Shrikhand'] lowercase text-yellow-soda">package</span>
+            Network Integration{' '}
+            <span className="font-['Shrikhand'] lowercase text-yellow-soda tracking-wide">options</span>
           </h2>
           <p className="text-lg md:text-xl text-cream/80 font-['InterRegular'] max-w-2xl mx-auto">
-            Full infrastructure deployment including asset management contracts, relay network integration, and solver
-            liquidity sourcing.
+            Infrastructure deployment for new networks. Includes asset management contracts, relay network integration,
+            and solver liquidity coordination.
           </p>
         </div>
 
@@ -83,7 +89,7 @@ export default function NetworkIntegrationSection() {
             >
               {pkg.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-yellow-soda text-espresso text-xs font-['InterBold'] uppercase tracking-wider">
-                  Most Popular
+                  {pkg.badge}
                 </div>
               )}
 
@@ -93,9 +99,8 @@ export default function NetworkIntegrationSection() {
               </div>
 
               <div className="mb-6">
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-4xl font-['InterBold'] text-white">{pkg.price}</span>
-                  <span className="text-sm text-cream/70 font-['InterRegular']">one-time</span>
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-2xl font-['InterBold'] text-white">{pkg.price}</span>
                 </div>
                 <div className="flex items-center gap-2 text-cream/70">
                   <Clock weight="duotone" className="w-4 h-4" />
@@ -133,16 +138,16 @@ export default function NetworkIntegrationSection() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div>
               <CurrencyDollar weight="duotone" className="w-8 h-8 text-yellow-soda mx-auto mb-3" />
-              <h4 className="font-['InterBold'] text-white mb-2">Revenue Sharing</h4>
+              <h4 className="font-['InterBold'] text-white mb-2">Empower your network apps</h4>
               <p className="text-sm text-cream/70 font-['InterRegular']">
-                Earn protocol fees on every transaction routed through your network
+                Give your builders the opportunity to attract new audiences
               </p>
             </div>
             <div>
               <CheckCircle weight="duotone" className="w-8 h-8 text-yellow-soda mx-auto mb-3" />
               <h4 className="font-['InterBold'] text-white mb-2">Day One Liquidity</h4>
               <p className="text-sm text-cream/70 font-['InterRegular']">
-                Access to SODAX's unified liquidity pool from launch
+                Access to SODAX' unified liquidity inventory from launch
               </p>
             </div>
             <div>

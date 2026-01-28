@@ -1,46 +1,49 @@
 'use client';
 
 import { EyeSlash, Graph, CurrencyDollar, Package } from '@phosphor-icons/react/dist/ssr';
+import { Button } from '@/components/ui/button';
 
 const advantages = [
   {
-    icon: EyeSlash,
-    title: 'Invisible Complexity',
-    description:
-      'Handle routing, bridging, and error recovery in the background. Your users see outcomes, not infrastructure.',
-    highlight: 'Zero configuration required',
-  },
-  {
     icon: Graph,
-    title: 'True Network Abstraction',
+    title: 'Execution Coordination',
     description:
-      'Seamlessly connect EVM and non-EVM environments (Solana, Sui, Stellar). One integration, 14+ networks.',
-    highlight: 'EVM + Non-EVM support',
-  },
-  {
-    icon: CurrencyDollar,
-    title: 'Shared Economics',
-    description: 'Revenue sharing on protocol fees and solver execution for routed volume. Your growth is our growth.',
-    highlight: 'Transparent fee structure',
+      'SODAX coordinates liquidity, timing, and failure modes so you can focus on your application logic. Handles routing paths and recovery without exposing users to intermediate steps.',
+    highlight: 'Asynchronous execution handled',
   },
   {
     icon: Package,
-    title: 'Composability',
-    description: 'Modular SDKs that allow integration of specific features (swaps, lending, or wallets) independently.',
-    highlight: 'Pick what you need',
+    title: 'EVM and Non-EVM Support',
+    description:
+      'Connect to Ethereum, Solana, Sui, Stellar, and other environments through a single integration surface. SODAX manages network-specific adapters.',
+    highlight: '14+ networks supported',
+  },
+  {
+    icon: CurrencyDollar,
+    title: 'Aligned Economics',
+    description:
+      'Revenue sharing on protocol fees for volume you route through the system. Transparent fee structure with no hidden costs.',
+    highlight: 'Volume-based revenue share',
+  },
+  {
+    icon: EyeSlash,
+    title: 'Modular Integration',
+    description:
+      'Use only the components you need. Integrate swaps, lending, or wallet connections independently through composable SDKs.',
+    highlight: 'Granular feature selection',
   },
 ];
 
 export default function SodaxAdvantageSection() {
   return (
-    <section className="py-20 px-8 bg-almost-white" aria-label="SODAX Advantages">
+    <section id="sodax-advantages" className="py-20 px-8 bg-almost-white" aria-label="SODAX Advantages">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-espresso mb-6">
-            The SODAX <span className="font-['Shrikhand'] lowercase text-cherry-soda">advantage</span>
+            What SODAX <span className="font-['Shrikhand'] lowercase text-cherry-soda tracking-wide">handles</span>
           </h2>
           <p className="text-lg md:text-xl text-clay-dark font-['InterRegular'] max-w-2xl mx-auto">
-            Why partners choose us to power their cross-network execution.
+            The coordination responsibilities SODAX absorbs so you can focus on your product.
           </p>
         </div>
 
@@ -72,6 +75,17 @@ export default function SodaxAdvantageSection() {
               </div>
             );
           })}
+        </div>
+
+        {/* CTA to Documentation */}
+        <div className="mt-12 text-center">
+          <Button
+            size="lg"
+            className="bg-cherry-soda text-white hover:bg-cherry-bright font-['InterBold'] px-8"
+            onClick={() => window.open('https://docs.sodax.com', '_blank')}
+          >
+            View Documentation
+          </Button>
         </div>
 
         {/* SDK Integration Stack */}

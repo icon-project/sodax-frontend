@@ -32,18 +32,18 @@ export default function PartnersHeroSection() {
         </div>
 
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-white mb-4 leading-tight">
-          Cross-Chain Partner Network: Coordinate Execution.{' '}
-          <span className="font-['Shrikhand'] lowercase text-yellow-soda">deliver</span> Outcomes.
+          Build cross-network applications.{' '}
+          <span className="font-['Shrikhand'] lowercase text-yellow-soda tracking-wide">skip</span> the infrastructure.
         </h1>
 
         <p className="text-base md:text-lg text-cream/90 font-['InterRegular'] max-w-2xl mx-auto mb-8 leading-relaxed">
-          Join the SODAX Partner Network to enable complex cross-network actions without building custom infrastructure.
-          Access unified liquidity and intent-based execution across 14+ networks.
+          SODAX coordinates execution and liquidity across 14+ networks so you can deliver intended outcomes without
+          owning cross-network infrastructure.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <Button
-            className="bg-white text-cherry-soda hover:bg-cream font-['InterBold'] px-6 py-3 group"
+            className="bg-white text-cherry-soda hover:bg-cream font-['InterBold'] !px-4 py-3 group"
             onClick={() => {
               window.location.href = 'mailto:partnerships@sodax.com?subject=Partnership Inquiry';
             }}
@@ -53,12 +53,35 @@ export default function PartnersHeroSection() {
           </Button>
           <Button
             variant="outline"
-            className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-['InterMedium'] px-6 py-3"
+            className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-['InterMedium'] !px-4 py-3"
             onClick={() => window.open('https://docs.sodax.com', '_blank')}
           >
             <FileTextIcon weight="duotone" className="mr-2" />
             Documentation
           </Button>
+        </div>
+
+        {/* Quick Navigation */}
+        <div className="mt-12 flex flex-wrap gap-3 justify-center items-center">
+          <span className="text-cream/70 text-sm font-['InterMedium']">Jump to:</span>
+          <button
+            className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-cream hover:bg-white/20 text-sm font-['InterMedium'] transition-all"
+            onClick={() => document.getElementById('case-studies')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Case Studies
+          </button>
+          <button
+            className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-cream hover:bg-white/20 text-sm font-['InterMedium'] transition-all"
+            onClick={() => document.getElementById('sodax-advantages')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            SODAX Advantages
+          </button>
+          <button
+            className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-cream hover:bg-white/20 text-sm font-['InterMedium'] transition-all"
+            onClick={() => document.getElementById('integration-options')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Integration Options
+          </button>
         </div>
       </div>
 
