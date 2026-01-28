@@ -14,7 +14,7 @@ import WithdrawAmountSelect from './withdraw-amount-select';
 import WithdrawConfirmationStep from './withdraw-confirmation-step';
 import WithdrawTokenSelect from './withdraw-token-select';
 import WithdrawDialogFooter from './withdraw-dialog-footer';
-import type { DepositItemData, NetworkBalance } from '../../page';
+import type { DepositItemData, NetworkBalance } from '@/constants/save';
 import { cn } from '@/lib/utils';
 
 interface WithdrawDialogProps {
