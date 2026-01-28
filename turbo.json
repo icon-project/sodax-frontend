@@ -7,7 +7,17 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "BLOB_READ_WRITE_TOKEN",
+        "DATABASE_URI",
+        "BETTER_AUTH_SECRET",
+        "ALLOW_ADMIN_CREATION",
+        "BETTER_AUTH_URL",
+        "NEXT_PUBLIC_BETTER_AUTH_URL",
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET"
+      ]
     },
     "build:packages": {
       "dependsOn": ["^build"],
