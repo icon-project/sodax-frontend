@@ -32,7 +32,6 @@ export const EVM_CHAIN_ICONS = [
   '/chain/sonic.png',
   '/chain/lightlink.png',
   '/chain/hyper.png',
-  '/chain/ethereum.png',
 ];
 
 /**
