@@ -68,15 +68,15 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
             (SOON)
           </span>
         )}
-        {isMobile && enabled && totalDepositedUsdValue !== undefined && totalDepositedUsdValue > 0 && (
+        {isMobile && enabled && totalDepositedUsdValue !== undefined && Math.floor(totalDepositedUsdValue) > 0 && (
           <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px] ml-2">
             {formatCurrencyCompact(Math.floor(totalDepositedUsdValue))}
           </Badge>
         )}
       </div>
       {!isMobile && !enabled && <Badge variant="desktop">SOON</Badge>}
-      {!isMobile && enabled && totalDepositedUsdValue !== undefined && totalDepositedUsdValue > 0 && (
-        <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px] ml-3">
+      {!isMobile && enabled && totalDepositedUsdValue !== undefined && Math.floor(totalDepositedUsdValue) > 0 && (
+        <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px]">
           {formatCurrencyCompact(Math.floor(totalDepositedUsdValue))}
         </Badge>
       )}

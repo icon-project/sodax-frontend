@@ -62,7 +62,7 @@ export default function CurrencySearchPanel({
   return (
     <>
       <motion.div
-        className="w-full gap-(--layout-space-small) flex"
+        className="w-full gap-(--layout-space-small) flex flex-col md:flex-row"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -92,12 +92,12 @@ export default function CurrencySearchPanel({
             value={searchQuery}
           />
         </InputGroup>
-        <div className="flex flex-wrap items-center">
+        <div className="flex flex-wrap items-center sm:flex-1">
           <div
             className={cn(
-              "group text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-tight group-hover:font-bold py-1 px-3 cursor-pointer",
+              "group text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-tight group-hover:font-bold py-1 px-3 cursor-pointer leading-1.4",
               hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60'),
-              selectedChain === null && 'ring-2 ring-cream-white rounded-full',
+              selectedChain === null && 'outline-2 outline-cream-white rounded-full',
             )}
             onClick={() => handleChainSelect(null, 'inline')}
             onMouseEnter={() => setHoveredChain('all')}
@@ -113,7 +113,7 @@ export default function CurrencySearchPanel({
                   className={cn(
                     'group cursor-pointer w-6 h-6 justify-center items-center flex',
                     hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60'),
-                    selectedChain === chain.id && 'ring-2 ring-clay-light rounded-full',
+                    selectedChain === chain.id && 'border-2 border-clay-light rounded-full',
                   )}
                   onClick={() => handleChainSelect(chain.id, 'inline')}
                   onMouseEnter={() => setHoveredChain(chain.id)}
@@ -132,13 +132,13 @@ export default function CurrencySearchPanel({
             </Tooltip>
           ))}
           <div
-            className="ml-2 w-4 h-4 bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.10)] outline-2 outline-white inline-flex flex-col justify-center items-center relative cursor-pointer"
+            className="ml-2 w-4 h-4 relative bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.5)] ring ring-2 ring-white inline-flex flex-col justify-center items-center cursor-pointer"
             ref={networkPickerReference}
             onClick={() => {
               setIsAssetListBlurred(true);
             }}
           >
-            <div className="w-3 h-4 left-[4px] top-0 absolute mix-blend-multiply bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.10)] outline-2 outline-white" />
+            <div className="w-3 h-4 left-[4px] top-0 absolute mix-blend-multiply bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.5)] ring ring-2 ring-white" />
             <div className="left-[4.50px] top-[3px] absolute inline-flex justify-start items-center">
               <div className="justify-start text-espresso text-[8px] font-medium font-['InterRegular'] leading-[9.60px]">
                 +{remainingChains.length}
@@ -151,6 +151,28 @@ export default function CurrencySearchPanel({
               reference={networkPickerReference.current}
             />
           </div>
+          {/* <div
+            className="w-4 h-4 inline-flex flex-col justify-center items-center relative cursor-pointer ml-2"
+            ref={networkPickerReference}
+            onClick={() => {
+              setIsAssetListBlurred(true);
+            }}
+          >
+            <div className="absolute bg-white bottom-0 box-border content-stretch flex flex-col items-center justify-center p-0 rounded w-4">
+              <div className="w-4 h-4 relative bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center">
+                <div className="w-3 h-4 left-[4px] top-0 absolute mix-blend-multiply bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white" />
+                <div className="justify-start text-espresso text-[8px] font-medium font-['InterRegular'] leading-[1.2]">
+                  +{remainingChains.length}
+                </div>
+              </div>
+            </div>
+            <NetworkPicker
+              isClicked={isAssetListBlurred}
+              chains={remainingChains}
+              onSelect={chainId => handleChainSelect(chainId, 'picker')}
+              reference={networkPickerReference.current}
+            />
+          </div> */}
         </div>
       </motion.div>
     </>
