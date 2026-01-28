@@ -33,7 +33,7 @@ export function PartnerSimpleFooter() {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             socials
           </div>
-          <FooterLink href="https://news.sodax.com/">News</FooterLink>
+          <FooterLink href="https://sodax.com/news">News</FooterLink>
           <FooterLink href="https://discord.gg/xM2Nh4S6vN" showArrow>
             Discord
           </FooterLink>
@@ -57,10 +57,7 @@ export function PartnerSimpleFooter() {
           <FooterLink href="https://sodaxscan.com/" showArrow>
             SODAX Scan
           </FooterLink>
-          <FooterLink
-            href="/SODAX.logos.and.token.zip"
-            showArrowDown={true}
-          >
+          <FooterLink href="/SODAX.logos.and.token.zip" showArrowDown={true}>
             Brand Kit
           </FooterLink>
         </div>
