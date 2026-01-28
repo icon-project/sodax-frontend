@@ -76,19 +76,26 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
     );
   };
 
+  const getButtonLabel = () => {
+    if (updateMutation.isPending) return 'Saving...';
+
+    if (!prefs) return 'Set destination';
+
+    if (!hasChanged) return 'Destination set ✓';
+
+    return 'Update destination';
+  };
+
   return (
     <main id="preferences-card" className="bg-transparent w-1/2 scroll-mt-24">
-      {' '}
-      <CardHeader className="pb-3">
+      <CardHeader className="px-0 pb-4">
         <CardTitle className="text-md font-bold flex items-center gap-2 text-clay">
           <Settings2 className="w-4 h-4 text-cherry" />
           Auto-Swap Destination
         </CardTitle>
-        <p className="text-xs text-clay-medium">
-          All fees will be automatically swapped to your target asset and sent to the selected network.{' '}
-        </p>
+        <p className="text-xs text-clay">All fees are swapped to your target asset and sent to the selected network</p>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 px-0">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase text-clay-light">Receive on Chain</Label>
@@ -129,7 +136,7 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
        3. OR no destination token has been selected (!dstToken)
     */
             <Button variant="cherry" className="px-8 py-5" size="sm" onClick={handleSave} disabled={isButtonDisabled}>
-              {updateMutation.isPending ? 'Updating...' : !hasChanged ? 'Destination Set ✓' : 'Update Destination'}
+              {getButtonLabel()}
             </Button>
           )}
         </div>

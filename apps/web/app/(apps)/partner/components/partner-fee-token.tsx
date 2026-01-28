@@ -1,10 +1,11 @@
-import { Button } from '@/components/ui/button';
-import CurrencyLogo from '@/components/shared/currency-logo';
 import type { FeeClaimAsset } from '../hooks/useFeeClaimAssets';
 import { useFeeClaimApproval } from '../hooks/useFeeClaimApproval';
 import type { Address } from '@sodax/types';
 import { toast } from 'sonner';
 import { FeeClaimAssetStatus } from '../utils/fee-claim';
+import CurrencyLogo from '@/components/shared/currency-logo';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 type PartnerFeeTokenProps = {
   asset: FeeClaimAsset;
@@ -13,8 +14,10 @@ type PartnerFeeTokenProps = {
 
 export function PartnerFeeToken({ asset, onClaim }: PartnerFeeTokenProps) {
   const { isApproved, approve } = useFeeClaimApproval(asset.currency.address as Address);
+  const [locallyApproved, setLocallyApproved] = useState(false);
 
   const isUSDC = asset.currency.symbol === 'USDC';
+  const canClaim = asset.status === FeeClaimAssetStatus.READY && (isApproved || locallyApproved);
 
   const handleAction = () => {
     if (asset.status === FeeClaimAssetStatus.NO_PREFS) {
@@ -24,11 +27,12 @@ export function PartnerFeeToken({ asset, onClaim }: PartnerFeeTokenProps) {
 
     if (asset.status !== FeeClaimAssetStatus.READY) return;
 
-    if (isApproved) {
+    if (canClaim) {
       onClaim(asset);
     } else {
       approve.mutate(undefined, {
         onSuccess: () => {
+          setLocallyApproved(true);
           toast.success(`${asset.currency.symbol} approved!`);
         },
       });
@@ -38,15 +42,18 @@ export function PartnerFeeToken({ asset, onClaim }: PartnerFeeTokenProps) {
   const getButtonText = () => {
     switch (asset.status) {
       case FeeClaimAssetStatus.NO_PREFS:
-        return 'Set Destination ↑';
+        return 'Set destination ↑';
 
       case FeeClaimAssetStatus.BELOW_MIN:
-        return 'Below Minimum';
+        return 'Below minimum';
+
+      case FeeClaimAssetStatus.CLAIMED:
+        return 'Already claimed';
 
       case FeeClaimAssetStatus.READY:
-        if (approve.isPending) return 'Approving...';
-        if (!isApproved) return 'Approve';
-        return isUSDC ? 'Claim USDC' : 'Claim & Swap';
+        if (approve.isPending) return 'Approving…';
+        if (!canClaim) return 'Approve';
+        return isUSDC ? 'Claim USDC' : 'Claim & swap';
     }
   };
 

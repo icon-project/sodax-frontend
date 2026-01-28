@@ -4,17 +4,20 @@ import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { type Address, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import { ClaimModal } from './components/claim-modal';
 import { PartnerPreferencesCard } from './components/partner-preference-card';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { PartnerFeeBalances } from './components/partner-fee-balances';
 import { BackToTop } from '@/components/shared/back-to-top';
 import { usePartnerFeeLifecycle } from './hooks/usePartnerFeeLifecycle';
 import type { FeeClaimAsset } from './hooks/useFeeClaimAssets';
+import { MIN_PARTNER_CLAIM_AMOUNT } from '@/constants/partner-claim';
+import { ConfirmClaimModal } from './components/modals/confirm-claim-modal';
+import { ClaimSubmittedModal } from './components/modals/claim-submitted-modal';
+import { ClaimFlowStep } from './utils/fee-claim';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isClaimModalOpen, setClaimModalOpen] = useState(false);
+  const [claimFlow, setClaimFlow] = useState<ClaimFlowStep>(ClaimFlowStep.NONE);
   const [selectedAsset, setSelectedAsset] = useState<FeeClaimAsset | null>(null);
 
   const { address: connectedAddress } = useXAccount(SONIC_MAINNET_CHAIN_ID);
@@ -45,7 +48,7 @@ export default function PartnerPage() {
 
   const handleClaim = (asset: FeeClaimAsset) => {
     setSelectedAsset(asset);
-    setClaimModalOpen(true);
+    setClaimFlow(ClaimFlowStep.CONFIRM);
   };
 
   useEffect(() => {
@@ -116,9 +119,7 @@ export default function PartnerPage() {
               <li>Fees are automatically swapped to USDC</li>
               <li>Destination is configured once</li>
               <li>First claim requires a one-time approval</li>
-              <li>
-                Minimum claim amount is <span className="text-clay font-medium">3 USDC</span>
-              </li>
+              <li>Minimum claim amount is {MIN_PARTNER_CLAIM_AMOUNT} USDC</li>
               <li>Only assets with a positive balance are displayed</li>
             </ul>
           </div>
@@ -138,18 +139,40 @@ export default function PartnerPage() {
           />
         )}
       </motion.div>
-      {selectedAsset && (
-        <ClaimModal
-          isOpen={isClaimModalOpen}
-          onClose={() => setClaimModalOpen(false)}
+      {claimFlow === ClaimFlowStep.CONFIRM && selectedAsset && (
+        <ConfirmClaimModal
+          isOpen
           asset={selectedAsset}
-          onSuccess={() => {
-            setSelectedAsset(null);
-            refreshBalances(); // Use the unified refresh function
-          }}
           partnerAddress={connectedAddress as Address}
+          onClose={() => {
+            setClaimFlow(ClaimFlowStep.NONE);
+            setSelectedAsset(null);
+          }}
+          onSuccess={() => {
+            setClaimFlow(ClaimFlowStep.SUBMITTED);
+            refreshBalances();
+          }}
         />
       )}
+
+      {claimFlow === ClaimFlowStep.SUBMITTED && (
+        <ClaimSubmittedModal
+          isOpen
+          onClose={() => {
+            setClaimFlow(ClaimFlowStep.NONE);
+            setSelectedAsset(null);
+          }}
+          destination={
+            activePreferences
+              ? {
+                  chain: activePreferences.dstChain,
+                  address: activePreferences.dstAddress,
+                }
+              : undefined
+          }
+        />
+      )}
+
       <BackToTop />
     </motion.div>
   );

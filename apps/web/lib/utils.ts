@@ -15,7 +15,8 @@ import { INJECTIVE_MAINNET_CHAIN_ID, LIGHTLINK_MAINNET_CHAIN_ID, hubAssets } fro
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
-import { availableChains } from '@/constants/chains';
+import { availableChains, getChainUI } from '@/constants/chains';
+// import { CHAIN_TX_EXPLORERS } from '@/constants/chain-explorers';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -303,3 +304,9 @@ export function calculateAPY(formattedReserves: FormatReserveUSDResponse[] | und
     return '-';
   }
 }
+
+export const getChainExplorerTxUrl = (chainId: string, txHash: string): string | undefined => {
+  const chain = getChainUI(chainId);
+  if (!chain?.explorerTxUrl) return undefined;
+  return `${chain.explorerTxUrl}${txHash}`;
+};

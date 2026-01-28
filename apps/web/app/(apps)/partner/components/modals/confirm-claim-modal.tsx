@@ -3,16 +3,17 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import type { FeeClaimAsset } from '../hooks/useFeeClaimAssets';
-import { useFeeClaimExecute } from '../hooks/useFeeClaimExecute';
-import { useFeeClaimPreferences } from '../hooks/useFeeClaimPreferences';
+import type { FeeClaimAsset } from '../../hooks/useFeeClaimAssets';
+import { useFeeClaimExecute } from '../../hooks/useFeeClaimExecute';
+import { useFeeClaimPreferences } from '../../hooks/useFeeClaimPreferences';
 import type { Address } from '@sodax/types';
 import { useState } from 'react';
 import { CircularProgressIcon } from '@/components/icons';
 import { Check } from 'lucide-react';
-import { ClaimExecutionState } from '../utils/fee-claim';
+import { ClaimExecutionState } from '../../utils/fee-claim';
+import { getChainExplorerTxUrl } from '@/lib/utils';
 
-interface ClaimModalProps {
+interface ConfirmClaimModalProps {
   isOpen: boolean;
   onClose: () => void;
   asset: FeeClaimAsset;
@@ -20,13 +21,15 @@ interface ClaimModalProps {
   onSuccess?: () => void;
 }
 
-export function ClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }: ClaimModalProps) {
+export function ConfirmClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }: ConfirmClaimModalProps) {
   const { data: preferences } = useFeeClaimPreferences(partnerAddress);
   const executeClaim = useFeeClaimExecute();
   const [executionState, setExecutionState] = useState<ClaimExecutionState>(ClaimExecutionState.READY);
+  const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
+  const chainId = preferences?.dstChain;
 
   const handleConfirm = () => {
-    setExecutionState(ClaimExecutionState.SUBMITTING);
+    setExecutionState(ClaimExecutionState.SIGNING);
 
     executeClaim.mutate(
       {
@@ -34,8 +37,17 @@ export function ClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }
         amount: asset.balance,
       },
       {
-        onSuccess: () => {
-          setExecutionState(ClaimExecutionState.COMPLETED);
+        onSuccess: result => {
+          let hash: `0x${string}` | null = null;
+
+          if ('hash' in result) {
+            hash = result.hash as `0x${string}`;
+          } else if ('intent_tx_hash' in result) {
+            hash = result.intent_tx_hash as `0x${string}`;
+          }
+
+          setTxHash(hash);
+          setExecutionState(ClaimExecutionState.SUBMITTED);
           toast.success('Claim submitted');
           onSuccess?.();
         },
@@ -49,24 +61,19 @@ export function ClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }
 
   const renderActionButton = () => {
     switch (executionState) {
-      case ClaimExecutionState.SUBMITTING:
-      case ClaimExecutionState.SUBMITTED:
+      case ClaimExecutionState.SIGNING:
         return (
           <Button disabled variant="cherry" className="w-full">
-            <div className="flex items-center gap-2">
-              <span>Claim in progress…</span>
-              <CircularProgressIcon className="animate-spin" />
-            </div>
+            <span>Confirming in wallet…</span>
+            <CircularProgressIcon className="animate-spin" />
           </Button>
         );
 
-      case ClaimExecutionState.COMPLETED:
+      case ClaimExecutionState.SUBMITTED:
         return (
           <Button disabled variant="cherry" className="w-full">
-            <div className="flex items-center gap-2">
-              <span>Claim completed</span>
-              <Check className="w-4 h-4" />
-            </div>
+            <span>Transaction submitted</span>
+            <Check className="w-4 h-4" />
           </Button>
         );
 
@@ -78,6 +85,8 @@ export function ClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }
         );
     }
   };
+
+  const txUrl = txHash && chainId ? getChainExplorerTxUrl(chainId, txHash) : undefined;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -105,12 +114,26 @@ export function ClaimModal({ isOpen, onClose, asset, partnerAddress, onSuccess }
             </p>
             <p className="text-clay text-xs">Address: {preferences?.dstAddress}</p>
           </div>
-          <p className="text-xs text-clay-light">Processing may take a few moments after confirmation.</p>
         </div>
         <DialogFooter>{renderActionButton()}</DialogFooter>
         <p className="text-xs text-clay-light text-center">
           This submits a claim request. Execution may take a few moments.
         </p>
+        {txUrl && (
+          <a
+            href={txUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-cherry underline break-all text-xs"
+          >
+            View transaction on explorer
+          </a>
+        )}
+        {executionState === ClaimExecutionState.SUBMITTED && (
+          <p className="text-xs text-clay-light text-center">
+            Your claim has been submitted and will be processed shortly. You can safely close this window.
+          </p>
+        )}
       </DialogContent>
     </Dialog>
   );

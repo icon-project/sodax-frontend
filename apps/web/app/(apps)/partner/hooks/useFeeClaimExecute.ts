@@ -26,27 +26,33 @@ export function useFeeClaimExecute() {
 
   return useMutation({
     mutationFn: async ({ fromToken, amount }: { fromToken: string; amount: bigint }) => {
-      // MOCK CHECK
-      if (process.env.NEXT_PUBLIC_USE_PARTNER_MOCKS === 'true') {
-        console.log('🛠️ Mock Partner Mode: Simulating Swap Intent...');
-        // Wait 2 seconds to simulate blockchain/solver delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        return { hash: '0xMOCK_TRANSACTION_HASH_FOR_TESTING' };
+      if (!sodax || !spokeProvider) {
+        throw new Error('SDK or Wallet not ready');
       }
 
-      // REAL SDK CALL
-      if (!sodax || !spokeProvider) throw new Error('SDK or Wallet not ready');
-      const result = await sodax.partners.feeClaim.swap({
+      // 1️⃣ Create intent → THIS returns the tx hash
+      const txResult = await sodax.partners.feeClaim.createIntentAutoSwap({
         params: { fromToken: fromToken as Address, amount },
         spokeProvider: spokeProvider as SonicSpokeProvider,
       });
-      console.log('CLAIM SUBMIT', {
-        fromToken,
-        amount: amount.toString(),
-      });
 
-      if (!result.ok) throw result.error;
-      return result.value;
+      if (!txResult.ok) throw txResult.error;
+
+      const txHash = txResult.value; // ✅ REAL hash
+
+      // 2️⃣ Fire-and-forget solver execution
+      sodax.partners.feeClaim
+        .swap({
+          params: { fromToken: fromToken as Address, amount },
+          spokeProvider: spokeProvider as SonicSpokeProvider,
+        })
+        .catch(err => {
+          console.error('Solver execution failed (post-tx):', err);
+        });
+
+      return {
+        txHash,
+      };
     },
   });
 }

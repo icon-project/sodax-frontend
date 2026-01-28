@@ -43,49 +43,43 @@ export function useFeeClaimAssets(address?: Address) {
   const assets = useMemo(() => {
     if (!balancesQuery.data) return [];
 
-    return (
-      Array.from(balancesQuery.data.values())
-        .map(asset => {
-          const isUSDC = asset.symbol === USDC_SYMBOL;
-          const minClaimAmount = parseUnits(MIN_PARTNER_CLAIM_AMOUNT.toString(), asset.decimal);
+    return Array.from(balancesQuery.data.values()).map(asset => {
+      const isUSDC = asset.symbol === USDC_SYMBOL;
+      const minClaimAmount = parseUnits(MIN_PARTNER_CLAIM_AMOUNT.toString(), asset.decimal);
 
-          const rawFormattedBalance = formatUnits(asset.balance, asset.decimal);
-          const hasPrefs = !!prefsQuery.data;
+      const rawFormattedBalance = formatUnits(asset.balance, asset.decimal);
+      const hasPrefs = !!prefsQuery.data;
 
-          /**
-           * Asset status meaning:
-           * - NO_PREFS   → user must set destination first
-           * - BELOW_MIN  → balance exists but too small to claim
-           * - READY      → can proceed with approval / claim
-           */
-          let status: FeeClaimAssetStatus = FeeClaimAssetStatus.READY;
+      let status: FeeClaimAssetStatus = FeeClaimAssetStatus.READY;
 
-          if (!hasPrefs && !isUSDC) {
-            status = FeeClaimAssetStatus.NO_PREFS;
-          } else if (asset.balance < minClaimAmount) {
-            status = FeeClaimAssetStatus.BELOW_MIN;
-          }
+      // 1️⃣ Already claimed (balance is zero)
+      if (asset.balance === 0n) {
+        status = FeeClaimAssetStatus.CLAIMED;
+      }
+      // 2️⃣ Destination not set (non-USDC)
+      else if (!hasPrefs && !isUSDC) {
+        status = FeeClaimAssetStatus.NO_PREFS;
+      }
+      // 3️⃣ Below minimum
+      else if (asset.balance < minClaimAmount) {
+        status = FeeClaimAssetStatus.BELOW_MIN;
+      }
 
-          return {
-            sdkAsset: asset,
-            currency: {
-              symbol: asset.symbol,
-              name: asset.name,
-              address: asset.address as Address,
-              decimals: asset.decimal,
-              xChainId: asset.originalChain,
-            },
-            balance: asset.balance,
-            displayBalance: rawFormattedBalance ? Number(rawFormattedBalance).toFixed(4) : '-',
-
-            status,
-            // Approval is a separate concern handled elsewhere
-            requiresApproval: true,
-          };
-        })
-        // Hide zero-balance assets from the UI
-        .filter(asset => Number(asset.displayBalance) > 0)
-    );
+      return {
+        sdkAsset: asset,
+        currency: {
+          symbol: asset.symbol,
+          name: asset.name,
+          address: asset.address as Address,
+          decimals: asset.decimal,
+          xChainId: asset.originalChain,
+        },
+        balance: asset.balance,
+        displayBalance: rawFormattedBalance ? Number(rawFormattedBalance).toFixed(4) : '0.0000',
+        status,
+        requiresApproval: true,
+      };
+    });
   }, [balancesQuery.data, prefsQuery.data]);
 
   return {

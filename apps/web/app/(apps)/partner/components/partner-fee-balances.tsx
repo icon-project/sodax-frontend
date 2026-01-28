@@ -7,6 +7,8 @@ import { PartnerFeeToken } from './partner-fee-token';
 import type { SetSwapPreferenceParams } from '@sodax/sdk';
 import { ChainGroupSkeleton } from './chain-group-skeleton';
 import type { FeeClaimAsset } from '../hooks/useFeeClaimAssets';
+import { Wallet2 } from 'lucide-react';
+import { CardTitle } from '@/components/ui/card';
 
 type PartnerFeeBalancesProps = {
   assets: FeeClaimAsset[];
@@ -44,8 +46,13 @@ export function PartnerFeeBalances({ assets, isLoading, onClaim, prefs }: Partne
 
   return (
     <main className="transition-all duration-500">
-      <div className="text-lg font-semibold text-clay mb-6">Your fee balances</div>
-
+      <CardTitle className="text-md font-bold flex items-center gap-2 text-clay w-1/2">
+        <Wallet2 className="w-4 h-4 text-clay-light" />
+        Your fee balances
+      </CardTitle>
+      <p className="text-clay text-xs my-3 w-1/2">
+        After submitting a claim, your funds will appear in your destination wallet once processing is complete{' '}
+      </p>
       {isLoading ? (
         <div className="space-y-3">
           <ChainGroupSkeleton />

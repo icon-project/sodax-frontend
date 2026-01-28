@@ -2,12 +2,18 @@ export enum FeeClaimAssetStatus {
   NO_PREFS = 'NO_PREFS',
   BELOW_MIN = 'BELOW_MIN',
   READY = 'READY',
+  CLAIMED = 'CLAIMED',
 }
 
+//transaction lifecycle
 export enum ClaimExecutionState {
-  READY = 'READY', // user can start the claim
-  APPROVING = 'APPROVING', // ERC20 approve tx
-  SUBMITTING = 'SUBMITTING', // createIntent tx sent
-  SUBMITTED = 'SUBMITTED', // solver working (async)
-  COMPLETED = 'COMPLETED',
+  READY = 'READY', //before user clicks
+  SIGNING = 'SIGNING', // wallet tsx signing
+  SUBMITTED = 'SUBMITTED', //tsx hash exist
+}
+
+export enum ClaimFlowStep {
+  NONE = 'NONE',
+  CONFIRM = 'CONFIRM',
+  SUBMITTED = 'SUBMITTED',
 }
