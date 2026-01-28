@@ -29,6 +29,10 @@ export default function AssetListItem({
     const total = tokensWithBalances.reduce((sum, token) => {
       return sum + Number(token.supplyBalance || '0');
     }, 0);
+    return total;
+  }, [tokensWithBalances]);
+
+  useEffect(() => {
     if (!isExpanded || !ref.current) return;
 
     const el = ref.current;
