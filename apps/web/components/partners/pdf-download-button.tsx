@@ -1,6 +1,6 @@
 'use client';
 
-import { FileArrowDown } from '@phosphor-icons/react/dist/ssr';
+import { FileDown } from 'lucide-react';
 import { downloadFile } from '@/lib/download-utils';
 
 interface PdfDownloadButtonProps {
@@ -25,11 +25,13 @@ export function PdfDownloadButton({ title = 'Case Study', pdfUrl }: PdfDownloadB
       aria-label={pdfUrl ? `Download ${title} PDF` : `Print ${title} as PDF`}
       title={pdfUrl ? 'Download PDF' : 'Print or save as PDF'}
     >
-      <FileArrowDown size={16} weight="duotone" className="text-[var(--espresso)]" />
+      <FileDown size={16} className="text-[var(--espresso)]" />
       <span className="font-['InterMedium'] text-sm text-[var(--espresso)] sm:hidden md:inline">
         {pdfUrl ? 'Download PDF' : 'Download'}
       </span>
-      <span className="font-['InterMedium'] text-sm text-[var(--espresso)] hidden sm:inline md:hidden">PDF</span>
+      <span className="font-['InterMedium'] text-sm text-[var(--espresso)] hidden sm:inline md:hidden">
+        PDF
+      </span>
     </button>
   );
 }

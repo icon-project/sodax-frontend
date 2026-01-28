@@ -47,6 +47,7 @@ for urgent task:
 2. create a PR from the branch to production, after testing by the QA or dev, the PR is merged into production
 3. make a PR from production to main to sync the latest changes between production and main
 
+
 rules for merging:
 1. when merge feature branches to main, use squash merge
 2. when merge main into staging, use normal merge
