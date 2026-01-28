@@ -4,21 +4,18 @@ import { motion } from 'framer-motion';
 import { useFloating, autoUpdate, offset, shift, limitShift } from '@floating-ui/react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { chainIdToChainName } from '@/providers/constants';
 import NetworkIcon from '@/components/shared/network-icon';
-import type { XToken } from '@sodax/types';
+import type { ChainUI } from '@/constants/chains';
 
 export function NetworkPicker({
   isClicked,
-  tokens,
-  tokenSymbol,
+  chains,
   onSelect,
   reference,
 }: {
   isClicked: boolean;
-  tokens: XToken[];
-  tokenSymbol: string;
-  onSelect?: (token: XToken) => void;
+  chains: ChainUI[];
+  onSelect?: (chainId: string) => void;
   reference: HTMLElement | null;
 }): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
@@ -79,24 +76,19 @@ export function NetworkPicker({
           isMobile && isSingle ? 'text-left ml-5' : 'text-center',
         )}
       >
-        {hoveredIcon !== null && tokens[hoveredIcon] ? (
+        {hoveredIcon !== null && chains[hoveredIcon] ? (
           <>
-            {tokenSymbol} <span className="font-bold">on {chainIdToChainName(tokens[hoveredIcon].xChainId)}</span>
+            <span className="font-bold">{chains[hoveredIcon].name}</span>
           </>
         ) : (
           'Choose a network'
         )}
       </div>
 
-      <div
-        className={cn(
-          'flex flex-wrap justify-center w-[140px] network-picker-container',
-          isMobile && isSingle && 'ml-4',
-        )}
-      >
-        {tokens.map((token, index) => (
+      <div className={cn('flex flex-wrap justify-center w-[140px]', isMobile && isSingle && 'ml-4')}>
+        {chains.map((chain, index) => (
           <motion.div
-            key={token.xChainId}
+            key={chain.id}
             className={cn(
               'p-1.5 cursor-pointer',
               hoveredIcon !== null && hoveredIcon !== index && 'opacity-60 grayscale-[0.5]',
@@ -108,10 +100,10 @@ export function NetworkPicker({
             onMouseDown={e => {
               e.preventDefault();
               e.stopPropagation();
-              onSelect?.(token);
+              onSelect?.(chain.id);
             }}
           >
-            <NetworkIcon id={token.xChainId} />
+            <NetworkIcon id={chain.id} />
           </motion.div>
         ))}
       </div>

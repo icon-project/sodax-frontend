@@ -303,3 +303,23 @@ export function calculateAPY(formattedReserves: FormatReserveUSDResponse[] | und
     return '-';
   }
 }
+
+export function formatCurrencyCompact(value: number): string {
+  const abs = Math.abs(value);
+
+  if (abs < 1000) {
+    return `$${value.toLocaleString()}`;
+  }
+
+  if (abs < 1_000_000) {
+    const num = (value / 1000).toFixed(1);
+    return `$${trimZeros(num)}K`;
+  }
+
+  const num = (value / 1_000_000).toFixed(2);
+  return `$${trimZeros(num)}M`;
+}
+
+function trimZeros(num: string) {
+  return num.replace(/\.?0+$/, '');
+}

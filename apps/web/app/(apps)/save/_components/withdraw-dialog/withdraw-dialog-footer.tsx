@@ -17,6 +17,8 @@ import { cn, formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import type { SpokeProvider } from '@sodax/sdk';
 import { parseUnits } from 'viem';
+import { getChainName } from '@/constants/chains';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface WithdrawDialogFooterProps {
   currentStep: number;
@@ -54,6 +56,7 @@ export default function WithdrawDialogFooter({
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const [isApproved, setIsApproved] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const queryClient = useQueryClient();
   // Money market withdraw hooks
   const withdrawAmountString = withdrawValue > 0 ? withdrawValue.toString() : '0';
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
@@ -190,7 +193,16 @@ export default function WithdrawDialogFooter({
             <Button
               variant="cherry"
               className="text-white font-['InterRegular'] transition-all duration-300 ease-in-out w-full disabled:bg-cherry-bright disabled:!text-white"
-              onClick={isCompleted ? onClose : handleWithdraw}
+              onClick={
+                isCompleted
+                  ? async () => {
+                      await queryClient.invalidateQueries({ queryKey: ['mm', 'aTokensBalances'] });
+                      await queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData'] });
+                      await queryClient.invalidateQueries({ queryKey: ['mm', 'reservesUsdFormat'] });
+                      onClose();
+                    }
+                  : handleWithdraw
+              }
               disabled={isWithdrawing}
             >
               {isWithdrawing ? (
@@ -204,7 +216,7 @@ export default function WithdrawDialogFooter({
                   <CheckIcon className="w-4 h-4 ml-1" />
                 </>
               ) : (
-                `Withdraw to ${selectedToken?.symbol}`
+                `Withdraw to ${getChainName(selectedToken?.xChainId as ChainId)}`
               )}
             </Button>
           )}

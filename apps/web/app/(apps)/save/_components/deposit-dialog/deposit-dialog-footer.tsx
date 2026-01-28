@@ -13,6 +13,7 @@ import { DEPOSIT_STEP } from '../../_stores/save-store';
 import { CheckIcon, Loader2Icon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { SpokeProvider } from '@sodax/sdk';
+import { useQueryClient } from '@tanstack/react-query';
 interface DepositDialogFooterProps {
   selectedToken: XToken | null;
   onPendingChange?: (isPending: boolean) => void;
@@ -33,6 +34,7 @@ export default function DepositDialogFooter({
   const [isCompleted, setIsCompleted] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
     params: {
       token: selectedToken?.address as string,
@@ -76,12 +78,12 @@ export default function DepositDialogFooter({
     });
     if (response.ok) {
       setIsCompleted(true);
+      // Refetch supply balances and reserves data after successful deposit
+      await queryClient.invalidateQueries({ queryKey: ['mm', 'aTokensBalances'] });
+      await queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData'] });
+      await queryClient.invalidateQueries({ queryKey: ['mm', 'reservesUsdFormat'] });
     }
   };
-
-  const isStep1 = currentDepositStep === DEPOSIT_STEP.TERMS;
-  const isStep2 = currentDepositStep === DEPOSIT_STEP.APPROVE;
-  const isStep3 = currentDepositStep === DEPOSIT_STEP.CONFIRM;
 
   const getNextStep = (step: DEPOSIT_STEP): DEPOSIT_STEP | null => {
     switch (step) {
@@ -118,8 +120,7 @@ export default function DepositDialogFooter({
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      {/* Step 1: Continue button - show on mobile only if step 1, always on desktop */}
-      {(isMobile ? isStep1 : true) && (
+      {(isMobile ? currentDepositStep === DEPOSIT_STEP.TERMS : true) && (
         <Button
           variant="cherry"
           className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
@@ -130,15 +131,14 @@ export default function DepositDialogFooter({
                 : 'flex flex-1'
           }`}
           onClick={handleContinue}
-          disabled={!isStep1}
+          disabled={currentDepositStep !== DEPOSIT_STEP.TERMS}
         >
           {currentDepositStep !== DEPOSIT_STEP.TERMS ? <Check className="w-5 h-5" /> : 'Continue'}
         </Button>
       )}
 
-      {/* Step 2: Approve/Switch Chain button - show on mobile only if step 2, always on desktop */}
-      {(isMobile ? isStep2 : true) &&
-        (isStep2 && isWrongChain ? (
+      {(isMobile ? currentDepositStep === DEPOSIT_STEP.APPROVE : true) &&
+        (currentDepositStep === DEPOSIT_STEP.APPROVE && isWrongChain ? (
           <Button className={isMobile ? 'w-full' : 'flex-1'} type="button" variant="cherry" onClick={handleSwitchChain}>
             Switch Chain
           </Button>
@@ -146,14 +146,14 @@ export default function DepositDialogFooter({
           <Button
             variant="cherry"
             className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
-              isMobile ? 'w-full' : isStep2 ? 'flex-1' : 'w-[40px]'
+              isMobile ? 'w-full' : currentDepositStep === DEPOSIT_STEP.APPROVE ? 'flex-1' : 'w-[40px]'
             }`}
             onClick={handleApprove}
-            disabled={!isStep2 || isApproving || isAllowanceLoading || isApproved}
+            disabled={currentDepositStep !== DEPOSIT_STEP.APPROVE || isApproving || isAllowanceLoading || isApproved}
           >
             {isApproved ? (
               <Check className="w-5 h-5" />
-            ) : isStep1 ? (
+            ) : currentDepositStep === DEPOSIT_STEP.TERMS ? (
               <FilePenLine />
             ) : isApproving ? (
               'Approving...'
@@ -163,8 +163,7 @@ export default function DepositDialogFooter({
           </Button>
         ))}
 
-      {/* Step 3: Deposit button - show on mobile only if step 3 or completed, always on desktop */}
-      {(isMobile ? isStep3 || isCompleted : true) &&
+      {(isMobile ? currentDepositStep === DEPOSIT_STEP.CONFIRM || isCompleted : true) &&
         (isCompleted ? (
           <Button
             variant="cherry"
@@ -182,12 +181,12 @@ export default function DepositDialogFooter({
             className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
               isMobile
                 ? 'w-full'
-                : isStep3 || isApproved
+                : currentDepositStep === DEPOSIT_STEP.CONFIRM || isApproved
                   ? 'h-10 rounded-full p-0 flex flex-1 items-center justify-center'
                   : 'w-[140px]'
             }`}
             onClick={handleDeposit}
-            disabled={!isStep3}
+            disabled={currentDepositStep !== DEPOSIT_STEP.CONFIRM}
           >
             {isPending ? (
               <>
