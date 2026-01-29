@@ -9,7 +9,7 @@ export const registerUser = async ({
   signature,
   chainType,
   message,
-}: { address: string; signature: string; chainType: string; message: string }) => {
+}: { address: string; signature: string | Uint8Array; chainType: string; message: string }) => {
   try {
     if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
       await fetch(`${BASE_URL}/users/register`, {
@@ -19,7 +19,7 @@ export const registerUser = async ({
         },
         body: JSON.stringify({
           address,
-          signature: chainType === 'SOLANA' ? bs58.encode(Uint8Array.from(signature)) : signature,
+          signature: chainType === 'SOLANA' ? bs58.encode(Uint8Array.from(signature as Uint8Array)) : signature,
           message,
           chain: chainType,
         }),
