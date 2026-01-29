@@ -3,31 +3,17 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn, formatBalance } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
-import { hubAssets } from '@sodax/types';
 import { getUniqueByChain } from '@/lib/utils';
 import NetworkIcon from '@/components/shared/network-icon';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useSaveState } from '../../_stores/save-store-provider';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
-import { useBackendMoneyMarketAssetSuppliers } from '@sodax/dapp-kit';
 import { Tooltip, TooltipTrigger } from '@/components/ui/tooltip';
 import { TooltipContent } from '@/components/ui/tooltip';
+import Image from 'next/image';
 
 function UserInfo({ isVisible, token }: { isVisible: boolean; token: XToken | undefined }) {
-  const vault = token ? hubAssets[token.xChainId]?.[token.address]?.vault : undefined;
-  const reserveAddress = vault || undefined;
-
-  const { data: suppliers } = useBackendMoneyMarketAssetSuppliers({
-    params: {
-      reserveAddress,
-    },
-    pagination: {
-      offset: '0',
-      limit: '1000000',
-    },
-  });
-
   return (
     <motion.div
       className="content-stretch flex flex-col items-center justify-center"
@@ -35,12 +21,7 @@ function UserInfo({ isVisible, token }: { isVisible: boolean; token: XToken | un
       animate={{ opacity: isVisible ? 1 : 0 }}
       transition={{ duration: 0.3, delay: isVisible ? 0.15 : 0 }}
     >
-      <p className="font-['InterRegular'] font-bold leading-[1.4] relative shrink-0 text-clay-dark !text-(length:--body-small)">
-        {suppliers?.suppliers.length}
-      </p>
-      <p className="font-['InterRegular'] font-medium leading-[1.2] relative shrink-0 text-clay-light !text-[9px]">
-        USERS
-      </p>
+      <Image src="/symbol3.png" width={16} height={16} alt="symbol3" />
     </motion.div>
   );
 }
@@ -59,7 +40,7 @@ function CollapsedAPY({ apy }: { apy: string }) {
   );
 }
 
-function AccordionCollapsedInfo({ tokens, apy }: { tokens: XToken[]; apy: string }) {
+function AccordionCollapsedInfo({ tokens }: { tokens: XToken[] }) {
   const unique = getUniqueByChain(tokens);
 
   return (
@@ -103,13 +84,6 @@ function AccordionCollapsedInfo({ tokens, apy }: { tokens: XToken[]; apy: string
             </div>
           </div>
         )}
-      </div>
-
-      <div className="hidden md:flex gap-1 shrink-0">
-        <span className="text-clay-light text-(length:--body-small)">Avg./mo:</span>
-        <span className="text-clay-light text-(length:--body-small) font-['InterBold']">
-          {(((1 + Number(apy.replace('%', '')) / 100) ** (1 / 12) - 1) * 100).toFixed(2)}%
-        </span>
       </div>
     </motion.div>
   );
@@ -173,7 +147,7 @@ export default function AssetListItemHeader({
         </motion.div>
       </ItemMedia>
 
-      <ItemContent>
+      <ItemContent className="flex justify-between flex-row">
         <motion.div
           className="flex flex-col"
           animate={{ height: !isExpanded ? 'auto' : '24px' }}
@@ -207,14 +181,13 @@ export default function AssetListItemHeader({
                 )
               )}
             </motion.div>
-
-            <AnimatePresence>{!isExpanded && <CollapsedAPY apy={apy} />}</AnimatePresence>
           </ItemTitle>
 
           <AnimatePresence initial={false} mode="wait">
-            {!isExpanded && <AccordionCollapsedInfo tokens={tokens} apy={apy} />}
+            {!isExpanded && <AccordionCollapsedInfo tokens={tokens} />}
           </AnimatePresence>
         </motion.div>
+        <AnimatePresence>{!isExpanded && <CollapsedAPY apy={apy} />}</AnimatePresence>
       </ItemContent>
     </Item>
   );
