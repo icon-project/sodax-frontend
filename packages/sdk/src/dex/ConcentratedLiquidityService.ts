@@ -24,7 +24,13 @@ import {
 } from '../index.js';
 import type { Address, HttpUrl, OriginalAssetAddress } from '@sodax/types';
 import type { EvmHubProvider } from '../shared/entities/Providers.js';
-import type { Prettify, OptionalTimeout, OptionalSkipSimulation, ClServiceConfig, RelayOptionalExtraData } from '../shared/types.js';
+import type {
+  Prettify,
+  OptionalTimeout,
+  OptionalSkipSimulation,
+  ClServiceConfig,
+  RelayOptionalExtraData,
+} from '../shared/types.js';
 import { erc20Abi, maxUint160, maxUint48 } from 'viem';
 import { Price, Token } from '@pancakeswap/swap-sdk-core';
 
@@ -48,6 +54,27 @@ import {
   TickMath,
   tickToPrice,
 } from '@pancakeswap/v3-sdk';
+
+// Pool reward configuration from hook contract
+export type PoolRewardConfig = {
+  rewardCurrency: Address; // Currency (currency0 or currency1) to use as reward token
+  rewardRatePerSecond: bigint; // Amount of reward tokens per second
+  lastActionTimestamp: bigint; // Timestamp of last position-affecting action
+};
+
+// APY range for concentrated liquidity positions
+export type ApyRange = {
+  minApy: number; // APY when liquidity is spread across all ticks (wide range)
+  maxApy: number; // APY when liquidity is concentrated in 1 tick (narrow range)
+};
+
+// Claim rewards parameters
+export type ConcentratedLiquidityClaimRewardsParams = {
+  poolKey: PoolKey;
+  tokenId: bigint; // NFT token ID
+  tickLower: bigint; // Lower tick of the position
+  tickUpper: bigint; // Upper tick of the position
+};
 
 // Types for concentrated liquidity operations
 export type ConcentratedLiquiditySupplyParams = {
@@ -103,7 +130,8 @@ export type ConcentratedLiquidityParams =
   | ConcentratedLiquidityIncreaseLiquidityParams
   | ConcentratedLiquidityDecreaseLiquidityParams
   | ConcentratedLiquidityBurnPositionParams
-  | ConcentratedLiquidityWithdrawParams;
+  | ConcentratedLiquidityWithdrawParams
+  | ConcentratedLiquidityClaimRewardsParams;
 
 // Parameter types for refactored functions following SwapService pattern
 export type SupplyLiquidityParams<S extends SpokeProvider> = Prettify<{
@@ -123,6 +151,11 @@ export type DecreaseLiquidityParams<S extends SpokeProvider> = Prettify<{
 
 export type BurnPositionParams<S extends SpokeProvider> = Prettify<{
   burnParams: ConcentratedLiquidityBurnPositionParams;
+  spokeProvider: S;
+}>;
+
+export type ClaimRewardsParams<S extends SpokeProvider> = Prettify<{
+  claimParams: ConcentratedLiquidityClaimRewardsParams;
   spokeProvider: S;
 }>;
 
@@ -224,6 +257,9 @@ export interface PoolData {
   // Additional pool metrics
   isActive: boolean;
   createdAt?: number; // Block number when pool was created
+
+  // Reward configuration (if pool has rewards)
+  rewardConfig?: PoolRewardConfig;
 }
 
 export type ConcentratedLiquidityUnknownErrorCode =
@@ -232,7 +268,9 @@ export type ConcentratedLiquidityUnknownErrorCode =
   | 'WITHDRAW_LIQUIDITY_UNKNOWN_ERROR'
   | 'INCREASE_LIQUIDITY_UNKNOWN_ERROR'
   | 'DECREASE_LIQUIDITY_UNKNOWN_ERROR'
-  | 'BURN_POSITION_UNKNOWN_ERROR';
+  | 'BURN_POSITION_UNKNOWN_ERROR'
+  | 'CLAIM_REWARDS_UNKNOWN_ERROR'
+  | 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR';
 
 export type GetConcentratedLiquidityParams<T extends ConcentratedLiquidityUnknownErrorCode> =
   T extends 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR'
@@ -247,7 +285,11 @@ export type GetConcentratedLiquidityParams<T extends ConcentratedLiquidityUnknow
             ? ConcentratedLiquidityDecreaseLiquidityParams
             : T extends 'BURN_POSITION_UNKNOWN_ERROR'
               ? ConcentratedLiquidityBurnPositionParams
-              : never;
+              : T extends 'CLAIM_REWARDS_UNKNOWN_ERROR'
+                ? ConcentratedLiquidityClaimRewardsParams
+                : T extends 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR'
+                  ? PoolKey
+                  : never;
 
 export type ConcentratedLiquidityErrorCode =
   | ConcentratedLiquidityUnknownErrorCode
@@ -257,7 +299,9 @@ export type ConcentratedLiquidityErrorCode =
   | 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'
   | 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'
   | 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'
-  | 'CREATE_BURN_POSITION_INTENT_FAILED';
+  | 'CREATE_BURN_POSITION_INTENT_FAILED'
+  | 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
+  | 'GET_POOL_REWARD_CONFIG_FAILED';
 
 export type ConcentratedLiquidityUnknownError<T extends ConcentratedLiquidityUnknownErrorCode> = {
   error: unknown;
@@ -294,6 +338,16 @@ export type ConcentratedLiquidityBurnPositionFailedError = {
   payload: ConcentratedLiquidityBurnPositionParams;
 };
 
+export type ConcentratedLiquidityClaimRewardsFailedError = {
+  error: unknown;
+  payload: ConcentratedLiquidityClaimRewardsParams;
+};
+
+export type ConcentratedLiquidityGetPoolRewardConfigFailedError = {
+  error: unknown;
+  payload: PoolKey;
+};
+
 export type GetConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCode> = T extends 'SUBMIT_TX_FAILED'
   ? ConcentratedLiquiditySubmitTxFailedError
   : T extends 'RELAY_TIMEOUT'
@@ -308,9 +362,13 @@ export type GetConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCo
             ? ConcentratedLiquidityDecreaseLiquidityFailedError
             : T extends 'CREATE_BURN_POSITION_INTENT_FAILED'
               ? ConcentratedLiquidityBurnPositionFailedError
-              : T extends ConcentratedLiquidityUnknownErrorCode
-                ? ConcentratedLiquidityUnknownError<T>
-                : never;
+              : T extends 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
+                ? ConcentratedLiquidityClaimRewardsFailedError
+                : T extends 'GET_POOL_REWARD_CONFIG_FAILED'
+                  ? ConcentratedLiquidityGetPoolRewardConfigFailedError
+                  : T extends ConcentratedLiquidityUnknownErrorCode
+                    ? ConcentratedLiquidityUnknownError<T>
+                    : never;
 
 export type ConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCode> = {
   code: T;
@@ -923,6 +981,215 @@ export class ClService {
     }
   }
 
+  /**
+   * Fetch pool reward configuration from the hook contract
+   * @param poolKey - The pool key containing the hook address
+   * @param publicClient - The viem public client for reading from the chain
+   * @returns The pool reward configuration
+   */
+  public async getPoolRewardConfig(
+    poolKey: PoolKey,
+    publicClient: PublicClient<HttpTransport>,
+  ): Promise<Result<PoolRewardConfig, ConcentratedLiquidityError<'GET_POOL_REWARD_CONFIG_FAILED'>>> {
+    try {
+      const hookAddress = poolKey.hooks;
+
+      if (!hookAddress || hookAddress === '0x' || hookAddress === '0x0000000000000000000000000000000000000000') {
+        return {
+          ok: false,
+          error: {
+            code: 'GET_POOL_REWARD_CONFIG_FAILED',
+            data: {
+              error: new Error('Pool has no hook configured'),
+              payload: poolKey,
+            },
+          },
+        };
+      }
+
+      const poolId = getPoolId(poolKey);
+
+      // ABI for reading poolRewardConfigs mapping from hook contract
+      const poolRewardConfigsAbi = [
+        {
+          inputs: [{ name: 'poolId', type: 'bytes32' }],
+          name: 'poolRewardConfigs',
+          outputs: [
+            { name: 'rewardCurrency', type: 'address' },
+            { name: 'rewardRatePerSecond', type: 'uint256' },
+            { name: 'lastActionTimestamp', type: 'uint256' },
+          ],
+          stateMutability: 'view',
+          type: 'function',
+        },
+      ] as const;
+
+      const result = await publicClient.readContract({
+        address: hookAddress,
+        abi: poolRewardConfigsAbi,
+        functionName: 'poolRewardConfigs',
+        args: [poolId],
+      });
+
+      const [rewardCurrency, rewardRatePerSecond, lastActionTimestamp] = result;
+
+      return {
+        ok: true,
+        value: {
+          rewardCurrency: rewardCurrency as Address,
+          rewardRatePerSecond,
+          lastActionTimestamp,
+        },
+      };
+    } catch (error) {
+      console.error('getPoolRewardConfig error:', error);
+      return {
+        ok: false,
+        error: {
+          code: 'GET_POOL_REWARD_CONFIG_FAILED',
+          data: {
+            error: error,
+            payload: poolKey,
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Execute claim rewards action - triggers reward distribution by calling decrease liquidity with 0 value
+   */
+  public async executeClaimRewards<S extends SpokeProvider, R extends boolean = false>(
+    params: ConcentratedLiquidityClaimRewardsParams,
+    spokeProvider: S,
+    raw?: R,
+    skipSimulation?: boolean,
+  ): Promise<
+    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_CLAIM_REWARDS_INTENT_FAILED'>> &
+      RelayOptionalExtraData
+  > {
+    try {
+      const userAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const calls: EvmContractCall[] = [];
+
+      // Call decrease liquidity with 0 liquidity to trigger reward distribution
+      const calldata = encodeCLPositionManagerDecreaseLiquidityCalldata({
+        tokenId: params.tokenId,
+        poolKey: params.poolKey,
+        liquidity: 0n, // 0 liquidity to only claim rewards
+        amount0Min: 0n,
+        amount1Min: 0n,
+        recipient: hubWallet,
+        hookData: '0x',
+        deadline: BigInt(2) ** BigInt(256) - BigInt(1), // maxUint256
+      });
+
+      const claimCall: EvmContractCall = {
+        address: this.config.clPositionManager,
+        value: 0n,
+        data: calldata,
+      };
+
+      calls.push(claimCall);
+
+      // Execute the transaction
+      const data: Hex = encodeContractCalls(calls);
+      const txResult = await SpokeService.callWallet(
+        hubWallet,
+        data,
+        spokeProvider,
+        this.hubProvider,
+        raw,
+        skipSimulation,
+      );
+
+      return {
+        ok: true,
+        value: txResult satisfies TxReturnType<S, R>,
+        data: {
+          address: hubWallet,
+          payload: data,
+        },
+      };
+    } catch (error) {
+      console.error('executeClaimRewards error:', error);
+      return {
+        ok: false,
+        error: {
+          code: 'CREATE_CLAIM_REWARDS_INTENT_FAILED',
+          data: {
+            error: error,
+            payload: params,
+          },
+        },
+      };
+    }
+  }
+
+  /**
+   * Claim rewards and wait for the transaction to be relayed to the hub
+   * This method wraps executeClaimRewards and relays the transaction to the hub
+   */
+  public async claimRewards<S extends SpokeProvider>({
+    claimParams,
+    spokeProvider,
+    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+    skipSimulation = false,
+  }: Prettify<ClaimRewardsParams<S> & OptionalTimeout & OptionalSkipSimulation>): Promise<
+    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
+  > {
+    try {
+      const txResult = await this.executeClaimRewards(claimParams, spokeProvider, false, skipSimulation);
+
+      if (!txResult.ok) {
+        return txResult;
+      }
+
+      let intentTxHash: string | null = null;
+      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+        const packetResult = await relayTxAndWaitPacket(
+          txResult.value,
+          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          spokeProvider,
+          this.relayerApiEndpoint,
+          timeout,
+        );
+
+        if (!packetResult.ok) {
+          return {
+            ok: false,
+            error: {
+              code: packetResult.error.code,
+              data: {
+                error: packetResult.error,
+                payload: txResult.value,
+              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
+            },
+          };
+        }
+
+        intentTxHash = packetResult.value.dst_tx_hash;
+      } else {
+        intentTxHash = txResult.value;
+      }
+
+      return { ok: true, value: [txResult.value, intentTxHash] };
+    } catch (error) {
+      console.error('claimRewards error:', error);
+      return {
+        ok: false,
+        error: {
+          code: 'CLAIM_REWARDS_UNKNOWN_ERROR',
+          data: {
+            error: error,
+            payload: claimParams,
+          },
+        },
+      };
+    }
+  }
+
   public getPools(): PoolKey[] {
     return this.configService.getDexPools();
   }
@@ -1118,6 +1385,22 @@ export class ClService {
       // For now, we'll decode it or use a default based on fee tier
       const tickSpacing = poolKey.parameters.tickSpacing; // Default tick spacing
 
+      // Fetch reward configuration if pool has a hook
+      let rewardConfig: PoolRewardConfig | undefined;
+
+      const hookAddress = poolKey.hooks;
+      if (hookAddress && hookAddress !== '0x' && hookAddress !== '0x0000000000000000000000000000000000000000') {
+        try {
+          const rewardConfigResult = await this.getPoolRewardConfig(poolKey, publicClient);
+          if (rewardConfigResult.ok && rewardConfigResult.value.rewardRatePerSecond > 0n) {
+            rewardConfig = rewardConfigResult.value;
+          }
+        } catch (error) {
+          // Silently fail if reward config can't be fetched - pool might not have rewards
+          console.warn('Failed to fetch reward config for pool:', error);
+        }
+      }
+
       return {
         poolId,
         poolKey: {
@@ -1146,6 +1429,8 @@ export class ClService {
         token1IsStatAToken: enrichment1.isStatAToken,
         token1ConversionRate: enrichment1.conversionRate,
         token1UnderlyingToken: enrichment1.underlyingToken,
+        // Reward and APY data
+        rewardConfig,
       };
     } catch (error) {
       console.error('Failed to fetch pool data:', error);
