@@ -15,7 +15,7 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export type ChainType = 'ICON' | 'EVM' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA';
+export type ChainType = 'ICON' | 'EVM' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA' | 'NEAR';
 
 export type Chain = {
   id: string | number;
@@ -218,6 +218,18 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   rpc_url: string;
 };
 
+export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken?: string;
+    intentFiller: string;
+  };
+  rpcUrl: string;
+};
+
 export type IconAddress = `hx${string}` | `cx${string}`;
 export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
   addresses: {
@@ -236,7 +248,8 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
-  | SolanaChainConfig;
+  | SolanaChainConfig
+  | NearSpokeChainConfig;
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)

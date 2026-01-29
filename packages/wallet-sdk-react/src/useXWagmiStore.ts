@@ -13,6 +13,7 @@ import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
 import { IconXService } from './xchains/icon';
 import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
+import { NearXService } from './xchains/near/NearXService';
 
 type XWagmiStore = {
   xServices: Partial<Record<ChainType, XService>>;
@@ -24,7 +25,7 @@ type XWagmiStore = {
 
 const initXServices = () => {
   const xServices = {};
-  ['EVM', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON'].forEach(key => {
+  ['EVM', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON', 'NEAR'].forEach(key => {
     const xChainType = key as ChainType;
 
     switch (xChainType) {
@@ -54,6 +55,10 @@ const initXServices = () => {
       case 'ICON':
         xServices[xChainType] = IconXService.getInstance();
         xServices[xChainType].setXConnectors([new IconHanaXConnector()]);
+        break;
+      case 'NEAR':
+        xServices[xChainType] = NearXService.getInstance();
+        xServices[xChainType].setXConnectors([]);
         break;
       default:
         break;

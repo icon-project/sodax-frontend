@@ -11,6 +11,7 @@
     "staking": "pnpm run build && node dist/soda-staking.js",
     "stellar": "pnpm run build && node dist/stellar.js",
     "icon": "pnpm run build && node dist/icon.js",
+    "near": "pnpm run build && node dist/near.js",
     "bnusd-migration-test": "pnpm run build && node dist/tests/bnusd-migration.test.js",
     "estimate-gas-test": "pnpm run build && node dist/tests/estimate-gas.test.js",
     "backend-api-test": "pnpm run build && node dist/tests/backend-api.test.js",
@@ -44,7 +45,7 @@
     "bn.js": "^5.2.1",
     "bs58": "^6.0.0",
     "dotenv": "^16.4.7",
-    "ethers": "^6.13.5",
+    "ethers": "^6.14.1",
     "viem": "catalog:"
   },
   "devDependencies": {

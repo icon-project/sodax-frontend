@@ -12,6 +12,8 @@ public/dist
 .history
 .idea
 **/build/**
+**/*.testnet.ts
+**/artifacts/**
 
 # Agent skills (local to VSCode)
 .agents/
