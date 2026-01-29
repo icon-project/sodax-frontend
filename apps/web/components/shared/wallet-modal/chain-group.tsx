@@ -1,9 +1,9 @@
-import type { FeeClaimAsset } from '@/app/(apps)/partner/utils/useFeeClaimAssets';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import type { FeeClaimAsset } from '@/app/(apps)/partner/hooks/useFeeClaimAssets';
 
 type ChainGroupProps = {
   chainName: string;

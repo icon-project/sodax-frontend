@@ -70,8 +70,6 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
     ? lastSegment // e.g. "swap", "migrate", "home"
     : (usedTabs[0]?.value ?? 'migrate'); // fallback = first tab (Home for partner)
 
-  const tokenCount = useSaveStore(state => state.tokenCount);
-
   const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
