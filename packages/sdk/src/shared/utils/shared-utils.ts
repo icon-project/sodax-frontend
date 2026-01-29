@@ -147,6 +147,9 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
     case 'stellar':
       return `0x${StellarAddress.fromString(address).toScVal().toXDR('hex')}`;
 
+    case 'bitcoin':
+      return toHex(Buffer.from(address, 'utf-8'));
+      
     default:
       return address as Hex;
   }

@@ -7,7 +7,13 @@
   "version": "0.0.1-rc.5",
   "license": "MIT",
   "description": "Sodax Wallet SDK Core",
-  "keywords": ["sodax", "wallet", "sdk", "frontend", "interface"],
+  "keywords": [
+    "sodax",
+    "wallet",
+    "sdk",
+    "frontend",
+    "interface"
+  ],
   "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-core",
   "bugs": {
     "url": "https://github.com/icon-project/sodax-frontend/issues"
@@ -30,7 +36,9 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run --exclude ./src/tests/e2e",
@@ -47,26 +55,32 @@
     "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
   },
   "dependencies": {
-    "@sodax/types": "workspace:*",
-    "icon-sdk-js": "catalog:",
-    "viem": "catalog:",
-    "@injectivelabs/sdk-ts": "catalog:",
-    "@injectivelabs/wallet-core": "catalog:",
-    "@injectivelabs/wallet-base": "catalog:",
-    "@injectivelabs/wallet-private-key": "catalog:",
-    "@injectivelabs/ts-types": "catalog:",
     "@injectivelabs/networks": "catalog:",
+    "@injectivelabs/sdk-ts": "catalog:",
+    "@injectivelabs/ts-types": "catalog:",
+    "@injectivelabs/wallet-base": "catalog:",
+    "@injectivelabs/wallet-core": "catalog:",
+    "@injectivelabs/wallet-private-key": "catalog:",
+    "@mysten/sui": "catalog:",
+    "@mysten/wallet-standard": "catalog:",
+    "@sodax/types": "workspace:*",
     "@solana/spl-token": "catalog:",
     "@solana/wallet-adapter-base": "catalog:",
     "@solana/web3.js": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
-    "@mysten/sui": "catalog:",
-    "@mysten/wallet-standard": "catalog:"
+    "bip322-js": "^3.0.0",
+    "bitcoinjs-lib": "^6.1.5",
+    "ecpair": "^2.0.1",
+    "icon-sdk-js": "catalog:",
+    "secp256k1": "^5.0.1",
+    "tiny-secp256k1": "^2.2.3",
+    "viem": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
     "@changesets/cli": "catalog:",
     "@types/node": "catalog:",
+    "@types/secp256k1": "^4.0.7",
     "@vitest/coverage-v8": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",

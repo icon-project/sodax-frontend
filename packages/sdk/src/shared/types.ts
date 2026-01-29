@@ -48,6 +48,8 @@ import type {
   BaseSpokeChainConfig,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
+import type { BitcoinRawSpokeProvider, BitcoinSpokeProvider } from './entities/btc/BitcoinSpokeProvider.js';
+import type { BitcoinSpokeDepositParams } from './services/spoke/BitcoinSpokeService.js';
 
 export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
 export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
@@ -207,6 +209,10 @@ export type GetSpokeDepositParamsType<T extends SpokeProviderType> = T extends E
                           ? SonicSpokeDepositParams
                           : T extends SonicRawSpokeProvider
                             ? SonicSpokeDepositParams
+                            : T extends BitcoinSpokeProvider
+                              ? BitcoinSpokeDepositParams
+                              : T extends BitcoinRawSpokeProvider
+                                ? BitcoinSpokeDepositParams
                             : never;
 
 export type GetAddressType<T extends SpokeProviderType> = T extends EvmSpokeProvider
@@ -440,6 +446,7 @@ export type PromiseTxReturnType<
 export type EvmSpokeProviderType = EvmSpokeProvider | EvmRawSpokeProvider;
 export type SolanaSpokeProviderType = SolanaSpokeProvider | SolanaRawSpokeProvider;
 export type StellarSpokeProviderType = StellarSpokeProvider | StellarRawSpokeProvider;
+export type BitcoinSpokeProviderType = BitcoinSpokeProvider | BitcoinRawSpokeProvider;
 export type IconSpokeProviderType = IconSpokeProvider | IconRawSpokeProvider;
 export type SuiSpokeProviderType = SuiSpokeProvider | SuiRawSpokeProvider;
 export type InjectiveSpokeProviderType = InjectiveSpokeProvider | InjectiveRawSpokeProvider;

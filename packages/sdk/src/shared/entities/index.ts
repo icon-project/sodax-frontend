@@ -5,3 +5,4 @@ export * from './stellar/index.js';
 export * from './sui/index.js';
 export * from './Sodax.js';
 export * from './Providers.js';
+export * from './btc/index.js';

@@ -29,10 +29,12 @@ import {
   type EvmChainId,
   type EvmHubChainConfig,
   type WalletAddressProvider,
+  type IBitcoinWalletProvider,
 } from '@sodax/types';
 import type { ConfigService } from '../config/ConfigService.js';
 import { getHubChainConfig } from '../config/ConfigService.js';
 import type { StellarRawSpokeProvider, StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
+import type { BitcoinRawSpokeProvider, BitcoinSpokeProvider } from './btc/BitcoinSpokeProvider.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -189,6 +191,8 @@ export type IWalletProvider =
   | ISuiWalletProvider
   | IIconWalletProvider
   | IInjectiveWalletProvider
+  | IStellarWalletProvider
+  | IBitcoinWalletProvider
   | ISolanaWalletProvider;
 
 export type SpokeProvider = (
@@ -199,6 +203,7 @@ export type SpokeProvider = (
   | StellarSpokeProvider
   | SolanaSpokeProvider
   | SonicSpokeProvider
+  | BitcoinSpokeProvider
 ) &
   ISpokeProvider;
 
@@ -210,6 +215,7 @@ export type RawSpokeProvider = (
   | StellarRawSpokeProvider
   | SolanaRawSpokeProvider
   | SonicRawSpokeProvider
+  | BitcoinRawSpokeProvider
 ) &
   IRawSpokeProvider;
 

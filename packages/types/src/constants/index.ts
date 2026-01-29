@@ -2,6 +2,7 @@ import type { GetAllConfigApiResponse } from '../backend/index.js';
 import type {
   Address,
   BaseSpokeChainInfo,
+  BitcoinSpokeChainConfig,
   ChainId,
   ChainType,
   EvmHubChainConfig,
@@ -42,6 +43,7 @@ export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
 export const HYPEREVM_MAINNET_CHAIN_ID = 'hyper';
 export const LIGHTLINK_MAINNET_CHAIN_ID = 'lightlink';
 export const ETHEREUM_MAINNET_CHAIN_ID = 'ethereum';
+export const BITCOIN_MAINNET_CHAIN_ID = 'bitcoin';
 
 export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
 
@@ -62,6 +64,7 @@ export const CHAIN_IDS = [
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  BITCOIN_MAINNET_CHAIN_ID
 ] as const;
 
 export const EVM_CHAIN_IDS = [
@@ -168,6 +171,12 @@ export const baseChainInfo = {
     type: 'EVM',
     chainId: 1,
   },
+  [BITCOIN_MAINNET_CHAIN_ID]: {
+    name: 'Bitcoin',
+    id: BITCOIN_MAINNET_CHAIN_ID,
+    type: 'BITCOIN',
+    chainId: 'bitcoin',
+  }
 } as const satisfies Record<ChainId, BaseSpokeChainInfo<ChainType>>;
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
@@ -187,6 +196,7 @@ export const ChainIdToIntentRelayChainId = {
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
   [ETHEREUM_MAINNET_CHAIN_ID]: 2n,
+  [BITCOIN_MAINNET_CHAIN_ID]: 627463n
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -1082,6 +1092,34 @@ export const spokeChainConfig = {
     rpcUrl: 'https://injective-rpc.publicnode.com:443',
     walletAddress: '',
   } as const satisfies InjectiveSpokeChainConfig,
+  [BITCOIN_MAINNET_CHAIN_ID]: {
+    addresses: {
+      assetManager: 'tb1pfqugvtvt28a27jrhk4s27ky5n4vwf7nr50ar67xfjs87k80f3qjq0rv725',
+    },
+    chain: baseChainInfo[BITCOIN_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'BITCOIN'>,
+    bnUSD: '',
+    nativeToken: 'BTC' as const,
+    supportedTokens: {
+      BTC: {
+        symbol: 'BTC',
+        name: 'Bitcoin',
+        decimals: 8,
+        address: '0:0',
+        xChainId: BITCOIN_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '2078823:25',
+        xChainId: BITCOIN_MAINNET_CHAIN_ID,
+      }
+    },
+    radfiApiUrl: 'https://api.radfi.com',
+    radfiApiKey: '',
+    network: 'TESTNET',
+    rpcUrl: 'https://mempool.space/signet/api',
+  } as const satisfies BitcoinSpokeChainConfig,
   [STELLAR_MAINNET_CHAIN_ID]: {
     addresses: {
       connection: 'CDFQDDPUPAM3XPGORHDOEFRNLMKOH3N3X6XTXNLSXJQXIU3RVCM3OPEP',
@@ -2167,6 +2205,22 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: SodaTokens.sodaWSTETH.address,
     },
   },
+  [BITCOIN_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC.symbol]: {
+      asset: '0x8862C633d77f634EC9F659010EB83165f6274F19',
+      decimal: 8,
+      symbol: 'BTC',
+      name: 'Bitcoin',
+      vault: '0x6486795C12e731F38C58a559f059c4eb01D31EC9',
+    },
+    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.bnUSD.symbol]: {
+      asset: '0x3d8a9b8d3b4b4c7c1f8b7a9b8d3b4b4c1f8b7a9b',
+      decimal: 8,
+      symbol: 'SAT',  
+      name: 'Satoshi',
+      vault: '0x',
+    }
+  }
 } as const;
 
 export const solverConfig = {
@@ -2287,6 +2341,9 @@ export const swapSupportedTokens = {
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
+  ] as const satisfies XToken[],
+  [BITCOIN_MAINNET_CHAIN_ID]: [
+    
   ] as const satisfies XToken[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2443,6 +2500,9 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+  ] as const satisfies XToken[],
+  [BITCOIN_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC,
   ] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainId, readonly XToken[]>;
 

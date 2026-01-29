@@ -7,7 +7,12 @@
   "version": "0.0.1-rc.5",
   "license": "MIT",
   "description": "Sodax SDK",
-  "keywords": ["sodax", "sdk", "frontend", "interface"],
+  "keywords": [
+    "sodax",
+    "sdk",
+    "frontend",
+    "interface"
+  ],
   "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/sdk",
   "bugs": {
     "url": "https://github.com/icon-project/sodax-frontend/issues"
@@ -30,7 +35,9 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run --exclude ./src/e2e-tests",
@@ -52,16 +59,21 @@
     "@injectivelabs/networks": "catalog:",
     "@injectivelabs/sdk-ts": "catalog:",
     "@mysten/sui": "catalog:",
+    "@ordjs/runestone": "^1.6.0",
     "@sodax/types": "workspace:*",
     "@solana/spl-token": "catalog:",
     "@solana/web3.js": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
+    "bignumber.js": "catalog:",
+    "bitcoinjs-lib": "^6.1.5",
     "bn.js": "^5.2.1",
+    "ecpair": "^2.0.1",
     "icon-sdk-js": "catalog:",
     "rlp": "3.0.0",
+    "runelib": "^1.0.7",
     "tiny-invariant": "1.3.3",
-    "viem": "catalog:",
-    "bignumber.js": "catalog:"
+    "tiny-secp256k1": "^2.2.4",
+    "viem": "catalog:"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
@@ -72,6 +84,5 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  },
-  "peerDependencies": {}
+  }
 }
