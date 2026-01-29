@@ -56,10 +56,10 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   usdPrice = 0,
 }: CurrencyInputPanelProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
   const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
   const { outputToken } = useSwapState();
-  const isMobile = useIsMobile();
 
   const handleTokenSelect = (selectedToken: XToken): void => {
     if (onCurrencyChange) {
@@ -92,6 +92,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   );
 
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>): void => {
+    if (isMobile) return;
     const target = e.target as HTMLElement;
     if (target.tagName !== 'INPUT' && !target.closest('input')) {
       inputRef.current?.focus();
@@ -142,6 +143,11 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 )}
               </div>
             )}
+            {!isChainConnected && type === CurrencyInputPanelType.INPUT && (
+              <div className="mix-blend-multiply text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] flex gap-1">
+                <span className="text-(length:--body-comfortable) whitespace-nowrap">Wallet not connected</span>
+              </div>
+            )}
 
             {type === CurrencyInputPanelType.OUTPUT && onSwapAndSendToggle && (
               <div className="inline-flex justify-start items-center gap-2 w-32 md:w-[150px]">
@@ -183,6 +189,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         <>
           <div className="inline-flex justify-start items-center gap-2 mt-2 w-full">
             <Input
+              autoFocus
               type="text"
               placeholder="Enter destination address"
               value={customDestinationAddress}

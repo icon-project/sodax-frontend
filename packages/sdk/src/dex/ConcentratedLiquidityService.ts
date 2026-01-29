@@ -24,7 +24,13 @@ import {
 } from '../index.js';
 import type { Address, HttpUrl, OriginalAssetAddress } from '@sodax/types';
 import type { EvmHubProvider } from '../shared/entities/Providers.js';
-import type { Prettify, OptionalTimeout, OptionalSkipSimulation, ClServiceConfig, RelayOptionalExtraData } from '../shared/types.js';
+import type {
+  Prettify,
+  OptionalTimeout,
+  OptionalSkipSimulation,
+  ClServiceConfig,
+  RelayOptionalExtraData,
+} from '../shared/types.js';
 import { erc20Abi, maxUint160, maxUint48 } from 'viem';
 import { Price, Token } from '@pancakeswap/swap-sdk-core';
 
@@ -376,7 +382,11 @@ export class ClService {
   > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const hubWallet = await deriveUserWalletAddress(
+        this.hubProvider,
+        spokeProvider.chainConfig.chain.id,
+        userAddress,
+      );
       const calls: EvmContractCall[] = [];
 
       const token0Approvals = this.permit2Approve(params.poolKey.currency0, this.config.clPositionManager);
@@ -453,7 +463,11 @@ export class ClService {
   > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const hubWallet = await deriveUserWalletAddress(
+        this.hubProvider,
+        spokeProvider.chainConfig.chain.id,
+        userAddress,
+      );
       const calls: EvmContractCall[] = [];
 
       const positionConfig: CLPositionConfig = {
@@ -472,7 +486,12 @@ export class ClService {
         '0x', // no hook data
         BigInt(2) ** BigInt(256) - BigInt(1), // maxUint256 deadline
       );
-
+      console.log('calldata', calldata);
+      console.log('calldata', calldata);
+      console.log('calldata', calldata);
+      console.log('calldata', calldata);
+      console.log('calldata', calldata);
+      console.log('calldata', calldata);
       const increaseCall: EvmContractCall = {
         address: this.config.clPositionManager,
         value: 0n,
@@ -525,7 +544,11 @@ export class ClService {
   > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const hubWallet = await deriveUserWalletAddress(
+        this.hubProvider,
+        spokeProvider.chainConfig.chain.id,
+        userAddress,
+      );
       const calls: EvmContractCall[] = [];
 
       const calldata = encodeCLPositionManagerDecreaseLiquidityCalldata({
@@ -592,7 +615,11 @@ export class ClService {
   > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const hubWallet = await deriveUserWalletAddress(
+        this.hubProvider,
+        spokeProvider.chainConfig.chain.id,
+        userAddress,
+      );
       const calls: EvmContractCall[] = [];
 
       const positionConfig: CLPositionConfig = {

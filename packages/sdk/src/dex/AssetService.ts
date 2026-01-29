@@ -27,17 +27,24 @@ import {
 import {
   SodaTokens,
   SONIC_MAINNET_CHAIN_ID,
-  type ConcentratedLiquidityConfig,
   type HttpUrl,
   type OriginalAssetAddress,
   type SpokeChainId,
 } from '@sodax/types';
+import type { ConcentratedLiquidityConfig } from '../shared/types.js';
 import { erc20Abi, isAddress } from 'viem';
 import invariant from 'tiny-invariant';
 import { getConcentratedLiquidityConfig } from '../shared/constants.js';
 import { stataTokenFactoryAbi } from '../shared/abis/stataTokenFactory.abi.js';
 import { type EvmHubProvider, EvmSpokeProvider, SonicSpokeProvider } from '../shared/entities/Providers.js';
-import type { GetAddressType, GetSpokeDepositParamsType, HubTxHash } from '../shared/types.js';
+import type {
+  GetAddressType,
+  GetSpokeDepositParamsType,
+  HubTxHash,
+  EvmSpokeProviderType,
+  StellarSpokeProviderType,
+  SonicSpokeProviderType,
+} from '../shared/types.js';
 
 // Local type definitions
 export type AssetServiceConfig = {
@@ -315,7 +322,7 @@ export class AssetService {
         const result = await StellarSpokeService.requestTrustline(params.asset, params.amount, spokeProvider, raw);
         return {
           ok: true,
-          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
@@ -333,7 +340,7 @@ export class AssetService {
 
         return {
           ok: true,
-          value: result satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
@@ -349,7 +356,7 @@ export class AssetService {
           userRouter,
           spokeProvider,
           raw,
-        )) satisfies TxReturnType<EvmSpokeProvider, R> as TxReturnType<S, R>;
+        )) satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>;
 
         return {
           ok: true,
@@ -397,11 +404,23 @@ export class AssetService {
       invariant(depositParams.poolToken.length > 0, 'Pool token is required');
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const abstractedWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
-      const hubwallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+      const abstractedWalletAddress = await deriveUserWalletAddress(
+        this.hubProvider,
+        spokeProvider.chainConfig.chain.id,
+        walletAddress,
+      );
+      const hubwallet = await deriveUserWalletAddress(
+        this.hubProvider,
+        spokeProvider.chainConfig.chain.id,
+        walletAddress,
+      );
       let recipient = hubwallet;
       if (depositParams.dstProvider) {
-        recipient = await deriveUserWalletAddress(depositParams.dstProvider, this.hubProvider, walletAddress);
+        recipient = await deriveUserWalletAddress(
+          this.hubProvider,
+          depositParams.dstProvider.chainConfig.chain.id,
+          walletAddress,
+        );
       }
       const calls = await this.getTokenWrapAction(
         depositParams.asset,
@@ -460,11 +479,19 @@ export class AssetService {
     invariant(withdrawParams.poolToken.length > 0, 'Pool token is required');
 
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const hubwallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+    const hubwallet = await deriveUserWalletAddress(
+      this.hubProvider,
+      spokeProvider.chainConfig.chain.id,
+      walletAddress,
+    );
     let recipient = hubwallet;
     let dstChainId = spokeProvider.chainConfig.chain.id;
     if (withdrawParams.dstProvider) {
-      recipient = await deriveUserWalletAddress(withdrawParams.dstProvider, this.hubProvider, walletAddress);
+      recipient = await deriveUserWalletAddress(
+        this.hubProvider,
+        withdrawParams.dstProvider.chainConfig.chain.id,
+        walletAddress,
+      );
       dstChainId = withdrawParams.dstProvider.chainConfig.chain.id;
     }
 
@@ -742,7 +769,6 @@ export class AssetService {
     if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {
       calls.push(Erc20Service.encodeTransfer(assetConfig.asset, recipient, translatedAmount));
     } else {
-      // TODO add sonic support
       calls.push(
         EvmAssetManagerService.encodeTransfer(
           assetConfig.asset,
@@ -788,7 +814,11 @@ export class AssetService {
 
   public async getDeposit(poolToken: Address, spokeProvider: SpokeProvider): Promise<bigint> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const hubwallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+    const hubwallet = await deriveUserWalletAddress(
+      this.hubProvider,
+      spokeProvider.chainConfig.chain.id,
+      walletAddress,
+    );
 
     return await this.hubProvider.publicClient.readContract({
       address: poolToken,

@@ -21,6 +21,7 @@ import {
   type GetSwapTokensByChainIdApiResponse,
   type GetSwapTokensApiResponse,
   CONFIG_VERSION,
+  defaultSharedConfig,
 } from '@sodax/types';
 import type { BackendApiService } from '../../backendApi/BackendApiService.js';
 import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT, dexPools, StatATokenAddresses } from '../constants.js';
@@ -35,6 +36,7 @@ export type ConfigServiceConfig = {
 export type ConfigServiceConstructorParams = {
   backendApiService: BackendApiService;
   config?: ConfigServiceConfig;
+  sharedConfig?: typeof defaultSharedConfig;
 };
 
 /**
@@ -43,6 +45,7 @@ export type ConfigServiceConstructorParams = {
 export class ConfigService {
   readonly serviceConfig: ConfigServiceConfig;
   readonly backendApiService: BackendApiService;
+  readonly sharedConfig: typeof defaultSharedConfig;
   private initialized = false;
 
   private sodaxConfig: GetAllConfigApiResponse;
@@ -58,7 +61,7 @@ export class ConfigService {
   private moneyMarketReserveAssetsSet!: Set<Address>;
   private spokeChainIdsSet!: Set<SpokeChainId>;
 
-  constructor({ backendApiService, config }: ConfigServiceConstructorParams) {
+  constructor({ backendApiService, config, sharedConfig }: ConfigServiceConstructorParams) {
     this.serviceConfig = {
       backendApiUrl: config?.backendApiUrl ?? DEFAULT_BACKEND_API_ENDPOINT,
       timeout: config?.timeout ?? DEFAULT_BACKEND_API_TIMEOUT,
@@ -66,6 +69,10 @@ export class ConfigService {
     this.backendApiService = backendApiService;
     this.sodaxConfig = defaultSodaxConfig;
     this.loadSodaxConfigDataStructures(this.sodaxConfig);
+    this.sharedConfig = {
+      ...defaultSharedConfig,
+      ...sharedConfig,
+    }
   }
 
   public async initialize(): Promise<Result<void>> {
@@ -119,6 +126,12 @@ export class ConfigService {
     return this.sodaxConfig.supportedMoneyMarketTokens;
   }
 
+  public getMoneyMarketToken(chainId: SpokeChainId, token: string): Token | undefined {
+    return this.sodaxConfig.supportedMoneyMarketTokens[chainId].find(
+      t => t.address.toLowerCase() === token.toLowerCase(),
+    );
+  }
+
   public getMoneyMarketReserveAssets(): GetMoneyMarketReserveAssetsApiResponse {
     return this.sodaxConfig.supportedMoneyMarketReserveAssets;
   }
@@ -139,12 +152,16 @@ export class ConfigService {
     return this.supportedHubAssetsSet.has(hubAsset.toLowerCase() as Address);
   }
 
-  public isValidSodaVaultAsset(vault: Address): boolean {
+  public isValidSodaVaultAsset(vault: string): boolean {
     return this.supportedSodaVaultAssetsSet.has(vault.toLowerCase() as Address);
   }
 
-  public isValidVault(vault: Address): boolean {
-    return this.isValidSodaVaultAsset(vault);
+  public isValidVault(vault: string | Token): boolean {
+    if (typeof vault === 'string') {
+      return this.isValidSodaVaultAsset(vault);
+    }
+
+    return this.isValidSodaVaultAsset(vault.address);
   }
 
   public isValidChainHubAsset(chainId: SpokeChainId, hubAsset: Address): boolean {

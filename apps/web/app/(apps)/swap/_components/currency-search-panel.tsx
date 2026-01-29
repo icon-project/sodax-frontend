@@ -4,6 +4,7 @@ import { ChevronDownIcon, ChevronUpIcon, SearchIcon, LayoutGrid } from 'lucide-r
 import { Input } from '@/components/ui/input';
 import { availableChains, getChainIcon } from '@/constants/chains';
 import { useState } from 'react';
+import { AllNetworkIcon } from '@/components/shared/all-network-icon';
 
 interface CurrencySearchPanelProps {
   isUsdtClicked: boolean;
@@ -27,6 +28,7 @@ export function CurrencySearchPanel({
   selectedChainId,
 }: CurrencySearchPanelProps): React.JSX.Element {
   const [hoveredChain, setHoveredChain] = useState<string | null>(null);
+
   return (
     <div
       className={`mt-4 box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 h-12 ${
@@ -35,7 +37,7 @@ export function CurrencySearchPanel({
     >
       <div className="w-full flex justify-center">
         <div
-          className={`w-full md:w-64 h-12 px-6 rounded-[32px] outline outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center transition-all duration-200
+          className={`w-60 sm:w-64 h-12 px-6 rounded-[32px] outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center transition-all duration-200
           }`}
         >
           <div className="flex items-center">
@@ -63,18 +65,6 @@ export function CurrencySearchPanel({
             >
               {selectedChainId ? (
                 <div className="w-8 h-8 flex justify-center items-center relative group">
-                  {/* {!isChainSelectorOpen && (
-                    <Button
-                      className="w-4 h-4 bg-white rounded-[256px] absolute !p-0 -left-2 top-2 z-52 hover:!bg-white"
-                      variant="cream"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleChainSelect('');
-                      }}
-                    >
-                      <CloseIcon1 className="text-clay group-hover:text-espresso transition-colors" />
-                    </Button>
-                  )} */}
                   <Image
                     src={getChainIcon(selectedChainId) || '/chain/0x2105.base.png'}
                     alt="Selected Chain"
@@ -86,24 +76,7 @@ export function CurrencySearchPanel({
                 </div>
               ) : (
                 <div className="w-6 h-6 grid grid-cols-2 gap-1 p-[2px]">
-                  <Image
-                    src="/chain/0x2105.base.png"
-                    alt="Base"
-                    width={8}
-                    height={8}
-                    className="rounded-[2px]"
-                    priority
-                  />
-                  <Image src="/chain/solana.png" alt="Solana" width={8} height={8} className="rounded-[2px]" priority />
-                  <Image
-                    src="/chain/0xa4b1.arbitrum.png"
-                    alt="Arbitrum"
-                    width={8}
-                    height={8}
-                    className="rounded-[2px]"
-                    priority
-                  />
-                  <Image src="/chain/sui.png" alt="Sui" width={8} height={8} className="rounded-[2px]" priority />
+                  <AllNetworkIcon />
                 </div>
               )}
               {isChainSelectorOpen ? (
@@ -116,50 +89,16 @@ export function CurrencySearchPanel({
             {isChainSelectorOpen && (
               <div className="fixed inset-0 flex items-center justify-center z-50 mt-36">
                 <div className="absolute inset-0 bg-transparent" onClick={handleChainSelectorClick} />
-                <div className="relative bg-transparent border-none w-64">
-                  <div className="grid grid-cols-2 overflow-hidden pl-2 py-1">
-                    {/* All Networks Option */}
+                <div className="relative bg-transparent border-none">
+                  <div className="grid grid-cols-2 overflow-hidden p-2 gap-x-4">
                     <div
-                      className={`group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
+                      className={`group inline-flex justify-start items-center gap-4 py-2 cursor-pointer ${hoveredChain !== null && (hoveredChain === 'all' ? 'opacity-100' : 'opacity-60')}`}
                       onClick={handleShowAllChains}
                       onMouseEnter={() => setHoveredChain('all')}
                       onMouseLeave={() => setHoveredChain(null)}
                     >
-                      <div className="w-6 h-6  ring-4 ring-white rounded-[6px] shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden">
-                        <>
-                          <Image
-                            src="/chain/0x2105.base.png"
-                            alt="Base"
-                            width={8}
-                            height={8}
-                            className="rounded-[2px]"
-                            priority
-                          />
-                          <Image
-                            src="/chain/solana.png"
-                            alt="Solana"
-                            width={8}
-                            height={8}
-                            className="rounded-[2px]"
-                            priority
-                          />
-                          <Image
-                            src="/chain/0xa4b1.arbitrum.png"
-                            alt="Arbitrum"
-                            width={8}
-                            height={8}
-                            className="rounded-[2px]"
-                            priority
-                          />
-                          <Image
-                            src="/chain/sui.png"
-                            alt="Sui"
-                            width={8}
-                            height={8}
-                            className="rounded-[2px]"
-                            priority
-                          />
-                        </>
+                      <div className="w-6 h-6  ring-4 ring-white rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145,1)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden bg-cream-white">
+                        <AllNetworkIcon />
                       </div>
                       <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">
                         All
@@ -169,7 +108,7 @@ export function CurrencySearchPanel({
                     {availableChains.map(chain => (
                       <div
                         key={chain.id}
-                        className={`group inline-flex justify-start items-center gap-4 pb-4 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
+                        className={`group inline-flex justify-start items-center gap-4 py-2 cursor-pointer ${hoveredChain !== null && (hoveredChain === chain.id ? 'opacity-100' : 'opacity-60')}`}
                         onClick={() => handleChainSelect(chain.id)}
                         onMouseEnter={() => setHoveredChain(chain.id)}
                         onMouseLeave={() => setHoveredChain(null)}

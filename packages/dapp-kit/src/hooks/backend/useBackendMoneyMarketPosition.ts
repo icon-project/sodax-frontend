@@ -1,56 +1,53 @@
-// packages/dapp-kit/src/hooks/backend/useMoneyMarketPosition.ts
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { MoneyMarketPosition } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
+export type UseBackendMoneyMarketPositionParams = {
+  userAddress: string | undefined;
+  queryOptions?: UseQueryOptions<MoneyMarketPosition | undefined, Error>;
+};
+
 /**
- * Hook for fetching money market position for a specific user from the backend API.
+ * React hook for fetching a user's money market position from the backend API.
  *
- * This hook provides access to a user's money market positions, including their
- * aToken balances, variable debt token balances, and associated reserve information.
- * The data is automatically fetched and cached using React Query.
+ * @param {UseBackendMoneyMarketPositionParams | undefined} params - Parameters object:
+ *   - userAddress: The user's wallet address to fetch positions for. If undefined or empty, the query is disabled.
+ *   - queryOptions: (Optional) React Query options to customize behavior (e.g., staleTime, enabled).
  *
- * @param {string | undefined} userAddress - The user's wallet address. If undefined, the query will be disabled.
- *
- * @returns {UseQueryResult<MoneyMarketPosition | undefined>} A query result object containing:
- *   - data: The money market position data when available
- *   - isLoading: Boolean indicating if the request is in progress
- *   - error: Error object if the request failed
- *   - refetch: Function to manually trigger a data refresh
+ * @returns {UseQueryResult<MoneyMarketPosition | undefined, Error>} - React Query result object with:
+ *   - data: The user's money market position data, or undefined if not available.
+ *   - isLoading: Loading state.
+ *   - error: An Error instance if fetching failed.
+ *   - refetch: Function to manually trigger a refetch.
  *
  * @example
- * ```typescript
- * const { data: position, isLoading, error } = useMoneyMarketPosition('0x123...');
- *
- * if (isLoading) return <div>Loading position...</div>;
- * if (error) return <div>Error: {error.message}</div>;
- * if (position) {
- *   console.log('User address:', position.userAddress);
- *   console.log('Positions:', position.positions);
- * }
- * ```
- *
- * @remarks
- * - The query is disabled when userAddress is undefined or empty
- * - Uses React Query for efficient caching and state management
- * - Automatically handles error states and loading indicators
- * - Includes user's aToken and debt token balances across all reserves
+ * const { data, isLoading, error } = useBackendMoneyMarketPosition({
+ *   userAddress: '0xabc...',
+ *   queryOptions: { staleTime: 60000 },
+ * });
  */
 export const useBackendMoneyMarketPosition = (
-  userAddress: string | undefined,
-): UseQueryResult<MoneyMarketPosition | undefined> => {
+  params: UseBackendMoneyMarketPositionParams | undefined,
+): UseQueryResult<MoneyMarketPosition | undefined, Error> => {
   const { sodax } = useSodaxContext();
 
+  const defaultQueryOptions = {
+    queryKey: ['api', 'mm', 'position', params?.userAddress],
+    enabled: !!params?.userAddress && params?.userAddress.length > 0,
+    retry: 3,
+  };
+  const queryOptions = {
+    ...defaultQueryOptions,
+    ...params?.queryOptions,
+  };
+
   return useQuery({
-    queryKey: ['backend', 'moneymarket', 'position', userAddress],
+    ...queryOptions,
     queryFn: async (): Promise<MoneyMarketPosition | undefined> => {
-      if (!userAddress) {
+      if (!params?.userAddress) {
         return undefined;
       }
-
-      return sodax.backendApi.getMoneyMarketPosition(userAddress);
+      return sodax.backendApi.getMoneyMarketPosition(params.userAddress);
     },
-    enabled: !!userAddress && userAddress.length > 0,
-    retry: 3,
   });
 };

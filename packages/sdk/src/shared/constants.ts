@@ -20,9 +20,9 @@ import {
   spokeChainConfig,
   type EvmChainId,
   ETHEREUM_MAINNET_CHAIN_ID,
-  type ConcentratedLiquidityConfig,
   type Address,
 } from '@sodax/types';
+import type { ConcentratedLiquidityConfig } from './types.js';
 import type { PoolKey } from '../dex/types.js';
 
 export const DEFAULT_MAX_RETRY = 3;

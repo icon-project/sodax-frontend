@@ -1,27 +1,34 @@
 // packages/dapp-kit/src/hooks/backend/useMoneyMarketAsset.ts
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { MoneyMarketAsset } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
+export type UseBackendMoneyMarketAssetParams = {
+  params: {
+    reserveAddress: string | undefined;
+  };
+  queryOptions?: UseQueryOptions<MoneyMarketAsset | undefined, Error>;
+};
+
 /**
- * Hook for fetching specific money market asset details from the backend API.
+ * React hook to fetch a specific money market asset from the backend API.
  *
- * This hook provides access to detailed information for a specific money market asset,
- * including reserve information, liquidity rates, borrow rates, and market statistics.
- * The data is automatically fetched and cached using React Query.
+ * @param params - The hook input parameter object (may be undefined):
+ *   - `params`: An object containing:
+ *       - `reserveAddress` (string | undefined): Reserve contract address to fetch asset details. Disables query if undefined or empty.
+ *   - `queryOptions` (optional): React Query options for advanced configuration (e.g. caching, staleTime, retry, etc.).
  *
- * @param {string | undefined} reserveAddress - The reserve contract address. If undefined, the query will be disabled.
- *
- * @returns {UseQueryResult<MoneyMarketAsset | undefined>} A query result object containing:
- *   - data: The money market asset data when available
- *   - isLoading: Boolean indicating if the request is in progress
- *   - error: Error object if the request failed
- *   - refetch: Function to manually trigger a data refresh
+ * @returns A React Query result object: {@link UseQueryResult} for {@link MoneyMarketAsset} or `undefined` on error or if disabled,
+ *   including:
+ *   - `data`: The money market asset (when available) or `undefined`.
+ *   - `isLoading`: Whether the query is running.
+ *   - `error`: An error encountered by the query (if any).
+ *   - `refetch`: Function to manually refetch the asset.
  *
  * @example
- * ```typescript
- * const { data: asset, isLoading, error } = useMoneyMarketAsset('0xabc...');
- *
+ * const { data: asset, isLoading, error } = useBackendMoneyMarketAsset({
+ *   params: { reserveAddress: '0xabc...' },
+ * });
  * if (isLoading) return <div>Loading asset...</div>;
  * if (error) return <div>Error: {error.message}</div>;
  * if (asset) {
@@ -29,29 +36,35 @@ import { useSodaxContext } from '../shared/useSodaxContext';
  *   console.log('Liquidity rate:', asset.liquidityRate);
  *   console.log('Variable borrow rate:', asset.variableBorrowRate);
  * }
- * ```
  *
  * @remarks
- * - The query is disabled when reserveAddress is undefined or empty
- * - Uses React Query for efficient caching and state management
- * - Automatically handles error states and loading indicators
- * - Returns comprehensive asset information for the specified reserve
+ * - Query is disabled if `params`, `params.params`, or `params.params.reserveAddress` is missing or empty.
+ * - Uses React Query for caching and background-state management.
+ * - Loading and error handling are managed automatically.
  */
 export const useBackendMoneyMarketAsset = (
-  reserveAddress: string | undefined,
-): UseQueryResult<MoneyMarketAsset | undefined> => {
+  params: UseBackendMoneyMarketAssetParams | undefined,
+): UseQueryResult<MoneyMarketAsset | undefined, Error> => {
   const { sodax } = useSodaxContext();
 
+  const defaultQueryOptions = {
+    queryKey: ['api', 'mm', 'asset', params?.params?.reserveAddress],
+    enabled: !!params?.params?.reserveAddress && params?.params?.reserveAddress.length > 0,
+    retry: 3,
+  };
+  const queryOptions = {
+    ...defaultQueryOptions,
+    ...params?.queryOptions,
+  };
+
   return useQuery({
-    queryKey: ['backend', 'moneymarket', 'asset', reserveAddress],
+    ...queryOptions,
     queryFn: async (): Promise<MoneyMarketAsset | undefined> => {
-      if (!reserveAddress) {
+      if (!params?.params?.reserveAddress) {
         return undefined;
       }
 
-      return sodax.backendApi.getMoneyMarketAsset(reserveAddress);
+      return sodax.backendApi.getMoneyMarketAsset(params.params.reserveAddress);
     },
-    enabled: !!reserveAddress && reserveAddress.length > 0,
-    retry: 3,
   });
 };

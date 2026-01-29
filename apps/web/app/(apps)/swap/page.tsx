@@ -13,13 +13,14 @@ import type { QuoteType } from '@sodax/sdk';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useSwapState, useSwapActions } from './_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
-import { ExternalLinkIcon } from 'lucide-react';
+import { ExternalLinkIcon, Timer } from 'lucide-react';
 import Link from 'next/link';
 import SwapReviewButton from './_components/swap-review-button';
 import AnimatedNumber from '@/components/shared/animated-number';
 import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
+import { getSwapTiming } from '@/lib/swap-timing';
 
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
@@ -35,6 +36,8 @@ export default function SwapPage() {
 
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
+
+  const swapTiming = getSwapTiming(inputToken.xChainId, outputToken.xChainId);
 
   const isSourceChainConnected = sourceAddress !== undefined;
   const isDestinationChainConnected = destinationAddress !== undefined;
@@ -75,7 +78,7 @@ export default function SwapPage() {
       token_dst_blockchain_id: outputToken.xChainId,
       amount:
         parseUnits(inputAmount, inputToken.decimals) -
-        sodax.swap.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)),
+        sodax.swaps.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)),
       quote_type: 'exact_input' as QuoteType,
     };
 
@@ -102,11 +105,11 @@ export default function SwapPage() {
 
     return {
       partner: new BigNumber(
-        formatUnits(sodax.swap.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)), inputToken.decimals),
+        formatUnits(sodax.swaps.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)), inputToken.decimals),
       ),
-      solver: new BigNumber(formatUnits(sodax.swap.getSolverFee(calculatedOutputAmount), outputToken.decimals)),
+      solver: new BigNumber(formatUnits(sodax.swaps.getSolverFee(calculatedOutputAmount), outputToken.decimals)),
     };
-  }, [inputAmount, calculatedOutputAmount, inputToken.decimals, outputToken.decimals, sodax.swap]);
+  }, [inputAmount, calculatedOutputAmount, inputToken.decimals, outputToken.decimals, sodax.swaps]);
 
   const { data: inputTokenPrice } = useTokenPrice(inputToken);
   const swapFeesUsdValue = useMemo(() => {
@@ -145,7 +148,7 @@ export default function SwapPage() {
 
   const handleMaxClick = (): void => {
     if (isSourceChainConnected) {
-      const maxAvailableAmount = calculateMaxAvailableAmount(sourceBalance, inputToken.decimals, sodax.swap);
+      const maxAvailableAmount = calculateMaxAvailableAmount(sourceBalance, inputToken.decimals, sodax.swaps);
       setInputAmount(formatBalance(maxAvailableAmount, inputTokenPrice || 0));
     }
   };
@@ -260,8 +263,15 @@ export default function SwapPage() {
             </div>
           ) : (
             sourceAddress && (
-              <div className="mt-(--layout-space-small) text-clay-light font-['InterRegular'] leading-tight text-(length:--body-comfortable)">
-                Takes ~1 min · Total fees: {swapFeesUsdValue?.total && `$${swapFeesUsdValue?.total.toFixed(4)}`}
+              <div className="mt-(--layout-space-small) font-['InterRegular'] leading-tight text-(length:--body-comfortable) flex gap-1 items-center">
+                <Timer className={swapTiming.iconClass} />
+                <span>
+                  <span className={swapTiming.textClass}>{swapTiming.label}</span>
+                  <span className="text-clay-light">
+                    {' '}
+                    Total fees: {swapFeesUsdValue?.total && swapFeesUsdValue.total.toFixed(4)}
+                  </span>
+                </span>
               </div>
             )
           )}

@@ -9,7 +9,7 @@ import {
   type DexServiceConfig,
 } from '../../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
-import type { HttpUrl } from '@sodax/types';
+import type { HttpUrl, defaultSharedConfig } from '@sodax/types';
 import type {
   SolverConfigParams,
   MoneyMarketConfigParams,
@@ -30,6 +30,7 @@ export type SodaxConfig = {
   hubProviderConfig?: EvmHubProviderConfig; // hub provider for the hub chain (e.g. Sonic mainnet)
   relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
   backendApiConfig?: BackendApiConfig; // backend API config used to interact with the backend API
+  sharedConfig?: typeof defaultSharedConfig;
 };
 
 /**
@@ -62,6 +63,7 @@ export class Sodax {
         backendApiUrl: config?.backendApiConfig?.baseURL,
         timeout: config?.backendApiConfig?.timeout,
       },
+      sharedConfig: config?.sharedConfig,
     });
     this.hubProvider = new EvmHubProvider({ config: config?.hubProviderConfig, configService: this.config }); // default to Sonic mainnet
     this.swaps =
