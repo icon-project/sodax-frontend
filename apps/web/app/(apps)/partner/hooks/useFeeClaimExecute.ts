@@ -25,34 +25,21 @@ export function useFeeClaimExecute() {
   const spokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID, walletProvider);
 
   return useMutation({
-    mutationFn: async ({ fromToken, amount }: { fromToken: string; amount: bigint }) => {
+    mutationFn: async ({ fromToken, amount }: { fromToken: Address; amount: bigint }) => {
       if (!sodax || !spokeProvider) {
         throw new Error('SDK or Wallet not ready');
       }
 
-      // 1️⃣ Create intent → THIS returns the tx hash
-      const txResult = await sodax.partners.feeClaim.createIntentAutoSwap({
-        params: { fromToken: fromToken as Address, amount },
+      const result = await sodax.partners.feeClaim.swap({
+        params: { fromToken, amount },
         spokeProvider: spokeProvider as SonicSpokeProvider,
       });
 
-      if (!txResult.ok) throw txResult.error;
+      if (!result.ok) {
+        throw result.error;
+      }
 
-      const txHash = txResult.value; // ✅ REAL hash
-
-      // 2️⃣ Fire-and-forget solver execution
-      sodax.partners.feeClaim
-        .swap({
-          params: { fromToken: fromToken as Address, amount },
-          spokeProvider: spokeProvider as SonicSpokeProvider,
-        })
-        .catch(err => {
-          console.error('Solver execution failed (post-tx):', err);
-        });
-
-      return {
-        txHash,
-      };
+      return result.value; // { srcTxHash, intentTxHash, solverExecutionResponse }
     },
   });
 }

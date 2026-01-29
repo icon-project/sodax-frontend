@@ -34,6 +34,8 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(SONIC_MAINNET_CHAIN_ID);
 
+  const isFirstTimeSet = !prefs;
+
   // Sync local state when preferences load
   useEffect(() => {
     if (prefs) {
@@ -65,7 +67,7 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
           queryClient.invalidateQueries({
             queryKey: ['feeClaimPrefs', address],
           });
-          toast.success('Destination updated!');
+          toast.success(isFirstTimeSet ? 'Destination set!' : 'Destination updated!');
         }, // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         onError: (err: any) => {
           // Use the robust error message logic to avoid "undefined"

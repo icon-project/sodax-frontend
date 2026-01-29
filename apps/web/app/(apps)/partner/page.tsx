@@ -21,6 +21,7 @@ export default function PartnerPage() {
   const [selectedAsset, setSelectedAsset] = useState<FeeClaimAsset | null>(null);
 
   const { address: connectedAddress } = useXAccount(SONIC_MAINNET_CHAIN_ID);
+  const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | null>(null);
 
   // TODO START: DEV TESTING LOGIC (Delete this block before PR)
   // =========================================================
@@ -148,7 +149,8 @@ export default function PartnerPage() {
             setClaimFlow(ClaimFlowStep.NONE);
             setSelectedAsset(null);
           }}
-          onSuccess={() => {
+          onSuccess={({ srcTxHash }) => {
+            setSubmittedTxHash(srcTxHash);
             setClaimFlow(ClaimFlowStep.SUBMITTED);
             refreshBalances();
           }}
@@ -161,6 +163,7 @@ export default function PartnerPage() {
           onClose={() => {
             setClaimFlow(ClaimFlowStep.NONE);
             setSelectedAsset(null);
+            setSubmittedTxHash(null); // optional cleanup, but good
           }}
           destination={
             activePreferences
@@ -170,6 +173,7 @@ export default function PartnerPage() {
                 }
               : undefined
           }
+          srcTxHash={submittedTxHash}
         />
       )}
 
