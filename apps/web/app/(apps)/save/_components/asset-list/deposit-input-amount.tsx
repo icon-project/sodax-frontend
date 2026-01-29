@@ -160,7 +160,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy,
           tokenSymbol={tokens[0]?.symbol || selectedToken?.symbol || ''}
           onInputChange={handleInputChange}
         />
-        <div className="flex gap-2 items-center -mt-2 mb-7">
+        <div className="flex gap-2 items-center mt-2 mb-7">
           <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
             {isSimulate ? (
               sourceAddress ? (
