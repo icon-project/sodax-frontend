@@ -136,6 +136,12 @@ export type ExecuteIntentAutoSwapError =
   | SolverErrorResponse
   | UnknownIntentAutoSwapError;
 
+export type IntentAutoSwapResult = {
+  srcTxHash: Hex; // The transaction hash of the source transaction on the source chain (Sonic chain)
+  solverExecutionResponse: SolverExecutionResponse; // The solver execution response
+  intentTxHash: Hex; // The transaction hash of the intent on the hub chain (Sonic chain)
+};
+
 export class PartnerFeeClaimService {
   readonly config: PartnerFeeClaimServiceConfig;
   readonly hubProvider: EvmHubProvider;
@@ -564,7 +570,9 @@ export class PartnerFeeClaimService {
   public async swap<S extends SonicSpokeProvider>({
     params,
     spokeProvider,
-  }: { params: SwapParams; spokeProvider: S }): Promise<Result<SolverExecutionResponse, ExecuteIntentAutoSwapError>> {
+  }: { params: SwapParams; spokeProvider: S }): Promise<
+    Result<IntentAutoSwapResult, ExecuteIntentAutoSwapError>
+  > {
     try {
       const txHash = await this.createIntentAutoSwap({ params, spokeProvider, raw: false });
 
@@ -592,20 +600,24 @@ export class PartnerFeeClaimService {
       }
 
       // Post execution to solver API
-      const result = await SolverApiService.postExecution(
+      const solverExecutionResponse = await SolverApiService.postExecution(
         {
           intent_tx_hash: intentTxHash,
         },
         this.config,
       );
 
-      if (!result.ok) {
-        return result;
+      if (!solverExecutionResponse.ok) {
+        return solverExecutionResponse;
       }
 
       return {
         ok: true,
-        value: result.value,
+        value: {
+          srcTxHash: txHash.value,
+          solverExecutionResponse: solverExecutionResponse.value,
+          intentTxHash,
+        },
       };
     } catch (error) {
       return {

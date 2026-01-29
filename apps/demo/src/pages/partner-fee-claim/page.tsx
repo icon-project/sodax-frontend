@@ -247,7 +247,9 @@ export default function PartnerFeeClaimPage() {
         return;
       }
 
-      setSwapSuccess(`Swap executed successfully! Intent: ${result.value.intent_hash || 'N/A'}`);
+      setSwapSuccess(
+        `Swap executed successfully! Intent: ${result.value.solverExecutionResponse.intent_hash || 'N/A'}`,
+      );
     } catch (err) {
       setSwapError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
