@@ -20,7 +20,7 @@ export function TokenSelectDropdown({
   disabled?: boolean;
 }) {
   return (
-    <Select value={selectedToken ?? undefined} onValueChange={onSelectToken} disabled={disabled}>
+    <Select value={selectedToken ?? ''} onValueChange={onSelectToken} disabled={disabled}>
       <SelectTrigger className="w-full" disabled={disabled}>
         <SelectValue placeholder="Select token" />
       </SelectTrigger>

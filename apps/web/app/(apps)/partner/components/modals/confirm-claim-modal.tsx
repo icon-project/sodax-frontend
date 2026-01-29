@@ -1,6 +1,13 @@
 'use client';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { FeeClaimAsset } from '../../hooks/useFeeClaimAssets';
@@ -88,7 +95,12 @@ export function ConfirmClaimModal({ isOpen, onClose, asset, partnerAddress, onSu
       <DialogContent className="border-cherry-grey/20">
         <DialogHeader>
           <DialogTitle className="text-center text-cherry-dark">Confirm Full Balance Claim</DialogTitle>
+
+          <DialogDescription className="text-center text-clay-light">
+            Review the details below before submitting your claim.
+          </DialogDescription>
         </DialogHeader>
+
         <div className="space-y-4 py-4 text-center">
           <div className="bg-cream-white p-3 rounded-lg border border-cherry-grey">
             <div className="space-y-1">
@@ -96,12 +108,9 @@ export function ConfirmClaimModal({ isOpen, onClose, asset, partnerAddress, onSu
                 {asset.displayBalance} {asset.currency.symbol}
               </div>
               <p className="text-[11px] text-clay-light">Full available balance (partial claims are not supported)</p>
-
-              <div className="relative max-w-sm"></div>
             </div>
           </div>
 
-          {/* Show the destination chain from preferences */}
           <div className="text-sm border-l-2 border-cherry pl-3 text-left">
             <p className="text-clay font-medium">Destination Details:</p>
             <p className="text-clay text-xs">
@@ -110,10 +119,13 @@ export function ConfirmClaimModal({ isOpen, onClose, asset, partnerAddress, onSu
             <p className="text-clay text-xs">Address: {preferences?.dstAddress}</p>
           </div>
         </div>
+
         <DialogFooter>{renderActionButton()}</DialogFooter>
+
         <p className="text-xs text-clay-light text-center">
           This submits a claim request. Execution may take a few moments.
         </p>
+
         {executionState === ClaimExecutionState.SUBMITTED && (
           <p className="text-xs text-clay-light text-center">
             Your claim has been submitted and will be processed shortly. You can safely close this window.
