@@ -65,7 +65,13 @@ export function ConfirmClaimModal({ isOpen, onClose, asset, partnerAddress, onSu
         return (
           <Button disabled variant="cherry" className="w-full">
             <span>Confirming in wallet…</span>
-            <CircularProgressIcon className="animate-spin" />
+            <CircularProgressIcon
+              width={16}
+              height={16}
+              stroke="white"
+              progress={100}
+              className="animate-spin inline-block"
+            />
           </Button>
         );
 

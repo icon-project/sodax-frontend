@@ -1,6 +1,8 @@
 import { useSodaxContext } from '@sodax/dapp-kit';
 import type { Address } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
+import { enrichBalancesWithUsdPrices } from '../utils/enrichBalancesWithUsdPrices';
+import type { AssetBalance } from '@sodax/sdk';
 
 /**
  * Fetches raw partner fee balances from the SDK.
@@ -17,10 +19,14 @@ import { useQuery } from '@tanstack/react-query';
  * Think of this as:
  * "Give me everything the blockchain knows about partner fees."
  */
+export type AssetBalanceWithUsd = AssetBalance & {
+  usdPrice?: number | null;
+};
+
 export function useFeeClaimBalances(address?: Address) {
   const { sodax } = useSodaxContext();
 
-  return useQuery({
+  return useQuery<Map<string, AssetBalanceWithUsd>>({
     queryKey: ['feeClaimBalances', address],
     queryFn: async () => {
       if (!address) throw new Error('Address is required');
@@ -34,8 +40,7 @@ export function useFeeClaimBalances(address?: Address) {
         console.error('❌ SDK Error:', result.error);
         throw result.error;
       }
-
-      return result.value;
+      return enrichBalancesWithUsdPrices(result.value);
     },
     enabled: !!sodax && !!address,
     refetchOnWindowFocus: false,

@@ -56,7 +56,6 @@ export function PartnerFeeToken({ asset, onClaim }: PartnerFeeTokenProps) {
         return isUSDC ? 'Claim USDC' : 'Claim & swap';
     }
   };
-
   const isDisabled = asset.status !== FeeClaimAssetStatus.READY || approve.isPending;
 
   return (
@@ -66,7 +65,16 @@ export function PartnerFeeToken({ asset, onClaim }: PartnerFeeTokenProps) {
           <CurrencyLogo currency={asset.currency} />
         </div>
         <div className="w-15 text-sm text-espresso">{asset.currency.symbol}</div>
-        <div className="w-20 text-sm text-clay-light">{asset.displayBalance}</div>
+        <div className="w-20 text-sm text-clay-light">
+          {asset.displayBalance}
+
+          {asset.usdEstimate !== undefined &&
+            (asset.usdEstimate === null ? (
+              <div className="text-[11px] text-clay/40 mt-0.5">N/A</div>
+            ) : (
+              <div className="text-[11px] text-clay mt-0.5">~ ${asset.usdEstimate.toFixed(2)}</div>
+            ))}
+        </div>
       </div>
 
       <div className="w-full flex justify-end">

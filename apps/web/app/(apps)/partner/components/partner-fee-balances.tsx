@@ -50,9 +50,8 @@ export function PartnerFeeBalances({ assets, isLoading, onClaim, prefs }: Partne
         <Wallet2 className="w-4 h-4 text-clay-light" />
         Your fee balances
       </CardTitle>
-      <p className="text-clay text-xs my-3 w-1/2">
-        After submitting a claim, your funds will appear in your destination wallet once processing is complete{' '}
-      </p>
+      <p className="text-clay text-xs mt-3 w-1/2">Claimed funds are sent to your selected destination wallet</p>
+      <p className="text-clay italic text-xs mb-3 w-1/2">*Values in USD are estimates </p>
       {isLoading ? (
         <div className="space-y-3">
           <ChainGroupSkeleton />

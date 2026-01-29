@@ -16,9 +16,8 @@ export type FeeClaimAsset = {
   displayBalance: string;
   status: FeeClaimAssetStatus;
   requiresApproval: boolean;
+  usdEstimate?: number | null;
 };
-
-const USDC_SYMBOL = 'USDC';
 
 /**
  * Transforms raw SDK balances into UI-ready partner fee assets.
@@ -44,11 +43,23 @@ export function useFeeClaimAssets(address?: Address) {
     if (!balancesQuery.data) return [];
 
     return Array.from(balancesQuery.data.values()).map(asset => {
-      const isUSDC = asset.symbol === USDC_SYMBOL;
       const minClaimAmount = parseUnits(MIN_PARTNER_CLAIM_AMOUNT.toString(), asset.decimal);
 
       const rawFormattedBalance = formatUnits(asset.balance, asset.decimal);
       const hasPrefs = !!prefsQuery.data;
+
+      let usdEstimate: number | null | undefined = undefined;
+
+      // USD token → leave undefined
+      if (!asset.symbol.toLowerCase().includes('usd')) {
+        if (asset.usdPrice != null) {
+          // non-USD, price known
+          usdEstimate = Number(rawFormattedBalance) * asset.usdPrice;
+        } else {
+          // non-USD, price unknown
+          usdEstimate = null;
+        }
+      }
 
       let status: FeeClaimAssetStatus = FeeClaimAssetStatus.READY;
 
@@ -57,7 +68,7 @@ export function useFeeClaimAssets(address?: Address) {
         status = FeeClaimAssetStatus.CLAIMED;
       }
       // 2️⃣ Destination not set (non-USDC)
-      else if (!hasPrefs && !isUSDC) {
+      else if (!hasPrefs) {
         status = FeeClaimAssetStatus.NO_PREFS;
       }
       // 3️⃣ Below minimum
@@ -78,6 +89,7 @@ export function useFeeClaimAssets(address?: Address) {
         displayBalance: rawFormattedBalance ? Number(rawFormattedBalance).toFixed(4) : '0.0000',
         status,
         requiresApproval: true,
+        usdEstimate,
       };
     });
   }, [balancesQuery.data, prefsQuery.data]);
