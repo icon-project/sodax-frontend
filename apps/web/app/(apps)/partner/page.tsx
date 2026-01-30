@@ -117,7 +117,6 @@ export default function PartnerPage() {
             </div>
             <div className="h-px bg-cherry-grey/60 my-2" />
             <ul className="list-disc pl-5 space-y-1 text-clay-light">
-              <li>Fees are automatically swapped to USDC</li>
               <li>Destination is configured once</li>
               <li>First claim requires a one-time approval</li>
               <li>Minimum claim amount is {MIN_PARTNER_CLAIM_AMOUNT} USDC</li>

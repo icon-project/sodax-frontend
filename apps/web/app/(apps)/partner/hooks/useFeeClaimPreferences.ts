@@ -2,7 +2,7 @@ import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import { SONIC_MAINNET_CHAIN_ID, type Address } from '@sodax/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { SetSwapPreferenceParams, SonicSpokeProvider } from '../../../../../../packages/sdk/dist';
+import type { SetSwapPreferenceParams, SonicSpokeProvider } from '@sodax/sdk';
 
 /**
  * Handles partner auto-swap preferences (destination).
@@ -30,6 +30,8 @@ export function useFeeClaimPreferences(address?: Address) {
     queryFn: async () => {
       if (!address || !sodax) throw new Error('SDK or Address missing');
       const result = await sodax.partners.feeClaim.getAutoSwapPreferences({ address });
+      console.log('Fetched preferences:', result);
+
       if (!result.ok) throw result.error;
       return result.value;
     },
