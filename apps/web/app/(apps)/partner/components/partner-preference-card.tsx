@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SONIC_MAINNET_CHAIN_ID, type ChainId, type Address, type XToken } from '@sodax/types';
 import { toast } from '@/components/ui/sonner';
