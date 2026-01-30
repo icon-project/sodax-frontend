@@ -53,7 +53,7 @@ export const ProtocolIntentsAbi = [
   },
   {
     type: 'function',
-    name: 'autoSwapPreferences',
+    name: 'getAutoSwapPreferences',
     inputs: [
       {
         name: 'user',
@@ -88,4 +88,3 @@ export const ProtocolIntentsAbi = [
     stateMutability: 'view',
   },
 ] as const;
-

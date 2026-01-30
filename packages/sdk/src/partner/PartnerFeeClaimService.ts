@@ -48,8 +48,8 @@ export type AssetBalance = {
 
 export type AutoSwapPreferences = {
   outputToken: Address;
-  dstChain: SpokeChainId;
-  dstAddress: Address;
+  dstChain: SpokeChainId | 'not configured';
+  dstAddress: Hex;
 };
 
 export type GetAutoSwapPreferencesParams =
@@ -324,17 +324,24 @@ export class PartnerFeeClaimService {
       const autoSwapPreferences = await this.hubProvider.publicClient.readContract({
         address: this.config.protocolIntentsContract,
         abi: ProtocolIntentsAbi,
-        functionName: 'autoSwapPreferences',
+        functionName: 'getAutoSwapPreferences',
         args: [queryAddress as GetAddressType<SonicSpokeProviderType>],
       });
+
+      // If dstChain is 0 (not configured), return "not configured" without conversion
+      const dstChain =
+        autoSwapPreferences.dstChain === 0n
+          ? ('not configured' as const)
+          : this.configService.getSpokeChainIdFromIntentRelayChainId(
+              autoSwapPreferences.dstChain as IntentRelayChainId,
+            );
 
       return {
         ok: true,
         value: {
-          ...autoSwapPreferences,
-          dstChain: this.configService.getSpokeChainIdFromIntentRelayChainId(
-            autoSwapPreferences.dstChain as IntentRelayChainId,
-          ),
+          outputToken: autoSwapPreferences.outputToken,
+          dstChain,
+          dstAddress: autoSwapPreferences.dstAddress,
         },
       };
     } catch (error) {
@@ -570,9 +577,7 @@ export class PartnerFeeClaimService {
   public async swap<S extends SonicSpokeProvider>({
     params,
     spokeProvider,
-  }: { params: SwapParams; spokeProvider: S }): Promise<
-    Result<IntentAutoSwapResult, ExecuteIntentAutoSwapError>
-  > {
+  }: { params: SwapParams; spokeProvider: S }): Promise<Result<IntentAutoSwapResult, ExecuteIntentAutoSwapError>> {
     try {
       const txHash = await this.createIntentAutoSwap({ params, spokeProvider, raw: false });
 
