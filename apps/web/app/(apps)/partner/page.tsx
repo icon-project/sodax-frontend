@@ -2,7 +2,7 @@
 
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { type Address, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { PartnerPreferencesCard } from './components/partner-preference-card';
 import { useXAccount } from '@sodax/wallet-sdk-react';
@@ -14,6 +14,7 @@ import { MIN_PARTNER_CLAIM_AMOUNT } from '@/constants/partner-claim';
 import { ConfirmClaimModal } from './components/modals/confirm-claim-modal';
 import { ClaimSubmittedModal } from './components/modals/claim-submitted-modal';
 import { ClaimFlowStep } from './utils/fee-claim';
+import type { SetSwapPreferenceParams } from '@sodax/sdk';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,6 +23,9 @@ export default function PartnerPage() {
 
   const { address: connectedAddress } = useXAccount(SONIC_MAINNET_CHAIN_ID);
   const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | null>(null);
+  const lifecycle = usePartnerFeeLifecycle(connectedAddress as Address);
+
+  const { activePreferences, claimableFees, isInitialLoading, refreshBalances } = lifecycle;
 
   // TODO START: DEV TESTING LOGIC (Delete this block before PR)
   // =========================================================
@@ -43,9 +47,16 @@ export default function PartnerPage() {
   // const { assets, isLoading, refetch, hasPreferences } = useFeeClaimAssets(effectiveAddress);
   // const { data: preferences } = useFeeClaimPreferences(effectiveAddress as Address);
 
-  const { activePreferences, claimableFees, isInitialLoading, refreshBalances } = usePartnerFeeLifecycle(
-    connectedAddress as Address,
-  );
+  const normalizedPreferences = useMemo<SetSwapPreferenceParams | undefined>(() => {
+    if (!activePreferences) return undefined;
+    if (activePreferences.dstChain === 'not configured') return undefined;
+
+    return {
+      dstChain: activePreferences.dstChain,
+      dstAddress: activePreferences.dstAddress,
+      outputToken: activePreferences.outputToken,
+    };
+  }, [activePreferences]);
 
   const handleClaim = (asset: FeeClaimAsset) => {
     setSelectedAsset(asset);
@@ -88,10 +99,10 @@ export default function PartnerPage() {
                 <div className="flex flex-col">
                   <span className="leading-snug">Monitor and manage fees earned through your SODAX partnership.</span>
                   {/* Show current preferences as suggested by Robi */}
-                  {activePreferences && (
+                  {normalizedPreferences && (
                     <span className="text-xs text-clay mt-1">
-                      Auto-swap destination set: {activePreferences.dstAddress.slice(0, 6)}... on{' '}
-                      {activePreferences.dstChain}
+                      Auto-swap destination set: {normalizedPreferences.dstAddress.slice(0, 6)}... on{' '}
+                      {normalizedPreferences.dstChain}
                     </span>
                   )}
                 </div>
@@ -126,7 +137,13 @@ export default function PartnerPage() {
         </>
       )}
       {/* 2. Preferences Card*/}
-      {connectedAddress && <PartnerPreferencesCard address={connectedAddress as Address} />}
+      {connectedAddress && (
+        <PartnerPreferencesCard
+          address={connectedAddress as Address}
+          prefs={lifecycle.activePreferences}
+          updateMutation={lifecycle.updateMutation}
+        />
+      )}
       <div className="w-1/2 h-px bg-clay-light/30 my-2" />
       {/* Main content */}
       <motion.div variants={itemVariants}>
@@ -135,7 +152,7 @@ export default function PartnerPage() {
             assets={claimableFees}
             isLoading={isInitialLoading}
             onClaim={handleClaim}
-            prefs={activePreferences}
+            prefs={normalizedPreferences}
           />
         )}
       </motion.div>
@@ -165,10 +182,10 @@ export default function PartnerPage() {
             setSubmittedTxHash(null); // optional cleanup, but good
           }}
           destination={
-            activePreferences
+            normalizedPreferences
               ? {
-                  chain: activePreferences.dstChain,
-                  address: activePreferences.dstAddress,
+                  chain: normalizedPreferences.dstChain,
+                  address: normalizedPreferences.dstAddress,
                 }
               : undefined
           }

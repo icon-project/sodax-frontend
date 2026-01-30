@@ -8,17 +8,21 @@ import { ChainSelectDropdown } from '@/components/shared/chain-select-dropdown';
 import { SONIC_MAINNET_CHAIN_ID, spokeChainConfig, type ChainId, type Address } from '@sodax/types';
 import { toast } from '@/components/ui/sonner';
 import { Settings2 } from 'lucide-react';
-import { useFeeClaimPreferences } from '../hooks/useFeeClaimPreferences';
 import { TokenSelectDropdown } from '@/components/shared/token-select-dropdown';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { getChainName } from '@/constants/chains';
 import { useQueryClient } from '@tanstack/react-query';
+import type { useFeeClaimPreferences } from '../hooks/useFeeClaimPreferences';
 
-export function PartnerPreferencesCard({ address }: { address: Address }) {
+export function PartnerPreferencesCard(props: {
+  address: Address;
+  prefs: ReturnType<typeof useFeeClaimPreferences>['data'];
+  updateMutation: ReturnType<typeof useFeeClaimPreferences>['updateMutation'];
+}) {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
-  const { data: prefs, updateMutation } = useFeeClaimPreferences(address);
+  const { address, prefs, updateMutation } = props;
 
   const [dstChain, setDstChain] = useState<ChainId>(SONIC_MAINNET_CHAIN_ID);
   const [dstToken, setDstToken] = useState<Address | null>(null);
@@ -38,10 +42,13 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
 
   // Sync local state when preferences load
   useEffect(() => {
-    if (prefs) {
-      setDstChain(prefs.dstChain as ChainId);
-      setDstToken(prefs.outputToken);
+    if (!prefs) return;
+
+    if (prefs.dstChain !== 'not configured') {
+      setDstChain(prefs.dstChain);
     }
+
+    setDstToken(prefs.outputToken);
   }, [prefs]);
 
   const handleSave = () => {
@@ -63,10 +70,6 @@ export function PartnerPreferencesCard({ address }: { address: Address }) {
       },
       {
         onSuccess: () => {
-          // Use 'feeClaimPrefs' to match the hook exactly
-          queryClient.invalidateQueries({
-            queryKey: ['feeClaimPrefs', address],
-          });
           toast.success(isFirstTimeSet ? 'Destination set!' : 'Destination updated!');
         }, // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         onError: (err: any) => {
