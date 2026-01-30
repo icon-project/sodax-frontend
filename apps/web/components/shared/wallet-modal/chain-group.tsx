@@ -18,7 +18,7 @@ export function ChainGroup({ chainName, chainIcon, balances, children }: ChainGr
   return (
     <div
       className={cn(
-        'bg-white w-full md:w-1/2 overflow-hidden relative',
+        'bg-cream-white w-full md:w-1/2 overflow-hidden relative',
         'transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1)',
         'rounded-[28px]',
         open ? 'shadow-xl' : 'shadow-none',
@@ -36,7 +36,6 @@ export function ChainGroup({ chainName, chainIcon, balances, children }: ChainGr
         className={cn(
           'w-full flex items-center justify-between px-7 py-3 h-auto relative z-10',
           'transition-all duration-500 ease-in-out',
-          'hover:bg-clay-light/4 active:bg-clay-light/8',
           open ? 'rounded-t-[27px] rounded-b-none bg-clay-light/2' : 'rounded-[27px]',
         )}
       >
@@ -70,7 +69,7 @@ export function ChainGroup({ chainName, chainIcon, balances, children }: ChainGr
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           >
-            <div className="px-5 pb-5 bg-vibrant-white/20">
+            <div className="px-5 pb-5">
               <div className="mx-2 h-[0.5px] bg-clay-light/10 mb-4" />
               <div className="flex flex-col gap-2">{children}</div>
             </div>

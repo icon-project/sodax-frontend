@@ -3,44 +3,40 @@
 import { useState, useEffect } from 'react';
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { ChainSelectDropdown } from '@/components/shared/chain-select-dropdown';
-import { SONIC_MAINNET_CHAIN_ID, spokeChainConfig, type ChainId, type Address } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, type ChainId, type Address, type XToken } from '@sodax/types';
 import { toast } from '@/components/ui/sonner';
-import { Settings2 } from 'lucide-react';
-import { TokenSelectDropdown } from '@/components/shared/token-select-dropdown';
+import { InfoIcon, Settings2 } from 'lucide-react';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { getChainName } from '@/constants/chains';
-import { useQueryClient } from '@tanstack/react-query';
 import type { useFeeClaimPreferences } from '../hooks/useFeeClaimPreferences';
+import { PartnerDestinationPicker } from './partner-destination-picker';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import NetworkIcon from '@/components/shared/network-icon';
+import { cn } from '@/lib/utils';
 
 export function PartnerPreferencesCard(props: {
   address: Address;
   prefs: ReturnType<typeof useFeeClaimPreferences>['data'];
   updateMutation: ReturnType<typeof useFeeClaimPreferences>['updateMutation'];
+  usdcDestinations: XToken[];
 }) {
   const { sodax } = useSodaxContext();
-  const queryClient = useQueryClient();
-  const { address, prefs, updateMutation } = props;
+  const { address, prefs, updateMutation, usdcDestinations } = props;
 
   const [dstChain, setDstChain] = useState<ChainId>(SONIC_MAINNET_CHAIN_ID);
   const [dstToken, setDstToken] = useState<Address | null>(null);
-  const SonicUsdcToken = spokeChainConfig[SONIC_MAINNET_CHAIN_ID]?.supportedTokens?.USDC;
 
-  // Using isFetching ensures the button stays disabled while the data is reloading
-  const isRefetching = queryClient.isFetching({ queryKey: ['feeClaimPrefs', address] }) > 0;
+  /** UI STATE */
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
   const hasChanged = prefs ? prefs.dstChain !== dstChain || prefs.outputToken !== dstToken : true;
-
-  // Update the disabled condition
-  const isButtonDisabled = updateMutation.isPending || isRefetching || !hasChanged || !dstToken;
+  const isButtonDisabled = updateMutation.isPending || !dstToken || !hasChanged;
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(SONIC_MAINNET_CHAIN_ID);
-
   const isFirstTimeSet = !prefs;
 
-  // Sync local state when preferences load
+  /** Sync saved prefs → local state */
   useEffect(() => {
     if (!prefs) return;
 
@@ -54,9 +50,7 @@ export function PartnerPreferencesCard(props: {
   const handleSave = () => {
     if (!dstToken) return;
 
-    // Safety check for the contract address we found in the logs
     const contractAddress = sodax?.partners?.feeClaim?.config?.protocolIntentsContract;
-
     if (!contractAddress) {
       toast.error('SDK Error: Protocol Intents Contract missing');
       return;
@@ -65,15 +59,17 @@ export function PartnerPreferencesCard(props: {
     updateMutation.mutate(
       {
         outputToken: dstToken as Address,
-        dstChain: dstChain,
+        dstChain,
         dstAddress: address,
       },
       {
         onSuccess: () => {
-          toast.success(isFirstTimeSet ? 'Destination set!' : 'Destination updated!');
-        }, // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+          toast.success(isFirstTimeSet ? 'Saved!' : 'Updated!');
+          setIsPickerOpen(false);
+        },
+
+        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
         onError: (err: any) => {
-          // Use the robust error message logic to avoid "undefined"
           const msg = err?.shortMessage || err?.message || 'Update failed';
           toast.error(`Update failed: ${msg}`);
         },
@@ -82,68 +78,87 @@ export function PartnerPreferencesCard(props: {
   };
 
   const getButtonLabel = () => {
-    if (updateMutation.isPending) return 'Saving...';
-
-    if (!prefs) return 'Set destination';
-
-    if (!hasChanged) return 'Destination set ✓';
-
-    return 'Update destination';
+    if (updateMutation.isPending) return 'Saving claim network…';
+    if (!prefs) return 'Save claim network';
+    if (!hasChanged) return ' Network saved';
+    return 'Save claim network';
   };
 
   return (
-    <main id="preferences-card" className="bg-transparent w-1/2 scroll-mt-24">
-      <CardHeader className="px-0 pb-4">
-        <CardTitle className="text-md font-bold flex items-center gap-2 text-clay">
-          <Settings2 className="w-4 h-4 text-cherry" />
-          Auto-Swap Destination
-        </CardTitle>
-        <p className="text-xs text-clay">All fees are swapped to your target asset and sent to the selected network</p>
-      </CardHeader>
-      <CardContent className="space-y-4 px-0">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase text-clay-light">Receive on Chain</Label>
-            <ChainSelectDropdown
-              selectedChainId={dstChain}
-              selectChainId={id => setDstChain(id as ChainId)}
-              allowedChains={Object.values(spokeChainConfig).map(c => c.chain.id)}
-              disabled={updateMutation.isPending}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase text-clay-light">Target Asset</Label>
-            <TokenSelectDropdown
-              selectedToken={dstToken}
-              onSelectToken={token => setDstToken(token)}
-              tokens={[
-                {
-                  address: SonicUsdcToken?.address || '',
-                  symbol: 'USDC',
-                },
-              ]}
-              disabled={updateMutation.isPending}
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-center">
-          {isWrongChain ? (
-            /* Force network switch if on the wrong chain */
-            <Button variant="cherry" className="px-8 py-5" onClick={handleSwitchChain}>
-              Switch to {getChainName(SONIC_MAINNET_CHAIN_ID)}
-            </Button>
-          ) : (
-            /* The button is DISABLED if:
-       1. A mutation is currently in flight (isPending)
-       2. OR the current local state matches the saved preferences (!hasChanged)
-       3. OR no destination token has been selected (!dstToken)
-    */
-            <Button variant="cherry" className="px-8 py-5" size="sm" onClick={handleSave} disabled={isButtonDisabled}>
-              {getButtonLabel()}
-            </Button>
+    <main id="preferences-card" className="bg-transparent w-full max-w-md scroll-mt-24">
+      <CardContent className="px-0">
+        <div
+          className={cn(
+            'relative rounded-2xl border bg-cream-white px-4 py-4 transition-colors',
+            isPickerOpen ? 'border-cherry/40' : 'border-cherry-grey',
           )}
+        >
+          {/* HEADER - Title + Chain badge in top-right */}
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center justify-between gap-4">
+              <CardTitle className="text-md font-bold flex items-center gap-2 text-clay">
+                <Settings2 className="w-4 h-4 text-cherry" />
+                Your claim network
+              </CardTitle>
+
+              {/* Chain badge - top right corner */}
+              {dstToken && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cream-grey/30 text-[11px] text-clay-light whitespace-nowrap">
+                  <NetworkIcon id={dstChain} className="w-3 h-3" />
+                  <span className="font-medium">{getChainName(dstChain)}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1 text-xs text-clay">
+              <span>Fees are converted to USDC and sent to:</span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center">
+                    <InfoIcon className="w-3 h-3 text-clay-light cursor-default" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
+                  Choose which network receives your USDC
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </div>
+
+          {/* MAIN CONTENT - Picker left, Button right */}
+          <div className="flex items-center justify-between gap-4 min-h-[80px]">
+            {/* LEFT: Picker anchored to bottom-left */}
+            <div className="flex flex-col justify-center mx-auto">
+              <PartnerDestinationPicker
+                availableChains={usdcDestinations}
+                selectedChainId={dstChain}
+                onChange={token => {
+                  setDstChain(token.xChainId);
+                  setDstToken(token.address as Address);
+                }}
+                onOpenChange={setIsPickerOpen}
+              />
+            </div>
+
+            {/* RIGHT: Button in middle-right */}
+            <div className="flex items-center mx-auto">
+              {isWrongChain ? (
+                <Button variant="cherry" className="px-6 py-4 text-sm" onClick={handleSwitchChain}>
+                  Switch to {getChainName(SONIC_MAINNET_CHAIN_ID)}
+                </Button>
+              ) : (
+                <Button
+                  variant="cherry"
+                  className={cn('px-6 py-4 text-sm transition-opacity', !hasChanged && 'opacity-50')}
+                  onClick={handleSave}
+                  disabled={isButtonDisabled}
+                  aria-label={hasChanged ? 'Save claim network preferences' : 'No changes to save'}
+                >
+                  {getButtonLabel()}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </CardContent>
     </main>

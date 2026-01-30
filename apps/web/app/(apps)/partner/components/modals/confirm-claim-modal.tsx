@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import type { FeeClaimAsset } from '../../hooks/useFeeClaimAssets';
@@ -18,6 +11,7 @@ import { useState } from 'react';
 import { CircularProgressIcon } from '@/components/icons';
 import { Check } from 'lucide-react';
 import { ClaimExecutionState } from '../../utils/fee-claim';
+import { getChainName } from '@/constants/chains';
 
 interface ConfirmClaimModalProps {
   isOpen: boolean;
@@ -90,45 +84,47 @@ export function ConfirmClaimModal({ isOpen, onClose, asset, partnerAddress, onSu
     }
   };
 
+  const destinationChainName =
+    preferences?.dstChain && preferences.dstChain !== 'not configured'
+      ? getChainName(preferences.dstChain)
+      : 'Not configured';
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="border-cherry-grey/20">
+      <DialogContent className="border-cherry-grey/20" hideCloseButton>
         <DialogHeader>
-          <DialogTitle className="text-center text-cherry-dark">Confirm Full Balance Claim</DialogTitle>
-
-          <DialogDescription className="text-center text-clay-light">
-            Review the details below before submitting your claim.
-          </DialogDescription>
+          <DialogTitle className="text-center text-cherry-dark">Confirm Claim</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4 text-center">
-          <div className="bg-cream-white p-3 rounded-lg border border-cherry-grey">
-            <div className="space-y-1">
-              <div className="text-lg font-semibold text-espresso">
-                {asset.displayBalance} {asset.currency.symbol}
-              </div>
-              <p className="text-[11px] text-clay-light">Full available balance (partial claims are not supported)</p>
+        <div className="space-y-3 py-2">
+          <div className="bg-cream-white p-4 rounded-lg border border-cherry-grey text-center">
+            <div className="text-2xl font-bold text-espresso">
+              {asset.displayBalance} {asset.currency.symbol}
             </div>
+            <p className="text-xs text-clay-light mt-1">Full balance claim</p>
           </div>
 
-          <div className="text-sm border-l-2 border-cherry pl-3 text-left">
-            <p className="text-clay font-medium">Destination Details:</p>
-            <p className="text-clay text-xs">
-              Network: <strong>{preferences?.dstChain}</strong>
-            </p>
-            <p className="text-clay text-xs">Address: {preferences?.dstAddress}</p>
+          <div className="space-y-1.5 px-1">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-clay-light min-w-[60px]">Network:</span>
+              <span className="font-semibold text-clay">{destinationChainName}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-clay-light min-w-[60px]">To:</span>
+              <span className="font-mono text-xs text-clay">{preferences?.dstAddress}</span>
+            </div>
           </div>
         </div>
 
-        <DialogFooter>{renderActionButton()}</DialogFooter>
+        <DialogFooter className="mt-2">{renderActionButton()}</DialogFooter>
 
-        <p className="text-xs text-clay-light text-center">
-          This submits a claim request. Execution may take a few moments.
+        <p className="text-xs text-clay-light text-center -mt-2">
+          Processing may take a few moments after confirmation
         </p>
 
         {executionState === ClaimExecutionState.SUBMITTED && (
-          <p className="text-xs text-clay-light text-center">
-            Your claim has been submitted and will be processed shortly. You can safely close this window.
+          <p className="text-xs text-clay-light text-center -mt-1">
+            Claim submitted successfully. You can safely close this window.
           </p>
         )}
       </DialogContent>
