@@ -4,6 +4,17 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Tier 2: Optimize package imports to reduce bundling memory/time
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@phosphor-icons/react',
+      '@web3icons/react',
+      'framer-motion',
+      'motion',
+      'date-fns',
+    ],
+  },
   images: {
     domains: ['storage.herewallet.app'],
     dangerouslyAllowSVG: true,
