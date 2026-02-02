@@ -10,6 +10,7 @@ import {
   lightlinkPhoenix,
   mainnet,
   redbellyMainnet,
+  kaia,
 } from 'viem/chains';
 import type { LegacybnUSDChainId, LegacybnUSDToken, NewbnUSDChainId } from '../index.js';
 import {
@@ -27,6 +28,7 @@ import {
   ICON_MAINNET_CHAIN_ID,
   CHAIN_IDS,
   HYPEREVM_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   spokeChainConfig,
   type EvmChainId,
@@ -102,6 +104,8 @@ export function getEvmViemChain(id: EvmChainId): Chain {
       return mainnet;
     case REDBELLY_MAINNET_CHAIN_ID:
       return redbellyMainnet;
+    case KAIA_MAINNET_CHAIN_ID:
+      return kaia;
     default:
       throw new Error(`Unsupported EVM chain ID: ${id}`);
   }
@@ -154,15 +158,6 @@ export const getAllLegacybnUSDTokens = (): { token: LegacybnUSDToken; chainId: L
     chainId,
   }));
 };
-
-// export const hubVaultsAddressSet = new Set<Address>(
-//   Object.values(hubVaults).map(vault => vault.address.toLowerCase() as Address),
-// );
-
-// all hub assets contained in the money market reserves (supply / borrow assets)
-// export const moneyMarketReserveHubAssetsSet = new Set<Address>(
-//   Object.values(hubVaults).flatMap(vault => vault.reserves.map(reserve => reserve.toLowerCase() as Address)),
-// );
 
 // export const isMoneyMarketReserveHubAsset = (hubAsset: Address): boolean =>
 //   moneyMarketReserveHubAssetsSet.has(hubAsset.toLowerCase() as Address);

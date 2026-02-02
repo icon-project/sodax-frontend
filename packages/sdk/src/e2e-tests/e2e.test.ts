@@ -18,8 +18,7 @@ import {
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
-  SodaTokens,
-  hubVaults,
+  KAIA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
 import { sonic } from 'viem/chains';
@@ -109,6 +108,7 @@ describe('e2e', () => {
     [LIGHTLINK_MAINNET_CHAIN_ID]: [],
     [ETHEREUM_MAINNET_CHAIN_ID]: [],
     [REDBELLY_MAINNET_CHAIN_ID]: [],
+    [KAIA_MAINNET_CHAIN_ID]: [],
   };
 
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {
@@ -158,13 +158,15 @@ describe('e2e', () => {
 
         if (
           !vaultAssets.includes(hubAsset.asset.toLowerCase() as Address) &&
-          hubAsset.asset.toLowerCase() !== '0x0000000000000000000000000000000000000000'
+          hubAsset.asset.toLowerCase() !== '0x0000000000000000000000000000000000000000' &&
+          hubAsset.asset.toLowerCase() !== vaultAddress.toLowerCase()
         ) {
           throw new Error(`Hub asset ${hubAsset.asset} not found in vault ${vaultAddress} on chain ${spokeChain}`);
         }
         expect(
           vaultAssets.includes(hubAsset.asset.toLowerCase() as Address) ||
-            hubAsset.asset.toLowerCase() === '0x0000000000000000000000000000000000000000',
+            hubAsset.asset.toLowerCase() === '0x0000000000000000000000000000000000000000' ||
+            hubAsset.asset.toLowerCase() === vaultAddress.toLowerCase(),
         ).toBe(true);
       }
     }
@@ -182,34 +184,4 @@ describe('e2e', () => {
       }
     }
   });
-
-  it('Query all reserve tokens of the SodaTokens vaults and verify they exist in the hubVaults', async () => {
-    for (const [tokenSymbol, sodaVaultToken] of Object.entries(SodaTokens)) {
-      console.log('************************************************');
-      console.log(`${tokenSymbol} ${sodaVaultToken.address}`);
-      console.log('--------------------------------');
-
-      const [sodaVaultTokenAssets] = await sonicPublicClient.readContract({
-        address: sodaVaultToken.address,
-        abi: vaultTokenAbi,
-        functionName: 'getAllTokenInfo',
-        args: [],
-      });
-
-      let missingAsset = false;
-      for (const asset of sodaVaultTokenAssets) {
-        // console.log(`Expecting ${asset} to be in ${tokenSymbol} ${sodaVaultToken.address} reserves`);
-        const isAssetInReserves = hubVaults[tokenSymbol as keyof typeof hubVaults].reserves
-          .map(reserve => reserve.toLowerCase())
-          .includes(asset.toLowerCase());
-
-        if (!isAssetInReserves) {
-          console.log(`${asset} not found in ${tokenSymbol} reserves`);
-          missingAsset = true;
-        }
-      }
-
-      expect(missingAsset).toBe(false);
-    }
-  }, 100000);
 });

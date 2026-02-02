@@ -62,11 +62,7 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
         availableChains.find(chain => chain.id === chainId),
       );
       return newbnUSDSpokeChainIds2
-        .filter(
-          chainId =>
-            chainId !== HYPEREVM_MAINNET_CHAIN_ID &&
-            chainId !== ETHEREUM_MAINNET_CHAIN_ID,
-        )
+        .filter(chainId => chainId !== HYPEREVM_MAINNET_CHAIN_ID && chainId !== ETHEREUM_MAINNET_CHAIN_ID)
         .map(chainId => {
           const config = spokeChainConfig[chainId as NewbnUSDChainId];
           const token = config.supportedTokens.bnUSD;

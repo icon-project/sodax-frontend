@@ -7,10 +7,7 @@ describe('calculateAllReserveIncentives', () => {
   const reserveIncentiveMock = new ReserveIncentiveMock();
   const userReserveMock = new UserReserveMock().supply(100).variableBorrow(100);
 
-  const { totalLiquidity, totalVariableDebt } = calculateReserveDebt(
-    userReserveMock.reserve,
-    1,
-  );
+  const { totalLiquidity, totalVariableDebt } = calculateReserveDebt(userReserveMock.reserve, 1);
 
   const reserve = {
     ...userReserveMock.reserve,
@@ -23,14 +20,8 @@ describe('calculateAllReserveIncentives', () => {
       reserves: [reserve],
       marketReferenceCurrencyDecimals: 8,
     });
-    expect(
-      result['0x0000000000000000000000000000000000000000']?.aIncentives?.[0]
-        ?.incentiveAPR,
-    ).toBe('157680');
-    expect(
-      result['0x0000000000000000000000000000000000000000']?.vIncentives?.[0]
-        ?.incentiveAPR,
-    ).toBe('315360');
+    expect(result['0x0000000000000000000000000000000000000000']?.aIncentives?.[0]?.incentiveAPR).toBe('157680');
+    expect(result['0x0000000000000000000000000000000000000000']?.vIncentives?.[0]?.incentiveAPR).toBe('315360');
   });
 
   it('calculate incentives for reserve with distribution ended', () => {
@@ -42,14 +33,8 @@ describe('calculateAllReserveIncentives', () => {
       reserves: [reserve],
       marketReferenceCurrencyDecimals: 8,
     });
-    expect(
-      result['0x0000000000000000000000000000000000000000']?.aIncentives?.[0]
-        ?.incentiveAPR,
-    ).toBe('0');
-    expect(
-      result['0x0000000000000000000000000000000000000000']?.vIncentives?.[0]
-        ?.incentiveAPR,
-    ).toBe('0');
+    expect(result['0x0000000000000000000000000000000000000000']?.aIncentives?.[0]?.incentiveAPR).toBe('0');
+    expect(result['0x0000000000000000000000000000000000000000']?.vIncentives?.[0]?.incentiveAPR).toBe('0');
   });
 
   it('not add reserveIncentivesDict entry if no reserve is found', () => {
@@ -58,8 +43,6 @@ describe('calculateAllReserveIncentives', () => {
       reserves: [],
       marketReferenceCurrencyDecimals: 8,
     });
-    expect(result['0x0000000000000000000000000000000000000000']).toBe(
-      undefined,
-    );
+    expect(result['0x0000000000000000000000000000000000000000']).toBe(undefined);
   });
 });

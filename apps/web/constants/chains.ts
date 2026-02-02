@@ -21,36 +21,50 @@ export interface ChainUI {
   icon: string;
 }
 
+export const EVM_CHAIN_ICONS = [
+  '/chain/ethereum.png',
+  '/chain/0x2105.base.png',
+  '/chain/0x38.bsc.png',
+  '/chain/0xa86a.avax.png',
+  '/chain/0x89.polygon.png',
+  '/chain/0xa.optimism.png',
+  '/chain/0xa4b1.arbitrum.png',
+  '/chain/sonic.png',
+  '/chain/lightlink.png',
+  '/chain/hyper.png',
+];
+
 /**
  * Available chains for UI components with display information
  * Maps SPOKE_CHAIN_IDS to human-readable names and icon paths
  */
 export const availableChains: ChainUI[] = [
+  { id: ETHEREUM_MAINNET_CHAIN_ID, name: 'Ethereum', icon: '/chain/ethereum.png' },
+  { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', icon: '/chain/solana.png' },
+  { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png' },
   { id: SONIC_MAINNET_CHAIN_ID, name: 'Sonic', icon: '/chain/sonic.png' },
+  {
+    id: ARBITRUM_MAINNET_CHAIN_ID,
+    name: 'Arbitrum',
+    icon: '/chain/0xa4b1.arbitrum.png',
+  },
+  { id: SUI_MAINNET_CHAIN_ID, name: 'Sui', icon: '/chain/sui.png' },
+  { id: BSC_MAINNET_CHAIN_ID, name: 'BNB Chain', icon: '/chain/0x38.bsc.png' },
+  {
+    id: POLYGON_MAINNET_CHAIN_ID,
+    name: 'Polygon',
+    icon: '/chain/0x89.polygon.png',
+  },
   {
     id: AVALANCHE_MAINNET_CHAIN_ID,
     name: 'Avalanche',
     icon: '/chain/0xa86a.avax.png',
   },
   {
-    id: ARBITRUM_MAINNET_CHAIN_ID,
-    name: 'Arbitrum',
-    icon: '/chain/0xa4b1.arbitrum.png',
-  },
-  { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png' },
-  { id: BSC_MAINNET_CHAIN_ID, name: 'BSC', icon: '/chain/0x38.bsc.png' },
-  { id: SUI_MAINNET_CHAIN_ID, name: 'Sui', icon: '/chain/sui.png' },
-  {
     id: OPTIMISM_MAINNET_CHAIN_ID,
     name: 'Optimism',
     icon: '/chain/0xa.optimism.png',
   },
-  {
-    id: POLYGON_MAINNET_CHAIN_ID,
-    name: 'Polygon',
-    icon: '/chain/0x89.polygon.png',
-  },
-  { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', icon: '/chain/solana.png' },
   { id: STELLAR_MAINNET_CHAIN_ID, name: 'Stellar', icon: '/chain/stellar.png' },
   { id: ICON_MAINNET_CHAIN_ID, name: 'ICON', icon: '/chain/0x1.icon.png' },
   {
@@ -59,7 +73,6 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/lightlink.png',
   },
   { id: HYPEREVM_MAINNET_CHAIN_ID, name: 'Hyper', icon: '/chain/hyper.png' },
-  { id: ETHEREUM_MAINNET_CHAIN_ID, name: 'Ethereum', icon: '/chain/ethereum.png' },
 ];
 
 /**

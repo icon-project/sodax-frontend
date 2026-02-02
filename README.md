@@ -25,6 +25,10 @@ The `packages` directory contains a sdk's and libraries:
 - **wallet-sdk-react** (`/packages/wallet-sdk-react`): A dedicated Wallet Connectivity SDK that supports multi-chain wallet operations, including transaction signing, broadcasting, and retrieval. It is fully compliant with the Sodax SDK wallet provider interface specifications, ensuring seamless integration. [Wallet SDK Documentation](./packages/wallet-sdk-react/README.md).
 - **dapp-kit** (`/packages/dapp-kit`): A utility kit optimized for React and Next.js applications, leveraging both the wallet-sdk and Sodax SDKs. It offers a collection of hooks, components, and utilities designed to accelerate frontend dApp development with modular, production-ready building blocks. [dApp Kit Documentation](./packages/dapp-kit/README.md).
 
+### Publishing SDK's
+
+Instruction on how to release new packages can be found in [RELEASE_INSTRUCTIONS.md](./packages/RELEASE_INSTRUCTIONS.md)
+
 ### Git Flow Frontend
 
 branches: `main`, `staging`, `production`:

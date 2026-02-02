@@ -43,7 +43,7 @@ export default function MigratePage() {
                 setMigrationMode(value);
               }
             }}
-            className="h-12 w-64 px-1 border border-4 border-cream-white rounded-full mix-blend-multiply"
+            className="h-12 w-64 px-1 border-4 border-cream-white rounded-full mix-blend-multiply"
           >
             <ToggleGroupItem value={MIGRATION_MODE_ICX_SODA} className="cursor-pointer">
               ICX & SODA

@@ -70,7 +70,7 @@ async function executeSwap(inputAmount: bigint): Promise<void> {
       quote_type: 'exact_input',
     };
 
-    const quoteResult = await sodax.swap.getQuote(quoteRequest);
+    const quoteResult = await sodax.swaps.getQuote(quoteRequest);
     if (!quoteResult.ok) {
       console.error('Failed to get quote:', quoteResult.error);
       return;
@@ -84,7 +84,7 @@ async function executeSwap(inputAmount: bigint): Promise<void> {
     const walletAddress: string = await arbWalletProvider.getWalletAddress();
     // Five minutes in seconds (300 seconds)
     const fiveMinutesInSeconds: bigint = 300n;
-    const deadline: bigint = await sodax.swap.getSwapDeadline(fiveMinutesInSeconds);
+    const deadline: bigint = await sodax.swaps.getSwapDeadline(fiveMinutesInSeconds);
 
     const createIntentParams: CreateIntentParams = {
       inputToken: arbEthToken,
@@ -101,7 +101,7 @@ async function executeSwap(inputAmount: bigint): Promise<void> {
       data: '0x',
     };
 
-    const allowanceResult = await sodax.swap.isAllowanceValid({
+    const allowanceResult = await sodax.swaps.isAllowanceValid({
       intentParams: createIntentParams,
       spokeProvider: arbSpokeProvider,
     });
@@ -114,7 +114,7 @@ async function executeSwap(inputAmount: bigint): Promise<void> {
     // Step 5: Approve if Needed
     if (!allowanceResult.value) {
       console.log('Step 5: Approving tokens...');
-      const approveResult = await sodax.swap.approve({
+      const approveResult = await sodax.swaps.approve({
         intentParams: createIntentParams,
         spokeProvider: arbSpokeProvider,
       });
@@ -136,7 +136,7 @@ async function executeSwap(inputAmount: bigint): Promise<void> {
 
     // Step 6: Execute Swap
     console.log('Step 6: Executing swap...');
-    const swapResult = await sodax.swap.swap({
+    const swapResult = await sodax.swaps.swap({
       intentParams: createIntentParams,
       spokeProvider: arbSpokeProvider,
     });
@@ -205,7 +205,7 @@ async function checkIntentStatus(sodax: Sodax, dstTxHash: string, maxAttempts = 
 
   while (attempt < maxAttempts) {
     attempt++;
-    const statusResult = await sodax.swap.getStatus(statusRequest);
+    const statusResult = await sodax.swaps.getStatus(statusRequest);
 
     if (!statusResult.ok) {
       console.error(`[Attempt ${attempt}] Failed to check intent status:`, statusResult.error);

@@ -1,7 +1,7 @@
 import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
 import { SwapService, MigrationService, BackendApiService, BridgeService, StakingService } from '../../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
-import type { HttpUrl } from '@sodax/types';
+import type { HttpUrl, defaultSharedConfig } from '@sodax/types';
 import type {
   SolverConfigParams,
   MoneyMarketConfigParams,
@@ -14,13 +14,14 @@ import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 import { ConfigService } from '../config/index.js';
 
 export type SodaxConfig = {
-  swap?: SolverConfigParams; // optional Solver service enabling intent based swaps
+  swaps?: SolverConfigParams; // optional Solver service enabling intent based swaps
   moneyMarket?: MoneyMarketConfigParams; // optional Money Market service enabling cross-chain lending and borrowing
   migration?: MigrationServiceConfig; // optional Migration service enabling ICX migration to SODA
   bridge?: BridgeServiceConfig; // optional Bridge service enabling cross-chain transfers
   hubProviderConfig?: EvmHubProviderConfig; // hub provider for the hub chain (e.g. Sonic mainnet)
   relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
   backendApiConfig?: BackendApiConfig; // backend API config used to interact with the backend API
+  sharedConfig?: typeof defaultSharedConfig;
 };
 
 /**
@@ -31,7 +32,7 @@ export type SodaxConfig = {
 export class Sodax {
   public readonly instanceConfig?: SodaxConfig;
 
-  public readonly swap: SwapService; // Solver service enabling intent based swaps
+  public readonly swaps: SwapService; // Solver service enabling intent based swaps
   public readonly moneyMarket: MoneyMarketService; // Money Market service enabling cross-chain lending and borrowing
   public readonly migration: MigrationService; // ICX migration service enabling ICX migration to SODA
   public readonly backendApi: BackendApiService; // backend API service enabling backend API endpoints
@@ -52,12 +53,13 @@ export class Sodax {
         backendApiUrl: config?.backendApiConfig?.baseURL,
         timeout: config?.backendApiConfig?.timeout,
       },
+      sharedConfig: config?.sharedConfig,
     });
     this.hubProvider = new EvmHubProvider({ config: config?.hubProviderConfig, configService: this.config }); // default to Sonic mainnet
-    this.swap =
-      config && config.swap
+    this.swaps =
+      config && config.swaps
         ? new SwapService({
-            config: config.swap,
+            config: config.swaps,
             configService: this.config,
             hubProvider: this.hubProvider,
             relayerApiEndpoint: this.relayerApiEndpoint,
@@ -125,18 +127,6 @@ export class Sodax {
    * @param sodax - The Sodax instance to initialize.
    */
   public async initialize(): Promise<Result<void>> {
-    try {
-      await this.config.initialize();
-
-      return {
-        ok: true,
-        value: undefined,
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error,
-      };
-    }
+    return this.config.initialize();
   }
 }

@@ -70,11 +70,10 @@ const solverConfig = {
 } satisfies SolverConfigParams;
 
 const sodax = new Sodax({
-  swap: solverConfig,
+  swaps: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
-
 
 const evmHubProvider = new EvmHubProvider({
   config: hubConfig,
@@ -92,7 +91,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address): Pro
     sodax.config,
   );
   const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-  const txHash: Hash = await SpokeService.deposit(
+  const txHash = await SpokeService.deposit(
     {
       from: walletAddress,
       token,
@@ -124,7 +123,7 @@ async function withdrawAsset(token: string, amount: bigint, recipient: string): 
     evmHubProvider,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
+  const txHash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
 
   console.log('[withdrawAsset] txHash', txHash);
 }
@@ -138,7 +137,7 @@ async function supply(token: string, amount: bigint): Promise<void> {
     evmHubProvider,
   );
 
-  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(spokeProvider.chainConfig.chain.id, token, amount, hubWallet);
 
   const txHash = await SpokeService.deposit(
     {
@@ -172,7 +171,7 @@ async function borrow(token: string, amount: bigint): Promise<void> {
     spokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
+  const txHash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
 
   console.log('[borrow] txHash', txHash);
 }
@@ -194,7 +193,7 @@ async function withdraw(token: string, amount: bigint): Promise<void> {
     spokeProvider.chainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
+  const txHash = await SpokeService.callWallet(hubWallet, data, spokeProvider, evmHubProvider);
 
   console.log('[withdraw] txHash', txHash);
 }
@@ -207,9 +206,9 @@ async function repay(token: string, amount: bigint): Promise<void> {
     walletAddressBytes,
     evmHubProvider,
   );
-  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(spokeProvider.chainConfig.chain.id, token, amount, hubWallet);
 
-  const txHash: Hash = await SpokeService.deposit(
+  const txHash = await SpokeService.deposit(
     {
       from: walletAddress,
       token,

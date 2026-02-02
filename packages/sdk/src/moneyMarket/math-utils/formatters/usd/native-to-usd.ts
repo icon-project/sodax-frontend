@@ -19,10 +19,6 @@ export function nativeToUSD({
   return valueToBigNumber(amount.toString())
     .multipliedBy(priceInMarketReferenceCurrency)
     .multipliedBy(normalizedMarketReferencePriceInUsd)
-    .dividedBy(
-      new BigNumber(1).shiftedBy(
-        currencyDecimals + marketReferenceCurrencyDecimals,
-      ),
-    )
+    .dividedBy(new BigNumber(1).shiftedBy(currencyDecimals + marketReferenceCurrencyDecimals))
     .toString();
 }

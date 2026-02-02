@@ -5,11 +5,11 @@
  */
 
 import type {
+  Address,
   GetAllConfigApiResponse,
   GetChainsApiResponse,
   GetHubAssetsApiResponse,
   GetHubAssetsByChainIdApiResponse,
-  GetHubVaultsApiResponse,
   GetMoneyMarketReserveAssetsApiResponse,
   GetMoneyMarketTokensApiResponse,
   GetMoneyMarketTokensByChainIdApiResponse,
@@ -53,20 +53,27 @@ export interface IntentResponse {
   intent: {
     intentId: string;
     creator: string;
-    inputToken: string;
-    outputToken: string;
+    inputToken: `0x${string}`;
+    outputToken: `0x${string}`;
     inputAmount: string;
     minOutputAmount: string;
     deadline: string;
     allowPartialFill: boolean;
     srcChain: number;
     dstChain: number;
-    srcAddress: string;
-    dstAddress: string;
+    srcAddress: `0x${string}`;
+    dstAddress: `0x${string}`;
     solver: string;
     data: string;
   };
   events: unknown[];
+}
+
+export interface UserIntentsResponse {
+  total: number;
+  offset: number;
+  limit: number;
+  items: IntentResponse[];
 }
 
 // Solver endpoints types
@@ -216,8 +223,9 @@ export class BackendApiService implements IConfigApi {
 
   // Intent endpoints
   /**
-   * Get intent details by transaction hash
-   * @param txHash - Transaction hash
+   * Get intent details by intent created transaction hash from the hub chain.
+   * Intents are only created on the hub chain, so the transaction hash must be from the hub chain.
+   * @param txHash - The intent created transaction hash from the hub chain
    * @returns Promise<IntentResponse>
    */
   public async getIntentByTxHash(txHash: string): Promise<IntentResponse> {
@@ -248,6 +256,39 @@ export class BackendApiService implements IConfigApi {
     const endpoint = `/solver/orderbook?${queryString}`;
 
     return this.makeRequest<OrderbookResponse>(endpoint, { method: 'GET' });
+  }
+
+  /**
+   * Get all intents created by a specific user address with optional filters.
+   *
+   * @param params - Options to filter the user intents.
+   * @param params.userAddress - The user's wallet address on the hub chain (required).
+   * @param params.startDate - Optional. Start timestamp in milliseconds (number, required if filtering by date).
+   * @param params.endDate - Optional. End timestamp in milliseconds (number, required if filtering by date).
+   * @param params.limit - Optional. Max number of results (string).
+   * @param params.offset - Optional. Pagination offset (string).
+   *
+   * @returns {Promise<UserIntentsResponse>} Promise resolving to an array of intent responses for the user.
+   */
+  public async getUserIntents(params: {
+    userAddress: Address;
+    startDate?: number;
+    endDate?: number;
+    limit?: string;
+    offset?: string;
+  }): Promise<UserIntentsResponse> {
+    const { userAddress, startDate, endDate, limit, offset } = params;
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', new Date(startDate).toISOString());
+    if (endDate) queryParams.append('endDate', new Date(endDate).toISOString());
+    if (limit) queryParams.append('limit', limit);
+    if (offset) queryParams.append('offset', offset);
+
+    const queryString = queryParams.toString();
+    const endpoint =
+      queryString.length > 0 ? `/intent/user/${userAddress}?${queryString}` : `/intent/user/${userAddress}`;
+
+    return this.makeRequest<UserIntentsResponse>(endpoint, { method: 'GET' });
   }
 
   // Money Market endpoints
@@ -379,7 +420,9 @@ export class BackendApiService implements IConfigApi {
    * @returns Promise<GetMoneyMarketTokensApiResponse>
    */
   public async getMoneyMarketReserveAssets(): Promise<GetMoneyMarketReserveAssetsApiResponse> {
-    return this.makeRequest<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', { method: 'GET' });
+    return this.makeRequest<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', {
+      method: 'GET',
+    });
   }
 
   /**
@@ -399,14 +442,6 @@ export class BackendApiService implements IConfigApi {
    */
   public async getHubAssets(): Promise<GetHubAssetsApiResponse> {
     return this.makeRequest<GetHubAssetsApiResponse>('/config/hub/assets', { method: 'GET' });
-  }
-
-  /**
-   * Get all supported Soda hub vaults
-   * @returns Promise<GetHubVaultsApiResponse>
-   */
-  public async getHubVaults(): Promise<GetHubVaultsApiResponse> {
-    return this.makeRequest<GetHubVaultsApiResponse>('/config/hub/vaults', { method: 'GET' });
   }
 
   /**

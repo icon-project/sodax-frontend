@@ -123,8 +123,8 @@ export type EvmHubChainConfig = BaseHubChainConfig<'EVM'> & {
     stakedSoda: Address;
     xSoda: Address;
     stakingRouter: Address;
+    walletRouter: Address;
   };
-
   nativeToken: Address;
   wrappedNativeToken: Address;
 };
@@ -133,7 +133,7 @@ export type SpokeChainInfo<T extends ChainType> = BaseSpokeChainInfo<T>;
 
 export type BaseSpokeChainConfig<T extends ChainType> = {
   chain: SpokeChainInfo<T>;
-  addresses: { [key: string]: string | Uint8Array };
+  addresses: { [key: string]: string };
   supportedTokens: Record<string, XToken>;
   nativeToken: string;
   bnUSD: string;
@@ -253,11 +253,6 @@ export type MoneyMarketConfig = {
   bnUSDAToken: Address;
 };
 
-export type VaultType = {
-  address: Address; // vault address
-  reserves: Address[]; // hub asset addresses contained in the vault
-};
-
 export type HubAsset = {
   asset: Address;
   decimal: number;
@@ -273,3 +268,9 @@ export type TokenInfo = {
   maxDeposit: bigint;
   isSupported: boolean;
 };
+
+export type BridgeLimit = {
+  amount: bigint;
+  decimals: number;
+  type : 'DEPOSIT_LIMIT' | 'WITHDRAWAL_LIMIT';
+}

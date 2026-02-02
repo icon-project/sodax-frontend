@@ -8,6 +8,7 @@ import type {
   UserReserveData,
   UserReserveDataHumanized,
   ReserveDataLegacy,
+  ReserveDataHumanized,
 } from './MoneyMarketTypes.js';
 import {
   formatReserves,
@@ -24,8 +25,8 @@ import {
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
 import type { Address, Erc20Token } from '@sodax/types';
-import { deriveUserWalletAddress } from '../shared/utils/shared-utils.js';
-import { Erc20Service } from '../shared/index.js';
+import { Erc20Service, HubService } from '../shared/index.js';
+import { erc20Abi } from 'viem';
 
 export class MoneyMarketDataService {
   public readonly uiPoolDataProviderService: UiPoolDataProviderService;
@@ -40,6 +41,38 @@ export class MoneyMarketDataService {
 
   public async getATokenData(aToken: Address): Promise<Erc20Token> {
     return Erc20Service.getErc20Token(aToken, this.hubProvider.publicClient);
+  }
+
+  /**
+   * Fetches multiple aToken balances in a single multicall for better performance
+   * @param aTokens - Array of aToken addresses
+   * @param userAddress - User's hub wallet address to fetch balances for
+   * @returns Promise<Map<Address, bigint>> - Map of aToken address to balance
+   */
+  public async getATokensBalances(aTokens: readonly Address[], userAddress: Address): Promise<Map<Address, bigint>> {
+    const contracts = aTokens.map((aToken: Address) => ({
+      address: aToken,
+      abi: erc20Abi,
+      functionName: 'balanceOf' as const,
+      args: [userAddress] as const,
+    }));
+
+    const results = await this.hubProvider.publicClient.multicall({
+      contracts,
+      allowFailure: false,
+    });
+
+    const balanceMap = new Map<Address, bigint>();
+    let resultIndex = 0;
+    for (const aToken of aTokens) {
+      const result = results[resultIndex];
+      if (result !== undefined) {
+        balanceMap.set(aToken, result as bigint);
+      }
+      resultIndex++;
+    }
+
+    return balanceMap;
   }
 
   /**
@@ -94,8 +127,9 @@ export class MoneyMarketDataService {
     spokeProvider: SpokeProvider,
   ): Promise<readonly [readonly UserReserveData[], number]> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    // derive users hub wallet address
-    const hubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+    const spokeChainId = spokeProvider.chainConfig.chain.id;
+    const hubWalletAddress = await HubService.getUserHubWalletAddress(walletAddress, spokeChainId, this.hubProvider);
+
     return this.uiPoolDataProviderService.getUserReservesData(hubWalletAddress);
   }
 
@@ -133,8 +167,9 @@ export class MoneyMarketDataService {
     userEmodeCategoryId: number;
   }> {
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    // derive users hub wallet address
-    const hubWalletAddress = await deriveUserWalletAddress(spokeProvider, this.hubProvider, walletAddress);
+    const spokeChainId = spokeProvider.chainConfig.chain.id;
+    const hubWalletAddress = await HubService.getUserHubWalletAddress(walletAddress, spokeChainId, this.hubProvider);
+
     return this.uiPoolDataProviderService.getUserReservesHumanized(hubWalletAddress);
   }
 
@@ -145,7 +180,7 @@ export class MoneyMarketDataService {
   /**
    * @description Util function to build the request for the formatReserves function
    */
-  public buildReserveDataWithPrice(reserves: ReservesDataHumanized): FormatReservesUSDRequest<ReserveDataWithPrice> {
+  public buildReserveDataWithPrice(reserves: ReservesDataHumanized): FormatReservesUSDRequest<ReserveDataHumanized> {
     // Current UNIX timestamp in seconds
     const currentUnixTimestamp: number = Math.floor(Date.now() / 1000);
     const baseCurrencyData = reserves.baseCurrencyData;
@@ -194,10 +229,10 @@ export class MoneyMarketDataService {
    * @param {FormatReservesUSDRequest<ReserveDataWithPrice>} - the request parameters
    * @returns {FormatReserveUSDResponse<FormatReservesUSDRequest>} - an array of formatted configuration and live usage data for each reserve in a Sodax market
    */
-  public formatReservesUSD(
-    params: FormatReservesUSDRequest<ReserveDataWithPrice>,
-  ): (ReserveData & { priceInMarketReferenceCurrency: string } & FormatReserveUSDResponse)[] {
-    return formatReserves(params);
+  public formatReservesUSD<T extends ReserveDataWithPrice>(
+    params: FormatReservesUSDRequest<T>,
+  ): FormatReserveUSDResponse[] {
+    return formatReserves<T>(params);
   }
 
   /**
