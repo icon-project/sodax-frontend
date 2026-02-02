@@ -172,6 +172,11 @@ export default function SwapPage() {
     }, 500);
   }, []);
 
+  useEffect(() => {
+    setIsSwapAndSend(false);
+    setCustomDestinationAddress('');
+  }, [setIsSwapAndSend, setCustomDestinationAddress]);
+
   return (
     <motion.div className="w-full">
       <motion.div
