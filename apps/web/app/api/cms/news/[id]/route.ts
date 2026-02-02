@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePermission, requireAdmin } from "@/lib/auth-utils";
 import { generateSlug, type NewsArticle } from "@/lib/mongodb-types";
+import { triggerDeployIfPublished } from "@/lib/trigger-deploy";
 import { ObjectId } from "mongodb";
 
 type RouteContext = {
@@ -84,6 +85,12 @@ export async function PATCH(
       { returnDocument: "after" }
     );
 
+    // Trigger deploy if article is or was published
+    await triggerDeployIfPublished(
+      isNowPublished || wasPublished,
+      `News updated: ${result?.title || existing.title}`
+    );
+
     return NextResponse.json(result);
   } catch (error) {
     console.error("PATCH /api/cms/news/[id] error:", error);
@@ -105,11 +112,18 @@ export async function DELETE(
     const { id } = await context.params;
     const collection = db.collection<NewsArticle>("news");
 
+    // Check if article was published before deleting
+    const existing = await collection.findOne({ _id: new ObjectId(id) });
+    const wasPublished = existing?.published ?? false;
+
     const result = await collection.deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: "News article not found" }, { status: 404 });
     }
+
+    // Trigger deploy if deleted article was published
+    await triggerDeployIfPublished(wasPublished, `News deleted: ${existing?.title}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

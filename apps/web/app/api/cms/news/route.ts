@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/auth-utils';
 import { generateSlug, type NewsArticle } from '@/lib/mongodb-types';
 import { NewsArticleSchema, formatZodError } from '@/lib/cms-schemas';
 import { sanitizeHtml, sanitizeText } from '@/lib/sanitize';
+import { triggerDeployIfPublished } from '@/lib/trigger-deploy';
 import { ZodError } from 'zod';
 
 // GET /api/cms/news - List all news (with optional filters)
@@ -98,6 +99,9 @@ export async function POST(request: NextRequest) {
     };
 
     const result = await collection.insertOne(article);
+
+    // Trigger deploy if article is published
+    await triggerDeployIfPublished(article.published, `News created: ${article.title}`);
 
     return NextResponse.json({ ...article, _id: result.insertedId }, { status: 201 });
   } catch (error) {

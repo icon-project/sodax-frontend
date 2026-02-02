@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth-utils";
 import { generateSlug, type GlossaryTerm } from "@/lib/mongodb-types";
+import { triggerDeployIfPublished } from "@/lib/trigger-deploy";
 
 // GET /api/cms/glossary - List all glossary terms
 export async function GET(request: NextRequest) {
@@ -106,6 +107,9 @@ export async function POST(request: NextRequest) {
     };
 
     const result = await collection.insertOne(glossaryTerm);
+
+    // Trigger deploy if term is published
+    await triggerDeployIfPublished(glossaryTerm.published, `Glossary term created: ${glossaryTerm.term}`);
 
     return NextResponse.json(
       { ...glossaryTerm, _id: result.insertedId },
