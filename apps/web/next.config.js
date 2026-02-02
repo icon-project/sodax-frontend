@@ -13,6 +13,15 @@ const nextConfig = {
       'framer-motion',
       'motion',
       'date-fns',
+      // CMS packages
+      '@tiptap/react',
+      '@tiptap/starter-kit',
+      '@tiptap/extension-image',
+      '@tiptap/extension-link',
+      '@tiptap/extension-placeholder',
+      'better-auth',
+      'sanitize-html',
+      'mongodb',
     ],
   },
   images: {
