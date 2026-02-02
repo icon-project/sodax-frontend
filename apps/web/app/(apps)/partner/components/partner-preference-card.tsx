@@ -98,7 +98,23 @@ export function PartnerPreferencesCard(props: {
             <div className="flex items-center justify-between gap-4">
               <CardTitle className="text-md font-bold flex items-center gap-2 text-clay">
                 <Settings2 className="w-4 h-4 text-cherry" />
-                Your claim network
+                Your claim network{' '}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center">
+                      <InfoIcon className="w-4 h-4 text-clay-light cursor-default mt-px" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    variant="soft"
+                    side="top"
+                    align="center"
+                    sideOffset={6}
+                    className="text-clay bg-white"
+                  >
+                    Choose which network receives your USDC
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
 
               {/* Chain badge - top right corner */}
@@ -112,16 +128,6 @@ export function PartnerPreferencesCard(props: {
 
             <div className="flex items-center gap-1 text-xs text-clay">
               <span>Fees are converted to USDC and sent to:</span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex items-center">
-                    <InfoIcon className="w-3 h-3 text-clay-light cursor-default" />
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
-                  Choose which network receives your USDC
-                </TooltipContent>
-              </Tooltip>
             </div>
           </div>
 
