@@ -68,7 +68,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
 
   return (
     <div
-      className={`w-full relative rounded-(--layout-container-radius) outline outline-[#e4dada] inline-flex justify-between items-center group ${className} outline-2 outline-offset-[-2px] hover:outline-4 hover:outline-offset-[-4px] sm:outline-3 sm:outline-offset-[-3px] sm:hover:outline-5 sm:hover:outline-offset-[-5px] md:outline-4 md:outline-offset-[-4px] md:hover:outline-6 md:hover:outline-offset-[-6px]`}
+      className={`w-full relative rounded-(--layout-container-radius) outline outline-almost-white mix-blend-multiply inline-flex justify-between items-center group ${className} outline-2 outline-offset-[-2px] hover:outline-4 hover:outline-offset-[-4px] sm:outline-3 sm:outline-offset-[-3px] sm:hover:outline-5 sm:hover:outline-offset-[-5px] md:outline-4 md:outline-offset-[-4px] md:hover:outline-6 md:hover:outline-offset-[-6px]`}
       style={{ padding: 'var(--layout-space-comfortable) var(--layout-space-big)' }}
       onClick={() => inputRef.current?.focus()}
     >
