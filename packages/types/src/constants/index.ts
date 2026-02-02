@@ -1449,7 +1449,7 @@ export const spokeChainConfig = {
     chain: baseChainInfo[REDBELLY_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x39E77f86C1B1f3fbAb362A82b49D2E86C09659B4',
-      connection: '0x---',
+      connection: '0x88F03d1b4e84FB6ED54dFFadc609D724E324Ab02',
     },
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8',
@@ -1480,6 +1480,13 @@ export const spokeChainConfig = {
         name: 'USD Coin',
         decimals: 6,
         address: '0x8201c02d4AB2214471E8C3AD6475C8b0CD9F2D06',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0x8C4aCd74Ff4385f3B7911432FA6787Aa14406f8B',
         xChainId: REDBELLY_MAINNET_CHAIN_ID,
       },
       rETH: {
@@ -2410,6 +2417,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'USD Coin',
       vault: SodaTokens.sodaUSDC.address,
     },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x81afe70d3b8266395b9f508c95cfc05ce7e01609',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
     [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rETH.address]: {
       asset: '0x87baf5eb9c67a86a5260b7ec739d0c4a4a450ae3',
       decimal: 18,
@@ -2772,6 +2786,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rETH,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBTC,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSOL,
