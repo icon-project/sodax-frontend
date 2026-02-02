@@ -42,6 +42,7 @@ export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
 export const HYPEREVM_MAINNET_CHAIN_ID = 'hyper';
 export const LIGHTLINK_MAINNET_CHAIN_ID = 'lightlink';
 export const ETHEREUM_MAINNET_CHAIN_ID = 'ethereum';
+export const KAIA_MAINNET_CHAIN_ID = '0x2019.kaia';
 
 export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
 
@@ -62,6 +63,7 @@ export const CHAIN_IDS = [
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
 ] as const;
 
 export const EVM_CHAIN_IDS = [
@@ -75,6 +77,7 @@ export const EVM_CHAIN_IDS = [
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
 ] as const;
 
 export const baseChainInfo = {
@@ -168,6 +171,12 @@ export const baseChainInfo = {
     type: 'EVM',
     chainId: 1,
   },
+  [KAIA_MAINNET_CHAIN_ID]: {
+    name: 'Kaia',
+    id: KAIA_MAINNET_CHAIN_ID,
+    type: 'EVM',
+    chainId: 8217,
+  },
 } as const satisfies Record<ChainId, BaseSpokeChainInfo<ChainType>>;
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
@@ -187,6 +196,7 @@ export const ChainIdToIntentRelayChainId = {
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
   [ETHEREUM_MAINNET_CHAIN_ID]: 2n,
+  [KAIA_MAINNET_CHAIN_ID]: 27489n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -211,6 +221,7 @@ export const HubVaultSymbols = [
   'sodaLL',
   'sodaWEETH',
   'sodaWSTETH',
+  'sodaKAIA',
 ] as const;
 
 export const SodaTokens = {
@@ -345,6 +356,13 @@ export const SodaTokens = {
     name: 'SODA WSTETH',
     decimals: 18,
     address: '0x58b0538D7EEaeE69EF32f9F1dE5cbF32A10a977B',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaKAIA: {
+    symbol: 'sodaKAIA',
+    name: 'Soda KAIA',
+    decimals: 18,
+    address: '0xD7d41b5f803b6A40F8A6eAa34E459A4564e39891',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
 } as const satisfies Record<HubVaultSymbol, XToken>;
@@ -1370,6 +1388,45 @@ export const spokeChainConfig = {
       },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
+  [KAIA_MAINNET_CHAIN_ID]: {
+    chain: baseChainInfo[KAIA_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
+    addresses: {
+      assetManager: '0x6D2126DB97dd88AfA85127253807D04A066b6746',
+      connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
+    bnUSD: '0xF8D13cAcb8E2B6BA8396DbA35a7365EF6b603cd6',
+    supportedTokens: {
+      KAIA: {
+        symbol: 'KAIA',
+        name: 'Kaia',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+        xChainId: KAIA_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '0xF8D13cAcb8E2B6BA8396DbA35a7365EF6b603cd6',
+        xChainId: KAIA_MAINNET_CHAIN_ID,
+      },
+      SODA: {
+        symbol: 'SODA',
+        name: 'SODAX',
+        decimals: 18,
+        address: '0x772ffe538e45b2cddfb5823041ec26c44815b9ab',
+        xChainId: KAIA_MAINNET_CHAIN_ID,
+      },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0xd077a400968890eacc75cdc901f0356c943e4fdb',
+        xChainId: KAIA_MAINNET_CHAIN_ID,
+      }
+    } as const,
+  } as const satisfies EvmSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
 
 export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
@@ -2167,6 +2224,36 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: SodaTokens.sodaWSTETH.address,
     },
   },
+  [KAIA_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.KAIA.address]: {
+      asset: '0x1950c088bc12398240224808167a166f220c8d0e',
+      decimal: 18,
+      symbol: 'KAIA',
+      name: 'Kaia',
+      vault: SodaTokens.sodaKAIA.address,
+    },
+    [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0x60cc9bd812bec2fb65242e9cd0a3ead4a8bf7488',
+      decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: SodaTokens.bnUSD.address,
+    },
+    [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
+      asset: '0x7c5a1f6d39befef7dd2b2be38dd98d323d42ab8d',
+      decimal: 18,
+      symbol: 'SODA',
+      name: 'SODAX',
+      vault: SodaTokens.sodaSODA.address,
+    },
+    [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x99ecd19afce86766a417956971cdc5e026284454',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
+  },
 } as const;
 
 export const solverConfig = {
@@ -2294,6 +2381,12 @@ export const swapSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
     // spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
+  ] as const satisfies XToken[],
+  [KAIA_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.KAIA,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainId, readonly XToken[]>;
 
@@ -2443,6 +2536,12 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+  ] as const satisfies XToken[],
+  [KAIA_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.KAIA,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainId, readonly XToken[]>;
 
