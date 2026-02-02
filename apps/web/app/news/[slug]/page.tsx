@@ -66,7 +66,6 @@ export async function generateMetadata({
   const canonicalUrl = `https://sodax.com/news/${article.slug}`;
   const publishedTime = (article.publishedAt || article.createdAt).toISOString();
   const modifiedTime = article.updatedAt?.toISOString();
-  const imageUrl = article.image || 'https://sodax.com/og-news.png';
 
   return {
     title,
@@ -88,14 +87,6 @@ export async function generateMetadata({
       title,
       description,
       url: canonicalUrl,
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: article.title,
-        },
-      ],
       type: 'article',
       siteName: 'SODAX',
       publishedTime,
@@ -110,7 +101,6 @@ export async function generateMetadata({
       creator: '@gosodax',
       title,
       description,
-      images: [imageUrl],
     },
     robots: {
       index: true,

@@ -5,10 +5,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
-import {
-  BookOpenIcon,
-  RssSimpleIcon,
-} from '@phosphor-icons/react/dist/ssr';
+import { BookOpenIcon, RssSimpleIcon } from '@phosphor-icons/react/dist/ssr';
 import { DecorativeDivider } from '@/components/ui/decorative-divider';
 import { LatestUpdatesSection } from './latest-updates-section';
 import { formatDate } from './utils';
@@ -66,14 +63,6 @@ export async function generateMetadata(props: {
       url: canonicalUrl,
       type: 'website',
       siteName: 'SODAX',
-      images: [
-        {
-          url: 'https://sodax.com/og-news.png',
-          width: 1200,
-          height: 630,
-          alt: 'SODAX News',
-        },
-      ],
     },
     twitter: {
       card: 'summary_large_image',
@@ -81,7 +70,6 @@ export async function generateMetadata(props: {
       creator: '@gosodax',
       title,
       description,
-      images: ['https://sodax.com/og-news.png'],
     },
     robots: {
       index: true,
@@ -243,8 +231,8 @@ export default async function NewsPage(props: {
             <Link
               href="/news"
               className={`h-10 px-6 py-2 text-xs font-bold rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
-                !category 
-                  ? 'bg-[#ede6e6] text-[#483534]' 
+                !category
+                  ? 'bg-[#ede6e6] text-[#483534]'
                   : 'border-[3px] border-[#ede6e6] text-[#8e7e7d] font-normal hover:bg-[#ede6e6]/50'
               }`}
             >
@@ -307,7 +295,10 @@ export default async function NewsPage(props: {
               {/* Featured Article */}
               <section className="bg-white rounded-[24px] overflow-hidden shadow-[0px_4px_32px_0px_#ede6e6]">
                 <div className="p-2">
-                  <Link href={`/news/${featured.slug}`} className="group flex flex-col md:flex-row gap-2 md:items-center">
+                  <Link
+                    href={`/news/${featured.slug}`}
+                    className="group flex flex-col md:flex-row gap-2 md:items-center"
+                  >
                     {featured.image && (
                       <div className="relative w-full md:w-[288px] h-[200px] md:h-[180px] bg-[#ede6e6] rounded-[16px] overflow-hidden shrink-0">
                         <Image
@@ -321,9 +312,7 @@ export default async function NewsPage(props: {
                       </div>
                     )}
                     <div className={`flex flex-col gap-1 p-2 ${!featured.image ? 'w-full' : 'flex-1'}`}>
-                      <span className="text-[9px] font-medium uppercase text-[#8e7e7d] leading-[1.2]">
-                        Featured
-                      </span>
+                      <span className="text-[9px] font-medium uppercase text-[#8e7e7d] leading-[1.2]">Featured</span>
                       <h2 className="text-[24px] font-bold text-[#483534] leading-[1.1] group-hover:text-[var(--cherry-soda)] transition-colors">
                         {featured.title}
                       </h2>
@@ -341,7 +330,9 @@ export default async function NewsPage(props: {
               {/* Secondary Articles */}
               {secondary.length > 0 && (
                 <section aria-labelledby="top-stories">
-                  <h2 id="top-stories" className="sr-only">Top Stories</h2>
+                  <h2 id="top-stories" className="sr-only">
+                    Top Stories
+                  </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {secondary.map(article => (
                       <Link
@@ -389,9 +380,7 @@ export default async function NewsPage(props: {
               {/* SDK Documentation Card */}
               <div className="bg-[#ede6e6] rounded-[24px] p-8 flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
-                  <span className="text-[9px] font-medium uppercase text-[#8e7e7d] leading-[1.2]">
-                    Developer Docs
-                  </span>
+                  <span className="text-[9px] font-medium uppercase text-[#8e7e7d] leading-[1.2]">Developer Docs</span>
                   <h3 className="font-bold text-[16px] text-[#483534] leading-[1.4]">Build with SODAX SDK</h3>
                   <p className="text-[14px] text-[#8e7e7d] leading-[1.4]">
                     Comprehensive guides, API references, and tutorials to integrate SODAX into your DeFi application.
