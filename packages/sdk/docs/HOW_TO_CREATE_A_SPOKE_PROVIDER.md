@@ -74,7 +74,7 @@ await sodax.initialize(); // Fetches latest configuration from backend API
 
 ## EVM Chains
 
-EVM chains include Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Lightlink, and HyperEVM. For these chains, use the `EvmSpokeProvider` class.
+EVM chains include Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Lightlink, HyperEVM, and Kaia. For these chains, use the `EvmSpokeProvider` class.
 
 **Supported EVM Chains**:
 
@@ -86,6 +86,7 @@ EVM chains include Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Lightlink,
 - Polygon (`POLYGON_MAINNET_CHAIN_ID`)
 - Lightlink (`LIGHTLINK_MAINNET_CHAIN_ID`)
 - HyperEVM (`HYPEREVM_MAINNET_CHAIN_ID`)
+- Kaia (`KAIA_MAINNET_CHAIN_ID`)
 
 ### Constructor Signature
 
