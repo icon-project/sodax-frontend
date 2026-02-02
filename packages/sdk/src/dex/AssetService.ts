@@ -1,4 +1,13 @@
-import type { OptionalRaw, OptionalTimeout, Prettify, RelayOptionalExtraData, SpokeTxHash } from './../shared/types.js';
+import type {
+  EvmSpokeProviderType,
+  OptionalRaw,
+  OptionalTimeout,
+  Prettify,
+  RelayOptionalExtraData,
+  SonicSpokeProviderType,
+  SpokeTxHash,
+  StellarSpokeProviderType,
+} from './../shared/types.js';
 import type { Address, Hex } from 'viem';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
@@ -23,6 +32,11 @@ import {
   StellarSpokeProvider,
   StellarSpokeService,
   SonicSpokeService,
+  isStellarSpokeProviderType,
+  isEvmSpokeProviderType,
+  isSonicSpokeProviderType,
+  HubService,
+  isHubSpokeProvider,
 } from '../index.js';
 import {
   SodaTokens,
@@ -36,7 +50,12 @@ import { erc20Abi, isAddress } from 'viem';
 import invariant from 'tiny-invariant';
 import { getConcentratedLiquidityConfig } from '../shared/constants.js';
 import { stataTokenFactoryAbi } from '../shared/abis/stataTokenFactory.abi.js';
-import { type EvmHubProvider, EvmSpokeProvider, SonicSpokeProvider } from '../shared/entities/Providers.js';
+import {
+  type EvmHubProvider,
+  EvmSpokeProvider,
+  SonicSpokeProvider,
+  type SpokeProviderType,
+} from '../shared/entities/Providers.js';
 import type { GetAddressType, GetSpokeDepositParamsType, HubTxHash } from '../shared/types.js';
 
 // Local type definitions
@@ -50,22 +69,22 @@ export type CreateAssetWithdrawParams = {
   poolToken: Address;
   asset: OriginalAssetAddress; // asset address
   amount: bigint; // amount of asset to withdraw
-  dstProvider?: SpokeProvider;
+  dstProvider?: SpokeProviderType;
 };
 
 export type CreateDepositParams = {
   asset: OriginalAssetAddress; // asset address
   amount: bigint; // amount of token to deposit
   poolToken: Address;
-  dstProvider?: SpokeProvider;
+  dstProvider?: SpokeProviderType;
 };
 
-export type AssetWithdrawParams<S extends SpokeProvider = SpokeProvider> = {
+export type AssetWithdrawParams<S extends SpokeProviderType = SpokeProviderType> = {
   withdrawParams: CreateAssetWithdrawParams;
   spokeProvider: S;
 };
 
-export type DepositParams<S extends SpokeProvider = SpokeProvider> = {
+export type DepositParams<S extends SpokeProviderType = SpokeProviderType> = {
   depositParams: CreateDepositParams;
   spokeProvider: S;
 };
@@ -155,13 +174,13 @@ export class AssetService {
     this.relayerApiEndpoint = relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT;
     this.hubProvider = hubProvider;
     // Use default config if none provided
-    if (!config) {
+    if (config) {
       this.config = {
-        concentratedLiquidityConfig: getConcentratedLiquidityConfig(),
+        concentratedLiquidityConfig: config.concentratedLiquidityConfig,
       };
     } else {
       this.config = {
-        concentratedLiquidityConfig: config.concentratedLiquidityConfig,
+        concentratedLiquidityConfig: getConcentratedLiquidityConfig(),
       };
     }
   }
@@ -204,7 +223,7 @@ export class AssetService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (spokeProvider instanceof StellarSpokeProvider) {
+      if (isStellarSpokeProviderType(spokeProvider)) {
         return {
           ok: true,
           value: await StellarSpokeService.hasSufficientTrustline(params.asset, params.amount, spokeProvider),
@@ -212,59 +231,44 @@ export class AssetService {
       }
 
       // For non-EVM/non-Sonic chains, no approval is required
-      if (!(spokeProvider instanceof EvmSpokeProvider || spokeProvider instanceof SonicSpokeProvider)) {
+      if (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) {
+        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+          ? await HubService.getUserRouter(
+              walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+              this.hubProvider,
+            )
+          : spokeProvider.chainConfig.addresses.assetManager;
+
+        const result = await Erc20Service.isAllowanceValid(
+          params.asset as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+          params.amount,
+          walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+          spender as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+          spokeProvider,
+        );
+
+        if (!result.ok) {
+          return {
+            ok: false,
+            error: {
+              code: 'ALLOWANCE_CHECK_FAILED',
+              data: {
+                error: result.error,
+                payload: params,
+              },
+            },
+          };
+        }
+
         return {
           ok: true,
-          value: true,
-        };
-      }
-
-      invariant(isAddress(params.asset), 'Invalid source asset address for EVM chain');
-
-      let allowanceResult: Result<boolean> = {
-        ok: false,
-        error: new Error('Invalid spoke provider'),
-      };
-      if (spokeProvider instanceof EvmSpokeProvider) {
-        allowanceResult = await Erc20Service.isAllowanceValid(
-          params.asset,
-          params.amount,
-          walletAddress as GetAddressType<EvmSpokeProvider>,
-          spokeProvider.chainConfig.addresses.assetManager as Address,
-          spokeProvider as EvmSpokeProvider | SonicSpokeProvider,
-        );
-      }
-      if (spokeProvider instanceof SonicSpokeProvider) {
-        const userRouter = await SonicSpokeService.getUserRouter(
-          walletAddress as GetAddressType<SonicSpokeProvider>,
-          spokeProvider,
-        );
-
-        allowanceResult = await Erc20Service.isAllowanceValid(
-          params.asset as GetAddressType<SonicSpokeProvider>,
-          params.amount,
-          walletAddress as GetAddressType<SonicSpokeProvider>,
-          userRouter,
-          spokeProvider,
-        );
-      }
-
-      if (!allowanceResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'ALLOWANCE_CHECK_FAILED',
-            data: {
-              error: allowanceResult.error,
-              payload: params,
-            },
-          },
+          value: result.value,
         };
       }
 
       return {
         ok: true,
-        value: allowanceResult.value,
+        value: true,
       };
     } catch (error) {
       return {
@@ -298,7 +302,7 @@ export class AssetService {
    * );
    *
    */
-  public async approve<S extends SpokeProvider, R extends boolean = false>({
+  public async approve<S extends SpokeProviderType, R extends boolean = false>({
     depositParams: params,
     spokeProvider,
     raw,
@@ -311,11 +315,11 @@ export class AssetService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (spokeProvider instanceof StellarSpokeProvider) {
+      if (isStellarSpokeProviderType(spokeProvider)) {
         const result = await StellarSpokeService.requestTrustline(params.asset, params.amount, spokeProvider, raw);
         return {
           ok: true,
-          value: result satisfies TxReturnType<StellarSpokeProvider, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
         };
       }
 
