@@ -1,14 +1,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import {
-  type AggregatedReserveData,
-  hubAssets,
-  SolverIntentStatusCode,
-  type SpokeChainId,
-  type UserReserveData,
-  type XToken,
-} from '@sodax/sdk';
+import { hubAssets, SolverIntentStatusCode, type SpokeChainId } from '@sodax/sdk';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -113,4 +106,36 @@ export function formatCompactNumber(value: string | number | bigint): string {
   if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
 
   return num.toFixed(4);
+}
+
+export function getSpokeTokenAddressByVault(chainId: SpokeChainId, vaultAddress: string): string | undefined {
+  const chainAssets = hubAssets[chainId];
+  if (!chainAssets) return undefined;
+
+  // The KEY in hubAssets is the spoke token address!
+  for (const [spokeTokenAddress, info] of Object.entries(chainAssets)) {
+    if (info.vault.toLowerCase() === vaultAddress.toLowerCase()) {
+      return spokeTokenAddress;
+    }
+  }
+  return undefined;
+}
+
+export function getReadableTxError(error: unknown): string {
+  if (!error || typeof error !== 'object') {
+    return 'Something went wrong. Please try again.';
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
+  const message = (error as any)?.shortMessage || (error as any)?.message || '';
+
+  if (message.includes('gas price below minimum')) {
+    return 'Network gas fee is too low. Please try again in a moment.';
+  }
+
+  if (message.includes('User rejected')) {
+    return 'Transaction was rejected in your wallet.';
+  }
+
+  return 'Transaction failed. Please try again.';
 }

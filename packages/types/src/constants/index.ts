@@ -115,7 +115,7 @@ export const baseChainInfo = {
     chainId: 10,
   },
   [BSC_MAINNET_CHAIN_ID]: {
-    name: 'BSC',
+    name: 'BNB Chain',
     id: BSC_MAINNET_CHAIN_ID,
     type: 'EVM',
     chainId: 56,
@@ -376,6 +376,7 @@ export const hubChainConfig = {
     stakedSoda: '0x4333B324102d00392038ca92537DfbB8CB0DAc68',
     xSoda: '0xADC6561Cc8FC31767B4917CCc97F510D411378d9',
     stakingRouter: '0xE287Cd568543d880e0F0DfaDCE18B44930759367',
+    walletRouter: '0xC67C3e55c665E78b25dc9829B3Aa5af47d914733',
   },
   nativeToken: '0x0000000000000000000000000000000000000000',
   wrappedNativeToken: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
@@ -397,6 +398,13 @@ export const spokeChainConfig = {
         name: 'Sonic',
         decimals: 18,
         address: '0x0000000000000000000000000000000000000000',
+        xChainId: SONIC_MAINNET_CHAIN_ID,
+      },
+      bnUSDd: {
+        symbol: 'bnUSDd',
+        name: 'Balanced Dollar',
+        decimals: 18,
+        address: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38',
         xChainId: SONIC_MAINNET_CHAIN_ID,
       },
       WETH: {
@@ -1380,6 +1388,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'bnUSD',
       vault: SodaTokens.bnUSD.address,
     },
+    [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.bnUSDd.address]: {
+      asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.bnUSDd.address,
+      decimal: 18,
+      symbol: 'bnUSDd',
+      name: 'Balanced Dollar',
+      vault: SodaTokens.bnUSD.address,
+    },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS.address,
       decimal: 18,
@@ -1396,14 +1411,14 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.address,
-      decimal: 6,
-      symbol: 'USDC ',
+      decimal: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC.decimals,
+      symbol: 'USDC',
       name: 'USD Coin',
       vault: SodaTokens.sodaUSDC.address,
     },
     [spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
       asset: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.address,
-      decimal: 6,
+      decimal: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT.decimals,
       symbol: 'USDT',
       name: 'Tether USD',
       vault: SodaTokens.sodaUSDT.address,
@@ -1492,14 +1507,14 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
       asset: '0x3C0a80C6a1110fC80309382b3989eC626c135eE9',
-      decimal: 6,
+      decimal: spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT.decimals,
       symbol: 'USDT',
       name: 'Tether USD',
       vault: SodaTokens.sodaUSDT.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
       asset: '0xdB7BdA65c3a1C51D64dC4444e418684677334109',
-      decimal: 6,
+      decimal: spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDC.decimals,
       symbol: 'USDC',
       name: 'USD Coin',
       vault: SodaTokens.sodaUSDC.address,
@@ -2294,7 +2309,7 @@ const moneyMarketConfig = {
     lendingPool: '0x553434896D39F867761859D0FE7189d2Af70514E',
     uiPoolDataProvider: '0xC04d746C38f1E51C8b3A3E2730250bbAC2F271bf',
     poolAddressesProvider: '0x036aDe0aBAA4c82445Cb7597f2d6d6130C118c7b',
-    bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38',
+    bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38', // debt token
     bnUSDAToken: '0xa2cDA49735e42f0905496E40a66B3C5475Ed69dF',
     bnUSDVault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
   } satisfies MoneyMarketConfig,
@@ -2418,6 +2433,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const satisfies XToken[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2453,3 +2469,10 @@ export const defaultSodaxConfig = {
 } satisfies GetAllConfigApiResponse;
 
 export const supportedSpokeChains: SpokeChainId[] = Object.keys(spokeChainConfig) as SpokeChainId[];
+
+export const defaultSharedConfig = {
+  [STELLAR_MAINNET_CHAIN_ID]: {
+    horizonRpcUrl: 'https://horizon.stellar.org',
+    sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
+  },
+} as const;

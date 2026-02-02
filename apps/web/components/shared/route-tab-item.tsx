@@ -4,6 +4,7 @@ import type React from 'react';
 import Link from 'next/link';
 import TabIcon, { type TabIconType } from './tab-icon';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrencyCompact } from '@/lib/utils';
 
 interface RouteTabItemProps {
   href: string;
@@ -15,6 +16,7 @@ interface RouteTabItemProps {
   setRef?: (el: HTMLAnchorElement | null) => void;
   className?: string;
   enabled: boolean;
+  totalDepositedUsdValue?: number;
 }
 
 const RouteTabItem: React.FC<RouteTabItemProps> = ({
@@ -27,6 +29,7 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
   setRef,
   className = '',
   enabled,
+  totalDepositedUsdValue,
 }) => {
   const getTextClassName = (): string => {
     if (isMobile) {
@@ -65,8 +68,18 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
             (SOON)
           </span>
         )}
+        {isMobile && enabled && totalDepositedUsdValue !== undefined && Math.floor(totalDepositedUsdValue) > 0 && (
+          <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px] ml-2">
+            {formatCurrencyCompact(Math.floor(totalDepositedUsdValue))}
+          </Badge>
+        )}
       </div>
       {!isMobile && !enabled && <Badge variant="desktop">SOON</Badge>}
+      {!isMobile && enabled && totalDepositedUsdValue !== undefined && Math.floor(totalDepositedUsdValue) > 0 && (
+        <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px]">
+          {formatCurrencyCompact(Math.floor(totalDepositedUsdValue))}
+        </Badge>
+      )}
     </div>
   );
 

@@ -48,6 +48,8 @@ interface ReserveMetricsResult {
   totalBorrow: string;
   totalLiquidityUSD: string;
   totalBorrowsUSD: string;
+  supplyBalanceUSD: string;
+  liquidationThreshold: string;
 }
 
 export function useReserveMetrics({
@@ -56,7 +58,29 @@ export function useReserveMetrics({
   userReserves,
 }: UseReserveMetricsProps): ReserveMetricsResult {
   try {
-    const vault = hubAssets[token.xChainId][token.address].vault;
+    const chainAssets = hubAssets[token.xChainId];
+    const hubAsset = chainAssets?.[token.address];
+
+    // This token does NOT exist on this chain’s hub
+    // (normal in cross-chain borrow lists)
+    if (!hubAsset) {
+      return {
+        userReserve: undefined,
+        formattedReserve: undefined,
+        supplyAPR: '-',
+        borrowAPR: '-',
+        supplyAPY: '-',
+        borrowAPY: '-',
+        totalSupply: '-',
+        totalBorrow: '-',
+        totalLiquidityUSD: '-',
+        totalBorrowsUSD: '-',
+        supplyBalanceUSD: '-',
+        liquidationThreshold: '-',
+      };
+    }
+
+    const vault = hubAsset.vault;
     const userReserve = userReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
     const formattedReserve = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
     // Default metrics
@@ -68,6 +92,8 @@ export function useReserveMetrics({
     let totalBorrow = '-';
     let totalLiquidityUSD = '-';
     let totalBorrowsUSD = '-';
+    let supplyBalanceUSD = '-';
+    let liquidationThreshold = '-';
 
     if (formattedReserve) {
       const liquidityRate = Number(formattedReserve.liquidityRate) / 1e27;
@@ -88,6 +114,26 @@ export function useReserveMetrics({
         totalLiquidityUSD = `$${Number(formattedReserve.totalLiquidityUSD ?? 0).toFixed(2)}`;
         totalBorrowsUSD = `$${Number(formattedReserve.totalDebtUSD ?? 0).toFixed(2)}`;
       }
+
+      const ltValue = Number(formattedReserve.formattedReserveLiquidationThreshold);
+      if (Number.isFinite(ltValue) && ltValue > 0) {
+        liquidationThreshold = `${(ltValue * 100).toFixed(2)}%`;
+      }
+
+      if (userReserve) {
+        const decimals = Number(formattedReserve.decimals ?? 18);
+        const priceInUsd = Number(formattedReserve.priceInUSD);
+        // The stored supplied balance does not grow by itself.
+        // We apply the current liquidity index to get the real,interest-adjusted amount the user has supplied.
+        const liquidityIndex = BigInt(formattedReserve.liquidityIndex);
+        const scaledBalance = BigInt(userReserve.scaledATokenBalance);
+        const balanceRaw = (scaledBalance * liquidityIndex) / BigInt(1e27);
+        const suppliedTokens = Number(formatUnits(balanceRaw, decimals));
+        const suppliedUsd = suppliedTokens * priceInUsd;
+        if (Number.isFinite(suppliedUsd) && suppliedUsd > 0) {
+          supplyBalanceUSD = `$${suppliedUsd.toFixed(3)}`;
+        }
+      }
     }
 
     return {
@@ -101,6 +147,8 @@ export function useReserveMetrics({
       totalBorrow,
       totalLiquidityUSD,
       totalBorrowsUSD,
+      supplyBalanceUSD,
+      liquidationThreshold,
     };
   } catch (error) {
     console.error(`Error in useReserveMetrics for ${token.symbol} (${token.address}):`, error);
@@ -115,6 +163,8 @@ export function useReserveMetrics({
       totalBorrow: '-',
       totalLiquidityUSD: '-',
       totalBorrowsUSD: '-',
+      supplyBalanceUSD: '-',
+      liquidationThreshold: '-',
     };
   }
 }

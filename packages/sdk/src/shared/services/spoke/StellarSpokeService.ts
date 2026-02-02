@@ -4,22 +4,24 @@ import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokePr
 import {
   CustomStellarAccount,
   type DepositSimulationParams,
-  type PromiseStellarTxReturnType,
   type Result,
   STELLAR_DEFAULT_TX_TIMEOUT_SECONDS,
+  StellarBaseSpokeProvider,
   type StellarGasEstimate,
-  type StellarReturnType,
+  type StellarSpokeProviderType,
+  type TxReturnType,
   encodeAddress,
+  isStellarRawSpokeProvider,
   parseToStroops,
   sleep,
 } from '../../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import {
   FeeBumpTransaction,
+  Horizon,
   type Transaction,
   TransactionBuilder,
   rpc,
-  type Horizon,
   Operation,
   Asset,
   BASE_FEE,
@@ -28,6 +30,7 @@ import {
   STELLAR_MAINNET_CHAIN_ID,
   getIntentRelayChainId,
   spokeChainConfig,
+  type HttpUrl,
   type HubAddress,
   type StellarRawTransaction,
 } from '@sodax/types';
@@ -60,7 +63,7 @@ export class StellarSpokeService {
   public static async hasSufficientTrustline(
     token: string,
     amount: bigint,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProviderType,
   ): Promise<boolean> {
     // native token and legacy bnUSD do not require trustline
     if (
@@ -105,6 +108,61 @@ export class StellarSpokeService {
   }
 
   /**
+   * Check if the user has sufficent trustline established for the token.
+   * @param token - The token address to check the trustline for.
+   * @param amount - The amount of tokens to check the trustline for.
+   * @param spokeProvider - The Stellar spoke provider.
+   * @returns True if the user has sufficent trustline established for the token, false otherwise.
+   */
+  public static async walletHasSufficientTrustline(
+    token: string,
+    amount: bigint,
+    walletAddress: string,
+    horizonRpcUrl: HttpUrl,
+  ): Promise<boolean> {
+    const stellarChainConfig = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID];
+    // native token and legacy bnUSD do not require trustline
+    if (
+      token.toLowerCase() === stellarChainConfig.nativeToken.toLowerCase() ||
+      token.toLowerCase() === stellarChainConfig.supportedTokens.legacybnUSD.address.toLowerCase()
+    ) {
+      return true;
+    }
+
+    const trustlineConfig = stellarChainConfig.trustlineConfigs.find(
+      config => config.contractId.toLowerCase() === token.toLowerCase(),
+    );
+
+    if (!trustlineConfig) {
+      throw new Error(`Trustline config not found for token: ${token}`);
+    }
+
+    const server = new Horizon.Server(horizonRpcUrl, { allowHttp: true });
+    const { balances } = await server.accounts().accountId(walletAddress).call();
+
+    const tokenBalance = balances.find(
+      balance =>
+        'limit' in balance &&
+        'balance' in balance &&
+        'asset_code' in balance &&
+        trustlineConfig.assetCode.toLowerCase() === balance.asset_code?.toLowerCase() &&
+        'asset_issuer' in balance &&
+        trustlineConfig.assetIssuer.toLowerCase() === balance.asset_issuer?.toLowerCase(),
+    ) as Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum4' | 'credit_alphanum12'> | undefined;
+
+    if (!tokenBalance) {
+      console.error(`No token balances found for token: ${token}`);
+      return false;
+    }
+
+    const limit = parseToStroops(tokenBalance.limit);
+    const balance = parseToStroops(tokenBalance.balance);
+    const availableTrustAmount: bigint = limit - balance;
+
+    return availableTrustAmount >= amount;
+  }
+
+  /**
    * Request a trustline for a given token and amount.
    * @param token - The token address to request the trustline for.
    * @param amount - The amount of tokens to request the trustline for.
@@ -112,12 +170,12 @@ export class StellarSpokeService {
    * @param raw - Whether to return the raw transaction data.
    * @returns The transaction result.
    */
-  public static async requestTrustline<R extends boolean = false>(
+  public static async requestTrustline<S extends StellarSpokeProviderType, R extends boolean = false>(
     token: string,
     amount: bigint,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     try {
       const asset = spokeProvider.chainConfig.trustlineConfigs.find(
         t => t.contractId.toLowerCase() === token.toLowerCase(),
@@ -147,7 +205,7 @@ export class StellarSpokeService {
         .setTimeout(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS)
         .build();
 
-      if (raw) {
+      if (raw || isStellarRawSpokeProvider(spokeProvider)) {
         const transactionXdr = transaction.toXDR();
 
         return {
@@ -155,12 +213,12 @@ export class StellarSpokeService {
           to: spokeProvider.chainConfig.addresses.assetManager,
           value: amount,
           data: transactionXdr,
-        } satisfies StellarReturnType<true> as StellarReturnType<R>;
+        } satisfies TxReturnType<StellarSpokeProviderType, true> as TxReturnType<S, R>;
       }
 
       const hash = await spokeProvider.signAndSendTransaction(transaction);
 
-      return `${hash}` as StellarReturnType<R>;
+      return `${hash}` satisfies TxReturnType<StellarSpokeProviderType, false> as TxReturnType<S, R>;
     } catch (error) {
       console.error('Error during requestTrustline:', error);
       throw error;
@@ -175,7 +233,7 @@ export class StellarSpokeService {
    */
   public static async estimateGas(
     rawTx: StellarRawTransaction,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProviderType,
   ): Promise<StellarGasEstimate> {
     const network = await spokeProvider.sorobanServer.getNetwork();
     let tx: Transaction | FeeBumpTransaction = TransactionBuilder.fromXDR(rawTx.data, network.passphrase);
@@ -193,12 +251,12 @@ export class StellarSpokeService {
     return BigInt(simulationForFee.minResourceFee);
   }
 
-  public static async deposit<R extends boolean = false>(
+  public static async deposit<S extends StellarSpokeProviderType, R extends boolean = false>(
     params: StellarSpokeDepositParams,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: S,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<S, R>> {
     const userWallet: Address =
       params.to ??
       (await EvmWalletAbstraction.getUserHubWalletAddress(
@@ -225,20 +283,20 @@ export class StellarSpokeService {
    * @param spokeProvider - The spoke provider.
    * @returns The balance of the token.
    */
-  public static async getDeposit(token: string, spokeProvider: StellarSpokeProvider): Promise<bigint> {
-    return BigInt(await spokeProvider.getBalance(token));
+  public static async getDeposit(token: string, spokeProvider: StellarSpokeProviderType): Promise<bigint> {
+    return BigInt(await StellarBaseSpokeProvider.getBalance(token, spokeProvider));
   }
 
   /**
    * Generate simulation parameters for deposit from StellarSpokeDepositParams.
    * @param {StellarSpokeDepositParams} params - The deposit parameters.
-   * @param {StellarSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {StellarSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<DepositSimulationParams>} The simulation parameters.
    */
   public static async getSimulateDepositParams(
     params: StellarSpokeDepositParams,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProviderType,
     hubProvider: EvmHubProvider,
   ): Promise<DepositSimulationParams> {
     const to =
@@ -275,39 +333,41 @@ export class StellarSpokeService {
   public static async callWallet<R extends boolean = false>(
     from: HubAddress,
     payload: Hex,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: StellarSpokeProviderType,
     hubProvider: EvmHubProvider,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
+  ): Promise<TxReturnType<StellarSpokeProviderType, R>> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
     return StellarSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
 
-  private static async transfer<R extends boolean = false>(
+  private static async transfer<S extends StellarSpokeProviderType, R extends boolean = false>(
     { token, recipient, amount, data = '0x' }: StellarTransferToHubParams,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
-    return await spokeProvider.deposit(
+  ): Promise<TxReturnType<S, R>> {
+    return await StellarBaseSpokeProvider.deposit(
       token,
       amount.toString(),
       fromHex(recipient, 'bytes'),
       fromHex(data, 'bytes'),
+      spokeProvider,
       raw,
     );
   }
 
-  private static async call<R extends boolean = false>(
+  private static async call<S extends StellarSpokeProviderType, R extends boolean = false>(
     dstChainId: bigint,
     dstAddress: HubAddress,
     payload: Hex,
-    spokeProvider: StellarSpokeProvider,
+    spokeProvider: S,
     raw?: R,
-  ): PromiseStellarTxReturnType<R> {
-    return await spokeProvider.sendMessage(
+  ): Promise<TxReturnType<S, R>> {
+    return await StellarBaseSpokeProvider.sendMessage(
       dstChainId.toString(),
       fromHex(dstAddress, 'bytes'),
       fromHex(payload, 'bytes'),
+      spokeProvider,
       raw,
     );
   }

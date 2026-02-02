@@ -140,60 +140,147 @@ function App() {
 
 ```typescript
 // Connect Wallet Operations
-import { useXConnectors, useXConnect, useXAccount } from '@sodax/wallet-sdk-react';
-const evmConnectors = useXConnectors('EVM');
-const { mutateAsync: connect, isPending } = useXConnect();
-const account = useXAccount('EVM');
-
-const handleConnect = () => {
-  connect(evmConnectors[0]);
-};
-
-return (
-  <div>
-    <button onClick={handleConnect}>Connect EVM Wallet</button>
-    <div>Connected wallet: {account.address}</div>
-  </div>
-);
-
 // Money Market Operations
-import { useSupply, useWithdraw, useBorrow, useRepay, useUserReservesData } from '@sodax/dapp-kit';
+import { useSupply, useWithdraw, useBorrow, useRepay, useUserReservesData, useMMAllowance, useMMApprove } from '@sodax/dapp-kit';
+import { parseUnits } from 'viem';
+import { useMemo, useState } from 'react';
 
 function MoneyMarketComponent() {
+  const [amount, setAmount] = useState<string>('');
+  const spokeProvider = useSpokeProvider(chainId, walletProvider);
+
   // Supply tokens
-  const { mutateAsync: supply, isPending: isSupplying } = useSupply(token);
-  const handleSupply = async (amount: string) => {
-    await supply(amount);
+  const supplyParams = useMemo(() => {
+    if (!amount) return undefined;
+    return {
+      token: token.address,
+      amount: parseUnits(amount, token.decimals),
+      action: 'supply' as const,
+    };
+  }, [token.address, token.decimals, amount]);
+
+  const { data: hasSupplyAllowed, isLoading: isSupplyAllowanceLoading } = useMMAllowance(supplyParams, spokeProvider);
+  const { mutateAsync: approveSupply, isPending: isApprovingSupply, error: approveSupplyError } = useMMApprove();
+  const { mutateAsync: supply, isPending: isSupplying, error: supplyError } = useSupply();
+
+  const handleApproveSupply = async () => {
+    if (!spokeProvider || !supplyParams) return;
+    try {
+      await approveSupply({ params: supplyParams, spokeProvider });
+    } catch (err) {
+      console.error('Error approving supply:', err);
+    }
+  };
+
+  const handleSupply = async () => {
+    if (!spokeProvider || !supplyParams) return;
+    try {
+      await supply({ params: supplyParams, spokeProvider });
+    } catch (err) {
+      console.error('Error supplying:', err);
+    }
   };
 
   // Withdraw tokens
-  const { mutateAsync: withdraw, isPending: isWithdrawing } = useWithdraw(token, chainId);
-  const handleWithdraw = async (amount: string) => {
-    await withdraw(amount);
+  const withdrawParams = useMemo(() => {
+    if (!amount) return undefined;
+    return {
+      token: token.address,
+      amount: parseUnits(amount, 18), // vault token on hub chain decimals is 18
+      action: 'withdraw' as const,
+    };
+  }, [token.address, amount]);
+
+  const { data: hasWithdrawAllowed, isLoading: isWithdrawAllowanceLoading } = useMMAllowance(withdrawParams, spokeProvider);
+const { data: hasWithdrawAllowed, isLoading: isWithdrawAllowanceLoading } = useMMAllowance({ params: withdrawParams, spokeProvider });
+
+  const { mutateAsync: approveWithdraw, isPending: isApprovingWithdraw, error: approveWithdrawError } = useMMApprove();
+  const { mutateAsync: withdraw, isPending: isWithdrawing, error: withdrawError } = useWithdraw();
+
+  const handleApproveWithdraw = async () => {
+    if (!spokeProvider || !withdrawParams) return;
+    try {
+      await approveWithdraw({ params: withdrawParams, spokeProvider });
+    } catch (err) {
+      console.error('Error approving withdraw:', err);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!spokeProvider || !withdrawParams) return;
+    try {
+      await withdraw({ params: withdrawParams, spokeProvider });
+    } catch (err) {
+      console.error('Error withdrawing:', err);
+    }
   };
 
   // Borrow tokens
-  const { mutateAsync: borrow, isPending: isBorrowing } = useBorrow(token, chainId);
-  const handleBorrow = async (amount: string) => {
-    await borrow(amount);
+  const borrowParams = useMemo(() => {
+    if (!amount) return undefined;
+    return {
+      token: token.address,
+      amount: parseUnits(amount, 18),
+      action: 'borrow' as const,
+    };
+  }, [token.address, amount]);
+
+  const { data: hasBorrowAllowed, isLoading: isBorrowAllowanceLoading } = useMMAllowance({ params: borrowParams, spokeProvider });
+  const { mutateAsync: approveBorrow, isPending: isApprovingBorrow, error: approveBorrowError } = useMMApprove();
+  const { mutateAsync: borrow, isPending: isBorrowing, error: borrowError } = useBorrow();
+
+  const handleApproveBorrow = async () => {
+    if (!spokeProvider || !borrowParams) return;
+    try {
+      await approveBorrow({ params: borrowParams, spokeProvider });
+    } catch (err) {
+      console.error('Error approving borrow:', err);
+    }
+  };
+
+  const handleBorrow = async () => {
+    if (!spokeProvider || !borrowParams) return;
+    try {
+      await borrow({ params: borrowParams, spokeProvider });
+    } catch (err) {
+      console.error('Error borrowing:', err);
+    }
+  };
+
+  // Repay tokens
+  const repayParams = useMemo(() => {
+    if (!amount) return undefined;
+    return {
+      token: token.address,
+      amount: parseUnits(amount, token.decimals),
+      action: 'repay' as const,
+    };
+  }, [token.address, token.decimals, amount]);
+
+  const { data: hasRepayAllowed, isLoading: isRepayAllowanceLoading } = useMMAllowance({ params: repayParams, spokeProvider });
+  const { mutateAsync: approveRepay, isPending: isApprovingRepay, error: approveRepayError } = useMMApprove();
+  const { mutateAsync: repay, isPending: isRepaying, error: repayError } = useRepay();
+
+  const handleApproveRepay = async () => {
+    if (!spokeProvider || !repayParams) return;
+    try {
+      await approveRepay({ params: repayParams, spokeProvider });
+    } catch (err) {
+      console.error('Error approving repay:', err);
+    }
+  };
+
+  const handleRepay = async () => {
+    if (!spokeProvider || !repayParams) return;
+    try {
+      await repay({ params: repayParams, spokeProvider });
+    } catch (err) {
+      console.error('Error repaying:', err);
+    }
   };
 
   // Get user's supplied assets
   const userReserves = useUserReservesData(chainId);
-}
-
-// Token Management
-import { useMMAllowance, useApprove } from '@sodax/dapp-kit';
-
-function TokenManagementComponent() {
-  // Check token allowance
-  const { data: hasAllowed } = useMMAllowance(token, amount);
-  
-  // Approve token spending
-  const { approve, isLoading: isApproving } = useApprove(token);
-  const handleApprove = async (amount: string) => {
-    await approve(amount);
-  };
 }
 
 // Wallet Address Derivation
@@ -321,6 +408,10 @@ function BridgeComponent() {
 #### Swap Hooks
 - [`useQuote()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useQuote.ts) - Get quote for an intent order
 - [`useSwap()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useSwap.ts) - Create and submit an intent order
+- [`useCreateLimitOrder()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useCreateLimitOrder.ts) - Create a limit order intent (no deadline, must be cancelled manually)
+- **Note**: Limit orders use `useSwapAllowance()` for checking token allowance (same as swaps)
+- **Note**: Limit orders use `useSwapApprove()` for approving token spending (same as swaps)
+- **Note**: Limit orders use `useCancelSwap()` for cancelling (same as swaps)
 - [`useStatus()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useStatus.ts) - Get status of an intent order
 - [`useSwapAllowance()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useSwapAllowance.ts) - Check token allowance for an intent order
 - [`useSwapApprove()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/swap/useSwapApprove.ts) - Approve token spending

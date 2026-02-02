@@ -11,7 +11,7 @@ import { shortenAddress } from '@/lib/utils';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useSwapApprove, useSpokeProvider, useSwap, useStatus } from '@sodax/dapp-kit';
-import { type CreateIntentParams, type IntentState, SolverIntentStatusCode } from '@sodax/sdk';
+import { type CreateIntentParams, type IntentState, SolverIntentStatusCode, waitUntilIntentExecuted } from '@sodax/sdk';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useSwapActions, useSwapState } from '../_stores/swap-store-provider';
 import { formatUnits, parseUnits } from 'viem';
@@ -21,6 +21,10 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useSodaxContext } from '@sodax/dapp-kit';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getIntentRelayChainId, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { getSwapTiming } from '@/lib/swap-timing';
+import { trackSwapCompleted } from '@/lib/analytics';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -46,16 +50,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const [approvalError, setApprovalError] = useState<string | null>(null);
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
-  const {
-    inputToken,
-    outputToken,
-    inputAmount,
-    isSwapAndSend,
-    customDestinationAddress,
-    dstTxHash,
-    swapError,
-    swapStatus,
-  } = useSwapState();
+  const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, dstTxHash, swapError } =
+    useSwapState();
   const { setInputAmount, setDstTxHash, setSwapError, setSwapStatus, setAllowanceConfirmed, resetSwapExecutionState } =
     useSwapActions();
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
@@ -67,6 +63,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceSpokeProvider);
   const [filledIntent, setFilledIntent] = useState<IntentState | null>(null);
   const { sodax } = useSodaxContext();
+  const [targetChainSolved, setTargetChainSolved] = useState(false);
+  const { data: inputTokenPrice } = useTokenPrice(inputToken);
   const intentOrderPayload = useMemo(() => {
     if (!inputToken || !outputToken || !minOutputAmount || !inputAmount || !sourceAddress || !finalDestinationAddress) {
       return undefined;
@@ -91,11 +89,54 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceSpokeProvider);
   const { data: status } = useStatus((dstTxHash || '0x') as `0x${string}`);
 
+  const swapTiming = getSwapTiming(inputToken.xChainId, outputToken.xChainId);
+
   useEffect(() => {
     const getFilledIntent = async () => {
       if (status?.ok) {
-        const filledIntent = await sodax.swap.getFilledIntent(status.value.fill_tx_hash as `0x${string}`);
+        const filledIntent = await sodax.swaps.getFilledIntent(status.value.fill_tx_hash as `0x${string}`);
         setFilledIntent(filledIntent);
+        if (outputToken.xChainId === SONIC_MAINNET_CHAIN_ID) {
+          setTargetChainSolved(true);
+          setDstTxHash('');
+
+          // Track successful swap completion
+          if (inputAmount && inputTokenPrice) {
+            const inputAmountUsd = Number.parseFloat(inputAmount) * inputTokenPrice;
+            trackSwapCompleted({
+              input_token_symbol: inputToken.symbol,
+              output_token_symbol: outputToken.symbol,
+              input_amount_usd: inputAmountUsd,
+              source_chain: chainIdToChainName(inputToken.xChainId),
+              destination_chain: chainIdToChainName(outputToken.xChainId),
+              transaction_hash: status.value.fill_tx_hash || dstTxHash || '',
+            });
+          }
+        } else {
+          const packet = await waitUntilIntentExecuted({
+            intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
+            spokeTxHash: status.value.fill_tx_hash as `0x${string}`,
+            timeout: 300000, // 5 minutes
+            apiUrl: sodax.relayerApiEndpoint,
+          });
+          if (packet.ok) {
+            setTargetChainSolved(true);
+            setDstTxHash('');
+
+            // Track successful swap completion
+            if (inputAmount && inputTokenPrice) {
+              const inputAmountUsd = Number.parseFloat(inputAmount) * inputTokenPrice;
+              trackSwapCompleted({
+                input_token_symbol: inputToken.symbol,
+                output_token_symbol: outputToken.symbol,
+                input_amount_usd: inputAmountUsd,
+                source_chain: chainIdToChainName(inputToken.xChainId),
+                destination_chain: chainIdToChainName(outputToken.xChainId),
+                transaction_hash: status.value.fill_tx_hash || '',
+              });
+            }
+          }
+        }
       }
     };
 
@@ -104,14 +145,26 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       setSwapStatus(statusCode);
       if (statusCode === SolverIntentStatusCode.SOLVED) {
         getFilledIntent();
-        setDstTxHash('');
       }
 
       if (statusCode === SolverIntentStatusCode.FAILED) {
         setSwapError({ title: 'Swap failed', message: 'Please try again.' });
       }
     }
-  }, [dstTxHash, status, setSwapStatus, setSwapError, setDstTxHash, sodax]);
+  }, [
+    dstTxHash,
+    status,
+    setSwapStatus,
+    setSwapError,
+    setDstTxHash,
+    sodax,
+    outputToken.xChainId,
+    outputToken.symbol,
+    inputToken.symbol,
+    inputToken.xChainId,
+    inputAmount,
+    inputTokenPrice,
+  ]);
 
   const displayedOutputValue = useMemo(() => {
     if (filledIntent) {
@@ -156,7 +209,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       return;
     }
 
-    if (swapStatus === SolverIntentStatusCode.SOLVED) {
+    if (targetChainSolved) {
       setInputAmount('');
     }
 
@@ -164,6 +217,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     setApprovalError(null);
     resetSwapExecutionState();
     setFilledIntent(null);
+    setTargetChainSolved(false);
     onClose?.();
   };
 
@@ -198,7 +252,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
           <div className={`flex w-full justify-center ${swapError ? 'opacity-40' : ''}`}>
             <div className="w-60 pb-6 inline-flex justify-between items-center">
               <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
-                <div className={`${swapStatus === SolverIntentStatusCode.SOLVED ? 'grayscale opacity-50' : ''}`}>
+                <div className={`${targetChainSolved ? 'grayscale opacity-50' : ''}`}>
                   <CurrencyLogo currency={inputToken} />
                 </div>
                 <div className="flex flex-col justify-start items-center gap-2">
@@ -225,19 +279,19 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
                   </div>
                 </div>
               </div>
-              <div className="w-16 h-9 inline-flex flex-col justify-between items-center">
-                {swapStatus === SolverIntentStatusCode.SOLVED ? (
+              <div className="w-16 inline-flex flex-col justify-center items-center gap-1">
+                {targetChainSolved ? (
                   <>
                     <ChevronsRight className="w-4 h-4 text-clay-light" />
-                    <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
+                    <div className="text-center text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-tight">
                       Done
                     </div>
                   </>
                 ) : (
                   <>
-                    <Timer className="w-4 h-4 text-clay" />
-                    <div className="justify-start text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
-                      ~30s
+                    <Timer className={swapTiming.iconClass} />
+                    <div className="text-center text-(length:--body-small) font-medium font-['InterRegular'] leading-tight">
+                      <span className={swapTiming.textClass}>{swapTiming.shortLabel}</span>
                     </div>
                   </>
                 )}
@@ -288,9 +342,10 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             onApprove={handleApprove}
             onSwapConfirm={handleSwapConfirm}
             isApproving={isApproving}
+            targetChainSolved={targetChainSolved}
           />
 
-          {swapStatus === SolverIntentStatusCode.SOLVED ? (
+          {targetChainSolved ? (
             <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
               Enjoying SODAX?
               <Link

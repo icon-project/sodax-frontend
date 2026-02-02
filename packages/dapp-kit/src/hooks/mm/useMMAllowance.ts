@@ -1,8 +1,12 @@
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { XToken } from '@sodax/types';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
-import { parseUnits } from 'viem';
-import type { MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
+import type { MoneyMarketParams, SpokeProvider } from '@sodax/sdk';
+
+export type UseMMAllowanceParams = {
+  params: MoneyMarketParams | undefined;
+  spokeProvider: SpokeProvider | undefined;
+  queryOptions?: UseQueryOptions<boolean, Error>;
+};
 
 /**
  * Hook for checking token allowance for money market operations.
@@ -25,32 +29,37 @@ import type { MoneyMarketAction, SpokeProvider } from '@sodax/sdk';
  * const { data: hasAllowed, isLoading } = useMMAllowance(token, "100", "repay", provider);
  * ```
  */
-export function useMMAllowance(
-  token: XToken,
-  amount: string,
-  action: MoneyMarketAction,
-  spokeProvider: SpokeProvider | undefined,
-): UseQueryResult<boolean, Error> {
+export function useMMAllowance({
+  params,
+  spokeProvider,
+  queryOptions,
+}: UseMMAllowanceParams): UseQueryResult<boolean, Error> {
   const { sodax } = useSodaxContext();
 
+  const defaultQueryOptions = {
+    queryKey: ['mm', 'allowance', params?.token, params?.action],
+    enabled: !!spokeProvider,
+    refetchInterval: 5000,
+  };
+
+  queryOptions = {
+    ...defaultQueryOptions,
+    ...queryOptions, // override default query options if provided
+  }
+
   return useQuery({
-    queryKey: ['allowance', token.address, amount, action],
+    ...queryOptions,
     queryFn: async () => {
       if (!spokeProvider) throw new Error('Spoke provider is required');
-      const actionBasedDecimals = action === 'withdraw' || action === 'borrow' ? 18 : token.decimals; // withdraw and borrow actions are in aToken decimals
-      const allowance = await sodax.moneyMarket.isAllowanceValid(
-        {
-          token: token.address,
-          amount: parseUnits(amount, actionBasedDecimals),
-          action,
-        },
-        spokeProvider,
-      );
-      if (allowance.ok) {
-        return allowance.value;
+      if (!params) throw new Error('Params are required');
+
+      const allowance = await sodax.moneyMarket.isAllowanceValid(params, spokeProvider);
+
+      if (!allowance.ok) {
+        throw allowance.error;
       }
-      return false;
+
+      return allowance.value;
     },
-    enabled: !!spokeProvider,
   });
 }

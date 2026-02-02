@@ -2,7 +2,7 @@
 
 Swaps part of the SDK provides abstractions to assist you with interacting with the cross-chain Intent Smart Contracts, Solver and Relay API.
 
-All swap operations are accessed through the `swap` property of a `Sodax` instance:
+All swap operations are accessed through the `swaps` property of a `Sodax` instance:
 
 ```typescript
 import { Sodax, SpokeChainId, Token } from "@sodax/sdk";
@@ -48,31 +48,39 @@ Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-fronten
 All swap methods are accessible through `sodax.swaps`:
 
 ### Quote & Fee Methods
+
 - `getQuote(request)` - Request a quote from the solver API
 - `getPartnerFee(inputAmount)` - Calculate partner fee for a given input amount
 - `getSolverFee(inputAmount)` - Calculate solver fee (0.1%) for a given input amount
 - `getSwapDeadline(offset?)` - Get deadline timestamp for a swap
 
 ### Intent Creation & Execution
+
 - `swap(params)` - Complete swap operation (recommended, handles all steps automatically)
+- `createLimitOrder(params)` - Create a limit order intent (no deadline, must be cancelled manually)
 - `createAndSubmitIntent(params)` - Create and submit intent (alternative to swap)
 - `createIntent(params)` - Create intent only (for custom handling)
 - `submitIntent(payload)` - Submit intent to relay API (for custom handling)
 - `postExecution(request)` - Post execution to Solver API(for custom handling)
 
 ### Intent Management
+
 - `getIntent(txHash)` - Retrieve intent from hub chain transaction hash
-- `getFilledIntent(txHash)` - Get the filled intent state from the hub chain transaction hash by parsing the `IntentFilled` event.  
+- `getFilledIntent(txHash)` - Get the filled intent state from the hub chain transaction hash by parsing the `IntentFilled` event.
   Useful for obtaining the final exact output amount and state details after an intent has been executed.
+- `getSolvedIntentPacket(params)` - Get the intent delivery info about solved intent from the Relayer API.
 - `getIntentHash(intent)` - Get keccak256 hash of an intent
 - `getStatus(request)` - Get intent status from Solver API
 - `cancelIntent(intent, spokeProvider, raw?)` - Cancel an active intent
+- `cancelLimitOrder(intent, spokeProvider, raw?)` - Cancel a limit order intent (wrapper around cancelIntent)
 
 ### Token Approval
+
 - `isAllowanceValid(params)` - Check if token approval is needed
 - `approve(params, raw?)` - Approve tokens or request trustline (Stellar)
 
 ### Utility Methods
+
 - `getSupportedSwapTokensByChainId(chainId)` - Get supported swap tokens for a chain
 - `getSupportedSwapTokens()` - Get all supported swap tokens per chain
 - `SwapService.estimateGas(rawTx, spokeProvider)` - Estimate gas for raw transactions (static method)
@@ -87,6 +95,7 @@ Requesting a quote should require you to just consume user input amount and conv
 All the required configurations (chain id [nid], token decimals and address) should be loaded as described in [Using SDK Config and Constants](#using-sdk-config-and-constants).
 
 Quoting API supports different types of quotes:
+
 - "exact_input": "amount" parameter is the amount the user want's to swap (e.g. the user is asking for a quote to swap 1 WETH to xxx SUI)
 - "exact_output": "amount" parameter is the final amount the user wants. (e.g. the user want's to swap WETH for SUI, but is asking how many WETH is going to cost to have 1 SUI)
 
@@ -148,11 +157,16 @@ const createIntentParams = {
 All solver functions use object parameters for better readability and extensibility. The common parameter structure includes:
 
 - **`intentParams`**: The `CreateIntentParams` object containing swap details
-- **`spokeProvider`**: The spoke provider instance for the source chain
+- **`spokeProvider`**: The spoke provider instance for the source chain. Can be a regular `SpokeProvider` (e.g., `EvmSpokeProvider`) or a raw spoke provider (e.g., `EvmRawSpokeProvider`) when you only have a wallet address. See [HOW_TO_CREATE_A_SPOKE_PROVIDER.md](./HOW_TO_CREATE_A_SPOKE_PROVIDER.md) for details on raw spoke providers.
 - **`fee`**: (Optional) Partner fee configuration. If not provided, uses the default partner fee from config. **Note**: Fees are now deducted from the input amount rather than added to it.
-- **`raw`**: (Optional) Whether to return raw transaction data instead of executing the transaction.
+- **`raw`**: (Optional) Whether to return raw transaction data instead of executing the transaction. **Note**: When using raw spoke providers, you must pass `raw: true`. Some methods like `swap` and `createAndSubmitIntent` do not support raw mode as they need to execute transactions.
 - **`timeout`**: (Optional) Timeout in milliseconds for relay operations (default: 60 seconds).
 - **`skipSimulation`**: (Optional) Whether to skip transaction simulation (default: false).
+
+**Raw Spoke Provider Support:**
+
+- **Methods that support raw mode**: `createIntent`, `approve`, `cancelIntent`
+- **Methods that do NOT support raw mode**: `swap`, `createAndSubmitIntent` (these methods need to execute transactions and submit them to the relay API)
 
 ### Get Fees
 
@@ -252,6 +266,43 @@ if (!isApproved.ok) {
 // ... continue with createIntent or swap ...
 ```
 
+**Using Raw Spoke Providers with `approve`:**
+
+When using raw spoke providers, you can get raw approval transaction data:
+
+```typescript
+import {
+  EvmRawSpokeProvider,
+  BSC_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+  type Address
+} from "@sodax/sdk";
+
+// User's wallet address
+const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
+
+// Create raw spoke provider
+const bscChainConfig = spokeChainConfig[BSC_MAINNET_CHAIN_ID];
+const bscRawSpokeProvider = new EvmRawSpokeProvider(userWalletAddress, bscChainConfig);
+
+// Get raw approval transaction
+const approveResult = await sodax.swaps.approve({
+  intentParams: {
+    ...createIntentParams,
+    srcAddress: userWalletAddress,
+  },
+  spokeProvider: bscRawSpokeProvider,
+  raw: true, // Required when using raw spoke provider
+});
+
+if (approveResult.ok) {
+  const rawTx = approveResult.value;
+  // rawTx is a raw transaction object: { from, to, value, data }
+  // This can be sent to the user for signing
+  console.log('Raw approval transaction:', rawTx);
+}
+```
+
 **Important**: The approval amount is now the same as the `inputAmount` specified in your intent parameters. The fee is automatically deducted from this amount during intent creation, so you only need to approve the exact amount you want to swap.
 
 ### Stellar Trustline Requirements
@@ -266,16 +317,19 @@ For Stellar-based swap operations, the allowance and approval system works diffe
 
 The `estimateGas` static method allows you to estimate the gas cost for raw transactions before executing them. This is particularly useful for intent creation and approval transactions to provide users with accurate gas estimates.
 
-**Note**: This is a static method, so it can be called directly on `SwapService`.
+**Note**: This is a static method, so it can be called directly on `SwapService`. This method works with both regular and raw spoke providers.
 
 ```typescript
 import {
   SwapService,
+  EvmRawSpokeProvider,
   BSC_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID
+  ARBITRUM_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+  type Address
 } from "@sodax/sdk";
 
-// Example: Estimate gas for an intent creation transaction
+// Example: Estimate gas for an intent creation transaction using regular spoke provider
 const createIntentResult = await sodax.swaps.createIntent({
   intentParams: createIntentParams,
   spokeProvider: bscSpokeProvider,
@@ -294,6 +348,32 @@ if (createIntentResult.ok) {
     console.log('Estimated gas:', gasEstimate.value);
   } else {
     console.error('Failed to estimate gas:', gasEstimate.error);
+  }
+}
+
+// Example: Estimate gas using raw spoke provider (backend scenario)
+const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
+const bscChainConfig = spokeChainConfig[BSC_MAINNET_CHAIN_ID];
+const bscRawSpokeProvider = new EvmRawSpokeProvider(userWalletAddress, bscChainConfig);
+
+const createIntentResultWithRaw = await sodax.swaps.createIntent({
+  intentParams: {
+    ...createIntentParams,
+    srcAddress: userWalletAddress,
+    dstAddress: userWalletAddress,
+  },
+  spokeProvider: bscRawSpokeProvider,
+  raw: true, // Required when using raw spoke provider
+});
+
+if (createIntentResultWithRaw.ok) {
+  const [rawTx, intent] = createIntentResultWithRaw.value;
+  
+  // Estimate gas using the raw spoke provider
+  const gasEstimate = await SwapService.estimateGas(rawTx, bscRawSpokeProvider);
+  
+  if (gasEstimate.ok) {
+    console.log('Estimated gas:', gasEstimate.value);
   }
 }
 
@@ -333,6 +413,8 @@ The `swap` method is the recommended way to perform a complete swap operation. I
 3. Wait for relayer to relay tx data to the hub chain (Sonic)
 4. Post hub chain tx hash to the Solver API
 
+**Note**: The `swap` method does NOT support raw mode (`raw: true`) because it needs to execute transactions and submit them to the relay API. If you need raw transaction data, use `createIntent` instead.
+
 ```typescript
 import {
   BSC_MAINNET_CHAIN_ID,
@@ -342,6 +424,7 @@ import {
 /**
  * Create swap which does all steps for you automatically
  * IMPORTANT: You should primarily use swap function unless you require custom step by step handling
+ * NOTE: This method requires a regular spoke provider (not raw) as it needs to execute transactions
  */
 const swapResult = await sodax.swaps.swap({
   intentParams: createIntentParams,
@@ -359,9 +442,90 @@ if (!swapResult.ok) {
 const [solverExecutionResponse, intent, intentDeliveryInfo] = swapResult.value;
 ```
 
+#### Create Limit Order
+
+Limit orders are similar to regular swaps but have no deadline (deadline is automatically set to `0n`). They remain active until manually cancelled by the user. Limit orders are useful when you want to place an order that should remain open indefinitely until filled or cancelled.
+
+**Key differences from regular swaps:**
+- No deadline (automatically set to `0n`)
+- Uses the same approval flow as regular swaps
+- Must be cancelled manually using `cancelIntent`
+
+```typescript
+import type { CreateLimitOrderParams } from '@sodax/sdk';
+
+// Create limit order params (note: deadline is omitted, it will be set to 0n automatically)
+const limitOrderParams = {
+  inputToken: '0x..',  // The address of the input token on spoke chain
+  outputToken: '0x..',  // The address of the output token on spoke chain
+  inputAmount: BigInt(1000000), // The amount of input tokens
+  minOutputAmount: BigInt(900000), // min amount you are expecting to receive
+  // deadline is omitted - will be automatically set to 0n
+  allowPartialFill: false, // Whether the intent can be partially filled
+  srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
+  dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+  srcAddress: '0x..', // Source address (original address on spoke chain)
+  dstAddress: '0x..', // Destination address (original address on spoke chain)
+  solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
+  data: '0x', // Additional arbitrary data
+} satisfies CreateLimitOrderParams;
+
+// Create the limit order
+const createLimitOrderResult = await sodax.swaps.createLimitOrder({
+  intentParams: limitOrderParams,
+  spokeProvider: bscSpokeProvider,
+  fee, // optional - uses configured partner fee if not provided
+  timeout, // optional - timeout in milliseconds (default: 60 seconds)
+});
+
+if (!createLimitOrderResult.ok) {
+  // handle error
+}
+
+const [solverExecutionResponse, intent, intentDeliveryInfo] = createLimitOrderResult.value;
+
+// Get intent hash for tracking
+const intentHash = sodax.swaps.getIntentHash(intent);
+console.log('Limit order created with intent hash:', intentHash);
+```
+
+**Important Notes:**
+- Limit orders use the same approval flow as regular swaps - use `isAllowanceValid` and `approve` methods
+- Limit orders remain active indefinitely until cancelled or filled
+- The fee is automatically deducted from the `inputAmount` just like regular swaps
+- Limit orders go through the same flow as swaps (create, submit to relay, wait for execution, post to Solver API)
+
+#### Cancel Limit Order
+
+Cancel a limit order intent. This is a wrapper around `cancelIntent` since cancelling a limit order is the same as cancelling any intent.
+
+**Note**: You can also use `cancelIntent` directly - both methods work identically. `cancelLimitOrder` is provided for semantic clarity when working with limit orders.
+
+```typescript
+import type { Intent } from "@sodax/sdk";
+
+// Get intent first (or use intent from createLimitOrder response)
+const intent: Intent = await sodax.swaps.getIntent(txHash);
+
+// Cancel the limit order
+const cancelResult = await sodax.swaps.cancelLimitOrder(
+  intent,
+  bscSpokeProvider,
+);
+
+if (cancelResult.ok) {
+  console.log('[cancelLimitOrder] txHash:', cancelResult.value);
+} else {
+  // handle error
+  console.error('[cancelLimitOrder] error:', cancelResult.error);
+}
+```
+
 #### Create And Submit Intent (Alternative Method - Equal to Swap)
 
 If you need more control over the process, you can use `createAndSubmitIntent` which is equivalent to `swap`:
+
+**Note**: The `createAndSubmitIntent` method does NOT support raw mode (`raw: true`) because it needs to execute transactions and submit them to the relay API. If you need raw transaction data, use `createIntent` instead.
 
 ```typescript
 const createAndSubmitIntentResult = await sodax.swaps.createAndSubmitIntent({
@@ -400,6 +564,44 @@ if (!createIntentResult.ok) {
 
 // txHash/rawTx, Intent & FeeAmount, and create intent data (Hex)
 const [rawTx, intent, intentDataHex] = createIntentResult.value;
+```
+
+**Using Raw Spoke Providers with `createIntent`:**
+
+When using raw spoke providers (e.g., `EvmRawSpokeProvider`), you must pass `raw: true` to get raw transaction data:
+
+```typescript
+import {
+  EvmRawSpokeProvider,
+  ARBITRUM_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+  type Address
+} from "@sodax/sdk";
+
+// User's wallet address (e.g., from database or API)
+const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
+
+// Create raw spoke provider
+const arbChainConfig = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID];
+const arbRawSpokeProvider = new EvmRawSpokeProvider(userWalletAddress, arbChainConfig);
+
+// Create intent with raw spoke provider
+const createIntentResult = await sodax.swaps.createIntent({
+  intentParams: {
+    ...createIntentParams,
+    srcAddress: userWalletAddress,
+    dstAddress: userWalletAddress,
+  },
+  spokeProvider: arbRawSpokeProvider,
+  raw: true, // Required when using raw spoke provider
+});
+
+if (createIntentResult.ok) {
+  const [rawTx, intent, intentDataHex] = createIntentResult.value;
+  // rawTx is a raw transaction object: { from, to, value, data }
+  // This can be sent to the user for signing or used for gas estimation
+  console.log('Raw transaction:', rawTx);
+}
 ```
 
 **Important**: When creating an intent, the fee is automatically deducted from the `inputAmount` specified in your `createIntentParams`. The actual amount used for the swap will be `inputAmount - feeAmount`. Make sure your `inputAmount` is sufficient to cover both the swap amount and the fee.
@@ -496,6 +698,7 @@ try {
 ```
 
 **IntentState Structure:**
+
 - `exists`: `boolean` - Whether the intent exists
 - `remainingInput`: `bigint` - Remaining input amount that hasn't been filled
 - `receivedOutput`: `bigint` - Amount of output tokens received
@@ -530,6 +733,44 @@ if (result.ok) {
 }
 ```
 
+**Using Raw Spoke Providers with `cancelIntent`:**
+
+When using raw spoke providers, you can get raw cancel transaction data:
+
+```typescript
+import {
+  EvmRawSpokeProvider,
+  BSC_MAINNET_CHAIN_ID,
+  spokeChainConfig,
+  type Address,
+  type Intent
+} from "@sodax/sdk";
+
+// User's wallet address
+const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
+
+// Create raw spoke provider
+const bscChainConfig = spokeChainConfig[BSC_MAINNET_CHAIN_ID];
+const bscRawSpokeProvider = new EvmRawSpokeProvider(userWalletAddress, bscChainConfig);
+
+// Get intent (or use from previous createIntent response)
+const intent: Intent = await sodax.swaps.getIntent(txHash);
+
+// Get raw cancel transaction
+const result = await sodax.swaps.cancelIntent(
+  intent,
+  bscRawSpokeProvider,
+  true, // true = get raw transaction
+);
+
+if (result.ok) {
+  const rawTx = result.value;
+  // rawTx is a raw transaction object: { from, to, value, data }
+  // This can be sent to the user for signing
+  console.log('Raw cancel transaction:', rawTx);
+}
+```
+
 ### Get Intent Status
 
 Retrieve status of intent from the Solver API.
@@ -555,6 +796,56 @@ if (result.ok) {
 }
 ```
 
+### Get Solved Intent Packet
+
+Get the intent delivery info about solved intent from the Relayer API. Packet data contains info about the intent execution on the destination chain.
+
+**Note**: This method should be called after `getStatus` returns a status of `SOLVED (3)`. The `fill_tx_hash` from the status response is used as the `fillTxHash` parameter.
+
+```typescript
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  SolverIntentStatusCode,
+  type SolverIntentStatusRequest,
+  type PacketData,
+  type IntentError
+} from "@sodax/sdk";
+
+// First, get the status to check if the intent is solved
+const statusRequest = {
+  intent_tx_hash: '0x...', // Hub chain transaction hash
+} satisfies SolverIntentStatusRequest;
+
+const statusResult = await sodax.swaps.getStatus(statusRequest);
+
+if (statusResult.ok && statusResult.value.status === SolverIntentStatusCode.SOLVED) {
+  const { fill_tx_hash } = statusResult.value;
+  
+  if (fill_tx_hash) {
+    // Get the packet data for the solved intent
+    const packetResult = await sodax.swaps.getSolvedIntentPacket({
+      chainId: ARBITRUM_MAINNET_CHAIN_ID, // Destination spoke chain ID
+      fillTxHash: fill_tx_hash, // Fill transaction hash from getStatus
+      timeout: 120000, // Optional: timeout in milliseconds (default: 120 seconds)
+    });
+
+    if (packetResult.ok) {
+      const packet: PacketData = packetResult.value;
+      console.log('Source chain ID:', packet.src_chain_id);
+      console.log('Source transaction hash:', packet.src_tx_hash);
+      console.log('Destination chain ID:', packet.dst_chain_id);
+      console.log('Destination transaction hash:', packet.dst_tx_hash);
+      console.log('Status:', packet.status);
+      console.log('Source address:', packet.src_address);
+      console.log('Destination address:', packet.dst_address);
+    } else {
+      // Handle timeout error
+      const error: IntentError<'RELAY_TIMEOUT'> = packetResult.error;
+      console.error('Failed to get solved intent packet:', error);
+    }
+  }
+}
+```
 
 ### Get Intent Hash
 

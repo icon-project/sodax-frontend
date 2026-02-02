@@ -89,7 +89,8 @@ export default function StakingPage() {
   const { mutateAsync: stake, isPending: isStakingPending } = useStake(spokeProvider);
   const { mutateAsync: approveStake, isPending: isApprovingStake } = useStakeApprove(spokeProvider);
   const { mutateAsync: approveUnstake, isPending: isApprovingUnstake } = useUnstakeApprove(spokeProvider);
-  const { mutateAsync: approveInstantUnstake, isPending: isApprovingInstantUnstake } = useInstantUnstakeApprove(spokeProvider);
+  const { mutateAsync: approveInstantUnstake, isPending: isApprovingInstantUnstake } =
+    useInstantUnstakeApprove(spokeProvider);
   const { mutateAsync: unstake, isPending: isUnstakingPending } = useUnstake(spokeProvider);
   const { data: isStakeAllowed, isLoading: isStakeAllowanceLoading } = useStakeAllowance(
     stakeAmount && sodaToken && account.address
@@ -112,11 +113,11 @@ export default function StakingPage() {
   );
   const { data: isInstantUnstakeAllowed, isLoading: isInstantUnstakeAllowanceLoading } = useInstantUnstakeAllowance(
     unstakeAmount && sodaToken && account.address
-    ? {
-      amount: scaleTokenAmount(unstakeAmount, 18), // xSoda has 18 decimals
-      minAmount: scaleTokenAmount(minUnstakeAmount, 18),
-      account: account.address as `0x${string}`,
-    }
+      ? {
+          amount: scaleTokenAmount(unstakeAmount, 18), // xSoda has 18 decimals
+          minAmount: scaleTokenAmount(minUnstakeAmount, 18),
+          account: account.address as `0x${string}`,
+        }
       : undefined,
     spokeProvider,
   );
@@ -350,7 +351,9 @@ export default function StakingPage() {
           {account.address && spokeProvider && <StakingInfo spokeProvider={spokeProvider} />}
 
           {/* Unstaking Info */}
-          {account.address && spokeProvider && <UnstakingInfo spokeProvider={spokeProvider} userAddress={account.address} />}
+          {account.address && spokeProvider && (
+            <UnstakingInfo spokeProvider={spokeProvider} userAddress={account.address} />
+          )}
 
           {/* Action Tabs */}
           {account.address && (
@@ -501,7 +504,9 @@ export default function StakingPage() {
                   ) : (
                     <Button
                       variant="outline"
-                      disabled={!unstakeAmount || !instantUnstakeRatio || !minUnstakeAmount || isInstantUnstakingPending}
+                      disabled={
+                        !unstakeAmount || !instantUnstakeRatio || !minUnstakeAmount || isInstantUnstakingPending
+                      }
                       className="w-full"
                       onClick={() => setInstantUnstakeDialogOpen(true)}
                     >
@@ -617,7 +622,10 @@ export default function StakingPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Instant Unstake xSODA</DialogTitle>
-            <DialogDescription> InstantUnstake {unstakeAmount} xSODA shares to initiate unstaking process</DialogDescription>
+            <DialogDescription>
+              {' '}
+              InstantUnstake {unstakeAmount} xSODA shares to initiate unstaking process
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setInstantUnstakeDialogOpen(false)}>
