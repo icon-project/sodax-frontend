@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation';
 import { requirePermission } from '@/lib/auth-utils';
 import { NewsForm } from '@/components/cms/news-form';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { ObjectId } from 'mongodb';
 import type { NewsArticle } from '@/lib/mongodb-types';
+
+// CMS pages require authentication - cannot be statically generated
+export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -14,7 +17,7 @@ export default async function EditNewsPage({ params }: PageProps) {
     await requirePermission('news');
     const { id } = await params;
 
-    const collection = db.collection<NewsArticle>('news');
+    const collection = getDb().collection<NewsArticle>('news');
     const article = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!article) {

@@ -1,11 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { requirePermission } from '@/lib/auth-utils';
 import { generateSlug, type NewsArticle } from '@/lib/mongodb-types';
 import { NewsArticleSchema, formatZodError } from '@/lib/cms-schemas';
 import { sanitizeHtml, sanitizeText } from '@/lib/sanitize';
 import { triggerDeployIfPublished } from '@/lib/trigger-deploy';
 import { ZodError } from 'zod';
+
+// CMS API routes require authentication - prevent build-time analysis
+export const dynamic = 'force-dynamic';
 
 // GET /api/cms/news - List all news (with optional filters)
 export async function GET(request: NextRequest) {
@@ -22,7 +25,7 @@ export async function GET(request: NextRequest) {
       filter.published = published === 'true';
     }
 
-    const collection = db.collection<NewsArticle>('news');
+    const collection = getDb().collection<NewsArticle>('news');
 
     // Parallel fetching for data and count
     const [news, total] = await Promise.all([
@@ -71,7 +74,7 @@ export async function POST(request: NextRequest) {
       : sanitizeText(validated.content.substring(0, 200).replace(/<[^>]*>/g, ''));
 
     const slug = generateSlug(validated.title);
-    const collection = db.collection<NewsArticle>('news');
+    const collection = getDb().collection<NewsArticle>('news');
 
     // Check if slug already exists
     const existing = await collection.findOne({ slug });

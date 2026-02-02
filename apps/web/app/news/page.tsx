@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 import { BookOpenIcon, RssSimpleIcon } from '@phosphor-icons/react/dist/ssr';
@@ -103,7 +103,7 @@ interface NewsArticle {
 // Use React.cache() for per-request deduplication
 const getPublishedNews = cache(async (): Promise<NewsArticle[]> => {
   try {
-    const news = await db
+    const news = await getDb()
       .collection<NewsArticle>('news')
       .find({ published: true })
       .sort({ publishedAt: -1, createdAt: -1 })

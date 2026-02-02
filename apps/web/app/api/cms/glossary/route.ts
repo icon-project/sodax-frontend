@@ -1,8 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { requirePermission } from '@/lib/auth-utils';
 import { generateSlug, type GlossaryTerm } from '@/lib/mongodb-types';
 import { triggerDeployIfPublished } from '@/lib/trigger-deploy';
+
+// CMS API routes require authentication - prevent build-time analysis
+export const dynamic = 'force-dynamic';
 
 // GET /api/cms/glossary - List all glossary terms
 export async function GET(request: NextRequest) {
@@ -19,7 +22,7 @@ export async function GET(request: NextRequest) {
       filter.published = published === 'true';
     }
 
-    const collection = db.collection<GlossaryTerm>('glossary');
+    const collection = getDb().collection<GlossaryTerm>('glossary');
 
     const [terms, total] = await Promise.all([
       collection
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     const slug = generateSlug(term);
-    const collection = db.collection<GlossaryTerm>('glossary');
+    const collection = getDb().collection<GlossaryTerm>('glossary');
 
     const existing = await collection.findOne({ slug });
     if (existing) {

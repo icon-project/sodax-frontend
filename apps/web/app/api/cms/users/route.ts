@@ -1,9 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/auth-utils';
-import { db } from '@/lib/auth';
+import { getDb } from '@/lib/auth';
 import { CreateUserSchema, UpdateUserSchema, formatZodError } from '@/lib/cms-schemas';
 import { ObjectId } from 'mongodb';
 import { ZodError } from 'zod';
+
+// CMS API routes require authentication - prevent build-time analysis
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/cms/users - List all users
@@ -12,7 +15,7 @@ export async function GET() {
   try {
     await requireAdmin();
 
-    const usersCollection = db.collection('user');
+    const usersCollection = getDb().collection('user');
     const users = await usersCollection
       .find({})
       .project({
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Validate input with Zod schema
     const validated = CreateUserSchema.parse(body);
 
-    const usersCollection = db.collection('user');
+    const usersCollection = getDb().collection('user');
 
     // Check if user already exists
     const existingUser = await usersCollection.findOne({ email: validated.email });
@@ -101,7 +104,7 @@ export async function PATCH(request: NextRequest) {
     // Validate input with Zod schema
     const validated = UpdateUserSchema.parse(body);
 
-    const usersCollection = db.collection('user');
+    const usersCollection = getDb().collection('user');
     const result = await usersCollection.updateOne(
       { id: validated.userId },
       { $set: { permissions: JSON.stringify(validated.permissions) } },
@@ -142,7 +145,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
 
-    const usersCollection = db.collection('user');
+    const usersCollection = getDb().collection('user');
 
     // Try to find and delete user by id, _id (as ObjectId), or email
     const deleteQuery: { $or: Array<{ id?: string; email?: string; _id?: ObjectId }> } = {

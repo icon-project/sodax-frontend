@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 
 export const alt = 'SODAX News Article';
 export const size = {
@@ -23,7 +23,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   // Fetch article directly from DB (same as page.tsx)
   let title = 'SODAX News';
   try {
-    const article = await db
+    const article = await getDb()
       .collection<NewsArticle>('news')
       .findOne({ slug, published: true }, { projection: { title: 1 } });
     title = article?.title || 'SODAX News';

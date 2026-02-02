@@ -3,7 +3,7 @@ import { cache } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
@@ -29,7 +29,7 @@ interface NewsArticle {
 // Use React.cache() for per-request deduplication
 const getArticleBySlug = cache(async (slug: string): Promise<NewsArticle | null> => {
   try {
-    const article = await db.collection<NewsArticle>('news').findOne({ slug, published: true });
+    const article = await getDb().collection<NewsArticle>('news').findOne({ slug, published: true });
     return article;
   } catch (error) {
     console.error('Failed to fetch article:', error);
@@ -39,7 +39,7 @@ const getArticleBySlug = cache(async (slug: string): Promise<NewsArticle | null>
 
 const getAllPublishedSlugs = cache(async (): Promise<string[]> => {
   try {
-    const articles = await db.collection<NewsArticle>('news').find({ published: true }).project({ slug: 1 }).toArray();
+    const articles = await getDb().collection<NewsArticle>('news').find({ published: true }).project({ slug: 1 }).toArray();
     return articles.map(article => article.slug);
   } catch (error) {
     console.error('Failed to fetch slugs:', error);

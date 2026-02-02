@@ -1,7 +1,15 @@
-import { auth } from "./auth";
+import { auth, getDb } from "./auth";
 import { headers } from "next/headers";
 import { type CMSPermission, getUserPermissions } from "./permissions";
-import { db } from "./auth";
+
+// Extended user type that includes custom fields from Better Auth additionalFields
+type CMSUser = {
+  id: string;
+  email: string;
+  name: string;
+  role?: string | null;
+  permissions?: string | null;
+};
 
 /**
  * Server-side session verification utility
@@ -27,7 +35,7 @@ export async function requireAuth() {
   }
 
   // Check if user exists in database and has valid role assigned (whitelist check)
-  const usersCollection = db.collection("user");
+  const usersCollection = getDb().collection("user");
   const existingUser = await usersCollection.findOne({ 
     email: session.user.email 
   });
@@ -53,7 +61,9 @@ export async function requireAuth() {
 export async function requireAdmin() {
   const session = await requireAuth();
 
-  if (session.user.role !== "admin") {
+  // Cast to access custom role field added via Better Auth user.additionalFields
+  const user = session.user as CMSUser;
+  if (user.role !== "admin") {
     throw new Error("Forbidden: Admin access required");
   }
 
@@ -66,7 +76,8 @@ export async function requireAdmin() {
  */
 export async function requirePermission(permission: CMSPermission) {
   const session = await requireAuth();
-  const permissions = getUserPermissions(session.user);
+  // Cast to access custom fields added via Better Auth user.additionalFields
+  const permissions = getUserPermissions(session.user as CMSUser);
 
   if (!permissions.includes(permission)) {
     throw new Error(`Forbidden: ${permission} permission required`);
@@ -81,7 +92,8 @@ export async function requirePermission(permission: CMSPermission) {
  */
 export async function requireAnyPermission(requiredPermissions: CMSPermission[]) {
   const session = await requireAuth();
-  const permissions = getUserPermissions(session.user);
+  // Cast to access custom fields added via Better Auth user.additionalFields
+  const permissions = getUserPermissions(session.user as CMSUser);
 
   const hasAccess = requiredPermissions.some(p => permissions.includes(p));
   if (!hasAccess) {

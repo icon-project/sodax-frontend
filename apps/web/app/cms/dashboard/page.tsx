@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { requireAuth } from "@/lib/auth-utils";
 import { CMSDashboard } from "@/components/cms/cms-dashboard";
 
+// CMS pages require authentication - cannot be statically generated
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   try {
     const session = await requireAuth();

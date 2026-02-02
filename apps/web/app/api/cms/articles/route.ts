@@ -1,11 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { requirePermission } from '@/lib/auth-utils';
 import { generateSlug, type Article } from '@/lib/mongodb-types';
 import { ArticleSchema, formatZodError } from '@/lib/cms-schemas';
 import { sanitizeHtml, sanitizeText } from '@/lib/sanitize';
 import { triggerDeployIfPublished } from '@/lib/trigger-deploy';
 import { ZodError } from 'zod';
+
+// CMS API routes require authentication - prevent build-time analysis
+export const dynamic = 'force-dynamic';
 
 // GET /api/cms/articles - List all articles
 export async function GET(request: NextRequest) {
@@ -22,7 +25,7 @@ export async function GET(request: NextRequest) {
       filter.published = published === 'true';
     }
 
-    const collection = db.collection<Article>('articles');
+    const collection = getDb().collection<Article>('articles');
 
     const [articles, total] = await Promise.all([
       collection
@@ -70,7 +73,7 @@ export async function POST(request: NextRequest) {
       : sanitizeText(validated.content.substring(0, 200).replace(/<[^>]*>/g, ''));
 
     const slug = generateSlug(validated.title);
-    const collection = db.collection<Article>('articles');
+    const collection = getDb().collection<Article>('articles');
 
     const existing = await collection.findOne({ slug });
     if (existing) {

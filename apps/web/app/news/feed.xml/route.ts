@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 
 // Static generation at build time with ISR
 // This ensures the RSS feed is cached and not making DB calls on every request
@@ -33,7 +33,7 @@ function stripHtml(html: string): string {
 
 async function getPublishedNews(): Promise<NewsArticle[]> {
   try {
-    const news = await db
+    const news = await getDb()
       .collection<NewsArticle>('news')
       .find({ published: true })
       .sort({ publishedAt: -1, createdAt: -1 })

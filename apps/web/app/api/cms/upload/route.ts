@@ -2,6 +2,9 @@ import { put } from '@vercel/blob';
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAnyPermission } from '@/lib/auth-utils';
 
+// CMS API routes require authentication - prevent build-time analysis
+export const dynamic = 'force-dynamic';
+
 // Allowed image extensions and MIME types
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];

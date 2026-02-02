@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sodax.com';
 
@@ -93,7 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Fetch dynamic content from CMS in parallel
     const [newsArticles, articles, glossaryTerms] = await Promise.all([
       // News articles
-      db
+      getDb()
         .collection<NewsArticle>('news')
         .find({ published: true })
         .project({ slug: 1, updatedAt: 1, publishedAt: 1 })
@@ -105,7 +105,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }),
 
       // Articles (if collection exists)
-      db
+      getDb()
         .collection<Article>('articles')
         .find({ published: true })
         .project({ slug: 1, updatedAt: 1, publishedAt: 1 })
@@ -117,7 +117,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }),
 
       // Glossary terms
-      db
+      getDb()
         .collection<GlossaryTerm>('glossary')
         .find({ published: true })
         .project({ slug: 1, updatedAt: 1 })

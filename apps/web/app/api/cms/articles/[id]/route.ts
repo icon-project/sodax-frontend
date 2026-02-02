@@ -1,9 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { requirePermission, requireAdmin } from '@/lib/auth-utils';
 import { generateSlug, type Article } from '@/lib/mongodb-types';
 import { triggerDeployIfPublished } from '@/lib/trigger-deploy';
 import { ObjectId } from 'mongodb';
+
+// CMS API routes require authentication - prevent build-time analysis
+export const dynamic = 'force-dynamic';
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -15,7 +18,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     await requirePermission('articles');
 
     const { id } = await context.params;
-    const collection = db.collection<Article>('articles');
+    const collection = getDb().collection<Article>('articles');
     const article = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!article) {
@@ -39,7 +42,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const { id } = await context.params;
     const body = await request.json();
-    const collection = db.collection<Article>('articles');
+    const collection = getDb().collection<Article>('articles');
 
     const existing = await collection.findOne({ _id: new ObjectId(id) });
     if (!existing) {
@@ -96,7 +99,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     await requirePermission('articles');
 
     const { id } = await context.params;
-    const collection = db.collection<Article>('articles');
+    const collection = getDb().collection<Article>('articles');
 
     // Check if article was published before deleting
     const existing = await collection.findOne({ _id: new ObjectId(id) });

@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth-utils";
 
+// CMS pages require authentication - cannot be statically generated
+export const dynamic = 'force-dynamic';
+
 export default async function CMSIndexPage() {
   const session = await getServerSession();
   
