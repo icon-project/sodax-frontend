@@ -62,8 +62,20 @@ export const hyper = /*#__PURE__*/ defineChain({
 
 export const createWagmiConfig = (config: RpcConfig) => {
   return createConfig({
-
-    chains: [mainnet, avalanche, arbitrum, base, bsc, sonic, optimism, polygon, hyper, lightlinkPhoenix, kaia,redbellyMainnet],
+    chains: [
+      mainnet,
+      avalanche,
+      arbitrum,
+      base,
+      bsc,
+      sonic,
+      optimism,
+      polygon,
+      hyper,
+      lightlinkPhoenix,
+      kaia,
+      redbellyMainnet,
+    ],
     ssr: true,
     transports: {
       [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
@@ -123,27 +135,6 @@ export class EvmXService extends XService {
     throw new Error(`Unsupported token: ${xToken.symbol}`);
   }
 
-  // get erc20 token balance in a chain (evm chain only)
-  async _getTokenBalance(address: string | undefined, chainId: number, tokenAddress: string): Promise<bigint> {
-    const publicClient = getPublicClient(this.wagmiConfig as Config, { chainId: chainId });
-    if (!publicClient) throw new Error('Public client not found');
-    const balance = await publicClient.readContract({
-      abi: erc20Abi,
-      address: tokenAddress as `0x${string}`,
-      functionName: 'balanceOf',
-      args: [address as `0x${string}`],
-    });
-    return balance || 0n;
-  }
-
-  //get native balance of the chain (evm chain only)
-  async _getChainBalance(address: string | undefined, chainId: number) {
-    const balance = await getPublicClient(this.wagmiConfig as Config, { chainId: chainId })?.getBalance({
-      address: address as Address,
-    });
-    return balance || 0n;
-  }
-
   async getBalances(address: string | undefined, xTokens: XToken[]) {
     if (!address) return {};
     if (!this.wagmiConfig) return {};
@@ -183,8 +174,5 @@ export class EvmXService extends XService {
         acc[balance.address] = balance.balance;
         return acc;
       }, tokenMap);
-    }
-
-
-  
+  }
 }
