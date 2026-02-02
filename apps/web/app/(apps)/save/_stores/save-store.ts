@@ -68,6 +68,7 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         name: 'sodax-save-store',
         partialize: state => ({
           depositValue: state.depositValue,
+          activeAsset: state.activeAsset,
         }),
         merge: (persistedState, currentState) => {
           const persisted = persistedState as Partial<SaveState> | null;

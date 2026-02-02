@@ -37,18 +37,15 @@ export function LatestUpdatesSection({ articles }: LatestUpdatesSectionProps) {
 
   return (
     <section>
-      <h2 className="text-xl font-black text-[var(--espresso)] mb-4 pb-2 border-b-2 border-[var(--cherry-soda)]">
-        Latest Updates
-      </h2>
       <div className="grid sm:grid-cols-2 gap-4">
         {displayedArticles.map(article => (
           <Link
             key={article._id}
             href={`/news/${article.slug}`}
-            className="group bg-white rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 border border-[var(--clay-light)] hover:border-[var(--cherry-soda)]"
+            className="group bg-white rounded-[24px] overflow-hidden hover:shadow-[0px_8px_40px_0px_#ede6e6] transition-all duration-300 shadow-[0px_4px_32px_0px_#ede6e6] flex flex-col"
           >
             {article.image && (
-              <div className="relative aspect-[16/9] bg-[var(--cream)] overflow-hidden">
+              <div className="relative aspect-[16/9] bg-[#ede6e6] overflow-hidden m-2 rounded-[16px]">
                 <Image
                   src={article.image}
                   alt={article.title}
@@ -58,14 +55,16 @@ export function LatestUpdatesSection({ articles }: LatestUpdatesSectionProps) {
                 />
               </div>
             )}
-            <div className="p-4">
-              <h3 className="text-base font-bold text-[var(--espresso)] leading-tight mb-2 group-hover:text-[var(--cherry-soda)] transition-colors line-clamp-2">
+            <div className="p-4 flex flex-col gap-2">
+              <h3 className="text-[18px] font-bold text-[#483534] leading-[1.2] group-hover:text-[var(--cherry-soda)] transition-colors line-clamp-2">
                 {article.title}
               </h3>
-              <p className="text-sm text-[var(--clay)] mb-2 line-clamp-2">{article.excerpt}</p>
-              <time className="text-xs text-[var(--clay-light)]">
-                {formatDate(article.publishedAt || article.createdAt)}
-              </time>
+              <p className="text-[14px] text-[#6b5c5b] leading-[1.4] line-clamp-2">{article.excerpt}</p>
+              <div className="inline-flex items-center h-5 px-2 bg-[#ede6e6] rounded-[256px] w-fit">
+                <time className="text-[11px] text-[#8e7e7d] leading-[1.3]">
+                  {formatDate(article.publishedAt || article.createdAt)}
+                </time>
+              </div>
             </div>
           </Link>
         ))}
@@ -75,7 +74,7 @@ export function LatestUpdatesSection({ articles }: LatestUpdatesSectionProps) {
           <button
             type="button"
             onClick={loadMore}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[var(--cherry-soda)] font-semibold border-2 border-[var(--cherry-soda)] rounded-lg hover:bg-[var(--cherry-soda)] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md"
+            className="inline-flex items-center gap-2 h-10 px-6 bg-white text-[#483534] text-[12px] font-medium rounded-[240px] hover:bg-[#ede6e6] transition-all duration-200 shadow-[0px_4px_32px_0px_#ede6e6]"
           >
             Load More Articles
             <ArrowDown className="w-4 h-4" />
