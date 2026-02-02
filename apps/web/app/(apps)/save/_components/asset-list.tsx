@@ -1,6 +1,6 @@
 import { Accordion } from '@/components/ui/accordion';
 import { useMemo } from 'react';
-import { getUniqueTokenSymbols, getMoneymarketTokens, hasFunds } from '@/lib/utils';
+import { getUniqueTokenSymbols, getMoneymarketTokens, hasFunds, cn } from '@/lib/utils';
 import AssetListItem from './asset-list/asset-list-item';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useSaveState, useSaveActions } from '../_stores/save-store-provider';
@@ -14,7 +14,7 @@ export default function AssetList({
   searchQuery: string;
   selectedChain: string | null;
 }) {
-  const { activeAsset } = useSaveState();
+  const { activeAsset, isAssetListBlurred } = useSaveState();
   const { setActiveAsset } = useSaveActions();
   const allTokens = useMemo(() => getMoneymarketTokens(), []);
   const filteredTokens = useMemo(
@@ -68,31 +68,56 @@ export default function AssetList({
     >
       {hasAssets ? (
         <>
-          <div className="px-0 py-2 font-['InterRegular'] text-(length:--body-small) font-medium text-clay">
+          <div
+            className={cn(
+              "px-0 py-2 font-['InterRegular'] text-(length:--body-small) font-medium text-clay",
+              isAssetListBlurred && 'blur-md opacity-40 pointer-events-none',
+            )}
+          >
             Ready to earn
           </div>
           {readyToEarn.map(asset => (
-            <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+            <AssetListItem
+              key={asset.symbol}
+              data={asset}
+              isExpanded={activeAsset === asset.symbol}
+              isReadyToEarn={true}
+            />
           ))}
 
           {availableToDeposit.length > 0 && (
             <>
-              <div className="px-0 py-2 font-['InterRegular'] text-(length:--body-small) font-medium text-clay">
+              <div
+                className={cn(
+                  "px-0 py-2 font-['InterRegular'] text-(length:--body-small) font-medium text-clay",
+                  isAssetListBlurred && 'blur-md opacity-40 pointer-events-none',
+                )}
+              >
                 Available to deposit
               </div>
               {availableToDeposit.map(asset => (
-                <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+                <AssetListItem
+                  key={asset.symbol}
+                  data={asset}
+                  isExpanded={activeAsset === asset.symbol}
+                  isReadyToEarn={false}
+                />
               ))}
             </>
           )}
-          <NoResults />
+          {(searchQuery || selectedChain) && <NoResults />}
         </>
       ) : (
         <>
           {allAssets.map(asset => (
-            <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+            <AssetListItem
+              key={asset.symbol}
+              data={asset}
+              isExpanded={activeAsset === asset.symbol}
+              isReadyToEarn={false}
+            />
           ))}
-          <NoResults />
+          {(searchQuery || selectedChain) && <NoResults />}
         </>
       )}
     </Accordion>

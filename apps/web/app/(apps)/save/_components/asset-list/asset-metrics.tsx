@@ -1,13 +1,14 @@
 import { Separator } from '@/components/ui/separator';
 import { AlertCircleIcon } from 'lucide-react';
+import { formatCurrencyCompact } from '@/lib/utils';
 
-export default function AssetMetrics({ apy, deposits }: { apy: string; deposits: string }) {
+export default function AssetMetrics({ apy, deposits }: { apy: string; deposits: number }) {
   return (
     <div className="flex h-12">
       <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
       <InfoBlock value={apy} label="Current APY" />
       <Separator orientation="vertical" className="mix-blend-multiply bg-cream-white border-l-2 h-12" />
-      <InfoBlock value={deposits} label="All deposits" />
+      <InfoBlock value={formatCurrencyCompact(deposits)} label="All deposits" />
     </div>
   );
 }

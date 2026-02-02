@@ -49,7 +49,7 @@ export const tabConfigs: TabConfig[] = [
 export function RouteTabs(): React.JSX.Element {
   const pathname = usePathname();
   const current = pathname.split('/').pop() || 'migrate';
-  const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
+  const totalDepositedUsdValue = useSaveStore(state => state.totalDepositedUsdValue);
 
   const desktopTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
   const mobileTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
@@ -136,7 +136,7 @@ export function RouteTabs(): React.JSX.Element {
                 isMobile={false}
                 setRef={setDesktopTabRef(tab.value)}
                 enabled={tab.enabled}
-                badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
+                totalDepositedUsdValue={tab.value === 'save' ? totalDepositedUsdValue : undefined}
               />
             );
           })}
@@ -165,7 +165,7 @@ export function RouteTabs(): React.JSX.Element {
                     isMobile
                     setRef={setMobileTabRef(tab.value)}
                     enabled={tab.enabled}
-                    badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
+                    totalDepositedUsdValue={tab.value === 'save' ? totalDepositedUsdValue : undefined}
                   />
                 );
               })}

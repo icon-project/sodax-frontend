@@ -11,21 +11,23 @@ export enum DEPOSIT_STEP {
 export type SaveState = {
   depositValue: number;
   currentDepositStep: DEPOSIT_STEP;
-  suppliedAssetCount: number;
+  totalDepositedUsdValue: number;
   isSwitchingChain: boolean;
   activeAsset: string;
   scrollToCenter: boolean;
   isNetworkPickerOpened: boolean;
+  isAssetListBlurred: boolean;
 };
 
 export type SaveActions = {
   setDepositValue: (value: number) => void;
   setCurrentDepositStep: (step: DEPOSIT_STEP) => void;
-  setSuppliedAssetCount: (count: number) => void;
+  setTotalDepositedUsdValue: (value: number) => void;
   setIsSwitchingChain: (isSwitching: boolean) => void;
   setActiveAsset: (value: string) => void;
   setScrollToCenter: (value: boolean) => void;
   setIsNetworkPickerOpened: (value: boolean) => void;
+  setIsAssetListBlurred: (value: boolean) => void;
   resetSaveState: () => void;
 };
 
@@ -34,11 +36,12 @@ export type SaveStore = SaveState & SaveActions;
 export const defaultSaveState: SaveState = {
   depositValue: 0,
   currentDepositStep: DEPOSIT_STEP.TERMS,
-  suppliedAssetCount: 0,
+  totalDepositedUsdValue: 0,
   isSwitchingChain: false,
   activeAsset: '',
   scrollToCenter: false,
   isNetworkPickerOpened: false,
+  isAssetListBlurred: false,
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -48,11 +51,12 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         ...initState,
         setDepositValue: (value: number) => set({ depositValue: value }),
         setCurrentDepositStep: (step: DEPOSIT_STEP) => set({ currentDepositStep: step }),
-        setSuppliedAssetCount: (count: number) => set({ suppliedAssetCount: count }),
+        setTotalDepositedUsdValue: (value: number) => set({ totalDepositedUsdValue: value }),
         setIsSwitchingChain: (isSwitching: boolean) => set({ isSwitchingChain: isSwitching }),
         setActiveAsset: (value: string) => set({ activeAsset: value }),
         setScrollToCenter: (value: boolean) => set({ scrollToCenter: value }),
         setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
+        setIsAssetListBlurred: (value: boolean) => set({ isAssetListBlurred: value }),
         resetSaveState: () => {
           set({
             currentDepositStep: DEPOSIT_STEP.TERMS,
@@ -64,7 +68,6 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         name: 'sodax-save-store',
         partialize: state => ({
           depositValue: state.depositValue,
-          activeAsset: state.activeAsset,
         }),
         merge: (persistedState, currentState) => {
           const persisted = persistedState as Partial<SaveState> | null;
