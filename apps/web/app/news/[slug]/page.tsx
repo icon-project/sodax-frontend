@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 import { ShareButton } from '@/components/news/share-button';
@@ -282,7 +283,7 @@ export default async function NewsArticlePage({
                 </div>
               )}
 
-              {/* Content */}
+              {/* Content - sanitized to prevent XSS */}
               <div
                 className="tiptap prose prose-lg max-w-none
                   prose-headings:font-black prose-headings:text-[var(--espresso)]
@@ -299,7 +300,7 @@ export default async function NewsArticlePage({
                 prose-code:text-[var(--cherry-soda)] prose-code:bg-[var(--cream)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                 prose-pre:bg-[var(--espresso)] prose-pre:text-[var(--cream-white)] prose-pre:rounded-lg
                 prose-hr:border-[var(--clay-light)] prose-hr:my-8"
-                dangerouslySetInnerHTML={{ __html: article.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
               />
 
               {/* Tags */}

@@ -2,6 +2,9 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requirePermission } from '@/lib/auth-utils';
 import { generateSlug, type NewsArticle } from '@/lib/mongodb-types';
+import { NewsArticleSchema, formatZodError } from '@/lib/cms-schemas';
+import { sanitizeHtml, sanitizeText } from '@/lib/sanitize';
+import { ZodError } from 'zod';
 
 // GET /api/cms/news - List all news (with optional filters)
 export async function GET(request: NextRequest) {
@@ -10,8 +13,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const published = searchParams.get('published');
-    const page = Number.parseInt(searchParams.get('page') || '1', 10);
-    const limit = Number.parseInt(searchParams.get('limit') || '20', 10);
+    const page = Math.max(1, Number.parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, Number.parseInt(searchParams.get('limit') || '20', 10)));
 
     const filter: Record<string, unknown> = {};
     if (published !== null) {
@@ -42,9 +45,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('GET /api/cms/news error:', error);
+    const isForbidden = error instanceof Error && error.message.includes('Forbidden');
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch news' },
-      { status: error instanceof Error && error.message.includes('Forbidden') ? 403 : 500 },
+      { error: isForbidden ? 'Access denied' : 'Failed to fetch news' },
+      { status: isForbidden ? 403 : 500 },
     );
   }
 }
@@ -55,23 +59,17 @@ export async function POST(request: NextRequest) {
     const session = await requirePermission('news');
 
     const body = await request.json();
-    const {
-      title,
-      content,
-      excerpt,
-      image,
-      metaTitle,
-      metaDescription,
-      published = false,
-      tags = [],
-      categories = [],
-    } = body;
 
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
-    }
+    // Validate input with Zod schema
+    const validated = NewsArticleSchema.parse(body);
 
-    const slug = generateSlug(title);
+    // Sanitize content to prevent XSS
+    const sanitizedContent = sanitizeHtml(validated.content);
+    const sanitizedExcerpt = validated.excerpt
+      ? sanitizeText(validated.excerpt)
+      : sanitizeText(validated.content.substring(0, 200).replace(/<[^>]*>/g, ''));
+
+    const slug = generateSlug(validated.title);
     const collection = db.collection<NewsArticle>('news');
 
     // Check if slug already exists
@@ -82,19 +80,19 @@ export async function POST(request: NextRequest) {
 
     const now = new Date();
     const article: NewsArticle = {
-      title,
+      title: validated.title,
       slug,
-      content,
-      excerpt: excerpt || content.substring(0, 200).replace(/<[^>]*>/g, ''),
-      image,
-      metaTitle: metaTitle || title,
-      metaDescription: metaDescription || excerpt,
-      published,
-      publishedAt: published ? now : undefined,
+      content: sanitizedContent,
+      excerpt: sanitizedExcerpt,
+      image: validated.image || undefined,
+      metaTitle: validated.metaTitle || validated.title,
+      metaDescription: validated.metaDescription || sanitizedExcerpt,
+      published: validated.published,
+      publishedAt: validated.published ? now : undefined,
       authorId: session.user.id,
       authorName: session.user.name,
-      tags,
-      categories,
+      tags: validated.tags,
+      categories: validated.categories,
       createdAt: now,
       updatedAt: now,
     };
@@ -104,9 +102,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ...article, _id: result.insertedId }, { status: 201 });
   } catch (error) {
     console.error('POST /api/cms/news error:', error);
+
+    // Handle Zod validation errors
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: formatZodError(error) }, { status: 400 });
+    }
+
+    const isForbidden = error instanceof Error && error.message.includes('Forbidden');
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create news' },
-      { status: error instanceof Error && error.message.includes('Forbidden') ? 403 : 500 },
+      { error: isForbidden ? 'Access denied' : 'Failed to create news article' },
+      { status: isForbidden ? 403 : 500 },
     );
   }
 }
