@@ -1,5 +1,5 @@
 export const HyperIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" class="web3icons">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
     <title>HyperEVM</title>
     <defs>
       <clipPath id="rounded-clip">
