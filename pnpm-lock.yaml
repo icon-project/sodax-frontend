@@ -377,17 +377,17 @@ importers:
         specifier: ^2.2.8
         version: 2.2.10(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react@19.2.9)(babel-plugin-macros@3.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(viem@2.29.2(bufferutil@4.1.0)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76))(wagmi@2.16.9(@react-native-async-storage/async-storage@1.24.0(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10)))(@tanstack/query-core@5.87.4)(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(immer@10.1.1)(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(viem@2.29.2(bufferutil@4.1.0)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76))(zod@3.25.76))
       '@sodax/dapp-kit':
-        specifier: 1.0.4-beta
-        version: 1.0.4-beta(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
+        specifier: 1.1.0-beta-rc1
+        version: 1.1.0-beta-rc1(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@sodax/sdk':
-        specifier: 1.0.4-beta
-        version: 1.0.4-beta(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
+        specifier: 1.1.0-beta-rc1
+        version: 1.1.0-beta-rc1(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@sodax/types':
-        specifier: 1.0.4-beta
-        version: 1.0.4-beta
+        specifier: 1.1.0-beta-rc1
+        version: 1.1.0-beta-rc1
       '@sodax/wallet-sdk-react':
-        specifier: 1.0.4-beta
-        version: 1.0.4-beta(@babel/core@7.28.6)(@react-native-async-storage/async-storage@1.24.0(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10)))(@stellar/stellar-base@14.0.4)(@tanstack/query-core@5.87.4)(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(babel-plugin-macros@3.1.0)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10))(react@19.1.4)(tslib@2.8.1)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
+        specifier: 1.1.0-beta-rc1
+        version: 1.1.0-beta-rc1(@babel/core@7.28.6)(@react-native-async-storage/async-storage@1.24.0(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10)))(@stellar/stellar-base@14.0.4)(@tanstack/query-core@5.87.4)(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(babel-plugin-macros@3.1.0)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10))(react@19.1.4)(tslib@2.8.1)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@solana/web3.js':
         specifier: 'catalog:'
         version: 1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -3825,26 +3825,26 @@ packages:
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
 
-  '@sodax/dapp-kit@1.0.4-beta':
-    resolution: {integrity: sha512-3Nyxjh+OEy5Hgc6HOUhilQSSycVY/BRlqchAdnT/zFNMMebJlWdaZ6u41FqFXdQbGoH2dlfokz4WxsxldbvX4g==}
+  '@sodax/dapp-kit@1.1.0-beta-rc1':
+    resolution: {integrity: sha512-i1x0WzDjS2/nHGfGJ9Cmba0XrgGy1T8QHumz5Ot2N1gx7jou0VTw6+2nMZGdLG1A8WOc8C8+9PSiW++jRPcvZg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@tanstack/react-query': 5.x
       react: '>=18'
 
-  '@sodax/sdk@1.0.4-beta':
-    resolution: {integrity: sha512-eRuUzQ4R9dq3IcGGq8W5aatXiNE/+T7BWz3gSFvolk6CNzm3wFSrRk6+t1Mm0X+RbwfdVUjnKyNt1RWYvdxyDg==}
+  '@sodax/sdk@1.1.0-beta-rc1':
+    resolution: {integrity: sha512-Gm4sqwtG/cXqibnh4sBOsHiHobrcVn9Kp5xJncKQHssLZ5B8exwhQQOr5INtpRFllU2CMKcMeV4aQgCZ/Tiy1Q==}
     engines: {node: '>=18.0.0'}
 
-  '@sodax/types@1.0.4-beta':
-    resolution: {integrity: sha512-e14yC7MPSKySpDwdsOzcgVAfDdm1Wz1KgrsQFosZze5EAkcm3kfEWnGKrtsPZXEvBkRDBMdZ2bhr8GyeimCk6Q==}
+  '@sodax/types@1.1.0-beta-rc1':
+    resolution: {integrity: sha512-eI8J8T7OAeD2DHMtlDZBS+X7ioL60nfv+VVPtlfpx4K63I4NKLmt1uByI6bRseaYlBoYrhYiGQrA+H9CO7Gphw==}
 
-  '@sodax/wallet-sdk-core@1.0.4-beta':
-    resolution: {integrity: sha512-Z7ZJyhRSe2uGmWXKeZ3ROg8l33t3L4sIRswa566z/72kPS5TNLFGIPbMMlkDq/KmZdOqVFKBDsI6AlU0nAVn7Q==}
+  '@sodax/wallet-sdk-core@1.1.0-beta-rc1':
+    resolution: {integrity: sha512-59fBmwy8fVG7GA1OABF4ioBS46YRxca6FTa/hdm9TJhykJD7XD2APQIbfIpMEuPoDvp0BA2z6/p2rH0Yzg2lMw==}
     engines: {node: '>=18.0.0'}
 
-  '@sodax/wallet-sdk-react@1.0.4-beta':
-    resolution: {integrity: sha512-lYaQY3ArDTsBpaksr5qtNyWvt11vfqNVbk5hmNR6F4FHrpRxGq/LD3rWLmV4KBOYfPLm74ATfQ+Jb9RP347REA==}
+  '@sodax/wallet-sdk-react@1.1.0-beta-rc1':
+    resolution: {integrity: sha512-5G7wH5aZiB/An8rYpUpGa5c3uxwqL8lZQZUaiuI14gYrABBKi/RnwnVt4E5AKL6Gp7qPpCM+Nqvcs+iEtBCiiw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@tanstack/react-query': 5.x
@@ -15747,10 +15747,10 @@ snapshots:
 
   '@socket.io/component-emitter@3.1.2': {}
 
-  '@sodax/dapp-kit@1.0.4-beta(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)':
+  '@sodax/dapp-kit@1.1.0-beta-rc1(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
-      '@sodax/sdk': 1.0.4-beta(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
-      '@sodax/types': 1.0.4-beta
+      '@sodax/sdk': 1.1.0-beta-rc1(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@sodax/types': 1.1.0-beta-rc1
       '@tanstack/react-query': 5.87.4(react@19.1.4)
       react: 19.1.4
       viem: 2.29.2(bufferutil@4.1.0)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -15771,14 +15771,14 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@sodax/sdk@1.0.4-beta(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)':
+  '@sodax/sdk@1.1.0-beta-rc1(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
       '@coral-xyz/anchor': 0.30.1(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@injectivelabs/core-proto-ts': 1.16.5
       '@injectivelabs/networks': 1.16.10
       '@injectivelabs/sdk-ts': 1.16.10(@types/react@19.2.9)(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@mysten/sui': 1.21.2(typescript@5.5.4)
-      '@sodax/types': 1.0.4-beta
+      '@sodax/types': 1.1.0-beta-rc1
       '@solana/spl-token': 0.4.9(@solana/web3.js@1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@stellar/stellar-sdk': 12.3.0
@@ -15806,9 +15806,9 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@sodax/types@1.0.4-beta': {}
+  '@sodax/types@1.1.0-beta-rc1': {}
 
-  '@sodax/wallet-sdk-core@1.0.4-beta(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)':
+  '@sodax/wallet-sdk-core@1.1.0-beta-rc1(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
       '@injectivelabs/networks': 1.16.10
       '@injectivelabs/sdk-ts': 1.16.10(@types/react@19.2.9)(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
@@ -15818,7 +15818,7 @@ snapshots:
       '@injectivelabs/wallet-private-key': 1.16.10(@types/react@19.2.9)(bufferutil@4.1.0)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(utf-8-validate@5.0.10)
       '@mysten/sui': 1.21.2(typescript@5.5.4)
       '@mysten/wallet-standard': 0.15.6(typescript@5.5.4)
-      '@sodax/types': 1.0.4-beta
+      '@sodax/types': 1.1.0-beta-rc1
       '@solana/spl-token': 0.4.9(@solana/web3.js@1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)(utf-8-validate@5.0.10)
       '@solana/wallet-adapter-base': 0.9.26(@solana/web3.js@1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10))
       '@solana/web3.js': 1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -15844,7 +15844,7 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@sodax/wallet-sdk-react@1.0.4-beta(@babel/core@7.28.6)(@react-native-async-storage/async-storage@1.24.0(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10)))(@stellar/stellar-base@14.0.4)(@tanstack/query-core@5.87.4)(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(babel-plugin-macros@3.1.0)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10))(react@19.1.4)(tslib@2.8.1)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)':
+  '@sodax/wallet-sdk-react@1.1.0-beta-rc1(@babel/core@7.28.6)(@react-native-async-storage/async-storage@1.24.0(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10)))(@stellar/stellar-base@14.0.4)(@tanstack/query-core@5.87.4)(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(babel-plugin-macros@3.1.0)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10))(react@19.1.4)(tslib@2.8.1)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
       '@coral-xyz/anchor': 0.30.1(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@creit.tech/stellar-wallets-kit': 1.9.5(ltqom5lqwknwbht2tteqjc7zku)
@@ -15858,8 +15858,8 @@ snapshots:
       '@injectivelabs/wallet-strategy': 1.16.10(@babel/core@7.28.6)(@react-native-async-storage/async-storage@1.24.0(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10)))(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(react-dom@19.1.4(react@19.1.4))(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10))(react@19.1.4)(starknet@8.9.2)(tslib@2.8.1)(typescript@5.5.4)(utf-8-validate@5.0.10)(ws@8.18.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)
       '@mysten/dapp-kit': 0.14.18(@tanstack/react-query@5.87.4(react@19.1.4))(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(babel-plugin-macros@3.1.0)(immer@10.1.1)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)
       '@mysten/sui': 1.21.2(typescript@5.5.4)
-      '@sodax/types': 1.0.4-beta
-      '@sodax/wallet-sdk-core': 1.0.4-beta(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@sodax/types': 1.1.0-beta-rc1
+      '@sodax/wallet-sdk-core': 1.1.0-beta-rc1(@types/react@19.2.9)(bufferutil@4.1.0)(encoding@0.1.13)(react-dom@19.1.4(react@19.1.4))(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
       '@solana/spl-token': 0.4.9(@solana/web3.js@1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.1.0)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)(utf-8-validate@5.0.10)
       '@solana/wallet-adapter-react': 0.15.35(@solana/web3.js@1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10))(bs58@6.0.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10))(react@19.1.4)(typescript@5.5.4)
       '@solana/wallet-adapter-wallets': 0.19.30(@babel/runtime@7.28.6)(@react-native-async-storage/async-storage@1.24.0(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10)))(@solana/sysvars@2.3.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4))(@solana/web3.js@1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10))(@types/react@19.2.9)(bs58@6.0.0)(bufferutil@4.1.0)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(react-dom@19.1.4(react@19.1.4))(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10))(react@19.1.4)(tslib@2.8.1)(typescript@5.5.4)(utf-8-validate@5.0.10)(ws@8.18.0(bufferutil@4.1.0)(utf-8-validate@5.0.10))(zod@3.25.76)
