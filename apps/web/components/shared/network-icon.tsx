@@ -13,6 +13,7 @@ import { LightLinkIcon } from '@/components/icons/chains/lightlink';
 import { IcxIcon } from '@/components/icons/chains/icon';
 import { HyperIcon } from '@/components/icons/chains/hyper';
 import { EthereumIcon } from '@/components/icons/chains/ethereum';
+import { KaiaIcon } from '@/components/icons/chains/kaia';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -29,6 +30,7 @@ import {
   HYPEREVM_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 interface NetworkIconProps {
@@ -54,6 +56,7 @@ export default function NetworkIcon({ id, className }: NetworkIconProps): React.
       {id === LIGHTLINK_MAINNET_CHAIN_ID && <LightLinkIcon />}
       {id === HYPEREVM_MAINNET_CHAIN_ID && <HyperIcon />}
       {id === ETHEREUM_MAINNET_CHAIN_ID && <EthereumIcon />}
+      {id === KAIA_MAINNET_CHAIN_ID && <KaiaIcon />}
     </div>
   );
 }
