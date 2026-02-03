@@ -25,7 +25,7 @@ const TABLE_HEADERS = [
   'Supply APY',
   'Supply APR',
   'Borrowed',
-  'Available',
+  'Available to borrow',
   '',
   '',
   '',
@@ -68,9 +68,9 @@ export function SupplyAssetsList(): ReactElement {
       return { label: 'At risk', className: 'text-negative' };
     }
     if (hf < 2) {
-      return { label: 'Caution', className: 'text-yellow-dark' };
+      return { label: 'Moderate Risk', className: 'text-yellow-dark' };
     }
-    return { label: 'Very safe', className: 'text-cherry-soda' };
+    return { label: 'Low Risk', className: 'text-cherry-soda' };
   }
   const healthState = healthFactorRaw !== undefined ? getHealthFactorState(healthFactorRaw) : undefined;
 
@@ -141,75 +141,77 @@ export function SupplyAssetsList(): ReactElement {
           </div>
         ) : (
           <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
-            <Table>
-              <TableHeader className="sticky top-0 bg-cream z-20">
-                <TableRow className="border-b border-cherry-grey/20">
-                  {TABLE_HEADERS.map((header, index) => {
-                    if (header === 'LT %') {
+            <div className="max-h-[400px] overflow-y-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-cream z-20 ">
+                  <TableRow className="border-b border-cherry-grey/20">
+                    {TABLE_HEADERS.map((header, index) => {
+                      if (header === 'LT %') {
+                        return (
+                          <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
+                            <div className="flex items-center gap-1">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    aria-label="Liquidation Threshold info"
+                                    className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
+                                  >
+                                    <Info className="w-3 h-3 mb-0.5 text-cherry-soda" />
+                                  </button>
+                                </TooltipTrigger>
+
+                                <TooltipContent>
+                                  <strong>Liquidation Threshold</strong> is the percentage of supplied value that counts
+                                  toward liquidation calculations.
+                                </TooltipContent>
+                              </Tooltip>
+                              <span>{header}</span>
+                            </div>
+                          </TableHead>
+                        );
+                      }
+
                       return (
                         <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
-                          <div className="flex items-center gap-1">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  aria-label="Liquidation Threshold info"
-                                  className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
-                                >
-                                  <Info className="w-3 h-3 mb-0.5 text-cherry-soda" />
-                                </button>
-                              </TooltipTrigger>
-
-                              <TooltipContent>
-                                <strong>Liquidation Threshold</strong> is the percentage of supplied value that counts
-                                toward liquidation calculations.
-                              </TooltipContent>
-                            </Tooltip>
-                            <span>{header}</span>
-                          </div>
+                          {header}
                         </TableHead>
                       );
-                    }
-
-                    return (
-                      <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
-                        {header}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isUserReservesLoading ||
-                isFormattedReservesLoading ||
-                isATokensLoading ||
-                !userReserves ||
-                !formattedReserves ? (
-                  <TableRow>
-                    <TableCell colSpan={16} className="text-center">
-                      Loading...
-                    </TableCell>
+                    })}
                   </TableRow>
-                ) : (
-                  userReserves &&
-                  tokens.map(token => (
-                    <SupplyAssetsListItem
-                      key={token.address}
-                      token={token}
-                      walletBalance={
-                        balances?.[token.address]
-                          ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
-                          : '-'
-                      }
-                      formattedReserves={formattedReserves}
-                      userReserves={userReserves}
-                      aTokenBalancesMap={aTokenBalancesMap}
-                      onRefreshReserves={handleRefresh}
-                    />
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {isUserReservesLoading ||
+                  isFormattedReservesLoading ||
+                  isATokensLoading ||
+                  !userReserves ||
+                  !formattedReserves ? (
+                    <TableRow>
+                      <TableCell colSpan={16} className="text-center">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    userReserves &&
+                    tokens.map(token => (
+                      <SupplyAssetsListItem
+                        key={token.address}
+                        token={token}
+                        walletBalance={
+                          balances?.[token.address]
+                            ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
+                            : '-'
+                        }
+                        formattedReserves={formattedReserves}
+                        userReserves={userReserves}
+                        aTokenBalancesMap={aTokenBalancesMap}
+                        onRefreshReserves={handleRefresh}
+                      />
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
       </CardContent>

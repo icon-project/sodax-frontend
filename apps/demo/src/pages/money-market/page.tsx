@@ -45,7 +45,7 @@ export default function MoneyMarketPage() {
         {xAccount?.address ? (
           <div className="animate-in fade-in duration-500">
             <SupplyAssetsList />
-            <BorrowAssetsList />
+            <BorrowAssetsList initialChainId={selectedChainId} />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[500px] bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-12">

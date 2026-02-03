@@ -47,12 +47,7 @@ export function getBorrowableAssetsWithMarketData(
       const hubAsset = chainAssets[assetKey];
       if (!hubAsset) continue;
 
-      // filter out unsupported or incomplete entries
-      if (
-        !validVaults.has(hubAsset.vault.toLowerCase()) ||
-        hubAsset.symbol.includes('.') ||
-        hubAsset.symbol.toLowerCase().startsWith('soda')
-      ) {
+      if (!validVaults.has(hubAsset.vault.toLowerCase())) {
         continue;
       }
 
