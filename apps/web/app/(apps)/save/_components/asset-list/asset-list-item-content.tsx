@@ -24,7 +24,7 @@ export default function AssetListItemContent({
 }) {
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
-  const { isShowDeposits, selectedToken } = useSaveState();
+  const { isShowDeposits } = useSaveState();
   const { setIsShowDeposits, setSelectedToken } = useSaveActions();
 
   useEffect(() => {
