@@ -68,6 +68,7 @@ All swap methods are accessible through `sodax.swaps`:
 - `getIntent(txHash)` - Retrieve intent from hub chain transaction hash
 - `getFilledIntent(txHash)` - Get the filled intent state from the hub chain transaction hash by parsing the `IntentFilled` event.
   Useful for obtaining the final exact output amount and state details after an intent has been executed.
+- `getIntentSubmitTxExtraData(params)` - Get submit tx extra data for a hub chain intent
 - `getSolvedIntentPacket(params)` - Get the intent delivery info about solved intent from the Relayer API.
 - `getIntentHash(intent)` - Get keccak256 hash of an intent
 - `getStatus(request)` - Get intent status from Solver API
@@ -633,6 +634,38 @@ if (submitResult.ok) {
   // handle error
   console.error('[submitIntent] error:', submitResult.error);
 }
+```
+
+### Get Intent Submit Tx Extra Data
+
+When manually submitting a transaction to the relay API, you can include extra data derived from the hub chain intent. This extra data is required for some relayers and is returned as `{ address, payload }`.
+
+You can retrieve the extra data by passing either the hub chain transaction hash or a previously fetched `intent`.
+
+**NOTE** currently extra data is only required when source chain is Solana!
+
+```typescript
+import type { IntentRelayRequest, SubmitTxExtraData } from "@sodax/sdk";
+
+// Option 1: derive extra data from hub chain transaction hash
+const extraDataFromTx: SubmitTxExtraData = await sodax.swaps.getIntentSubmitTxExtraData({
+  txHash: '0x9b8c5f19b2e1f4f0d2e1c4f2a1f9d1f0a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9',
+});
+
+// Option 2: derive extra data from a known intent
+const intent = await sodax.swaps.getIntent(txHash);
+const extraDataFromIntent: SubmitTxExtraData = await sodax.swaps.getIntentSubmitTxExtraData({
+  intent,
+});
+
+const submitPayload = {
+  action: 'submit',
+  params: {
+    chain_id: '0x38.bsc',
+    tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
+    data: extraDataFromTx,
+  },
+} satisfies IntentRelayRequest<'submit'>;
 ```
 
 ### Post Execution to Solver API

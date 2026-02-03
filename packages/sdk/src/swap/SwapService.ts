@@ -12,6 +12,7 @@ import type {
   IntentRelayRequest,
   PacketData,
   RelayErrorCode,
+  SubmitTxExtraData,
   WaitUntilIntentExecutedPayload,
 } from '../shared/services/intentRelay/IntentRelayApiService.js';
 import { submitTransaction, waitUntilIntentExecuted } from '../shared/services/intentRelay/IntentRelayApiService.js';
@@ -197,6 +198,8 @@ export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   code: T;
   data: IntentErrorData<T>;
 };
+
+export type GetIntentSubmitTxExtraDataParams = { txHash: Hash } | { intent: Intent };
 
 export type SwapParams<S extends SpokeProviderType> = Prettify<
   {
@@ -601,7 +604,7 @@ export class SwapService {
                   data: {
                     address: intent.creator,
                     payload: data,
-                  },
+                  } satisfies SubmitTxExtraData,
                 },
               }
             : {
@@ -1380,6 +1383,30 @@ export class SwapService {
         },
       };
     }
+  }
+
+  /**
+   * Gets the submit tx extra data for an intent
+   * NOTE: Currently this is only required when source chain is Solana
+   * @param {GetIntentSubmitTxExtraDataParams} params - The txHash or intent parameters
+   * @param {Hash} params.txHash - The transaction hash on Hub chain
+   * @param {Intent} params.intent - The intent
+   * @returns {Promise<SubmitTxExtraData>} The submit tx extra data
+   */
+  public async getIntentSubmitTxExtraData(params: GetIntentSubmitTxExtraDataParams): Promise<SubmitTxExtraData> {
+    let intent: Intent;
+    if ('txHash' in params) {
+      intent = await this.getIntent(params.txHash);
+    } else {
+      intent = params.intent;
+    }
+
+    const txData = EvmSolverService.encodeCreateIntent(intent, this.config.intentsContract);
+
+    return {
+      address: intent.creator,
+      payload: txData.data,
+    };
   }
 
   /**
