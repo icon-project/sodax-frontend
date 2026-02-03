@@ -2645,10 +2645,21 @@ export const swapSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const,
   [REDBELLY_MAINNET_CHAIN_ID]: [
-    /*
-    @todo-xx
-    to be added, please contact
-    */
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.RBNT,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rETH,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBTC,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSOL,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBNB,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rHYPE,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rAVAX,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rXLM,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSUI,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rS,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rPOL,
   ] as const satisfies Token[],
   [KAIA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.KAIA,
