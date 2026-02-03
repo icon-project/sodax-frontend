@@ -1404,6 +1404,13 @@ export const spokeChainConfig = {
         address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
         xChainId: ETHEREUM_MAINNET_CHAIN_ID,
       },
+      WBTC: {
+        symbol: 'WBTC',
+        name: 'Wrapped Bitcoin',
+        decimals: 8,
+        address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      }
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [KAIA_MAINNET_CHAIN_ID]: {
@@ -2357,6 +2364,20 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'Wrapped Staked Ethereum',
       vault: SodaTokens.sodaWSTETH.address,
     },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0xd1a1c0ae27f661887fe76b0fd609eb2f6846a8b3',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.WBTC.address]: {
+      asset: '0x4ccbe4c2cf2aeed19314790622efd71dc0b67acb',
+      decimal: 8,
+      symbol: 'WBTC',
+      name: 'Wrapped Bitcoin',
+      vault: SodaTokens.sodaBTC.address,
+    }
   },
   [KAIA_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].nativeToken]: {
@@ -2780,6 +2801,10 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.WBTC,
   ] as const,
   [REDBELLY_MAINNET_CHAIN_ID]: [
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.RBNT,
