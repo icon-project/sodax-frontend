@@ -13,6 +13,7 @@ import {
   ICON_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export interface ChainUI {
@@ -32,6 +33,7 @@ export const EVM_CHAIN_ICONS = [
   '/chain/sonic.png',
   '/chain/lightlink.png',
   '/chain/hyper.png',
+  '/chain/0x2019.kaia.png',
 ];
 
 /**
@@ -73,6 +75,7 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/lightlink.png',
   },
   { id: HYPEREVM_MAINNET_CHAIN_ID, name: 'Hyper', icon: '/chain/hyper.png' },
+  { id: KAIA_MAINNET_CHAIN_ID, name: 'Kaia', icon: '/chain/0x2019.kaia.png' },
 ];
 
 /**
