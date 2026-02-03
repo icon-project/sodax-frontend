@@ -15,6 +15,8 @@ import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import AmountInputSlider from '../amount-input-slider';
 import { useRouter } from 'next/navigation';
 import AssetMetrics from './asset-metrics';
+import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
+import { useReservesUsdFormat } from '@sodax/dapp-kit';
 interface DepositInputAmountProps {
   selectedToken: XToken | null;
   tokens: XToken[];
@@ -36,6 +38,14 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy,
   const balance = selectedToken
     ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
     : 0n;
+
+  const { data: formattedReserves } = useReservesUsdFormat();
+  const tokensWithSupplyBalances = useTokenSupplyBalances(
+    selectedToken ? [selectedToken] : [],
+    formattedReserves || [],
+  );
+  const selectedTokenSupplyBalance = tokensWithSupplyBalances[0]?.supplyBalance ?? '0';
+  const hasDeposit = Number(selectedTokenSupplyBalance) > 0;
 
   const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
 
@@ -101,18 +111,14 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy,
   const getHelperText = () => {
     return (
       <>
-        {depositValue > 0 ? (
-          <>
-            <div className="flex gap-2">
-              <span className="text-clay-light">Yield/mo:</span>
-              <span className="font-['InterRegular'] text-espresso font-medium">
-                {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
-              </span>
-              <AlertCircleIcon width={16} height={16} className="text-clay" />
-            </div>
-          </>
-        ) : (
-          'To show your funds'
+        {depositValue > 0 && (
+          <div className="flex gap-2">
+            <span className="text-clay-light">Yield/mo:</span>
+            <span className="font-['InterRegular'] text-espresso font-medium">
+              {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
+            </span>
+            <AlertCircleIcon width={16} height={16} className="text-clay" />
+          </div>
         )}
       </>
     );
@@ -235,7 +241,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy,
                     setIsDepositDialogOpen(true);
                   }}
                 >
-                  Continue
+                  {hasDeposit ? 'Add more' : 'Continue'}
                 </Button>
               )}
               <DepositDialog
