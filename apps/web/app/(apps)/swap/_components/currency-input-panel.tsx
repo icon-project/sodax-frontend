@@ -182,7 +182,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 onClick={e => e.stopPropagation()}
                 onFocus={e => e.stopPropagation()}
                 placeholder="0"
-                className="!text-2xl text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso [&::selection]:bg-cherry-brighter [&::selection]:text-espresso [&::-moz-selection]:bg-cherry-brighter [&::-moz-selection]:text-espresso placeholder:text-espresso w-32 -ml-32 sm:ml-0 md:w-full !px-0 h-7 rounded-none"
+                className="text-2xl! text-right border-none shadow-none focus:outline-none focus:ring-0 focus:border-none focus:shadow-none focus-visible:border-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 !pr-0 focus:!text-espresso text-espresso [&::selection]:bg-cherry-brighter [&::selection]:text-espresso [&::-moz-selection]:bg-cherry-brighter [&::-moz-selection]:text-espresso placeholder:text-espresso w-32 -ml-32 sm:ml-0 md:w-full !px-0 h-7 rounded-none"
                 readOnly={type === CurrencyInputPanelType.OUTPUT}
               />
             </div>
@@ -203,7 +203,7 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
                 onChange={e => handleChange(e.target.value)}
                 onClick={e => e.stopPropagation()}
                 onFocus={e => e.stopPropagation()}
-                className={`h-10 flex-1 text-(length:--body-small) border-cream-white focus:!border-cream-white rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 ${!isValidAddress ? 'text-negative focus-visible:text-negative' : ''}`}
+                className={`h-10 flex-1 text-(length:--body-small) border-cream-white focus:border-cream-white! rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 ${!isValidAddress ? 'text-negative focus-visible:text-negative' : ''}`}
               />
             </div>
             {stellarAccountValidation?.ok === false && validateChainAddress(customDestinationAddress, 'STELLAR') && (
