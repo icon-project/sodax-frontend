@@ -661,8 +661,8 @@ const extraDataFromIntent: SubmitTxExtraData = await sodax.swaps.getIntentSubmit
 const submitPayload = {
   action: 'submit',
   params: {
-    chain_id: '0x38.bsc',
-    tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
+    chain_id: getIntentRelayChainId(srcChain).toString(),
+    tx_hash: <spoke tx hash>,
     data: extraDataFromTx,
   },
 } satisfies IntentRelayRequest<'submit'>;
