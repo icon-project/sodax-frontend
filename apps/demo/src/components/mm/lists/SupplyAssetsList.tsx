@@ -141,45 +141,47 @@ export function SupplyAssetsList(): ReactElement {
           </div>
         ) : (
           <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
-            <div className="max-h-[400px] overflow-y-auto">
-              <Table>
-                <TableHeader className="sticky top-0 bg-cream z-20 ">
-                  <TableRow className="border-b border-cherry-grey/20">
-                    {TABLE_HEADERS.map((header, index) => {
-                      if (header === 'LT %') {
-                        return (
-                          <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
-                            <div className="flex items-center gap-1">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    aria-label="Liquidation Threshold info"
-                                    className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
-                                  >
-                                    <Info className="w-3 h-3 mb-0.5 text-cherry-soda" />
-                                  </button>
-                                </TooltipTrigger>
-
-                                <TooltipContent>
-                                  <strong>Liquidation Threshold</strong> is the percentage of supplied value that counts
-                                  toward liquidation calculations.
-                                </TooltipContent>
-                              </Tooltip>
-                              <span>{header}</span>
-                            </div>
-                          </TableHead>
-                        );
-                      }
-
+            <Table className="table-fixed w-full">
+              <TableHeader className="sticky top-0 bg-cream z-20">
+                <TableRow className="border-b border-cherry-grey/20">
+                  {TABLE_HEADERS.map((header, index) => {
+                    if (header === 'LT %') {
                       return (
                         <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
-                          {header}
+                          <div className="flex items-center gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label="Liquidation Threshold info"
+                                  className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
+                                >
+                                  <Info className="w-3 h-3 mb-0.5 text-cherry-soda" />
+                                </button>
+                              </TooltipTrigger>
+
+                              <TooltipContent>
+                                <strong>Liquidation Threshold</strong> is the percentage of supplied value that counts
+                                toward liquidation calculations.
+                              </TooltipContent>
+                            </Tooltip>
+                            <span>{header}</span>
+                          </div>
                         </TableHead>
                       );
-                    })}
-                  </TableRow>
-                </TableHeader>
+                    }
+
+                    return (
+                      <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
+                        {header}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              </TableHeader>
+            </Table>
+            <div className="max-h-[400px] overflow-y-auto">
+              <Table className="table-fixed w-full">
                 <TableBody>
                   {isUserReservesLoading ||
                   isFormattedReservesLoading ||
