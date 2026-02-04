@@ -6,6 +6,7 @@ import {
   BSC_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   OPTIMISM_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
@@ -18,7 +19,18 @@ import { getWagmiChainId, isNativeToken } from '@/utils';
 import { type Address, defineChain, erc20Abi } from 'viem';
 import { getPublicClient } from 'wagmi/actions';
 import { type Config, createConfig, http } from 'wagmi';
-import { mainnet, avalanche, base, optimism, polygon, arbitrum, bsc, sonic, lightlinkPhoenix } from 'wagmi/chains';
+import {
+  mainnet,
+  avalanche,
+  base,
+  optimism,
+  polygon,
+  arbitrum,
+  bsc,
+  sonic,
+  lightlinkPhoenix,
+  kaia,
+} from 'wagmi/chains';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
@@ -48,7 +60,7 @@ export const hyper = /*#__PURE__*/ defineChain({
 
 export const createWagmiConfig = (config: RpcConfig) => {
   return createConfig({
-    chains: [mainnet, avalanche, arbitrum, base, bsc, sonic, optimism, polygon, hyper, lightlinkPhoenix],
+    chains: [mainnet, avalanche, arbitrum, base, bsc, sonic, optimism, polygon, hyper, lightlinkPhoenix, kaia],
     ssr: true,
     transports: {
       [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
@@ -61,6 +73,7 @@ export const createWagmiConfig = (config: RpcConfig) => {
       [polygon.id]: http(config[POLYGON_MAINNET_CHAIN_ID]),
       [hyper.id]: http(config[HYPEREVM_MAINNET_CHAIN_ID]),
       [lightlinkPhoenix.id]: http(config[LIGHTLINK_MAINNET_CHAIN_ID]),
+      [kaia.id]: http(config[KAIA_MAINNET_CHAIN_ID]),
     },
   });
 };
@@ -99,6 +112,7 @@ export class EvmXService extends XService {
       const balance = await getPublicClient(this.wagmiConfig, { chainId: chainId })?.getBalance({
         address: address as Address,
       });
+      console.log('balance', balance);
       return balance || 0n;
     }
 
@@ -133,7 +147,7 @@ export class EvmXService extends XService {
         chainId: getWagmiChainId(xChainId),
       })),
     });
-
+    console.log('result', result);
     return nonNativeXTokens
       .map((token, index) => ({
         symbol: token.symbol,

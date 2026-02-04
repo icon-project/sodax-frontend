@@ -23,11 +23,11 @@ export function useLiquidity(tokens: XToken[], formattedReserves?: FormatReserve
       const deposits = Number(entry.totalLiquidityUSD ?? 0);
 
       return {
-        apy: `${apy.toFixed(4)}%`,
+        apy: `${apy.toFixed(2)}%`,
         deposits: deposits,
       };
     } catch {
-      return { apy: '-', deposits: '-' };
+      return { apy: '0', deposits: 0 };
     }
   }, [tokens, formattedReserves, isLoading]);
 }

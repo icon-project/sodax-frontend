@@ -41,7 +41,7 @@ function TooltipContent({
       >
         {children}
         <ArrowRightIcon
-          className="absolute -bottom-6 left-1/2 -translate-x-1/2 rotate-270 z-50"
+          className="absolute -bottom-6 left-1/2 -translate-x-1/2 rotate-270 z-50 pointer-events-none"
           fill="white"
           height={40}
         />

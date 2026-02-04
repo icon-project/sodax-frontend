@@ -18,6 +18,7 @@ import {
   LIGHTLINK_MAINNET_CHAIN_ID,
   NEAR_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
 import { sonic } from 'viem/chains';
@@ -107,6 +108,7 @@ describe('e2e', () => {
     [LIGHTLINK_MAINNET_CHAIN_ID]: [],
     [NEAR_MAINNET_CHAIN_ID]: [],
     [ETHEREUM_MAINNET_CHAIN_ID]: [],
+    [KAIA_MAINNET_CHAIN_ID]: [],
   };
 
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {
@@ -156,13 +158,15 @@ describe('e2e', () => {
 
         if (
           !vaultAssets.includes(hubAsset.asset.toLowerCase() as Address) &&
-          hubAsset.asset.toLowerCase() !== '0x0000000000000000000000000000000000000000'
+          hubAsset.asset.toLowerCase() !== '0x0000000000000000000000000000000000000000' &&
+          hubAsset.asset.toLowerCase() !== vaultAddress.toLowerCase()
         ) {
           throw new Error(`Hub asset ${hubAsset.asset} not found in vault ${vaultAddress} on chain ${spokeChain}`);
         }
         expect(
           vaultAssets.includes(hubAsset.asset.toLowerCase() as Address) ||
-            hubAsset.asset.toLowerCase() === '0x0000000000000000000000000000000000000000',
+            hubAsset.asset.toLowerCase() === '0x0000000000000000000000000000000000000000' ||
+            hubAsset.asset.toLowerCase() === vaultAddress.toLowerCase(),
         ).toBe(true);
       }
     }

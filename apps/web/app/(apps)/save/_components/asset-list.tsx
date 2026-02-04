@@ -15,7 +15,7 @@ export default function AssetList({
   selectedChain: string | null;
 }) {
   const { activeAsset, isAssetListBlurred } = useSaveState();
-  const { setActiveAsset } = useSaveActions();
+  const { setActiveAsset, setIsShowDeposits, setSelectedToken } = useSaveActions();
   const allTokens = useMemo(() => getMoneymarketTokens(), []);
   const filteredTokens = useMemo(
     () => allTokens.filter(t => (selectedChain ? t.xChainId === selectedChain : true)),
@@ -64,7 +64,11 @@ export default function AssetList({
       collapsible
       className="network-accordion"
       value={activeAsset}
-      onValueChange={setActiveAsset}
+      onValueChange={value => {
+        setIsShowDeposits(false);
+        setSelectedToken(null);
+        setActiveAsset(value);
+      }}
     >
       {hasAssets ? (
         <>
@@ -77,7 +81,12 @@ export default function AssetList({
             Ready to earn
           </div>
           {readyToEarn.map(asset => (
-            <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+            <AssetListItem
+              key={asset.symbol}
+              data={asset}
+              isExpanded={activeAsset === asset.symbol}
+              isReadyToEarn={true}
+            />
           ))}
 
           {availableToDeposit.length > 0 && (
@@ -91,18 +100,28 @@ export default function AssetList({
                 Available to deposit
               </div>
               {availableToDeposit.map(asset => (
-                <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+                <AssetListItem
+                  key={asset.symbol}
+                  data={asset}
+                  isExpanded={activeAsset === asset.symbol}
+                  isReadyToEarn={false}
+                />
               ))}
             </>
           )}
-          <NoResults />
+          {(searchQuery || selectedChain) && <NoResults />}
         </>
       ) : (
         <>
           {allAssets.map(asset => (
-            <AssetListItem key={asset.symbol} data={asset} isExpanded={activeAsset === asset.symbol} />
+            <AssetListItem
+              key={asset.symbol}
+              data={asset}
+              isExpanded={activeAsset === asset.symbol}
+              isReadyToEarn={false}
+            />
           ))}
-          <NoResults />
+          {(searchQuery || selectedChain) && <NoResults />}
         </>
       )}
     </Accordion>
