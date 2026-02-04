@@ -1,4 +1,3 @@
-// apps/demo/src/components/mm/lists/SupplyAssetsListItem.tsx
 import React, { type ReactElement } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken, Address } from '@sodax/types';
@@ -16,6 +15,7 @@ interface SupplyAssetsListItemProps {
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
   aTokenBalancesMap?: Map<Address, bigint>;
+  onRefreshReserves?: () => void;
 }
 
 export function SupplyAssetsListItem({
@@ -24,21 +24,27 @@ export function SupplyAssetsListItem({
   formattedReserves,
   userReserves,
   aTokenBalancesMap,
+  onRefreshReserves,
 }: SupplyAssetsListItemProps): ReactElement {
   const metrics = useReserveMetrics({
     token,
-    formattedReserves: formattedReserves,
+    formattedReserves,
     userReserves: userReserves as UserReserveData[],
   });
 
-  // Get aToken balance from the pre-fetched map
   const aTokenAddress = metrics.formattedReserve?.aTokenAddress;
+
+  // 2. GET THE RAW BIGINT FROM THE MAP
   const aTokenBalance =
     aTokenAddress && isAddress(aTokenAddress) && aTokenBalancesMap
       ? aTokenBalancesMap.get(aTokenAddress as Address)
       : undefined;
 
-  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(4) : undefined;
+  // ALWAYS USE 18 DECIMALS FOR aTOKENS
+  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(5) : '-';
+
+  // OPTIONAL: FORMAT WALLET BALANCE (uses token's native decimals)
+  const formattedWallet = walletBalance ? Number(walletBalance).toFixed(4) : '-';
 
   const formattedDebt = metrics.userReserve
     ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
@@ -77,7 +83,7 @@ export function SupplyAssetsListItem({
       <TableCell>{availableToBorrow}</TableCell>
       <TableCell className="flex flex-row gap-2">
         <SupplyButton token={token} />
-        <WithdrawButton token={token} />
+        <WithdrawButton token={token} onSuccess={onRefreshReserves} />
         <OldBorrowButton token={token} />
         <RepayButton token={token} />
       </TableCell>
