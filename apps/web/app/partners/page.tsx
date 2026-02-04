@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     siteName: 'SODAX',
     images: [
       {
-        url: 'https://sodax.com/og-partners.png',
+        url: 'https://sodax.com/partners/link-preview.png',
         width: 1200,
         height: 630,
         alt: 'SODAX Partner Network - Cross-Network Execution Infrastructure',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: 'SODAX Partner Network - Cross-Network Execution Infrastructure',
     description:
       'Build cross-network applications without becoming an infrastructure team. SODAX coordinates execution and liquidity across multiple networks for wallets, DEXs, and protocols.',
-    images: ['https://sodax.com/og-partners.png'],
+    images: ['https://sodax.com/partners/link-preview.png'],
     site: '@gosodax',
     creator: '@gosodax',
   },

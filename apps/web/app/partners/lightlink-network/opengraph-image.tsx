@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const alt = 'Amped Finance Case Study | SODAX Partners';
+export const alt = 'LightLink Network Case Study | SODAX Partners';
 export const size = {
   width: 1200,
   height: 630,
@@ -11,8 +11,8 @@ export const size = {
 export const contentType = 'image/png';
 
 // Partner-specific configuration
-const partnerName = 'Amped Finance';
-const partnerLogoPath = '/partners/amped-finance/logo.png';
+const partnerName = 'LightLink Network';
+const partnerLogoPath = '/partners/lightlink-network/logo.png';
 
 export default async function Image() {
   const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3001';
