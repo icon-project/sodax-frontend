@@ -61,7 +61,7 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
         setCurrentStakeStep: (step: STAKE_STEP) => set({ currentStakeStep: step }),
         setTotalStakedUsdValue: (value: number) => set({ totalStakedUsdValue: value }),
         setSelectedToken: (token: XToken | null) => set({ selectedToken: token }),
-        setStakeMode: (mode: STAKE_MODE) => set({ stakeMode: mode }),
+        setStakeMode: (mode: STAKE_MODE) => set({ stakeMode: mode, stakeValue: 0n, stakeTypedValue: '' }),
         resetStakeState: () => {
           set({
             currentStakeStep: STAKE_STEP.TERMS,

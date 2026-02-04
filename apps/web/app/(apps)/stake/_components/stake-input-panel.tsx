@@ -14,12 +14,13 @@ import { cn, formatTokenAmount } from '@/lib/utils';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import StakeDialog from './stake-dialog/stake-dialog';
 import { getChainName } from '@/constants/chains';
+import { STAKE_MODE } from '../_stores/stake-store';
 
 export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
 
-  const { selectedToken, stakeValue, stakeTypedValue } = useStakeState();
-  const { setSelectedToken, setStakeValue, setStakeTypedValue } = useStakeActions();
+  const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance } = useStakeState();
+  const { setSelectedToken, setStakeTypedValue } = useStakeActions();
 
   const openModal = useModalStore(state => state.openModal);
 
@@ -50,6 +51,7 @@ export function StakeInputPanel(): React.JSX.Element {
   });
   const balance = selectedToken ? balances?.[selectedToken.address] || 0n : 0n;
   const formattedBalance = selectedToken ? formatTokenAmount(balance, selectedToken.decimals) : '0';
+  const formattedUserXSodaBalance = userXSodaBalance ? formatTokenAmount(userXSodaBalance, 18) : '0';
 
   const handleConnect = (): void => {
     const chainId = selectedToken?.xChainId || 'sonic';
@@ -68,6 +70,14 @@ export function StakeInputPanel(): React.JSX.Element {
     setIsStakeDialogOpen(true);
   };
 
+  const handleUnstake = (): void => {
+    console.log('handleUnstake');
+  };
+
+  const sliderMaxValue = useMemo(() => {
+    return stakeMode === STAKE_MODE.STAKING ? Number(formattedBalance) : Number(formattedUserXSodaBalance);
+  }, [stakeMode, formattedBalance, formattedUserXSodaBalance]);
+
   return (
     <>
       <div className="w-full px-(--layout-space-big) pt-10 pb-8 flex flex-col justify-start items-start gap-8 sm:gap-4">
@@ -82,7 +92,7 @@ export function StakeInputPanel(): React.JSX.Element {
         <div className="w-full flex flex-col sm:flex-row gap-6 sm:gap-2 justify-between items-center">
           <CustomSlider
             defaultValue={[0]}
-            max={Number(formattedBalance)}
+            max={sliderMaxValue}
             step={0.0001}
             value={[Number(stakeTypedValue)]}
             onValueChange={value => setStakeTypedValue(value[0] ? value[0].toString() : '')}
@@ -90,35 +100,52 @@ export function StakeInputPanel(): React.JSX.Element {
             trackClassName="bg-cream-white data-[orientation=horizontal]:h-1"
             rangeClassName={cn('[background-size:20px_20px] ', 'bg-cherry-bright')}
             thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
-            disabled={!selectedToken || !walletConnected}
+            disabled={
+              !selectedToken || !walletConnected || (stakeMode === STAKE_MODE.UNSTAKING && userXSodaBalance === 0n)
+            }
           />
 
           <div className="w-full flex gap-2">
             <Input
               type="number"
-              placeholder="0 SODA"
+              placeholder={stakeMode === STAKE_MODE.STAKING ? '0 SODA' : '0 xSODA'}
               value={stakeTypedValue}
               onChange={e => setStakeTypedValue(e.target.value)}
               disabled={!selectedToken || !walletConnected}
               className="pl-6 pr-4 rounded-[32px]"
             />
 
-            {!walletConnected && selectedToken ? (
+            {stakeMode === STAKE_MODE.STAKING ? (
+              !walletConnected && selectedToken ? (
+                <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
+                  Connect {getChainName(selectedToken.xChainId)}
+                </Button>
+              ) : balance > 0n ? (
+                <Button
+                  variant="cherry"
+                  className="px-6"
+                  onClick={handleStake}
+                  disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > balance}
+                >
+                  {userXSodaBalance > 0n ? 'Stake More' : 'Stake'}
+                </Button>
+              ) : (
+                <Button variant="cherry" className="px-6" onClick={handleBuySoda}>
+                  Buy SODA
+                </Button>
+              )
+            ) : !walletConnected && selectedToken ? (
               <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
                 Connect {getChainName(selectedToken.xChainId)}
               </Button>
-            ) : balance > 0n ? (
+            ) : (
               <Button
                 variant="cherry"
                 className="px-6"
-                onClick={handleStake}
-                disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > balance}
+                onClick={handleUnstake}
+                disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > userXSodaBalance}
               >
-                Stake
-              </Button>
-            ) : (
-              <Button variant="cherry" className="px-6" onClick={handleBuySoda}>
-                Buy SODA
+                Unstake
               </Button>
             )}
           </div>

@@ -3,19 +3,12 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Info } from 'lucide-react';
-import { useSpokeProvider } from '@sodax/dapp-kit';
 import { useStakeState } from '../_stores/stake-store-provider';
-import { useStakingInfo } from '@sodax/dapp-kit';
-import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import { formatTokenAmount } from '@/lib/utils';
 import { STAKING_APR, UNSTAKING_PERIOD_DAYS } from './constants';
 
 export function StakeStatsCard(): React.JSX.Element {
-  const { selectedToken } = useStakeState();
-  const walletProvider = useWalletProvider(selectedToken?.xChainId);
-  const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
-
-  const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
+  const { userXSodaBalance, userXSodaValue } = useStakeState();
 
   return (
     <div className="w-full relative flex flex-col justify-start items-start gap-4">
@@ -37,7 +30,7 @@ export function StakeStatsCard(): React.JSX.Element {
         <div className="grow flex flex-col justify-center items-start gap-1">
           <div className="flex justify-center items-center gap-1">
             <span className="text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-              {formatTokenAmount(stakingInfo?.userXSodaBalance || 0n, 18)}
+              {formatTokenAmount(userXSodaBalance, 18)}
             </span>
             <span className="text-clay text-(length:--body-super-comfortable) font-normal font-['Inter'] leading-5">
               {' '}
@@ -46,7 +39,7 @@ export function StakeStatsCard(): React.JSX.Element {
           </div>
           <div className="flex justify-center items-center gap-1">
             <div className="justify-center text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-              ~{formatTokenAmount(stakingInfo?.userXSodaValue || 0n, 18)} SODA
+              ~{formatTokenAmount(userXSodaValue, 18)} SODA
             </div>
             <div className="w-4 h-4 relative overflow-hidden">
               <Info className="w-3.5 h-3.5 text-clay-light" />

@@ -1,10 +1,12 @@
 // apps/web/app/(apps)/stake/_stores/stake-store-provider.tsx
 'use client';
 
-import { type ReactNode, createContext, useRef, useContext } from 'react';
+import { type ReactNode, createContext, useRef, useContext, useMemo } from 'react';
 import { useStore } from 'zustand';
 
 import { type StakeStore, createStakeStore } from './stake-store';
+import { useSpokeProvider, useStakingInfo } from '@sodax/dapp-kit';
+import { useWalletProvider } from '@sodax/wallet-sdk-react';
 
 export type StakeStoreApi = ReturnType<typeof createStakeStore>;
 
@@ -40,6 +42,19 @@ export const useStakeState = () => {
   const totalStakedUsdValue = useStakeStore(state => state.totalStakedUsdValue);
   const selectedToken = useStakeStore(state => state.selectedToken);
   const stakeMode = useStakeStore(state => state.stakeMode);
+
+  const walletProvider = useWalletProvider(selectedToken?.xChainId);
+  const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
+
+  const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
+
+  const { userXSodaBalance, userXSodaValue } = useMemo(() => {
+    if (!stakingInfo || isLoadingStakingInfo) {
+      return { userXSodaBalance: 0n, userXSodaValue: 0n };
+    }
+    return { userXSodaBalance: stakingInfo.userXSodaBalance, userXSodaValue: stakingInfo.userXSodaValue };
+  }, [stakingInfo, isLoadingStakingInfo]);
+
   return {
     stakeValue,
     stakeTypedValue,
@@ -47,6 +62,11 @@ export const useStakeState = () => {
     totalStakedUsdValue,
     selectedToken,
     stakeMode,
+
+    userXSodaBalance,
+    userXSodaValue,
+    stakingInfo,
+    isLoadingStakingInfo,
   };
 };
 
