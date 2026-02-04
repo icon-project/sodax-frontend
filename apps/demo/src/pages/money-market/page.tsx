@@ -34,9 +34,7 @@ export default function MoneyMarketPage() {
             {walletAddressOnHub && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-clay">Hub Wallet Address:</span>
-                <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark font-mono text-xs">
-                  {walletAddressOnHub}
-                </span>
+                <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark text-xs">{walletAddressOnHub}</span>
               </div>
             )}
           </div>

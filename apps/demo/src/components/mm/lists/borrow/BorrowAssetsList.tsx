@@ -128,7 +128,10 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
             <TableHeader className="sticky top-0 bg-cream z-20">
               <TableRow className="border-b border-cherry-grey/20">
                 {TABLE_HEADERS.map(header => (
-                  <TableHead key={header} className="text-cherry-dark font-bold">
+                  <TableHead
+                    key={header}
+                    className="sticky top-0 z-10 bg-cream text-cherry-dark font-bold whitespace-nowrap after:absolute after:inset-0 after:-z-10 after:bg-cream"
+                  >
                     {header}
                   </TableHead>
                 ))}
