@@ -38,6 +38,13 @@ export const tabConfigs: TabConfig[] = [
     enabled: false,
   },
   {
+    value: 'stake',
+    type: 'stake',
+    label: 'Stake',
+    content: 'a quick stake',
+    enabled: true,
+  },
+  {
     value: 'migrate',
     type: 'migrate',
     label: 'Migrate',
