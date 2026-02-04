@@ -25,6 +25,8 @@ import { type Address, encodeFunctionData, type Hash, type Hex, toHex } from 'vi
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId, NEAR_MAINNET_CHAIN_ID, type EvmRawTransaction } from '@sodax/types';
 import dotenv from 'dotenv';
 import { EvmWalletProvider, NearWalletProvider } from '@sodax/wallet-sdk-core';
+import * as ethers from 'ethers';
+
 dotenv.config();
 
 // load PK from .env
@@ -305,7 +307,7 @@ async function fillIntentHub(
     throw error;
   }
 }
-import * as ethers from 'ethers';
+
 async function fillIntentHubRaw(
   fill_id: bigint,
   intentId: bigint,

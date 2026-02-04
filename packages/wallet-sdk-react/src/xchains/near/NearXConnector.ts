@@ -21,6 +21,10 @@ export class NearXConnector extends XConnector {
     const wallet = await walletSelector.connect(this._wallet.manifest.id);
     const accounts = await wallet.getAccounts();
 
+    if (accounts.length === 0 || accounts[0] === undefined) {
+      return undefined;
+    }
+
     return {
       address: accounts[0].accountId,
       xChainType: this.xChainType,

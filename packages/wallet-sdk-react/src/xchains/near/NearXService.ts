@@ -33,7 +33,6 @@ export class NearXService extends XService {
     // get native balance
     if (xToken.symbol === 'NEAR') {
       const account = await provider.viewAccount(address ?? '');
-      console.log(account, address);
       return BigInt(account.amount);
     }
 
