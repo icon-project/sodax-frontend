@@ -51,4 +51,4 @@ for urgent task:
 rules for merging:
 1. when merge feature branches to main, use squash merge
 2. when merge main into staging, use normal merge
-3. when merge staging into production, use normal merge 
+3. when merge staging into production, use normal merge.
