@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { PartnerPageHeader } from './partner-page-header';
+import { MarketingHeader } from '@/components/shared/marketing-header';
 import { PartnerSimpleFooter } from './partner-simple-footer';
 
 export interface PartnerMetadata {
@@ -61,7 +61,7 @@ export function PartnerPageLayout({
 
   return (
     <div className="bg-white flex flex-col min-h-screen w-full">
-        <PartnerPageHeader backLink={backLink} backText={backText} />
+        <MarketingHeader backLink={backLink} backText={backText} />
 
         {/* Content */}
         <div className="flex flex-col items-center w-full">

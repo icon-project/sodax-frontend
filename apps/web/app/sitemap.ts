@@ -42,6 +42,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
+    {
+      url: `${SITE_URL}/partners`,
+      lastModified: new Date('2026-01-28'),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/partners/amped-finance`,
+      lastModified: LAST_MODIFIED,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
   ];
 
   // Note: /news and /press redirect to external sites (news.sodax.com, press.sodax.com)

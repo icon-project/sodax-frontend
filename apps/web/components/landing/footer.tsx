@@ -1,3 +1,5 @@
+'use client';
+
 import { Label } from '@/components/ui/label';
 import { FooterLink } from '@/components/landing/footer-link';
 import Image from 'next/image';
