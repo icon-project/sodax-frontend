@@ -4,6 +4,10 @@ export type AssetUsdPrice = {
   usdPrice: number | null;
 };
 
+function normalizeSymbol(symbol: string) {
+  return symbol.replace(/^soda/i, '').toUpperCase();
+}
+
 // a bit of a hacky way of getting prices consulted with Paul, using an endpoint from the Sodax Monitor that returns a 1-time-fetched price for a given asset. Not ideal but works fine for now
 export async function getAssetUsdPrice(assetSymbol: string): Promise<AssetUsdPrice> {
   if (!assetSymbol) {
@@ -53,21 +57,33 @@ export async function getAssetUsdPrice(assetSymbol: string): Promise<AssetUsdPri
     usdPrice: null,
   };
 }
-//check if chainId might be needed
-//function that
-//signature of the function - check it
 
-//TODO make sure it doesnt render usdc prices
+//currently just assets needed for partner dashboard
 function getCoingeckoIdFromSymbol(symbol: string): string {
-  switch (symbol.toUpperCase()) {
+  const s = normalizeSymbol(symbol);
+
+  switch (s) {
     case 'BTC':
+    case 'BTCB':
       return 'bitcoin';
 
-    case 'BTCB': // BTC on BSC
-      return 'bitcoin';
+    case 'WBTC':
+      return 'wrapped-bitcoin';
+
+    case 'CBBTC':
+      return 'coinbase-wrapped-btc';
 
     case 'ETH':
       return 'ethereum';
+
+    case 'WETH':
+      return 'ethereum'; // matches Monitor (e.g. Sonic)
+
+    case 'WSTETH':
+      return 'wrapped-steth';
+
+    case 'WEETH':
+      return 'wrapped-eeth';
 
     case 'BNB':
       return 'binancecoin';
@@ -79,25 +95,29 @@ function getCoingeckoIdFromSymbol(symbol: string): string {
       return 'avalanche-2';
 
     case 'MATIC':
-      return 'matic-network'; // CoinGecko still uses this id
-
-    case 'USDC':
-      return 'usd-coin';
-
-    case 'USDT':
-      return 'tether';
+      return 'matic-network';
 
     case 'SUI':
       return 'sui';
 
+    case 'XLM':
+      return 'stellar';
+
+    case 'ICX':
+      return 'icon';
+
+    case 'INJ':
+      return 'injective-protocol';
+
     case 'HYPE':
-      return 'hyperliquid'; // confirm if this is correct for your token
+      return 'hyperliquid';
 
     case 'S':
+    case 'WS':
       return 'sonic-3';
 
-    case 'SODAX': // TODO important: later change to real SODAX token
-      return 'icon';
+    case 'SODAX':
+      return 'icon'; // ✅ KEEP THIS
 
     default:
       return 'unknown';
