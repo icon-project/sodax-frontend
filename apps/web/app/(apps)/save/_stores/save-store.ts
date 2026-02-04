@@ -1,6 +1,7 @@
 // apps/web/app/(apps)/save/_stores/save-store.ts
 import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
+import type { XToken } from '@sodax/types';
 
 export enum DEPOSIT_STEP {
   TERMS = 0,
@@ -17,6 +18,8 @@ export type SaveState = {
   scrollToCenter: boolean;
   isNetworkPickerOpened: boolean;
   isAssetListBlurred: boolean;
+  isShowDeposits: boolean;
+  selectedToken: XToken | null;
 };
 
 export type SaveActions = {
@@ -28,6 +31,8 @@ export type SaveActions = {
   setScrollToCenter: (value: boolean) => void;
   setIsNetworkPickerOpened: (value: boolean) => void;
   setIsAssetListBlurred: (value: boolean) => void;
+  setIsShowDeposits: (value: boolean) => void;
+  setSelectedToken: (token: XToken | null) => void;
   resetSaveState: () => void;
 };
 
@@ -42,6 +47,8 @@ export const defaultSaveState: SaveState = {
   scrollToCenter: false,
   isNetworkPickerOpened: false,
   isAssetListBlurred: false,
+  isShowDeposits: false,
+  selectedToken: null,
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -57,6 +64,8 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
         setScrollToCenter: (value: boolean) => set({ scrollToCenter: value }),
         setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
         setIsAssetListBlurred: (value: boolean) => set({ isAssetListBlurred: value }),
+        setIsShowDeposits: (value: boolean) => set({ isShowDeposits: value }),
+        setSelectedToken: (token: XToken | null) => set({ selectedToken: token }),
         resetSaveState: () => {
           set({
             currentDepositStep: DEPOSIT_STEP.TERMS,

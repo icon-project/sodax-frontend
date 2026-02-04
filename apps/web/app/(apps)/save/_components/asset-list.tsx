@@ -15,7 +15,7 @@ export default function AssetList({
   selectedChain: string | null;
 }) {
   const { activeAsset, isAssetListBlurred } = useSaveState();
-  const { setActiveAsset } = useSaveActions();
+  const { setActiveAsset, setIsShowDeposits, setSelectedToken } = useSaveActions();
   const allTokens = useMemo(() => getMoneymarketTokens(), []);
   const filteredTokens = useMemo(
     () => allTokens.filter(t => (selectedChain ? t.xChainId === selectedChain : true)),
@@ -64,7 +64,11 @@ export default function AssetList({
       collapsible
       className="network-accordion"
       value={activeAsset}
-      onValueChange={setActiveAsset}
+      onValueChange={value => {
+        setIsShowDeposits(false);
+        setSelectedToken(null);
+        setActiveAsset(value);
+      }}
     >
       {hasAssets ? (
         <>

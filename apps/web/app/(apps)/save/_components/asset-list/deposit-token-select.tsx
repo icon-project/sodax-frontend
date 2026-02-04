@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 
 type Props = {
   displayItems: DisplayItem[];
-  selectedToken: XToken | null;
   setSelectedToken: (token: XToken | null) => void;
   onContinue?: () => void;
   apy: string;
@@ -22,13 +21,13 @@ type Props = {
 
 export function DepositTokenSelect({
   displayItems,
-  selectedToken,
   setSelectedToken,
   onContinue,
   apy,
   deposits,
   isReadyToEarn,
 }: Props) {
+  const { selectedToken } = useSaveState();
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
   const allChainBalances = useAllChainBalances();
   const balance = selectedToken
