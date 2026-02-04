@@ -4,26 +4,6 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Tier 2: Optimize package imports to reduce bundling memory/time
-  experimental: {
-    optimizePackageImports: [
-      'lucide-react',
-      '@phosphor-icons/react',
-      '@web3icons/react',
-      'framer-motion',
-      'motion',
-      'date-fns',
-      // CMS packages
-      '@tiptap/react',
-      '@tiptap/starter-kit',
-      '@tiptap/extension-image',
-      '@tiptap/extension-link',
-      '@tiptap/extension-placeholder',
-      'better-auth',
-      'sanitize-html',
-      'mongodb',
-    ],
-  },
   images: {
     domains: ['storage.herewallet.app'],
     dangerouslyAllowSVG: true,
@@ -33,12 +13,6 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'stellar.creit.tech',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: '*.public.blob.vercel-storage.com',
         port: '',
         pathname: '/**',
       },
