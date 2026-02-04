@@ -1,6 +1,3 @@
-// apps/web/app/(apps)/stake/_components/stake-input-panel.tsx
-// Input panel component for staking with token selector, balance, slider, and input field
-
 import type React from 'react';
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
@@ -13,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
+import { cn } from '@/lib/utils';
+import { CustomSlider } from '@/components/ui/customer-slider';
 
 export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
@@ -66,38 +65,48 @@ export function StakeInputPanel(): React.JSX.Element {
   };
 
   return (
-    <div className="w-full flex flex-col justify-start items-start gap-2">
-      <div className="flex flex-col justify-start items-start">
-        <div className="px-8 pt-10 pb-8 flex flex-col justify-start items-start gap-4">
-          <div className="inline-flex justify-start items-center gap-3">
-            <SodaAsset
-              selectedToken={selectedToken}
-              tokens={sodaTokens}
-              setSelectNetworkToken={token => setSelectedToken(token)}
-            />
-          </div>
+    <div className="w-full px-(--layout-space-big) pt-10 pb-8 flex flex-col justify-start items-start gap-8 sm:gap-4">
+      <div className="w-full flex justify-start items-center gap-3">
+        <SodaAsset
+          selectedToken={selectedToken}
+          tokens={sodaTokens}
+          setSelectNetworkToken={token => setSelectedToken(token)}
+        />
+      </div>
 
-          <div>
-            <Input
-              type="number"
-              placeholder="0.0"
-              value={stakeValue}
-              onChange={e => setStakeValue(Number(e.target.value))}
-            />
-            {!walletConnected ? (
-              <Button variant="cherry" onClick={() => handleConnect()}>
-                Connect Wallet
-              </Button>
-            ) : balance > 0n ? (
-              <Button variant="cherry" onClick={handleStake}>
-                Stake
-              </Button>
-            ) : (
-              <Button variant="cherry" onClick={handleBuySoda}>
-                Buy SODA
-              </Button>
-            )}
-          </div>
+      <div className="w-full flex flex-col sm:flex-row gap-6 sm:gap-2 justify-between items-center">
+        <CustomSlider
+          defaultValue={[0]}
+          max={10}
+          step={0.0001}
+          value={[stakeValue]}
+          onValueChange={value => setStakeValue(value[0] ?? 0)}
+          className="h-10 data-[orientation=horizontal]:h-1"
+          trackClassName="bg-cream-white data-[orientation=horizontal]:h-1"
+          rangeClassName={cn('[background-size:20px_20px] ', 'bg-cherry-bright')}
+          thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
+        />
+
+        <div className="w-full flex gap-2">
+          <Input
+            type="number"
+            placeholder="0.0"
+            value={stakeValue}
+            onChange={e => setStakeValue(Number(e.target.value))}
+          />
+          {!walletConnected ? (
+            <Button variant="cherry" onClick={() => handleConnect()}>
+              Connect Wallet
+            </Button>
+          ) : balance > 0n ? (
+            <Button variant="cherry" onClick={handleStake}>
+              Stake
+            </Button>
+          ) : (
+            <Button variant="cherry" onClick={handleBuySoda}>
+              Buy SODA
+            </Button>
+          )}
         </div>
       </div>
     </div>
