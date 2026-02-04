@@ -35,12 +35,14 @@ export const useStakeStore = <T,>(selector: (store: StakeStore) => T): T => {
 
 export const useStakeState = () => {
   const stakeValue = useStakeStore(state => state.stakeValue);
+  const stakeTypedValue = useStakeStore(state => state.stakeTypedValue);
   const currentStakeStep = useStakeStore(state => state.currentStakeStep);
   const totalStakedUsdValue = useStakeStore(state => state.totalStakedUsdValue);
   const selectedToken = useStakeStore(state => state.selectedToken);
   const stakeMode = useStakeStore(state => state.stakeMode);
   return {
     stakeValue,
+    stakeTypedValue,
     currentStakeStep,
     totalStakedUsdValue,
     selectedToken,
@@ -50,6 +52,7 @@ export const useStakeState = () => {
 
 export const useStakeActions = () => {
   const setStakeValue = useStakeStore(state => state.setStakeValue);
+  const setStakeTypedValue = useStakeStore(state => state.setStakeTypedValue);
   const setCurrentStakeStep = useStakeStore(state => state.setCurrentStakeStep);
   const setTotalStakedUsdValue = useStakeStore(state => state.setTotalStakedUsdValue);
   const setSelectedToken = useStakeStore(state => state.setSelectedToken);
@@ -58,6 +61,7 @@ export const useStakeActions = () => {
 
   return {
     setStakeValue,
+    setStakeTypedValue,
     setCurrentStakeStep,
     setTotalStakedUsdValue,
     setSelectedToken,
