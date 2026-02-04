@@ -73,12 +73,12 @@ export default function StakeDialogFooter({
 
   useEffect(() => {
     if (hasAllowed) {
-      setCurrentStakeStep(STAKE_STEP.CONFIRM);
+      setCurrentStakeStep(STAKE_STEP.STAKE_CONFIRM);
     }
   }, [hasAllowed, setCurrentStakeStep]);
   const handleContinue = (): void => {
-    if (currentStakeStep === STAKE_STEP.TERMS) {
-      setCurrentStakeStep(STAKE_STEP.APPROVE);
+    if (currentStakeStep === STAKE_STEP.STAKE_TERMS) {
+      setCurrentStakeStep(STAKE_STEP.STAKE_APPROVE);
     }
   };
 
@@ -106,13 +106,13 @@ export default function StakeDialogFooter({
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      {currentStakeStep === STAKE_STEP.TERMS && (
+      {currentStakeStep === STAKE_STEP.STAKE_TERMS && (
         <Button variant="cherry" className="flex flex-1" onClick={handleContinue}>
           Continue
         </Button>
       )}
 
-      {currentStakeStep === STAKE_STEP.APPROVE &&
+      {currentStakeStep === STAKE_STEP.STAKE_APPROVE &&
         (isWrongChain ? (
           <Button variant="cherry" className="flex flex-1" onClick={handleSwitchChain}>
             Switch Chain
@@ -131,7 +131,7 @@ export default function StakeDialogFooter({
           </>
         ))}
 
-      {currentStakeStep === STAKE_STEP.CONFIRM && (
+      {currentStakeStep === STAKE_STEP.STAKE_CONFIRM && (
         <Button
           variant="cherry"
           className="flex flex-1"

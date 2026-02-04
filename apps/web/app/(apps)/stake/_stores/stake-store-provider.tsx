@@ -42,6 +42,8 @@ export const useStakeState = () => {
   const totalStakedUsdValue = useStakeStore(state => state.totalStakedUsdValue);
   const selectedToken = useStakeStore(state => state.selectedToken);
   const stakeMode = useStakeStore(state => state.stakeMode);
+  const unstakeMethod = useStakeStore(state => state.unstakeMethod);
+  const currentUnstakeStep = useStakeStore(state => state.currentUnstakeStep);
 
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
@@ -62,6 +64,8 @@ export const useStakeState = () => {
     totalStakedUsdValue,
     selectedToken,
     stakeMode,
+    unstakeMethod,
+    currentUnstakeStep,
 
     userXSodaBalance,
     userXSodaValue,
@@ -78,6 +82,9 @@ export const useStakeActions = () => {
   const setSelectedToken = useStakeStore(state => state.setSelectedToken);
   const setStakeMode = useStakeStore(state => state.setStakeMode);
   const resetStakeState = useStakeStore(state => state.resetStakeState);
+  const setUnstakeMethod = useStakeStore(state => state.setUnstakeMethod);
+  const setCurrentUnstakeStep = useStakeStore(state => state.setCurrentUnstakeStep);
+  const resetUnstakeState = useStakeStore(state => state.resetUnstakeState);
 
   return {
     setStakeValue,
@@ -87,5 +94,8 @@ export const useStakeActions = () => {
     setSelectedToken,
     setStakeMode,
     resetStakeState,
+    setUnstakeMethod,
+    setCurrentUnstakeStep,
+    resetUnstakeState,
   };
 };

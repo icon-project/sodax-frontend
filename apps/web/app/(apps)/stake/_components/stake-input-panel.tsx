@@ -13,6 +13,7 @@ import { MODAL_ID } from '@/stores/modal-store';
 import { cn, formatTokenAmount } from '@/lib/utils';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import StakeDialog from './stake-dialog/stake-dialog';
+import UnstakeDialog from './unstake-dialog/unstake-dialog';
 import { getChainName } from '@/constants/chains';
 import { STAKE_MODE } from '../_stores/stake-store';
 
@@ -43,9 +44,10 @@ export function StakeInputPanel(): React.JSX.Element {
   const { address } = useXAccount(currentNetwork);
   const walletConnected = !!address;
   const [isStakeDialogOpen, setIsStakeDialogOpen] = useState<boolean>(false);
+  const [isUnstakeDialogOpen, setIsUnstakeDialogOpen] = useState<boolean>(false);
 
   const { data: balances } = useXBalances({
-    xChainId: currentNetwork,
+    xChainId: currentNetwork || 'sonic',
     xTokens: selectedToken ? [selectedToken] : [],
     address,
   });
@@ -71,7 +73,7 @@ export function StakeInputPanel(): React.JSX.Element {
   };
 
   const handleUnstake = (): void => {
-    console.log('handleUnstake');
+    setIsUnstakeDialogOpen(true);
   };
 
   const sliderMaxValue = useMemo(() => {
@@ -154,6 +156,12 @@ export function StakeInputPanel(): React.JSX.Element {
       <StakeDialog
         open={isStakeDialogOpen}
         onOpenChange={setIsStakeDialogOpen}
+        selectedToken={selectedToken}
+        tokens={sodaTokens}
+      />
+      <UnstakeDialog
+        open={isUnstakeDialogOpen}
+        onOpenChange={setIsUnstakeDialogOpen}
         selectedToken={selectedToken}
         tokens={sodaTokens}
       />

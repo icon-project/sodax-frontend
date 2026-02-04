@@ -9,9 +9,20 @@ export enum STAKE_MODE {
 }
 
 export enum STAKE_STEP {
-  TERMS = 0,
-  APPROVE = 1,
-  CONFIRM = 2,
+  STAKE_TERMS = 0,
+  STAKE_APPROVE = 1,
+  STAKE_CONFIRM = 2,
+}
+
+export enum UNSTAKE_METHOD {
+  REGULAR = 'regular', // Wait 180 days
+  INSTANT = 'instant', // Instant unstake
+}
+
+export enum UNSTAKE_STEP {
+  UNSTAKE_CHOOSE_TYPE = 0,
+  UNSTAKE_APPROVE = 1,
+  UNSTAKE_CONFIRM = 2,
 }
 
 export type StakeState = {
@@ -21,6 +32,8 @@ export type StakeState = {
   stakeMode: STAKE_MODE;
   currentStakeStep: STAKE_STEP;
   totalStakedUsdValue: number;
+  unstakeMethod: UNSTAKE_METHOD;
+  currentUnstakeStep: UNSTAKE_STEP;
 };
 
 export type StakeActions = {
@@ -31,6 +44,9 @@ export type StakeActions = {
   setSelectedToken: (token: XToken | null) => void;
   setStakeMode: (mode: STAKE_MODE) => void;
   resetStakeState: () => void;
+  setUnstakeMethod: (method: UNSTAKE_METHOD) => void;
+  setCurrentUnstakeStep: (step: UNSTAKE_STEP) => void;
+  resetUnstakeState: () => void;
 };
 
 export type StakeStore = StakeState & StakeActions;
@@ -40,8 +56,10 @@ export const defaultStakeState: StakeState = {
   stakeMode: STAKE_MODE.STAKING,
   stakeValue: 0n,
   stakeTypedValue: '',
-  currentStakeStep: STAKE_STEP.TERMS,
+  currentStakeStep: STAKE_STEP.STAKE_TERMS,
   totalStakedUsdValue: 0,
+  unstakeMethod: UNSTAKE_METHOD.REGULAR,
+  currentUnstakeStep: UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE,
 };
 
 export const createStakeStore = (initState: StakeState = defaultStakeState) => {
@@ -64,7 +82,15 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
         setStakeMode: (mode: STAKE_MODE) => set({ stakeMode: mode, stakeValue: 0n, stakeTypedValue: '' }),
         resetStakeState: () => {
           set({
-            currentStakeStep: STAKE_STEP.TERMS,
+            currentStakeStep: STAKE_STEP.STAKE_TERMS,
+          });
+        },
+        setUnstakeMethod: (method: UNSTAKE_METHOD) => set({ unstakeMethod: method }),
+        setCurrentUnstakeStep: (step: UNSTAKE_STEP) => set({ currentUnstakeStep: step }),
+        resetUnstakeState: () => {
+          set({
+            currentUnstakeStep: UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE,
+            unstakeMethod: UNSTAKE_METHOD.REGULAR,
           });
         },
       }),
@@ -77,6 +103,8 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
           totalStakedUsdValue: state.totalStakedUsdValue,
           selectedToken: state.selectedToken,
           stakeMode: state.stakeMode,
+          unstakeMethod: state.unstakeMethod,
+          currentUnstakeStep: state.currentUnstakeStep,
         }),
         merge: (persistedState, currentState) => {
           const persisted = persistedState as Partial<StakeState & { stakeValue: string }> | null;

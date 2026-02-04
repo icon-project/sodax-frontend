@@ -77,8 +77,8 @@ export default function StakeDialog({
           />
         </DialogTitle>
 
-        {currentStakeStep === STAKE_STEP.TERMS && <StakeInfoStep selectedToken={selectedToken as XToken} />}
-        {currentStakeStep !== STAKE_STEP.TERMS && (
+        {currentStakeStep === STAKE_STEP.STAKE_TERMS && <StakeInfoStep selectedToken={selectedToken as XToken} />}
+        {currentStakeStep !== STAKE_STEP.STAKE_TERMS && (
           <StakeConfirmationStep selectedToken={selectedToken as XToken} receivedXSodaAmount={receivedXSodaAmount} />
         )}
         <StakeDialogFooter
