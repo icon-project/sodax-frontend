@@ -57,6 +57,7 @@ export default function SodaTokenLayout({ children }: { children: React.ReactNod
 
   return (
     <>
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {children}
     </>

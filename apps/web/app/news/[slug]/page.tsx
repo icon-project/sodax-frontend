@@ -212,12 +212,10 @@ export default async function NewsArticlePage({
 
   return (
     <>
-      {/* JSON-LD Structured Data */}
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleStructuredData) }} />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
-      />
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }} />
       <div className="min-h-screen w-full bg-[var(--almost-white)]">
         <MarketingHeader backLink="/news" backText="← news" />
         <div className="max-w-7xl mx-auto">
@@ -300,6 +298,7 @@ export default async function NewsArticlePage({
                 prose-code:text-[var(--cherry-soda)] prose-code:bg-[var(--cream)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                 prose-pre:bg-[var(--espresso)] prose-pre:text-[var(--cream-white)] prose-pre:rounded-lg
                 prose-hr:border-[var(--clay-light)] prose-hr:my-8"
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is sanitized with sanitize-html library
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
               />
 

@@ -173,6 +173,7 @@ export default async function NewsPage(props: {
   if (filteredArticles.length === 0 && !category) {
     return (
       <>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="min-h-screen bg-[var(--almost-white)] flex items-center justify-center px-4">
           <div className="text-center">
@@ -191,6 +192,7 @@ export default async function NewsPage(props: {
   if (!featured) {
     return (
       <>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="min-h-screen w-full bg-[var(--almost-white)]">
           <MarketingHeader backLink="/" backText="← home" />
@@ -220,7 +222,7 @@ export default async function NewsPage(props: {
 
   return (
     <>
-      {/* JSON-LD Structured Data */}
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="min-h-screen w-full bg-[var(--almost-white)]">
         <MarketingHeader backLink="/" backText="← home" />
