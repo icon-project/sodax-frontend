@@ -174,6 +174,12 @@ export const hasSufficientBalanceWithFee = (
   }
 };
 
+export function formatTokenAmount(amount: number | string | bigint, decimals: number, displayDecimals = 2): string {
+  return new BigNumber(amount.toString())
+    .dividedBy(new BigNumber(10).pow(decimals))
+    .toFixed(displayDecimals, BigNumber.ROUND_DOWN);
+}
+
 export const formatBalance = (amount: string, price: number): string => {
   if (!amount || new BigNumber(amount).isZero() || Number(amount) < 0) return '0';
   const decimals = price >= 10000 ? 6 : 4;

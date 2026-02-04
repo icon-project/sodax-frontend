@@ -2,12 +2,13 @@
 // Header component for stake page with title and description
 
 import type React from 'react';
+import { STAKING_APR } from './constants';
 
 interface StakeHeaderProps {
   apr?: number;
 }
 
-export function StakeHeader({ apr = 23.77 }: StakeHeaderProps): React.JSX.Element {
+export function StakeHeader({ apr = STAKING_APR }: StakeHeaderProps): React.JSX.Element {
   return (
     <div className="self-stretch mix-blend-multiply flex flex-col justify-start items-start gap-4">
       <div className="self-stretch mix-blend-multiply justify-end">
@@ -20,4 +21,3 @@ export function StakeHeader({ apr = 23.77 }: StakeHeaderProps): React.JSX.Elemen
     </div>
   );
 }
-

@@ -7,13 +7,14 @@ import { StakeHeader, StakeInputPanel, StakeStatsCard, UnstakeModeToggle } from 
 import { useStakeActions, useStakeState } from './_stores/stake-store-provider';
 import { STAKE_MODE } from './_stores/stake-store';
 import { UnstakeRequests } from './_components/unstake-requests';
+import { STAKING_APR } from './_components/constants';
 
 export default function StakePage(): React.JSX.Element {
   const { stakeMode } = useStakeState();
   const { setStakeMode } = useStakeActions();
   return (
     <div className="w-full self-stretch inline-flex flex-col justify-start items-start gap-(--layout-space-normal)">
-      <StakeHeader apr={23.77} />
+      <StakeHeader apr={STAKING_APR} />
 
       <div className="w-full rounded-(--layout-container-radius) outline-[#e4dada] outline outline-[3px] outline-offset-[-3px] flex flex-col justify-start items-start gap-2">
         <div>

@@ -4,8 +4,24 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Info } from 'lucide-react';
+import { useSpokeProvider } from '@sodax/dapp-kit';
+import { useStakeState } from '../_stores/stake-store-provider';
+import { useStakingInfo } from '@sodax/dapp-kit';
+import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import { formatTokenAmount } from '@/lib/utils';
+import { STAKING_APR, UNSTAKING_PERIOD_DAYS } from './constants';
 
 export function StakeStatsCard(): React.JSX.Element {
+  const { selectedToken } = useStakeState();
+  console.log('selectedToken', selectedToken);
+  const walletProvider = useWalletProvider(selectedToken?.xChainId);
+  const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
+
+  console.log('spokeProvider', spokeProvider);
+  const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
+  console.log('stakingInfo', stakingInfo);
+  console.log('isLoadingStakingInfo', isLoadingStakingInfo);
+
   return (
     <div className="w-full relative flex flex-col justify-start items-start gap-4">
       <div className="w-full inline-flex justify-between items-center">
@@ -28,7 +44,7 @@ export function StakeStatsCard(): React.JSX.Element {
             <div className="inline-flex justify-center items-center gap-1">
               <div className="justify-center">
                 <span className="text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-                  0
+                  {formatTokenAmount(stakingInfo?.userXSodaBalance || 0n, 18)}
                 </span>
                 <span className="text-clay text-(length:--body-super-comfortable) font-normal font-['Inter'] leading-5">
                   {' '}
@@ -38,7 +54,7 @@ export function StakeStatsCard(): React.JSX.Element {
             </div>
             <div className="inline-flex justify-center items-center gap-1">
               <div className="justify-center text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-                ~0 SODA
+                ~{formatTokenAmount(stakingInfo?.userXSodaValue || 0n, 18)} SODA
               </div>
               <div className="w-4 h-4 relative overflow-hidden">
                 <Info className="w-3.5 h-3.5 text-clay-light" />
@@ -49,14 +65,14 @@ export function StakeStatsCard(): React.JSX.Element {
         <div className="inline-flex flex-col justify-center items-end gap-1">
           <div className="inline-flex justify-end items-center gap-1">
             <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-              23.77% APR
+              {STAKING_APR}% APR
             </div>
             <div className="w-4 h-4 relative overflow-hidden">
               <Info className="w-3.5 h-3.5 text-clay-light" />
             </div>
           </div>
           <div className="justify-center text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-            0 total staked
+            {formatTokenAmount(stakingInfo?.totalStaked || 0n, 18)} total staked
           </div>
         </div>
       </div>
@@ -84,7 +100,7 @@ export function StakeStatsCard(): React.JSX.Element {
           </div>
           <div className="inline-flex justify-start items-center gap-1">
             <div className="text-espresso text-(length:--body-comfortable) font-bold font-['Inter'] leading-5">
-              180 days
+              {UNSTAKING_PERIOD_DAYS} days
             </div>
             <div className="w-4 h-4 relative overflow-hidden">
               <Info className="w-3.5 h-3.5 text-clay-light" />

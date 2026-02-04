@@ -1,7 +1,7 @@
 import type React from 'react';
-import XCircleIcon from '../_icons/x-circle-icon';
-import MinusCircleIcon from '../_icons/minus-circle-icon';
-// import CheckCircleIcon from '../_icons/check-circle-icon';
+import XCircleIcon from './icons/x-circle-icon';
+import MinusCircleIcon from './icons/minus-circle-icon';
+// import CheckCircleIcon from './icons/check-circle-icon';
 
 export function UnstakeRequestItem(): React.JSX.Element {
   return (

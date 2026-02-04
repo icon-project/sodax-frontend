@@ -39,7 +39,6 @@ export function SodaAsset({
   });
   const balance = balances?.[selectedToken?.address || token.address] || 0n;
   const formattedBalance = formatUnits(balance, selectedToken?.decimals || token.decimals);
-  console.log('formattedBalance', formattedBalance);
   return (
     <div onClick={() => setIsNetworkPickerOpened(!isNetworkPickerOpened)} className="relative" ref={assetRef}>
       <div className="flex items-center justify-center gap-2">
