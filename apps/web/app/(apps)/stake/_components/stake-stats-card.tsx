@@ -6,6 +6,7 @@ import { Info } from 'lucide-react';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { formatTokenAmount } from '@/lib/utils';
 import { STAKING_APR, UNSTAKING_PERIOD_DAYS } from './constants';
+import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
 
 export function StakeStatsCard(): React.JSX.Element {
   const { userXSodaBalance, userXSodaValue } = useStakeState();
@@ -44,6 +45,7 @@ export function StakeStatsCard(): React.JSX.Element {
             <div className="w-4 h-4 relative overflow-hidden">
               <Info className="w-3.5 h-3.5 text-clay-light" />
             </div>
+            <LoadingThreeDotsJumping />
           </div>
         </div>
         <div className="flex flex-col justify-center items-end gap-1">

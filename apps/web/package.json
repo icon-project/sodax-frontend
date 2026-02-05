@@ -58,6 +58,7 @@
     "next": "15.5.9",
     "numeral": "^2.0.6",
     "postcss": "^8.5.3",
+    "radix-ui": "^1.4.3",
     "react": "19.1.4",
     "react-dom": "19.1.4",
     "react-scroll": "^1.9.3",

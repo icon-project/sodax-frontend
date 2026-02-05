@@ -331,3 +331,33 @@ export function formatCurrencyCompact(value: number): string {
 function trimZeros(num: string) {
   return num.replace(/\.?0+$/, '');
 }
+
+/**
+ * Calculates time remaining for unstaking based on start time and unstaking period.
+ * @param startTime - The start time of the unstake request (in seconds, as bigint)
+ * @param unstakingPeriod - The unstaking period duration (in seconds, as bigint)
+ * @returns Formatted string showing time remaining (e.g., "180d 5h 30m remaining" or "Ready to claim")
+ */
+export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): string {
+  const now = Math.floor(Date.now() / 1000);
+  const start = Number(startTime);
+  const period = Number(unstakingPeriod);
+  const elapsed = now - start;
+  const remaining = period - elapsed;
+
+  if (remaining <= 0) {
+    return 'Ready to claim';
+  }
+
+  const days = Math.floor(remaining / 86400);
+  const hours = Math.floor((remaining % 86400) / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+
+  if (days > 0) {
+    return `${days} days left`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m remaining`;
+  }
+  return `${minutes}m remaining`;
+}
