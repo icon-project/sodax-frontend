@@ -92,6 +92,7 @@ export function StakeInputPanel(): React.JSX.Element {
             selectedToken={selectedToken}
             tokens={sodaTokens}
             setSelectNetworkToken={token => setSelectedToken(token)}
+            isXSoda={stakeMode === STAKE_MODE.UNSTAKING}
           />
           <div className="flex flex-col gap-[2px]">
             <div className="font-['Inter'] flex items-center text-(length:--body-super-comfortable) text-espresso">

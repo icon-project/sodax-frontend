@@ -8,10 +8,12 @@ export function SodaAsset({
   selectedToken,
   tokens,
   setSelectNetworkToken,
+  isXSoda = false,
 }: {
   selectedToken: XToken | null;
   tokens: XToken[];
   setSelectNetworkToken: (network: XToken) => void;
+  isXSoda?: boolean;
 }): React.JSX.Element {
   const token = tokens[0] || ({} as XToken);
   const [isNetworkPickerOpened, setIsNetworkPickerOpened] = useState(false);
@@ -29,9 +31,19 @@ export function SodaAsset({
       <div className="flex items-center justify-center gap-2">
         <div className="relative">
           {selectedToken ? (
-            <CurrencyLogo currency={selectedToken} isGroup={false} tokenCount={tokens.length} />
+            <CurrencyLogo
+              currency={selectedToken}
+              isGroup={false}
+              tokenCount={tokens.length}
+              logoSrc={isXSoda ? '/coin/xsoda.png' : undefined}
+            />
           ) : (
-            <CurrencyLogo currency={token} isGroup={true} tokenCount={tokens.length} />
+            <CurrencyLogo
+              currency={token}
+              isGroup={true}
+              tokenCount={tokens.length}
+              logoSrc={isXSoda ? '/coin/xsoda.png' : undefined}
+            />
           )}
           {isNetworkPickerOpened && (
             <NetworkPicker
