@@ -98,7 +98,6 @@ All the required configurations (chain id [nid], token decimals and address) sho
 Quoting API supports different types of quotes:
 
 - "exact_input": "amount" parameter is the amount the user want's to swap (e.g. the user is asking for a quote to swap 1 WETH to xxx SUI)
-- "exact_output": "amount" parameter is the final amount the user wants. (e.g. the user want's to swap WETH for SUI, but is asking how many WETH is going to cost to have 1 SUI)
 
 ```typescript
 import {
