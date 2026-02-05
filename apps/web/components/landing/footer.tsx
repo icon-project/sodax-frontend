@@ -1,3 +1,5 @@
+'use client';
+
 import { Label } from '@/components/ui/label';
 import { FooterLink } from '@/components/landing/footer-link';
 import Image from 'next/image';
@@ -50,7 +52,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
             socials
           </div>
-          <FooterLink href="https://news.sodax.com/">News</FooterLink>
+          <FooterLink href="https://sodax.com/news">News</FooterLink>
           <FooterLink href="https://discord.gg/xM2Nh4S6vN" showArrow>
             Discord
           </FooterLink>

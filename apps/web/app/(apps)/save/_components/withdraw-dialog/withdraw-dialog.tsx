@@ -1,20 +1,20 @@
 'use client';
 
 import type React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { XToken } from '@sodax/types';
 import { XIcon } from 'lucide-react';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-import { useReservesUsdFormat, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
+import { useATokensBalances, useReservesUsdFormat, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import type { UserReserveData } from '@sodax/sdk';
-import { formatUnits } from 'viem';
+import { type Address, formatUnits, isAddress } from 'viem';
 import WithdrawAmountSelect from './withdraw-amount-select';
 import WithdrawConfirmationStep from './withdraw-confirmation-step';
 import WithdrawTokenSelect from './withdraw-token-select';
 import WithdrawDialogFooter from './withdraw-dialog-footer';
-import type { DepositItemData, NetworkBalance } from '../../page';
+import type { DepositItemData, NetworkBalance } from '@/constants/save';
 import { cn } from '@/lib/utils';
 
 interface WithdrawDialogProps {
@@ -40,15 +40,31 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
   const { data: userReserves } = useUserReservesData({ spokeProvider, address: sourceAddress });
   const { data: formattedReserves } = useReservesUsdFormat();
   const [outsideClick, setOutsideClick] = useState<boolean>(false);
+  const aTokenAddresses = useMemo(() => {
+    if (!formattedReserves) return [];
+    return formattedReserves
+      .map(reserve => reserve.aTokenAddress)
+      .filter((address): address is `0x${string}` => isAddress(address));
+  }, [formattedReserves]);
+  const { data: aTokenBalancesMap } = useATokensBalances({
+    aTokens: aTokenAddresses,
+    spokeProvider,
+    userAddress: sourceAddress,
+  });
+
   const metrics = useReserveMetrics({
     token: selectedToken as XToken,
     formattedReserves: formattedReserves || [],
     userReserves: (userReserves?.[0] as UserReserveData[]) || [],
   });
 
-  const supplyBalance = metrics.userReserve
-    ? Number(formatUnits(metrics.userReserve.scaledATokenBalance, 18)).toFixed(4)
-    : '0';
+  const aTokenAddress = metrics.formattedReserve?.aTokenAddress;
+  const aTokenBalance =
+    aTokenAddress && isAddress(aTokenAddress) && aTokenBalancesMap
+      ? aTokenBalancesMap.get(aTokenAddress as Address)
+      : undefined;
+
+  const supplyBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(4) : '0';
 
   useEffect(() => {
     if (open && selectedItem) {

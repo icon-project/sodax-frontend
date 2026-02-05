@@ -15,7 +15,8 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export type ChainType = 'ICON' | 'EVM' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA';
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA'] as const;
+export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
   id: string | number;
@@ -268,3 +269,9 @@ export type TokenInfo = {
   maxDeposit: bigint;
   isSupported: boolean;
 };
+
+export type BridgeLimit = {
+  amount: bigint;
+  decimals: number;
+  type : 'DEPOSIT_LIMIT' | 'WITHDRAWAL_LIMIT';
+}

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ARBITRUM_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, type XToken, spokeChainConfig } from '@sodax/types';
 import { Sodax } from '../index.js';
+import BigNumber from 'bignumber.js';
 
 describe('BridgeService', () => {
   const sodax = new Sodax();
@@ -123,6 +124,17 @@ describe('BridgeService', () => {
       );
 
       expect(!bridgeableTokensResult.ok && bridgeableTokensResult.error).toBeDefined();
+    });
+
+    it('should return the correct bridgeable amount', async () => {
+      const fromTokenInfo = { decimals: 6 };
+      const toTokenInfo = { decimals: 18 };
+      const availableDeposit = BigInt(10 ** fromTokenInfo.decimals + 1);
+      const assetManagerBalance = 2n * BigInt(10 ** toTokenInfo.decimals);
+
+      BigNumber(availableDeposit)
+        .shiftedBy(-fromTokenInfo.decimals)
+        .isLessThan(BigNumber(assetManagerBalance).shiftedBy(-toTokenInfo.decimals));
     });
   });
 });

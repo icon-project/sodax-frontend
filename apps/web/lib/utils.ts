@@ -11,7 +11,7 @@ import BigNumber from 'bignumber.js';
 import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId } from '@sodax/types';
-import { INJECTIVE_MAINNET_CHAIN_ID, LIGHTLINK_MAINNET_CHAIN_ID, hubAssets } from '@sodax/types';
+import { INJECTIVE_MAINNET_CHAIN_ID, LIGHTLINK_MAINNET_CHAIN_ID, ICON_MAINNET_CHAIN_ID, hubAssets } from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
@@ -219,7 +219,7 @@ export const getSwapErrorMessage = (errorCode: string): { title: string; message
   );
 };
 
-export const STABLECOINS = ['bnUSD', 'USDC', 'USDT'];
+export const STABLECOINS = ['bnUSD', 'USDT', 'USDC'];
 
 export function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string }): number {
   const aStable = STABLECOINS.includes(a.symbol);
@@ -233,7 +233,9 @@ export function getMoneymarketTokens(): XToken[] {
   return Object.entries(moneyMarketSupportedTokens)
     .flatMap(([chainId, items]) =>
       items.map((t: Token) =>
-        chainId !== INJECTIVE_MAINNET_CHAIN_ID && chainId !== LIGHTLINK_MAINNET_CHAIN_ID
+        chainId !== INJECTIVE_MAINNET_CHAIN_ID &&
+        chainId !== LIGHTLINK_MAINNET_CHAIN_ID &&
+        chainId !== ICON_MAINNET_CHAIN_ID
           ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
           : undefined,
       ),
@@ -310,3 +312,22 @@ export const getChainExplorerTxUrl = (chainId: string, txHash: string): string |
   if (!chain?.explorerTxUrl) return undefined;
   return `${chain.explorerTxUrl}${txHash}`;
 };
+export function formatCurrencyCompact(value: number): string {
+  const abs = Math.abs(value);
+
+  if (abs < 1000) {
+    return `$${value.toLocaleString()}`;
+  }
+
+  if (abs < 1_000_000) {
+    const num = (value / 1000).toFixed(1);
+    return `$${trimZeros(num)}K`;
+  }
+
+  const num = (value / 1_000_000).toFixed(2);
+  return `$${trimZeros(num)}M`;
+}
+
+function trimZeros(num: string) {
+  return num.replace(/\.?0+$/, '');
+}

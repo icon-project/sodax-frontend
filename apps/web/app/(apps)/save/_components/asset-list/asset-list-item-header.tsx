@@ -1,31 +1,21 @@
+// apps/web/app/(apps)/save/_components/asset-list/asset-list-item-header.tsx
 import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { AnimatePresence, motion } from 'motion/react';
 import { cn, formatBalance } from '@/lib/utils';
 import type { XToken } from '@sodax/types';
-import { hubAssets } from '@sodax/types';
 import { getUniqueByChain } from '@/lib/utils';
 import NetworkIcon from '@/components/shared/network-icon';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useSaveState } from '../../_stores/save-store-provider';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
-import { useBackendMoneyMarketAssetSuppliers } from '@sodax/dapp-kit';
+import { Tooltip, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipContent } from '@/components/ui/tooltip';
+import Image from 'next/image';
+import { useMemo } from 'react';
 
 function UserInfo({ isVisible, token }: { isVisible: boolean; token: XToken | undefined }) {
-  const vault = token ? hubAssets[token.xChainId]?.[token.address]?.vault : undefined;
-  const reserveAddress = vault || undefined;
-
-  const { data: suppliers } = useBackendMoneyMarketAssetSuppliers({
-    params: {
-      reserveAddress,
-    },
-    pagination: {
-      offset: '0',
-      limit: '1000000',
-    },
-  });
-
   return (
     <motion.div
       className="content-stretch flex flex-col items-center justify-center"
@@ -33,12 +23,7 @@ function UserInfo({ isVisible, token }: { isVisible: boolean; token: XToken | un
       animate={{ opacity: isVisible ? 1 : 0 }}
       transition={{ duration: 0.3, delay: isVisible ? 0.15 : 0 }}
     >
-      <p className="font-['InterRegular'] font-bold leading-[1.4] relative shrink-0 text-clay-dark !text-(length:--body-small)">
-        {suppliers?.suppliers.length}
-      </p>
-      <p className="font-['InterRegular'] font-medium leading-[1.2] relative shrink-0 text-clay-light !text-[9px]">
-        USERS
-      </p>
+      <Image src="/symbol3.png" width={16} height={16} alt="symbol3" />
     </motion.div>
   );
 }
@@ -58,7 +43,10 @@ function CollapsedAPY({ apy }: { apy: string }) {
 }
 
 function AccordionCollapsedInfo({ tokens }: { tokens: XToken[] }) {
-  const unique = getUniqueByChain(tokens);
+  const unique = useMemo(() => getUniqueByChain(tokens), [tokens]);
+  const firstNine = useMemo(() => unique.slice(0, 9), [unique]);
+  const remainingTokens = useMemo(() => unique.slice(9), [unique]);
+  const remainingCount = useMemo(() => unique.length - 9, [unique.length]);
 
   return (
     <motion.div
@@ -68,22 +56,39 @@ function AccordionCollapsedInfo({ tokens }: { tokens: XToken[] }) {
       exit={{ opacity: 0 }}
     >
       <div className="flex items-center group-hover:gap-[2px] gap-0 transition-all">
-        {unique.slice(0, 9).map(t => (
+        {firstNine.map(t => (
           <div key={t.xChainId} className="-mr-[2px] group-hover:mr-0 transition-all duration-200">
             <NetworkIcon id={t.xChainId} />
           </div>
         ))}
 
         {unique.length > 9 && (
-          <div className="ring-2 ring-white bg-white rounded w-4 h-4 flex items-center justify-center">
-            <span className="text-espresso text-[8px]">+{unique.length - 9}</span>
+          <div className="w-4 h-4 relative bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden">
+            <div className="left-[3px] top-[3px] absolute inline-flex justify-start items-center">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="justify-start text-espresso text-[8px] font-medium font-['InterRegular'] leading-[9.60px]">
+                    +{remainingCount}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  sideOffset={20}
+                  className="bg-white px-8 py-4 items-center gap-2 text-espresso rounded-full h-[54px] text-(length:--body-comfortable) flex"
+                >
+                  Also on
+                  <div className="flex flex-wrap -gap-1">
+                    {remainingTokens.map(t => (
+                      <div key={t.xChainId} className="-mr-[2px] group-hover:mr-0 transition-all duration-200">
+                        <NetworkIcon id={t.xChainId} />
+                      </div>
+                    ))}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         )}
-      </div>
-
-      <div className="hidden md:flex gap-1 shrink-0">
-        <span className="text-clay-light text-(length:--body-small) font-['InterBold']">$28,067.62</span>
-        <span className="text-clay-light text-(length:--body-small)">paid-out (30d)</span>
       </div>
     </motion.div>
   );
@@ -147,7 +152,7 @@ export default function AssetListItemHeader({
         </motion.div>
       </ItemMedia>
 
-      <ItemContent>
+      <ItemContent className="flex justify-between flex-row">
         <motion.div
           className="flex flex-col"
           animate={{ height: !isExpanded ? 'auto' : '24px' }}
@@ -181,14 +186,13 @@ export default function AssetListItemHeader({
                 )
               )}
             </motion.div>
-
-            <AnimatePresence>{!isExpanded && <CollapsedAPY apy={apy} />}</AnimatePresence>
           </ItemTitle>
 
           <AnimatePresence initial={false} mode="wait">
             {!isExpanded && <AccordionCollapsedInfo tokens={tokens} />}
           </AnimatePresence>
         </motion.div>
+        <AnimatePresence>{!isExpanded && <CollapsedAPY apy={apy} />}</AnimatePresence>
       </ItemContent>
     </Item>
   );

@@ -7,21 +7,21 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
 ### Features
 
 - [Swaps (Solver / Intents)](./docs/SWAPS.md) - Cross-chain intent-based swaps
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink, Ethereum, Redbelly, Kaia) ✅
   - Sui ✅
   - Stellar ✅
   - ICON ✅
   - Solana ✅
   - Injective ✅
 - [Money Market](./docs/MONEY_MARKET.md) - Cross-chain lending and borrowing
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink, Ethereum, Redbelly, Kaia) ✅
   - Sui ✅
   - Stellar ✅
   - ICON ✅
   - Solana ✅
   - Injective ✅
 - [Bridge](./docs/BRIDGE.md) - Cross-chain token bridging
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink, Ethereum, Redbelly, Kaia) ✅
   - Sui ✅
   - Stellar ✅
   - ICON ✅
@@ -29,7 +29,7 @@ The Sodax SDK provides a comprehensive interface for interacting with the Sodax 
   - Injective ✅
 - [Migration](./docs/MIGRATION.md) - Token migration (ICX, bnUSD, BALN)
 - [Staking](./docs/STAKING.md) - SODA token staking
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink, Ethereum, Redbelly, Kaia) ✅
   - Sui ✅
   - Stellar ✅
   - ICON ✅

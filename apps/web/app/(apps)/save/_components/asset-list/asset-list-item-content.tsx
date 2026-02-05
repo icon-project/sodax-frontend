@@ -1,12 +1,14 @@
+// apps/web/app/(apps)/save/_components/asset-list/asset-list-item-content.tsx
 import { motion } from 'motion/react';
 import { accordionVariants } from '@/constants/animation';
 import type { XToken } from '@sodax/types';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useTokenWalletBalances } from '@/hooks/useTokenWalletBalances';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import DepositInputAmount from './deposit-input-amount';
 import { DepositTokenSelect } from './deposit-token-select';
+import { useSaveState, useSaveActions } from '../../_stores/save-store-provider';
 
 export type DisplayItem = {
   tokens?: XToken[];
@@ -15,19 +17,21 @@ export type DisplayItem = {
 
 export default function AssetListItemContent({
   tokens,
+  isReadyToEarn,
 }: {
   tokens: XToken[];
+  isReadyToEarn: boolean;
 }) {
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { apy, deposits } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
-  const [isShowDeposits, setIsShowDeposits] = useState(false);
-  const [selectedToken, setSelectedToken] = useState<XToken | null>(null);
+  const { isShowDeposits } = useSaveState();
+  const { setIsShowDeposits, setSelectedToken } = useSaveActions();
 
   useEffect(() => {
     if (tokens.length === 1) {
       setSelectedToken(tokens[0] || null);
     }
-  }, [tokens]);
+  }, [tokens, setSelectedToken]);
 
   const tokensWithBalances = useTokenWalletBalances(tokens);
 
@@ -41,7 +45,7 @@ export default function AssetListItemContent({
 
   const displayItems: DisplayItem[] = [...holdTokens.map(t => ({ tokens: [t], supplyBalance: t.supplyBalance }))];
 
-  if (platformTokens.length > 0) {
+  if (holdTokens.length === 0 && platformTokens.length > 0) {
     displayItems.push({
       tokens: platformTokens,
       supplyBalance: '0',
@@ -58,22 +62,22 @@ export default function AssetListItemContent({
     >
       {isShowDeposits ? (
         <DepositInputAmount
-          selectedToken={selectedToken}
-          apy={apy}
           tokens={tokens}
           onBack={() => {
             setIsShowDeposits(false);
             setSelectedToken(null);
           }}
+          apy={apy}
+          deposits={Number(deposits)}
         />
       ) : (
         <DepositTokenSelect
           displayItems={displayItems}
-          selectedToken={selectedToken}
           setSelectedToken={setSelectedToken}
           onContinue={!isShowDeposits ? () => setIsShowDeposits(true) : undefined}
           apy={apy}
-          deposits={deposits}
+          deposits={Number(deposits)}
+          isReadyToEarn={isReadyToEarn}
         />
       )}
     </motion.div>

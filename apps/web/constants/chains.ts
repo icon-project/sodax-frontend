@@ -13,6 +13,7 @@ import {
   ICON_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export interface ChainUI {
@@ -33,6 +34,7 @@ export const EVM_CHAIN_ICONS = [
   '/chain/sonic.png',
   '/chain/lightlink.png',
   '/chain/hyper.png',
+  '/chain/0x2019.kaia.png',
 ];
 
 /**
@@ -46,6 +48,22 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/sonic.png',
     explorerTxUrl: 'https://sonicscan.org/tx/',
   },
+  { id: ETHEREUM_MAINNET_CHAIN_ID, name: 'Ethereum', icon: '/chain/ethereum.png' },
+  { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', icon: '/chain/solana.png' },
+  { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png' },
+  { id: SONIC_MAINNET_CHAIN_ID, name: 'Sonic', icon: '/chain/sonic.png' },
+  {
+    id: ARBITRUM_MAINNET_CHAIN_ID,
+    name: 'Arbitrum',
+    icon: '/chain/0xa4b1.arbitrum.png',
+  },
+  { id: SUI_MAINNET_CHAIN_ID, name: 'Sui', icon: '/chain/sui.png' },
+  { id: BSC_MAINNET_CHAIN_ID, name: 'BNB Chain', icon: '/chain/0x38.bsc.png' },
+  {
+    id: POLYGON_MAINNET_CHAIN_ID,
+    name: 'Polygon',
+    icon: '/chain/0x89.polygon.png',
+  },
   {
     id: AVALANCHE_MAINNET_CHAIN_ID,
     name: 'Avalanche',
@@ -53,67 +71,12 @@ export const availableChains: ChainUI[] = [
     explorerTxUrl: 'https://snowtrace.io/tx/',
   },
   {
-    id: ARBITRUM_MAINNET_CHAIN_ID,
-    name: 'Arbitrum',
-    icon: '/chain/0xa4b1.arbitrum.png',
-    explorerTxUrl: 'https://arbiscan.io/tx/',
-  },
-  {
-    id: BASE_MAINNET_CHAIN_ID,
-    name: 'Base',
-    icon: '/chain/0x2105.base.png',
-    explorerTxUrl: 'https://basescan.org/tx/',
-  },
-  {
-    id: BSC_MAINNET_CHAIN_ID,
-    name: 'BNB Chain',
-    icon: '/chain/0x38.bsc.png',
-    explorerTxUrl: 'https://bscscan.com/tx/',
-  },
-  {
-    id: POLYGON_MAINNET_CHAIN_ID,
-    name: 'Polygon',
-    icon: '/chain/0x89.polygon.png',
-    explorerTxUrl: 'https://polygonscan.com/tx/',
-  },
-  {
     id: OPTIMISM_MAINNET_CHAIN_ID,
     name: 'Optimism',
     icon: '/chain/0xa.optimism.png',
-    explorerTxUrl: 'https://optimistic.etherscan.io/tx/',
   },
-  {
-    id: ETHEREUM_MAINNET_CHAIN_ID,
-    name: 'Ethereum',
-    icon: '/chain/ethereum.png',
-    explorerTxUrl: 'https://etherscan.io/tx/',
-  },
-
-  // non-EVM
-  {
-    id: SOLANA_MAINNET_CHAIN_ID,
-    name: 'Solana',
-    icon: '/chain/solana.png',
-    explorerTxUrl: 'https://solscan.io/tx/',
-  },
-  {
-    id: SUI_MAINNET_CHAIN_ID,
-    name: 'Sui',
-    icon: '/chain/sui.png',
-    explorerTxUrl: 'https://suiexplorer.com/tx/',
-  },
-  {
-    id: STELLAR_MAINNET_CHAIN_ID,
-    name: 'Stellar',
-    icon: '/chain/stellar.png',
-    explorerTxUrl: 'https://stellar.expert/explorer/public/tx/',
-  },
-  {
-    id: ICON_MAINNET_CHAIN_ID,
-    name: 'ICON',
-    icon: '/chain/0x1.icon.png',
-    explorerTxUrl: 'https://tracker.icon.community/transaction/',
-  },
+  { id: STELLAR_MAINNET_CHAIN_ID, name: 'Stellar', icon: '/chain/stellar.png' },
+  { id: ICON_MAINNET_CHAIN_ID, name: 'ICON', icon: '/chain/0x1.icon.png' },
   {
     id: LIGHTLINK_MAINNET_CHAIN_ID,
     name: 'LightLink',
@@ -126,6 +89,8 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/hyper.png',
     explorerTxUrl: 'https://explorer.hyperchain.io/tx/',
   },
+  { id: HYPEREVM_MAINNET_CHAIN_ID, name: 'Hyper', icon: '/chain/hyper.png' },
+  { id: KAIA_MAINNET_CHAIN_ID, name: 'Kaia', icon: '/chain/0x2019.kaia.png' },
 ];
 
 /**
