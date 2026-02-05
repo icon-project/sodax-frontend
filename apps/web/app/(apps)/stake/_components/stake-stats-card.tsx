@@ -1,5 +1,3 @@
-// apps/web/app/(apps)/stake/_components/stake-stats-card.tsx
-
 import type React from 'react';
 import Image from 'next/image';
 import { Info } from 'lucide-react';
@@ -10,7 +8,7 @@ import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jump
 import { useStakingConfig } from '@sodax/dapp-kit';
 
 export function StakeStatsCard(): React.JSX.Element {
-  const { userXSodaBalance, userXSodaValue } = useStakeState();
+  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance } = useStakeState();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
 
   return (
@@ -33,7 +31,7 @@ export function StakeStatsCard(): React.JSX.Element {
         <div className="grow flex flex-col justify-center items-start gap-1">
           <div className="flex justify-center items-center gap-1">
             <span className="text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-              {formatTokenAmount(userXSodaBalance, 18)}
+              {formatTokenAmount(totalUserXSodaBalance, 18)}
             </span>
             <span className="text-clay text-(length:--body-super-comfortable) font-normal font-['Inter'] leading-5">
               {' '}
@@ -42,12 +40,12 @@ export function StakeStatsCard(): React.JSX.Element {
           </div>
           <div className="flex justify-center items-center gap-1">
             <div className="justify-center text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-              ~{formatTokenAmount(userXSodaValue, 18)} SODA
+              ~{formatTokenAmount(totalUserXSodaValue, 18)} SODA
             </div>
             <div className="w-4 h-4 relative overflow-hidden">
               <Info className="w-3.5 h-3.5 text-clay-light" />
             </div>
-            <LoadingThreeDotsJumping />
+            {userXSodaBalance > 0n && <LoadingThreeDotsJumping />}
           </div>
         </div>
         <div className="flex flex-col justify-center items-end gap-1">

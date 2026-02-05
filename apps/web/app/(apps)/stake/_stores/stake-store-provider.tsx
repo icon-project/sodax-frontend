@@ -1,11 +1,10 @@
-// apps/web/app/(apps)/stake/_stores/stake-store-provider.tsx
 'use client';
 
 import { type ReactNode, createContext, useRef, useContext, useMemo } from 'react';
 import { useStore } from 'zustand';
 
-import { type StakeStore, createStakeStore } from './stake-store';
-import { useSpokeProvider, useStakingInfo } from '@sodax/dapp-kit';
+import { type StakeStore, createStakeStore, STAKE_MODE } from './stake-store';
+import { useSpokeProvider, useStakingInfo, useStakeRatio, useConvertedAssets } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 
 export type StakeStoreApi = ReturnType<typeof createStakeStore>;
@@ -51,12 +50,52 @@ export const useStakeState = () => {
 
   const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
 
+  // Get stake ratio when staking (converts SODA to xSODA)
+  const { data: stakeRatio } = useStakeRatio(
+    stakeMode === STAKE_MODE.STAKING && stakeValue > 0n ? stakeValue : undefined,
+  );
+
+  // Get converted assets when unstaking (converts xSODA to SODA)
+  const { data: convertedAssets } = useConvertedAssets(
+    stakeMode === STAKE_MODE.UNSTAKING && stakeValue > 0n ? stakeValue : undefined,
+  );
+
   const { userXSodaBalance, userXSodaValue } = useMemo(() => {
     if (!stakingInfo || isLoadingStakingInfo) {
       return { userXSodaBalance: 0n, userXSodaValue: 0n };
     }
     return { userXSodaBalance: stakingInfo.userXSodaBalance, userXSodaValue: stakingInfo.userXSodaValue };
   }, [stakingInfo, isLoadingStakingInfo]);
+
+  const stakeValueInSoda = useMemo(() => {
+    if (stakeMode === STAKE_MODE.STAKING) {
+      return stakeValue;
+    }
+    return convertedAssets || 0n;
+  }, [stakeMode, stakeValue, convertedAssets]);
+
+  const stakeValueInXSoda = useMemo(() => {
+    if (stakeMode === STAKE_MODE.STAKING) {
+      return stakeRatio?.[0] || 0n;
+    }
+    return stakeValue;
+  }, [stakeMode, stakeValue, stakeRatio]);
+
+  const totalUserXSodaBalance = useMemo(() => {
+    if (stakeMode === STAKE_MODE.UNSTAKING) {
+      return userXSodaBalance - stakeValueInXSoda;
+    }
+
+    return userXSodaBalance + stakeValueInXSoda;
+  }, [userXSodaBalance, stakeMode, stakeValueInXSoda]);
+
+  const totalUserXSodaValue = useMemo(() => {
+    if (stakeMode === STAKE_MODE.UNSTAKING) {
+      return userXSodaValue - stakeValueInSoda;
+    }
+
+    return userXSodaValue + stakeValueInSoda;
+  }, [userXSodaValue, stakeMode, stakeValueInSoda]);
 
   return {
     stakeValue,
@@ -72,6 +111,8 @@ export const useStakeState = () => {
     userXSodaValue,
     stakingInfo,
     isLoadingStakingInfo,
+    totalUserXSodaBalance,
+    totalUserXSodaValue,
   };
 };
 
