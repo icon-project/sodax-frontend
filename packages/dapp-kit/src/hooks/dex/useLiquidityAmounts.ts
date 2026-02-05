@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ClService, type PoolData } from '@sodax/sdk';
 
-interface UseLiquidityAmountsReturn {
+interface UseLiquidityAmountsResult {
   liquidityToken0Amount: string;
   liquidityToken1Amount: string;
   lastEditedToken: 'token0' | 'token1' | null;
@@ -21,7 +21,7 @@ interface UseLiquidityAmountsReturn {
  * @param {string} minPrice - Minimum price for the liquidity range
  * @param {string} maxPrice - Maximum price for the liquidity range
  * @param {PoolData | null} poolData - The pool data containing token information
- * @returns {UseLiquidityAmountsReturn} Object containing amounts, state, and handlers
+ * @returns {UseLiquidityAmountsResult} Object containing amounts, state, and handlers
  *
  * @example
  * ```typescript
@@ -42,7 +42,7 @@ export function useLiquidityAmounts(
   minPrice: string,
   maxPrice: string,
   poolData: PoolData | null,
-): UseLiquidityAmountsReturn {
+): UseLiquidityAmountsResult {
   const [liquidityToken0Amount, setLiquidityToken0Amount] = useState<string>('');
   const [liquidityToken1Amount, setLiquidityToken1Amount] = useState<string>('');
   const [lastEditedToken, setLastEditedToken] = useState<'token0' | 'token1' | null>(null);

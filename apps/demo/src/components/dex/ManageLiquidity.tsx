@@ -1,5 +1,5 @@
 // apps/demo/src/components/dex/ManageLiquidity.tsx
-import React, { useEffect, useState } from 'react';
+import React, { type JSX, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,12 +8,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import type { ChainId, ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
 import type { XAccount } from '@sodax/wallet-sdk-react';
-import { useCreateDepositParams, useDexAllowance, useDexApprove, useDexDeposit, useDexWithdraw } from '@sodax/dapp-kit';
+import {
+  createWithdrawParamsProps,
+  findSpokeTokenForPool,
+  useCreateDepositParams,
+  useDexAllowance,
+  useDexApprove,
+  useDexDeposit,
+  useDexWithdraw,
+  useSodaxContext,
+} from '@sodax/dapp-kit';
 
 interface ManageLiquidityProps {
-  poolData: PoolData | null;
-  xAccount: XAccount | null;
-  spokeProvider: SpokeProvider | null;
+  poolData: PoolData;
+  xAccount: XAccount;
+  spokeProvider: SpokeProvider;
   pools: PoolKey[];
   selectedPoolIndex: number;
   // Form state
@@ -27,8 +36,8 @@ interface ManageLiquidityProps {
   positionId: string;
   positionInfo: ClPositionInfo | null;
   isValidPosition: boolean;
-  selectedPoolKey: PoolKey | null;
-  selectedChainId: ChainId | null;
+  selectedPoolKey: PoolKey;
+  selectedChainId: ChainId;
   // Handlers
   onLiquidityToken0AmountChange: (value: string) => void;
   onLiquidityToken1AmountChange: (value: string) => void;
@@ -76,13 +85,14 @@ export function ManageLiquidity({
   selectedPoolKey,
   selectedChainId,
 }: ManageLiquidityProps): JSX.Element | null {
-  if (!poolData || !xAccount?.address) {
-    console.warn('[ManageLiquidity] Pool data or xAccount address is required');
-    return null;
-  }
+  const { sodax } = useSodaxContext();
 
   // UI state
   const [error, setError] = useState<string>('');
+
+  // Form state
+  const [token0Amount, setToken0Amount] = useState<string>('');
+  const [token1Amount, setToken1Amount] = useState<string>('');
 
   // Reset state when chain changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: setter functions are stable
@@ -90,10 +100,6 @@ export function ManageLiquidity({
     setToken0Amount('');
     setToken1Amount('');
   }, [selectedChainId]);
-
-  // Form state
-  const [token0Amount, setToken0Amount] = useState<string>('');
-  const [token1Amount, setToken1Amount] = useState<string>('');
 
   const createDepositParams0 = useCreateDepositParams({
     tokenIndex: 0,
@@ -117,12 +123,12 @@ export function ManageLiquidity({
     params: createDepositParams1,
     spokeProvider,
   });
-  const { mutateAsync: approveToken0, isPending: isApprovingToken0 } = useDexApprove(spokeProvider);
-  const { mutateAsync: approveToken1, isPending: isApprovingToken1 } = useDexApprove(spokeProvider);
+  const { mutateAsync: approveToken0, isPending: isApprovingToken0 } = useDexApprove();
+  const { mutateAsync: approveToken1, isPending: isApprovingToken1 } = useDexApprove();
 
   // Hooks for mutations
-  const depositMutation = useDexDeposit(spokeProvider ?? null);
-  const withdrawMutation = useDexWithdraw(spokeProvider ?? null);
+  const depositMutation = useDexDeposit();
+  const withdrawMutation = useDexWithdraw();
 
   // Handle mutation errors and success
   useEffect(() => {
@@ -145,10 +151,29 @@ export function ManageLiquidity({
   const loading = depositMutation.isPending || withdrawMutation.isPending;
 
   const handleApproveToken0 = async () => {
-    await approveToken0(createDepositParams0);
+    if (!createDepositParams0) {
+      setError('Please enter a valid amount ');
+      return;
+    }
+
+    if (!spokeProvider) {
+      setError('Spoke provider is not set');
+      return;
+    }
+
+    await approveToken0({ params: createDepositParams0, spokeProvider });
   };
   const handleApproveToken1 = async () => {
-    await approveToken1(createDepositParams1);
+    if (!createDepositParams1) {
+      setError('Please enter a valid amount');
+      return;
+    }
+
+    if (!spokeProvider) {
+      setError('Spoke provider is not set');
+      return;
+    }
+    await approveToken1({ params: createDepositParams1, spokeProvider });
   };
 
   // Handle deposit
@@ -167,7 +192,7 @@ export function ManageLiquidity({
     setError('');
 
     try {
-      await depositMutation.mutateAsync(params);
+      await depositMutation.mutateAsync({ params, spokeProvider });
 
       // Clear form
       if (tokenIndex === 0) {
@@ -199,10 +224,15 @@ export function ManageLiquidity({
 
     try {
       await withdrawMutation.mutateAsync({
-        tokenIndex,
-        amount,
-        poolData,
-        poolKey: selectedPoolKey,
+        params: createWithdrawParamsProps({
+          tokenIndex,
+          amount,
+          poolData,
+          poolKey: selectedPoolKey,
+          spokeProvider,
+          sodax,
+        }),
+        spokeProvider,
       });
 
       // Clear form
@@ -217,6 +247,11 @@ export function ManageLiquidity({
       setError(`Withdraw failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
+
+  if (!poolData || !xAccount?.address) {
+    console.warn('[ManageLiquidity] Pool data or xAccount address is required');
+    return null;
+  }
 
   return (
     <Card>
@@ -233,7 +268,19 @@ export function ManageLiquidity({
           <TabsContent value="deposit" className="space-y-4">
             {/* Token 0 Deposit */}
             <div className="space-y-2">
-              <Label htmlFor="token0-deposit">{poolData.token0.symbol}</Label>
+              <Label htmlFor="token0-deposit">
+                Deposit{' '}
+                {
+                  findSpokeTokenForPool({
+                    tokenIndex: 0,
+                    poolData,
+                    spokeProvider: spokeProvider,
+                    poolKey: selectedPoolKey,
+                    sodax,
+                  })?.symbol
+                }{' '}
+                as {poolData.token0.symbol}
+              </Label>
               <div className="flex gap-2">
                 <Input
                   id="token0-deposit"
@@ -271,7 +318,12 @@ export function ManageLiquidity({
                 type="button"
                 variant="default"
                 onClick={handleApproveToken0}
-                disabled={createDepositParams0 === undefined || isToken0AllowanceLoading || hasToken0Allowed || isApprovingToken0}
+                disabled={
+                  createDepositParams0 === undefined ||
+                  isToken0AllowanceLoading ||
+                  hasToken0Allowed ||
+                  isApprovingToken0
+                }
               >
                 {isApprovingToken0 ? 'Approving...' : hasToken0Allowed ? 'Approved' : 'Approve'}
               </Button>
@@ -283,7 +335,19 @@ export function ManageLiquidity({
 
             {/* Token 1 Deposit */}
             <div className="space-y-2">
-              <Label htmlFor="token1-deposit">{poolData.token1.symbol}</Label>
+              <Label htmlFor="token1-deposit">
+                Deposit{' '}
+                {
+                  findSpokeTokenForPool({
+                    tokenIndex: 1,
+                    poolData,
+                    spokeProvider: spokeProvider,
+                    poolKey: selectedPoolKey,
+                    sodax,
+                  })?.symbol
+                }{' '}
+                as {poolData.token1.symbol}
+              </Label>
               <div className="flex gap-2">
                 <Input
                   id="token1-deposit"
@@ -321,7 +385,12 @@ export function ManageLiquidity({
                 type="button"
                 variant="default"
                 onClick={handleApproveToken1}
-                disabled={createDepositParams1 === undefined || isToken1AllowanceLoading || hasToken1Allowed || isApprovingToken1}
+                disabled={
+                  createDepositParams1 === undefined ||
+                  isToken1AllowanceLoading ||
+                  hasToken1Allowed ||
+                  isApprovingToken1
+                }
               >
                 {isApprovingToken1 ? 'Approving...' : hasToken1Allowed ? 'Approved' : 'Approve'}
               </Button>
@@ -648,7 +717,7 @@ export function ManageLiquidity({
                         <Button
                           onClick={onBurnPosition}
                           disabled={loading || !positionInfo}
-                          variant="destructive"
+                          variant="outline"
                           className="w-full"
                           title="Remove all liquidity and burn this position NFT"
                         >
@@ -748,7 +817,7 @@ export function ManageLiquidity({
               <Button
                 onClick={() => handleWithdraw(0)}
                 disabled={loading || !token0Amount}
-                variant="destructive"
+                variant="outline"
                 className="w-full"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -794,7 +863,7 @@ export function ManageLiquidity({
               <Button
                 onClick={() => handleWithdraw(1)}
                 disabled={loading || !token1Amount}
-                variant="destructive"
+                variant="outline"
                 className="w-full"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}

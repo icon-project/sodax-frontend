@@ -1,10 +1,8 @@
 // apps/demo/src/components/dex/SimplePoolManager.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, type JSX } from 'react';
 import { AlertCircle } from 'lucide-react';
-import type { ClService, PoolData, PoolKey } from '@sodax/sdk';
 import { useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
-import { useSpokeProvider } from '@sodax/dapp-kit';
 import { Setup } from './Setup';
 import { SelectPool } from './SelectPool';
 import { PoolInformation } from './PoolInformation';
@@ -18,6 +16,10 @@ import {
   useSupplyLiquidity,
   useDecreaseLiquidity,
   useBurnPosition,
+  useSpokeProvider,
+  createBurnPositionParamsProps,
+  createDecreaseLiquidityParamsProps,
+  createSupplyLiquidityParamsProps,
 } from '@sodax/dapp-kit';
 
 export function SimplePoolManager(): JSX.Element {
@@ -106,9 +108,9 @@ export function SimplePoolManager(): JSX.Element {
   }, [poolDataError]);
 
   // Hooks for mutations
-  const supplyLiquidityMutation = useSupplyLiquidity(spokeProvider ?? null);
-  const decreaseLiquidityMutation = useDecreaseLiquidity(spokeProvider ?? null);
-  const burnPositionMutation = useBurnPosition(spokeProvider ?? null);
+  const supplyLiquidityMutation = useSupplyLiquidity();
+  const decreaseLiquidityMutation = useDecreaseLiquidity();
+  const burnPositionMutation = useBurnPosition();
 
   // Combined loading state
   const loading =
@@ -116,7 +118,6 @@ export function SimplePoolManager(): JSX.Element {
     supplyLiquidityMutation.isPending ||
     decreaseLiquidityMutation.isPending ||
     burnPositionMutation.isPending;
-
 
   useEffect(() => {
     if (supplyLiquidityMutation.isSuccess) {
@@ -143,8 +144,6 @@ export function SimplePoolManager(): JSX.Element {
       }
     }
   }, [burnPositionMutation.isSuccess, burnPositionMutation.error]);
-
-
 
   // Handle supply liquidity
   const handleSupplyLiquidity = async (): Promise<void> => {
@@ -177,15 +176,18 @@ export function SimplePoolManager(): JSX.Element {
 
     try {
       await supplyLiquidityMutation.mutateAsync({
-        poolData,
-        poolKey: selectedPoolKey,
-        minPrice,
-        maxPrice,
-        liquidityToken0Amount,
-        liquidityToken1Amount,
-        slippageTolerance,
-        positionId: positionId || null,
-        isValidPosition,
+        params: createSupplyLiquidityParamsProps({
+          poolData,
+          poolKey: selectedPoolKey,
+          minPrice,
+          maxPrice,
+          liquidityToken0Amount,
+          liquidityToken1Amount,
+          slippageTolerance,
+          positionId: positionId || null,
+          isValidPosition,
+        }),
+        spokeProvider,
       });
 
       // Clear form
@@ -223,11 +225,14 @@ export function SimplePoolManager(): JSX.Element {
 
     try {
       await decreaseLiquidityMutation.mutateAsync({
-        poolKey: selectedPoolKey,
-        tokenId: positionId,
-        percentage: liquidityToken0Amount,
-        positionInfo,
-        slippageTolerance,
+        params: createDecreaseLiquidityParamsProps({
+          poolKey: selectedPoolKey,
+          tokenId: positionId,
+          percentage: liquidityToken0Amount,
+          positionInfo,
+          slippageTolerance,
+        }),
+        spokeProvider,
       });
 
       // Clear form
@@ -247,16 +252,45 @@ export function SimplePoolManager(): JSX.Element {
       return;
     }
 
+    // Show confirmation dialog if position has liquidity
+    let confirmMessage = '';
+    if (positionInfo.liquidity > 0n) {
+      const token0Amount = `${formatAmount(positionInfo.amount0, poolData.token0.decimals)} ${poolData.token0.symbol}`;
+      const token1Amount = `${formatAmount(positionInfo.amount1, poolData.token1.decimals)} ${poolData.token1.symbol}`;
+
+      let token0Details = token0Amount;
+      let token1Details = token1Amount;
+
+      if (positionInfo.amount0Underlying && poolData.token0IsStatAToken && poolData.token0UnderlyingToken) {
+        const underlyingAmount = formatAmount(positionInfo.amount0Underlying, poolData.token0UnderlyingToken.decimals);
+        token0Details += ` (≈${underlyingAmount} ${poolData.token0UnderlyingToken.symbol})`;
+      }
+
+      if (positionInfo.amount1Underlying && poolData.token1IsStatAToken && poolData.token1UnderlyingToken) {
+        const underlyingAmount = formatAmount(positionInfo.amount1Underlying, poolData.token1UnderlyingToken.decimals);
+        token1Details += ` (≈${underlyingAmount} ${poolData.token1UnderlyingToken.symbol})`;
+      }
+
+      confirmMessage = `This position has liquidity. Burning will:\n1. Remove all liquidity:\n   - ${token0Details}\n   - ${token1Details}\n2. Burn the NFT\n\nAre you sure?`;
+    } else {
+      confirmMessage = 'Are you sure you want to burn this position? This action cannot be undone.';
+    }
+
+    if (confirm(confirmMessage)) {
+      return;
+    }
+
     setError('');
 
     try {
       await burnPositionMutation.mutateAsync({
-        poolKey: selectedPoolKey,
-        tokenId: positionId,
-        positionInfo,
-        poolData,
-        slippageTolerance,
-        formatAmount,
+        params: createBurnPositionParamsProps({
+          poolKey: selectedPoolKey,
+          tokenId: positionId,
+          positionInfo,
+          slippageTolerance,
+        }),
+        spokeProvider,
       });
 
       // Clear position state
@@ -308,7 +342,6 @@ export function SimplePoolManager(): JSX.Element {
         openWalletModal={openWalletModal}
         disconnect={disconnect}
       />
-
       <SelectPool
         selectedChainId={selectedChainId}
         pools={pools}
@@ -316,41 +349,40 @@ export function SimplePoolManager(): JSX.Element {
         onPoolSelect={setSelectedPoolIndex}
         loading={loading}
       />
-
       <PoolInformation poolData={poolData} formatAmount={formatAmount} formatConversionRate={formatConversionRate} />
-
-      <ManageLiquidity
-        poolData={poolData ?? null}
-        xAccount={xAccount}
-        spokeProvider={spokeProvider ?? null}
-        pools={pools}
-        selectedPoolIndex={selectedPoolIndex}
-        token0Balance={token0Balance}
-        token1Balance={token1Balance}
-        minPrice={minPrice}
-        maxPrice={maxPrice}
-        liquidityToken0Amount={liquidityToken0Amount}
-        liquidityToken1Amount={liquidityToken1Amount}
-        slippageTolerance={slippageTolerance}
-        positionId={positionId}
-        positionInfo={positionInfo}
-        isValidPosition={isValidPosition}
-        onLiquidityToken0AmountChange={handleToken0AmountChange}
-        onLiquidityToken1AmountChange={handleToken1AmountChange}
-        onMinPriceChange={setMinPrice}
-        onMaxPriceChange={setMaxPrice}
-        onSlippageToleranceChange={setSlippageTolerance}
-        onPositionIdChange={handlePositionIdChange}
-        onClearPosition={handleClearPosition}
-        onSupplyLiquidity={handleSupplyLiquidity}
-        onDecreaseLiquidity={handleDecreaseLiquidity}
-        onBurnPosition={handleBurnPosition}
-        formatAmount={formatAmount}
-        calculateUnderlyingAmount={calculateUnderlyingAmount}
-        selectedPoolKey={selectedPoolKey}
-        selectedChainId={selectedChainId}
-      />
-
+      {poolData && spokeProvider && xAccount && selectedPoolKey && selectedChainId && (
+        <ManageLiquidity
+          poolData={poolData}
+          xAccount={xAccount}
+          spokeProvider={spokeProvider}
+          pools={pools}
+          selectedPoolIndex={selectedPoolIndex}
+          token0Balance={token0Balance}
+          token1Balance={token1Balance}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          liquidityToken0Amount={liquidityToken0Amount}
+          liquidityToken1Amount={liquidityToken1Amount}
+          slippageTolerance={slippageTolerance}
+          positionId={positionId}
+          positionInfo={positionInfo}
+          isValidPosition={isValidPosition}
+          onLiquidityToken0AmountChange={handleToken0AmountChange}
+          onLiquidityToken1AmountChange={handleToken1AmountChange}
+          onMinPriceChange={setMinPrice}
+          onMaxPriceChange={setMaxPrice}
+          onSlippageToleranceChange={setSlippageTolerance}
+          onPositionIdChange={handlePositionIdChange}
+          onClearPosition={handleClearPosition}
+          onSupplyLiquidity={handleSupplyLiquidity}
+          onDecreaseLiquidity={handleDecreaseLiquidity}
+          onBurnPosition={handleBurnPosition}
+          formatAmount={formatAmount}
+          calculateUnderlyingAmount={calculateUnderlyingAmount}
+          selectedPoolKey={selectedPoolKey}
+          selectedChainId={selectedChainId}
+        />
+      )}
       {/* Error Display */}
       {error && (
         <div className="flex items-start gap-3 rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">

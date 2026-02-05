@@ -24,7 +24,12 @@ import {
   defaultSharedConfig,
 } from '@sodax/types';
 import type { BackendApiService } from '../../backendApi/BackendApiService.js';
-import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT, dexPools, StatATokenAddresses } from '../constants.js';
+import {
+  DEFAULT_BACKEND_API_ENDPOINT,
+  DEFAULT_BACKEND_API_TIMEOUT,
+  dexPools,
+  StatATokenAddresses,
+} from '../constants.js';
 import type { Result } from '../types.js';
 import type { PoolKey } from '../../dex/types.js';
 
@@ -72,7 +77,7 @@ export class ConfigService {
     this.sharedConfig = {
       ...defaultSharedConfig,
       ...sharedConfig,
-    }
+    };
   }
 
   public async initialize(): Promise<Result<void>> {
@@ -259,6 +264,14 @@ export class ConfigService {
     }
     return originalAssetAddresses[0] as OriginalAssetAddress;
   };
+
+  public findTokenByOriginalAddress(originalAddress: OriginalAssetAddress, chainId: SpokeChainId): XToken | undefined {
+    const tokens = this.supportedTokensPerChain.get(chainId);
+    if (tokens && tokens.length > 0) {
+      return tokens.find(token => token.address.toLowerCase() === originalAddress.toLowerCase());
+    }
+    return undefined;
+  }
 
   public getDexPools(): PoolKey[] {
     // TODO make those dynamic in future

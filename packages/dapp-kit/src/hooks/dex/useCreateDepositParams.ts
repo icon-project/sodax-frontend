@@ -1,58 +1,40 @@
-import type { CreateDepositParams, OriginalAssetAddress, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
 import { useMemo } from 'react';
-import { parseUnits } from 'viem';
+import type { CreateAssetDepositParams, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
+import { useSodaxContext } from '../shared/useSodaxContext';
+import { createDepositParamsProps } from '@/utils/dex-utils';
 
-export type RawDepositParams = {
+export type RawDexDepositParams = {
   tokenIndex: 0 | 1;
-  amount: string;
+  amount: string | number;
   poolData: PoolData;
   poolKey: PoolKey;
 };
 
-export type UseCreateDepositParamsProps = RawDepositParams & {
+export type UseCreateDepositParamsProps = RawDexDepositParams & {
   spokeProvider: SpokeProvider | null;
 };
 
-// Returns a memoized CreateDepositParams if input is valid, or undefined otherwise
 export function useCreateDepositParams({
   tokenIndex,
   amount,
   poolData,
   poolKey,
   spokeProvider,
-}: UseCreateDepositParamsProps): CreateDepositParams | undefined {
+}: UseCreateDepositParamsProps): CreateAssetDepositParams | undefined {
   const { sodax } = useSodaxContext();
 
-  if (!spokeProvider) {
-    console.error('Spoke provider is required');
-    return undefined;
-  }
-
-  // Memoize the deposit params for the provided input dependencies
-  return useMemo<CreateDepositParams | undefined>(() => {
+  return useMemo<CreateAssetDepositParams | undefined>(() => {
     if (!spokeProvider) {
-      // Prevents unnecessary errors in React render loops by returning undefined when provider is absent.
+      console.warn('[useCreateDepositParams] Spoke provider is not set');
       return undefined;
     }
 
-    const amountNum = Number.parseFloat(amount);
-    if (!amount || amountNum <= 0) {
+    if (!amount || Number.parseFloat(String(amount)) <= 0) {
+      console.warn('[useCreateDepositParams] Amount must be greater than 0');
       return undefined;
     }
 
-    const token = tokenIndex === 0 ? poolData.token0 : poolData.token1;
-    const assets = sodax.dex.clService.getAssetsForPool(spokeProvider, poolKey);
-    if (!assets) {
-      return undefined;
-    }
-
-    const originalAsset: OriginalAssetAddress = tokenIndex === 0 ? assets.token0 : assets.token1;
-
-    return {
-      asset: originalAsset,
-      amount: parseUnits(amount, token.decimals),
-      poolToken: token.address,
-    } satisfies CreateDepositParams;
+    console.log('useCreateDepositParams', tokenIndex, amount, poolData, poolKey, spokeProvider);
+    return createDepositParamsProps({ poolKey, tokenIndex, amount, poolData, spokeProvider, sodax });
   }, [tokenIndex, amount, poolData, poolKey, spokeProvider, sodax]);
 }

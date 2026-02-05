@@ -1,5 +1,5 @@
 // apps/demo/src/components/dex/SelectPool.tsx
-import React from 'react';
+import React, { type JSX } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

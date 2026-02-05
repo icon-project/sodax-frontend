@@ -1,56 +1,42 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import type { SpokeProvider, CreateDepositParams, SpokeTxHash } from '@sodax/sdk';
+import type { SpokeProvider, CreateAssetDepositParams, SpokeTxHash } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
+export type UseDexApproveParams = {
+  params: CreateAssetDepositParams;
+  spokeProvider: SpokeProvider;
+};
+
 /**
- * React hook to approve token allowance for DEX deposits.
+ * React hook for performing a DEX token allowance approval transaction.
  *
- * Handles the user approval process for a given token before making a deposit through the DEX.
- * After successful approval, this hook automatically triggers an invalidation and refetch for queries
- * related to the token allowance, ensuring up-to-date UI state.
+ * Returns a mutation object that allows explicitly triggering a token approval
+ * for a DEX deposit, using the specified approval parameters and spoke provider.
+ * On successful approval, the related allowance query is invalidated and refetched
+ * for consistent UI state.
  *
- * @param {SpokeProvider | null} spokeProvider
- *   The spoke provider instance for the active chain. Approval is not possible if this is null.
- * @returns {UseMutationResult<SpokeTxHash, Error, CreateDepositParams | undefined>}
- *   A React Query mutation result for the approve operation, where:
- *   - `mutateAsync(params)` triggers the approval
- *   - `data` is the raw transaction hash (as returned by SDK) upon success
- *   - `error` is set if approval fails
- *   - `isPending` indicates mutation is in progress
+ * @returns {UseMutationResult<SpokeTxHash, Error, UseDexApproveParams>}
+ *   React Query mutation result for the approval operation. Use `mutateAsync` with
+ *   an object of shape `{ params, spokeProvider }` to initiate approval.
  *
  * @example
  * ```typescript
- * const { mutateAsync: approve, isPending, error } = useDexApprove(spokeProvider);
- * 
- * await approve({
- *   asset,                // Asset address for approval
- *   amount: parseUnits('100', 18), // Token amount in base units as a bigint
- *   poolToken             // DEX pool contract address
- * });
+ * const { mutateAsync: approve, isPending, error } = useDexApprove();
+ * await approve({ params: { asset, amount, poolToken }, spokeProvider });
  * ```
+ *
  * @remarks
- * - Use before attempting a pooled token deposit, after allowance check (`useDexAllowance`) fails.
- * - The transaction returned is on the spoke (local chain).
- * - Throws errors if called without a valid `spokeProvider` or `depositParams`.
- * - Automatically refetches allowance after success to update UI.
+ * - Throws if called without both a valid `params` and `spokeProvider`.
+ * - On approval success, the query for ['dex', 'allowance'] is invalidated/refetched.
  */
-export function useDexApprove(
-  spokeProvider: SpokeProvider | null,
-): UseMutationResult<SpokeTxHash, Error, CreateDepositParams | undefined> {
+export function useDexApprove(): UseMutationResult<SpokeTxHash, Error, UseDexApproveParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (depositParams: CreateDepositParams | undefined) => {
-      if (!spokeProvider) {
-        throw new Error('Spoke provider is required');
-      }
-      if (!depositParams) {
-        throw new Error('Deposit params are required');
-      }
-
+    mutationFn: async ({ params, spokeProvider }: UseDexApproveParams) => {
       const approveResult = await sodax.dex.assetService.approve({
-        depositParams,
+        params,
         spokeProvider,
         raw: false,
       });

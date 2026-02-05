@@ -1,5 +1,5 @@
 // apps/demo/src/components/dex/Setup.tsx
-import React from 'react';
+import React, { type JSX } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';

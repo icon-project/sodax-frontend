@@ -1,60 +1,52 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import type { SpokeProvider, CreateDepositParams, SpokeTxHash, HubTxHash } from '@sodax/sdk';
+import type { SpokeProvider, CreateAssetDepositParams, SpokeTxHash, HubTxHash } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
+export type UseDexDepositParams = {
+  params: CreateAssetDepositParams;
+  spokeProvider: SpokeProvider;
+};
+
 /**
- * React hook to perform a token deposit into a DEX pool.
+/**
+ * React hook that provides a mutation to perform a deposit into a DEX pool using the provided parameters and SpokeProvider.
  *
- * This hook wraps the deposit action for a pool on the active chain. The user must have approved
- * enough token allowance for the DEX before calling this (see {@link useDexAllowance}, {@link useDexApprove}).
+ * The hook returns a mutation object for executing the deposit (`mutateAsync`), tracking its state (`isPending`), and any resulting error (`error`).
+ * On successful deposit, all queries matching ['dex', 'poolBalances'] are invalidated and refetched.
  *
- * On success, the pool balances will be refetched for UI updates.
- *
- * @param {SpokeProvider | null} spokeProvider
- *   The SpokeProvider instance for the desired chain. Pass `null` to disable/defer the mutation.
- *
- * @returns {UseMutationResult<[SpokeTxHash, HubTxHash], Error, CreateDepositParams>}
- *   A React Query mutation object with:
- *   - `mutateAsync(depositParams)`: Executes the deposit using {@link CreateDepositParams}.
- *   - `isPending`: Boolean state for mutation loading.
- *   - `error`: Any error thrown by the deposit attempt.
+ * @returns {UseMutationResult<[SpokeTxHash, HubTxHash], Error, UseDexDepositParams>}
+ *   React Query mutation result:
+ *   - `mutateAsync({ params, spokeProvider })`: Triggers the deposit with {@link CreateDepositParams} and the target SpokeProvider.
+ *   - `isPending`: True while the deposit transaction is pending.
+ *   - `error`: Error if the mutation fails.
  *
  * @example
  * ```typescript
- * const { mutateAsync: deposit, isPending, error } = useDexDeposit(spokeProvider);
- *
- * await deposit({
- *   asset,             // Asset address being deposited
- *   amount,            // Amount as bigint (in base units)
- *   poolToken,         // Pool token/contract address
- *   ...                // (other fields required by CreateDepositParams)
- * });
+ * const { mutateAsync: deposit, isPending, error } = useDexDeposit();
+ * await deposit({ params: { asset, amount, poolToken }, spokeProvider });
  * ```
  *
  * @remarks
- * - The returned tuple is: [spokeTxHash, hubTxHash] from the Sodax SDK after deposit.
- * - Throws if `spokeProvider` or `depositParams` are missing.
- * - Automatically refetches pool balances after a successful deposit.
+ * - Throws if called with missing `spokeProvider` or `params`.
+ * - Upon success, automatically refetches up-to-date pool balances.
  */
-export function useDexDeposit(
-  spokeProvider: SpokeProvider | null,
-): UseMutationResult<[SpokeTxHash, HubTxHash], Error, CreateDepositParams> {
+export function useDexDeposit(): UseMutationResult<[SpokeTxHash, HubTxHash], Error, UseDexDepositParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (depositParams: CreateDepositParams): Promise<[SpokeTxHash, HubTxHash]> => {
+    mutationFn: async ({ params, spokeProvider }: UseDexDepositParams) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider is required');
       }
 
-      if (!depositParams) {
+      if (!params) {
         throw new Error('Deposit params are required');
       }
 
       // Perform the deposit operation
       const depositResult = await sodax.dex.assetService.deposit({
-        depositParams,
+        params,
         spokeProvider,
       });
 

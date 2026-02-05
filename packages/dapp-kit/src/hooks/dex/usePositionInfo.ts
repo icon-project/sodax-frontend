@@ -1,4 +1,4 @@
-import { QueryObserverOptions, useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { type QueryObserverOptions, useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { ClPositionInfo, PoolKey } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 

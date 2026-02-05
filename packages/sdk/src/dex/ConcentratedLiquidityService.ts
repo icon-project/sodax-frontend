@@ -8,10 +8,8 @@ import {
   type SpokeProvider,
   SpokeService,
   encodeContractCalls,
-  deriveUserWalletAddress,
   relayTxAndWaitPacket,
   DEFAULT_RELAY_TX_TIMEOUT,
-  SolanaSpokeProvider,
   Permit2Service,
   Erc20Service,
   Erc4626Service,
@@ -21,9 +19,12 @@ import {
   type HubTxHash,
   getConcentratedLiquidityConfig,
   type ConfigService,
+  isSolanaSpokeProviderType,
+  isHubSpokeProvider,
+  HubService,
 } from '../index.js';
 import type { Address, HttpUrl, OriginalAssetAddress } from '@sodax/types';
-import type { EvmHubProvider } from '../shared/entities/Providers.js';
+import type { EvmHubProvider, SpokeProviderType } from '../shared/entities/Providers.js';
 import type {
   Prettify,
   OptionalTimeout,
@@ -134,28 +135,28 @@ export type ConcentratedLiquidityParams =
   | ConcentratedLiquidityClaimRewardsParams;
 
 // Parameter types for refactored functions following SwapService pattern
-export type SupplyLiquidityParams<S extends SpokeProvider> = Prettify<{
-  supplyParams: ConcentratedLiquiditySupplyParams;
+export type SupplyLiquidityParams<S extends SpokeProviderType> = Prettify<{
+  params: ConcentratedLiquiditySupplyParams;
   spokeProvider: S;
 }>;
 
-export type IncreaseLiquidityParams<S extends SpokeProvider> = Prettify<{
-  increaseParams: ConcentratedLiquidityIncreaseLiquidityParams;
+export type IncreaseLiquidityParams<S extends SpokeProviderType> = Prettify<{
+  params: ConcentratedLiquidityIncreaseLiquidityParams;
   spokeProvider: S;
 }>;
 
-export type DecreaseLiquidityParams<S extends SpokeProvider> = Prettify<{
-  decreaseParams: ConcentratedLiquidityDecreaseLiquidityParams;
+export type DecreaseLiquidityParams<S extends SpokeProviderType> = Prettify<{
+  params: ConcentratedLiquidityDecreaseLiquidityParams;
   spokeProvider: S;
 }>;
 
-export type BurnPositionParams<S extends SpokeProvider> = Prettify<{
-  burnParams: ConcentratedLiquidityBurnPositionParams;
+export type BurnPositionParams<S extends SpokeProviderType> = Prettify<{
+  params: ConcentratedLiquidityBurnPositionParams;
   spokeProvider: S;
 }>;
 
-export type ClaimRewardsParams<S extends SpokeProvider> = Prettify<{
-  claimParams: ConcentratedLiquidityClaimRewardsParams;
+export type ClaimRewardsParams<S extends SpokeProviderType> = Prettify<{
+  params: ConcentratedLiquidityClaimRewardsParams;
   spokeProvider: S;
 }>;
 
@@ -405,7 +406,7 @@ export class ClService {
   }
 
   public getAssetsForPool(
-    spokeProvider: SpokeProvider,
+    spokeProvider: SpokeProviderType,
     poolKey: PoolKey,
   ): { token0: OriginalAssetAddress; token1: OriginalAssetAddress } {
     return {
@@ -423,7 +424,7 @@ export class ClService {
   /**
    * Execute supply liquidity action - creates a new concentrated liquidity position
    */
-  public async executeSupplyLiquidity<S extends SpokeProvider, R extends boolean = false>(
+  public async executeSupplyLiquidity<S extends SpokeProviderType, R extends boolean = false>(
     params: ConcentratedLiquiditySupplyParams,
     spokeProvider: S,
     raw?: R,
@@ -434,7 +435,11 @@ export class ClService {
   > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const hubWallet = await HubService.getUserHubWalletAddress(
+        userAddress,
+        spokeProvider.chainConfig.chain.id,
+        this.hubProvider,
+      );
       const calls: EvmContractCall[] = [];
 
       const token0Approvals = this.permit2Approve(params.poolKey.currency0, this.config.clPositionManager);
@@ -500,7 +505,7 @@ export class ClService {
     }
   }
 
-  public async executeIncreaseLiquidity<S extends SpokeProvider, R extends boolean = false>(
+  public async executeIncreaseLiquidity<S extends SpokeProviderType, R extends boolean = false>(
     params: ConcentratedLiquidityIncreaseLiquidityParams,
     spokeProvider: S,
     raw?: R,
@@ -511,7 +516,11 @@ export class ClService {
   > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const hubWallet = await HubService.getUserHubWalletAddress(
+        userAddress,
+        spokeProvider.chainConfig.chain.id,
+        this.hubProvider,
+      );
       const calls: EvmContractCall[] = [];
 
       const positionConfig: CLPositionConfig = {
@@ -572,7 +581,7 @@ export class ClService {
     }
   }
 
-  public async executeDecreaseLiquidity<S extends SpokeProvider, R extends boolean = false>(
+  public async executeDecreaseLiquidity<S extends SpokeProviderType, R extends boolean = false>(
     params: ConcentratedLiquidityDecreaseLiquidityParams,
     spokeProvider: S,
     raw?: R,
@@ -583,7 +592,11 @@ export class ClService {
   > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const hubWallet = await HubService.getUserHubWalletAddress(
+        userAddress,
+        spokeProvider.chainConfig.chain.id,
+        this.hubProvider,
+      );
       const calls: EvmContractCall[] = [];
 
       const calldata = encodeCLPositionManagerDecreaseLiquidityCalldata({
@@ -639,7 +652,7 @@ export class ClService {
   /**
    * Execute burn position action - burns an NFT position and collects remaining tokens
    */
-  public async executeBurnPosition<S extends SpokeProvider, R extends boolean = false>(
+  public async executeBurnPosition<S extends SpokeProviderType, R extends boolean = false>(
     params: ConcentratedLiquidityBurnPositionParams,
     spokeProvider: S,
     raw?: R,
@@ -650,7 +663,11 @@ export class ClService {
   > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const hubWallet = await HubService.getUserHubWalletAddress(
+        userAddress,
+        spokeProvider.chainConfig.chain.id,
+        this.hubProvider,
+      );
       const calls: EvmContractCall[] = [];
 
       const positionConfig: CLPositionConfig = {
@@ -731,7 +748,7 @@ export class ClService {
    * This method wraps executeSupplyLiquidity and relays the transaction to the hub
    */
   public async supplyLiquidity<S extends SpokeProvider>({
-    supplyParams,
+    params,
     spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
     skipSimulation = false,
@@ -739,17 +756,17 @@ export class ClService {
     Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
   > {
     try {
-      const txResult = await this.executeSupplyLiquidity(supplyParams, spokeProvider, false, skipSimulation);
+      const txResult = await this.executeSupplyLiquidity(params, spokeProvider, false, skipSimulation);
 
       if (!txResult.ok) {
         return txResult;
       }
 
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
           spokeProvider,
           this.relayerApiEndpoint,
           timeout,
@@ -782,7 +799,7 @@ export class ClService {
           code: 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR',
           data: {
             error: error,
-            payload: supplyParams,
+            payload: params,
           },
         },
       };
@@ -794,14 +811,14 @@ export class ClService {
    * This method wraps executeIncreaseLiquidity and relays the transaction to the hub
    */
   public async increaseLiquidity<S extends SpokeProvider>({
-    increaseParams,
+    params,
     spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   }: Prettify<IncreaseLiquidityParams<S> & OptionalTimeout>): Promise<
     Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
   > {
     try {
-      const txResult = await this.executeIncreaseLiquidity(increaseParams, spokeProvider, false);
+      const txResult = await this.executeIncreaseLiquidity(params, spokeProvider, false);
 
       if (!txResult.ok) {
         return txResult satisfies Result<
@@ -811,10 +828,10 @@ export class ClService {
       }
 
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
           spokeProvider,
           this.relayerApiEndpoint,
           timeout,
@@ -846,7 +863,7 @@ export class ClService {
           code: 'INCREASE_LIQUIDITY_UNKNOWN_ERROR',
           data: {
             error: error,
-            payload: increaseParams,
+            payload: params,
           },
         },
       };
@@ -858,14 +875,14 @@ export class ClService {
    * This method wraps executeDecreaseLiquidity and relays the transaction to the hub
    */
   public async decreaseLiquidity<S extends SpokeProvider>({
-    decreaseParams,
+    params,
     spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   }: Prettify<DecreaseLiquidityParams<S> & OptionalTimeout>): Promise<
     Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
   > {
     try {
-      const txResult = await this.executeDecreaseLiquidity(decreaseParams, spokeProvider, false);
+      const txResult = await this.executeDecreaseLiquidity(params, spokeProvider, false);
 
       if (!txResult.ok) {
         return txResult satisfies Result<
@@ -875,10 +892,10 @@ export class ClService {
       }
 
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
           spokeProvider,
           this.relayerApiEndpoint,
           timeout,
@@ -910,7 +927,7 @@ export class ClService {
           code: 'DECREASE_LIQUIDITY_UNKNOWN_ERROR',
           data: {
             error: error,
-            payload: decreaseParams,
+            payload: params,
           },
         },
       };
@@ -922,14 +939,14 @@ export class ClService {
    * This method wraps executeBurnPosition and relays the transaction to the hub
    */
   public async burnPosition<S extends SpokeProvider>({
-    burnParams,
+    params,
     spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   }: Prettify<BurnPositionParams<S> & OptionalTimeout>): Promise<
     Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
   > {
     try {
-      const txResult = await this.executeBurnPosition(burnParams, spokeProvider, false);
+      const txResult = await this.executeBurnPosition(params, spokeProvider, false);
 
       if (!txResult.ok) {
         return txResult satisfies Result<
@@ -939,10 +956,10 @@ export class ClService {
       }
 
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
           spokeProvider,
           this.relayerApiEndpoint,
           timeout,
@@ -974,7 +991,7 @@ export class ClService {
           code: 'BURN_POSITION_UNKNOWN_ERROR',
           data: {
             error: error,
-            payload: burnParams,
+            payload: params,
           },
         },
       };
@@ -1036,7 +1053,7 @@ export class ClService {
       return {
         ok: true,
         value: {
-          rewardCurrency: rewardCurrency as Address,
+          rewardCurrency: rewardCurrency,
           rewardRatePerSecond,
           lastActionTimestamp,
         },
@@ -1059,7 +1076,7 @@ export class ClService {
   /**
    * Execute claim rewards action - triggers reward distribution by calling decrease liquidity with 0 value
    */
-  public async executeClaimRewards<S extends SpokeProvider, R extends boolean = false>(
+  public async executeClaimRewards<S extends SpokeProviderType, R extends boolean = false>(
     params: ConcentratedLiquidityClaimRewardsParams,
     spokeProvider: S,
     raw?: R,
@@ -1070,7 +1087,11 @@ export class ClService {
   > {
     try {
       const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await deriveUserWalletAddress(spokeProvider, this.hubProvider, userAddress);
+      const hubWallet = await HubService.getUserHubWalletAddress(
+        userAddress,
+        spokeProvider.chainConfig.chain.id,
+        this.hubProvider,
+      );
       const calls: EvmContractCall[] = [];
 
       // Call decrease liquidity with 0 liquidity to trigger reward distribution
@@ -1132,7 +1153,7 @@ export class ClService {
    * This method wraps executeClaimRewards and relays the transaction to the hub
    */
   public async claimRewards<S extends SpokeProvider>({
-    claimParams,
+    params,
     spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
     skipSimulation = false,
@@ -1140,17 +1161,17 @@ export class ClService {
     Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
   > {
     try {
-      const txResult = await this.executeClaimRewards(claimParams, spokeProvider, false, skipSimulation);
+      const txResult = await this.executeClaimRewards(params, spokeProvider, false, skipSimulation);
 
       if (!txResult.ok) {
         return txResult;
       }
 
       let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
           spokeProvider,
           this.relayerApiEndpoint,
           timeout,
@@ -1183,7 +1204,7 @@ export class ClService {
           code: 'CLAIM_REWARDS_UNKNOWN_ERROR',
           data: {
             error: error,
-            payload: claimParams,
+            payload: params,
           },
         },
       };

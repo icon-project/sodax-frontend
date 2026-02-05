@@ -2,67 +2,56 @@ import { type QueryObserverOptions, useQuery, type UseQueryResult } from '@tanst
 import type { PoolData, PoolKey } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-export interface UsePoolDataProps {
+export type UsePoolDataProps = {
   poolKey: PoolKey | null;
   enabled?: boolean;
   queryOptions?: QueryObserverOptions<PoolData, Error>;
-}
+};
 
 /**
- * React hook to query on-chain data for a specific DEX pool.
+ * React hook to fetch on-chain data for a given DEX pool.
  *
- * This hook retrieves immutable and dynamic information for a given pool key, including the token info,
- * pool characteristics, price, liquidity, and state from the chain via the Sodax clService.
+ * @param {UsePoolDataProps} props - The props object:
+ *   - `poolKey`: PoolKey | null — The unique identifier for the pool to fetch data for. If null, disables the query.
+ *   - `enabled`: boolean (optional) — Whether the query is enabled. Defaults to enabled if a poolKey is provided, otherwise false.
+ *   - `queryOptions`: QueryObserverOptions<PoolData, Error> (optional) — Additional React Query options (e.g., staleTime, refetchInterval).
  *
- * @param {PoolKey | null} poolKey
- *   The key representing the DEX pool to fetch data for. Pass `null` to disable the query.
- * @param {boolean} [enabled]
- *   Optionally enable/disable the query. Defaults to true if a poolKey is provided, otherwise false.
- * @param {QueryObserverOptions<PoolData, Error>} [queryOptions]
- *   Optionally provide advanced react-query options (staleTime, refetchInterval, etc). Entries are merged with defaults.
- *
- * @returns {UseQueryResult<PoolData, Error>}
- *   React Query result object, with `data` as the loaded PoolData (or undefined if loading/errored),
- *   plus status fields (`isLoading`, `isError`, etc).
+ * @returns {UseQueryResult<PoolData, Error>} React Query result containing pool data (`data`), loading state (`isLoading`), error (`error`), and status fields.
  *
  * @example
  * ```typescript
- * // Basic usage with default polling and state
- * const { data: poolData, isLoading, error } = usePoolData({ poolKey: selectedPoolKey });
- * if (isLoading) return <div>Loading pool data…</div>;
- * if (error) return <div>Error: {error.message}</div>;
+ * const { data: poolData, isLoading, error } = usePoolData({ poolKey });
+ * if (isLoading) return <div>Loading…</div>;
+ * if (error) return <div>Error!</div>;
  * if (poolData) {
- *   // Access poolData fields such as poolId, tokens, price, etc.
+ *   // poolData is available
  * }
  * ```
  *
  * @remarks
- * - Re-fetches every 30 seconds as long as enabled (adjustable via queryOptions).
- * - If `poolKey` is `null`, query is automatically disabled and no request is sent.
- * - Throws error if `poolKey` is omitted or invalid when enabled.
- * - Useful for all views needing up-to-date pool state (deposit/withdraw/liquidity/analytics UI).
+ * - Refetches pool data every 30 seconds by default, and may be configured via `queryOptions`.
+ * - If `poolKey` is `null`, the query is disabled and no network request is performed.
+ * - Throws an error if `poolKey` is missing when the query is enabled.
  */
 export function usePoolData({
   poolKey,
   queryOptions = {
     queryKey: ['dex', 'poolData', poolKey],
     enabled: poolKey !== null,
-    staleTime: 10000, // Consider data stale after 10 seconds
-    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 10000,
+    refetchInterval: 30000,
   },
 }: UsePoolDataProps): UseQueryResult<PoolData, Error> {
   const { sodax } = useSodaxContext();
 
   return useQuery({
     ...queryOptions,
-    queryFn: async () => {
+    queryFn: async (): Promise<PoolData> => {
       if (!poolKey) {
         throw new Error('Pool key is required');
       }
-
       return await sodax.dex.clService.getPoolData(poolKey, sodax.hubProvider.publicClient);
     },
     enabled: poolKey !== null,
   });
 }
-

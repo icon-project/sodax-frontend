@@ -56,9 +56,7 @@ export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
-export type ClServiceConfig = Prettify<
-  ConcentratedLiquidityConfig & RelayerApiConfig
->;
+export type ClServiceConfig = Prettify<ConcentratedLiquidityConfig & RelayerApiConfig>;
 export type SwapServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
@@ -527,3 +525,10 @@ export type GetChainConfigType<T extends ChainType> = T extends 'EVM'
           : T extends 'INJECTIVE'
             ? InjectiveSpokeChainConfig
             : BaseSpokeChainConfig<T>;
+
+export type RawDestinationParams = {
+  toChainId: SpokeChainId;
+  toAddress: string;
+};
+export type SpokeProviderObjectType = { spokeProvider: SpokeProviderType };
+export type DestinationParamsType = RawDestinationParams | SpokeProviderObjectType;

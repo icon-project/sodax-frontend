@@ -1,5 +1,5 @@
 // apps/demo/src/components/dex/PoolInformation.tsx
-import React from 'react';
+import React, { type JSX } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ClService, PoolData } from '@sodax/sdk';
 

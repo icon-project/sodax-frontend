@@ -1,36 +1,48 @@
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { type QueryObserverOptions, useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { PoolKey } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
+export type UsePoolsProps = {
+  /**
+   * Optional react-query QueryObserverOptions for customizing query behavior such as
+   * staleTime, refetchInterval, cacheTime, etc. These are merged with sensible defaults.
+   */
+  queryOptions?: QueryObserverOptions<PoolKey[], Error>;
+};
+
 /**
- * Hook for loading available pools list from the DEX service.
+ * Loads and caches the available list of pools from the DEX service's ConcentratedLiquidityService.
  *
- * This hook fetches the list of available pools from the ConcentratedLiquidityService.
- * The pools list is static and doesn't require network calls, so it's cached indefinitely.
+ * By default, the query result is cached indefinitely (with `staleTime` set to Infinity), reflecting the
+ * assumption that the pools list is mostly static.
  *
- * @returns {UseQueryResult<PoolKey[], Error>} Query result object containing pools array and state
+ * @param params
+ *   Optional configuration object:
+ *   - queryOptions: Partial QueryObserverOptions for react-query (merged with built-in defaults).
+ *
+ * @returns
+ *   A UseQueryResult object from @tanstack/react-query containing:
+ *   - `data`: Array of PoolKey objects or undefined if not loaded or errored.
+ *   - Status fields: `isLoading`, `isError`, `error`, etc.
  *
  * @example
- * ```typescript
- * const { data: pools, isLoading, error } = usePools();
- *
- * if (isLoading) return <div>Loading pools...</div>;
- * if (pools) {
- *   pools.forEach((pool, index) => {
- *     console.log(`Pool ${index}: Fee ${pool.fee / 10000}%`);
- *   });
- * }
- * ```
+ *   const { data: pools, isLoading, error } = usePools();
+ *   if (isLoading) return <div>Loading pools...</div>;
+ *   if (error) return <div>Error: {error.message}</div>;
+ *   if (pools) pools.forEach((pool, idx) => console.log(pool.id, pool.fee));
  */
-export function usePools(): UseQueryResult<PoolKey[], Error> {
+export function usePools(params?: UsePoolsProps): UseQueryResult<PoolKey[], Error> {
   const { sodax } = useSodaxContext();
+  const defaultQueryOptions = {
+    queryKey: ['dex', 'pools'],
+    staleTime: Number.POSITIVE_INFINITY, // Pools list is static, cache indefinitely
+  };
+  const queryOptions = { ...defaultQueryOptions, ...params?.queryOptions };
 
   return useQuery({
-    queryKey: ['dex', 'pools'],
-    queryFn: () => {
+    ...queryOptions,
+    queryFn: async (): Promise<PoolKey[]> => {
       return sodax.dex.clService.getPools();
     },
-    staleTime: Number.POSITIVE_INFINITY, // Pools list is static
   });
 }
-

@@ -1,75 +1,65 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import type { ClPositionInfo, HubTxHash, PoolKey, SpokeProvider, SpokeTxHash } from '@sodax/sdk';
+import type {
+  ConcentratedLiquidityDecreaseLiquidityParams,
+  HubTxHash,
+  SpokeProvider,
+  SpokeTxHash,
+} from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-interface DecreaseLiquidityParams {
-  poolKey: PoolKey;
-  tokenId: string;
-  percentage: string;
-  positionInfo: ClPositionInfo;
-  slippageTolerance: string;
-}
+export type UseDecreaseLiquidityParams = {
+  params: ConcentratedLiquidityDecreaseLiquidityParams;
+  spokeProvider: SpokeProvider;
+};
 
 /**
- * Hook for decreasing liquidity from a position.
+ * React hook that provides a mutation for decreasing liquidity in a concentrated liquidity position.
  *
- * This hook handles decreasing liquidity by a percentage from an existing position.
- * It calculates the liquidity to remove and applies slippage tolerance to minimum amounts.
+ * This hook returns a mutation for removing liquidity from a position using the provided
+ * `ConcentratedLiquidityDecreaseLiquidityParams` and `SpokeProvider`. The mutation returns a tuple of
+ * the spoke transaction hash and the hub transaction hash upon success.
  *
- * @param {SpokeProvider | null} spokeProvider - The spoke provider for the chain
- * @returns {UseMutationResult<void, Error, DecreaseLiquidityParams>} Mutation result with decrease function
+ * @returns {UseMutationResult<[SpokeTxHash, HubTxHash], Error, UseDecreaseLiquidityParams>}
+ *   React Query mutation result:
+ *   - `mutateAsync({ params, spokeProvider })`: Triggers the decrease liquidity mutation.
+ *   - On success, returns `[spokeTxHash, hubTxHash]`.
+ *   - On failure, throws an error.
  *
  * @example
  * ```typescript
- * const { mutateAsync: decreaseLiquidity, isPending, error } = useDecreaseLiquidity(spokeProvider);
+ * const { mutateAsync: decreaseLiquidity, isPending, error } = useDecreaseLiquidity();
  *
  * await decreaseLiquidity({
- *   poolKey,
- *   tokenId: '123',
- *   percentage: '50',
- *   positionInfo,
- *   slippageTolerance: '0.5',
+ *   params: {
+ *     poolKey,
+ *     tokenId: 123n,
+ *     liquidity: 100000n,
+ *     amount0Min: 0n,
+ *     amount1Min: 0n,
+ *   },
+ *   spokeProvider,
  * });
  * ```
+ *
+ * @param {UseDecreaseLiquidityParams} variables
+ *   - `params`: Parameters for the decrease liquidity operation, matching `ConcentratedLiquidityDecreaseLiquidityParams`.
+ *   - `spokeProvider`: The provider instance for the target spoke chain.
+ *
+ * @remarks
+ * - After a successful liquidity decrease, the hook will invalidate DEX pool balances and position info queries.
  */
-export function useDecreaseLiquidity(
-  spokeProvider: SpokeProvider | null,
-): UseMutationResult<[SpokeTxHash, HubTxHash], Error, DecreaseLiquidityParams> {
+export function useDecreaseLiquidity(): UseMutationResult<[SpokeTxHash, HubTxHash], Error, UseDecreaseLiquidityParams> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ poolKey, tokenId, percentage, positionInfo, slippageTolerance }: DecreaseLiquidityParams) => {
+    mutationFn: async ({ params, spokeProvider }: UseDecreaseLiquidityParams) => {
       if (!spokeProvider) {
         throw new Error('Spoke provider is required');
       }
 
-      const percentageNum = Number.parseFloat(percentage);
-      if (percentageNum <= 0 || percentageNum > 100) {
-        throw new Error('Percentage must be between 0 and 100');
-      }
-
-      // Calculate liquidity to remove based on percentage
-      const liquidityToRemove = (positionInfo.liquidity * BigInt(Math.floor(percentageNum * 100))) / 10000n;
-
-      // Calculate expected token amounts from this liquidity
-      const expectedAmount0 = (positionInfo.amount0 * BigInt(Math.floor(percentageNum * 100))) / 10000n;
-      const expectedAmount1 = (positionInfo.amount1 * BigInt(Math.floor(percentageNum * 100))) / 10000n;
-
-      // Apply slippage to minimum amounts
-      const slippage = Number.parseFloat(slippageTolerance) || 0.5;
-      const slippageMultiplier = BigInt(Math.floor((100 - slippage) * 100));
-      const amount0Min = (expectedAmount0 * slippageMultiplier) / 10000n;
-      const amount1Min = (expectedAmount1 * slippageMultiplier) / 10000n;
-
       const decreaseResult = await sodax.dex.clService.decreaseLiquidity({
-        decreaseParams: {
-          poolKey,
-          tokenId: BigInt(tokenId),
-          liquidity: liquidityToRemove,
-          amount0Min,
-          amount1Min,
-        },
+        params,
         spokeProvider,
       });
 
@@ -80,7 +70,7 @@ export function useDecreaseLiquidity(
       return decreaseResult.value;
     },
     onSuccess: () => {
-      // Invalidate relevant queries
+      // Invalidate relevant queries after successful liquidity decrease
       queryClient.invalidateQueries({ queryKey: ['dex', 'poolBalances'] });
       queryClient.invalidateQueries({ queryKey: ['dex', 'positionInfo'] });
     },

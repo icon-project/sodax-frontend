@@ -16,46 +16,38 @@ export interface UsePoolBalancesProps {
 }
 
 /**
- * React hook for querying the user's pool deposit token balances.
+ * React hook to query a user's token balances for a DEX pool.
  *
- * This hook returns the user's on-protocol balances for both tokens
- * in a specific DEX pool, refreshing as needed. It queries the Sodax AssetService.
+ * Given the pool data (with token addresses), the pool's key, and a SpokeProvider,
+ * fetches the user's protocol balances for both token0 and token1 for the specified pool.
+ * Queries are auto-refreshed; advanced options can be customized via `queryOptions`.
  *
- * @param {PoolData | null} poolData
- *   The pool data object, including token0 and token1 addresses. Pass `null` to disable the query.
- * @param {PoolKey | null} poolKey
- *   The key (ID) for the pool. Pass `null` to disable the query.
- * @param {SpokeProvider | null} spokeProvider
- *   Chain provider to query balances on. Pass `null` to disable the query.
- * @param {boolean} [enabled=true]
- *   Whether the balance query should be enabled. Defaults to true if all inputs are defined.
- * @param {QueryObserverOptions<UsePoolBalancesResponse, Error>} [queryOptions]
- *   Optional react-query options (e.g. custom interval, staleTime).
+ * @param {UsePoolBalancesProps} props
+ *   Object containing:
+ *   - `poolData`: {PoolData | null} - Pool info (must include token0 and token1 addresses). Required unless disabling.
+ *   - `poolKey`: {PoolKey | null} - Unique key for the DEX pool. Required unless disabling.
+ *   - `spokeProvider`: {SpokeProvider | null} - Provider instance for the chain. Required unless disabling.
+ *   - `enabled`: {boolean} (optional) - Whether to enable the query. Defaults to `true` if all other arguments are provided.
+ *   - `queryOptions`: {QueryObserverOptions<UsePoolBalancesResponse, Error>} (optional) - Advanced react-query options.
  *
  * @returns {UseQueryResult<UsePoolBalancesResponse, Error>}
- *   Standard React Query result object containing:
- *   - `data`: `{ token0Balance: bigint, token1Balance: bigint }` or undefined if not loaded
- *   - `isLoading`: Loading state
- *   - `isError`: Error state
- *   - ...other query result helpers
+ *   React Query result object:
+ *   - `data`: `{ token0Balance: bigint, token1Balance: bigint }` if loaded, undefined otherwise.
+ *   - `isLoading`, `isError`, etc. for status handling.
+ *
+ * @remarks
+ * - Throws an error if any of `poolData`, `poolKey`, or `spokeProvider` is missing when enabled.
+ * - Suitable for tracking current protocol/wallet balances for both pool tokens.
+ * - The hook is designed for use within a React component tree that provides the Sodax context.
+ * - Data are automatically refreshed at the provided or default polling interval (default: refetch every 10s).
  *
  * @example
  * ```typescript
- * // Using all arguments as props:
- * const { data: balances, isLoading, error } = usePoolBalances({
- *   poolData, poolKey, spokeProvider
- * });
- * if (isLoading) return <div>Loading balances…</div>;
- * if (balances) {
- *   console.log('T0:', balances.token0Balance, 'T1:', balances.token1Balance);
+ * const { data, isLoading } = usePoolBalances({ poolData, poolKey, spokeProvider });
+ * if (data) {
+ *   console.log('Balances:', data.token0Balance, data.token1Balance);
  * }
  * ```
- *
- * @remarks
- * - Balances are for the user's deposits in the pool on this chain.
- * - Automatically refreshes every 10 seconds by default.
- * - Returns an error if any required argument is missing.
- * - Use in combination with pool selection and wallet connection UI.
  */
 export function usePoolBalances({
   poolData,

@@ -1,13 +1,13 @@
 import { type QueryObserverOptions, useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { SpokeProvider, CreateDepositParams } from '@sodax/sdk';
+import type { SpokeProvider, CreateAssetDepositParams } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-export interface useDexAllowanceProps {
-  params: CreateDepositParams | undefined;
+export type UseDexAllowanceProps = {
+  params: CreateAssetDepositParams | undefined;
   spokeProvider: SpokeProvider | null;
   enabled?: boolean;
   queryOptions?: QueryObserverOptions<boolean, Error>;
-}
+};
 
 /**
  * Hook to check if the user has approved sufficient token allowance for DEX deposits.
@@ -16,7 +16,7 @@ export interface useDexAllowanceProps {
  * the user has granted enough allowance to allow a specific deposit to the DEX. It leverages
  * React Query for status, caching, and background refetching.
  *
- * @param {CreateDepositParams | undefined} params
+ * @param {CreateAssetDepositParams | undefined} params
  *   The deposit parameters: asset address, poolToken, and raw amount (BigInt), or undefined to disable.
  * @param {SpokeProvider | undefined} spokeProvider
  *   The provider interface for the selected chain. When undefined, the query is disabled.
@@ -58,7 +58,7 @@ export function useDexAllowance({
     ],
     enabled: !!params && !!spokeProvider,
   },
-}: useDexAllowanceProps): UseQueryResult<boolean, Error> {
+}: UseDexAllowanceProps): UseQueryResult<boolean, Error> {
   const { sodax } = useSodaxContext();
 
   return useQuery({
@@ -69,7 +69,7 @@ export function useDexAllowance({
       }
 
       const allowanceResult = await sodax.dex.assetService.isAllowanceValid({
-        depositParams: {
+        params: {
           asset: params.asset,
           amount: params.amount,
           poolToken: params.poolToken,
