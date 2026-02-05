@@ -48,7 +48,7 @@ export function ChainGroup({ chainName, chainIcon, balances, children }: ChainGr
             />
           </div>
           <div className="flex flex-col items-start text-left">
-            <span className="font-semibold text-espresso text-base tracking-tight">{chainName}</span>
+            <span className="font-bold text-espresso text-base tracking-tight">{chainName}</span>
             <span className="text-[10px] uppercase tracking-widest font-bold text-clay">{balances.length} Assets</span>
           </div>
         </div>

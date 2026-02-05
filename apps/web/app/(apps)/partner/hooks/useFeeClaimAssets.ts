@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
-import { formatUnits, parseUnits } from 'viem';
+import { formatUnits } from 'viem';
 
 import { useFeeClaimBalances } from './useFeeClaimBalances';
 import { useFeeClaimPreferences } from './useFeeClaimPreferences';
 
 import type { Address, XToken } from '@sodax/types';
 import type { AssetBalance } from '@sodax/sdk';
-import { MIN_PARTNER_CLAIM_AMOUNT } from '@/constants/partner-claim';
+import { MIN_PARTNER_CLAIM_USD_AMOUNT } from '@/constants/partner-claim';
 import { FeeClaimAssetStatus } from '../utils/fee-claim';
 
 export type FeeClaimAsset = {
@@ -43,37 +43,35 @@ export function useFeeClaimAssets(address?: Address) {
     if (!balancesQuery.data) return [];
 
     return Array.from(balancesQuery.data.values()).map(asset => {
-      const minClaimAmount = parseUnits(MIN_PARTNER_CLAIM_AMOUNT.toString(), asset.decimal);
-
       const rawFormattedBalance = formatUnits(asset.balance, asset.decimal);
       const hasPrefs = !!prefsQuery.data;
 
-      let usdEstimate: number | null | undefined = undefined;
+      // --- Calculate USD Estimate ---
+      let usdEstimate: number | null = null;
+      const balanceNum = Number(rawFormattedBalance);
 
-      // USD token → leave undefined
-      if (!asset.symbol.toLowerCase().includes('usd')) {
-        if (asset.usdPrice != null) {
-          // non-USD, price known
-          usdEstimate = Number(rawFormattedBalance) * asset.usdPrice;
-        } else {
-          // non-USD, price unknown
-          usdEstimate = null;
-        }
+      if (asset.symbol.toLowerCase().includes('usd')) {
+        usdEstimate = balanceNum; // Stablecoins are 1:1
+      } else if (asset.usdPrice != null) {
+        usdEstimate = balanceNum * asset.usdPrice;
       }
 
+      // --- Determine Status based on USD Value ---
       let status: FeeClaimAssetStatus = FeeClaimAssetStatus.READY;
 
-      // 1️⃣ Already claimed (balance is zero)
       if (asset.balance === 0n) {
         status = FeeClaimAssetStatus.CLAIMED;
-      }
-      // 2️⃣ Destination not set (non-USDC)
-      else if (!hasPrefs) {
+      } else if (!hasPrefs) {
         status = FeeClaimAssetStatus.NO_PREFS;
       }
-      // 3️⃣ Below minimum
-      else if (asset.balance < minClaimAmount) {
+      // Check against the $10 threshold
+      else if (usdEstimate !== null && usdEstimate < MIN_PARTNER_CLAIM_USD_AMOUNT) {
         status = FeeClaimAssetStatus.BELOW_MIN;
+      }
+      // If price is unknown (null), you might want a fallback
+      // or let it be READY so users can try to claim anyway
+      else if (usdEstimate === null) {
+        status = FeeClaimAssetStatus.READY;
       }
 
       return {

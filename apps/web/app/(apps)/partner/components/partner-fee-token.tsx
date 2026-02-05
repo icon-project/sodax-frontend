@@ -59,26 +59,39 @@ export function PartnerFeeToken({ asset, onClaim }: PartnerFeeTokenProps) {
   const isDisabled = asset.status !== FeeClaimAssetStatus.READY || approve.isPending;
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl px-4 py-4 sm:py-3 sm:px-2 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center">
-      <div className="flex items-center gap-4">
-        <div className="w-10 flex justify-center">
-          <CurrencyLogo currency={asset.currency} />
+    <div className="flex flex-col gap-3 rounded-xl py-4 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-4 sm:bg-transparent sm:border-0">
+      {/* Top Row: Asset Info */}
+      <div className="flex items-center justify-between w-full sm:contents">
+        <div className="flex items-center gap-3">
+          {/* Fixed width container for logo to keep symbols aligned */}
+          <div className="w-10 flex justify-center">
+            <CurrencyLogo currency={asset.currency} />
+          </div>
+          {/* Fixed width for symbol ensures the balance column is identical in every row */}
+          <div className="w-22">
+            <span className="text-sm font-bold text-espresso leading-tight">{asset.currency.symbol}</span>
+          </div>
         </div>
-        <div className="w-15 text-sm text-espresso">{asset.currency.symbol}</div>
-        <div className="w-20 text-sm text-clay-light">
-          {asset.displayBalance}
 
-          {asset.usdEstimate !== undefined &&
-            (asset.usdEstimate === null ? (
-              <div className="text-[11px] text-clay/40 mt-0.5">N/A</div>
-            ) : (
-              <div className="text-[11px] text-clay mt-0.5">~ ${asset.usdEstimate.toFixed(2)}</div>
-            ))}
+        {/* Balance Column - Fixed width for vertical alignment across rows */}
+        <div className="flex flex-col items-end sm:items-start w-18">
+          <span className="text-sm text-clay-light">{asset.displayBalance}</span>
+          {asset.usdEstimate !== undefined && (
+            <span className="text-[11px] text-clay mt-0.5">
+              {asset.usdEstimate === null ? 'N/A' : `~$${asset.usdEstimate.toFixed(2)}`}
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="w-full flex justify-end">
-        <Button variant="cherry" disabled={isDisabled} onClick={handleAction}>
+      {/* Bottom Row: Action Button */}
+      <div className="w-full sm:w-auto mt-1 sm:mt-0 sm:ml-4">
+        <Button
+          variant="cherry"
+          className="w-full  h-10 rounded-full text-sm font-bold shadow-sm"
+          disabled={isDisabled}
+          onClick={handleAction}
+        >
           {getButtonText()}
         </Button>
       </div>

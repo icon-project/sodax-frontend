@@ -10,7 +10,7 @@ import type { FeeClaimAsset } from '../hooks/useFeeClaimAssets';
 import { InfoIcon, Wallet2 } from 'lucide-react';
 import { CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MIN_PARTNER_CLAIM_AMOUNT } from '@/constants/partner-claim';
+import { MIN_PARTNER_CLAIM_USD_AMOUNT } from '@/constants/partner-claim';
 
 type PartnerFeeBalancesProps = {
   assets: FeeClaimAsset[];
@@ -59,7 +59,7 @@ export function PartnerFeeBalances({ assets, isLoading, onClaim, prefs }: Partne
           </TooltipTrigger>
 
           <TooltipContent variant="soft" side="top" align="center" sideOffset={6} className="text-clay bg-white">
-            Minimum claim amount is {MIN_PARTNER_CLAIM_AMOUNT} USDC. Values in USD are estimates.
+            Minimum claim amount is {MIN_PARTNER_CLAIM_USD_AMOUNT} USDC. Values in USD are estimates.
           </TooltipContent>
         </Tooltip>
       </CardTitle>
