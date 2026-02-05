@@ -1347,7 +1347,6 @@ export const spokeChainConfig = {
       assetManager: 'asset-manager.sodax.near',
       connection: 'connection.sodax.near',
       rateLimit: 'rate-limit.sodax.near',
-      xTokenManager: '',
       intentFiller: 'intent-filler.sodax.near',
     },
     supportedTokens: {

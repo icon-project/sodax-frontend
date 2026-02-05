@@ -222,9 +222,7 @@ export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
   addresses: {
     assetManager: string;
     connection: string;
-    xTokenManager: string;
     rateLimit: string;
-    testToken?: string;
     intentFiller: string;
   };
   rpcUrl: string;
