@@ -243,7 +243,7 @@ export type SolverConfigParams =
   | Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
   | Optional<PartnerFeeConfig, 'partnerFee'>;
 
-export type QuoteType = 'exact_input' | 'exact_output';
+export type QuoteType = 'exact_input';
 
 export type SolverIntentQuoteRequest = {
   token_src: string; // Token address on the source chain

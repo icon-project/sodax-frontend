@@ -199,7 +199,6 @@ describe('calculatePercentageAmount', () => {
   it('should adjust amount by fee correctly', () => {
     const testCases = [
       { amount: 1000n, fee: { amount: 100n, address }, quoteType: 'exact_input', expected: 900n },
-      { amount: 1000n, fee: { amount: 100n, address }, quoteType: 'exact_output', expected: 1100n },
     ] as const;
 
     for (const { amount, fee, quoteType, expected } of testCases) {
