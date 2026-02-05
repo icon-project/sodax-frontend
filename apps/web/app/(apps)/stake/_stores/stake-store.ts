@@ -80,11 +80,11 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
         },
         setStakeValueByPercent: (percent: number, maxValue: bigint) => {
           if (percent >= 100) {
-            set({ stakeValue: maxValue, stakeTypedValue: formatTokenAmount(maxValue, 18) });
+            set({ stakeValue: BigInt(maxValue), stakeTypedValue: formatTokenAmount(BigInt(maxValue), 18) });
             return;
           }
           const value = BigInt(new BigNumber(maxValue).multipliedBy(Math.round(percent)).dividedBy(100).toFixed(0));
-          set({ stakeValue: value, stakeTypedValue: formatTokenAmount(value, 18) });
+          set({ stakeValue: BigInt(value), stakeTypedValue: formatTokenAmount(BigInt(value), 18) });
         },
         setCurrentStakeStep: (step: STAKE_STEP) => set({ currentStakeStep: step }),
         setTotalStakedUsdValue: (value: number) => set({ totalStakedUsdValue: value }),

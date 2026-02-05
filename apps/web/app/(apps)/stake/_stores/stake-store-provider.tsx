@@ -67,16 +67,16 @@ export const useStakeState = () => {
     return { userXSodaBalance: stakingInfo.userXSodaBalance, userXSodaValue: stakingInfo.userXSodaValue };
   }, [stakingInfo, isLoadingStakingInfo]);
 
-  const stakeValueInSoda = useMemo(() => {
+  const stakeValueInSoda: bigint = useMemo(() => {
     if (stakeMode === STAKE_MODE.STAKING) {
       return stakeValue;
     }
-    return convertedAssets || 0n;
+    return BigInt(convertedAssets || 0);
   }, [stakeMode, stakeValue, convertedAssets]);
 
-  const stakeValueInXSoda = useMemo(() => {
+  const stakeValueInXSoda: bigint = useMemo(() => {
     if (stakeMode === STAKE_MODE.STAKING) {
-      return stakeRatio?.[0] || 0n;
+      return BigInt(stakeRatio?.[0] || 0);
     }
     return stakeValue;
   }, [stakeMode, stakeValue, stakeRatio]);
