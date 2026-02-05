@@ -87,7 +87,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   }, [inputToken, outputToken, minOutputAmount, inputAmount, sourceAddress, finalDestinationAddress]);
 
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceSpokeProvider);
-  const { data: status } = useStatus((dstTxHash || '0x') as `0x${string}`);
+  const { data: status } = useStatus(dstTxHash as `0x${string}`);
 
   const swapTiming = getSwapTiming(inputToken.xChainId, outputToken.xChainId);
 
