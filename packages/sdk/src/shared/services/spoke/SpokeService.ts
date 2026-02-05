@@ -24,6 +24,7 @@ import type {
   SuiSpokeProviderType,
   SolanaSpokeProviderType,
   StellarSpokeProviderType,
+  NearSpokeProviderType,
 } from '../../types.js';
 import { getIntentRelayChainId, type Address, type Hex, type HubAddress } from '@sodax/types';
 import { InjectiveSpokeService } from './InjectiveSpokeService.js';
@@ -45,10 +46,13 @@ import {
   isInjectiveSpokeProviderType,
   isEvmSpokeProviderType,
   isSonicSpokeProviderType,
+  isNearSpokeProviderType,
 } from '../../guards.js';
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
 import { encodeAddress } from '../../utils/shared-utils.js';
+import { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
+import { NearSpokeService } from './NearSpokeService.js';
 
 /**
  * SpokeService is a main class that provides functionalities for dealing with spoke chains.
@@ -289,6 +293,15 @@ export class SpokeService {
         raw,
       ) satisfies Promise<TxReturnType<StellarSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
+    if (isNearSpokeProviderType(spokeProvider)) {
+      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
+      return NearSpokeService.deposit(
+        params as GetSpokeDepositParamsType<NearSpokeProviderType>,
+        spokeProvider,
+        hubProvider,
+        raw,
+      ) satisfies Promise<TxReturnType<NearSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
+    }
 
     throw new Error('Invalid spoke provider');
   }
@@ -340,6 +353,13 @@ export class SpokeService {
         hubProvider,
       );
     }
+    if (isNearSpokeProviderType(spokeProvider)) {
+      return NearSpokeService.getSimulateDepositParams(
+        params as GetSpokeDepositParamsType<NearSpokeProviderType>,
+        spokeProvider,
+        hubProvider,
+      );
+    }
 
     throw new Error('[getSimulateDepositParams] Invalid spoke provider');
   }
@@ -387,6 +407,9 @@ export class SpokeService {
     }
     if (isSonicSpokeProviderType(spokeProvider)) {
       return SonicSpokeService.getDeposit(token, spokeProvider);
+    }
+    if (isNearSpokeProviderType(spokeProvider)) {
+      return NearSpokeService.getDeposit(token, spokeProvider);
     }
 
     throw new Error('Invalid spoke provider');
@@ -484,6 +507,14 @@ export class SpokeService {
       )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
     }
 
+    if (isNearSpokeProviderType(spokeProvider)) {
+      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
+      return (await NearSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
+        NearSpokeProviderType,
+        R
+      > as TxReturnType<T, R>;
+    }
+
     throw new Error('[callWallet] Invalid spoke provider');
   }
 
@@ -514,6 +545,33 @@ export class SpokeService {
     }
   }
 
+  /**
+   * Get max withdrawable balance for token.
+   * @param {string| Address} token - The address of the token to get the balance of.
+   * @param {SpokeProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The max limit allowed for token.
+   */
+  public static getLimit(token: string | Address, spokeProvider: SpokeProvider): Promise<bigint> {
+    if (spokeProvider instanceof NearSpokeProvider) {
+      return NearSpokeService.getLimit(token as string, spokeProvider);
+    }
+
+    throw new Error('Invalid spoke provider');
+  }
+
+  /**
+   * Get available withdrawable amount.
+   * @param {string| Address} token - The address of the token to get the balance of.
+   * @param {SpokeProvider} spokeProvider - The spoke provider.
+   * @returns {Promise<bigint>} The available withdrawable amount for token.
+   */
+  public static getAvailable(token: string | Address, spokeProvider: SpokeProvider): Promise<bigint> {
+    if (spokeProvider instanceof NearSpokeProvider) {
+      return NearSpokeService.getAvailable(token as string, spokeProvider);
+    }
+
+    throw new Error('Invalid spoke provider');
+  }
   /**
    * Verifies the transaction hash for the spoke chain to exist on chain.
    * Only stellar and solana need to be verified. For other chains, we assume the transaction exists on chain.
