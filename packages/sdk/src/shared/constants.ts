@@ -1,5 +1,17 @@
 import { defineChain, type Chain } from 'viem';
-import { arbitrum, avalanche, base, bsc, optimism, polygon, sonic, lightlinkPhoenix, mainnet, kaia } from 'viem/chains';
+import {
+  arbitrum,
+  avalanche,
+  base,
+  bsc,
+  optimism,
+  polygon,
+  sonic,
+  lightlinkPhoenix,
+  mainnet,
+  redbellyMainnet,
+  kaia,
+} from 'viem/chains';
 import type { LegacybnUSDChainId, LegacybnUSDToken, NewbnUSDChainId } from '../index.js';
 import {
   type Token,
@@ -21,6 +33,7 @@ import {
   spokeChainConfig,
   type EvmChainId,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -89,6 +102,8 @@ export function getEvmViemChain(id: EvmChainId): Chain {
       return lightlinkPhoenix;
     case ETHEREUM_MAINNET_CHAIN_ID:
       return mainnet;
+    case REDBELLY_MAINNET_CHAIN_ID:
+      return redbellyMainnet;
     case KAIA_MAINNET_CHAIN_ID:
       return kaia;
     default:

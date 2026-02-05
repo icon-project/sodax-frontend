@@ -18,6 +18,7 @@ import {
   LIGHTLINK_MAINNET_CHAIN_ID,
   NEAR_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
   KAIA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
@@ -108,6 +109,7 @@ describe('e2e', () => {
     [LIGHTLINK_MAINNET_CHAIN_ID]: [],
     [NEAR_MAINNET_CHAIN_ID]: [],
     [ETHEREUM_MAINNET_CHAIN_ID]: [],
+    [REDBELLY_MAINNET_CHAIN_ID]: [],
     [KAIA_MAINNET_CHAIN_ID]: [],
   };
 
