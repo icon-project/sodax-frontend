@@ -11,7 +11,7 @@ import StakeDialogFooter from './stake-dialog-footer';
 import { useStakeState, useStakeActions } from '../../_stores/stake-store-provider';
 import { STAKE_STEP } from '../../_stores/stake-store';
 import { useStakeRatio } from '@sodax/dapp-kit';
-import { formatUnits, parseUnits } from 'viem';
+import { formatUnits } from 'viem';
 import BigNumber from 'bignumber.js';
 
 interface StakeDialogProps {
