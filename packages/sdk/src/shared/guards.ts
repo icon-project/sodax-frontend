@@ -440,7 +440,7 @@ export function isSolanaRawSpokeProvider(value: unknown): value is SolanaRawSpok
 }
 
 export function isStellarRawSpokeProvider(value: unknown): value is StellarRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STELLAR' && 'baseProvider' in value;
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STELLAR';
 }
 
 export function isIconRawSpokeProvider(value: unknown): value is IconRawSpokeProvider {
