@@ -141,7 +141,7 @@ export function StakeInputPanel(): React.JSX.Element {
           <CustomSlider
             defaultValue={[0]}
             max={sliderMaxValue}
-            step={0.0001}
+            step={0.01}
             value={[Number(stakeTypedValue)]}
             onValueChange={value => setStakeTypedValue(value[0] ? value[0].toString() : '')}
             className="h-10 data-[orientation=horizontal]:h-1"
