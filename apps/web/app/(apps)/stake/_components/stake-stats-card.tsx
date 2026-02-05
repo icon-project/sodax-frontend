@@ -5,11 +5,13 @@ import Image from 'next/image';
 import { Info } from 'lucide-react';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { formatTokenAmount } from '@/lib/utils';
-import { STAKING_APR, UNSTAKING_PERIOD_DAYS } from './constants';
+import { STAKING_APR } from './constants';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
+import { useStakingConfig } from '@sodax/dapp-kit';
 
 export function StakeStatsCard(): React.JSX.Element {
   const { userXSodaBalance, userXSodaValue } = useStakeState();
+  const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
 
   return (
     <div className="w-full relative flex flex-col justify-start items-start gap-4">
@@ -21,7 +23,7 @@ export function StakeStatsCard(): React.JSX.Element {
           <Image
             data-property-1="xSODA"
             className="w-5 h-5 left-[14px] top-[14px] absolute mix-blend-multiply rounded-[256px]"
-            src="/coin/soda.png"
+            src="/coin/xsoda.png"
             alt="xSODA"
             width={20}
             height={20}
@@ -87,7 +89,7 @@ export function StakeStatsCard(): React.JSX.Element {
           </div>
           <div className="flex justify-start items-center gap-1">
             <div className="text-espresso text-(length:--body-comfortable) font-bold font-['Inter'] leading-5">
-              {UNSTAKING_PERIOD_DAYS} days
+              {!isLoadingStakingConfig ? `${stakingConfig?.unstakingPeriod} seconds` : '-'}
             </div>
             <div className="w-4 h-4 relative overflow-hidden">
               <Info className="w-3.5 h-3.5 text-clay-light" />

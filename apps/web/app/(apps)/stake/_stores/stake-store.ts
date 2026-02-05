@@ -1,7 +1,8 @@
-// apps/web/app/(apps)/stake/_stores/stake-store.ts
 import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
 import type { XToken } from '@sodax/types';
+import { formatTokenAmount } from '@/lib/utils';
+import BigNumber from 'bignumber.js';
 
 export enum STAKE_MODE {
   STAKING = 'staking',
@@ -39,6 +40,7 @@ export type StakeState = {
 export type StakeActions = {
   setStakeValue: (value: bigint) => void;
   setStakeTypedValue: (value: string) => void;
+  setStakeValueByPercent: (percent: number, maxValue: bigint) => void;
   setCurrentStakeStep: (step: STAKE_STEP) => void;
   setTotalStakedUsdValue: (value: number) => void;
   setSelectedToken: (token: XToken | null) => void;
@@ -75,6 +77,14 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
           } else {
             set({ stakeTypedValue: value, stakeValue: BigInt(numericValue * 10 ** 18) });
           }
+        },
+        setStakeValueByPercent: (percent: number, maxValue: bigint) => {
+          if (percent >= 100) {
+            set({ stakeValue: maxValue, stakeTypedValue: formatTokenAmount(maxValue, 18) });
+            return;
+          }
+          const value = BigInt(new BigNumber(maxValue).multipliedBy(Math.round(percent)).dividedBy(100).toFixed(0));
+          set({ stakeValue: value, stakeTypedValue: formatTokenAmount(value, 18) });
         },
         setCurrentStakeStep: (step: STAKE_STEP) => set({ currentStakeStep: step }),
         setTotalStakedUsdValue: (value: number) => set({ totalStakedUsdValue: value }),

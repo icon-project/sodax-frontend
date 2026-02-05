@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
-import { cn, formatTokenAmount } from '@/lib/utils';
+import { cn, formatBalance, formatTokenAmount } from '@/lib/utils';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import StakeDialog from './stake-dialog/stake-dialog';
 import UnstakeDialog from './unstake-dialog/unstake-dialog';
@@ -21,7 +21,7 @@ export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
 
   const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance } = useStakeState();
-  const { setSelectedToken, setStakeTypedValue } = useStakeActions();
+  const { setSelectedToken, setStakeTypedValue, setStakeValueByPercent } = useStakeActions();
 
   const openModal = useModalStore(state => state.openModal);
 
@@ -76,6 +76,10 @@ export function StakeInputPanel(): React.JSX.Element {
     setIsUnstakeDialogOpen(true);
   };
 
+  const maxValue = useMemo(() => {
+    return stakeMode === STAKE_MODE.STAKING ? balance : userXSodaBalance;
+  }, [stakeMode, balance, userXSodaBalance]);
+
   const sliderMaxValue = useMemo(() => {
     return stakeMode === STAKE_MODE.STAKING ? Number(formattedBalance) : Number(formattedUserXSodaBalance);
   }, [stakeMode, formattedBalance, formattedUserXSodaBalance]);
@@ -89,6 +93,47 @@ export function StakeInputPanel(): React.JSX.Element {
             tokens={sodaTokens}
             setSelectNetworkToken={token => setSelectedToken(token)}
           />
+          <div className="flex flex-col gap-[2px]">
+            <div className="font-['Inter'] flex items-center text-(length:--body-super-comfortable) text-espresso">
+              <span>{stakeMode === STAKE_MODE.STAKING ? 'Stake SODA' : 'Unstake xSODA'}</span>
+              {/* <ChevronDownIcon className="w-4 h-4 text-clay ml-1" /> */}
+            </div>
+            <div className="font-['Inter'] flex items-center text-(length:--body-small) text-clay">
+              {!selectedToken ? (
+                <span>Choose a network</span>
+              ) : !walletConnected ? (
+                <span>Wallet not connected</span>
+              ) : balance > 0n ? (
+                <div className="flex items-center gap-1">
+                  <span>Balance: {sliderMaxValue}</span>
+                  {stakeMode === STAKE_MODE.UNSTAKING &&
+                    [5, 10].map(percent => (
+                      <Button
+                        key={percent}
+                        variant="default"
+                        className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
+                        onClick={() => {
+                          setStakeValueByPercent(percent, maxValue);
+                        }}
+                      >
+                        {percent}%
+                      </Button>
+                    ))}
+                  <Button
+                    variant="default"
+                    className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
+                    onClick={() => {
+                      setStakeValueByPercent(100, maxValue);
+                    }}
+                  >
+                    MAX
+                  </Button>
+                </div>
+              ) : (
+                <span>No SODA in wallet</span>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="w-full flex flex-col sm:flex-row gap-6 sm:gap-2 justify-between items-center">
@@ -114,7 +159,7 @@ export function StakeInputPanel(): React.JSX.Element {
               value={stakeTypedValue}
               onChange={e => setStakeTypedValue(e.target.value)}
               disabled={!selectedToken || !walletConnected}
-              className="pl-6 pr-4 rounded-[32px]"
+              className="pl-6 pr-4 rounded-[32px] min-w-[100px]"
             />
 
             {stakeMode === STAKE_MODE.STAKING ? (
@@ -129,7 +174,7 @@ export function StakeInputPanel(): React.JSX.Element {
                   onClick={handleStake}
                   disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > balance}
                 >
-                  {userXSodaBalance > 0n ? 'Stake More' : 'Stake'}
+                  {userXSodaBalance > 0n ? 'Stake more' : 'Stake'}
                 </Button>
               ) : (
                 <Button variant="cherry" className="px-6" onClick={handleBuySoda}>
