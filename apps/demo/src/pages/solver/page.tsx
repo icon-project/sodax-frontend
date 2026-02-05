@@ -4,7 +4,7 @@ import LimitOrderCard from '@/components/solver/LimitOrderCard';
 import type { Hex, Intent, IntentDeliveryInfo } from '@sodax/sdk';
 import OrderStatus from '@/components/solver/OrderStatus';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAppStore } from '@/zustand/useAppStore';
+import { type SolverEnv, useAppStore } from '@/zustand/useAppStore';
 
 enum OrderType {
   Market = 'Market',
@@ -14,10 +14,11 @@ enum OrderType {
 enum Environment {
   Production = 'Production',
   Staging = 'Staging',
+  Dev = 'Dev',
 }
 
 export default function SolverPage() {
-  const { setIsSolverProduction, isSolverProduction } = useAppStore();
+  const { solverEnvironment, setSolverEnvironment } = useAppStore();
   const [orders, setOrders] = useState<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>(
     [],
   );
@@ -30,15 +31,11 @@ export default function SolverPage() {
         <OrderStatus key={index} order={order} />
       ))}
 
-      <Tabs
-        value={isSolverProduction ? Environment.Production : Environment.Staging}
-        onValueChange={value => {
-          setIsSolverProduction(value === Environment.Production);
-        }}
-      >
+      <Tabs value={solverEnvironment} onValueChange={value => setSolverEnvironment(value as SolverEnv)}>
         <TabsList>
           <TabsTrigger value={Environment.Staging}>Staging</TabsTrigger>
           <TabsTrigger value={Environment.Production}>Production</TabsTrigger>
+          <TabsTrigger value={Environment.Dev}>Dev</TabsTrigger>
         </TabsList>
       </Tabs>
 

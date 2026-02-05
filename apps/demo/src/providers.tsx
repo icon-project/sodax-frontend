@@ -4,8 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SodaxWalletProvider } from '@sodax/wallet-sdk-react';
 import type { RpcConfig } from '@sodax/types';
 import { SodaxProvider } from '@sodax/dapp-kit';
-import { productionSolverConfig, stagingSolverConfig } from './constants';
-import type { SodaxConfig } from '@sodax/sdk';
+import { productionSolverConfig, stagingSolverConfig, devSolverConfig } from './constants';
+import type { SodaxConfig, SolverConfigParams } from '@sodax/sdk';
 import { useAppStore } from './zustand/useAppStore';
 
 const queryClient = new QueryClient();
@@ -21,13 +21,19 @@ const rpcConfig: RpcConfig = {
 };
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const { isSolverProduction } = useAppStore();
-
+  const { solverEnvironment } = useAppStore();
   const sodaxConfig = useMemo(() => {
+    let swapsConfig: SolverConfigParams = productionSolverConfig;
+    if (solverEnvironment === 'Staging') {
+      swapsConfig = stagingSolverConfig;
+    } else if (solverEnvironment === 'Dev') {
+      swapsConfig = devSolverConfig;
+    }
+
     return {
-      swaps: isSolverProduction ? productionSolverConfig : stagingSolverConfig,
+      swaps: swapsConfig,
     } satisfies SodaxConfig;
-  }, [isSolverProduction]);
+  }, [solverEnvironment]);
 
   return (
     <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
