@@ -3,11 +3,11 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken, Address } from '@sodax/types';
 import { SupplyButton } from './SupplyButton';
 import { WithdrawButton } from './WithdrawButton';
-import { RepayButton } from './RepayButton';
 import { formatUnits, isAddress } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { OldBorrowButton } from './OldBorrowButton';
+import { Button } from '@/components/ui/button';
 
 interface SupplyAssetsListItemProps {
   token: XToken;
@@ -16,6 +16,7 @@ interface SupplyAssetsListItemProps {
   userReserves: readonly UserReserveData[];
   aTokenBalancesMap?: Map<Address, bigint>;
   onRefreshReserves?: () => void;
+  onRepayClick: (token: XToken, maxDebt: string) => void;
 }
 
 export function SupplyAssetsListItem({
@@ -25,6 +26,7 @@ export function SupplyAssetsListItem({
   userReserves,
   aTokenBalancesMap,
   onRefreshReserves,
+  onRepayClick,
 }: SupplyAssetsListItemProps): ReactElement {
   const metrics = useReserveMetrics({
     token,
@@ -43,12 +45,11 @@ export function SupplyAssetsListItem({
   // ALWAYS USE 18 DECIMALS FOR aTOKENS
   const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(5) : '-';
 
-  // OPTIONAL: FORMAT WALLET BALANCE (uses token's native decimals)
-  const formattedWallet = walletBalance ? Number(walletBalance).toFixed(4) : '-';
-
   const formattedDebt = metrics.userReserve
     ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
     : undefined;
+
+  const hasDebt = metrics.userReserve && metrics.userReserve.scaledVariableDebt > 0n;
 
   const availableToBorrow = !metrics.formattedReserve
     ? undefined
@@ -85,7 +86,14 @@ export function SupplyAssetsListItem({
         <SupplyButton token={token} />
         <WithdrawButton token={token} onSuccess={onRefreshReserves} />
         <OldBorrowButton token={token} />
-        <RepayButton token={token} />
+        <Button
+          variant="cherry"
+          size="sm"
+          onClick={() => onRepayClick(token, formattedDebt ?? '0')}
+          disabled={!hasDebt}
+        >
+          Repay
+        </Button>{' '}
       </TableCell>
     </TableRow>
   );
