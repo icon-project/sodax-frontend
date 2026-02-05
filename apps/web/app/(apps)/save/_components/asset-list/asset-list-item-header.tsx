@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/save/_components/asset-list/asset-list-item-header.tsx
 import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { AnimatePresence, motion } from 'motion/react';
@@ -12,6 +13,7 @@ import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { Tooltip, TooltipTrigger } from '@/components/ui/tooltip';
 import { TooltipContent } from '@/components/ui/tooltip';
 import Image from 'next/image';
+import { useMemo } from 'react';
 
 function UserInfo({ isVisible, token }: { isVisible: boolean; token: XToken | undefined }) {
   return (
@@ -41,7 +43,10 @@ function CollapsedAPY({ apy }: { apy: string }) {
 }
 
 function AccordionCollapsedInfo({ tokens }: { tokens: XToken[] }) {
-  const unique = getUniqueByChain(tokens);
+  const unique = useMemo(() => getUniqueByChain(tokens), [tokens]);
+  const firstNine = useMemo(() => unique.slice(0, 9), [unique]);
+  const remainingTokens = useMemo(() => unique.slice(9), [unique]);
+  const remainingCount = useMemo(() => unique.length - 9, [unique.length]);
 
   return (
     <motion.div
@@ -51,7 +56,7 @@ function AccordionCollapsedInfo({ tokens }: { tokens: XToken[] }) {
       exit={{ opacity: 0 }}
     >
       <div className="flex items-center group-hover:gap-[2px] gap-0 transition-all">
-        {unique.slice(0, 9).map(t => (
+        {firstNine.map(t => (
           <div key={t.xChainId} className="-mr-[2px] group-hover:mr-0 transition-all duration-200">
             <NetworkIcon id={t.xChainId} />
           </div>
@@ -63,7 +68,7 @@ function AccordionCollapsedInfo({ tokens }: { tokens: XToken[] }) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="justify-start text-espresso text-[8px] font-medium font-['InterRegular'] leading-[9.60px]">
-                    +{unique.length - 9}
+                    +{remainingCount}
                   </span>
                 </TooltipTrigger>
                 <TooltipContent
@@ -73,7 +78,7 @@ function AccordionCollapsedInfo({ tokens }: { tokens: XToken[] }) {
                 >
                   Also on
                   <div className="flex flex-wrap -gap-1">
-                    {unique.slice(9).map(t => (
+                    {remainingTokens.map(t => (
                       <div key={t.xChainId} className="-mr-[2px] group-hover:mr-0 transition-all duration-200">
                         <NetworkIcon id={t.xChainId} />
                       </div>
