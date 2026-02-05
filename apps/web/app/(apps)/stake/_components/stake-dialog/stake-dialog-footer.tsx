@@ -17,7 +17,6 @@ import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 interface StakeDialogFooterProps {
   selectedToken: XToken | null;
   receivedXSodaAmount: string;
-  scaledStakeAmount: bigint | undefined;
   onPendingChange?: (isPending: boolean) => void;
   onClose?: () => void;
 }
@@ -25,11 +24,11 @@ interface StakeDialogFooterProps {
 export default function StakeDialogFooter({
   selectedToken,
   receivedXSodaAmount,
-  scaledStakeAmount,
   onPendingChange,
   onClose,
 }: StakeDialogFooterProps): React.JSX.Element {
   const { currentStakeStep } = useStakeState();
+  const { stakeValue } = useStakeState();
   const { setCurrentStakeStep } = useStakeActions();
 
   const currentNetwork = selectedToken?.xChainId;
@@ -40,16 +39,16 @@ export default function StakeDialogFooter({
 
   const { mutateAsync: stake, isPending } = useStake(spokeProvider as SpokeProvider);
   const stakeOrderPayload = useMemo(() => {
-    if (!scaledStakeAmount || !receivedXSodaAmount || !address) {
+    if (!stakeValue || !receivedXSodaAmount || !address) {
       return undefined;
     }
     return {
-      amount: scaledStakeAmount,
+      amount: stakeValue,
       account: address as `0x${string}`,
       minReceive: parseUnits(receivedXSodaAmount, 18),
       action: 'stake' as const,
     } satisfies StakeParams;
-  }, [address, scaledStakeAmount, receivedXSodaAmount]);
+  }, [address, stakeValue, receivedXSodaAmount]);
 
   const stakeOrderPayloadForApprove = useMemo(() => {
     if (!stakeOrderPayload) {
@@ -87,13 +86,13 @@ export default function StakeDialogFooter({
   };
 
   const handleStake = async (): Promise<void> => {
-    if (!selectedToken || !address || !scaledStakeAmount) {
+    if (!selectedToken || !address || !stakeValue) {
       return;
     }
 
     try {
       await stake({
-        amount: scaledStakeAmount,
+        amount: stakeValue,
         minReceive: parseUnits(receivedXSodaAmount, 18) as bigint,
         account: address as `0x${string}`,
         action: 'stake',
@@ -136,7 +135,7 @@ export default function StakeDialogFooter({
           variant="cherry"
           className="flex flex-1"
           onClick={handleStake}
-          disabled={isPending || !selectedToken || !address || !scaledStakeAmount}
+          disabled={isPending || !selectedToken || !address || !stakeValue}
         >
           {isPending ? 'Staking...' : 'Stake SODA'}
         </Button>

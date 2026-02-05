@@ -1,11 +1,11 @@
 import type React from 'react';
 import { useMemo } from 'react';
-import XCircleIcon from './icons/x-circle-icon';
-import MinusCircleIcon from './icons/minus-circle-icon';
 import type { UnstakeRequestWithPenalty, StakingConfig, SpokeProvider } from '@sodax/sdk';
 import { useClaim, useCancelUnstake } from '@sodax/dapp-kit';
 import { formatTokenAmount, getTimeRemaining } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
+import { CircleCheck, MinusCircleIcon, XCircleIcon } from 'lucide-react';
 
 interface UnstakeRequestItemProps {
   request: UnstakeRequestWithPenalty;
@@ -28,20 +28,24 @@ export function UnstakeRequestItem({
     return getTimeRemaining(request.request.startTime, stakingConfig.unstakingPeriod);
   }, [request.request.startTime, stakingConfig]);
 
+  const isReadyToClaim = useMemo((): boolean => {
+    return timeRemaining === 'Unstake complete';
+  }, [timeRemaining]);
+
   const progressPercentage = useMemo((): number => {
-    if (!stakingConfig) {
+    if (!request.request.amount || request.request.amount === 0n) {
       return 0;
     }
-    const now = Math.floor(Date.now() / 1000);
-    const start = Number(request.request.startTime);
-    const period = Number(stakingConfig.unstakingPeriod);
-    const elapsed = now - start;
-    const progress = Math.min(100, Math.max(0, (elapsed / period) * 100));
+    // Calculate progress based on claimable amount vs total amount
+    // This shows progress for the remaining value (starting from initial claimable amount, not 0)
+    const totalAmount = Number(request.request.amount);
+    const claimableAmount = Number(request.claimableAmount);
+    const progress = Math.min(100, Math.max(0, (claimableAmount / totalAmount) * 100));
     return progress;
-  }, [request.request.startTime, stakingConfig]);
+  }, [request.request.amount, request.claimableAmount]);
 
   const claimableAmountFormatted = formatTokenAmount(request.claimableAmount, 18, 4);
-  const totalAmountFormatted = formatTokenAmount(request.request.amount, 18, 2);
+  const totalAmountFormatted = formatTokenAmount(request.request.amount, 18, 4);
   const penaltyPercentage = request.penaltyPercentage.toFixed(1);
 
   const completionDate = useMemo((): string => {
@@ -91,59 +95,83 @@ export function UnstakeRequestItem({
     <div className="w-full inline-flex flex-col justify-start items-start gap-4">
       <div className="w-full flex flex-col justify-start items-start gap-1">
         <div className="inline-flex justify-start items-center gap-2">
-          <div className="justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['Inter'] leading-5">
+          <div className="justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
             {timeRemaining}
           </div>
-          <div className="w-4 h-4 relative overflow-hidden">
-            <div className="w-[1.33px] h-[1.33px] left-[7.33px] top-[8px] absolute outline outline-[1.50px] outline-offset-[-0.75px] outline-Clay-light" />
-            <div className="w-[1.33px] h-[1.33px] left-[12px] top-[7.33px] absolute outline outline-[1.50px] outline-offset-[-0.75px] outline-Clay-light" />
-            <div className="w-[1.33px] h-[1.33px] left-[2.67px] top-[6.67px] absolute outline outline-[1.50px] outline-offset-[-0.75px] outline-Clay-light" />
-          </div>
+          {isReadyToClaim ? null : <LoadingThreeDotsJumping />}
         </div>
 
         <div className="w-full inline-flex justify-between items-center">
           <div className="justify-center">
-            <span className="text-espresso text-(length:--body-small) font-bold font-['Inter'] leading-4">
-              {claimableAmountFormatted}
-            </span>
-            <span className="text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-              {' '}
-              / {totalAmountFormatted} SODA
-            </span>
+            {isReadyToClaim ? (
+              <>
+                <span className="text-espresso text-(length:--body-small) font-['InterBold'] leading-4">
+                  {totalAmountFormatted} SODA
+                </span>
+                <span className="text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+                  {' '}
+                  SODA
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-espresso text-(length:--body-small) font-['InterBold'] leading-4">
+                  {claimableAmountFormatted}
+                </span>
+                <span className="text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+                  {' '}
+                  / {totalAmountFormatted} SODA
+                </span>
+              </>
+            )}
           </div>
-          {completionDate && (
-            <div className="justify-center text-clay text-(length:--body-fine-print) font-normal font-['Inter'] leading-3">
-              {completionDate}
-            </div>
-          )}
+          <div className="justify-center text-clay text-(length:--body-fine-print) font-normal font-['InterRegular'] leading-3">
+            {isReadyToClaim ? 'Ready to claim' : completionDate && <>{completionDate}</>}
+          </div>
         </div>
       </div>
 
       <Progress value={progressPercentage} className="h-1 bg-almost-white rounded-[40px] [&>div]:bg-clay-light" />
 
       <div className="inline-flex justify-start items-center gap-4">
-        <button
-          type="button"
-          onClick={handleClaim}
-          disabled={isClaiming || isCancellingUnstake || !spokeProvider}
-          className="rounded-2xl flex justify-center items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
-        >
-          <MinusCircleIcon />
-          <div className="justify-start text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-            {isClaiming ? 'Claiming...' : `Claim early –${penaltyPercentage}%`}
-          </div>
-        </button>
-        <button
-          type="button"
-          onClick={handleCancel}
-          disabled={isClaiming || isCancellingUnstake || !spokeProvider}
-          className="rounded-2xl flex justify-center items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
-        >
-          <XCircleIcon />
-          <div className="justify-start text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-            {isCancellingUnstake ? 'Cancelling...' : 'Cancel'}
-          </div>
-        </button>
+        {isReadyToClaim ? (
+          <button
+            type="button"
+            onClick={handleClaim}
+            disabled={isClaiming || isCancellingUnstake || !spokeProvider}
+            className="rounded-2xl flex justify-center items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+          >
+            <CircleCheck className="w-4 h-4" />
+            <div className="justify-start text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+              Claim full value
+            </div>
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={handleClaim}
+              disabled={isClaiming || isCancellingUnstake || !spokeProvider}
+              className="rounded-2xl flex justify-center items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+            >
+              <MinusCircleIcon className="w-4 h-4" />
+              <div className="justify-start text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+                {isClaiming ? 'Claiming...' : `Claim early –${penaltyPercentage}%`}
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isClaiming || isCancellingUnstake || !spokeProvider}
+              className="rounded-2xl flex justify-center items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
+            >
+              <XCircleIcon className="w-4 h-4" />
+              <div className="justify-start text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+                {isCancellingUnstake ? 'Cancelling...' : 'Cancel'}
+              </div>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

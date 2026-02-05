@@ -32,14 +32,7 @@ export default function StakeDialog({
   const [isStakePending, setIsStakePending] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
-  const scaledStakeAmount = useMemo((): bigint | undefined => {
-    if (!stakeValue || !selectedToken) {
-      return undefined;
-    }
-    return parseUnits(stakeValue.toString(), selectedToken.decimals);
-  }, [stakeValue, selectedToken]);
-
-  const { data: stakeRatio, isLoading: isLoadingStakeRatio } = useStakeRatio(scaledStakeAmount);
+  const { data: stakeRatio, isLoading: isLoadingStakeRatio } = useStakeRatio(stakeValue);
 
   const receivedXSodaAmount = useMemo((): string => {
     if (!stakeRatio || isLoadingStakeRatio) {
@@ -84,7 +77,6 @@ export default function StakeDialog({
         <StakeDialogFooter
           selectedToken={selectedToken}
           receivedXSodaAmount={receivedXSodaAmount}
-          scaledStakeAmount={scaledStakeAmount}
           onPendingChange={setIsStakePending}
           onClose={handleClose}
         />

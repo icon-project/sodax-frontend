@@ -23,53 +23,36 @@ export function UnstakeRequests(): React.JSX.Element {
 
   const requests = unstakingInfoWithPenalty?.requestsWithPenalty ?? [];
 
-  if (isLoadingUnstakingInfo) {
+  if (isLoadingUnstakingInfo && requests.length > 0) {
     return (
       <div className="w-full relative flex flex-col justify-start items-start gap-(--layout-space-normal)">
         <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
           Unstake Requests
         </div>
         <div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)">
-          <div className="text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-            Loading...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (requests.length === 0) {
-    return (
-      <div className="w-full relative flex flex-col justify-start items-start gap-(--layout-space-normal)">
-        <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-          Unstake Requests
-        </div>
-        <div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)">
-          <div className="text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-            No pending unstake requests
-          </div>
+          <div className="text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full relative flex flex-col justify-start items-start gap-(--layout-space-normal)">
-      <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-        Unstake Requests
-      </div>
-      <div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)">
-        {requests.map((request, index) => (
-          <Fragment key={request.id.toString()}>
-            <UnstakeRequestItem
-              request={request}
-              stakingConfig={stakingConfig}
-              spokeProvider={spokeProvider}
-            />
-            {index !== requests.length - 1 && <Separator className="w-full h-0.5" />}
-          </Fragment>
-        ))}
-      </div>
-    </div>
+    <>
+      {requests.length > 0 && (
+        <div className="w-full relative flex flex-col justify-start items-start gap-(--layout-space-normal)">
+          <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-5">
+            Unstake Requests
+          </div>
+          <div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)">
+            {requests.map((request, index) => (
+              <Fragment key={request.id.toString()}>
+                <UnstakeRequestItem request={request} stakingConfig={stakingConfig} spokeProvider={spokeProvider} />
+                {index !== requests.length - 1 && <Separator className="w-full h-0.5" />}
+              </Fragment>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -3,6 +3,7 @@ import type { XToken } from '@sodax/types';
 import { useStakeState } from '../../_stores/stake-store-provider';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { CircleArrowRight } from 'lucide-react';
+import { formatUnits } from 'viem';
 
 interface StakeConfirmationStepProps {
   selectedToken: XToken;
@@ -38,7 +39,7 @@ export default function StakeConfirmationStep({
           <div className="flex flex-col justify-start items-center gap-2">
             <div className="inline-flex justify-start items-center gap-1">
               <div className="justify-start text-espresso text-base font-normal font-['InterRegular'] leading-5">
-                {stakeValue}
+                {formatUnits(stakeValue, selectedToken.decimals)}
               </div>
               <div className="justify-start text-clay text-base font-normal font-['InterRegular'] leading-5">SODA</div>
             </div>

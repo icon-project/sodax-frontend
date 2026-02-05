@@ -346,7 +346,7 @@ export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): st
   const remaining = period - elapsed;
 
   if (remaining <= 0) {
-    return 'Ready to claim';
+    return 'Unstake complete';
   }
 
   const days = Math.floor(remaining / 86400);
