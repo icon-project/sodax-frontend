@@ -35,6 +35,7 @@ export type StakeState = {
   totalStakedUsdValue: number;
   unstakeMethod: UNSTAKE_METHOD;
   currentUnstakeStep: UNSTAKE_STEP;
+  isNetworkPickerOpened: boolean;
 };
 
 export type StakeActions = {
@@ -49,6 +50,7 @@ export type StakeActions = {
   setUnstakeMethod: (method: UNSTAKE_METHOD) => void;
   setCurrentUnstakeStep: (step: UNSTAKE_STEP) => void;
   resetUnstakeState: () => void;
+  setIsNetworkPickerOpened: (value: boolean) => void;
 };
 
 export type StakeStore = StakeState & StakeActions;
@@ -62,6 +64,7 @@ export const defaultStakeState: StakeState = {
   totalStakedUsdValue: 0,
   unstakeMethod: UNSTAKE_METHOD.REGULAR,
   currentUnstakeStep: UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE,
+  isNetworkPickerOpened: false,
 };
 
 export const createStakeStore = (initState: StakeState = defaultStakeState) => {
@@ -103,6 +106,7 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
             unstakeMethod: UNSTAKE_METHOD.REGULAR,
           });
         },
+        setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
       }),
       {
         name: 'sodax-stake-store',

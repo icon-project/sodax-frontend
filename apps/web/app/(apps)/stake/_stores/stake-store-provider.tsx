@@ -44,6 +44,7 @@ export const useStakeState = () => {
   const stakeMode = useStakeStore(state => state.stakeMode);
   const unstakeMethod = useStakeStore(state => state.unstakeMethod);
   const currentUnstakeStep = useStakeStore(state => state.currentUnstakeStep);
+  const isNetworkPickerOpened = useStakeStore(state => state.isNetworkPickerOpened);
 
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
@@ -113,6 +114,7 @@ export const useStakeState = () => {
     isLoadingStakingInfo,
     totalUserXSodaBalance,
     totalUserXSodaValue,
+    isNetworkPickerOpened,
   };
 };
 
@@ -128,6 +130,7 @@ export const useStakeActions = () => {
   const setUnstakeMethod = useStakeStore(state => state.setUnstakeMethod);
   const setCurrentUnstakeStep = useStakeStore(state => state.setCurrentUnstakeStep);
   const resetUnstakeState = useStakeStore(state => state.resetUnstakeState);
+  const setIsNetworkPickerOpened = useStakeStore(state => state.setIsNetworkPickerOpened);
 
   return {
     setStakeValue,
@@ -141,5 +144,6 @@ export const useStakeActions = () => {
     setUnstakeMethod,
     setCurrentUnstakeStep,
     resetUnstakeState,
+    setIsNetworkPickerOpened,
   };
 };

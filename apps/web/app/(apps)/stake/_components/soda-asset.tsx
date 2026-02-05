@@ -1,8 +1,10 @@
+// apps/web/app/(apps)/stake/_components/soda-asset.tsx
 import CurrencyLogo from '@/components/shared/currency-logo';
 import type { XToken } from '@sodax/types';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useClickAway } from 'react-use';
 import { NetworkPicker } from '../../save/_components/token-asset/network-picker';
+import { useStakeActions, useStakeState } from '../_stores/stake-store-provider';
 
 export function SodaAsset({
   selectedToken,
@@ -16,7 +18,8 @@ export function SodaAsset({
   isXSoda?: boolean;
 }): React.JSX.Element {
   const token = tokens[0] || ({} as XToken);
-  const [isNetworkPickerOpened, setIsNetworkPickerOpened] = useState(false);
+  const { isNetworkPickerOpened } = useStakeState();
+  const { setIsNetworkPickerOpened } = useStakeActions();
   const assetRef = useRef<HTMLDivElement>(null);
   useClickAway(assetRef, event => {
     const target = event.target as HTMLElement;

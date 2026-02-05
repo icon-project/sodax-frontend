@@ -15,7 +15,7 @@ export function StakeHeader({ apr = STAKING_APR }: StakeHeaderProps): React.JSX.
         <span className="text-yellow-dark text-3xl font-normal font-['Shrikhand'] leading-8">Stake</span>
         <span className="text-yellow-dark text-3xl font-bold font-['Inter'] leading-8"> your SODA</span>
       </div>
-      <div className="self-stretch mix-blend-multiply justify-start text-clay-light text-base font-normal font-['Inter'] leading-5">
+      <div className="self-stretch mix-blend-multiply justify-start text-clay-light text-base font-normal font-['InterRegular'] leading-5">
         Earn {apr}% from protocol fees.
       </div>
     </div>

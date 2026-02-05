@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
-import { cn, formatBalance, formatTokenAmount } from '@/lib/utils';
+import { cn, formatTokenAmount } from '@/lib/utils';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import StakeDialog from './stake-dialog/stake-dialog';
 import UnstakeDialog from './unstake-dialog/unstake-dialog';
@@ -86,7 +86,7 @@ export function StakeInputPanel(): React.JSX.Element {
 
   return (
     <>
-      <div className="w-full px-(--layout-space-big) pt-10 pb-8 flex flex-col justify-start items-start gap-8 sm:gap-4">
+      <div className="w-full px-(--layout-space-big) pt-10 pb-8 flex flex-col justify-start items-start gap-8 sm:gap-4 isolate mix-blend-normal">
         <div className="w-full flex justify-start items-center gap-3">
           <SodaAsset
             selectedToken={selectedToken}
@@ -95,11 +95,11 @@ export function StakeInputPanel(): React.JSX.Element {
             isXSoda={stakeMode === STAKE_MODE.UNSTAKING}
           />
           <div className="flex flex-col gap-[2px]">
-            <div className="font-['Inter'] flex items-center text-(length:--body-super-comfortable) text-espresso">
+            <div className="font-['InterRegular'] flex items-center text-(length:--body-super-comfortable) text-espresso">
               <span>{stakeMode === STAKE_MODE.STAKING ? 'Stake SODA' : 'Unstake xSODA'}</span>
               {/* <ChevronDownIcon className="w-4 h-4 text-clay ml-1" /> */}
             </div>
-            <div className="font-['Inter'] flex items-center text-(length:--body-small) text-clay">
+            <div className="font-['InterRegular'] flex items-center text-(length:--body-small) text-clay">
               {!selectedToken ? (
                 <span>Choose a network</span>
               ) : !walletConnected ? (

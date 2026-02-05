@@ -12,7 +12,7 @@ export function UnstakeModeToggle({ enabled, onToggle }: UnstakeModeToggleProps)
   return (
     <div className="w-full pt-4 inline-flex justify-end items-center gap-2">
       {/* <div className="justify-center text-clay text-xs font-normal font-['Inter'] leading-5">Unstake mode</div> */}
-      <div className="justify-center text-espresso text-(length:--body-comfortable) font-normal font-['Inter'] leading-5">
+      <div className="justify-center text-espresso text-(length:--body-comfortable) font-normal font-['InterRegular'] leading-5">
         Unstake mode
       </div>
       <div>
