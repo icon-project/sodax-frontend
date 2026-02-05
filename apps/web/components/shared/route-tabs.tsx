@@ -38,6 +38,13 @@ export const tabConfigs: TabConfig[] = [
     enabled: false,
   },
   {
+    value: 'stake',
+    type: 'stake',
+    label: 'Stake',
+    content: 'a quick stake',
+    enabled: true,
+  },
+  {
     value: 'migrate',
     type: 'migrate',
     label: 'Migrate',
@@ -152,23 +159,25 @@ export function RouteTabs(): React.JSX.Element {
         <div className="relative">
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-24 flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
-              {tabConfigs.map(tab => {
-                const active = current === tab.value;
-                return (
-                  <RouteTabItem
-                    key={tab.value}
-                    href={`/${tab.value}`}
-                    value={tab.value}
-                    type={tab.type}
-                    label={tab.label}
-                    isActive={active}
-                    isMobile
-                    setRef={setMobileTabRef(tab.value)}
-                    enabled={tab.enabled}
-                    totalDepositedUsdValue={tab.value === 'save' ? totalDepositedUsdValue : undefined}
-                  />
-                );
-              })}
+              {tabConfigs
+                .filter(tab => tab.enabled)
+                .map(tab => {
+                  const active = current === tab.value;
+                  return (
+                    <RouteTabItem
+                      key={tab.value}
+                      href={`/${tab.value}`}
+                      value={tab.value}
+                      type={tab.type}
+                      label={tab.label}
+                      isActive={active}
+                      isMobile
+                      setRef={setMobileTabRef(tab.value)}
+                      enabled={tab.enabled}
+                      totalDepositedUsdValue={tab.value === 'save' ? totalDepositedUsdValue : undefined}
+                    />
+                  );
+                })}
             </div>
           </div>
 

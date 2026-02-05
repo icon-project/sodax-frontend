@@ -147,7 +147,6 @@ export class EvmXService extends XService {
         chainId: getWagmiChainId(xChainId),
       })),
     });
-    console.log('result', result);
     return nonNativeXTokens
       .map((token, index) => ({
         symbol: token.symbol,
