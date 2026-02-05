@@ -1410,7 +1410,7 @@ export const spokeChainConfig = {
         decimals: 8,
         address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
         xChainId: ETHEREUM_MAINNET_CHAIN_ID,
-      }
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [KAIA_MAINNET_CHAIN_ID]: {
@@ -2377,7 +2377,7 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'WBTC',
       name: 'Wrapped Bitcoin',
       vault: SodaTokens.sodaBTC.address,
-    }
+    },
   },
   [KAIA_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].nativeToken]: {
@@ -2818,7 +2818,6 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.WBTC,
   ] as const,
   [REDBELLY_MAINNET_CHAIN_ID]: [
-    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.RBNT,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDC,
