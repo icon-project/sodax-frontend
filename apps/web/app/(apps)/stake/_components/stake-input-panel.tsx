@@ -1,13 +1,7 @@
 import type React from 'react';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { XToken, SpokeChainId } from '@sodax/types';
-import { spokeChainConfig, supportedSpokeChains } from '@sodax/sdk';
-import { useStakeActions, useStakeState } from '../_stores/stake-store-provider';
-import { SodaAsset } from './soda-asset';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { cn, formatTokenAmount } from '@/lib/utils';
@@ -16,12 +10,16 @@ import StakeDialog from './stake-dialog/stake-dialog';
 import UnstakeDialog from './unstake-dialog/unstake-dialog';
 import { getChainName } from '@/constants/chains';
 import { STAKE_MODE } from '../_stores/stake-store';
+import { useStakeState } from '../_stores/stake-store-provider';
+import { useStakeActions } from '../_stores/stake-store-provider';
+import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
+import { Input } from '@/components/ui/input';
 
 export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
 
   const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance } = useStakeState();
-  const { setSelectedToken, setStakeTypedValue, setStakeValueByPercent } = useStakeActions();
+  const { setStakeTypedValue, setStakeValueByPercent } = useStakeActions();
 
   const openModal = useModalStore(state => state.openModal);
 
