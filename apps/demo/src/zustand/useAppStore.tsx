@@ -3,7 +3,11 @@ import { immer } from 'zustand/middleware/immer';
 import type { StateCreator } from 'zustand';
 import type { ChainId } from '@sodax/types';
 
-export type SolverEnv = 'Production' | 'Staging' | 'Dev';
+export enum SolverEnv {
+  Production = 'Production',
+  Staging = 'Staging',
+  Dev = 'Dev',
+}
 
 type AppStore = {
   selectedChainId: ChainId;
@@ -22,7 +26,7 @@ export const useAppStore = create<AppStore>()(
     isWalletModalOpen: false,
     openWalletModal: () => set({ isWalletModalOpen: true }),
     closeWalletModal: () => set({ isWalletModalOpen: false }),
-    solverEnvironment: 'Production',
+    solverEnvironment: SolverEnv.Production,
     setSolverEnvironment: (env: SolverEnv) => set({ solverEnvironment: env }),
   })) as StateCreator<AppStore, [], []>,
 );

@@ -6,7 +6,7 @@ import type { RpcConfig } from '@sodax/types';
 import { SodaxProvider } from '@sodax/dapp-kit';
 import { productionSolverConfig, stagingSolverConfig, devSolverConfig } from './constants';
 import type { SodaxConfig, SolverConfigParams } from '@sodax/sdk';
-import { useAppStore } from './zustand/useAppStore';
+import { SolverEnv, useAppStore } from './zustand/useAppStore';
 
 const queryClient = new QueryClient();
 
@@ -20,19 +20,19 @@ const rpcConfig: RpcConfig = {
   },
 };
 
+const configMap: Record<SolverEnv, SolverConfigParams> = {
+  [SolverEnv.Production]: productionSolverConfig,
+  [SolverEnv.Staging]: stagingSolverConfig,
+  [SolverEnv.Dev]: devSolverConfig,
+};
+
 export default function Providers({ children }: { children: ReactNode }) {
   const { solverEnvironment } = useAppStore();
-  const sodaxConfig = useMemo(() => {
-    let swapsConfig: SolverConfigParams = productionSolverConfig;
-    if (solverEnvironment === 'Staging') {
-      swapsConfig = stagingSolverConfig;
-    } else if (solverEnvironment === 'Dev') {
-      swapsConfig = devSolverConfig;
-    }
 
+  const sodaxConfig: SodaxConfig = useMemo(() => {
     return {
-      swaps: swapsConfig,
-    } satisfies SodaxConfig;
+      swaps: configMap[solverEnvironment],
+    };
   }, [solverEnvironment]);
 
   return (
