@@ -8,8 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TiptapEditor } from './tiptap-editor';
-import { ArrowLeft, Save, Upload } from 'lucide-react';
+import { ArrowLeft, Save, Upload, Calendar, User } from 'lucide-react';
+
+interface Author {
+  id: string;
+  name: string;
+  email: string;
+}
 
 interface NewsFormProps {
   article?: {
@@ -23,11 +30,14 @@ interface NewsFormProps {
     metaDescription?: string;
     published: boolean;
     publishedAt?: string;
+    authorId?: string;
+    authorName?: string;
     tags: string[];
     categories: string[];
     createdAt: string;
     updatedAt: string;
   };
+  authors?: Author[];
 }
 
 const CATEGORY_OPTIONS = [
@@ -37,9 +47,24 @@ const CATEGORY_OPTIONS = [
   { value: 'technical', label: 'Technical' },
 ];
 
-export function NewsForm({ article }: NewsFormProps) {
+// Default author option for the team
+const SODAX_TEAM_AUTHOR: Author = {
+  id: 'sodax-team',
+  name: 'SODAX Team',
+  email: 'team@sodax.com',
+};
+
+export function NewsForm({ article, authors = [] }: NewsFormProps) {
   const router = useRouter();
   const isEditing = !!article;
+
+  // Helper to format date for datetime-local input
+  const formatDateForInput = (dateStr?: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    // Format as YYYY-MM-DDTHH:mm for datetime-local input
+    return date.toISOString().slice(0, 16);
+  };
 
   const [formData, setFormData] = useState({
     title: article?.title || '',
@@ -50,6 +75,9 @@ export function NewsForm({ article }: NewsFormProps) {
     metaTitle: article?.metaTitle || '',
     metaDescription: article?.metaDescription || '',
     published: article?.published || false,
+    publishedAt: formatDateForInput(article?.publishedAt),
+    authorId: article?.authorId || '',
+    authorName: article?.authorName || '',
     tags: article?.tags?.join(', ') || '',
     categories: article?.categories || [],
   });
@@ -104,6 +132,8 @@ export function NewsForm({ article }: NewsFormProps) {
           .split(',')
           .map(t => t.trim())
           .filter(Boolean),
+        // Convert datetime-local value to ISO string for API
+        publishedAt: formData.publishedAt ? new Date(formData.publishedAt).toISOString() : null,
       };
 
       const url = isEditing ? `/api/cms/news/${article._id}` : '/api/cms/news';
@@ -349,8 +379,62 @@ export function NewsForm({ article }: NewsFormProps) {
 
             {/* Publishing Card */}
             <Card className="border-2 border-[var(--cherry-grey)] shadow-xl">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
+              <CardHeader className="bg-[var(--cream-white)]">
+                <CardTitle className="text-[var(--espresso)]">Publishing Options</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6 pt-6">
+                {/* Author Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="author" className="text-[var(--espresso)] font-medium flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Author
+                  </Label>
+                  <Select
+                    value={formData.authorId}
+                    onValueChange={(value) => {
+                      const allAuthors = [SODAX_TEAM_AUTHOR, ...authors];
+                      const selectedAuthor = allAuthors.find(a => a.id === value);
+                      setFormData({
+                        ...formData,
+                        authorId: value,
+                        authorName: selectedAuthor?.name || '',
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="border-[var(--cherry-grey)] focus:border-[var(--cherry-soda)]">
+                      <SelectValue placeholder="Select an author" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem key={SODAX_TEAM_AUTHOR.id} value={SODAX_TEAM_AUTHOR.id}>
+                        {SODAX_TEAM_AUTHOR.name}
+                      </SelectItem>
+                      {authors.map((author) => (
+                        <SelectItem key={author.id} value={author.id}>
+                          {author.name} ({author.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Publish Date */}
+                <div className="space-y-2">
+                  <Label htmlFor="publishedAt" className="text-[var(--espresso)] font-medium flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Publish Date
+                  </Label>
+                  <Input
+                    id="publishedAt"
+                    type="datetime-local"
+                    value={formData.publishedAt}
+                    onChange={e => setFormData({ ...formData, publishedAt: e.target.value })}
+                    className="border-[var(--cherry-grey)] focus:border-[var(--cherry-soda)]"
+                  />
+                  <p className="text-xs text-[var(--clay)]">Leave empty to use current date when publishing</p>
+                </div>
+
+                {/* Publish Toggle */}
+                <div className="flex items-center justify-between pt-4 border-t border-[var(--cherry-grey)]">
                   <div>
                     <Label htmlFor="published" className="text-[var(--espresso)] font-medium">
                       Publish Article
