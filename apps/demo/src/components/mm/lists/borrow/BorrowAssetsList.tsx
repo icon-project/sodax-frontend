@@ -29,8 +29,6 @@ const TABLE_HEADERS = [
 
 export function BorrowAssetsList() {
   const { selectedChainId } = useAppStore();
-  const [open, setOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [successData, setSuccessData] = useState<{
     amount: string;
     token: XToken;
@@ -54,7 +52,10 @@ export function BorrowAssetsList() {
     ) as XToken[];
   }, []);
 
-  const [selectedTokenForBorrow, setSelectedTokenForBorrow] = useState<XToken | null>(null);
+  const [borrowData, setBorrowData] = useState<{
+    token: XToken;
+    maxBorrow: string;
+  } | null>(null);
 
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];
@@ -140,7 +141,7 @@ export function BorrowAssetsList() {
                         }
                         formattedReserves={formattedReserves || []}
                         userReserves={userReserves?.[0] || []}
-                        onBorrowClick={token => setSelectedTokenForBorrow(token)}
+                        onBorrowClick={(token, maxBorrow) => setBorrowData({ token, maxBorrow })}
                       />
                     );
                   })
@@ -150,18 +151,18 @@ export function BorrowAssetsList() {
           </div>
         </div>
       </CardContent>
-      {selectedTokenForBorrow && (
+      {borrowData && (
         <BorrowModal
-          key={selectedTokenForBorrow.address}
-          open={!!selectedTokenForBorrow}
-          token={selectedTokenForBorrow}
+          open={!!borrowData}
+          token={borrowData.token}
           onOpenChange={open => {
-            if (!open) setSelectedTokenForBorrow(null);
+            if (!open) setBorrowData(null);
           }}
           onSuccess={data => {
             setSuccessData(data);
-            setSelectedTokenForBorrow(null);
+            setBorrowData(null);
           }}
+          maxBorrow={borrowData.maxBorrow}
         />
       )}
       <SuccessModal open={!!successData} onClose={() => setSuccessData(null)} data={successData} action="borrow" />

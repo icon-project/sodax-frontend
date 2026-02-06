@@ -21,7 +21,7 @@ interface BorrowAssetsListItemProps {
   disabled?: boolean;
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
-  onBorrowClick: (token: XToken) => void;
+  onBorrowClick: (token: XToken, maxBorrow: string) => void;
 }
 
 export function BorrowAssetsListItem({
@@ -67,6 +67,8 @@ export function BorrowAssetsListItem({
           ).toFixed(6);
   }
 
+  const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
+
   return (
     <TableRow className={`hover:bg-cream/30 transition-colors ${disabled ? 'opacity-50' : ''}`}>
       <TableCell>
@@ -91,9 +93,9 @@ export function BorrowAssetsListItem({
       <TableCell>
         <BorrowButton
           token={token}
-          disabled={disabled}
-          onClick={clickedToken => {
-            onBorrowClick(clickedToken);
+          disabled={disabled || !canBorrow}
+          onClick={() => {
+            onBorrowClick(token, availableLiquidity ?? '0');
           }}
         />
       </TableCell>

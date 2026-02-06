@@ -28,9 +28,10 @@ interface BorrowModalProps {
     sourceChainId: ChainId;
     destinationChainId: ChainId;
   }) => void;
+  maxBorrow: string;
 }
 
-export function BorrowModal({ open, onOpenChange, token, onSuccess }: BorrowModalProps) {
+export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }: BorrowModalProps) {
   // console.log('Modal rendering for:', token.symbol);
   const [amount, setAmount] = useState('');
   const { selectedChainId } = useAppStore();
@@ -104,6 +105,10 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess }: BorrowModa
     }
   };
 
+  const handleMaxClick = () => {
+    setAmount(maxBorrow);
+  };
+
   const handleOpenChangeInternal = (nextOpen: boolean) => {
     onOpenChange(nextOpen);
     if (!nextOpen) {
@@ -126,7 +131,22 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess }: BorrowModa
           <div className="flex items-center gap-2">
             <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} />
             <span>{token.symbol}</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleMaxClick}
+              disabled={!maxBorrow || maxBorrow === '0'}
+            >
+              Max
+            </Button>
           </div>
+
+          {maxBorrow && maxBorrow !== '0' && (
+            <p className="text-xs text-muted-foreground">
+              Max borrow: {Number(maxBorrow).toFixed(6)} {token.symbol}
+            </p>
+          )}
         </div>
 
         {error && <p className="text-red-500 text-sm mt-2">{error.code}</p>}
