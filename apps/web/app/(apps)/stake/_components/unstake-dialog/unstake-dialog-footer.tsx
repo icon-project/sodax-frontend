@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { ChainId, XToken } from '@sodax/types';
@@ -19,6 +19,9 @@ import {
 } from '@sodax/dapp-kit';
 import { useWalletProvider, useXAccount, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { SpokeProvider, UnstakeParams, InstantUnstakeParams } from '@sodax/sdk';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
+import { chainIdToChainName } from '@/providers/constants';
 
 interface UnstakeDialogFooterProps {
   selectedToken: XToken | null;
@@ -41,6 +44,9 @@ export default function UnstakeDialogFooter({
   const walletProvider = useWalletProvider(currentNetwork);
   const spokeProvider = useSpokeProvider(currentNetwork, walletProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currentNetwork as ChainId);
+  const isMobile = useIsMobile();
+  const [isApproved, setIsApproved] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   // Get estimates for instant unstake
   const { data: instantUnstakeRatio } = useInstantUnstakeRatio(scaledUnstakeAmount);
@@ -130,6 +136,7 @@ export default function UnstakeDialogFooter({
   useEffect(() => {
     if (hasAllowed) {
       setCurrentUnstakeStep(UNSTAKE_STEP.UNSTAKE_CONFIRM);
+      setIsApproved(true);
     }
   }, [hasAllowed, setCurrentUnstakeStep]);
 
@@ -158,7 +165,7 @@ export default function UnstakeDialogFooter({
       } else if (unstakeMethod === UNSTAKE_METHOD.REGULAR && regularUnstakeParams) {
         await unstake(regularUnstakeParams);
       }
-      onClose?.();
+      setIsCompleted(true);
     } catch (error) {
       console.error('Unstake error:', error);
     }
@@ -166,53 +173,97 @@ export default function UnstakeDialogFooter({
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      {currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE && (
-        <Button variant="cherry" className="flex flex-1" onClick={handleContinue}>
-          Continue
+      {(isMobile ? currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE : true) && (
+        <Button
+          variant="cherry"
+          className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+            isMobile
+              ? 'w-full'
+              : currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE
+                ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center'
+                : 'flex flex-1'
+          }`}
+          onClick={handleContinue}
+          disabled={currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE}
+        >
+          {currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? <Check className="w-5 h-5" /> : 'Continue'}
         </Button>
       )}
 
-      {currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE &&
+      {(isMobile ? currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE : true) &&
         (isWrongChain ? (
           <Button variant="cherry" className="flex flex-1" onClick={handleSwitchChain}>
             Switch Chain
           </Button>
         ) : (
           <>
-            <Button variant="cherry" className="flex flex-1" onClick={handleApprove}>
-              {isAllowanceLoading
-                ? 'Checking allowance...'
-                : hasAllowed
-                  ? 'Approved'
-                  : isApproving
-                    ? 'Approving...'
-                    : 'Approve'}
+            <Button
+              variant="cherry"
+              className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+                isMobile ? 'w-full' : currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE ? 'flex-1' : 'w-[40px]'
+              }`}
+              onClick={handleApprove}
+              disabled={
+                currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE || isApproving || isAllowanceLoading || isApproved
+              }
+            >
+              {isApproved ? (
+                <Check className="w-5 h-5" />
+              ) : currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? (
+                <FilePenLine />
+              ) : isApproving ? (
+                'Approving...'
+              ) : (
+                `Approve on ${chainIdToChainName(selectedToken?.xChainId as ChainId)}`
+              )}
             </Button>
           </>
         ))}
 
-      {currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM && (
-        <Button
-          variant="cherry"
-          className="flex flex-1"
-          onClick={handleUnstake}
-          disabled={
-            isPending ||
-            !selectedToken ||
-            !address ||
-            !scaledUnstakeAmount ||
-            (unstakeMethod === UNSTAKE_METHOD.INSTANT && !minUnstakeAmount)
-          }
-        >
-          {isPending
-            ? unstakeMethod === UNSTAKE_METHOD.INSTANT
-              ? 'Instant Unstaking...'
-              : 'Unstaking...'
-            : unstakeMethod === UNSTAKE_METHOD.INSTANT
-              ? 'Instant Unstake xSODA'
-              : 'Unstake xSODA'}
-        </Button>
-      )}
+      {(isMobile ? currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM || isCompleted : true) &&
+        (isCompleted ? (
+          <Button
+            variant="cherry"
+            className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
+              isMobile ? 'w-full' : 'flex-1'
+            }`}
+            onClick={onClose}
+          >
+            Unstake complete
+            <CheckIcon className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button
+            variant="cherry"
+            className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+              isMobile
+                ? 'w-full'
+                : currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM || isApproved
+                  ? 'h-10 rounded-full p-0 flex flex-1 items-center justify-center'
+                  : 'w-[140px]'
+            }`}
+            onClick={handleUnstake}
+            disabled={
+              currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CONFIRM ||
+              isPending ||
+              !selectedToken ||
+              !address ||
+              !scaledUnstakeAmount ||
+              (unstakeMethod === UNSTAKE_METHOD.INSTANT && !minUnstakeAmount)
+            }
+          >
+            {isPending ? (
+              <>
+                {unstakeMethod === UNSTAKE_METHOD.INSTANT ? 'Instant Unstaking' : 'Unstaking'}{' '}
+                <Loader2Icon className="w-4 h-4 animate-spin" />
+              </>
+            ) : unstakeMethod === UNSTAKE_METHOD.INSTANT ? (
+              'Instant Unstake xSODA'
+            ) : (
+              'Unstake xSODA'
+            )}
+          </Button>
+        ))}
     </DialogFooter>
   );
 }

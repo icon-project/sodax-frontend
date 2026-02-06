@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { ChainId, XToken } from '@sodax/types';
@@ -13,7 +13,9 @@ import type { SpokeProvider, StakeParams } from '@sodax/sdk';
 import { parseUnits } from 'viem';
 import { useStakeApprove, useStakeAllowance } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
-
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
+import { chainIdToChainName } from '@/providers/constants';
 interface StakeDialogFooterProps {
   selectedToken: XToken | null;
   receivedXSodaAmount: string;
@@ -38,6 +40,9 @@ export default function StakeDialogFooter({
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currentNetwork as ChainId);
 
   const { mutateAsync: stake, isPending } = useStake(spokeProvider as SpokeProvider);
+  const isMobile = useIsMobile();
+  const [isApproved, setIsApproved] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const stakeOrderPayload = useMemo(() => {
     if (!stakeValue || !receivedXSodaAmount || !address) {
       return undefined;
@@ -73,6 +78,7 @@ export default function StakeDialogFooter({
   useEffect(() => {
     if (hasAllowed) {
       setCurrentStakeStep(STAKE_STEP.STAKE_CONFIRM);
+      setIsApproved(true);
     }
   }, [hasAllowed, setCurrentStakeStep]);
   const handleContinue = (): void => {
@@ -97,7 +103,7 @@ export default function StakeDialogFooter({
         account: address as `0x${string}`,
         action: 'stake',
       });
-      onClose?.();
+      setIsCompleted(true);
     } catch (error) {
       console.error('Stake error:', error);
     }
@@ -105,41 +111,87 @@ export default function StakeDialogFooter({
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      {currentStakeStep === STAKE_STEP.STAKE_TERMS && (
-        <Button variant="cherry" className="flex flex-1" onClick={handleContinue}>
-          Continue
+      {(isMobile ? currentStakeStep === STAKE_STEP.STAKE_TERMS : true) && (
+        <Button
+          variant="cherry"
+          className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+            isMobile
+              ? 'w-full'
+              : currentStakeStep !== STAKE_STEP.STAKE_TERMS
+                ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center'
+                : 'flex flex-1'
+          }`}
+          onClick={handleContinue}
+          disabled={currentStakeStep !== STAKE_STEP.STAKE_TERMS}
+        >
+          {currentStakeStep !== STAKE_STEP.STAKE_TERMS ? <Check className="w-5 h-5" /> : 'Continue'}
         </Button>
       )}
 
-      {currentStakeStep === STAKE_STEP.STAKE_APPROVE &&
+      {(isMobile ? currentStakeStep === STAKE_STEP.STAKE_APPROVE : true) &&
         (isWrongChain ? (
           <Button variant="cherry" className="flex flex-1" onClick={handleSwitchChain}>
             Switch Chain
           </Button>
         ) : (
           <>
-            <Button variant="cherry" className="flex flex-1" onClick={handleApprove}>
-              {isAllowanceLoading
-                ? 'Checking allowance...'
-                : hasAllowed
-                  ? 'Approved'
-                  : isApproving
-                    ? 'Approving...'
-                    : 'Approve'}
+            <Button
+              variant="cherry"
+              className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+                isMobile ? 'w-full' : currentStakeStep === STAKE_STEP.STAKE_APPROVE ? 'flex-1' : 'w-[40px]'
+              }`}
+              onClick={handleApprove}
+              disabled={
+                currentStakeStep !== STAKE_STEP.STAKE_APPROVE || isApproving || isAllowanceLoading || isApproved
+              }
+            >
+              {isApproved ? (
+                <Check className="w-5 h-5" />
+              ) : currentStakeStep === STAKE_STEP.STAKE_TERMS ? (
+                <FilePenLine />
+              ) : isApproving ? (
+                'Approving...'
+              ) : (
+                `Approve on ${chainIdToChainName(selectedToken?.xChainId as ChainId)}`
+              )}
             </Button>
           </>
         ))}
 
-      {currentStakeStep === STAKE_STEP.STAKE_CONFIRM && (
-        <Button
-          variant="cherry"
-          className="flex flex-1"
-          onClick={handleStake}
-          disabled={isPending || !selectedToken || !address || !stakeValue}
-        >
-          {isPending ? 'Staking...' : 'Stake SODA'}
-        </Button>
-      )}
+      {(isMobile ? currentStakeStep === STAKE_STEP.STAKE_CONFIRM || isCompleted : true) &&
+        (isCompleted ? (
+          <Button
+            variant="cherry"
+            className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
+              isMobile ? 'w-full' : 'flex-1'
+            }`}
+            onClick={onClose}
+          >
+            Stake complete
+            <CheckIcon className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button
+            variant="cherry"
+            className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+              isMobile
+                ? 'w-full'
+                : currentStakeStep === STAKE_STEP.STAKE_CONFIRM || isApproved
+                  ? 'h-10 rounded-full p-0 flex flex-1 items-center justify-center'
+                  : 'w-[140px]'
+            }`}
+            onClick={handleStake}
+            disabled={currentStakeStep !== STAKE_STEP.STAKE_CONFIRM}
+          >
+            {isPending ? (
+              <>
+                Staking <Loader2Icon className="w-4 h-4 animate-spin" />
+              </>
+            ) : (
+              'Stake SODA'
+            )}
+          </Button>
+        ))}
     </DialogFooter>
   );
 }

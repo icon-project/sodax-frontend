@@ -28,13 +28,13 @@ export default function UnstakeConfirmationStep({
   return (
     <div className="flex flex-col items-center mt-4">
       <div className="flex flex-col text-center">
-        <div className="text-espresso text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4]">
-          {unstakeMethod === UNSTAKE_METHOD.INSTANT ? 'Instant Unstaking' : 'Unstaking'} xSODA
+        <div className="text-espresso text-(length:--body-super-comfortable) font-['InterBold'] ">
+          {unstakeMethod === UNSTAKE_METHOD.INSTANT ? 'Instant unstake' : 'Unstaking'} xSODA
         </div>
         <div className="text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
           {unstakeMethod === UNSTAKE_METHOD.INSTANT
-            ? 'You will receive SODA immediately'
-            : 'Wait 180 days to receive full value'}
+            ? 'Exit early to receive SODA immediately.'
+            : 'You can change your mind later'}
         </div>
       </div>
 

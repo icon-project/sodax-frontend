@@ -113,7 +113,6 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
         partialize: state => ({
           stakeValue: state.stakeValue.toString(),
           stakeTypedValue: state.stakeTypedValue,
-          currentStakeStep: state.currentStakeStep,
           totalStakedUsdValue: state.totalStakedUsdValue,
           selectedToken: state.selectedToken,
           stakeMode: state.stakeMode,

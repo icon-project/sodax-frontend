@@ -35,7 +35,7 @@ export default function StakeDialog({ open, onOpenChange, selectedToken }: Stake
     const [xSodaShares] = stakeRatio;
     const formatted = formatUnits((xSodaShares * 95n) / 100n, 18);
 
-    return new BigNumber(formatted).toFixed(2);
+    return formatted;
   }, [stakeRatio, isLoadingStakeRatio]);
 
   const handleClose = (): void => {
