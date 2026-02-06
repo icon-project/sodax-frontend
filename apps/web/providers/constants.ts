@@ -41,8 +41,8 @@ export const partnerFeePercentage = {
 
 export const mainnetSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  // solverApiEndpoint: 'https://api.sodax.com/v1/intent',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
+  solverApiEndpoint: 'https://api.sodax.com/v1/intent',
+  // solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: partnerFeePercentage, // fee to be paid to the partner address
 } satisfies SolverConfigParams;
 
@@ -57,15 +57,15 @@ export const sodaxConfig = {
 
 export const rpcConfig: RpcConfig = {
   // EVM chains
-  sonic: 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0xa86a.avax': 'https://avax-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0xa4b1.arbitrum': 'https://arb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0x2105.base': 'https://base-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0x38.bsc': 'https://bnb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0xa.optimism': 'https://opt-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0x89.polygon': 'https://polygon-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  ethereum: 'https://eth-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // sonic: 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0xa86a.avax': 'https://avax-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0xa4b1.arbitrum': 'https://arb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0x2105.base': 'https://base-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0x38.bsc': 'https://bnb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0xa.optimism': 'https://opt-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0x89.polygon': 'https://polygon-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // ethereum: 'https://eth-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
 
   // evm in dev mode
   // sonic: 'https://sonic-rpc.publicnode.com',
