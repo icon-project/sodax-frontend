@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { motion } from 'motion/react';
 import { CheckCircleIcon, ClockIcon } from '@phosphor-icons/react';
 
 const integrationPackages = [
@@ -66,10 +67,18 @@ export default function NetworkIntegrationSection() {
         </p>
 
         {/* Cards Row */}
-        <div className="flex flex-col md:flex-row gap-4 items-stretch w-full">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-80px' }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12 } } }}
+          className="flex flex-col md:flex-row gap-4 items-stretch w-full"
+        >
           {integrationPackages.map(pkg => (
-            <div
+            <motion.div
               key={pkg.title}
+              variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="bg-white rounded-3xl flex flex-col gap-4 items-start pt-12 pb-6 px-6 w-full md:w-76 md:shrink-0 self-stretch"
             >
               {/* Package Title + Description */}
@@ -99,15 +108,15 @@ export default function NetworkIntegrationSection() {
               {/* CTA Button */}
               <a
                 href={`mailto:partnerships@sodax.com?subject=Network Integration Inquiry: ${pkg.title}`}
-                className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full w-full"
+                className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full w-full cursor-pointer"
               >
                 <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-espresso text-center">
-                  Contact Sales
+                  Contact Partnerships
                 </span>
               </a>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

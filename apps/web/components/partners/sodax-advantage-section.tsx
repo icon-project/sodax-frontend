@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { motion } from 'motion/react';
 
 const advantages = [
   {
@@ -16,10 +17,11 @@ const advantages = [
     badges: ['14+ networks', 'Single integration', 'Multi-VM'],
   },
   {
-    title: 'Aligned Economics',
+    title: 'LayerZero OFT Compatible',
     description:
-      'Revenue sharing on protocol fees for volume you route through the system. Transparent fee structure with no hidden costs.',
-    badges: ['Revenue share', 'Transparent fees', 'Volume-based'],
+      'SODAX adapts the LayerZero OFT standard for bridging, giving any LayerZero-connected network immediate access to deep trading liquidity. No costly per-network liquidity drives required.',
+    badges: ['OFT standard', 'Unified liquidity', 'Zero bootstrapping'],
+    featured: true,
   },
   {
     title: 'Modular Integration',
@@ -73,12 +75,29 @@ export default function SodaxAdvantageSection() {
         </div>
 
         {/* Advantage Cards - 2x2 Grid */}
-        <div className="flex flex-wrap justify-center gap-4 w-full">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-80px' }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
+          className="flex flex-wrap justify-center gap-4 w-full"
+        >
           {advantages.map(advantage => (
-            <div
+            <motion.div
               key={advantage.title}
-              className="bg-cream-white rounded-3xl flex flex-col gap-4 items-start justify-center pt-12 pb-6 px-6 w-full md:w-116"
+              variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className={`relative overflow-hidden bg-cream-white rounded-3xl flex flex-col gap-4 items-start justify-center pt-12 pb-6 px-6 w-full md:w-116${'featured' in advantage && advantage.featured ? ' ring-1 ring-espresso/6' : ''}`}
             >
+              {'featured' in advantage && advantage.featured && (
+                <div
+                  className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                  style={{
+                    backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
+                    backgroundSize: '20px 20px',
+                  }}
+                />
+              )}
               <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{advantage.title}</h3>
               <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark w-full">
                 {advantage.description}
@@ -93,14 +112,13 @@ export default function SodaxAdvantageSection() {
                   </span>
                 ))}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
-
+        </motion.div>
         {/* CTA Button */}
         <button
           type="button"
-          className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full"
+          className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer"
           onClick={() => window.open('https://docs.sodax.com', '_blank')}
         >
           <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-espresso text-center">
@@ -114,14 +132,22 @@ export default function SodaxAdvantageSection() {
           <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Three-Layer SDK Architecture</h2>
         </div>
 
-        <div className="bg-white rounded-3xl flex flex-col md:flex-row items-start justify-between px-6 py-14 w-full">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-80px' }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.15 } } }}
+          className="bg-white rounded-3xl flex flex-col md:flex-row items-start justify-between px-6 py-14 w-full"
+        >
           {sdkLayers.map(layer => (
-            <a
+            <motion.a
               key={layer.number}
+              variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               href={layer.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-1 flex-col gap-2 items-center px-10 hover:opacity-80 transition-opacity"
+              className="flex flex-1 flex-col gap-2 items-center px-10 hover:opacity-80 transition-opacity cursor-pointer"
             >
               <div className="bg-cherry-grey rounded-full flex flex-col items-center justify-center size-16">
                 <span className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{layer.number}</span>
@@ -133,9 +159,9 @@ export default function SodaxAdvantageSection() {
               <span className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap">
                 {layer.badge}
               </span>
-            </a>
+            </motion.a>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

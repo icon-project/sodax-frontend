@@ -1,5 +1,7 @@
 'use client';
 
+import { motion } from 'motion/react';
+
 const quickLinks = [
   {
     title: 'Documentation',
@@ -26,7 +28,13 @@ export default function PartnersCtaSection() {
     <section className="bg-cream-white overflow-clip px-4 md:px-8 py-30" aria-label="Partner Call to Action">
       <div className="flex flex-col gap-10 items-center max-w-236 mx-auto w-full">
         {/* CTA Container */}
-        <div className="flex flex-col gap-8 items-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col gap-8 items-center"
+        >
           {/* Title */}
           <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso text-center max-w-140">
             Deliver cross-network actions. <span className="text-yellow-dark">Skip the infrastructure work.</span>
@@ -42,7 +50,7 @@ export default function PartnersCtaSection() {
             href="https://docs.sodax.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full"
+            className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer"
           >
             <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-white text-center">
               View documentation
@@ -52,21 +60,29 @@ export default function PartnersCtaSection() {
           {/* Email Note */}
           <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-center">
             <span className="text-espresso">Reach out to </span>
-            <a href="mailto:partnerships@sodax.com" className="text-clay hover:underline">
+            <a href="mailto:partnerships@sodax.com" className="text-clay hover:underline cursor-pointer">
               partnerships@sodax.com
             </a>
           </p>
-        </div>
+        </motion.div>
 
         {/* Quick Link Cards */}
-        <div className="flex flex-wrap justify-center gap-4 w-full">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-80px' }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
+          className="flex flex-wrap justify-center gap-4 w-full"
+        >
           {quickLinks.map(link => (
-            <a
+            <motion.a
               key={link.title}
+              variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white rounded-3xl flex flex-col gap-4 items-start justify-center pt-12 pb-6 px-6 w-full sm:w-76 hover:opacity-90 transition-opacity"
+              className="bg-white rounded-3xl flex flex-col gap-4 items-start justify-center pt-12 pb-6 px-6 w-full sm:w-76 hover:opacity-90 transition-opacity cursor-pointer"
             >
               <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{link.title}</h3>
               <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark w-full">
@@ -82,9 +98,9 @@ export default function PartnersCtaSection() {
                   </span>
                 ))}
               </div>
-            </a>
+            </motion.a>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

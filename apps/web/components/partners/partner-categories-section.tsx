@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { WalletIcon, ArrowsLeftRightIcon, VaultIcon, TrendUpIcon, GlobeIcon } from '@phosphor-icons/react';
+import { motion } from 'motion/react';
+import { WalletIcon, ArrowsLeftRightIcon, VaultIcon, TrendUpIcon, GlobeIcon, PathIcon } from '@phosphor-icons/react';
 
 const categories = [
   {
@@ -34,6 +35,12 @@ const categories = [
     description: 'Access shared liquidity from launch. Offer asset variants backed by system-level inventory.',
     examples: ['LightLink', 'Sonic', 'New L2s'],
   },
+  {
+    icon: PathIcon,
+    title: 'Solver Marketplaces',
+    description: 'Add cheaper routes to solver marketplaces. Benefit end users across popular and exotic pairs.',
+    examples: ['Near Intents', '1Inch Fusion'],
+  },
 ];
 
 export default function PartnerCategoriesSection() {
@@ -52,12 +59,20 @@ export default function PartnerCategoriesSection() {
         </p>
 
         {/* Cards Grid */}
-        <div className="flex flex-wrap justify-center gap-4 w-full">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-80px' }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+          className="flex flex-wrap justify-center gap-4 w-full"
+        >
           {categories.map(category => {
             const Icon = category.icon;
             return (
-              <div
+              <motion.div
                 key={category.title}
+                variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="bg-white rounded-3xl flex flex-col gap-4 items-start justify-center pt-12 pb-6 px-6 w-full sm:w-76"
               >
                 {/* Card Title Row */}
@@ -84,10 +99,10 @@ export default function PartnerCategoriesSection() {
                     </span>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

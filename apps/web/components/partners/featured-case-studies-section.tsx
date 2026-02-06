@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion } from 'motion/react';
 
 const caseStudies = [
   {
@@ -62,10 +63,18 @@ export default function FeaturedCaseStudiesSection() {
         </p>
 
         {/* Cards Row */}
-        <div className="flex flex-col md:flex-row gap-4 items-stretch w-full">
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: '-80px' }}
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12 } } }}
+          className="flex flex-col md:flex-row gap-4 items-stretch w-full"
+        >
           {caseStudies.map(study => (
-            <div
+            <motion.div
               key={study.name}
+              variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="bg-white rounded-3xl flex flex-col gap-4 items-start pt-12 pb-6 px-6 w-full md:w-76 md:shrink-0 self-stretch"
             >
               {/* Partner Name + Tagline */}
@@ -101,15 +110,15 @@ export default function FeaturedCaseStudiesSection() {
               {/* CTA Button */}
               <Link
                 href={study.href}
-                className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full"
+                className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer"
               >
                 <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-espresso text-center">
                   Read Case Study
                 </span>
               </Link>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
