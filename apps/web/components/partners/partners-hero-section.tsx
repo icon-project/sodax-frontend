@@ -1,98 +1,87 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { ArrowRightIcon, FileTextIcon } from '@phosphor-icons/react';
+import { PackageOpen, Settings2, Users } from 'lucide-react';
 
 export default function PartnersHeroSection() {
   return (
     <section
-      className="relative min-h-[90vh] flex flex-col items-center justify-center bg-cherry-soda overflow-hidden"
+      className="relative flex flex-col items-center bg-cherry-soda overflow-hidden pt-63.25 pb-30"
       aria-label="Partner Network Hero"
     >
-      {/* Background Grid Pattern */}
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: `linear-gradient(var(--cream) 1px, transparent 1px),
-                           linear-gradient(90deg, var(--cream) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px',
-        }}
-      />
-
-      {/* Floating Elements - Subtle Animation */}
-      <div className="absolute top-20 right-10 w-32 h-32 rounded-full bg-yellow-soda/20 blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 left-10 w-40 h-40 rounded-full bg-cream/10 blur-3xl animate-pulse delay-1000" />
-
       {/* Main Content */}
-      <div className="relative z-10 max-w-5xl mx-auto px-8 text-center">
-        <div className="mb-4 inline-block">
-          <span className="px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-cream text-sm font-['InterMedium'] tracking-wide">
-            PREFERRED PARTNER NETWORK
-          </span>
-        </div>
+      <div className="flex flex-col gap-8 items-center text-center max-w-140 mx-auto px-6">
+        <p className="font-['InterRegular'] text-[18px] leading-[1.2] text-cherry-brighter">
+          Preferred Partner Network
+        </p>
 
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-white mb-4 leading-tight">
+        <h1 className="font-['InterExtraBold'] text-[32px] md:text-[42px] leading-[1.1] text-white text-center">
           Build cross-network applications.{' '}
-          <span className="font-['Shrikhand'] lowercase text-yellow-soda tracking-wide">skip</span> the infrastructure.
+          <span className="text-yellow-soda">
+            Skip the
+            <br className="hidden md:block" /> infrastructure.
+          </span>
         </h1>
 
-        <p className="text-base md:text-lg text-cream/90 font-['InterRegular'] max-w-2xl mx-auto mb-8 leading-relaxed">
+        <p className="font-['InterRegular'] text-[18px] leading-[1.2] text-white max-w-132">
           SODAX coordinates execution and liquidity across 14+ networks so you can deliver intended outcomes without
           owning cross-network infrastructure.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-          <Button
-            className="bg-white text-cherry-soda hover:bg-cream font-['InterBold'] !px-4 py-3 group"
+        <div className="flex gap-4 items-center justify-center">
+          <button
+            type="button"
+            className="bg-white hover:bg-cream text-espresso font-['InterMedium'] text-[14px] leading-[1.4] h-10 px-6 py-2 rounded-[240px] text-center transition-colors"
             onClick={() => {
               window.location.href = 'mailto:partnerships@sodax.com?subject=Partnership Inquiry';
             }}
           >
-            Become a Partner
-            <ArrowRightIcon weight="duotone" className="ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
-          <Button
-            variant="outline"
-            className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-['InterMedium'] !px-4 py-3"
+            Become a partner
+          </button>
+          <button
+            type="button"
+            className="bg-transparent border-3 border-cherry-bright text-cream font-['InterRegular'] text-[14px] leading-[1.4] h-10 px-6 py-2 rounded-[240px] text-center transition-colors"
             onClick={() => window.open('https://docs.sodax.com', '_blank')}
           >
-            <FileTextIcon weight="duotone" className="mr-2" />
             Documentation
-          </Button>
-        </div>
-
-        {/* Quick Navigation */}
-        <div className="mt-12 flex flex-wrap gap-3 justify-center items-center">
-          <span className="text-cream/70 text-sm font-['InterMedium']">Jump to:</span>
-          <button
-            type="button"
-            className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-cream hover:bg-white/20 text-sm font-['InterMedium'] transition-all"
-            onClick={() => document.getElementById('case-studies')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            Case Studies
-          </button>
-          <button
-            type="button"
-            className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-cream hover:bg-white/20 text-sm font-['InterMedium'] transition-all"
-            onClick={() => document.getElementById('sodax-advantages')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            SODAX Advantages
-          </button>
-          <button
-            type="button"
-            className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-sm text-cream hover:bg-white/20 text-sm font-['InterMedium'] transition-all"
-            onClick={() => document.getElementById('integration-options')?.scrollIntoView({ behavior: 'smooth' })}
-          >
-            Integration Options
           </button>
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-        <span className="text-cream text-xs font-['InterMedium'] tracking-wider">EXPLORE</span>
-        <div className="w-6 h-10 border-2 border-cream rounded-full flex justify-center pt-2">
-          <div className="w-1.5 h-1.5 bg-cream rounded-full" />
+      {/* Jump to Section */}
+      <div className="flex flex-col gap-4 items-center mt-auto pt-24">
+        {/* Divider */}
+        <div>
+          <div className="w-136 max-w-[90vw] h-0.5 bg-cherry-brighter/20" />
+          <div className="w-136 max-w-[90vw] h-0.5 bg-cherry-dark/20" />
+        </div>
+
+        <p className="font-['InterRegular'] text-[16px] leading-[1.4] text-cherry-brighter">Jump to</p>
+
+        <div className="flex gap-6 items-center">
+          <button
+            type="button"
+            className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors"
+            onClick={() => document.getElementById('case-studies')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Case studies
+            <Users size={16} className="text-cherry-bright" />
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors"
+            onClick={() => document.getElementById('sodax-advantages')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            SODAX Advantages
+            <PackageOpen size={16} className="text-cherry-bright" />
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors"
+            onClick={() => document.getElementById('integration-options')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Integration Options
+            <Settings2 size={16} className="text-cherry-bright" />
+          </button>
         </div>
       </div>
     </section>
