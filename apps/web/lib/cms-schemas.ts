@@ -19,6 +19,9 @@ export const NewsArticleSchema = z.object({
   published: z.boolean().default(false),
   tags: z.array(z.string().max(50)).default([]),
   categories: z.array(z.string().max(50)).default([]),
+  authorId: z.string().optional(),
+  authorName: z.string().optional(),
+  publishedAt: z.string().datetime().optional().nullable(),
 });
 
 // Article creation/update schema

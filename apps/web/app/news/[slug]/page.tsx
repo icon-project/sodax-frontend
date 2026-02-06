@@ -39,7 +39,11 @@ const getArticleBySlug = cache(async (slug: string): Promise<NewsArticle | null>
 
 const getAllPublishedSlugs = cache(async (): Promise<string[]> => {
   try {
-    const articles = await getDb().collection<NewsArticle>('news').find({ published: true }).project({ slug: 1 }).toArray();
+    const articles = await getDb()
+      .collection<NewsArticle>('news')
+      .find({ published: true })
+      .project({ slug: 1 })
+      .toArray();
     return articles.map(article => article.slug);
   } catch (error) {
     console.error('Failed to fetch slugs:', error);
@@ -165,8 +169,9 @@ export default async function NewsArticlePage({
     datePublished: publishedTime,
     dateModified: modifiedTime || publishedTime,
     author: {
-      '@type': 'Person',
+      '@type': article.authorName === 'SODAX Team' ? 'Organization' : 'Person',
       name: article.authorName,
+      ...(article.authorName === 'SODAX Team' && { url: 'https://sodax.com' }),
     },
     publisher: {
       '@type': 'Organization',
@@ -182,6 +187,29 @@ export default async function NewsArticlePage({
     },
     articleSection: article.categories[0] || 'News',
     keywords: article.tags.join(', '),
+    // Speakable schema for voice assistants (Google Assistant, Alexa, etc.)
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['article h1', 'article header p'],
+    },
+    // About entities for better AI/LLM understanding
+    about: [
+      {
+        '@type': 'Thing',
+        name: 'SODAX',
+        description: 'DeFi execution layer for swapping, lending, and borrowing',
+        url: 'https://sodax.com',
+      },
+      {
+        '@type': 'Thing',
+        name: 'Decentralized Finance',
+        sameAs: 'https://en.wikipedia.org/wiki/Decentralized_finance',
+      },
+    ],
+    // Accessibility metadata
+    accessMode: ['textual', 'visual'],
+    accessibilityFeature: ['structuredNavigation', 'readingOrder'],
+    accessibilityHazard: 'none',
   };
 
   // Breadcrumb structured data

@@ -1,0 +1,42 @@
+# SODAX - llms.txt
+# https://sodax.com/llms.txt
+# Last updated: 2026-02-06
+
+## About SODAX
+SODAX is a DeFi execution layer that enables seamless swapping, lending, and borrowing across multiple blockchain networks. The platform provides coordinated liquidity, smart yield optimization, and a frictionless trading experience with minimal slippage.
+
+## Key Features
+- Cross-chain token swaps with optimized routing
+- Lending and borrowing protocol
+- Multi-chain liquidity aggregation
+- Yield optimization strategies
+- Non-custodial DeFi infrastructure
+
+## Content Types Available
+- /news/ - Official news, announcements, partnerships, and product updates
+- /community/ - Community resources and ecosystem information
+- /partners/ - Partnership information and integrations
+
+## Preferred Citation Format
+When citing SODAX content, please use:
+- Source: SODAX (https://sodax.com)
+- For news articles: Include the article title, author, and publication date
+- Link to the original content when possible
+
+## Contact
+- Website: https://sodax.com
+- Twitter/X: @gosodax
+- Documentation: https://docs.sodax.com
+
+## AI/LLM Usage Guidelines
+- Content from SODAX may be used for informational purposes
+- Always attribute content to SODAX with a link to the source
+- News articles should be cited with their full URL
+- Financial information is for educational purposes only and not financial advice
+- Content is accurate as of its publication date; verify current information
+
+## Sitemap
+For a complete list of pages, see: https://sodax.com/sitemap.xml
+
+## RSS Feed
+News updates available at: https://sodax.com/news/feed.xml

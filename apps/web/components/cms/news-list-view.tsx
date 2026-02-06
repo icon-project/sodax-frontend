@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Edit, Trash2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, ArrowLeft, ExternalLink } from 'lucide-react';
 import type { NewsArticle } from '@/lib/mongodb-types';
 import { format } from 'date-fns';
 
@@ -145,11 +145,23 @@ export function NewsListView() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {!article.published && (
+                          <button
+                            type="button"
+                            onClick={() => window.open(`/news/preview/${article._id.toString()}`, '_blank')}
+                            className="inline-flex items-center justify-center h-8 px-2 gap-1 rounded-md bg-transparent text-[var(--clay)] hover:bg-[var(--cream)] hover:text-[var(--cherry-soda)] transition-colors cursor-pointer border border-[var(--cherry-grey)] hover:border-[var(--cherry-soda)] text-xs font-medium"
+                            title="Preview article"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            Preview
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => router.push(`/cms/news/${article._id.toString()}`)}
                           className="inline-flex items-center justify-center h-8 w-8 px-0 rounded-md bg-transparent text-[var(--espresso)] hover:bg-[var(--cream)] hover:text-[var(--espresso)] transition-colors cursor-pointer border-0 outline-none"
                           style={{ border: 'none', outline: 'none' }}
+                          title="Edit article"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -159,6 +171,7 @@ export function NewsListView() {
                           disabled={deleting === article._id.toString()}
                           className="inline-flex items-center justify-center h-8 w-8 px-0 rounded-md bg-transparent text-red-600 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer border-0 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{ border: 'none', outline: 'none' }}
+                          title="Delete article"
                         >
                           {deleting === article._id.toString() ? (
                             <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
