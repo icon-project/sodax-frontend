@@ -24,6 +24,9 @@ import { createWagmiConfig } from './xchains/evm/EvmXService';
 import { reconnectIcon } from './xchains/icon/actions';
 // import { reconnectInjective } from './xchains/injective/actions';
 import { reconnectStellar } from './xchains/stellar/actions';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
   const wagmiConfig = useMemo(() => {
@@ -33,18 +36,20 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
 
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
-        <SuiWalletProvider autoConnect={true}>
-          <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? ''}>
-            <SolanaWalletProvider wallets={wallets} autoConnect>
-              <Hydrate />
-              {children}
-            </SolanaWalletProvider>
-          </SolanaConnectionProvider>
-        </SuiWalletProvider>
-      </SuiClientProvider>
-    </WagmiProvider>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={wagmiConfig}>
+        <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
+          <SuiWalletProvider autoConnect={true}>
+            <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? ''}>
+              <SolanaWalletProvider wallets={wallets} autoConnect>
+                <Hydrate />
+                {children}
+              </SolanaWalletProvider>
+            </SolanaConnectionProvider>
+          </SuiWalletProvider>
+        </SuiClientProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
 

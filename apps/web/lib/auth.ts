@@ -30,6 +30,11 @@ function getAuthConfig(): BetterAuthOptions {
     database: mongodbAdapter(getDb(), {
       client: getMongoClient(),
     }),
+    trustedOrigins: [
+      "https://sodax-web-dev.vercel.app",
+      "https://sodax.com",
+      "https://www.sodax.com",
+    ],
     emailAndPassword: {
       enabled: false, // Disable email/password, only allow Google OAuth
     },
@@ -80,5 +85,5 @@ export const auth = new Proxy({} as ReturnType<typeof betterAuth>, {
   },
 });
 
-// Export lazy getters for MongoDB client and db for CMS operations
-export { getMongoClient, getDb };
+// Export the getAuth function for route handlers that need the actual instance
+export { getMongoClient, getDb, getAuth };
