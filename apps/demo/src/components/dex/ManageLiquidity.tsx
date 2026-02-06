@@ -10,7 +10,6 @@ import type { ChainId, ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '
 import type { XAccount } from '@sodax/wallet-sdk-react';
 import {
   createWithdrawParamsProps,
-  findSpokeTokenForPool,
   useCreateDepositParams,
   useDexAllowance,
   useDexApprove,
@@ -94,6 +93,8 @@ export function ManageLiquidity({
   const [token0Amount, setToken0Amount] = useState<string>('');
   const [token1Amount, setToken1Amount] = useState<string>('');
 
+  const poolSpokeAssets = sodax.dex.clService.getAssetsForPool(spokeProvider, pools[selectedPoolIndex]);
+
   // Reset state when chain changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: setter functions are stable
   useEffect(() => {
@@ -105,15 +106,13 @@ export function ManageLiquidity({
     tokenIndex: 0,
     amount: token0Amount,
     poolData,
-    poolKey: pools[selectedPoolIndex],
-    spokeProvider,
+    poolSpokeAssets,
   });
   const createDepositParams1 = useCreateDepositParams({
     tokenIndex: 1,
     amount: token1Amount,
     poolData,
-    poolKey: pools[selectedPoolIndex],
-    spokeProvider,
+    poolSpokeAssets,
   });
   const { data: hasToken0Allowed, isLoading: isToken0AllowanceLoading } = useDexAllowance({
     params: createDepositParams0,
@@ -228,9 +227,7 @@ export function ManageLiquidity({
           tokenIndex,
           amount,
           poolData,
-          poolKey: selectedPoolKey,
-          spokeProvider,
-          sodax,
+          poolSpokeAssets,
         }),
         spokeProvider,
       });
@@ -269,17 +266,7 @@ export function ManageLiquidity({
             {/* Token 0 Deposit */}
             <div className="space-y-2">
               <Label htmlFor="token0-deposit">
-                Deposit{' '}
-                {
-                  findSpokeTokenForPool({
-                    tokenIndex: 0,
-                    poolData,
-                    spokeProvider: spokeProvider,
-                    poolKey: selectedPoolKey,
-                    sodax,
-                  })?.symbol
-                }{' '}
-                as {poolData.token0.symbol}
+                Deposit {poolSpokeAssets.token0.symbol} as {poolData.token0.symbol}
               </Label>
               <div className="flex gap-2">
                 <Input
@@ -336,17 +323,7 @@ export function ManageLiquidity({
             {/* Token 1 Deposit */}
             <div className="space-y-2">
               <Label htmlFor="token1-deposit">
-                Deposit{' '}
-                {
-                  findSpokeTokenForPool({
-                    tokenIndex: 1,
-                    poolData,
-                    spokeProvider: spokeProvider,
-                    poolKey: selectedPoolKey,
-                    sodax,
-                  })?.symbol
-                }{' '}
-                as {poolData.token1.symbol}
+                Deposit {poolSpokeAssets.token1.symbol} as {poolData.token1.symbol}
               </Label>
               <div className="flex gap-2">
                 <Input

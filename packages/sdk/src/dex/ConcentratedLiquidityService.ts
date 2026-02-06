@@ -23,7 +23,7 @@ import {
   isHubSpokeProvider,
   HubService,
 } from '../index.js';
-import type { Address, HttpUrl, OriginalAssetAddress } from '@sodax/types';
+import type { Address, HttpUrl, OriginalAssetAddress, XToken } from '@sodax/types';
 import type { EvmHubProvider, SpokeProviderType } from '../shared/entities/Providers.js';
 import type {
   Prettify,
@@ -263,6 +263,8 @@ export interface PoolData {
   rewardConfig?: PoolRewardConfig;
 }
 
+export type PoolSpokeAssets = { token0: XToken; token1: XToken };
+
 export type ConcentratedLiquidityUnknownErrorCode =
   | 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR'
   | 'GET_POOL_DATA_UNKNOWN_ERROR'
@@ -405,19 +407,33 @@ export class ClService {
     };
   }
 
-  public getAssetsForPool(
-    spokeProvider: SpokeProviderType,
-    poolKey: PoolKey,
-  ): { token0: OriginalAssetAddress; token1: OriginalAssetAddress } {
+  public getAssetsForPool(spokeProvider: SpokeProviderType, poolKey: PoolKey): PoolSpokeAssets {
+    const token0SpokeAddress = this.configService.getOriginalAssetAddressFromStakedATokenAddress(
+      spokeProvider.chainConfig.chain.id,
+      poolKey.currency0,
+    );
+    const token1SpokeAddress = this.configService.getOriginalAssetAddressFromStakedATokenAddress(
+      spokeProvider.chainConfig.chain.id,
+      poolKey.currency1,
+    );
+    const token0 = this.configService.findTokenByOriginalAddress(
+      token0SpokeAddress,
+      spokeProvider.chainConfig.chain.id,
+    );
+    const token1 = this.configService.findTokenByOriginalAddress(
+      token1SpokeAddress,
+      spokeProvider.chainConfig.chain.id,
+    );
+
+    if (!token0) {
+      throw new Error(`[getAssetsForPool] Token0 ${token0SpokeAddress} not found`);
+    }
+    if (!token1) {
+      throw new Error(`[getAssetsForPool] Token1 ${token1SpokeAddress} not found`);
+    }
     return {
-      token0: this.configService.getOriginalAssetAddressFromStakedATokenAddress(
-        spokeProvider.chainConfig.chain.id,
-        poolKey.currency0,
-      ),
-      token1: this.configService.getOriginalAssetAddressFromStakedATokenAddress(
-        spokeProvider.chainConfig.chain.id,
-        poolKey.currency1,
-      ),
+      token0,
+      token1,
     };
   }
 

@@ -1,40 +1,44 @@
 import { useMemo } from 'react';
-import type { CreateAssetDepositParams, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import type { CreateAssetDepositParams, PoolData, PoolSpokeAssets } from '@sodax/sdk';
 import { createDepositParamsProps } from '@/utils/dex-utils';
 
-export type RawDexDepositParams = {
+export type UseCreateDepositParamsProps = {
   tokenIndex: 0 | 1;
   amount: string | number;
   poolData: PoolData;
-  poolKey: PoolKey;
+  poolSpokeAssets: PoolSpokeAssets;
 };
 
-export type UseCreateDepositParamsProps = RawDexDepositParams & {
-  spokeProvider: SpokeProvider | null;
-};
 
+/**
+ * React hook to create the deposit parameters for a given pool and token.
+ *
+ * Purpose:
+ *   - Provides a hook which memoizes the deposit parameters for a given pool and token.
+ *
+ * Usage:
+ *   - Call the function with the token index, amount, pool data, pool key, and spoke provider to create the deposit parameters.
+ *
+ * Params:
+ * @param tokenIndex - The index of the token to deposit.
+ * @param amount - The amount of the token to deposit.
+ * @param poolData - The pool data of the pool to deposit to.
+ * @param poolKey - The pool key of the pool to deposit to.
+ * @param spokeProvider - The spoke provider to use for the deposit.
+ * @returns The deposit parameters or undefined if the pool key, spoke provider, or amount is not set.
+ */
 export function useCreateDepositParams({
   tokenIndex,
   amount,
   poolData,
-  poolKey,
-  spokeProvider,
+  poolSpokeAssets,
 }: UseCreateDepositParamsProps): CreateAssetDepositParams | undefined {
-  const { sodax } = useSodaxContext();
-
   return useMemo<CreateAssetDepositParams | undefined>(() => {
-    if (!spokeProvider) {
-      console.warn('[useCreateDepositParams] Spoke provider is not set');
-      return undefined;
-    }
-
     if (!amount || Number.parseFloat(String(amount)) <= 0) {
       console.warn('[useCreateDepositParams] Amount must be greater than 0');
       return undefined;
     }
 
-    console.log('useCreateDepositParams', tokenIndex, amount, poolData, poolKey, spokeProvider);
-    return createDepositParamsProps({ poolKey, tokenIndex, amount, poolData, spokeProvider, sodax });
-  }, [tokenIndex, amount, poolData, poolKey, spokeProvider, sodax]);
+    return createDepositParamsProps({ tokenIndex, amount, poolData, poolSpokeAssets });
+  }, [tokenIndex, amount, poolData, poolSpokeAssets]);
 }

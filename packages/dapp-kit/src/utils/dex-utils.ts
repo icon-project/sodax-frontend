@@ -12,11 +12,6 @@ import {
   type ConcentratedLiquidityBurnPositionParams,
   type ConcentratedLiquidityDecreaseLiquidityParams,
   type CreateAssetDepositParams,
-  type Sodax,
-  type PoolData,
-  type SpokeProviderType,
-  type PoolKey,
-  type XToken,
 } from '@sodax/sdk';
 import { parseUnits } from 'viem';
 
@@ -52,7 +47,7 @@ export function createDecreaseLiquidityParamsProps({
   slippageTolerance,
 }: UseCreateDecreaseLiquidityParamsProps): ConcentratedLiquidityDecreaseLiquidityParams {
   const percentageNum = Number.parseFloat(String(percentage));
-  const slippage = Number.parseFloat(String(slippageTolerance)) || 0.5;
+  const slippage = Number.parseFloat(String(slippageTolerance));
 
   if (percentageNum <= 0 || percentageNum > 100) {
     throw new Error('Percentage must be between 0 and 100');
@@ -83,40 +78,12 @@ export function createDecreaseLiquidityParamsProps({
   };
 }
 
-export function findSpokeTokenForPool({
-  tokenIndex,
-  spokeProvider,
-  poolKey,
-  sodax,
-}: { tokenIndex: 0 | 1; poolData: PoolData; spokeProvider: SpokeProviderType; poolKey: PoolKey; sodax: Sodax }):
-  | XToken
-  | undefined {
-  const assets = sodax.dex.clService.getAssetsForPool(spokeProvider, poolKey);
-  console.log('assets', assets);
-  console.log('tokenIndex', tokenIndex);
-  console.log('spokeProvider', spokeProvider.chainConfig.chain.id);
-  console.log('poolKey', poolKey);
-  console.log('sodax', sodax);
-
-  if (!assets) {
-    return undefined;
-  }
-
-  return sodax.config.findTokenByOriginalAddress(tokenIndex === 0 ? assets.token0 : assets.token1, spokeProvider.chainConfig.chain.id);
-}
-
 export function createDepositParamsProps({
-  poolKey,
   tokenIndex,
   amount,
   poolData,
-  spokeProvider,
-  sodax,
-}: UseCreateDepositParamsProps & { sodax: Sodax }): CreateAssetDepositParams {
-  if (!spokeProvider) {
-    throw new Error('[createDepositParamsProps] Spoke provider is not set');
-  }
-
+  poolSpokeAssets,
+}: UseCreateDepositParamsProps): CreateAssetDepositParams {
   const amountNum = Number.parseFloat(String(amount));
 
   if (!amount || amountNum <= 0) {
@@ -124,15 +91,10 @@ export function createDepositParamsProps({
   }
 
   const token = tokenIndex === 0 ? poolData.token0 : poolData.token1;
-  const assets = sodax.dex.clService.getAssetsForPool(spokeProvider, poolKey);
-  if (!assets) {
-    throw new Error('Failed to get assets for pool');
-  }
-
-  const originalAsset = tokenIndex === 0 ? assets.token0 : assets.token1;
+  const originalAsset = tokenIndex === 0 ? poolSpokeAssets.token0 : poolSpokeAssets.token1;
 
   return {
-    asset: originalAsset,
+    asset: originalAsset.address,
     amount: parseUnits(String(amount), token.decimals),
     poolToken: token.address,
   };
@@ -212,30 +174,19 @@ export function createWithdrawParamsProps({
   tokenIndex,
   amount,
   poolData,
-  poolKey,
-  spokeProvider,
+  poolSpokeAssets,
   dst,
-  sodax,
-}: UseCreateWithdrawParamsProps & { sodax: Sodax }): CreateAssetWithdrawParams {
-  if (!spokeProvider) {
-    throw new Error('[createWithdrawParamsProps] Spoke provider is not set');
-  }
-
+}: UseCreateWithdrawParamsProps): CreateAssetWithdrawParams {
   const amountNum = Number.parseFloat(String(amount));
   if (!amount || amountNum <= 0) {
     throw new Error('Please enter a valid amount');
   }
 
   const token = tokenIndex === 0 ? poolData.token0 : poolData.token1;
-  const assets = sodax.dex.clService.getAssetsForPool(spokeProvider, poolKey);
-  if (!assets) {
-    throw new Error('Failed to get assets for pool');
-  }
-
-  const originalAsset = tokenIndex === 0 ? assets.token0 : assets.token1;
+  const originalAsset = tokenIndex === 0 ? poolSpokeAssets.token0 : poolSpokeAssets.token1;
 
   return {
-    asset: originalAsset,
+    asset: originalAsset.address,
     amount: parseUnits(String(amount), token.decimals),
     poolToken: token.address,
     dst,
