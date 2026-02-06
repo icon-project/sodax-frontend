@@ -1,9 +1,9 @@
 import { getAssetUsdPrice } from '@/lib/getAssetUsdPrice';
-import type { AssetBalance } from '@sodax/sdk';
+import type { PartnerFeeClaimAssetBalance } from '@sodax/sdk';
 
 export async function enrichBalancesWithUsdPrices(
-  balances: Map<string, AssetBalance>,
-): Promise<Map<string, AssetBalance>> {
+  balances: Map<string, PartnerFeeClaimAssetBalance>,
+): Promise<Map<string, PartnerFeeClaimAssetBalance>> {
   const symbols = Array.from(balances.values()).map(a => a.symbol);
   const uniqueSymbols = Array.from(new Set(symbols));
 

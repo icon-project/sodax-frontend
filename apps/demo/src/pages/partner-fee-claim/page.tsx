@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { SONIC_MAINNET_CHAIN_ID, type Address, type SpokeChainId } from '@sodax/types';
 import { formatUnits, isAddress, parseUnits } from 'viem';
-import type { AssetBalance, SonicSpokeProvider } from '@sodax/sdk';
+import type { PartnerFeeClaimAssetBalance, SonicSpokeProvider } from '@sodax/sdk';
 import { chainIdToChainName } from '@/constants';
 import { SelectChain } from '@/components/solver/SelectChain';
 
@@ -18,7 +18,7 @@ export default function PartnerFeeClaimPage() {
   const walletProvider = useWalletProvider(SONIC_MAINNET_CHAIN_ID);
   const spokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID, walletProvider) as SonicSpokeProvider | undefined;
   const [address, setAddress] = useState<string>('');
-  const [balances, setBalances] = useState<Map<string, AssetBalance> | null>(null);
+  const [balances, setBalances] = useState<Map<string, PartnerFeeClaimAssetBalance> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

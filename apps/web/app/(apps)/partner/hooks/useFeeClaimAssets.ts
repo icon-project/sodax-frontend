@@ -5,12 +5,12 @@ import { useFeeClaimBalances } from './useFeeClaimBalances';
 import { useFeeClaimPreferences } from './useFeeClaimPreferences';
 
 import type { Address, XToken } from '@sodax/types';
-import type { AssetBalance } from '@sodax/sdk';
+import type { PartnerFeeClaimAssetBalance } from '@sodax/sdk';
 import { MIN_PARTNER_CLAIM_USD_AMOUNT } from '@/constants/partner-claim';
 import { FeeClaimAssetStatus } from '../utils/fee-claim';
 
 export type FeeClaimAsset = {
-  sdkAsset: AssetBalance;
+  sdkAsset: PartnerFeeClaimAssetBalance;
   currency: XToken;
   balance: bigint;
   displayBalance: string;

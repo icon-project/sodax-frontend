@@ -2,7 +2,7 @@ import { useSodaxContext } from '@sodax/dapp-kit';
 import type { Address } from '@sodax/types';
 import { useQuery } from '@tanstack/react-query';
 import { enrichBalancesWithUsdPrices } from '../utils/enrichBalancesWithUsdPrices';
-import type { AssetBalance } from '@sodax/sdk';
+import type { PartnerFeeClaimAssetBalance } from '@sodax/sdk';
 
 /**
  * Fetches raw partner fee balances from the SDK.
@@ -19,7 +19,7 @@ import type { AssetBalance } from '@sodax/sdk';
  * Think of this as:
  * "Give me everything the blockchain knows about partner fees."
  */
-export type AssetBalanceWithUsd = AssetBalance & {
+export type AssetBalanceWithUsd = PartnerFeeClaimAssetBalance & {
   usdPrice?: number | null;
 };
 

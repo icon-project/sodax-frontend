@@ -12,6 +12,7 @@ import type {
   OptionalRaw,
   GetAddressType,
   SolverErrorResponse,
+  SonicAddressOrSpokeType,
 } from '../shared/types.js';
 import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
 import { SolverApiService } from '../swap/SolverApiService.js';
@@ -36,7 +37,7 @@ import {
 } from '@sodax/types';
 import { encodeAddress } from '../index.js';
 
-export type AssetBalance = {
+export type PartnerFeeClaimAssetBalance = {
   symbol: string;
   name: string;
   address: Address; // The wrapped asset address on Sonic (hub chain)
@@ -51,22 +52,6 @@ export type AutoSwapPreferences = {
   dstChain: SpokeChainId | 'not configured';
   dstAddress: Hex;
 };
-
-export type GetAutoSwapPreferencesParams =
-  | {
-      address: Address;
-    }
-  | {
-      spokeProvider: SonicSpokeProviderType;
-    };
-
-export type FetchAssetsBalancesParams =
-  | {
-      address: Address;
-    }
-  | {
-      spokeProvider: SonicSpokeProviderType;
-    };
 
 export type SetSwapPreferenceParams = {
   outputToken: Address;
@@ -189,11 +174,11 @@ export class PartnerFeeClaimService {
    *   If an address, queries balances for that address.
    *   If a SonicSpokeProviderType, uses the connected wallet's address.
    * @returns A promise resolving to a Result containing a Map from wrapped asset address (on Sonic)
-   *   to AssetBalance, or an Error on failure.
+   *   to PartnerFeeClaimAssetBalance, or an Error on failure.
    */
   public async fetchAssetsBalances(
-    params: FetchAssetsBalancesParams,
-  ): Promise<Result<Map<string, AssetBalance>, Error>> {
+    params: SonicAddressOrSpokeType,
+  ): Promise<Result<Map<string, PartnerFeeClaimAssetBalance>, Error>> {
     try {
       let queryAddress: string;
       if ('address' in params) {
@@ -250,7 +235,7 @@ export class PartnerFeeClaimService {
       });
 
       // Build result map keyed by asset address (wrapped token on Sonic)
-      const balancesMap = new Map<string, AssetBalance>();
+      const balancesMap = new Map<string, PartnerFeeClaimAssetBalance>();
       let nonZeroCount = 0;
 
       uniqueAssetEntries.forEach((entry, index) => {
@@ -305,7 +290,7 @@ export class PartnerFeeClaimService {
    *   The auto swap preferences include the output token, destination chain, and destination address.
    */
   public async getAutoSwapPreferences(
-    params: GetAutoSwapPreferencesParams,
+    params: SonicAddressOrSpokeType,
   ): Promise<Result<AutoSwapPreferences, Error>> {
     try {
       let queryAddress: string;
