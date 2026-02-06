@@ -194,7 +194,7 @@ export default async function NewsPage(props: {
       <>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <div className="min-h-screen w-full bg-[var(--almost-white)]">
+        <div className="relative min-h-screen w-full bg-[var(--almost-white)]">
           <MarketingHeader backLink="/" backText="← home" />
           <div className="max-w-7xl mx-auto px-4 py-16">
             <div className="bg-white rounded-lg p-8 text-center border-2 border-[var(--clay-light)]">
@@ -224,7 +224,7 @@ export default async function NewsPage(props: {
     <>
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <div className="min-h-screen w-full bg-[var(--almost-white)]">
+      <div className="relative min-h-screen w-full bg-[var(--almost-white)]">
         <MarketingHeader backLink="/" backText="← home" />
 
         {/* Category Filter Tabs */}

@@ -39,7 +39,11 @@ const getArticleBySlug = cache(async (slug: string): Promise<NewsArticle | null>
 
 const getAllPublishedSlugs = cache(async (): Promise<string[]> => {
   try {
-    const articles = await getDb().collection<NewsArticle>('news').find({ published: true }).project({ slug: 1 }).toArray();
+    const articles = await getDb()
+      .collection<NewsArticle>('news')
+      .find({ published: true })
+      .project({ slug: 1 })
+      .toArray();
     return articles.map(article => article.slug);
   } catch (error) {
     console.error('Failed to fetch slugs:', error);
@@ -215,10 +219,13 @@ export default async function NewsArticlePage({
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleStructuredData) }} />
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }} />
-      <div className="min-h-screen w-full bg-[var(--almost-white)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
+      />
+      <div className="relative min-h-screen w-full bg-[var(--almost-white)]">
         <MarketingHeader backLink="/news" backText="← news" />
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto pt-[100px]">
           {/* Article */}
           <article className="py-8" itemScope itemType="https://schema.org/NewsArticle">
             <div className="container mx-auto px-4 max-w-4xl">
