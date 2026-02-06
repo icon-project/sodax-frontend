@@ -147,6 +147,10 @@ export class ConfigService {
     return this.hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
   }
 
+  public getSpokeTokenFromOriginalAssetAddress(chainId: SpokeChainId, originalAssetAddress: OriginalAssetAddress): XToken | undefined {
+    return this.supportedTokensPerChain.get(chainId)?.find(token => token.address.toLowerCase() === originalAssetAddress.toLowerCase());
+  }
+
   public isValidHubAsset(hubAsset: Address): boolean {
     return this.supportedHubAssetsSet.has(hubAsset.toLowerCase() as Address);
   }
