@@ -50,7 +50,7 @@ export function SuccessModal({ open, onClose, data, action }: SuccessModalProps)
       case 'supply':
         return (
           <p className="text-sm text-clay text-center">
-            Your <strong>{data.token.symbol}</strong> is now earning interest on <strong>{sourceName}</strong>. 📈
+            Your <strong>{data.token.symbol}</strong> is now earning interest on <strong>{sourceName}</strong>.
           </p>
         );
       case 'withdraw':

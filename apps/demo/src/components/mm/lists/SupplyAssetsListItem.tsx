@@ -1,8 +1,6 @@
 import React, { type ReactElement } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken, Address } from '@sodax/types';
-import { SupplyButton } from './SupplyButton';
-import { WithdrawButton } from './WithdrawButton';
 import { formatUnits, isAddress } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
@@ -17,6 +15,8 @@ interface SupplyAssetsListItemProps {
   aTokenBalancesMap?: Map<Address, bigint>;
   onRefreshReserves?: () => void;
   onRepayClick: (token: XToken, maxDebt: string) => void;
+  onWithdrawClick: (token: XToken, maxWithdraw: string) => void;
+  onSupplyClick: (token: XToken, maxSupply: string) => void;
 }
 
 export function SupplyAssetsListItem({
@@ -27,6 +27,8 @@ export function SupplyAssetsListItem({
   aTokenBalancesMap,
   onRefreshReserves,
   onRepayClick,
+  onWithdrawClick,
+  onSupplyClick,
 }: SupplyAssetsListItemProps): ReactElement {
   const metrics = useReserveMetrics({
     token,
@@ -50,6 +52,7 @@ export function SupplyAssetsListItem({
     : undefined;
 
   const hasDebt = metrics.userReserve && metrics.userReserve.scaledVariableDebt > 0n;
+  const hasSupply = aTokenBalance !== undefined && aTokenBalance > 0n;
 
   const availableToBorrow = !metrics.formattedReserve
     ? undefined
@@ -83,8 +86,22 @@ export function SupplyAssetsListItem({
       <TableCell>{formattedDebt}</TableCell>
       <TableCell>{availableToBorrow}</TableCell>
       <TableCell className="flex flex-row gap-2">
-        <SupplyButton token={token} />
-        <WithdrawButton token={token} onSuccess={onRefreshReserves} />
+        <Button
+          variant="cherry"
+          size="sm"
+          onClick={() => onSupplyClick(token, walletBalance ?? '0')}
+          disabled={!walletBalance || walletBalance === '-' || Number.parseFloat(walletBalance) <= 0}
+        >
+          Supply
+        </Button>{' '}
+        <Button
+          variant="cherry"
+          size="sm"
+          onClick={() => onWithdrawClick(token, formattedBalance ?? '0')}
+          disabled={!hasSupply}
+        >
+          Withdraw
+        </Button>{' '}
         <OldBorrowButton token={token} />
         <Button
           variant="cherry"

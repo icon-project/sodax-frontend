@@ -13,12 +13,12 @@ import { Label } from '@/components/ui/label';
 
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
-import type { MoneyMarketRepayParams } from '@sodax/sdk';
-import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
+import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
+import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
 
-interface RepayModalProps {
+interface WithdrawModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   token: XToken; // token the user wants to RECEIVE (e.g. USDC on Avalanche)
@@ -28,23 +28,24 @@ interface RepayModalProps {
     sourceChainId: ChainId;
     destinationChainId: ChainId;
   }) => void;
-  maxDebt: string;
+  maxWithdraw: string;
 }
 
-export function RepayModal({ open, onOpenChange, token, onSuccess, maxDebt }: RepayModalProps) {
+export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdraw }: WithdrawModalProps) {
   const [amount, setAmount] = useState('');
   const { selectedChainId } = useAppStore();
 
   const sourceWalletProvider = useWalletProvider(selectedChainId);
   const sourceSpokeProvider = useSpokeProvider(selectedChainId, sourceWalletProvider);
 
-  const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay();
-  const params: MoneyMarketRepayParams | undefined = useMemo(() => {
+  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw();
+
+  const params: MoneyMarketWithdrawParams | undefined = useMemo(() => {
     if (!amount) return undefined;
     return {
       token: token.address,
       amount: parseUnits(amount, token.decimals),
-      action: 'repay',
+      action: 'withdraw',
     };
   }, [token.address, token.decimals, amount]);
 
@@ -61,11 +62,11 @@ export function RepayModal({ open, onOpenChange, token, onSuccess, maxDebt }: Re
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
-  const handleRepay = async () => {
+  const handleWithdraw = async () => {
     if (!sourceSpokeProvider || !params) return;
 
     try {
-      await repay({
+      await withdraw({
         params,
         spokeProvider: sourceSpokeProvider,
       });
@@ -76,9 +77,9 @@ export function RepayModal({ open, onOpenChange, token, onSuccess, maxDebt }: Re
         sourceChainId: selectedChainId,
         destinationChainId: token.xChainId,
       });
-      onOpenChange(false);
+      onOpenChange(false); // Fixed: was setOpen
     } catch (err) {
-      console.error('Repay failed:', err);
+      console.error('Withdraw failed:', err);
     }
   };
 
@@ -96,7 +97,7 @@ export function RepayModal({ open, onOpenChange, token, onSuccess, maxDebt }: Re
   };
 
   const handleMaxclick = () => {
-    setAmount(maxDebt);
+    setAmount(maxWithdraw);
   };
 
   const handleOpenChangeInternal = (nextOpen: boolean) => {
@@ -112,8 +113,8 @@ export function RepayModal({ open, onOpenChange, token, onSuccess, maxDebt }: Re
     <Dialog open={open} onOpenChange={handleOpenChangeInternal}>
       <DialogContent className="sm:max-w-md border-cherry-grey/20">
         <DialogHeader>
-          <DialogTitle className="text-center text-cherry-dark">Repay {token.symbol}</DialogTitle>
-          <DialogDescription className="text-center">Choose amount to repay.</DialogDescription>
+          <DialogTitle className="text-center text-cherry-dark">Withdraw {token.symbol}</DialogTitle>
+          <DialogDescription className="text-center">Choose amount to withdraw.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
@@ -126,14 +127,14 @@ export function RepayModal({ open, onOpenChange, token, onSuccess, maxDebt }: Re
               variant="outline"
               size="sm"
               onClick={handleMaxclick}
-              disabled={!maxDebt || maxDebt === '0'}
+              disabled={!maxWithdraw || maxWithdraw === '0'}
             >
               Max
             </Button>
           </div>
-          {maxDebt && maxDebt !== '0' && (
+          {maxWithdraw && maxWithdraw !== '0' && (
             <p className="text-xs text-muted-foreground">
-              Max debt: {Number(maxDebt).toFixed(6)} {token.symbol}
+              Max withdraw: {Number(maxWithdraw).toFixed(6)} {token.symbol}
             </p>
           )}
         </div>
@@ -160,8 +161,8 @@ export function RepayModal({ open, onOpenChange, token, onSuccess, maxDebt }: Re
           )}
 
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleRepay} disabled={!hasAllowed}>
-              {isPending ? 'Repaying...' : 'Repay'}
+            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={!hasAllowed}>
+              {isPending ? 'Withdrawing...' : 'Withdraw'}
             </Button>
           )}
         </DialogFooter>

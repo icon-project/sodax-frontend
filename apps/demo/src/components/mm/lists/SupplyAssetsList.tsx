@@ -15,8 +15,10 @@ import { useAppStore } from '@/zustand/useAppStore';
 import { type ChainId, ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens, type XToken } from '@sodax/sdk';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
-import { SuccessModal } from './SuccessModal';
+import { type ActionType, SuccessModal } from './SuccessModal';
 import { RepayModal } from './RepayModal';
+import { WithdrawModal } from '../WithdrawModal';
+import { SupplyModal } from './SupplyModal';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -39,7 +41,15 @@ export function SupplyAssetsList(): ReactElement {
     token: XToken;
     maxDebt: string;
   } | null>(null);
-
+  const [withdrawData, setWithdrawData] = useState<{
+    token: XToken;
+    maxWithdraw: string;
+  } | null>(null);
+  const [supplyData, setSupplyData] = useState<{
+    token: XToken;
+    maxSupply: string;
+  } | null>(null);
+  const [currentAction, setCurrentAction] = useState<ActionType>('repay');
   const [successData, setSuccessData] = useState<{
     amount: string;
     token: XToken;
@@ -219,7 +229,18 @@ export function SupplyAssetsList(): ReactElement {
                         userReserves={userReserves}
                         aTokenBalancesMap={aTokenBalancesMap}
                         onRefreshReserves={handleRefresh}
-                        onRepayClick={(token, maxDebt) => setRepayData({ token, maxDebt })}
+                        onRepayClick={(token, maxDebt) => {
+                          setCurrentAction('repay');
+                          setRepayData({ token, maxDebt });
+                        }}
+                        onWithdrawClick={(token, maxWithdraw) => {
+                          setCurrentAction('withdraw');
+                          setWithdrawData({ token, maxWithdraw });
+                        }}
+                        onSupplyClick={(token, maxSupply) => {
+                          setCurrentAction('supply');
+                          setSupplyData({ token, maxSupply });
+                        }}
                       />
                     ))
                   )}
@@ -229,6 +250,21 @@ export function SupplyAssetsList(): ReactElement {
           )}
         </CardContent>
       </Card>
+      {supplyData && (
+        <SupplyModal
+          open={true}
+          token={supplyData.token}
+          maxSupply={supplyData.maxSupply}
+          onOpenChange={open => {
+            if (!open) setSupplyData(null);
+          }}
+          onSuccess={data => {
+            setSuccessData(data);
+            setSupplyData(null);
+            handleRefresh();
+          }}
+        />
+      )}
       {repayData && (
         <RepayModal
           open={true}
@@ -244,9 +280,29 @@ export function SupplyAssetsList(): ReactElement {
           }}
         />
       )}
+      {withdrawData && (
+        <WithdrawModal
+          open={true}
+          token={withdrawData.token}
+          maxWithdraw={withdrawData.maxWithdraw}
+          onOpenChange={open => {
+            if (!open) setWithdrawData(null);
+          }}
+          onSuccess={data => {
+            setSuccessData(data);
+            setWithdrawData(null);
+            handleRefresh();
+          }}
+        />
+      )}
 
       {/* SuccessModal */}
-      <SuccessModal open={!!successData} onClose={() => setSuccessData(null)} data={successData} action="repay" />
+      <SuccessModal
+        open={!!successData}
+        onClose={() => setSuccessData(null)}
+        data={successData}
+        action={currentAction}
+      />
     </>
   );
 }
