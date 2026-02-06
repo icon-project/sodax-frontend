@@ -1,128 +1,141 @@
 'use client';
 
-import { EyeSlashIcon, GraphIcon, CurrencyDollarIcon, PackageIcon } from '@phosphor-icons/react';
-import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import { ArrowRightIcon } from '@phosphor-icons/react';
 
 const advantages = [
   {
-    icon: GraphIcon,
     title: 'Execution Coordination',
     description:
       'SODAX coordinates liquidity, timing, and failure modes so you can focus on your application logic. Handles routing paths and recovery without exposing users to intermediate steps.',
-    highlight: 'Asynchronous execution handled',
+    badges: ['Cross-network routing', 'Failure recovery', 'Async execution'],
   },
   {
-    icon: PackageIcon,
     title: 'EVM and Non-EVM Support',
     description:
       'Connect to Ethereum, Solana, Sui, Stellar, and other environments through a single integration surface. SODAX manages network-specific adapters.',
-    highlight: '14+ networks supported',
+    badges: ['14+ networks', 'Single integration', 'Multi-VM'],
   },
   {
-    icon: CurrencyDollarIcon,
     title: 'Aligned Economics',
     description:
       'Revenue sharing on protocol fees for volume you route through the system. Transparent fee structure with no hidden costs.',
-    highlight: 'Volume-based revenue share',
+    badges: ['Revenue share', 'Transparent fees', 'Volume-based'],
   },
   {
-    icon: EyeSlashIcon,
     title: 'Modular Integration',
     description:
       'Use only the components you need. Integrate swaps, lending, or wallet connections independently through composable SDKs.',
-    highlight: 'Granular feature selection',
+    badges: ['Composable', 'Feature selection', 'SDK-based'],
+  },
+];
+
+const sdkLayers = [
+  {
+    number: '1',
+    title: 'Foundation Layer',
+    description: 'Core logic, swaps, lending, and bridging primitives',
+    badge: '@sodax/sdk',
+    href: 'https://docs.sodax.com/developers/packages/1.-the-foundation',
+  },
+  {
+    number: '2',
+    title: 'Connection Layer',
+    description: 'Opinionated React wrapper for cross-chain wallet providers',
+    badge: '@sodax/wallet-sdk-react',
+    href: 'https://docs.sodax.com/developers/packages/2.-the-connection-layer',
+  },
+  {
+    number: '3',
+    title: 'Experience Layer',
+    description: 'Pre-built UI components and hooks for rapid deployment',
+    badge: '@sodax/dapp-kit',
+    href: 'https://docs.sodax.com/developers/packages/3.-the-experience-layer',
   },
 ];
 
 export default function SodaxAdvantageSection() {
   return (
-    <section id="sodax-advantages" className="py-20 px-8 bg-almost-white" aria-label="SODAX Advantages">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-espresso mb-6">
-            What SODAX <span className="font-['Shrikhand'] lowercase text-cherry-soda tracking-wide">handles</span>
-          </h2>
-          <p className="text-lg md:text-xl text-clay-dark font-['InterRegular'] max-w-2xl mx-auto">
-            The coordination responsibilities SODAX absorbs so you can focus on your product.
+    <section
+      id="sodax-advantages"
+      className="bg-almost-white overflow-clip px-4 md:px-8 py-30"
+      aria-label="SODAX Advantages"
+    >
+      <div className="flex flex-col gap-12 items-center max-w-236 mx-auto w-full">
+        {/* Header */}
+        <div className="flex flex-col gap-4 items-center">
+          <div className="flex gap-2 items-center">
+            <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} />
+            <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">What SODAX handles</h2>
+          </div>
+          <p className="font-['InterRegular'] text-[16px] leading-[1.4] text-espresso text-center">
+            The responsibilities SODAX absorbs so you can focus on your product.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {advantages.map((advantage, index) => {
-            const Icon = advantage.icon;
-            return (
-              <div
-                key={advantage.title}
-                className="group bg-cream rounded-2xl p-8 hover:bg-white transition-all duration-300 border-2 border-transparent hover:border-cherry-soda/20"
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                }}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="shrink-0 w-12 h-12 rounded-lg bg-cherry-soda flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Icon weight="duotone" className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-['InterBold'] text-espresso mb-2">{advantage.title}</h3>
-                    <p className="text-clay-dark font-['InterRegular'] text-sm leading-relaxed mb-3">
-                      {advantage.description}
-                    </p>
-                    <div className="inline-block px-3 py-1 rounded-full bg-yellow-soda/30 text-espresso text-xs font-['InterMedium']">
-                      {advantage.highlight}
-                    </div>
-                  </div>
-                </div>
+        {/* Advantage Cards - 2x2 Grid */}
+        <div className="flex flex-wrap justify-center gap-4 w-full">
+          {advantages.map(advantage => (
+            <div
+              key={advantage.title}
+              className="bg-cream-white rounded-3xl flex flex-col gap-4 items-start justify-center pt-12 pb-6 px-6 w-full md:w-116"
+            >
+              <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{advantage.title}</h3>
+              <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark w-full">
+                {advantage.description}
+              </p>
+              <div className="flex gap-1 items-start flex-wrap">
+                {advantage.badges.map(badge => (
+                  <span
+                    key={badge}
+                    className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
+                  >
+                    {badge}
+                  </span>
+                ))}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
 
-        {/* CTA to Documentation */}
-        <div className="mt-12 text-center">
-          <Button
-            size="lg"
-            className="bg-cherry-soda text-white hover:bg-cherry-bright font-['InterBold'] px-8"
-            onClick={() => window.open('https://docs.sodax.com', '_blank')}
-          >
-            View Documentation
-          </Button>
+        {/* CTA Button */}
+        <button
+          type="button"
+          className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full"
+          onClick={() => window.open('https://docs.sodax.com', '_blank')}
+        >
+          <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-espresso text-center">
+            View documentation
+          </span>
+        </button>
+
+        {/* Three-Layer SDK Architecture */}
+        <div className="flex gap-2 items-center">
+          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} />
+          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Three-Layer SDK Architecture</h2>
         </div>
 
-        {/* SDK Integration Stack */}
-        <div className="mt-16 bg-cream rounded-2xl p-8 border-2 border-cherry-soda/10">
-          <h3 className="text-2xl font-['InterBold'] text-espresso mb-6 text-center">Three-Layer SDK Architecture</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-cherry-soda text-white flex items-center justify-center text-2xl font-['InterBold'] mb-4">
-                1
+        <div className="bg-white rounded-3xl flex flex-col md:flex-row items-start justify-between px-6 py-14 w-full">
+          {sdkLayers.map(layer => (
+            <a
+              key={layer.number}
+              href={layer.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-1 flex-col gap-2 items-center px-10 hover:opacity-80 transition-opacity"
+            >
+              <div className="bg-cherry-grey rounded-full flex flex-col items-center justify-center size-16">
+                <span className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{layer.number}</span>
               </div>
-              <h4 className="font-['InterBold'] text-espresso mb-2">Foundation Layer</h4>
-              <code className="text-xs bg-white px-3 py-1 rounded-md text-clay mb-2">@sodax/sdk</code>
-              <p className="text-sm text-clay-dark font-['InterRegular']">
-                Core logic, swaps, lending, and bridging primitives
+              <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{layer.title}</h3>
+              <p className="font-['InterRegular'] text-[12px] leading-[1.4] text-black text-center w-full">
+                {layer.description}
               </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-yellow-soda text-espresso flex items-center justify-center text-2xl font-['InterBold'] mb-4">
-                2
-              </div>
-              <h4 className="font-['InterBold'] text-espresso mb-2">Connection Layer</h4>
-              <code className="text-xs bg-white px-3 py-1 rounded-md text-clay mb-2">@sodax/wallet-sdk-react</code>
-              <p className="text-sm text-clay-dark font-['InterRegular']">
-                Opinionated React wrapper for cross-chain wallet providers
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 rounded-full bg-cherry-bright text-white flex items-center justify-center text-2xl font-['InterBold'] mb-4">
-                3
-              </div>
-              <h4 className="font-['InterBold'] text-espresso mb-2">Experience Layer</h4>
-              <code className="text-xs bg-white px-3 py-1 rounded-md text-clay mb-2">@sodax/dapp-kit</code>
-              <p className="text-sm text-clay-dark font-['InterRegular']">
-                Pre-built UI components and hooks for rapid deployment
-              </p>
-            </div>
-          </div>
+              <span className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap">
+                {layer.badge}
+              </span>
+            </a>
+          ))}
         </div>
       </div>
     </section>

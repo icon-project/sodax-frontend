@@ -1,8 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { ArrowRightIcon } from '@phosphor-icons/react';
+import Link from 'next/link';
 
 const caseStudies = [
   {
@@ -15,11 +14,10 @@ const caseStudies = [
       { label: 'Integration Time', value: '2-4 days' },
       { label: 'Networks Accessible', value: '14+' },
     ],
-    gradient: 'from-cherry-soda to-cherry-bright',
     href: '/partners/amped-finance',
   },
   {
-    logo: '/coin/hana.png',
+    logo: '/partners/hana/logo.svg',
     name: 'Hana Wallet',
     tagline: 'Multi-Network Web3 Wallet',
     description:
@@ -28,11 +26,10 @@ const caseStudies = [
       { label: 'Users', value: '47,000+' },
       { label: 'Typical Settlement', value: '~22s' },
     ],
-    gradient: 'from-yellow-soda to-yellow-soda/80',
-    href: '#',
+    href: '/partners/hana',
   },
   {
-    logo: '/coin/lightlink.svg',
+    logo: '/partners/lightlink-network/logo.svg',
     name: 'LightLink Network',
     tagline: 'Enterprise-Grade L2',
     description:
@@ -41,95 +38,77 @@ const caseStudies = [
       { label: 'Asset Variants', value: '20+' },
       { label: 'Liquidity Depth', value: '$4M+' },
     ],
-    gradient: 'from-clay to-clay-dark',
-    href: '#',
+    href: '/partners/lightlink-network',
   },
 ];
 
 export default function FeaturedCaseStudiesSection() {
-  const router = useRouter();
-
   return (
-    <section id="case-studies" className="py-20 px-8 bg-cream" aria-label="Featured Case Studies">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-['InterBold'] text-espresso mb-6">
-            <span className="font-['Shrikhand'] lowercase text-cherry-soda tracking-wide">proven</span> success
-          </h2>
-          <p className="text-lg md:text-xl text-clay-dark font-['InterRegular'] max-w-2xl mx-auto">
-            Real partners, real outcomes. See how teams are building with SODAX.
-          </p>
+    <section
+      id="case-studies"
+      className="bg-cream-white overflow-clip px-4 md:px-8 py-30"
+      aria-label="Featured Case Studies"
+    >
+      <div className="flex flex-col gap-6 items-center max-w-236 mx-auto w-full">
+        {/* Title */}
+        <div className="flex gap-2 items-center">
+          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} />
+          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Proven success</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {caseStudies.map((study, index) => {
-            return (
-              <div
-                key={study.name}
-                className="group bg-almost-white rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border border-clay-light/20"
-                onClick={() => {
-                  if (study.href !== '#') {
-                    router.push(study.href);
-                  }
-                }}
-                style={{
-                  animationDelay: `${index * 100}ms`,
-                }}
-              >
-                {/* Card Header with Gradient - Using Project Logo */}
-                <div className={`h-32 bg-gradient-to-br ${study.gradient} relative flex items-center justify-center`}>
-                  <div className="absolute inset-0 bg-black/10" />
-                  <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-white/90 p-2 flex items-center justify-center">
-                    <Image
-                      src={study.logo}
-                      alt={`${study.name} logo`}
-                      width={48}
-                      height={48}
-                      className="object-contain"
-                      loading="lazy"
-                    />
-                  </div>
+        {/* Subtitle */}
+        <p className="font-['InterRegular'] text-[16px] leading-[1.4] text-espresso text-center">
+          Real partners, real outcomes. See how teams are building with SODAX.
+        </p>
+
+        {/* Cards Row */}
+        <div className="flex flex-col md:flex-row gap-4 items-stretch w-full">
+          {caseStudies.map(study => (
+            <div
+              key={study.name}
+              className="bg-white rounded-3xl flex flex-col gap-4 items-start pt-12 pb-6 px-6 w-full md:w-76 md:shrink-0 self-stretch"
+            >
+              {/* Partner Name + Tagline */}
+              <div className="flex flex-col gap-1 items-start">
+                <div className="flex gap-2 items-center">
+                  <Image src={study.logo} alt={`${study.name} logo`} width={16} height={16} className="rounded-sm" />
+                  <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{study.name}</h3>
                 </div>
-
-                {/* Card Content */}
-                <div className="p-6">
-                  <div className="mb-4">
-                    <h3 className="text-xl font-['InterBold'] text-espresso mb-1">{study.name}</h3>
-                    <p className="text-xs font-['InterMedium'] text-clay-dark">{study.tagline}</p>
-                  </div>
-
-                  <p className="text-sm text-clay-dark font-['InterRegular'] leading-relaxed mb-4">
-                    {study.description}
-                  </p>
-
-                  {/* Metrics */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    {study.metrics.map(metric => (
-                      <div key={metric.label} className="bg-cream rounded-lg p-3">
-                        <p className="text-2xl font-['InterBold'] text-cherry-soda mb-1">{metric.value}</p>
-                        <p className="text-xs font-['InterMedium'] text-clay-dark">{metric.label}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* CTA */}
-                  {study.href !== '#' && (
-                    <div className="flex items-center justify-between pt-4 border-t border-clay-light/20">
-                      <span className="text-sm font-['InterMedium'] text-cherry-soda group-hover:text-cherry-bright transition-colors">
-                        Read Case Study
-                      </span>
-                      <ArrowRightIcon className="w-5 h-5 text-cherry-soda group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  )}
-                  {study.href === '#' && (
-                    <div className="flex items-center justify-center pt-4 border-t border-clay-light/20">
-                      <span className="text-xs font-['InterMedium'] text-clay-dark">Case Study Coming Soon</span>
-                    </div>
-                  )}
-                </div>
+                <span className="font-['InterRegular'] text-[11px] leading-[1.3] text-clay">{study.tagline}</span>
               </div>
-            );
-          })}
+
+              {/* Description */}
+              <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark w-full flex-1">
+                {study.description}
+              </p>
+
+              {/* Metrics Row */}
+              <div className="flex gap-6 items-center">
+                {study.metrics.map((metric, i) => (
+                  <div key={metric.label} className="flex gap-4 items-center">
+                    {/* Vertical divider */}
+                    <div className="w-px h-12 bg-clay-light" />
+                    <div className="flex flex-col items-start">
+                      <span className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{metric.value}</span>
+                      <span className="font-['InterRegular'] text-[12px] leading-[1.4] text-clay-light">
+                        {metric.label}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA Button */}
+              <Link
+                href={study.href}
+                className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full"
+              >
+                <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-espresso text-center">
+                  Read Case Study
+                </span>
+              </Link>
+            </div>
+          ))}
         </div>
       </div>
     </section>
