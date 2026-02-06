@@ -57,15 +57,15 @@ export const sodaxConfig = {
 
 export const rpcConfig: RpcConfig = {
   // EVM chains
-  sonic: 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0xa86a.avax': 'https://avax-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0xa4b1.arbitrum': 'https://arb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0x2105.base': 'https://base-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0x38.bsc': 'https://bnb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0xa.optimism': 'https://opt-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  '0x89.polygon': 'https://polygon-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  ethereum: 'https://eth-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
-  hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // sonic: 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0xa86a.avax': 'https://avax-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0xa4b1.arbitrum': 'https://arb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0x2105.base': 'https://base-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0x38.bsc': 'https://bnb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0xa.optimism': 'https://opt-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // '0x89.polygon': 'https://polygon-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // ethereum: 'https://eth-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
 
   // evm in dev mode
   // sonic: 'https://sonic-rpc.publicnode.com',

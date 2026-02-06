@@ -70,6 +70,7 @@ const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   mSUI: 'sui',
   yapSUI: 'sui',
   trevinSUI: 'sui',
+  KAIA: 'kaia',
 };
 
 const COINGECKO_WRAPPER_API_BASE = 'https://coingecko-wrapper-cyan.vercel.app';

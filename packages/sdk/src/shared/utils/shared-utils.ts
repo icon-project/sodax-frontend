@@ -105,13 +105,10 @@ export function calculateFeeAmount(inputAmount: bigint, fee: PartnerFee | undefi
  */
 export function adjustAmountByFee(amount: bigint, fee: PartnerFee | undefined, quoteType: QuoteType): bigint {
   invariant(amount > 0n, 'Amount must be greater than 0');
-  invariant(quoteType === 'exact_input' || quoteType === 'exact_output', 'Invalid quote type');
+  invariant(quoteType === 'exact_input', 'Invalid quote type');
 
   if (quoteType === 'exact_input') {
     return amount - calculateFeeAmount(amount, fee);
-  }
-  if (quoteType === 'exact_output') {
-    return amount + calculateFeeAmount(amount, fee);
   }
 
   throw new Error('Invalid quote type');

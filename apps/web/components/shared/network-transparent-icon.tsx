@@ -13,6 +13,7 @@ import {
   INJECTIVE_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { IconTransparentIcon } from '../icons/chains/icon-transparent';
 import { AvalancheTransparentIcon } from '../icons/chains/avalanche-transparent';
@@ -28,6 +29,7 @@ import { OptimismTransparentIcon } from '../icons/chains/optimism-transparent';
 import { ArbitrumTransparentIcon } from '../icons/chains/arbitrum-transparent';
 import { HyperTransparentIcon } from '../icons/chains/hyper-transparent';
 import { EthereumTransparentIcon } from '../icons/chains/ethereum-transparent';
+import { KaiaTransparentIcon } from '../icons/chains/kaia-transparent';
 
 interface NetworkTransparentIconProps {
   id: string;
@@ -51,6 +53,7 @@ export default function NetworkTransparentIcon({ id, className }: NetworkTranspa
       {id === ARBITRUM_MAINNET_CHAIN_ID && <ArbitrumTransparentIcon />}
       {id === HYPEREVM_MAINNET_CHAIN_ID && <HyperTransparentIcon />}
       {id === ETHEREUM_MAINNET_CHAIN_ID && <EthereumTransparentIcon />}
+      {id === KAIA_MAINNET_CHAIN_ID && <KaiaTransparentIcon />}
     </>
   );
 }
