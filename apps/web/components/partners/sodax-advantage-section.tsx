@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { ArrowRightIcon } from '@phosphor-icons/react';
 
 const advantages = [
   {

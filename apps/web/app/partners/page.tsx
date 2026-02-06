@@ -103,6 +103,7 @@ export default function PartnersPage() {
 
   return (
     <div className="partners-page w-full overflow-x-hidden bg-cream">
+      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Safe usage for JSON-LD structured data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <MarketingHeader backLink="/" backText="← home" variant="dark" />
       <main>
