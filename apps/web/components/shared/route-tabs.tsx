@@ -154,9 +154,6 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
           {usedTabs.map(tab => {
             // If tab.href is missing (like in Swap/Save), use /value
             const href = tab.href ?? `/${tab.value}`;
-
-            // We determine if it should act as a Link based on whether it's enabled.
-            // In your RouteTabItem, if href is provided, it renders a Link.
             const active = pathname === href || pathname.startsWith(`${href}/`) || pathname.endsWith(`/${tab.value}`);
 
             return (
