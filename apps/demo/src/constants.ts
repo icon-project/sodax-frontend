@@ -13,10 +13,10 @@ export function chainIdToChainName(chainId: SpokeChainId): string {
 
 export const stagingSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
+  solverApiEndpoint: 'https://sodax-solver-dev.iconblockchain.xyz',
 } satisfies SolverConfigParams;
 
 export const productionSolverConfig = {
   intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://api.sodax.com/v1/intent',
+  solverApiEndpoint: 'https://sodax-solver-dev.iconblockchain.xyz',
 } satisfies SolverConfigParams;
