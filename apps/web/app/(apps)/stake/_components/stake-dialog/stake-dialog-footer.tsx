@@ -188,7 +188,7 @@ export default function StakeDialogFooter({
                 Staking <Loader2Icon className="w-4 h-4 animate-spin" />
               </>
             ) : (
-              'Stake SODA'
+              'Stake'
             )}
           </Button>
         ))}

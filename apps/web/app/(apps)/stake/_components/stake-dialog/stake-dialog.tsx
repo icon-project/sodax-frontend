@@ -12,8 +12,6 @@ import { useStakeState, useStakeActions } from '../../_stores/stake-store-provid
 import { STAKE_STEP } from '../../_stores/stake-store';
 import { useStakeRatio } from '@sodax/dapp-kit';
 import { formatUnits } from 'viem';
-import BigNumber from 'bignumber.js';
-
 interface StakeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

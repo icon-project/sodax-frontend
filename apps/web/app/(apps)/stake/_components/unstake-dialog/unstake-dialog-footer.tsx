@@ -129,6 +129,10 @@ export default function UnstakeDialogFooter({
   const isAllowanceLoading =
     unstakeMethod === UNSTAKE_METHOD.INSTANT ? isInstantUnstakeAllowanceLoading : isRegularUnstakeAllowanceLoading;
 
+  console.log('isAllowanceLoading', isAllowanceLoading);
+  console.log('hasAllowed', hasAllowed);
+  console.log('isApproved', isApproved);
+  console.log('currentUnstakeStep', currentUnstakeStep);
   useEffect(() => {
     onPendingChange?.(isPending);
   }, [isPending, onPendingChange]);
@@ -204,7 +208,7 @@ export default function UnstakeDialogFooter({
               }`}
               onClick={handleApprove}
               disabled={
-                currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE || isApproving || isAllowanceLoading || isApproved
+                currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_APPROVE || isApproving || isAllowanceLoading || isApproved
               }
             >
               {isApproved ? (
@@ -257,10 +261,16 @@ export default function UnstakeDialogFooter({
                 {unstakeMethod === UNSTAKE_METHOD.INSTANT ? 'Instant Unstaking' : 'Unstaking'}{' '}
                 <Loader2Icon className="w-4 h-4 animate-spin" />
               </>
-            ) : unstakeMethod === UNSTAKE_METHOD.INSTANT ? (
-              'Instant Unstake xSODA'
+            ) : unstakeMethod === UNSTAKE_METHOD.INSTANT && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? (
+              'Unstake'
+            ) : unstakeMethod === UNSTAKE_METHOD.INSTANT && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM ? (
+              'Unstake now'
+            ) : unstakeMethod === UNSTAKE_METHOD.REGULAR && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? (
+              'Unstake'
+            ) : unstakeMethod === UNSTAKE_METHOD.REGULAR && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM ? (
+              'Confirm unstake request'
             ) : (
-              'Unstake xSODA'
+              'Unstake'
             )}
           </Button>
         ))}
