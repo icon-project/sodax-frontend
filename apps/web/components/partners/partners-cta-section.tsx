@@ -1,124 +1,89 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { ArrowRightIcon, FileTextIcon, GithubLogoIcon, ChatCircleIcon } from '@phosphor-icons/react';
+const quickLinks = [
+  {
+    title: 'Documentation',
+    description: 'Comprehensive guides, API references, and integration tutorials for building with SODAX.',
+    badges: ['SDK reference', 'Guides', 'Examples'],
+    href: 'https://docs.sodax.com',
+  },
+  {
+    title: 'GitHub',
+    description: 'Explore our open-source SDKs, example implementations, and contribute to the ecosystem.',
+    badges: ['Open source', 'SDKs', 'Examples'],
+    href: 'https://github.com/icon-project/sodax',
+  },
+  {
+    title: 'Discord Community',
+    description: 'Connect with other builders, get technical support, and stay updated on new features.',
+    badges: ['Support', 'Builders', 'Updates'],
+    href: 'https://discord.gg/xM2Nh4S6vN',
+  },
+];
 
 export default function PartnersCtaSection() {
   return (
-    <section className="py-20 px-8 bg-cream" aria-label="Partner Call to Action">
-      <div className="max-w-5xl mx-auto">
-        {/* Main CTA */}
-        <div className="bg-gradient-to-br from-cherry-soda to-cherry-bright rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
-          {/* Background Pattern */}
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-              backgroundSize: '30px 30px',
-            }}
-          />
+    <section className="bg-cream-white overflow-clip px-4 md:px-8 py-30" aria-label="Partner Call to Action">
+      <div className="flex flex-col gap-10 items-center max-w-236 mx-auto w-full">
+        {/* CTA Container */}
+        <div className="flex flex-col gap-8 items-center">
+          {/* Title */}
+          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso text-center max-w-140">
+            Deliver cross-network actions. <span className="text-yellow-dark">Skip the infrastructure work.</span>
+          </h2>
 
-          <div className="relative z-10">
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-['InterBold'] text-white mb-6 leading-tight">
-              Deliver cross-network outcomes.{' '}
-              <span className="font-['Shrikhand'] lowercase text-yellow-soda tracking-wide">skip</span> the
-              infrastructure work.
-            </h2>
+          {/* Subtitle */}
+          <p className="font-['InterRegular'] text-[18px] leading-[1.2] text-espresso text-center max-w-100">
+            SODAX coordinates execution so you can focus on building your application.
+          </p>
 
-            <p className="text-xl md:text-2xl text-cream/90 font-['InterRegular'] mb-10 max-w-3xl mx-auto">
-              SODAX coordinates execution so you can focus on building your application.
-            </p>
-
-            <Button
-              size="lg"
-              className="bg-white text-cherry-soda hover:bg-cream font-['InterBold'] px-10 py-7 text-lg group shadow-2xl"
-              onClick={() => {
-                window.location.href = 'mailto:partnerships@sodax.com?subject=Partnership Inquiry';
-              }}
-            >
-              Start the Conversation
-              <ArrowRightIcon weight="duotone" className="ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-
-            <p className="mt-6 text-cream/70 text-sm font-['InterRegular']">
-              Reach out to{' '}
-              <a
-                href="mailto:partnerships@sodax.com"
-                className="text-yellow-soda hover:text-yellow-soda/80 font-['InterMedium'] underline"
-              >
-                partnerships@sodax.com
-              </a>
-            </p>
-          </div>
-        </div>
-
-        {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+          {/* CTA Button */}
           <a
             href="https://docs.sodax.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="group bg-almost-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-clay-light/20"
+            className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full"
           >
-            <div className="w-12 h-12 rounded-lg bg-cherry-soda/10 flex items-center justify-center mb-4 group-hover:bg-cherry-soda/20 transition-colors">
-              <FileTextIcon weight="duotone" className="w-6 h-6 text-cherry-soda" />
-            </div>
-            <h3 className="font-['InterBold'] text-espresso text-lg mb-2">Documentation</h3>
-            <p className="text-sm text-clay-dark font-['InterRegular'] mb-3">
-              Comprehensive guides, API references, and integration tutorials.
-            </p>
-            <span className="text-sm font-['InterMedium'] text-cherry-soda group-hover:text-cherry-bright flex items-center">
-              Explore Docs
-              <ArrowRightIcon
-                weight="duotone"
-                className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
-              />
+            <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-white text-center">
+              View documentation
             </span>
           </a>
 
-          <a
-            href="https://github.com/sodax-protocol"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group bg-almost-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-clay-light/20"
-          >
-            <div className="w-12 h-12 rounded-lg bg-clay/10 flex items-center justify-center mb-4 group-hover:bg-clay/20 transition-colors">
-              <GithubLogoIcon weight="duotone" className="w-6 h-6 text-clay" />
-            </div>
-            <h3 className="font-['InterBold'] text-espresso text-lg mb-2">GitHub</h3>
-            <p className="text-sm text-clay-dark font-['InterRegular'] mb-3">
-              Explore our open-source SDKs and example implementations.
-            </p>
-            <span className="text-sm font-['InterMedium'] text-clay group-hover:text-clay-dark flex items-center">
-              View Repositories
-              <ArrowRightIcon
-                weight="duotone"
-                className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
-              />
-            </span>
-          </a>
+          {/* Email Note */}
+          <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-center">
+            <span className="text-espresso">Reach out to </span>
+            <a href="mailto:partnerships@sodax.com" className="text-clay hover:underline">
+              partnerships@sodax.com
+            </a>
+          </p>
+        </div>
 
-          <a
-            href="https://discord.gg/xM2Nh4S6vN"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group bg-almost-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border border-clay-light/20"
-          >
-            <div className="w-12 h-12 rounded-lg bg-yellow-soda/20 flex items-center justify-center mb-4 group-hover:bg-yellow-soda/30 transition-colors">
-              <ChatCircleIcon weight="duotone" className="w-6 h-6 text-clay-dark" />
-            </div>
-            <h3 className="font-['InterBold'] text-espresso text-lg mb-2">Discord Community</h3>
-            <p className="text-sm text-clay-dark font-['InterRegular'] mb-3">
-              Connect with other builders and get support from our team.
-            </p>
-            <span className="text-sm font-['InterMedium'] text-clay-dark group-hover:text-espresso flex items-center">
-              Join Discord
-              <ArrowRightIcon
-                weight="duotone"
-                className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
-              />
-            </span>
-          </a>
+        {/* Quick Link Cards */}
+        <div className="flex flex-wrap justify-center gap-4 w-full">
+          {quickLinks.map(link => (
+            <a
+              key={link.title}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white rounded-3xl flex flex-col gap-4 items-start justify-center pt-12 pb-6 px-6 w-full sm:w-76 hover:opacity-90 transition-opacity"
+            >
+              <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{link.title}</h3>
+              <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark w-full">
+                {link.description}
+              </p>
+              <div className="flex gap-1 items-start flex-wrap">
+                {link.badges.map(badge => (
+                  <span
+                    key={badge}
+                    className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
+                  >
+                    {badge}
+                  </span>
+                ))}
+              </div>
+            </a>
+          ))}
         </div>
       </div>
     </section>
