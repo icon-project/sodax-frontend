@@ -6,8 +6,6 @@ import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { cn } from '@/lib/utils';
 import { ArrowRightIcon } from '../icons/arrow-right-icon';
 
-type TooltipVariant = 'default' | 'soft';
-
 function TooltipProvider({ delayDuration = 0, ...props }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
   return <TooltipPrimitive.Provider data-slot="tooltip-provider" delayDuration={delayDuration} {...props} />;
 }
@@ -27,37 +25,24 @@ function TooltipTrigger({ ...props }: React.ComponentProps<typeof TooltipPrimiti
 function TooltipContent({
   className,
   sideOffset = -10,
-  variant = 'default',
   children,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content> & {
-  variant?: TooltipVariant;
-}) {
-  const isSoft = variant === 'soft';
-
+}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
+        data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          // shared animation
-          'animate-in fade-in-0 zoom-in-95',
-          'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
-          'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2',
-          'data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-          'z-50 w-fit text-xs rounded-md',
-          // default (backward compatible)
-          !isSoft && 'bg-primary text-primary-foreground px-3 py-1.5',
-          // soft (new)
-          isSoft && 'bg-cream-white text-espresso px-4 py-2 shadow-lg border border-clay-light/20',
+          'bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance',
           className,
         )}
         {...props}
       >
         {children}
         <ArrowRightIcon
-          className="absolute -bottom-6 left-1/2 -translate-x-1/2 rotate-270 z-50"
-          fill={isSoft ? '#fff7f5' : 'white'}
+          className="absolute -bottom-6 left-1/2 -translate-x-1/2 rotate-270 z-50 pointer-events-none"
+          fill="white"
           height={40}
         />
       </TooltipPrimitive.Content>

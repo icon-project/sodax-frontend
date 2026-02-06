@@ -23,26 +23,16 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
   isHovered = false,
   hideNetwork = false,
 }) => {
-  const symbol = currency.symbol.toLowerCase();
-
-  // 1. Remove common prefixes like 'soda'
-  // 2. Handle specific legacy cases
-  // 3. Fallback to the original symbol if no prefix found
-  const iconName = symbol.startsWith('soda')
-    ? symbol.replace('soda', '')
-    : symbol === 'bnusd (legacy)'
-      ? 'bnusd'
-      : symbol;
   return (
     <div className={`w-12 h-12 relative ${className}`}>
-      <div className="w-12 h-12 left-0 top-0 absolute bg-linear-to-br from-white to-zinc-100 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.20)]" />
+      <div className="w-12 h-12 left-0 top-0 absolute bg-gradient-to-br from-white to-zinc-100 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.20)]" />
       <div
         data-property-1="Default"
         className="left-[12px] top-[12px] absolute bg-White rounded-[256px] inline-flex flex-col justify-start items-start overflow-hidden"
       >
         <Image
           className="w-6 h-6 rounded-[256px]"
-          src={`/coin/${iconName}.png`}
+          src={`/coin/${currency.symbol === 'bnUSD (legacy)' ? 'bnusd' : currency.symbol.toLowerCase()}.png`}
           alt={currency.symbol}
           width={24}
           height={24}

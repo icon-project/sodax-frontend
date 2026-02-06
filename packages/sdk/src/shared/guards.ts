@@ -462,7 +462,3 @@ export function isSonicRawSpokeProvider(value: unknown): value is SonicRawSpokeP
     value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
   );
 }
-
-export function isAddressString(value: unknown): value is string {
-  return typeof value === 'string';
-}

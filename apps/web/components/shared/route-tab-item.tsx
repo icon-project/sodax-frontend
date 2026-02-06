@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrencyCompact } from '@/lib/utils';
 
 interface RouteTabItemProps {
-  href?: string;
+  href: string;
   value: string;
   type: TabIconType;
   label: string;
@@ -16,8 +16,6 @@ interface RouteTabItemProps {
   setRef?: (el: HTMLAnchorElement | null) => void;
   className?: string;
   enabled: boolean;
-  badgeCount?: number;
-  showIcon?: boolean;
   totalDepositedUsdValue?: number;
 }
 
@@ -31,8 +29,6 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
   setRef,
   className = '',
   enabled,
-  badgeCount,
-  showIcon = true,
   totalDepositedUsdValue,
 }) => {
   const getTextClassName = (): string => {
@@ -59,7 +55,7 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
 
   const content = (
     <div className={getContainerClassName()}>
-      {showIcon && <TabIcon type={type} isActive={isActive} isMobile={isMobile} />}
+      <TabIcon type={type} isActive={isActive} isMobile={isMobile} />
       <div className={isMobile ? 'flex justify-start items-center gap-[2px]' : 'flex justify-start items-center ml-2'}>
         <div
           className={getTextClassName()}
@@ -86,24 +82,12 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
       )}
     </div>
   );
-  // 1. Disabled feature (SOON)
+
   if (!enabled) {
     return (
       <div
         ref={setRef ? (el: HTMLDivElement | null) => setRef(el as HTMLAnchorElement | null) : undefined}
         className="cursor-not-allowed py-0 px-0"
-      >
-        {content}
-      </div>
-    );
-  }
-
-  // 2. Enabled but NOT navigational (Home)
-  if (!href) {
-    return (
-      <div
-        ref={setRef ? (el: HTMLDivElement | null) => setRef(el as HTMLAnchorElement | null) : undefined}
-        className="py-0 px-0"
       >
         {content}
       </div>

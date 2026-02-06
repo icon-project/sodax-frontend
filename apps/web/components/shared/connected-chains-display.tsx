@@ -6,8 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { useXAccounts } from '@sodax/wallet-sdk-react';
 import { getChainIconByName, EVM_CHAIN_ICONS } from '@/constants/chains';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
 
 interface ConnectedChainsDisplayProps {
   onClick?: () => void;
@@ -15,10 +13,6 @@ interface ConnectedChainsDisplayProps {
 
 export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps): React.JSX.Element {
   const xAccounts = useXAccounts();
-
-  const pathname = usePathname();
-  const isPartner = pathname.startsWith('/partner');
-
   const connectedChains = Object.entries(xAccounts)
     .filter(([_, account]) => account?.address)
     .map(([chainType, account]) => ({
@@ -33,8 +27,8 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
   const hasEVMChains = connectedChains.some(chain => chain.chainType === 'EVM');
 
   return (
-    <div className="flex justify-end items-center gap-4 w-auto shrink-0">
-      <div className={cn('items-center cursor-pointer', isPartner ? 'hidden sm:flex' : 'flex')} onClick={onClick}>
+    <div className="flex justify-end items-center gap-4 w-[183px]">
+      <div className="flex items-center cursor-pointer" onClick={onClick}>
         {!hasEVMChains &&
           connectedChains.map(chain => {
             return (

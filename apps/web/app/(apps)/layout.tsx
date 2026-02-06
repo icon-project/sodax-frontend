@@ -16,9 +16,6 @@ import LandingPage from '../page';
 import { headerVariants, contentVariants, mainContentVariants } from '@/constants/animation';
 import { useRef, useState, useLayoutEffect, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { usePathname } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import { Toaster } from '@/components/ui/sonner';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const { isSwitchingPage } = useAppStore(state => state);
@@ -27,9 +24,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const isMobile = useIsMobile();
   const { shouldTriggerAnimation } = useAppStore(state => state);
   const { setShouldTriggerAnimation } = useAppStore(state => state);
-
-  const pathname = usePathname();
-  const isPartner = pathname.startsWith('/partner');
 
   useLayoutEffect(() => {
     if (ref.current) {
@@ -64,13 +58,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <LandingPage />
           </div>
           <ModalStoreProvider>
-            <div
-              className={cn(
-                'w-full sm:min-h-screen',
-                isPartner ? 'min-h-full overflow-visible' : 'max-h-screen sm:max-h-none overflow-hidden',
-              )}
-            >
-              {' '}
+            <div className="max-h-screen sm:max-h-none sm:min-h-screen w-[100%] overflow-hidden">
               <motion.div
                 variants={headerVariants}
                 initial={!shouldTriggerAnimation ? 'open' : 'closed'}
@@ -78,6 +66,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               >
                 <Header />
               </motion.div>
+
               <motion.div
                 variants={contentVariants}
                 initial={!shouldTriggerAnimation ? 'open' : { y: '300px' }}
@@ -85,42 +74,29 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 className="bg-cream-white relative min-h-[calc(100vh-240px)] "
                 style={{ height: !isMobile ? height - 136 : height - 40 }}
               >
-                <div
-                  className={cn(
-                    'w-full absolute md:-top-34 -top-36 left-1/2 -translate-x-1/2',
-                    isPartner ? 'lg:w-[1280px] lg:max-w-[1280px]' : 'lg:w-[1024px] lg:max-w-[1024px]',
-                  )}
-                >
+                <div className="w-full lg:w-[1024px] lg:max-w-[1024px] absolute md:-top-34 -top-36 left-1/2 -translate-x-1/2">
                   <motion.div
                     variants={mainContentVariants}
                     initial={!shouldTriggerAnimation ? 'open' : { y: 30, opacity: 0 }}
                     animate={isSwitchingPage ? 'open' : 'closed'}
-                    className={cn(
-                      'flex justify-center items-start',
-                      isPartner ? 'items-stretch' : 'min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)]',
-                    )}
+                    className="flex justify-center items-start min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-224px)]"
                   >
                     <RouteTabs />
                     <div
                       ref={ref}
-                      className={cn(
-                        `w-full min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)]
-                    p-[80px_16px] pb-10 md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-2
-                    rounded-tl-[32px] rounded-tr-[32px] border-8 border-vibrant-white bg-[radial-gradient(239.64%_141.42%_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)]
-                    border-b-0 z-20 ml-0 sm:max-h-none overflow-auto md:-ml-16 max-h-[calc(100vh-192px)]`,
-                        isPartner
-                          ? 'w-full max-w-[1440px] md:w-[calc(100%-240px)]'
-                          : 'lg:w-[784px] md:w-[calc(100%-200px)]',
-                      )}
+                      className="w-full md:w-[calc(100%-200px)] lg:w-[784px] min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)]
+                        p-[80px_16px] pb-10 md:p-[120px_48px] lg:p-[120px_80px] flex items-start gap-2
+                        rounded-tl-[32px] rounded-tr-[32px] border-8 border-vibrant-white bg-[radial-gradient(1400px_1400px_at_0%_0%,_#E3D8D8_0%,_#F5F2F2_22.12%,_#F5F2F2_57.69%,_#F5EDED_100%)] 
+                        border-b-0 z-20 ml-0 md:-ml-16 max-h-[calc(100vh-192px)] sm:max-h-none overflow-auto"
                     >
                       {children}
                     </div>
                   </motion.div>
                 </div>
               </motion.div>
+
               <WalletModal />
               <TermsConfirmationModal />
-              <Toaster />
             </div>
           </ModalStoreProvider>
         </SaveStoreProvider>

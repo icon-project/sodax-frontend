@@ -44,7 +44,6 @@ export const useSaveState = () => {
   const isAssetListBlurred = useSaveStore(state => state.isAssetListBlurred);
   const isShowDeposits = useSaveStore(state => state.isShowDeposits);
   const selectedToken = useSaveStore(state => state.selectedToken);
-  const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
   return {
     depositValue,
     currentDepositStep,
@@ -56,7 +55,6 @@ export const useSaveState = () => {
     isAssetListBlurred,
     isShowDeposits,
     selectedToken,
-    suppliedAssetCount,
   };
 };
 

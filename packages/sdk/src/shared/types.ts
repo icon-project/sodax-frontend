@@ -514,9 +514,3 @@ export type GetChainConfigType<T extends ChainType> = T extends 'EVM'
           : T extends 'INJECTIVE'
             ? InjectiveSpokeChainConfig
             : BaseSpokeChainConfig<T>;
-
-export type SonicAddressOrSpokeType = {
-  address: Address;
-} | {
-  spokeProvider: SonicSpokeProviderType;
-};

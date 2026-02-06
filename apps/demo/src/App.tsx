@@ -7,7 +7,6 @@ import Header from './components/shared/header';
 import SolverPage from './pages/solver/page';
 import BridgePage from './pages/bridge/page';
 import StakingPage from './pages/staking/page';
-import PartnerFeeClaimPage from './pages/partner-fee-claim/page';
 
 const router = createBrowserRouter([
   {
@@ -38,10 +37,6 @@ const router = createBrowserRouter([
       {
         path: '/staking',
         element: <StakingPage />,
-      },
-      {
-        path: '/partner-fee-claim',
-        element: <PartnerFeeClaimPage />,
       },
     ],
   },
