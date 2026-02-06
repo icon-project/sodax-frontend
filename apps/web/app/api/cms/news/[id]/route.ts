@@ -80,10 +80,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       publishedAt,
     };
 
-    // Remove publishedAt from body to avoid double-setting
-    delete update.publishedAt;
-    update.publishedAt = publishedAt;
-
     const result = await collection.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: update },

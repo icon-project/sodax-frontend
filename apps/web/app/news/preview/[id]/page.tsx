@@ -51,6 +51,12 @@ export default async function NewsPreviewPage({ params }: PageProps) {
 
   const { id } = await params;
 
+  // Validate ObjectId format before querying
+  if (!ObjectId.isValid(id)) {
+    console.error(`Invalid ObjectId format for preview: ${id}`);
+    redirect('/cms/news');
+  }
+
   // Fetch article by ID (not slug), regardless of published status
   let article: NewsArticle | null = null;
   try {
