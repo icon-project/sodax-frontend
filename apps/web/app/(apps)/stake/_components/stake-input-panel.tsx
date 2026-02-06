@@ -25,21 +25,6 @@ export function StakeInputPanel(): React.JSX.Element {
 
   const openModal = useModalStore(state => state.openModal);
 
-  // Get all SODA tokens from all supported chains
-  const sodaTokens = useMemo((): XToken[] => {
-    const tokens: XToken[] = [];
-    for (const chainId of supportedSpokeChains) {
-      const chainConfig = spokeChainConfig[chainId as SpokeChainId];
-      if (chainConfig?.supportedTokens && 'SODA' in chainConfig.supportedTokens) {
-        const sodaToken = chainConfig.supportedTokens.SODA as XToken;
-        if (sodaToken) {
-          tokens.push(sodaToken);
-        }
-      }
-    }
-    return tokens; // Fallback to current token if none found
-  }, []);
-
   const currentNetwork = selectedToken ? selectedToken.xChainId : undefined;
   const { address } = useXAccount(currentNetwork);
   const walletConnected = !!address;
@@ -87,14 +72,8 @@ export function StakeInputPanel(): React.JSX.Element {
   return (
     <>
       <div className="w-full px-(--layout-space-big) pt-10 pb-8 flex flex-col justify-start items-start gap-8 sm:gap-4 isolate mix-blend-normal">
-        <div className="w-full flex justify-start items-center gap-3">
-          <SodaAsset
-            selectedToken={selectedToken}
-            tokens={sodaTokens}
-            setSelectNetworkToken={token => setSelectedToken(token)}
-            isXSoda={stakeMode === STAKE_MODE.UNSTAKING}
-          />
-          <div className="flex flex-col gap-[2px]">
+        <div className="w-full flex justify-start items-center pl-12">
+          <div className="flex flex-col gap-[2px] ml-(--layout-space-small)">
             <div className="font-['InterRegular'] flex items-center text-(length:--body-super-comfortable) text-espresso">
               <span>{stakeMode === STAKE_MODE.STAKING ? 'Stake SODA' : 'Unstake xSODA'}</span>
               {/* <ChevronDownIcon className="w-4 h-4 text-clay ml-1" /> */}
@@ -199,18 +178,8 @@ export function StakeInputPanel(): React.JSX.Element {
           </div>
         </div>
       </div>
-      <StakeDialog
-        open={isStakeDialogOpen}
-        onOpenChange={setIsStakeDialogOpen}
-        selectedToken={selectedToken}
-        tokens={sodaTokens}
-      />
-      <UnstakeDialog
-        open={isUnstakeDialogOpen}
-        onOpenChange={setIsUnstakeDialogOpen}
-        selectedToken={selectedToken}
-        tokens={sodaTokens}
-      />
+      <StakeDialog open={isStakeDialogOpen} onOpenChange={setIsStakeDialogOpen} selectedToken={selectedToken} />
+      <UnstakeDialog open={isUnstakeDialogOpen} onOpenChange={setIsUnstakeDialogOpen} selectedToken={selectedToken} />
     </>
   );
 }

@@ -18,15 +18,9 @@ interface UnstakeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedToken: XToken | null;
-  tokens: XToken[];
 }
 
-export default function UnstakeDialog({
-  open,
-  onOpenChange,
-  selectedToken,
-  tokens,
-}: UnstakeDialogProps): React.JSX.Element {
+export default function UnstakeDialog({ open, onOpenChange, selectedToken }: UnstakeDialogProps): React.JSX.Element {
   const { currentUnstakeStep, stakeValue, unstakeMethod } = useStakeState();
   const { resetUnstakeState } = useStakeActions();
   const [isUnstakePending, setIsUnstakePending] = useState<boolean>(false);

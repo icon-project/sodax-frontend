@@ -18,15 +18,9 @@ interface StakeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedToken: XToken | null;
-  tokens: XToken[];
 }
 
-export default function StakeDialog({
-  open,
-  onOpenChange,
-  selectedToken,
-  tokens,
-}: StakeDialogProps): React.JSX.Element {
+export default function StakeDialog({ open, onOpenChange, selectedToken }: StakeDialogProps): React.JSX.Element {
   const { currentStakeStep, stakeValue } = useStakeState();
   const { resetStakeState } = useStakeActions();
   const [isStakePending, setIsStakePending] = useState<boolean>(false);

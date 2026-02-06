@@ -3,7 +3,7 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import type { XToken } from '@sodax/types';
 import { useRef } from 'react';
 import { useClickAway } from 'react-use';
-import { NetworkPicker } from '../../save/_components/token-asset/network-picker';
+import { NetworkPicker } from './network-picker';
 import { useStakeActions, useStakeState } from '../_stores/stake-store-provider';
 
 export function SodaAsset({
