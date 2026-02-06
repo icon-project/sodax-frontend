@@ -80,5 +80,5 @@ export const auth = new Proxy({} as ReturnType<typeof betterAuth>, {
   },
 });
 
-// Export lazy getters for MongoDB client and db for CMS operations
-export { getMongoClient, getDb };
+// Export the getAuth function for route handlers that need the actual instance
+export { getMongoClient, getDb, getAuth };
