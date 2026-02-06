@@ -20,6 +20,7 @@ import type {
 } from '../types.js';
 import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
 import { ConfigService } from '../config/index.js';
+import { PartnerService, type PartnerServiceConfig } from '../../partner/PartnerService.js';
 
 export type SodaxConfig = {
   swaps?: SolverConfigParams; // optional Solver service enabling intent based swaps
@@ -30,6 +31,7 @@ export type SodaxConfig = {
   hubProviderConfig?: EvmHubProviderConfig; // hub provider for the hub chain (e.g. Sonic mainnet)
   relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
   backendApiConfig?: BackendApiConfig; // backend API config used to interact with the backend API
+  partners?: PartnerServiceConfig; // optional Partner fee claim service enabling partner fee claim operations
   sharedConfig?: typeof defaultSharedConfig;
 };
 
@@ -47,6 +49,7 @@ export class Sodax {
   public readonly backendApi: BackendApiService; // backend API service enabling backend API endpoints
   public readonly bridge: BridgeService; // Bridge service enabling cross-chain transfers
   public readonly staking: StakingService; // Staking service enabling SODA staking operations
+  public readonly partners: PartnerService; // Partner service enabling partner fee claim and other partner operations
   public readonly dex: DexService; // Dex service enabling DEX operations
   public readonly config: ConfigService; // Config service enabling configuration data fetching from the backend API or fallbacking to default values
 
@@ -133,6 +136,13 @@ export class Sodax {
       relayerApiEndpoint: this.relayerApiEndpoint,
       configService: this.config,
     });
+    this.partners = config?.partners
+      ? new PartnerService({
+          feeClaim: config.partners.feeClaim,
+          configService: this.config,
+          hubProvider: this.hubProvider,
+        })
+      : new PartnerService({ configService: this.config, hubProvider: this.hubProvider });
   }
 
   /**

@@ -1,8 +1,8 @@
 import type { ChainId, EvmRawTransaction, EvmRawTransactionReceipt, IEvmWalletProvider } from '@sodax/types';
 import type { Account, Address, Chain, Transport, Hash, PublicClient, WalletClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { createWalletClient, createPublicClient, http } from 'viem';
-import { sonic, avalanche, arbitrum, base, optimism, bsc, polygon, mainnet } from 'viem/chains';
+import { createWalletClient, createPublicClient, http,defineChain } from 'viem';
+import { sonic, avalanche, arbitrum, base, optimism, bsc, polygon, mainnet, redbellyMainnet, kaia,lightlinkPhoenix } from 'viem/chains';
 import {
   SONIC_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -12,7 +12,37 @@ import {
   BSC_MAINNET_CHAIN_ID,
   POLYGON_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
+  HYPEREVM_MAINNET_CHAIN_ID,
 } from '@sodax/types';
+
+// HyperEVM chain is not supported by viem, so we need to define it manually
+export const hyper = /*#__PURE__*/ defineChain({
+  id: 999,
+  name: 'HyperEVM',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'HYPE',
+    symbol: 'HYPE',
+  },
+  rpcUrls: {
+    default: { http: ['https://rpc.hyperliquid.xyz/evm'] },
+  },
+  blockExplorers: {
+    default: {
+      name: 'HyperEVMScan',
+      url: 'https://hyperevmscan.io/',
+    },
+  },
+  contracts: {
+    multicall3: {
+      address: '0xcA11bde05977b3631167028862bE2a173976CA11',
+      blockCreated: 13051,
+    },
+  },
+});
 
 export function getEvmViemChain(id: ChainId): Chain {
   switch (id) {
@@ -32,6 +62,14 @@ export function getEvmViemChain(id: ChainId): Chain {
       return polygon;
     case ETHEREUM_MAINNET_CHAIN_ID:
       return mainnet;
+    case REDBELLY_MAINNET_CHAIN_ID:
+      return redbellyMainnet;
+    case KAIA_MAINNET_CHAIN_ID:
+      return kaia;
+    case LIGHTLINK_MAINNET_CHAIN_ID:
+      return lightlinkPhoenix;
+    case HYPEREVM_MAINNET_CHAIN_ID:
+      return hyper;
     default:
       throw new Error(`Unsupported EVM chain ID: ${id}`);
   }

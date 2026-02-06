@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { XToken } from '@sodax/types';
-import { useXAccount, getXChainType } from '@sodax/wallet-sdk-react';
+import { useXAccount, getXChainType, useXBalances } from '@sodax/wallet-sdk-react';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { formatBalance } from '@/lib/utils';
 import { formatUnits, parseUnits } from 'viem';
@@ -11,19 +11,20 @@ import { AlertCircleIcon, ArrowLeft } from 'lucide-react';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import DepositDialog from '../deposit-dialog/deposit-dialog';
-import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import AmountInputSlider from '../amount-input-slider';
 import { useRouter } from 'next/navigation';
 import AssetMetrics from './asset-metrics';
+import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
+import { useReservesUsdFormat } from '@sodax/dapp-kit';
 interface DepositInputAmountProps {
-  selectedToken: XToken | null;
   tokens: XToken[];
   onBack?: () => void;
   apy: string;
   deposits: number;
 }
 
-export default function DepositInputAmount({ selectedToken, tokens, onBack, apy, deposits }: DepositInputAmountProps) {
+export default function DepositInputAmount({ tokens, onBack, apy, deposits }: DepositInputAmountProps) {
+  const { selectedToken } = useSaveState();
   const router = useRouter();
   const { address: sourceAddress } = useXAccount(selectedToken?.xChainId);
   const { setDepositValue } = useSaveActions();
@@ -32,10 +33,22 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy,
   const previousTokenAddressRef = useRef<string | undefined>(selectedToken?.address);
   const openModal = useModalStore(state => state.openModal);
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState<boolean>(false);
-  const allChainBalances = useAllChainBalances();
-  const balance = selectedToken
-    ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
-    : 0n;
+  const { data: balances } = useXBalances({
+    xChainId: selectedToken?.xChainId || 'sonic',
+    xTokens: selectedToken ? [selectedToken] : [],
+    address: sourceAddress,
+  });
+  const balance = selectedToken ? (balances?.[selectedToken.address] ?? 0n) : 0n;
+  if (selectedToken?.xChainId === '0xa.optimism' && selectedToken.symbol === 'USDT') {
+    console.log('balance', balance);
+  }
+  const { data: formattedReserves } = useReservesUsdFormat();
+  const tokensWithSupplyBalances = useTokenSupplyBalances(
+    selectedToken ? [selectedToken] : [],
+    formattedReserves || [],
+  );
+  const selectedTokenSupplyBalance = tokensWithSupplyBalances[0]?.supplyBalance ?? '0';
+  const hasDeposit = Number(selectedTokenSupplyBalance) > 0;
 
   const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
 
@@ -101,18 +114,14 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy,
   const getHelperText = () => {
     return (
       <>
-        {depositValue > 0 ? (
-          <>
-            <div className="flex gap-2">
-              <span className="text-clay-light">Yield/mo:</span>
-              <span className="font-['InterRegular'] text-espresso font-medium">
-                {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
-              </span>
-              <AlertCircleIcon width={16} height={16} className="text-clay" />
-            </div>
-          </>
-        ) : (
-          'To show your funds'
+        {depositValue > 0 && (
+          <div className="flex gap-2">
+            <span className="text-clay-light">Yield/mo:</span>
+            <span className="font-['InterRegular'] text-espresso font-medium">
+              {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
+            </span>
+            <AlertCircleIcon width={16} height={16} className="text-clay" />
+          </div>
         )}
       </>
     );
@@ -217,7 +226,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy,
 
           {sourceAddress && (
             <>
-              {balance === 0n && (
+              {Number(balance) === 0 && (
                 <Button
                   variant="cherry"
                   className="w-27 mix-blend-multiply shadow-none"
@@ -235,7 +244,7 @@ export default function DepositInputAmount({ selectedToken, tokens, onBack, apy,
                     setIsDepositDialogOpen(true);
                   }}
                 >
-                  Continue
+                  {hasDeposit ? 'Add more' : 'Continue'}
                 </Button>
               )}
               <DepositDialog

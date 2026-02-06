@@ -151,28 +151,6 @@ export default function CurrencySearchPanel({
               reference={networkPickerReference.current}
             />
           </div>
-          {/* <div
-            className="w-4 h-4 inline-flex flex-col justify-center items-center relative cursor-pointer ml-2"
-            ref={networkPickerReference}
-            onClick={() => {
-              setIsAssetListBlurred(true);
-            }}
-          >
-            <div className="absolute bg-white bottom-0 box-border content-stretch flex flex-col items-center justify-center p-0 rounded w-4">
-              <div className="w-4 h-4 relative bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center">
-                <div className="w-3 h-4 left-[4px] top-0 absolute mix-blend-multiply bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white" />
-                <div className="justify-start text-espresso text-[8px] font-medium font-['InterRegular'] leading-[1.2]">
-                  +{remainingChains.length}
-                </div>
-              </div>
-            </div>
-            <NetworkPicker
-              isClicked={isAssetListBlurred}
-              chains={remainingChains}
-              onSelect={chainId => handleChainSelect(chainId, 'picker')}
-              reference={networkPickerReference.current}
-            />
-          </div> */}
         </div>
       </motion.div>
     </>
