@@ -59,6 +59,18 @@ export default function UnstakeDialogFooter({
     return (instantUnstakeRatio * 95n) / 100n;
   }, [instantUnstakeRatio, unstakeMethod]);
 
+  // Calculate penalty percentage for instant unstake
+  const penaltyPercentage = useMemo((): number | undefined => {
+    if (!scaledUnstakeAmount || !instantUnstakeRatio || unstakeMethod !== UNSTAKE_METHOD.INSTANT) {
+      return undefined;
+    }
+    if (scaledUnstakeAmount === 0n) {
+      return 0;
+    }
+    const penalty = (scaledUnstakeAmount - instantUnstakeRatio) * 10000n / scaledUnstakeAmount;
+    return Number(penalty) / 100;
+  }, [scaledUnstakeAmount, instantUnstakeRatio, unstakeMethod]);
+
   // Regular unstake hooks
   const { mutateAsync: unstake, isPending: isUnstakingPending } = useUnstake(spokeProvider as SpokeProvider);
   const regularUnstakeParams = useMemo((): Omit<UnstakeParams, 'action'> | undefined => {
@@ -264,7 +276,9 @@ export default function UnstakeDialogFooter({
             ) : unstakeMethod === UNSTAKE_METHOD.INSTANT && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? (
               'Unstake'
             ) : unstakeMethod === UNSTAKE_METHOD.INSTANT && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM ? (
-              'Unstake now'
+              penaltyPercentage !== undefined
+                ? `Unstake now ${penaltyPercentage.toFixed(2)}%`
+                : 'Unstake now'
             ) : unstakeMethod === UNSTAKE_METHOD.REGULAR && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? (
               'Unstake'
             ) : unstakeMethod === UNSTAKE_METHOD.REGULAR && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM ? (
