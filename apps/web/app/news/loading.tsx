@@ -6,7 +6,7 @@ export default function NewsLoading() {
   return (
     <div className="min-h-screen w-full bg-[var(--almost-white)]">
       {/* Header skeleton */}
-      <div className="sticky top-0 z-40 bg-[var(--cherry-soda)] h-14" />
+      <div className="sticky top-0 z-40 bg-[var(--cherry-soda)] h-[100px]" />
 
       {/* Category Filter Tabs skeleton */}
       <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
