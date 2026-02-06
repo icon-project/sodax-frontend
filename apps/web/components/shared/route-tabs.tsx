@@ -149,6 +149,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
             ? 'md:w-[320px] lg:w-65' // wider partner sidebar
             : 'md:w-66 lg:w-76', // existing apps unchanged
         )}
+        style={{ height: '-webkit-fill-available' }}
       >
         <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
           {usedTabs.map(tab => {
