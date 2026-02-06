@@ -14,8 +14,10 @@ export default function StakePage(): React.JSX.Element {
     <div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)">
       <StakeHeader apr={STAKING_APR} />
 
-      <div className="relative w-full rounded-(--layout-container-radius) outline-[#eee6e6] outline outline-[3px] outline-offset-[-3px] flex flex-col justify-start items-start gap-2">
-        <StakeInputPanel />
+      <div className="relative w-full   flex flex-col justify-start items-start gap-0">
+        <div className="w-full border-[#eee6e6] border-[3px] border-b-0 rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)">
+          <StakeInputPanel />
+        </div>
         <div className="relative p-(--layout-space-big) w-full flex flex-col justify-start items-start bg-almost-white mix-blend-multiply rounded-bl-(--layout-container-radius) rounded-br-(--layout-container-radius)">
           <div className="absolute top-0 left-[72px]">
             <Tip fill="white" />
