@@ -41,6 +41,13 @@ export const tabConfigs: TabConfig[] = [
     enabled: false,
   },
   {
+    value: 'stake',
+    type: 'stake',
+    label: 'Stake',
+    content: 'a quick stake',
+    enabled: true,
+  },
+  {
     value: 'migrate',
     type: 'migrate',
     label: 'Migrate',
@@ -50,7 +57,7 @@ export const tabConfigs: TabConfig[] = [
 ];
 
 export const partnerTabConfigs: TabConfig[] = [
-  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, showIcon: false },
+  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, showIcon: false, href: '/partner' },
 ];
 
 interface RouteTabsProps {
@@ -149,19 +156,18 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
             ? 'md:w-[320px] lg:w-65' // wider partner sidebar
             : 'md:w-66 lg:w-76', // existing apps unchanged
         )}
+        style={{ height: '-webkit-fill-available' }}
       >
         <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
           {usedTabs.map(tab => {
+            // If tab.href is missing (like in Swap/Save), use /value
             const href = tab.href ?? `/${tab.value}`;
-            const isLink = Boolean(tab.href);
-            const active =
-              pathname === href ||
-              pathname.startsWith(`${href}/`) || // handles subpaths like /apps/partner/stats
-              pathname.endsWith(`/${tab.value}`); // old-style matching as extra safety
+            const active = pathname === href || pathname.startsWith(`${href}/`) || pathname.endsWith(`/${tab.value}`);
+
             return (
               <RouteTabItem
                 key={tab.value}
-                href={isLink ? href : undefined}
+                href={href}
                 value={tab.value}
                 type={tab.type}
                 label={tab.label}

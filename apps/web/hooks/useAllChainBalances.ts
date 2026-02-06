@@ -5,6 +5,7 @@ import type { SpokeChainId, ChainType, XToken } from '@sodax/types';
 import { useXAccounts } from '@sodax/wallet-sdk-react';
 import { getXChainType } from '@sodax/wallet-sdk-react';
 import { useXWagmiStore } from '@sodax/wallet-sdk-react';
+import { spokeChainConfig } from '@sodax/sdk';
 import { getSupportedSolverTokensForChain } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
 
@@ -21,9 +22,12 @@ export interface ChainBalanceEntry {
  * Hook to get balances for all available chains
  * Preserves token information including chain ID for each balance
  * Uses a single React Query to fetch all balances in parallel
+ * @param options - Optional configuration
+ * @param options.onlySodaTokens - If true, only fetch SODA tokens instead of all supported solver tokens
  * @returns Object mapping token addresses to arrays of balance entries with chain and token info
  */
-export function useAllChainBalances(): Record<string, ChainBalanceEntry[]> {
+export function useAllChainBalances(options?: { onlySodaTokens?: boolean }): Record<string, ChainBalanceEntry[]> {
+  const { onlySodaTokens = false } = options || {};
   const xAccounts = useXAccounts();
   const xServices = useXWagmiStore(state => state.xServices);
 
@@ -35,21 +39,35 @@ export function useAllChainBalances(): Record<string, ChainBalanceEntry[]> {
       const account = chainType ? xAccounts[chainType] : undefined;
       const address = account?.address;
 
+      // Get tokens based on mode: SODA tokens only for stake, or all supported solver tokens
+      let tokens: XToken[] = [];
+      if (onlySodaTokens) {
+        const chainConfig = spokeChainConfig[chainId];
+        if (chainConfig?.supportedTokens && 'SODA' in chainConfig.supportedTokens) {
+          const sodaToken = chainConfig.supportedTokens.SODA as XToken;
+          if (sodaToken) {
+            tokens = [sodaToken];
+          }
+        }
+      } else {
+        tokens = getSupportedSolverTokensForChain(chainId);
+      }
+
       return {
         chainId,
         chainType,
         address,
-        tokens: getSupportedSolverTokensForChain(chainId),
+        tokens,
       };
     });
-  }, [xAccounts]);
+  }, [xAccounts, onlySodaTokens]);
 
   // Check if any wallet is connected
   const hasConnectedWallet = chainQueries.some(q => !!q.address);
 
   // Single query that fetches balances for all chains in parallel
   const { data: allBalances } = useQuery({
-    queryKey: ['allChainBalances', chainQueries.map(q => ({ chainId: q.chainId, address: q.address }))],
+    queryKey: ['allChainBalances', onlySodaTokens, chainQueries.map(q => ({ chainId: q.chainId, address: q.address }))],
     queryFn: async (): Promise<Record<string, ChainBalanceEntry[]>> => {
       const balancesByAddress: Record<string, ChainBalanceEntry[]> = {};
 
