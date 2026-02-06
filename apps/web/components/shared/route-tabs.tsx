@@ -50,7 +50,7 @@ export const tabConfigs: TabConfig[] = [
 ];
 
 export const partnerTabConfigs: TabConfig[] = [
-  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, showIcon: false },
+  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, showIcon: false, href: '/partner' },
 ];
 
 interface RouteTabsProps {
@@ -152,16 +152,17 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
       >
         <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
           {usedTabs.map(tab => {
+            // If tab.href is missing (like in Swap/Save), use /value
             const href = tab.href ?? `/${tab.value}`;
-            const isLink = Boolean(tab.href);
-            const active =
-              pathname === href ||
-              pathname.startsWith(`${href}/`) || // handles subpaths like /apps/partner/stats
-              pathname.endsWith(`/${tab.value}`); // old-style matching as extra safety
+
+            // We determine if it should act as a Link based on whether it's enabled.
+            // In your RouteTabItem, if href is provided, it renders a Link.
+            const active = pathname === href || pathname.startsWith(`${href}/`) || pathname.endsWith(`/${tab.value}`);
+
             return (
               <RouteTabItem
                 key={tab.value}
-                href={isLink ? href : undefined}
+                href={href}
                 value={tab.value}
                 type={tab.type}
                 label={tab.label}
