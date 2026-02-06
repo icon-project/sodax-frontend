@@ -54,7 +54,9 @@ export default async function NewsPreviewPage({ params }: PageProps) {
   // Fetch article by ID (not slug), regardless of published status
   let article: NewsArticle | null = null;
   try {
-    article = await getDb().collection<NewsArticle>('news').findOne({ _id: new ObjectId(id) });
+    article = await getDb()
+      .collection<NewsArticle>('news')
+      .findOne({ _id: new ObjectId(id) });
   } catch (error) {
     console.error('Failed to fetch article for preview:', error);
   }
@@ -81,7 +83,8 @@ export default async function NewsPreviewPage({ params }: PageProps) {
         <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
           <span className="font-bold">⚠️ PREVIEW MODE</span>
           <span className="text-sm">
-            This article is {article.published ? 'published' : 'a draft'} — You are viewing it as it will appear to visitors
+            This article is {article.published ? 'published' : 'a draft'} — You are viewing it as it will appear to
+            visitors
           </span>
           <Link
             href={`/cms/news/${id}`}
@@ -118,20 +121,14 @@ export default async function NewsPreviewPage({ params }: PageProps) {
                 {article.title}
               </h1>
 
-              <p className="text-xl text-[var(--clay)] leading-relaxed mb-6">
-                {article.excerpt}
-              </p>
+              <p className="text-xl text-[var(--clay)] leading-relaxed mb-6">{article.excerpt}</p>
 
               <div className="flex items-center gap-4 text-sm text-[var(--clay-light)] pb-6 border-b border-[var(--clay-light)]">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-[var(--espresso)]">
-                    {article.authorName}
-                  </span>
+                  <span className="font-medium text-[var(--espresso)]">{article.authorName}</span>
                 </div>
                 <span>•</span>
-                <time dateTime={publishedTime}>
-                  {formatDate(article.publishedAt || article.createdAt)}
-                </time>
+                <time dateTime={publishedTime}>{formatDate(article.publishedAt || article.createdAt)}</time>
                 {modifiedTime && <meta itemProp="dateModified" content={modifiedTime} />}
               </div>
             </header>

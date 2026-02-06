@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date();
-    
+
     // Determine publish date: use provided date, or now if publishing, or undefined
     let publishedAt: Date | undefined;
     if (validated.publishedAt) {

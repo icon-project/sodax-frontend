@@ -166,7 +166,11 @@ export function NewsForm({ article, authors = [] }: NewsFormProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => router.back()} className="mb-4 text-[var(--clay)] hover:text-[var(--espresso)] hover:bg-transparent px-2 !outline-0 !border-0">
+            <Button
+              variant="ghost"
+              onClick={() => router.back()}
+              className="mb-4 text-[var(--clay)] hover:text-[var(--espresso)] hover:bg-transparent px-2 !outline-0 !border-0"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
@@ -391,7 +395,7 @@ export function NewsForm({ article, authors = [] }: NewsFormProps) {
                   </Label>
                   <Select
                     value={formData.authorId}
-                    onValueChange={(value) => {
+                    onValueChange={value => {
                       const allAuthors = [SODAX_TEAM_AUTHOR, ...authors];
                       const selectedAuthor = allAuthors.find(a => a.id === value);
                       setFormData({
@@ -408,7 +412,7 @@ export function NewsForm({ article, authors = [] }: NewsFormProps) {
                       <SelectItem key={SODAX_TEAM_AUTHOR.id} value={SODAX_TEAM_AUTHOR.id}>
                         {SODAX_TEAM_AUTHOR.name}
                       </SelectItem>
-                      {authors.map((author) => (
+                      {authors.map(author => (
                         <SelectItem key={author.id} value={author.id}>
                           {author.name} ({author.email})
                         </SelectItem>

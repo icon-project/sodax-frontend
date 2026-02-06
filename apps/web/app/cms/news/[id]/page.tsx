@@ -39,7 +39,7 @@ export default async function EditNewsPage({ params }: PageProps) {
       .find({ role: { $in: ['admin', 'user'] } })
       .project({ _id: 1, id: 1, email: 1, name: 1 })
       .toArray();
-    
+
     const authors = users.map(u => ({
       id: u.id || u._id.toString(),
       name: u.name || u.email,
