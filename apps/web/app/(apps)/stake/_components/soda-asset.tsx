@@ -1,10 +1,11 @@
 // apps/web/app/(apps)/stake/_components/soda-asset.tsx
 import CurrencyLogo from '@/components/shared/currency-logo';
-import type { XToken } from '@sodax/types';
+import type { ChainId, XToken } from '@sodax/types';
 import { useRef } from 'react';
 import { useClickAway } from 'react-use';
 import { NetworkPicker } from './network-picker';
 import { useStakeActions, useStakeState } from '../_stores/stake-store-provider';
+import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 
 export function SodaAsset({
   selectedToken,
@@ -21,6 +22,7 @@ export function SodaAsset({
   const { isNetworkPickerOpened } = useStakeState();
   const { setIsNetworkPickerOpened } = useStakeActions();
   const assetRef = useRef<HTMLDivElement>(null);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedToken?.xChainId as ChainId);
   useClickAway(assetRef, event => {
     const target = event.target as HTMLElement;
     const isInNetworkPicker = target.closest('.network-picker-container') !== null;
@@ -56,6 +58,9 @@ export function SodaAsset({
               onSelect={token => {
                 setIsNetworkPickerOpened(false);
                 setSelectNetworkToken(token);
+                if (isWrongChain) {
+                  handleSwitchChain();
+                }
               }}
               reference={assetRef.current}
             />

@@ -129,8 +129,8 @@ export default function StakeDialogFooter({
       )}
 
       {(isMobile ? currentStakeStep === STAKE_STEP.STAKE_APPROVE : true) &&
-        (isWrongChain ? (
-          <Button variant="cherry" className="flex flex-1" onClick={handleSwitchChain}>
+        (currentStakeStep === STAKE_STEP.STAKE_APPROVE && isWrongChain ? (
+          <Button className={isMobile ? 'w-full' : 'flex-1'} type="button" variant="cherry" onClick={handleSwitchChain}>
             Switch Chain
           </Button>
         ) : (

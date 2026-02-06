@@ -67,7 +67,7 @@ export default function UnstakeDialogFooter({
     if (scaledUnstakeAmount === 0n) {
       return 0;
     }
-    const penalty = (scaledUnstakeAmount - instantUnstakeRatio) * 10000n / scaledUnstakeAmount;
+    const penalty = ((scaledUnstakeAmount - instantUnstakeRatio) * 10000n) / scaledUnstakeAmount;
     return Number(penalty) / 100;
   }, [scaledUnstakeAmount, instantUnstakeRatio, unstakeMethod]);
 
@@ -207,8 +207,8 @@ export default function UnstakeDialogFooter({
       )}
 
       {(isMobile ? currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE : true) &&
-        (isWrongChain ? (
-          <Button variant="cherry" className="flex flex-1" onClick={handleSwitchChain}>
+        (currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE && isWrongChain ? (
+          <Button className={isMobile ? 'w-full' : 'flex-1'} type="button" variant="cherry" onClick={handleSwitchChain}>
             Switch Chain
           </Button>
         ) : (
@@ -276,9 +276,11 @@ export default function UnstakeDialogFooter({
             ) : unstakeMethod === UNSTAKE_METHOD.INSTANT && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? (
               'Unstake'
             ) : unstakeMethod === UNSTAKE_METHOD.INSTANT && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM ? (
-              penaltyPercentage !== undefined
-                ? `Unstake now ${penaltyPercentage.toFixed(2)}%`
-                : 'Unstake now'
+              penaltyPercentage !== undefined ? (
+                `Unstake now ${penaltyPercentage.toFixed(2)}%`
+              ) : (
+                'Unstake now'
+              )
             ) : unstakeMethod === UNSTAKE_METHOD.REGULAR && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? (
               'Unstake'
             ) : unstakeMethod === UNSTAKE_METHOD.REGULAR && currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM ? (

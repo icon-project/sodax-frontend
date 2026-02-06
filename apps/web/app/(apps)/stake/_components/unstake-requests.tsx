@@ -1,5 +1,3 @@
-// apps/web/app/(apps)/stake/_components/unstake-requests.tsx
-
 import type React from 'react';
 import { UnstakeRequestItem } from './unstake-request-item';
 import { Separator } from '@/components/ui/separator';
@@ -43,6 +41,7 @@ export function UnstakeRequests(): React.JSX.Element {
           <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-5">
             Unstake Requests
           </div>
+
           <div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)">
             {requests.map((request, index) => (
               <Fragment key={request.id.toString()}>
