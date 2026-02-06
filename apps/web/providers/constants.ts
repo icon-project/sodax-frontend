@@ -24,8 +24,9 @@ export function chainIdToChainName(chainId: SpokeChainId): string {
 
 const testnet = process.env.NEXT_PUBLIC_TESTNET === 'YES';
 const hubChainId = SONIC_MAINNET_CHAIN_ID;
-// const hubRpcUrl = 'https://sonic-rpc.publicnode.com'; use this if in dev it isn't working
 const hubRpcUrl = 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg';
+// const hubRpcUrl = 'https://rpc.soniclabs.com';
+
 const hubConfig = {
   hubRpcUrl,
   chainConfig: getHubChainConfig(),
