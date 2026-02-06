@@ -86,7 +86,7 @@ export type AssetEntry = {
   hubAsset: { symbol: string; name: string; decimal: number };
 };
 
-export type SwapParams = {
+export type PartnerFeeClaimSwapParams = {
   fromToken: Address;
   amount: bigint;
   timeout?: number;
@@ -111,7 +111,7 @@ export type SetSwapPreferenceError = {
 };
 
 export type IntentAutoSwapErrorData = {
-  payload: SwapParams;
+  payload: PartnerFeeClaimSwapParams;
   error: unknown;
 };
 
@@ -507,7 +507,7 @@ export class PartnerFeeClaimService {
 
   /**
    * Creates an intent to auto swap tokens using the protocol intents contract
-   * @param {SwapParams} params - The swap parameters
+   * @param {PartnerFeeClaimSwapParams} params - The swap parameters
    * @param {SonicSpokeProviderType} spokeProvider - The Sonic spoke provider
    * @param {boolean} raw - Whether to return raw transaction data
    * @returns {Promise<TxReturnType<SonicSpokeProviderType, R>>} Transaction hash or raw transaction
@@ -516,7 +516,7 @@ export class PartnerFeeClaimService {
     params,
     spokeProvider,
     raw,
-  }: { params: SwapParams; spokeProvider: S } & OptionalRaw<R>): Promise<
+  }: { params: PartnerFeeClaimSwapParams; spokeProvider: S } & OptionalRaw<R>): Promise<
     Result<TxReturnType<S, R>, CreateIntentAutoSwapError>
   > {
     try {
@@ -570,14 +570,16 @@ export class PartnerFeeClaimService {
 
   /**
    * Creates an intent auto swap and handles post-execution
-   * @param {SwapParams} params - The swap parameters
+   * @param {PartnerFeeClaimSwapParams} params - The swap parameters
    * @param {SonicSpokeProviderType} spokeProvider - The Sonic spoke provider
    * @returns {Promise<Result<SolverExecutionResponse, IntentError<IntentErrorCode>>>} Solver execution response
    */
   public async swap<S extends SonicSpokeProvider>({
     params,
     spokeProvider,
-  }: { params: SwapParams; spokeProvider: S }): Promise<Result<IntentAutoSwapResult, ExecuteIntentAutoSwapError>> {
+  }: { params: PartnerFeeClaimSwapParams; spokeProvider: S }): Promise<
+    Result<IntentAutoSwapResult, ExecuteIntentAutoSwapError>
+  > {
     try {
       const txHash = await this.createIntentAutoSwap({ params, spokeProvider, raw: false });
 
