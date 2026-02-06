@@ -4,6 +4,7 @@ import {
   useSpokeProvider,
   useReservesUsdFormat,
   useBackendAllMoneyMarketAssets,
+  useUserFormattedSummary,
 } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -75,6 +76,10 @@ export function BorrowAssetsList() {
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
+  const { data: userSummary } = useUserFormattedSummary({
+    spokeProvider,
+    address,
+  });
 
   const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
 
@@ -142,6 +147,7 @@ export function BorrowAssetsList() {
                         formattedReserves={formattedReserves || []}
                         userReserves={userReserves?.[0] || []}
                         onBorrowClick={(token, maxBorrow) => setBorrowData({ token, maxBorrow })}
+                        userSummary={userSummary}
                       />
                     );
                   })

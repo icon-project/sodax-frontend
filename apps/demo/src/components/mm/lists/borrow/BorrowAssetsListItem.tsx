@@ -5,7 +5,7 @@ import type { ChainId, XToken } from '@sodax/types';
 import { BorrowButton } from '../BorrowButton';
 import { getChainLabel } from '@/lib/borrowUtils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
+import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
 
 interface BorrowAssetsListItemProps {
@@ -22,6 +22,7 @@ interface BorrowAssetsListItemProps {
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
   onBorrowClick: (token: XToken, maxBorrow: string) => void;
+  userSummary?: FormatUserSummaryResponse;
 }
 
 export function BorrowAssetsListItem({
@@ -32,6 +33,7 @@ export function BorrowAssetsListItem({
   formattedReserves,
   userReserves,
   onBorrowClick,
+  userSummary,
 }: BorrowAssetsListItemProps) {
   const metrics = useReserveMetrics({
     token,
@@ -67,6 +69,25 @@ export function BorrowAssetsListItem({
           ).toFixed(6);
   }
 
+  let maxBorrow = '0';
+
+  if (userSummary && metrics.formattedReserve && availableLiquidity) {
+    const availableBorrowsUSD = Number(userSummary.availableBorrowsUSD);
+    const priceUSD = Number(metrics.formattedReserve.priceInUSD);
+
+    if (priceUSD > 0 && availableBorrowsUSD > 0) {
+      const userLimitTokens = availableBorrowsUSD / priceUSD;
+      const poolLimitTokens = Number(availableLiquidity);
+
+      maxBorrow = (Math.min(userLimitTokens, poolLimitTokens) * 0.99).toFixed(6);
+    }
+  }
+
+  console.log('[Borrow Debug]', {
+    availableBorrowsUSD: userSummary?.availableBorrowsUSD,
+    token: token.symbol,
+  });
+
   const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
 
   return (
@@ -95,7 +116,7 @@ export function BorrowAssetsListItem({
           token={token}
           disabled={disabled || !canBorrow}
           onClick={() => {
-            onBorrowClick(token, availableLiquidity ?? '0');
+            onBorrowClick(token, maxBorrow);
           }}
         />
       </TableCell>

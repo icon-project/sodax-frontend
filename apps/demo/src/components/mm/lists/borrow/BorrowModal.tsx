@@ -32,7 +32,6 @@ interface BorrowModalProps {
 }
 
 export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }: BorrowModalProps) {
-  // console.log('Modal rendering for:', token.symbol);
   const [amount, setAmount] = useState('');
   const { selectedChainId } = useAppStore();
 
@@ -42,8 +41,6 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }:
   const { mutateAsync: borrow, isPending, error, reset: resetBorrowError } = useBorrow();
 
   /**
-   * Borrow params:
-   * IMPORTANT RULES (from SDK tests):
    * - token.address MUST belong to the SOURCE chain
    * - toChainId decides where tokens are DELIVERED
    * - spokeProvider decides where DEBT is created
