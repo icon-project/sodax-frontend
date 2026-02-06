@@ -70,24 +70,14 @@ export function BorrowAssetsListItem({
   return (
     <TableRow className={`hover:bg-cream/30 transition-colors ${disabled ? 'opacity-50' : ''}`}>
       <TableCell>
-        <span className="font-medium text-cherry-dark">{asset.symbol}</span>
+        <span className="font-bold text-cherry-dark">{asset.symbol}</span>
         <span className="text-clay-light text-xs ml-1">{getChainLabel(token.xChainId)}</span>
       </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{walletBalance}</span>
-      </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{availableLiquidity ?? '--'}</span>
-      </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{metrics.borrowAPY}</span>
-      </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{metrics.borrowAPR}</span>
-      </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{metrics.totalBorrow}</span>
-      </TableCell>
+      <TableCell className="text-clay">{walletBalance}</TableCell>
+      <TableCell className="text-clay">{availableLiquidity ?? '--'}</TableCell>
+      <TableCell className="text-clay">{metrics.borrowAPY}</TableCell>
+      <TableCell className="text-clay">{metrics.borrowAPR}</TableCell>
+      <TableCell className="text-clay">{metrics.totalBorrow}</TableCell>
       <TableCell>
         <BorrowButton
           token={token}

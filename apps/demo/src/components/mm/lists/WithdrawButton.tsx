@@ -130,7 +130,7 @@ export function WithdrawButton({ token, onSuccess }: WithdrawButtonProps) {
           <Button
             className="w-full"
             type="button"
-            variant="default"
+            variant="cherrySoda"
             onClick={handleApprove}
             disabled={isAllowanceLoading || hasAllowed || isApproving || !params || !spokeProvider}
           >

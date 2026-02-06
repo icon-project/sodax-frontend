@@ -117,7 +117,7 @@ export function SupplyButton({ token }: { token: XToken }) {
           <Button
             className="w-full"
             type="button"
-            variant="default"
+            variant="cherrySoda"
             onClick={handleApprove}
             disabled={isAllowanceLoading || hasAllowed || isApproving || !params || !spokeProvider}
           >

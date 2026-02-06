@@ -25,10 +25,8 @@ const TABLE_HEADERS = [
   'Supply APY',
   'Supply APR',
   'Borrowed',
-  'Available',
-  '',
-  '',
-  '',
+  'Borrow available',
+  'Actions',
 ] as const;
 
 export function SupplyAssetsList(): ReactElement {
@@ -68,9 +66,9 @@ export function SupplyAssetsList(): ReactElement {
       return { label: 'At risk', className: 'text-negative' };
     }
     if (hf < 2) {
-      return { label: 'Caution', className: 'text-yellow-dark' };
+      return { label: 'Moderate Risk', className: 'text-yellow-dark' };
     }
-    return { label: 'Very safe', className: 'text-cherry-soda' };
+    return { label: 'Low Risk', className: 'text-cherry-soda' };
   }
   const healthState = healthFactorRaw !== undefined ? getHealthFactorState(healthFactorRaw) : undefined;
 
@@ -107,6 +105,7 @@ export function SupplyAssetsList(): ReactElement {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Markets</CardTitle>
+
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -118,87 +117,80 @@ export function SupplyAssetsList(): ReactElement {
                   <Info className="w-4 h-4 text-cherry-soda" />
                 </button>
               </TooltipTrigger>
-
               <TooltipContent>
                 <strong>Health Factor</strong> indicates how close your account is to liquidation. Values below{' '}
                 <strong>1</strong> are unsafe.
               </TooltipContent>
             </Tooltip>
+
             <span className="text-cherry-soda">Health Factor:</span>
             <span className="font-semibold text-foreground">{healthFactorDisplay}</span>
+
             {healthState && (
               <span className={`ml-2 text-xs font-medium ${healthState.className}`}>({healthState.label})</span>
             )}
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
         {isIcon ? (
-          <div className=" text-center text-cherry-dark">
+          <div className="text-center text-cherry-dark">
             <p className="font-medium">
               Money Market is not available on ICON. ICON is supported for swap and migration only.
             </p>
           </div>
         ) : (
-          <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
-            <Table>
-              <TableHeader className="sticky top-0 bg-cream z-20">
+          <div className="rounded-lg border border-cherry-grey/20 max-h-[400px] overflow-y-auto">
+            <Table unstyled className="table-auto">
+              <TableHeader className="bg-cream">
                 <TableRow className="border-b border-cherry-grey/20">
-                  {TABLE_HEADERS.map((header, index) => {
-                    if (header === 'LT %') {
-                      return (
-                        <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
-                          <div className="flex items-center gap-1">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  type="button"
-                                  aria-label="Liquidation Threshold info"
-                                  className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
-                                >
-                                  <Info className="w-3 h-3 mb-0.5 text-cherry-soda" />
-                                </button>
-                              </TooltipTrigger>
-
-                              <TooltipContent>
-                                <strong>Liquidation Threshold</strong> is the percentage of supplied value that counts
-                                toward liquidation calculations.
-                              </TooltipContent>
-                            </Tooltip>
-                            <span>{header}</span>
-                          </div>
-                        </TableHead>
-                      );
-                    }
-
-                    return (
-                      <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
-                        {header}
-                      </TableHead>
-                    );
-                  })}
+                  {TABLE_HEADERS.map((header, index) => (
+                    <TableHead
+                      key={index}
+                      className="sticky top-0 z-10 bg-cream text-cherry-dark font-bold whitespace-nowrap border-b border-cherry-grey/20"
+                    >
+                      {header === 'LT %' ? (
+                        <div className="flex items-center gap-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                aria-label="Liquidation Threshold info"
+                                className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
+                              >
+                                <Info className="w-4 h-4 text-cherry-soda mb-0.5" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <strong>Liquidation Threshold</strong> is the percentage of supplied value that counts
+                              toward liquidation.
+                            </TooltipContent>
+                          </Tooltip>
+                          <span>{header}</span>
+                        </div>
+                      ) : (
+                        header
+                      )}
+                    </TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isUserReservesLoading ||
-                isFormattedReservesLoading ||
-                isATokensLoading ||
-                !userReserves ||
-                !formattedReserves ? (
+                {isUserReservesLoading || isFormattedReservesLoading || isATokensLoading || !formattedReserves ? (
                   <TableRow>
-                    <TableCell colSpan={16} className="text-center">
+                    <TableCell colSpan={TABLE_HEADERS.length} className="text-center">
                       Loading...
                     </TableCell>
                   </TableRow>
                 ) : (
-                  userReserves &&
                   tokens.map(token => (
                     <SupplyAssetsListItem
                       key={token.address}
                       token={token}
                       walletBalance={
                         balances?.[token.address]
-                          ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
+                          ? Number(formatUnits(balances[token.address] || 0n, token.decimals)).toFixed(4)
                           : '-'
                       }
                       formattedReserves={formattedReserves}
