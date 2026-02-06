@@ -4,6 +4,7 @@ import {
   useSpokeProvider,
   useReservesUsdFormat,
   useBackendAllMoneyMarketAssets,
+  useUserFormattedSummary,
 } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -29,8 +30,6 @@ const TABLE_HEADERS = [
 
 export function BorrowAssetsList() {
   const { selectedChainId } = useAppStore();
-  const [open, setOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [successData, setSuccessData] = useState<{
     amount: string;
     token: XToken;
@@ -54,7 +53,10 @@ export function BorrowAssetsList() {
     ) as XToken[];
   }, []);
 
-  const [selectedTokenForBorrow, setSelectedTokenForBorrow] = useState<XToken | null>(null);
+  const [borrowData, setBorrowData] = useState<{
+    token: XToken;
+    maxBorrow: string;
+  } | null>(null);
 
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];
@@ -74,6 +76,10 @@ export function BorrowAssetsList() {
   const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
+  const { data: userSummary } = useUserFormattedSummary({
+    spokeProvider,
+    address,
+  });
 
   const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
 
@@ -140,7 +146,8 @@ export function BorrowAssetsList() {
                         }
                         formattedReserves={formattedReserves || []}
                         userReserves={userReserves?.[0] || []}
-                        onBorrowClick={token => setSelectedTokenForBorrow(token)}
+                        onBorrowClick={(token, maxBorrow) => setBorrowData({ token, maxBorrow })}
+                        userSummary={userSummary}
                       />
                     );
                   })
@@ -150,18 +157,18 @@ export function BorrowAssetsList() {
           </div>
         </div>
       </CardContent>
-      {selectedTokenForBorrow && (
+      {borrowData && (
         <BorrowModal
-          key={selectedTokenForBorrow.address}
-          open={!!selectedTokenForBorrow}
-          token={selectedTokenForBorrow}
+          open={!!borrowData}
+          token={borrowData.token}
           onOpenChange={open => {
-            if (!open) setSelectedTokenForBorrow(null);
+            if (!open) setBorrowData(null);
           }}
           onSuccess={data => {
             setSuccessData(data);
-            setSelectedTokenForBorrow(null);
+            setBorrowData(null);
           }}
+          maxBorrow={borrowData.maxBorrow}
         />
       )}
       <SuccessModal open={!!successData} onClose={() => setSuccessData(null)} data={successData} action="borrow" />

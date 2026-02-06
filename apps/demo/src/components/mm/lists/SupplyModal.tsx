@@ -13,12 +13,12 @@ import { Label } from '@/components/ui/label';
 
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
-import type { MoneyMarketBorrowParams } from '@sodax/sdk';
-import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
+import { useMMAllowance, useMMApprove, useSpokeProvider, useSupply } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
+import type { MoneyMarketSupplyParams } from '@sodax/sdk';
 
-interface BorrowModalProps {
+interface SupplyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   token: XToken; // token the user wants to RECEIVE (e.g. USDC on Avalanche)
@@ -28,32 +28,26 @@ interface BorrowModalProps {
     sourceChainId: ChainId;
     destinationChainId: ChainId;
   }) => void;
-  maxBorrow: string;
+  maxSupply: string;
 }
 
-export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }: BorrowModalProps) {
+export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply }: SupplyModalProps) {
   const [amount, setAmount] = useState('');
   const { selectedChainId } = useAppStore();
 
   const sourceWalletProvider = useWalletProvider(selectedChainId);
   const sourceSpokeProvider = useSpokeProvider(selectedChainId, sourceWalletProvider);
 
-  const { mutateAsync: borrow, isPending, error, reset: resetBorrowError } = useBorrow();
+  const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply();
 
-  /**
-   * - token.address MUST belong to the SOURCE chain
-   * - toChainId decides where tokens are DELIVERED
-   * - spokeProvider decides where DEBT is created
-   */
-  const params: MoneyMarketBorrowParams | undefined = useMemo(() => {
+  const params: MoneyMarketSupplyParams | undefined = useMemo(() => {
     if (!amount) return undefined;
     return {
       token: token.address,
       amount: parseUnits(amount, token.decimals),
-      action: 'borrow',
-      toChainId: token.xChainId,
+      action: 'supply',
     };
-  }, [amount, token.address, token.decimals, token.xChainId]);
+  }, [token.address, token.decimals, amount]);
 
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
     params,
@@ -68,13 +62,13 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }:
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
-  const handleBorrow = async () => {
+  const handleSupply = async () => {
     if (!sourceSpokeProvider || !params) return;
 
     try {
-      await borrow({
+      await supply({
         params,
-        spokeProvider: sourceSpokeProvider, // ALWAYS source chain
+        spokeProvider: sourceSpokeProvider,
       });
 
       onSuccess?.({
@@ -85,7 +79,7 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }:
       });
       onOpenChange(false);
     } catch (err) {
-      console.error('Borrow failed:', err);
+      console.error('Supply failed:', err);
     }
   };
 
@@ -102,15 +96,15 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }:
     }
   };
 
-  const handleMaxClick = () => {
-    setAmount(maxBorrow);
+  const handleMaxclick = () => {
+    setAmount(maxSupply);
   };
 
   const handleOpenChangeInternal = (nextOpen: boolean) => {
     onOpenChange(nextOpen);
     if (!nextOpen) {
       setAmount('');
-      resetBorrowError?.();
+      resetError?.();
       resetApproveError?.();
     }
   };
@@ -119,8 +113,8 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }:
     <Dialog open={open} onOpenChange={handleOpenChangeInternal}>
       <DialogContent className="sm:max-w-md border-cherry-grey/20">
         <DialogHeader>
-          <DialogTitle className="text-center text-cherry-dark">Borrow {token.symbol}</DialogTitle>
-          <DialogDescription className="text-center">Choose amount and destination chain.</DialogDescription>
+          <DialogTitle className="text-center text-cherry-dark">Supply {token.symbol}</DialogTitle>
+          <DialogDescription className="text-center">Choose amount to supply.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-2">
@@ -132,16 +126,15 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }:
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleMaxClick}
-              disabled={!maxBorrow || maxBorrow === '0'}
+              onClick={handleMaxclick}
+              disabled={!maxSupply || maxSupply === '0'}
             >
               Max
             </Button>
           </div>
-
-          {maxBorrow && maxBorrow !== '0' && (
+          {maxSupply && maxSupply !== '0' && (
             <p className="text-xs text-muted-foreground">
-              Max borrow: {Number(maxBorrow).toFixed(6)} {token.symbol}
+              Max supply: {Number(maxSupply).toFixed(6)} {token.symbol}
             </p>
           )}
         </div>
@@ -168,8 +161,8 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }:
           )}
 
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleBorrow} disabled={!hasAllowed}>
-              {isPending ? 'Borrowing...' : 'Borrow'}
+            <Button className="w-full" type="button" variant="default" onClick={handleSupply} disabled={!hasAllowed}>
+              {isPending ? 'Supplying...' : 'Supply'}
             </Button>
           )}
         </DialogFooter>
