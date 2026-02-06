@@ -275,3 +275,17 @@ export type BridgeLimit = {
   decimals: number;
   type : 'DEPOSIT_LIMIT' | 'WITHDRAWAL_LIMIT';
 }
+
+export type ConcentratedLiquidityConfig = {
+  permit2: Address;
+  clPoolManager: Address;
+  router: Address;
+  clPositionManager: Address;
+  clPositionDescriptor: Address;
+  clQuoter: Address;
+  clTickLens: Address;
+  defaultHook: Address;
+  stataTokenFactory: Address;
+  defaultTickSpacing: number;
+  defaultBitmap: bigint;
+};
