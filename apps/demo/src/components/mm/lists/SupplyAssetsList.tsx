@@ -17,8 +17,8 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { Info } from 'lucide-react';
 import { type ActionType, SuccessModal } from './SuccessModal';
 import { RepayModal } from './RepayModal';
-import { WithdrawModal } from '../WithdrawModal';
 import { SupplyModal } from './SupplyModal';
+import { WithdrawModal } from './WithdrawModal';
 
 const TABLE_HEADERS = [
   'Asset',
