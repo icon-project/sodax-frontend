@@ -31,7 +31,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'save',
     label: 'Save',
     content: 'a quick save',
-    enabled: true,
+    enabled: false,
   },
   {
     value: 'loans',
@@ -40,13 +40,13 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick loans',
     enabled: false,
   },
-  {
-    value: 'stake',
-    type: 'stake',
-    label: 'Stake',
-    content: 'a quick stake',
-    enabled: true,
-  },
+  // {
+  //   value: 'stake',
+  //   type: 'stake',
+  //   label: 'Stake',
+  //   content: 'a quick stake',
+  //   enabled: true,
+  // },
   {
     value: 'migrate',
     type: 'migrate',

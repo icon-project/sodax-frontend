@@ -124,7 +124,7 @@ export function StakeInputPanel(): React.JSX.Element {
             className="h-10 data-[orientation=horizontal]:h-1"
             trackClassName="bg-cream-white data-[orientation=horizontal]:h-1"
             rangeClassName={cn('[background-size:20px_20px] ', 'bg-cherry-bright')}
-            thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)]"
+            thumbClassName="cursor-pointer bg-white !border-white border-gray-400 w-6 h-6 [filter:drop-shadow(0_2px_24px_#EDE6E6)] data-[disabled]:cursor-not-allowed data-[disabled]:!outline-none"
             disabled={
               !selectedToken || !walletConnected || (stakeMode === STAKE_MODE.UNSTAKING && userXSodaBalance === 0n)
             }
