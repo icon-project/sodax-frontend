@@ -156,7 +156,7 @@ export default function SodaxSDKPage() {
           {/* ============================================ */}
 
           {/* Header Section */}
-          <AnimatedSection className="flex flex-col gap-6 items-start w-full mb-16">
+          <AnimatedSection className="flex flex-col gap-6 items-start w-full">
             {/* Page Actions */}
             <div className="flex justify-end w-full">
               <PageActions
@@ -189,6 +189,23 @@ export default function SodaxSDKPage() {
                   <h1 className="font-['InterBlack'] text-4xl md:text-6xl lg:text-7xl text-[var(--espresso)] leading-none">
                     SODAX <span className="text-[#ecc100]">SDK</span>
                   </h1>
+                </div>
+
+                {/* About Us - inline in left column */}
+                <div className="flex flex-col gap-4 items-start w-full pt-4">
+                  <h2 className="font-['InterBold'] text-lg text-[var(--espresso)] w-full">About Us</h2>
+                  <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-relaxed">
+                    SODAX is an execution and liquidity system that enables DeFi actions across 14+ networks. This
+                    includes Solana, Sui, Stellar, Ethereum, Arbitrum, and Polygon. The system coordinates swaps,
+                    lending, and borrowing through a single layer powered by protocol-owned liquidity and intent-based
+                    execution.
+                  </p>
+                  <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-relaxed">
+                    <span className="font-['InterBold'] text-[var(--espresso)]">Trusted at scale.</span> Powering
+                    cross-network execution for Houdini Swap, Balanced, Hana Wallet, Amped Finance, and LightLink. Our
+                    solver network optimizes for capital efficiency and execution reliability, aggregating liquidity to
+                    deliver competitive pricing and predictable settlement times.
+                  </p>
                 </div>
               </div>
 
@@ -232,22 +249,6 @@ export default function SodaxSDKPage() {
             </div>
           </AnimatedSection>
 
-          {/* About Us Section */}
-          <AnimatedScrollSection className="flex flex-col gap-4 items-start w-full max-w-2xl">
-            <h2 className="font-['InterBold'] text-lg text-[var(--espresso)] w-full">About Us</h2>
-            <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-relaxed">
-              SODAX is an execution and liquidity system that enables DeFi actions across 14+ networks. This includes
-              Solana, Sui, Stellar, Ethereum, Arbitrum, and Polygon. The system coordinates swaps, lending, and
-              borrowing through a single layer powered by protocol-owned liquidity and intent-based execution.
-            </p>
-            <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-relaxed">
-              <span className="font-['InterBold'] text-[var(--espresso)]">Trusted at scale.</span> Powering
-              cross-network execution for Houdini Swap, Balanced, Hana Wallet, Amped Finance, and LightLink. Our solver
-              network optimizes for capital efficiency and execution reliability, aggregating liquidity to deliver
-              competitive pricing and predictable settlement times.
-            </p>
-          </AnimatedScrollSection>
-
           <div className="w-full max-w-2xl h-px bg-[var(--cream-white)]" />
 
           {/* The Solution Section */}
@@ -277,9 +278,9 @@ export default function SodaxSDKPage() {
           </AnimatedScrollSection>
 
           {/* Ideal For Section */}
-          <AnimatedScrollSection className="bg-[var(--cream-white)] -mx-4 md:-mx-8 px-6 md:px-20 pb-16 pt-12 mb-16 rounded-2xl">
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="flex flex-col justify-end w-52">
+          <AnimatedScrollSection className="bg-[var(--cream-white)] -mx-4 md:-mx-8 px-6 md:px-14 py-10 mb-16 rounded-2xl">
+            <div className="flex flex-col md:flex-row gap-6 items-center">
+              <div className="flex flex-col justify-center w-44 shrink-0">
                 <h2 className="font-['InterBlack'] text-5xl md:text-6xl text-[var(--espresso)] text-right leading-none">
                   IDEAL
                   <br />
@@ -377,7 +378,8 @@ export default function SodaxSDKPage() {
                   </PartnerLogo>
                   <PartnerLogo description="Cross-network DEX">
                     <div className="flex items-center gap-1">
-                      <Image src={imgLogoBalanced1} alt="Balanced" width={26} height={26} className="object-contain" />
+                      <Image src={imgLogoBalanced1} alt="Balanced" width={28} height={28} className="object-contain" />
+                      <span className="font-['InterBold'] text-xs text-[var(--espresso)]">Balanced</span>
                     </div>
                   </PartnerLogo>
                   <PartnerLogo description="Derivatives DEX">
@@ -461,7 +463,7 @@ export default function SodaxSDKPage() {
               </div>
             </div>
           </AnimatedScrollSection>
-          <AnimatedScrollSection className="bg-gradient-to-b from-[var(--cream-white)] to-[var(--almost-white)] -mx-4 md:-mx-8 px-6 md:px-20 py-12 mb-0">
+          <AnimatedScrollSection className="bg-gradient-to-b from-[var(--cream-white)] to-[var(--almost-white)] -mx-4 md:-mx-8 px-6 md:px-20 pt-12 pb-16 mb-16 rounded-2xl">
             <div className="flex flex-col lg:flex-row gap-8 items-center">
               {/* Laptop Image */}
               <div className="relative w-full lg:w-[500px] h-[300px] lg:h-[400px] shrink-0">
@@ -480,10 +482,10 @@ export default function SodaxSDKPage() {
                 </p>
               </div>
             </div>
-          </AnimatedScrollSection>
 
-          <AnimatedScrollSection className="flex flex-col gap-6 items-start py-16 px-6 md:px-20 -mx-4 md:-mx-8 bg-[var(--almost-white)]">
-            <h2 className="font-['InterBlack'] text-5xl md:text-6xl text-[var(--espresso)] leading-none">WHY SODAX</h2>
+            <div className="w-full h-px bg-[var(--cherry-grey)]/20 my-10" />
+
+            <h2 className="font-['InterBlack'] text-5xl md:text-6xl text-[var(--espresso)] leading-none mb-6">WHY SODAX</h2>
 
             {/* Comparison Cards */}
             <div className="flex flex-col md:flex-row gap-6 items-start w-full">
