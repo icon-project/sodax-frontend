@@ -22,7 +22,7 @@ export default function SolverPage() {
     [],
   );
 
-  const [orderType, setOrderType] = useState<OrderType>(OrderType.Limit);
+  const [orderType, setOrderType] = useState<OrderType>(OrderType.Market);
 
   return (
     <main className="flex flex-col items-center content-center justify-center space-y-2">
