@@ -10,8 +10,8 @@ const integrationPackages = [
     description: 'Deployment for Ethereum-based networks.',
     timeline: '4-6 weeks',
     features: [
-      'Asset management contracts',
-      'Relay network integration',
+      'Audited asset management contracts',
+      'Multi-bridge integration',
       'Solver liquidity sourcing',
       'SDK documentation',
       'Technical support',

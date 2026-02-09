@@ -485,7 +485,9 @@ export default function SodaxSDKPage() {
 
             <div className="w-full h-px bg-[var(--cherry-grey)]/20 my-10" />
 
-            <h2 className="font-['InterBlack'] text-5xl md:text-6xl text-[var(--espresso)] leading-none mb-6">WHY SODAX</h2>
+            <h2 className="font-['InterBlack'] text-5xl md:text-6xl text-[var(--espresso)] leading-none mb-6">
+              WHY SODAX
+            </h2>
 
             {/* Comparison Cards */}
             <div className="flex flex-col md:flex-row gap-6 items-start w-full">

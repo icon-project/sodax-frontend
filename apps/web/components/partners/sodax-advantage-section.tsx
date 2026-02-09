@@ -17,17 +17,17 @@ const advantages = [
     badges: ['14+ networks', 'Single integration', 'Multi-VM'],
   },
   {
-    title: 'LayerZero OFT Compatible',
+    title: 'Multi-Bridge Architecture',
     description:
-      'SODAX adapts the LayerZero OFT standard for bridging, giving any LayerZero-connected network immediate access to deep trading liquidity. No costly per-network liquidity drives required.',
-    badges: ['OFT standard', 'Unified liquidity', 'Zero bootstrapping'],
+      'Assets are distributed across established bridge protocols—LayerZero, CCTP, and purpose-built infrastructure—so no single bridge holds majority exposure. SODAX routes through the most battle-tested path available.',
+    badges: ['LayerZero OFT', 'CCTP', 'Distributed custody'],
     featured: true,
   },
   {
     title: 'Modular Integration',
     description:
-      'Use only the components you need. Integrate swaps, lending, or wallet connections independently through composable SDKs.',
-    badges: ['Composable', 'Feature selection', 'SDK-based'],
+      'Use only the components you need. Built on audited code and battle-tested primitives, integrated through composable SDKs.',
+    badges: ['Audited code', 'Composable', 'SDK-based'],
   },
 ];
 
