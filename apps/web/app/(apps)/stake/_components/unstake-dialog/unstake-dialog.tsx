@@ -80,7 +80,9 @@ export default function UnstakeDialog({ open, onOpenChange, selectedToken }: Uns
           />
         </DialogTitle>
 
-        {currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE && <UnstakeMethodSelectionStep />}
+        {currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE && (
+          <UnstakeMethodSelectionStep receivedSodaAmount={receivedSodaAmount} />
+        )}
         {currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE && (
           <UnstakeConfirmationStep selectedToken={selectedToken as XToken} receivedSodaAmount={receivedSodaAmount} />
         )}

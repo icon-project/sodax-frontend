@@ -3,7 +3,9 @@ import { useStakeState, useStakeActions } from '../../_stores/stake-store-provid
 import { UNSTAKE_METHOD } from '../../_stores/stake-store';
 import Image from 'next/image';
 
-export default function UnstakeMethodSelectionStep(): React.JSX.Element {
+export default function UnstakeMethodSelectionStep({
+  receivedSodaAmount,
+}: { receivedSodaAmount: string }): React.JSX.Element {
   const { unstakeMethod } = useStakeState();
   const { setUnstakeMethod } = useStakeActions();
 
@@ -44,7 +46,7 @@ export default function UnstakeMethodSelectionStep(): React.JSX.Element {
                 <Image src="/coin/soda.png" alt="SODA" width={16} height={16} />
               </div>
               <div className="flex justify-center gap-1">
-                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">3,191.71</span>
+                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{receivedSodaAmount}</span>
                 <span className="text-clay text-xs font-normal font-['InterRegular'] "> SODA</span>
               </div>
             </div>
@@ -81,7 +83,7 @@ export default function UnstakeMethodSelectionStep(): React.JSX.Element {
                 <Image src="/coin/soda.png" alt="SODA" width={16} height={16} />
               </div>
               <div className="flex justify-center gap-1">
-                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">3,191.71</span>
+                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{receivedSodaAmount}</span>
                 <span className="text-clay text-xs font-normal font-['InterRegular'] ">SODA</span>
               </div>
             </div>
