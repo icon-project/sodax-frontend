@@ -1,12 +1,84 @@
 # https://sodax.com robots.txt
-# Allow search x to crawl and index
+# Allow search engines and AI agents to crawl and index
 
+# Default rules for all crawlers
 User-agent: *
 Allow: /
-
-# Disallow bot spam and unnecessary paths
 Disallow: /_next/
-Disallow: /*.json
+Disallow: /api/
+Disallow: /cms/
+Disallow: /*.json$
 
-# Reference to sitemap
+# Google Search
+User-agent: Googlebot
+Allow: /
+
+# Bing Search
+User-agent: Bingbot
+Allow: /
+
+# OpenAI GPT Crawler
+User-agent: GPTBot
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+# OpenAI ChatGPT Plugin
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic Claude Crawler
+User-agent: anthropic-ai
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+# Google AI (Gemini, Bard)
+User-agent: Google-Extended
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+# Common Crawl (used by many AI models)
+User-agent: CCBot
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+# Meta AI
+User-agent: FacebookBot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+# Apple AI (Applebot extended for AI features)
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+# Cohere AI
+User-agent: cohere-ai
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+# Reference to sitemap and llms.txt
 Sitemap: https://sodax.com/sitemap.xml
+
+# AI/LLM context file
+# llms.txt: https://sodax.com/llms.txt
