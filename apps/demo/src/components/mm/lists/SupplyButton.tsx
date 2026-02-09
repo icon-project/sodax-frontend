@@ -4,17 +4,20 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMMAllowance, useSupply, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
-import type { XToken } from '@sodax/types';
+import type { ChainId, XToken } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
 import type { MoneyMarketSupplyParams } from '@sodax/sdk';
 import { getReadableTxError } from '@/lib/utils';
-
+import { ChainSelector } from '@/components/shared/ChainSelector';
+import { getChainName } from 'chains';
 export function SupplyButton({ token }: { token: XToken }) {
   const [amount, setAmount] = useState<string>('');
   const [open, setOpen] = useState(false);
-  const walletProvider = useWalletProvider(token.xChainId);
-  const spokeProvider = useSpokeProvider(token.xChainId, walletProvider);
+  const [fromChainId, setFromChainId] = useState<ChainId>(token.xChainId);
+  const [toChainId, setToChainId] = useState<ChainId>(token.xChainId);
+  const walletProviderFrom = useWalletProvider(fromChainId);
+  const spokeProviderFrom = useSpokeProvider(fromChainId, walletProviderFrom);
   const { mutateAsync: supply, isPending, error, reset: resetError } = useSupply();
 
   const params: MoneyMarketSupplyParams | undefined = useMemo(() => {
@@ -23,10 +26,15 @@ export function SupplyButton({ token }: { token: XToken }) {
       token: token.address,
       amount: parseUnits(amount, token.decimals),
       action: 'supply',
+      toChainId,
+      fromChainId,
     };
-  }, [token.address, token.decimals, amount]);
+  }, [token.address, token.decimals, amount, toChainId, fromChainId]);
 
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({ params, spokeProvider });
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
+    params,
+    spokeProvider: spokeProviderFrom,
+  });
   const {
     mutateAsync: approve,
     isPending: isApproving,
@@ -37,8 +45,8 @@ export function SupplyButton({ token }: { token: XToken }) {
 
   const handleSupply = async () => {
     console.log('handlesupply called with params:', params);
-    if (!spokeProvider) {
-      console.error('spokeProvider is not available');
+    if (!spokeProviderFrom) {
+      console.error('spokeProviderFrom is not available');
       return;
     }
     if (!params) {
@@ -48,7 +56,7 @@ export function SupplyButton({ token }: { token: XToken }) {
     try {
       await supply({
         params,
-        spokeProvider,
+        spokeProvider: spokeProviderFrom,
       });
       setOpen(false);
     } catch (err) {
@@ -66,7 +74,7 @@ export function SupplyButton({ token }: { token: XToken }) {
   };
 
   const handleApprove = async () => {
-    if (!spokeProvider) {
+    if (!spokeProviderFrom) {
       console.error('spokeProvider is not available');
       return;
     }
@@ -75,7 +83,7 @@ export function SupplyButton({ token }: { token: XToken }) {
       return;
     }
     try {
-      await approve({ params, spokeProvider });
+      await approve({ params, spokeProvider: spokeProviderFrom });
     } catch (err) {
       console.error('Error in handleApprove:', err);
     }
@@ -100,6 +108,22 @@ export function SupplyButton({ token }: { token: XToken }) {
         <DialogHeader>
           <DialogTitle>Supply {token.symbol}</DialogTitle>
         </DialogHeader>
+        <Label>Supply from network</Label>
+        {/* SOURCE SELECTION */}
+        <div className="space-y-2">
+          <Label>Supply from network (Source)</Label>
+          <ChainSelector selectedChainId={fromChainId} selectChainId={setFromChainId} />
+        </div>
+
+        {/* DESTINATION SELECTION */}
+        <div className="space-y-2 mt-4">
+          <Label>Record supply on (Destination)</Label>
+          <ChainSelector selectedChainId={toChainId} selectChainId={setToChainId} />
+          <p className="text-xs text-clay">
+            Funds will be bridged from {getChainName(fromChainId)} to {getChainName(toChainId)}
+          </p>
+        </div>
+
         <div className="flex items-center space-x-2">
           <div className="grid w-full max-w-sm items-center gap-1.5">
             <Label htmlFor="amount">Amount</Label>
@@ -110,16 +134,14 @@ export function SupplyButton({ token }: { token: XToken }) {
           </div>
         </div>
         {error && <p className="text-red-500 text-sm mt-2">{getReadableTxError(error)}</p>}
-
         {approveError && <p className="text-red-500 text-sm mt-2">{getReadableTxError(approveError)}</p>}
-
         <DialogFooter className="sm:justify-start">
           <Button
             className="w-full"
             type="button"
             variant="default"
             onClick={handleApprove}
-            disabled={isAllowanceLoading || hasAllowed || isApproving || !params || !spokeProvider}
+            disabled={isAllowanceLoading || hasAllowed || isApproving || !params || !spokeProviderFrom}
           >
             {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
           </Button>
