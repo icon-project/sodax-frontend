@@ -6,6 +6,7 @@ import SodaxAdvantageSection from '@/components/partners/sodax-advantage-section
 import FeaturedCaseStudiesSection from '@/components/partners/featured-case-studies-section';
 import NetworkIntegrationSection from '@/components/partners/network-integration-section';
 import PartnersCtaSection from '@/components/partners/partners-cta-section';
+import BuildersMcpSection from '@/components/partners/builders-mcp-section';
 import Footer from '@/components/landing/footer';
 
 export const metadata: Metadata = {
@@ -112,6 +113,7 @@ export default function PartnersPage() {
         <SodaxAdvantageSection />
         <FeaturedCaseStudiesSection />
         <NetworkIntegrationSection />
+        <BuildersMcpSection />
         <PartnersCtaSection />
       </main>
       <Footer />
