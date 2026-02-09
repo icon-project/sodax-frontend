@@ -1,45 +1,38 @@
 'use client';
 
 import Image from 'next/image';
-import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { PackageOpen, Settings2, Users } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Bot, PackageOpen, Settings2, Users } from 'lucide-react';
+import { NETWORK_ICON_MAP } from './network-icons';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const MICA_WHITEPAPER_URL = '#'; // TODO: Replace with actual MiCa-compliant whitepaper URL
 
-const CHAIN_NETWORKS = [
-  { src: '/chain/ethereum.png', name: 'Ethereum' },
-  { src: '/chain/0x2105.base.png', name: 'Base' },
-  { src: '/chain/0x38.bsc.png', name: 'BNB Chain' },
-  { src: '/chain/0x89.polygon.png', name: 'Polygon' },
-  { src: '/chain/0xa.optimism.png', name: 'Optimism' },
-  { src: '/chain/0xa4b1.arbitrum.png', name: 'Arbitrum' },
-  { src: '/chain/0xa86a.avax.png', name: 'Avalanche' },
-  { src: '/chain/0x2019.kaia.png', name: 'Kaia' },
-  { src: '/chain/icon.png', name: 'ICON' },
-  { src: '/chain/injective-1.png', name: 'Injective' },
-  { src: '/chain/lightlink.png', name: 'LightLink' },
-  { src: '/chain/nibiru.png', name: 'Nibiru' },
-  { src: '/chain/solana.png', name: 'Solana' },
-  { src: '/chain/sonic.png', name: 'Sonic' },
-  { src: '/chain/stellar.png', name: 'Stellar' },
-  { src: '/chain/sui.png', name: 'Sui' },
-  { src: '/chain/hyper.png', name: 'Hyper' },
+const NETWORK_NAMES = [
+  'Ethereum',
+  'Base',
+  'BNB Chain',
+  'Polygon',
+  'Optimism',
+  'Arbitrum',
+  'Avalanche',
+  'Kaia',
+  'ICON',
+  'Injective',
+  'Nibiru',
+  'Solana',
+  'Sonic',
+  'Stellar',
+  'Sui',
+  'HyperEVM',
+  'Bitcoin',
+  'Near',
+  'Stacks',
+  'Redbelly',
 ];
 
 export default function PartnersHeroSection() {
-  const bannerRef = useRef<HTMLDivElement>(null);
-
-  // Scrub scroll progress scoped to the banner element's visibility
-  const { scrollYProgress } = useScroll({
-    target: bannerRef,
-    offset: ['start end', 'end start'], // 0 = banner enters viewport bottom, 1 = exits top
-  });
-
-  // Map scroll progress → horizontal translate (right-to-left as user scrolls down)
-  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-15%']);
   return (
     <section
       className="relative flex flex-col items-center bg-cherry-soda overflow-hidden pt-32 pb-30"
@@ -128,26 +121,30 @@ export default function PartnersHeroSection() {
         </div>
       </motion.div>
 
-      {/* Trust Banner — Supported Networks */}
-      <div ref={bannerRef} className="w-full mt-16 mb-4 overflow-hidden" aria-label="Supported networks">
+      {/* Trust Banner — Supported Networks (infinite marquee) */}
+      <div className="w-full mt-16 mb-4 overflow-x-clip" aria-label="Supported networks">
         <div className="relative w-full">
           {/* Fade edges */}
           <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 z-10 bg-gradient-to-r from-cherry-soda via-cherry-soda to-transparent" />
           <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 z-10 bg-gradient-to-l from-cherry-soda via-cherry-soda to-transparent" />
-          {/* Scroll-driven track */}
-          <motion.div style={{ x }} className="flex items-center w-max will-change-transform">
-            {[...CHAIN_NETWORKS, ...CHAIN_NETWORKS].map((chain, i) => (
-              <div key={`${chain.name}-${i}`} className="mx-8 shrink-0">
-                <Image
-                  src={chain.src}
-                  alt={chain.name}
-                  width={48}
-                  height={48}
-                  className="rounded-full grayscale-[90%] opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-200"
-                />
-              </div>
-            ))}
-          </motion.div>
+          {/* Infinite scrolling track */}
+          <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
+            {[...NETWORK_NAMES, ...NETWORK_NAMES].map((name, i) => {
+              const Icon = NETWORK_ICON_MAP[name];
+              if (!Icon) return null;
+              return (
+                <div
+                  key={`${name}-${i}`}
+                  className="group/icon relative mx-8 shrink-0 text-white opacity-20 hover:opacity-100 transition-opacity duration-300"
+                >
+                  <Icon width={40} height={40} aria-label={name} />
+                  <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap rounded-md bg-black/80 px-2.5 py-1 font-['InterRegular'] text-[11px] text-white opacity-0 scale-95 group-hover/icon:opacity-100 group-hover/icon:scale-100 transition-all duration-200">
+                    {name}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -240,6 +237,14 @@ export default function PartnersHeroSection() {
           >
             Integration Options
             <Settings2 size={16} className="text-cherry-bright" />
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
+            onClick={() => document.getElementById('builders-mcp')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Builders MCP
+            <Bot size={16} className="text-cherry-bright" />
           </button>
         </div>
       </motion.div>
