@@ -33,15 +33,15 @@ export default function PartnersCtaSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col gap-8 items-center"
+          className="flex flex-col gap-6 md:gap-8 items-center px-4"
         >
           {/* Title */}
-          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso text-center max-w-140">
+          <h2 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso text-center max-w-full md:max-w-140">
             Build cross-network applications. <span className="text-yellow-dark">Skip the infrastructure.</span>
           </h2>
 
           {/* Subtitle */}
-          <p className="font-['InterRegular'] text-[18px] leading-[1.2] text-espresso text-center max-w-132">
+          <p className="font-['InterRegular'] text-[16px] sm:text-[18px] leading-[1.4] sm:leading-[1.2] text-espresso text-center max-w-full md:max-w-132">
             SODAX is built as infrastructure for modern money, coordinating complex DeFi execution across networks and
             liquidity as a single system.
           </p>
@@ -51,7 +51,7 @@ export default function PartnersCtaSection() {
             href="https://docs.sodax.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer"
+            className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer w-full sm:w-auto"
           >
             <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-white text-center">
               View documentation
@@ -59,7 +59,7 @@ export default function PartnersCtaSection() {
           </a>
 
           {/* Email Note */}
-          <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-center">
+          <p className="font-['InterRegular'] text-[13px] sm:text-[14px] leading-[1.4] text-center">
             <span className="text-espresso">Reach out to </span>
             <a href="mailto:partnerships@sodax.com" className="text-clay hover:underline cursor-pointer">
               partnerships@sodax.com
@@ -83,10 +83,12 @@ export default function PartnersCtaSection() {
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white border-2 border-clay/20 rounded-lg flex flex-col gap-4 items-start justify-center p-6 w-full sm:w-76 hover:border-cherry-bright transition-colors cursor-pointer group"
+              className="bg-white border-2 border-clay/20 rounded-lg flex flex-col gap-4 items-start justify-center p-5 md:p-6 w-full sm:w-76 hover:border-cherry-bright transition-colors cursor-pointer group"
             >
               <div className="flex items-center justify-between w-full">
-                <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{link.title}</h3>
+                <h3 className="font-['InterBold'] text-[16px] sm:text-[18px] leading-[1.2] text-espresso">
+                  {link.title}
+                </h3>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -103,7 +105,7 @@ export default function PartnersCtaSection() {
                   <path d="M7 7h10v10" />
                 </svg>
               </div>
-              <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark w-full">
+              <p className="font-['InterRegular'] text-[13px] sm:text-[14px] leading-[1.4] text-clay-dark w-full">
                 {link.description}
               </p>
             </motion.a>

@@ -91,25 +91,21 @@ export default function PartnersHeroSection() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease, delay: 0.25 }}
-        className="flex flex-col gap-8 items-center text-center max-w-140 mx-auto px-6"
+        className="flex flex-col gap-6 md:gap-8 items-center text-center max-w-140 mx-auto px-4 md:px-6"
       >
-        <h1 className="font-['InterBold'] text-[32px] md:text-[42px] leading-[1.1] text-white text-center">
-          Build cross-network applications.{' '}
-          <span className="text-yellow-soda">
-            Skip the
-            <br className="hidden md:block" /> infrastructure.
-          </span>
+        <h1 className="font-['InterBold'] text-[28px] sm:text-[36px] md:text-[42px] leading-[1.1] text-white text-center max-w-full">
+          Build cross-network applications. <span className="text-yellow-soda">Skip the infrastructure.</span>
         </h1>
 
-        <p className="font-['InterRegular'] text-[18px] leading-[1.2] text-white max-w-132">
+        <p className="font-['InterRegular'] text-[16px] md:text-[18px] leading-[1.4] md:leading-[1.2] text-white max-w-[90vw] md:max-w-132">
           SODAX is built as infrastructure for modern money, coordinating complex DeFi execution across networks and
           liquidity as a single system.
         </p>
 
-        <div className="flex gap-4 items-center justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center w-full sm:w-auto">
           <button
             type="button"
-            className="bg-white hover:bg-cream text-espresso font-['InterMedium'] text-[14px] leading-[1.4] h-10 px-6 py-2 rounded-[240px] text-center transition-colors cursor-pointer"
+            className="bg-white hover:bg-cream text-espresso font-['InterMedium'] text-[14px] leading-[1.4] h-10 px-6 py-2 rounded-[240px] text-center transition-colors cursor-pointer w-full sm:w-auto"
             onClick={() => {
               window.location.href = 'mailto:partnerships@sodax.com?subject=Partnership Inquiry';
             }}
@@ -118,7 +114,7 @@ export default function PartnersHeroSection() {
           </button>
           <button
             type="button"
-            className="bg-transparent border-3 border-cherry-bright text-cream font-['InterRegular'] text-[14px] leading-[1.4] h-10 px-6 py-2 rounded-[240px] text-center transition-colors cursor-pointer"
+            className="bg-transparent border-3 border-cherry-bright text-cream font-['InterRegular'] text-[14px] leading-[1.4] h-10 px-6 py-2 rounded-[240px] text-center transition-colors cursor-pointer w-full sm:w-auto"
             onClick={() => window.open('https://docs.sodax.com', '_blank')}
           >
             View documentation
@@ -162,7 +158,7 @@ export default function PartnersHeroSection() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, ease, delay: 0.6 }}
-        className="flex flex-col gap-4 items-center mt-auto pt-24"
+        className="flex flex-col gap-4 items-center mt-auto pt-16 md:pt-24 w-full"
       >
         {/* Divider */}
         <div>
@@ -170,40 +166,40 @@ export default function PartnersHeroSection() {
           <div className="w-136 max-w-[90vw] h-0.5 bg-cherry-dark/20" />
         </div>
 
-        <p className="font-['InterRegular'] text-[16px] leading-[1.4] text-cherry-brighter">Jump to</p>
+        <p className="font-['InterRegular'] text-[14px] md:text-[16px] leading-[1.4] text-cherry-brighter">Jump to</p>
 
-        <div className="flex gap-6 items-center">
+        <div className="grid grid-cols-2 lg:flex gap-3 lg:gap-6 items-center justify-center max-w-4xl px-6 w-fit md:px-8">
           <button
             type="button"
-            className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
+            className="flex items-center justify-start gap-2 font-['InterRegular'] text-[14px] md:text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
             onClick={() => document.getElementById('case-studies')?.scrollIntoView({ behavior: 'smooth' })}
           >
             Case studies
-            <Users size={16} className="text-cherry-bright" />
+            <Users size={16} className="text-cherry-bright shrink-0" />
           </button>
           <button
             type="button"
-            className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
+            className="flex items-center justify-start gap-2 font-['InterRegular'] text-[14px] md:text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
             onClick={() => document.getElementById('sodax-advantages')?.scrollIntoView({ behavior: 'smooth' })}
           >
             SODAX advantages
-            <PackageOpen size={16} className="text-cherry-bright" />
+            <PackageOpen size={16} className="text-cherry-bright shrink-0" />
           </button>
           <button
             type="button"
-            className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
+            className="flex items-center justify-start gap-2 font-['InterRegular'] text-[14px] md:text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
             onClick={() => document.getElementById('integration-options')?.scrollIntoView({ behavior: 'smooth' })}
           >
             Integration options
-            <Settings2 size={16} className="text-cherry-bright" />
+            <Settings2 size={16} className="text-cherry-bright shrink-0" />
           </button>
           <button
             type="button"
-            className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
+            className="flex items-center justify-start gap-2 font-['InterRegular'] text-[14px] md:text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
             onClick={() => document.getElementById('builders-mcp')?.scrollIntoView({ behavior: 'smooth' })}
           >
             Builders MCP
-            <Bot size={16} className="text-cherry-bright" />
+            <Bot size={16} className="text-cherry-bright shrink-0" />
           </button>
         </div>
       </motion.div>

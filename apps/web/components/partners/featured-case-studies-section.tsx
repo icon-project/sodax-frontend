@@ -52,13 +52,13 @@ export default function FeaturedCaseStudiesSection() {
     >
       <div className="flex flex-col gap-6 items-center max-w-236 mx-auto w-full">
         {/* Title */}
-        <div className="flex gap-2 items-center">
-          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} />
-          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Proven success</h2>
+        <div className="flex gap-2 items-center px-4">
+          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="flex-shrink-0" />
+          <h2 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Proven success</h2>
         </div>
 
         {/* Subtitle */}
-        <p className="font-['InterRegular'] text-[16px] leading-[1.4] text-espresso text-center">
+        <p className="font-['InterRegular'] text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center px-4">
           Real partners, real outcomes. See how teams are building with SODAX.
         </p>
 
@@ -68,20 +68,28 @@ export default function FeaturedCaseStudiesSection() {
           whileInView="show"
           viewport={{ once: true, margin: '-80px' }}
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12 } } }}
-          className="flex flex-col md:flex-row gap-4 items-stretch w-full"
+          className="flex flex-col lg:flex-row gap-4 items-stretch w-full"
         >
           {caseStudies.map(study => (
             <motion.div
               key={study.name}
               variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-white rounded-3xl flex flex-col gap-4 items-start pt-12 pb-6 px-6 w-full md:w-76 md:shrink-0 self-stretch"
+              className="bg-white rounded-3xl flex flex-col gap-4 items-start pt-8 md:pt-12 pb-6 px-5 md:px-6 w-full lg:flex-1 self-stretch"
             >
               {/* Partner Name + Tagline */}
               <div className="flex flex-col gap-1 items-start">
                 <div className="flex gap-2 items-center">
-                  <Image src={study.logo} alt={`${study.name} logo`} width={16} height={16} className="rounded-sm" />
-                  <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{study.name}</h3>
+                  <Image
+                    src={study.logo}
+                    alt={`${study.name} logo`}
+                    width={16}
+                    height={16}
+                    className="rounded-sm flex-shrink-0"
+                  />
+                  <h3 className="font-['InterBold'] text-[16px] sm:text-[18px] leading-[1.2] text-espresso">
+                    {study.name}
+                  </h3>
                 </div>
                 <span className="font-['InterRegular'] text-[11px] leading-[1.3] text-clay">{study.tagline}</span>
               </div>
@@ -92,14 +100,16 @@ export default function FeaturedCaseStudiesSection() {
               </p>
 
               {/* Metrics Row */}
-              <div className="flex gap-6 items-center">
+              <div className="flex gap-3 sm:gap-6 items-center flex-wrap">
                 {study.metrics.map((metric, i) => (
-                  <div key={metric.label} className="flex gap-4 items-center">
+                  <div key={metric.label} className="flex gap-3 sm:gap-4 items-center">
                     {/* Vertical divider */}
-                    <div className="w-px h-12 bg-clay-light" />
+                    <div className="w-px h-10 sm:h-12 bg-clay-light" />
                     <div className="flex flex-col items-start">
-                      <span className="font-['InterBold'] text-[15px] leading-[1.2] text-espresso">{metric.value}</span>
-                      <span className="font-['InterRegular'] text-[11px] leading-[1.4] text-clay-light">
+                      <span className="font-['InterBold'] text-[14px] sm:text-[15px] leading-[1.2] text-espresso">
+                        {metric.value}
+                      </span>
+                      <span className="font-['InterRegular'] text-[10px] sm:text-[11px] leading-[1.4] text-clay-light">
                         {metric.label}
                       </span>
                     </div>
@@ -110,7 +120,7 @@ export default function FeaturedCaseStudiesSection() {
               {/* CTA Button */}
               <Link
                 href={study.href}
-                className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer"
+                className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer w-full sm:w-auto"
               >
                 <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-espresso text-center">
                   Read case study
