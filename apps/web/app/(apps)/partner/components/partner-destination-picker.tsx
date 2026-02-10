@@ -5,24 +5,24 @@ import type { XToken, SpokeChainId } from '@sodax/types';
 import { TokenAsset } from '@/components/shared/token-asset';
 
 interface PartnerDestinationPickerProps {
-  availableChains: XToken[]; // same token, different chains
+  availableTokens: XToken[]; // same token, different chains
   selectedChainId: SpokeChainId;
   onChange: (token: XToken) => void;
   onOpenChange?: (open: boolean) => void; //
 }
 
 export function PartnerDestinationPicker({
-  availableChains,
+  availableTokens,
   selectedChainId,
   onChange,
   onOpenChange,
 }: PartnerDestinationPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  if (availableChains.length === 0) return null;
+  if (availableTokens.length === 0) return null;
 
-  const fallbackToken = availableChains[0] as XToken;
-  const selectedToken = availableChains.find(t => t.xChainId === selectedChainId) ?? fallbackToken;
+  const fallbackToken = availableTokens[0] as XToken;
+  const selectedToken = availableTokens.find(t => t.xChainId === selectedChainId) ?? fallbackToken;
 
   return (
     <div className="relative inline-block">
@@ -32,8 +32,8 @@ export function PartnerDestinationPicker({
         token={selectedToken}
         isHoldToken={false}
         isGroup
-        tokenCount={availableChains.length}
-        tokens={availableChains}
+        tokenCount={availableTokens.length}
+        tokens={availableTokens}
         isClicked={isOpen}
         isHoverDimmed={false}
         isClickBlurred={false}

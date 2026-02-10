@@ -289,9 +289,7 @@ export class PartnerFeeClaimService {
    * @returns A promise resolving to a Result containing the auto swap preferences, or an Error on failure.
    *   The auto swap preferences include the output token, destination chain, and destination address.
    */
-  public async getAutoSwapPreferences(
-    params: SonicAddressOrSpokeType,
-  ): Promise<Result<AutoSwapPreferences, Error>> {
+  public async getAutoSwapPreferences(params: SonicAddressOrSpokeType): Promise<Result<AutoSwapPreferences, Error>> {
     try {
       let queryAddress: string;
       if ('address' in params) {
@@ -364,6 +362,16 @@ export class PartnerFeeClaimService {
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
+      const outputToken =
+        params.dstChain !== this.hubProvider.chainConfig.chain.id
+          ? this.hubProvider.configService.getHubAssetInfo(params.dstChain, params.outputToken)?.asset
+          : params.outputToken;
+
+      invariant(
+        outputToken,
+        `hub asset not found for spoke chain token (params.outputToken): ${params.outputToken} with chain id: ${params.dstChain}`,
+      );
+
       const rawTx = {
         from: walletAddress as GetAddressType<SonicSpokeProviderType>,
         to: this.config.protocolIntentsContract,
@@ -372,7 +380,7 @@ export class PartnerFeeClaimService {
           abi: ProtocolIntentsAbi,
           functionName: 'setAutoSwapPreferences',
           args: [
-            params.outputToken,
+            outputToken,
             BigInt(getIntentRelayChainId(params.dstChain)),
             encodeAddress(params.dstChain, params.dstAddress),
           ],

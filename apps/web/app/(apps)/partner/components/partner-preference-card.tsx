@@ -136,7 +136,7 @@ export function PartnerPreferencesCard(props: {
             {/* LEFT: Picker anchored to bottom-left */}
             <div className="flex flex-col justify-center mx-auto">
               <PartnerDestinationPicker
-                availableChains={usdcDestinations}
+                availableTokens={usdcDestinations}
                 selectedChainId={dstChain}
                 onChange={token => {
                   setDstChain(token.xChainId);
