@@ -42,11 +42,11 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <FooterLink href="https://app.balanced.network/" showArrow>
             Balanced DeFi
           </FooterLink>
-          <FooterLink href="/partner" showArrow>
+          {/* <FooterLink href="/partner" showArrow>
             <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
               partner portal
             </div>
-          </FooterLink>
+          </FooterLink> */}
         </div>
         <div className="inline-flex flex-col justify-start items-start gap-3 w-33.5">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
