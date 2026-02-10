@@ -46,7 +46,6 @@ export async function getAssetUsdPrice(assetSymbol: string): Promise<AssetUsdPri
       throw new Error(`Error fetching price: ${response.statusText}`);
     }
     const data = await response.json();
-    console.log('Fetched price data:', data);
     return {
       usdPrice: data.usd_price,
     };
