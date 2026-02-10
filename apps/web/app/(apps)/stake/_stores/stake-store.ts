@@ -114,7 +114,6 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
           stakeValue: state.stakeValue.toString(),
           stakeTypedValue: state.stakeTypedValue,
           totalStakedUsdValue: state.totalStakedUsdValue,
-          selectedToken: state.selectedToken,
           stakeMode: state.stakeMode,
           unstakeMethod: state.unstakeMethod,
           currentUnstakeStep: state.currentUnstakeStep,

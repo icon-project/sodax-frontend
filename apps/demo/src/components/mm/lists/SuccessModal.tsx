@@ -1,7 +1,6 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2 } from 'lucide-react';
 import type { ChainId, XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/constants';
 
@@ -51,7 +50,7 @@ export function SuccessModal({ open, onClose, data, action }: SuccessModalProps)
       case 'supply':
         return (
           <p className="text-sm text-clay text-center">
-            Your <strong>{data.token.symbol}</strong> is now earning interest on <strong>{sourceName}</strong>. 📈
+            Your <strong>{data.token.symbol}</strong> is now earning interest on <strong>{sourceName}</strong>.
           </p>
         );
       case 'withdraw':

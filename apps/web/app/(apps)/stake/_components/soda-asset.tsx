@@ -22,7 +22,8 @@ export function SodaAsset({
   const { isNetworkPickerOpened } = useStakeState();
   const { setIsNetworkPickerOpened } = useStakeActions();
   const assetRef = useRef<HTMLDivElement>(null);
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedToken?.xChainId as ChainId);
+  const chainId = (selectedToken?.xChainId || token?.xChainId) as ChainId;
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(chainId);
   useClickAway(assetRef, event => {
     const target = event.target as HTMLElement;
     const isInNetworkPicker = target.closest('.network-picker-container') !== null;
@@ -33,7 +34,7 @@ export function SodaAsset({
 
   return (
     <div onClick={() => setIsNetworkPickerOpened(!isNetworkPickerOpened)} className="relative" ref={assetRef}>
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-2 cursor-pointer">
         <div className="relative">
           {selectedToken ? (
             <CurrencyLogo

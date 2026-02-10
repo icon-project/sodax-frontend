@@ -64,12 +64,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const wasPublished = existing.published;
     const isNowPublished = body.published ?? existing.published;
 
+    // Handle publishedAt: use provided date, or set to now if transitioning to published
+    let publishedAt = existing.publishedAt;
+    if (body.publishedAt !== undefined) {
+      publishedAt = body.publishedAt ? new Date(body.publishedAt) : undefined;
+    } else if (isNowPublished && !wasPublished) {
+      publishedAt = new Date();
+    }
+
     const update = {
       ...body,
       slug,
       updatedAt: new Date(),
-      // Set publishedAt if transitioning to published state
-      ...(isNowPublished && !wasPublished && { publishedAt: new Date() }),
+      publishedAt,
     };
 
     const result = await collection.findOneAndUpdate(

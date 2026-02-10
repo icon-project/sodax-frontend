@@ -82,6 +82,15 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date();
+
+    // Determine publish date: use provided date, or now if publishing, or undefined
+    let publishedAt: Date | undefined;
+    if (validated.publishedAt) {
+      publishedAt = new Date(validated.publishedAt);
+    } else if (validated.published) {
+      publishedAt = now;
+    }
+
     const article: NewsArticle = {
       title: validated.title,
       slug,
@@ -91,9 +100,9 @@ export async function POST(request: NextRequest) {
       metaTitle: validated.metaTitle || validated.title,
       metaDescription: validated.metaDescription || sanitizedExcerpt,
       published: validated.published,
-      publishedAt: validated.published ? now : undefined,
-      authorId: session.user.id,
-      authorName: session.user.name,
+      publishedAt,
+      authorId: validated.authorId || session.user.id,
+      authorName: validated.authorName || session.user.name,
       tags: validated.tags,
       categories: validated.categories,
       createdAt: now,

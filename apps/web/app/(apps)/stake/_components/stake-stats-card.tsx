@@ -12,15 +12,15 @@ export function StakeStatsCard(): React.JSX.Element {
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
 
   return (
-    <div className="w-full relative flex flex-col justify-start items-start gap-4 bg-blend-multiply">
+    <div className="w-full relative flex flex-col justify-start items-start gap-4">
       <div className="w-full flex justify-between items-center gap-(--layout-space-small)">
         <div data-property-1="Default" className="w-12 h-14 relative">
           <div className="w-14 h-1.5 left-[-4px] top-[50px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_var(--Espresso,_#483534)_0%,_rgba(71.72,_53.14,_52.29,_0)_100%)] rounded-full"></div>
           <div className="w-9 h-1 left-[6px] top-[51px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,_var(--Espresso,_#483534)_0%,_rgba(71.72,_53.14,_52.29,_0)_100%)] rounded-full"></div>
-          <Image className="left-[5px] top-0 absolute" src="/white-can.png" alt="CAN" width={38} height={56} />
+          <Image className="left-[5px] top-0 absolute" src="/can1.png" alt="CAN" width={38} height={56} />
           <Image
             data-property-1="xSODA"
-            className="w-5 h-5 left-[14px] top-[14px] absolute mix-blend-multiply rounded-[256px]"
+            className="w-5 h-5 left-[14px] top-[14px] absolute rounded-[256px]"
             src="/coin/xsoda.png"
             alt="xSODA"
             width={20}
