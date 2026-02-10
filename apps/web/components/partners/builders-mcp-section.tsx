@@ -8,23 +8,23 @@ import { Terminal, Cpu, BookOpen, Copy, Check } from 'lucide-react';
 const tools = [
   {
     icon: Terminal,
-    title: 'Core API Data',
+    title: 'Core API data',
     description:
       'Access live data from the SODAX API including supported chains, swap tokens, transaction lookups, and trading volume.',
     badges: ['Chains', 'Tokens', 'Volume', 'Transactions'],
   },
   {
     icon: Cpu,
-    title: 'DeFi & Token Data',
+    title: 'DeFi & Token data',
     description:
-      'Money market positions, lending assets, partner integrations, and SODA token supply — all queryable by your AI agent.',
+      'Money market positions, lending assets, partner integrations, and SODA token supply, all queryable by your AI agent.',
     badges: ['Lending', 'Borrowing', 'Partners', 'Token supply'],
   },
   {
     icon: BookOpen,
-    title: 'SDK Documentation',
+    title: 'SDK documentation',
     description:
-      'Auto-proxied from docs.sodax.com via GitBook. Updates automatically when docs change — always current.',
+      'Auto-proxied from docs.sodax.com via GitBook. Updates automatically when docs change, always current.',
     badges: ['Auto-sync', 'Search', 'Guides', 'Examples'],
   },
 ];

@@ -6,7 +6,7 @@ import { CheckCircleIcon, ClockIcon } from '@phosphor-icons/react';
 
 const integrationPackages = [
   {
-    title: 'EVM Compatible',
+    title: 'EVM compatible',
     description: 'Deployment for Ethereum-based networks.',
     timeline: '4-6 weeks',
     features: [
@@ -18,7 +18,7 @@ const integrationPackages = [
     ],
   },
   {
-    title: 'Custom / Non-Standard',
+    title: 'Custom / Non-standard',
     description: 'Bespoke integration for unique architectures.',
     timeline: '8-12 weeks',
     features: [
@@ -57,7 +57,7 @@ export default function NetworkIntegrationSection() {
         {/* Title */}
         <div className="flex gap-2 items-center">
           <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} />
-          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Network Integration options</h2>
+          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Network integration options</h2>
         </div>
 
         {/* Subtitle */}

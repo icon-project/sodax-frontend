@@ -44,7 +44,7 @@ const NETWORK_NAMES = [
 export default function PartnersHeroSection() {
   return (
     <section
-      className="relative flex flex-col items-center bg-cherry-soda overflow-hidden pt-32 pb-30"
+      className="relative flex flex-col items-center bg-cherry-soda overflow-hidden pt-60 pb-30"
       aria-label="Partner Network Hero"
     >
       {/* MiCa Compliance Badge */}
@@ -186,7 +186,7 @@ export default function PartnersHeroSection() {
             className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
             onClick={() => document.getElementById('sodax-advantages')?.scrollIntoView({ behavior: 'smooth' })}
           >
-            SODAX Advantages
+            SODAX advantages
             <PackageOpen size={16} className="text-cherry-bright" />
           </button>
           <button
@@ -194,7 +194,7 @@ export default function PartnersHeroSection() {
             className="flex items-center gap-2 font-['InterRegular'] text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
             onClick={() => document.getElementById('integration-options')?.scrollIntoView({ behavior: 'smooth' })}
           >
-            Integration Options
+            Integration options
             <Settings2 size={16} className="text-cherry-bright" />
           </button>
           <button

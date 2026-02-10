@@ -13,31 +13,31 @@ const caseStudies = [
       'Launched cross-network deposits in 2 days instead of months. Zero infrastructure costs for coordinating assets across 14+ networks.',
     metrics: [
       { label: 'To launch', value: '2 days' },
-      { label: 'Infrastructure Cost', value: '$0' },
+      { label: 'Infrastructure cost', value: '$0' },
     ],
     href: '/partners/amped-finance',
   },
   {
     logo: '/partners/hana/logo.svg',
     name: 'Hana Wallet',
-    tagline: 'Multi-Network Web3 Wallet',
+    tagline: 'Multi-network web3 wallet',
     description:
       'Enabled cross-network swaps for 47,000+ users without building custom infrastructure. Competitive 22s settlement time drives user retention.',
     metrics: [
-      { label: 'Users Enabled', value: '47,000+' },
-      { label: 'Dev Cost Saved', value: 'Zero infra team' },
+      { label: 'Users enabled', value: '47,000+' },
+      { label: 'Dev cost saved', value: 'Zero infra team' },
     ],
     href: '/partners/hana',
   },
   {
     logo: '/partners/lightlink-network/logo.svg',
     name: 'LightLink Network',
-    tagline: 'Enterprise-Grade L2',
+    tagline: 'Enterprise-grade L2',
     description:
       'Launched with 20+ non-native assets on day one. Avoided months of individual bridge partnerships and liquidity bootstrapping costs.',
     metrics: [
-      { label: 'Time to Market', value: 'Day 1 liquidity' },
-      { label: 'Partnership Saved', value: '6+ months' },
+      { label: 'Time to market', value: 'Day 1 liquidity' },
+      { label: 'Partnerships saved', value: '6+ months' },
     ],
     href: '/partners/lightlink-network',
   },
@@ -113,7 +113,7 @@ export default function FeaturedCaseStudiesSection() {
                 className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer"
               >
                 <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-espresso text-center">
-                  Read Case Study
+                  Read case study
                 </span>
               </Link>
             </motion.div>

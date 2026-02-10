@@ -5,26 +5,26 @@ import { motion } from 'motion/react';
 
 const advantages = [
   {
-    title: 'Execution Coordination',
+    title: 'Execution coordination',
     description:
       'SODAX coordinates liquidity, timing, and failure modes so you can focus on your application logic. Handles routing paths and recovery without exposing users to intermediate steps. Ship cross-network features in days instead of months.',
     badges: ['Cross-network routing', 'Failure recovery', 'Async execution'],
     featured: true,
   },
   {
-    title: 'EVM and Non-EVM Support',
+    title: 'EVM and non-EVM support',
     description:
       'Connect to Ethereum, Solana, Sui, Stellar, and other environments through a single integration surface. SODAX manages network-specific adapters.',
     badges: ['14+ networks', 'Single integration', 'Multi-VM'],
   },
   {
-    title: 'Multi-Bridge Architecture',
+    title: 'Multi-bridge architecture',
     description:
       'SODAX integrates with established bridge protocols like LayerZero, CCTP, and purpose-built infrastructure. Designed to complement these existing investments rather than replace them.',
     badges: ['LayerZero OFT', 'CCTP', 'Distributed custody'],
   },
   {
-    title: 'Modular Integration',
+    title: 'Modular integration',
     description:
       'Use only the components you need. Built on audited code and battle-tested primitives, integrated through composable SDKs.',
     badges: ['Audited code', 'Composable', 'SDK-based'],
@@ -34,21 +34,21 @@ const advantages = [
 const sdkLayers = [
   {
     number: '1',
-    title: 'Foundation Layer',
+    title: 'Foundation layer',
     description: 'Core logic, swaps, lending, and bridging primitives',
     badge: '@sodax/sdk',
     href: 'https://docs.sodax.com/developers/packages/1.-the-foundation',
   },
   {
     number: '2',
-    title: 'Connection Layer',
+    title: 'Connection layer',
     description: 'Opinionated React wrapper for cross-chain wallet providers',
     badge: '@sodax/wallet-sdk-react',
     href: 'https://docs.sodax.com/developers/packages/2.-the-connection-layer',
   },
   {
     number: '3',
-    title: 'Experience Layer',
+    title: 'Experience layer',
     description: 'Pre-built UI components and hooks for rapid deployment',
     badge: '@sodax/dapp-kit',
     href: 'https://docs.sodax.com/developers/packages/3.-the-experience-layer',
@@ -201,7 +201,7 @@ export default function SodaxAdvantageSection() {
         {/* Three-Layer SDK Architecture */}
         <div className="flex gap-2 items-center">
           <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} />
-          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Three-Layer SDK Architecture</h2>
+          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Three-layer SDK architecture</h2>
         </div>
 
         <motion.div

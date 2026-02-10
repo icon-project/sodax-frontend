@@ -19,25 +19,25 @@ const categories = [
   },
   {
     icon: VaultIcon,
-    title: 'Lending Protocols',
+    title: 'Lending protocols',
     description: 'Support multi-network user flows for collateral and borrowing across chains.',
     examples: ['Aave', 'Compound', 'Venus'],
   },
   {
     icon: TrendUpIcon,
-    title: 'Perp DEXs & Yield Apps',
+    title: 'Perp DEXs & Yield apps',
     description: 'Accept deposits from any supported network. Complete settlement into your native assets.',
     examples: ['Amped Finance', 'GMX', 'dYdX'],
   },
   {
     icon: GlobeIcon,
-    title: 'New Networks',
+    title: 'New networks',
     description: 'Launch with ready-made cross-network capabilities and liquidity access from day one.',
     examples: ['LightLink', 'Sonic', 'New L2s'],
   },
   {
     icon: PathIcon,
-    title: 'Solver Marketplaces',
+    title: 'Solver marketplaces',
     description: 'Add efficient cross-network routes. Benefit end users across popular and exotic pairs.',
     examples: ['Near Intents', '1Inch Fusion'],
   },
@@ -97,7 +97,7 @@ export default function PartnerCategoriesSection() {
         {/* Title */}
         <div className="flex gap-2 items-center">
           <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} />
-          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Built for Builders</h2>
+          <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso">Built for builders</h2>
         </div>
 
         {/* Subtitle */}
