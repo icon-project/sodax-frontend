@@ -105,6 +105,42 @@ export function SupplyAssetsList(): ReactElement {
       .filter((address): address is `0x${string}` => isAddress(address));
   }, [formattedReserves]);
 
+  const getAllTokenInstances = (tokenSymbol: string): XToken[] => {
+    const allTokens: XToken[] = [];
+
+    // Helper to check if symbols are related
+    const isRelatedToken = (symbol: string, baseSymbol: string): boolean => {
+      // Direct match
+      if (symbol === baseSymbol) return true;
+
+      // Check for soda-wrapped versions
+      if (symbol === `soda${baseSymbol}`) return true;
+      if (baseSymbol === `soda${symbol}`) return true;
+
+      // Strip 'soda' prefix for comparison
+      const stripSoda = (s: string) => (s.startsWith('soda') ? s.slice(4) : s);
+      return stripSoda(symbol) === stripSoda(baseSymbol);
+    };
+
+    // Search all chains for related tokens
+    Object.keys(moneyMarketSupportedTokens).forEach(chainId => {
+      const chainTokens = moneyMarketSupportedTokens[chainId as unknown as ChainId];
+
+      if (!chainTokens) return;
+
+      // Find matching token (POL, sodaPOL, etc.)
+      const matchingToken = chainTokens.find(t => isRelatedToken(t.symbol, tokenSymbol));
+
+      if (matchingToken) {
+        console.log('✅ Found', matchingToken.symbol, 'on', chainId);
+        allTokens.push(matchingToken);
+      }
+    });
+
+    console.log('📊 Total instances:', allTokens);
+    return allTokens;
+  };
+
   // Fetch all aToken balances in a single multicall
   const {
     data: aTokenBalancesMap,
@@ -263,6 +299,7 @@ export function SupplyAssetsList(): ReactElement {
             setSupplyData(null);
             handleRefresh();
           }}
+          availableTokens={getAllTokenInstances(supplyData.token.symbol)}
         />
       )}
       {repayData && (
