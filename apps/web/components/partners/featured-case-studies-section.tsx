@@ -53,7 +53,7 @@ export default function FeaturedCaseStudiesSection() {
       <div className="flex flex-col gap-6 items-center max-w-236 mx-auto w-full">
         {/* Title */}
         <div className="flex gap-2 items-center px-4">
-          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="flex-shrink-0" />
+          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
           <h2 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Proven success</h2>
         </div>
 
@@ -85,7 +85,7 @@ export default function FeaturedCaseStudiesSection() {
                     alt={`${study.name} logo`}
                     width={16}
                     height={16}
-                    className="rounded-sm flex-shrink-0"
+                    className="rounded-sm shrink-0"
                   />
                   <h3 className="font-['InterBold'] text-[16px] sm:text-[18px] leading-[1.2] text-espresso">
                     {study.name}
@@ -95,7 +95,7 @@ export default function FeaturedCaseStudiesSection() {
               </div>
 
               {/* Description */}
-              <p className="font-['InterRegular'] text-[13px] leading-[1.5] text-clay-dark w-full flex-1">
+              <p className="font-['InterRegular'] text-[13px] leading-normal text-clay-dark w-full flex-1">
                 {study.description}
               </p>
 

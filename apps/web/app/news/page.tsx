@@ -175,10 +175,10 @@ export default async function NewsPage(props: {
       <>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <div className="min-h-screen bg-[var(--almost-white)] flex items-center justify-center px-4">
+        <div className="min-h-screen bg-almost-white flex items-center justify-center px-4">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-[var(--espresso)] mb-4">No News Yet</h1>
-            <p className="text-[var(--clay)] text-lg">Check back soon for updates.</p>
+            <h1 className="text-4xl font-bold text-espresso mb-4">No News Yet</h1>
+            <p className="text-clay text-lg">Check back soon for updates.</p>
           </div>
         </div>
       </>
@@ -194,20 +194,20 @@ export default async function NewsPage(props: {
       <>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        <div className="relative min-h-screen w-full bg-[var(--almost-white)]">
+        <div className="relative min-h-screen w-full bg-almost-white">
           <MarketingHeader backLink="/" backText="← home" />
           <div className="max-w-7xl mx-auto px-4 py-16">
-            <div className="bg-white rounded-lg p-8 text-center border-2 border-[var(--clay-light)]">
-              <h2 className="text-2xl font-bold text-[var(--espresso)] mb-2">
+            <div className="bg-white rounded-lg p-8 text-center border-2 border-clay-light">
+              <h2 className="text-2xl font-bold text-espresso mb-2">
                 {category ? `No articles in "${category}" category` : 'No news articles available'}
               </h2>
-              <p className="text-[var(--clay)] mb-4">
+              <p className="text-clay mb-4">
                 {category ? 'Try selecting a different category or view all news.' : 'Check back soon for updates.'}
               </p>
               {category && (
                 <Link
                   href="/news"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--cherry-soda)] text-white font-semibold rounded-lg hover:bg-[var(--cherry-dark)] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-cherry-soda text-white font-semibold rounded-lg hover:bg-cherry-dark transition-colors"
                 >
                   View All News
                 </Link>
@@ -224,7 +224,7 @@ export default async function NewsPage(props: {
     <>
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <div className="relative min-h-screen w-full bg-[var(--almost-white)]">
+      <div className="relative min-h-screen w-full bg-almost-white">
         <MarketingHeader backLink="/" backText="← home" />
 
         {/* Category Filter Tabs */}
@@ -295,14 +295,14 @@ export default async function NewsPage(props: {
             {/* Main Content Area */}
             <div className="min-w-0 flex flex-col gap-4">
               {/* Featured Article */}
-              <section className="bg-white rounded-[24px] overflow-hidden shadow-[0px_4px_32px_0px_#ede6e6]">
+              <section className="bg-white rounded-3xl overflow-hidden shadow-[0px_4px_32px_0px_#ede6e6]">
                 <div className="p-2">
                   <Link
                     href={`/news/${featured.slug}`}
                     className="group flex flex-col md:flex-row gap-2 md:items-center"
                   >
                     {featured.image && (
-                      <div className="relative w-full md:w-[288px] h-[200px] md:h-[180px] bg-[#ede6e6] rounded-[16px] overflow-hidden shrink-0">
+                      <div className="relative w-full md:w-[288px] h-50 md:h-45 bg-[#ede6e6] rounded-[16px] overflow-hidden shrink-0">
                         <Image
                           src={featured.image}
                           alt={featured.title}
@@ -315,7 +315,7 @@ export default async function NewsPage(props: {
                     )}
                     <div className={`flex flex-col gap-1 p-2 ${!featured.image ? 'w-full' : 'flex-1'}`}>
                       <span className="text-[9px] font-medium uppercase text-[#8e7e7d] leading-[1.2]">Featured</span>
-                      <h2 className="text-[24px] font-bold text-[#483534] leading-[1.1] group-hover:text-[var(--cherry-soda)] transition-colors">
+                      <h2 className="text-[24px] font-bold text-[#483534] leading-[1.1] group-hover:text-cherry-soda transition-colors">
                         {featured.title}
                       </h2>
                       <p className="text-[14px] text-[#6b5c5b] leading-[1.4] line-clamp-2">{featured.excerpt}</p>
@@ -340,10 +340,10 @@ export default async function NewsPage(props: {
                       <Link
                         key={article._id}
                         href={`/news/${article.slug}`}
-                        className="group bg-white p-2 rounded-[24px] hover:shadow-[0px_8px_40px_0px_#ede6e6] transition-all duration-300 shadow-[0px_4px_32px_0px_#ede6e6] flex flex-col gap-4"
+                        className="group bg-white p-2 rounded-3xl hover:shadow-[0px_8px_40px_0px_#ede6e6] transition-all duration-300 shadow-[0px_4px_32px_0px_#ede6e6] flex flex-col gap-4"
                       >
                         {article.image && (
-                          <div className="relative w-full h-[180px] bg-[#ede6e6] rounded-[16px] overflow-hidden">
+                          <div className="relative w-full h-45 bg-[#ede6e6] rounded-2xl overflow-hidden">
                             <Image
                               src={article.image}
                               alt={article.title}
@@ -357,7 +357,7 @@ export default async function NewsPage(props: {
                           <span className="text-[9px] font-medium uppercase text-[#8e7e7d] leading-[1.2]">
                             TOP STORY
                           </span>
-                          <h3 className="text-[18px] font-bold text-[#483534] leading-[1.2] group-hover:text-[var(--cherry-soda)] transition-colors">
+                          <h3 className="text-[18px] font-bold text-[#483534] leading-[1.2] group-hover:text-cherry-soda transition-colors">
                             {article.title}
                           </h3>
                           <p className="text-[14px] text-[#6b5c5b] leading-[1.4] line-clamp-3">{article.excerpt}</p>
@@ -380,7 +380,7 @@ export default async function NewsPage(props: {
             {/* Sidebar - Highlights */}
             <aside className="flex flex-col gap-4">
               {/* SDK Documentation Card */}
-              <div className="bg-[#ede6e6] rounded-[24px] p-8 flex flex-col gap-4">
+              <div className="bg-[#ede6e6] rounded-3xl p-8 flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
                   <span className="text-[9px] font-medium uppercase text-[#8e7e7d] leading-[1.2]">Developer Docs</span>
                   <h3 className="font-bold text-[16px] text-[#483534] leading-[1.4]">Build with SODAX SDK</h3>
@@ -401,7 +401,7 @@ export default async function NewsPage(props: {
               </div>
 
               {/* Social Media Card */}
-              <div className="bg-[#ede6e6] rounded-[24px] p-8 flex flex-col gap-4">
+              <div className="bg-[#ede6e6] rounded-3xl p-8 flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
                   <span className="text-[9px] font-medium uppercase text-[#8e7e7d] leading-[1.2]">
                     JOIN THE COMMUNITY

@@ -126,8 +126,8 @@ export default function PartnersHeroSection() {
       <div className="w-full mt-16 mb-4 overflow-x-clip group/marquee" aria-label="Supported networks">
         <div className="relative w-full">
           {/* Fade edges */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 z-10 bg-gradient-to-r from-cherry-soda via-cherry-soda to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 z-10 bg-gradient-to-l from-cherry-soda via-cherry-soda to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 z-10 bg-linear-to-r from-cherry-soda via-cherry-soda to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 z-10 bg-linear-to-l from-cherry-soda via-cherry-soda to-transparent" />
           {/* Infinite scrolling track */}
           <div className="flex w-max animate-marquee">
             {[...NETWORK_NAMES, ...NETWORK_NAMES].map((name, i) => {

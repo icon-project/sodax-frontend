@@ -56,7 +56,7 @@ export default function NetworkIntegrationSection() {
       <div className="flex flex-col gap-6 items-center max-w-236 mx-auto w-full">
         {/* Title */}
         <div className="flex gap-2 items-center px-4">
-          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="flex-shrink-0" />
+          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
           <h2 className="font-['InterBold'] text-[24px] sm:text-[28px] md:text-[32px] leading-[1.1] text-espresso text-center sm:text-left">
             Network integration options
           </h2>
@@ -93,7 +93,7 @@ export default function NetworkIntegrationSection() {
 
               {/* Timeline */}
               <div className="flex gap-2 items-center">
-                <ClockIcon weight="regular" className="w-4 h-4 text-clay flex-shrink-0" />
+                <ClockIcon weight="regular" className="w-4 h-4 text-clay shrink-0" />
                 <span className="font-['InterRegular'] text-[12px] leading-[1.4] text-clay-dark">
                   {pkg.timeline} deployment
                 </span>

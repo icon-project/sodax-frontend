@@ -58,7 +58,7 @@ export default function BuildersMcpSection() {
           className="flex flex-col gap-4 items-center px-4"
         >
           <div className="flex gap-2 items-center">
-            <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="flex-shrink-0" />
+            <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
             <h2 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Builders MCP</h2>
           </div>
           <p className="font-['InterRegular'] text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">

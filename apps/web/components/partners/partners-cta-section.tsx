@@ -99,7 +99,7 @@ export default function PartnersCtaSection() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-clay flex-shrink-0"
+                  className="text-clay shrink-0"
                 >
                   <path d="M7 17L17 7" />
                   <path d="M7 7h10v10" />

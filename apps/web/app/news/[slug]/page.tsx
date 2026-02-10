@@ -244,38 +244,38 @@ export default async function NewsArticlePage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleStructuredData) }} />
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }} />
-      <div className="relative min-h-screen w-full bg-[var(--almost-white)]">
+      <div className="relative min-h-screen w-full bg-almost-white">
         <MarketingHeader backLink="/news" backText="← news" />
-        <div className="max-w-7xl mx-auto pt-[100px]">
+        <div className="max-w-7xl mx-auto pt-25">
           {/* Article */}
           <article className="py-8" itemScope itemType="https://schema.org/NewsArticle">
             <div className="container mx-auto px-4 max-w-4xl">
               {/* Breadcrumb */}
-              <nav className="mb-6 text-sm text-[var(--clay)]" aria-label="Breadcrumb">
-                <Link href="/news" className="hover:text-[var(--cherry-soda)] transition-colors">
+              <nav className="mb-6 text-sm text-clay" aria-label="Breadcrumb">
+                <Link href="/news" className="hover:text-cherry-soda transition-colors">
                   News
                 </Link>
                 <span className="mx-2">/</span>
-                <span className="text-[var(--espresso)]">{article.title}</span>
+                <span className="text-espresso">{article.title}</span>
               </nav>
 
               {/* Header */}
               <header className="mb-8">
                 <h1
-                  className="text-4xl md:text-5xl font-black text-[var(--espresso)] leading-tight mb-4"
+                  className="text-4xl md:text-5xl font-black text-espresso leading-tight mb-4"
                   itemProp="headline"
                 >
                   {article.title}
                 </h1>
 
-                <p className="text-xl text-[var(--clay)] leading-relaxed mb-6" itemProp="description">
+                <p className="text-xl text-clay leading-relaxed mb-6" itemProp="description">
                   {article.excerpt}
                 </p>
 
-                <div className="flex items-center gap-4 text-sm text-[var(--clay-light)] pb-6 border-b border-[var(--clay-light)]">
+                <div className="flex items-center gap-4 text-sm text-clay-light pb-6 border-b border-clay-light">
                   <div className="flex items-center gap-2">
                     <span
-                      className="font-medium text-[var(--espresso)]"
+                      className="font-medium text-espresso"
                       itemProp="author"
                       itemScope
                       itemType="https://schema.org/Person"
@@ -296,7 +296,7 @@ export default async function NewsArticlePage({
 
               {/* Featured Image */}
               {article.image && (
-                <div className="relative aspect-[16/9] bg-[var(--cream)] rounded-xl overflow-hidden mb-8 shadow-lg">
+                <div className="relative aspect-video bg-cream rounded-xl overflow-hidden mb-8 shadow-lg">
                   <Image
                     src={article.image}
                     alt={article.title}
@@ -312,32 +312,32 @@ export default async function NewsArticlePage({
               {/* Content - sanitized to prevent XSS */}
               <div
                 className="tiptap prose prose-lg max-w-none
-                  prose-headings:font-black prose-headings:text-[var(--espresso)]
+                  prose-headings:font-black prose-headings:text-espresso
                   prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-4
                   prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3
-                  prose-p:text-[var(--clay)] prose-p:leading-relaxed prose-p:mb-6
-                  prose-a:text-[var(--cherry-soda)] prose-a:font-medium prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-[var(--espresso)] prose-strong:font-bold
+                  prose-p:text-clay prose-p:leading-relaxed prose-p:mb-6
+                  prose-a:text-cherry-soda prose-a:font-medium prose-a:no-underline hover:prose-a:underline
+                prose-strong:text-espresso prose-strong:font-bold
                 prose-ul:list-disc prose-ul:pl-6 prose-ul:my-6
                 prose-ol:list-decimal prose-ol:pl-6 prose-ol:my-6
-                prose-li:text-[var(--clay)] prose-li:mb-2 prose-li:leading-relaxed
-                prose-blockquote:border-l-4 prose-blockquote:border-[var(--cherry-soda)] 
-                prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-[var(--clay)]
-                prose-code:text-[var(--cherry-soda)] prose-code:bg-[var(--cream)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-                prose-pre:bg-[var(--espresso)] prose-pre:text-[var(--cream-white)] prose-pre:rounded-lg
-                prose-hr:border-[var(--clay-light)] prose-hr:my-8"
+                prose-li:text-clay prose-li:mb-2 prose-li:leading-relaxed
+                prose-blockquote:border-l-4 prose-blockquote:border-cherry-soda 
+                prose-blockquote:pl-6 prose-blockquote:italic prose-blockquote:text-clay
+                prose-code:text-cherry-soda prose-code:bg-cream prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                prose-pre:bg-espresso prose-pre:text-cream-white prose-pre:rounded-lg
+                prose-hr:border-clay-light prose-hr:my-8"
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is sanitized with sanitize-html library
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
               />
 
               {/* Tags */}
               {article.tags && article.tags.length > 0 && (
-                <div className="mt-12 pt-8 border-t border-[var(--clay-light)]">
+                <div className="mt-12 pt-8 border-t border-clay-light">
                   <div className="flex flex-wrap gap-2">
                     {article.tags.map(tag => (
                       <span
                         key={tag}
-                        className="px-3 py-1 bg-[var(--cream)] text-[var(--espresso)] text-sm font-medium rounded-full"
+                        className="px-3 py-1 bg-cream text-espresso text-sm font-medium rounded-full"
                       >
                         {tag}
                       </span>
@@ -350,7 +350,7 @@ export default async function NewsArticlePage({
               <div className="mt-12">
                 <Link
                   href="/news"
-                  className="inline-flex items-center gap-2 text-[var(--cherry-soda)] font-medium hover:gap-3 transition-all"
+                  className="inline-flex items-center gap-2 text-cherry-soda font-medium hover:gap-3 transition-all"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <title>Back arrow</title>

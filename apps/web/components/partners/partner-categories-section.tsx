@@ -57,7 +57,7 @@ export default function PartnerCategoriesSection() {
         >
           {/* Metric 1 */}
           <div className="flex flex-col items-center gap-1 px-6 sm:px-8 md:px-12">
-            <span className="font-['InterBold'] text-[32px] sm:text-[36px] md:text-[42px] leading-[1] text-espresso">
+            <span className="font-['InterBold'] text-[32px] sm:text-[36px] md:text-[42px] leading-none text-espresso">
               10
             </span>
             <span className="font-['InterRegular'] text-[12px] sm:text-[13px] leading-[1.3] text-clay-dark text-center">
@@ -73,7 +73,7 @@ export default function PartnerCategoriesSection() {
 
           {/* Metric 2 */}
           <div className="flex flex-col items-center gap-1 px-6 sm:px-8 md:px-12">
-            <span className="font-['InterBold'] text-[32px] sm:text-[36px] md:text-[42px] leading-[1] text-espresso">
+            <span className="font-['InterBold'] text-[32px] sm:text-[36px] md:text-[42px] leading-none text-espresso">
               30k
             </span>
             <span className="font-['InterRegular'] text-[12px] sm:text-[13px] leading-[1.3] text-clay-dark text-center">
@@ -90,7 +90,7 @@ export default function PartnerCategoriesSection() {
           {/* Metric 3 */}
           <div className="flex flex-col items-center gap-1 px-6 sm:px-8 md:px-12">
             <div className="flex items-baseline gap-1.5">
-              <span className="font-['InterBold'] text-[32px] sm:text-[36px] md:text-[42px] leading-[1] text-espresso">
+              <span className="font-['InterBold'] text-[32px] sm:text-[36px] md:text-[42px] leading-none text-espresso">
                 $50k
               </span>
               <span className="font-['InterRegular'] text-[10px] sm:text-[11px] leading-[1.3] text-cherry-soda">
@@ -108,7 +108,7 @@ export default function PartnerCategoriesSection() {
 
         {/* Title */}
         <div className="flex gap-2 items-center px-4">
-          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="flex-shrink-0" />
+          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
           <h2 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso">
             Built for builders
           </h2>
