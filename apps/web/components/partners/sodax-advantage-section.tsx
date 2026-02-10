@@ -7,8 +7,9 @@ const advantages = [
   {
     title: 'Execution Coordination',
     description:
-      'SODAX coordinates liquidity, timing, and failure modes so you can focus on your application logic. Handles routing paths and recovery without exposing users to intermediate steps.',
+      'SODAX coordinates liquidity, timing, and failure modes so you can focus on your application logic. Handles routing paths and recovery without exposing users to intermediate steps. Ship cross-network features in days instead of months.',
     badges: ['Cross-network routing', 'Failure recovery', 'Async execution'],
+    featured: true,
   },
   {
     title: 'EVM and Non-EVM Support',
@@ -19,9 +20,8 @@ const advantages = [
   {
     title: 'Multi-Bridge Architecture',
     description:
-      'Assets are distributed across established bridge protocols—LayerZero, CCTP, and purpose-built infrastructure—so no single bridge holds majority exposure. SODAX routes through the most battle-tested path available.',
+      'SODAX integrates with established bridge protocols like LayerZero, CCTP, and purpose-built infrastructure. Designed to complement these existing investments rather than replace them.',
     badges: ['LayerZero OFT', 'CCTP', 'Distributed custody'],
-    featured: true,
   },
   {
     title: 'Modular Integration',
@@ -29,7 +29,7 @@ const advantages = [
       'Use only the components you need. Built on audited code and battle-tested primitives, integrated through composable SDKs.',
     badges: ['Audited code', 'Composable', 'SDK-based'],
   },
-];
+] as const;
 
 const sdkLayers = [
   {
@@ -74,46 +74,118 @@ export default function SodaxAdvantageSection() {
           </p>
         </div>
 
-        {/* Advantage Cards - 2x2 Grid */}
+        {/* Advantage Cards - Asymmetric Mosaic Layout */}
         <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: '-80px' }}
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
-          className="flex flex-wrap justify-center gap-4 w-full"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+          className="grid grid-cols-1 md:grid-cols-12 gap-4 w-full"
         >
-          {advantages.map(advantage => (
-            <motion.div
-              key={advantage.title}
-              variants={{ hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className={`relative overflow-hidden bg-cream-white rounded-3xl flex flex-col gap-4 items-start justify-center pt-12 pb-6 px-6 w-full md:w-116${'featured' in advantage && advantage.featured ? ' ring-1 ring-espresso/6' : ''}`}
-            >
-              {'featured' in advantage && advantage.featured && (
-                <div
-                  className="absolute inset-0 opacity-[0.03] pointer-events-none"
-                  style={{
-                    backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
-                    backgroundSize: '20px 20px',
-                  }}
-                />
-              )}
-              <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{advantage.title}</h3>
-              <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark w-full">
-                {advantage.description}
-              </p>
-              <div className="flex gap-1 items-start flex-wrap">
-                {advantage.badges.map(badge => (
-                  <span
-                    key={badge}
-                    className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
-                  >
-                    {badge}
-                  </span>
-                ))}
+          {/* Card 1: EVM Support - Top Left */}
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="md:col-span-5 bg-cream-white rounded-3xl p-6 flex flex-col gap-4"
+          >
+            <div className="flex items-start gap-2">
+              <span className="font-mono text-[10px] text-espresso/40 mt-0.5">01</span>
+              <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{advantages[1].title}</h3>
+            </div>
+            <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark">
+              {advantages[1].description}
+            </p>
+            <div className="flex gap-1 flex-wrap mt-auto">
+              {advantages[1].badges.map(badge => (
+                <span
+                  key={badge}
+                  className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Card 2: Execution Coordination - Top Right, Taller, Featured */}
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="md:col-span-7 bg-white rounded-3xl p-6 flex flex-col gap-4"
+          >
+            <div className="flex items-start gap-2">
+              <span className="font-mono text-[10px] text-cherry-soda mt-0.5">02</span>
+              <div className="flex-1">
+                <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{advantages[0].title}</h3>
+                <span className="font-['InterRegular'] text-[10px] leading-[1.3] text-cherry-soda uppercase tracking-wide">
+                  FEATURED
+                </span>
               </div>
-            </motion.div>
-          ))}
+            </div>
+            <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark">
+              {advantages[0].description}
+            </p>
+            <div className="flex gap-1 flex-wrap mt-auto">
+              {advantages[0].badges.map(badge => (
+                <span
+                  key={badge}
+                  className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Card 3: Multi-Bridge - Bottom Left, Taller */}
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="md:col-span-7 bg-cream-white rounded-3xl p-6 flex flex-col gap-4"
+          >
+            <div className="flex items-start gap-2">
+              <span className="font-mono text-[10px] text-espresso/40 mt-0.5">03</span>
+              <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{advantages[2].title}</h3>
+            </div>
+            <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark">
+              {advantages[2].description}
+            </p>
+            <div className="flex gap-1 flex-wrap mt-auto">
+              {advantages[2].badges.map(badge => (
+                <span
+                  key={badge}
+                  className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Card 4: Modular Integration - Bottom Right */}
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="md:col-span-5 bg-cream-white rounded-3xl p-6 flex flex-col gap-4"
+          >
+            <div className="flex items-start gap-2">
+              <span className="font-mono text-[10px] text-espresso/40 mt-0.5">04</span>
+              <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{advantages[3].title}</h3>
+            </div>
+            <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark">
+              {advantages[3].description}
+            </p>
+            <div className="flex gap-1 flex-wrap mt-auto">
+              {advantages[3].badges.map(badge => (
+                <span
+                  key={badge}
+                  className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
+                >
+                  {badge}
+                </span>
+              ))}
+            </div>
+          </motion.div>
         </motion.div>
         {/* CTA Button */}
         <button

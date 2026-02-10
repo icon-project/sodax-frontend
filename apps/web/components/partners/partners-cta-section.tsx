@@ -37,12 +37,13 @@ export default function PartnersCtaSection() {
         >
           {/* Title */}
           <h2 className="font-['InterBold'] text-[32px] leading-[1.1] text-espresso text-center max-w-140">
-            Deliver cross-network actions. <span className="text-yellow-dark">Skip the infrastructure work.</span>
+            Build cross-network applications. <span className="text-yellow-dark">Skip the infrastructure.</span>
           </h2>
 
           {/* Subtitle */}
-          <p className="font-['InterRegular'] text-[18px] leading-[1.2] text-espresso text-center max-w-100">
-            SODAX coordinates execution so you can focus on building your application.
+          <p className="font-['InterRegular'] text-[18px] leading-[1.2] text-espresso text-center max-w-132">
+            SODAX is built as infrastructure for modern money, coordinating complex DeFi execution across networks and
+            liquidity as a single system.
           </p>
 
           {/* CTA Button */}
@@ -82,22 +83,29 @@ export default function PartnersCtaSection() {
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white rounded-3xl flex flex-col gap-4 items-start justify-center pt-12 pb-6 px-6 w-full sm:w-76 hover:opacity-90 transition-opacity cursor-pointer"
+              className="bg-white border-2 border-clay/20 rounded-lg flex flex-col gap-4 items-start justify-center p-6 w-full sm:w-76 hover:border-cherry-bright transition-colors cursor-pointer group"
             >
-              <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{link.title}</h3>
+              <div className="flex items-center justify-between w-full">
+                <h3 className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{link.title}</h3>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-clay flex-shrink-0"
+                >
+                  <path d="M7 17L17 7" />
+                  <path d="M7 7h10v10" />
+                </svg>
+              </div>
               <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark w-full">
                 {link.description}
               </p>
-              <div className="flex gap-1 items-start flex-wrap">
-                {link.badges.map(badge => (
-                  <span
-                    key={badge}
-                    className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
-                  >
-                    {badge}
-                  </span>
-                ))}
-              </div>
             </motion.a>
           ))}
         </motion.div>

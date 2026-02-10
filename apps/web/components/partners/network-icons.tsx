@@ -339,6 +339,31 @@ export function RedbellyIcon(props: IconProps) {
   );
 }
 
+/** LightLink – interlocking shapes */
+export function LightLinkIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <title>LightLink</title>
+      <path
+        d="M5.80579 8.67447C5.41044 9.04511 5.41044 9.66038 5.80579 10.0384L8.71558 12.7664C9.11884 13.1444 9.76722 13.1444 10.1705 12.7664C10.5658 12.3957 10.5658 11.7805 10.1705 11.4024L7.26069 8.67447C6.86534 8.30382 6.20905 8.30382 5.80579 8.67447Z"
+        fill="currentColor"
+      />
+      <path
+        d="M15.6977 7.58482C16.1009 7.20676 16.1009 6.59891 15.6977 6.22085C15.3023 5.85021 14.646 5.85021 14.2428 6.22085L10.1706 10.0385C9.76738 10.4165 9.83854 10.3498 9.44319 10.7205C8.54179 11.5655 7.30829 11.4321 6.90503 11.0614L8.71574 12.759C9.11109 13.1296 9.76738 13.1296 10.1706 12.759L15.6977 7.58482Z"
+        fill="currentColor"
+      />
+      <path
+        d="M10.1944 7.32563C10.5898 6.95499 10.5898 6.33972 10.1944 5.96167L7.28462 3.23374C6.88136 2.85568 6.23298 2.85568 5.82972 3.23374C5.43437 3.60438 5.43437 4.21965 5.82972 4.5977L8.73951 7.32563C9.14277 7.69627 9.79115 7.69627 10.1944 7.32563Z"
+        fill="currentColor"
+      />
+      <path
+        d="M0.302689 8.42246C-0.100571 8.80051 -0.100571 9.40837 0.302689 9.78642C0.698041 10.1571 1.35433 10.1571 1.75758 9.78642L5.82971 5.96139C6.23297 5.58333 6.16181 5.65005 6.55716 5.27941C7.45856 4.43434 8.69206 4.56777 9.09532 4.93842L7.28461 3.24087C6.88926 2.87023 6.23297 2.87023 5.82971 3.24087L0.302689 8.42246Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 /** Lookup map: name → component */
 export const NETWORK_ICON_MAP: Record<string, React.FC<IconProps>> = {
   Ethereum: EthereumIcon,
@@ -361,4 +386,5 @@ export const NETWORK_ICON_MAP: Record<string, React.FC<IconProps>> = {
   Near: NearIcon,
   Stacks: StacksIcon,
   Redbelly: RedbellyIcon,
+  LightLink: LightLinkIcon,
 };

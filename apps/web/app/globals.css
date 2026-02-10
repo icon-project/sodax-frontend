@@ -390,6 +390,10 @@
   animation: marquee 60s linear infinite;
 }
 
+.group\/marquee:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
 .swap-accordion h3 {
   padding-top: 0px !important;
   padding-bottom: 0px !important;

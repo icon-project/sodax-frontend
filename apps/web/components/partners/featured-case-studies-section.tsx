@@ -10,10 +10,10 @@ const caseStudies = [
     name: 'Amped Finance',
     tagline: 'Derivatives DEX on LightLink & Sonic',
     description:
-      'Built cross-network deposit coordination for their derivatives platform. Provides LightLink users with access to assets from other networks.',
+      'Launched cross-network deposits in 2 days instead of months. Zero infrastructure costs for coordinating assets across 14+ networks.',
     metrics: [
-      { label: 'Integration Time', value: '2-4 days' },
-      { label: 'Networks Accessible', value: '14+' },
+      { label: 'To launch', value: '2 days' },
+      { label: 'Infrastructure Cost', value: '$0' },
     ],
     href: '/partners/amped-finance',
   },
@@ -22,10 +22,10 @@ const caseStudies = [
     name: 'Hana Wallet',
     tagline: 'Multi-Network Web3 Wallet',
     description:
-      'Coordinates cross-network swaps for 47,000+ users. Typical settlement completes in around 22 seconds under normal network conditions.',
+      'Enabled cross-network swaps for 47,000+ users without building custom infrastructure. Competitive 22s settlement time drives user retention.',
     metrics: [
-      { label: 'Users', value: '47,000+' },
-      { label: 'Typical Settlement', value: '~22s' },
+      { label: 'Users Enabled', value: '47,000+' },
+      { label: 'Dev Cost Saved', value: 'Zero infra team' },
     ],
     href: '/partners/hana',
   },
@@ -34,10 +34,10 @@ const caseStudies = [
     name: 'LightLink Network',
     tagline: 'Enterprise-Grade L2',
     description:
-      'Uses sodaVariants (BTC.LL, SOL.LL) to make non-native assets usable on LightLink from launch. Backed by system-level liquidity inventory.',
+      'Launched with 20+ non-native assets on day one. Avoided months of individual bridge partnerships and liquidity bootstrapping costs.',
     metrics: [
-      { label: 'Asset Variants', value: '20+' },
-      { label: 'Liquidity Depth', value: '$4M+' },
+      { label: 'Time to Market', value: 'Day 1 liquidity' },
+      { label: 'Partnership Saved', value: '6+ months' },
     ],
     href: '/partners/lightlink-network',
   },
@@ -87,7 +87,7 @@ export default function FeaturedCaseStudiesSection() {
               </div>
 
               {/* Description */}
-              <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark w-full flex-1">
+              <p className="font-['InterRegular'] text-[13px] leading-[1.5] text-clay-dark w-full flex-1">
                 {study.description}
               </p>
 
@@ -98,8 +98,8 @@ export default function FeaturedCaseStudiesSection() {
                     {/* Vertical divider */}
                     <div className="w-px h-12 bg-clay-light" />
                     <div className="flex flex-col items-start">
-                      <span className="font-['InterBold'] text-[18px] leading-[1.2] text-espresso">{metric.value}</span>
-                      <span className="font-['InterRegular'] text-[12px] leading-[1.4] text-clay-light">
+                      <span className="font-['InterBold'] text-[15px] leading-[1.2] text-espresso">{metric.value}</span>
+                      <span className="font-['InterRegular'] text-[11px] leading-[1.4] text-clay-light">
                         {metric.label}
                       </span>
                     </div>
