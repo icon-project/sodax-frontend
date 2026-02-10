@@ -35,21 +35,15 @@ export function NetworkPicker({
   const chainIds = useMemo(() => tokens.map(token => token.xChainId), [tokens]);
   const allChainXSodaBalances = useAllChainXSodaBalances(chainIds);
 
-  // Create a map of token balances for quick lookup
-  // For staking: use SODA balance per chain
-  // For unstaking: use xSODA balance per chain (pre-calculated for all networks)
   const tokenBalances = useMemo(() => {
     const balances: Map<string, bigint> = new Map();
 
     if (stakeMode === STAKE_MODE.UNSTAKING) {
-      // For unstaking, use xSODA balance for each chain
       tokens.forEach(token => {
         const xSodaBalance = allChainXSodaBalances.get(token.xChainId) || 0n;
         balances.set(token.xChainId, xSodaBalance);
       });
-      console.log('all xsodabalances', balances);
     } else {
-      // For staking, use SODA balance per chain
       tokens.forEach(token => {
         const balanceEntries = allChainBalances[token.address] || [];
         const balanceEntry = balanceEntries.find(entry => entry.chainId === token.xChainId);

@@ -14,6 +14,7 @@ import {
   ETHEREUM_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   KAIA_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export interface ChainUI {
@@ -35,6 +36,7 @@ export const EVM_CHAIN_ICONS = [
   '/chain/lightlink.png',
   '/chain/hyper.png',
   '/chain/0x2019.kaia.png',
+  '/chain/redbelly.png',
 ];
 
 /**
@@ -51,7 +53,6 @@ export const availableChains: ChainUI[] = [
   { id: ETHEREUM_MAINNET_CHAIN_ID, name: 'Ethereum', icon: '/chain/ethereum.png' },
   { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', icon: '/chain/solana.png' },
   { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png' },
-  { id: SONIC_MAINNET_CHAIN_ID, name: 'Sonic', icon: '/chain/sonic.png' },
   {
     id: ARBITRUM_MAINNET_CHAIN_ID,
     name: 'Arbitrum',
@@ -89,8 +90,8 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/hyper.png',
     explorerTxUrl: 'https://explorer.hyperchain.io/tx/',
   },
-  { id: HYPEREVM_MAINNET_CHAIN_ID, name: 'Hyper', icon: '/chain/hyper.png' },
   { id: KAIA_MAINNET_CHAIN_ID, name: 'Kaia', icon: '/chain/0x2019.kaia.png' },
+  { id: REDBELLY_MAINNET_CHAIN_ID, name: 'Redbelly', icon: '/chain/redbelly.png' },
 ];
 
 /**

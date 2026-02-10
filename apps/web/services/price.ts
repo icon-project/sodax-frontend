@@ -19,29 +19,37 @@ const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   USDT: 'tether',
   bnUSD: 'bnusd',
   SOL: 'solana',
+  rSOL: 'solana',
   BNB: 'binancecoin',
+  rBNB: 'binancecoin',
   AVAX: 'avalanche-2',
+  rAVAX: 'avalanche-2',
   LL: 'lightlink',
   HYPE: 'hyperliquid',
+  rHYPE: 'hyperliquid',
   XLM: 'stellar',
+  rXLM: 'stellar',
   POL: 'polygon-ecosystem-token',
+  rPOL: 'polygon-ecosystem-token',
   SODA: 'icon',
 
   S: 'sonic-3',
   wS: 'wrapped-sonic',
+  rS: 'sonic-3',
 
   BTC: 'bitcoin',
   WBTC: 'wrapped-bitcoin',
   cbBTC: 'coinbase-wrapped-btc',
   tBTC: 'tbtc',
   BTCB: 'binance-bitcoin',
+  rBTC: 'bitcoin',
 
   ETH: 'ethereum',
   WETH: 'weth',
   weETH: 'wrapped-eeth',
   wstETH: 'wrapped-steth',
   ETHB: 'ethereum',
-
+  rETH: 'ethereum',
   //LightLink
   'AVAX.LL': 'avalanche-2',
   'BNB.LL': 'binancecoin',
@@ -64,13 +72,14 @@ const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
 
   //Sui
   SUI: 'sui',
+  rSUI: 'sui',
   afSUI: 'aftermath-staked-sui',
   haSUI: 'haedal-staked-sui',
   vSUI: 'volo-staked-sui',
   mSUI: 'sui',
   yapSUI: 'sui',
   trevinSUI: 'sui',
-  KAIA: 'kaia',
+  RBNT: 'redbelly-native-token',
 };
 
 const COINGECKO_WRAPPER_API_BASE = 'https://coingecko-wrapper-cyan.vercel.app';

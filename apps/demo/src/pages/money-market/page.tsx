@@ -29,6 +29,9 @@ export default function MoneyMarketPage() {
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-clay">Chain:</span>
               <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
+              <div className="text-xs text-muted-foreground">
+                This chain is used for collateral (supply) & debt (borrow)
+              </div>
             </div>
 
             {walletAddressOnHub && (

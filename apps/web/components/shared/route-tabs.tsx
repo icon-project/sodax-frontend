@@ -7,6 +7,7 @@ import { useSaveStore } from '@/app/(apps)/save/_stores/save-store-provider';
 
 import type { TabIconType } from './tab-icon';
 import { cn } from '@/lib/utils';
+import { STAKING_APR } from '@/app/(apps)/stake/_components/constants';
 
 export interface TabConfig {
   value: string;
@@ -178,6 +179,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
                 badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
                 showIcon={tab.showIcon !== false}
                 totalDepositedUsdValue={tab.value === 'save' ? totalDepositedUsdValue : undefined}
+                apr={tab.value === 'stake' ? STAKING_APR : undefined}
               />
             );
           })}
@@ -193,27 +195,29 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
         <div className="relative">
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-24 flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
-              {usedTabs.map(tab => {
-                const href = tab.href ?? `/${tab.value}`;
-                const isLink = Boolean(tab.href);
-                const active = current === tab.value;
-                return (
-                  <RouteTabItem
-                    key={tab.value}
-                    href={isLink ? href : undefined}
-                    value={tab.value}
-                    type={tab.type}
-                    label={tab.label}
-                    isActive={active}
-                    isMobile
-                    setRef={setMobileTabRef(tab.value)}
-                    enabled={tab.enabled}
-                    badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
-                    showIcon={tab.showIcon !== false}
-                    totalDepositedUsdValue={tab.value === 'save' ? totalDepositedUsdValue : undefined}
-                  />
-                );
-              })}
+              {usedTabs
+                .filter(tab => !(tab.value === 'loans'))
+                .map(tab => {
+                  const href = tab.href ?? `/${tab.value}`;
+                  const active = current === tab.value;
+                  return (
+                    <RouteTabItem
+                      key={tab.value}
+                      href={href}
+                      value={tab.value}
+                      type={tab.type}
+                      label={tab.label}
+                      isActive={active}
+                      isMobile
+                      setRef={setMobileTabRef(tab.value)}
+                      enabled={tab.enabled}
+                      badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
+                      showIcon={tab.showIcon !== false}
+                      totalDepositedUsdValue={tab.value === 'save' ? totalDepositedUsdValue : undefined}
+                      apr={tab.value === 'stake' ? STAKING_APR : undefined}
+                    />
+                  );
+                })}
             </div>
           </div>
 
