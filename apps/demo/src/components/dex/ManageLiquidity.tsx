@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import type { ChainId, ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
 import type { XAccount } from '@sodax/wallet-sdk-react';
+import { UserPositions } from '@/components/dex/UserPositions';
 import {
   createWithdrawParamsProps,
   useCreateDepositParams,
@@ -257,9 +258,10 @@ export function ManageLiquidity({
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="deposit" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3 gap-1 divide-x divide-border">
             <TabsTrigger value="deposit">Deposit</TabsTrigger>
             <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
+            <TabsTrigger value="positions">My positions</TabsTrigger>
           </TabsList>
 
           <TabsContent value="deposit" className="space-y-4">
@@ -847,6 +849,14 @@ export function ManageLiquidity({
                 Withdraw {poolData.token1.symbol}
               </Button>
             </div>
+          </TabsContent>
+          <TabsContent value="positions" className="space-y-4">
+            <UserPositions
+              userAddress={xAccount.address}
+              poolKey={selectedPoolKey}
+              poolData={poolData}
+              spokeProvider={spokeProvider}
+            />
           </TabsContent>
         </Tabs>
       </CardContent>

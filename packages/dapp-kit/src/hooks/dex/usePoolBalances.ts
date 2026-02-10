@@ -58,8 +58,7 @@ export function usePoolBalances({
     queryKey: [
       'dex',
       'poolBalances',
-      poolData?.token0.address,
-      poolData?.token1.address,
+      poolData?.poolKey,
       spokeProvider?.chainConfig.chain.id,
     ],
     enabled: enabled && poolData !== null && poolKey !== null && spokeProvider !== null,

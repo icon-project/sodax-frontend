@@ -139,3 +139,45 @@ export function getReadableTxError(error: unknown): string {
 
   return 'Transaction failed. Please try again.';
 }
+
+export function saveTokenIdToLocalStorage(userAddress: string, tokenId: string): void {
+  const cleanId = tokenId.trim().toLowerCase();
+  const positions = getTokenIdsFromLocalStorage(userAddress);
+
+  const hasDuplicate = positions.some(id => id.trim().toLowerCase() === cleanId);
+
+  if (!hasDuplicate) {
+    positions.push(tokenId.trim());
+    localStorage.setItem(
+      `sodax-dex-positions-${userAddress}`,
+      positions.join(',')
+    );
+  } else {
+    console.warn(`Token ID ${tokenId} already exists for user ${userAddress}`);
+  }
+}
+
+export function getTokenIdsFromLocalStorage(userAddress: string): string[] {
+  const positions = localStorage.getItem(`sodax-dex-positions-${userAddress}`);
+  if (!positions) {
+    return [];
+  }
+  return positions.split(',').map(v => v.trim());
+}
+
+export function removeTokenIdFromLocalStorage(userAddress: string, tokenId: string): void {
+  const positions = getTokenIdsFromLocalStorage(userAddress);
+  if (!positions) {
+    return;
+  }
+  if (positions.includes(tokenId)) {
+    positions.splice(positions.indexOf(tokenId), 1);
+    localStorage.setItem(`sodax-dex-positions-${userAddress}`, positions.join(','));
+  } else {
+    console.warn(`Token ID ${tokenId} not found for user ${userAddress}`);
+  }
+}
+
+export function clearTokenIdsFromLocalStorage(userAddress: string): void {
+  localStorage.removeItem(`sodax-dex-positions-${userAddress}`);
+}

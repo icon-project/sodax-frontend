@@ -20,9 +20,13 @@ import {
   createBurnPositionParamsProps,
   createDecreaseLiquidityParamsProps,
   createSupplyLiquidityParamsProps,
+  useSodaxContext,
 } from '@sodax/dapp-kit';
+import type { Hash } from '@sodax/types';
+import { saveTokenIdToLocalStorage } from '@/lib/utils';
 
 export function SimplePoolManager(): JSX.Element {
+  const { sodax } = useSodaxContext();
   // Wallet integration
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
   const xAccount = useXAccount(selectedChainId);
@@ -175,7 +179,7 @@ export function SimplePoolManager(): JSX.Element {
     setError('');
 
     try {
-      await supplyLiquidityMutation.mutateAsync({
+      const result = await supplyLiquidityMutation.mutateAsync({
         params: createSupplyLiquidityParamsProps({
           poolData,
           poolKey: selectedPoolKey,
@@ -189,6 +193,12 @@ export function SimplePoolManager(): JSX.Element {
         }),
         spokeProvider,
       });
+      const [_, hubTxHash] = result;
+      const mintPositionEvent = await sodax.dex.clService.getMintPositionEvent(hubTxHash as Hash);
+      saveTokenIdToLocalStorage(
+        await spokeProvider.walletProvider.getWalletAddress(),
+        mintPositionEvent.tokenId.toString(),
+      );
 
       // Clear form
       setMinPrice('');

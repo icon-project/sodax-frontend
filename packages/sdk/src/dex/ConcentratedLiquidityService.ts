@@ -22,8 +22,9 @@ import {
   isSolanaSpokeProviderType,
   isHubSpokeProvider,
   HubService,
+  type MintPositionEventLog,
 } from '../index.js';
-import type { Address, HttpUrl, OriginalAssetAddress, XToken } from '@sodax/types';
+import type { Address, Hash, HttpUrl, OriginalAssetAddress, XToken } from '@sodax/types';
 import type { EvmHubProvider, SpokeProviderType } from '../shared/entities/Providers.js';
 import type {
   Prettify,
@@ -32,7 +33,7 @@ import type {
   ClServiceConfig,
   RelayOptionalExtraData,
 } from '../shared/types.js';
-import { erc20Abi, maxUint160, maxUint48 } from 'viem';
+import { erc20Abi, maxUint160, maxUint48, parseEventLogs } from 'viem';
 import { Price, Token } from '@pancakeswap/swap-sdk-core';
 
 import type { PoolKey, CLPositionConfig } from './types.js';
@@ -55,6 +56,10 @@ import {
   TickMath,
   tickToPrice,
 } from '@pancakeswap/v3-sdk';
+
+export type ClMintPositionEventLog = {
+  tokenId: bigint;
+};
 
 // Pool reward configuration from hook contract
 export type PoolRewardConfig = {
@@ -519,6 +524,37 @@ export class ClService {
         },
       };
     }
+  }
+
+  /**
+   * Get the mint position event log from the hub transaction hash
+   * @param hubTxHash - The hub transaction hash
+   * @returns The mint position event log
+   */
+  public async getMintPositionEvent(hubTxHash: Hash): Promise<ClMintPositionEventLog> {
+    const receipt = await this.hubProvider.publicClient.waitForTransactionReceipt({ hash: hubTxHash });
+    console.log('receipt', receipt.logs);
+    const logs: MintPositionEventLog[] = parseEventLogs({
+      abi: CLPositionManagerAbi,
+      eventName: 'MintPosition',
+      logs: receipt.logs,
+      strict: true,
+    });
+    console.log('logs', logs);
+
+    const eventLog = logs[0];
+    console.log('eventLog', eventLog);
+    if (!eventLog) {
+      throw new Error(`No mint position event found for ${hubTxHash}`);
+    }
+
+    if (!eventLog.args.tokenId) {
+      throw new Error(`No tokenId found for ${hubTxHash}`);
+    }
+
+    return {
+      tokenId: eventLog.args.tokenId,
+    };
   }
 
   public async executeIncreaseLiquidity<S extends SpokeProviderType, R extends boolean = false>(

@@ -14,3 +14,4 @@ export * from './useCreateDepositParams';
 export * from './useCreateSupplyLiquidityParams';
 export * from './useCreateDecreaseLiquidityParams';
 export * from './useCreateWithdrawParams';
+export * from './useClaimRewards';
