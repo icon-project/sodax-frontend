@@ -34,7 +34,7 @@ export function SodaAsset({
 
   return (
     <div onClick={() => setIsNetworkPickerOpened(!isNetworkPickerOpened)} className="relative" ref={assetRef}>
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-2 cursor-pointer">
         <div className="relative">
           {selectedToken ? (
             <CurrencyLogo

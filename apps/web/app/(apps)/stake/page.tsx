@@ -1,6 +1,6 @@
 'use client';
 
-import { StakeHeader, StakeInputPanel, StakeStatsCard, UnstakeModeToggle } from './_components';
+import { StakeHeader, StakeInputPanel, StakeStatsCard } from './_components';
 import { useStakeActions, useStakeState } from './_stores/stake-store-provider';
 import { STAKE_MODE } from './_stores/stake-store';
 import { UnstakeRequests } from './_components/unstake-requests';
@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 
 export default function StakePage(): React.JSX.Element {
   const { stakeMode, selectedToken, isNetworkPickerOpened } = useStakeState();
-  const { setStakeMode, setSelectedToken } = useStakeActions();
+  const { setSelectedToken } = useStakeActions();
 
   // Get all SODA tokens from all supported chains
   const sodaTokens = useMemo((): XToken[] => {
@@ -45,7 +45,9 @@ export default function StakePage(): React.JSX.Element {
         </div>
         <div
           className={cn(
-            'w-full border-[#eee6e6] border-[3px] border-b-0 rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
+            'relative w-full rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
+            'before:absolute before:inset-0 before:border-almost-white before:border-[3px] before:border-b-0 before:rounded-tl-(--layout-container-radius) before:rounded-tr-(--layout-container-radius) before:mix-blend-multiply before:pointer-events-none',
+            'transition-[filter] duration-300',
             isNetworkPickerOpened && 'blur-sm',
           )}
         >
@@ -55,6 +57,7 @@ export default function StakePage(): React.JSX.Element {
         <div
           className={cn(
             'relative p-(--layout-space-big) w-full flex flex-col justify-start items-start bg-almost-white mix-blend-multiply rounded-bl-(--layout-container-radius) rounded-br-(--layout-container-radius)',
+            'transition-[filter] duration-300',
             isNetworkPickerOpened && 'blur-sm',
           )}
         >
@@ -63,12 +66,6 @@ export default function StakePage(): React.JSX.Element {
           </div>
 
           <StakeStatsCard />
-          <UnstakeModeToggle
-            enabled={stakeMode === STAKE_MODE.UNSTAKING}
-            onToggle={() =>
-              setStakeMode(stakeMode === STAKE_MODE.UNSTAKING ? STAKE_MODE.STAKING : STAKE_MODE.UNSTAKING)
-            }
-          />
         </div>
       </div>
 
