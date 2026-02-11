@@ -10,6 +10,7 @@
   --font-family-inter-regular: "InterRegular", "Inter", system-ui, sans-serif;
   --font-family-inter-medium: "InterMedium", "Inter", system-ui, sans-serif;
   --font-family-inter-bold: "InterBold", "Inter", system-ui, sans-serif;
+  --font-family-inter-extrabold: "InterExtraBold", "Inter", system-ui, sans-serif;
   --font-family-inter-black: "InterBlack", "Inter", system-ui, sans-serif;
 }
 
@@ -333,6 +334,14 @@
 }
 
 @font-face {
+  font-family: "InterExtraBold";
+  src: url("/fonts/Inter_18pt-ExtraBold.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "InterBlack";
   src: url("/fonts/Inter_18pt-Black.ttf") format("truetype");
   font-weight: normal;
@@ -366,6 +375,23 @@
 
 .iekbcc0 {
   pointer-events: auto !important;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 60s linear infinite;
+}
+
+.group\/marquee:hover .animate-marquee {
+  animation-play-state: paused;
 }
 
 .swap-accordion h3 {
@@ -431,4 +457,14 @@ textarea[readonly] {
 
 .money-market h3 {
   padding-bottom: 0px !important;
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
