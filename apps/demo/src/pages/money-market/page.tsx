@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
-import { Wallet } from 'lucide-react';
+import { Info, Wallet } from 'lucide-react';
 import { BorrowAssetsList } from '@/components/mm/lists/borrow/BorrowAssetsList';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 export default function MoneyMarketPage() {
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
@@ -21,7 +22,22 @@ export default function MoneyMarketPage() {
         {/* Header Section */}
         <div className="my-3">
           <h1 className="text-4xl font-bold text-cherry-dark">Money Market</h1>
-          <p className="text-clay">Supply and borrow assets across multiple chains</p>
+          <p className="text-clay">
+            Supply and borrow assets across multiple chains.{' '}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Money Market Info"
+                  className="inline-flex items-center text-clay hover:text-cherry-dark"
+                >
+                  <Info className="w-4 h-4 text-clay pt-0.5" />
+                </button>
+              </TooltipTrigger>
+
+              <TooltipContent>Only assets supported by the SODAX Money Market on this chain are shown.</TooltipContent>
+            </Tooltip>
+          </p>
         </div>{' '}
         {/* Controls Bar */}
         <div className="bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-3 my-3">

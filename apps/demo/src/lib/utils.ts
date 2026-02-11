@@ -1,7 +1,15 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { hubAssets, SolverIntentStatusCode, type SpokeChainId } from '@sodax/sdk';
+import {
+  hubAssets,
+  moneyMarketSupportedTokens,
+  SolverIntentStatusCode,
+  supportedSpokeChains,
+  type XToken,
+  type SpokeChainId,
+  type ChainId,
+} from '@sodax/sdk';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -148,4 +156,14 @@ export function getHealthFactorState(hf: number) {
     return { label: 'Moderate Risk', className: 'text-yellow-dark' };
   }
   return { label: 'Low Risk', className: 'text-cherry-soda' };
+}
+
+export function getChainsWithThisToken(token: XToken) {
+  return supportedSpokeChains.filter(chainId =>
+    moneyMarketSupportedTokens[chainId].some(t => t.symbol === token.symbol),
+  );
+}
+
+export function getTokenOnChain(symbol: string, chainId: ChainId): XToken | undefined {
+  return moneyMarketSupportedTokens[chainId]?.find(t => t.symbol === symbol);
 }

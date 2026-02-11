@@ -110,7 +110,9 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
         {!hasCollateral && !isLoading && (
           <div className="mt-4 p-3 bg-cherry-brighter/20 border border-cherry/30 rounded-lg flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-cherry-soda shrink-0 mt-0.5" />
-            <p className="text-sm text-cherry-soda font-medium">Supply an asset first to enable borrowing</p>
+            <p className="text-sm text-cherry-soda font-medium">
+              Borrowing is disabled because you have not supplied collateral on this chain.
+            </p>
           </div>
         )}
       </CardHeader>

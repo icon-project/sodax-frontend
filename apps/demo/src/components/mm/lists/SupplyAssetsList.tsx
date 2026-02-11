@@ -16,10 +16,11 @@ import { type ChainId, ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens, type X
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
 import { type ActionType, SuccessModal } from './SuccessModal';
-import { RepayModal } from './RepayModal';
+// import { RepayModal } from './RepayModal';
 import { SupplyModal } from './SupplyModal';
 import { WithdrawModal } from './WithdrawModal';
 import { getHealthFactorState } from '@/lib/utils';
+import { CrossChainActionModal } from './CrossChainActionModal';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -257,7 +258,7 @@ export function SupplyAssetsList(): ReactElement {
           }}
         />
       )}
-      {repayData && (
+      {/* {repayData && (
         <RepayModal
           open={true}
           token={repayData.token}
@@ -269,6 +270,21 @@ export function SupplyAssetsList(): ReactElement {
             setSuccessData(data);
             setRepayData(null);
             handleRefresh();
+          }}
+        />
+      )} */}
+      {repayData && (
+        <CrossChainActionModal
+          open={true}
+          token={repayData.token}
+          maxDebt={repayData.maxDebt}
+          onOpenChange={open => {
+            if (!open) setRepayData(null);
+          }}
+          onSuccess={async data => {
+            setSuccessData(data);
+            setRepayData(null);
+            await handleRefresh();
           }}
         />
       )}
