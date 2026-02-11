@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import type { XToken } from '@sodax/types';
 import type { DisplayItem } from './asset-list-item-content';
