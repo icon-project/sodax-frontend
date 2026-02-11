@@ -19,6 +19,7 @@ import { type ActionType, SuccessModal } from './SuccessModal';
 import { RepayModal } from './RepayModal';
 import { SupplyModal } from './SupplyModal';
 import { WithdrawModal } from './WithdrawModal';
+import { getHealthFactorState } from '@/lib/utils';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -84,15 +85,6 @@ export function SupplyAssetsList(): ReactElement {
   const healthFactorDisplay =
     healthFactorRaw !== undefined && Number.isFinite(healthFactorRaw) ? healthFactorRaw.toFixed(2) : '-';
 
-  function getHealthFactorState(hf: number) {
-    if (hf < 1) {
-      return { label: 'At risk', className: 'text-negative' };
-    }
-    if (hf < 2) {
-      return { label: 'Moderate Risk', className: 'text-yellow-dark' };
-    }
-    return { label: 'Low Risk', className: 'text-cherry-soda' };
-  }
   const healthState = healthFactorRaw !== undefined ? getHealthFactorState(healthFactorRaw) : undefined;
 
   // Extract all aToken addresses from formattedReserves for batch fetching

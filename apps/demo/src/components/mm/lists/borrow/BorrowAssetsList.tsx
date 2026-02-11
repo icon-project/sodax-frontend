@@ -15,7 +15,7 @@ import { formatUnits } from 'viem';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
 import { BorrowModal } from './BorrowModal';
 import { SuccessModal } from '../SuccessModal';
-import { type XToken, type ChainId, moneyMarketSupportedTokens } from '@sodax/types';
+import { type XToken, type ChainId, moneyMarketSupportedTokens, AVALANCHE_MAINNET_CHAIN_ID } from '@sodax/types';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 
 const TABLE_HEADERS = [
@@ -32,11 +32,7 @@ type BorrowAssetsListProps = {
 };
 
 export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX.Element {
-  const [selectedChainId, selectChainId] = useState<ChainId>(
-    initialChainId ?? (Object.keys(moneyMarketSupportedTokens)[0] as ChainId),
-  );
-  const [open, setOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [selectedChainId, selectChainId] = useState(initialChainId ?? AVALANCHE_MAINNET_CHAIN_ID);
   const [successData, setSuccessData] = useState<{
     amount: string;
     token: XToken;
@@ -67,15 +63,12 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
 
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];
-    // console.log('RAW BACKEND ASSETS:', allMoneyMarketAssets);
     // 1. Get all assets the backend says are borrowable globally
     const allBorrowableAssets = getBorrowableAssetsWithMarketData(allMoneyMarketAssets, allTokens);
 
     const sodaVariants = allBorrowableAssets.filter(
       a => a.symbol.toLowerCase().startsWith('soda') || a.symbol.includes('.LL'),
     );
-    console.log('DETECTED SODA/LL VARIANTS:', sodaVariants);
-
     // 2. Get the specific tokens our config says should be supported for the SELECTED chain
     const supportedOnChain = moneyMarketSupportedTokens[selectedChainId] || [];
 
@@ -107,9 +100,6 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
   const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
 
   const isLoading = isUserReservesLoading || isFormattedReservesLoading || isAssetsLoading;
-
-  // Define logic to separate them
-  const isBorrowOnly = (symbol: string) => symbol.endsWith('.LL') || symbol.startsWith('soda');
 
   return (
     <Card className="mt-3">
