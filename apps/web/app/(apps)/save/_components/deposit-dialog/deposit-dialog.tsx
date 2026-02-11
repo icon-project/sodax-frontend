@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { XToken } from '@sodax/types';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
-import { XIcon } from 'lucide-react';
+import { XIcon, ShieldAlertIcon } from 'lucide-react';
 import DepositInfoStep from './deposit-info-step';
 import DepositConfirmationStep from './deposit-confirmation-step';
 import DepositDialogFooter from './deposit-dialog-footer';
@@ -32,6 +32,7 @@ export default function DepositDialog({
   const { apy } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
   const [isSupplyPending, setIsSupplyPending] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
+  const [depositError, setDepositError] = useState<{ title: string; message: string } | null>(null);
 
   const handleClose = (): void => {
     if (isSupplyPending) {
@@ -40,6 +41,7 @@ export default function DepositDialog({
       return;
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setDepositError(null);
     onOpenChange(false);
     resetSaveState();
   };
@@ -63,9 +65,14 @@ export default function DepositDialog({
           <DepositInfoStep apy={apy} selectedToken={selectedToken as XToken} />
         )}
         {currentDepositStep !== DEPOSIT_STEP.TERMS && (
-          <DepositConfirmationStep selectedToken={selectedToken as XToken} apy={apy} />
+          <DepositConfirmationStep selectedToken={selectedToken as XToken} apy={apy} depositError={depositError} />
         )}
-        <DepositDialogFooter selectedToken={selectedToken} onPendingChange={setIsSupplyPending} onClose={handleClose} />
+        <DepositDialogFooter
+          selectedToken={selectedToken}
+          onPendingChange={setIsSupplyPending}
+          onClose={handleClose}
+          onError={setDepositError}
+        />
       </DialogContent>
     </Dialog>
   );
