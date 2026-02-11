@@ -96,11 +96,11 @@ export function BorrowAssetsListItem({
         <span className="font-bold text-cherry-dark">{asset.symbol}</span>
         <span className="text-clay-light text-xs ml-1">{getChainLabel(token.xChainId)}</span>
       </TableCell>
-      <TableCell className="text-clay">{walletBalance}</TableCell>
-      <TableCell className="text-clay">{availableLiquidity ?? '--'}</TableCell>
-      <TableCell className="text-clay">{metrics.borrowAPY}</TableCell>
-      <TableCell className="text-clay">{metrics.borrowAPR}</TableCell>
-      <TableCell className="text-clay">{metrics.totalBorrow}</TableCell>
+      <TableCell>{walletBalance}</TableCell>
+      <TableCell>{availableLiquidity ?? '--'}</TableCell>
+      <TableCell>{metrics.borrowAPY}</TableCell>
+      <TableCell>{metrics.borrowAPR}</TableCell>
+      <TableCell>{metrics.totalBorrow}</TableCell>
       <TableCell>
         <BorrowButton
           token={token}

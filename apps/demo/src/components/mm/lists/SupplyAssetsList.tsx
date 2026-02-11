@@ -154,8 +154,10 @@ export function SupplyAssetsList(): ReactElement {
               </p>
             </div>
           ) : (
-            <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
-              <Table>
+            <div className="rounded-lg border border-cherry-grey/20 max-h-[400px] overflow-y-auto overflow-x-hidden px-2">
+              {' '}
+              <Table unstyled className="table-auto">
+                {' '}
                 <TableHeader className="sticky top-0 bg-cream z-20">
                   <TableRow className="border-b border-cherry-grey/20">
                     {TABLE_HEADERS.map((header, index) => {
