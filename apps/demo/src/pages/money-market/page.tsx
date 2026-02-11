@@ -37,9 +37,7 @@ export default function MoneyMarketPage() {
             {walletAddressOnHub && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-clay">Hub Wallet Address:</span>
-                <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark font-mono text-xs">
-                  {walletAddressOnHub}
-                </span>
+                <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark text-xs">{walletAddressOnHub}</span>
               </div>
             )}
           </div>
@@ -48,7 +46,7 @@ export default function MoneyMarketPage() {
         {xAccount?.address ? (
           <div className="animate-in fade-in duration-500">
             <SupplyAssetsList />
-            <BorrowAssetsList />
+            <BorrowAssetsList initialChainId={selectedChainId} />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[500px] bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-12">
