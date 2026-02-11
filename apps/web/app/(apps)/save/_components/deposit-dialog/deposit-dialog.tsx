@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import type { XToken } from '@sodax/types';
 import { useLiquidity } from '@/hooks/useAPY';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
-import { XIcon, ShieldAlertIcon } from 'lucide-react';
+import { XIcon } from 'lucide-react';
 import DepositInfoStep from './deposit-info-step';
 import DepositConfirmationStep from './deposit-confirmation-step';
 import DepositDialogFooter from './deposit-dialog-footer';
