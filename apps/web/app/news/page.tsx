@@ -196,7 +196,7 @@ export default async function NewsPage(props: {
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="relative min-h-screen w-full bg-almost-white">
           <MarketingHeader backLink="/" backText="← home" />
-          <div className="max-w-7xl mx-auto px-4 py-16">
+          <div className="max-w-7xl mx-auto px-4 py-16 pt-[120px]">
             <div className="bg-white rounded-lg p-8 text-center border-2 border-clay-light">
               <h2 className="text-2xl font-bold text-espresso mb-2">
                 {category ? `No articles in "${category}" category` : 'No news articles available'}
@@ -228,7 +228,7 @@ export default async function NewsPage(props: {
         <MarketingHeader backLink="/" backText="← home" />
 
         {/* Category Filter Tabs */}
-        <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+        <div className="max-w-7xl mx-auto px-4 pt-[120px] pb-8 md:pb-12">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 md:justify-center md:flex-wrap scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
             <Link
               href="/news"

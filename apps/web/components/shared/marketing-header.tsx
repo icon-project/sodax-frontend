@@ -30,7 +30,7 @@ export function MarketingHeader({ backLink, backText }: MarketingHeaderProps) {
   const finalBackText = backText ?? defaultBackText;
 
   // Background style
-  const backgroundClass = 'bg-[var(--cherry-soda)]';
+  const backgroundClass = 'bg-cherry-soda';
 
   return (
     <div className="h-[100px] absolute top-0 left-0 right-0 z-50 flex flex-col justify-start items-center w-full">
@@ -62,7 +62,7 @@ export function MarketingHeader({ backLink, backText }: MarketingHeaderProps) {
                   href={href}
                   style={{ fontFamily: isActive ? 'InterBold' : 'InterRegular' }}
                   className={`text-white text-[14px] transition-all ${
-                    isActive ? 'cursor-none' : 'hover:font-[InterBold] cursor-pointer'
+                    isActive ? 'cursor-default' : 'hover:font-[InterBold] cursor-pointer'
                   }`}
                 >
                   {label}

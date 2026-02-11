@@ -104,7 +104,7 @@ export default function FeaturedCaseStudiesSection() {
                 {study.metrics.map((metric, i) => (
                   <div key={metric.label} className="flex gap-3 sm:gap-4 items-center">
                     {/* Vertical divider */}
-                    <div className="w-px h-10 sm:h-12 bg-clay-light" />
+                    {i > 0 && <div className="w-px h-10 sm:h-12 bg-clay-light" />}
                     <div className="flex flex-col items-start">
                       <span className="font-['InterBold'] text-[14px] sm:text-[15px] leading-[1.2] text-espresso">
                         {metric.value}

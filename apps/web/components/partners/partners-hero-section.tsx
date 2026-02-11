@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Bot, PackageOpen, Settings2, Users } from 'lucide-react';
 import { NETWORK_ICON_MAP } from './network-icons';
 
@@ -114,7 +114,7 @@ export default function PartnersHeroSection() {
           </button>
           <button
             type="button"
-            className="bg-transparent border-3 border-cherry-bright text-cream font-['InterRegular'] text-[14px] leading-[1.4] h-10 px-6 py-2 rounded-[240px] text-center transition-colors cursor-pointer w-full sm:w-auto"
+            className="bg-transparent border-[3px] border-cherry-bright text-cream font-['InterRegular'] text-[14px] leading-[1.4] h-10 px-6 py-2 rounded-[240px] text-center transition-colors cursor-pointer w-full sm:w-auto"
             onClick={() => window.open('https://docs.sodax.com', '_blank')}
           >
             View documentation

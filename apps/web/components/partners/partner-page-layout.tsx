@@ -35,20 +35,11 @@ export function generatePartnerMetadata(metadata: PartnerMetadata): Metadata {
       description: description,
       type: 'article',
       url: pageUrl,
-      images: [
-        {
-          url: `https://sodax.com${logoUrl.replace('.svg', '.png')}`,
-          width: 1200,
-          height: 630,
-          alt: `${partnerName} Case Study`,
-        },
-      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: fullTitle,
       description: description,
-      images: [`https://sodax.com${logoUrl.replace('.svg', '.png')}`],
     },
   };
 }
