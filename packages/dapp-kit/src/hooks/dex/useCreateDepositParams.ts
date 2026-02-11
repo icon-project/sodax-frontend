@@ -35,7 +35,6 @@ export function useCreateDepositParams({
 }: UseCreateDepositParamsProps): CreateAssetDepositParams | undefined {
   return useMemo<CreateAssetDepositParams | undefined>(() => {
     if (!amount || Number.parseFloat(String(amount)) <= 0) {
-      console.warn('[useCreateDepositParams] Amount must be greater than 0');
       return undefined;
     }
 

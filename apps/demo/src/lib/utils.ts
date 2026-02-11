@@ -140,16 +140,20 @@ export function getReadableTxError(error: unknown): string {
   return 'Transaction failed. Please try again.';
 }
 
-export function saveTokenIdToLocalStorage(userAddress: string, tokenId: string): void {
+export function createDexTokenIdsStorageKey(chainId: SpokeChainId, userAddress: string): string {
+  return `sodax-dex-positions-${chainId}-${userAddress}`;
+}
+
+export function saveTokenIdToLocalStorage(userAddress: string, chainId: SpokeChainId, tokenId: string): void {
   const cleanId = tokenId.trim().toLowerCase();
-  const positions = getTokenIdsFromLocalStorage(userAddress);
+  const positions = getTokenIdsFromLocalStorage(chainId, userAddress);
 
   const hasDuplicate = positions.some(id => id.trim().toLowerCase() === cleanId);
 
   if (!hasDuplicate) {
     positions.push(tokenId.trim());
     localStorage.setItem(
-      `sodax-dex-positions-${userAddress}`,
+      createDexTokenIdsStorageKey(chainId, userAddress),
       positions.join(',')
     );
   } else {
@@ -157,16 +161,16 @@ export function saveTokenIdToLocalStorage(userAddress: string, tokenId: string):
   }
 }
 
-export function getTokenIdsFromLocalStorage(userAddress: string): string[] {
-  const positions = localStorage.getItem(`sodax-dex-positions-${userAddress}`);
+export function getTokenIdsFromLocalStorage(chainId: SpokeChainId, userAddress: string): string[] {
+  const positions = localStorage.getItem(createDexTokenIdsStorageKey(chainId, userAddress));
   if (!positions) {
     return [];
   }
   return positions.split(',').map(v => v.trim());
 }
 
-export function removeTokenIdFromLocalStorage(userAddress: string, tokenId: string): void {
-  const positions = getTokenIdsFromLocalStorage(userAddress);
+export function removeTokenIdFromLocalStorage(chainId: SpokeChainId, userAddress: string, tokenId: string): void {
+  const positions = getTokenIdsFromLocalStorage(chainId, userAddress);
   if (!positions) {
     return;
   }

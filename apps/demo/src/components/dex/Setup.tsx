@@ -6,12 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Wallet } from 'lucide-react';
 import type { ChainType } from '@sodax/sdk';
 import type { ChainId } from '@sodax/types';
-import { getXChainType, useEvmSwitchChain, type XAccount } from '@sodax/wallet-sdk-react';
+import { getXChainType, type XAccount } from '@sodax/wallet-sdk-react';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 
 interface SetupProps {
   selectedChainId: ChainId;
   selectChainId: (chainId: ChainId) => void;
+  isWrongChain: boolean;
+  handleSwitchChain: () => void;
   xAccount: XAccount | null;
   openWalletModal: () => void;
   disconnect: (chainType: ChainType) => void;
@@ -20,12 +22,12 @@ interface SetupProps {
 export function Setup({
   selectedChainId,
   selectChainId,
+  isWrongChain,
+  handleSwitchChain,
   xAccount,
   openWalletModal,
   disconnect,
 }: SetupProps): JSX.Element {
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
-
   return (
     <Card>
       <CardHeader>
@@ -38,11 +40,18 @@ export function Setup({
         {/* Chain Selection */}
         <div className="space-y-2">
           <Label htmlFor="chain">Select Chain</Label>
-          {selectedChainId ? (
-            <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
-          ) : (
-            <p className="text-sm text-muted-foreground">Please select a chain</p>
-          )}
+          <div className="flex items-center gap-2">
+            {selectedChainId ? (
+              <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
+            ) : (
+              <p className="text-sm text-muted-foreground">Please select a chain</p>
+            )}
+            {isWrongChain && (
+              <Button className="w-full max-w-[120px]" type="button" variant="default" onClick={handleSwitchChain}>
+                Switch Chain
+              </Button>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground">Selected chain: {selectedChainId || 'None'}</p>
         </div>
 
@@ -69,11 +78,6 @@ export function Setup({
                 >
                   Disconnect
                 </Button>
-                {isWrongChain && (
-                  <Button className="w-full max-w-[120px]" type="button" variant="default" onClick={handleSwitchChain}>
-                    Switch Chain
-                  </Button>
-                )}
               </div>
             </div>
           ) : (

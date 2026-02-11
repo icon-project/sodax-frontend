@@ -35,7 +35,6 @@ type PositionListItemProps = Readonly<{
 }>;
 
 function PositionListItem({ tokenId, poolKey, poolData, spokeProvider }: PositionListItemProps): JSX.Element | null {
-  const { sodax } = useSodaxContext();
   const { data, isLoading, isError, error: positionInfoError } = usePositionInfo({ tokenId, poolKey });
   const claimRewardsMutation = useClaimRewards();
   const burnPositionMutation = useBurnPosition();
@@ -243,6 +242,7 @@ export function UserPositions({ userAddress, poolKey, poolData, spokeProvider }:
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [newTokenId, setNewTokenId] = useState<string>('');
   const [hubTxHashInput, setHubTxHashInput] = useState<string>('');
+  const selectedChainId = spokeProvider.chainConfig.chain.id;
 
   useEffect(() => {
     if (!userAddress) {
@@ -250,9 +250,9 @@ export function UserPositions({ userAddress, poolKey, poolData, spokeProvider }:
       setIsLoaded(true);
       return;
     }
-    setTokenIds(getTokenIdsFromLocalStorage(userAddress));
+    setTokenIds(getTokenIdsFromLocalStorage(selectedChainId, userAddress));
     setIsLoaded(true);
-  }, [userAddress]);
+  }, [userAddress, selectedChainId]);
 
   const isNewTokenIdValid = newTokenId.trim() !== '' && Number.isFinite(Number(newTokenId));
 
@@ -261,8 +261,8 @@ export function UserPositions({ userAddress, poolKey, poolData, spokeProvider }:
       return;
     }
     const trimmedTokenId = newTokenId.trim();
-    saveTokenIdToLocalStorage(userAddress, trimmedTokenId);
-    setTokenIds(getTokenIdsFromLocalStorage(userAddress));
+    saveTokenIdToLocalStorage(userAddress, selectedChainId, trimmedTokenId);
+    setTokenIds(getTokenIdsFromLocalStorage(selectedChainId, userAddress));
     setNewTokenId('');
   };
 
@@ -282,7 +282,7 @@ export function UserPositions({ userAddress, poolKey, poolData, spokeProvider }:
 
     try {
       const mintPositionEvent = await sodax.dex.clService.getMintPositionEvent(hubTxHashInput.trim() as Hash);
-      saveTokenIdToLocalStorage(userAddress, mintPositionEvent.tokenId.toString());
+      saveTokenIdToLocalStorage(userAddress, selectedChainId, mintPositionEvent.tokenId.toString());
       setHubTxHashInput('');
       globalThis.alert(`Position ID: ${mintPositionEvent.tokenId.toString()}`);
     } catch (err) {

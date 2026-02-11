@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import type { ChainId, ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
-import type { XAccount } from '@sodax/wallet-sdk-react';
+import { useXBalances, type XAccount } from '@sodax/wallet-sdk-react';
 import { UserPositions } from '@/components/dex/UserPositions';
 import {
   createWithdrawParamsProps,
@@ -95,6 +95,13 @@ export function ManageLiquidity({
   const [token1Amount, setToken1Amount] = useState<string>('');
 
   const poolSpokeAssets = sodax.dex.clService.getAssetsForPool(spokeProvider, pools[selectedPoolIndex]);
+  const { data: sourceBalances } = useXBalances({
+    xChainId: selectedChainId,
+    xTokens: [poolSpokeAssets.token0, poolSpokeAssets.token1],
+    address: xAccount.address,
+  });
+  const spokeToken0Balance = sourceBalances?.[poolSpokeAssets.token0.address ?? ''] ?? 0n;
+  const spokeToken1Balance = sourceBalances?.[poolSpokeAssets.token1.address ?? ''] ?? 0n;
 
   // Reset state when chain changes
   // biome-ignore lint/correctness/useExhaustiveDependencies: setter functions are stable
@@ -259,9 +266,9 @@ export function ManageLiquidity({
       <CardContent>
         <Tabs defaultValue="deposit" className="w-full">
           <TabsList className="grid w-full grid-cols-3 gap-1 divide-x divide-border">
-            <TabsTrigger value="deposit">Deposit</TabsTrigger>
-            <TabsTrigger value="withdraw">Withdraw</TabsTrigger>
-            <TabsTrigger value="positions">My positions</TabsTrigger>
+            <TabsTrigger className="cursor-pointer" value="deposit">Deposit</TabsTrigger>
+            <TabsTrigger className="cursor-pointer" value="withdraw">Withdraw</TabsTrigger>
+            <TabsTrigger className="cursor-pointer" value="positions">My positions</TabsTrigger>
           </TabsList>
 
           <TabsContent value="deposit" className="space-y-4">
@@ -285,7 +292,11 @@ export function ManageLiquidity({
               </div>
               <div className="text-xs space-y-1">
                 <p className="text-muted-foreground">
-                  Balance: {formatAmount(token0Balance, poolData.token0.decimals)} {poolData.token0.symbol}
+                  Balance ({spokeProvider.chainConfig.chain.name}):{' '}
+                  {formatAmount(spokeToken0Balance, poolSpokeAssets.token0.decimals)} {poolSpokeAssets.token0.symbol}
+                  <br />
+                  Deposited Balance ({sodax.hubProvider.chainConfig.chain.name}):{' '}
+                  {formatAmount(token0Balance, poolData.token0.decimals)} {poolData.token0.symbol}
                 </p>
                 {poolData.token0IsStatAToken &&
                   poolData.token0ConversionRate &&
@@ -342,7 +353,11 @@ export function ManageLiquidity({
               </div>
               <div className="text-xs space-y-1">
                 <p className="text-muted-foreground">
-                  Balance: {formatAmount(token1Balance, poolData.token1.decimals)} {poolData.token1.symbol}
+                  Balance ({spokeProvider.chainConfig.chain.name}):{' '}
+                  {formatAmount(spokeToken1Balance, poolSpokeAssets.token1.decimals)} {poolSpokeAssets.token1.symbol}
+                  <br />
+                  Deposited Balance ({sodax.hubProvider.chainConfig.chain.name}):{' '}
+                  {formatAmount(token1Balance, poolData.token1.decimals)} {poolData.token1.symbol}
                 </p>
                 {poolData.token1IsStatAToken &&
                   poolData.token1ConversionRate &&

@@ -699,8 +699,10 @@ export class AssetService {
     }
 
     const calls: EvmContractCall[] = [];
-    calls.push(Erc20Service.encodeApprove(assetConfig.asset, assetConfig.vault, amount));
-    calls.push(EvmVaultTokenService.encodeDeposit(assetConfig.vault, assetConfig.asset, amount));
+    if (!this.configService.isValidVault(assetConfig.asset)) {
+      calls.push(Erc20Service.encodeApprove(assetConfig.asset, assetConfig.vault, amount));
+      calls.push(EvmVaultTokenService.encodeDeposit(assetConfig.vault, assetConfig.asset, amount));
+    }
     const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, amount);
 
     if (poolToken.toLowerCase() === assetConfig.vault.toLowerCase()) {
@@ -716,8 +718,10 @@ export class AssetService {
 
     invariant(dexToken === poolToken, 'Dex token does not match pool token');
 
+    // deposit non-vault token into the vault
     calls.push(Erc20Service.encodeApprove(assetConfig.vault, dexToken, translatedAmount));
     calls.push(Erc4626Service.encodeDeposit(dexToken, translatedAmount, recipient));
+
     return calls;
   }
 

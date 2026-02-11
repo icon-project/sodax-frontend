@@ -36,7 +36,6 @@ export function useCreateWithdrawParams({
 }: UseCreateWithdrawParamsProps): CreateAssetWithdrawParams | undefined {
   return useMemo<CreateAssetWithdrawParams | undefined>(() => {
     if (!amount || Number.parseFloat(String(amount)) <= 0) {
-      console.warn('[useCreateWithdrawParams] Amount must be greater than 0');
       return undefined;
     }
 

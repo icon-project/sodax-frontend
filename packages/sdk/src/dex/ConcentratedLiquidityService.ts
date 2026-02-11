@@ -533,17 +533,14 @@ export class ClService {
    */
   public async getMintPositionEvent(hubTxHash: Hash): Promise<ClMintPositionEventLog> {
     const receipt = await this.hubProvider.publicClient.waitForTransactionReceipt({ hash: hubTxHash });
-    console.log('receipt', receipt.logs);
     const logs: MintPositionEventLog[] = parseEventLogs({
       abi: CLPositionManagerAbi,
       eventName: 'MintPosition',
       logs: receipt.logs,
       strict: true,
     });
-    console.log('logs', logs);
 
     const eventLog = logs[0];
-    console.log('eventLog', eventLog);
     if (!eventLog) {
       throw new Error(`No mint position event found for ${hubTxHash}`);
     }

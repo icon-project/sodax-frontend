@@ -1,7 +1,7 @@
 // apps/demo/src/components/dex/SimplePoolManager.tsx
 import React, { useState, useEffect, type JSX } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk-react';
+import { useEvmSwitchChain, useWalletProvider, useXAccount, useXDisconnect } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { Setup } from './Setup';
 import { SelectPool } from './SelectPool';
@@ -29,6 +29,7 @@ export function SimplePoolManager(): JSX.Element {
   const { sodax } = useSodaxContext();
   // Wallet integration
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
   const xAccount = useXAccount(selectedChainId);
   const disconnect = useXDisconnect();
   const walletProvider = useWalletProvider(selectedChainId);
@@ -197,6 +198,7 @@ export function SimplePoolManager(): JSX.Element {
       const mintPositionEvent = await sodax.dex.clService.getMintPositionEvent(hubTxHash as Hash);
       saveTokenIdToLocalStorage(
         await spokeProvider.walletProvider.getWalletAddress(),
+        selectedChainId,
         mintPositionEvent.tokenId.toString(),
       );
 
@@ -348,19 +350,25 @@ export function SimplePoolManager(): JSX.Element {
       <Setup
         selectedChainId={selectedChainId}
         selectChainId={selectChainId}
+        isWrongChain={isWrongChain}
+        handleSwitchChain={handleSwitchChain}
         xAccount={xAccount}
         openWalletModal={openWalletModal}
         disconnect={disconnect}
       />
-      <SelectPool
-        selectedChainId={selectedChainId}
-        pools={pools}
-        selectedPoolIndex={selectedPoolIndex}
-        onPoolSelect={setSelectedPoolIndex}
-        loading={loading}
-      />
-      <PoolInformation poolData={poolData} formatAmount={formatAmount} formatConversionRate={formatConversionRate} />
-      {poolData && spokeProvider && xAccount && selectedPoolKey && selectedChainId && (
+      {!isWrongChain && (
+        <SelectPool
+          selectedChainId={selectedChainId}
+          pools={pools}
+          selectedPoolIndex={selectedPoolIndex}
+          onPoolSelect={setSelectedPoolIndex}
+          loading={loading}
+        />
+      )}
+      {!isWrongChain && (
+        <PoolInformation poolData={poolData} formatAmount={formatAmount} formatConversionRate={formatConversionRate} />
+      )}
+      {!isWrongChain && poolData && spokeProvider && xAccount && selectedPoolKey && selectedChainId && (
         <ManageLiquidity
           poolData={poolData}
           xAccount={xAccount}
