@@ -22,7 +22,7 @@ interface PartnerPageLayoutProps {
 }
 
 export function generatePartnerMetadata(metadata: PartnerMetadata): Metadata {
-  const { partnerName, tagline, description, logoUrl } = metadata;
+  const { partnerName, tagline, description } = metadata;
   const pageUrl = `https://sodax.com/partners/${partnerName.toLowerCase().replace(/\s+/g, '-')}`;
   const fullTitle = `${partnerName} Case Study | SODAX Partners`;
 
