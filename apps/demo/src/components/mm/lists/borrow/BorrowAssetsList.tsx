@@ -89,7 +89,10 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     address,
   });
 
-  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
+  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({
+    spokeChainId: selectedChainId,
+    userAddress: address,
+  });
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { data: userSummary } = useUserFormattedSummary({

@@ -79,7 +79,7 @@ All money market methods are accessible through `sodax.moneyMarket`:
 - `data.getReservesData()` - Get raw aggregated reserve data
 - `data.getReservesHumanized()` - Get humanized reserve data
 - `data.getReserveData(asset)` - Get specific reserve data
-- `data.getUserReservesData(spokeProvider)` - Get raw user reserve data
+- `data.getUserReservesData(spokeChainId, userAddress)` - Get raw user reserve data
 - `data.getUserReservesHumanized(spokeProvider)` - Get humanized user reserve data
 - `data.formatReservesUSD(request)` - Format reserves with USD conversions
 - `data.formatUserSummary(request)` - Format user portfolio summary with USD conversions
@@ -830,7 +830,7 @@ The SDK provides several methods to retrieve different types of data:
 - `getReserveNormalizedIncome(asset)` - Get normalized income for a specific asset
 
 #### User Data
-- `getUserReservesData(spokeProvider)` - Get raw user reserve data
+- `getUserReservesData(spokeChainId, userAddress)` - Get raw user reserve data
 - `getUserReservesHumanized(spokeProvider)` - Get humanized user reserve data
 
 #### E-Mode Data

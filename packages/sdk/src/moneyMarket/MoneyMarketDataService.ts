@@ -24,7 +24,7 @@ import {
 } from './math-utils/index.js';
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
-import type { Address, Erc20Token } from '@sodax/types';
+import type { Address, Erc20Token, SpokeChainId } from '@sodax/types';
 import { Erc20Service, HubService } from '../shared/index.js';
 import { erc20Abi } from 'viem';
 
@@ -120,15 +120,15 @@ export class MoneyMarketDataService {
 
   /**
    * Get the user reserves data
-   * @param spokeProvider - The spoke provider
+   * @param spokeChainId - The spoke chain ID
+   * @param userAddress - The user's wallet address on the spoke chain
    * @returns {Promise<readonly [readonly UserReserveData[], number]>} - The user reserves data
    */
   public async getUserReservesData(
-    spokeProvider: SpokeProvider,
+    spokeChainId: SpokeChainId,
+    userAddress: Address,
   ): Promise<readonly [readonly UserReserveData[], number]> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const spokeChainId = spokeProvider.chainConfig.chain.id;
-    const hubWalletAddress = await HubService.getUserHubWalletAddress(walletAddress, spokeChainId, this.hubProvider);
+    const hubWalletAddress = await HubService.getUserHubWalletAddress(userAddress, spokeChainId, this.hubProvider);
 
     return this.uiPoolDataProviderService.getUserReservesData(hubWalletAddress);
   }
