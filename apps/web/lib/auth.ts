@@ -30,6 +30,11 @@ function getAuthConfig(): BetterAuthOptions {
     database: mongodbAdapter(getDb(), {
       client: getMongoClient(),
     }),
+    trustedOrigins: [
+      "https://sodax-web-dev.vercel.app",
+      "https://sodax.com",
+      "https://www.sodax.com",
+    ],
     emailAndPassword: {
       enabled: false, // Disable email/password, only allow Google OAuth
     },
