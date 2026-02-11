@@ -34,6 +34,7 @@ interface WithdrawDialogFooterProps {
   isTokenSelection: boolean;
   count: number;
   totalBalance?: string;
+  onError: (error: { title: string; message: string } | null) => void;
 }
 
 export default function WithdrawDialogFooter({
@@ -50,6 +51,7 @@ export default function WithdrawDialogFooter({
   isTokenSelection,
   count,
   totalBalance,
+  onError,
 }: WithdrawDialogFooterProps): React.JSX.Element {
   const { setIsSwitchingChain } = useSaveActions();
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
@@ -74,6 +76,7 @@ export default function WithdrawDialogFooter({
   const handleApprove = async (): Promise<void> => {
     if (!selectedToken || withdrawValue <= 0) return;
     try {
+      onError(null);
       await approve({
         params: {
           token: selectedToken?.address as string,
@@ -85,11 +88,18 @@ export default function WithdrawDialogFooter({
       setIsApproved(true);
     } catch (error) {
       console.error('Error approving withdraw:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to approve withdrawal';
+      onError({
+        title: 'Approval Failed',
+        message: errorMessage,
+      });
     }
   };
 
   const handleWithdraw = async (): Promise<void> => {
     try {
+      onError(null);
       onWithdrawStart();
       const response = await withdraw({
         params: {
@@ -102,10 +112,22 @@ export default function WithdrawDialogFooter({
       if (response?.ok) {
         onWithdrawSuccess();
         setIsCompleted(true);
+      } else {
+        onWithdrawSuccess();
+        onError({
+          title: 'Withdrawal Failed',
+          message: 'Transaction was not successful. Please try again.',
+        });
       }
     } catch (error) {
       console.error('Error withdrawing:', error);
       onWithdrawSuccess();
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to withdraw';
+      onError({
+        title: 'Withdrawal Failed',
+        message: errorMessage,
+      });
     }
   };
 
@@ -113,8 +135,9 @@ export default function WithdrawDialogFooter({
     if (!open) {
       setIsApproved(false);
       setIsCompleted(false);
+      onError(null);
     }
-  }, [open]);
+  }, [open, onError]);
 
   return (
     <DialogFooter
