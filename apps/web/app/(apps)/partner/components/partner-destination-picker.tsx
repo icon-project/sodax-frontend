@@ -8,7 +8,7 @@ interface PartnerDestinationPickerProps {
   availableTokens: XToken[]; // same token, different chains
   selectedChainId: SpokeChainId;
   onChange: (token: XToken) => void;
-  onOpenChange?: (open: boolean) => void; //
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function PartnerDestinationPicker({
@@ -21,7 +21,11 @@ export function PartnerDestinationPicker({
 
   if (availableTokens.length === 0) return null;
 
-  const fallbackToken = availableTokens[0] as XToken;
+  const firstToken = availableTokens[0];
+
+  if (!firstToken) return null;
+
+  const fallbackToken = firstToken;
   const selectedToken = availableTokens.find(t => t.xChainId === selectedChainId) ?? fallbackToken;
 
   return (

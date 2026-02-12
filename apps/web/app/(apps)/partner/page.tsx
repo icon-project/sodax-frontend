@@ -3,7 +3,7 @@
 import { itemVariants, listVariants } from '@/constants/animation';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
-import { type Address, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { PartnerPreferencesCard } from './components/partner-preference-card';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { PartnerFeeBalances } from './components/partner-fee-balances';
@@ -15,15 +15,20 @@ import { ClaimSubmittedModal } from './components/modals/claim-submitted-modal';
 import { ClaimFlowStep } from './utils/fee-claim';
 import type { SetSwapPreferenceParams } from '@sodax/sdk';
 import { getUsdcDestinations } from './utils/getUsdDestinations';
+import { isAddress } from 'viem';
 
 export default function PartnerPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [claimFlow, setClaimFlow] = useState<ClaimFlowStep>(ClaimFlowStep.NONE);
   const [selectedAsset, setSelectedAsset] = useState<FeeClaimAsset | null>(null);
 
-  const { address: connectedAddress } = useXAccount(SONIC_MAINNET_CHAIN_ID);
+  const { address: rawAddress } = useXAccount(SONIC_MAINNET_CHAIN_ID);
+
+  const partnerAddress = rawAddress && isAddress(rawAddress) ? rawAddress : undefined;
+
   const [submittedTxHash, setSubmittedTxHash] = useState<`0x${string}` | null>(null);
-  const lifecycle = usePartnerFeeLifecycle(connectedAddress as Address);
+
+  const lifecycle = usePartnerFeeLifecycle(partnerAddress);
 
   const { activePreferences, claimableFees, isInitialLoading, refreshBalances } = lifecycle;
 
@@ -65,7 +70,7 @@ export default function PartnerPage() {
               VIEWING DEV PARTNER DATA!
             </div>
           )}
-          {/* Title */}
+          {/* Title & subtitle*/}
           <div className="flex items-baseline gap-1 flex-wrap">
             <span className="mix-blend-multiply text-yellow-dark font-bold font-['InterRegular'] text-(size:--app-title)!">
               Partner
@@ -74,9 +79,8 @@ export default function PartnerPage() {
               dashboard{' '}
             </span>
           </div>
-          {/* Subtitle row */}
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center text-sm text-clay-light w-full">
-            {connectedAddress ? (
+            {partnerAddress ? (
               <>
                 <div className="flex flex-col">
                   <span className="leading-snug">Monitor and manage fees earned through your SODAX partnership.</span>
@@ -84,7 +88,7 @@ export default function PartnerPage() {
                 <span className="leading-snug sm:text-right break-all sm:break-normal">
                   <span className="text-clay-medium">Connected wallet: </span>
                   <span className="font-mono font-bold">
-                    {connectedAddress.slice(0, 6)}...{connectedAddress.slice(-4)}
+                    {partnerAddress.slice(0, 6)}...{partnerAddress.slice(-4)}
                   </span>{' '}
                 </span>
               </>
@@ -94,10 +98,10 @@ export default function PartnerPage() {
           </div>
         </motion.div>
       </div>
-      {/* 2. Preferences Card*/}
-      {connectedAddress && (
+      {/* Preferences Card*/}
+      {partnerAddress && (
         <PartnerPreferencesCard
-          address={connectedAddress as Address}
+          address={partnerAddress}
           prefs={lifecycle.activePreferences}
           updateMutation={lifecycle.updateMutation}
           usdcDestinations={usdcDestinations}
@@ -106,7 +110,7 @@ export default function PartnerPage() {
       <div className="w-1/2 h-px bg-clay-light/30 my-2" />
       {/* Main content */}
       <motion.div variants={itemVariants}>
-        {connectedAddress && (
+        {partnerAddress && (
           <PartnerFeeBalances
             assets={claimableFees}
             isLoading={isInitialLoading}
@@ -115,11 +119,11 @@ export default function PartnerPage() {
           />
         )}
       </motion.div>
-      {claimFlow === ClaimFlowStep.CONFIRM && selectedAsset && (
+      {claimFlow === ClaimFlowStep.CONFIRM && selectedAsset && partnerAddress && (
         <ConfirmClaimModal
           isOpen
           asset={selectedAsset}
-          partnerAddress={connectedAddress as Address}
+          partnerAddress={partnerAddress}
           onClose={() => {
             setClaimFlow(ClaimFlowStep.NONE);
             setSelectedAsset(null);

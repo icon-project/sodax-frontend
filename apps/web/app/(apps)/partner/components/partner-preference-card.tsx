@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SONIC_MAINNET_CHAIN_ID, type ChainId, type Address, type XToken } from '@sodax/types';
@@ -13,7 +13,8 @@ import type { useFeeClaimPreferences } from '../hooks/useFeeClaimPreferences';
 import { PartnerDestinationPicker } from './partner-destination-picker';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import NetworkIcon from '@/components/shared/network-icon';
-import { cn } from '@/lib/utils';
+import { cn, isEvmChainId } from '@/lib/utils';
+import { BaseError, isAddress } from 'viem';
 
 export function PartnerPreferencesCard(props: {
   address: Address;
@@ -48,8 +49,10 @@ export function PartnerPreferencesCard(props: {
   }, [prefs]);
 
   const handleSave = () => {
-    if (!dstToken) return;
-
+    if (!dstToken || !isAddress(dstToken)) {
+      toast.error('Cannot save: Invalid destination address');
+      return;
+    }
     const contractAddress = sodax?.partners?.feeClaim?.config?.protocolIntentsContract;
     if (!contractAddress) {
       toast.error('SDK Error: Protocol Intents Contract missing');
@@ -58,7 +61,7 @@ export function PartnerPreferencesCard(props: {
 
     updateMutation.mutate(
       {
-        outputToken: dstToken as Address,
+        outputToken: dstToken,
         dstChain,
         dstAddress: address,
       },
@@ -68,20 +71,42 @@ export function PartnerPreferencesCard(props: {
           setIsPickerOpen(false);
         },
 
-        // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-        onError: (err: any) => {
-          const msg = err?.shortMessage || err?.message || 'Update failed';
+        onError: (err: unknown) => {
+          let msg = 'Update failed';
+
+          if (err instanceof BaseError) {
+            msg = err.shortMessage || err.message;
+          } else if (err instanceof Error) {
+            msg = err.message;
+          }
+
           toast.error(`Update failed: ${msg}`);
         },
       },
     );
   };
 
+  const evmUsdcDestinations = useMemo(
+    () => usdcDestinations.filter(token => isEvmChainId(token.xChainId)),
+    [usdcDestinations],
+  );
+
   const getButtonLabel = () => {
     if (updateMutation.isPending) return 'Saving claim network…';
     if (!prefs) return 'Save claim network';
     if (!hasChanged) return ' Network saved';
     return 'Save claim network';
+  };
+
+  const handleTokenChange = (token: XToken) => {
+    setDstChain(token.xChainId);
+
+    if (isAddress(token.address)) {
+      setDstToken(token.address);
+    } else {
+      console.error('Invalid token address:', token.address);
+      setDstToken(null);
+    }
   };
 
   return (
@@ -93,7 +118,7 @@ export function PartnerPreferencesCard(props: {
             isPickerOpen ? 'border-cherry/40' : 'border-cherry-grey',
           )}
         >
-          {/* HEADER - Title + Chain badge in top-right */}
+          {/* HEADER */}
           <div className="space-y-2 mb-4">
             <div className="flex items-center justify-between gap-4">
               <CardTitle className="text-md font-bold flex items-center gap-2 text-clay">
@@ -117,7 +142,6 @@ export function PartnerPreferencesCard(props: {
                 </Tooltip>
               </CardTitle>
 
-              {/* Chain badge - top right corner */}
               {dstToken && (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cream-grey/30 text-[11px] text-clay-light whitespace-nowrap">
                   <NetworkIcon id={dstChain} className="w-3 h-3" />
@@ -130,18 +154,14 @@ export function PartnerPreferencesCard(props: {
               <span>Fees are converted to USDC and sent to:</span>
             </div>
           </div>
-
           {/* MAIN CONTENT - Picker left, Button right */}
-          <div className="flex items-center justify-between gap-4 min-h-[80px]">
+          <div className="flex items-center justify-between gap-6 min-h-[80px]">
             {/* LEFT: Picker anchored to bottom-left */}
             <div className="flex flex-col justify-center mx-auto">
               <PartnerDestinationPicker
-                availableTokens={usdcDestinations}
+                availableTokens={evmUsdcDestinations}
                 selectedChainId={dstChain}
-                onChange={token => {
-                  setDstChain(token.xChainId);
-                  setDstToken(token.address as Address);
-                }}
+                onChange={handleTokenChange}
                 onOpenChange={setIsPickerOpen}
               />
             </div>
@@ -165,6 +185,7 @@ export function PartnerPreferencesCard(props: {
               )}
             </div>
           </div>
+          <p className="text-xs text-center text-clay-light mt-2"> EVM only • More chains soon</p>
         </div>
       </CardContent>
     </main>
