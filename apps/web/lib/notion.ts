@@ -65,12 +65,19 @@ async function notionFetch(endpoint: string, options: RequestInit = {}) {
 }
 
 export async function getNotionPages(db: NotionDB): Promise<NotionPage[]> {
-  const data = await notionFetch(`/databases/${NOTION_DB[db]}/query`, {
-    method: 'POST',
-    body: JSON.stringify({ page_size: 100 }),
-  });
+  try {
+    const data = await notionFetch(`/databases/${NOTION_DB[db]}/query`, {
+      method: 'POST',
+      body: JSON.stringify({ page_size: 100 }),
+    });
 
-  return data.results;
+    return data.results;
+  } catch (error) {
+    // Gracefully return empty during build when NOTION_TOKEN isn't available
+    // Pages using ISR will populate at runtime via revalidation
+    console.warn(`Failed to fetch Notion ${db} pages:`, error instanceof Error ? error.message : error);
+    return [];
+  }
 }
 
 export async function getNotionPageBySlug(
