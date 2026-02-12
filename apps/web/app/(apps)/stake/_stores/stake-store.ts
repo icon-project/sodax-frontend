@@ -59,7 +59,7 @@ export const defaultStakeState: StakeState = {
   selectedToken: null,
   stakeMode: STAKE_MODE.STAKING,
   stakeValue: 0n,
-  stakeTypedValue: '',
+  stakeTypedValue: '0',
   currentStakeStep: STAKE_STEP.STAKE_TERMS,
   totalStakedUsdValue: 0,
   unstakeMethod: UNSTAKE_METHOD.REGULAR,
