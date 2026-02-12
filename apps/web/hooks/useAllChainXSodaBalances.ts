@@ -97,8 +97,6 @@ export function useAllChainXSodaBalances(chainIds: SpokeChainId[]): Map<SpokeCha
     });
   }, [chainIds, xAccounts]);
 
-  console.log('chainQueries', chainQueries);
-
   // Check if any wallet is connected
   const hasConnectedWallet = chainQueries.some(q => !!q.address);
 
@@ -130,8 +128,6 @@ export function useAllChainXSodaBalances(chainIds: SpokeChainId[]): Map<SpokeCha
             result = await sodax.staking.getStakingInfoFromSpoke(rawSpokeProvider);
           }
 
-          console.log('query', query);
-          console.log('result', result);
           if (!result.ok) {
             console.warn(`Failed to fetch xSODA balance for chain ${query.chainId}:`, result.error);
             return { chainId: query.chainId, balance: 0n };
