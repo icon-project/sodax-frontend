@@ -158,6 +158,7 @@ export function TokenAsset({
    * Floating UI uses this as reference.
    */
   const assetRef = useRef<HTMLDivElement>(null);
+  const tileOpacity = isClickBlurred ? 0.4 : isHoverDimmed ? 0.5 : 1; // 0.4 is 40% opacity, 0.5 is 50%, 1 is 100%
 
   return (
     <>
@@ -166,7 +167,7 @@ export function TokenAsset({
           layout
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{
-            opacity: isHoverDimmed ? 0.5 : 1,
+            opacity: tileOpacity,
             scale: isHovered ? 1.1 : 1,
           }}
           exit={{ opacity: 0, scale: 0.8 }}
@@ -174,8 +175,7 @@ export function TokenAsset({
           whileHover={{ zIndex: 9999 }}
           className={cn(
             'px-3 flex flex-col items-center justify-start cursor-pointer w-18 pb-4 transition-all',
-            isClickBlurred && 'blur opacity-30',
-            isHoverDimmed && 'opacity-50',
+            isClickBlurred && 'blur-sm',
             isClicked && isGroup && 'z-[9999]',
           )}
           data-name="Asset"
