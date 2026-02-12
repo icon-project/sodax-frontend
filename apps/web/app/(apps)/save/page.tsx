@@ -16,20 +16,7 @@ import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import type { XToken } from '@sodax/types';
 import type { CarouselApi } from '@/components/ui/carousel';
 import CurrencySearchPanel from './_components/currency-search-panel';
-
-export interface NetworkBalance {
-  networkId: string;
-  balance: string;
-  token: XToken;
-}
-
-export interface DepositItemData {
-  asset: XToken;
-  totalBalance: string;
-  fiatValue: string;
-  networksWithFunds: NetworkBalance[];
-  apy: string;
-}
+import type { DepositItemData, NetworkBalance } from '@/constants/save';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);

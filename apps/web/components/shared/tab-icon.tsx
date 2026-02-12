@@ -1,8 +1,8 @@
 // apps/web/components/shared/tab-icon.tsx
 import type React from 'react';
-import { SwapIcon, SavingsIcon, LoansIcon, MigrateIcon } from '@/components/icons';
+import { SwapIcon, SavingsIcon, LoansIcon, MigrateIcon, StakeIcon } from '@/components/icons';
 
-export type TabIconType = 'swap' | 'save' | 'loans' | 'migrate';
+export type TabIconType = 'swap' | 'save' | 'loans' | 'migrate' | 'stake';
 
 interface TabIconProps {
   type: TabIconType;
@@ -17,6 +17,7 @@ const TabIcon: React.FC<TabIconProps> = ({ type, isActive, isMobile = false, cla
     save: <SavingsIcon isActive={isActive} isMobile={isMobile} className={className} />,
     loans: <LoansIcon isActive={isActive} isMobile={isMobile} className={className} />,
     migrate: <MigrateIcon isActive={isActive} isMobile={isMobile} className={className} />,
+    stake: <StakeIcon isActive={isActive} isMobile={isMobile} className={className} />,
   };
 
   return (

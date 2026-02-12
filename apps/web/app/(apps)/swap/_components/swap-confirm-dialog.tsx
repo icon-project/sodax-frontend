@@ -52,8 +52,15 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, dstTxHash, swapError } =
     useSwapState();
-  const { setInputAmount, setDstTxHash, setSwapError, setSwapStatus, setAllowanceConfirmed, resetSwapExecutionState } =
-    useSwapActions();
+  const {
+    setInputAmount,
+    setDstTxHash,
+    setSwapError,
+    setSwapStatus,
+    setAllowanceConfirmed,
+    resetSwapExecutionState,
+    setCustomDestinationAddress,
+  } = useSwapActions();
   const { address: sourceAddress } = useXAccount(inputToken.xChainId);
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress || '';
@@ -87,7 +94,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   }, [inputToken, outputToken, minOutputAmount, inputAmount, sourceAddress, finalDestinationAddress]);
 
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceSpokeProvider);
-  const { data: status } = useStatus((dstTxHash || '0x') as `0x${string}`);
+  const { data: status } = useStatus(dstTxHash as `0x${string}`);
 
   const swapTiming = getSwapTiming(inputToken.xChainId, outputToken.xChainId);
 
@@ -211,6 +218,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
     if (targetChainSolved) {
       setInputAmount('');
+      setCustomDestinationAddress('');
     }
 
     setIsShaking(false);

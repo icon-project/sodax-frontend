@@ -13,16 +13,19 @@ import { DEPOSIT_STEP } from '../../_stores/save-store';
 import { CheckIcon, Loader2Icon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { SpokeProvider } from '@sodax/sdk';
+import { useQueryClient } from '@tanstack/react-query';
 interface DepositDialogFooterProps {
   selectedToken: XToken | null;
   onPendingChange?: (isPending: boolean) => void;
   onClose?: () => void;
+  onError?: (error: { title: string; message: string } | null) => void;
 }
 
 export default function DepositDialogFooter({
   selectedToken,
   onPendingChange,
   onClose,
+  onError,
 }: DepositDialogFooterProps): React.JSX.Element {
   const { currentDepositStep, depositValue } = useSaveState();
   const { setCurrentDepositStep, setIsSwitchingChain } = useSaveActions();
@@ -33,6 +36,7 @@ export default function DepositDialogFooter({
   const [isCompleted, setIsCompleted] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
     params: {
       token: selectedToken?.address as string,
@@ -66,16 +70,36 @@ export default function DepositDialogFooter({
   }, [isPending, onPendingChange]);
 
   const handleDeposit = async (): Promise<void> => {
-    const response = await supply({
-      params: {
-        token: selectedToken?.address as string,
-        amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
-        action: 'supply',
-      },
-      spokeProvider: spokeProvider as SpokeProvider,
-    });
-    if (response.ok) {
-      setIsCompleted(true);
+    try {
+      onError?.(null);
+      const response = await supply({
+        params: {
+          token: selectedToken?.address as string,
+          amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
+          action: 'supply',
+        },
+        spokeProvider: spokeProvider as SpokeProvider,
+      });
+      if (response.ok) {
+        setIsCompleted(true);
+        // Refetch supply balances and reserves data after successful deposit
+        await queryClient.invalidateQueries({ queryKey: ['mm', 'aTokensBalances'] });
+        await queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData'] });
+        await queryClient.invalidateQueries({ queryKey: ['mm', 'reservesUsdFormat'] });
+      } else {
+        onError?.({
+          title: 'Deposit Failed',
+          message: 'Transaction was not successful. Please try again.',
+        });
+      }
+    } catch (error) {
+      console.error('Error depositing:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to deposit';
+      onError?.({
+        title: 'Deposit Failed',
+        message: errorMessage,
+      });
     }
   };
 
@@ -98,17 +122,33 @@ export default function DepositDialogFooter({
   };
 
   const handleApprove = async (): Promise<void> => {
-    const response = await approve({
-      params: {
-        token: selectedToken?.address as string,
-        amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
-        action: 'supply',
-      },
-      spokeProvider: spokeProvider as SpokeProvider,
-    });
-    if (response) {
-      setIsApproved(true);
-      setCurrentDepositStep(DEPOSIT_STEP.CONFIRM);
+    try {
+      onError?.(null);
+      const response = await approve({
+        params: {
+          token: selectedToken?.address as string,
+          amount: parseUnits(depositValue.toString(), selectedToken?.decimals ?? 18),
+          action: 'supply',
+        },
+        spokeProvider: spokeProvider as SpokeProvider,
+      });
+      if (response) {
+        setIsApproved(true);
+        setCurrentDepositStep(DEPOSIT_STEP.CONFIRM);
+      } else {
+        onError?.({
+          title: 'Approval Failed',
+          message: 'No response received. Please try again.',
+        });
+      }
+    } catch (error) {
+      console.error('Error approving deposit:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to approve deposit';
+      onError?.({
+        title: 'Approval Failed',
+        message: errorMessage,
+      });
     }
   };
 
