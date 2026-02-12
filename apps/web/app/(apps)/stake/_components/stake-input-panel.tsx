@@ -21,7 +21,7 @@ export function StakeInputPanel(): React.JSX.Element {
 
   const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance, isNetworkPickerOpened } =
     useStakeState();
-  const { setStakeTypedValue, setStakeValueByPercent, setIsNetworkPickerOpened, setStakeMode } = useStakeActions();
+  const { setStakeTypedValue, setStakeValueByPercent, setIsNetworkPickerOpened } = useStakeActions();
 
   const openModal = useModalStore(state => state.openModal);
 
@@ -134,7 +134,7 @@ export function StakeInputPanel(): React.JSX.Element {
         <div className="w-full flex flex-col sm:flex-row sm:gap-2 justify-between items-center">
           <CustomSlider
             defaultValue={[0]}
-            max={sliderMaxValue == 0 ? 1 : sliderMaxValue}
+            max={sliderMaxValue === 0 ? 1 : sliderMaxValue}
             step={0.01}
             value={[Number(stakeTypedValue)]}
             onValueChange={value => setStakeTypedValue(value[0] ? value[0].toString() : '')}
