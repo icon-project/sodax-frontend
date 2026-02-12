@@ -62,7 +62,7 @@ export function SupplyAssetsListItem({
           Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), 18)),
           Number.parseInt(metrics.formattedReserve.borrowCap) -
             Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
-        ).toFixed(6);
+        ).toFixed(5);
 
   return (
     <TableRow>

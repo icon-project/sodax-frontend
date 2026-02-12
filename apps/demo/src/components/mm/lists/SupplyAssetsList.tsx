@@ -19,6 +19,7 @@ import { type ActionType, SuccessModal } from './SuccessModal';
 import { RepayModal } from './RepayModal';
 import { SupplyModal } from './SupplyModal';
 import { WithdrawModal } from './WithdrawModal';
+import { getHealthFactorState } from '@/lib/utils';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -29,10 +30,8 @@ const TABLE_HEADERS = [
   'Supply APY',
   'Supply APR',
   'Borrowed',
-  'Available',
-  '',
-  '',
-  '',
+  'Borrow available',
+  'Actions',
 ] as const;
 
 export function SupplyAssetsList(): ReactElement {
@@ -86,15 +85,6 @@ export function SupplyAssetsList(): ReactElement {
   const healthFactorDisplay =
     healthFactorRaw !== undefined && Number.isFinite(healthFactorRaw) ? healthFactorRaw.toFixed(2) : '-';
 
-  function getHealthFactorState(hf: number) {
-    if (hf < 1) {
-      return { label: 'At risk', className: 'text-negative' };
-    }
-    if (hf < 2) {
-      return { label: 'Caution', className: 'text-yellow-dark' };
-    }
-    return { label: 'Very safe', className: 'text-cherry-soda' };
-  }
   const healthState = healthFactorRaw !== undefined ? getHealthFactorState(healthFactorRaw) : undefined;
 
   // Extract all aToken addresses from formattedReserves for batch fetching
@@ -164,8 +154,10 @@ export function SupplyAssetsList(): ReactElement {
               </p>
             </div>
           ) : (
-            <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
-              <Table>
+            <div className="rounded-lg border border-cherry-grey/20 max-h-[400px] overflow-y-auto overflow-x-hidden px-2">
+              {' '}
+              <Table unstyled className="table-auto">
+                {' '}
                 <TableHeader className="sticky top-0 bg-cream z-20">
                   <TableRow className="border-b border-cherry-grey/20">
                     {TABLE_HEADERS.map((header, index) => {
