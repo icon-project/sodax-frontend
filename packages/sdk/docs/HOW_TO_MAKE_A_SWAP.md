@@ -143,7 +143,7 @@ const quoteRequest = {
   token_src_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
   token_dst_blockchain_id: POLYGON_MAINNET_CHAIN_ID,
   amount: inputAmount,
-  quote_type: 'exact_input', // or 'exact_output'
+  quote_type: 'exact_input',
 } satisfies SolverIntentQuoteRequest;
 
 const quoteResult = await sodax.swaps.getQuote(quoteRequest);

@@ -2633,6 +2633,7 @@ export const solverConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
     intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
     solverApiEndpoint: 'https://api.sodax.com/v1/intent',
+    protocolIntentsContract: '0xaFf2EDb3057ed6f9C1dA6c930b8ddDf2beE573A5' as const,
   } satisfies SolverConfig,
 };
 
@@ -2753,6 +2754,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
     // spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const,

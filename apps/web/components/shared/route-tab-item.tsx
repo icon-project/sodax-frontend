@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrencyCompact } from '@/lib/utils';
 
 interface RouteTabItemProps {
-  href: string;
+  href?: string;
   value: string;
   type: TabIconType;
   label: string;
@@ -16,7 +16,10 @@ interface RouteTabItemProps {
   setRef?: (el: HTMLAnchorElement | null) => void;
   className?: string;
   enabled: boolean;
+  badgeCount?: number;
+  showIcon?: boolean;
   totalDepositedUsdValue?: number;
+  apr?: number;
 }
 
 const RouteTabItem: React.FC<RouteTabItemProps> = ({
@@ -29,7 +32,10 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
   setRef,
   className = '',
   enabled,
+  badgeCount,
+  showIcon = true,
   totalDepositedUsdValue,
+  apr,
 }) => {
   const getTextClassName = (): string => {
     if (isMobile) {
@@ -55,7 +61,7 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
 
   const content = (
     <div className={getContainerClassName()}>
-      <TabIcon type={type} isActive={isActive} isMobile={isMobile} />
+      {showIcon && <TabIcon type={type} isActive={isActive} isMobile={isMobile} />}
       <div className={isMobile ? 'flex justify-start items-center gap-[2px]' : 'flex justify-start items-center ml-2'}>
         <div
           className={getTextClassName()}
@@ -73,6 +79,11 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
             {formatCurrencyCompact(Math.floor(totalDepositedUsdValue))}
           </Badge>
         )}
+        {isMobile && enabled && apr !== undefined && (
+          <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px] ml-2">
+            {apr.toFixed(2)}%
+          </Badge>
+        )}
       </div>
       {!isMobile && !enabled && <Badge variant="desktop">SOON</Badge>}
       {!isMobile && enabled && totalDepositedUsdValue !== undefined && Math.floor(totalDepositedUsdValue) > 0 && (
@@ -80,14 +91,31 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
           {formatCurrencyCompact(Math.floor(totalDepositedUsdValue))}
         </Badge>
       )}
+      {!isMobile && enabled && apr !== undefined && (
+        <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px]">
+          {apr.toFixed(2)}%
+        </Badge>
+      )}
     </div>
   );
-
+  // 1. Disabled feature (SOON)
   if (!enabled) {
     return (
       <div
         ref={setRef ? (el: HTMLDivElement | null) => setRef(el as HTMLAnchorElement | null) : undefined}
         className="cursor-not-allowed py-0 px-0"
+      >
+        {content}
+      </div>
+    );
+  }
+
+  // 2. Enabled but NOT navigational (Home)
+  if (!href) {
+    return (
+      <div
+        ref={setRef ? (el: HTMLDivElement | null) => setRef(el as HTMLAnchorElement | null) : undefined}
+        className="py-0 px-0"
       >
         {content}
       </div>

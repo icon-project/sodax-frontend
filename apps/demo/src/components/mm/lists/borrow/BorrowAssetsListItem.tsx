@@ -5,7 +5,7 @@ import type { ChainId, XToken } from '@sodax/types';
 import { BorrowButton } from '../BorrowButton';
 import { getChainLabel } from '@/lib/borrowUtils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
+import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
 
 interface BorrowAssetsListItemProps {
@@ -21,7 +21,8 @@ interface BorrowAssetsListItemProps {
   disabled?: boolean;
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
-  onBorrowClick: (token: XToken) => void;
+  onBorrowClick: (token: XToken, maxBorrow: string) => void;
+  userSummary?: FormatUserSummaryResponse;
 }
 
 export function BorrowAssetsListItem({
@@ -32,6 +33,7 @@ export function BorrowAssetsListItem({
   formattedReserves,
   userReserves,
   onBorrowClick,
+  userSummary,
 }: BorrowAssetsListItemProps) {
   const metrics = useReserveMetrics({
     token,
@@ -67,33 +69,44 @@ export function BorrowAssetsListItem({
           ).toFixed(6);
   }
 
+  let maxBorrow = '0';
+
+  if (userSummary && metrics.formattedReserve && availableLiquidity) {
+    const availableBorrowsUSD = Number(userSummary.availableBorrowsUSD);
+    const priceUSD = Number(metrics.formattedReserve.priceInUSD);
+
+    if (priceUSD > 0 && availableBorrowsUSD > 0) {
+      const userLimitTokens = availableBorrowsUSD / priceUSD;
+      const poolLimitTokens = Number(availableLiquidity);
+
+      maxBorrow = (Math.min(userLimitTokens, poolLimitTokens) * 0.99).toFixed(6);
+    }
+  }
+
+  console.log('[Borrow Debug]', {
+    availableBorrowsUSD: userSummary?.availableBorrowsUSD,
+    token: token.symbol,
+  });
+
+  const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
+
   return (
     <TableRow className={`hover:bg-cream/30 transition-colors ${disabled ? 'opacity-50' : ''}`}>
       <TableCell>
-        <span className="font-medium text-cherry-dark">{asset.symbol}</span>
+        <span className="font-bold text-cherry-dark">{asset.symbol}</span>
         <span className="text-clay-light text-xs ml-1">{getChainLabel(token.xChainId)}</span>
       </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{walletBalance}</span>
-      </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{availableLiquidity ?? '--'}</span>
-      </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{metrics.borrowAPY}</span>
-      </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{metrics.borrowAPR}</span>
-      </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{metrics.totalBorrow}</span>
-      </TableCell>
+      <TableCell>{walletBalance}</TableCell>
+      <TableCell>{availableLiquidity ?? '--'}</TableCell>
+      <TableCell>{metrics.borrowAPY}</TableCell>
+      <TableCell>{metrics.borrowAPR}</TableCell>
+      <TableCell>{metrics.totalBorrow}</TableCell>
       <TableCell>
         <BorrowButton
           token={token}
-          disabled={disabled}
-          onClick={clickedToken => {
-            onBorrowClick(clickedToken);
+          disabled={disabled || !canBorrow}
+          onClick={() => {
+            onBorrowClick(token, maxBorrow);
           }}
         />
       </TableCell>

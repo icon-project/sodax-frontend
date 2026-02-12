@@ -1,21 +1,22 @@
-import React, { useMemo, useState } from 'react';
+import React, { type JSX, useMemo, useState } from 'react';
 import {
   useUserReservesData,
   useSpokeProvider,
   useReservesUsdFormat,
   useBackendAllMoneyMarketAssets,
+  useUserFormattedSummary,
 } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
-import { useAppStore } from '@/zustand/useAppStore';
 import { BorrowAssetsListItem } from './BorrowAssetsListItem';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { formatUnits } from 'viem';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
 import { BorrowModal } from './BorrowModal';
 import { SuccessModal } from '../SuccessModal';
-import { type XToken, type ChainId, moneyMarketSupportedTokens } from '@sodax/types';
+import { type XToken, type ChainId, moneyMarketSupportedTokens, AVALANCHE_MAINNET_CHAIN_ID } from '@sodax/types';
+import { ChainSelector } from '@/components/shared/ChainSelector';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -26,11 +27,12 @@ const TABLE_HEADERS = [
   'Total Borrow',
   'Action',
 ];
+type BorrowAssetsListProps = {
+  initialChainId?: ChainId;
+};
 
-export function BorrowAssetsList() {
-  const { selectedChainId } = useAppStore();
-  const [open, setOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX.Element {
+  const [selectedChainId, selectChainId] = useState(initialChainId ?? AVALANCHE_MAINNET_CHAIN_ID);
   const [successData, setSuccessData] = useState<{
     amount: string;
     token: XToken;
@@ -54,12 +56,28 @@ export function BorrowAssetsList() {
     ) as XToken[];
   }, []);
 
-  const [selectedTokenForBorrow, setSelectedTokenForBorrow] = useState<XToken | null>(null);
+  const [borrowData, setBorrowData] = useState<{
+    token: XToken;
+    maxBorrow: string;
+  } | null>(null);
 
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];
-    return getBorrowableAssetsWithMarketData(allMoneyMarketAssets, allTokens);
-  }, [allMoneyMarketAssets, allTokens]);
+    // 1. Get all assets the backend says are borrowable globally
+    const allBorrowableAssets = getBorrowableAssetsWithMarketData(allMoneyMarketAssets, allTokens);
+
+    const sodaVariants = allBorrowableAssets.filter(
+      a => a.symbol.toLowerCase().startsWith('soda') || a.symbol.includes('.LL'),
+    );
+    // 2. Get the specific tokens our config says should be supported for the SELECTED chain
+    const supportedOnChain = moneyMarketSupportedTokens[selectedChainId] || [];
+
+    // 3. FIX: Only return assets that belong to the selected chain
+    // AND are explicitly defined in that chain's config
+    return allBorrowableAssets.filter(
+      asset => asset.chainId === selectedChainId && supportedOnChain.some(t => t.symbol === asset.token.symbol),
+    );
+  }, [allMoneyMarketAssets, allTokens, selectedChainId]);
 
   const tokensOnSelectedChain = useMemo(
     () => allTokens.filter(t => t.xChainId === selectedChainId),
@@ -77,16 +95,20 @@ export function BorrowAssetsList() {
   });
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
+  const { data: userSummary } = useUserFormattedSummary({
+    spokeProvider,
+    address,
+  });
 
   const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
 
   const isLoading = isUserReservesLoading || isFormattedReservesLoading || isAssetsLoading;
 
   return (
-    <Card className="mt-6">
+    <Card className="mt-3">
       <CardHeader>
         <CardTitle>Assets to Borrow</CardTitle>
-        <p className="text-sm text-clay font-normal mt-2"> Borrow assets - choose destination chain.</p>
+        <p className="text-sm text-clay font-normal"> Select an asset and destination chain to begin borrowing.</p>
 
         {!hasCollateral && !isLoading && (
           <div className="mt-4 p-3 bg-cherry-brighter/20 border border-cherry/30 rounded-lg flex items-start gap-2">
@@ -95,21 +117,28 @@ export function BorrowAssetsList() {
           </div>
         )}
       </CardHeader>
-
+      <div className=" py-2 mx-2 my-1">
+        <div className="flex items-center gap-3 mx-6 pb-2">
+          <span className="text-sm font-medium text-clay">Chain:</span>
+          <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
+        </div>
+      </div>
       <CardContent>
         <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
           <Table className="table-fixed w-full">
             <TableHeader className="sticky top-0 bg-cream z-20">
               <TableRow className="border-b border-cherry-grey/20">
                 {TABLE_HEADERS.map(header => (
-                  <TableHead key={header} className="text-cherry-dark font-bold">
+                  <TableHead
+                    key={header}
+                    className="sticky top-0 z-10 bg-cream text-cherry-dark font-bold whitespace-nowrap after:absolute after:inset-0 after:-z-10 after:bg-cream"
+                  >
                     {header}
                   </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
           </Table>
-
           <div className="max-h-[400px] overflow-y-auto">
             <Table className="table-fixed w-full">
               <TableBody>
@@ -143,7 +172,8 @@ export function BorrowAssetsList() {
                         }
                         formattedReserves={formattedReserves || []}
                         userReserves={userReserves?.[0] || []}
-                        onBorrowClick={token => setSelectedTokenForBorrow(token)}
+                        onBorrowClick={(token, maxBorrow) => setBorrowData({ token, maxBorrow })}
+                        userSummary={userSummary}
                       />
                     );
                   })
@@ -153,18 +183,18 @@ export function BorrowAssetsList() {
           </div>
         </div>
       </CardContent>
-      {selectedTokenForBorrow && (
+      {borrowData && (
         <BorrowModal
-          key={selectedTokenForBorrow.address}
-          open={!!selectedTokenForBorrow}
-          token={selectedTokenForBorrow}
+          open={!!borrowData}
+          token={borrowData.token}
           onOpenChange={open => {
-            if (!open) setSelectedTokenForBorrow(null);
+            if (!open) setBorrowData(null);
           }}
           onSuccess={data => {
             setSuccessData(data);
-            setSelectedTokenForBorrow(null);
+            setBorrowData(null);
           }}
+          maxBorrow={borrowData.maxBorrow}
         />
       )}
       <SuccessModal open={!!successData} onClose={() => setSuccessData(null)} data={successData} action="borrow" />

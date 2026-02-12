@@ -15,7 +15,8 @@ import { INJECTIVE_MAINNET_CHAIN_ID, LIGHTLINK_MAINNET_CHAIN_ID, ICON_MAINNET_CH
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
-import { availableChains } from '@/constants/chains';
+import { availableChains, getChainUI } from '@/constants/chains';
+// import { CHAIN_TX_EXPLORERS } from '@/constants/chain-explorers';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -174,6 +175,12 @@ export const hasSufficientBalanceWithFee = (
   }
 };
 
+export function formatTokenAmount(amount: number | string | bigint, decimals: number, displayDecimals = 2): string {
+  return new BigNumber(amount.toString())
+    .dividedBy(new BigNumber(10).pow(decimals))
+    .toFixed(displayDecimals, BigNumber.ROUND_DOWN);
+}
+
 export const formatBalance = (amount: string, price: number): string => {
   if (!amount || new BigNumber(amount).isZero() || Number(amount) < 0) return '0';
   const decimals = price >= 10000 ? 6 : 4;
@@ -306,6 +313,11 @@ export function calculateAPY(formattedReserves: FormatReserveUSDResponse[] | und
   }
 }
 
+export const getChainExplorerTxUrl = (chainId: string, txHash: string): string | undefined => {
+  const chain = getChainUI(chainId);
+  if (!chain?.explorerTxUrl) return undefined;
+  return `${chain.explorerTxUrl}${txHash}`;
+};
 export function formatCurrencyCompact(value: number): string {
   const abs = Math.abs(value);
 
@@ -324,4 +336,34 @@ export function formatCurrencyCompact(value: number): string {
 
 function trimZeros(num: string) {
   return num.replace(/\.?0+$/, '');
+}
+
+/**
+ * Calculates time remaining for unstaking based on start time and unstaking period.
+ * @param startTime - The start time of the unstake request (in seconds, as bigint)
+ * @param unstakingPeriod - The unstaking period duration (in seconds, as bigint)
+ * @returns Formatted string showing time remaining (e.g., "180d 5h 30m remaining" or "Ready to claim")
+ */
+export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): string {
+  const now = Math.floor(Date.now() / 1000);
+  const start = Number(startTime);
+  const period = Number(unstakingPeriod);
+  const elapsed = now - start;
+  const remaining = period - elapsed;
+
+  if (remaining <= 0) {
+    return 'Unstake complete';
+  }
+
+  const days = Math.floor(remaining / 86400);
+  const hours = Math.floor((remaining % 86400) / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+
+  if (days > 0) {
+    return `${days} days left`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m remaining`;
+  }
+  return `${minutes}m remaining`;
 }

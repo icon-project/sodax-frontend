@@ -4,12 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { 
-  Flame, 
-  Lock, 
-  Network, 
-  TrendingDown, 
-  Users, 
+import {
+  Flame,
+  Lock,
+  Network,
+  TrendingDown,
+  Users,
   Coins,
   Shield,
   ChevronDown,
@@ -117,13 +117,9 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full py-2.5 sm:py-3 px-3 sm:px-4 flex items-start justify-between gap-3 sm:gap-4 text-left hover:bg-cream/20 transition-colors"
       >
-        <span className="text-espresso text-sm font-medium font-['InterRegular'] flex-1">
-          {question}
-        </span>
+        <span className="text-espresso text-sm font-medium font-['InterRegular'] flex-1">{question}</span>
         <ChevronDown
-          className={`w-4 h-4 text-clay flex-shrink-0 transition-transform duration-300 ${
-            isOpen ? 'rotate-180' : ''
-          }`}
+          className={`w-4 h-4 text-clay flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
       {isOpen && (
@@ -160,11 +156,7 @@ function CopyButton({ text }: { text: string }) {
       className="p-1.5 hover:bg-clay/10 rounded transition-colors"
       title="Copy address"
     >
-      {copied ? (
-        <Check className="w-3.5 h-3.5 text-green-600" />
-      ) : (
-        <Copy className="w-3.5 h-3.5 text-clay" />
-      )}
+      {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5 text-clay" />}
     </button>
   );
 }
@@ -192,11 +184,13 @@ export default function SodaTokenPage() {
     },
     {
       question: 'What is the vesting schedule for locked supply?',
-      answer: 'Locked SODA follows a 5-year vesting schedule with a 1-year cliff. This ensures long-term alignment and gradual token distribution.',
+      answer:
+        'Locked SODA follows a 5-year vesting schedule with a 1-year cliff. This ensures long-term alignment and gradual token distribution.',
     },
     {
       question: 'How is SODA deflationary?',
-      answer: '20% of protocol revenue is used to buy SODA from the market and burn it permanently, linking supply reduction to system usage.',
+      answer:
+        '20% of protocol revenue is used to buy SODA from the market and burn it permanently, linking supply reduction to system usage.',
     },
     {
       question: 'What is Protocol-Owned Liquidity (POL)?',
@@ -204,7 +198,8 @@ export default function SodaTokenPage() {
     },
     {
       question: 'How do I earn staking rewards?',
-      answer: 'By staking SODA for xSODA. You receive 20% of protocol revenue, with higher APR for longer locks (up to 180 days).',
+      answer:
+        'By staking SODA for xSODA. You receive 20% of protocol revenue, with higher APR for longer locks (up to 180 days).',
     },
     {
       question: 'Can I unstake early?',
@@ -217,12 +212,12 @@ export default function SodaTokenPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-almost-white w-full">
+    <div className="relative min-h-screen bg-almost-white w-full">
       {/* Header */}
       <MarketingHeader />
-      
+
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-[132px] pb-8 sm:pb-12 lg:pb-16">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -230,9 +225,7 @@ export default function SodaTokenPage() {
           transition={{ duration: 0.6 }}
           className="mb-6 sm:mb-8 md:mb-10"
         >
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-['InterRegular'] text-espresso">
-            SODA Token
-          </h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-['InterRegular'] text-espresso">SODA Token</h1>
           <p className="text-sm sm:text-base md:text-lg text-clay font-['InterRegular'] leading-relaxed">
             Participation and coordination inside the SODAX execution system
           </p>
@@ -278,9 +271,7 @@ export default function SodaTokenPage() {
                   value={formatNumber(circulatingQuery.data)}
                   className="text-2xl sm:text-3xl font-bold font-['InterRegular'] text-espresso block mb-1"
                 />
-                <p className="text-clay text-sm font-['InterRegular']">
-                  SODA in circulation
-                </p>
+                <p className="text-clay text-sm font-['InterRegular']">SODA in circulation</p>
               </motion.div>
 
               {/* Total Supply */}
@@ -300,9 +291,7 @@ export default function SodaTokenPage() {
                   value={formatNumber(totalQuery.data)}
                   className="text-2xl sm:text-3xl font-bold font-['InterRegular'] text-espresso block mb-1"
                 />
-                <p className="text-clay text-sm font-['InterRegular']">
-                  Fixed maximum
-                </p>
+                <p className="text-clay text-sm font-['InterRegular']">Fixed maximum</p>
               </motion.div>
             </div>
 
@@ -353,8 +342,8 @@ export default function SodaTokenPage() {
                     Protocol Participation Token
                   </div>
                   <p className="text-clay text-sm font-['InterRegular'] leading-relaxed">
-                    SODA aligns liquidity participation, execution incentives, and protocol governance across the
-                    SODAX network.
+                    SODA aligns liquidity participation, execution incentives, and protocol governance across the SODAX
+                    network.
                   </p>
                 </div>
               </div>
@@ -393,13 +382,11 @@ export default function SodaTokenPage() {
         {/* What is SODA */}
         <Section delay={0}>
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3">
-              What is SODA?
-            </h2>
+            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3">What is SODA?</h2>
             <p className="text-clay text-sm font-['InterRegular'] leading-relaxed mb-3">
-              SODA is the native utility and governance token of the SODAX execution coordination system. SODAX is
-              built as an outcome-oriented cross-network execution system that coordinates liquidity and execution
-              across heterogeneous networks.
+              SODA is the native utility and governance token of the SODAX execution coordination system. SODAX is built
+              as an outcome-oriented cross-network execution system that coordinates liquidity and execution across
+              heterogeneous networks.
             </p>
             <p className="text-clay text-sm font-['InterRegular'] leading-relaxed">
               SODA provides the economic layer that aligns solver incentives with execution reliability, enables
@@ -416,16 +403,12 @@ export default function SodaTokenPage() {
         {/* Token Economics */}
         <Section delay={0}>
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3">
-              Token Economics
-            </h2>
+            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3">Token Economics</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="border border-cherry-grey/20 rounded p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingDown className="w-4 h-4 text-clay" />
-                  <div className="text-espresso text-sm font-bold font-['InterRegular']">
-                    20% Protocol Burn
-                  </div>
+                  <div className="text-espresso text-sm font-bold font-['InterRegular']">20% Protocol Burn</div>
                 </div>
                 <p className="text-clay text-xs font-['InterRegular'] leading-relaxed">
                   Revenue used to market-buy SODA, then permanently removed from circulation
@@ -434,9 +417,7 @@ export default function SodaTokenPage() {
               <div className="border border-cherry-grey/20 rounded p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Coins className="w-4 h-4 text-clay" />
-                  <div className="text-espresso text-sm font-bold font-['InterRegular']">
-                    50% POL Reinvestment
-                  </div>
+                  <div className="text-espresso text-sm font-bold font-['InterRegular']">50% POL Reinvestment</div>
                 </div>
                 <p className="text-clay text-xs font-['InterRegular'] leading-relaxed">
                   Reinvested into protocol-managed liquidity to support execution reliability and solver inventory
@@ -445,9 +426,7 @@ export default function SodaTokenPage() {
               <div className="border border-cherry-grey/20 rounded p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Users className="w-4 h-4 text-clay" />
-                  <div className="text-espresso text-sm font-bold font-['InterRegular']">
-                    20% Staking Rewards
-                  </div>
+                  <div className="text-espresso text-sm font-bold font-['InterRegular']">20% Staking Rewards</div>
                 </div>
                 <p className="text-clay text-xs font-['InterRegular'] leading-relaxed">
                   Distributed to xSODA holders to reward long-term participation
@@ -456,9 +435,7 @@ export default function SodaTokenPage() {
               <div className="border border-cherry-grey/20 rounded p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Shield className="w-4 h-4 text-clay" />
-                  <div className="text-espresso text-sm font-bold font-['InterRegular']">
-                    10% DAO / Incentives
-                  </div>
+                  <div className="text-espresso text-sm font-bold font-['InterRegular']">10% DAO / Incentives</div>
                 </div>
                 <p className="text-clay text-xs font-['InterRegular'] leading-relaxed">
                   Allocated for ecosystem expansion and strategic partnerships
@@ -489,9 +466,7 @@ export default function SodaTokenPage() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-espresso text-sm font-bold font-['InterRegular']">
-                        {network.name}
-                      </div>
+                      <div className="text-espresso text-sm font-bold font-['InterRegular']">{network.name}</div>
                       <p className="text-clay text-xs font-['InterRegular']">{network.role}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -514,9 +489,7 @@ export default function SodaTokenPage() {
         {/* FAQ Section */}
         <Section delay={0}>
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3 sm:mb-4">
-              FAQ
-            </h2>
+            <h2 className="text-lg sm:text-xl font-bold font-['InterRegular'] text-espresso mb-3 sm:mb-4">FAQ</h2>
             <div className="divide-y divide-cherry-grey/20">
               {faqs.map((faq, index) => (
                 <FAQItem key={index} question={faq.question} answer={faq.answer} />
@@ -559,7 +532,7 @@ export default function SodaTokenPage() {
           </div>
         </Section>
       </div>
-      
+
       {/* Footer */}
       <Footer />
     </div>

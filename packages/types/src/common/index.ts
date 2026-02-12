@@ -253,6 +253,7 @@ export type SpokeChainConfig =
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
   solverApiEndpoint: HttpUrl;
+  protocolIntentsContract?: Address; // Protocol Intents Contract for partner fee claims
 };
 
 export type MoneyMarketConfig = {

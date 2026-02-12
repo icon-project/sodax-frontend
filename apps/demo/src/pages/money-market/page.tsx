@@ -29,14 +29,15 @@ export default function MoneyMarketPage() {
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-clay">Chain:</span>
               <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
+              <div className="text-xs text-muted-foreground">
+                This chain is used for collateral (supply) & debt (borrow)
+              </div>
             </div>
 
             {walletAddressOnHub && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-clay">Hub Wallet Address:</span>
-                <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark font-mono text-xs">
-                  {walletAddressOnHub}
-                </span>
+                <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark text-xs">{walletAddressOnHub}</span>
               </div>
             )}
           </div>
@@ -45,7 +46,7 @@ export default function MoneyMarketPage() {
         {xAccount?.address ? (
           <div className="animate-in fade-in duration-500">
             <SupplyAssetsList />
-            <BorrowAssetsList />
+            <BorrowAssetsList initialChainId={selectedChainId} />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[500px] bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-12">

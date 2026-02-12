@@ -4,7 +4,6 @@ import { requirePermission } from '@/lib/auth-utils';
 import { generateSlug, type NewsArticle } from '@/lib/mongodb-types';
 import { NewsArticleSchema, formatZodError } from '@/lib/cms-schemas';
 import { sanitizeHtml, sanitizeText } from '@/lib/sanitize';
-import { triggerDeployIfPublished } from '@/lib/trigger-deploy';
 import { ZodError } from 'zod';
 
 // CMS API routes require authentication - prevent build-time analysis
@@ -83,6 +82,15 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date();
+
+    // Determine publish date: use provided date, or now if publishing, or undefined
+    let publishedAt: Date | undefined;
+    if (validated.publishedAt) {
+      publishedAt = new Date(validated.publishedAt);
+    } else if (validated.published) {
+      publishedAt = now;
+    }
+
     const article: NewsArticle = {
       title: validated.title,
       slug,
@@ -92,9 +100,9 @@ export async function POST(request: NextRequest) {
       metaTitle: validated.metaTitle || validated.title,
       metaDescription: validated.metaDescription || sanitizedExcerpt,
       published: validated.published,
-      publishedAt: validated.published ? now : undefined,
-      authorId: session.user.id,
-      authorName: session.user.name,
+      publishedAt,
+      authorId: validated.authorId || session.user.id,
+      authorName: validated.authorName || session.user.name,
       tags: validated.tags,
       categories: validated.categories,
       createdAt: now,
@@ -102,9 +110,6 @@ export async function POST(request: NextRequest) {
     };
 
     const result = await collection.insertOne(article);
-
-    // Trigger deploy if article is published
-    await triggerDeployIfPublished(article.published, `News created: ${article.title}`);
 
     return NextResponse.json({ ...article, _id: result.insertedId }, { status: 201 });
   } catch (error) {

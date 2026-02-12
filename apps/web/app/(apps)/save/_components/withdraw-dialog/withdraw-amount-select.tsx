@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/save/_components/withdraw-dialog/withdraw-amount-select.tsx
 import type React from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { formatBalance } from '@/lib/utils';
@@ -28,6 +29,7 @@ export default function WithdrawAmountSelect({
   const balance = selectedToken
     ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
     : 0n;
+
   return (
     <>
       <div className="flex gap-2 mb-4">
@@ -41,7 +43,10 @@ export default function WithdrawAmountSelect({
       <AmountInputSlider
         value={[withdrawValue]}
         onValueChange={value => onWithdrawValueChange(value[0] ?? 0)}
-        maxValue={Number(supplyBalance) || 0}
+        maxValue={
+          Math.floor(Number(supplyBalance) * 10 ** (selectedToken?.decimals ?? 18)) /
+          10 ** (selectedToken?.decimals ?? 18)
+        }
         tokenSymbol={selectedToken?.symbol || ''}
         onInputChange={onInputChange}
         isSimulate={!(sourceAddress && balance > 0n)}

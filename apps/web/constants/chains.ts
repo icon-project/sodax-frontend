@@ -14,12 +14,14 @@ import {
   ETHEREUM_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   KAIA_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export interface ChainUI {
   id: string;
   name: string;
   icon: string;
+  explorerTxUrl?: string;
 }
 
 export const EVM_CHAIN_ICONS = [
@@ -34,6 +36,7 @@ export const EVM_CHAIN_ICONS = [
   '/chain/lightlink.png',
   '/chain/hyper.png',
   '/chain/0x2019.kaia.png',
+  '/chain/redbelly.png',
 ];
 
 /**
@@ -41,10 +44,15 @@ export const EVM_CHAIN_ICONS = [
  * Maps SPOKE_CHAIN_IDS to human-readable names and icon paths
  */
 export const availableChains: ChainUI[] = [
+  {
+    id: SONIC_MAINNET_CHAIN_ID,
+    name: 'Sonic',
+    icon: '/chain/sonic.png',
+    explorerTxUrl: 'https://sonicscan.org/tx/',
+  },
   { id: ETHEREUM_MAINNET_CHAIN_ID, name: 'Ethereum', icon: '/chain/ethereum.png' },
   { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', icon: '/chain/solana.png' },
   { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png' },
-  { id: SONIC_MAINNET_CHAIN_ID, name: 'Sonic', icon: '/chain/sonic.png' },
   {
     id: ARBITRUM_MAINNET_CHAIN_ID,
     name: 'Arbitrum',
@@ -61,6 +69,7 @@ export const availableChains: ChainUI[] = [
     id: AVALANCHE_MAINNET_CHAIN_ID,
     name: 'Avalanche',
     icon: '/chain/0xa86a.avax.png',
+    explorerTxUrl: 'https://snowtrace.io/tx/',
   },
   {
     id: OPTIMISM_MAINNET_CHAIN_ID,
@@ -73,9 +82,16 @@ export const availableChains: ChainUI[] = [
     id: LIGHTLINK_MAINNET_CHAIN_ID,
     name: 'LightLink',
     icon: '/chain/lightlink.png',
+    explorerTxUrl: 'https://phoenix.lightlink.io/tx/',
   },
-  { id: HYPEREVM_MAINNET_CHAIN_ID, name: 'Hyper', icon: '/chain/hyper.png' },
+  {
+    id: HYPEREVM_MAINNET_CHAIN_ID,
+    name: 'Hyper',
+    icon: '/chain/hyper.png',
+    explorerTxUrl: 'https://explorer.hyperchain.io/tx/',
+  },
   { id: KAIA_MAINNET_CHAIN_ID, name: 'Kaia', icon: '/chain/0x2019.kaia.png' },
+  { id: REDBELLY_MAINNET_CHAIN_ID, name: 'Redbelly', icon: '/chain/redbelly.png' },
 ];
 
 /**

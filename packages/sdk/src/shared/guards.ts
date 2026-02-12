@@ -456,7 +456,7 @@ export function isSolanaRawSpokeProvider(value: unknown): value is SolanaRawSpok
 }
 
 export function isStellarRawSpokeProvider(value: unknown): value is StellarRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STELLAR' && 'baseProvider' in value;
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STELLAR';
 }
 
 export function isIconRawSpokeProvider(value: unknown): value is IconRawSpokeProvider {
@@ -481,4 +481,8 @@ export function isSonicRawSpokeProvider(value: unknown): value is SonicRawSpokeP
 
 export function isNearRawSpokeProvider(value: unknown): value is NearRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'NEAR';
+}
+
+export function isAddressString(value: unknown): value is string {
+  return typeof value === 'string';
 }

@@ -20,6 +20,7 @@ export type SaveState = {
   isAssetListBlurred: boolean;
   isShowDeposits: boolean;
   selectedToken: XToken | null;
+  suppliedAssetCount: number;
 };
 
 export type SaveActions = {
@@ -34,6 +35,7 @@ export type SaveActions = {
   setIsShowDeposits: (value: boolean) => void;
   setSelectedToken: (token: XToken | null) => void;
   resetSaveState: () => void;
+  setSuppliedAssetCount: (count: number) => void;
 };
 
 export type SaveStore = SaveState & SaveActions;
@@ -49,6 +51,7 @@ export const defaultSaveState: SaveState = {
   isAssetListBlurred: false,
   isShowDeposits: false,
   selectedToken: null,
+  suppliedAssetCount: 0,
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
@@ -72,6 +75,7 @@ export const createSaveStore = (initState: SaveState = defaultSaveState) => {
             isSwitchingChain: false,
           });
         },
+        setSuppliedAssetCount: (count: number) => set({ suppliedAssetCount: count }), // <--- Add this
       }),
       {
         name: 'sodax-save-store',
