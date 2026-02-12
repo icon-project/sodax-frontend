@@ -8,9 +8,11 @@ import { STAKING_APR } from './_components/constants';
 import Tip from './_components/icons/tip';
 import type { XToken, SpokeChainId } from '@sodax/types';
 import { supportedSpokeChains, spokeChainConfig } from '@sodax/sdk';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SodaAsset } from './_components/soda-asset';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
+import { itemVariants, listVariants } from '@/constants/animation';
 
 export default function StakePage(): React.JSX.Element {
   const { stakeMode, selectedToken, isNetworkPickerOpened } = useStakeState();
@@ -31,10 +33,18 @@ export default function StakePage(): React.JSX.Element {
     return tokens; // Fallback to current token if none found
   }, []);
 
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsOpen(true);
+    }, 500);
+  }, []);
+
   return (
-    <div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)">
+    <motion.div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)" variants={listVariants} initial={false} animate={isOpen ? 'open' : 'closed'}>
       <StakeHeader apr={STAKING_APR} />
-      <div className="relative w-full   flex flex-col justify-start items-start gap-0">
+      <motion.div className="relative w-full   flex flex-col justify-start items-start gap-0" variants={itemVariants}>
         <div className="absolute top-10 left-(--layout-space-big) z-10">
           <SodaAsset
             selectedToken={selectedToken}
@@ -67,9 +77,9 @@ export default function StakePage(): React.JSX.Element {
 
           <StakeStatsCard />
         </div>
-      </div>
+      </motion.div>
 
       <UnstakeRequests />
-    </div>
+    </motion.div>
   );
 }
