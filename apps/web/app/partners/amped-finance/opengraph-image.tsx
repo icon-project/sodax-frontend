@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const alt = 'Amped Finance x SODAX Partnership';
+export const alt = 'Amped Finance Case Study | SODAX Partners';
 export const size = {
   width: 1200,
   height: 630,
@@ -10,22 +10,27 @@ export const size = {
 
 export const contentType = 'image/png';
 
+// Partner-specific configuration
+const partnerName = 'Amped Finance';
+const partnerLogoPath = '/partners/amped-finance/logo.png';
+
 export default async function Image() {
-  // Fetch logo images using absolute URLs
   const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3001';
 
   try {
-    const sodaxLogo = fetch(`${baseUrl}/symbol.png`).then(res => {
-      if (!res.ok) throw new Error('Failed to fetch SODAX logo');
-      return res.arrayBuffer();
-    });
-
-    const ampedLogo = fetch(`${baseUrl}/partners/amped-finance/logo.png`).then(res => {
-      if (!res.ok) throw new Error('Failed to fetch Amped Finance logo');
-      return res.arrayBuffer();
-    });
-
-    const [sodaxLogoData, ampedLogoData] = await Promise.all([sodaxLogo, ampedLogo]);
+    const [backgroundData, partnerLogoData, interExtraBold] = await Promise.all([
+      fetch(`${baseUrl}/partners/link-preview-dynamic.jpg`).then(res => {
+        if (!res.ok) throw new Error('Failed to fetch background');
+        return res.arrayBuffer();
+      }),
+      fetch(`${baseUrl}${partnerLogoPath}`).then(res => {
+        if (!res.ok) throw new Error('Failed to fetch partner logo');
+        return res.arrayBuffer();
+      }),
+      fetch('https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYMZs.woff').then(
+        res => res.arrayBuffer(),
+      ),
+    ]);
 
     return new ImageResponse(
       <div
@@ -33,74 +38,87 @@ export default async function Image() {
           height: '100%',
           width: '100%',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(to right, #a55c55, #000000)',
-          gap: '80px',
-          padding: '60px',
+          position: 'relative',
         }}
       >
-        {/* SodaX Logo */}
-        <div
+        {/* Background Image */}
+        <img
+          src={`data:image/jpeg;base64,${Buffer.from(backgroundData).toString('base64')}`}
+          alt=""
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
           }}
-        >
-          <img
-            src={`data:image/png;base64,${Buffer.from(sodaxLogoData).toString('base64')}`}
-            alt="SodaX Logo"
-            width="280"
-            height="280"
-            style={{
-              objectFit: 'contain',
-            }}
-          />
-        </div>
+        />
 
-        {/* X Separator */}
+        {/* Content Overlay */}
         <div
           style={{
+            position: 'absolute',
+            top: -20,
+            left: 0,
+            width: '100%',
+            height: '100%',
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: 'column',
             justifyContent: 'center',
-            fontSize: '80px',
-            fontWeight: 'bold',
-            color: 'white',
-            opacity: 0.5,
+            paddingLeft: '150px',
+            paddingTop: '0px',
           }}
         >
-          ×
-        </div>
-
-        {/* Amped Finance Logo */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <img
-            src={`data:image/png;base64,${Buffer.from(ampedLogoData).toString('base64')}`}
-            alt="Amped Finance Logo"
-            width="280"
-            height="280"
+          {/* Partner Logo + Name */}
+          <div
             style={{
-              objectFit: 'contain',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '24px',
             }}
-          />
+          >
+            {/* Partner Logo */}
+            <img
+              src={`data:image/png;base64,${Buffer.from(partnerLogoData).toString('base64')}`}
+              alt={`${partnerName} Logo`}
+              width="140"
+              height="140"
+              style={{
+                objectFit: 'contain',
+                marginTop: '-30px',
+              }}
+            />
+
+            {/* Partner Name */}
+            <div
+              style={{
+                fontSize: '58px',
+                fontWeight: 800,
+                color: '#483534',
+              }}
+            >
+              {partnerName}
+            </div>
+          </div>
         </div>
       </div>,
       {
         ...size,
+        fonts: [
+          {
+            name: 'Inter',
+            data: interExtraBold,
+            style: 'normal',
+            weight: 800,
+          },
+        ],
       },
     );
   } catch (error) {
     console.error('Error generating OpenGraph image:', error);
 
-    // Return fallback OpenGraph image with text only
+    // Return fallback with text only
     return new ImageResponse(
       <div
         style={{
@@ -108,39 +126,30 @@ export default async function Image() {
           width: '100%',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(to right, #a55c55, #000000)',
-          padding: '60px',
+          backgroundColor: '#f8f3f3',
+          paddingLeft: '112px',
         }}
       >
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '20px',
+            fontSize: '24px',
+            fontWeight: 500,
+            color: '#8e7e7d',
+            letterSpacing: '0.05em',
+            marginBottom: '8px',
           }}
         >
-          <div
-            style={{
-              fontSize: '72px',
-              fontWeight: 'bold',
-              color: 'white',
-              textAlign: 'center',
-            }}
-          >
-            Amped Finance × SODAX
-          </div>
-          <div
-            style={{
-              fontSize: '36px',
-              color: 'rgba(255, 255, 255, 0.8)',
-              textAlign: 'center',
-            }}
-          >
-            Partnership Case Study
-          </div>
+          CASE STUDY
+        </div>
+        <div
+          style={{
+            fontSize: '48px',
+            fontWeight: 700,
+            color: '#483534',
+          }}
+        >
+          {partnerName}
         </div>
       </div>,
       {

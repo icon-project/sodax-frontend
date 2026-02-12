@@ -32,7 +32,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'save',
     label: 'Save',
     content: 'a quick save',
-    enabled: false,
+    enabled: true,
   },
   {
     value: 'loans',
@@ -41,13 +41,13 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick loans',
     enabled: false,
   },
-  // {
-  //   value: 'stake',
-  //   type: 'stake',
-  //   label: 'Stake',
-  //   content: 'a quick stake',
-  //   enabled: true,
-  // },
+  {
+    value: 'stake',
+    type: 'stake',
+    label: 'Stake',
+    content: 'a quick stake',
+    enabled: true,
+  },
   {
     value: 'migrate',
     type: 'migrate',
@@ -196,7 +196,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-24 flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
               {usedTabs
-                // .filter(tab => !(tab.value === 'loans'))
+                .filter(tab => !(tab.value === 'loans'))
                 .map(tab => {
                   const href = tab.href ?? `/${tab.value}`;
                   const active = current === tab.value;
