@@ -1,4 +1,4 @@
-import { stagger } from 'motion/react';
+import { stagger, type Variants } from 'motion/react';
 
 export const headerVariants = {
   open: {
@@ -86,5 +86,24 @@ export const accordionVariants = {
     height: 'auto',
     opacity: 1,
     transition: { duration: 0.25, ease: 'easeOut' as const },
+  },
+};
+
+export const stakeModeVariants: Variants = {
+  enter: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      duration: 1,
+      ease: [0, 0.7, 0.1, 1], // heavy ease-out
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -32,
+    transition: {
+      duration: 1,
+      ease: [0.9, 0, 1, 0.3], // heavy ease-in
+    },
   },
 };
