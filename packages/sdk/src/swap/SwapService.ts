@@ -218,7 +218,7 @@ export type LimitOrderParams<S extends SpokeProviderType> = Prettify<
 >;
 
 export type SwapServiceConstructorParams = {
-  config: SolverConfigParams | undefined;
+  config?: SolverConfigParams;
   configService: ConfigService;
   hubProvider: EvmHubProvider;
   relayerApiEndpoint?: HttpUrl;
