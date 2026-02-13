@@ -47,13 +47,6 @@ export function useMMApprove(): UseMutationResult<string, Error, UseMMApprovePar
       return allowance.value;
     },
     onSuccess: (_, { params, spokeProvider }: UseMMApproveParams) => {
-      console.log('onSuccess invoked with queryKey:', [
-        'mm',
-        'allowance',
-        spokeProvider?.chainConfig.chain.id,
-        params.token,
-        params.action,
-      ]);
       // Invalidate allowance query to refetch updated approval status
       queryClient.invalidateQueries({
         queryKey: ['mm', 'allowance', spokeProvider?.chainConfig.chain.id, params.token, params.action],

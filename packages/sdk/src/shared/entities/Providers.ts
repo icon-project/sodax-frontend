@@ -15,9 +15,12 @@ import type { InjectiveRawSpokeProvider, InjectiveSpokeProvider } from './inject
 import type { IconRawSpokeProvider, IconSpokeProvider } from './icon/IconSpokeProvider.js';
 import type { SolanaRawSpokeProvider, SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
 import type { SuiRawSpokeProvider, SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
+import type { NearRawSpokeProvider, NearSpokeProvider } from './near/NearSpokeProvider.js';
+
 import {
   SONIC_MAINNET_CHAIN_ID,
   type IEvmWalletProvider,
+  type INearWalletProvider,
   type IStellarWalletProvider,
   type ISuiWalletProvider,
   type IIconWalletProvider,
@@ -189,7 +192,8 @@ export type IWalletProvider =
   | ISuiWalletProvider
   | IIconWalletProvider
   | IInjectiveWalletProvider
-  | ISolanaWalletProvider;
+  | ISolanaWalletProvider
+  | INearWalletProvider;
 
 export type SpokeProvider = (
   | EvmSpokeProvider
@@ -199,6 +203,7 @@ export type SpokeProvider = (
   | StellarSpokeProvider
   | SolanaSpokeProvider
   | SonicSpokeProvider
+  | NearSpokeProvider
 ) &
   ISpokeProvider;
 
@@ -210,6 +215,7 @@ export type RawSpokeProvider = (
   | StellarRawSpokeProvider
   | SolanaRawSpokeProvider
   | SonicRawSpokeProvider
+  | NearRawSpokeProvider
 ) &
   IRawSpokeProvider;
 

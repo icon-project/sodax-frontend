@@ -79,8 +79,8 @@ All money market methods are accessible through `sodax.moneyMarket`:
 - `data.getReservesData()` - Get raw aggregated reserve data
 - `data.getReservesHumanized()` - Get humanized reserve data
 - `data.getReserveData(asset)` - Get specific reserve data
-- `data.getUserReservesData(spokeProvider)` - Get raw user reserve data
-- `data.getUserReservesHumanized(spokeProvider)` - Get humanized user reserve data
+- `data.getUserReservesData(spokeChainId, userAddress)` - Get raw user reserve data
+- `data.getUserReservesHumanized(spokeChainId, userAddress)` - Get humanized user reserve data
 - `data.formatReservesUSD(request)` - Format reserves with USD conversions
 - `data.formatUserSummary(request)` - Format user portfolio summary with USD conversions
 
@@ -830,8 +830,8 @@ The SDK provides several methods to retrieve different types of data:
 - `getReserveNormalizedIncome(asset)` - Get normalized income for a specific asset
 
 #### User Data
-- `getUserReservesData(spokeProvider)` - Get raw user reserve data
-- `getUserReservesHumanized(spokeProvider)` - Get humanized user reserve data
+- `getUserReservesData(spokeChainId, userAddress)` - Get raw user reserve data
+- `getUserReservesHumanized(spokeChainId, userAddress)` - Get humanized user reserve data
 
 #### E-Mode Data
 - `getEModes()` - Get raw E-Mode data
@@ -864,7 +864,7 @@ const formattedReserves = sodax.moneyMarket.data.formatReservesUSD(
 );
 
 // Fetch user reserves data
-const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
+const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeChainId, userAddress);
 
 // Format user summary with USD conversions
 const userSummary = sodax.moneyMarket.data.formatUserSummary(
@@ -886,8 +886,8 @@ First, retrieve the raw data from the blockchain:
 // Get humanized reserves data (normalized decimals)
 const reserves = await sodax.moneyMarket.data.getReservesHumanized();
 
-// Get user reserves data for a specific spoke provider
-const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
+// Get user reserves data for a specific spoke chain
+const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeChainId, userAddress);
 ```
 
 #### 2. Build Formatting Requests

@@ -25,6 +25,7 @@ import type {
   IconSpokeProviderType,
   InjectiveSpokeProviderType,
   MoneyMarketConfigParams,
+  NearSpokeProviderType,
   Optional,
   PartnerFeeAmount,
   PartnerFeeConfig,
@@ -52,6 +53,7 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   ChainIdToIntentRelayChainId,
 } from '@sodax/types';
+import { type NearRawSpokeProvider, NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';
@@ -179,6 +181,16 @@ export function isSolanaSpokeProvider(value: SpokeProviderType): value is Solana
   );
 }
 
+export function isNearSpokeProvider(value: SpokeProviderType): value is NearSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof NearSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'NEAR'
+  );
+}
+
 export function isStellarSpokeProviderType(value: SpokeProviderType): value is StellarSpokeProviderType {
   return (
     typeof value === 'object' && value !== null && (isStellarSpokeProvider(value) || isStellarRawSpokeProvider(value))
@@ -193,6 +205,10 @@ export function isStellarSpokeProvider(value: SpokeProviderType): value is Stell
     !('raw' in value) &&
     value.chainConfig.chain.type === 'STELLAR'
   );
+}
+
+export function isNearSpokeProviderType(value: SpokeProviderType): value is NearSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isNearSpokeProvider(value) || isNearRawSpokeProvider(value));
 }
 
 export function isInjectiveSpokeProviderType(value: SpokeProviderType): value is InjectiveSpokeProviderType {
@@ -461,6 +477,10 @@ export function isSonicRawSpokeProvider(value: unknown): value is SonicRawSpokeP
     value.chainConfig.chain.type === 'EVM' &&
     value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
   );
+}
+
+export function isNearRawSpokeProvider(value: unknown): value is NearRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'NEAR';
 }
 
 export function isAddressString(value: unknown): value is string {

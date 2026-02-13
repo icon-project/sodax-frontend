@@ -552,7 +552,7 @@ export class StakingService {
         hubTxHash = txResult.value;
       }
 
-      return { ok: true, value: [txResult.value, hubTxHash] };
+      return { ok: true, value: [txResult.value, hubTxHash ?? ''] };
     } catch (error) {
       return {
         ok: false,

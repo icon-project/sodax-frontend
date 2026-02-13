@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { useDisconnect } from 'wagmi';
 import { getXService } from '../actions';
 import { useXWagmiStore } from '../useXWagmiStore';
+import type { NearXService } from '@/xchains/near/NearXService';
 
 /**
  * Hook for disconnecting from a specific blockchain wallet
@@ -47,6 +48,13 @@ export function useXDisconnect(): (xChainType: ChainType) => Promise<void> {
         case 'SOLANA':
           await solanaWallet.disconnect();
           break;
+
+        case 'NEAR': {
+          const nearXService = getXService('NEAR') as NearXService;
+          nearXService.walletSelector.disconnect();
+          break;
+        }
+
         default: {
           // Handle other chain types
           const xService = getXService(xChainType);

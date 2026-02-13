@@ -83,11 +83,6 @@ export function BorrowAssetsListItem({
     }
   }
 
-  console.log('[Borrow Debug]', {
-    availableBorrowsUSD: userSummary?.availableBorrowsUSD,
-    token: token.symbol,
-  });
-
   const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
 
   return (
