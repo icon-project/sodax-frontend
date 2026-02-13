@@ -15,6 +15,7 @@ interface SuccessModalProps {
     token: XToken;
     sourceChainId: ChainId;
     destinationChainId: ChainId;
+    txHash?: `0x${string}`;
   } | null;
 }
 
@@ -93,6 +94,15 @@ export function SuccessModal({ open, onClose, data, action }: SuccessModalProps)
             </div>
 
             {renderDescription()}
+
+            {data.txHash && (
+              <div className="mt-4 space-y-2">
+                <p className="text-xs text-clay text-center font-semibold uppercase tracking-wide">Transaction Hash</p>
+                <p className="font-mono text-xs text-center text-clay">
+                  {data.txHash.slice(0, 10)}...{data.txHash.slice(-8)}
+                </p>
+              </div>
+            )}
           </>
         )}
 

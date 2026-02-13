@@ -55,6 +55,7 @@ export function SupplyAssetsList(): ReactElement {
     token: XToken;
     sourceChainId: ChainId;
     destinationChainId: ChainId;
+    txHash?: `0x${string}`;
   } | null>(null);
 
   const tokens = moneyMarketSupportedTokens[selectedChainId];
