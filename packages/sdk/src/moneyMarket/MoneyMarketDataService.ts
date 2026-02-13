@@ -1,4 +1,4 @@
-import type { EvmHubProvider, SpokeProvider } from '../shared/entities/Providers.js';
+import type { EvmHubProvider } from '../shared/entities/Providers.js';
 import type {
   AggregatedReserveData,
   BaseCurrencyInfo,
@@ -159,16 +159,18 @@ export class MoneyMarketDataService {
 
   /**
    * Get the user reserves humanized
-   * @param spokeProvider - The spoke provider
+   * @param spokeChainId - The spoke chain ID
+   * @param userAddress - The user's wallet address on the spoke chain
    * @returns {Promise<{userReserves: UserReserveDataHumanized[], userEmodeCategoryId: number}>} - The user reserves humanized
    */
-  public async getUserReservesHumanized(spokeProvider: SpokeProvider): Promise<{
+  public async getUserReservesHumanized(
+    spokeChainId: SpokeChainId,
+    userAddress: Address,
+  ): Promise<{
     userReserves: UserReserveDataHumanized[];
     userEmodeCategoryId: number;
   }> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const spokeChainId = spokeProvider.chainConfig.chain.id;
-    const hubWalletAddress = await HubService.getUserHubWalletAddress(walletAddress, spokeChainId, this.hubProvider);
+    const hubWalletAddress = await HubService.getUserHubWalletAddress(userAddress, spokeChainId, this.hubProvider);
 
     return this.uiPoolDataProviderService.getUserReservesHumanized(hubWalletAddress);
   }

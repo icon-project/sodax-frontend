@@ -1,14 +1,13 @@
 import React, { type JSX, useMemo, useState } from 'react';
 import {
   useUserReservesData,
-  useSpokeProvider,
   useReservesUsdFormat,
   useBackendAllMoneyMarketAssets,
   useUserFormattedSummary,
 } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { BorrowAssetsListItem } from './BorrowAssetsListItem';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { formatUnits } from 'viem';
@@ -44,9 +43,6 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
 
   const { address } = useXAccount(selectedChainId);
 
-  const walletProvider = useWalletProvider(selectedChainId);
-
-  const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
   const allTokens = useMemo(() => {
     return Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
       chainTokens.map(token => ({
@@ -96,8 +92,8 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { data: userSummary } = useUserFormattedSummary({
-    spokeProvider,
-    address,
+    spokeChainId: selectedChainId,
+    userAddress: address,
   });
 
   const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);

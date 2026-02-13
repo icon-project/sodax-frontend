@@ -117,7 +117,7 @@ async function displayFormattedData() {
   );
 
   // fetch user reserves
-  const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
+  const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(SONIC_MAINNET_CHAIN_ID, await spokeProvider.walletProvider.getWalletAddress());
 
   // format user summary
   const userSummary = sodax.moneyMarket.data.formatUserSummary(

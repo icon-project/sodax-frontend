@@ -79,7 +79,7 @@ export function SupplyAssetsList(): ReactElement {
     isLoading: isFormattedReservesLoading,
     refetch: refetchFormattedReserves,
   } = useReservesUsdFormat();
-  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({ spokeProvider, address });
+  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({ spokeChainId: selectedChainId, userAddress: address });
   const healthFactorRaw = userSummary?.healthFactor ? Number(userSummary.healthFactor) : undefined;
 
   const healthFactorDisplay =
