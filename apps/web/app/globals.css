@@ -277,7 +277,7 @@
   --layout-linear-boder: var(--layout-linear-boder-mobile);
   --layout-space-small: var(--layout-space-small-mobile);
   --text-main-title: var(--main-title-mobile);
-  --text-body-fine-print: var(--body-fine-print-mobile);
+  --text-body-fine-print: var(--body-fine-print);
 }
 
 @media (min-width: 768px) {
@@ -294,7 +294,7 @@
     --layout-space-small: var(--layout-space-small-tablet);
     --layout-linear-boder: var(--layout-linear-boder-tablet);
     --main-title: var(--main-title-tablet);
-    --text-body-fine-print: var(--body-fine-print-tablet);
+    --body-fine-print: var(--body-fine-print-tablet);
   }
 }
 
@@ -312,7 +312,7 @@
     --layout-space-small: var(--layout-space-small-desktop);
     --layout-linear-boder: var(--layout-linear-boder-desktop);
     --main-title: var(--main-title-desktop);
-    --text-body-fine-print: var(--body-fine-print-desktop);
+    --body-fine-print: var(--body-fine-print-desktop);
   }
 }
 
