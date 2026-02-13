@@ -1,6 +1,5 @@
 'use client';
 
-<<<<<<< HEAD
 import { StakeHeader, StakeInputPanel, StakeSelectorPanel, StakeStatsCard } from './_components';
 import { useStakeState } from './_stores/stake-store-provider';
 import { UnstakeRequests } from './_components/unstake-requests';
@@ -60,12 +59,5 @@ export default function StakePage(): React.JSX.Element {
 
       <UnstakeRequests />
     </motion.div>
-=======
-export default function StakePage() {
-  return (
-    <div className="inline-flex flex-col justify-start items-start gap-4">
-      <div>StakePage</div>
-    </div>
->>>>>>> main
   );
 }
