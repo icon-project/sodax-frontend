@@ -18,7 +18,6 @@ export default function StakePage(): React.JSX.Element {
   const { stakeMode, selectedToken, isNetworkPickerOpened } = useStakeState();
   const { setSelectedToken } = useStakeActions();
 
-  // Get all SODA tokens from all supported chains
   const sodaTokens = useMemo((): XToken[] => {
     const tokens: XToken[] = [];
     for (const chainId of supportedSpokeChains) {
@@ -30,7 +29,7 @@ export default function StakePage(): React.JSX.Element {
         }
       }
     }
-    return tokens; // Fallback to current token if none found
+    return tokens;
   }, []);
 
   const [isOpen, setIsOpen] = useState(false);
