@@ -7,6 +7,7 @@ import { getChainLabel } from '@/lib/borrowUtils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
+import { Button } from '@/components/ui/button';
 
 interface BorrowAssetsListItemProps {
   token: XToken;
@@ -22,6 +23,7 @@ interface BorrowAssetsListItemProps {
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
   onBorrowClick: (token: XToken, maxBorrow: string) => void;
+  onRepayClick: (token: XToken, maxDebt: string) => void;
   userSummary?: FormatUserSummaryResponse;
 }
 
@@ -33,6 +35,7 @@ export function BorrowAssetsListItem({
   formattedReserves,
   userReserves,
   onBorrowClick,
+  onRepayClick,
   userSummary,
 }: BorrowAssetsListItemProps) {
   const metrics = useReserveMetrics({
@@ -83,32 +86,77 @@ export function BorrowAssetsListItem({
     }
   }
 
-  console.log('[Borrow Debug]', {
-    availableBorrowsUSD: userSummary?.availableBorrowsUSD,
-    token: token.symbol,
-  });
-
   const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
+  const formattedDebt = metrics.userReserve
+    ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
+    : '0';
+
+  const hasDebt = metrics.userReserve && metrics.userReserve.scaledVariableDebt > 0n;
 
   return (
-    <TableRow className={`hover:bg-cream/30 transition-colors ${disabled ? 'opacity-50' : ''}`}>
-      <TableCell>
-        <span className="font-bold text-cherry-dark">{asset.symbol}</span>
-        <span className="text-clay-light text-xs ml-1">{getChainLabel(token.xChainId)}</span>
+    <TableRow
+      className={`border-b border-cherry-grey/10 hover:bg-cream/20 transition-colors ${disabled ? 'opacity-50' : ''}`}
+    >
+      {/* Asset */}
+      <TableCell className="px-6 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col">
+            <span className="font-bold text-cherry-dark">{asset.symbol}</span>
+            <span className="text-xs text-clay">{getChainLabel(token.xChainId)}</span>
+          </div>
+        </div>
       </TableCell>
-      <TableCell>{walletBalance}</TableCell>
-      <TableCell>{availableLiquidity ?? '--'}</TableCell>
-      <TableCell>{metrics.borrowAPY}</TableCell>
-      <TableCell>{metrics.borrowAPR}</TableCell>
-      <TableCell>{metrics.totalBorrow}</TableCell>
-      <TableCell>
-        <BorrowButton
-          token={token}
-          disabled={disabled || !canBorrow}
-          onClick={() => {
-            onBorrowClick(token, maxBorrow);
-          }}
-        />
+
+      {/* Wallet Balance */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm text-foreground">{walletBalance}</span>
+      </TableCell>
+
+      {/* Available Liquidity */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-foreground">{availableLiquidity ?? '--'}</span>
+      </TableCell>
+
+      {/* Borrow APY */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-cherry-dark">{metrics.borrowAPY}</span>
+      </TableCell>
+
+      {/* Borrow APR */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-cherry-dark">{metrics.borrowAPR}</span>
+      </TableCell>
+
+      {/* Total Borrow */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm text-foreground">{metrics.totalBorrow}</span>
+      </TableCell>
+
+      {/* Borrowed */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-foreground">{formattedDebt}</span>
+      </TableCell>
+
+      {/* Actions */}
+      <TableCell className="px-6 py-5">
+        <div className="flex items-center gap-2">
+          <BorrowButton
+            token={token}
+            disabled={disabled || !canBorrow}
+            onClick={() => {
+              onBorrowClick(token, maxBorrow);
+            }}
+          />
+          <Button
+            variant="cherry"
+            size="sm"
+            onClick={() => onRepayClick(token, formattedDebt)}
+            disabled={!hasDebt}
+            className="flex-1 min-w-[85px]"
+          >
+            Repay
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );

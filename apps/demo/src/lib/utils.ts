@@ -1,7 +1,16 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { hubAssets, SolverIntentStatusCode, type SpokeChainId } from '@sodax/sdk';
+import {
+  hubAssets,
+  moneyMarketSupportedTokens,
+  SolverIntentStatusCode,
+  supportedSpokeChains,
+  type XToken,
+  type SpokeChainId,
+  type ChainId,
+} from '@sodax/sdk';
+import { getChainUI } from './chains';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -148,4 +157,43 @@ export function getHealthFactorState(hf: number) {
     return { label: 'Moderate Risk', className: 'text-yellow-dark' };
   }
   return { label: 'Low Risk', className: 'text-cherry-soda' };
+}
+
+export function getChainsWithThisToken(token: XToken) {
+  return supportedSpokeChains.filter(chainId =>
+    moneyMarketSupportedTokens[chainId].some(t => t.symbol === token.symbol),
+  );
+}
+
+export function getTokenOnChain(symbol: string, chainId: ChainId): XToken | undefined {
+  const normalizedChainId = String(chainId).toLowerCase();
+
+  return Object.values(moneyMarketSupportedTokens)
+    .flat()
+    .find(t => t.symbol === symbol && t.xChainId === normalizedChainId);
+}
+
+export const getChainExplorerTxUrl = (chainId: string, txHash: string): string | undefined => {
+  const chain = getChainUI(chainId);
+  if (!chain?.explorerTxUrl) return undefined;
+  return `${chain.explorerTxUrl}${txHash}`;
+};
+export function formatCurrencyCompact(value: number): string {
+  const abs = Math.abs(value);
+
+  if (abs < 1000) {
+    return `$${value.toLocaleString()}`;
+  }
+
+  if (abs < 1_000_000) {
+    const num = (value / 1000).toFixed(1);
+    return `$${trimZeros(num)}K`;
+  }
+
+  const num = (value / 1_000_000).toFixed(2);
+  return `$${trimZeros(num)}M`;
+}
+
+function trimZeros(num: string) {
+  return num.replace(/\.?0+$/, '');
 }
