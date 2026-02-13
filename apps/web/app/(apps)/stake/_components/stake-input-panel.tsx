@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useModalStore } from '@/stores/modal-store-provider';
@@ -63,6 +63,12 @@ export function StakeInputPanel(): React.JSX.Element {
   const sliderMaxValue = useMemo(() => {
     return stakeMode === STAKE_MODE.STAKING ? Number(formattedBalance) : Number(formattedUserXSodaBalance);
   }, [stakeMode, formattedBalance, formattedUserXSodaBalance]);
+
+  useEffect(() => {
+    if (sliderMaxValue === 0) {
+      setStakeTypedValue('0');
+    }
+  }, [sliderMaxValue, setStakeTypedValue]);
 
   const isSliderDisabled = useMemo(() => {
     return !selectedToken || !walletConnected || sliderMaxValue === 0;

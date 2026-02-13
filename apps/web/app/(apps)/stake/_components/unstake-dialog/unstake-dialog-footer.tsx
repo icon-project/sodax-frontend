@@ -27,14 +27,18 @@ interface UnstakeDialogFooterProps {
   selectedToken: XToken | null;
   scaledUnstakeAmount: bigint | undefined;
   onPendingChange?: (isPending: boolean) => void;
+  onCompletedChange?: (isCompleted: boolean) => void;
   onClose?: () => void;
+  onError?: (error: { title: string; message: string } | null) => void;
 }
 
 export default function UnstakeDialogFooter({
   selectedToken,
   scaledUnstakeAmount,
   onPendingChange,
+  onCompletedChange,
   onClose,
+  onError,
 }: UnstakeDialogFooterProps): React.JSX.Element {
   const { currentUnstakeStep, unstakeMethod } = useStakeState();
   const { setCurrentUnstakeStep } = useStakeActions();
@@ -141,10 +145,6 @@ export default function UnstakeDialogFooter({
   const isAllowanceLoading =
     unstakeMethod === UNSTAKE_METHOD.INSTANT ? isInstantUnstakeAllowanceLoading : isRegularUnstakeAllowanceLoading;
 
-  console.log('isAllowanceLoading', isAllowanceLoading);
-  console.log('hasAllowed', hasAllowed);
-  console.log('isApproved', isApproved);
-  console.log('currentUnstakeStep', currentUnstakeStep);
   useEffect(() => {
     onPendingChange?.(isPending);
   }, [isPending, onPendingChange]);
@@ -163,10 +163,31 @@ export default function UnstakeDialogFooter({
   };
 
   const handleApprove = async (): Promise<void> => {
-    if (unstakeMethod === UNSTAKE_METHOD.INSTANT && instantUnstakeParamsForApprove) {
-      await approveInstantUnstake(instantUnstakeParamsForApprove);
-    } else if (unstakeMethod === UNSTAKE_METHOD.REGULAR && regularUnstakeParamsForApprove) {
-      await approveRegularUnstake(regularUnstakeParamsForApprove);
+    try {
+      onError?.(null);
+      let response: unknown;
+      if (unstakeMethod === UNSTAKE_METHOD.INSTANT && instantUnstakeParamsForApprove) {
+        response = await approveInstantUnstake(instantUnstakeParamsForApprove);
+      } else if (unstakeMethod === UNSTAKE_METHOD.REGULAR && regularUnstakeParamsForApprove) {
+        response = await approveRegularUnstake(regularUnstakeParamsForApprove);
+      }
+      if (!response) {
+        onError?.({
+          title: 'Approval Failed',
+          message: 'No response received. Please try again.',
+        });
+      } else {
+        setIsApproved(true);
+        setCurrentUnstakeStep(UNSTAKE_STEP.UNSTAKE_CONFIRM);
+      }
+    } catch (error) {
+      console.error('Error approving unstake:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to approve unstake';
+      onError?.({
+        title: 'Approval Failed',
+        message: errorMessage,
+      });
     }
   };
 
@@ -176,14 +197,22 @@ export default function UnstakeDialogFooter({
     }
 
     try {
+      onError?.(null);
       if (unstakeMethod === UNSTAKE_METHOD.INSTANT && instantUnstakeParams) {
         await instantUnstake(instantUnstakeParams);
       } else if (unstakeMethod === UNSTAKE_METHOD.REGULAR && regularUnstakeParams) {
         await unstake(regularUnstakeParams);
       }
       setIsCompleted(true);
+      onCompletedChange?.(true);
     } catch (error) {
       console.error('Unstake error:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to unstake';
+      onError?.({
+        title: 'Unstake Failed',
+        message: errorMessage,
+      });
     }
   };
 

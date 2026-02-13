@@ -118,7 +118,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                           className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
                           onClick={e => {
                             e.stopPropagation();
-                            setStakeValueByPercent(percent, BigInt(formattedBalance));
+                            setStakeValueByPercent(percent, balance);
                           }}
                         >
                           {percent}%
@@ -129,7 +129,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                       className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
                       onClick={e => {
                         e.stopPropagation();
-                        setStakeValueByPercent(100, BigInt(formattedBalance));
+                        setStakeValueByPercent(100, balance);
                       }}
                     >
                       MAX
