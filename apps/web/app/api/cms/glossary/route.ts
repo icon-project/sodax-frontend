@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { requirePermission } from '@/lib/auth-utils';
 import { generateSlug, type GlossaryTerm } from '@/lib/mongodb-types';
-import { triggerDeployIfPublished } from '@/lib/trigger-deploy';
 
 // CMS API routes require authentication - prevent build-time analysis
 export const dynamic = 'force-dynamic';
@@ -104,9 +103,6 @@ export async function POST(request: NextRequest) {
     };
 
     const result = await collection.insertOne(glossaryTerm);
-
-    // Trigger deploy if term is published
-    await triggerDeployIfPublished(glossaryTerm.published, `Glossary term created: ${glossaryTerm.term}`);
 
     return NextResponse.json({ ...glossaryTerm, _id: result.insertedId }, { status: 201 });
   } catch (error) {

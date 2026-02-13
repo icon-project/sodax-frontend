@@ -185,3 +185,13 @@ export function removeTokenIdFromLocalStorage(chainId: SpokeChainId, userAddress
 export function clearTokenIdsFromLocalStorage(userAddress: string): void {
   localStorage.removeItem(`sodax-dex-positions-${userAddress}`);
 }
+
+export function getHealthFactorState(hf: number) {
+  if (hf < 1) {
+    return { label: 'At risk', className: 'text-negative' };
+  }
+  if (hf < 2) {
+    return { label: 'Moderate Risk', className: 'text-yellow-dark' };
+  }
+  return { label: 'Low Risk', className: 'text-cherry-soda' };
+}

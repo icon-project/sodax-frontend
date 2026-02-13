@@ -40,7 +40,6 @@ export default function CurrencySearchPanel({
   const { setIsAssetListBlurred } = useSaveActions();
   const { isAssetListBlurred } = useSaveState();
   const MAX_DISPLAYED = 7;
-
   const displayedChains = availableChains.slice(0, MAX_DISPLAYED);
   const remainingChains = availableChains.slice(MAX_DISPLAYED);
 

@@ -1,6 +1,3 @@
-// apps/web/constants/save.ts
-// Save page types: network balances and deposit item data.
-
 import type { XToken } from '@sodax/types';
 
 export interface NetworkBalance {

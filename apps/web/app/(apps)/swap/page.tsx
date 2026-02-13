@@ -172,6 +172,11 @@ export default function SwapPage() {
     }, 500);
   }, []);
 
+  useEffect(() => {
+    setIsSwapAndSend(false);
+    setCustomDestinationAddress('');
+  }, [setIsSwapAndSend, setCustomDestinationAddress]);
+
   return (
     <motion.div className="w-full">
       <motion.div
@@ -189,23 +194,23 @@ export default function SwapPage() {
               everywhere
             </span>
           </div>
-          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex gap-1">
+          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug text-(length:--subtitle)! flex gap-1">
             Access{' '}
             <AnimatedNumber
               to={63}
-              className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-6"
+              className="text-clay-light font-normal font-['InterRegular'] leading-snug text-(length:--subtitle)! min-w-6"
             />
             assets across
             <AnimatedNumber
               to={12}
-              className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-5"
+              className="text-clay-light font-normal font-['InterRegular'] leading-snug text-(length:--subtitle)! min-w-5"
             />
             networks.
           </div>
         </motion.div>
 
         <motion.div
-          className="inline-flex flex-col justify-start items-start gap-2 w-full mt-(--layout-space-comfortable)"
+          className="inline-flex flex-col justify-start items-start gap-4 sm:gap-2 w-full mt-(--layout-space-comfortable)"
           variants={itemVariants}
           layout={false}
         >

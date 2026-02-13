@@ -18,7 +18,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
     onTermsClick?.();
   };
   return (
-    <div className="h-140 flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center mt-4 bg-almost-white footer pt-20">
+    <div className="h-140 flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center bg-almost-white footer pt-20">
       <div className="p-4 pl-0 min-w-50 ml-8">
         <div className="flex items-center">
           <Image src="/symbol2.png" alt="SODAX Symbol" width={32} height={32} />
@@ -42,11 +42,11 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <FooterLink href="https://app.balanced.network/" showArrow>
             Balanced DeFi
           </FooterLink>
-          <FooterLink href="/partner" showArrow>
+          {/* <FooterLink href="/partner" showArrow>
             <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
               partner portal
             </div>
-          </FooterLink>
+          </FooterLink> */}
         </div>
         <div className="inline-flex flex-col justify-start items-start gap-3 w-33.5">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
