@@ -13,15 +13,14 @@ import { STAKE_MODE } from '../_stores/stake-store';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { useStakeActions } from '../_stores/stake-store-provider';
 import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
-import { ChevronDownIcon } from 'lucide-react';
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
 
-  const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance, isNetworkPickerOpened } =
-    useStakeState();
-  const { setStakeTypedValue, setStakeValueByPercent, setIsNetworkPickerOpened } = useStakeActions();
+  const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance } = useStakeState();
+  const { setStakeTypedValue } = useStakeActions();
 
   const openModal = useModalStore(state => state.openModal);
 
@@ -61,10 +60,6 @@ export function StakeInputPanel(): React.JSX.Element {
     setIsUnstakeDialogOpen(true);
   };
 
-  const maxValue = useMemo(() => {
-    return stakeMode === STAKE_MODE.STAKING ? balance : userXSodaBalance;
-  }, [stakeMode, balance, userXSodaBalance]);
-
   const sliderMaxValue = useMemo(() => {
     return stakeMode === STAKE_MODE.STAKING ? Number(formattedBalance) : Number(formattedUserXSodaBalance);
   }, [stakeMode, formattedBalance, formattedUserXSodaBalance]);
@@ -74,63 +69,7 @@ export function StakeInputPanel(): React.JSX.Element {
   }, [selectedToken, walletConnected, sliderMaxValue]);
   return (
     <>
-      <div className="w-full px-(--layout-space-big) pt-10 pb-8 flex flex-col justify-start items-start gap-8 sm:gap-4 isolate">
-        <div className="w-full flex justify-between items-center">
-          <div
-            onClick={() => setIsNetworkPickerOpened(!isNetworkPickerOpened)}
-            className="flex justify-start items-center pl-12 cursor-pointer h-12"
-          >
-            <div className="flex flex-col gap-[2px] ml-(--layout-space-small)">
-              <div className="font-['InterRegular'] flex items-center text-(length:--body-super-comfortable) text-espresso">
-                <span>{stakeMode === STAKE_MODE.STAKING ? 'Stake SODA' : 'Unstake xSODA'}</span>
-                <ChevronDownIcon
-                  className={cn(
-                    'w-4 h-4 text-clay ml-1 transition-transform duration-200',
-                    isNetworkPickerOpened && 'rotate-180',
-                  )}
-                />
-              </div>
-              <div className="font-['InterRegular'] flex items-center text-(length:--body-small) text-clay">
-                {!selectedToken ? (
-                  <span>Choose a network</span>
-                ) : !walletConnected ? (
-                  <span>Wallet not connected</span>
-                ) : balance > 0n ? (
-                  <div className="flex items-center gap-1">
-                    <span>Balance: {sliderMaxValue}</span>
-                    {stakeMode === STAKE_MODE.UNSTAKING &&
-                      [5, 10].map(percent => (
-                        <Button
-                          key={percent}
-                          variant="default"
-                          className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setStakeValueByPercent(percent, maxValue);
-                          }}
-                        >
-                          {percent}%
-                        </Button>
-                      ))}
-                    <Button
-                      variant="default"
-                      className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
-                      onClick={e => {
-                        e.stopPropagation();
-                        setStakeValueByPercent(100, maxValue);
-                      }}
-                    >
-                      MAX
-                    </Button>
-                  </div>
-                ) : (
-                  <span>No SODA in wallet</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="w-full px-(--layout-space-big) pt-26 pb-8 flex flex-col justify-start items-start gap-8 sm:gap-4 isolate">
         <div className="w-full flex flex-col sm:flex-row sm:gap-2 justify-between items-center">
           <CustomSlider
             defaultValue={[0]}
@@ -148,60 +87,89 @@ export function StakeInputPanel(): React.JSX.Element {
           />
 
           <div className="w-full flex gap-2 flex-1 mt-4 sm:mt-0">
-            <InputGroup className={cn("border-cream-white border-4 w-30 h-10 rounded-full outline-none shadow-none", isSliderDisabled && 'pointer-events-none')}>
-              <InputGroupInput
-                type="number"
-                placeholder="0"
-                value={stakeTypedValue}
-                onChange={e => setStakeTypedValue(e.target.value)}
-                disabled={isSliderDisabled}
-                className={cn("pl-6 pr-4 text-espresso text-(length:--body-comfortable) placeholder:text-clay-light font-['InterRegular']")}
-              />
-              <InputGroupAddon align="inline-end">
-                <InputGroupText
-                  className={cn(
-                    'text-cherry-grey text-(length:--body-comfortable) font-normal font-["InterRegular"]',
-                    stakeTypedValue && 'hidden',
-                  )}
+            <InputGroup
+              className={cn(
+                'border-cream-white border-4 w-30 h-10 rounded-full outline-none shadow-none',
+                isSliderDisabled && 'pointer-events-none',
+              )}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className="flex"
                 >
-                  {stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'}
-                </InputGroupText>
-              </InputGroupAddon>
+                  <InputGroupInput
+                    type="number"
+                    placeholder="0"
+                    value={stakeTypedValue}
+                    onChange={e => setStakeTypedValue(e.target.value)}
+                    disabled={isSliderDisabled}
+                    className={cn(
+                      "pl-6 pr-4 text-espresso text-(length:--body-comfortable) placeholder:text-clay-light font-['InterRegular']",
+                    )}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupText
+                      className={cn(
+                        'text-cherry-grey text-(length:--body-comfortable) font-normal font-["InterRegular"]',
+                        stakeTypedValue && 'hidden',
+                      )}
+                    >
+                      {stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'}
+                    </InputGroupText>
+                  </InputGroupAddon>
+                </motion.div>
+              </AnimatePresence>
             </InputGroup>
 
-            {stakeMode === STAKE_MODE.STAKING ? (
-              !walletConnected && selectedToken ? (
-                <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
-                  Connect {getChainName(selectedToken.xChainId)}
-                </Button>
-              ) : balance > 0n ? (
-                <Button
-                  variant="cherry"
-                  className="px-6"
-                  onClick={handleStake}
-                  disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > balance}
-                >
-                  Stake
-                </Button>
-              ) : (
-                <Button variant="cherry" className="px-6" onClick={handleBuySoda}>
-                  Buy SODA
-                </Button>
-              )
-            ) : !walletConnected && selectedToken ? (
-              <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
-                Connect {getChainName(selectedToken.xChainId)}
-              </Button>
-            ) : (
-              <Button
-                variant="cherry"
-                className="px-6"
-                onClick={handleUnstake}
-                disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > userXSodaBalance}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'}
+                initial={false}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8 }}
+                className="flex"
               >
-                Unstake
-              </Button>
-            )}
+                {stakeMode === STAKE_MODE.STAKING ? (
+                  !walletConnected && selectedToken ? (
+                    <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
+                      Connect {getChainName(selectedToken.xChainId)}
+                    </Button>
+                  ) : balance > 0n ? (
+                    <Button
+                      variant="cherry"
+                      className="px-6 w-25"
+                      onClick={handleStake}
+                      disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > balance}
+                    >
+                      Stake
+                    </Button>
+                  ) : (
+                    <Button variant="cherry" className="px-6" onClick={handleBuySoda}>
+                      Buy SODA
+                    </Button>
+                  )
+                ) : !walletConnected && selectedToken ? (
+                  <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
+                    Connect {getChainName(selectedToken.xChainId)}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="cherry"
+                    className="px-6 w-25"
+                    onClick={handleUnstake}
+                    disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > userXSodaBalance}
+                  >
+                    Unstake
+                  </Button>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
