@@ -266,7 +266,8 @@ const { data: hasWithdrawAllowed, isLoading: isWithdrawAllowanceLoading } = useM
   };
 
   // Get user's supplied assets
-  const userReserves = useUserReservesData(chainId);
+  const { address } = useXAccount(chainId);
+  const { data: userReserves } = useUserReservesData({ spokeChainId: chainId, userAddress: address });
 }
 
 // Wallet Address Derivation
