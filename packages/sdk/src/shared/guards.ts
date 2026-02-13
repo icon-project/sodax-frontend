@@ -14,6 +14,7 @@ import {
   type SonicRawSpokeProvider,
   type RawSpokeProvider,
   type SpokeProviderType,
+  type SpokeProvider,
 } from './entities/Providers.js';
 import { InjectiveSpokeProvider, type InjectiveRawSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/IconSpokeProvider.js';
@@ -30,9 +31,11 @@ import type {
   PartnerFeeConfig,
   PartnerFeePercentage,
   Prettify,
+  RawDestinationParams,
   SolanaSpokeProviderType,
   SolverConfigParams,
   SonicSpokeProviderType,
+  SpokeProviderObjectType,
   StellarSpokeProviderType,
   SuiSpokeProviderType,
 } from './types.js';
@@ -431,6 +434,20 @@ export function isRawSpokeProvider(value: unknown): value is RawSpokeProvider {
   );
 }
 
+export function isSpokeProvider(value: unknown): value is SpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletProvider' in value &&
+    'chainConfig' in value &&
+    (!('raw' in value) || value.raw === false)
+  );
+}
+
+export function isSpokeProviderType(value: unknown): value is SpokeProviderType {
+  return isSpokeProvider(value) || isRawSpokeProvider(value);
+}
+
 export function isEvmRawSpokeProvider(value: unknown): value is EvmRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'EVM';
 }
@@ -461,6 +478,20 @@ export function isSonicRawSpokeProvider(value: unknown): value is SonicRawSpokeP
     value.chainConfig.chain.type === 'EVM' &&
     value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
   );
+}
+
+export function isSpokeProviderObjectType(value: unknown): value is SpokeProviderObjectType {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'spokeProvider' in value &&
+    value.spokeProvider !== undefined &&
+    isSpokeProviderType(value.spokeProvider)
+  );
+}
+
+export function isRawDestinationParams(value: unknown): value is RawDestinationParams {
+  return typeof value === 'object' && value !== null && 'toChainId' in value && 'toAddress' in value;
 }
 
 export function isAddressString(value: unknown): value is string {

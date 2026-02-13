@@ -140,6 +140,52 @@ export function getReadableTxError(error: unknown): string {
   return 'Transaction failed. Please try again.';
 }
 
+export function createDexTokenIdsStorageKey(chainId: SpokeChainId, userAddress: string): string {
+  return `sodax-dex-positions-${chainId}-${userAddress}`;
+}
+
+export function saveTokenIdToLocalStorage(userAddress: string, chainId: SpokeChainId, tokenId: string): void {
+  const cleanId = tokenId.trim().toLowerCase();
+  const positions = getTokenIdsFromLocalStorage(chainId, userAddress);
+
+  const hasDuplicate = positions.some(id => id.trim().toLowerCase() === cleanId);
+
+  if (!hasDuplicate) {
+    positions.push(tokenId.trim());
+    localStorage.setItem(
+      createDexTokenIdsStorageKey(chainId, userAddress),
+      positions.join(',')
+    );
+  } else {
+    console.warn(`Token ID ${tokenId} already exists for user ${userAddress}`);
+  }
+}
+
+export function getTokenIdsFromLocalStorage(chainId: SpokeChainId, userAddress: string): string[] {
+  const positions = localStorage.getItem(createDexTokenIdsStorageKey(chainId, userAddress));
+  if (!positions) {
+    return [];
+  }
+  return positions.split(',').map(v => v.trim());
+}
+
+export function removeTokenIdFromLocalStorage(chainId: SpokeChainId, userAddress: string, tokenId: string): void {
+  const positions = getTokenIdsFromLocalStorage(chainId, userAddress);
+  if (!positions) {
+    return;
+  }
+  if (positions.includes(tokenId)) {
+    positions.splice(positions.indexOf(tokenId), 1);
+    localStorage.setItem(`sodax-dex-positions-${userAddress}`, positions.join(','));
+  } else {
+    console.warn(`Token ID ${tokenId} not found for user ${userAddress}`);
+  }
+}
+
+export function clearTokenIdsFromLocalStorage(userAddress: string): void {
+  localStorage.removeItem(`sodax-dex-positions-${userAddress}`);
+}
+
 export function getHealthFactorState(hf: number) {
   if (hf < 1) {
     return { label: 'At risk', className: 'text-negative' };

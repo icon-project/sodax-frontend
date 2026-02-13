@@ -24,8 +24,14 @@ import {
   defaultSharedConfig,
 } from '@sodax/types';
 import type { BackendApiService } from '../../backendApi/BackendApiService.js';
-import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT } from '../constants.js';
+import {
+  DEFAULT_BACKEND_API_ENDPOINT,
+  DEFAULT_BACKEND_API_TIMEOUT,
+  dexPools,
+  StatATokenAddresses,
+} from '../constants.js';
 import type { Result } from '../types.js';
+import type { PoolKey } from '../../dex/types.js';
 
 export type ConfigServiceConfig = {
   backendApiUrl: HttpUrl | undefined;
@@ -59,6 +65,7 @@ export class ConfigService {
   private supportedTokensPerChain!: Map<SpokeChainId, readonly XToken[]>;
   private moneyMarketReserveAssetsSet!: Set<Address>;
   private spokeChainIdsSet!: Set<SpokeChainId>;
+  private stakedATokenAddressesSet!: Set<Address>;
 
   constructor({ backendApiService, config, sharedConfig }: ConfigServiceConstructorParams) {
     this.serviceConfig = {
@@ -71,7 +78,7 @@ export class ConfigService {
     this.sharedConfig = {
       ...defaultSharedConfig,
       ...sharedConfig,
-    }
+    };
   }
 
   public async initialize(): Promise<Result<void>> {
@@ -147,8 +154,13 @@ export class ConfigService {
     return this.hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
   }
 
-  public getSpokeTokenFromOriginalAssetAddress(chainId: SpokeChainId, originalAssetAddress: OriginalAssetAddress): XToken | undefined {
-    return this.supportedTokensPerChain.get(chainId)?.find(token => token.address.toLowerCase() === originalAssetAddress.toLowerCase());
+  public getSpokeTokenFromOriginalAssetAddress(
+    chainId: SpokeChainId,
+    originalAssetAddress: OriginalAssetAddress,
+  ): XToken | undefined {
+    return this.supportedTokensPerChain
+      .get(chainId)
+      ?.find(token => token.address.toLowerCase() === originalAssetAddress.toLowerCase());
   }
 
   public isValidHubAsset(hubAsset: Address): boolean {
@@ -234,7 +246,11 @@ export class ConfigService {
     return supportedTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
   }
 
-  public getOriginalAssetInfoFromVault(chainId: SpokeChainId, vault: Address): OriginalAssetAddress[] {
+  public isValidStakedATokenAddress(address: Address): boolean {
+    return this.stakedATokenAddressesSet.has(address.toLowerCase() as Address);
+  }
+
+  public getOriginalAssetsFromVault(chainId: SpokeChainId, vault: Address): OriginalAssetAddress[] {
     const hubAssets = this.sodaxConfig.supportedHubAssets;
     const assets = hubAssets[chainId];
     if (!assets) {
@@ -248,6 +264,48 @@ export class ConfigService {
       }
     }
     return result;
+  }
+
+  public getSodaTokenAddress(chainId: SpokeChainId): string | undefined {
+    return this.sodaxConfig.spokeChainConfig[chainId].supportedTokens.SODA?.address;
+  }
+
+  public getOriginalAssetAddressFromStakedATokenAddress = (
+    chainId: SpokeChainId,
+    address: Address,
+  ): OriginalAssetAddress => {
+    if (address.toLowerCase() === this.getHubChainConfig().addresses.xSoda.toLowerCase()) {
+      const sodaTokenAddress = this.getSodaTokenAddress(chainId);
+      if (!sodaTokenAddress) {
+        throw new Error(
+          `[getOriginalAssetAddressFromStakedATokenAddress] Soda token address not found for chain ${chainId}`,
+        );
+      }
+      return sodaTokenAddress;
+    }
+
+    const normalizedAddress = address.toLowerCase() as keyof typeof StatATokenAddresses;
+    const sodaToken = StatATokenAddresses[normalizedAddress] ?? address;
+
+    const originalAssetAddresses = this.getOriginalAssetsFromVault(chainId, sodaToken);
+    
+    if (!originalAssetAddresses.length) {
+      throw new Error('[getOriginalAssetAddressFromStakedATokenAddress] Original asset address not found');
+    }
+    return originalAssetAddresses[0] as OriginalAssetAddress;
+  };
+
+  public findTokenByOriginalAddress(originalAddress: OriginalAssetAddress, chainId: SpokeChainId): XToken | undefined {
+    const tokens = this.supportedTokensPerChain.get(chainId);
+    if (tokens && tokens.length > 0) {
+      return tokens.find(token => token.address.toLowerCase() === originalAddress.toLowerCase());
+    }
+    return undefined;
+  }
+
+  public getDexPools(): PoolKey[] {
+    // TODO make those dynamic in future
+    return Object.values(dexPools);
   }
 
   public isMoneyMarketSupportedToken(chainId: SpokeChainId, token: string): boolean {
@@ -270,6 +328,9 @@ export class ConfigService {
     this.loadRelayChainIdMapDataStructures(sodaxConfig.relayChainIdMap);
     this.loadSpokeChainConfigDataStructures(sodaxConfig.spokeChainConfig);
     this.loadMoneyMarketReserveAssetsDataStructures(sodaxConfig.supportedMoneyMarketReserveAssets);
+    this.stakedATokenAddressesSet = new Set(
+      Object.keys(StatATokenAddresses).map(address => address.toLowerCase() as Address),
+    );
   }
 
   private loadHubAssetDataStructures(hubAssets: GetHubAssetsApiResponse): void {

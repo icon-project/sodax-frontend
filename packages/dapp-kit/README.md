@@ -64,6 +64,19 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Get instant unstake ratio (xSODA to SODA conversion rate with penalty) (`useInstantUnstakeRatio`)
   - Get converted assets amount for xSODA shares (`useConvertedAssets`)
 
+- DEX (Decentralized Exchange)
+  - Get available pools list (`usePools`)
+  - Get pool data for a selected pool (`usePoolData`)
+  - Get token balances for pool tokens (`usePoolBalances`)
+  - Get position information by token ID (`usePositionInfo`)
+  - Deposit tokens to a pool (`useDexDeposit`)
+  - Withdraw tokens from a pool (`useDexWithdraw`)
+  - Check token allowance for DEX operations (`useDexAllowance`)
+  - Approve token spending for DEX operations (`useDexApprove`)
+  - Calculate liquidity amounts based on price range (`useLiquidityAmounts`)
+  - Supply liquidity to a pool (`useSupplyLiquidity`)
+  - Decrease liquidity from a position (`useDecreaseLiquidity`)
+
 ## Installation
 
 ```bash
@@ -414,6 +427,29 @@ function BridgeComponent() {
 - [`useBridgeApprove()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/bridge/useBridgeApprove.ts) - Approve token spending for bridge actions
 - [`useGetBridgeableAmount()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/bridge/useGetBridgeableAmount.ts) - Get maximum amount available to be bridged
 - [`useGetBridgeableTokens()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/bridge/useGetBridgeableTokens.ts) - Get available destination tokens for bridging
+
+#### DEX Hooks
+- [`usePools()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/usePools.ts) - Get available pools list from the DEX service
+- [`usePoolData()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/usePoolData.ts) - Get pool data for a selected pool
+- [`usePoolBalances()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/usePoolBalances.ts) - Get token balances for pool tokens
+- [`usePositionInfo()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/usePositionInfo.ts) - Get position information by token ID
+- [`useDexDeposit()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useDexDeposit.ts) - Deposit tokens to a pool
+- [`useDexWithdraw()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useDexWithdraw.ts) - Withdraw tokens from a pool
+- [`useDexAllowance()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useDexAllowance.ts) - Check token allowance for DEX operations
+- [`useDexApprove()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useDexApprove.ts) - Approve token spending for DEX operations
+- [`useLiquidityAmounts()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useLiquidityAmounts.ts) - Calculate liquidity amounts based on price range
+- [`useSupplyLiquidity()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useSupplyLiquidity.ts) - Supply liquidity to a pool
+- [`useDecreaseLiquidity()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useDecreaseLiquidity.ts) - Decrease liquidity from a position
+- [`useCreateDepositParams()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useCreateDepositParams.ts) - Build and memoize pool deposit params with basic amount validation
+- [`useCreateWithdrawParams()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useCreateWithdrawParams.ts) - Build and memoize pool withdrawal params with basic amount validation
+- [`useCreateSupplyLiquidityParams()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useCreateSupplyLiquidityParams.ts) - Build and memoize supply liquidity params with price and slippage validation
+- [`useCreateDecreaseLiquidityParams()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useCreateDecreaseLiquidityParams.ts) - Build and memoize decrease liquidity params with percentage and slippage validation
+
+#### DEX Utils
+- [`createDepositParamsProps()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/utils/dex-utils.ts) - Create deposit params for a pool token using pool data and spoke asset info
+- [`createWithdrawParamsProps()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/utils/dex-utils.ts) - Create withdraw params for a pool token with optional destination info
+- [`createSupplyLiquidityParamsProps()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/utils/dex-utils.ts) - Create concentrated liquidity supply params from price range, amounts, and slippage
+- [`createDecreaseLiquidityParamsProps()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/utils/dex-utils.ts) - Create decrease liquidity params from position info, percentage, and slippage
 
 ## Contributing
 

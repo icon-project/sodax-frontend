@@ -15,8 +15,7 @@ import type { EvmContractCall, PartnerFee } from '../shared/types.js';
 import { FEE_PERCENTAGE_SCALE } from '../shared/constants.js';
 import { calculatePercentageFeeAmount, encodeAddress, randomUint256 } from '../shared/utils/shared-utils.js';
 import { encodeContractCalls } from '../shared/utils/evm-utils.js';
-import { isIntentRelayChainId } from '../shared/guards.js';
-import { isPartnerFeeAmount, isPartnerFeePercentage } from '../shared/guards.js';
+import { isPartnerFeeAmount, isPartnerFeePercentage, isIntentRelayChainId } from '../shared/guards.js';
 import {
   type CreateIntentParams,
   type FeeData,
@@ -28,10 +27,13 @@ import {
 import { SONIC_MAINNET_CHAIN_ID, getIntentRelayChainId, type Hash, type Hex, type SolverConfig } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 import type { EvmHubProvider } from '../shared/entities/Providers.js';
+import { CLPositionManagerAbi } from '@pancakeswap/infinity-sdk';
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
 export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventAbi>[number];
 export const IntentFilledEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentFilled' });
 export type IntentFilledEventLog = GetLogsReturnType<typeof IntentFilledEventAbi>[number];
+export const MintPositionEventAbi = getAbiItem({ abi: CLPositionManagerAbi, name: 'MintPosition' });
+export type MintPositionEventLog = GetLogsReturnType<typeof MintPositionEventAbi>[number];
 
 export class EvmSolverService {
   private constructor() {}

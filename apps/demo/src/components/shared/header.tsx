@@ -12,6 +12,7 @@ const navLinks = [
   { to: '/bridge', label: 'Bridge' },
   { to: '/staking', label: 'Staking' },
   { to: '/partner-fee-claim', label: 'Partner Fee Claim' },
+  { to: '/dex', label: 'Dex' },
 ];
 
 const getNavLinkClass = (isActive: boolean) =>

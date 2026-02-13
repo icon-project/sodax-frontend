@@ -46,6 +46,7 @@ import type {
   SuiSpokeChainConfig,
   SolanaChainConfig,
   BaseSpokeChainConfig,
+  ConcentratedLiquidityConfig,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 
@@ -55,6 +56,7 @@ export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
+export type ClServiceConfig = Prettify<ConcentratedLiquidityConfig & RelayerApiConfig>;
 export type SwapServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
@@ -169,6 +171,8 @@ export type FeeAmount = {
 
 export type OptionalFee = { fee?: PartnerFee };
 
+export type OptionalSkipSimulation = { skipSimulation?: boolean };
+
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconContractAddress = `cx${string}`;
@@ -177,7 +181,14 @@ export type IcxTokenType =
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['nativeToken'];
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 
-export type SpokeDepositParams = EvmSpokeDepositParams | InjectiveSpokeDepositParams | IconSpokeDepositParams;
+export type SpokeDepositParams =
+  | EvmSpokeDepositParams
+  | InjectiveSpokeDepositParams
+  | SuiSpokeDepositParams
+  | IconSpokeDepositParams
+  | StellarSpokeDepositParams
+  | SolanaSpokeDepositParams
+  | SonicSpokeDepositParams;
 
 export type GetSpokeDepositParamsType<T extends SpokeProviderType> = T extends EvmSpokeProvider
   ? EvmSpokeDepositParams
@@ -207,7 +218,7 @@ export type GetSpokeDepositParamsType<T extends SpokeProviderType> = T extends E
                           ? SonicSpokeDepositParams
                           : T extends SonicRawSpokeProvider
                             ? SonicSpokeDepositParams
-                            : never;
+                            : SpokeDepositParams;
 
 export type GetAddressType<T extends SpokeProviderType> = T extends EvmSpokeProvider
   ? Address
@@ -496,7 +507,7 @@ export type GetEstimateGasReturnType<T extends SpokeProviderType> = T['chainConf
             ? InjectiveGasEstimate
             : GasEstimateType; // default to all gas estimate types union type
 
-export type OptionalRaw<R extends boolean = false> = { raw?: R };
+export type OptionalRaw<R extends boolean> = { raw?: R };
 export type OptionalTimeout = { timeout?: number };
 export type RelayExtraData = { address: Hex; payload: Hex };
 export type RelayOptionalExtraData = { data?: RelayExtraData };
@@ -515,6 +526,12 @@ export type GetChainConfigType<T extends ChainType> = T extends 'EVM'
             ? InjectiveSpokeChainConfig
             : BaseSpokeChainConfig<T>;
 
+export type RawDestinationParams = {
+  toChainId: SpokeChainId;
+  toAddress: string;
+};
+export type SpokeProviderObjectType = { spokeProvider: SpokeProviderType };
+export type DestinationParamsType = RawDestinationParams | SpokeProviderObjectType;
 export type SonicAddressOrSpokeType = {
   address: Address;
 } | {
