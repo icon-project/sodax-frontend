@@ -13,8 +13,8 @@ import {
   ICON_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
-  KAIA_MAINNET_CHAIN_ID,
-  REDBELLY_MAINNET_CHAIN_ID,
+  // KAIA_MAINNET_CHAIN_ID,
+  // REDBELLY_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export interface ChainUI {
@@ -35,8 +35,8 @@ export const EVM_CHAIN_ICONS = [
   '/chain/sonic.png',
   '/chain/lightlink.png',
   '/chain/hyper.png',
-  '/chain/0x2019.kaia.png',
-  '/chain/redbelly.png',
+  // '/chain/0x2019.kaia.png',
+  // '/chain/redbelly.png',
 ];
 
 /**
@@ -90,8 +90,8 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/hyper.png',
     explorerTxUrl: 'https://explorer.hyperchain.io/tx/',
   },
-  { id: KAIA_MAINNET_CHAIN_ID, name: 'Kaia', icon: '/chain/0x2019.kaia.png' },
-  { id: REDBELLY_MAINNET_CHAIN_ID, name: 'Redbelly', icon: '/chain/redbelly.png' },
+  // { id: KAIA_MAINNET_CHAIN_ID, name: 'Kaia', icon: '/chain/0x2019.kaia.png' },
+  // { id: REDBELLY_MAINNET_CHAIN_ID, name: 'Redbelly', icon: '/chain/redbelly.png' },
 ];
 
 /**
