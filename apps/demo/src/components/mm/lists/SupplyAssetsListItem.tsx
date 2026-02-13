@@ -4,7 +4,7 @@ import type { XToken, Address } from '@sodax/types';
 import { formatUnits, isAddress } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-import { OldBorrowButton } from './OldBorrowButton';
+// import { OldBorrowButton } from './OldBorrowButton';
 import { Button } from '@/components/ui/button';
 
 interface SupplyAssetsListItemProps {
@@ -14,7 +14,6 @@ interface SupplyAssetsListItemProps {
   userReserves: readonly UserReserveData[];
   aTokenBalancesMap?: Map<Address, bigint>;
   onRefreshReserves?: () => void;
-  onRepayClick: (token: XToken, maxDebt: string) => void;
   onWithdrawClick: (token: XToken, maxWithdraw: string) => void;
   onSupplyClick: (token: XToken, maxSupply: string) => void;
 }
@@ -25,8 +24,6 @@ export function SupplyAssetsListItem({
   formattedReserves,
   userReserves,
   aTokenBalancesMap,
-  onRefreshReserves,
-  onRepayClick,
   onWithdrawClick,
   onSupplyClick,
 }: SupplyAssetsListItemProps): ReactElement {
@@ -47,22 +44,7 @@ export function SupplyAssetsListItem({
   // ALWAYS USE 18 DECIMALS FOR aTOKENS
   const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(5) : '-';
 
-  const formattedDebt = metrics.userReserve
-    ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
-    : undefined;
-
-  const hasDebt = metrics.userReserve && metrics.userReserve.scaledVariableDebt > 0n;
   const hasSupply = aTokenBalance !== undefined && aTokenBalance > 0n;
-
-  const availableToBorrow = !metrics.formattedReserve
-    ? undefined
-    : metrics.formattedReserve.borrowCap === '0'
-      ? formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), 18)
-      : Math.min(
-          Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), 18)),
-          Number.parseInt(metrics.formattedReserve.borrowCap) -
-            Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
-        ).toFixed(5);
 
   return (
     <TableRow>
@@ -83,8 +65,6 @@ export function SupplyAssetsListItem({
       </TableCell>
       <TableCell>{metrics.supplyAPY || '-'}</TableCell>
       <TableCell>{metrics.supplyAPR || '-'}</TableCell>
-      <TableCell>{formattedDebt}</TableCell>
-      <TableCell>{availableToBorrow}</TableCell>
       <TableCell className="flex flex-row gap-2">
         <Button
           variant="cherry"
@@ -102,15 +82,15 @@ export function SupplyAssetsListItem({
         >
           Withdraw
         </Button>{' '}
-        <OldBorrowButton token={token} />
-        <Button
+        {/* <OldBorrowButton token={token} /> */}
+        {/* <Button
           variant="cherry"
           size="sm"
           onClick={() => onRepayClick(token, formattedDebt ?? '0')}
           disabled={!hasDebt}
         >
           Repay
-        </Button>{' '}
+        </Button>{' '} */}
       </TableCell>
     </TableRow>
   );

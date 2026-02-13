@@ -7,6 +7,7 @@ import { getChainLabel } from '@/lib/borrowUtils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
+import { Button } from '@/components/ui/button';
 
 interface BorrowAssetsListItemProps {
   token: XToken;
@@ -22,6 +23,7 @@ interface BorrowAssetsListItemProps {
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
   onBorrowClick: (token: XToken, maxBorrow: string) => void;
+  onRepayClick: (token: XToken, maxDebt: string) => void;
   userSummary?: FormatUserSummaryResponse;
 }
 
@@ -33,6 +35,7 @@ export function BorrowAssetsListItem({
   formattedReserves,
   userReserves,
   onBorrowClick,
+  onRepayClick,
   userSummary,
 }: BorrowAssetsListItemProps) {
   const metrics = useReserveMetrics({
@@ -84,6 +87,11 @@ export function BorrowAssetsListItem({
   }
 
   const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
+  const formattedDebt = metrics.userReserve
+    ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
+    : '0';
+
+  const hasDebt = metrics.userReserve && metrics.userReserve.scaledVariableDebt > 0n;
 
   return (
     <TableRow className={`hover:bg-cream/30 transition-colors ${disabled ? 'opacity-50' : ''}`}>
@@ -96,14 +104,20 @@ export function BorrowAssetsListItem({
       <TableCell>{metrics.borrowAPY}</TableCell>
       <TableCell>{metrics.borrowAPR}</TableCell>
       <TableCell>{metrics.totalBorrow}</TableCell>
+      <TableCell>{formattedDebt}</TableCell>
       <TableCell>
-        <BorrowButton
-          token={token}
-          disabled={disabled || !canBorrow}
-          onClick={() => {
-            onBorrowClick(token, maxBorrow);
-          }}
-        />
+        <div className="flex flex-row gap-2">
+          <BorrowButton
+            token={token}
+            disabled={disabled || !canBorrow}
+            onClick={() => {
+              onBorrowClick(token, maxBorrow);
+            }}
+          />{' '}
+          <Button variant="cherry" size="sm" onClick={() => onRepayClick(token, formattedDebt)} disabled={!hasDebt}>
+            Repay
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );

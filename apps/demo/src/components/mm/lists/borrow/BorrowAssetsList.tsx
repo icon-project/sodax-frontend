@@ -14,9 +14,10 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { formatUnits } from 'viem';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
 import { BorrowModal } from './BorrowModal';
-import { SuccessModal } from '../SuccessModal';
+import { SuccessModal, type ActionType } from '../SuccessModal';
 import { type XToken, type ChainId, moneyMarketSupportedTokens, AVALANCHE_MAINNET_CHAIN_ID } from '@sodax/types';
 import { ChainSelector } from '@/components/shared/ChainSelector';
+import { RepayActionModal } from '../RepayActionModal';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -25,7 +26,8 @@ const TABLE_HEADERS = [
   'Borrow APY',
   'Borrow APR',
   'Total Borrow',
-  'Action',
+  'Borrowed',
+  'Actions',
 ];
 type BorrowAssetsListProps = {
   initialChainId?: ChainId;
@@ -33,12 +35,18 @@ type BorrowAssetsListProps = {
 
 export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX.Element {
   const [selectedChainId, selectChainId] = useState(initialChainId ?? AVALANCHE_MAINNET_CHAIN_ID);
+  const [repayData, setRepayData] = useState<{
+    token: XToken;
+    maxDebt: string;
+  } | null>(null);
   const [successData, setSuccessData] = useState<{
     amount: string;
     token: XToken;
     sourceChainId: ChainId;
     destinationChainId: ChainId;
+    txHash?: `0x${string}`;
   } | null>(null);
+  const [currentAction, setCurrentAction] = useState<ActionType>('borrow');
 
   const { data: allMoneyMarketAssets, isLoading: isAssetsLoading } = useBackendAllMoneyMarketAssets({});
 
@@ -89,10 +97,18 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     address,
   });
 
-  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
+  const {
+    data: userReserves,
+    isLoading: isUserReservesLoading,
+    refetch: refetchReserves,
+  } = useUserReservesData({ spokeProvider, address });
 
-  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
-  const { data: userSummary } = useUserFormattedSummary({
+  const {
+    data: formattedReserves,
+    isLoading: isFormattedReservesLoading,
+    refetch: refetchFormattedReserves,
+  } = useReservesUsdFormat();
+  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({
     spokeProvider,
     address,
   });
@@ -100,6 +116,10 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
   const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
 
   const isLoading = isUserReservesLoading || isFormattedReservesLoading || isAssetsLoading;
+
+  const handleRefresh = async () => {
+    await Promise.all([refetchFormattedReserves(), refetchReserves(), refetchSummary()]);
+  };
 
   return (
     <Card className="mt-3">
@@ -123,63 +143,55 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
         </div>
       </div>
       <CardContent>
-        <div className="rounded-lg border border-cherry-grey/20 overflow-hidden">
-          <Table className="table-fixed w-full">
+        <div className="rounded-lg border border-cherry-grey/20 max-h-[400px] overflow-y-auto">
+          <Table unstyled className="table-auto">
             <TableHeader className="sticky top-0 bg-cream z-20">
               <TableRow className="border-b border-cherry-grey/20">
                 {TABLE_HEADERS.map(header => (
-                  <TableHead
-                    key={header}
-                    className="sticky top-0 z-10 bg-cream text-cherry-dark font-bold whitespace-nowrap after:absolute after:inset-0 after:-z-10 after:bg-cream"
-                  >
+                  <TableHead key={header} className="text-cherry-dark font-bold">
                     {header}
                   </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-12">
+                    <div className="flex items-center justify-center gap-2 text-clay">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Loading borrowable assets...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                borrowableAssets.map((asset, index) => (
+                  <BorrowAssetsListItem
+                    key={`${asset.chainId}-${asset.address}-${index}`}
+                    token={asset.token}
+                    asset={asset}
+                    disabled={!hasCollateral}
+                    walletBalance={
+                      asset.token?.xChainId === selectedChainId && balances?.[asset.token.address]
+                        ? Number(formatUnits(balances[asset.token.address], asset.token.decimals)).toFixed(6)
+                        : '-'
+                    }
+                    formattedReserves={formattedReserves || []}
+                    userReserves={userReserves?.[0] || []}
+                    onBorrowClick={(token, maxBorrow) => {
+                      setCurrentAction('borrow');
+                      setBorrowData({ token, maxBorrow });
+                    }}
+                    onRepayClick={(token, maxDebt) => {
+                      setCurrentAction('repay');
+                      setRepayData({ token, maxDebt });
+                    }}
+                    userSummary={userSummary}
+                  />
+                ))
+              )}
+            </TableBody>
           </Table>
-          <div className="max-h-[400px] overflow-y-auto">
-            <Table className="table-fixed w-full">
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12">
-                      <div className="flex items-center justify-center gap-2 text-clay">
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Loading borrowable assets...</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  borrowableAssets.map((asset, index) => {
-                    const sourceToken = allTokens.find(
-                      t => t.symbol === asset.token.symbol && t.xChainId === selectedChainId,
-                    );
-                    // console.log("CURRENTLY SELECTED TOKEN:", selectedTokenForBorrow?.symbol);
-                    // console.log(`ROW CREATED: Row is ${asset.token.symbol}. When clicked, it will send ${asset.token.symbol} up.`);
-                    // console.log(`Row ${index} | Display Symbol: ${asset.symbol} | Button Token Symbol: ${asset.token.symbol}`);
-                    return (
-                      <BorrowAssetsListItem
-                        key={`${asset.chainId}-${asset.address}-${index}`}
-                        token={asset.token}
-                        asset={asset}
-                        disabled={!hasCollateral}
-                        walletBalance={
-                          asset.token?.xChainId === selectedChainId && balances?.[asset.token.address]
-                            ? Number(formatUnits(balances[asset.token.address], asset.token.decimals)).toFixed(6)
-                            : '-'
-                        }
-                        formattedReserves={formattedReserves || []}
-                        userReserves={userReserves?.[0] || []}
-                        onBorrowClick={(token, maxBorrow) => setBorrowData({ token, maxBorrow })}
-                        userSummary={userSummary}
-                      />
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
         </div>
       </CardContent>
       {borrowData && (
@@ -196,7 +208,27 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
           maxBorrow={borrowData.maxBorrow}
         />
       )}
-      <SuccessModal open={!!successData} onClose={() => setSuccessData(null)} data={successData} action="borrow" />
+      {repayData && (
+        <RepayActionModal
+          open={true}
+          token={repayData.token}
+          maxDebt={repayData.maxDebt}
+          onOpenChange={open => {
+            if (!open) setRepayData(null);
+          }}
+          onSuccess={async data => {
+            setSuccessData(data);
+            setRepayData(null);
+            await handleRefresh();
+          }}
+        />
+      )}
+      <SuccessModal
+        open={!!successData}
+        onClose={() => setSuccessData(null)}
+        data={successData}
+        action={currentAction}
+      />
     </Card>
   );
 }

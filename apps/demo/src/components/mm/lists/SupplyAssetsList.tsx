@@ -20,7 +20,7 @@ import { type ActionType, SuccessModal } from './SuccessModal';
 import { SupplyModal } from './SupplyModal';
 import { WithdrawModal } from './WithdrawModal';
 import { getHealthFactorState } from '@/lib/utils';
-import { CrossChainActionModal } from './CrossChainActionModal';
+// import { RepayActionModal } from './RepayActionModal';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -30,17 +30,12 @@ const TABLE_HEADERS = [
   'Total Supply',
   'Supply APY',
   'Supply APR',
-  'Borrowed',
-  'Borrow available',
   'Actions',
 ] as const;
 
 export function SupplyAssetsList(): ReactElement {
   const { selectedChainId } = useAppStore();
-  const [repayData, setRepayData] = useState<{
-    token: XToken;
-    maxDebt: string;
-  } | null>(null);
+
   const [withdrawData, setWithdrawData] = useState<{
     token: XToken;
     maxWithdraw: string;
@@ -156,10 +151,8 @@ export function SupplyAssetsList(): ReactElement {
               </p>
             </div>
           ) : (
-            <div className="rounded-lg border border-cherry-grey/20 max-h-[400px] overflow-y-auto overflow-x-hidden px-2">
-              {' '}
+            <div className="rounded-lg border border-cherry-grey/20 max-h-[400px] overflow-y-auto">
               <Table unstyled className="table-auto">
-                {' '}
                 <TableHeader className="sticky top-0 bg-cream z-20">
                   <TableRow className="border-b border-cherry-grey/20">
                     {TABLE_HEADERS.map((header, index) => {
@@ -223,10 +216,6 @@ export function SupplyAssetsList(): ReactElement {
                         userReserves={userReserves}
                         aTokenBalancesMap={aTokenBalancesMap}
                         onRefreshReserves={handleRefresh}
-                        onRepayClick={(token, maxDebt) => {
-                          setCurrentAction('repay');
-                          setRepayData({ token, maxDebt });
-                        }}
                         onWithdrawClick={(token, maxWithdraw) => {
                           setCurrentAction('withdraw');
                           setWithdrawData({ token, maxWithdraw });
@@ -274,8 +263,8 @@ export function SupplyAssetsList(): ReactElement {
           }}
         />
       )} */}
-      {repayData && (
-        <CrossChainActionModal
+      {/* {repayData && (
+        <RepayActionModal
           open={true}
           token={repayData.token}
           maxDebt={repayData.maxDebt}
@@ -288,7 +277,7 @@ export function SupplyAssetsList(): ReactElement {
             await handleRefresh();
           }}
         />
-      )}
+      )} */}
       {withdrawData && (
         <WithdrawModal
           open={true}

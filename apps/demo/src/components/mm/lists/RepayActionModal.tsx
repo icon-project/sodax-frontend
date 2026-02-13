@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { getChainsWithThisToken, getTokenOnChain } from '@/lib/utils';
 import { useXBalances, useXAccount } from '@sodax/wallet-sdk-react';
+import { getChainName } from '@/constants';
 
 interface Props {
   open: boolean;
@@ -26,7 +27,7 @@ interface Props {
   }) => void;
 }
 
-export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSuccess }: Props) {
+export function RepayActionModal({ open, onOpenChange, token, maxDebt, onSuccess }: Props) {
   const [amount, setAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const { selectedChainId } = useAppStore();
@@ -38,20 +39,18 @@ export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSu
   const sourceToken = getTokenOnChain(token.symbol, fromChainId);
   const targetToken = token; // Debt token on target chain
 
-  // ✅ Wallet provider for the source (repay) chain
+  // Wallet provider for the source (repay) chain
   const sourceWalletProvider = useWalletProvider(fromChainId);
 
-  // ✅ Spoke provider where the actual repay happens (source chain)
+  // Spoke provider where the actual repay happens (source chain)
   const sourceSpokeProvider = useSpokeProvider(fromChainId, sourceWalletProvider);
-
-  const needsBridge = fromChainId !== toChainId;
 
   const { mutateAsync: repay, isPending } = useRepay();
   const { mutateAsync: approve, isPending: isApproving } = useMMApprove();
 
   const repayableChains = getChainsWithThisToken(token);
 
-  // ✅ Source chain params (where funds come from)
+  // Source chain params (where funds come from)
   const sourceParams: MoneyMarketRepayParams | undefined = useMemo(() => {
     if (!amount || !sourceToken) return undefined;
     const normalizedAmount = amount.replace(',', '.');
@@ -59,16 +58,18 @@ export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSu
       token: sourceToken.address,
       amount: parseUnits(normalizedAmount, sourceToken.decimals),
       action: 'repay',
+      toChainId: toChainId, // ADD THIS - where the debt is
+      toAddress: address as `0x${string}`, // ADD THIS - whose debt to repay
     };
-  }, [amount, sourceToken]);
+  }, [amount, sourceToken, toChainId, address]);
 
-  // ✅ Check allowance on the source chain (where tokens are spent)
+  // Check allowance on the source chain (where tokens are spent)
   const { data: sourceAllowed, isLoading: isSourceAllowanceLoading } = useMMAllowance({
     params: sourceParams,
     spokeProvider: sourceSpokeProvider,
   });
 
-  // ✅ Check user balance on source chain
+  // Check user balance on source chain
   const { data: balances } = useXBalances({
     xChainId: fromChainId,
     xTokens: sourceToken ? [sourceToken] : [],
@@ -83,20 +84,44 @@ export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSu
   const amountNum = Number(amount || 0);
   const insufficientBalance = amountNum > userBalance;
 
-  // ✅ Determine which approvals are needed (only source chain)
+  // Determine which approvals are needed (only source chain)
   const needsSourceApproval = !sourceAllowed;
 
-  // ✅ Chain switching hook for the source chain
+  // Chain switching hook for the source chain
   const { isWrongChain: isWrongSourceChain, handleSwitchChain: handleSwitchToSource } = useEvmSwitchChain(fromChainId);
 
   const extractTxHash = (result: unknown): `0x${string}` | undefined => {
     if (!result || typeof result !== 'object') {
       return undefined;
     }
-    const candidate =
+
+    // Try direct fields first (future-proofing)
+    const directCandidate =
       (result as { txHash?: `0x${string}`; hash?: `0x${string}` }).txHash ??
       (result as { txHash?: `0x${string}`; hash?: `0x${string}` }).hash;
-    return typeof candidate === 'string' ? candidate : undefined;
+
+    if (typeof directCandidate === 'string') {
+      return directCandidate;
+    }
+
+    // Handle Money Market pattern: { ok: true, value: [spokeTxHash, hubTxHash] }
+    if ('value' in result) {
+      const value = (result as { value?: unknown }).value;
+
+      if (Array.isArray(value)) {
+        const [spokeTxHash, hubTxHash] = value as [unknown, unknown];
+
+        if (typeof spokeTxHash === 'string') {
+          return spokeTxHash as `0x${string}`;
+        }
+
+        if (typeof hubTxHash === 'string') {
+          return hubTxHash as `0x${string}`;
+        }
+      }
+    }
+
+    return undefined;
   };
 
   const handleRepay = async (): Promise<void> => {
@@ -108,7 +133,7 @@ export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSu
     }
 
     try {
-      // ✅ Wait for transaction to complete
+      // Wait for transaction to complete
       const result = await repay({
         params: sourceParams,
         spokeProvider: sourceSpokeProvider,
@@ -116,7 +141,7 @@ export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSu
 
       console.log('Repay result:', result);
 
-      // ✅ Call success callback
+      // Call success callback
       onSuccess?.({
         amount,
         token,
@@ -132,7 +157,6 @@ export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSu
     }
   };
 
-  // apps/demo/src/components/mm/lists/CrossChainActionModal.tsx
   const getErrorMessage = (error: unknown, fallback = 'Approval failed'): string => {
     if (error instanceof Error && error.message) return error.message;
     if (typeof error === 'string') return error;
@@ -182,12 +206,6 @@ export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSu
 
         {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">{error}</div>}
 
-        {needsBridge && (
-          <p className="text-xs text-cherry-soda">
-            ⚠️ This will require background bridging from {fromChainId} to {toChainId}
-          </p>
-        )}
-
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
             From chain: <strong>{fromChainId}</strong>
@@ -231,11 +249,11 @@ export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSu
 
           {insufficientBalance && <p className="text-xs text-red-600">Insufficient balance on {fromChainId}</p>}
 
-          {/* ✅ Approval and repay flow on the source (repay) chain */}
+          {/* Approval and repay flow on the source (repay) chain */}
           {needsSourceApproval ? (
             isWrongSourceChain ? (
               <Button className="w-full" onClick={handleSwitchToSource}>
-                Switch to {fromChainId}
+                Switch to {getChainName(fromChainId)}
               </Button>
             ) : (
               <Button
@@ -244,7 +262,9 @@ export function CrossChainActionModal({ open, onOpenChange, token, maxDebt, onSu
                 onClick={handleApproveSource}
                 disabled={!sourceParams || isApproving || insufficientBalance}
               >
-                {isApproving ? 'Approving…' : `Approve ${sourceToken?.symbol || token.symbol} on ${fromChainId}`}
+                {isApproving
+                  ? 'Approving…'
+                  : `Approve ${sourceToken?.symbol || token.symbol} on ${getChainName(fromChainId)}`}
               </Button>
             )
           ) : isWrongSourceChain ? (
