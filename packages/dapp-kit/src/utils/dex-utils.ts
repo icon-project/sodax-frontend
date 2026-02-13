@@ -5,39 +5,13 @@ import type {
   UseCreateSupplyLiquidityParamsResult,
   UseCreateWithdrawParamsProps,
 } from '@/hooks/dex';
-import type { UseCreateBurnPositionParamsProps } from '@/hooks/dex/useCreateBurnPositionParams';
 import {
   ClService,
   type CreateAssetWithdrawParams,
-  type ConcentratedLiquidityBurnPositionParams,
   type ConcentratedLiquidityDecreaseLiquidityParams,
   type CreateAssetDepositParams,
 } from '@sodax/sdk';
 import { parseUnits } from 'viem';
-
-export function createBurnPositionParamsProps({
-  poolKey,
-  tokenId,
-  positionInfo,
-  slippageTolerance,
-}: UseCreateBurnPositionParamsProps): ConcentratedLiquidityBurnPositionParams {
-  const slippage = Number.parseFloat(String(slippageTolerance));
-
-  if (slippage <= 0 || slippage > 100) {
-    throw new Error('Slippage must be between 0 and 100');
-  }
-
-  const slippageMultiplier = BigInt(Math.floor((100 - slippage) * 100));
-  const amount0Min = (positionInfo.amount0 * slippageMultiplier) / 10000n;
-  const amount1Min = (positionInfo.amount1 * slippageMultiplier) / 10000n;
-
-  return {
-    poolKey,
-    tokenId: BigInt(tokenId),
-    amount0Min: amount0Min,
-    amount1Min: amount1Min,
-  };
-}
 
 export function createDecreaseLiquidityParamsProps({
   poolKey,
@@ -58,11 +32,20 @@ export function createDecreaseLiquidityParamsProps({
   }
 
   // Calculate liquidity to remove based on percentage
-  const liquidityToRemove = (positionInfo.liquidity * BigInt(Math.floor(percentageNum * 100))) / 10000n;
+  const liquidityToRemove =
+    percentageNum === 100
+      ? positionInfo.liquidity
+      : (positionInfo.liquidity * BigInt(Math.floor(percentageNum * 100))) / 10000n;
 
   // Calculate expected token amounts from this liquidity
-  const expectedAmount0 = (positionInfo.amount0 * BigInt(Math.floor(percentageNum * 100))) / 10000n;
-  const expectedAmount1 = (positionInfo.amount1 * BigInt(Math.floor(percentageNum * 100))) / 10000n;
+  const expectedAmount0 =
+    percentageNum === 100
+      ? positionInfo.amount0
+      : (positionInfo.amount0 * BigInt(Math.floor(percentageNum * 100))) / 10000n;
+  const expectedAmount1 =
+    percentageNum === 100
+      ? positionInfo.amount1
+      : (positionInfo.amount1 * BigInt(Math.floor(percentageNum * 100))) / 10000n;
 
   // Apply slippage to minimum amounts
   const slippageMultiplier = BigInt(Math.floor((100 - slippage) * 100));

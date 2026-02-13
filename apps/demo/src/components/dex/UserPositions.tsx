@@ -2,8 +2,8 @@
 import React, { type JSX, useEffect, useState } from 'react';
 import type { Hash, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
 import {
-  createBurnPositionParamsProps,
-  useBurnPosition,
+  createDecreaseLiquidityParamsProps,
+  useDecreaseLiquidity,
   useClaimRewards,
   usePositionInfo,
   useSodaxContext,
@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
 
 type UserPositionsProps = Readonly<{
   userAddress: string;
@@ -35,9 +36,10 @@ type PositionListItemProps = Readonly<{
 }>;
 
 function PositionListItem({ tokenId, poolKey, poolData, spokeProvider }: PositionListItemProps): JSX.Element | null {
+  const [percentageToRemove, setPercentageToRemove] = useState(0);
   const { data, isLoading, isError, error: positionInfoError } = usePositionInfo({ tokenId, poolKey });
   const claimRewardsMutation = useClaimRewards();
-  const burnPositionMutation = useBurnPosition();
+  const decreaseLiquidityMutation = useDecreaseLiquidity();
   const [error, setError] = useState<string>('');
 
   if (isLoading) {
@@ -89,11 +91,17 @@ function PositionListItem({ tokenId, poolKey, poolData, spokeProvider }: Positio
     }
   };
 
-  // Handle burn position
-  const handleBurnPosition = async (): Promise<void> => {
-    // Show confirmation dialog if position has liquidity
+  // Handle decrease liquidity position
+  const handleDecreaseLiquidity = async (percentage: number): Promise<void> => {
+    if (percentage <= 0 || percentage > 100) {
+      setError('Percentage must be between 0 and 100');
+      return;
+    }
+    setError('');
+
+    // Show confirmation dialog if position has liquidity and user wants to remove all liquidity
     let confirmMessage = '';
-    if (positionInfo.liquidity > 0n) {
+    if (positionInfo.liquidity > 0n && percentage === 100) {
       const token0Amount = `${normaliseTokenAmount(positionInfo.amount0, poolData.token0.decimals)} ${poolData.token0.symbol}`;
       const token1Amount = `${normaliseTokenAmount(positionInfo.amount1, poolData.token1.decimals)} ${poolData.token1.symbol}`;
 
@@ -116,9 +124,9 @@ function PositionListItem({ tokenId, poolKey, poolData, spokeProvider }: Positio
         token1Details += ` (≈${underlyingAmount} ${poolData.token1UnderlyingToken.symbol})`;
       }
 
-      confirmMessage = `This position has liquidity. Burning will:\n1. Remove all liquidity:\n   - ${token0Details}\n   - ${token1Details}\n2. Burn the NFT\n\nAre you sure?`;
+      confirmMessage = `Remove all liquidity:\n   - ${token0Details}\n   - ${token1Details}`;
     } else {
-      confirmMessage = 'Are you sure you want to burn this position? This action cannot be undone.';
+      confirmMessage = `Remove ${percentage}% of liquidity`;
     }
 
     if (!confirm(confirmMessage)) {
@@ -128,53 +136,27 @@ function PositionListItem({ tokenId, poolKey, poolData, spokeProvider }: Positio
     setError('');
 
     try {
-      // Step 1: If position has liquidity, decrease it to 0 first
-      // if (positionInfo.liquidity > 0n) {
-      //   const slippage = 0.5;
-      //   const slippageMultiplier = BigInt(Math.floor((100 - slippage) * 100));
-      //   const amount0Min = (positionInfo.amount0 * slippageMultiplier) / 10000n;
-      //   const amount1Min = (positionInfo.amount1 * slippageMultiplier) / 10000n;
-
-      //   const decreaseResult = await sodax.dex.clService.decreaseLiquidity({
-      //     params: {
-      //       poolKey: poolKey,
-      //       tokenId: BigInt(tokenId),
-      //       liquidity: positionInfo.liquidity,
-      //       amount0Min,
-      //       amount1Min,
-      //     },
-      //     spokeProvider,
-      //   });
-
-      //   if (!decreaseResult.ok) {
-      //     console.error('Decrease liquidity failed:', decreaseResult.error);
-      //     throw new Error(`Failed to remove liquidity: ${decreaseResult.error?.code || 'Unknown error'}`);
-      //   }
-      // }
-
-      await burnPositionMutation.mutateAsync({
-        params: createBurnPositionParamsProps({
+      // NOTE: when removing 100% of liquidity unclaimed fees are supposedly included (double check)
+      await decreaseLiquidityMutation.mutateAsync({
+        params: createDecreaseLiquidityParamsProps({
           poolKey: poolKey,
           tokenId: tokenId,
+          percentage: percentageToRemove,
           positionInfo: positionInfo,
           slippageTolerance: 0.5,
         }),
         spokeProvider,
       });
 
-      // Clear position state
-      // setPositionId('');
-      // setMinPrice('');
-      // setMaxPrice('');
-      // setLiquidityToken0Amount('');
-      // setLiquidityToken1Amount('');
+      // Clear percentage to remove
+      setPercentageToRemove(0);
       setError('');
     } catch (err) {
-      if (err instanceof Error && err.message === 'Burn cancelled by user') {
+      if (err instanceof Error && err.message === 'Decrease liquidity cancelled by user') {
         return; // User cancelled, don't show error
       }
-      console.error('Burn position failed:', err);
-      setError(`Burn position failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      console.error('Decrease liquidity failed:', err);
+      setError(`Decrease liquidity failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
 
@@ -201,26 +183,6 @@ function PositionListItem({ tokenId, poolKey, poolData, spokeProvider }: Positio
         </div>
         <div className="col-span-2 flex items-center justify-between text-xs text-muted-foreground">
           <span>Unclaimed fees</span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              onClick={handleClaimRewards}
-              disabled={!hasUnclaimedFees || claimRewardsMutation.isPending}
-            >
-              {claimRewardsMutation.isPending ? 'Claiming...' : 'Claim'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              onClick={handleBurnPosition}
-              disabled={burnPositionMutation.isPending}
-            >
-              {burnPositionMutation.isPending ? 'Burning...' : 'Burn'}
-            </Button>
-          </div>
         </div>
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">Unclaimed {poolData.token0.symbol} Fees</p>
@@ -230,7 +192,60 @@ function PositionListItem({ tokenId, poolKey, poolData, spokeProvider }: Positio
           <p className="text-xs text-muted-foreground">Unclaimed {poolData.token1.symbol} Fees</p>
           <p className="font-mono">{fees1}</p>
         </div>
+        <div className="space-y-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="default"
+            onClick={handleClaimRewards}
+            disabled={!hasUnclaimedFees || claimRewardsMutation.isPending}
+          >
+            {claimRewardsMutation.isPending ? 'Claiming...' : 'Claim'}
+          </Button>
+        </div>
         {error ? <div className="col-span-2 text-xs text-destructive">{error}</div> : null}
+      </div>
+      <div className="mt-4">
+        <div className="flex flex-col space-y-2 p-2 rounded w-full">
+          <Label htmlFor="decrease-percentage" className="text-sm font-medium">
+            Decrease Liquidity (%)
+          </Label>
+          <div className="flex gap-2 items-center w-fit">
+            <Input
+              className="w-[60px]"
+              id="decrease-percentage"
+              type="number"
+              placeholder="Enter % to remove (e.g., 50 for 50%)"
+              value={percentageToRemove}
+              onChange={e => setPercentageToRemove(Number(e.target.value))}
+            />
+            <span className="text-sm text-muted-foreground">%</span>
+            <Button
+              onClick={() => handleDecreaseLiquidity(percentageToRemove)}
+              disabled={isLoading || !percentageToRemove}
+              variant="outline"
+              className="w-fit ml-2"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Decrease Liquidity
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">Enter percentage of position to remove (100 = all liquidity)</p>
+        </div>
+
+        <div className="grid grid-rows-2 gap-2 pt-2">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="default"
+              onClick={() => handleDecreaseLiquidity(100)}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Removing...' : 'Remove all liquidity'}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -15,9 +15,7 @@ import {
   useLiquidityAmounts,
   useSupplyLiquidity,
   useDecreaseLiquidity,
-  useBurnPosition,
   useSpokeProvider,
-  createBurnPositionParamsProps,
   createDecreaseLiquidityParamsProps,
   createSupplyLiquidityParamsProps,
   useSodaxContext,
@@ -115,14 +113,9 @@ export function SimplePoolManager(): JSX.Element {
   // Hooks for mutations
   const supplyLiquidityMutation = useSupplyLiquidity();
   const decreaseLiquidityMutation = useDecreaseLiquidity();
-  const burnPositionMutation = useBurnPosition();
 
   // Combined loading state
-  const loading =
-    isLoadingPoolData ||
-    supplyLiquidityMutation.isPending ||
-    decreaseLiquidityMutation.isPending ||
-    burnPositionMutation.isPending;
+  const loading = isLoadingPoolData || supplyLiquidityMutation.isPending || decreaseLiquidityMutation.isPending;
 
   useEffect(() => {
     if (supplyLiquidityMutation.isSuccess) {
@@ -139,16 +132,6 @@ export function SimplePoolManager(): JSX.Element {
       setError(`Decrease liquidity failed: ${decreaseLiquidityMutation.error.message}`);
     }
   }, [decreaseLiquidityMutation.isSuccess, decreaseLiquidityMutation.error]);
-
-  useEffect(() => {
-    if (burnPositionMutation.isSuccess) {
-      setError('');
-    } else if (burnPositionMutation.error) {
-      if (burnPositionMutation.error.message !== 'Burn cancelled by user') {
-        setError(`Burn position failed: ${burnPositionMutation.error.message}`);
-      }
-    }
-  }, [burnPositionMutation.isSuccess, burnPositionMutation.error]);
 
   // Handle supply liquidity
   const handleSupplyLiquidity = async (): Promise<void> => {
@@ -257,70 +240,6 @@ export function SimplePoolManager(): JSX.Element {
     }
   };
 
-  // Handle burn position
-  const handleBurnPosition = async (): Promise<void> => {
-    if (!poolData || !spokeProvider || !selectedPoolKey || !positionId || !isValidPosition || !positionInfo) {
-      setError('Please enter a valid position ID first');
-      return;
-    }
-
-    // Show confirmation dialog if position has liquidity
-    let confirmMessage = '';
-    if (positionInfo.liquidity > 0n) {
-      const token0Amount = `${formatAmount(positionInfo.amount0, poolData.token0.decimals)} ${poolData.token0.symbol}`;
-      const token1Amount = `${formatAmount(positionInfo.amount1, poolData.token1.decimals)} ${poolData.token1.symbol}`;
-
-      let token0Details = token0Amount;
-      let token1Details = token1Amount;
-
-      if (positionInfo.amount0Underlying && poolData.token0IsStatAToken && poolData.token0UnderlyingToken) {
-        const underlyingAmount = formatAmount(positionInfo.amount0Underlying, poolData.token0UnderlyingToken.decimals);
-        token0Details += ` (≈${underlyingAmount} ${poolData.token0UnderlyingToken.symbol})`;
-      }
-
-      if (positionInfo.amount1Underlying && poolData.token1IsStatAToken && poolData.token1UnderlyingToken) {
-        const underlyingAmount = formatAmount(positionInfo.amount1Underlying, poolData.token1UnderlyingToken.decimals);
-        token1Details += ` (≈${underlyingAmount} ${poolData.token1UnderlyingToken.symbol})`;
-      }
-
-      confirmMessage = `This position has liquidity. Burning will:\n1. Remove all liquidity:\n   - ${token0Details}\n   - ${token1Details}\n2. Burn the NFT\n\nAre you sure?`;
-    } else {
-      confirmMessage = 'Are you sure you want to burn this position? This action cannot be undone.';
-    }
-
-    if (confirm(confirmMessage)) {
-      return;
-    }
-
-    setError('');
-
-    try {
-      await burnPositionMutation.mutateAsync({
-        params: createBurnPositionParamsProps({
-          poolKey: selectedPoolKey,
-          tokenId: positionId,
-          positionInfo,
-          slippageTolerance,
-        }),
-        spokeProvider,
-      });
-
-      // Clear position state
-      setPositionId('');
-      setMinPrice('');
-      setMaxPrice('');
-      setLiquidityToken0Amount('');
-      setLiquidityToken1Amount('');
-      setError('');
-    } catch (err) {
-      if (err instanceof Error && err.message === 'Burn cancelled by user') {
-        return; // User cancelled, don't show error
-      }
-      console.error('Burn position failed:', err);
-      setError(`Burn position failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    }
-  };
-
   const formatAmount = (amount: bigint, decimals: number): string => {
     return (Number(amount) / 10 ** decimals).toFixed(6);
   };
@@ -394,7 +313,6 @@ export function SimplePoolManager(): JSX.Element {
           onClearPosition={handleClearPosition}
           onSupplyLiquidity={handleSupplyLiquidity}
           onDecreaseLiquidity={handleDecreaseLiquidity}
-          onBurnPosition={handleBurnPosition}
           formatAmount={formatAmount}
           calculateUnderlyingAmount={calculateUnderlyingAmount}
           selectedPoolKey={selectedPoolKey}

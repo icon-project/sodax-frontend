@@ -45,7 +45,6 @@ import {
   encodeCLPositionManagerMintCalldata,
   encodeCLPositionManagerIncreaseLiquidityCalldata,
   encodeCLPositionManagerDecreaseLiquidityCalldata,
-  encodeCLPositionManagerBurnCalldata,
 } from '@pancakeswap/infinity-sdk';
 import {
   maxLiquidityForAmount0Precise,
@@ -123,19 +122,11 @@ export type ConcentratedLiquidityDecreaseLiquidityParams = {
   amount1Min: bigint; // minimum amount of token1
 };
 
-export type ConcentratedLiquidityBurnPositionParams = {
-  poolKey: PoolKey;
-  tokenId: bigint; // NFT token ID
-  amount0Min: bigint; // minimum amount of token0
-  amount1Min: bigint; // minimum amount of token1
-};
-
 // Union type for all concentrated liquidity parameters
 export type ConcentratedLiquidityParams =
   | ConcentratedLiquiditySupplyParams
   | ConcentratedLiquidityIncreaseLiquidityParams
   | ConcentratedLiquidityDecreaseLiquidityParams
-  | ConcentratedLiquidityBurnPositionParams
   | ConcentratedLiquidityWithdrawParams
   | ConcentratedLiquidityClaimRewardsParams;
 
@@ -152,11 +143,6 @@ export type IncreaseLiquidityParams<S extends SpokeProviderType> = Prettify<{
 
 export type DecreaseLiquidityParams<S extends SpokeProviderType> = Prettify<{
   params: ConcentratedLiquidityDecreaseLiquidityParams;
-  spokeProvider: S;
-}>;
-
-export type BurnPositionParams<S extends SpokeProviderType> = Prettify<{
-  params: ConcentratedLiquidityBurnPositionParams;
   spokeProvider: S;
 }>;
 
@@ -276,7 +262,6 @@ export type ConcentratedLiquidityUnknownErrorCode =
   | 'WITHDRAW_LIQUIDITY_UNKNOWN_ERROR'
   | 'INCREASE_LIQUIDITY_UNKNOWN_ERROR'
   | 'DECREASE_LIQUIDITY_UNKNOWN_ERROR'
-  | 'BURN_POSITION_UNKNOWN_ERROR'
   | 'CLAIM_REWARDS_UNKNOWN_ERROR'
   | 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR';
 
@@ -291,8 +276,6 @@ export type GetConcentratedLiquidityParams<T extends ConcentratedLiquidityUnknow
           ? ConcentratedLiquidityIncreaseLiquidityParams
           : T extends 'DECREASE_LIQUIDITY_UNKNOWN_ERROR'
             ? ConcentratedLiquidityDecreaseLiquidityParams
-            : T extends 'BURN_POSITION_UNKNOWN_ERROR'
-              ? ConcentratedLiquidityBurnPositionParams
               : T extends 'CLAIM_REWARDS_UNKNOWN_ERROR'
                 ? ConcentratedLiquidityClaimRewardsParams
                 : T extends 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR'
@@ -307,7 +290,6 @@ export type ConcentratedLiquidityErrorCode =
   | 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'
   | 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'
   | 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'
-  | 'CREATE_BURN_POSITION_INTENT_FAILED'
   | 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
   | 'GET_POOL_REWARD_CONFIG_FAILED';
 
@@ -341,11 +323,6 @@ export type ConcentratedLiquidityDecreaseLiquidityFailedError = {
   payload: ConcentratedLiquidityDecreaseLiquidityParams;
 };
 
-export type ConcentratedLiquidityBurnPositionFailedError = {
-  error: unknown;
-  payload: ConcentratedLiquidityBurnPositionParams;
-};
-
 export type ConcentratedLiquidityClaimRewardsFailedError = {
   error: unknown;
   payload: ConcentratedLiquidityClaimRewardsParams;
@@ -368,8 +345,6 @@ export type GetConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCo
           ? ConcentratedLiquidityIncreaseLiquidityFailedError
           : T extends 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'
             ? ConcentratedLiquidityDecreaseLiquidityFailedError
-            : T extends 'CREATE_BURN_POSITION_INTENT_FAILED'
-              ? ConcentratedLiquidityBurnPositionFailedError
               : T extends 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
                 ? ConcentratedLiquidityClaimRewardsFailedError
                 : T extends 'GET_POOL_REWARD_CONFIG_FAILED'
@@ -394,7 +369,7 @@ export type ClServiceConstructorParams = {
 
 /**
  * Concetration Liquidity Service provides a high-level interface for concentrated liquidity operations
- * including supply liquidity, increase liquidity, decrease liquidity, and burn position.
+ * including supply liquidity, increase liquidity, decrease liquidit position.
  */
 export class ClService {
   public readonly config: ClServiceConfig;
@@ -429,6 +404,8 @@ export class ClService {
       token1SpokeAddress,
       spokeProvider.chainConfig.chain.id,
     );
+    console.log('token0', token0);
+    console.log('token1', token1);
 
     if (!token0) {
       throw new Error(`[getAssetsForPool] Token0 ${token0SpokeAddress} not found`);
@@ -698,82 +675,6 @@ export class ClService {
     }
   }
 
-  /**
-   * Execute burn position action - burns an NFT position and collects remaining tokens
-   */
-  public async executeBurnPosition<S extends SpokeProviderType, R extends boolean = false>(
-    params: ConcentratedLiquidityBurnPositionParams,
-    spokeProvider: S,
-    raw?: R,
-    skipSimulation?: boolean,
-  ): Promise<
-    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_BURN_POSITION_INTENT_FAILED'>> &
-      RelayOptionalExtraData
-  > {
-    try {
-      const userAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await HubService.getUserHubWalletAddress(
-        userAddress,
-        spokeProvider.chainConfig.chain.id,
-        this.hubProvider,
-      );
-      const calls: EvmContractCall[] = [];
-
-      const positionConfig: CLPositionConfig = {
-        poolKey: params.poolKey,
-        tickLower: 0, // Will be determined by tokenId
-        tickUpper: 0, // Will be determined by tokenId
-      };
-
-      const calldata = encodeCLPositionManagerBurnCalldata(
-        params.tokenId,
-        positionConfig,
-        params.amount0Min,
-        params.amount1Min,
-        '0x', // no hook data
-        BigInt(2) ** BigInt(256) - BigInt(1), // maxUint256 deadline
-      );
-
-      const burnCall: EvmContractCall = {
-        address: this.config.clPositionManager,
-        value: 0n,
-        data: calldata,
-      };
-
-      calls.push(burnCall);
-
-      // Execute the transaction
-      const data: Hex = encodeContractCalls(calls);
-      const txResult = await SpokeService.callWallet(
-        hubWallet,
-        data,
-        spokeProvider,
-        this.hubProvider,
-        raw,
-        skipSimulation,
-      );
-      return {
-        ok: true,
-        value: txResult satisfies TxReturnType<S, R>,
-        data: {
-          address: hubWallet,
-          payload: data,
-        },
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_BURN_POSITION_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
-      };
-    }
-  }
-
   public permit2Approve(token: Address, contract: Address): EvmContractCall[] {
     const calls: EvmContractCall[] = [];
 
@@ -974,70 +875,6 @@ export class ClService {
         ok: false,
         error: {
           code: 'DECREASE_LIQUIDITY_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
-      };
-    }
-  }
-
-  /**
-   * Burn position and wait for the transaction to be relayed to the hub
-   * This method wraps executeBurnPosition and relays the transaction to the hub
-   */
-  public async burnPosition<S extends SpokeProvider>({
-    params,
-    spokeProvider,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  }: Prettify<BurnPositionParams<S> & OptionalTimeout>): Promise<
-    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
-  > {
-    try {
-      const txResult = await this.executeBurnPosition(params, spokeProvider, false);
-
-      if (!txResult.ok) {
-        return txResult satisfies Result<
-          [SpokeTxHash, HubTxHash],
-          ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>
-        >;
-      }
-
-      let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
-        const packetResult = await relayTxAndWaitPacket(
-          txResult.value,
-          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
-          spokeProvider,
-          this.relayerApiEndpoint,
-          timeout,
-        );
-
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
-
-        intentTxHash = packetResult.value.dst_tx_hash;
-      } else {
-        intentTxHash = txResult.value;
-      }
-
-      return { ok: true, value: [txResult.value, intentTxHash] };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'BURN_POSITION_UNKNOWN_ERROR',
           data: {
             error: error,
             payload: params,

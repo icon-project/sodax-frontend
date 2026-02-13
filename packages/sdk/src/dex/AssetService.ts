@@ -514,6 +514,34 @@ export class AssetService {
   }
 
   /**
+   * Check if the asset is SODA and the pool token is XSODA (requires stake/unstake if yes)
+   * @param chainId - The chain id
+   * @param asset - The asset address
+   * @param poolToken - The pool token address
+   * @returns True if the asset is SODA and the pool token is XSODA, false otherwise
+   */
+  public isSodaAsXSodaInPool({
+    chainId,
+    asset,
+    poolToken,
+  }: {
+    chainId: SpokeChainId;
+    asset: OriginalAssetAddress;
+    poolToken: Address;
+  }): boolean {
+    const spokeToken = this.configService.getSpokeTokenFromOriginalAssetAddress(chainId, asset);
+
+    if (!spokeToken) {
+      throw new Error(`[isSodaDepositToXSoda] Spoke token not found for asset ${asset}`);
+    }
+
+    return (
+      spokeToken.symbol.toLowerCase() === 'soda' &&
+      poolToken.toLowerCase() === this.hubProvider.chainConfig.addresses.xSoda.toLowerCase()
+    );
+  }
+
+  /**
    * Deposit tokens and wait for the transaction to be relayed to the hub.
    *
    * This method wraps {@link executeDeposit} and performs post-processing to relay

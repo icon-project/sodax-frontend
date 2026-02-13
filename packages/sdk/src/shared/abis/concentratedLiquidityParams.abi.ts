@@ -62,14 +62,3 @@ export const modifyLiquidityParamsAbi = [
   { type: 'uint128', name: 'amount1Max' },
   { type: 'bytes', name: 'hookData' },
 ] as const;
-
-/**
- * Burn position parameters ABI definition
- * Based on: (uint256 tokenId, uint128 amount0Min, uint128 amount1Min, bytes hookData)
- */
-export const burnPositionParamsAbi = [
-  { type: 'uint256', name: 'tokenId' },
-  { type: 'uint128', name: 'amount0Min' },
-  { type: 'uint128', name: 'amount1Min' },
-  { type: 'bytes', name: 'hookData' },
-] as const;

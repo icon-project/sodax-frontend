@@ -9,7 +9,6 @@ export * from './useDexApprove';
 export * from './useLiquidityAmounts';
 export * from './useSupplyLiquidity';
 export * from './useDecreaseLiquidity';
-export * from './useBurnPosition';
 export * from './useCreateDepositParams';
 export * from './useCreateSupplyLiquidityParams';
 export * from './useCreateDecreaseLiquidityParams';

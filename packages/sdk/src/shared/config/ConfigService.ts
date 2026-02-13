@@ -65,6 +65,7 @@ export class ConfigService {
   private supportedTokensPerChain!: Map<SpokeChainId, readonly XToken[]>;
   private moneyMarketReserveAssetsSet!: Set<Address>;
   private spokeChainIdsSet!: Set<SpokeChainId>;
+  private stakedATokenAddressesSet!: Set<Address>;
 
   constructor({ backendApiService, config, sharedConfig }: ConfigServiceConstructorParams) {
     this.serviceConfig = {
@@ -153,8 +154,13 @@ export class ConfigService {
     return this.hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
   }
 
-  public getSpokeTokenFromOriginalAssetAddress(chainId: SpokeChainId, originalAssetAddress: OriginalAssetAddress): XToken | undefined {
-    return this.supportedTokensPerChain.get(chainId)?.find(token => token.address.toLowerCase() === originalAssetAddress.toLowerCase());
+  public getSpokeTokenFromOriginalAssetAddress(
+    chainId: SpokeChainId,
+    originalAssetAddress: OriginalAssetAddress,
+  ): XToken | undefined {
+    return this.supportedTokensPerChain
+      .get(chainId)
+      ?.find(token => token.address.toLowerCase() === originalAssetAddress.toLowerCase());
   }
 
   public isValidHubAsset(hubAsset: Address): boolean {
@@ -240,7 +246,11 @@ export class ConfigService {
     return supportedTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
   }
 
-  public getOriginalAssetInfoFromVault(chainId: SpokeChainId, vault: Address): OriginalAssetAddress[] {
+  public isValidStakedATokenAddress(address: Address): boolean {
+    return this.stakedATokenAddressesSet.has(address.toLowerCase() as Address);
+  }
+
+  public getOriginalAssetsFromVault(chainId: SpokeChainId, vault: Address): OriginalAssetAddress[] {
     const hubAssets = this.sodaxConfig.supportedHubAssets;
     const assets = hubAssets[chainId];
     if (!assets) {
@@ -256,13 +266,29 @@ export class ConfigService {
     return result;
   }
 
+  public getSodaTokenAddress(chainId: SpokeChainId): string | undefined {
+    return this.sodaxConfig.spokeChainConfig[chainId].supportedTokens.SODA?.address;
+  }
+
   public getOriginalAssetAddressFromStakedATokenAddress = (
     chainId: SpokeChainId,
     address: Address,
   ): OriginalAssetAddress => {
+    if (address.toLowerCase() === this.getHubChainConfig().addresses.xSoda.toLowerCase()) {
+      const sodaTokenAddress = this.getSodaTokenAddress(chainId);
+      if (!sodaTokenAddress) {
+        throw new Error(
+          `[getOriginalAssetAddressFromStakedATokenAddress] Soda token address not found for chain ${chainId}`,
+        );
+      }
+      return sodaTokenAddress;
+    }
+
     const normalizedAddress = address.toLowerCase() as keyof typeof StatATokenAddresses;
     const sodaToken = StatATokenAddresses[normalizedAddress] ?? address;
-    const originalAssetAddresses = this.getOriginalAssetInfoFromVault(chainId, sodaToken);
+
+    const originalAssetAddresses = this.getOriginalAssetsFromVault(chainId, sodaToken);
+    
     if (!originalAssetAddresses.length) {
       throw new Error('[getOriginalAssetAddressFromStakedATokenAddress] Original asset address not found');
     }
@@ -302,6 +328,9 @@ export class ConfigService {
     this.loadRelayChainIdMapDataStructures(sodaxConfig.relayChainIdMap);
     this.loadSpokeChainConfigDataStructures(sodaxConfig.spokeChainConfig);
     this.loadMoneyMarketReserveAssetsDataStructures(sodaxConfig.supportedMoneyMarketReserveAssets);
+    this.stakedATokenAddressesSet = new Set(
+      Object.keys(StatATokenAddresses).map(address => address.toLowerCase() as Address),
+    );
   }
 
   private loadHubAssetDataStructures(hubAssets: GetHubAssetsApiResponse): void {

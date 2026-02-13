@@ -250,23 +250,6 @@ await sodax.dex.clService.decreaseLiquidity({
 });
 ```
 
-### burnPosition
-
-Burns a position NFT and collects the remaining amounts.
-
-**Example:**
-```typescript
-const result = await sodax.dex.clService.burnPosition({
-  params: {
-    poolKey,
-    tokenId: 1n,
-    amount0Min: 0n,
-    amount1Min: 0n,
-  },
-  spokeProvider,
-});
-```
-
 ### claimRewards
 
 Claims rewards for a position.
@@ -367,13 +350,6 @@ export type ConcentratedLiquidityDecreaseLiquidityParams = {
   amount1Min: bigint;
 };
 
-export type ConcentratedLiquidityBurnPositionParams = {
-  poolKey: PoolKey;
-  tokenId: bigint;
-  amount0Min: bigint;
-  amount1Min: bigint;
-};
-
 export type ConcentratedLiquidityClaimRewardsParams = {
   poolKey: PoolKey;
   tokenId: bigint;
@@ -404,7 +380,6 @@ Common CL error codes:
 - `CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED`
 - `CREATE_INCREASE_LIQUIDITY_INTENT_FAILED`
 - `CREATE_DECREASE_LIQUIDITY_INTENT_FAILED`
-- `CREATE_BURN_POSITION_INTENT_FAILED`
 - `CREATE_CLAIM_REWARDS_INTENT_FAILED`
 - `GET_POOL_REWARD_CONFIG_FAILED`
 - `SUBMIT_TX_FAILED`
@@ -417,5 +392,5 @@ Common CL error codes:
 3. **For Stellar destination chains**: check and establish trustlines manually (see [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md))
 4. **Deposit** using `assetService.deposit()` to obtain pool token balances
 5. **Supply liquidity** using `clService.supplyLiquidity()` (or increase an existing position)
-6. **Manage position** using increase/decrease/burn/claim
+6. **Manage position** using increase/decrease/claim
 7. **Withdraw** using `assetService.withdraw()` when needed

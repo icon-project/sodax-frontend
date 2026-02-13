@@ -76,7 +76,6 @@ dApp Kit is a collection of React components, hooks, and utilities designed to s
   - Calculate liquidity amounts based on price range (`useLiquidityAmounts`)
   - Supply liquidity to a pool (`useSupplyLiquidity`)
   - Decrease liquidity from a position (`useDecreaseLiquidity`)
-  - Burn a position NFT (`useBurnPosition`)
 
 ## Installation
 
@@ -441,19 +440,16 @@ function BridgeComponent() {
 - [`useLiquidityAmounts()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useLiquidityAmounts.ts) - Calculate liquidity amounts based on price range
 - [`useSupplyLiquidity()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useSupplyLiquidity.ts) - Supply liquidity to a pool
 - [`useDecreaseLiquidity()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useDecreaseLiquidity.ts) - Decrease liquidity from a position
-- [`useBurnPosition()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useBurnPosition.ts) - Burn a position NFT
 - [`useCreateDepositParams()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useCreateDepositParams.ts) - Build and memoize pool deposit params with basic amount validation
 - [`useCreateWithdrawParams()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useCreateWithdrawParams.ts) - Build and memoize pool withdrawal params with basic amount validation
 - [`useCreateSupplyLiquidityParams()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useCreateSupplyLiquidityParams.ts) - Build and memoize supply liquidity params with price and slippage validation
 - [`useCreateDecreaseLiquidityParams()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useCreateDecreaseLiquidityParams.ts) - Build and memoize decrease liquidity params with percentage and slippage validation
-- [`useCreateBurnPositionParams()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/hooks/dex/useCreateBurnPositionParams.ts) - Build and memoize burn position params with slippage validation
 
 #### DEX Utils
 - [`createDepositParamsProps()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/utils/dex-utils.ts) - Create deposit params for a pool token using pool data and spoke asset info
 - [`createWithdrawParamsProps()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/utils/dex-utils.ts) - Create withdraw params for a pool token with optional destination info
 - [`createSupplyLiquidityParamsProps()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/utils/dex-utils.ts) - Create concentrated liquidity supply params from price range, amounts, and slippage
 - [`createDecreaseLiquidityParamsProps()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/utils/dex-utils.ts) - Create decrease liquidity params from position info, percentage, and slippage
-- [`createBurnPositionParamsProps()`](https://github.com/icon-project/sodax-frontend/tree/main/packages/dapp-kit/src/utils/dex-utils.ts) - Create burn position params from position info and slippage
 
 ## Contributing
 
