@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -277,7 +278,7 @@
   --layout-linear-boder: var(--layout-linear-boder-mobile);
   --layout-space-small: var(--layout-space-small-mobile);
   --text-main-title: var(--main-title-mobile);
-  --text-body-fine-print: var(--body-fine-print);
+  --text-body-fine-print: var(--body-fine-print-mobile);
 }
 
 @media (min-width: 768px) {
@@ -294,7 +295,7 @@
     --layout-space-small: var(--layout-space-small-tablet);
     --layout-linear-boder: var(--layout-linear-boder-tablet);
     --main-title: var(--main-title-tablet);
-    --body-fine-print: var(--body-fine-print-tablet);
+    --text-body-fine-print: var(--body-fine-print-tablet);
   }
 }
 
@@ -312,7 +313,7 @@
     --layout-space-small: var(--layout-space-small-desktop);
     --layout-linear-boder: var(--layout-linear-boder-desktop);
     --main-title: var(--main-title-desktop);
-    --body-fine-print: var(--body-fine-print-desktop);
+    --text-body-fine-print: var(--body-fine-print-desktop);
   }
 }
 

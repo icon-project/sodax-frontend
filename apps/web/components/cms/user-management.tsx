@@ -51,9 +51,11 @@ export function UserManagement() {
   };
 
   const getUserPermissions = (user: User): CMSPermission[] => {
-    if (user.role === "admin") return ["news", "articles", "glossary"];
+    if (user.role === "admin") return ["news"];
     try {
-      return JSON.parse(user.permissions || "[]");
+      const perms = JSON.parse(user.permissions || "[]");
+      // Filter out glossary (managed via Notion) and articles (coming soon)
+      return perms.filter((p: CMSPermission) => p !== "glossary" && p !== "articles");
     } catch {
       return [];
     }
@@ -238,7 +240,7 @@ export function UserManagement() {
               <div>
                 <Label>Permissions</Label>
                 <div className="flex gap-6 mt-2">
-                  {(["news", "articles", "glossary"] as CMSPermission[]).map(permission => (
+                  {(["news"] as CMSPermission[]).map(permission => (
                     <label key={permission} className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         checked={newPermissions.includes(permission)}
@@ -330,7 +332,7 @@ export function UserManagement() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {(["news", "articles", "glossary"] as CMSPermission[]).map(
+                          {(["news"] as CMSPermission[]).map(
                             permission => (
                               <div key={permission} className="flex items-center gap-2">
                                 <Checkbox
