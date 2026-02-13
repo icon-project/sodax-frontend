@@ -15,6 +15,7 @@ export class NearXService extends XService {
       network: 'mainnet',
       logger: console,
       autoConnect: true,
+      excludedWallets: ['okx-wallet'],
     });
   }
 
