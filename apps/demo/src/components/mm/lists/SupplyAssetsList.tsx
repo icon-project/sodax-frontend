@@ -16,11 +16,9 @@ import { type ChainId, ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens, type X
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
 import { type ActionType, SuccessModal } from './SuccessModal';
-// import { RepayModal } from './RepayModal';
 import { SupplyModal } from './SupplyModal';
 import { WithdrawModal } from './WithdrawModal';
 import { getHealthFactorState } from '@/lib/utils';
-// import { RepayActionModal } from './RepayActionModal';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -115,10 +113,10 @@ export function SupplyAssetsList(): ReactElement {
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-6">
           <div className="flex items-center justify-between">
             <CardTitle>Markets</CardTitle>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 px-4 py-2 bg-cream/50 rounded-lg border border-cherry-grey/20">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -129,106 +127,113 @@ export function SupplyAssetsList(): ReactElement {
                     <Info className="w-4 h-4 text-cherry-soda" />
                   </button>
                 </TooltipTrigger>
-
                 <TooltipContent>
-                  <strong>Health Factor</strong> indicates how close your account is to liquidation. Values below{' '}
-                  <strong>1</strong> are unsafe.
+                  Indicates how close your account is to liquidation. Values below <strong>1</strong> are unsafe.
                 </TooltipContent>
               </Tooltip>
-              <span className="text-cherry-soda">Health Factor:</span>
-              <span className="font-semibold text-foreground">{healthFactorDisplay}</span>
+              <span className="text-sm text-cherry-soda">Health Factor:</span>
+              <span className="text-sm font-semibold text-cherry-dark">{healthFactorDisplay}</span>
               {healthState && (
-                <span className={`ml-2 text-xs font-medium ${healthState.className}`}>({healthState.label})</span>
+                <span className={`text-xs font-medium ${healthState.className}`}>({healthState.label})</span>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isIcon ? (
-            <div className=" text-center text-cherry-dark">
+            <div className="text-center text-cherry-dark p-8">
               <p className="font-medium">
                 Money Market is not available on ICON. ICON is supported for swap and migration only.
               </p>
             </div>
           ) : (
-            <div className="rounded-lg border border-cherry-grey/20 max-h-[400px] overflow-y-auto">
-              <Table unstyled className="table-auto">
-                <TableHeader className="sticky top-0 bg-cream z-20">
-                  <TableRow className="border-b border-cherry-grey/20">
-                    {TABLE_HEADERS.map((header, index) => {
-                      if (header === 'LT %') {
-                        return (
-                          <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
-                            <div className="flex items-center gap-1">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    type="button"
-                                    aria-label="Liquidation Threshold info"
-                                    className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
-                                  >
-                                    <Info className="w-3 h-3 mb-0.5 text-cherry-soda" />
-                                  </button>
-                                </TooltipTrigger>
+            <div className="overflow-hidden">
+              <div className="max-h-[500px] overflow-y-auto">
+                <Table unstyled className="w-full">
+                  <TableHeader className="sticky top-0 bg-cream backdrop-blur-sm z-20 border-b border-cherry-grey/20">
+                    <TableRow>
+                      {TABLE_HEADERS.map((header, index) => {
+                        if (header === 'LT %') {
+                          return (
+                            <TableHead
+                              key={`${header}-${index}`}
+                              className="text-xs font-medium text-clay uppercase tracking-wide px-6 py-4"
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      aria-label="Liquidation Threshold info"
+                                      className="inline-flex items-center text-clay hover:text-cherry-dark"
+                                    >
+                                      <Info className="w-3.5 h-3.5 text-cherry-soda" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <strong>Liquidation Threshold</strong> is the percentage of supplied value that
+                                    counts toward liquidation calculations.
+                                  </TooltipContent>
+                                </Tooltip>
+                                <span>{header}</span>
+                              </div>
+                            </TableHead>
+                          );
+                        }
 
-                                <TooltipContent>
-                                  <strong>Liquidation Threshold</strong> is the percentage of supplied value that counts
-                                  toward liquidation calculations.
-                                </TooltipContent>
-                              </Tooltip>
-                              <span>{header}</span>
-                            </div>
+                        return (
+                          <TableHead
+                            key={`${header}-${index}`}
+                            className={`text-xs font-medium text-clay uppercase tracking-wide px-6 py-4 ${
+                              header === 'Actions' ? 'text-center' : ''
+                            }`}
+                          >
+                            {header}
                           </TableHead>
                         );
-                      }
-
-                      return (
-                        <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
-                          {header}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isUserReservesLoading ||
-                  isFormattedReservesLoading ||
-                  isATokensLoading ||
-                  !userReserves ||
-                  !formattedReserves ? (
-                    <TableRow>
-                      <TableCell colSpan={16} className="text-center">
-                        Loading...
-                      </TableCell>
+                      })}
                     </TableRow>
-                  ) : (
-                    userReserves &&
-                    tokens.map(token => (
-                      <SupplyAssetsListItem
-                        key={token.address}
-                        token={token}
-                        walletBalance={
-                          balances?.[token.address]
-                            ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
-                            : '-'
-                        }
-                        formattedReserves={formattedReserves}
-                        userReserves={userReserves}
-                        aTokenBalancesMap={aTokenBalancesMap}
-                        onRefreshReserves={handleRefresh}
-                        onWithdrawClick={(token, maxWithdraw) => {
-                          setCurrentAction('withdraw');
-                          setWithdrawData({ token, maxWithdraw });
-                        }}
-                        onSupplyClick={(token, maxSupply) => {
-                          setCurrentAction('supply');
-                          setSupplyData({ token, maxSupply });
-                        }}
-                      />
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {isUserReservesLoading ||
+                    isFormattedReservesLoading ||
+                    isATokensLoading ||
+                    !userReserves ||
+                    !formattedReserves ? (
+                      <TableRow>
+                        <TableCell colSpan={16} className="text-center py-12 text-clay">
+                          Loading...
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      userReserves &&
+                      tokens.map(token => (
+                        <SupplyAssetsListItem
+                          key={token.address}
+                          token={token}
+                          walletBalance={
+                            balances?.[token.address]
+                              ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
+                              : '-'
+                          }
+                          formattedReserves={formattedReserves}
+                          userReserves={userReserves}
+                          aTokenBalancesMap={aTokenBalancesMap}
+                          onRefreshReserves={handleRefresh}
+                          onWithdrawClick={(token, maxWithdraw) => {
+                            setCurrentAction('withdraw');
+                            setWithdrawData({ token, maxWithdraw });
+                          }}
+                          onSupplyClick={(token, maxSupply) => {
+                            setCurrentAction('supply');
+                            setSupplyData({ token, maxSupply });
+                          }}
+                        />
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </CardContent>
@@ -248,36 +253,6 @@ export function SupplyAssetsList(): ReactElement {
           }}
         />
       )}
-      {/* {repayData && (
-        <RepayModal
-          open={true}
-          token={repayData.token}
-          maxDebt={repayData.maxDebt}
-          onOpenChange={open => {
-            if (!open) setRepayData(null);
-          }}
-          onSuccess={data => {
-            setSuccessData(data);
-            setRepayData(null);
-            handleRefresh();
-          }}
-        />
-      )} */}
-      {/* {repayData && (
-        <RepayActionModal
-          open={true}
-          token={repayData.token}
-          maxDebt={repayData.maxDebt}
-          onOpenChange={open => {
-            if (!open) setRepayData(null);
-          }}
-          onSuccess={async data => {
-            setSuccessData(data);
-            setRepayData(null);
-            await handleRefresh();
-          }}
-        />
-      )} */}
       {withdrawData && (
         <WithdrawModal
           open={true}
@@ -293,8 +268,6 @@ export function SupplyAssetsList(): ReactElement {
           }}
         />
       )}
-
-      {/* SuccessModal */}
       <SuccessModal
         open={!!successData}
         onClose={() => setSuccessData(null)}

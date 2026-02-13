@@ -47,43 +47,73 @@ export function SupplyAssetsListItem({
   const hasSupply = aTokenBalance !== undefined && aTokenBalance > 0n;
 
   return (
-    <TableRow>
-      <TableCell className="font-bold text-cherry-dark">{token.symbol}</TableCell>
-      <TableCell>{walletBalance}</TableCell>
-      <TableCell>
-        <div className="flex flex-col items-start">
-          {formattedBalance ?? '-'}{' '}
-          <span className="text-xs text-muted-foreground">{metrics.supplyBalanceUSD || '-'}</span>
+    <TableRow className="border-b border-cherry-grey/10 hover:bg-cream/20 transition-colors">
+      {/* Asset */}
+      <TableCell className="px-6 py-5">
+        <div className="flex items-center gap-3">
+          <span className="font-bold text-cherry-dark">{token.symbol}</span>
         </div>
       </TableCell>
-      <TableCell>{metrics.liquidationThreshold || '-'}</TableCell>
-      <TableCell>
-        <div className="flex flex-col items-start">
-          {metrics.totalSupply || '-'}{' '}
-          <span className="text-xs text-muted-foreground">{metrics.totalLiquidityUSD || '-'}</span>
+
+      {/* Wallet Balance */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm text-foreground">{walletBalance}</span>
+      </TableCell>
+
+      {/* Supplied */}
+      <TableCell className="px-6 py-5">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-foreground">{formattedBalance ?? '-'}</span>
+          <span className="text-xs text-clay">{metrics.supplyBalanceUSD || '-'}</span>
         </div>
       </TableCell>
-      <TableCell>{metrics.supplyAPY || '-'}</TableCell>
-      <TableCell>{metrics.supplyAPR || '-'}</TableCell>
-      <TableCell className="flex flex-row gap-2">
-        <Button
-          variant="cherry"
-          size="sm"
-          onClick={() => onSupplyClick(token, walletBalance ?? '0')}
-          disabled={!walletBalance || walletBalance === '-' || Number.parseFloat(walletBalance) <= 0}
-        >
-          Supply
-        </Button>{' '}
-        <Button
-          variant="cherry"
-          size="sm"
-          onClick={() => onWithdrawClick(token, formattedBalance ?? '0')}
-          disabled={!hasSupply}
-        >
-          Withdraw
-        </Button>{' '}
-        {/* <OldBorrowButton token={token} /> */}
-        {/* <Button
+
+      {/* LT % */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm text-foreground">{metrics.liquidationThreshold || '-'}</span>
+      </TableCell>
+
+      {/* Total Supply */}
+      <TableCell className="px-6 py-5">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-foreground">{metrics.totalSupply || '-'}</span>
+          <span className="text-xs text-clay">{metrics.totalLiquidityUSD || '-'}</span>
+        </div>
+      </TableCell>
+
+      {/* Supply APY */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-cherry-dark">{metrics.supplyAPY || '-'}</span>
+      </TableCell>
+
+      {/* Supply APR */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-cherry-dark">{metrics.supplyAPR || '-'}</span>
+      </TableCell>
+
+      {/* Actions */}
+      <TableCell className="px-6 py-5">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="cherry"
+            size="sm"
+            onClick={() => onSupplyClick(token, walletBalance ?? '0')}
+            disabled={!walletBalance || walletBalance === '-' || Number.parseFloat(walletBalance) <= 0}
+            className="flex-1 min-w-[85px]"
+          >
+            Supply
+          </Button>
+          <Button
+            variant="cherry"
+            size="sm"
+            onClick={() => onWithdrawClick(token, formattedBalance ?? '0')}
+            disabled={!hasSupply}
+            className="flex-1 min-w-[85px]"
+          >
+            Withdraw
+          </Button>
+          {/* <OldBorrowButton token={token} /> */}
+          {/* <Button
           variant="cherry"
           size="sm"
           onClick={() => onRepayClick(token, formattedDebt ?? '0')}
@@ -91,6 +121,7 @@ export function SupplyAssetsListItem({
         >
           Repay
         </Button>{' '} */}
+        </div>
       </TableCell>
     </TableRow>
   );

@@ -125,73 +125,76 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     <Card className="mt-3">
       <CardHeader>
         <CardTitle>Assets to Borrow</CardTitle>
-        <p className="text-sm text-clay font-normal"> Select an asset and destination chain to begin borrowing.</p>
+        <p className="text-sm text-clay font-normal">Borrow assets available on the selected chain.</p>
 
         {!hasCollateral && !isLoading && (
-          <div className="mt-4 p-3 bg-cherry-brighter/20 border border-cherry/30 rounded-lg flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-cherry-soda shrink-0 mt-0.5" />
+          <div className="mt-4 p-3 bg-cherry-brighter/20 border border-cherry-soda/30 rounded-lg flex items-start gap-2">
             <p className="text-sm text-cherry-soda font-medium">
-              Borrowing is disabled because you have not supplied collateral on this chain.
+              Supply collateral in the Markets section above to enable borrowing.
             </p>
           </div>
         )}
       </CardHeader>
-      <div className=" py-2 mx-2 my-1">
+      <div className="py-2 mx-2 my-1">
         <div className="flex items-center gap-3 mx-6 pb-2">
           <span className="text-sm font-medium text-clay">Chain:</span>
           <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
         </div>
       </div>
-      <CardContent>
-        <div className="rounded-lg border border-cherry-grey/20 max-h-[400px] overflow-y-auto">
-          <Table unstyled className="table-auto">
-            <TableHeader className="sticky top-0 bg-cream z-20">
-              <TableRow className="border-b border-cherry-grey/20">
-                {TABLE_HEADERS.map(header => (
-                  <TableHead key={header} className="text-cherry-dark font-bold">
-                    {header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
+      <CardContent className="p-0">
+        <div className="overflow-hidden">
+          <div className="max-h-[500px] overflow-y-auto">
+            <Table unstyled className="w-full">
+              <TableHeader className="sticky top-0 bg-cream backdrop-blur-sm z-20 border-b border-cherry-grey/20">
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12">
-                    <div className="flex items-center justify-center gap-2 text-clay">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Loading borrowable assets...</span>
-                    </div>
-                  </TableCell>
+                  {TABLE_HEADERS.map(header => (
+                    <TableHead
+                      key={header}
+                      className={`text-xs font-medium text-clay uppercase tracking-wide px-6 py-4 ${
+                        header === 'Actions' ? 'text-center' : ''
+                      }`}
+                    >
+                      {header}
+                    </TableHead>
+                  ))}
                 </TableRow>
-              ) : (
-                borrowableAssets.map((asset, index) => (
-                  <BorrowAssetsListItem
-                    key={`${asset.chainId}-${asset.address}-${index}`}
-                    token={asset.token}
-                    asset={asset}
-                    disabled={!hasCollateral}
-                    walletBalance={
-                      asset.token?.xChainId === selectedChainId && balances?.[asset.token.address]
-                        ? Number(formatUnits(balances[asset.token.address], asset.token.decimals)).toFixed(6)
-                        : '-'
-                    }
-                    formattedReserves={formattedReserves || []}
-                    userReserves={userReserves?.[0] || []}
-                    onBorrowClick={(token, maxBorrow) => {
-                      setCurrentAction('borrow');
-                      setBorrowData({ token, maxBorrow });
-                    }}
-                    onRepayClick={(token, maxDebt) => {
-                      setCurrentAction('repay');
-                      setRepayData({ token, maxDebt });
-                    }}
-                    userSummary={userSummary}
-                  />
-                ))
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12 text-clay">
+                      Loading borrowable assets...
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  borrowableAssets.map((asset, index) => (
+                    <BorrowAssetsListItem
+                      key={`${asset.chainId}-${asset.address}-${index}`}
+                      token={asset.token}
+                      asset={asset}
+                      disabled={!hasCollateral}
+                      walletBalance={
+                        asset.token?.xChainId === selectedChainId && balances?.[asset.token.address]
+                          ? Number(formatUnits(balances[asset.token.address], asset.token.decimals)).toFixed(6)
+                          : '-'
+                      }
+                      formattedReserves={formattedReserves || []}
+                      userReserves={userReserves?.[0] || []}
+                      onBorrowClick={(token, maxBorrow) => {
+                        setCurrentAction('borrow');
+                        setBorrowData({ token, maxBorrow });
+                      }}
+                      onRepayClick={(token, maxDebt) => {
+                        setCurrentAction('repay');
+                        setRepayData({ token, maxDebt });
+                      }}
+                      userSummary={userSummary}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </CardContent>
       {borrowData && (
