@@ -20,9 +20,11 @@ interface StakeDialogProps {
 
 export default function StakeDialog({ open, onOpenChange, selectedToken }: StakeDialogProps): React.JSX.Element {
   const { currentStakeStep, stakeValue } = useStakeState();
-  const { resetStakeState } = useStakeActions();
+  const { resetStakeState, setStakeTypedValue, setStakeValue } = useStakeActions();
   const [isStakePending, setIsStakePending] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
+  const [isStakeCompleted, setIsStakeCompleted] = useState<boolean>(false);
+  const [stakeError, setStakeError] = useState<{ title: string; message: string } | null>(null);
 
   const { data: stakeRatio, isLoading: isLoadingStakeRatio } = useStakeRatio(stakeValue);
 
@@ -43,8 +45,14 @@ export default function StakeDialog({ open, onOpenChange, selectedToken }: Stake
       return;
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setStakeError(null);
     onOpenChange(false);
     resetStakeState();
+    if (isStakeCompleted) {
+      setStakeTypedValue('');
+      setStakeValue(0n);
+      setIsStakeCompleted(false);
+    }
   };
 
   return (
@@ -64,13 +72,19 @@ export default function StakeDialog({ open, onOpenChange, selectedToken }: Stake
 
         {currentStakeStep === STAKE_STEP.STAKE_TERMS && <StakeInfoStep selectedToken={selectedToken as XToken} />}
         {currentStakeStep !== STAKE_STEP.STAKE_TERMS && (
-          <StakeConfirmationStep selectedToken={selectedToken as XToken} receivedXSodaAmount={receivedXSodaAmount} />
+          <StakeConfirmationStep
+            selectedToken={selectedToken as XToken}
+            receivedXSodaAmount={receivedXSodaAmount}
+            stakeError={stakeError}
+          />
         )}
         <StakeDialogFooter
           selectedToken={selectedToken}
           receivedXSodaAmount={receivedXSodaAmount}
           onPendingChange={setIsStakePending}
+          onCompletedChange={setIsStakeCompleted}
           onClose={handleClose}
+          onError={setStakeError}
         />
       </DialogContent>
     </Dialog>
