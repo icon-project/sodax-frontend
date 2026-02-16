@@ -17,6 +17,8 @@ import type { MoneyMarketRepayParams } from '@sodax/sdk';
 import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
+import { getMmErrorText } from '@/lib/utils';
+import { MmErrorBox } from './MmErrorBox';
 
 interface RepayModalProps {
   open: boolean;
@@ -138,9 +140,8 @@ export function RepayModal({ open, onOpenChange, token, onSuccess, maxDebt }: Re
           )}
         </div>
 
-        {error && <p className="text-red-500 text-sm mt-2">{error.code}</p>}
-
-        {approveError && <p className="text-red-500 text-sm mt-2">{approveError.message}</p>}
+        {error && <MmErrorBox text={getMmErrorText(error)} />}
+        {approveError && <MmErrorBox text={getMmErrorText(approveError)} />}
 
         <DialogFooter className="sm:justify-start">
           <Button

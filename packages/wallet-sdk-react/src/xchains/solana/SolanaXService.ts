@@ -29,7 +29,7 @@ export class SolanaXService extends XService {
 
     const connection = this.connection;
     if (!connection) {
-      throw new Error('Connection is not initialized');
+      return BigInt(0);
     }
 
     try {
@@ -41,10 +41,8 @@ export class SolanaXService extends XService {
       const tokenAccountPubkey = getAssociatedTokenAddressSync(new PublicKey(xToken.address), new PublicKey(address));
       const tokenAccount = await getAccount(connection, tokenAccountPubkey);
       return BigInt(tokenAccount.amount);
-    } catch (e) {
-      console.log('error', e);
+    } catch {
+      return BigInt(0);
     }
-
-    return BigInt(0);
   }
 }

@@ -17,7 +17,8 @@ import type { MoneyMarketBorrowParams } from '@sodax/sdk';
 import { useBorrow, useMMAllowance, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
-import { getChainsWithThisToken, getTokenOnChain } from '@/lib/utils';
+import { getChainsWithThisToken, getMmErrorText, getTokenOnChain } from '@/lib/utils';
+import { MmErrorBox } from '../MmErrorBox';
 import { getChainName } from '@/constants';
 
 interface BorrowModalProps {
@@ -198,8 +199,8 @@ export function BorrowModal({ open, onOpenChange, token, onSuccess, maxBorrow }:
           </div>
         </div>
 
-        {error && <p className="text-red-500 text-sm mt-2">{error.code}</p>}
-        {approveError && <p className="text-red-500 text-sm mt-2">{approveError.message}</p>}
+        {error && <MmErrorBox text={getMmErrorText(error)} />}
+        {approveError && <MmErrorBox text={getMmErrorText(approveError)} />}
 
         <DialogFooter className="sm:justify-start flex-col gap-2">
           <Button

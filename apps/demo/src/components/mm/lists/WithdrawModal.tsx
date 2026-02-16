@@ -17,6 +17,8 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@so
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
+import { getMmErrorText } from '@/lib/utils';
+import { MmErrorBox } from './MmErrorBox';
 
 interface WithdrawModalProps {
   open: boolean;
@@ -148,9 +150,8 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
           )}
         </div>
 
-        {error && <p className="text-red-500 text-sm mt-2">{error.code}</p>}
-
-        {approveError && <p className="text-red-500 text-sm mt-2">{approveError.message}</p>}
+        {error && <MmErrorBox text={getMmErrorText(error)} />}
+        {approveError && <MmErrorBox text={getMmErrorText(approveError)} />}
 
         <DialogFooter className="sm:justify-start">
           <Button

@@ -201,3 +201,15 @@ function trimZeros(num: string) {
 export function isTxHash(value: unknown): value is `0x${string}` {
   return typeof value === 'string' && value.startsWith('0x');
 }
+
+/** Returns the full error message/code for display in MM modals (exact error text). */
+export function getMmErrorText(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const o = error as { message?: string; code?: string };
+    const part = o.message ?? o.code;
+    if (typeof part === 'string') return part;
+  }
+  return String(error);
+}
