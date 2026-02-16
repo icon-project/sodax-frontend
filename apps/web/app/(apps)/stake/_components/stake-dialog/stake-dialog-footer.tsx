@@ -20,14 +20,18 @@ interface StakeDialogFooterProps {
   selectedToken: XToken | null;
   receivedXSodaAmount: string;
   onPendingChange?: (isPending: boolean) => void;
+  onCompletedChange?: (isCompleted: boolean) => void;
   onClose?: () => void;
+  onError?: (error: { title: string; message: string } | null) => void;
 }
 
 export default function StakeDialogFooter({
   selectedToken,
   receivedXSodaAmount,
   onPendingChange,
+  onCompletedChange,
   onClose,
+  onError,
 }: StakeDialogFooterProps): React.JSX.Element {
   const { currentStakeStep } = useStakeState();
   const { stakeValue } = useStakeState();
@@ -88,7 +92,27 @@ export default function StakeDialogFooter({
   };
 
   const handleApprove = async (): Promise<void> => {
-    await approveStake(stakeOrderPayloadForApprove);
+    try {
+      onError?.(null);
+      const response = await approveStake(stakeOrderPayloadForApprove);
+      if (!response) {
+        onError?.({
+          title: 'Approval Failed',
+          message: 'No response received. Please try again.',
+        });
+      } else {
+        setIsApproved(true);
+        setCurrentStakeStep(STAKE_STEP.STAKE_CONFIRM);
+      }
+    } catch (error) {
+      console.error('Error approving stake:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to approve stake';
+      onError?.({
+        title: 'Approval Failed',
+        message: errorMessage,
+      });
+    }
   };
 
   const handleStake = async (): Promise<void> => {
@@ -97,6 +121,7 @@ export default function StakeDialogFooter({
     }
 
     try {
+      onError?.(null);
       await stake({
         amount: stakeValue,
         minReceive: parseUnits(receivedXSodaAmount, 18) as bigint,
@@ -104,8 +129,15 @@ export default function StakeDialogFooter({
         action: 'stake',
       });
       setIsCompleted(true);
+      onCompletedChange?.(true);
     } catch (error) {
       console.error('Stake error:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to stake';
+      onError?.({
+        title: 'Stake Failed',
+        message: errorMessage,
+      });
     }
   };
 
@@ -165,7 +197,9 @@ export default function StakeDialogFooter({
             className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
               isMobile ? 'w-full' : 'flex-1'
             }`}
-            onClick={onClose}
+            onClick={() => {
+              onClose?.();
+            }}
           >
             Stake complete
             <CheckIcon className="w-4 h-4" />

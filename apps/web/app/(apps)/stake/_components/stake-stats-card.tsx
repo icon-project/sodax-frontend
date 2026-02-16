@@ -6,9 +6,13 @@ import { formatTokenAmount } from '@/lib/utils';
 import { STAKING_APR } from './constants';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
 import { useStakingConfig } from '@sodax/dapp-kit';
+import { UnstakeModeToggle } from './unstake-mode-toggle';
+import { STAKE_MODE } from '../_stores/stake-store';
+import { useStakeActions } from '../_stores/stake-store-provider';
 
 export function StakeStatsCard(): React.JSX.Element {
-  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance } = useStakeState();
+  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance, stakeMode } = useStakeState();
+  const { setStakeMode } = useStakeActions();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
 
   return (
@@ -58,6 +62,13 @@ export function StakeStatsCard(): React.JSX.Element {
             15.8M total staked
           </div>
         </div>
+      </div>
+
+      <div className="w-full flex justify-end items-center">
+        <UnstakeModeToggle
+          enabled={stakeMode === STAKE_MODE.UNSTAKING}
+          onToggle={() => setStakeMode(stakeMode === STAKE_MODE.UNSTAKING ? STAKE_MODE.STAKING : STAKE_MODE.UNSTAKING)}
+        />
       </div>
 
       <div className="w-full h-0.5 relative">

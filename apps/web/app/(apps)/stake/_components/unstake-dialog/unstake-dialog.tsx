@@ -22,9 +22,11 @@ interface UnstakeDialogProps {
 
 export default function UnstakeDialog({ open, onOpenChange, selectedToken }: UnstakeDialogProps): React.JSX.Element {
   const { currentUnstakeStep, stakeValue, unstakeMethod } = useStakeState();
-  const { resetUnstakeState } = useStakeActions();
+  const { resetUnstakeState, setStakeTypedValue, setStakeValue } = useStakeActions();
   const [isUnstakePending, setIsUnstakePending] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
+  const [isUnstakeCompleted, setIsUnstakeCompleted] = useState<boolean>(false);
+  const [unstakeError, setUnstakeError] = useState<{ title: string; message: string } | null>(null);
 
   const scaledUnstakeAmount = useMemo((): bigint | undefined => {
     if (!stakeValue) {
@@ -61,8 +63,14 @@ export default function UnstakeDialog({ open, onOpenChange, selectedToken }: Uns
       return;
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setUnstakeError(null);
     onOpenChange(false);
     resetUnstakeState();
+    if (isUnstakeCompleted) {
+      setStakeTypedValue('');
+      setStakeValue(0n);
+      setIsUnstakeCompleted(false);
+    }
   };
 
   return (
@@ -84,13 +92,19 @@ export default function UnstakeDialog({ open, onOpenChange, selectedToken }: Uns
           <UnstakeMethodSelectionStep receivedSodaAmount={receivedSodaAmount} />
         )}
         {currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE && (
-          <UnstakeConfirmationStep selectedToken={selectedToken as XToken} receivedSodaAmount={receivedSodaAmount} />
+          <UnstakeConfirmationStep
+            selectedToken={selectedToken as XToken}
+            receivedSodaAmount={receivedSodaAmount}
+            unstakeError={unstakeError}
+          />
         )}
         <UnstakeDialogFooter
           selectedToken={selectedToken}
           scaledUnstakeAmount={scaledUnstakeAmount}
           onPendingChange={setIsUnstakePending}
+          onCompletedChange={setIsUnstakeCompleted}
           onClose={handleClose}
+          onError={setUnstakeError}
         />
       </DialogContent>
     </Dialog>

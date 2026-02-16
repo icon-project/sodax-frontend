@@ -1,9 +1,8 @@
-// apps/web/app/(apps)/stake/_components/network-picker.tsx
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { useFloating, autoUpdate, offset, shift, limitShift } from '@floating-ui/react';
-import { cn } from '@/lib/utils';
+import { cn, formatTokenAmount } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { chainIdToChainName } from '@/providers/constants';
 import NetworkIcon from '@/components/shared/network-icon';
@@ -110,7 +109,29 @@ export function NetworkPicker({
       >
         {hoveredIcon !== null && tokens[hoveredIcon] ? (
           <>
-            {tokenSymbol} <span className="font-bold">on {chainIdToChainName(tokens[hoveredIcon].xChainId)}</span>
+            {(() => {
+              const hoveredToken = tokens[hoveredIcon];
+              const hoveredBalance = tokenBalances.get(hoveredToken.xChainId) || 0n;
+              console.log('hoveredBalance', hoveredBalance);
+              const hasHoveredBalance = hoveredBalance > 0n;
+              const formattedHoveredBalance = hasHoveredBalance
+                ? formatTokenAmount(hoveredBalance, hoveredToken.decimals)
+                : null;
+
+              return (
+                <>
+                  {BigInt(hoveredBalance) === 0n && (
+                    <>
+                      {' '}
+                      {tokenSymbol} <span className="font-bold">on {chainIdToChainName(hoveredToken.xChainId)}</span>
+                    </>
+                  )}
+                  {hoveredBalance !== 0n && formattedHoveredBalance !== null && (
+                    <> Balance: {formattedHoveredBalance}</>
+                  )}
+                </>
+              );
+            })()}
           </>
         ) : (
           'Choose a network'

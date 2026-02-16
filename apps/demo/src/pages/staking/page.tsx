@@ -39,6 +39,7 @@ import {
   useInstantUnstakeApprove,
   useInstantUnstakeAllowance,
   useSodaxContext,
+  useGetUserHubWalletAddress,
 } from '@sodax/dapp-kit';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -63,6 +64,7 @@ export default function StakingPage() {
   console.log('wallet provider:', walletProvider);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
   const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
+  const { data: walletAddressOnHub } = useGetUserHubWalletAddress(selectedChainId, account?.address);
 
   // Staking info hooks
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
@@ -333,6 +335,12 @@ export default function StakingPage() {
               )}
             </div>
           </div>
+          {walletAddressOnHub && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-clay">Hub Wallet Address:</span>
+              <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark text-xs">{walletAddressOnHub}</span>
+            </div>
+          )}
 
           {/* SODA Balance */}
           {account.address && sodaToken && spokeProvider && (
@@ -491,10 +499,17 @@ export default function StakingPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Button onClick={() => setUnstakeDialogOpen(true)} disabled={!unstakeAmount} className="w-full">
-                    <ArrowDownUp className="mr-2 h-4 w-4" />
-                    Regular Unstake (with waiting period)
-                  </Button>
+                  {isWrongChain ? (
+                    <Button className="w-full" onClick={handleSwitchChain}>
+                      <ArrowLeftRight className="mr-2 h-4 w-4" />
+                      Switch Chain
+                    </Button>
+                  ) : (
+                    <Button onClick={() => setUnstakeDialogOpen(true)} disabled={!unstakeAmount} className="w-full">
+                      <ArrowDownUp className="mr-2 h-4 w-4" />
+                      Regular Unstake (with waiting period)
+                    </Button>
+                  )}
 
                   {isWrongChain ? (
                     <Button variant="outline" className="w-full" onClick={handleSwitchChain}>
