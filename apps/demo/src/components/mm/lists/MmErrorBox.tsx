@@ -1,7 +1,6 @@
-// apps/demo/src/components/mm/lists/MmErrorBox.tsx
 // Displays raw error text in a consistent, well-aligned box inside MM modals.
 
-import type { ReactElement } from 'react';
+import React, { type ReactElement } from 'react';
 
 interface MmErrorBoxProps {
   text: string;
@@ -9,10 +8,7 @@ interface MmErrorBoxProps {
 
 export function MmErrorBox({ text }: MmErrorBoxProps): ReactElement {
   return (
-    <div
-      className="mt-2 w-full rounded-lg border border-red-200 bg-red-50/90 px-3 py-2.5 text-left"
-      role="alert"
-    >
+    <div className="mt-2 w-full rounded-lg border border-red-200 bg-red-50/90 px-3 py-2.5 text-left" role="alert">
       <p className="max-h-32 overflow-y-auto whitespace-pre-wrap wrap-break-word font-mono text-sm text-red-800">
         {text}
       </p>

@@ -63,6 +63,21 @@ export function SupplyAssetsList(): ReactElement {
     address,
   });
 
+  // Debug: why Solana wallet balance not showing
+  if (selectedChainId === 'solana') {
+    console.log('[SupplyAssetsList] Solana', {
+      selectedChainId,
+      address: address ?? null,
+      tokensCount: tokens.length,
+      tokenSymbols: tokens.map(t => t.symbol),
+      tokenAddresses: tokens.map(t => ({ symbol: t.symbol, address: t.address })),
+      balances: balances ?? null,
+      balancesKeys: balances ? Object.keys(balances) : [],
+      isBalancesLoading,
+      perToken: tokens.map(t => ({ symbol: t.symbol, balance: balances?.[t.address], keyUsed: t.address })),
+    });
+  }
+
   const {
     data: userReservesData,
     isLoading: isUserReservesLoading,

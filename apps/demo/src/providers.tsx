@@ -12,7 +12,10 @@ const queryClient = new QueryClient();
 
 const rpcConfig: RpcConfig = {
   //solana
-  solana: process.env.SOLANA_RPC_URL || 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  //TODO: to be reverted before push! the rpc below isn't working, revert before pushing but we should check
+  // solana: process.env.SOLANA_RPC_URL || 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+
+  solana: process.env.SOLANA_RPC_URL ?? process.env.VITE_SOLANA_RPC_URL ?? 'https://solana-rpc.publicnode.com',
   //stellar
   stellar: {
     horizonRpcUrl: 'https://horizon.stellar.org',
