@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { ChainId, XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/constants';
 import { getChainExplorerTxUrl } from '@/lib/utils';
-import { ExternalLink } from 'lucide-react';
+import { Check, Copy, ExternalLink } from 'lucide-react';
 
 export type ActionType = 'supply' | 'withdraw' | 'borrow' | 'repay';
 
@@ -22,7 +22,15 @@ interface SuccessModalProps {
 }
 
 export function SuccessModal({ open, onClose, data, action }: SuccessModalProps) {
+  const [copied, setCopied] = useState(false);
   const txUrl = data?.txHash ? getChainExplorerTxUrl(data.sourceChainId, data.txHash) : undefined;
+
+  const handleCopyHash = async (): Promise<void> => {
+    if (!data?.txHash) return;
+    await navigator.clipboard.writeText(data.txHash);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const contentConfig: Record<ActionType, { title: string; label: string }> = {
     supply: { title: 'Assets Supplied', label: 'Amount supplied' },
@@ -88,33 +96,35 @@ export function SuccessModal({ open, onClose, data, action }: SuccessModalProps)
             {/* Description Section */}
             <div className="min-h-[40px] flex items-center justify-center">{renderDescription()}</div>
 
-            {/* Transaction Details Section */}
+            {/* Transaction Details Section (match partner claim: hash + copy + view on explorer) */}
             {data.txHash && (
-              <div className="pt-6 border-t border-cherry-grey/10">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-clay-light uppercase tracking-widest font-bold">
-                    Transaction Details
-                  </span>
+              <div className=" border-t border-cherry-grey/10">
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-xs text-clay-light uppercase tracking-wide font-semibold">Transaction Hash</p>
+                  <code className="text-sm font-mono text-clay whitespace-nowrap">
+                    {data.txHash.slice(0, 4)}...{data.txHash.slice(-4)}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={handleCopyHash}
+                    className="shrink-0 p-1.5 rounded hover:bg-cherry/10 text-clay-light hover:text-cherry transition"
+                    title={copied ? 'Copied!' : 'Copy hash'}
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
 
-                <a
-                  href={txUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between w-full p-3 rounded-xl bg-cream-white border border-cherry-grey/30 hover:border-cherry/50 hover:bg-cherry/[0.02] transition-all group"
-                >
-                  <div className="flex flex-col items-start gap-1">
-                    <span className="text-xs text-clay-light font-medium leading-none">Hash</span>
-                    <code className="text-sm font-mono text-clay group-hover:text-cherry-dark transition-colors">
-                      {data.txHash.slice(0, 6)}...{data.txHash.slice(-4)}
-                    </code>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 text-sm text-cherry font-medium bg-cherry/5 px-3 py-1.5 rounded-lg group-hover:bg-cherry group-hover:text-white transition-all">
-                    <span>Explorer</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </div>
-                </a>
+                {txUrl && (
+                  <a
+                    href={txUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full rounded-lg bg-cream-grey/40 px-4 py-2.5 text-sm text-cherry-dark font-medium hover:bg-cherry/10 transition"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    View on explorer
+                  </a>
+                )}
               </div>
             )}
           </div>

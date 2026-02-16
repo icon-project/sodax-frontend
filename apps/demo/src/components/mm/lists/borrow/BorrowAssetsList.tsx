@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { BorrowAssetsListItem } from './BorrowAssetsListItem';
-import { AlertCircle, Loader2 } from 'lucide-react';
 import { formatUnits } from 'viem';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
 import { BorrowModal } from './BorrowModal';
@@ -18,6 +17,7 @@ import { SuccessModal, type ActionType } from '../SuccessModal';
 import { type XToken, type ChainId, moneyMarketSupportedTokens, AVALANCHE_MAINNET_CHAIN_ID } from '@sodax/types';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { RepayActionModal } from '../RepayActionModal';
+import { useAppStore } from '@/zustand/useAppStore';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -35,6 +35,10 @@ type BorrowAssetsListProps = {
 
 export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX.Element {
   const [selectedChainId, selectChainId] = useState(initialChainId ?? AVALANCHE_MAINNET_CHAIN_ID);
+  const [borrowData, setBorrowData] = useState<{
+    token: XToken;
+    maxBorrow: string;
+  } | null>(null);
   const [repayData, setRepayData] = useState<{
     token: XToken;
     maxDebt: string;
@@ -48,13 +52,12 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
   } | null>(null);
   const [currentAction, setCurrentAction] = useState<ActionType>('borrow');
 
-  const { data: allMoneyMarketAssets, isLoading: isAssetsLoading } = useBackendAllMoneyMarketAssets({});
+  const { selectedChainId: selectedMarketChainId } = useAppStore();
 
   const { address } = useXAccount(selectedChainId);
-
   const walletProvider = useWalletProvider(selectedChainId);
-
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
+
   const allTokens = useMemo(() => {
     return Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
       chainTokens.map(token => ({
@@ -64,19 +67,36 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     ) as XToken[];
   }, []);
 
-  const [borrowData, setBorrowData] = useState<{
-    token: XToken;
-    maxBorrow: string;
-  } | null>(null);
+  const { address: marketAddress } = useXAccount(selectedMarketChainId);
+  const marketWalletProvider = useWalletProvider(selectedMarketChainId);
+  const marketSpokeProvider = useSpokeProvider(selectedMarketChainId, marketWalletProvider);
+  const { data: allMoneyMarketAssets, isLoading: isAssetsLoading } = useBackendAllMoneyMarketAssets({});
 
+  const {
+    data: userReserves,
+    isLoading: isUserReservesLoading,
+    refetch: refetchReserves,
+  } = useUserReservesData({ spokeProvider, address });
+
+  const { data: marketUserReserves, isLoading: isMarketUserReservesLoading } = useUserReservesData({
+    spokeProvider: marketSpokeProvider,
+    address: marketAddress,
+  });
+
+  const {
+    data: formattedReserves,
+    isLoading: isFormattedReservesLoading,
+    refetch: refetchFormattedReserves,
+  } = useReservesUsdFormat();
+  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({
+    spokeProvider,
+    address,
+  });
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];
     // 1. Get all assets the backend says are borrowable globally
     const allBorrowableAssets = getBorrowableAssetsWithMarketData(allMoneyMarketAssets, allTokens);
 
-    const sodaVariants = allBorrowableAssets.filter(
-      a => a.symbol.toLowerCase().startsWith('soda') || a.symbol.includes('.LL'),
-    );
     // 2. Get the specific tokens our config says should be supported for the SELECTED chain
     const supportedOnChain = moneyMarketSupportedTokens[selectedChainId] || [];
 
@@ -96,26 +116,10 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     xTokens: tokensOnSelectedChain,
     address,
   });
+  const hasCollateral = !!marketUserReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
 
-  const {
-    data: userReserves,
-    isLoading: isUserReservesLoading,
-    refetch: refetchReserves,
-  } = useUserReservesData({ spokeProvider, address });
-
-  const {
-    data: formattedReserves,
-    isLoading: isFormattedReservesLoading,
-    refetch: refetchFormattedReserves,
-  } = useReservesUsdFormat();
-  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({
-    spokeProvider,
-    address,
-  });
-
-  const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
-
-  const isLoading = isUserReservesLoading || isFormattedReservesLoading || isAssetsLoading;
+  const isLoading =
+    isUserReservesLoading || isFormattedReservesLoading || isAssetsLoading || isMarketUserReservesLoading;
 
   const handleRefresh = async () => {
     await Promise.all([refetchFormattedReserves(), refetchReserves(), refetchSummary()]);
@@ -130,7 +134,7 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
         {!hasCollateral && !isLoading && (
           <div className="mt-4 p-3 bg-cherry-brighter/20 border border-cherry-soda/30 rounded-lg flex items-start gap-2">
             <p className="text-sm text-cherry-soda font-medium">
-              Supply collateral in the Markets section above to enable borrowing.
+              To borrow assets, first supply collateral in the Markets section above on any supported chain.
             </p>
           </div>
         )}

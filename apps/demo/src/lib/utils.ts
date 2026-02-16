@@ -197,3 +197,7 @@ export function formatCurrencyCompact(value: number): string {
 function trimZeros(num: string) {
   return num.replace(/\.?0+$/, '');
 }
+
+export function isTxHash(value: unknown): value is `0x${string}` {
+  return typeof value === 'string' && value.startsWith('0x');
+}

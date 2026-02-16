@@ -51,13 +51,13 @@ export function SupplyAssetsList(): ReactElement {
     txHash?: `0x${string}`;
   } | null>(null);
 
-  const tokens = moneyMarketSupportedTokens[selectedChainId];
+  const tokens = moneyMarketSupportedTokens[selectedChainId] ?? [];
   const isIcon = selectedChainId === ICON_MAINNET_CHAIN_ID;
 
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
-  const { data: balances, refetch: refetchWalletBalances } = useXBalances({
+  const { data: balances, isLoading: isBalancesLoading, refetch: refetchWalletBalances } = useXBalances({
     xChainId: selectedChainId,
     xTokens: tokens,
     address,
@@ -110,6 +110,7 @@ export function SupplyAssetsList(): ReactElement {
       refetchWalletBalances(),
     ]);
   };
+
   return (
     <>
       <Card>
@@ -212,9 +213,11 @@ export function SupplyAssetsList(): ReactElement {
                           key={token.address}
                           token={token}
                           walletBalance={
-                            balances?.[token.address]
-                              ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
-                              : '-'
+                            isBalancesLoading
+                              ? '...'
+                              : balances != null
+                                ? Number(formatUnits(balances[token.address] ?? 0n, token.decimals)).toFixed(4)
+                                : '-'
                           }
                           formattedReserves={formattedReserves}
                           userReserves={userReserves}

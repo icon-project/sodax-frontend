@@ -11,7 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
 import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
@@ -27,6 +27,7 @@ interface WithdrawModalProps {
     token: XToken;
     sourceChainId: ChainId;
     destinationChainId: ChainId;
+    txHash?: `0x${string}`;
   }) => void;
   maxWithdraw: string;
 }
@@ -37,17 +38,22 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
 
   const sourceWalletProvider = useWalletProvider(selectedChainId);
   const sourceSpokeProvider = useSpokeProvider(selectedChainId, sourceWalletProvider);
+  const { address: sourceAddress } = useXAccount(selectedChainId);
+  const { address: destAddress } = useXAccount(token.xChainId);
 
   const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw();
 
   const params: MoneyMarketWithdrawParams | undefined = useMemo(() => {
     if (!amount) return undefined;
+    const toAddress = destAddress ?? sourceAddress;
     return {
       token: token.address,
       amount: parseUnits(amount, token.decimals),
       action: 'withdraw',
+      toChainId: token.xChainId,
+      ...(toAddress ? { toAddress } : {}),
     };
-  }, [token.address, token.decimals, amount]);
+  }, [token.address, token.decimals, token.xChainId, amount, destAddress, sourceAddress]);
 
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
     params,
@@ -62,30 +68,8 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
-  const handleWithdraw = async () => {
+  const handleApprove = async (): Promise<void> => {
     if (!sourceSpokeProvider || !params) return;
-
-    try {
-      await withdraw({
-        params,
-        spokeProvider: sourceSpokeProvider,
-      });
-
-      onSuccess?.({
-        amount,
-        token,
-        sourceChainId: selectedChainId,
-        destinationChainId: token.xChainId,
-      });
-      onOpenChange(false); // Fixed: was setOpen
-    } catch (err) {
-      console.error('Withdraw failed:', err);
-    }
-  };
-
-  const handleApprove = async () => {
-    if (!sourceSpokeProvider || !params) return;
-
     try {
       await approve({
         params,
@@ -96,6 +80,31 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
     }
   };
 
+  const handleWithdraw = async (): Promise<void> => {
+    if (!sourceSpokeProvider || !params) return;
+
+    try {
+      const result = await withdraw({
+        params,
+        spokeProvider: sourceSpokeProvider,
+      });
+
+      const spokeTxHash = result?.value?.[0];
+      const txHash =
+        typeof spokeTxHash === 'string' && spokeTxHash.startsWith('0x') ? (spokeTxHash as `0x${string}`) : undefined;
+
+      onSuccess?.({
+        amount,
+        token,
+        sourceChainId: selectedChainId,
+        destinationChainId: token.xChainId,
+        txHash,
+      });
+      onOpenChange(false);
+    } catch (err) {
+      console.error('Approve failed:', err);
+    }
+  };
   const handleMaxclick = () => {
     setAmount(maxWithdraw);
   };
@@ -161,7 +170,13 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
           )}
 
           {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleWithdraw} disabled={!hasAllowed}>
+            <Button
+              className="w-full"
+              type="button"
+              variant="default"
+              onClick={handleWithdraw}
+              disabled={!hasAllowed || !params || !sourceSpokeProvider || isPending}
+            >
               {isPending ? 'Withdrawing...' : 'Withdraw'}
             </Button>
           )}

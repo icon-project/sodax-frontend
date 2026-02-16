@@ -208,9 +208,9 @@ export function RepayActionModal({ open, onOpenChange, token, maxDebt, onSuccess
 
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            From chain: <strong>{fromChainId}</strong>
+            From chain: <strong>{getChainName(fromChainId)}</strong>
             <br />
-            To chain (debt): <strong>{toChainId}</strong>
+            To chain (debt): <strong>{getChainName(toChainId)}</strong>
           </p>
 
           <div className="space-y-2">
@@ -222,11 +222,11 @@ export function RepayActionModal({ open, onOpenChange, token, maxDebt, onSuccess
             />
 
             <p className="text-xs text-muted-foreground">
-              Debt lives on: <strong>{toChainId}</strong> (cannot be changed)
+              Debt lives on: <strong>{getChainName(toChainId)}</strong> (cannot be changed)
             </p>
-            <p className="text-xs text-muted-foreground">
-              Your balance on the chain you want to repay: {userBalance.toFixed(6)}{' '}
-              {sourceToken?.symbol || token.symbol}
+            <p className="text-xs text-muted-foreground gap-2">
+              Your balance on the chain you want to repay: {userBalance.toFixed(6)}
+              <span> {sourceToken?.symbol || token.symbol}</span>
             </p>
           </div>
 
@@ -247,7 +247,9 @@ export function RepayActionModal({ open, onOpenChange, token, maxDebt, onSuccess
             Max debt: {Number(maxDebt).toFixed(6)} {token.symbol}
           </p>
 
-          {insufficientBalance && <p className="text-xs text-red-600">Insufficient balance on {fromChainId}</p>}
+          {insufficientBalance && (
+            <p className="text-xs text-red-600">Insufficient balance on {getChainName(fromChainId)}</p>
+          )}
 
           {/* Approval and repay flow on the source (repay) chain */}
           {needsSourceApproval ? (
@@ -258,7 +260,7 @@ export function RepayActionModal({ open, onOpenChange, token, maxDebt, onSuccess
             ) : (
               <Button
                 className="w-full"
-                variant="secondary"
+                variant="cherry"
                 onClick={handleApproveSource}
                 disabled={!sourceParams || isApproving || insufficientBalance}
               >
@@ -269,7 +271,7 @@ export function RepayActionModal({ open, onOpenChange, token, maxDebt, onSuccess
             )
           ) : isWrongSourceChain ? (
             <Button className="w-full" onClick={handleSwitchToSource}>
-              Switch to {fromChainId}
+              Switch to {getChainName(fromChainId)}
             </Button>
           ) : (
             <Button
