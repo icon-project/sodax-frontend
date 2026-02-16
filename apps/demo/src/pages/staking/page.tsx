@@ -499,10 +499,17 @@ export default function StakingPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Button onClick={() => setUnstakeDialogOpen(true)} disabled={!unstakeAmount} className="w-full">
-                    <ArrowDownUp className="mr-2 h-4 w-4" />
-                    Regular Unstake (with waiting period)
-                  </Button>
+                  {isWrongChain ? (
+                    <Button className="w-full" onClick={handleSwitchChain}>
+                      <ArrowLeftRight className="mr-2 h-4 w-4" />
+                      Switch Chain
+                    </Button>
+                  ) : (
+                    <Button onClick={() => setUnstakeDialogOpen(true)} disabled={!unstakeAmount} className="w-full">
+                      <ArrowDownUp className="mr-2 h-4 w-4" />
+                      Regular Unstake (with waiting period)
+                    </Button>
+                  )}
 
                   {isWrongChain ? (
                     <Button variant="outline" className="w-full" onClick={handleSwitchChain}>
