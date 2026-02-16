@@ -65,11 +65,6 @@ export default function PartnerPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 w-full">
         <motion.div variants={itemVariants} className="w-full">
-          {process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEV_PARTNER_ADDRESS && (
-            <div className="bg-cherry text-negative text-[12px] p-1 text-center rounded font-bold">
-              VIEWING DEV PARTNER DATA!
-            </div>
-          )}
           {/* Title & subtitle*/}
           <div className="flex items-baseline gap-1 flex-wrap">
             <span className="mix-blend-multiply text-yellow-dark font-bold font-['InterRegular'] text-(size:--app-title)!">

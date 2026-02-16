@@ -9,6 +9,19 @@ import type { PartnerFeeClaimAssetBalance } from '@sodax/sdk';
 import { MIN_PARTNER_CLAIM_USD_AMOUNT } from '@/constants/partner-claim';
 import { FeeClaimAssetStatus } from '../utils/fee-claim';
 
+function normalizePartnerDisplaySymbol(symbol: string): string {
+  // apps/web/app/(apps)/partner/hooks/useFeeClaimAssets.ts
+  // Purpose: normalize legacy symbols for partner dashboard display.
+  // Effect: Polygon native token is now `POL`, but some sources still report `MATIC`.
+  const upper = symbol.toUpperCase();
+  if (upper.endsWith('.LL')) {
+    const base = upper.slice(0, -3);
+    const normalizedBase = base === 'MATIC' ? 'POL' : base;
+    return `${normalizedBase}.LL`;
+  }
+  return upper === 'MATIC' ? 'POL' : upper;
+}
+
 export type FeeClaimAsset = {
   sdkAsset: PartnerFeeClaimAssetBalance;
   currency: XToken;
@@ -45,6 +58,7 @@ export function useFeeClaimAssets(address?: Address) {
     return Array.from(balancesQuery.data.values()).map(asset => {
       const rawFormattedBalance = formatUnits(asset.balance, asset.decimal);
       const hasPrefs = !!prefsQuery.data;
+      const displaySymbol = normalizePartnerDisplaySymbol(asset.symbol);
 
       // --- Calculate USD Estimate ---
       let usdEstimate: number | null = null;
@@ -77,7 +91,7 @@ export function useFeeClaimAssets(address?: Address) {
       return {
         sdkAsset: asset,
         currency: {
-          symbol: asset.symbol,
+          symbol: displaySymbol,
           name: asset.name,
           address: asset.address as Address,
           decimals: asset.decimal,

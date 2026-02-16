@@ -4,8 +4,14 @@ export type AssetUsdPrice = {
   usdPrice: number | null;
 };
 
-function normalizeSymbol(symbol: string) {
-  return symbol.replace(/^soda/i, '').toUpperCase();
+function normalizeSymbol(symbol: string): string {
+  // Purpose: normalize symbols so partner dashboard pricing maps correctly.
+  // Effect: tokens represented on the Liquidity Layer (suffix `.LL`, e.g. `SOL.LL`)
+  //         will use the same USD price feed as their base token (`SOL`).
+  const upper = symbol.replace(/^soda/i, '').toUpperCase();
+  const withoutLlSuffix = upper.replace(/\.LL$/, '');
+  if (withoutLlSuffix === 'MATIC') return 'POL';
+  return withoutLlSuffix;
 }
 
 // a bit of a hacky way of getting prices consulted with Paul, using an endpoint from the Sodax Monitor that returns a 1-time-fetched price for a given asset. Not ideal but works fine for now
@@ -93,8 +99,8 @@ function getCoingeckoIdFromSymbol(symbol: string): string {
     case 'AVAX':
       return 'avalanche-2';
 
-    case 'MATIC':
-      return 'matic-network';
+    case 'POL':
+      return 'polygon-ecosystem-token';
 
     case 'SUI':
       return 'sui';
@@ -116,7 +122,7 @@ function getCoingeckoIdFromSymbol(symbol: string): string {
       return 'sonic-3';
 
     case 'SODAX':
-      return 'icon'; // ✅ KEEP THIS
+      return 'icon'; // KEEP THIS
 
     default:
       return 'unknown';
