@@ -111,12 +111,7 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
       {
         name: 'sodax-stake-store',
         partialize: state => ({
-          stakeValue: state.stakeValue.toString(),
-          stakeTypedValue: state.stakeTypedValue,
-          totalStakedUsdValue: state.totalStakedUsdValue,
           stakeMode: state.stakeMode,
-          unstakeMethod: state.unstakeMethod,
-          currentUnstakeStep: state.currentUnstakeStep,
         }),
         merge: (persistedState, currentState) => {
           const persisted = persistedState as Partial<StakeState & { stakeValue: string }> | null;
