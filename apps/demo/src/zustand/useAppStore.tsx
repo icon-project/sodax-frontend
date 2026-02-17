@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { StateCreator } from 'zustand';
 import type { ChainId } from '@sodax/types';
 
@@ -20,13 +21,20 @@ type AppStore = {
 };
 
 export const useAppStore = create<AppStore>()(
-  immer((set, get) => ({
-    selectedChainId: '0xa4b1.arbitrum',
-    selectChainId: (chainId: ChainId) => set({ selectedChainId: chainId }),
-    isWalletModalOpen: false,
-    openWalletModal: () => set({ isWalletModalOpen: true }),
-    closeWalletModal: () => set({ isWalletModalOpen: false }),
-    solverEnvironment: SolverEnv.Production,
-    setSolverEnvironment: (env: SolverEnv) => set({ solverEnvironment: env }),
-  })) as StateCreator<AppStore, [], []>,
+  persist(
+    immer((set, get) => ({
+      selectedChainId: '0xa4b1.arbitrum',
+      selectChainId: (chainId: ChainId) => set({ selectedChainId: chainId }),
+      isWalletModalOpen: false,
+      openWalletModal: () => set({ isWalletModalOpen: true }),
+      closeWalletModal: () => set({ isWalletModalOpen: false }),
+      solverEnvironment: SolverEnv.Production,
+      setSolverEnvironment: (env: SolverEnv) => set({ solverEnvironment: env }),
+    })) as StateCreator<AppStore, [], []>,
+    {
+      name: 'sodax-app-store',
+      storage: createJSONStorage(() => localStorage),
+      partialize: state => ({ selectedChainId: state.selectedChainId }),
+    },
+  ),
 );
