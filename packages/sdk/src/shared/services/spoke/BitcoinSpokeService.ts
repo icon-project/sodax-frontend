@@ -13,7 +13,6 @@ export type BitcoinSpokeDepositParams = {
   token: string; // Token identifier
   amount: bigint; // Amount in satoshis
   data: Hex; // Additional data to send with the deposit
-  useTradingWallet?: boolean; // Use the trading wallet
   accessToken?: string; // Access token to use trading wallet
 };
 
@@ -21,7 +20,6 @@ export type BitcoinTransferToHubParams = {
   token: string;
   amount: bigint;
   data?: Hex;
-  useTradingWallet?: boolean;
   accessToken?: string;
 };
 
@@ -77,7 +75,6 @@ export class BitcoinSpokeService {
         token: params.token,
         amount: params.amount,
         data: params.data ?? '0x',
-        useTradingWallet: params.useTradingWallet,
         accessToken: params.accessToken,
       },
       spokeProvider,
@@ -154,16 +151,14 @@ export class BitcoinSpokeService {
     payload: Hex,
     spokeProvider: BitcoinSpokeProviderType,
     EvmHubProvider: EvmHubProvider,
-    raw?: R,
-    useTradingWallet?: boolean
+    raw?: R
   ): Promise<TxReturnType<BitcoinSpokeProviderType, R>> {
     return BitcoinSpokeService.call(
       EvmHubProvider.chainConfig.chain.id,
       from,
       payload,
       spokeProvider,
-      raw,
-      useTradingWallet
+      raw
     );
   }
 
@@ -176,7 +171,7 @@ export class BitcoinSpokeService {
    * @returns {Promise<TxReturnType<BitcoinSpokeProviderType, R>>} Transaction hash or raw PSBT
    */
   private static async transfer<R extends boolean = false>(
-    { token, amount, data = '0x', useTradingWallet = false, accessToken }: BitcoinTransferToHubParams,
+    { token, amount, data = '0x', accessToken }: BitcoinTransferToHubParams,
     spokeProvider: BitcoinSpokeProviderType,
     raw?: R,
   ): Promise<TxReturnType<BitcoinSpokeProviderType, R>> {
@@ -187,7 +182,6 @@ export class BitcoinSpokeService {
       data,
       spokeProvider,
       raw,
-      useTradingWallet,
       accessToken
     )
   }
@@ -208,14 +202,12 @@ export class BitcoinSpokeService {
     payload: Hex,
     spokeProvider: BitcoinSpokeProviderType,
     raw?: R,
-    useTradingWallet?: boolean
   ): Promise<TxReturnType<BitcoinSpokeProviderType, R>> {
     return await BitcoinBaseSpokeProvider.encodeWithdrawalData(
       dstChainId,
       payload,
       spokeProvider,
-      raw,
-      useTradingWallet
+      raw
     ) as TxReturnType<BitcoinSpokeProviderType, R>
   }
 }

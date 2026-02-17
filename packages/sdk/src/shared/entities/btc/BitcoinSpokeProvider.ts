@@ -13,7 +13,7 @@ import { isBitcoinRawSpokeProvider } from '../../guards.js';
 
 import * as ecc from 'tiny-secp256k1';
 import { RadfiProvider, type RadfiConfig } from './RadfiProvider.js';
-import type { Hex } from 'viem';
+import { keccak256, type Hex } from 'viem';
 
 bitcoin.initEccLib(ecc);
 export type BitcoinUTXO = {
@@ -36,14 +36,14 @@ export interface BitcoinTransactionResult {
   virtualSize: number;
 }
 
-export type WalletUsed = "USER" | "TRADING"
+export type WalletMode = "USER" | "TRADING"
 
 export interface Payload {
   src_address: string
   data: string
   src_chain_id: number
   dst_chain_id: number
-  wallet_used: WalletUsed
+  wallet_used: WalletMode
   timestamp: number
   address_type: AddressType
 }
@@ -61,14 +61,22 @@ export class BitcoinBaseSpokeProvider {
   public readonly network: bitcoin.networks.Network;
   public readonly chainConfig: BitcoinSpokeChainConfig;
   public readonly radfi: RadfiProvider;
+  public readonly walletMode: WalletMode;
+  public radfiAccessToken: string = '';
 
-  constructor(config: BitcoinSpokeChainConfig, radfiConfig: RadfiConfig, rpcURL?: string,) {
+
+  constructor(config: BitcoinSpokeChainConfig, radfiConfig: RadfiConfig, walletMode: WalletMode = "USER", rpcURL?: string) {
     this.chainConfig = config;
     this.rpcUrl = rpcURL ?? config.rpcUrl;
     this.network = config.network === 'TESTNET'
       ? bitcoin.networks.testnet
       : bitcoin.networks.bitcoin;
     this.radfi = new RadfiProvider(radfiConfig);
+    this.walletMode = walletMode
+  }
+
+  public setRadfiAccessToken(token: string) {
+    this.radfiAccessToken = token;
   }
 
   /**
@@ -253,7 +261,6 @@ export class BitcoinBaseSpokeProvider {
     data: string,
     provider: S,
     raw?: R,
-    useTradingWallet = false,
     accessToken = '',
   ): Promise<TxReturnType<S, R>> {
     try {
@@ -270,20 +277,25 @@ export class BitcoinBaseSpokeProvider {
         }) satisfies TxReturnType<BitcoinSpokeProviderType, true> as TxReturnType<S, R>;
 
       // ───────────────── Trading wallet flow ─────────────────
-      if (useTradingWallet) {
+      if (provider.walletMode === "TRADING") {
         const tokenId =
           provider.chainConfig.supportedTokens[token]?.address;
 
         if (!tokenId) {
           throw new Error(`Unsupported token: ${token}`);
         }
+
+        data = data.startsWith('0x') ? data.slice(2) : data
+        data = data.length == 64 ? data : keccak256(`0x${data}`).slice(2);
+
+        accessToken = accessToken || provider.radfiAccessToken;
         const withdrawTx =
           await provider.radfi.createWithdrawTransaction({
             token: tokenId,
             amount,
             recipient: provider.chainConfig.addresses.assetManager,
             userAddress: walletAddress,
-            data: data.startsWith('0x') ? data.slice(2) : data,
+            data: data,
           }, accessToken);
 
         if (raw || isBitcoinRawSpokeProvider(provider)) {
@@ -297,9 +309,10 @@ export class BitcoinBaseSpokeProvider {
           );
 
         return (await provider.radfi.requestRadfiSignature({
-          userAddress: walletAddress,
+          userAddress: data,
           signedBase64Tx: signedTx,
         }, accessToken)) satisfies TxReturnType<BitcoinSpokeProviderType, false> as TxReturnType<S, R>;
+
       }
 
       // ───────────────── Normal deposit flow ─────────────────
@@ -326,7 +339,6 @@ export class BitcoinBaseSpokeProvider {
       return (await provider.signAndBroadcastTransaction(
         depositPsbt
       )) satisfies TxReturnType<BitcoinSpokeProviderType, false> as TxReturnType<S, R>;
-
     } catch (error) {
       console.error('Error during deposit:', error);
       throw error;
@@ -468,11 +480,10 @@ export class BitcoinBaseSpokeProvider {
     data: Hex,
     provider: S,
     raw?: R,
-    useTradingWallet?: boolean
   ): Promise<string> {
     let srcAddress = await provider.walletProvider.getWalletAddress();
     const addressType = provider.getAddressType(srcAddress);
-    if (useTradingWallet) {
+    if (provider.walletMode === "TRADING") {
       srcAddress = await provider.radfi
         .getTradingWallet(srcAddress)
         .then(res => res.tradingAddress)
@@ -483,7 +494,7 @@ export class BitcoinBaseSpokeProvider {
       data,
       src_chain_id: Number(getIntentRelayChainId(provider.chainConfig.chain.id)),
       dst_chain_id: Number(getIntentRelayChainId(dstChainId)),
-      wallet_used: useTradingWallet ? "TRADING" : "USER",
+      wallet_used: provider.walletMode,
       timestamp: Date.now(),
       address_type: addressType
     }
@@ -519,9 +530,10 @@ export class BitcoinRawSpokeProvider extends BitcoinBaseSpokeProvider implements
     publicKey: string,
     chainConfig: BitcoinSpokeChainConfig,
     radfiConfig: RadfiConfig,
+    walletMode: WalletMode = "USER",
     rpcUrl?: string,
   ) {
-    super(chainConfig, radfiConfig, rpcUrl);
+    super(chainConfig, radfiConfig, walletMode, rpcUrl);
     this.walletProvider = {
       getWalletAddress: async () => walletAddress,
       getPublicKey: async () => publicKey,
@@ -540,9 +552,10 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
     walletProvider: IBitcoinWalletProvider,
     chainConfig: BitcoinSpokeChainConfig,
     radfiConfig: RadfiConfig,
+    walletMode: WalletMode = "USER",
     rpcUrl?: string,
   ) {
-    super(chainConfig, radfiConfig, rpcUrl);
+    super(chainConfig, radfiConfig, walletMode, rpcUrl);
     this.walletProvider = walletProvider;
   }
 

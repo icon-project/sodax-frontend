@@ -47,6 +47,7 @@ import {
   isEvmSpokeProviderType,
   isSonicSpokeProviderType,
   isBitcoinSpokeProviderType,
+  isBitcoinSpokeProvider,
 } from '../../guards.js';
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
@@ -430,8 +431,6 @@ export class SpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
     skipSimulation = false,
-    useTradingWallet = false,
-    srcAddressBytes?: Address, // in case of bitcoin, trading wallet is used, for simulation
   ): Promise<TxReturnType<T, R>> {
     if (isSonicSpokeProviderType(spokeProvider)) {
       return (await SonicSpokeService.callWallet(payload, spokeProvider, raw)) satisfies TxReturnType<
@@ -440,12 +439,26 @@ export class SpokeService {
       > as TxReturnType<T, R>;
     }
 
+    let srcAddress = encodeAddress(
+      spokeProvider.chainConfig.chain.id,
+      await spokeProvider.walletProvider.getWalletAddress(),
+    )
+
+    if (isBitcoinSpokeProvider(spokeProvider)) {
+      if (spokeProvider.walletMode === 'TRADING') {
+        const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(
+          await spokeProvider.walletProvider.getWalletAddress()
+        );
+        srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, tradingWalletAddress.tradingAddress as Address);
+      }
+    }
+
     if (!skipSimulation) {
       const result = await SpokeService.simulateRecvMessage(
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: srcAddressBytes!,
+          srcAddress,
           payload,
         },
         hubProvider,
@@ -506,14 +519,13 @@ export class SpokeService {
       )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
     }
     if (isBitcoinSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation, srcAddressBytes);
+      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
       return (await BitcoinSpokeService.callWallet(
         from,
         payload,
         spokeProvider,
         hubProvider,
         raw,
-        useTradingWallet,
       )) satisfies TxReturnType<BitcoinSpokeProviderType, R> as TxReturnType<T, R>;
     }
 
@@ -526,18 +538,28 @@ export class SpokeService {
     spokeProvider: SpokeProviderType,
     hubProvider: EvmHubProvider,
     skipSimulation: boolean,
-    srcAddressBytes?: Address,
   ): Promise<void> {
     if (!skipSimulation) {
-      
+
+      let srcAddress = encodeAddress(
+        spokeProvider.chainConfig.chain.id,
+        await spokeProvider.walletProvider.getWalletAddress(),
+      )
+
+      if (isBitcoinSpokeProvider(spokeProvider)) {
+        if (spokeProvider.walletMode === 'TRADING') {
+          const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(
+            await spokeProvider.walletProvider.getWalletAddress()
+          );
+          srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, tradingWalletAddress.tradingAddress as Address);
+        }
+      }
+
       const result = await SpokeService.simulateRecvMessage(
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: srcAddressBytes ?? encodeAddress(
-            spokeProvider.chainConfig.chain.id,
-            await spokeProvider.walletProvider.getWalletAddress(),
-          ),
+          srcAddress,
           payload,
         },
         hubProvider,

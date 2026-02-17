@@ -1094,7 +1094,7 @@ export const spokeChainConfig = {
   } as const satisfies InjectiveSpokeChainConfig,
   [BITCOIN_MAINNET_CHAIN_ID]: {
     addresses: {
-      assetManager: 'tb1pfqugvtvt28a27jrhk4s27ky5n4vwf7nr50ar67xfjs87k80f3qjq0rv725',
+      assetManager: 'bc1p4z9555xw0266vhq2x5un4zdmm9dt9zyet32fs7wa7u5ckdxusd9qsw4xfx',
     },
     chain: baseChainInfo[BITCOIN_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'BITCOIN'>,
     bnUSD: '',
@@ -1110,15 +1110,15 @@ export const spokeChainConfig = {
       bnUSD: {
         symbol: 'bnUSD',
         name: 'bnUSD',
-        decimals: 18,
-        address: '2078823:25',
+        decimals: 6,
+        address: '251340:25',
         xChainId: BITCOIN_MAINNET_CHAIN_ID,
       }
     },
-    radfiApiUrl: 'https://api.radfi.com',
+    radfiApiUrl: 'https://staging.api.radfi.co/api',
     radfiApiKey: '',
-    network: 'TESTNET',
-    rpcUrl: 'https://mempool.space/signet/api',
+    network: 'MAINNET',
+    rpcUrl: 'https://mempool.space/api',
   } as const satisfies BitcoinSpokeChainConfig,
   [STELLAR_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -2207,18 +2207,18 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
   },
   [BITCOIN_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC.symbol]: {
-      asset: '0x8862C633d77f634EC9F659010EB83165f6274F19',
+      asset: '0xeb0393893b5bf98a50073d6740738b08e575058b',
       decimal: 8,
       symbol: 'BTC',
       name: 'Bitcoin',
-      vault: '0x6486795C12e731F38C58a559f059c4eb01D31EC9',
+      vault: '0xeb0393893b5bf98a50073d6740738b08e575058b',
     },
     [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.bnUSD.symbol]: {
-      asset: '0x3d8a9b8d3b4b4c7c1f8b7a9b8d3b4b4c1f8b7a9b',
-      decimal: 8,
-      symbol: 'SAT',  
-      name: 'Satoshi',
-      vault: '0x',
+      asset: '0xE81544002bFE4A8D02B09D4A2EBB3ED0fd176F0D',
+      decimal: 6,
+      symbol: 'BUSD',  
+      name: 'BUSD.BUSD.BUSD',
+      vault: '0x6486795C12e731F38C58a559f059c4eb01D31EC9',
     }
   }
 } as const;
