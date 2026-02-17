@@ -1,171 +1,319 @@
-import React, { useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
-import { parseUnits } from 'viem';
-import type { MoneyMarketRepayParams } from '@sodax/sdk';
-import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
-import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
-import { getMmErrorText } from '@/lib/utils';
-import { MmErrorBox } from './MmErrorBox';
+import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
+import type { ChainId, MoneyMarketRepayParams, XToken } from '@sodax/sdk';
+import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
+import React, { useMemo, useState } from 'react';
+import { formatUnits, parseUnits } from 'viem';
+import { useQueryClient } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { ChainSelector } from '@/components/shared/ChainSelector';
+import { getChainsWithThisToken, getTokenOnChain } from '@/lib/utils';
+import { useXBalances, useXAccount } from '@sodax/wallet-sdk-react';
+import { getChainName } from '@/constants';
+import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
+import { extractTxHash } from '@/lib/extractTxHash';
+import { ActionSuccessContent, type ActionSuccessData } from './ActionSuccessContent';
+import { Loader2 } from 'lucide-react';
+import { isValidEvmAddress, isErrorWithMessage } from '../typeGuards';
+import { isAddress } from 'viem';
 
 interface RepayModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  token: XToken; // token the user wants to RECEIVE (e.g. USDC on Avalanche)
+  token: XToken;
+  maxDebt: string;
+  /**
+   * If true, shows success screen within the same dialog instead of closing and calling onSuccess.
+   * This provides a smoother UX transition. If false, behaves like before (calls onSuccess and closes).
+   */
+  inlineSuccess?: boolean;
+  /**
+   * Called when transaction succeeds, only if inlineSuccess is false.
+   * If inlineSuccess is true, success is shown inline and this callback is not called.
+   */
   onSuccess?: (data: {
     amount: string;
     token: XToken;
     sourceChainId: ChainId;
     destinationChainId: ChainId;
+    txHash?: `0x${string}`;
   }) => void;
-  maxDebt: string;
 }
 
-export function RepayModal({ open, onOpenChange, token, onSuccess, maxDebt }: RepayModalProps) {
+export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inlineSuccess }: RepayModalProps) {
   const [amount, setAmount] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  // UI state: tracks whether to show form or success screen within the same dialog
+  const [step, setStep] = useState<'form' | 'success'>('form');
+  // Stores success data (amount, token, txHash) when transaction completes, for displaying success screen
+  const [successData, setSuccessData] = useState<ActionSuccessData | null>(null);
   const { selectedChainId } = useAppStore();
 
-  const sourceWalletProvider = useWalletProvider(selectedChainId);
-  const sourceSpokeProvider = useSpokeProvider(selectedChainId, sourceWalletProvider);
+  const [fromChainId, setFromChainId] = useState(selectedChainId);
+  const [toChainId] = useState(token.xChainId);
+  const { address } = useXAccount(fromChainId);
+  const queryClient = useQueryClient();
 
-  const { mutateAsync: repay, isPending, error, reset: resetError } = useRepay();
-  const params: MoneyMarketRepayParams | undefined = useMemo(() => {
-    if (!amount) return undefined;
+  const sourceToken = getTokenOnChain(token.symbol, fromChainId);
+  const targetToken = token; // Debt token on target chain
+
+  // Wallet provider for the source (repay) chain
+  const sourceWalletProvider = useWalletProvider(fromChainId);
+
+  // Spoke provider where the actual repay happens (source chain)
+  const sourceSpokeProvider = useSpokeProvider(fromChainId, sourceWalletProvider);
+
+  const { mutateAsync: repay, isPending } = useRepay();
+  const { mutateAsync: approve, isPending: isApproving } = useMMApprove();
+
+  const repayableChains = getChainsWithThisToken(token);
+
+  // Source chain params (where funds come from)
+  const sourceParams: MoneyMarketRepayParams | undefined = useMemo(() => {
+    if (!amount || !sourceToken) return undefined;
+    
+    // Validate address is a valid EVM address before using
+    if (!address || !isValidEvmAddress(address)) {
+      throw new Error(`Invalid type of variable address in RepayModal: expected valid EVM address, got ${typeof address}`);
+    }
+    
+    const normalizedAmount = amount.replace(',', '.');
     return {
-      token: token.address,
-      amount: parseUnits(amount, token.decimals),
+      token: sourceToken.address,
+      amount: parseUnits(normalizedAmount, sourceToken.decimals),
       action: 'repay',
+      toChainId: toChainId, // ADD THIS - where the debt is
+      toAddress: address, // ADD THIS - whose debt to repay
     };
-  }, [token.address, token.decimals, amount]);
+  }, [amount, sourceToken, toChainId, address]);
 
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
-    params,
+  // Check allowance on the source chain (where tokens are spent)
+  const { data: sourceAllowed, isLoading: isSourceAllowanceLoading } = useMMAllowance({
+    params: sourceParams,
     spokeProvider: sourceSpokeProvider,
   });
-  const {
-    mutateAsync: approve,
-    isPending: isApproving,
-    error: approveError,
-    reset: resetApproveError,
-  } = useMMApprove();
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
+  // Check user balance on source chain
+  const { data: balances, isLoading: isBalancesLoading, isFetching: isBalancesFetching } = useXBalances({
+    xChainId: fromChainId,
+    xTokens: sourceToken ? [sourceToken] : [],
+    address,
+  });
 
-  const handleRepay = async () => {
-    if (!sourceSpokeProvider || !params) return;
+  const userBalance =
+    sourceToken && balances?.[sourceToken.address] !== undefined
+      ? Number(formatUnits(balances[sourceToken.address] ?? 0n, sourceToken.decimals))
+      : undefined;
+
+  const amountNum = Number(amount.replace(',', '.') || 0);
+  const insufficientBalance = userBalance !== undefined && amountNum > userBalance;
+
+  // If allowance is unknown/loading, assume approval is needed (show Approve button).
+  // Only show action button when we know allowance exists.
+  const hasSourceAllowance = sourceAllowed === true;
+  const needsSourceApproval = sourceAllowed === false || sourceAllowed === undefined || isSourceAllowanceLoading;
+
+  // Chain switching hook for the source chain
+  const { isWrongChain: isWrongSourceChain, handleSwitchChain: handleSwitchToSource } = useEvmSwitchChain(fromChainId);
+
+  const handleRepay = async (): Promise<void> => {
+    setError(null);
+
+    if (!sourceSpokeProvider || !sourceParams) {
+      setError('Missing provider or params');
+      return;
+    }
+
+    const normalizedAmount = amount.replace(',', '.');
 
     try {
-      await repay({
-        params,
+      // Wait for transaction to complete
+      const result = await repay({
+        params: sourceParams,
         spokeProvider: sourceSpokeProvider,
       });
 
-      onSuccess?.({
-        amount,
-        token,
-        sourceChainId: selectedChainId,
-        destinationChainId: token.xChainId,
+      invalidateMmQueries(queryClient, {
+        mmChainIds: [toChainId],
+        address,
+        balanceChainIds: [fromChainId],
       });
-      onOpenChange(false);
-    } catch (err) {
+
+      const nextSuccessData: ActionSuccessData = {
+        amount: normalizedAmount,
+        token,
+        sourceChainId: fromChainId,
+        destinationChainId: toChainId,
+        txHash: extractTxHash(result),
+      };
+
+      // Call success callback
+      if (inlineSuccess) {
+        setSuccessData(nextSuccessData);
+        setStep('success');
+      } else {
+        onSuccess?.(nextSuccessData);
+        onOpenChange(false);
+      }
+    } catch (err: unknown) {
       console.error('Repay failed:', err);
+      setError(getErrorMessage(err, 'Transaction failed. Please try again.'));
     }
   };
 
-  const handleApprove = async () => {
-    if (!sourceSpokeProvider || !params) return;
+  const getErrorMessage = (error: unknown, fallback = 'Approval failed'): string => {
+    if (error instanceof Error && error.message) return error.message;
+    if (typeof error === 'string') return error;
+    // Use type guard instead of type assertion
+    if (isErrorWithMessage(error)) {
+      return error.message;
+    }
+    return fallback;
+  };
+
+  const handleApproveSource = async (): Promise<void> => {
+    setError(null);
+    if (!sourceSpokeProvider || !sourceParams) return;
 
     try {
       await approve({
-        params,
+        params: sourceParams,
         spokeProvider: sourceSpokeProvider,
       });
-    } catch (err) {
-      console.error('Approve failed:', err);
+    } catch (err: unknown) {
+      console.error('Source approval failed:', err);
+      setError(getErrorMessage(err));
     }
   };
 
-  const handleMaxclick = () => {
+  const handleMax = () => {
     setAmount(maxDebt);
   };
 
-  const handleOpenChangeInternal = (nextOpen: boolean) => {
+  const isBusy = isPending || isApproving;
+  // Only consider balance "unknown" during initial load, not during background refetches
+  // This prevents flickering: once we have a balance, keep showing it even during refetches
+  const isBalanceUnknown = isBalancesLoading || userBalance === undefined;
+  
+  // Check if user has any debt to repay (maxDebt > 0)
+  const hasDebt = maxDebt && maxDebt !== '0' && Number.parseFloat(maxDebt) > 0;
+
+  const handleOpenChangeInternal = (nextOpen: boolean): void => {
     onOpenChange(nextOpen);
     if (!nextOpen) {
       setAmount('');
-      resetError?.();
-      resetApproveError?.();
+      setError(null);
+      setStep('form');
+      setSuccessData(null);
     }
   };
 
+  // Show success screen instead of form when transaction completes and inlineSuccess is enabled
+  if (inlineSuccess && step === 'success' && successData) {
+    return (
+      <Dialog open={open} onOpenChange={handleOpenChangeInternal}>
+        <DialogContent className="sm:max-w-sm border-cherry-grey/20">
+          <ActionSuccessContent action="repay" data={successData} onClose={() => onOpenChange(false)} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChangeInternal}>
-      <DialogContent className="sm:max-w-md border-cherry-grey/20">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-cherry-dark">Repay {token.symbol}</DialogTitle>
-          <DialogDescription className="text-center">Choose amount to repay.</DialogDescription>
+          <DialogTitle>Repay {token.symbol}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-2">
-          <Label htmlFor="amount">Amount</Label>
-          <div className="flex items-center gap-2">
-            <Input id="amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} />
-            <span>{token.symbol}</span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleMaxclick}
-              disabled={!maxDebt || maxDebt === '0'}
-            >
+        {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">{error}</div>}
+
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            From chain: <strong>{getChainName(fromChainId)}</strong>
+            <br />
+            To chain (debt): <strong>{getChainName(toChainId)}</strong>
+          </p>
+
+          <div className="space-y-2">
+            <Label>Repay from chain</Label>
+            <ChainSelector
+              selectedChainId={fromChainId}
+              selectChainId={setFromChainId}
+              allowedChains={repayableChains}
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Debt lives on: <strong>{getChainName(toChainId)}</strong> (cannot be changed)
+            </p>
+            <p className="text-xs text-muted-foreground gap-2">
+              Your balance on the chain you want to repay:{' '}
+              {isBalanceUnknown ? '—' : userBalance.toFixed(6)}
+              <span> {sourceToken?.symbol || token.symbol}</span>
+            </p>
+          </div>
+
+          <Label>Amount</Label>
+          <div className="flex gap-2">
+            <Input
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className={!isBusy && insufficientBalance ? 'border-red-500' : ''}
+              placeholder="0.0"
+              disabled={isBusy}
+            />
+            <Button variant="outline" onClick={handleMax} disabled={isBusy}>
               Max
             </Button>
           </div>
-          {maxDebt && maxDebt !== '0' && (
-            <p className="text-xs text-muted-foreground">
-              Max debt: {Number(maxDebt).toFixed(6)} {token.symbol}
-            </p>
+
+          <p className="text-xs text-muted-foreground">
+            Max debt: {Number(maxDebt).toFixed(6)} {token.symbol}
+          </p>
+
+          {!isBusy && !isBalanceUnknown && insufficientBalance && (
+            <p className="text-xs text-red-600">Insufficient balance on {getChainName(fromChainId)}</p>
+          )}
+
+          {/* Approval and repay flow on the source (repay) chain */}
+          {isPending ? (
+            <Button className="w-full" disabled>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Repaying…
+            </Button>
+          ) : isWrongSourceChain ? (
+            <Button className="w-full" onClick={handleSwitchToSource} disabled={isBusy}>
+              Switch to {getChainName(fromChainId)}
+            </Button>
+          ) : needsSourceApproval ? (
+            <Button
+              className="w-full"
+              variant="cherry"
+              onClick={handleApproveSource}
+              disabled={!sourceParams || isApproving || insufficientBalance || isBusy || !hasDebt}
+            >
+              {isApproving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Approving…
+                </>
+              ) : (
+                `Approve ${sourceToken?.symbol || token.symbol} on ${getChainName(fromChainId)}`
+              )}
+            </Button>
+          ) : (
+            <Button
+              className="w-full"
+              onClick={handleRepay}
+              disabled={!sourceParams || !hasSourceAllowance || isBalanceUnknown || insufficientBalance || !amount || isBusy || !hasDebt}
+            >
+              Repay
+            </Button>
           )}
         </div>
-
-        {error && <MmErrorBox text={getMmErrorText(error)} />}
-        {approveError && <MmErrorBox text={getMmErrorText(approveError)} />}
-
-        <DialogFooter className="sm:justify-start">
-          <Button
-            className="w-full"
-            type="button"
-            variant="cherrySoda"
-            onClick={handleApprove}
-            disabled={isAllowanceLoading || hasAllowed || isApproving || !params || !sourceSpokeProvider}
-          >
-            {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
-          </Button>
-
-          {isWrongChain && (
-            <Button variant="cherry" size="sm" onClick={handleSwitchChain}>
-              Switch Chain
-            </Button>
-          )}
-
-          {!isWrongChain && (
-            <Button className="w-full" type="button" variant="default" onClick={handleRepay} disabled={!hasAllowed}>
-              {isPending ? 'Repaying...' : 'Repay'}
-            </Button>
-          )}
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

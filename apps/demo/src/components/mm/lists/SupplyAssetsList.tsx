@@ -1,4 +1,4 @@
-import React, { useMemo, useState, type ReactElement } from 'react';
+import React, { useEffect, useMemo, useState, type ReactElement } from 'react';
 import {
   useReservesUsdFormat,
   useSpokeProvider,
@@ -15,7 +15,6 @@ import { useAppStore } from '@/zustand/useAppStore';
 import { type ChainId, ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens, type XToken } from '@sodax/sdk';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
-import { type ActionType, SuccessModal } from './SuccessModal';
 import { SupplyModal } from './SupplyModal';
 import { WithdrawModal } from './WithdrawModal';
 import { getHealthFactorState } from '@/lib/utils';
@@ -42,14 +41,6 @@ export function SupplyAssetsList(): ReactElement {
     token: XToken;
     maxSupply: string;
   } | null>(null);
-  const [currentAction, setCurrentAction] = useState<ActionType>('repay');
-  const [successData, setSuccessData] = useState<{
-    amount: string;
-    token: XToken;
-    sourceChainId: ChainId;
-    destinationChainId: ChainId;
-    txHash?: `0x${string}`;
-  } | null>(null);
 
   const tokens = moneyMarketSupportedTokens[selectedChainId] ?? [];
   const isIcon = selectedChainId === ICON_MAINNET_CHAIN_ID;
@@ -57,13 +48,17 @@ export function SupplyAssetsList(): ReactElement {
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
-  const { data: balances, isLoading: isBalancesLoading, refetch: refetchWalletBalances } = useXBalances({
+  const {
+    data: balances,
+    isLoading: isBalancesLoading,
+    refetch: refetchWalletBalances,
+  } = useXBalances({
     xChainId: selectedChainId,
     xTokens: tokens,
     address,
   });
 
-  // Debug: why Solana wallet balance not showing
+  // // Debug: why Solana wallet balance not showing
   if (selectedChainId === 'solana') {
     console.log('[SupplyAssetsList] Solana', {
       selectedChainId,
@@ -228,10 +223,12 @@ export function SupplyAssetsList(): ReactElement {
                           key={token.address}
                           token={token}
                           walletBalance={
-                            isBalancesLoading
-                              ? '...'
-                              : balances != null
-                                ? Number(formatUnits(balances[token.address] ?? 0n, token.decimals)).toFixed(4)
+                            // Show "0.0000" when loading (better UX than "...") or when balance is 0
+                            // Only show "-" if balances object is null (error/unavailable state)
+                            balances != null
+                              ? Number(formatUnits(balances[token.address] ?? 0n, token.decimals)).toFixed(4)
+                              : isBalancesLoading
+                                ? '0.0000'
                                 : '-'
                           }
                           formattedReserves={formattedReserves}
@@ -239,11 +236,9 @@ export function SupplyAssetsList(): ReactElement {
                           aTokenBalancesMap={aTokenBalancesMap}
                           onRefreshReserves={handleRefresh}
                           onWithdrawClick={(token, maxWithdraw) => {
-                            setCurrentAction('withdraw');
                             setWithdrawData({ token, maxWithdraw });
                           }}
                           onSupplyClick={(token, maxSupply) => {
-                            setCurrentAction('supply');
                             setSupplyData({ token, maxSupply });
                           }}
                         />
@@ -261,13 +256,9 @@ export function SupplyAssetsList(): ReactElement {
           open={true}
           token={supplyData.token}
           maxSupply={supplyData.maxSupply}
+          inlineSuccess={true}
           onOpenChange={open => {
             if (!open) setSupplyData(null);
-          }}
-          onSuccess={data => {
-            setSuccessData(data);
-            setSupplyData(null);
-            handleRefresh();
           }}
         />
       )}
@@ -276,22 +267,12 @@ export function SupplyAssetsList(): ReactElement {
           open={true}
           token={withdrawData.token}
           maxWithdraw={withdrawData.maxWithdraw}
+          inlineSuccess={true}
           onOpenChange={open => {
             if (!open) setWithdrawData(null);
           }}
-          onSuccess={data => {
-            setSuccessData(data);
-            setWithdrawData(null);
-            handleRefresh();
-          }}
         />
       )}
-      <SuccessModal
-        open={!!successData}
-        onClose={() => setSuccessData(null)}
-        data={successData}
-        action={currentAction}
-      />
     </>
   );
 }

@@ -207,7 +207,22 @@ export function getMmErrorText(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   if (error && typeof error === 'object') {
-    const o = error as { message?: string; code?: string };
+    const o = error as { message?: string; code?: string; data?: { payload?: string; error?: unknown } };
+    
+    // Handle relay timeout errors with a user-friendly message
+    if (o.code === 'RELAY_TIMEOUT') {
+      const txHash = o.data?.payload;
+      if (txHash && typeof txHash === 'string') {
+        return `Transaction timed out while waiting for relay. The transaction may still be processing.\n\nTransaction hash: ${txHash}\n\nPlease check the transaction status on the explorer.`;
+      }
+      return 'Transaction timed out while waiting for relay. The transaction may still be processing. Please check the transaction status on the explorer.';
+    }
+    
+    // Handle submit tx failed errors
+    if (o.code === 'SUBMIT_TX_FAILED') {
+      return 'Failed to submit transaction to relay. Please try again.';
+    }
+    
     const part = o.message ?? o.code;
     if (typeof part === 'string') return part;
   }

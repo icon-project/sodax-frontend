@@ -24,8 +24,8 @@ export function chainIdToChainName(chainId: SpokeChainId): string {
 
 const testnet = process.env.NEXT_PUBLIC_TESTNET === 'YES';
 const hubChainId = SONIC_MAINNET_CHAIN_ID;
-// const hubRpcUrl = 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg';
-const hubRpcUrl = 'https://rpc.soniclabs.com'; // if rpc is failing, use this in dev mode
+const hubRpcUrl = 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg';
+// const hubRpcUrl = 'https://rpc.soniclabs.com'; // if rpc is failing, use this in dev mode
 
 const hubConfig = {
   hubRpcUrl,
@@ -80,7 +80,8 @@ export const rpcConfig: RpcConfig = {
 
   // Other chains
   '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
-  solana: 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // solana: 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  solana: 'https://solana-rpc.publicnode.com',
   sui: 'https://fullnode.mainnet.sui.io',
   'injective-1': 'https://sentry.tm.injective.network:26657',
   stellar: {

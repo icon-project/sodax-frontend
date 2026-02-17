@@ -8,6 +8,9 @@ import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
 import { Button } from '@/components/ui/button';
+import { DUST_THRESHOLD, MAX_BORROW_SAFETY_MARGIN, ATOKEN_DECIMALS, ZERO_ADDRESS } from '../../constants';
+import { isUserReserveDataArray, isValidEvmAddress } from '../../typeGuards';
+import { isAddress } from 'viem';
 
 interface BorrowAssetsListItemProps {
   token: XToken;
@@ -22,7 +25,7 @@ interface BorrowAssetsListItemProps {
   disabled?: boolean;
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
-  onBorrowClick: (token: XToken, maxBorrow: string) => void;
+  onBorrowClick: (token: XToken, maxBorrow: string, priceUSD: number) => void;
   onRepayClick: (token: XToken, maxDebt: string) => void;
   userSummary?: FormatUserSummaryResponse;
 }
@@ -38,17 +41,22 @@ export function BorrowAssetsListItem({
   onRepayClick,
   userSummary,
 }: BorrowAssetsListItemProps) {
+  // Validate userReserves array before passing to useReserveMetrics
+  if (!isUserReserveDataArray(userReserves)) {
+    throw new Error('Invalid type of variable userReserves: expected UserReserveData[]');
+  }
+
   const metrics = useReserveMetrics({
     token,
     formattedReserves,
-    userReserves: userReserves as UserReserveData[],
+    userReserves,
   });
 
-  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-
+  // Validate aTokenAddress is a valid EVM address before using
+  const rawATokenAddress = metrics.formattedReserve?.aTokenAddress;
   const aTokenAddress =
-    metrics.formattedReserve?.aTokenAddress && metrics.formattedReserve.aTokenAddress !== ZERO_ADDRESS
-      ? (metrics.formattedReserve.aTokenAddress as `0x${string}`)
+    rawATokenAddress && rawATokenAddress !== ZERO_ADDRESS && isValidEvmAddress(rawATokenAddress)
+      ? rawATokenAddress
       : undefined;
 
   const { data: aToken } = useAToken({
@@ -75,23 +83,42 @@ export function BorrowAssetsListItem({
   let maxBorrow = '0';
 
   if (userSummary && metrics.formattedReserve && availableLiquidity) {
-    const availableBorrowsUSD = Number(userSummary.availableBorrowsUSD);
+    let availableBorrowsUSD = Number(userSummary.availableBorrowsUSD);
     const priceUSD = Number(metrics.formattedReserve.priceInUSD);
+
+    // Fallback calculation if SDK returns 0 but user has collateral
+    // This can happen due to rounding/precision issues with very small amounts
+    if (availableBorrowsUSD === 0 && Number(userSummary.totalCollateralUSD) > 0) {
+      const totalCollateralUSD = Number(userSummary.totalCollateralUSD);
+      const totalBorrowsUSD = Number(userSummary.totalBorrowsUSD);
+      const currentLiquidationThreshold = Number(userSummary.currentLiquidationThreshold);
+
+      // Calculate available borrow: (collateral * maxLTV) - currentBorrows
+      // Using liquidation threshold as max LTV (typically 80%)
+      const maxBorrowableUSD = totalCollateralUSD * currentLiquidationThreshold;
+      availableBorrowsUSD = Math.max(0, maxBorrowableUSD - totalBorrowsUSD);
+    }
 
     if (priceUSD > 0 && availableBorrowsUSD > 0) {
       const userLimitTokens = availableBorrowsUSD / priceUSD;
       const poolLimitTokens = Number(availableLiquidity);
 
-      maxBorrow = (Math.min(userLimitTokens, poolLimitTokens) * 0.99).toFixed(6);
+      maxBorrow = (Math.min(userLimitTokens, poolLimitTokens) * MAX_BORROW_SAFETY_MARGIN).toFixed(6);
     }
   }
 
   const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
   const formattedDebt = metrics.userReserve
-    ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, 18)).toFixed(4)
+    ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, ATOKEN_DECIMALS)).toFixed(4)
     : '0';
 
-  const hasDebt = metrics.userReserve && metrics.userReserve.scaledVariableDebt > 0n;
+  // Check if user has meaningful debt: balance exists AND formatted amount is greater than DUST_THRESHOLD
+  // This prevents enabling repay button for dust amounts that display as "0.0000"
+  const hasDebt =
+    metrics.userReserve &&
+    metrics.userReserve.scaledVariableDebt > 0n &&
+    formattedDebt !== '0' &&
+    Number.parseFloat(formattedDebt) > DUST_THRESHOLD;
 
   return (
     <TableRow
@@ -101,7 +128,8 @@ export function BorrowAssetsListItem({
       <TableCell className="px-6 py-5">
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
-            <span className="font-bold text-cherry-dark">{asset.symbol}</span>
+            {/* Use token.symbol (current symbol like "POL") instead of asset.symbol (legacy like "MATIC") */}
+            <span className="font-bold text-cherry-dark">{token.symbol}</span>
             <span className="text-xs text-clay">{getChainLabel(token.xChainId)}</span>
           </div>
         </div>
@@ -144,7 +172,8 @@ export function BorrowAssetsListItem({
             token={token}
             disabled={disabled || !canBorrow}
             onClick={() => {
-              onBorrowClick(token, maxBorrow);
+              const priceUSD = metrics.formattedReserve ? Number(metrics.formattedReserve.priceInUSD) : 0;
+              onBorrowClick(token, maxBorrow, priceUSD);
             }}
           />
           <Button

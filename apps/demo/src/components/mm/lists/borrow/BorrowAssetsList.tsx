@@ -13,11 +13,11 @@ import { BorrowAssetsListItem } from './BorrowAssetsListItem';
 import { formatUnits } from 'viem';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
 import { BorrowModal } from './BorrowModal';
-import { SuccessModal, type ActionType } from '../SuccessModal';
 import { type XToken, type ChainId, moneyMarketSupportedTokens, AVALANCHE_MAINNET_CHAIN_ID } from '@sodax/types';
 import { ChainSelector } from '@/components/shared/ChainSelector';
-import { RepayActionModal } from '../RepayActionModal';
+import { RepayModal } from '../RepayModal';
 import { useAppStore } from '@/zustand/useAppStore';
+import { isXTokenArray } from '../../typeGuards';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -38,19 +38,12 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
   const [borrowData, setBorrowData] = useState<{
     token: XToken;
     maxBorrow: string;
+    priceUSD: number;
   } | null>(null);
   const [repayData, setRepayData] = useState<{
     token: XToken;
     maxDebt: string;
   } | null>(null);
-  const [successData, setSuccessData] = useState<{
-    amount: string;
-    token: XToken;
-    sourceChainId: ChainId;
-    destinationChainId: ChainId;
-    txHash?: `0x${string}`;
-  } | null>(null);
-  const [currentAction, setCurrentAction] = useState<ActionType>('borrow');
 
   const { selectedChainId: selectedMarketChainId } = useAppStore();
 
@@ -59,12 +52,17 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
 
   const allTokens = useMemo(() => {
-    return Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
+    const tokens = Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
       chainTokens.map(token => ({
         ...token,
         xChainId: chainId,
       })),
-    ) as XToken[];
+    );
+    // Type guard: validate all tokens are valid XToken objects before returning
+    if (!isXTokenArray(tokens)) {
+      throw new Error('Invalid type of variable allTokens: expected XToken[]');
+    }
+    return tokens;
   }, []);
 
   const { address: marketAddress } = useXAccount(selectedMarketChainId);
@@ -75,7 +73,6 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
   const {
     data: userReserves,
     isLoading: isUserReservesLoading,
-    refetch: refetchReserves,
   } = useUserReservesData({ spokeProvider, address });
 
   const { data: marketUserReserves, isLoading: isMarketUserReservesLoading } = useUserReservesData({
@@ -86,11 +83,11 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
   const {
     data: formattedReserves,
     isLoading: isFormattedReservesLoading,
-    refetch: refetchFormattedReserves,
   } = useReservesUsdFormat();
-  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({
-    spokeProvider,
-    address,
+  // Use marketSpokeProvider and marketAddress for userSummary since that's where collateral is
+  const { data: userSummary } = useUserFormattedSummary({
+    spokeProvider: marketSpokeProvider,
+    address: marketAddress,
   });
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];
@@ -120,10 +117,6 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
 
   const isLoading =
     isUserReservesLoading || isFormattedReservesLoading || isAssetsLoading || isMarketUserReservesLoading;
-
-  const handleRefresh = async () => {
-    await Promise.all([refetchFormattedReserves(), refetchReserves(), refetchSummary()]);
-  };
 
   return (
     <Card className="mt-3">
@@ -184,12 +177,10 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
                       }
                       formattedReserves={formattedReserves || []}
                       userReserves={userReserves?.[0] || []}
-                      onBorrowClick={(token, maxBorrow) => {
-                        setCurrentAction('borrow');
-                        setBorrowData({ token, maxBorrow });
+                      onBorrowClick={(token, maxBorrow, priceUSD) => {
+                        setBorrowData({ token, maxBorrow, priceUSD });
                       }}
                       onRepayClick={(token, maxDebt) => {
-                        setCurrentAction('repay');
                         setRepayData({ token, maxDebt });
                       }}
                       userSummary={userSummary}
@@ -205,37 +196,26 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
         <BorrowModal
           open={!!borrowData}
           token={borrowData.token}
+          inlineSuccess={true}
           onOpenChange={open => {
             if (!open) setBorrowData(null);
           }}
-          onSuccess={data => {
-            setSuccessData(data);
-            setBorrowData(null);
-          }}
           maxBorrow={borrowData.maxBorrow}
+          priceUSD={borrowData.priceUSD}
+          userSummary={userSummary}
         />
       )}
       {repayData && (
-        <RepayActionModal
+        <RepayModal
           open={true}
           token={repayData.token}
           maxDebt={repayData.maxDebt}
+          inlineSuccess={true}
           onOpenChange={open => {
             if (!open) setRepayData(null);
           }}
-          onSuccess={async data => {
-            setSuccessData(data);
-            setRepayData(null);
-            await handleRefresh();
-          }}
         />
       )}
-      <SuccessModal
-        open={!!successData}
-        onClose={() => setSuccessData(null)}
-        data={successData}
-        action={currentAction}
-      />
     </Card>
   );
 }

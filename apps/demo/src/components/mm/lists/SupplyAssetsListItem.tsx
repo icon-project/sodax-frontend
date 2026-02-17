@@ -6,6 +6,8 @@ import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 // import { OldBorrowButton } from './OldBorrowButton';
 import { Button } from '@/components/ui/button';
+import { DUST_THRESHOLD, ATOKEN_DECIMALS } from '../constants';
+import { isUserReserveDataArray, isValidAddress } from '../typeGuards';
 
 interface SupplyAssetsListItemProps {
   token: XToken;
@@ -27,24 +29,36 @@ export function SupplyAssetsListItem({
   onWithdrawClick,
   onSupplyClick,
 }: SupplyAssetsListItemProps): ReactElement {
+  // Validate userReserves array before passing to useReserveMetrics
+  if (!isUserReserveDataArray(userReserves)) {
+    throw new Error('Invalid type of variable userReserves: expected UserReserveData[]');
+  }
+
   const metrics = useReserveMetrics({
     token,
     formattedReserves,
-    userReserves: userReserves as UserReserveData[],
+    userReserves,
   });
 
   const aTokenAddress = metrics.formattedReserve?.aTokenAddress;
 
   // 2. GET THE RAW BIGINT FROM THE MAP
+  // Validate aTokenAddress is a valid Address before using
   const aTokenBalance =
-    aTokenAddress && isAddress(aTokenAddress) && aTokenBalancesMap
-      ? aTokenBalancesMap.get(aTokenAddress as Address)
+    aTokenAddress && isValidAddress(aTokenAddress) && aTokenBalancesMap
+      ? aTokenBalancesMap.get(aTokenAddress)
       : undefined;
 
-  // ALWAYS USE 18 DECIMALS FOR aTOKENS
-  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(5) : '-';
-
-  const hasSupply = aTokenBalance !== undefined && aTokenBalance > 0n;
+  // ALWAYS USE ATOKEN_DECIMALS (18) FOR aTOKENS
+  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)).toFixed(5) : '-';
+  
+  // Check if user has meaningful supply: balance exists AND formatted amount is greater than DUST_THRESHOLD
+  // This prevents enabling withdraw button for dust amounts that display as "0.00000"
+  const hasSupply = 
+    aTokenBalance !== undefined && 
+    aTokenBalance > 0n && 
+    formattedBalance !== '-' &&
+    Number.parseFloat(formattedBalance) > DUST_THRESHOLD;
 
   return (
     <TableRow className="border-b border-cherry-grey/10 hover:bg-cream/20 transition-colors">
@@ -98,7 +112,14 @@ export function SupplyAssetsListItem({
             variant="cherry"
             size="sm"
             onClick={() => onSupplyClick(token, walletBalance ?? '0')}
-            disabled={!walletBalance || walletBalance === '-' || Number.parseFloat(walletBalance) <= 0}
+            disabled={
+              // Disable if wallet balance is not available ('-'), empty, zero/negative, or invalid number
+              // Note: We show "0.0000" when loading, so we check for <= 0 to disable during loading too
+              !walletBalance ||
+              walletBalance === '-' ||
+              Number.parseFloat(walletBalance) <= 0 ||
+              Number.isNaN(Number.parseFloat(walletBalance))
+            }
             className="flex-1 min-w-[85px]"
           >
             Supply

@@ -5,6 +5,7 @@ import type { ChainId, XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/constants';
 import { getChainExplorerTxUrl } from '@/lib/utils';
 import { Check, Copy, ExternalLink } from 'lucide-react';
+import { COPY_FEEDBACK_TIMEOUT_MS, TX_HASH_DISPLAY_LENGTH } from '../constants';
 
 export type ActionType = 'supply' | 'withdraw' | 'borrow' | 'repay';
 
@@ -29,7 +30,7 @@ export function SuccessModal({ open, onClose, data, action }: SuccessModalProps)
     if (!data?.txHash) return;
     await navigator.clipboard.writeText(data.txHash);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), COPY_FEEDBACK_TIMEOUT_MS);
   };
 
   const contentConfig: Record<ActionType, { title: string; label: string }> = {
@@ -102,7 +103,7 @@ export function SuccessModal({ open, onClose, data, action }: SuccessModalProps)
                 <div className="flex items-center justify-center gap-2">
                   <p className="text-xs text-clay-light uppercase tracking-wide font-semibold">Transaction Hash</p>
                   <code className="text-sm font-mono text-clay whitespace-nowrap">
-                    {data.txHash.slice(0, 4)}...{data.txHash.slice(-4)}
+                    {data.txHash.slice(0, TX_HASH_DISPLAY_LENGTH)}...{data.txHash.slice(-TX_HASH_DISPLAY_LENGTH)}
                   </code>
                   <button
                     type="button"
