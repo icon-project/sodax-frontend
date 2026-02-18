@@ -161,7 +161,8 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
                               </TooltipTrigger>
                               <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
                                 The amount of tokens available in the pool that can be borrowed. This represents the
-                                unborrowed tokens in the money market, which may be limited by a borrow cap if one is set.
+                                unborrowed tokens in the money market, which may be limited by a borrow cap if one is
+                                set.
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -173,7 +174,7 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
                       return (
                         <TableHead
                           key={`${header}-${index}`}
-                          className="text-xs font-medium text-clay uppercase tracking-wide px-6 py-4"
+                          className="text-xs font-medium text-clay uppercase tracking-wide px-4 py-4"
                         >
                           <div className="flex items-center gap-1">
                             {header}
@@ -189,7 +190,8 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
                               </TooltipTrigger>
                               <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
                                 Annual Percentage Yield is the effective annual interest rate you pay for borrowing
-                                assets, accounting for compound interest. This is the actual cost you'll pay over a year.
+                                assets, accounting for compound interest. This is the actual cost you'll pay over a
+                                year.
                               </TooltipContent>
                             </Tooltip>
                           </div>
