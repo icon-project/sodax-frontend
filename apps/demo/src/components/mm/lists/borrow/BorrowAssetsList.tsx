@@ -18,6 +18,8 @@ import { ChainSelector } from '@/components/shared/ChainSelector';
 import { RepayModal } from '../RepayModal';
 import { useAppStore } from '@/zustand/useAppStore';
 import { isXTokenArray } from '../../typeGuards';
+import { Info } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const TABLE_HEADERS = [
   'Asset',
@@ -70,20 +72,14 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
   const marketSpokeProvider = useSpokeProvider(selectedMarketChainId, marketWalletProvider);
   const { data: allMoneyMarketAssets, isLoading: isAssetsLoading } = useBackendAllMoneyMarketAssets({});
 
-  const {
-    data: userReserves,
-    isLoading: isUserReservesLoading,
-  } = useUserReservesData({ spokeProvider, address });
+  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
 
   const { data: marketUserReserves, isLoading: isMarketUserReservesLoading } = useUserReservesData({
     spokeProvider: marketSpokeProvider,
     address: marketAddress,
   });
 
-  const {
-    data: formattedReserves,
-    isLoading: isFormattedReservesLoading,
-  } = useReservesUsdFormat();
+  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   // Use marketSpokeProvider and marketAddress for userSummary since that's where collateral is
   const { data: userSummary } = useUserFormattedSummary({
     spokeProvider: marketSpokeProvider,
@@ -144,16 +140,102 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
             <Table unstyled className="w-full">
               <TableHeader className="sticky top-0 bg-cream backdrop-blur-sm z-20 border-b border-cherry-grey/20">
                 <TableRow>
-                  {TABLE_HEADERS.map(header => (
-                    <TableHead
-                      key={header}
-                      className={`text-xs font-medium text-clay uppercase tracking-wide px-6 py-4 ${
-                        header === 'Actions' ? 'text-center' : ''
-                      }`}
-                    >
-                      {header}
-                    </TableHead>
-                  ))}
+                  {TABLE_HEADERS.map((header, index) => {
+                    if (header === 'Available Liquidity') {
+                      return (
+                        <TableHead
+                          key={`${header}-${index}`}
+                          className="text-xs font-medium text-clay uppercase tracking-wide px-6 py-4"
+                        >
+                          <div className="flex items-center gap-1">
+                            {header}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label="Available Liquidity Info"
+                                  className="inline-flex items-center text-clay hover:text-cherry-dark"
+                                >
+                                  <Info className="w-3.5 h-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
+                                The amount of tokens available in the pool that can be borrowed. This represents the
+                                unborrowed tokens in the money market, which may be limited by a borrow cap if one is set.
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </TableHead>
+                      );
+                    }
+
+                    if (header === 'Borrow APY') {
+                      return (
+                        <TableHead
+                          key={`${header}-${index}`}
+                          className="text-xs font-medium text-clay uppercase tracking-wide px-6 py-4"
+                        >
+                          <div className="flex items-center gap-1">
+                            {header}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label="Borrow APY info"
+                                  className="inline-flex items-center text-clay hover:text-cherry-dark"
+                                >
+                                  <Info className="w-3.5 h-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
+                                Annual Percentage Yield is the effective annual interest rate you pay for borrowing
+                                assets, accounting for compound interest. This is the actual cost you'll pay over a year.
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </TableHead>
+                      );
+                    }
+
+                    if (header === 'Borrow APR') {
+                      return (
+                        <TableHead
+                          key={`${header}-${index}`}
+                          className="text-xs font-medium text-clay uppercase tracking-wide px-6 py-4"
+                        >
+                          <div className="flex items-center gap-1">
+                            {header}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label="Borrow APR info"
+                                  className="inline-flex items-center text-clay hover:text-cherry-dark"
+                                >
+                                  <Info className="w-3.5 h-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
+                                Annual Percentage Rate is the simple annual interest rate you pay for borrowing assets,
+                                without compounding. APY accounts for compounding and is typically higher than APR.
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </TableHead>
+                      );
+                    }
+
+                    return (
+                      <TableHead
+                        key={`${header}-${index}`}
+                        className={`text-xs font-medium text-clay uppercase tracking-wide px-6 py-4 ${
+                          header === 'Actions' ? 'text-center' : ''
+                        }`}
+                      >
+                        {header}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -176,7 +258,7 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
                           : '-'
                       }
                       formattedReserves={formattedReserves || []}
-                      userReserves={userReserves?.[0] || []}
+                      userReserves={marketUserReserves?.[0] || []}
                       onBorrowClick={(token, maxBorrow, priceUSD) => {
                         setBorrowData({ token, maxBorrow, priceUSD });
                       }}

@@ -1,7 +1,7 @@
-import React, { type ReactElement } from 'react';
+import React, { type ReactElement, useMemo } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken, Address } from '@sodax/types';
-import { formatUnits, isAddress } from 'viem';
+import { formatUnits, parseUnits, isAddress } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 // import { OldBorrowButton } from './OldBorrowButton';
@@ -50,13 +50,20 @@ export function SupplyAssetsListItem({
       : undefined;
 
   // ALWAYS USE ATOKEN_DECIMALS (18) FOR aTOKENS
-  const formattedBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)).toFixed(5) : '-';
-  
+  const formattedBalance =
+    aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)).toFixed(5) : '-';
+
+  // Simple approach: use formattedBalance (rounded display value) - this was working before
+  const maxWithdrawExact = useMemo(() => {
+    if (!aTokenBalance || aTokenBalance === 0n || !aTokenAddress) return '0';
+    return formattedBalance !== '-' ? formattedBalance : '0';
+  }, [aTokenBalance, aTokenAddress, formattedBalance]);
+
   // Check if user has meaningful supply: balance exists AND formatted amount is greater than DUST_THRESHOLD
   // This prevents enabling withdraw button for dust amounts that display as "0.00000"
-  const hasSupply = 
-    aTokenBalance !== undefined && 
-    aTokenBalance > 0n && 
+  const hasSupply =
+    aTokenBalance !== undefined &&
+    aTokenBalance > 0n &&
     formattedBalance !== '-' &&
     Number.parseFloat(formattedBalance) > DUST_THRESHOLD;
 
@@ -127,7 +134,23 @@ export function SupplyAssetsListItem({
           <Button
             variant="cherry"
             size="sm"
-            onClick={() => onWithdrawClick(token, formattedBalance ?? '0')}
+            onClick={() => {
+              // Use the exact calculated max withdraw instead of rounded formattedBalance
+              const maxWithdrawValue = maxWithdrawExact;
+              console.log(`[SupplyAssetsListItem] Withdraw button clicked for ${token.symbol}:`, {
+                token: token.symbol,
+                tokenAddress: token.address,
+                aTokenAddress,
+                aTokenBalanceRaw: aTokenBalance?.toString(),
+                formattedBalance,
+                maxWithdrawExact,
+                maxWithdrawValue,
+                maxWithdrawParsed:
+                  maxWithdrawValue !== '0' ? parseUnits(maxWithdrawValue, token.decimals).toString() : '0',
+                tokenDecimals: token.decimals,
+              });
+              onWithdrawClick(token, maxWithdrawValue);
+            }}
             disabled={!hasSupply}
             className="flex-1 min-w-[85px]"
           >

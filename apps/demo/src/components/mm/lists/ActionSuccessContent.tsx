@@ -76,7 +76,7 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
       case 'repay':
         return (
           <p className="text-sm text-clay text-center px-2">
-            Your debt on <strong>{sourceName}</strong> has been successfully reduced.
+            Your debt <strong>{data.token.symbol}</strong> has been successfully repaid.
           </p>
         );
       default:

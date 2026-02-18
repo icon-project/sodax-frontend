@@ -171,6 +171,7 @@ export function SupplyAssetsList(): ReactElement {
                               className="text-xs font-medium text-clay uppercase tracking-wide px-6 py-4"
                             >
                               <div className="flex items-center gap-1.5">
+                                {header}
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <button
@@ -178,15 +179,101 @@ export function SupplyAssetsList(): ReactElement {
                                       aria-label="Liquidation Threshold info"
                                       className="inline-flex items-center text-clay hover:text-cherry-dark"
                                     >
-                                      <Info className="w-3.5 h-3.5 text-cherry-soda" />
+                                      <Info className="w-3.5 h-3.5" />
                                     </button>
                                   </TooltipTrigger>
-                                  <TooltipContent>
+                                  <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
                                     <strong>Liquidation Threshold</strong> is the percentage of supplied value that
                                     counts toward liquidation calculations.
                                   </TooltipContent>
                                 </Tooltip>
-                                <span>{header}</span>
+                              </div>
+                            </TableHead>
+                          );
+                        }
+
+                        if (header === 'Total Supply') {
+                          return (
+                            <TableHead
+                              key={`${header}-${index}`}
+                              className="text-xs font-medium text-clay uppercase tracking-wide px-6 py-4"
+                            >
+                              <div className="flex items-center gap-1">
+                                {header}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      aria-label="Total Supply info"
+                                      className="inline-flex items-center text-clay hover:text-cherry-dark"
+                                    >
+                                      <Info className="w-3.5 h-3.5" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
+                                    It's the total amount of tokens supplied to the money market pool by all users. It
+                                    equals the sum of available liquidity (unborrowed tokens) and total debt (borrowed
+                                    tokens).
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </TableHead>
+                          );
+                        }
+
+                        if (header === 'Supply APY') {
+                          return (
+                            <TableHead
+                              key={`${header}-${index}`}
+                              className="text-xs font-medium text-clay uppercase tracking-wide px-6 py-4"
+                            >
+                              <div className="flex items-center gap-1.5">
+                                {header}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      aria-label="Supply APY info"
+                                      className="inline-flex items-center text-clay hover:text-cherry-dark"
+                                    >
+                                      <Info className="w-3.5 h-3.5" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
+                                    <strong>Supply APY</strong> (Annual Percentage Yield) is the effective annual return
+                                    you earn for supplying assets, accounting for compound interest. This is the actual
+                                    yield you'll receive over a year.
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </TableHead>
+                          );
+                        }
+
+                        if (header === 'Supply APR') {
+                          return (
+                            <TableHead
+                              key={`${header}-${index}`}
+                              className="text-xs font-medium text-clay uppercase tracking-wide px-6 py-4"
+                            >
+                              <div className="flex items-center gap-1.5">
+                                {header}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      aria-label="Supply APR info"
+                                      className="inline-flex items-center text-clay hover:text-cherry-dark"
+                                    >
+                                      <Info className="w-3.5 h-3.5" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
+                                    <strong>Supply APR</strong> (Annual Percentage Rate) is the simple annual interest
+                                    rate you earn for supplying assets, without compounding. APY accounts for
+                                    compounding and is typically higher than APR.
+                                  </TooltipContent>
+                                </Tooltip>
                               </div>
                             </TableHead>
                           );

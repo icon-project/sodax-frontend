@@ -48,7 +48,14 @@ interface WithdrawModalProps {
   maxWithdraw: string;
 }
 
-export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdraw, inlineSuccess }: WithdrawModalProps) {
+export function WithdrawModal({
+  open,
+  onOpenChange,
+  token,
+  onSuccess,
+  maxWithdraw,
+  inlineSuccess,
+}: WithdrawModalProps) {
   const [amount, setAmount] = useState('');
   // UI state: tracks whether to show form or success screen within the same dialog
   const [step, setStep] = useState<'form' | 'success'>('form');
@@ -69,7 +76,7 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
     const toAddress = destAddress ?? sourceAddress;
     const normalizedAmount = amount.replace(',', '.');
     const parsedAmount = parseUnits(normalizedAmount, token.decimals);
-    
+
     const withdrawParams = {
       token: token.address,
       amount: parsedAmount,
@@ -77,7 +84,7 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
       toChainId: token.xChainId,
       ...(toAddress ? { toAddress } : {}),
     };
-    
+
     // Debug log for params creation
     console.log('[WithdrawModal] Withdraw params created:', {
       tokenAddress: token.address,
@@ -91,7 +98,7 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
       destAddress,
       params: withdrawParams,
     });
-    
+
     return withdrawParams;
   }, [token.address, token.decimals, token.xChainId, amount, destAddress, sourceAddress, selectedChainId]);
 
@@ -117,7 +124,7 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
   // Button state machine: prioritize pending states to prevent flickering
   // When a transaction is pending, show that state regardless of allowance checks
   const isBusy = isApproving || isPending;
-  
+
   // Withdraw actions don't require approval (per SDK implementation)
   // So we never need approval for withdraw, regardless of chain type
   const needsApproval = false;
@@ -151,7 +158,7 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
 
     try {
       const normalizedAmount = amount.replace(',', '.');
-      
+
       // Debug logs for withdrawal
       console.log('[WithdrawModal] Starting withdrawal:', {
         token: token.symbol,
@@ -177,19 +184,19 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
         spokeProviderChainId: sourceSpokeProvider?.chainConfig?.chain?.id,
         spokeProviderChainType: sourceSpokeProvider?.chainConfig?.chain?.type,
       });
-      
+
       console.log('[WithdrawModal] Calling SDK withdraw with:', {
         params: JSON.stringify(params, (key, value) => (typeof value === 'bigint' ? value.toString() : value)),
         spokeProviderType: sourceSpokeProvider?.chainConfig?.chain?.type,
         spokeProviderChainId: sourceSpokeProvider?.chainConfig?.chain?.id,
       });
-      
+
       const result = await withdraw({
         params,
         spokeProvider: sourceSpokeProvider,
       });
       const txHash = extractTxHash(result);
-      
+
       console.log('[WithdrawModal] Withdrawal successful:', { txHash, result });
 
       invalidateMmQueries(queryClient, {
@@ -226,13 +233,15 @@ export function WithdrawModal({ open, onOpenChange, token, onSuccess, maxWithdra
         sourceAddress,
         destAddress,
         chainType: sourceSpokeProvider?.chainConfig?.chain?.type,
-        params: params ? {
-          token: params.token,
-          amount: params.amount.toString(),
-          action: params.action,
-          toChainId: params.toChainId,
-          toAddress: params.toAddress,
-        } : null,
+        params: params
+          ? {
+              token: params.token,
+              amount: params.amount.toString(),
+              action: params.action,
+              toChainId: params.toChainId,
+              toAddress: params.toAddress,
+            }
+          : null,
       });
     }
   };

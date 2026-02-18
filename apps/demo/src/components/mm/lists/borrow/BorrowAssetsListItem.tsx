@@ -108,17 +108,37 @@ export function BorrowAssetsListItem({
   }
 
   const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
-  const formattedDebt = metrics.userReserve
-    ? Number(formatUnits(metrics.userReserve.scaledVariableDebt, ATOKEN_DECIMALS)).toFixed(4)
-    : '0';
+  const debtExact = metrics.userReserve ? formatUnits(metrics.userReserve.scaledVariableDebt, ATOKEN_DECIMALS) : '0';
+
+  const formatDecimalForDisplay = (value: string, maxDecimals: number): string => {
+    if (value === '0') return '0';
+    const [intPart, fracPart = ''] = value.split('.');
+    const truncated = fracPart.slice(0, maxDecimals);
+    const combined = truncated.length > 0 ? `${intPart}.${truncated}` : intPart;
+    const trimmed = combined.replace(/\.?0+$/, '');
+
+    // If we truncated to "0" but the value is non-zero, show a "< threshold" hint.
+    if (trimmed === '0' && Number.parseFloat(value) > 0) {
+      const threshold = `0.${'0'.repeat(Math.max(0, maxDecimals - 1))}1`;
+      return `<${threshold}`;
+    }
+
+    return trimmed;
+  };
+
+  const debtNum = Number.parseFloat(debtExact);
+  const debtDisplay = debtExact === '0' ? '0' : formatDecimalForDisplay(debtExact, debtNum < 1 ? 8 : 4);
 
   // Check if user has meaningful debt: balance exists AND formatted amount is greater than DUST_THRESHOLD
   // This prevents enabling repay button for dust amounts that display as "0.0000"
   const hasDebt =
     metrics.userReserve &&
     metrics.userReserve.scaledVariableDebt > 0n &&
-    formattedDebt !== '0' &&
-    Number.parseFloat(formattedDebt) > DUST_THRESHOLD;
+    Number.isFinite(debtNum) &&
+    // TEMP (testing): allow repaying dust-sized debts.
+    // Re-enable the DUST_THRESHOLD gate after testing.
+    // debtNum > DUST_THRESHOLD;
+    debtNum > 0;
 
   return (
     <TableRow
@@ -130,7 +150,6 @@ export function BorrowAssetsListItem({
           <div className="flex flex-col">
             {/* Use token.symbol (current symbol like "POL") instead of asset.symbol (legacy like "MATIC") */}
             <span className="font-bold text-cherry-dark">{token.symbol}</span>
-            <span className="text-xs text-clay">{getChainLabel(token.xChainId)}</span>
           </div>
         </div>
       </TableCell>
@@ -162,7 +181,7 @@ export function BorrowAssetsListItem({
 
       {/* Borrowed */}
       <TableCell className="px-6 py-5">
-        <span className="text-sm font-medium text-foreground">{formattedDebt}</span>
+        <span className="text-sm font-medium text-foreground">{debtDisplay}</span>
       </TableCell>
 
       {/* Actions */}
@@ -179,7 +198,7 @@ export function BorrowAssetsListItem({
           <Button
             variant="cherry"
             size="sm"
-            onClick={() => onRepayClick(token, formattedDebt)}
+            onClick={() => onRepayClick(token, debtExact)}
             disabled={!hasDebt}
             className="flex-1 min-w-[85px]"
           >

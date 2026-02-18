@@ -6,6 +6,7 @@ import {
   moneyMarketSupportedTokens,
   SolverIntentStatusCode,
   supportedSpokeChains,
+  spokeChainConfig,
   type XToken,
   type SpokeChainId,
   type ChainId,
@@ -227,4 +228,21 @@ export function getMmErrorText(error: unknown): string {
     if (typeof part === 'string') return part;
   }
   return String(error);
+}
+
+/**
+ * Gets the native token symbol for a given chain ID (e.g., ETH for Arbitrum, AVAX for Avalanche).
+ * Used for displaying gas fee requirements to users.
+ */
+export function getNativeTokenSymbol(chainId: ChainId): string {
+  const config = spokeChainConfig[chainId as SpokeChainId];
+  if (!config) return 'native token';
+  
+  // Find the token with address matching nativeToken (0x0000... for EVM chains)
+  const nativeTokenAddress = config.nativeToken;
+  const nativeToken = Object.values(config.supportedTokens).find(
+    token => token.address.toLowerCase() === nativeTokenAddress.toLowerCase()
+  );
+  
+  return nativeToken?.symbol ?? 'native token';
 }

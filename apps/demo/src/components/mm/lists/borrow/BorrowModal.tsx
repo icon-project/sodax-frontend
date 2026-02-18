@@ -25,7 +25,7 @@ import {
 } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
-import { getChainsWithThisToken, getMmErrorText, getTokenOnChain } from '@/lib/utils';
+import { getChainsWithThisToken, getMmErrorText, getTokenOnChain, getNativeTokenSymbol } from '@/lib/utils';
 import { formatUnits } from 'viem';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { MIN_BORROW_USD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
@@ -137,51 +137,76 @@ export function BorrowModal({
   });
 
   // Calculate max borrow dynamically based on destination chain
-  // Max borrow = min(user borrowing capacity, available liquidity on destination chain)
+  // If user has collateral, they can borrow any asset on any chain based on their borrowing capacity
+  // Destination chain liquidity is an optional constraint if available
   const { maxBorrow, priceUSD } = useMemo(() => {
-    if (!userSummary || !destinationMetrics.formattedReserve || !aToken) {
+    if (!userSummary) {
       return { maxBorrow: initialMaxBorrow, priceUSD: initialPriceUSD };
     }
 
-    // Get available liquidity on destination chain
-    let availableLiquidity: string | undefined;
-    if (destinationMetrics.formattedReserve.borrowCap === '0') {
-      availableLiquidity = formatUnits(BigInt(destinationMetrics.formattedReserve.availableLiquidity), aToken.decimals);
-    } else {
-      availableLiquidity = Math.min(
-        Number.parseFloat(formatUnits(BigInt(destinationMetrics.formattedReserve.availableLiquidity), aToken.decimals)),
-        Number.parseInt(destinationMetrics.formattedReserve.borrowCap) -
-          Number.parseFloat(destinationMetrics.formattedReserve.totalScaledVariableDebt),
-      ).toFixed(6);
+    // Calculate user's borrowing capacity (always do this if user has collateral)
+    let availableBorrowsUSD = Number(userSummary.availableBorrowsUSD);
+
+    // Fallback calculation if SDK returns 0 but user has collateral
+    if (availableBorrowsUSD === 0 && Number(userSummary.totalCollateralUSD) > 0) {
+      const totalCollateralUSD = Number(userSummary.totalCollateralUSD);
+      const totalBorrowsUSD = Number(userSummary.totalBorrowsUSD);
+      const currentLiquidationThreshold = Number(userSummary.currentLiquidationThreshold);
+      const maxBorrowableUSD = totalCollateralUSD * currentLiquidationThreshold;
+      availableBorrowsUSD = Math.max(0, maxBorrowableUSD - totalBorrowsUSD);
     }
 
-    // Calculate max borrow based on user's borrowing capacity and destination chain liquidity
-    let calculatedMaxBorrow = '0';
-    const calculatedPriceUSD = Number(destinationMetrics.formattedReserve.priceInUSD);
+    // If user has no borrowing capacity, return 0
+    if (availableBorrowsUSD <= 0) {
+      return { maxBorrow: '0', priceUSD: initialPriceUSD };
+    }
 
-    if (userSummary && availableLiquidity) {
-      let availableBorrowsUSD = Number(userSummary.availableBorrowsUSD);
+    // Use price from destination chain if available, otherwise use initial price (from token's native chain)
+    const destinationPriceUSD = destinationMetrics.formattedReserve
+      ? Number(destinationMetrics.formattedReserve.priceInUSD)
+      : 0;
+    const finalPriceUSD = destinationPriceUSD > 0 ? destinationPriceUSD : initialPriceUSD;
 
-      // Fallback calculation if SDK returns 0 but user has collateral
-      if (availableBorrowsUSD === 0 && Number(userSummary.totalCollateralUSD) > 0) {
-        const totalCollateralUSD = Number(userSummary.totalCollateralUSD);
-        const totalBorrowsUSD = Number(userSummary.totalBorrowsUSD);
-        const currentLiquidationThreshold = Number(userSummary.currentLiquidationThreshold);
-        const maxBorrowableUSD = totalCollateralUSD * currentLiquidationThreshold;
-        availableBorrowsUSD = Math.max(0, maxBorrowableUSD - totalBorrowsUSD);
+    // If no valid price available, can't calculate max borrow
+    if (finalPriceUSD <= 0) {
+      return { maxBorrow: initialMaxBorrow, priceUSD: initialPriceUSD };
+    }
+
+    // Calculate max borrow based on user's borrowing capacity
+    const userLimitTokens = availableBorrowsUSD / finalPriceUSD;
+    let calculatedMaxBorrow = userLimitTokens;
+
+    // If destination chain has liquidity data, also consider that as a constraint
+    if (destinationMetrics.formattedReserve && aToken) {
+      let availableLiquidity: string | undefined;
+      if (destinationMetrics.formattedReserve.borrowCap === '0') {
+        availableLiquidity = formatUnits(
+          BigInt(destinationMetrics.formattedReserve.availableLiquidity),
+          aToken.decimals,
+        );
+      } else {
+        availableLiquidity = Math.min(
+          Number.parseFloat(
+            formatUnits(BigInt(destinationMetrics.formattedReserve.availableLiquidity), aToken.decimals),
+          ),
+          Number.parseInt(destinationMetrics.formattedReserve.borrowCap) -
+            Number.parseFloat(destinationMetrics.formattedReserve.totalScaledVariableDebt),
+        ).toFixed(6);
       }
 
-      if (calculatedPriceUSD > 0 && availableBorrowsUSD > 0) {
-        const userLimitTokens = availableBorrowsUSD / calculatedPriceUSD;
+      if (availableLiquidity && Number(availableLiquidity) > 0) {
         const poolLimitTokens = Number(availableLiquidity);
-        calculatedMaxBorrow = (Math.min(userLimitTokens, poolLimitTokens) * MAX_BORROW_SAFETY_MARGIN).toFixed(6);
+        // Take the minimum of user capacity and pool liquidity
+        calculatedMaxBorrow = Math.min(userLimitTokens, poolLimitTokens);
       }
     }
 
-    // Use calculated value if available, otherwise fall back to initial
+    // Apply safety margin and format
+    const finalMaxBorrow = (calculatedMaxBorrow * MAX_BORROW_SAFETY_MARGIN).toFixed(6);
+
     return {
-      maxBorrow: calculatedMaxBorrow !== '0' ? calculatedMaxBorrow : initialMaxBorrow,
-      priceUSD: calculatedPriceUSD > 0 ? calculatedPriceUSD : initialPriceUSD,
+      maxBorrow: finalMaxBorrow !== '0' ? finalMaxBorrow : '0',
+      priceUSD: finalPriceUSD,
     };
   }, [userSummary, destinationMetrics.formattedReserve, aToken, initialMaxBorrow, initialPriceUSD]);
 
@@ -212,12 +237,14 @@ export function BorrowModal({
 
     const normalizedAmount = amount.replace(',', '.');
 
-    // Validate minimum borrow amount
+    // TEMPORARILY COMMENTED OUT: Validate minimum borrow amount
+    // const amountNum = Number.parseFloat(normalizedAmount);
+    // const minAmountNum = Number.parseFloat(minBorrowAmount);
+    // if (minAmountNum > 0 && amountNum < minAmountNum) {
+    //   return undefined; // Amount is below minimum
+    // }
+
     const amountNum = Number.parseFloat(normalizedAmount);
-    const minAmountNum = Number.parseFloat(minBorrowAmount);
-    if (minAmountNum > 0 && amountNum < minAmountNum) {
-      return undefined; // Amount is below minimum
-    }
 
     // Validate maximum borrow amount (prevent borrowing more than available)
     if (maxBorrow && maxBorrow !== '0') {
@@ -239,7 +266,7 @@ export function BorrowModal({
       action: 'borrow',
       ...crossChainParams,
     };
-  }, [amount, destinationToken, sourceChainId, destinationChainId, destinationAddress, minBorrowAmount, maxBorrow]);
+  }, [amount, destinationToken, sourceChainId, destinationChainId, destinationAddress, maxBorrow]);
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChainId);
 
@@ -384,20 +411,22 @@ export function BorrowModal({
                   Max borrow: {Number(maxBorrow).toFixed(6)} {token.symbol}
                 </p>
               )}
-              {minBorrowAmount !== '0' && (
+              {/* TEMPORARILY COMMENTED OUT: Min borrow display */}
+              {/* {minBorrowAmount !== '0' && (
                 <p className="text-xs text-muted-foreground">
                   Min borrow: {minBorrowAmount} {token.symbol} (~${MIN_BORROW_USD} USD)
                 </p>
-              )}
+              )} */}
               {/* Show validation messages when button is disabled due to amount */}
               {amount && (
                 <>
-                  {minBorrowAmount !== '0' &&
+                  {/* TEMPORARILY COMMENTED OUT: Min borrow validation */}
+                  {/* {minBorrowAmount !== '0' &&
                     Number.parseFloat(amount.replace(',', '.')) < Number.parseFloat(minBorrowAmount) && (
                       <p className="text-xs text-cherry-soda">
                         Amount must be at least {minBorrowAmount} {token.symbol} (~${MIN_BORROW_USD} USD)
                       </p>
-                    )}
+                    )} */}
                   {maxBorrow &&
                     maxBorrow !== '0' &&
                     Number.parseFloat(amount.replace(',', '.')) > Number.parseFloat(maxBorrow) && (
@@ -412,6 +441,14 @@ export function BorrowModal({
         </div>
 
         {error && <MmErrorBox text={getMmErrorText(error)} />}
+
+        {/* Gas fee warning - shown right before action button for maximum visibility */}
+        {!isWrongChain && !isCrossChainMissingDestinationAddress && amount && (
+          <p className="text-xs text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-lg border border-amber-200 dark:border-amber-800">
+            Make sure you have enough <strong>{getNativeTokenSymbol(sourceChainId)}</strong> on{' '}
+            <strong>{getChainName(sourceChainId)}</strong> to cover gas fees for this transaction.
+          </p>
+        )}
 
         <DialogFooter className="sm:justify-start flex-col gap-2">
           {isWrongChain ? (
