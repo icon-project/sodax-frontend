@@ -47,6 +47,26 @@ const AppSidebar = (): React.ReactElement => {
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
+                <Link href="/partners" className="text-(length:--body-super-comfortable) text-white font-medium">
+                  <p>Partners</p>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href="/community" className="text-(length:--body-super-comfortable) text-white font-medium">
+                  <p>Community</p>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <a
+                  href="https://docs.sodax.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-(length:--body-super-comfortable) text-white font-medium"
+                >
+                  <p>Docs</p>
+                </a>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
                 <Link href="/" className="text-(length:--body-super-comfortable) text-white font-medium">
                   <p>About</p>
                 </Link>

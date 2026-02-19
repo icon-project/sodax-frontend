@@ -4,16 +4,17 @@ import type React from 'react';
 
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import type { CarouselApi } from '@/components/ui/carousel';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
 import { MainCtaButton } from './main-cta-button';
 import { SodaxIcon } from '../icons/sodax-icon';
-import { Separator } from '@radix-ui/react-separator';
 import { useRouter } from 'next/navigation';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppStore } from '@/stores/app-store-provider';
+import Link from 'next/link';
+import { ArrowRight, ArrowUpRight, Repeat, Handshake, Users, Code } from 'lucide-react';
 
 const carouselItems = [
   { id: 1, src: '/coin/base.png', alt: 'BASE' },
@@ -29,12 +30,108 @@ const carouselItems = [
   { id: 11, src: '/coin/op.png', alt: 'OPTIMISM' },
 ];
 
+interface PathwayCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  href: string;
+  isExternal?: boolean;
+  accentColor: string;
+  index: number;
+}
+
+const PathwayCard = ({ icon, title, description, href, isExternal, accentColor, index }: PathwayCardProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const content = (
+    <div
+      className={`group relative flex flex-col gap-3 p-5 md:p-6 rounded-2xl cursor-pointer
+        border border-white/15 backdrop-blur-md
+        bg-white/[0.07] hover:bg-white/[0.14]
+        transition-all duration-250 ease-out
+        hover:border-white/30 hover:shadow-[0_8px_32px_rgba(0,0,0,0.15)]
+        hover:-translate-y-1
+        animate-fade-in-up`}
+      style={{ animationDelay: `${index * 100 + 200}ms` }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="flex items-start justify-between">
+        <div
+          className={`flex items-center justify-center w-10 h-10 rounded-xl transition-colors duration-250 ${accentColor}`}
+        >
+          {icon}
+        </div>
+        <div
+          className={`flex items-center justify-center w-7 h-7 rounded-full transition-all duration-250
+            ${isHovered ? 'bg-yellow-dark text-espresso scale-100' : 'bg-white/10 text-white/50 scale-90'}`}
+        >
+          {isExternal ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+        </div>
+      </div>
+      <div>
+        <h3 className="text-white font-[InterBold] text-[15px] md:text-[16px] leading-tight mb-1">{title}</h3>
+        <p className="text-cherry-brighter font-[InterRegular] text-[12px] md:text-[13px] leading-[1.4]">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+
+  if (isExternal) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-35">
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className="flex-1 min-w-35">
+      {content}
+    </Link>
+  );
+};
+
+const pathways: Omit<PathwayCardProps, 'index'>[] = [
+  {
+    icon: <Repeat className="w-5 h-5 text-yellow-dark" />,
+    title: 'Start trading',
+    description: 'Swap assets at the best rates across 11+ chains',
+    href: '/swap',
+    accentColor: 'bg-yellow-dark/20',
+  },
+  {
+    icon: <Handshake className="w-5 h-5 text-orange-sonic" />,
+    title: 'Partner with us',
+    description: 'Integrate, co-build, or grow the ecosystem together',
+    href: '/partners',
+    accentColor: 'bg-orange-sonic/20',
+  },
+  {
+    icon: <Users className="w-5 h-5 text-cherry-brighter" />,
+    title: 'Join community',
+    description: 'Connect with DeFi enthusiasts & stay in the loop',
+    href: '/community',
+    accentColor: 'bg-cherry-brighter/20',
+  },
+  {
+    icon: <Code className="w-5 h-5 text-cream" />,
+    title: 'Build on SODAX',
+    description: 'Explore our SDK, docs & developer resources',
+    href: 'https://docs.sodax.com',
+    isExternal: true,
+    accentColor: 'bg-cream/20',
+  },
+];
+
 const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactElement => {
   const imgRef = useRef<HTMLImageElement>(null);
   const carouselRef = useRef(null);
   const [api, setApi] = useState<CarouselApi>();
   const router = useRouter();
   const { setShouldTriggerAnimation } = useAppStore(state => state);
+
   useEffect(() => {
     if (!api) {
       return;
@@ -43,25 +140,35 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
     api.on('select', () => {});
   }, [api]);
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = useCallback(() => {
     api?.plugins().autoplay.stop();
-  };
+  }, [api]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     api?.plugins().autoplay.play();
-  };
+  }, [api]);
 
   return (
     <div className="hero-section">
-      <div className="h-[812px] sm:h-[860px] flex flex-col items-center bg-cherry-soda relative">
+      <div className="min-h-svh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
+        {/* Decorative background elements */}
         <Image
-          className="mix-blend-screen absolute max-md:top-[52%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-30 lg:left-1/2 lg:bottom-2 w-[297px] h-[445px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
+          className="mix-blend-screen absolute max-md:top-[48%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-10 lg:right-0 lg:bottom-0 w-60 h-90 sm:w-80 sm:h-120 lg:w-110 lg:h-165 opacity-40 lg:opacity-50"
           src="/girl.png"
           alt="background"
           width={541}
           height={811}
           unoptimized
         />
+        <Image
+          className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[680px] top-[30px] left-[-135px] sm:top-[-50px] lg:left-[9.5%] md:left-[-30%]"
+          src="/circle1.png"
+          alt="background"
+          width={701}
+          height={650}
+          ref={imgRef}
+        />
+
         {/* Menu Bar */}
         <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
           <div className="flex items-center">
@@ -85,7 +192,6 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
             </div>
           </div>
           <div className="flex items-center gap-8">
-            {/* Navigation Menu and Button */}
             <ul className="hidden lg:flex gap-4 z-10">
               <li>
                 <span
@@ -108,71 +214,35 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
             </div>
           </div>
         </div>
-        <Image
-          className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[680px] top-[30px] left-[-135px] sm:top-[-50px] lg:left-[9.5%] md:left-[-30%]"
-          src="/circle1.png"
-          alt="background"
-          width={701}
-          height={650}
-          ref={imgRef}
-        />
 
-        {/* Center Content */}
-        <div className="flex flex-col h-[700px] w-[310px] sm:w-[400px] md:w-[700px] lg:w-[900px] lg:pt-53 md:pt-41 pt-10 lg:mr-10">
-          <div className="flex flex-col justify-center  w-full">
-            <Label className="mix-blend-hard-light text-[54px] sm:text-[90px] md:text-[122px] lg:text-[156px] leading-none text-yellow-soda font-[InterBlack] lg:leading-[113px]">
+        {/* Hero Content */}
+        <div className="flex flex-col w-full px-6 sm:px-8 md:px-16 lg:px-8 lg:max-w-316 z-10 mt-8 sm:mt-12 md:mt-16 lg:mt-20 flex-1 pb-8">
+          {/* Headline */}
+          <div className="flex flex-col gap-2 md:gap-4 max-w-180 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
+            <Label className="mix-blend-hard-light text-[48px] sm:text-[72px] md:text-[96px] lg:text-[112px] leading-[0.9] text-yellow-soda font-[InterBlack] tracking-tight">
               FRESH DEFI
             </Label>
-            <div className="leading-[1.1] text-white font-[InterBlack] text-(length:--main-title) md:mt-6">
-              to grow your finances
-            </div>
+            <p className="text-white/90 font-[InterRegular] text-[15px] sm:text-[17px] md:text-[19px] leading-normal max-w-120">
+              Cross-chain swaps, savings & borrowing — across 11+ networks.{' '}
+              <span className="text-cherry-brighter">Find your path below.</span>
+            </p>
           </div>
-          <div className="flex h-[66px] md:mt-10 mt-96">
-            <div className="flex md:hidden">
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-40 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Swap, save and borrow
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Across networks
-                </div>
-              </div>
-            </div>
-            <div className="hidden md:flex ">
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-40 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Swap your assets
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  At leading rates
-                </div>
-              </div>
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-42 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Build your savings
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Across networks
-                </div>
-              </div>
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-39 pl-4 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Borrow stables or assets
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Without a bank
-                </div>
-              </div>
-            </div>
+
+          {/* Pathway Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mt-8 md:mt-10 lg:mt-12 max-w-220">
+            {pathways.map((pathway, i) => (
+              <PathwayCard key={pathway.title} {...pathway} index={i} />
+            ))}
           </div>
-          <div className="flex items-center w-full flex-wrap gap-4 md:mt-10 mt-4">
+
+          {/* Chain Carousel */}
+          <div
+            className="flex items-center flex-wrap gap-4 mt-auto pt-8 md:pt-10 animate-fade-in-up"
+            style={{ animationDelay: '600ms' }}
+          >
             <Label className="font-medium text-[18px] font-[Shrikhand] text-white">serving</Label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-cherry-soda to-transparent z-10"></div>
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-linear-to-r from-cherry-soda to-transparent z-10" />
               <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
                 <Carousel
                   ref={carouselRef}
@@ -205,17 +275,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
                   </CarouselContent>
                 </Carousel>
               </div>
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-cherry-soda to-transparent z-10"></div>
-            </div>
-            <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton
-                onClick={() => {
-                  router.push('/swap');
-                  setShouldTriggerAnimation(true);
-                }}
-              >
-                launch apps
-              </MainCtaButton>
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-cherry-soda to-transparent z-10" />
             </div>
           </div>
         </div>

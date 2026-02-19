@@ -7,7 +7,6 @@
 /********* Responsive Css *********/
 @media (max-width: 500px) {
   .hero-section {
-    height: 812px;
     background-image: url("/circle3.png");
     background-position: left 10%, right bottom;
   }
